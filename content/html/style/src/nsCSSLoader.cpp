@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 #include "nsICSSLoader.h"
-
+#include "nsICSSLoaderObserver.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 
@@ -161,12 +161,13 @@ public:
                 const nsString& aTitle, const nsString& aMedia, 
                 PRInt32 aDefaultNameSpaceID,
                 nsIContent* aOwner, PRInt32 aDocIndex, 
-                nsIParser* aParserToUnblock, PRBool aIsInline);
+                nsIParser* aParserToUnblock, PRBool aIsInline, 
+                nsICSSLoaderObserver* aObserver);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, const nsString& aMedia,
                 PRInt32 aDefaultNameSpaceID,
                 nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
-  SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, nsCSSLoaderCallbackFunc aCallback,
-                void* aData);
+  SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
+                nsICSSLoaderObserver* aObserver);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
@@ -193,8 +194,7 @@ public:
   PRBool          mIsAgent;
   PRBool          mSyncLoad;
 
-  nsCSSLoaderCallbackFunc mCallback;
-  void*                   mCallbackData;
+  nsICSSLoaderObserver* mObserver;
 };
 
 NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver);
@@ -203,15 +203,17 @@ MOZ_DECL_CTOR_COUNTER(PendingSheetData);
 
 struct PendingSheetData {
   PendingSheetData(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
-                   nsIContent* aElement)
+                   nsIContent* aElement, nsICSSLoaderObserver* aObserver)
     : mSheet(aSheet),
       mDocIndex(aDocIndex),
       mOwningElement(aElement),
-      mNotify(PR_FALSE)
+      mNotify(PR_FALSE),
+      mObserver(aObserver)
   {
     MOZ_COUNT_CTOR(PendingSheetData);
     NS_ADDREF(mSheet);
     NS_IF_ADDREF(mOwningElement);
+    NS_IF_ADDREF(mObserver);
   }
 
   ~PendingSheetData(void)
@@ -219,12 +221,14 @@ struct PendingSheetData {
     MOZ_COUNT_DTOR(PendingSheetData);
     NS_RELEASE(mSheet);
     NS_IF_RELEASE(mOwningElement);
+    NS_IF_RELEASE(mObserver);
   }
 
   nsICSSStyleSheet* mSheet;
   PRInt32           mDocIndex;
   nsIContent*       mOwningElement;
   PRBool            mNotify;
+  nsICSSLoaderObserver* mObserver;
 };
 
 class CSSLoaderImpl: public nsICSSLoader {
@@ -252,7 +256,8 @@ public:
                              PRInt32 aDefaultNameSpaceID,
                              PRInt32 aIndex,
                              nsIParser* aParserToUnblock,
-                             PRBool& aCompleted);
+                             PRBool& aCompleted,
+                             nsICSSLoaderObserver* aObserver);
 
   NS_IMETHOD LoadStyleLink(nsIContent* aElement,
                            nsIURI* aURL, 
@@ -261,7 +266,8 @@ public:
                            PRInt32 aDefaultNameSpaceID,
                            PRInt32 aIndex,
                            nsIParser* aParserToUnblock,
-                           PRBool& aCompleted);
+                           PRBool& aCompleted,
+                           nsICSSLoaderObserver* aObserver);
 
   NS_IMETHOD LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                             nsIURI* aURL, 
@@ -270,10 +276,9 @@ public:
                             PRInt32 aIndex);
 
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, 
-                          nsICSSStyleSheet*& aSheet,
-                          PRBool& aCompleted,
-                          nsCSSLoaderCallbackFunc aCallback,
-                          void *aData);
+                            nsICSSStyleSheet*& aSheet,
+                            PRBool& aCompleted,
+                            nsICSSLoaderObserver* aObserver);
 
   // local helper methods (public for access from statics)
   void Cleanup(URLKey& aKey, SheetLoadData* aLoadData);
@@ -293,12 +298,14 @@ public:
                         const nsString& aMedia);
 
   nsresult AddPendingSheet(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
-                           nsIContent* aElement);
+                           nsIContent* aElement, 
+                           nsICSSLoaderObserver* aObserver);
 
   PRBool IsAlternate(const nsString& aTitle);
 
   nsresult InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
-                            nsIContent* aElement, PRBool aNotify);
+                            nsIContent* aElement, PRBool aNotify,
+                            nsICSSLoaderObserver* aObserver);
 
   nsresult InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aParentSheet, 
                             PRInt32 aIndex);
@@ -332,7 +339,8 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
                              const nsString& aTitle, const nsString& aMedia,
                              PRInt32 aDefaultNameSpaceID,
                              nsIContent* aOwner, PRInt32 aDocIndex, 
-                             nsIParser* aParserToUnblock, PRBool aIsInline)
+                             nsIParser* aParserToUnblock, PRBool aIsInline, 
+                             nsICSSLoaderObserver* aObserver)
   : mLoader(aLoader),
     mURL(aURL),
     mTitle(aTitle),
@@ -349,14 +357,14 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mIsInline(aIsInline),
     mIsAgent(PR_FALSE),
     mSyncLoad(PR_FALSE),
-    mCallback(nsnull),
-    mCallbackData(nsnull)
+    mObserver(aObserver)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_IF_ADDREF(mOwningElement);
   NS_IF_ADDREF(mParserToUnblock);
+  NS_IF_ADDREF(mObserver);
 }
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
@@ -379,8 +387,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mIsInline(PR_FALSE),
     mIsAgent(PR_FALSE),
     mSyncLoad(PR_FALSE),
-    mCallback(nsnull),
-    mCallbackData(nsnull)
+    mObserver(nsnull)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
@@ -389,7 +396,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
 }
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
-                             nsCSSLoaderCallbackFunc aCallback, void* aData)
+                             nsICSSLoaderObserver* aObserver)
   : mLoader(aLoader),
     mURL(aURL),
     mTitle(),
@@ -405,13 +412,13 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mPendingChildren(0),
     mIsInline(PR_FALSE),
     mIsAgent(PR_TRUE),
-    mSyncLoad(PRBool(nsnull == aCallback)),
-    mCallback(aCallback),
-    mCallbackData(nsnull)
+    mSyncLoad(PRBool(nsnull == aObserver)),
+    mObserver(aObserver)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
+  NS_IF_ADDREF(mObserver);
 }
 
 
@@ -422,6 +429,7 @@ SheetLoadData::~SheetLoadData(void)
   NS_IF_RELEASE(mOwningElement);
   NS_IF_RELEASE(mParserToUnblock);
   NS_IF_RELEASE(mParentSheet);
+  NS_IF_RELEASE(mObserver);
   if (mNext) {
     delete mNext;
   }
@@ -611,7 +619,8 @@ InsertPendingSheet(void* aPendingData, void* aLoader)
   PendingSheetData* data = (PendingSheetData*)aPendingData;
   CSSLoaderImpl*  loader = (CSSLoaderImpl*)aLoader;
   loader->InsertSheetInDoc(data->mSheet, data->mDocIndex, 
-                           data->mOwningElement, data->mNotify);
+                           data->mOwningElement, data->mNotify,
+                           data->mObserver);
   delete data;
   return PR_TRUE;
 }
@@ -704,16 +713,16 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
       InsertChildSheet(aSheet, data->mParentSheet, data->mSheetIndex);
     }
     else if (data->mIsAgent) {  // is agent sheet
-      if (data->mCallback) {
-        (*(data->mCallback))(aSheet, data->mCallbackData);
+      if (data->mObserver) {
+        data->mObserver->StyleSheetLoaded(aSheet, PR_FALSE);
       }
     }
     else {  // doc sheet
       if (data->mParserToUnblock) { // if blocking, insert it immediately
-        InsertSheetInDoc(aSheet, data->mSheetIndex, data->mOwningElement, PR_TRUE);
+        InsertSheetInDoc(aSheet, data->mSheetIndex, data->mOwningElement, PR_TRUE, data->mObserver);
       }
       else { // otherwise wait until all are loaded (even inlines)
-        AddPendingSheet(aSheet, data->mSheetIndex, data->mOwningElement);
+        AddPendingSheet(aSheet, data->mSheetIndex, data->mOwningElement, data->mObserver);
       }
     }
 
@@ -927,9 +936,13 @@ CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet, const nsString& aTitle,
 
 nsresult
 CSSLoaderImpl::AddPendingSheet(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
-                               nsIContent* aElement) 
+                               nsIContent* aElement,
+                               nsICSSLoaderObserver* aObserver)
 {
-  PendingSheetData* data = new PendingSheetData(aSheet, aDocIndex, aElement);
+  PendingSheetData* data = new PendingSheetData(aSheet, 
+                                                aDocIndex, 
+                                                aElement,
+                                                aObserver);
   if (data) {
     mPendingDocSheets.AppendElement(data);
     return NS_OK;
@@ -948,7 +961,8 @@ CSSLoaderImpl::IsAlternate(const nsString& aTitle)
 
 nsresult
 CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex, 
-                                nsIContent* aElement, PRBool aNotify)
+                                nsIContent* aElement, PRBool aNotify,
+                                nsICSSLoaderObserver* aObserver)
 {
   if ((! mDocument) || (! aSheet)) {
     return NS_ERROR_NULL_POINTER;
@@ -996,6 +1010,9 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
     if (nsnull != aSheet) { // didn't insert yet
       mDocument->InsertStyleSheetAt(aSheet, 0, aNotify);
       sheetMap->InsertElementAt((void*)aDocIndex, 0);
+    }
+    if (nsnull != aObserver) {
+      aObserver->StyleSheetLoaded(aSheet, aNotify);
     }
     return NS_OK;
   }
@@ -1140,7 +1157,8 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                PRInt32 aDefaultNameSpaceID,
                                PRInt32 aDocIndex,
                                nsIParser* aParserToUnblock,
-                               PRBool& aCompleted)
+                               PRBool& aCompleted,
+                               nsICSSLoaderObserver* aObserver)
 {
   NS_ASSERTION(mDocument, "not initialized");
   if (! mDocument) {
@@ -1155,7 +1173,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
     SheetLoadData* data = new SheetLoadData(this, docURL, aTitle, aMedia, aDefaultNameSpaceID,
                                             aElement,
                                             aDocIndex, aParserToUnblock,
-                                            PR_TRUE);
+                                            PR_TRUE, aObserver);
     if (data == nsnull) {
       result = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1182,7 +1200,8 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
                              PRInt32 aDefaultNameSpaceID,
                              PRInt32 aDocIndex,
                              nsIParser* aParserToUnblock,
-                             PRBool& aCompleted)
+                             PRBool& aCompleted,
+                             nsICSSLoaderObserver* aObserver)
 {
   NS_ASSERTION(mDocument, "not initialized");
   if (! mDocument) {
@@ -1207,10 +1226,10 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
       if (NS_SUCCEEDED(result)) {
         PrepareSheet(clone, aTitle, aMedia);
         if (aParserToUnblock) { // stick it in now, parser is waiting for it
-          result = InsertSheetInDoc(clone, aDocIndex, aElement, PR_TRUE);
+          result = InsertSheetInDoc(clone, aDocIndex, aElement, PR_TRUE, aObserver);
         }
         else {  // add to pending list
-          result = AddPendingSheet(clone, aDocIndex, aElement);
+          result = AddPendingSheet(clone, aDocIndex, aElement, aObserver);
         }
         NS_RELEASE(clone);
       }
@@ -1218,7 +1237,8 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     else {  // need to load it
       SheetLoadData* data = new SheetLoadData(this, aURL, aTitle, aMedia, aDefaultNameSpaceID,
                                               aElement, aDocIndex, 
-                                              aParserToUnblock, PR_FALSE);
+                                              aParserToUnblock, PR_FALSE,
+                                              aObserver);
       if (data == nsnull) {
         result = NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1310,8 +1330,7 @@ NS_IMETHODIMP
 CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL, 
                               nsICSSStyleSheet*& aSheet,
                               PRBool& aCompleted,
-                              nsCSSLoaderCallbackFunc aCallback,
-                              void *aData)
+                              nsICSSLoaderObserver* aObserver)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aURL) {
@@ -1327,7 +1346,7 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         nsIUnicharInputStream* uin;
         result = NS_NewConverterStream(&uin, nsnull, in);
         if (NS_SUCCEEDED(result)) {
-          SheetLoadData* data = new SheetLoadData(this, aURL, aCallback, aData);
+          SheetLoadData* data = new SheetLoadData(this, aURL, aObserver);
           if (data == nsnull) {
             result = NS_ERROR_OUT_OF_MEMORY;
           }
