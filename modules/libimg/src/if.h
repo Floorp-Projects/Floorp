@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.4 1998/11/10 00:07:58 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.5 1999/02/17 18:14:57 kipp%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -72,9 +72,9 @@ typedef void
 (*TimeoutCallbackFunction) (void * closure);
 
 extern void * 
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
+IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 extern void
-FE_ClearTimeout(void *timer_id);
+IL_ClearTimeout(void *timer_id);
 PR_END_EXTERN_C
 #endif
 /********************************* in xpcompat.h *************************************/

@@ -1425,7 +1425,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 					gs->delay_time = MINIMUM_DELAY_TIME;
 				if (gs->delay_time){
                     gs->delay_timeout =
-                        FE_SetTimeout(gif_delay_time_callback, gs, gs->delay_time);
+                        IL_SetTimeout(gif_delay_time_callback, gs, gs->delay_time);
 
                     /* Essentially, tell the decoder state machine to wait
                        forever.  The timeout callback routine will wake up the
@@ -1557,7 +1557,7 @@ il_gif_abort(il_container *ic)
 
         /* Clear any pending timeouts */
         if (gs->delay_timeout) {
-            FE_ClearTimeout(gs->delay_timeout);
+            IL_ClearTimeout(gs->delay_timeout);
             gs->delay_timeout = NULL;
         }
     

@@ -641,7 +641,7 @@ void SyncTimeoutPeriod(DWORD dwTickCount)
 /* this function should register a function that will
  * be called after the specified interval of time has
  * elapsed.  This function should return an id 
- * that can be passed to FE_ClearTimeout to cancel 
+ * that can be passed to IL_ClearTimeout to cancel 
  * the Timeout request.
  *
  * A) Timeouts never fail to trigger, and
@@ -657,7 +657,7 @@ void SyncTimeoutPeriod(DWORD dwTickCount)
  * msecs:   The number of milli-seconds in the interval
  */
 void * 
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     WinTime * pTime = new WinTime;
     if(!pTime)
@@ -717,7 +717,7 @@ FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
  * has already expired.
  */
 void 
-FE_ClearTimeout(void * pStuff)
+IL_ClearTimeout(void * pStuff)
 {
     WinTime * pTimer = (WinTime *) pStuff;
 
@@ -767,7 +767,7 @@ static void wfe_ProcessTimeouts(DWORD dwNow)
 
     BOOL bCalledSync = FALSE;
 
-    //  Set the hack, such that when FE_ClearTimeout
+    //  Set the hack, such that when IL_ClearTimeout
     //      calls SyncTimeoutPeriod, that GetTickCount()
     //      overhead is not incurred.
     dwSyncHack = dwNow;
@@ -781,7 +781,7 @@ static void wfe_ProcessTimeouts(DWORD dwNow)
 
             //  Clear the timer.
             //  Period synced.
-            FE_ClearTimeout(p);
+            IL_ClearTimeout(p);
             bCalledSync = TRUE;
 
             //  Reset the loop (can't look at p->pNext now, and called
@@ -806,14 +806,14 @@ static void wfe_ProcessTimeouts(DWORD dwNow)
 }
 #else
 NS_EXPORT void*
-FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     return il_ss->SetTimeout((ilTimeoutCallbackFunction)func,
                              closure, msecs);
 }
 
 NS_EXPORT void
-FE_ClearTimeout(void *timer_id)
+IL_ClearTimeout(void *timer_id)
 {
     il_ss->ClearTimeout(timer_id);
 }

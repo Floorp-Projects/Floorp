@@ -147,9 +147,9 @@ extern char * NET_BACat  (char **dest, size_t dest_length, const char *src, size
 extern char * NET_SACopy (char **dest, const char *src);
 extern char * NET_SACat  (char **dest, const char *src);
 
-NS_EXPORT void* FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
+NS_EXPORT void* IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 
-NS_EXPORT void FE_ClearTimeout(void *timer_id);
+NS_EXPORT void IL_ClearTimeout(void *timer_id);
 
 PR_END_EXTERN_C
 

@@ -71,7 +71,7 @@ il_timeout_callback(void *closure)
 
     delay = (ic->pass > 1) ? 2 * ROW_OUTPUT_DELAY : ROW_OUTPUT_DELAY;
 
-    ic->row_output_timeout = FE_SetTimeout(il_timeout_callback, ic, delay);
+    ic->row_output_timeout = IL_SetTimeout(il_timeout_callback, ic, delay);
 }
 
 /*-----------------------------------------------------------------------------
@@ -134,7 +134,7 @@ il_partial(
     
         if (!ic->row_output_timeout){
             /* Set a timer that will actually display the image data. */
-            ic->row_output_timeout = FE_SetTimeout(il_timeout_callback, ic,
+            ic->row_output_timeout = IL_SetTimeout(il_timeout_callback, ic,
                                                    ROW_OUTPUT_INITIAL_DELAY);
         }
     }
