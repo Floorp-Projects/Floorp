@@ -70,16 +70,23 @@ function GetArgs()
 	var separator = String.fromCharCode(1);
 
 	var quoteChar = "";
-	for (var i = 0; i < originalData.length; i ++)
+	var prevChar = "";
+	var nextChar = "";
+	for (var i = 0; i < originalData.length; i ++, prevChar = aChar)
 	{
 		var aChar = originalData.charAt(i)
 		var aCharCode = originalData.charCodeAt(i)
-		if (aChar == quoteChar)
+		if ( i < originalData.length - 1)
+			nextChar = originalData.charAt(i + 1);
+		else
+			nextChar = "";
+
+		if (aChar == quoteChar && (nextChar == "," || nextChar == ""))
 		{
 			quoteChar = "";
 			data += aChar;
 		}
-		else if (aCharCode == 39 || aCharCode == 34) //quote or double quote
+		else if ((aCharCode == 39 || aCharCode == 34) && prevChar == "=") //quote or double quote
 		{
 			if (quoteChar == "")
 				quoteChar = aChar;
