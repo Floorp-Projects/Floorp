@@ -248,13 +248,21 @@ nsImgManager::TestPermission(nsIURI *aCurrentURI,
     nsCAutoString firstHost;
     rv = aFirstURI->GetAsciiHost(firstHost);
     if (NS_FAILED(rv)) return rv;
+
+    // If the tail is longer then the whole firstHost, it will never match
+    if (firstHost.Length() < tail.Length()) {
+      *aPermission = PR_FALSE;
+      return NS_OK;
+    }
     
     // Get the last part of the firstUri with the same length as |tail|
-    const nsACString &firstTail = Substring(firstHost, dot, firstHost.Length() - dot);
+    const nsACString &firstTail = Substring(firstHost, firstHost.Length() - tail.Length(), tail.Length());
 
     // Check that both tails are the same, and that just before the tail in
     // |firstUri| there is a dot. That means both url are in the same domain
-    if ((dot > 0 && firstHost.CharAt(dot-1) != '.') || !tail.Equals(firstTail)) {
+    if ((firstHost.Length() > tail.Length() && 
+         firstHost.CharAt(firstHost.Length() - tail.Length() - 1) != '.') || 
+        !tail.Equals(firstTail)) {
       *aPermission = PR_FALSE;
       return NS_OK;
     }
