@@ -4,6 +4,7 @@ Desc: Installation script
 const displayName = "Mozilla Calendar";
 const name        = "MozillaCalendar";
 const version     = "0.8";
+const addLocales   = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
 
 initInstall(displayName, name, version);
 
@@ -33,21 +34,13 @@ if ( err == SUCCESS ) {
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/modern/calendar/");
    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "locale/en-US/calendar/");
 
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "cs-CZ/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "cy-GB/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "de-AT/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "es-ES/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "fr-FR/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "hu-HU/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "ja-JP/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "lt-LT/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "nl-NL/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "pl-PL/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "pt-BR/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "sk-SK/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "sl-SI/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "sv-SE/");
-   registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "wen-DE/");
+   for (var i = 0; i < addLocales.length; i++) {
+      chkJarFileName = addLocales[i] + ".jar";
+      tmp_f = getFolder("Chrome", chkJarFileName);
+      if ( File.exists(tmp_f) ) {
+        registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, addLocales[i] + "/");
+      }
+   }
 
    err = performInstall();
   
