@@ -48,13 +48,22 @@ AC_SUBST(DEBUG_FLAGS)
 dnl Check for Mozilla.
 dnl ========================================================
 AC_ARG_WITH(mozilla,
-[  --with-mozilla=\$dir        location of mozilla directory],
+[  --with-mozilla=\$dir     location of mozilla directory],
         MOZ_DIR=$withval,
 	AC_MSG_ERROR(You must specify where mozilla lives with --with-mozilla.))
 
 MOZILLA_DIR="${MOZ_DIR}"
 
+AC_ARG_WITH(nspr,
+[  --with-nspr=\$dir        location of nspr headers and libs],
+	NSPR_DIR=$withval, NSPR_DIR=)
+
+if test -z $NSPR_DIR; then
+	NSPR_DIR=$MOZILLA_DIR/dist
+fi
+
 AC_SUBST(MOZILLA_DIR)
+AC_SUBST(NSPR_DIR)
 
 AC_OUTPUT(
 Makefile
