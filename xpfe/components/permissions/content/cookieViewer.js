@@ -42,6 +42,10 @@ const cookieType = "cookie";
 const imageType = "image";
 const popupType = "popup";
 
+// XXX this needs to be defined publicly
+// see bug 225857 comment 7
+const ALLOW_SESSION_ONLY = 8;
+
 var dialogType = cookieType;
 if (window.arguments[0] == "imageManager")
   dialogType = imageType;
@@ -96,6 +100,8 @@ function Startup() {
       element.value = cookieBundle.getString("textBannedImages");
       element = document.getElementById("cookiesTab");
       element.hidden = "true";
+      element = document.getElementById("btnSession");
+      element.hidden = "true";
     } else {
       element = document.getElementById("cookieviewer");
       element.setAttribute("title", cookieBundle.getString("popupTitle"));
@@ -109,7 +115,6 @@ function Startup() {
     }
   } catch(e) {
   }
-
   // load in the cookies and permissions
   cookiesTree = document.getElementById("cookiesTree");
   permissionsTree = document.getElementById("permissionsTree");
@@ -432,28 +437,49 @@ function loadPermissions() {
   var enumerator = permissionmanager.enumerator;
   var count = 0;
   var contentStr;
-  var canStr, cannotStr;
-  if (dialogType == cookieType) {
-    canStr="can";
-    cannotStr="cannot";
-  } else if (dialogType == imageType) {
-    canStr="canImages";
-    cannotStr="cannotImages";
-  } else {
-    canStr="canPopups";
-    cannotStr="cannotPopups";
+  var canStr, cannotStr, canSessionStr;
+  switch (dialogType) {
+    case cookieType:
+      canStr="can";
+      canSessionStr="canSession";
+      cannotStr="cannot";
+      break;
+    case imageType:
+      canStr="canImages";
+      cannotStr="cannotImages";
+      break;
+    case popupType:
+      canStr="canPopups";
+      cannotStr="cannotPopups";
+      break;
+    default:
+      return;
   }
   while (enumerator.hasMoreElements()) {
     var nextPermission = enumerator.getNext();
     nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
     if (nextPermission.type == dialogType) {
       var host = nextPermission.host;
-      var capability = ( nextPermission.capability == nsIPermissionManager.ALLOW_ACTION ) ? true : false;
+      var capability;
+      switch (nextPermission.capability) {
+        case nsIPermissionManager.ALLOW_ACTION:
+          capability = canStr;
+          break;
+        case nsIPermissionManager.DENY_ACTION:
+          capability = cannotStr;
+          break;
+        case ALLOW_SESSION_ONLY:
+          // we should only hit this for cookies
+          capability = canSessionStr;
+          break;
+        default:
+          return;
+      }
       permissions[count] = 
         new Permission(count++, host,
                        (host.charAt(0)==".") ? host.substring(1,host.length) : host,
                        nextPermission.type,
-                       cookieBundle.getString(capability?canStr:cannotStr));
+                       cookieBundle.getString(capability));
     }
   }
   permissionsTreeView.rowCount = permissions.length;
@@ -501,8 +527,11 @@ function buttonEnabling(textfield) {
   // trim any leading space
   var site = textfield.value.replace(/^\s*([-\w]*:\/+)?/, "");
   var block = document.getElementById("btnBlock");
+  var session = document.getElementById("btnSession");
   var allow = document.getElementById("btnAllow");
   block.disabled = !site;
+  if (dialogType == cookieType)
+    session.disabled = !site;
   allow.disabled = !site;
 }
 
