@@ -24,6 +24,7 @@
 #include "nsILocale.h"
 #include "nsIDateTimeFormat.h"
 #include "nsCOMPtr.h"
+#include "MailNewsTypes.h"
 
 /**
  * The mail message source.
@@ -142,6 +143,14 @@ protected:
 								   nsIRDFNode **target);
 	nsresult createFlaggedStringFromFlag(PRUint32 flags, nsCAutoString &statusStr);
 
+	nsresult createMessagePriorityNode(nsIMessage *message,
+								   nsIRDFNode **target);
+
+	nsresult createPriorityString(nsMsgPriority priority, nsCAutoString &priorityStr);
+
+	nsresult createMessageSizeNode(nsIMessage *message,
+								   nsIRDFNode **target);
+
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
@@ -164,6 +173,8 @@ protected:
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
 	static nsIRDFResource* kNC_Flagged;
+	static nsIRDFResource* kNC_Priority;
+	static nsIRDFResource* kNC_Size;
 
 	// commands
 	static nsIRDFResource* kNC_MarkRead;
