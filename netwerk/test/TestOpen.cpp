@@ -40,7 +40,7 @@
 #include <nsString.h>
 #include <nsIURI.h>
 #include <nsIChannel.h>
-#include <nsIHTTPChannel.h>
+#include <nsIHttpChannel.h>
 #include <nsIInputStream.h>
 #include <nsNetUtil.h>
 
