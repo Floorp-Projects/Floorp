@@ -68,6 +68,14 @@ ifneq ($(OS_ARCH),WINNT)
 endif
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+ifneq ($(OS_TARGET),WIN16)
+    ASFILES  = mpi_x86.asm
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+endif
+endif
+
+
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(USE_N32),1)
     ASFILES  = mpi_mips.s
@@ -154,6 +162,9 @@ mp%.c : mpi/mp%.c
 	cd mpi; cp $@ ..
 
 mp%.s : mpi/mp%.s
+	cd mpi; cp $@ ..
+
+mp%.asm : mpi/mp%.asm
 	cd mpi; cp $@ ..
 
 logtab.h : mpi/logtab.h
