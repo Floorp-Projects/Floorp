@@ -75,8 +75,8 @@ class nsLDAPOperation : public nsILDAPOperation
 		  int sizelimit); // max # of entries to return
 
   protected:
-    PRInt32 mMsgId;
-    nsCOMPtr<nsILDAPConnection> mConnection;
+    nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
+    PRInt32 mMsgId;	     // opaque handle to outbound message for this op
     LDAP *mConnectionHandle; // cached from mConnection->GetConnectionHandle()
     static struct timeval sNullTimeval;
 };
