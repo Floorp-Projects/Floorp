@@ -220,7 +220,7 @@ nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
 
   aRenderingContext.SetColor(NS_RGB(0, 0, 0));
   aFrame->GetRect(pageBounds);
-  pageBounds.Inflate(p2t, p2t);
+  pageBounds.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
   aRenderingContext.DrawRect(pageBounds);
 }
 
@@ -258,86 +258,78 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
     }
   }
 
-  // Send the notification that we're beginning to print the document
-  if (!SendStatusNotification(aStatusCallback, -1, totalPages,
-                              ePrintStatus_StartDoc)) {
-    return NS_ERROR_ABORT;  // indicate client cancelled printing
-  }
-
   // Begin printing of the document
   nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+  nsIPresShell*     presShell = aPresContext.GetShell();
+  nsIViewManager*   vm = presShell->GetViewManager();
   nsresult          rv = NS_OK;
+  NS_RELEASE(presShell);
 
-  if (NS_FAILED(rv)) {
-    if (nsnull != aStatusCallback) {
-      aStatusCallback->OnError(ePrintError_Error);
-    }
-  
-  } else {
-    nsIPresShell*     presShell = aPresContext.GetShell();
-    nsIViewManager*   vm = presShell->GetViewManager();
-    NS_RELEASE(presShell);
-  
-    // Print each specified page
-    PRInt32 pageNum = 1;
-    for (nsIFrame* page = mFirstChild;
-         nsnull != page;
-         pageNum++, page->GetNextSibling(page)) {
+  // Print each specified page
+  PRInt32 pageNum = 1;
+  for (nsIFrame* page = mFirstChild;
+       nsnull != page;
+       pageNum++, page->GetNextSibling(page)) {
 
-      // If printing a range of pages check whether the page number is in the
-      // range of pages to print
-      if (ePrintRange_SpecifiedRange == aPrintOptions.range) {
-        if (pageNum < aPrintOptions.startPage) {
-          continue;
-        } else if (pageNum > aPrintOptions.endPage) {
-          break;
-        }
-      }
-  
-      // Start printing of the page
-      if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
-                                  ePrintStatus_StartPage)) {
-        rv = NS_ERROR_ABORT;
-        break;
-      }
-      rv = dc->BeginPage();
-      if (NS_FAILED(rv)) {
-        if (nsnull != aStatusCallback) {
-          aStatusCallback->OnError(ePrintError_Error);
-        }
-        break;
-      }
-  
-      // Print the page
-      nsIView*  view;
-      page->GetView(view);
-      NS_ASSERTION(nsnull != view, "no page view");
-      vm->Display(view);
-  
-      // Finish printing of the page
-      if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
-                                  ePrintStatus_EndPage)) {
-        rv = NS_ERROR_ABORT;
-        break;
-      }
-      rv = dc->EndPage();
-      if (NS_FAILED(rv)) {
-        if (nsnull != aStatusCallback) {
-          aStatusCallback->OnError(ePrintError_Error);
-        }
+    // If printing a range of pages check whether the page number is in the
+    // range of pages to print
+    if (ePrintRange_SpecifiedRange == aPrintOptions.range) {
+      if (pageNum < aPrintOptions.startPage) {
+        continue;
+      } else if (pageNum > aPrintOptions.endPage) {
         break;
       }
     }
-  
-    // Finish printing of the document
-    if (NS_FAILED(rv) && (nsnull != aStatusCallback)) {
-      aStatusCallback->OnError(ePrintError_Error);
+
+    // Check for printing of odd and even pages
+    if (pageNum & 0x1) {
+      // It's an odd page
+      if (!aPrintOptions.oddNumberedPages) {
+        continue;
+      }
+    } else  {
+      // It's an even page
+      if (!aPrintOptions.evenNumberedPages) {
+        continue;
+      }
     }
-    SendStatusNotification(aStatusCallback, pageNum - 1, totalPages,
-                           ePrintStatus_EndDoc);
-    NS_RELEASE(vm);
+
+    // Start printing of the page
+    if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
+                                ePrintStatus_StartPage)) {
+      rv = NS_ERROR_ABORT;
+      break;
+    }
+    rv = dc->BeginPage();
+    if (NS_FAILED(rv)) {
+      if (nsnull != aStatusCallback) {
+        aStatusCallback->OnError(ePrintError_Error);
+      }
+      break;
+    }
+
+    // Print the page
+    nsIView*  view;
+    page->GetView(view);
+    NS_ASSERTION(nsnull != view, "no page view");
+    vm->Display(view);
+
+    // Finish printing of the page
+    if (!SendStatusNotification(aStatusCallback, pageNum, totalPages,
+                                ePrintStatus_EndPage)) {
+      rv = NS_ERROR_ABORT;
+      break;
+    }
+    rv = dc->EndPage();
+    if (NS_FAILED(rv)) {
+      if (nsnull != aStatusCallback) {
+        aStatusCallback->OnError(ePrintError_Error);
+      }
+      break;
+    }
   }
 
+  NS_RELEASE(vm);
   NS_RELEASE(dc);
   return rv;
 }
