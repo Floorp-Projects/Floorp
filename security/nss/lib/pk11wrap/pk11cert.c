@@ -3848,6 +3848,7 @@ SEC_DeletePermCRL(CERTSignedCrl *crl)
     PK11SlotInfo *slot = crl->slot;
 
     if (slot == NULL) {
+        PORT_Assert(slot);
 	/* shouldn't happen */
 	PORT_SetError( SEC_ERROR_CRL_INVALID);
 	return SECFailure;
