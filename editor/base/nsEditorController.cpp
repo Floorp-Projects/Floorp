@@ -183,11 +183,13 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
 
 NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PRBool *aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
 }
 
 NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
   return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
 }
 
