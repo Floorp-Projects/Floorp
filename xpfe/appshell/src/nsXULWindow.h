@@ -111,15 +111,16 @@ protected:
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
    nsVoidArray             mContentShells;
-   PRBool                  mContinueModalLoop;
    nsresult                mModalStatus;
-   PRBool                  mDebuting;       // being made visible right now
-   PRBool                  mChromeLoaded; // True when chrome has loaded
-   PRBool                  mShowAfterLoad;
-   PRBool                  mIntrinsicallySized; 
-   PRBool                  mCenterAfterLoad;
-   PRBool                  mIsHiddenWindow;
-   PRBool                  mHadChildWindow;
+   PRPackedBool            mContinueModalLoop;
+   PRPackedBool            mDebuting;       // being made visible right now
+   PRPackedBool            mChromeLoaded; // True when chrome has loaded
+   PRPackedBool            mShowAfterLoad;
+   PRPackedBool            mIntrinsicallySized; 
+   PRPackedBool            mCenterAfterLoad;
+   PRPackedBool            mIsHiddenWindow;
+   PRPackedBool            mHadChildWindow;
+   PRPackedBool            mBeingDestroyed;
    unsigned long           mZlevel;
 };
 

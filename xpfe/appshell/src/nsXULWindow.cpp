@@ -97,10 +97,12 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
-   mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
+   mModalStatus(NS_OK), mContinueModalLoop(PR_FALSE),
+   mDebuting(PR_FALSE), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
    mCenterAfterLoad(PR_FALSE), mIsHiddenWindow(PR_FALSE),
-   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
+   mHadChildWindow(PR_FALSE), mBeingDestroyed(PR_FALSE),
+   mZlevel(nsIXULWindow::normalZ)
 {
   NS_INIT_REFCNT();
 }
@@ -306,6 +308,7 @@ NS_IMETHODIMP nsXULWindow::Create()
 
 NS_IMETHODIMP nsXULWindow::Destroy()
 {
+   mBeingDestroyed = PR_TRUE;
    if(!mWindow)
       return NS_OK;
 
@@ -1264,6 +1267,13 @@ NS_IMETHODIMP nsXULWindow::CreateNewWindow(PRInt32 aChromeFlags,
    nsIXULWindow **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+
+  /* Prevent windows being shut down from opening new windows in their
+     onUnload handler. This is abused by many websites (you're thinking
+     porn sites, but I should also mention CNN) and in my opinion just
+     shouldn't work. If you think it should, see bugzilla bug 115969). */
+  if (mBeingDestroyed)
+    return NS_ERROR_FAILURE;
 
   if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
     return CreateNewChromeWindow(aChromeFlags, _retval);
