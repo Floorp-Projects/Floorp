@@ -5467,12 +5467,14 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 
     nsAutoString alertText;
     nsXPIDLString str;
-    rv = GetNewsStringByName("newsError", getter_Copies(str));
+    rv = GetNewsStringByID(MK_NNTP_ERROR_MESSAGE, getter_Copies(str));
     NS_ENSURE_SUCCESS(rv,rv);
 	alertText.Append(str);
 
-	  if (text)
-		  alertText.AppendWithConversion(text);
+	if (text) {
+	    alertText.Append(NS_LITERAL_STRING(" ").get());
+		alertText.AppendWithConversion(text);
+    }
 
 	rv = dialog->Alert(nsnull, alertText.GetUnicode());
     NS_ENSURE_SUCCESS(rv, rv);
