@@ -24,6 +24,7 @@ VIEWER MENU DISCARDABLE
 {
   POPUP "&File"
   {
+    MENUITEM "&New Window", VIEWER_WINDOW_OPEN
     MENUITEM "&Open...", VIEWER_FILE_OPEN
     POPUP "&Samples"
     {

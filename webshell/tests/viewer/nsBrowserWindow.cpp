@@ -313,6 +313,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     mApp->Exit();
     return nsEventStatus_eConsumeNoDefault;
 
+  case VIEWER_WINDOW_OPEN:
+    mApp->OpenWindow();
+    break;
+  
   case VIEWER_FILE_OPEN:
     DoFileOpen();
     break;
@@ -1057,6 +1061,13 @@ nsBrowserWindow::Hide()
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   mWindow->Show(PR_FALSE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::Close()
+{
+  Destroy();
   return NS_OK;
 }
 

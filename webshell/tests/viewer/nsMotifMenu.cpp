@@ -168,6 +168,7 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
   menuBar = XmCreateMenuBar(aParent, "menubar", NULL, 0);
 
   fileMenu   = CreatePulldownMenu(menuBar,  "File", 'F');
+  CreateMenuItem(fileMenu, "New Window", VIEWER_WINDOW_OPEN, aCallback);
   CreateMenuItem(fileMenu, "Open...", VIEWER_FILE_OPEN, aCallback);
 
   menu = CreatePulldownMenu(fileMenu, "Samples", 'S');
@@ -199,6 +200,7 @@ void CreateViewerMenus(Widget aParent, MenuCallbackProc aCallback)
 
   menu = CreatePulldownMenu(menuBar,  "Tools", 'T');
   CreateMenuItem(menu, "Java Script Console", JS_CONSOLE, aCallback);
+  CreateMenuItem(menu, "Editor Mode", EDITOR_MODE, aCallback);
 
   XtManageChild(menuBar);
 

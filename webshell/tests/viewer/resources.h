@@ -23,6 +23,7 @@
 #define VIEWER_EXIT             40002
 #define PREVIEW_CLOSE           40003
 
+#define VIEWER_WINDOW_OPEN      40009
 #define VIEWER_FILE_OPEN        40010
 
 // Note: must be in ascending sequential order
