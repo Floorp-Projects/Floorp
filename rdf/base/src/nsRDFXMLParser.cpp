@@ -24,8 +24,8 @@
 #include "nsIComponentManager.h"
 #include "nsIParser.h"
 #include "nsIRDFContentSink.h"
-#include "nsIStringStream.h"
 #include "nsParserCIID.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -126,13 +126,20 @@ nsRDFXMLParser::ParseString(nsIRDFDataSource* aSink, nsIURI* aBaseURI, const nsA
 
     nsString copy(aString); // XXX sucks, but I ain't touchin' nsIStringStream!
 
-    nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewStringInputStream(getter_AddRefs(stream), copy);
+    nsCOMPtr<nsISupports> isupports;
+    rv = NS_NewStringInputStream(getter_AddRefs(isupports), copy);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(isupports, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    listener->OnStartRequest(nsnull, nsnull);
-    listener->OnDataAvailable(nsnull, nsnull, stream, 0, aString.Length());
-    listener->OnStopRequest(nsnull, nsnull, NS_OK);
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aBaseURI,
+                                  stream, "text/xml", aString.Length());
+    if (NS_FAILED(rv)) return rv;
+
+    listener->OnStartRequest(channel, nsnull);
+    listener->OnDataAvailable(channel, nsnull, stream, 0, aString.Length());
+    listener->OnStopRequest(channel, nsnull, NS_OK);
 
     return NS_OK;
 }
