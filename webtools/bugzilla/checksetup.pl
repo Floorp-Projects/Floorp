@@ -773,7 +773,15 @@ my $drh = DBI->install_driver($db_base)
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.22.5";  # minimum version of MySQL
+    # XXX - as part of the fix for dataloss bug 107718, we need the ~ 
+    # operator, which isn't available in earlier versions, despite what
+    # the docs say. This is temporary, as we won't need bit fiddling
+    # once bug 60822 is fixed.
+    # A requirement for 3.23.x may become permenant though - see
+    # http://bugzilla.mozilla.org/show_bug.cgi?id=87958
+    my $sql_want = "3.23.5";
+
+    #my $sql_want = "3.22.5";  # minimum version of MySQL
 
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
