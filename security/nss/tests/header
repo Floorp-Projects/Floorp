@@ -200,6 +200,7 @@ glob_init()
     fi
                         # if running from cron HOST needs to be known early, 
     init_host            # so the output file name can be constructed. 
+    Debug "Setting up environment...( $QASCRIPT_DIR/set_environment) "
     . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
     Debug "OPerating system: $os_name $os_full"
     if [ $O_WIN = "ON" ] ; then
@@ -280,7 +281,7 @@ find_nt_masterbuild()
 ########################################################################
 set_daily_build_dirs()
 {
-    if [ "$O_LOCAL" = "ON" ] ; then
+    if [ "$O_LOCAL" = "ON" -a "$O_LN" = "OFF" ] ; then
         DAILY_BUILD=${LOCAL_MOZROOT}        # on local builds NSS_VER_DIR and DAILY_BUILD are 
                              # set to the LOCAL_MOZROOT, since it is not sure
                              # if ../.. (DAILY_BUILD) even exists
@@ -294,6 +295,34 @@ set_daily_build_dirs()
     fi
 }
 
+map_os64()
+{
+  IS_64=""
+  case `uname -s` in
+      #OSF1) has been done already - always 64 bit
+      SunOS)
+          MAPPED_OS=Solaris*8
+          IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
+          if [ "$O_TBX" = "OFF" ] ; then
+              set_osdir
+              if [ -n "$IS_64" ]
+              then #Wait for the 64 bit build to finish...
+                  Debug Testing build for $MAPPED_OS in $OSDIR
+                  Wait ${OSDIR}/SVbuild.InProgress.1 0
+              fi
+          fi
+          ;;
+      AIX)
+          IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
+          ;;
+      HP-UX)
+          IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
+          ;;
+  esac
+  Debug "Mapped OS to $MAPPED_OS"
+}
+
+
 
 ################################### copy_to_local ########################
 # global shell function, copies the necessary directories from the 
@@ -301,24 +330,67 @@ set_daily_build_dirs()
 ########################################################################
 copy_to_local()
 {
+    Debug "Copy network directories to local directories"
+    C2L_ERROR=0
     if [ ! -d ${LOCAL_MOZROOT}/dist ] ; then
-        mkdir ${LOCAL_MOZROOT}/dist
+        mkdir -p ${LOCAL_MOZROOT}/dist || C2L_ERROR=1
     fi
     if [ ! -d ${LOCAL_MOZROOT}/security/nss ] ; then
-        mkdir ${LOCAL_MOZROOT}/security/nss
+        mkdir -p ${LOCAL_MOZROOT}/security/nss || C2L_ERROR=2
+    fi
+    if [ $C2L_ERROR != 0 ] ; then
+        Exit "copy_to_local: Can t make necesssary directories ($C2L_ERROR ) "
     fi
     if [ ! -d ${LOCAL_MOZROOT}/security/nss/tests ] ; then
-        cp -r ${TESTSCRIPTDIR} ${LOCAL_MOZROOT}/security/nss
+        cp -r ${TESTSCRIPTDIR} ${LOCAL_MOZROOT}/security/nss || C2L_ERROR=1
     fi
     if [ ! -d ${LOCAL_MOZROOT}/security/coreconf ] ; then
-        cp -r ${MOZILLA_ROOT}/security/coreconf ${LOCAL_MOZROOT}/security
+        cp -r ${MOZILLA_ROOT}/security/coreconf ${LOCAL_MOZROOT}/security || C2L_ERROR=2
     fi
-    if [ ! -d ${LOCAL_MOZROOT}/dist/${OBJDIR} ] ; then
-        cp -r ${LOCALDIST}/${OBJDIR}
+    
+    NO_DIRS=0;
+    if [ "$O_WIN" = "ON" ] ; then
+        OS_TARGET=WINNT;export OS_TARGET
+    fi
+    unset BUILD_OPT;export BUILD_OPT;
+    unset USE_64;export USE_64;
+#FIXME only tested on 64 bit Solaris and only got 32 bit builds
+    while [ $NO_DIRS -lt 4 ] ; do
+                                                  # first time thru: Debug 32 bit NT
+        set_objdir
+        Debug "Copying ${OBJDIR}..."
+        if [ ! -d ${LOCAL_MOZROOT}/dist/${OBJDIR} ] ; then
+            cp -r ${LOCALDIST}/${OBJDIR} ${LOCAL_MOZROOT}/dist || C2L_ERROR=3
+        fi
+        NO_DIRS=`expr $NO_DIRS + 1`
+        if [ $NO_DIRS = 1 ] ; then                # 2nd time: OPT 32 bit NT
+            BUILD_OPT=1; export BUILD_OPT;
+        elif [ $NO_DIRS = 2 ] ; then              # 3rd time: OPT, either 64 bit or Win95 or force exit
+            if [ "$O_WIN" = "ON" ] ; then
+                OS_TARGET=WIN95;export OS_TARGET
+            else
+                map_os64
+                if [ -z "$IS_64" ] ; then #32 bit platform
+                    NO_DIRS=4
+                else
+                    USE_64=1; export USE_64
+                fi
+            fi
+        elif [ $NO_DIRS = 3 ] ; then              # 4th time:  Debug either 64 bit or Win95
+            unset BUILD_OPT;export BUILD_OPT;
+        fi
+     
+            
+    done
+    if [ $C2L_ERROR != 0 ] ; then
+        Exit "copy_to_local: Can t copy necesssary directories ($C2L_ERROR ) "
     fi
     unset TESTSCRIPTDIR
     unset TESTDIR
     unset RESULTDIR
+    O_LN=OFF       #from here on pretend it is regular -l local QA FIXME, might cause 
+                   #problems with the backwardcompatibility tests
+    Debug "Successfully copied network directories to local directories"
 }
 
 ################################### local_dirs ###########################
@@ -432,6 +504,7 @@ init_dirs()
     else
         NSS_VER_DIR="$UX_D0"/nss$NSSVER
     fi
+    #set -x
 
     set_daily_build_dirs
 
@@ -473,11 +546,12 @@ init_dirs()
     fi
 
     COMMON=${TESTSCRIPTDIR}/common
-    if [ "$O_LOCAL" = "ON" -a $O_LN = "OFF" ] ; then  # if it is a LN we need to know
+    if [ "$O_LOCAL" = "ON" -a $O_LN = "ON" ] ; then  # if it is a LN we need to know
                        # all the directories off the network first to copy them
         copy_to_local
         local_dirs     
     fi
+    #set +x
 
 
     set_objdir
@@ -639,6 +713,7 @@ eval_opts()
             O_SILENT=ON
             ;;
         -Y*|-y)
+            Debug "Option -y dedectet"
             O_ALWAYS_YES=ON
             ;;
         -d*|-D)

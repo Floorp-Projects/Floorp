@@ -173,33 +173,6 @@ map_os32()
     set_osdir
     Debug "Mapped OS to $MAPPED_OS"
 }
-map_os64()
-{
-  IS_64=""
-  case `uname -s` in
-      #OSF1) has been done already - always 64 bit
-      SunOS)
-          MAPPED_OS=Solaris*8
-          IS_64=`(isainfo -v | grep 64)>/dev/null 2>/dev/null && echo 64 bit`
-          if [ "$O_TBX" = "OFF" ] ; then
-              set_osdir
-              if [ -n "$IS_64" ] 
-              then #Wait for the 64 bit build to finish...
-                  Debug Testing build for $MAPPED_OS in $OSDIR
-                  Wait ${OSDIR}/SVbuild.InProgress.1 0     
-              fi
-          fi
-          ;;
-      AIX)
-          IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
-          ;;
-      HP-UX)
-          IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
-          ;;
-  esac
-  Debug "Mapped OS to $MAPPED_OS"
-}
-  
 
 ############################# nssqa_main ###############################
 # local shell function main controlling function of the nss qa
@@ -272,7 +245,7 @@ nssqa_main()
   
 TEST_LEVEL=0
 
-while [ $TEST_LEVEL -lt 2 ] ; do
+while [ $TEST_LEVEL -lt 2 ] ; do 
     export TEST_LEVEL
     unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
     unset USE_64;export USE_64;Debug "USE_64 $USE_64"
@@ -290,7 +263,9 @@ while [ $TEST_LEVEL -lt 2 ] ; do
     fi
 done
 
-if [  "$O_TBX" = "ON" ] ; then
+if [  "$O_TBX" = "ON" -o "$O_LOCAL" = "ON" ] ; then
+#FIXME - maybe it should be copied back to the networkdrive later (-ln)
+    Debug "running qa_stat"
     . `dirname $0`/qa_stat
 fi
 
