@@ -739,7 +739,7 @@ NS_METHOD nsContextMenu::SetWebShell(nsIWebShell * aWebShell)
   return NS_OK;
 }
 
-char* GetACPString(nsString& aStr)
+char* nsContextMenu::GetACPString(nsString& aStr)
 {
    int acplen = aStr.Length() * 2 + 1;
    char * acp = new char[acplen];
