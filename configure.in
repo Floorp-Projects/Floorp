@@ -881,7 +881,7 @@ case "$target" in
 *-aix*)
     AC_DEFINE(AIX)
     if test ! "$GNU_CC"; then
-        DSO_LDOPTS='-qmkshrobj=1 -G -bnoentry'
+        DSO_LDOPTS='-qmkshrobj=1'
         DSO_CFLAGS='-qflag=w:w'
         DSO_PIC_CFLAGS=
         LDFLAGS="$LDFLAGS -Wl,-brtl -blibpath:/usr/lib:/lib"
@@ -902,6 +902,8 @@ case "$target" in
             AC_MSG_RESULT([yes])    
         fi
         AC_LANG_RESTORE
+        CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
+        CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
     fi
     case "${target_os}" in
     aix4.1*)
