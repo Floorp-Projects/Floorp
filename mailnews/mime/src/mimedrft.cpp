@@ -77,7 +77,7 @@ int                 mime_decompose_file_output_fn ( char *buf, PRInt32 size, voi
 int                 mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
-static nsString& mime_decode_string(const char* str , 
+static nsString& mime_decode_string(const char* str , const char* defaultCharset, 
                                     PRBool eatContinuations = PR_TRUE);
 
 // CID's
@@ -227,11 +227,12 @@ mime_dump_attachments ( attachmentList );
   return rv;
 }
 
-static nsString& mime_decode_string(const char* str, 
+static nsString& mime_decode_string(const char* str, const char* defaultCharset, 
                                     PRBool eatContinuations)
 {
     static nsString decodedString;
     nsString encodedCharset;
+    encodedCharset.AssignWithConversion(defaultCharset);  // in case the header has no charset specified
     nsMsgI18NDecodeMimePartIIStr(NS_ConvertASCIItoUCS2(str), encodedCharset,
                                  decodedString, eatContinuations);
     return decodedString;
@@ -269,21 +270,21 @@ CreateCompositionFields(const char        *from,
 
   // Now set all of the passed in stuff...
   cFields->SetCharacterSet(NS_ConvertASCIItoUCS2(charset).GetUnicode());
-  cFields->SetFrom(mime_decode_string(from).GetUnicode());
-  cFields->SetSubject(mime_decode_string(subject).GetUnicode());
-  cFields->SetReplyTo(mime_decode_string(reply_to).GetUnicode());
-  cFields->SetTo(mime_decode_string(to).GetUnicode());
-  cFields->SetCc(mime_decode_string(cc).GetUnicode());
-  cFields->SetBcc(mime_decode_string(bcc).GetUnicode());
-  cFields->SetFcc(mime_decode_string(fcc).GetUnicode());
-  cFields->SetNewsgroups(mime_decode_string(newsgroups).GetUnicode());
-  cFields->SetFollowupTo(mime_decode_string(followup_to).GetUnicode());
-  cFields->SetOrganization(mime_decode_string(organization).GetUnicode());
-  cFields->SetReferences(mime_decode_string(references).GetUnicode());
-  cFields->SetOtherRandomHeaders(mime_decode_string(other_random_headers).GetUnicode());
-  cFields->SetPriority(mime_decode_string(priority).GetUnicode());
-  cFields->SetAttachments(mime_decode_string(attachment).GetUnicode());
-  cFields->SetNewspostUrl(mime_decode_string(newspost_url).GetUnicode());
+  cFields->SetFrom(mime_decode_string(from, charset).GetUnicode());
+  cFields->SetSubject(mime_decode_string(subject, charset).GetUnicode());
+  cFields->SetReplyTo(mime_decode_string(reply_to, charset).GetUnicode());
+  cFields->SetTo(mime_decode_string(to, charset).GetUnicode());
+  cFields->SetCc(mime_decode_string(cc, charset).GetUnicode());
+  cFields->SetBcc(mime_decode_string(bcc, charset).GetUnicode());
+  cFields->SetFcc(mime_decode_string(fcc, charset).GetUnicode());
+  cFields->SetNewsgroups(mime_decode_string(newsgroups, charset).GetUnicode());
+  cFields->SetFollowupTo(mime_decode_string(followup_to, charset).GetUnicode());
+  cFields->SetOrganization(mime_decode_string(organization, charset).GetUnicode());
+  cFields->SetReferences(mime_decode_string(references, charset).GetUnicode());
+  cFields->SetOtherRandomHeaders(mime_decode_string(other_random_headers, charset).GetUnicode());
+  cFields->SetPriority(mime_decode_string(priority, charset).GetUnicode());
+  cFields->SetAttachments(mime_decode_string(attachment, charset).GetUnicode());
+  cFields->SetNewspostUrl(mime_decode_string(newspost_url, charset).GetUnicode());
 
   return cFields;
 }
@@ -559,7 +560,7 @@ mime_intl_insert_message_header_1(char        **body,
 		mime_SACat(body, ": ");
 
   // MIME decode header and convert to UTF-8
-  nsAutoString ucs2(mime_decode_string(*hdr_value));
+  nsAutoString ucs2(mime_decode_string(*hdr_value, mailcharset));
   char* utf8 = ucs2.ToNewUTF8String();
   if (NULL != utf8) {
     mime_SACat(body, utf8);
@@ -1182,13 +1183,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
       refs = MimeHeaders_get(mdd->headers, HEADER_REFERENCES,  PR_FALSE, PR_TRUE);
       priority = MimeHeaders_get(mdd->headers, HEADER_X_PRIORITY, PR_FALSE, PR_FALSE);
       
-      mime_intl_mimepart_2_str(&repl, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&to, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&cc, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&bcc, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&grps, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&foll, mdd->mailcharset);
-      mime_intl_mimepart_2_str(&host, mdd->mailcharset);
       
       if (host) 
       {
@@ -1207,7 +1201,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
       }
     }
     
-    mime_intl_mimepart_2_str(&subj, mdd->mailcharset);
     
     fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
       org, subj, refs, 0, priority, 0, news_host,

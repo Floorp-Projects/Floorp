@@ -952,7 +952,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       nsAutoString subjectStr;
       nsAutoString aCharset;
       nsAutoString decodedString;
-      nsAutoString encodedCharset;  // we don't use this
+      nsAutoString encodedCharset;
       nsXPIDLCString charset;
 
       char *aCString = nsnull;
@@ -996,8 +996,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.IsEmpty())
           {
-            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
-            m_compFields->SetCharacterSet(aCharsetCStr);
+            m_compFields->SetCharacterSet(aCharset.GetUnicode());
+            // set an original charset so MIME decoder can use it in case the header has no label
+            encodedCharset = aCharset;
            }
         
           subjectStr.AppendWithConversion("Re: ");
