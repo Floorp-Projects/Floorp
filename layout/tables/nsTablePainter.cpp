@@ -345,7 +345,10 @@ TableBackgroundPainter::TranslateContext(nscoord aDX,
     for (PRUint32 i = 0; i < mNumCols; i++) {
       mCols[i].mCol.mRect.MoveBy(-aDX, -aDY);
       if (lastColGroup != mCols[i].mColGroup) {
-        NS_ASSERTION(mCols[i].mColGroup, "colgroup data should not be null");
+        NS_ASSERTION(mCols[i].mColGroup, "colgroup data should not be null - bug 237421");
+        // we need to wallpaper a over zero pointer deref, bug 237421 will have the real fix
+        if (!mCols[i].mColGroup)
+          return;
         mCols[i].mColGroup->mRect.MoveBy(-aDX, -aDY);
         lastColGroup = mCols[i].mColGroup;
       }
