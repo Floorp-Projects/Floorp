@@ -95,6 +95,7 @@ function onNewAccount() {
 function refreshAccounts()
 {
   var tree = document.getElementById("accounttree");
+  tree.clearItemSelection();
   tree.setAttribute('ref', tree.getAttribute('ref'));
 }
 
