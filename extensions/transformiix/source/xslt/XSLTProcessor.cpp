@@ -35,7 +35,10 @@
  * Nathan Pride, npride@wavo.com
  *    -- fixed a document base issue
  *
- * $Id: XSLTProcessor.cpp,v 1.15 2000/06/11 16:56:06 Peter.VanderBeken%pandora.be Exp $
+ * Olivier Gerardin
+ *    -- Changed behavior of passing parameters to templates
+ *
+ * $Id: XSLTProcessor.cpp,v 1.16 2000/06/19 07:09:02 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -50,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.15 $ $Date: 2000/06/11 16:56:06 $
+ * @version $Revision: 1.16 $ $Date: 2000/06/19 07:09:02 $
 **/
 
 /**
@@ -369,7 +372,7 @@ void XSLTProcessor::processTopLevel
 
     Element* stylesheet = xslDocument->getDocumentElement();
     processTopLevel(stylesheet, ps);
-   
+
 }
 
 void XSLTProcessor::processTopLevel
@@ -703,7 +706,7 @@ void XSLTProcessor::bindVariable
         }
         else {
             //-- error cannot rebind variables
-            String err("error cannot rebind variables: ");
+            String err("cannot rebind variables: ");
             err.append(name);
             err.append(" already exists in this scope.");
             notifyError(err);
@@ -899,7 +902,12 @@ void XSLTProcessor::processAction
                     //-- push nodeSet onto context stack
                     ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
-                        process(nodeSet->get(i), node, mode, ps);
+                        Element* xslTemplate = ps->findTemplate(nodeSet->get(i), node, mode);
+                        if ( xslTemplate ) {
+                            NamedMap* actualParams = processParameters(actionElement, node, ps);
+                            processTemplate(nodeSet->get(i), xslTemplate, ps, actualParams);
+                            delete actualParams;
+                        }
                     }
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
@@ -958,6 +966,13 @@ void XSLTProcessor::processAction
                 if ( templateName.length() > 0 ) {
                     Element* xslTemplate = ps->getNamedTemplate(templateName);
                     if ( xslTemplate ) {
+                        //-- new code from OG
+                        NamedMap* actualParams = processParameters(actionElement, node, ps);
+                        processTemplate(node, xslTemplate, ps, actualParams);
+                        delete actualParams;
+                        //-- end new code OG
+                        /*
+                          //-- original code
                         NamedMap params;
                         params.setObjectDeletion(MB_TRUE);
                         Stack* bindings = ps->getVariableSetStack();
@@ -966,6 +981,7 @@ void XSLTProcessor::processAction
                         processParameters(actionElement, node, ps);
                         processTemplate(node, xslTemplate, ps);
                         bindings->pop();
+                        */
                     }
                 }
                 else {
@@ -1412,18 +1428,27 @@ void XSLTProcessor::processAttrValueTemplate
 } //-- processAttributeValueTemplate
 
 /**
- * Processes the xsl:with-param elements of the given xsl action
- * Only processes xsl:with-params that have a corresponding
- * xsl:param already in the current VariableSet
+ * Processes the xsl:with-param child elements of the given xsl action.
+ * A VariableBinding is created for each actual parameter, and
+ * added to the result NamedMap. At this point, we do not care
+ * whether the actual parameter matches a formal parameter of the template
+ * or not.
+ * @param xslAction the action node that takes parameters (xsl:call-template
+ *   or xsl:apply-templates
+ * @param context the current context node
+ * @ps the current ProcessorState
+ * @return a NamedMap of variable bindings
 **/
-void XSLTProcessor::processParameters(Element* xslAction, Node* context, ProcessorState* ps)
+NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, ProcessorState* ps)
 {
-    if ( !xslAction ) return;
+    NamedMap* params = new NamedMap();
+
+    if ( !xslAction ) {
+      return params;
+    }
 
     //-- handle xsl:with-param elements
     NodeList* nl = xslAction->getChildNodes();
-    Stack* bindings = ps->getVariableSetStack();
-    NamedMap* current = (NamedMap*)bindings->peek();
     for (int i = 0; i < nl->getLength(); i++) {
         Node* tmpNode = nl->item(i);
         int nodeType = tmpNode->getNodeType();
@@ -1437,20 +1462,34 @@ void XSLTProcessor::processParameters(Element* xslAction, Node* context, Process
                     notifyError("missing required name attribute for xsl:with-param");
                 }
                 else {
-                    if ( current->get(name) ) {
-                        ExprResult* exprResult = processVariable(context, action, ps);
-                        bindVariable(name, exprResult, MB_FALSE, ps);
-                    }
+                    ExprResult* exprResult = processVariable(context, action, ps);
+                    if (params->get(name)) {
+                    //-- error cannot rebind parameters
+                    String err("value for parameter '");
+                    err.append(name);
+                    err.append("' specified more than once.");
+                    notifyError(err);
+                }
+                else {
+                    VariableBinding* binding = new VariableBinding(name, exprResult);
+                    params->put((const String&)name, binding);
                 }
             }
         }
     }
+    return params;
 } //-- processParameters
 
 /**
- *  Processes the set of nodes using the given context, and ProcessorState
+ * Processes the specified template using the given context, ProcessorState, and actual
+ * parameters.
+ * @param xslTemplate the template to be processed
+ * @ps the current ProcessorState
+ * @param params a NamedMap of variable bindings that contain the actual parameters for
+ *   the template. Parameters that do not match a formal parameter of the template (i.e.
+ *   there is no corresponding xsl:param in the template definition) will be discarded.
 **/
-void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps) {
+void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* params) {
 
     if ( !xslTemplate ) {
         //-- do default?
@@ -1460,6 +1499,7 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
         NamedMap localBindings;
         localBindings.setObjectDeletion(MB_TRUE);
         bindings->push(&localBindings);
+        processTemplateParams(xslTemplate, node, ps, params);
         NodeList* nl = xslTemplate->getChildNodes();
         for (int i = 0; i < nl->getLength(); i++)
             processAction(node, nl->item(i), ps);
@@ -1468,10 +1508,18 @@ void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorStat
 } //-- processTemplate
 
 /**
- *  Processes the set of nodes using the given context, and ProcessorState
+ * Builds the initial bindings for the template. Formal parameters (xsl:param) that
+ *   have a corresponding binding in actualParams are bound to the actual parameter value,
+ *   otherwise to their default value. Actual parameters that do not match any formal
+ *   parameter are discarded.
+ * @param xslTemplate the template node
+ * @param context the current context node
+ * @param ps the current ProcessorState
+ * @param actualParams a NamedMap of variable bindings that contains the actual parameters
 **/
 void XSLTProcessor::processTemplateParams
-    (Node* xslTemplate, Node* context, ProcessorState* ps) {
+    (Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams)
+{
 
     if ( xslTemplate ) {
         NodeList* nl = xslTemplate->getChildNodes();
@@ -1490,8 +1538,20 @@ void XSLTProcessor::processTemplateParams
                         notifyError("missing required name attribute for xsl:param");
                     }
                     else {
-                        ExprResult* exprResult = processVariable(context, action, ps);
-                        bindVariable(name, exprResult, MB_TRUE, ps);
+                        VariableBinding* binding = 0;
+                        if (actualParams) {
+                            binding = (VariableBinding*) actualParams->get((const String&)name);
+                        }
+                        if (binding) {
+                            // the formal parameter has a corresponding actual parameter, use it
+                            ExprResult* exprResult = binding->getValue();
+                            bindVariable(name, exprResult, MB_FALSE, ps);
+                        }
+                        else {
+                            // no actual param, use default
+                            ExprResult* exprResult = processVariable(context, action, ps);
+                            bindVariable(name, exprResult, MB_FALSE, ps);
+                        }
                     }
                 }
                 else break;
@@ -1661,7 +1721,7 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
     aStyleDOM->GetOwnerDocument(getter_AddRefs(styleDOMDocument));
     Document* xslDocument = new Document(styleDOMDocument);
     Element styleElement(aStyleDOM, xslDocument);
-    
+
     Document* resultDocument = new Document(aOutputDoc);
 
     //-- create a new ProcessorState
@@ -1683,7 +1743,7 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
     }
     else
         ps->setDocumentBase("");
-    
+
     //-- add error observers
 
       //------------------------------------------------------/
