@@ -67,6 +67,7 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/test3.css \
 		$(srcdir)/xul/tests/test3-output-default.css \
 		$(srcdir)/xul/tests/test3-output-marble.css \
+		$(srcdir)/xul/tests/test3-output-loud.css \
 		$(srcdir)/xul/tests/test3-static.js \
 		$(srcdir)/xul/tests/test3-handlers.js \
 		$(srcdir)/xul/tests/test3-commands.js \

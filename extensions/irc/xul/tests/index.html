@@ -32,30 +32,53 @@
 	if (navigator.userAgent.indexOf ("Mozilla/5.0") == -1)
 	  document.write ("<h1>The IRC Clients require Mozilla/5.0," +
 	                  "Things won't work for you.</h1>");
-      </script>  
-      Welcome to the Mozilla IRC client tests page.  From here you
-      can <a href="#samples">select a sample client</a> to try out.
-      It appears that you
-      <b>
-        <script language="javascript">
-          if (Components.classes["component://misc/bs/connection"])
-	     document.write ("do");
-          else
-            document.write ("do not");
-        </script>
-      </b>
-      have the shared object properly installed, and you 
-      <b>
-        <script language="javascript">
-          if (Components.interfaces.bsIConnection)
-            document.write ("do");
-          else
-            document.write ("do not");
-        </script>
-      </b>
-      have the interface definition properly installed.
+      </script>
+      Welcome to the Mozilla IRC client tests page.  If you are generally 
+      impatient, you can jump right to 
+      <a href="#samples">the sample clients</a>, if not, read on.
+
+      <center>
+	<table border="1" bgcolor="lightgrey">
+	  <tr>
+	    <th>
+	      File
+	    </th>
+	    <th>
+	      Status (blank is bad<a href="#security">*</a>)
+	    </th>
+	  </tr>
+	  <tr>
+	    <td>
+	      Component binary (libbs.so, or bs.dll)
+	    </td>	
+	    <td>
+	      <script language="javascript">
+		if (Components.classes["component://misc/bs/connection"])
+		  document.write ("OK");
+		else
+                  document.write ("Missing");
+	      </script>
+	    </td>
+	  </tr>
+	  <tr>
+	    <td>
+	      Type Library (bs.xpt)
+	    </td>
+	    <td>
+	      <script language="javascript">
+		if (Components.interfaces.bsIConnection)
+	          document.write ("OK");
+		else
+		  document.write ("Missing");
+	      </script>
+	    </td>
+	  </tr>
+	</table>
+      </center>
+
     <p>
-      If either of these files are not properly installed, the IRC client
+      If either of the files in the table above are not properly installed,
+      the IRC client
       will not be able to create a a socket connection, and will be mostly
       useless.  The shared object
       is called libbs.so on Unix, and bs.dll on Windows (It is not yet 
@@ -65,21 +88,20 @@
       related to the IRC client is either JavaScript, XUL, or HTML, and
       therefore is platform independant.
     <p>
+      <a name="security"></a>
       Currently, the security code which prevents unsigned scripts from 
-      doing Bad Things is incomplete.  In order to work around this limitation,
-      you must edit your <b>all.js</b> file, changing the lines:
+      doing Bad Things is incomplete.  If the status boxes above are blank,
+      this is most likely the cause.  In order to work around this limitation,
+      you must edit your <b>all.js</b> file, changing line:
       <pre>
-pref("security.checkdomprops", true);
 pref("security.checkxpconnect", true);
       </pre>
       To read:
       <pre>
-pref("security.checkdomprops", false);
 pref("security.checkxpconnect", false);
       </pre>
       This will disable the security code so that the IRC client can create
-      the XPCOM component it needs, and dynamically add content to the output
-      window.
+      the XPCOM component it needs.
     <p>
       <a name="samples">
       <hr>
@@ -127,7 +149,7 @@ pref("security.checkxpconnect", false);
     <address><a href="mailto:rginda@ndcico.com"></a></address>
 <!-- Created: Wed Sep 15 23:34:25 XXX 1999 -->
 <!-- hhmts start -->
-Last modified: Tue Oct 26 16:42:09 PDT 1999
+Last modified: Thu Oct 28 20:07:26 PDT 1999
 <!-- hhmts end -->
   </body>
 </html>

@@ -64,6 +64,7 @@ TESTFILES = \
     .\xul\tests\test3.css \
     .\xul\tests\test3-output-default.css \
     .\xul\tests\test3-output-marble.css \
+    .\xul\tests\test3-output-loud.css \
     .\xul\tests\test3-static.js \
     .\xul\tests\test3-handlers.js \
     .\xul\tests\test3-commands.js \
