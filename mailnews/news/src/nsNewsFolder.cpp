@@ -544,8 +544,11 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
-	// do we need to hash newsgroup name if it is too big?
-	path += (const char *) newsgroupname;
+
+    // remember, some file systems (like mac) can't handle long file names
+    nsCAutoString hashedName = newsgroupname;
+    rv = NS_MsgHashIfNecessary(hashedName);
+	path += (const char *) hashedName;
 	
 	rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {

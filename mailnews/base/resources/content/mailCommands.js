@@ -314,25 +314,30 @@ function Subscribe(preselectedMsgFolder)
 function SubscribeOKCallback(changeTable)
 {
 	for (var serverURI in changeTable) {
-        //dump("serverURI = " + serverURI + "\n");
 	    var folder = GetMsgFolderFromUri(serverURI);
 	    var server = folder.server;
 	    var subscribableServer =
             server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
         for (var name in changeTable[serverURI]) {
-            //dump("name = " + name + "\n");
-            //dump("(" + serverURI + "," + name + ") = " + changeTable[serverURI][name] + "\n");
 		    if (changeTable[serverURI][name] == true) {
-			    //dump("from js, subscribe to " + name +" on " + serverURI + "\n");
-			    subscribableServer.subscribe(name);
+                try {
+			        subscribableServer.subscribe(name);
+                }
+                catch (ex) {
+                    dump("failed to subscribe to " + name + ": " + ex + "\n");
+                }
 		    }
 		    else if (changeTable[serverURI][name] == false) {
-			    //dump("from js, unsubscribe to " + name +" on " + serverURI + "\n");
-			    subscribableServer.unsubscribe(name);
+                try {
+			        subscribableServer.unsubscribe(name);
+                }
+                catch (ex) {
+                    dump("failed to unsubscribe to " + name + ": " + ex + "\n");
+                }
             }
 		    else {
-			    //dump("no change to " + name + " on " + serverURI +"\n");
+			    // no change
 		    }
         }
 
@@ -340,7 +345,7 @@ function SubscribeOKCallback(changeTable)
             subscribableServer.commitSubscribeChanges();
         }
         catch (ex) {
-            dump(ex + "\n");
+            dump("failed to commit the changes: " + ex + "\n");
         }
     }
 }
