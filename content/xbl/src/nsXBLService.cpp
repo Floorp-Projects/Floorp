@@ -86,6 +86,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIFrameManager.h"
 #include "nsStyleContext.h"
+#include "nsIScriptSecurityManager.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
@@ -579,6 +580,27 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
     }
   }
 
+  // Security check - remote pages can't load local bindings, except from chrome
+  nsCOMPtr<nsIURI> docURI;
+  rv = document->GetDocumentURL(getter_AddRefs(docURI));
+  NS_ENSURE_SUCCESS(rv, rv); //XXX can a document have no URI here?
+  PRBool isChrome = PR_FALSE;
+  rv = docURI->SchemeIs("chrome", &isChrome);
+
+  if (NS_FAILED(rv) || !isChrome) {
+    nsCOMPtr<nsIURI> bindingURI;
+    rv = NS_NewURI(getter_AddRefs(bindingURI), aURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan(
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = secMan->CheckLoadURI(docURI, bindingURI,
+                              nsIScriptSecurityManager::ALLOW_CHROME);
+    if (NS_FAILED(rv))
+      return rv;
+  }
   nsCOMPtr<nsIXBLBinding> newBinding;
   nsCAutoString url; url.AssignWithConversion(aURL);
   if (NS_FAILED(rv = GetBinding(aContent, url, getter_AddRefs(newBinding)))) {
