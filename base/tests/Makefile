@@ -17,6 +17,8 @@
 
 DEPTH=../..
 
+REQUIRES xpcom netlib
+
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
@@ -24,7 +26,7 @@ CPPSRCS = \
 	TestCRT.cpp	\
 	$(NULL)
 
-INCLUDES+=-I../src -I$(PUBLIC)/xpcom
+INCLUDES+=-I../src 
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
