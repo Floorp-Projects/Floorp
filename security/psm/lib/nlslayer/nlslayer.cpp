@@ -325,6 +325,6 @@ extern "C" char *xpcomGetProcessDir(void)
     if (mozFile) {
         mozFile->GetPath(&retVal);
     }
-    return (retVal) ? PL_strdup(retVal) : NULL;
+    return retVal;
 }
 
