@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHistory : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHISTORY_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHISTORY_IID)
 
   NS_IMETHOD    GetLength(PRInt32* aLength)=0;
 

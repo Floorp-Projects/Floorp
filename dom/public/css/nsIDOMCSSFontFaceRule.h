@@ -37,7 +37,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class NS_NO_VTABLE nsIDOMCSSFontFaceRule : public nsIDOMCSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSFONTFACERULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSFONTFACERULE_IID)
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
 };

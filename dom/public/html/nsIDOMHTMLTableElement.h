@@ -40,7 +40,7 @@ class nsIDOMHTMLCollection;
 
 class NS_NO_VTABLE nsIDOMHTMLTableElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTABLEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTABLEELEMENT_IID)
 
   NS_IMETHOD    GetCaption(nsIDOMHTMLTableCaptionElement** aCaption)=0;
   NS_IMETHOD    SetCaption(nsIDOMHTMLTableCaptionElement* aCaption)=0;

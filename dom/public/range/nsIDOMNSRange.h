@@ -37,7 +37,7 @@ class nsIDOMDocumentFragment;
 
 class NS_NO_VTABLE nsIDOMNSRange : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSRANGE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSRANGE_IID)
   enum {
     NODE_BEFORE = 0,
     NODE_AFTER = 1,

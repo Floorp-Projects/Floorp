@@ -37,7 +37,7 @@ class nsIDOMElement;
 
 class NS_NO_VTABLE nsIDOMNSHTMLFormElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLFORMELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLFORMELEMENT_IID)
 
   NS_IMETHOD    GetEncoding(nsAWritableString& aEncoding)=0;
 

@@ -37,7 +37,7 @@ class nsIDOMHTMLFormElement;
 
 class NS_NO_VTABLE nsIDOMHTMLTextAreaElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLTEXTAREAELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLTEXTAREAELEMENT_IID)
 
   NS_IMETHOD    GetDefaultValue(nsAWritableString& aDefaultValue)=0;
   NS_IMETHOD    SetDefaultValue(const nsAReadableString& aDefaultValue)=0;

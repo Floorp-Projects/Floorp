@@ -39,7 +39,7 @@ class nsIDOMRect;
 
 class NS_NO_VTABLE nsIDOMCSSPrimitiveValue : public nsIDOMCSSValue {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSPRIMITIVEVALUE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSPRIMITIVEVALUE_IID)
   enum {
     CSS_UNKNOWN = 0,
     CSS_NUMBER = 1,

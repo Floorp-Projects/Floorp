@@ -36,7 +36,7 @@ class nsIDOMAbstractView;
 
 class NS_NO_VTABLE nsIDOMDocumentView : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTVIEW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTVIEW_IID)
 
   NS_IMETHOD    GetDefaultView(nsIDOMAbstractView** aDefaultView)=0;
 };

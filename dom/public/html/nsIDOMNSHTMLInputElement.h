@@ -36,7 +36,7 @@ class nsIControllers;
 
 class NS_NO_VTABLE nsIDOMNSHTMLInputElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLINPUTELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLINPUTELEMENT_IID)
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
 

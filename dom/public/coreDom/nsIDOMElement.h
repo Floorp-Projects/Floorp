@@ -38,7 +38,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMElement : public nsIDOMNode {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMELEMENT_IID)
 
   NS_IMETHOD    GetTagName(nsAWritableString& aTagName)=0;
 

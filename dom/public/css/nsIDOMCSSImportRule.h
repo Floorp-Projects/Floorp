@@ -38,7 +38,7 @@ class nsIDOMCSSStyleSheet;
 
 class NS_NO_VTABLE nsIDOMCSSImportRule : public nsIDOMCSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSIMPORTRULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSIMPORTRULE_IID)
 
   NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
 

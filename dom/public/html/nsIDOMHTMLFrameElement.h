@@ -37,7 +37,7 @@ class nsIDOMDocument;
 
 class NS_NO_VTABLE nsIDOMHTMLFrameElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFRAMEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFRAMEELEMENT_IID)
 
   NS_IMETHOD    GetFrameBorder(nsAWritableString& aFrameBorder)=0;
   NS_IMETHOD    SetFrameBorder(const nsAReadableString& aFrameBorder)=0;

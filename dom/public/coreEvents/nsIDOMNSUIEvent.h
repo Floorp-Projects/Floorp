@@ -36,7 +36,7 @@ class nsIDOMNode;
 
 class NS_NO_VTABLE nsIDOMNSUIEvent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSUIEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSUIEVENT_IID)
 
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
 

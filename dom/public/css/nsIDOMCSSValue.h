@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMCSSValue : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSVALUE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSVALUE_IID)
   enum {
     CSS_INHERIT = 0,
     CSS_PRIMITIVE_VALUE = 1,

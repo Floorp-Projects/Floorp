@@ -39,7 +39,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMDocumentXBL : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTXBL_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOCUMENTXBL_IID)
 
   NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn)=0;
 

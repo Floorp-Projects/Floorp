@@ -37,7 +37,7 @@ class nsIDOMEventTarget;
 
 class NS_NO_VTABLE nsIDOMMouseEvent : public nsIDOMUIEvent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMMOUSEEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMOUSEEVENT_IID)
 
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX)=0;
 

@@ -37,7 +37,7 @@ class nsIDOMHTMLCollection;
 
 class NS_NO_VTABLE nsIDOMHTMLFormElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFORMELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFORMELEMENT_IID)
 
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements)=0;
 

@@ -38,7 +38,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class NS_NO_VTABLE nsIDOMHTMLElement : public nsIDOMElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLELEMENT_IID)
 
   NS_IMETHOD    GetId(nsAWritableString& aId)=0;
   NS_IMETHOD    SetId(const nsAReadableString& aId)=0;

@@ -37,7 +37,7 @@ class nsIDOMCSSStyleDeclaration;
 
 class NS_NO_VTABLE nsIDOMCSSPageRule : public nsIDOMCSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSPAGERULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSPAGERULE_IID)
 
   NS_IMETHOD    GetSelectorText(nsAWritableString& aSelectorText)=0;
   NS_IMETHOD    SetSelectorText(const nsAReadableString& aSelectorText)=0;

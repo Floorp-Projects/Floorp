@@ -37,7 +37,7 @@ class nsIDOMAbstractView;
 
 class NS_NO_VTABLE nsIDOMKeyEvent : public nsIDOMUIEvent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMKEYEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMKEYEVENT_IID)
   enum {
     DOM_VK_CANCEL = 3,
     DOM_VK_BACK_SPACE = 8,

@@ -38,7 +38,7 @@ class nsIDOMCSSRuleList;
 
 class NS_NO_VTABLE nsIDOMCSSStyleSheet : public nsIDOMStyleSheet {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLESHEET_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSSTYLESHEET_IID)
 
   NS_IMETHOD    GetOwnerRule(nsIDOMCSSRule** aOwnerRule)=0;
 

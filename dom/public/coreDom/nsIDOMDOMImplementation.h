@@ -37,7 +37,7 @@ class nsIDOMDocumentType;
 
 class NS_NO_VTABLE nsIDOMDOMImplementation : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOMIMPLEMENTATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDOMIMPLEMENTATION_IID)
 
   NS_IMETHOD    HasFeature(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn)=0;
 

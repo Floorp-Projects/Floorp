@@ -44,7 +44,7 @@ class nsIDOMNodeList;
 
 class NS_NO_VTABLE nsIDOMXULElement : public nsIDOMElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULELEMENT_IID)
 
   NS_IMETHOD    GetId(nsAWritableString& aId)=0;
   NS_IMETHOD    SetId(const nsAReadableString& aId)=0;

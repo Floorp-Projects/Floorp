@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMNSHTMLButtonElement : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLBUTTONELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLBUTTONELEMENT_IID)
 
   NS_IMETHOD    Blur()=0;
 

@@ -36,7 +36,7 @@ class nsIDOMEventTarget;
 
 class NS_NO_VTABLE nsIDOMEvent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENT_IID)
   enum {
     CAPTURING_PHASE = 1,
     AT_TARGET = 2,

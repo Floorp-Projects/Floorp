@@ -35,7 +35,7 @@
 
 class NS_NO_VTABLE nsIDOMLocation : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMLOCATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMLOCATION_IID)
 
   NS_IMETHOD    GetHash(nsAWritableString& aHash)=0;
   NS_IMETHOD    SetHash(const nsAReadableString& aHash)=0;

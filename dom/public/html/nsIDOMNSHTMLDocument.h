@@ -38,7 +38,7 @@ class nsIDOMHTMLCollection;
 
 class NS_NO_VTABLE nsIDOMNSHTMLDocument : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMNSHTMLDOCUMENT_IID)
 
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
 

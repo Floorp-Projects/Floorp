@@ -37,7 +37,7 @@ class nsIDOMCSSValue;
 
 class NS_NO_VTABLE nsIDOMCSSStyleDeclaration : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMCSSSTYLEDECLARATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCSSSTYLEDECLARATION_IID)
 
   NS_IMETHOD    GetCssText(nsAWritableString& aCssText)=0;
   NS_IMETHOD    SetCssText(const nsAReadableString& aCssText)=0;

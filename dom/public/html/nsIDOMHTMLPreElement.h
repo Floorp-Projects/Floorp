@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLPreElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLPREELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLPREELEMENT_IID)
 
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
   NS_IMETHOD    SetWidth(PRInt32 aWidth)=0;

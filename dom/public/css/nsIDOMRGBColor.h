@@ -36,7 +36,7 @@ class nsIDOMCSSPrimitiveValue;
 
 class NS_NO_VTABLE nsIDOMRGBColor : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMRGBCOLOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMRGBCOLOR_IID)
 
   NS_IMETHOD    GetRed(nsIDOMCSSPrimitiveValue** aRed)=0;
 

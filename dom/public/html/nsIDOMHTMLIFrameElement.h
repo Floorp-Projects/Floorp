@@ -37,7 +37,7 @@ class nsIDOMDocument;
 
 class NS_NO_VTABLE nsIDOMHTMLIFrameElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLIFRAMEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLIFRAMEELEMENT_IID)
 
   NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;

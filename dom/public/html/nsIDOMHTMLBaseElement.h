@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLBaseElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLBASEELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLBASEELEMENT_IID)
 
   NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
   NS_IMETHOD    SetHref(const nsAReadableString& aHref)=0;

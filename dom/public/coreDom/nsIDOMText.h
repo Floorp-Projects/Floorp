@@ -37,7 +37,7 @@ class nsIDOMText;
 
 class NS_NO_VTABLE nsIDOMText : public nsIDOMCharacterData {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMTEXT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMTEXT_IID)
 
   NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn)=0;
 };

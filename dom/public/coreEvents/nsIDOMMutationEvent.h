@@ -36,7 +36,7 @@ class nsIDOMNode;
 
 class NS_NO_VTABLE nsIDOMMutationEvent : public nsIDOMEvent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMMUTATIONEVENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMUTATIONEVENT_IID)
   enum {
     MODIFICATION = 1,
     ADDITION = 2,

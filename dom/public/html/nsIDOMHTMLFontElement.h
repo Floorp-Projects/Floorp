@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLFontElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFONTELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFONTELEMENT_IID)
 
   NS_IMETHOD    GetColor(nsAWritableString& aColor)=0;
   NS_IMETHOD    SetColor(const nsAReadableString& aColor)=0;

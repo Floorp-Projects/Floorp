@@ -36,7 +36,7 @@
 
 class NS_NO_VTABLE nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFRAMESETELEMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMHTMLFRAMESETELEMENT_IID)
 
   NS_IMETHOD    GetCols(nsAWritableString& aCols)=0;
   NS_IMETHOD    SetCols(const nsAReadableString& aCols)=0;

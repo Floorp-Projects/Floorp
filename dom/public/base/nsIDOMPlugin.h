@@ -35,7 +35,7 @@ class nsIDOMMimeType;
 
 class NS_NO_VTABLE nsIDOMPlugin : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMPLUGIN_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPLUGIN_IID)
 
   NS_IMETHOD    GetDescription(nsAWritableString& aDescription)=0;
 

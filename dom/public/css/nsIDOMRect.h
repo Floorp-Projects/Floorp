@@ -36,7 +36,7 @@ class nsIDOMCSSPrimitiveValue;
 
 class NS_NO_VTABLE nsIDOMRect : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMRECT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMRECT_IID)
 
   NS_IMETHOD    GetTop(nsIDOMCSSPrimitiveValue** aTop)=0;
 
