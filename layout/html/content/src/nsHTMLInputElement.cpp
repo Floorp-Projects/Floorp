@@ -64,13 +64,8 @@
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
-static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 #ifdef ENDER_LITE
 typedef nsIGfxTextControlFrame2 textControlPlace;
@@ -226,7 +221,7 @@ NS_NewHTMLInputElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -253,7 +248,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLInputElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLInputElement))) {
     *aInstancePtr = (void*)(nsIDOMHTMLInputElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -263,7 +258,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kIFormControlIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -285,7 +280,7 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // nsIContent
@@ -309,7 +304,7 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
@@ -1266,7 +1261,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
   if (NS_FAILED(result)) formControl = nsnull;
 
   nsAutoString nameVal, idVal;

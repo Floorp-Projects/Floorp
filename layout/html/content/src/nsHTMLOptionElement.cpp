@@ -56,17 +56,6 @@
 #include "nsCOMPtr.h"
 
 
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLOptGroupElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kISelectElementIID, NS_ISELECTELEMENT_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
-static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
-
 class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
                             public nsIJSScriptObject,
                             public nsIHTMLContent,
@@ -143,7 +132,7 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -166,12 +155,12 @@ nsresult
 nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLOptionElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLOptionElement))) {
     *aInstancePtr = (void*)(nsIDOMHTMLOptionElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIJSNativeInitializerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSNativeInitializer))) {
     nsIJSNativeInitializer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -198,7 +187,7 @@ nsHTMLOptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP
@@ -208,7 +197,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   nsresult res = GetSelect(selectElement);
   if (NS_OK == res) {
     nsIFormControl* selectControl = nsnull;
-    res = selectElement->QueryInterface(kIFormControlIID, (void**)&selectControl);
+    res = selectElement->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&selectControl);
     NS_RELEASE(selectElement);
 
     if (NS_OK == res) {
@@ -393,7 +382,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
 
   // Get our nsIDOMNode interface to compare apples to apples.
   nsIDOMNode* thisNode = nsnull;
-  if (NS_OK == this->QueryInterface(kIDOMNodeIID, (void**)&thisNode)) {
+  if (NS_OK == this->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&thisNode)) {
 
     // Get our containing select content object.
     nsIDOMHTMLSelectElement* selectElement = nsnull;
@@ -509,7 +498,7 @@ nsHTMLOptionElement::GetText(nsAWritableString& aText)
     rv = ChildAt(i, node);
     if (NS_SUCCEEDED(rv) && node) {
       nsCOMPtr<nsIDOMText> domText;
-      rv = node->QueryInterface(kIDOMTextIID, (void**)getter_AddRefs(domText));
+      rv = node->QueryInterface(NS_GET_IID(nsIDOMText), (void**)getter_AddRefs(domText));
       if (NS_SUCCEEDED(rv) && domText) {
         rv = domText->GetData(aText);
         // the option could be all spaces, so compress the white space
@@ -546,7 +535,7 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
     result = ChildAt(i, node);
     if (NS_SUCCEEDED(result) && node) {
       nsCOMPtr<nsIDOMText> domText;
-      result = node->QueryInterface(kIDOMTextIID, (void**)getter_AddRefs(domText));
+      result = node->QueryInterface(NS_GET_IID(nsIDOMText), (void**)getter_AddRefs(domText));
       if (NS_SUCCEEDED(result) && domText) {
         result = domText->SetData(aText);
         if (NS_SUCCEEDED(result)) {
@@ -564,7 +553,7 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
     result = NS_NewTextNode(getter_AddRefs(text));
     if (NS_OK == result) {
       nsIDOMText* domtext;
-      result = text->QueryInterface(kIDOMTextIID, (void**)&domtext);
+      result = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&domtext);
       if (NS_SUCCEEDED(result) && domtext) {
         result = domtext->SetData(aText);
 	      if (NS_SUCCEEDED(result)) {
@@ -605,7 +594,7 @@ nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormContro
   nsresult res = GetSelect(selectElement);
   if (NS_OK == res) {
     nsIHTMLContent* selectContent = nsnull;
-    nsresult gotContent = selectElement->QueryInterface(kIContentIID, (void**)&selectContent);
+    nsresult gotContent = selectElement->QueryInterface(NS_GET_IID(nsIContent), (void**)&selectContent);
     NS_RELEASE(selectElement);
 
     if (NS_OK == gotContent) {
@@ -626,13 +615,13 @@ nsresult nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement
       aSelectElement = nsnull;
       if (nsnull != parentNode) {
         
-        res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
+        res = parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement), (void**)&aSelectElement);
 
         // If we are in an OptGroup we need to GetParentNode again (at least once)
         if (NS_OK != res) {
           nsIDOMHTMLOptGroupElement* optgroupElement = nsnull;
           while (1) { // Be ready for nested OptGroups
-            if ((nsnull != parentNode) && (NS_OK == parentNode->QueryInterface(kIDOMHTMLOptGroupElementIID, (void**)&optgroupElement))) {
+            if ((nsnull != parentNode) && (NS_OK == parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLOptGroupElement), (void**)&optgroupElement))) {
               NS_RELEASE(optgroupElement); // Don't need the optgroup, just seeing if it IS one.
               nsIDOMNode* grandParentNode = nsnull;
               if (NS_OK == parentNode->GetParentNode(&grandParentNode)) {
@@ -645,7 +634,7 @@ nsresult nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement
               break; // Break out if not a OptGroup (hopefully we have a select)
             }
           }
-          res = parentNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&aSelectElement);
+          res = parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement), (void**)&aSelectElement);
         }
 
         // We have a select if we're gonna get one, so let go of the generic node
@@ -677,7 +666,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         return result;
       }
       
-      result = textNode->QueryInterface(kITextContentIID, (void**)&content);
+      result = textNode->QueryInterface(NS_GET_IID(nsITextContent), (void**)&content);
       if (NS_FAILED(result)) {
         return result;
       }

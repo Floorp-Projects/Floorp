@@ -35,7 +35,6 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 
-static NS_DEFINE_IID(kIDOMHTMLFontElementIID, NS_IDOMHTMLFONTELEMENT_IID);
 
 class nsHTMLFontElement : public nsIDOMHTMLFontElement,
                           public nsIJSScriptObject,
@@ -84,7 +83,7 @@ NS_NewHTMLFontElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -106,7 +105,7 @@ nsresult
 nsHTMLFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLFontElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLFontElement))) {
     nsIDOMHTMLFontElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -124,7 +123,7 @@ nsHTMLFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Color, color)

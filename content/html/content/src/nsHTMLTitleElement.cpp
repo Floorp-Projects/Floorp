@@ -35,8 +35,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMHTMLDocument.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
                            public nsIJSScriptObject,
@@ -85,7 +83,7 @@ NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -107,7 +105,7 @@ nsresult
 nsHTMLTitleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLTitleElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTitleElement))) {
     nsIDOMHTMLTitleElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -125,7 +123,7 @@ nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP
@@ -183,7 +181,7 @@ nsHTMLTitleElement::GetText(nsAWritableString& aTitle)
   if ((NS_OK == result) && (nsnull != child)) {
     nsIDOMText* text;
     
-    result = child->QueryInterface(kIDOMTextIID, (void**)&text);
+    result = child->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&text);
     if (NS_OK == result) {
       text->GetData(aTitle);
       NS_RELEASE(text);
@@ -214,7 +212,7 @@ nsHTMLTitleElement::SetText(const nsAReadableString& aTitle)
   if ((NS_OK == result) && (nsnull != child)) {
     nsIDOMText* text;
     
-    result = child->QueryInterface(kIDOMTextIID, (void**)&text);
+    result = child->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&text);
     if (NS_OK == result) {
       text->SetData(aTitle);
       NS_RELEASE(text);

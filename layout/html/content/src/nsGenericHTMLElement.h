@@ -33,8 +33,6 @@
 
 #include "nsIStatefulFrame.h"
 
-extern const nsIID kIDOMHTMLElementIID;
-extern const nsIID kIHTMLContentIID;
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -663,19 +661,19 @@ public:
  */
 #define NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(_id, _iptr, _this) \
   NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, nsIHTMLContent) \
-  if (_id.Equals(kIDOMHTMLElementIID)) {                        \
+  if (_id.Equals(NS_GET_IID(nsIDOMHTMLElement))) {              \
     nsIDOMHTMLElement* tmp = _this;                             \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIHTMLContentIID)) {                           \
+  if (_id.Equals(NS_GET_IID(nsIHTMLContent))) {                 \
     nsIHTMLContent* tmp = _this;                                \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIStyledContentIID)) {                         \
+  if (_id.Equals(NS_GET_IID(nsIStyledContent))) {               \
     nsIStyledContent* tmp = _this;                              \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \

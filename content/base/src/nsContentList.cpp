@@ -112,30 +112,27 @@ nsContentList::~nsContentList()
   }
 }
 
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-
 nsresult nsContentList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMNodeListIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNodeList))) {
     *aInstancePtr = (void*)(nsIDOMNodeList*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
     *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMNodeList*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -169,7 +166,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     nsISupports *element = (nsISupports *)mContent.ElementAt(aIndex);
     
     if (nsnull != element) {
-      result = element->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
     }
     else {
       *aReturn = nsnull;
@@ -200,7 +197,7 @@ nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
              (aName.Equals(name))) ||
             ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
-          return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+          return content->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
         }
       }
     }

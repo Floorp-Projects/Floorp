@@ -31,8 +31,6 @@
 #include "nsCRT.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class nsTextNode : public nsIDOMText,
                    public nsIScriptObjectOwner,
@@ -84,7 +82,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
 }
 
 nsTextNode::nsTextNode()
@@ -104,13 +102,13 @@ NS_IMETHODIMP
 nsTextNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMTextIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMText))) {
     nsIDOMText* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kITextContentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
     nsITextContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -160,7 +158,7 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   // XXX Increment the ref count before calling any
   // methods. If they do a QI and then a Release()
   // the instance will be deleted.
-  result = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  result = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
   if (NS_FAILED(result)) {
     return result;
   }
@@ -187,7 +185,7 @@ nsTextNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  result = it->QueryInterface(NS_GET_IID(nsITextContent), (void**) aReturn);
   if (NS_FAILED(result) || !aCloneText) {
     return result;
   }

@@ -43,11 +43,6 @@
 #include "nsGenericHTMLElement.h"
 /* end for collections */
 
-static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableCaptionElementIID, NS_IDOMHTMLTABLECAPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-
 class GenericElementCollection;
 class TableRowsCollection;
 
@@ -148,7 +143,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     if (nsnull!=rowGroup)
     {
       nsIContent *content=nsnull;
-      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
       GenericElementCollection head(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       head.GetLength(&rows);
@@ -160,7 +155,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     if (nsnull!=rowGroup)
     {
       nsIContent *content=nsnull;
-      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
       GenericElementCollection foot(content, nsHTMLAtoms::tr);
       PRUint32 rows;
       foot.GetLength(&rows);
@@ -179,7 +174,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
       while (nsnull!=node)
       {
         nsIContent *content=nsnull;
-        node->QueryInterface(kIContentIID, (void **)&content);
+        node->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
         GenericElementCollection body(content, nsHTMLAtoms::tr);
         PRUint32 rows;
         body.GetLength(&rows);
@@ -210,7 +205,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     mParent->GetTHead(&rowGroup);
     if (nsnull != rowGroup) {
       nsIContent *content = nsnull;
-      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
       GenericElementCollection head(content, nsHTMLAtoms::tr);
       PRUint32 rowsInHead;
       head.GetLength(&rowsInHead);
@@ -233,7 +228,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       tbodies->Item(theIndex, &node);
       while (nsnull != node) {
         nsIContent *content = nsnull;
-        node->QueryInterface(kIContentIID, (void **)&content);
+        node->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
         GenericElementCollection body(content, nsHTMLAtoms::tr);
         NS_RELEASE(content);
         NS_RELEASE(node);
@@ -255,7 +250,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     mParent->GetTFoot(&rowGroup);
     if (nsnull != rowGroup) {
       nsIContent *content = nsnull;
-      rowGroup->QueryInterface(kIContentIID, (void **)&content);
+      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
       GenericElementCollection foot(content, nsHTMLAtoms::tr);
       foot.Item(aIndex-count, aReturn);
       NS_RELEASE(content);
@@ -299,7 +294,7 @@ NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -333,7 +328,7 @@ nsresult
 nsHTMLTableElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLTableElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableElement))) {
     nsIDOMHTMLTableElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -351,7 +346,7 @@ nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // the DOM spec says border, cellpadding, cellSpacing are all "wstring"
@@ -503,7 +498,7 @@ nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
     mRows = new TableRowsCollection(this);
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
-  mRows->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
+  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);   // caller's addref 
   return NS_OK;
 }
 
@@ -515,7 +510,7 @@ nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
     mTBodies = new GenericElementCollection((nsIContent*)this, nsHTMLAtoms::tbody);
     NS_ADDREF(mTBodies); // this table's reference, released in the destructor
   }
-  mTBodies->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);  // caller's addref 
+  mTBodies->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);  // caller's addref 
   return NS_OK;
 }
 
@@ -528,7 +523,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
   GetTHead(getter_AddRefs(head));
   if (head)
   { // return the existing thead
-    head->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    head->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "head must be a DOMHTMLElement");
   }
   else
@@ -548,7 +543,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
         return rv;
       }
      
-      newHead->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      newHead->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
 
       nsCOMPtr<nsIDOMNode> resultChild;
       rv = mInner.InsertBefore(*aValue, child, getter_AddRefs(resultChild));
@@ -579,7 +574,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
   GetTFoot(getter_AddRefs(foot));
   if (nsnull!=foot)
   { // return the existing tfoot
-    foot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    foot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "foot must be a DOMHTMLElement");
   }
   else
@@ -594,7 +589,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     if (NS_SUCCEEDED(rv) && newFoot)
     {
       rv = mInner.AppendChildTo(newFoot, PR_TRUE);
-      newFoot->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      newFoot->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
     }
   }
   return NS_OK;
@@ -622,7 +617,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
   GetCaption(getter_AddRefs(caption));
   if (caption)
   { // return the existing thead
-    caption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue);  // caller's addref
+    caption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue);  // caller's addref
     NS_ASSERTION(nsnull!=*aValue, "caption must be a DOMHTMLElement");
   }
   else
@@ -637,7 +632,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     if (NS_SUCCEEDED(rv) && newCaption)
     {
       rv = mInner.AppendChildTo(newCaption, PR_TRUE);
-      newCaption->QueryInterface(kIDOMHTMLElementIID, (void **)aValue); // caller's addref
+      newCaption->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aValue); // caller's addref
     }
   }
   return NS_OK;
@@ -695,7 +690,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
     {
       nsIDOMNode *newRowNode=nsnull;
-      newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode); // caller's addref
+      newRow->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&newRowNode); // caller's addref
       if ((0<=aIndex) && (PRInt32(rowCount)<=aIndex)) // the index is greater than the number of rows, so just append
         rv = parent->AppendChild(newRowNode, (nsIDOMNode **)aValue);
       else  // insert the new row before the reference row we found above
@@ -749,7 +744,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       if (NS_SUCCEEDED(rv) && (nsnull!=newRowGroup))
       {
         rv = mInner.AppendChildTo(newRowGroup, PR_TRUE);
-        newRowGroup->QueryInterface(kIDOMNodeIID, (void **)&rowGroup);
+        newRowGroup->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&rowGroup);
         NS_RELEASE(newRowGroup);
       }
     }
@@ -763,14 +758,14 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
       rv = NS_NewHTMLTableRowElement(&newRow, nodeInfo);
       nsIContent *rowGroupContent=nsnull;
-      rowGroup->QueryInterface(kIContentIID, (void **)&rowGroupContent);
+      rowGroup->QueryInterface(NS_GET_IID(nsIContent), (void **)&rowGroupContent);
       GenericElementCollection rowGroupRows(rowGroupContent, nsHTMLAtoms::tr);
       nsIDOMNode *firstRow=nsnull;
       rowGroupRows.Item(0, &firstRow);  // it's ok if this returns nsnull
       if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
       {
         nsIDOMNode *newRowNode;
-        newRow->QueryInterface(kIDOMNodeIID, (void **)&newRowNode);
+        newRow->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&newRowNode);
         rowGroup->InsertBefore(newRowNode, firstRow, (nsIDOMNode **)aValue);
         NS_RELEASE(newRowNode);
         NS_RELEASE(newRow);

@@ -37,9 +37,6 @@
 
 // XXX no SRC attribute
 
-static NS_DEFINE_IID(kIDOMHTMLStyleElementIID, NS_IDOMHTMLSTYLEELEMENT_IID);
-static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
-static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLStyleElement : public nsIDOMHTMLStyleElement,
                            public nsIJSScriptObject,
@@ -98,7 +95,7 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -122,13 +119,13 @@ nsresult
 nsHTMLStyleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLStyleElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLStyleElement))) {
     nsIDOMHTMLStyleElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStyleSheetLinkingElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleSheetLinkingElement))) {
     nsIStyleSheetLinkingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -151,7 +148,7 @@ nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP
@@ -162,7 +159,7 @@ nsHTMLStyleElement::GetDisabled(PRBool* aDisabled)
   if (nsnull != mStyleSheet) {
     nsIDOMStyleSheet* ss;
     
-    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
     if (NS_OK == result) {
       result = ss->GetDisabled(aDisabled);
       NS_RELEASE(ss);
@@ -183,7 +180,7 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
   if (nsnull != mStyleSheet) {
     nsIDOMStyleSheet* ss;
     
-    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
     if (NS_OK == result) {
       result = ss->SetDisabled(aDisabled);
       NS_RELEASE(ss);

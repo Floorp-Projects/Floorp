@@ -42,12 +42,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableRowElementIID, NS_IDOMHTMLTABLEROWELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-
 // nsTableCellCollection is needed because GenericElementCollection 
 // only supports element of a single tag. This collection supports
 // elements <td> or <th> elements.
@@ -118,7 +112,7 @@ nsTableCellCollection::Item(PRUint32     aIndex,
       child->GetTag(childTag);
       if ((nsHTMLAtoms::td ==childTag) || (nsHTMLAtoms::th ==childTag)) {
         if (aIndex == theIndex) {
-          child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
+          child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);   // out-param addref
           NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
           NS_RELEASE(childTag);
           NS_RELEASE(child);
@@ -180,7 +174,7 @@ protected:
 static
 void DebugList(nsIDOMHTMLTableElement* aTable) {
   nsIHTMLContent* content = nsnull;
-  nsresult result = aTable->QueryInterface(kIHTMLContentIID, (void**)&content);
+  nsresult result = aTable->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&content);
   if (NS_SUCCEEDED(result) && (nsnull != content)) {
     nsIDocument* doc = nsnull;
     result = content->GetDocument(doc);
@@ -216,7 +210,7 @@ NS_NewHTMLTableRowElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -243,7 +237,7 @@ nsresult
 nsHTMLTableRowElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLTableRowElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableRowElement))) {
     nsIDOMHTMLTableRowElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -261,7 +255,7 @@ nsHTMLTableRowElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // protected method
@@ -275,7 +269,7 @@ nsHTMLTableRowElement::GetSection(nsIDOMHTMLTableSectionElement** aSection)
   nsIDOMNode *sectionNode = nsnull;
   nsresult result = GetParentNode(&sectionNode);
   if (NS_SUCCEEDED(result) && (nsnull != sectionNode)) {
-    result = sectionNode->QueryInterface(kIDOMHTMLTableSectionElementIID, (void**)aSection);
+    result = sectionNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableSectionElement), (void**)aSection);
     NS_RELEASE(sectionNode);
   }
   return result;
@@ -295,7 +289,7 @@ nsHTMLTableRowElement::GetTable(nsIDOMHTMLTableElement** aTable)
     nsIDOMNode *tableNode = nsnull;
     result = sectionNode->GetParentNode(&tableNode);
     if (NS_SUCCEEDED(result) && (nsnull != tableNode)) {
-      result = tableNode->QueryInterface(kIDOMHTMLTableElementIID, (void**)aTable);
+      result = tableNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableElement), (void**)aTable);
       NS_RELEASE(tableNode);
     }
     NS_RELEASE(sectionNode);
@@ -473,7 +467,7 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
     mCells = new nsTableCellCollection(this, nsHTMLAtoms::td);
     NS_ADDREF(mCells); // this table's reference, released in the destructor
   }
-  mCells->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
+  mCells->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);   // caller's addref 
   return NS_OK;
 }
 
@@ -522,7 +516,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   nsresult rv = NS_NewHTMLTableCellElement(&cellContent, nodeInfo);
   if (NS_SUCCEEDED(rv) && (nsnull != cellContent)) {
     nsIDOMNode* cellNode = nsnull;
-    rv = cellContent->QueryInterface(kIDOMNodeIID, (void **)&cellNode); 
+    rv = cellContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&cellNode); 
     if (NS_SUCCEEDED(rv) && (nsnull != cellNode)) {
       if (doInsert) {
         PRInt32 refIndex = PR_MAX(aIndex, 0);   

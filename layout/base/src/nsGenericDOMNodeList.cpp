@@ -40,18 +40,17 @@ nsGenericDOMNodeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-  if (aIID.Equals(kIDOMNodeListIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNodeList))) {
     *aInstancePtr = (void*)(nsIDOMNodeList*)this;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMNodeList*)this;
     AddRef();
     return NS_OK;

@@ -139,23 +139,12 @@ const PRInt32 kBackward = 1;
 // XXX Used to control whether we implement document.layers
 //#define NS_IMPLEMENT_DOCUMENT_LAYERS
 
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMNSHTMLDocumentIID, NS_IDOMNSHTMLDOCUMENT_IID);
 
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
-static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsIRDFService* nsHTMLDocument::gRDF;
@@ -244,7 +233,7 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsHTMLDocument* doc = new nsHTMLDocument();
   if(doc)
-    return doc->QueryInterface(kIDocumentIID, (void**) aInstancePtrResult);
+    return doc->QueryInterface(NS_GET_IID(nsIDocument), (void**) aInstancePtrResult);
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -361,22 +350,22 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIHTMLDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLDocument))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIHTMLDocument *)this;
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMHTMLDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLDocument))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIDOMHTMLDocument *)this;
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNSHTMLDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLDocument))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIDOMNSHTMLDocument *)this;
     return NS_OK;
   }
-  if (aIID.Equals(kIHTMLContentContainerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
     return NS_OK;
@@ -921,8 +910,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // Set the parser as the stream listener for the document loader...
   if (mParser) 
   {
-    static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
-    rv = mParser->QueryInterface(kIStreamListenerIID, (void**)aDocListener);
+    rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
     if (NS_FAILED(rv)) { return rv; }
 
 
@@ -1420,7 +1408,7 @@ nsHTMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
 
   content->SetContentID(mNextContentID++);
 
-  return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+  return content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
 }
 
 
@@ -1445,7 +1433,7 @@ nsHTMLDocument::CreateElement(const nsAReadableString& aTagName,
   nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo);
   if (NS_SUCCEEDED(rv)) {
     content->SetContentID(mNextContentID++);
-    rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
+    rv = content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aReturn);
   }
   return rv;
 }
@@ -1820,7 +1808,7 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
   if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
     return NS_ERROR_FAILURE;
   }
-  return mBodyContent->QueryInterface(kIDOMHTMLElementIID, (void **)aBody);
+  return mBodyContent->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void **)aBody);
 }
 
 NS_IMETHODIMP    
@@ -1839,7 +1827,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 
   while (child != nsnull) {
     nsIDOMElement* domElement;
-    result = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
+    result = child->QueryInterface(NS_GET_IID(nsIDOMElement),(void **)&domElement);
     if (NS_OK == result) {
       nsString tagName;
       domElement->GetTagName(tagName);
@@ -2422,7 +2410,7 @@ nsHTMLDocument::GetElementsByName(const nsAReadableString& aElementName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return elements->QueryInterface(kIDOMNodeListIID, (void**)aReturn);
+  return elements->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aReturn);
 }
 
 nsresult
@@ -3365,12 +3353,12 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
     nsSelectionPoint * endPnt   = range->GetEndPoint();
 
     nsIContent* content;
-    nsresult rv = startNode->QueryInterface(kIContentIID,(void **)&content);
+    nsresult rv = startNode->QueryInterface(NS_GET_IID(nsIContent),(void **)&content);
     if (NS_OK == rv) {
       startPnt->SetPoint(content, startOffset, PR_TRUE);
       NS_RELEASE(content);
     }
-    rv = endNode->QueryInterface(kIContentIID,(void **)&content);
+    rv = endNode->QueryInterface(NS_GET_IID(nsIContent),(void **)&content);
     if (NS_OK == rv) {
       endPnt->SetPoint(content, endOffset, PR_FALSE);
       NS_RELEASE(content);
@@ -3571,7 +3559,7 @@ PRBool nsHTMLDocument::BuildBlockTraversing(nsIDOMNode * aParent,
                                             nsIDOMNode * aCurrentBlock) 
 {
   nsIDOMText* textContent;
-  nsresult rv = aParent->QueryInterface(kIDOMTextIID,(void **)&textContent);
+  nsresult rv = aParent->QueryInterface(NS_GET_IID(nsIDOMText),(void **)&textContent);
   if (NS_OK == rv) {
     nsString stringBuf;
     textContent->GetData(stringBuf);
@@ -3687,7 +3675,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
   }
 
   nsIDOMElement* domElement;
-  nsresult rv = aNode->QueryInterface(kIDOMElementIID,(void **)&domElement);
+  nsresult rv = aNode->QueryInterface(NS_GET_IID(nsIDOMElement),(void **)&domElement);
   if (NS_OK == rv) {
     nsString tagName;
     domElement->GetTagName(tagName);
@@ -3695,9 +3683,8 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
     NS_RELEASE(domElement);
   }
 
-  static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
   nsIDOMText* textContent;
-  rv = aNode->QueryInterface(kIDOMTextIID,(void **)&textContent);
+  rv = aNode->QueryInterface(NS_GET_IID(nsIDOMText),(void **)&textContent);
   if (NS_OK == rv) {
     nsString stringBuf;
     textContent->GetData(stringBuf);
@@ -3736,7 +3723,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
 static nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
 {
   nsIContent* content;
-  nsresult rv = aNode->QueryInterface(kIContentIID,(void **)&content);
+  nsresult rv = aNode->QueryInterface(NS_GET_IID(nsIContent),(void **)&content);
   if (NS_OK == rv) {
     if (content == aContent) {
       return aNode;
@@ -3867,7 +3854,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsAReadableString &aSearchStr,
     // to their DOM Node counter part
     if (mSearchDirection == kForward) {
       nsIDOMNode * endNode;
-      nsresult rv = endContent->QueryInterface(kIDOMNodeIID,(void **)&endNode);
+      nsresult rv = endContent->QueryInterface(NS_GET_IID(nsIDOMNode),(void **)&endNode);
       if (NS_OK == rv) {
         searchNode = endNode;
       }
@@ -3879,7 +3866,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsAReadableString &aSearchStr,
         mAdjustToEnd = PR_TRUE;
       } else {
         nsIDOMNode * startNode;
-        nsresult rv = startContent->QueryInterface(kIDOMNodeIID,(void **)&startNode);
+        nsresult rv = startContent->QueryInterface(NS_GET_IID(nsIDOMNode),(void **)&startNode);
         if (NS_OK == rv) {
           searchNode = startNode;
         }
@@ -3937,9 +3924,8 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsAReadableString &aSearchStr,
       nsIDOMNode * node = FindDOMNode(root, startContent);
 
       nsString contentStr;
-      //static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
       nsIDOMText* textContent;
-      nsresult rv = node->QueryInterface(kIDOMTextIID,(void **)&textContent);
+      nsresult rv = node->QueryInterface(NS_GET_IID(nsIDOMText),(void **)&textContent);
       if (NS_OK == rv) {
         textContent->GetData(contentStr);
         NS_RELEASE(textContent);
@@ -4022,9 +4008,8 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsAReadableString &aSearchStr,
         NS_IF_RELEASE(prevNode);
 
         if (contentNode != nsnull) {
-          static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
           nsIContent* content;
-          rv = contentNode->QueryInterface(kIContentIID,(void **)&content);
+          rv = contentNode->QueryInterface(NS_GET_IID(nsIContent),(void **)&content);
           if (NS_OK == rv) {
             //range    = mSelection->GetRange();
             //startPnt = range->GetStartPoint();
@@ -4066,7 +4051,7 @@ nsHTMLDocument::GetBodyContent()
 
   while (child != nsnull) {
     nsIDOMElement* domElement;
-    nsresult rv = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
+    nsresult rv = child->QueryInterface(NS_GET_IID(nsIDOMElement),(void **)&domElement);
     if (NS_OK == rv) {
       nsString tagName;
       domElement->GetTagName(tagName);
@@ -4093,7 +4078,7 @@ nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
     return NS_ERROR_FAILURE;
   }
   
-  return mBodyContent->QueryInterface(kIDOMHTMLBodyElementIID, 
+  return mBodyContent->QueryInterface(NS_GET_IID(nsIDOMHTMLBodyElement), 
                                       (void**)aBody);
 }
 
@@ -4110,7 +4095,7 @@ nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
   }
 
   nsIContent* iContent = nsnull;
-  nsresult result = aForm->QueryInterface(kIContentIID, (void**)&iContent);
+  nsresult result = aForm->QueryInterface(NS_GET_IID(nsIContent), (void**)&iContent);
   if ((NS_OK == result) && iContent) {
     nsIDOMHTMLCollection* forms = nsnull;
     

@@ -35,9 +35,6 @@
 #include "nsIFormControl.h"
 #include "nsISizeOfHandler.h"
 
-static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
 
 class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
                             public nsIJSScriptObject,
@@ -94,7 +91,7 @@ NS_NewHTMLLegendElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -142,7 +139,7 @@ nsHTMLLegendElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // nsIContent
@@ -166,7 +163,7 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }

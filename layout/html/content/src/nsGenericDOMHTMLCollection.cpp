@@ -39,20 +39,17 @@ nsGenericDOMHTMLCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
     *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
     AddRef();
     return NS_OK;

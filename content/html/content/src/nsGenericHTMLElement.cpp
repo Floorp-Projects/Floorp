@@ -94,24 +94,9 @@
 #include "nsXIFDTD.h"
 #include "nsLayoutCID.h"
 // XXX todo: add in missing out-of-memory checks
-NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
 
-static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
-static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
-static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 
 static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 
@@ -217,7 +202,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
     mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
     if (eHTMLUnit_ISupports == val.GetUnit()) {
       rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule);
+      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
       if (NS_OK == result) {
         *aDecl = cssRule->GetDeclaration();
         NS_RELEASE(cssRule);
@@ -259,7 +244,7 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
     mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
     if (eHTMLUnit_ISupports == val.GetUnit()) {
       rule = (nsIStyleRule*) val.GetISupportsValue();
-      result = rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule);
+      result = rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule);
       if (NS_OK == result) {
         cssRule->SetDeclaration(aDecl);
         NS_RELEASE(cssRule);
@@ -290,7 +275,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       doc->GetBaseURL(baseURI);
 
       nsIHTMLContentContainer* htmlContainer;
-      result = doc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+      result = doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
       if (NS_SUCCEEDED(result)) {
         result = htmlContainer->GetCSSLoader(cssLoader);
         NS_RELEASE(htmlContainer);
@@ -364,7 +349,7 @@ nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
   *aParent = nsnull;
 
   if (nsnull != mContent) {
-    return mContent->QueryInterface(kISupportsIID, (void **)aParent);
+    return mContent->QueryInterface(NS_GET_IID(nsISupports), (void **)aParent);
   }
 
   return NS_OK;
@@ -584,7 +569,7 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 
   if (nsnull == slots->mStyle) {
     nsIHTMLContent* htmlContent;
-    mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
     slots->mStyle = new nsDOMCSSAttributeDeclaration(htmlContent);
     NS_RELEASE(htmlContent);
     if (nsnull == slots->mStyle) {
@@ -593,7 +578,7 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
     NS_ADDREF(slots->mStyle);
   }
   
-  res = slots->mStyle->QueryInterface(kIDOMCSSStyleDeclarationIID,
+  res = slots->mStyle->QueryInterface(NS_GET_IID(nsIDOMCSSStyleDeclaration),
                                       (void **)aStyle);
 
   return res;
@@ -905,7 +890,7 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   nsIHTMLContentContainer*  htmlContainer;
   
   if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+    if (NS_OK == aDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer)) {
       htmlContainer->GetAttributeStyleSheet(&sheet);
       NS_RELEASE(htmlContainer);
     }
@@ -953,7 +938,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool a
   if (!doNothing) {
     nsIHTMLContent* htmlContent;
 
-    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
     if (NS_OK != result) {
       return result;
     }
@@ -994,7 +979,7 @@ FindFormParent(nsIContent* aParent,
       
     // If the current ancestor is a form, set it as our form
     if ((tag == nsHTMLAtoms::form) && (kNameSpaceID_HTML == nameSpaceID)) {
-      result = parent->QueryInterface(kIDOMHTMLFormElementIID, 
+      result = parent->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), 
                                       (void**)&form);
       if (NS_SUCCEEDED(result)) {
         result = aControl->SetForm(form);
@@ -1298,7 +1283,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   nsHTMLValue val;
   nsIHTMLContent* htmlContent;
   
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
@@ -1397,7 +1382,7 @@ static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
     nsISupports* supports = aValue.GetISupportsValue();
     if (nsnull != supports) {
       nsICSSStyleRule* cssRule;
-      if (NS_SUCCEEDED(supports->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {
+      if (NS_SUCCEEDED(supports->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule))) {
         nsICSSDeclaration* declaration = cssRule->GetDeclaration();
         if (nsnull != declaration) {
           declaration->GetStyleImpact(&hint);
@@ -1419,7 +1404,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
   nsIHTMLContent* htmlContent;
 
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
@@ -1486,7 +1471,7 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
 
   nsIHTMLContent* htmlContent;
 
-  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
   if (NS_OK != result) {
     return result;
   }
@@ -1561,7 +1546,7 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
   nscolor color;
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     nsIHTMLContent* htmlContent;
-    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+    result = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void **)&htmlContent);
     if (NS_OK != result) {
       return result;
     }
@@ -1724,7 +1709,7 @@ nsGenericHTMLElement::GetInlineStyleRules(nsISupportsArray* aRules)
       if (eHTMLUnit_ISupports == value.GetUnit()) {
         nsISupports* supports = value.GetISupportsValue();
         if (supports) {
-          result = supports->QueryInterface(kIStyleRuleIID, (void**)&rule);
+          result = supports->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&rule);
         }
         NS_RELEASE(supports);
       }
@@ -1791,7 +1776,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
   }
   if (nsnull != mDocument) {
     nsIHTMLDocument* htmlDoc;
-    result = mDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
+    result = mDocument->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&htmlDoc);
     if (NS_SUCCEEDED(result)) {
       result = htmlDoc->GetBaseTarget(aBaseTarget);
       NS_RELEASE(htmlDoc);
@@ -2029,7 +2014,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
       nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
       if (rule) {
         nsICSSStyleRule*  cssRule;
-        if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
+        if (NS_OK == rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule)) {
           nsICSSDeclaration* decl = cssRule->GetDeclaration();
           if (nsnull != decl) {
             decl->ToString(aResult);
@@ -2363,7 +2348,7 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
         nsIFrame *frame = nsnull;
         presShell->GetPrimaryFrameFor(aContent, &frame);
         if (nsnull != frame) {
-          res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+          res = frame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&aFormControlFrame);
         }
         NS_RELEASE(presShell);
       }
@@ -2767,7 +2752,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
       nsICSSParser* cssParser = nsnull;
       nsIHTMLContentContainer* htmlContainer;
 
-      result = mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+      result = mDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer);
       if (NS_SUCCEEDED(result) && htmlContainer) {
         result = htmlContainer->GetCSSLoader(cssLoader);
         NS_RELEASE(htmlContainer);
@@ -3186,7 +3171,7 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
+  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
 }
 
 nsresult
@@ -3275,7 +3260,7 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
       nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
       if (nsnull != child) {
         nsIDOMNode* node;
-        result = child->QueryInterface(kIDOMNodeIID, (void**)&node);
+        result = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
         if (NS_OK == result) {
           nsIDOMNode* newNode;
           
@@ -3283,7 +3268,7 @@ nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
           if (NS_OK == result) {
             nsIContent* newContent;
             
-            result = newNode->QueryInterface(kIContentIID, (void**)&newContent);
+            result = newNode->QueryInterface(NS_GET_IID(nsIContent), (void**)&newContent);
             if (NS_OK == result) {
               result = aDst->AppendChildTo(newContent, PR_FALSE);
               NS_RELEASE(newContent);
@@ -3313,7 +3298,7 @@ nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
+  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
 }
 
 nsresult
@@ -3333,7 +3318,7 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(0);
   if (nsnull != child) {
-    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
@@ -3346,7 +3331,7 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 {
   nsIContent *child = (nsIContent *)mChildren.ElementAt(mChildren.Count()-1);
   if (nsnull != child) {
-    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    nsresult res = child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }

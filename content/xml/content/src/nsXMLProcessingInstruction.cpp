@@ -96,7 +96,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
 }
 
 nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAReadableString& aTarget,
@@ -138,7 +138,7 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
   if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
     nsCOMPtr<nsIEventListenerManager> man;
     if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){
-      return man->QueryInterface(kIDOMEventReceiverIID, (void**)aInstancePtrResult);
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void**)aInstancePtrResult);
     }
     return NS_NOINTERFACE;
   }

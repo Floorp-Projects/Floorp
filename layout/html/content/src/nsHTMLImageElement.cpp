@@ -55,15 +55,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsIFrameImageLoader.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // XXX nav attrs: suppress
-
-static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMImageIID, NS_IDOMIMAGE_IID);
-static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
-static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
                            public nsIDOMImage,
@@ -163,7 +156,7 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -192,26 +185,26 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Note that this has to stay above the generic element
   // QI macro, since it overrides the nsIJSScriptObject implementation
   // from the generic element.
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
     AddRef();
     return NS_OK;
   }                                                             
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLImageElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLImageElement))) {
     nsIDOMHTMLImageElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMImageIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMImage))) {
     nsIDOMImage* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIJSNativeInitializerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSNativeInitializer))) {
     nsIJSNativeInitializer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -229,7 +222,7 @@ nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LowSrc, lowsrc)
@@ -767,13 +760,13 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
                                        getter_AddRefs(globalObject));;
   if (globalObject) {
     nsIDOMWindowInternal* domWindow;
-    result = globalObject->QueryInterface(kIDOMWindowIID, (void**)&domWindow);
+    result = globalObject->QueryInterface(NS_GET_IID(nsIDOMWindow), (void**)&domWindow);
     if (NS_SUCCEEDED(result)) {
       nsIDOMDocument* domDocument;
       result = domWindow->GetDocument(&domDocument);
       if (NS_SUCCEEDED(result)) {
         // Maintain the reference
-        result = domDocument->QueryInterface(kIDocumentIID, 
+        result = domDocument->QueryInterface(NS_GET_IID(nsIDocument), 
                                              (void**)&mOwnerDocument);
         NS_RELEASE(domDocument);
       }

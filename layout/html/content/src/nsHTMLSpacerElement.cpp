@@ -50,12 +50,8 @@
 #include "nsImageFrame.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // XXX nav attrs: suppress
-
-static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLSpacerElement : public nsIDOMHTMLElement,
                             public nsIJSScriptObject,
@@ -113,7 +109,7 @@ NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -137,7 +133,7 @@ nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Note that this has to stay above the generic element
   // QI macro, since it overrides the nsIJSScriptObject implementation
   // from the generic element.
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
     AddRef();
@@ -156,7 +152,7 @@ nsHTMLSpacerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP

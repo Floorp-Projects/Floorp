@@ -40,6 +40,8 @@ class nsDOMAttribute;
 
 class nsIDOMAttributePrivate : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMATTRIBUTEPRIVATE_IID)
+
   NS_IMETHOD DropReference() = 0;
   NS_IMETHOD SetContent(nsIContent* aContent) = 0;
   NS_IMETHOD GetContent(nsIContent** aContent) = 0;

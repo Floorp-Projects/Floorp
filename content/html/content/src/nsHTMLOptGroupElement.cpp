@@ -33,7 +33,7 @@
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 
-static NS_DEFINE_IID(kIDOMHTMLOptGroupElementIID, NS_IDOMHTMLOPTGROUPELEMENT_IID);
+
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class nsHTMLOptGroupElement : public nsIDOMHTMLOptGroupElement,
@@ -83,7 +83,7 @@ NS_NewHTMLOptGroupElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -105,7 +105,7 @@ nsresult
 nsHTMLOptGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLOptGroupElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLOptGroupElement))) {
     nsIDOMHTMLOptGroupElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -123,7 +123,7 @@ nsHTMLOptGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLOptGroupElement, Disabled, disabled)

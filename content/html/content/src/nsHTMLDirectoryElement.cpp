@@ -36,7 +36,6 @@
 
 extern nsGenericHTMLElement::EnumTable kListTypeTable[];
 
-static NS_DEFINE_IID(kIDOMHTMLDirectoryElementIID, NS_IDOMHTMLDIRECTORYELEMENT_IID);
 
 class nsHTMLDirectoryElement : public nsIDOMHTMLDirectoryElement,
                                public nsIJSScriptObject,
@@ -86,7 +85,7 @@ NS_NewHTMLDirectoryElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -108,7 +107,7 @@ nsresult
 nsHTMLDirectoryElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLDirectoryElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLDirectoryElement))) {
     nsIDOMHTMLDirectoryElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -126,7 +125,7 @@ nsHTMLDirectoryElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLDirectoryElement, Compact, compact)

@@ -94,7 +94,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       {
         if (aIndex==theIndex)
         {
-          child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
+          child->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);   // out-param addref
           NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
           NS_RELEASE(childTag);
           NS_RELEASE(child);

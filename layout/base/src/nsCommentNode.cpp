@@ -33,10 +33,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMRange.h"
 
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
-
 class nsCommentNode : public nsIDOMComment,
                       public nsIScriptObjectOwner,
                       public nsITextContent
@@ -242,7 +238,7 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
 }
 
 nsCommentNode::nsCommentNode()
@@ -263,13 +259,13 @@ NS_IMETHODIMP
 nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMCommentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMComment))) {
     nsIDOMComment* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kITextContentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
     nsITextContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -311,7 +307,7 @@ nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   // XXX Increment the ref count before calling any
   // methods. If they do a QI and then a Release()
   // the instance will be deleted.
-  result = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  result = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
   if (NS_FAILED(result)) {
     return result;
   }
@@ -338,7 +334,7 @@ nsCommentNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  result = it->QueryInterface(kITextContentIID, (void**) aReturn);
+  result = it->QueryInterface(NS_GET_IID(nsITextContent), (void**) aReturn);
   if (NS_FAILED(result) || !aCloneText) {
     return result;
   }

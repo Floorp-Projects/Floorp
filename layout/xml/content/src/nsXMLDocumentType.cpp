@@ -34,7 +34,6 @@
 #include "nsISizeOfHandler.h"
 #include "nsDOMAttributeMap.h"
 
-static NS_DEFINE_IID(kIDOMDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 
 class nsXMLDocumentType : public nsIDOMDocumentType,
                           public nsIScriptObjectOwner,
@@ -102,7 +101,7 @@ NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
 }
 
 nsXMLDocumentType::nsXMLDocumentType(const nsAReadableString& aName,
@@ -142,39 +141,39 @@ nsXMLDocumentType::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kISupportsIID)) {                          
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                          
     nsIDOMDocumentType* tmp = this;                                
     nsISupports* tmp2 = tmp;                                
     *aInstancePtrResult = (void*) tmp2;                                  
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }                                                         
-  if (aIID.Equals(kIDOMNodeIID)) {                           
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {                           
     nsIDOMNode* tmp = this;                                
     *aInstancePtrResult = (void*) tmp;                                   
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }                                                         
-  if (aIID.Equals(kIDOMEventReceiverIID)) {                  
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {                  
     nsCOMPtr<nsIEventListenerManager> man;
     if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){
-      return man->QueryInterface(kIDOMEventReceiverIID, (void**)aInstancePtrResult);
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void**)aInstancePtrResult);
     }     
     return NS_NOINTERFACE;
   }                                                         
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {                 
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {                 
     nsIScriptObjectOwner* tmp = this;                      
     *aInstancePtrResult = (void*) tmp;                                   
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }                                                         
-  if (aIID.Equals(kIContentIID)) {                           
+  if (aIID.Equals(NS_GET_IID(nsIContent))) {                           
     nsIContent* tmp = this;                                
     *aInstancePtrResult = (void*) tmp;                                   
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }
-  if (aIID.Equals(kIDOMDocumentTypeIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentType))) {
     nsIDOMDocumentType* tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
@@ -320,7 +319,7 @@ nsXMLDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP

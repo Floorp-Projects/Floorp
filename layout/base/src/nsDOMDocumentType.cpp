@@ -185,7 +185,7 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP

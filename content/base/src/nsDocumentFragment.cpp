@@ -34,9 +34,6 @@
 #include "nsDOMError.h"
 
 
-static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-
 class nsDocumentFragment : public nsIContent,
                            public nsIDOMDocumentFragment,
                            public nsIScriptObjectOwner
@@ -285,7 +282,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDOMDocumentFragmentIID, 
+  return it->QueryInterface(NS_GET_IID(nsIDOMDocumentFragment), 
                             (void**) aInstancePtrResult);
 }
 
@@ -310,32 +307,32 @@ NS_IMPL_RELEASE(nsDocumentFragment)
 nsresult
 nsDocumentFragment::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIDOMDocumentFragment* tmp = this;
     nsISupports* tmp2 = tmp;
     *aInstancePtr = (void*) tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMDocumentFragmentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentFragment))) {
     nsIDOMDocumentFragment* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNodeIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
     nsIDOMDocumentFragment* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIContentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIContent))) {
     nsIContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -376,7 +373,7 @@ NS_IMETHODIMP
 nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   if (nsnull != mOwnerDocument) {
-    return mOwnerDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+    return mOwnerDocument->QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aOwnerDocument);
   }
   else {
     *aOwnerDocument = nsnull;
@@ -419,7 +416,7 @@ nsDocumentFragment::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 //XXX  mInner.CopyInnerTo(this, &it->mInner);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP
