@@ -43,6 +43,7 @@
 #include "nsIThread.h" // for PRThread
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
+#include "nsISearchContext.h" // for Find
 
 #include "ns_globals.h"
 
@@ -82,6 +83,7 @@ struct WebShellInitContext {
 	int					w;
 	int					h;
         int                                     gtkWinPtr;
+  nsCOMPtr<nsISearchContext> searchContext;
 };
 
 enum {
@@ -90,7 +92,9 @@ enum {
 	kInitWebShellError,
 	kShowWebShellError,
 	kHistoryWebShellError,
-    kClipboardWebShellError
+	kClipboardWebShellError,
+	kFindComponentError,
+	kSearchContextError
 };
 
 extern JavaVM *gVm; // defined in jni_util.cpp
