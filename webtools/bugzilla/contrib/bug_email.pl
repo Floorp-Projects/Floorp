@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.19 2004/03/27 03:51:44 kiko%async.com.br Exp $
+# $Id: bug_email.pl,v 1.20 2004/04/09 02:23:09 jocuri%softhome.net Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -829,7 +829,7 @@ if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components, products where components.product_id = products.id AND products.name=" .
             SqlQuote($Control{'product'}) .
             " and components.name=" . SqlQuote($Control{'component'}));
-    $Control{'qacontact'} = FetchOneColumn();
+    $Control{'qa_contact'} = FetchOneColumn();
 }
 
 # Set Assigned - assigned_to depends on the product, cause initialowner 
