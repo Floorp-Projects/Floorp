@@ -21,7 +21,7 @@
  */
 
 #include "ns4xPluginInstance.h"
-#include "nsIPluginStreamListener.h"
+#include "ns4xPluginStreamListener.h"
 #include "nsPluginHostImpl.h"
 
 #include "prlog.h"
@@ -40,46 +40,6 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // needed for NS_TRY_SAFE_CALL_*
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-#define MAX_PLUGIN_NECKO_BUFFER 16384
-
-class ns4xPluginStreamListener : public nsIPluginStreamListener {
-
-public:
-
-  NS_DECL_ISUPPORTS
-
-  ///////////////////////////////////////////////////////////////////////////
-  // from nsIPluginStreamListener:
-
-  NS_IMETHOD OnStartBinding(nsIPluginStreamInfo* pluginInfo);
-
-  NS_IMETHOD OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, 
-                             PRUint32 length);
-
-  NS_IMETHOD OnFileAvailable( nsIPluginStreamInfo* pluginInfo, const char* fileName);
-
-  NS_IMETHOD OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status);
-
-  NS_IMETHOD GetStreamType(nsPluginStreamType *result);
-
-  ///////////////////////////////////////////////////////////////////////////
-  // ns4xPluginStreamListener specific methods:
-
-  ns4xPluginStreamListener(nsIPluginInstance* inst, void* notifyData);
-  virtual ~ns4xPluginStreamListener(void);
-  PRBool IsStarted(void);
-
-protected:
-
-  void* mNotifyData;
-  char* mStreamBuffer;
-  ns4xPluginInstance* mInst;
-  NPStream mNPStream;
-  PRUint32 mPosition;
-  nsPluginStreamType mStreamType;
-};
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // ns4xPluginStreamListener Methods
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,13 +48,13 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
                                                    void* notifyData)
-    : mNotifyData(notifyData)
+    : mNotifyData(notifyData),
+      mStreamInfo(nsnull)
 {
     NS_INIT_REFCNT();
 	mInst = (ns4xPluginInstance*) inst;
-	mPosition = 0;
-  mStreamBuffer=nsnull;
-
+	mStreamBuffer=nsnull;
+    mPosition = 0;
     // Initialize the 4.x interface structure
     memset(&mNPStream, 0, sizeof(mNPStream));
 
@@ -136,6 +96,8 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
   pluginInfo->IsSeekable(&seekable);
   pluginInfo->GetContentType(&contentType);
+
+  mStreamInfo = pluginInfo;
 
   PRLibrary* lib = mInst->fLibrary;
 
@@ -185,6 +147,7 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
+                                          PRUint32 sourceOffset, 
                                           PRUint32 length)
 {
   if (!mInst || !mInst->IsStarted())
@@ -204,6 +167,11 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   PRInt32   writeCount = 0;
   PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
   PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
+
+  // we are getting a range request, reset mPosition since postion passed to plugin will
+  // be relative to the absolute position of the file.
+  if (sourceOffset != 0)
+    mPosition = 0;
 
   pluginInfo->GetURL(&mNPStream.url);
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
@@ -267,10 +235,24 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
     {
       PRLibrary* lib = mInst->fLibrary;
 
+#ifdef DEBUG_dougt
+      printf(">  %d - %d \n", sourceOffset + writeCount + mPosition, numtowrite);
+#if 0
+      nsCString x; 
+      x.Append("d:\\parts\\");
+      x.AppendInt(sourceOffset);
+
+      PRFileDesc* fd;
+      fd = PR_Open(x, PR_CREATE_FILE |PR_SYNC| PR_APPEND | PR_RDWR, 777);
+      PR_Write(fd, mStreamBuffer, numtowrite);
+      PR_Close(fd);
+#endif
+#endif
+
       NS_TRY_SAFE_CALL_RETURN(writeCount, CallNPP_WriteProc(callbacks->write,
                                                             npp,
                                                             &mNPStream, 
-                                                            mPosition,
+                                                            sourceOffset + writeCount + mPosition,
                                                             numtowrite,
                                                             (void *)mStreamBuffer), lib);
       if (writeCount < 0) {
@@ -278,8 +260,10 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
         goto error;
       }
 
+      if (sourceOffset == 0)
+          mPosition += numtowrite;
+
       amountRead -= numtowrite;
-      mPosition += numtowrite;
     }
   }
 
@@ -294,7 +278,7 @@ error:
 
   if (leftToRead > 0)  // if we have more to read in this pass, do it recursivly
   {
-    OnDataAvailable(pluginInfo, input, leftToRead);
+    OnDataAvailable(pluginInfo, input, sourceOffset, leftToRead);
   }
 
   return rv;
