@@ -28,13 +28,41 @@
 #include "nsHTMLImageLoader.h"
 #include "nsIImageFrame.h"
 
+#ifdef USE_IMG2
+#include "nsTransform2D.h"
+#include "imgIRequest.h"
+#include "imgIDecoderObserver.h"
+#include "imgIContainerObserver.h"
+#endif
+
 class nsIFrame;
 class nsImageMap;
-class nsIImage;
 class nsIURI;
+class nsILoadGroup;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
+
+#ifdef USE_IMG2
+class nsImageFrame;
+
+class nsImageListener : imgIDecoderObserver
+{
+public:
+  nsImageListener();
+  virtual ~nsImageListener();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_IMGIDECODEROBSERVER
+  NS_DECL_IMGICONTAINEROBSERVER
+
+  void SetFrame(nsImageFrame *frame) { mFrame = frame; }
+
+private:
+  nsImageFrame *mFrame;
+};
+#endif
+
 
 #define ImageFrameSuper nsLeafFrame
 
@@ -85,6 +113,17 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
+#ifdef USE_IMG2
+  NS_IMETHOD OnStartDecode(imgIRequest *aRequest, nsIPresContext *aCX);
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
+  NS_IMETHOD OnStartFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame, const nsRect * rect);
+  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);
+  NS_IMETHOD OnStopContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsIPresContext *aCX, nsresult aStatus, const PRUnichar *aStatusArg);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIPresContext *aCX, gfxIImageFrame *aNewframe, nsRect *aDirtyRect);
+#endif
+
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -96,7 +135,9 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
+#ifndef USE_IMG2
   nsresult UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* aClosure);
+#endif
 
   nsImageMap* GetImageMap(nsIPresContext* aPresContext);
 
@@ -133,16 +174,37 @@ protected:
   void GetInnerArea(nsIPresContext* aPresContext,
                     nsRect& aInnerArea) const;
 
+#ifndef USE_IMG2
   static nsresult UpdateImageFrame(nsIPresContext* aPresContext,
                                    nsHTMLImageLoader* aLoader,
                                    nsIFrame* aFrame,
                                    void* aClosure,
                                    PRUint32 aStatus);
+#endif
+
+  void GetBaseURI(nsIURI **uri);
+  void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
   nsHTMLImageLoader   mImageLoader;
   nsHTMLImageLoader * mLowSrcImageLoader;
   nsImageMap*         mImageMap;
   PRPackedBool        mSizeConstrained;
+
+#ifdef USE_IMG2
+  PRPackedBool mGotInitialReflow;
+
+  nsCOMPtr<imgIRequest> mImageRequest;
+  nsCOMPtr<imgIRequest> mLowImageRequest;
+
+  nsCOMPtr<imgIDecoderObserver> mListener;
+
+  nsSize mComputedSize;
+  nsSize mIntrinsicSize;
+
+  nsTransform2D mTransform;
+#endif
+
+  PRPackedBool        mSizeFrozen;
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
   nsMargin            mBorderPadding;
