@@ -132,7 +132,7 @@ nsresult MimePluginInstance::Complete(void)
 		if (first_write)
 		{
 			unsigned int written;
-			stream->Write("</pre>", 0, 6, &written);
+			stream->Write("</pre>", 6, &written);
 		}
 		return stream->Complete();
 	}
@@ -161,7 +161,7 @@ nsresult MimePluginInstance::WriteReady(PRUint32 *aReadyCount)
 	return NS_OK;
 }
 
-nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aOffset, PRUint32 aCount, PRUint32 *aWriteCount)
+nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	nsINetOStream *stream = OutStream;
 
@@ -170,10 +170,10 @@ nsresult MimePluginInstance::Write(const char* aBuf, PRUint32 aOffset, PRUint32 
 		if (!first_write)
 		{
 			unsigned int written;
-			stream->Write("<pre>", 0, 5, &written);
+			stream->Write("<pre>", 5, &written);
 			first_write = PR_TRUE;
 		}
-		return stream->Write(aBuf, aOffset, aCount, aWriteCount);
+		return stream->Write(aBuf, aCount, aWriteCount);
 	}
 	return NS_OK;
 }

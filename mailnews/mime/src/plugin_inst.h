@@ -52,7 +52,6 @@ public:
   
     // nsIOutputStream interface
     NS_IMETHOD    Write(const char *aBuf,
-                        PRUint32 aOffset,
                         PRUint32 aLen,
                         PRUint32 *aWriteLength);
 
