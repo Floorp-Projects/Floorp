@@ -163,6 +163,12 @@ class nsCParserNode :  public nsIParserNode {
      * @return  int containing the line number the token was found on
      */
     virtual PRInt32 GetSourceLineNumber(void) const;
+
+    /** This method pop the attribute token from the given index
+     * @update	harishd 03/25/99
+     * @return  token at anIndex
+     */
+    virtual CToken* PopAttributeToken();
               
   protected:
     PRUint32  mAttributeCount;    

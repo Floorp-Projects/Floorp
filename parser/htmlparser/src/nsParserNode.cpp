@@ -287,3 +287,21 @@ PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
   return mLineNumber;
 }
 
+/**
+ * This method pop the attribute token
+ * @update	harishd 03/25/99
+ * @return  token at anIndex
+ */
+
+CToken* nsCParserNode::PopAttributeToken()
+{
+  NS_PRECONDITION(mAttributeCount<PRInt32(sizeof(mAttributes)), "Buffer overrun!");
+  if(mAttributeCount > 0) {
+    CToken* theAttrToken = mAttributes[--mAttributeCount];
+    mAttributes[mAttributeCount] = nsnull;
+    return theAttrToken;
+  }
+  return nsnull;
+}
+
+
