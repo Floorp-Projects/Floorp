@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -237,6 +238,13 @@ nsHttpConnectionMgr::ReclaimConnection(nsHttpConnection *conn)
     if (NS_FAILED(rv))
         NS_RELEASE(conn);
     return rv;
+}
+
+nsresult
+nsHttpConnectionMgr::UpdateParam(nsParamName name, PRUint16 value)
+{
+    PRUint32 param = (PRUint32(name) << 16) | PRUint32(value);
+    return PostEvent(&nsHttpConnectionMgr::OnMsgUpdateParam, NS_OK, (void *) param);
 }
 
 nsresult
@@ -821,6 +829,39 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(nsresult, void *param)
  
     OnMsgProcessPendingQ(NS_OK, ci); // releases |ci|
     NS_RELEASE(conn);
+}
+
+void
+nsHttpConnectionMgr::OnMsgUpdateParam(nsresult status, void *param)
+{
+    PRUint16 name  = (PRUint32(param) & 0xFFFF0000) >> 16;
+    PRUint16 value =  PRUint32(param) & 0x0000FFFF;
+
+    switch (name) {
+    case MAX_CONNECTIONS:
+        mMaxConns = value;
+        break;
+    case MAX_CONNECTIONS_PER_HOST:
+        mMaxConnsPerHost = value;
+        break;
+    case MAX_CONNECTIONS_PER_PROXY:
+        mMaxConnsPerProxy = value;
+        break;
+    case MAX_PERSISTENT_CONNECTIONS_PER_HOST:
+        mMaxPersistConnsPerHost = value;
+        break;
+    case MAX_PERSISTENT_CONNECTIONS_PER_PROXY:
+        mMaxPersistConnsPerProxy = value;
+        break;
+    case MAX_REQUEST_DELAY:
+        mMaxRequestDelay = value;
+        break;
+    case MAX_PIPELINED_REQUESTS:
+        mMaxPipelinedRequests = value;
+        break;
+    default:
+        NS_NOTREACHED("unexpected parameter name");
+    }
 }
 
 //-----------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,13 +54,24 @@ class nsHttpPipeline;
 class nsHttpConnectionMgr
 {
 public:
+
+    // parameter names
+    enum nsParamName {
+        MAX_CONNECTIONS,
+        MAX_CONNECTIONS_PER_HOST,
+        MAX_CONNECTIONS_PER_PROXY,
+        MAX_PERSISTENT_CONNECTIONS_PER_HOST,
+        MAX_PERSISTENT_CONNECTIONS_PER_PROXY,
+        MAX_REQUEST_DELAY,
+        MAX_PIPELINED_REQUESTS
+    };
+
     //-------------------------------------------------------------------------
     // NOTE: functions below may only be called on the main thread.
     //-------------------------------------------------------------------------
 
     nsHttpConnectionMgr();
 
-    // XXX cleanup the way we pass around prefs.
     nsresult Init(PRUint16 maxConnections,
                   PRUint16 maxConnectionsPerHost,
                   PRUint16 maxConnectionsPerProxy,
@@ -104,6 +116,10 @@ public:
     // connection can be reused then it will be added to the idle list, else
     // it will be closed.
     nsresult ReclaimConnection(nsHttpConnection *conn);
+
+    // called to update a parameter after the connection manager has already
+    // been initialized.
+    nsresult UpdateParam(nsParamName name, PRUint16 value);
 
     //-------------------------------------------------------------------------
     // NOTE: functions below may be called only on the socket thread.
@@ -252,6 +268,7 @@ private:
     void OnMsgProcessPendingQ      (nsresult status, void *param);
     void OnMsgPruneDeadConnections (nsresult status, void *param);
     void OnMsgReclaimConnection    (nsresult status, void *param);
+    void OnMsgUpdateParam          (nsresult status, void *param);
 
     // counters
     PRUint16 mNumActiveConns;
