@@ -51,16 +51,13 @@
 // class, be sure to change the class declaration to "class NS_BASE
 // nsTime".
 
-class nsTime
+class nsTime : public nsInt64
 {
-public: //XXX should be private
-    nsInt64 mValue;
-    
 public:
     /**
      * Construct the current time.
      */
-    nsTime(void) : mValue(PR_Now()) {
+    nsTime(void) : nsInt64(PR_Now()) {
     }
 
     /**
@@ -78,19 +75,19 @@ public:
     /**
      * Construct a time from a PRTime.
      */
-    nsTime(const PRTime aTime) : mValue(aTime) {
+    nsTime(const PRTime aTime) : nsInt64(aTime) {
     }
 
     /**
      * Construct a time from a 64-bit value.
      */
-    nsTime(const nsInt64& aTime) : mValue(aTime) {
+    nsTime(const nsInt64& aTime) : nsInt64(aTime) {
     }
 
     /**
      * Construct a time from another time.
      */
-    nsTime(const nsTime& aTime) : mValue(aTime.mValue) {
+    nsTime(const nsTime& aTime) : nsInt64(aTime.mValue) {
     }
 
     // ~nsTime(void) -- XXX destructor unnecessary
@@ -109,73 +106,7 @@ public:
     operator PRTime(void) const {
         return mValue;
     }
-
-    // Arithmetic operators
-
-    /**
-     * Subtract a 64-bit interval from a time.
-     */
-    nsTime& operator -=(const nsInt64& aInterval) {
-        mValue -= aInterval;
-        return *this;
-    }
-
-    /**
-     * Add a 64-bit interval to a time.
-     */
-    nsTime& operator +=(const nsInt64& aInterval) {
-        mValue += aInterval;
-        return *this;
-    }
-
-    // Comparison operators
-    friend const PRBool operator ==(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator !=(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator <(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator <=(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator >(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator >=(const nsTime& aTime1, const nsTime& aTime2);
 };
-
-/**
- * Binary addition to add a 64-bit interval to a time.
- */
-inline const nsTime
-operator +(const nsTime& aTime, const nsInt64& aInterval) {
-    return nsTime(aTime.mValue + aInterval);
-}
-
-/**
- * Binary subtraction to subtract a 64-bit interval to a time.
- */
-inline const nsTime
-operator -(const nsTime& aTime, const nsInt64& aInterval) {
-    return nsTime(aTime.mValue - aInterval);
-}
-
-/**
- * Binary subtraction to compute an interval from the difference of two times.
- */
-inline const nsInt64
-operator -(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue - aTime2.mValue;
-}
-
-/**
- * Determine if two times are equal
- */
-inline const PRBool
-operator ==(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue == aTime2.mValue;
-}
-
-/**
- * Determine if two times are different
- */
-inline const PRBool
-operator !=(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue != aTime2.mValue;
-}
 
 /**
  * Determine if one time is strictly less than another
