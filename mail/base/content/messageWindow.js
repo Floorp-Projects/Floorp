@@ -314,7 +314,14 @@ function delayedOnLoadMessageWindow()
 	}	
 
   CreateView(originalView);
- 
+  
+  // initialize the customizeDone method on the customizeable toolbar
+  var toolbox = document.getElementById("mail-toolbox");
+  toolbox.customizeDone = MailToolboxCustomizeDone;
+
+  var toolbarset = document.getElementById('customToolbars');
+  toolbox.toolbarset = toolbarset;
+
   setTimeout(OnLoadMessageWindowDelayed, 0, loadCustomMessage);
   
   SetupCommandUpdateHandlers();
