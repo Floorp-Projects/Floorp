@@ -291,7 +291,7 @@ nsEventQueueImpl::Unlink()
   if (old) {
     old->SetYounger(young);
     if (!young)
-      NS_RELEASE(mElderQueue); // release addref from AppendQueue
+      NS_RELEASE(old); // release addref from AppendQueue
   }
   return NS_OK;
 }
