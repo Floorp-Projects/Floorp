@@ -79,7 +79,10 @@ XP_State :: XP_State()
   // mMatrix.SetToScale(1.0, 1.0);  
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mFontMetrics = nsnull;
-  mCurrentColor = NS_RGB(255, 255, 255);
+  mCurrentColor = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
+                                    * ...but we should query that from 
+                                    * Xserver instead of guessing that...
+                                    */
   mTextColor = NS_RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
 }
@@ -132,8 +135,10 @@ nsRenderingContextXp :: nsRenderingContextXp()
 
   mStateCache = new nsVoidArray();
   mPrintContext = nsnull;
-  mCurrentColor = NS_RGB(255, 255, 255);
-
+  mCurrentColor = NS_RGB(0, 0, 0); /* X11 intial bg color is always _black_...
+                                    * ...but we should query that from 
+                                    * Xserver instead of guessing that...
+                                    */
   PushState();
   mP2T = 1.0f;
 }
