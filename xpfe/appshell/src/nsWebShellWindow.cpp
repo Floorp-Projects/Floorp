@@ -507,7 +507,7 @@ void nsWebShellWindow::ConnectCommandToOneGUINode(
   nsString nodeCmdName;
   theNodeAsElement->GetAttribute(cmdAtom, nodeCmdName);
   nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(nodeCmdName));
-  if (nsnull != cmd) {
+  if (cmd) {
     nsString guiDisplayName; // ok, this doesn't work.  How do I get the button text? jrm
     theNodeAsElement->GetAttribute(nsAutoString("name"), guiDisplayName);
 #if 0
@@ -575,7 +575,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             // Begin menuitem inner loop
             nsCOMPtr<nsIDOMNode> menuitemNode;
             menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
-            while (nsnull != menuitemNode) {
+            while (menuitemNode) {
               nsCOMPtr<nsIDOMElement> menuitemElement(menuitemNode);
               if (menuitemElement) {
                 nsString menuitemNodeType;
