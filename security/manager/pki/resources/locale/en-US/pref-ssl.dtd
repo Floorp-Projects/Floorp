@@ -50,22 +50,15 @@
 <!ENTITY cipher.ssl2.label "SSL2 Ciphersuites">
 <!ENTITY cipher.ssl3.label "SSL3/TLS Ciphersuites">
 
-<!-- SSL2 Ciphers -->
-<!ENTITY cipher.ssl2.rc4_128 "RC4 encryption with a 128-bit key">
-<!ENTITY cipher.ssl2.rc2_128 "RC2 encryption with a 128-bit key">
-<!ENTITY cipher.ssl2.des_ede3_192 "Triple DES encryption with a 168-bit key">
-<!ENTITY cipher.ssl2.des_64 "DES encryption with a 56-bit key">
-<!ENTITY cipher.ssl2.rc4_40 "RC4 encryption with a 40-bit key">
-<!ENTITY cipher.ssl2.rc2_40 "RC2 encryption with a 40-bit key">
-
-<!-- SSL3 ciphers -->
-<!ENTITY cipher.ssl3.rsa_rc4_128_md5 "RC4 encryption with a 128-bit key and an MD5 MAC">
-<!ENTITY cipher.ssl3.rsa_fips_des_ede3_sha "FIPS 140-1 compliant triple DES encryption and SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_des_ede3_sha "Triple DES encryption with a 168-bit key and a SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_fips_des_sha "FIPS 140-1 compliant DES encryption and SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_des_sha "DES encryption with a 56-bit key and a SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_1024_rc4_56_sha "RC4 encryption with a 56-bit key and a SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_1024_des_cbc_sha "DES encryption in CBC mode with a 56-bit key and a SHA-1 MAC">
-<!ENTITY cipher.ssl3.rsa_rc4_40_md5 "RC4 encryption with a 40-bit key and an MD5 MAC">
-<!ENTITY cipher.ssl3.rsa_rc2_40_md5 "RC2 encryption with a 40-bit key and an MD5 MAC">
-<!ENTITY cipher.ssl3.rsa_null_md5 "No encryption with an MD5 MAC">
+<!-- Labels for cipher attributes -->
+<!ENTITY cipher.enable "Enable">
+<!ENTITY cipher.name "Cipher">
+<!ENTITY cipher.version "Version">
+<!ENTITY cipher.encryption "Encryption Algorithm:">
+<!ENTITY cipher.authAlg "Authentification Algorithm:">
+<!ENTITY cipher.keyAlg "Key Algorithm:">
+<!ENTITY cipher.keySize "Key Size:">
+<!ENTITY cipher.macAlg "MAC Algorithm:">
+<!ENTITY cipher.other "Other Attributes:">
+<!ENTITY cipher.fips "FIPS">
+<!ENTITY cipher.exportable "IsExportable">

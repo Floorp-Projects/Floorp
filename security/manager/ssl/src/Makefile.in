@@ -71,6 +71,7 @@ CPPSRCS = 				\
         nsCMSSecureMessage.cpp          \
         nsCMS.cpp 	                \
         nsCertPicker.cpp                \
+        nsCipherInfo.cpp                \
 	$(NULL)
 
 REQUIRES	= nspr \
