@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextras
+SHORT_LIBNAME	= xmlextra
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsXMLExtrasModule.cpp
