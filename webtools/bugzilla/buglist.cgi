@@ -1172,6 +1172,7 @@ if ($dotweak) {
 <SCRIPT>
 numelements = document.changeform.elements.length;
 function SetCheckboxes(value) {
+    var item;
     for (var i=0 ; i<numelements ; i++) {
         item = document.changeform.elements\[i\];
         item.checked = value;
