@@ -755,9 +755,17 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
     h = dlopen(name, dl_flags);
 #elif defined(USE_HPSHL)
-    int shl_flags = DYNAMIC_PATH;
+    int shl_flags = 0;
     shl_t h;
 
+    /*
+     * Use the DYNAMIC_PATH flag only if 'name' is a plain file
+     * name (containing no directory) to match the behavior of
+     * dlopen().
+     */
+    if (strchr(name, PR_DIRECTORY_SEPARATOR) == NULL) {
+        shl_flags |= DYNAMIC_PATH;
+    }
     if (flags & PR_LD_LAZY) {
         shl_flags |= BIND_DEFERRED;
     }
