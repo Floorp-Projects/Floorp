@@ -116,13 +116,14 @@ NS_IMETHODIMP nsInternetConfigService::HasProtocalHandler(const char *protocol, 
 
 // This method does the dirty work of traipsing through IC mappings database
 // looking for a mapping for mimetype
-OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, const char *fileextension, ICMapEntry *entry)
+nsresult nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, const char *fileextension, ICMapEntry *entry)
 {
   ICInstance inst = nsInternetConfig::GetInstance();
   OSStatus err = noErr;
   ICAttr attr;
   Handle prefH;
-  PRBool domimecheck = PR_TRUE;
+  PRBool domimecheck = PR_TRUE, gotmatch = PR_FALSE;
+  ICMapEntry ent;
   
   if ((strcmp(mimetype, UNKNOWN_CONTENT_TYPE) == 0) ||
       (strcmp(mimetype, APPLICATION_OCTET_STREAM) == 0))
@@ -147,13 +148,13 @@ OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
             long pos;
             for(long i = 1; i <= count; i++)
             {
-              err = ::ICGetIndMapEntry(inst, prefH, i, &pos, entry);
+              err = ::ICGetIndMapEntry(inst, prefH, i, &pos, &ent);
               if (err == noErr)
               {
                 // first, do mime type check
                 if (domimecheck)
                 {
-                  nsCString temp((char *)&entry->MIMEType[1], (int)entry->MIMEType[0]);
+                  nsCAutoString temp((char *)&ent.MIMEType[1], (int)ent.MIMEType[0]);
                   if (!temp.EqualsIgnoreCase(mimetype))
                   {
                     // we need to do mime check, and check failed
@@ -164,12 +165,15 @@ OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
                 if (fileextension)
                 {
                   // if fileextension was passed in, compare that also
-                  if (entry->extension[0] != 0)
+                  if (ent.extension[0]) // check for non-empty pascal string
                   {
-                    nsCString temp((char *)&entry->extension[1], (int)entry->extension[0]);
+                    nsCAutoString temp((char *)&ent.extension[1], (int)ent.extension[0]);
                     if (temp.EqualsIgnoreCase(fileextension))
                     {
                       // mime type and file extension match, we're outta here
+                      gotmatch = PR_TRUE;
+                      // copy over ICMapEntry
+                      *entry = ent;
                       break;
                     }
                   }
@@ -179,6 +183,9 @@ OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
                   // at this point, we've got our match because
                   // domimecheck is true, the mime strings match, and fileextension isn't passed in
                   // bad thing is we'll stop on first match, but what can you do?
+                  gotmatch = PR_TRUE;
+                  // copy over ICMapEntry
+                  *entry = ent;
                   break;
                 }
               }
@@ -192,9 +199,16 @@ OSStatus nsInternetConfigService::GetMappingForMIMEType(const char *mimetype, co
         err = memFullErr;
       }
       err = ::ICEnd(inst);
+      if (err == noErr && gotmatch == PR_FALSE)
+      {
+      	err = fnfErr; // return SOME kind of error
+      }
     }
   }
-  return err;
+  if (err != noErr)
+	return NS_ERROR_FAILURE;
+  else
+  	return NS_OK;
 }
 
 nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIMIMEInfo ** mimeinfo)
