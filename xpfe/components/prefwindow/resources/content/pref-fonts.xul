@@ -41,9 +41,6 @@
 	</box> 
 	<box align="vertical" style="width: 100%;">
 		<html:fieldset style="width: 100%;">
-			<html:legend align="left">
-				<html:div></html:div> 
-			</html:legend>
 			<html:div>
 				&encod.select;
 				<html:select>

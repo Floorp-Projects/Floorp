@@ -42,9 +42,6 @@
 
 	<box align="vertical" flex="100%" style="width: 100%;">
 		<html:fieldset style="width: 100%;">
-					<html:legend align="left"> 
-			<html:div></html:div> 
-					</html:legend> 
 		<html:div>
 			&authorName;
 			<html:input name="author" type="text" id="pref:string:editor.author" />
