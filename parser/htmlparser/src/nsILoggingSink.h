@@ -34,6 +34,6 @@ public:
   NS_IMETHOD Init(FILE* fp) = 0;
 };
 
-extern nsresult NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult);
+extern "C" nsresult NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult);
 
 #endif /* nsILoggingSink_h___ */
