@@ -228,7 +228,7 @@ out:
 
 }
 
-void * GC_malloc_many(size_t lb)
+GC_PTR GC_malloc_many(size_t lb)
 {
     return(GC_generic_malloc_many(lb, NORMAL));
 }
