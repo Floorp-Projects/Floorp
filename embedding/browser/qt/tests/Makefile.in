@@ -31,7 +31,7 @@ MOCSRCS		= \
 IMAGES = fileopen.png reload.png back.png forward.png stop.png
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
-PROGRAM = $(CPPSRCS:.cpp=)
+PROGRAM = TestQGeckoEmbed$(BIN_SUFFIX)
 
 ifdef MOZ_ENABLE_QT
 LIBS		+= \
