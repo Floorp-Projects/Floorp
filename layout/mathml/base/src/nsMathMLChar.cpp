@@ -353,7 +353,7 @@ nsGlyphTable::GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition)
   static const char* kHorizontal = "LMRG";
   if (aPosition >= 4) {
     // return an ASCII digit for the size=0,1,2,...
-    return PRUnichar('0' + aPosition - 4);
+    return '0' + aPosition - 4;
   }
   return (aChar->mDirection == NS_STRETCH_DIRECTION_VERTICAL) ?
       kVertical[aPosition] :
@@ -408,11 +408,9 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
   if (mCharCache != uchar) {
     // The key in the property file is interpreted as ASCII and kept
     // as such ...
-    char cbuf[10]; PR_snprintf(cbuf, sizeof(cbuf), "\\u%04X", uchar);
-    nsDependentCString key(cbuf);
-    
+    char key[10]; PR_snprintf(key, sizeof(key), "\\u%04X", uchar);
     nsAutoString value;
-    nsresult rv = mGlyphProperties->GetStringProperty(key, value);
+    nsresult rv = mGlyphProperties->GetStringProperty(nsDependentCString(key), value);
     if (NS_FAILED(rv)) return kNullGlyph;
     Clean(value);
     // See if this char uses external fonts; e.g., if the 2nd glyph is taken from the
@@ -422,7 +420,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     // mGlyphCache[2*k] will later be rendered with mFontName[mGlyphCache[2*k+1]-'0']
     // Note: font identifier is internally an ASCII digit to avoid the null char issue
     nsAutoString buffer, puaValue;
-    nsCAutoString puaKey;
+    char puaKey[10];
     PRInt32 length = value.Length();
     for (PRInt32 i = 0, j = 0; i < length; i++, j++) {
       PRUnichar code = value[i];
@@ -435,23 +433,19 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
       // see if this code point is an *indirect reference* to
       // the PUA, and lookup "key.[TLMBRG1-9]" in the PUA
       else if (code == PRUnichar(0xF8FF)) {
-        puaKey.Assign(key);
-        puaKey.Append('.');
-        puaKey.Append(GetAnnotation(aChar, j));
-        rv = gPUAProperties->GetStringProperty(puaKey, puaValue);
-        if (NS_FAILED(rv) || !puaValue.Length()) return kNullGlyph;
+        PR_snprintf(puaKey, sizeof(puaKey), "%s.%c", key, GetAnnotation(aChar, j));
+        rv = gPUAProperties->GetStringProperty(nsDependentCString(puaKey), puaValue);
+        if (NS_FAILED(rv) || puaValue.IsEmpty()) return kNullGlyph;
         code = puaValue[0];
       }
       // see if this code point is a *direct reference* to
       // the PUA, and lookup "code.[TLMBRG1-9]" in the PUA
       else if ((i+2 < length) && (value[i+1] == PRUnichar('.'))) {
         i += 2;
-        PR_snprintf(cbuf, sizeof(cbuf), "\\u%04X", code);
-        puaKey.Assign(cbuf);
-        puaKey.Append('.');
-        puaKey.Append(char(value[i])); // safe cast, it's ascii
-        rv = gPUAProperties->GetStringProperty(puaKey, puaValue);
-        if (NS_FAILED(rv) || !puaValue.Length()) return kNullGlyph;
+        // safe cast of value[i], it's ascii
+        PR_snprintf(puaKey, sizeof(puaKey), "\\u%04X.%c", code, char(value[i]));
+        rv = gPUAProperties->GetStringProperty(nsDependentCString(puaKey), puaValue);
+        if (NS_FAILED(rv) || puaValue.IsEmpty()) return kNullGlyph;
         code = puaValue[0];
       }
       // see if an external font is needed for the code point
