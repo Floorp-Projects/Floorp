@@ -265,7 +265,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
     foundThread = new nsMsgGroupThread(m_db);
     m_groupsTable.Put(hashKey, foundThread);
     foundThread->AddRef();
-    if (m_sortType == nsMsgViewSortType::byDate)
+    if (GroupViewUsesDummyRow())
     {
       foundThread->m_dummy = PR_TRUE;
       msgFlags |=  MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_HASCHILDREN;
@@ -278,7 +278,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
     m_flags.InsertAt(insertIndex, msgFlags | MSG_VIEW_FLAG_ISTHREAD | MSG_FLAG_ELIDED);
     m_levels.InsertAt(insertIndex, 0, 1);
     // if grouped by date, insert dummy header for "age"
-    if (m_sortType == nsMsgViewSortType::byDate)
+    if (GroupViewUsesDummyRow())
     {
       foundThread->m_keys.InsertAt(0, msgKey/* nsMsgKey_None */);
       foundThread->m_threadKey = ((nsPRUint32Key *) hashKey)->GetValue();
@@ -295,7 +295,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
   if (!newThread && foundThread->m_keys[0] == msgKey)
   {
     m_keys.SetAt(viewIndexOfThread, msgKey);
-    if (m_sortType == nsMsgViewSortType::byDate)
+    if (GroupViewUsesDummyRow())
       foundThread->m_keys.SetAt(1, msgKey); // replace the old duplicate dummy header.
   }
 
@@ -472,31 +472,70 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
       return NS_OK;
 
     nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
-    if (colID[0] == 'd')
+    if (colID[0] == 's'  && colID[1] == 'u' )
     {
       aValue.SetCapacity(0);
-      // ### need to localize these...
-      // need to get the thread for this row, and use the thread id to switch on.
-      switch (((nsPRUint32Key *)hashKey)->GetValue())
+      nsXPIDLString valueText;
+      switch (m_sortType)
       {
-      case 1:
-        aValue.Assign(kTodayString);
-        break;
-      case 2:
-        aValue.Assign(kYesterdayString);
-        break;
-      case 3:
-        aValue.Assign(kLastWeekString);
-        break;
-      case 4:
-        aValue.Assign(kTwoWeeksAgoString);
-        break;
-      case 5:
-        aValue.Assign(kOldMailString);
-        break;
-      default:
-        NS_ASSERTION(PR_FALSE, "bad age thread");
-        break;
+        case nsMsgViewSortType::byDate:
+        {
+          switch (((nsPRUint32Key *)hashKey)->GetValue())
+          {
+          case 1:
+            aValue.Assign(kTodayString);
+            break;
+          case 2:
+            aValue.Assign(kYesterdayString);
+            break;
+          case 3:
+            aValue.Assign(kLastWeekString);
+            break;
+          case 4:
+            aValue.Assign(kTwoWeeksAgoString);
+            break;
+          case 5:
+            aValue.Assign(kOldMailString);
+            break;
+          default:
+            NS_ASSERTION(PR_FALSE, "bad age thread");
+            break;
+          }
+          break;
+        } 
+        case nsMsgViewSortType::byAuthor:
+          FetchAuthor(msgHdr, getter_Copies(valueText));
+          aValue.Assign(valueText.get());
+          break;
+        case nsMsgViewSortType::byStatus:      
+          rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
+          if (!valueText)
+            valueText.Adopt(GetString(NS_LITERAL_STRING("messagesWithNoStatus").get()));
+          aValue.Assign(valueText);
+          break;
+        case nsMsgViewSortType::byLabel:
+          rv = FetchLabel(msgHdr, getter_Copies(valueText));
+          if (!valueText)
+            valueText.Adopt(GetString(NS_LITERAL_STRING("unlabeledMessages").get()));
+          aValue.Assign(valueText);
+          break;
+        case nsMsgViewSortType::byPriority:
+          FetchPriority(msgHdr, getter_Copies(valueText));
+          if (!valueText)
+            valueText.Adopt(GetString(NS_LITERAL_STRING("noPriority").get()));
+          aValue.Assign(valueText);
+          break;
+        case nsMsgViewSortType::byAccount:
+          FetchAccount(msgHdr, getter_Copies(valueText));
+          aValue.Assign(valueText);
+          break;
+        case nsMsgViewSortType::byRecipient:
+          FetchRecipients(msgHdr, getter_Copies(valueText));
+          aValue.Assign(valueText);
+          break;
+        default:
+          NS_ASSERTION(PR_FALSE, "we don't sort by group for this type");
+          break;
       }
     }
     else if (colID[0] == 't')
@@ -561,4 +600,9 @@ nsMsgViewIndex nsMsgGroupView::ThreadIndexOfMsg(nsMsgKey msgKey,
       return msgIndex;
   }
   return nsMsgDBView::ThreadIndexOfMsg(msgKey, msgIndex, pThreadCount, pFlags);
+}
+
+PRBool nsMsgGroupView::GroupViewUsesDummyRow()
+{
+  return (m_sortType != nsMsgViewSortType::bySubject);
 }

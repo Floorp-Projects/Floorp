@@ -228,7 +228,8 @@ function InitViewSortByMenu()
     var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
         || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
         || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
-        || sortType == nsMsgViewSortType.byRecipient);
+        || sortType == nsMsgViewSortType.byRecipient || sortType == nsMsgViewSortType.byAccount
+        || sortType == nsMsgViewSortType.byStatus);
 
     setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
     setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));

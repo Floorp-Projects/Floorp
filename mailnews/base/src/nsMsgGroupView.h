@@ -68,6 +68,8 @@ protected:
                                             PRInt32 *pThreadCount = NULL,
                                             PRUint32 *pFlags = NULL);
 
+  PRBool GroupViewUsesDummyRow(); // returns true if we are grouped by a sort attribute that uses a dummy row
+
   nsHashtable  m_groupsTable;
 
   static PRUnichar* kTodayString;

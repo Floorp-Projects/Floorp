@@ -38,8 +38,6 @@
 
 var gLastMessageUriToLoad = null;
 var gThreadPaneCommandUpdater = null;
-var gGroupColumn;
-var gOldPrevColumn;
 
 function ThreadPaneOnClick(event)
 {
@@ -356,6 +354,14 @@ function MsgGroupBySort()
   var count = new Object;
   var msgFolder = dbview.msgFolder;
 
+  var sortTypeSupportsGrouping = (sortType == nsMsgViewSortType.byAuthor 
+         || sortType == nsMsgViewSortType.byDate || sortType == nsMsgViewSortType.byPriority
+         || sortType == nsMsgViewSortType.bySubject || sortType == nsMsgViewSortType.byLabel
+         || sortType == nsMsgViewSortType.byStatus  || sortType == nsMsgViewSortType.byRecipient);
+
+  if (!dbview.supportsThreading || !sortTypeSupportsGrouping)
+    return; // we shouldn't be trying to group something we don't support grouping for...
+
   viewFlags |= nsMsgViewFlagsType.kThreadedDisplay | nsMsgViewFlagsType.kGroupBySort;
   // null this out, so we don't try sort.
   if (gDBView) {
@@ -396,6 +402,12 @@ function MsgSortDescending()
   UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.descending);
 }
 
+function groupedBySortUsingDummyRow()
+{
+  return (gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort) && 
+         (gDBView.sortType != nsMsgViewSortType.bySubject);
+}
+
 function UpdateSortIndicators(sortType, sortOrder)
 {
   // show the twisties if the view is threaded
@@ -414,34 +426,23 @@ function UpdateSortIndicators(sortType, sortOrder)
   {
     var threadTree = document.getElementById("threadTree");  
     var subjectCol = document.getElementById("subjectCol");
-    // if this is persistent, need to reverse it when done.
-    gOldPrevColumn = currCol._previousVisibleColumn;
 
-    viewDebug("gOldPrevColumn = " + gOldPrevColumn + "\n");
-    if (currCol && subjectCol)
-      threadTree._reorderColumn(currCol, subjectCol, true);
-    gGroupColumn = currCol;
+    if (groupedBySortUsingDummyRow())
+    {
+      currCol.removeAttribute("primary");
+      subjectCol.setAttribute("primary", "true");
+    }
 
     // hide the threaded column when in grouped view since you can't do 
     // threads inside of a group.
     document.getElementById("threadCol").collapsed = true;
   }
+
   // clear primary attribute from group column if going to a non-grouped view.
-  if (gGroupColumn && !(gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort))
-  {
+  if (!(gDBView.viewFlags & nsMsgViewFlagsType.kGroupBySort))
     document.getElementById("threadCol").collapsed = false;
 
-    if (gGroupColumn != currCol)
-      gGroupColumn.removeAttribute("primary");
-    if (gOldPrevColumn)
-    {
-      var threadTree = GetThreadTree();
-      threadTree._reorderColumn(gGroupColumn, gOldPrevColumn, false);
-    }
-    gGroupColumn = null;
-  }
-
-  if (GetDBView().viewFlags & nsMsgViewFlagsType.kThreadedDisplay) {
+  if ((GetDBView().viewFlags & nsMsgViewFlagsType.kThreadedDisplay) && !groupedBySortUsingDummyRow()) {
     threadCol.setAttribute("sortDirection", "ascending");
     currCol.setAttribute("primary", "true");
   }
@@ -530,17 +531,4 @@ function ThreadPaneSelectionChanged()
     GetThreadTree().view.selectionChanged();
 }
 
-function ThreadPaneOnUnload()
-{
-  // put group column back where it was.
-  if (gGroupColumn && gOldPrevColumn)
-  {
-    var threadTree = GetThreadTree();
-    viewDebug ("inserting after col " + gOldPrevColumn + "\n");
-    threadTree._reorderColumn(gGroupColumn, gOldPrevColumn, false);
-    gGroupColumn = null;
-  }
-}
-
 addEventListener("load",ThreadPaneOnLoad,true);
-addEventListener("unload", ThreadPaneOnUnload, false);
