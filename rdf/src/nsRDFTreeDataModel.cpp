@@ -203,7 +203,8 @@ nsRDFTreeDataModel::GetVisibleColumnCount(PRUint32& count) const
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetColumnCount(PRUint32& count) const
 {
-    return mColumns.GetSize();
+    count = mColumns.GetSize();
+    return NS_OK;
 }
 
 
@@ -216,6 +217,8 @@ nsRDFTreeDataModel::GetNthColumn(nsITreeColumn*& pColumn, PRUint32 n) const
     }
 
     pColumn = static_cast<nsITreeColumn*>(mColumns.Get(n));
+    pColumn->AddRef();
+
     return NS_OK;
 }
 	
@@ -309,6 +312,15 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& result,
 nsresult
 nsRDFTreeDataModel::CreateColumns(void)
 {
+    /*
+    // XXX manually add columns for testing
+    AddColumn(nsString("Name"),          gCoreVocab->RDF_name);
+    AddColumn(nsString("Last Modified"), gWebData->RDF_lastModifiedDate);
+    AddColumn(nsString("Last Visited"),  gWebData->RDF_lastVisitDate);
+    AddColumn(nsString("Description"),   gWebData->RDF_description);
+    return NS_OK;
+    */
+
     // This mostly came over from HT_NewView()
     nsRDFDataModelItem* root = GetRoot();
     PR_ASSERT(root);
@@ -360,7 +372,6 @@ nsRDFTreeDataModel::CreateColumns(void)
         mColumns.Add(column);
     }	
     RDF_DisposeCursor(cursor);
-
     return NS_OK;
 }
 
