@@ -134,7 +134,7 @@ rebase:
 !endif
 
 splitsymbols:
-!if defined(MOZILLA_OFFICIAL)
+!if defined(MOZ_FULLCIRCLE)
 !if defined(FIND)
 !if "$(SPLITSYM)" != ""
 	echo splitting symbols for FullCircle
