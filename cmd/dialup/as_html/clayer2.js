@@ -307,6 +307,16 @@ function generateControls()
 			if ( editMode == true )
 				showBack = true;
 		}
+		else if ( formName == "error2.htm" )
+		{
+       			showBack = true;
+        		showExit = true;
+        		showNext = false;
+        		showAgain = true;
+        		showDone = false;
+        		if ( editMode == true )
+             		   showBack = true;
+		}
 		else if ( formName == "later.htm" )
 		{
 			showBack = false;
