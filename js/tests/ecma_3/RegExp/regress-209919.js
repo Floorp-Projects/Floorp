@@ -61,19 +61,19 @@ pattern = /^\-?(\d{1,}|\.{0,})*(\,\d{1,})?$/;
   status = inSection(1);
   string = '100.00';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, undefined, undefined);
+  expectedmatch = Array(string, '00', undefined);
   addThis();
 
   status = inSection(2);
   string = '100,00';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, undefined, ',00');
+  expectedmatch = Array(string, '100', ',00');
   addThis();
 
   status = inSection(3);
   string = '1.000,00';
   actualmatch = string.match(pattern);
-  expectedmatch = Array(string, undefined, ',00');
+  expectedmatch = Array(string, '000', ',00');
   addThis();
 
 
