@@ -22,6 +22,7 @@
  *   Doug Turner <dougt@netscape.com>
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Brian Ryner <bryner@netscape.com>
+ *   Terry Hayes <thayes@netscape.com>
  */
 #define FORCE_PR_LOG
 
@@ -41,10 +42,14 @@
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
+/*
 #include "nsCURILoader.h"
+ */
 #include "nsIDocument.h"
+/*
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXULDocument.h"
+*/
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIContent.h"
@@ -56,13 +61,13 @@
 #include "nsIPrompt.h"
 #include "nsIPref.h"
 #include "nsIFormSubmitObserver.h"
+#include "nsNSSHelper.h"
+
+#include "nsINSSDialogs.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-#define ENTER_SITE_PREF      "security.warn_entering_secure"
-#define LEAVE_SITE_PREF      "security.warn_leaving_secure"
-#define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
 
 #if defined(PR_LOGGING)
@@ -468,9 +473,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSin
                                                   nsIRequest* aRequest,
                                                   nsIChannel* aChannel)
 {
-  nsresult res;
   PRInt32 newSecurityState, oldSecurityState = mSecurityState;
-  PRBool boolpref;
   
   newSecurityState = GetSecurityStateFromChannel(aChannel);
 
@@ -481,77 +484,15 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSin
 
     SetBrokenLockIcon(eventSink, aRequest, PR_TRUE);
 
-    if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
-      boolpref = PR_TRUE;
-    
-    if (boolpref) {
-      nsCOMPtr<nsIPrompt> dialog;
-      mWindow->GetPrompter(getter_AddRefs(dialog));
-      if (!dialog)
-        return NS_ERROR_FAILURE;
-      
-      nsAutoString windowTitle, message, dontShowAgain;
-      
-      GetBundleString(NS_LITERAL_STRING("Title").get(), windowTitle);
-      GetBundleString(NS_LITERAL_STRING("LeaveSiteMessage").get(), message);
-      GetBundleString(NS_LITERAL_STRING("DontShowAgain").get(), dontShowAgain);
-      
-      PRBool outCheckValue = PR_TRUE;
-      res = dialog->AlertCheck(windowTitle.GetUnicode(),
-                               message.GetUnicode(),
-                               dontShowAgain.GetUnicode(),
-                               &outCheckValue);
-      if (NS_FAILED(res))
-        return res;
-      
-      if (!outCheckValue) {
-        mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
-#if 0
-        nsCOMPtr<nsISecurityManagerComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID, &res));
-        if (NS_FAILED(res))
-          return res;
-        //        psm->PassPrefs();
-#endif
-      }
-    }
+    AlertLeavingSecure();
+
   }
   // check to see if we are going from an insecure page to a secure one.
   else if ((newSecurityState == STATE_IS_SECURE ||
             newSecurityState == STATE_IS_BROKEN) &&
            oldSecurityState == STATE_IS_INSECURE) {
 
-    if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
-      boolpref = PR_TRUE;
-    if (boolpref) {
-      nsCOMPtr<nsIPrompt> dialog;
-      mWindow->GetPrompter(getter_AddRefs(dialog));
-      if (!dialog)
-        return NS_ERROR_FAILURE;
-      
-      nsAutoString windowTitle, message, dontShowAgain;
-      
-      GetBundleString(NS_LITERAL_STRING("Title").get(), windowTitle);
-      GetBundleString(NS_LITERAL_STRING("EnterSiteMessage").get(), message);
-      GetBundleString(NS_LITERAL_STRING("DontShowAgain").get(), dontShowAgain);
-      
-      PRBool outCheckValue = PR_TRUE;
-      res = dialog->AlertCheck(windowTitle.GetUnicode(),
-                               message.GetUnicode(),
-                               dontShowAgain.GetUnicode(),
-                               &outCheckValue);
-      if (NS_FAILED(res))
-        return res;
-      
-      if (!outCheckValue) {
-        mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
-#if 0
-        nsCOMPtr<nsISecurityManageComponent> psm(do_getService(PSM_COMPONENT_CONTRACTID, &res));
-        if (NS_FAILED(res)) 
-          return res;
-        //        psm->PassPrefs();
-#endif
-      }
-    }
+    AlertEnteringSecure();
   }
   
   mSecurityState = newSecurityState;
@@ -563,8 +504,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
                                          nsIRequest* aRequest, nsIChannel* aChannel)
 {
   PRInt16 newSecurityState;
-  nsresult rv;
-  
+
   newSecurityState = GetSecurityStateFromChannel(aChannel);
 
   if ((newSecurityState == STATE_IS_INSECURE ||
@@ -585,44 +525,13 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
 
     mSecurityState = STATE_IS_BROKEN;
     SetBrokenLockIcon(eventSink, aRequest);
-    
-    if (!mPref) return NS_ERROR_NULL_POINTER;
-    
-    PRBool boolpref;
-    if ((mPref->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
-      boolpref = PR_TRUE;
-    
-    if (boolpref && !mMixContentAlertShown) {
-      nsCOMPtr<nsIPrompt> dialog;
-      mWindow->GetPrompter(getter_AddRefs(dialog));
-      if (!dialog)
-        return NS_ERROR_FAILURE;
-      
-      nsAutoString windowTitle, message, dontShowAgain;
-      
-      GetBundleString(NS_LITERAL_STRING("Title").get(), windowTitle);
-      GetBundleString(NS_LITERAL_STRING("MixedContentMessage").get(), message);
-      GetBundleString(NS_LITERAL_STRING("DontShowAgain").get(), dontShowAgain);
-      
-      PRBool outCheckValue = PR_TRUE;
-      
-      rv = dialog->AlertCheck(windowTitle.GetUnicode(),
-                              message.GetUnicode(),
-                              dontShowAgain.GetUnicode(),
-                              &outCheckValue);
-      if (NS_FAILED(rv))
-        return rv;
-      
-      if (!outCheckValue) {
-        mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
-#if 0
-        nsCOMptr<nsISecurityManagerComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID, &rv));
-        if (NS_FAILED(rv))
-          return rv;
-        //        psm->PassPrefs();
-#endif
-      }
-      
+
+    // Show alert to user (first time only)
+    // NOTE: doesn't mSecurityState provide the correct
+    // one-time checking?? Why have mMixContentAlertShown
+    // as well?
+    if (!mMixContentAlertShown) {
+      AlertMixedMode();
       mMixContentAlertShown = PR_TRUE;
     }
   }
@@ -646,50 +555,13 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
        mSecurityState == STATE_IS_BROKEN)) {
     return NS_OK;
   }
-
-  PRBool boolpref = PR_TRUE;
-  
-  // posting to a non https URL.
-  mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref);
-  
-  if (boolpref) {
-    nsCOMPtr<nsIPrompt> dialog;
-    mWindow->GetPrompter(getter_AddRefs(dialog));
-    if (!dialog)
-      return NS_ERROR_FAILURE;
     
-    nsAutoString windowTitle, message, dontShowAgain;
-    
-    GetBundleString(NS_LITERAL_STRING("Title").get(), windowTitle);
-    GetBundleString(NS_LITERAL_STRING("DontShowAgain").get(), dontShowAgain);
-    
-    // posting to insecure webpage from a secure webpage.
-    if (!secure  && mSecurityState == STATE_IS_SECURE) {
-      GetBundleString(NS_LITERAL_STRING("PostToInsecure").get(), message);
-    } else { // anything else, post generic warning
-      GetBundleString(NS_LITERAL_STRING("PostToInsecureFromInsecure").get(),
-                      message);
-    }
-    
-    PRBool outCheckValue = PR_TRUE;
-    rv = dialog->ConfirmCheck(windowTitle.GetUnicode(),
-                              message.GetUnicode(),
-                              dontShowAgain.GetUnicode(),
-                              &outCheckValue,
-                              okayToPost);
-    if (NS_FAILED(rv))
-      return rv;
-    
-    if (!outCheckValue) {
-      mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
-      return NS_OK;
-#if 0
-      nsCOMPtr<nsISecurityManagerComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID, &rv));
-      if (NS_FAILED(rv))
-        return rv;
-      //      psm->PassPrefs();
-#endif
-    }
+  // posting to insecure webpage from a secure webpage.
+  // NOTE: This test is inconsistant with the one above
+  if (!secure  && (mSecurityState == STATE_IS_SECURE)) {
+    *okayToPost = ConfirmPostToInsecureFromSecure();
+  } else {
+    *okayToPost = ConfirmPostToInsecure();
   }
   
   return NS_OK;
@@ -723,3 +595,165 @@ nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
   return rv;
 }
 
+//
+// Implementation of an nsIInterfaceRequestor for use
+// as context for NSS calls
+//
+class nsUIContext : public nsIInterfaceRequestor
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEREQUESTOR
+
+  nsUIContext(nsIDOMWindowInternal *window);
+  virtual ~nsUIContext();
+
+private:
+  nsCOMPtr<nsIDOMWindowInternal> mWindow;
+};
+
+NS_IMPL_ISUPPORTS1(nsUIContext, nsIInterfaceRequestor)
+
+nsUIContext::nsUIContext(nsIDOMWindowInternal *aWindow)
+: mWindow(aWindow)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsUIContext::~nsUIContext()
+{
+}
+
+/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
+{
+  nsresult rv;
+
+  if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
+    nsIPrompt *prompt;
+
+    rv = mWindow->GetPrompter(&prompt);
+    *result = prompt;
+  } else {
+    rv = NS_ERROR_NO_INTERFACE;
+  }
+
+  return rv;
+}
+
+nsresult nsSecureBrowserUIImpl::
+GetNSSDialogs(const nsIID &id, void* *result)
+{
+  return ::getNSSDialogs(result, id);
+#if 0
+  nsCOMPtr<nsIProxyObjectManager> manager = do_GetService(NS_XPCOMPROXY_CONTRACTID);
+  if (!manager) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsINSSDialogs> nssDialogs = do_GetService(NS_NSSDIALOGS_CONTRACTID);
+  if (!nssDialogs) return NS_ERROR_FAILURE;
+
+  manager->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                             NS_GET_IID(nsISecurityWarningDialogs),
+                             nssDialogs,
+                             PROXY_SYNC,
+                             result);
+  if (!manager) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+#endif
+}
+
+void nsSecureBrowserUIImpl::
+AlertEnteringSecure()
+{
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  dialogs->AlertEnteringSecure(ctx);
+
+  return;
+}
+
+void nsSecureBrowserUIImpl::
+AlertLeavingSecure()
+{
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  dialogs->AlertLeavingSecure(ctx);
+
+  return;
+}
+
+void nsSecureBrowserUIImpl::
+AlertMixedMode()
+{
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  dialogs->AlertMixedMode(ctx);
+
+  return;
+}
+
+/**
+ * ConfirmPostToInsecure - returns PR_TRUE if
+ *   the user approves the submit (or doesn't care).
+ *   returns PR_FALSE on errors.
+ */
+PRBool nsSecureBrowserUIImpl::
+ConfirmPostToInsecure()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  PRBool result;
+
+  rv = dialogs->ConfirmPostToInsecure(ctx, &result);
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  return result;
+}
+
+/**
+ * ConfirmPostToInsecureFromSecure - returns PR_TRUE if
+ *   the user approves the submit (or doesn't care).
+ *   returns PR_FALSE on errors.
+ */
+PRBool nsSecureBrowserUIImpl::
+ConfirmPostToInsecureFromSecure()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return PR_FALSE;  // Should this allow PR_TRUE for unimplemented?
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  PRBool result;
+
+  rv = dialogs->ConfirmPostToInsecureFromSecure(ctx, &result);
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  return result;
+}

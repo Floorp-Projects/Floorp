@@ -89,6 +89,17 @@ protected:
   nsresult IsURLHTTPS(nsIURI* aURL, PRBool *value);
   nsresult SetBrokenLockIcon(nsISecurityEventSink* sink, nsIRequest* request,
                              PRBool removeValue = PR_FALSE);
+
+  // Alerts for security transitions
+  void AlertEnteringSecure();
+  void AlertLeavingSecure();
+  void AlertMixedMode();
+  PRBool ConfirmPostToInsecure();
+  PRBool ConfirmPostToInsecureFromSecure();
+
+  // Support functions
+  nsresult GetNSSDialogs(const nsIID &id, void* *result);
+
 };
 
 
