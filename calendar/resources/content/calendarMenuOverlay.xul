@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): Colin Phillips <colinp@oeone.com> 
+   -                 Dan Parent <danp@oeone.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,9 +42,10 @@
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
-<!DOCTYPE window [
-<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
-%navigatorDTD;
+<!DOCTYPE window 
+[
+	<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" > %navigatorDTD;
+	<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/calendarMenuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 <overlay id="calendarOverlay"
@@ -93,17 +95,21 @@
 
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
-    <menu id="menu_File">
-      <menupopup id="menu_FilePopup">            
-         <menuitem id="calendar-new-event-menu"                           label="New Event" oncommand="newEventCommand()"/>
-         <menuitem id="unifinder-modify-menu"   observes="modify_command" label="Edit Event"   oncommand="unifinderModifyCommand()" />
-         <menuitem id="unifinder-remove-menu"   observes="delete_command" label="Delete Event" oncommand="unifinderRemoveCommand()" key="delete_key"/>
-      </menupopup>
-    </menu>
+   <menu id="menu_File">                                                                                                                                          
+      <menupopup id="menu_FilePopup">
+         <menuitem id="calendar-new-event-menu" label="&file.new.event;" oncommand="newEventCommand()"/>                                                     
+         <menuitem id="unifinder-modify-menu" observes="modify_command" label="&file.edit.event;" oncommand="unifinderModifyCommand()" />                    
+         <menuitem id="unifinder-remove-menu" observes="delete_command" label="&file.delete.event;" oncommand="unifinderRemoveCommand()" key="delete_key" /> 
+         <menuseparator/>                                                                                                                                        
+         <menuitem id="calendar-mail-event" observes="send_event_command" label="&file.mail.event;" oncommand="javascript:void(0);"/>                            
+         <menuseparator/>
+         <menuitem id="calendar-about-menu-item" label="About Calendar" oncommand="alertCalendarVersion()"/>
+      </menupopup>                                                                                                                                                 
+   </menu>                                                                                                                                                           
 
-  <menu id="tasksMenu"/>
+   <menu id="tasksMenu"/>
   
-  <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
+   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
 </menubar>
 
 </overlay>
