@@ -332,16 +332,16 @@ function loadDialog()
   try {
     /* ... then try to get the generic settings ... */
     dialog.topInput.value    = gPrefs.getIntPref("print.print_edge_top") / 100.0;
-    dialog.bottomInput.value = gPrefs.getIntPref("print.print_edge_left") / 100.0;
-    dialog.leftInput.value   = gPrefs.getIntPref("print.print_edge_right") / 100.0;
-    dialog.rightInput.value  = gPrefs.getIntPref("print.print_edge_bottom") / 100.0;
+    dialog.bottomInput.value = gPrefs.getIntPref("print.print_edge_bottom") / 100.0;
+    dialog.leftInput.value   = gPrefs.getIntPref("print.print_edge_left") / 100.0;
+    dialog.rightInput.value  = gPrefs.getIntPref("print.print_edge_right") / 100.0;
 
     /* ... and then the printer specific settings. */
     var printername = gPrintSettings.printerName;
     dialog.topInput.value    = gPrefs.getIntPref("print.printer_"+printername+".print_edge_top") / 100.0;
-    dialog.bottomInput.value = gPrefs.getIntPref("print.printer_"+printername+".print_edge_left") / 100.0;
-    dialog.leftInput.value   = gPrefs.getIntPref("print.printer_"+printername+".print_edge_right") / 100.0;
-    dialog.rightInput.value  = gPrefs.getIntPref("print.printer_"+printername+".print_edge_bottom") / 100.0;
+    dialog.bottomInput.value = gPrefs.getIntPref("print.printer_"+printername+".print_edge_bottom") / 100.0;
+    dialog.leftInput.value   = gPrefs.getIntPref("print.printer_"+printername+".print_edge_left") / 100.0;
+    dialog.rightInput.value  = gPrefs.getIntPref("print.printer_"+printername+".print_edge_right") / 100.0;
   } catch (e) {  }
 }
 
@@ -407,13 +407,13 @@ function onAccept()
       gPrefs.setIntPref("print.printer_"+printerName+".print_edge_top", i);
 
       i = dialog.bottomInput.value * 100;
-      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_left", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_bottom", i);
 
       i = dialog.leftInput.value * 100;
-      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_right", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_left", i);
 
       i = dialog.rightInput.value * 100;
-      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_bottom", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_right", i);
     } catch (e) {
     }
 
