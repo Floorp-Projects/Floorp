@@ -189,6 +189,20 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAString& aValue, PRBool aNotify);
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
+                     PRBool aNotify) {
+    // This will end up calling the other SetAttr().
+    return nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue, aNotify);
+  }
+
+
+  /**
+   * Forget all information about the current submission (and the fact that we
+   * are currently submitting at all).
+   */
+  void ForgetCurrentSubmission();
 
   /**
    * Compare two nodes in the same tree (Negative result means a < b, 0 ==,
@@ -247,12 +261,20 @@ protected:
   //
   // Data members
   //
+  /** The list of controls (form.elements as well as stuff not in elements) */
   nsFormControlList *mControls;
+  /** The currently selected radio button of each group */
   nsDoubleHashtableStringRadio mSelectedRadioButtons;
+  /** Whether we are currently processing a submit event or not */
   PRPackedBool mGeneratingSubmit;
+  /** Whether we are currently processing a reset event or not */
   PRPackedBool mGeneratingReset;
+  /** Whether we are submitting currently */
   PRPackedBool mIsSubmitting;
+  /** The request currently being submitted */
   nsCOMPtr<nsIRequest> mSubmittingRequest;
+  /** The web progress object we are currently listening to */
+  nsCOMPtr<nsIWebProgress> mWebProgress;
 
   friend class nsFormControlEnumerator;
 
@@ -413,7 +435,7 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
 nsresult
 nsHTMLFormElement::Init(nsINodeInfo *aNodeInfo)
 {
-  nsresult rv = nsGenericHTMLElement::Init(aNodeInfo);
+  nsresult rv = nsGenericHTMLContainerElement::Init(aNodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mControls = new nsFormControlList(this);
@@ -495,45 +517,37 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 }
 
 NS_IMETHODIMP
-nsHTMLFormElement::GetName(nsAString& aValue)
+nsHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           const nsAString& aValue, PRBool aNotify)
 {
-  return nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
-                                                nsHTMLAtoms::name,
-                                                aValue);
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::SetName(const nsAString& aValue)
-{
-  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
-                                                nsHTMLAtoms::name,
-                                                aValue, PR_TRUE);
+  if (aName == nsHTMLAtoms::action || aName == nsHTMLAtoms::target) {
+    ForgetCurrentSubmission();
+  }
+  return nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+                                                aValue, aNotify);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
+NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 
 NS_IMETHODIMP
 nsHTMLFormElement::GetTarget(nsAString& aValue)
 {
   aValue.Truncate();
-  nsresult rv = nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
-                                                       nsHTMLAtoms::target,
-                                                       aValue);
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    rv = GetBaseTarget(aValue);
+    GetBaseTarget(aValue);
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::SetTarget(const nsAString& aValue)
 {
-  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_None,
-                                                nsHTMLAtoms::target,
-                                                aValue, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -654,11 +668,13 @@ nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   if (oldDocument != newDocument) {
     if (oldDocument) {
       oldDocument->RemovedForm();
+      ForgetCurrentSubmission();
     }
     if (newDocument) {
       newDocument->AddedForm();
     }
   }
+
   return rv;
 }
 
@@ -767,10 +783,10 @@ nsHTMLFormElement::DoReset()
   return NS_OK;
 }
 
-#define NS_ENSURE_SUBMIT_SUCCESS(rv) \
-  if (NS_FAILED(rv)) { \
-    mIsSubmitting = PR_FALSE; \
-    return rv; \
+#define NS_ENSURE_SUBMIT_SUCCESS(rv)                                          \
+  if (NS_FAILED(rv)) {                                                        \
+    ForgetCurrentSubmission();                                                \
+    return rv;                                                                \
   }
   
 nsresult
@@ -785,11 +801,10 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
 
   // Mark us as submitting so that we don't try to submit again
   mIsSubmitting = PR_TRUE;
-  mSubmittingRequest = nsnull;
-
-  nsIContent *originatingElement = nsnull;
+  NS_ASSERTION(!mWebProgress && !mSubmittingRequest, "Web progress / submitting request should not exist here!");
 
   // Get the originating frame (failure is non-fatal)
+  nsIContent *originatingElement = nsnull;
   if (aEvent) {
     if (NS_FORM_EVENT == aEvent->eventStructType) {
       originatingElement = ((nsFormEvent *)aEvent)->originator;
@@ -866,18 +881,15 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
     PRBool pending = PR_FALSE;
     mSubmittingRequest->IsPending(&pending);
     if (pending) {
-      nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-      NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
-      rv = webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
+      mWebProgress = do_GetInterface(docShell);
+      NS_ASSERTION(mWebProgress, "nsIDocShell not converted to nsIWebProgress!");
+      rv = mWebProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
       NS_ENSURE_SUBMIT_SUCCESS(rv);
     } else {
-      mSubmittingRequest = nsnull;
-      mIsSubmitting = PR_FALSE;
+      ForgetCurrentSubmission();
     }
-  }
-  else {
-    // in case we didn't do anything, reset mIsSubmitting
-    mIsSubmitting = PR_FALSE;
+  } else {
+    ForgetCurrentSubmission();
   }
 
   return rv;
@@ -1228,6 +1240,17 @@ nsHTMLFormElement::GetLength(PRInt32* aLength)
   return NS_OK;
 }
 
+void
+nsHTMLFormElement::ForgetCurrentSubmission()
+{
+  mIsSubmitting = PR_FALSE;
+  mSubmittingRequest = nsnull;
+  if (mWebProgress) {
+    mWebProgress->RemoveProgressListener(this);
+    mWebProgress = nsnull;
+  }
+}
+
 // nsIWebProgressListener
 NS_IMETHODIMP
 nsHTMLFormElement::OnStateChange(nsIWebProgress* aWebProgress,
@@ -1241,9 +1264,7 @@ nsHTMLFormElement::OnStateChange(nsIWebProgress* aWebProgress,
   // consequently leak the request.
   if (aRequest == mSubmittingRequest &&
       aStateFlags & nsIWebProgressListener::STATE_STOP) {
-    mIsSubmitting = PR_FALSE;
-    mSubmittingRequest = nsnull;
-    aWebProgress->RemoveProgressListener(this);
+    ForgetCurrentSubmission();
   }
 
   return NS_OK;
