@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-dd
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -12,10 +12,9 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
 #undef NS_IMPL_IDS
@@ -31,13 +30,21 @@
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
+#include "nsIDocumentLoader.h"
+#include "nsIWebShellServices.h"
+#include "nsIWebShell.h"
+#include "nsIContentViewerContainer.h"
 
 static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
+static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
+static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
+static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 //========================================================================== 
 //
 // Class declaration for the class 
@@ -78,6 +85,10 @@ public:
   NS_IMETHOD Start();
   NS_IMETHOD End();
 private:
+
+  NS_IMETHOD NotifyWebShell(PRUint32 aDocumentID, const char* charset, nsCharsetSource source);
+
+
   nsIObserver* mHack;
 };
 
@@ -154,6 +165,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         return NS_ERROR_ILLEGAL_VALUE;
 
     nsresult res = NS_OK;
+    PRUint32 i;
 
     // Only process if we get the HTTP-EQUIV=Content-Type in meta
     // We totaly need 4 attributes
@@ -164,15 +176,17 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
     if((numOfAttributes >= 4) && 
        (0 == nsCRT::strcasecmp(nameArray[0], "HTTP-EQUIV")) &&
-       (0 == nsCRT::strcasecmp(valueArray[0], "Content-Type")))
+       (0 == nsCRT::strncasecmp(((('\'' == valueArray[0][0]) || ('\"' == valueArray[0][0]))
+                                 ? (valueArray[0]+1) 
+                                 : valueArray[0]),
+                                "Content-Type", 
+                                12)))
     {
       nsAutoString currentCharset("unknown");
       nsAutoString charsetSourceStr("unknown");
 
-      for(PRUint32 i=0; i < numOfAttributes; i++) 
+      for(i=0; i < numOfAttributes; i++) 
       {
-         nsAutoString charset("charset");
-         nsAutoString charsetSource("charsetSource");
          if(0==nsCRT::strcmp(nameArray[i], "charset")) 
          {
            currentCharset = valueArray[i];
@@ -198,57 +212,133 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
       nsCharsetSource currentCharsetSource = (nsCharsetSource)charsetSourceInt;
 
-      if (0==nsCRT::strcasecmp(nameArray[1],"CONTENT")) 
+      if(kCharsetFromMetaTag > currentCharsetSource)
       {
-         nsAutoString content(valueArray[2]);
-         nsAutoString type;
-         content.Left(type, 9); // length of "text/html" == 9
-         if(type.EqualsIgnoreCase("text/html")) 
-         {
-            PRInt32 charsetValueStart = content.RFind("charset=", PR_TRUE ) ;
-            if(kNotFound != charsetValueStart) {	
-                  charsetValueStart += 8; // 8 = "charset=".length 
-                  PRInt32 charsetValueEnd = content.FindCharInSet("\'\";", charsetValueStart  );
-                  if(kNotFound == charsetValueEnd ) 
-                     charsetValueEnd = content.Length();
-                  nsAutoString theCharset;
-                  content.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
-
-                  if(kCharsetFromMetaTag > currentCharsetSource)
-                  {
-                     nsICharsetAlias* calias = nsnull;
-                     res = nsServiceManager::GetService(
-                                kCharsetAliasCID,
-                                kICharsetAliasIID,
-                                (nsISupports**) &calias);
-                     if(NS_SUCCEEDED(res) && (nsnull != calias) ) {
-                         PRBool same = PR_FALSE;
-                         res = calias->Equals( theCharset, currentCharset, &same);
-                         if(NS_SUCCEEDED(res) && (! same))
+          for(i=0; i < numOfAttributes; i++) 
+          {
+              if (0==nsCRT::strcasecmp(nameArray[i],"CONTENT")) 
+              {
+                 const PRUnichar *attr = valueArray[i] ;
+                 if(('\"' == attr[0]) || ('\'' == attr[0]))
+                     attr++;
+        
+                 nsAutoString content(attr);
+                 nsAutoString type;
+        
+                 content.Left(type, 9); // length of "text/html" == 9
+                 if(type.EqualsIgnoreCase("text/html")) 
+                 {
+                    PRInt32 charsetValueStart = content.RFind("charset=", PR_TRUE ) ;
+                    if(kNotFound != charsetValueStart) 
+                    {	
+                         charsetValueStart += 8; // 8 = "charset=".length 
+                         PRInt32 charsetValueEnd = content.FindCharInSet("\'\";", charsetValueStart  );
+                         if(kNotFound == charsetValueEnd ) 
+                             charsetValueEnd = content.Length();
+                         nsAutoString theCharset;
+                         content.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
+                         if(! theCharset.Equals(currentCharset)) 
                          {
-                            nsAutoString preferred;
-                            res = calias->GetPreferred(theCharset, preferred);
-                            if(NS_SUCCEEDED(res))
-                            {
-                               // XXX
-                               // ask nsWebShellProxy to load docuement
-                               // where the docuemtn ID is euqal to aDocuemntID
-                               // Charset equal to preferred
-                               // and charsetSource is kCharetFromMetaTag        
-                            }
-                         }
-                         nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
-                     }
-                  }
-                  
-            } // if
-          
-         } // if
-      } // if
-    } // if
+                             nsICharsetAlias* calias = nsnull;
+                             res = nsServiceManager::GetService(
+                                            kCharsetAliasCID,
+                                            kICharsetAliasIID,
+                                            (nsISupports**) &calias);
+                             if(NS_SUCCEEDED(res) && (nsnull != calias) ) 
+                             {
+                                  PRBool same = PR_FALSE;
+                                  res = calias->Equals( theCharset, currentCharset, &same);
+                                  if(NS_SUCCEEDED(res) && (! same))
+                                  {
+                                        nsAutoString preferred;
+                                        res = calias->GetPreferred(theCharset, preferred);
+                                        if(NS_SUCCEEDED(res))
+                                        {
+                                            const char* charsetInCStr = preferred.ToNewCString();
+                                            if(nsnull != charsetInCStr) {
+                                               res = NotifyWebShell(aDocumentID, charsetInCStr, kCharsetFromMetaTag );
+                                               delete [] (char*)charsetInCStr;
+                                            }
+                                        } // if check for GetPreferred
+                                  } // if check res for Equals
+                                  nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+                              } // if check res for GetService
+                          } // if Equals
+                    }  // if check  charset=
+                 } // if check text/html
+                 break;
+              } // if check CONTENT
+          } // for ( numOfAttributes )
+      } // if check nsCharsetSource
+    } // if 
     return res;
 }
 
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::NotifyWebShell(
+  PRUint32 aDocumentID, const char* charset, nsCharsetSource source)
+{
+   nsresult res = NS_OK;
+   // shoudl docLoader a memeber to increase performance ???
+   nsIDocumentLoader * docLoader = nsnull;
+   nsIContentViewerContainer * cvc  = nsnull;
+   nsIWebShellServices* wss = nsnull;
+   nsIWebShell* iws = nsnull;
+   const PRUnichar* theURL = nsnull;
+   PRInt32 historyIdx = -1;
+   nsAutoString urlStr;
+   const char* urlCStr = nsnull;
+   
+   if(NS_FAILED(res =nsServiceManager::GetService(kDocLoaderServiceCID,
+                                                   kIDocumentLoaderIID,
+                                                   (nsISupports**)&docLoader)))
+     goto done;
+   
+   if(NS_FAILED(res =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
+     goto done;
+
+   if(NS_FAILED( res = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
+     goto done;
+
+   if(NS_FAILED( res = wss->QueryInterface(kIWebShellIID, (void**)&iws)))
+     goto done;
+    
+
+   if(NS_FAILED( res = iws->GetHistoryIndex(historyIdx) ))
+     goto done;
+
+   // ask the webshelle about the current URL
+   if(NS_FAILED( res = iws->GetURL(historyIdx, &theURL) ))
+     goto done;
+   
+   // convert the PRUnichar* to const char*
+   urlStr = theURL;
+   urlCStr = urlStr.ToNewCString();
+   if(nsnull == urlCStr) 
+     goto done;
+
+   // ask the webshellservice to load the URL
+   if(NS_FAILED( res = wss->SetRendering(PR_TRUE) ))
+     goto done;
+
+   if(NS_FAILED(res = wss->StopDocumentLoad()))
+     goto done;
+
+   if(NS_FAILED(res = wss->LoadDocument(urlCStr, charset, source)))
+     goto done;
+ 
+done:
+   if(urlCStr) {
+      delete [] (char*) urlCStr;
+   }
+   if(docLoader) {
+      nsServiceManager::ReleaseService(kDocLoaderServiceCID,docLoader);
+   }
+   NS_IF_RELEASE(iws);
+   NS_IF_RELEASE(cvc);
+   NS_IF_RELEASE(wss);
+   return res;
+}
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(nsISupports** result) 
 {
