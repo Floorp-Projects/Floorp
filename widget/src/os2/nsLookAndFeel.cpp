@@ -17,133 +17,260 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      Make more like Windows.
  */
 
 #include "nsLookAndFeel.h"
-#include "nsColor.h"
 #include "nsWidgetDefs.h"
 
 #include "nsXPLookAndFeel.h"
 
-#include <stdio.h>
- 
-// XPCom scaffolding
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+
+//NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_ILOOKANDFEEL_IID)
 NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_GET_IID(nsILookAndFeel))
 
-nsLookAndFeel::nsLookAndFeel()
+nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+
+  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
-// Colours
+nsLookAndFeel::~nsLookAndFeel()
+{
+}
+
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
-   if (mXPLookAndFeel)
-   {
-      nsresult res = mXPLookAndFeel->GetColor(aID, aColor);
-      if (NS_SUCCEEDED(res))
-         return res;
-      res = NS_OK;
-   }
+  nsresult res = NS_OK;
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetColor(aID, aColor);
+    if (NS_SUCCEEDED(res))
+      return res;
+    res = NS_OK;
+  }
 
-   int idx = 0;
-   switch (aID)
-   {
-      case eColor_WindowBackground:       idx = SYSCLR_BACKGROUND;       break;
-      case eColor_WindowForeground:       idx = SYSCLR_WINDOWTEXT;       break;
-      case eColor_WidgetBackground:       idx = SYSCLR_BUTTONMIDDLE;     break;
-      case eColor_WidgetForeground:       idx = SYSCLR_WINDOWTEXT;       break;
-      case eColor_WidgetSelectBackground: idx = SYSCLR_HILITEBACKGROUND; break;
-      case eColor_WidgetSelectForeground: idx = SYSCLR_HILITEFOREGROUND; break;
-      case eColor_Widget3DHighlight:      idx = SYSCLR_BUTTONLIGHT;      break;
-      case eColor_Widget3DShadow:         idx = SYSCLR_BUTTONDARK;       break;
-      case eColor_TextBackground:         idx = SYSCLR_ENTRYFIELD;       break;
-      case eColor_TextForeground:         idx = SYSCLR_WINDOWTEXT;       break;
-      case eColor_TextSelectBackground:   idx = SYSCLR_HILITEBACKGROUND; break;
-      case eColor_TextSelectForeground:   idx = SYSCLR_HILITEFOREGROUND; break;
-
-   default: 
-         printf("nsLookAndFeel::GetColor received bad aID = %d", aID);
-         NS_ASSERTION( 0, "Bad system colour");
-         break;
-   }
-
-   long lColor = WinQuerySysColor( HWND_DESKTOP, idx, 0);
-
-   RGB2 *pRGB2 = (RGB2*) &lColor;
-
-   aColor = NS_RGB( pRGB2->bRed, pRGB2->bGreen, pRGB2->bBlue);
-
-   return NS_OK;
-}
-
-// metrics
-NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
-{
-   if (mXPLookAndFeel)
-   {
-      res = mXPLookAndFeel->GetMetric(aID, aMetric);
-      if (NS_SUCCEEDED(res))
-         return res;
-   }
-
-   long svalue = 0;
-   aMetric = 0;
-   ULONG ulPels = 0;
-
-   switch( aID)
-   {
-      case eMetric_WindowTitleHeight: svalue = SV_CYTITLEBAR; break;
-      case eMetric_WindowBorderWidth: svalue = SV_CXSIZEBORDER; break;
-      case eMetric_WindowBorderHeight: svalue = SV_CYSIZEBORDER; break;
-      case eMetric_Widget3DBorder: svalue = SV_CXBORDER; break;
-      case eMetric_TextFieldHeight: aMetric = gModuleData.lHtEntryfield; break; 
-
-      //
-      // These are copied from the Win32 version; changes welcome
-      //
-      case eMetric_TextVerticalInsidePadding:
-         aMetric = 0;
-         break;
-      case eMetric_TextShouldUseVerticalInsidePadding:
-         aMetric = 0;
-         break;
-      case eMetric_TextHorizontalInsideMinimumPadding:
-         aMetric = 3;
-         break;
-      case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 1;
+  int idx;
+  switch (aID) {
+    case eColor_WindowBackground:
+        idx = SYSCLR_WINDOW;          // white
+        break;
+    case eColor_WindowForeground:
+        idx = SYSCLR_WINDOWTEXT;   // black
+        break;
+    case eColor_WidgetBackground:
+        idx = SYSCLR_BUTTONMIDDLE;  // light gray 
+        break;
+    case eColor_WidgetForeground:
+        idx = SYSCLR_WINDOWTEXT;    // black
+        break;
+    case eColor_WidgetSelectBackground:
+        idx = SYSCLR_HILITEBACKGROUND;    // dark gray (items selected in a control)
+        break;
+    case eColor_WidgetSelectForeground:
+        idx = SYSCLR_HILITEFOREGROUND;    // white (text of items selected in a control)
+        break;
+    case eColor_Widget3DHighlight:
+        idx = SYSCLR_BUTTONLIGHT;   // white (highlight color for 3d for edges facing light source)
+        break;
+    case eColor_Widget3DShadow:
+        idx = SYSCLR_BUTTONDARK;      // dark gray (for edges facing away from light source)
+        break;
+    case eColor_TextBackground:
+        idx = SYSCLR_WINDOW;          // white
+        break;
+    case eColor_TextForeground:
+        idx = SYSCLR_WINDOWTEXT;    // black
+        break;
+    case eColor_TextSelectBackground:
+        idx = SYSCLR_HILITEBACKGROUND;         // dark gray
+        break;
+    case eColor_TextSelectForeground:
+        idx = SYSCLR_HILITEFOREGROUND;        // white
         break;
 
-      case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
-         aMetric = 10;
-         break;
-      case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
-         aMetric = 8;
-         break;
+    // New CSS 2 Color definitions
+    case eColor_activeborder:
+      idx = SYSCLR_ACTIVEBORDER;         // pale yellow
+      break;
+    case eColor_activecaption:
+      idx = SYSCLR_ACTIVETITLETEXT;   // teal (active window title bar)
+      break;
+    case eColor_appworkspace:
+      idx = SYSCLR_APPWORKSPACE;   // off-white
+      break;
+    case eColor_background:
+      idx = SYSCLR_BACKGROUND;      // light gray
+      break;
+    case eColor_buttonface:
+      idx = SYSCLR_BUTTONMIDDLE;    // light gray
+      break;
+    case eColor_buttonhighlight:
+      idx = SYSCLR_BUTTONLIGHT;        // white
+      break;
+    case eColor_buttonshadow:
+      idx = SYSCLR_BUTTONDARK;        // dark gray
+      break;
+    case eColor_buttontext:
+      idx = SYSCLR_BUTTONDEFAULT;    // black
+      break;
+    case eColor_captiontext:
+      idx = SYSCLR_WINDOWTEXT;          // black???
+      break;
+    case eColor_graytext:
+      idx = SYSCLR_MENUDISABLEDTEXT;         // dark gray
+      break;
+    case eColor_highlight:
+      idx = SYSCLR_HILITEFOREGROUND;    // white???
+      break;
+    case eColor_highlighttext:
+      idx = SYSCLR_WINDOWTEXT;    // black ???
+      break;
+    case eColor_inactiveborder:
+      idx = SYSCLR_INACTIVEBORDER;    // light gray
+      break;
+    case eColor_inactivecaption:
+      idx = SYSCLR_INACTIVETITLE;   // light gray???
+      break;
+    case eColor_inactivecaptiontext:
+      idx = SYSCLR_INACTIVETITLE;      // light gray???
+      break;
+    case eColor_infobackground:
+      idx = SYSCLR_INACTIVETITLE;      // light gray???
+      break;
+    case eColor_infotext:
+      idx = SYSCLR_WINDOWTEXT;    // black ???
+      break;
+    case eColor_menu:
+      idx = SYSCLR_MENU;     // light gray
+      break;
+    case eColor_menutext:
+      idx = SYSCLR_MENUTEXT;        // black
+      break;
+    case eColor_scrollbar:
+      idx = SYSCLR_SCROLLBAR;        // pale gray
+      break;
+    case eColor_threeddarkshadow:
+      idx = SYSCLR_SHADOW;    // dark gray???
+      break;
+    case eColor_threedface:
+      idx = SYSCLR_BUTTONMIDDLE;    // light gray???
+      break;
+    case eColor_threedhighlight:
+      idx = SYSCLR_BUTTONLIGHT;   // white???
+      break;
+    case eColor_threedlightshadow:
+      idx = SYSCLR_BUTTONMIDDLE;    // light gray???
+      break;
+    case eColor_threedshadow:
+      idx = SYSCLR_SHADOW;    // dark gray???
+      break;
+    case eColor_window:
+      idx = SYSCLR_WINDOW;    // white
+      break;
+    case eColor_windowframe:
+      idx = SYSCLR_WINDOWFRAME;   // dark gray
+      break;
+    case eColor_windowtext:
+      idx = SYSCLR_WINDOWTEXT;    // black
+      break;
+    default:
+        idx = SYSCLR_WINDOW;    // white
+        break;
+    }
 
-      case eMetric_CheckboxSize:
-         aMetric = 12;
-         break;
-      case eMetric_RadioboxSize:
-         aMetric = 12;
-         break;
+  long lColor = WinQuerySysColor( HWND_DESKTOP, idx, 0);
 
-      case eMetric_ListHorizontalInsideMinimumPadding:
-         aMetric = 3;
-         break;
-      case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-         aMetric = 0;
-         break;
-      case eMetric_ListVerticalInsidePadding:
-         aMetric = 0;
-         break;
-      case eMetric_ListShouldUseVerticalInsidePadding:
-         aMetric = 0;
-         break;
+  int iRed = (lColor & RGB_RED) >> 16;
+  int iGreen = (lColor & RGB_GREEN) >> 8;
+  int iBlue = (lColor & RGB_BLUE);
 
+  aColor = NS_RGB( iRed, iGreen, iBlue);   
+
+  return res;
+}
+
+NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
+{
+  nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
+  long svalue = 0;
+  aMetric = 0;
+  ULONG ulPels = 0;
+
+  switch (aID) {
+    case eMetric_WindowTitleHeight:
+        svalue = SV_CYTITLEBAR; 
+        break;
+    case eMetric_WindowBorderWidth:
+        svalue = SV_CXSIZEBORDER;
+        break;
+    case eMetric_WindowBorderHeight:
+        svalue = SV_CYSIZEBORDER; 
+        break;
+    case eMetric_Widget3DBorder:
+        svalue = SV_CXBORDER; 
+        break;
+    case eMetric_TextFieldBorder:
+        aMetric = 3;
+        break;
+    case eMetric_TextFieldHeight:
+        // ??? gModuleData.lHtEntryfield; 
+        aMetric = 24;
+        break;
+    case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
+        aMetric = 10;
+        break;
+    case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
+        aMetric = 8;
+        break;
+    case eMetric_CheckboxSize:
+        aMetric = 12;
+        break;
+    case eMetric_RadioboxSize:
+        aMetric = 12;
+        break;
+    case eMetric_TextHorizontalInsideMinimumPadding:
+        aMetric = 3;
+        break;
+    case eMetric_TextVerticalInsidePadding:
+        aMetric = 0;
+        break;
+    case eMetric_TextShouldUseVerticalInsidePadding:
+        aMetric = 0;
+        break;
+    case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
+        aMetric = 1;
+        break;
+    case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
+        aMetric = 0;
+        break;
+    case eMetric_ListHorizontalInsideMinimumPadding:
+        aMetric = 3;
+        break;
+    case eMetric_ListShouldUseVerticalInsidePadding:
+        aMetric = 0;
+        break;
+    case eMetric_ListVerticalInsidePadding:
+        aMetric = 0;
+        break;
     case eMetric_CaretBlinkTime:
-        aMetric = WinQuerySysValue( HWND_DESKTOP, SV_CURSORRATE);
+        svalue = SV_CURSORRATE;
         break;
     case eMetric_CaretWidthTwips:
         // Sigh - this is in 'twips', should be in 'app units', but there's no
@@ -163,72 +290,65 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // For now, lets assume p2t = 20.
         aMetric = 20 * ulPels;
         break;
-    case eMetric_SubmenuDelay:
-        aMetric = 200;
+// Windows     aMetric = 30;
         break;
+    default:
+        aMetric = -1;
+        res = NS_ERROR_FAILURE;
+    }
 
-   default:
-     NS_ASSERTION( 0, "Bad metric");
-     break;
-   }
+  if( svalue != 0)
+     aMetric = WinQuerySysValue( HWND_DESKTOP, svalue);
 
-   if( svalue != 0)
-      aMetric = WinQuerySysValue( HWND_DESKTOP, svalue);
-
-   return NS_OK;
+  return res;
 }
 
-//
-// These are copied from the Win32 version; changes welcome
-//
-// float metrics
-NS_IMETHODIMP nsLookAndFeel::GetMetric( const nsMetricFloatID aID,
-                                        float &aMetric)
+NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
-   nsresult res = NS_OK;
+  nsresult res = NS_OK;
 
-   if (mXPLookAndFeel)
-   {
-      res = mXPLookAndFeel->GetMetric(aID, aMetric);
-      if (NS_SUCCEEDED(res))
-         return res;
-   }
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
 
-   switch( aID)
-   {
-      case eMetricFloat_TextFieldVerticalInsidePadding:
-         aMetric = 0.25f;
-         break;
-      case eMetricFloat_TextFieldHorizontalInsidePadding:
-         aMetric = 0.95f;
-         break;
-      case eMetricFloat_TextAreaVerticalInsidePadding:
-         aMetric = 0.40f;
-         break;
-      case eMetricFloat_TextAreaHorizontalInsidePadding:
-         aMetric = 0.40f;
-         break;
-      case eMetricFloat_ListVerticalInsidePadding:
-         aMetric = 0.10f;
-         break;
-      case eMetricFloat_ListHorizontalInsidePadding:
-         aMetric = 0.40f;
-         break;
-      case eMetricFloat_ButtonVerticalInsidePadding:
-         aMetric = 0.25f;
-         break;
-      case eMetricFloat_ButtonHorizontalInsidePadding:
-         aMetric = 0.25f;
-         break;
-      default:
-         aMetric = -1.0;
-         res = NS_ERROR_FAILURE;
-         break;
-   }
-   return res;
+  switch (aID) {
+    case eMetricFloat_TextFieldVerticalInsidePadding:
+        aMetric = 0.25f;
+        break;
+    case eMetricFloat_TextFieldHorizontalInsidePadding:
+        aMetric = 1.025f;
+        break;
+    case eMetricFloat_TextAreaVerticalInsidePadding:
+        aMetric = 0.40f;
+        break;
+    case eMetricFloat_TextAreaHorizontalInsidePadding:
+        aMetric = 0.40f;
+        break;
+    case eMetricFloat_ListVerticalInsidePadding:
+        aMetric = 0.10f;
+        break;
+    case eMetricFloat_ListHorizontalInsidePadding:
+        aMetric = 0.40f;
+        break;
+    case eMetricFloat_ButtonVerticalInsidePadding:
+        aMetric = 0.25f;
+        break;
+    case eMetricFloat_ButtonHorizontalInsidePadding:
+        aMetric = 0.25f;
+        break;
+    default:
+        aMetric = -1.0;
+        res = NS_ERROR_FAILURE;
+    }
+  return res;
 }
+
 
 #ifdef NS_DEBUG
+
 NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const nsMetricNavFontID   aFontID, 
                                         const PRInt32             aFontSize, 
@@ -243,6 +363,7 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
 
   aSize.width  = 0;
   aSize.height = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  printf("nsLookAndFeel::GetNavSize not implemented\n");   // OS2TODO
+  return NS_ERROR_NOT_IMPLEMENTED;  
 }
 #endif
