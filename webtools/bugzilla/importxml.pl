@@ -467,7 +467,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
       push (@query, "target_milestone");
     } else {
       SendSQL("SELECT defaultmilestone FROM products " .
-              "WHERE product = " . SqlQuote($product[0]));
+              "WHERE name = " . SqlQuote($product[0]));
       my $tm = FetchOneColumn();
       push (@values, SqlQuote($tm));
       push (@query, "target_milestone");
