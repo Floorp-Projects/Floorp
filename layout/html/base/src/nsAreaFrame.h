@@ -82,9 +82,6 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
-                        nsDidReflowStatus aStatus);
-
   /**
    * Get the "type" of the frame
    *

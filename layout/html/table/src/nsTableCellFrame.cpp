@@ -469,6 +469,11 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
   }
   firstKid->MoveTo(aPresContext, kidRect.x, kidYTop);
+  if (kidYTop != kidRect.y) {
+    // Make sure any child views are correctly positioned. We know the inner table
+    // cell won't have a view
+    nsContainerFrame::PositionChildViews(aPresContext, firstKid);
+  }
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -649,8 +654,18 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     kidReflowState.reflowCommand = nsnull;
   }
 
+  // Assume the inner child will stay positioned exactly where it is. Later in
+  // VerticallyAlignChild() we'll move it if it turns out to be wrong. This
+  // avoids excessive movement and is more stable
+  nsPoint kidOrigin;
+  if (eReflowReason_Initial == aReflowState.reason) {
+    kidOrigin.MoveTo(leftInset, topInset);
+  } else {
+    firstKid->GetOrigin(kidOrigin);
+  }
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
-  ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
+  ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
+              kidOrigin.x, kidOrigin.y, 0, aStatus);
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize);
 
 #ifdef NS_DEBUG
@@ -727,8 +742,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   //////////////////////////////// HACK //////////////////////////////
   kidSize.width = PR_MIN(kidSize.width, availSize.width);
   ///////////////////////////// END HACK /////////////////////////////
-  firstKid->SetRect(&aPresContext, nsRect(leftInset, topInset,
-                                          kidSize.width, kidSize.height));  
+  FinishReflowChild(firstKid, aPresContext, kidSize,
+                    kidOrigin.x, kidOrigin.y, 0);
     
   // Return our size and our result
 

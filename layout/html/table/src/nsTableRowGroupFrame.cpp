@@ -342,19 +342,21 @@ nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 void nsTableRowGroupFrame::PlaceChild(nsIPresContext&      aPresContext,
 																			RowGroupReflowState& aReflowState,
 																			nsIFrame*            aKidFrame,
-																			const nsRect&        aKidRect,
+																			nsHTMLReflowMetrics& aDesiredSize,
+                                      nscoord              aX,
+                                      nscoord              aY,
 																			nsSize*              aMaxElementSize,
 																			nsSize&              aKidMaxElementSize)
 {
   // Place and size the child
-  aKidFrame->SetRect(&aPresContext, aKidRect);
+  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, aX, aY, 0);
 
   // Adjust the running y-offset
-  aReflowState.y += aKidRect.height;
+  aReflowState.y += aDesiredSize.height;
 
   // If our height is constrained then update the available height
   if (PR_FALSE == aReflowState.unconstrainedHeight) {
-    aReflowState.availSize.height -= aKidRect.height;
+    aReflowState.availSize.height -= aDesiredSize.height;
   }
 
   // Update the maximum element size
@@ -457,12 +459,13 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
         }
       }
   
-      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
+                       0, aReflowState.y, 0, aStatus);
   
       // Place the child
       nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
-      PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
-                 kidMaxElementSize);
+      PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize, 0,
+                 aReflowState.y, aDesiredSize.maxElementSize, kidMaxElementSize);
   
       /* if the table has collapsing borders, we need to reset the length of the shared vertical borders
        * for the table and the cells that overlap this row
@@ -877,8 +880,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
                                           availSize, eReflowReason_Resize);
         nsHTMLReflowMetrics desiredSize(nsnull);
 
-        rv = ReflowChild(rowFrame, aPresContext, desiredSize, rowReflowState, aStatus);
+        rv = ReflowChild(rowFrame, aPresContext, desiredSize, rowReflowState,
+                         0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
         rowFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
+        rowFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
         ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
         aDesiredSize.height = desiredSize.height;
 
@@ -1507,12 +1512,13 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   nsSize              kidMaxElementSize;
   nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull);
 
-  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
+                   0, aReflowState.y, 0, aStatus);
 
   // Place the row frame
   nsRect  kidRect(0, aReflowState.y, desiredSize.width, desiredSize.height);
-  PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect,
-             aDesiredSize.maxElementSize, kidMaxElementSize);
+  PlaceChild(aPresContext, aReflowState, aNextFrame, desiredSize, 0,
+             aReflowState.y, aDesiredSize.maxElementSize, kidMaxElementSize);
 
   // See if the table needs a reflow (e.g., if the column widths have
   // changed). If so, just return and don't bother adjusting the rows

@@ -505,7 +505,9 @@ protected:
   void PlaceChild(nsIPresContext&        aPresContext,
                   InnerTableReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
-                  const nsRect&          aKidRect,
+                  nsHTMLReflowMetrics&   aDesiredSize,
+                  nscoord                aX,
+                  nscoord                aY,
                   nsSize*                aMaxElementSize,
                   nsSize&                aKidMaxElementSize);
 

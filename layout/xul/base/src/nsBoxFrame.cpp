@@ -971,10 +971,23 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
       }
 
       nsRect rect;
+      nsIView*  view;
       childFrame->GetRect(rect);
       rect.x = x;
       rect.y = y;
       childFrame->SetRect(&aPresContext, rect);
+      childFrame->GetView(&aPresContext, &view);
+      // XXX Because we didn't position the frame or its view when reflowing
+      // it we must re-position all child views. This isn't optimal, and if
+      // we knew its final position, it would be better to position the frame
+      // and its view when doing the reflow...
+      if (view) {
+        nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, childFrame,
+                                                   view, nsnull);
+      } else {
+        // Re-position any child frame views
+        nsContainerFrame::PositionChildViews(&aPresContext, childFrame);
+      }
 
       // add in the right margin
       if (mInner->mHorizontal)
@@ -1131,6 +1144,9 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
    printf("because (%s)\n", ch);
 #endif
         // do the flow
+        // Note that we don't position the frame (or its view) now. If we knew
+        // where we were going to place the child, then it would be more
+        // efficient to position it now...
         childFrame->WillReflow(aPresContext);
         childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 
@@ -1183,8 +1199,20 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
 
         }
 
-          // set the rect
+        // set the rect and size the view (if it has one).. Don't position the view
+        // and sync its properties (like opacity) until later when we know its final
+        // position
         childFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
+        nsIView*  view;
+        childFrame->GetView(&aPresContext, &view);
+        if (view) {
+          nsIViewManager  *vm;
+
+          view->GetViewManager(vm);
+          vm->ResizeView(view, desiredSize.width, desiredSize.height);
+          NS_RELEASE(vm);
+        }
+        childFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
         // Stub out desiredSize.maxElementSize so that when go out of
         // scope, nothing bad happens!

@@ -992,10 +992,21 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
+    nsIView*          view;
 
+    rootFrame->WillReflow(*mPresContext);
+    rootFrame->GetView(mPresContext, &view);
+    if (view) {
+      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
+    }
     rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+    if (view) {
+      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
+                                                 nsnull);
+    }
+    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
       
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -1077,9 +1088,20 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
+    nsIView*          view;
 
+    rootFrame->WillReflow(*mPresContext);
+    rootFrame->GetView(mPresContext, &view);
+    if (view) {
+      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
+    }
     rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    if (view) {
+      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
+                                                 nsnull);
+    }
+    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
@@ -1262,9 +1284,21 @@ PresShell::StyleChangeReflow()
     // XXX We should be using eReflowReason_StyleChange
     nsHTMLReflowState reflowState(*mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
+    nsIView*          view;
 
+    rootFrame->WillReflow(*mPresContext);
+    rootFrame->GetView(mPresContext, &view);
+    if (view) {
+      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
+    }
     rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+    if (view) {
+      nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
+                                                 nsnull);
+    }
+    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;

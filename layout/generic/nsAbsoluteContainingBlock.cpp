@@ -260,8 +260,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     NS_NOTYETIMPLEMENTED("percentage border");
   }
   
-  aKidFrame->WillReflow(aPresContext);
-
   nsSize              availSize(aReflowState.mComputedWidth, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
@@ -274,6 +272,19 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     kidReflowState.reason = eReflowReason_Initial;
   }
 
+  // XXX TROY
+  // Send the WillReflow() notification and position the frame
+  aKidFrame->WillReflow(aPresContext);
+  aKidFrame->MoveTo(&aPresContext, 
+                    border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
+                    border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
+
+  // Position its view
+  nsIView*  kidView;
+  aKidFrame->GetView(&aPresContext, &kidView);
+  nsContainerFrame::PositionFrameView(&aPresContext, aKidFrame, kidView);
+
+  // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
   // Because we don't know the size of a replaced element until after we reflow
@@ -368,6 +379,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                kidDesiredSize.width, kidDesiredSize.height);
   aKidFrame->SetRect(&aPresContext, rect);
 
+  // Size and position the view and set its opacity, visibility, content
+  // transparency, and clip
+  nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, aKidFrame, kidView,
+                                             &kidDesiredSize.mCombinedArea);
+  aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   return rv;
 }
 

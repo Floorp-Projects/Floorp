@@ -271,6 +271,8 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
   // wrong place.
   nsresult result = NS_OK; /* = nsFrame::DidReflow(aPresContext, aStatus) */
 
+  // XXX TROY
+#if 0
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Apply DidReflow to each and every list that this frame implements
     nsIAtom* listName = nsnull;
@@ -286,6 +288,7 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
       GetAdditionalChildListName(listIndex++, &listName);
     } while(nsnull != listName);
   }
+#endif
 
   NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
   return result;

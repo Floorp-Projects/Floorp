@@ -35,6 +35,8 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIContent.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -918,7 +920,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // new starting x,y coordinates for the frame.
   ApplyLeftMargin(pfd, reflowState);
 
-  // Let frame know that are reflowing it
+  // Let frame know that are reflowing it. Note that we don't bother
+  // positioning the frame yet, because we're probably going to end up
+  // moving it when we do the vertical alignment
   nscoord x = pfd->mBounds.x;
   nscoord y = pfd->mBounds.y;
 
@@ -1072,13 +1076,20 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     pfd->mMaxElementSize = *metrics.maxElementSize;
   }
 
-  // Now that frame has been reflowed at least one time make sure that
-  // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
-  // initial reflow reason again.
-  if (eReflowReason_Initial == reason) {
-    aFrame->GetFrameState(&state);
-    aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+  // Size the frame and size its view (if it has one)
+  aFrame->SizeTo(&mPresContext, metrics.width, metrics.height);
+  nsIView*  view;
+  aFrame->GetView(&mPresContext, &view);
+  if (view) {
+    nsIViewManager  *vm;
+
+    view->GetViewManager(vm);
+    vm->ResizeView(view, metrics.width, metrics.height);
+    NS_RELEASE(vm);
   }
+
+  // Tell the frame that we're done reflowing it
+  aFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   if (aMetrics) {
     *aMetrics = metrics;

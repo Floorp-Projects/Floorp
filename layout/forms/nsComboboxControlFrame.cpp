@@ -424,14 +424,13 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
   kidReflowState.mComputedHeight = aAvailableHeight;
       
    // Reflow child
-  nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState, aStatus);
- 
-   // Set the child's width and height to it's desired size
   nsRect rect;
   aFrame->GetRect(rect);
-  rect.width = aDesiredSize.width;
-  rect.height = aDesiredSize.height;
-  aFrame->SetRect(&aPresContext, rect);
+  nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState,
+                            rect.x, rect.y, 0, aStatus);
+ 
+   // Set the child's width and height to it's desired size
+  FinishReflowChild(aFrame, aPresContext, aDesiredSize, rect.x, rect.y, 0);
   return rv;
 }
 

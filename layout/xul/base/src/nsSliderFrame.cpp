@@ -313,7 +313,9 @@ nsSliderFrame::ReflowThumb(nsIPresContext&   aPresContext,
     if (thumbReflowState.mComputedHeight != NS_INTRINSICSIZE)
        thumbReflowState.mComputedHeight -= total.top + total.bottom;
 
-    ReflowChild(thumbFrame, aPresContext, aDesiredSize, thumbReflowState, aStatus);
+    ReflowChild(thumbFrame, aPresContext, aDesiredSize, thumbReflowState,
+                0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
+    thumbFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     
     // add the margin back in
     aDesiredSize.width += margin.left + margin.right;
@@ -442,7 +444,13 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
   else
     thumbRect.y += pos;
 
+  nsIView*  view;
   thumbFrame->SetRect(&aPresContext, thumbRect);
+  thumbFrame->GetView(&aPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, thumbFrame,
+                                               view, nsnull);
+  }
 
   // add in our border
   aDesiredSize.width += borderPadding.left + borderPadding.right;

@@ -1864,6 +1864,12 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
         // Send the WillReflow notification, and reflow the child frame
         mDisplayFrame->WillReflow(aPresContext);
+        mDisplayFrame->MoveTo(&aPresContext, subBounds.x, subBounds.y);
+        nsIView*  view;
+        mDisplayFrame->GetView(&aPresContext, &view);
+        if (view) {
+          nsContainerFrame::PositionFrameView(&aPresContext, mDisplayFrame, view);
+        }
         nsReflowStatus status;
         rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
         // notice how status is ignored here

@@ -76,6 +76,12 @@ class nsLabelFrame : public nsHTMLContainerFrame
 public:
   nsLabelFrame();
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -116,7 +122,6 @@ protected:
   PRBool mControlIsInside;
   nsIFormControlFrame* mControlFrame;
   nsRect mTranslatedRect;
-  PRBool mDidInit;
 };
 
 nsresult
@@ -143,7 +148,6 @@ nsLabelFrame::nsLabelFrame()
   mControlIsInside = PR_FALSE;
   mControlFrame    = nsnull;
   mTranslatedRect  = nsRect(0,0,0,0);
-  mDidInit         = PR_FALSE;
 }
 
 void
@@ -423,6 +427,43 @@ void LabelHack(nsHTMLReflowState& aReflowState, char* aMessage)
   }
 }
 
+NS_IMETHODIMP
+nsLabelFrame::Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        aPrevInFlow)
+{
+  // call our base class
+  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent,
+                                            aContext, aPrevInFlow);
+
+  // create our view, we need a view to grab the mouse 
+  nsIView* view;
+  GetView(&aPresContext, &view);
+  if (!view) {
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
+                                                  (void **)&view);
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext.GetShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsIViewManager> viewMan;
+    presShell->GetViewManager(getter_AddRefs(viewMan));
+
+    nsIFrame* parWithView;
+    nsIView *parView;
+    GetParentWithView(&aPresContext, &parWithView);
+    parWithView->GetView(&aPresContext, &parView);
+    // the view's size is not know yet, but its size will be kept in synch with our frame.
+    nsRect boundBox(0, 0, 0, 0); 
+    result = view->Init(viewMan, boundBox, parView, nsnull);
+    view->SetContentTransparency(PR_TRUE);
+    viewMan->InsertChild(parView, view, 0);
+    SetView(&aPresContext, view);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
@@ -431,31 +472,6 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
 {
   // XXX remove the following when the reflow state is fixed
   LabelHack((nsHTMLReflowState&)aReflowState, "BUG - label");
-  if (!mDidInit) {
-    // create our view, we need a view to grab the mouse 
-    nsIView* view;
-    GetView(&aPresContext, &view);
-    if (!view) {
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
-                                                    (void **)&view);
-	    nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
-	    nsCOMPtr<nsIViewManager> viewMan;
-      presShell->GetViewManager(getter_AddRefs(viewMan));
-
-      nsIFrame* parWithView;
-	    nsIView *parView;
-      GetParentWithView(&aPresContext, &parWithView);
-	    parWithView->GetView(&aPresContext, &parView);
-      // the view's size is not know yet, but its size will be kept in synch with our frame.
-      nsRect boundBox(0, 0, 500, 500); 
-      result = view->Init(viewMan, boundBox, parView, nsnull);
-      view->SetContentTransparency(PR_TRUE);
-      viewMan->InsertChild(parView, view, 0);
-      SetView(&aPresContext, view);
-    }
-    mDidInit = PR_TRUE;
-  }
 
   if (nsnull == mControlFrame) {
     // check to see if a form control is referenced via the "for" attribute
@@ -489,11 +505,12 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize);
   // XXX remove when reflow state is fixed
   LabelHack(reflowState, "label's area");
-  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
+  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
+              borderPadding.left, borderPadding.top, 0, aStatus);
 
   // Place the child
-  nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
-  firstKid->SetRect(&aPresContext, rect);
+  FinishReflowChild(firstKid, aPresContext, aDesiredSize,
+                    borderPadding.left, borderPadding.top, 0);
 
   // add in our border and padding to the size of the child
   aDesiredSize.width  += borderPadding.left + borderPadding.right;

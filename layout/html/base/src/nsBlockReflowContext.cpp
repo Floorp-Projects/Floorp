@@ -226,6 +226,14 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Let frame know that we are reflowing it
   aFrame->WillReflow(*mPresContext);
 
+  // Position it and its view (if it has one)
+  aFrame->MoveTo(mPresContext, mX, mY);
+  nsIView*  view;
+  aFrame->GetView(mPresContext, &view);
+  if (view) {
+    nsContainerFrame::PositionFrameView(mPresContext, aFrame, view);
+  }
+
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
   mMetrics.height = nscoord(0xdeadbeef);
@@ -417,7 +425,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     // Empty blocks do not have anything special done to them and they
     // always fit. Note: don't force the width to 0
     nsRect r(x, y, mMetrics.width, 0);
-    mFrame->SetRect(mPresContext, r);
+
+    // Now place the frame and complete the reflow process
+    nsContainerFrame::FinishReflowChild(mFrame, *mPresContext, mMetrics, x, y, 0);
     aInFlowBounds = r;
 
     // Retain combined area information in case we contain a floater
@@ -544,8 +554,8 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       aCombinedRect.width = mMetrics.mCombinedArea.width;
       aCombinedRect.height = mMetrics.mCombinedArea.height;
 
-      // Now place the frame
-      mFrame->SetRect(mPresContext, nsRect(x, y, mMetrics.width, mMetrics.height));
+      // Now place the frame and complete the reflow process
+      nsContainerFrame::FinishReflowChild(mFrame, *mPresContext, mMetrics, x, y, 0);
 
 // XXX obsolete, i believe...
 #if 0
@@ -591,6 +601,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       }
     }
     else {
+      // Send the DidReflow() notification, but don't bother placing
+      // the frame
+      mFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
       fits = PR_FALSE;
     }
   }

@@ -1388,7 +1388,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
         nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame, 
                                          availSize, aReason);
         // rv intentionally not set here
-        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
+        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, aStatus);
+        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
         continue;
       }
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
@@ -1396,10 +1397,10 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       // Note: we don't bother checking here for whether we should clear the
       // isTopOfPage reflow state flag, because we're dealing with an unconstrained
       // height and it isn't an issue...
-      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
+      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, aStatus);
 
       // Place the child since some of its content fit in us.
-      kidFrame->SetRect(&aPresContext, nsRect(0, 0, kidSize.width, kidSize.height));
+      FinishReflowChild(kidFrame, aPresContext, kidSize, 0, 0, 0);
       if (NS_UNCONSTRAINEDSIZE==kidSize.height)
         y = NS_UNCONSTRAINEDSIZE;
       else
@@ -1428,8 +1429,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       {
         nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                          availSize, aReason);
-        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
-        kidFrame->SetRect(&aPresContext, nsRect(0, 0, 0, 0));
+        ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, 0, 0, 0, aStatus);
+        FinishReflowChild(kidFrame, aPresContext, kidSize, 0, 0, 0);
       }
     }
   }
@@ -2356,22 +2357,23 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                    aNextFrame, aReflowState.availSize);
 
-  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+  nscoord x = aReflowState.mBorderPadding.left;
+  nscoord y = aReflowState.mBorderPadding.top + aReflowState.y;
+  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
+                   x, y, 0, aStatus);
 
   // Place the row group frame. Don't use PlaceChild(), because it moves
   // the footer frame as well. We'll adjust the footer frame later on in
   // AdjustSiblingsAfterReflow()
-  nscoord x = aReflowState.mBorderPadding.left;
-  nscoord y = aReflowState.mBorderPadding.top + aReflowState.y;
   nsRect  kidRect(x, y, desiredSize.width, desiredSize.height);
-  aNextFrame->SetRect(&aPresContext, kidRect);
+  FinishReflowChild(aNextFrame, aPresContext, desiredSize, x, y, 0);
 
   // Adjust the running y-offset
-  aReflowState.y += kidRect.height;
+  aReflowState.y += desiredSize.height;
 
   // If our height is constrained, then update the available height
   if (PR_FALSE == aReflowState.unconstrainedHeight) {
-    aReflowState.availSize.height -= kidRect.height;
+    aReflowState.availSize.height -= desiredSize.height;
   }
 
   // Update the max element size
@@ -2459,22 +2461,24 @@ nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState)
 
 // Position and size aKidFrame and update our reflow state. The origin of
 // aKidRect is relative to the upper-left origin of our frame
-void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
+void nsTableFrame::PlaceChild(nsIPresContext&        aPresContext,
                               InnerTableReflowState& aReflowState,
-                              nsIFrame*          aKidFrame,
-                              const nsRect&      aKidRect,
-                              nsSize*            aMaxElementSize,
-                              nsSize&            aKidMaxElementSize)
+                              nsIFrame*              aKidFrame,
+                              nsHTMLReflowMetrics&   aDesiredSize,
+                              nscoord                aX,
+                              nscoord                aY,
+                              nsSize*                aMaxElementSize,
+                              nsSize&                aKidMaxElementSize)
 {
   // Place and size the child
-  aKidFrame->SetRect(&aPresContext, aKidRect);
+  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, aX, aY, 0);
 
   // Adjust the running y-offset
-  aReflowState.y += aKidRect.height;
+  aReflowState.y += aDesiredSize.height;
 
   // If our height is constrained, then update the available height
   if (PR_FALSE == aReflowState.unconstrainedHeight) {
-    aReflowState.availSize.height -= aKidRect.height;
+    aReflowState.availSize.height -= aDesiredSize.height;
   }
 
   // If this is a footer row group, remember it
@@ -2500,7 +2504,7 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
     
     // Move the footer below the body row group frame
     aReflowState.footerFrame->GetOrigin(origin);
-    origin.y += aKidRect.height;
+    origin.y += aDesiredSize.height;
     aReflowState.footerFrame->MoveTo(&aPresContext, origin.x, origin.y);
   }
 
@@ -2606,7 +2610,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         }
       }
 
-      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+      rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
+                       x, y, 0, aStatus);
       // Did the child fit?
       if (desiredSize.height > kidAvailSize.height) {
         if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
@@ -2619,7 +2624,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       }
 
       // Place the child
-      nsRect kidRect (x, y, desiredSize.width, desiredSize.height);
       if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
       {
         // we don't want to adjust the maxElementSize if this is an initial reflow
@@ -2627,8 +2631,10 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         nsSize *requestedMaxElementSize = nsnull;
         if (eReflowReason_Initial != aReflowState.reflowState.reason)
           requestedMaxElementSize = aDesiredSize.maxElementSize;
-        PlaceChild(aPresContext, aReflowState, kidFrame, kidRect,
-                   requestedMaxElementSize, kidMaxElementSize);
+        PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize,
+                   x, y, requestedMaxElementSize, kidMaxElementSize);
+      } else {
+        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
       childCount++;
 
@@ -2677,7 +2683,9 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
                                          aReflowState.reflowState, kidFrame,
                                          nsSize(0,0), eReflowReason_Resize);
         nsHTMLReflowMetrics unusedDesiredSize(nsnull);
-        ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState, aStatus);
+        ReflowChild(kidFrame, aPresContext, unusedDesiredSize, kidReflowState,
+                    0, 0, 0, aStatus);
+        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
 
     // Get the next child
@@ -2749,7 +2757,8 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
                                       kidFrame, aReflowState.availSize,
                                       eReflowReason_Resize);
 
-    rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
+    rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState,
+                     0, aReflowState.y, 0, aStatus);
 
     // Did the child fit?
     if ((kidSize.height > aReflowState.availSize.height) && mFrames.NotEmpty()) {
@@ -2760,13 +2769,14 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
       break;
     }
 
-    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.y += aReflowState.y;
     const nsStyleDisplay *childDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
-      PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize, *pKidMaxElementSize);
+      PlaceChild(aPresContext, aReflowState, kidFrame, kidSize, 0,
+                 aReflowState.y, aDesiredSize.maxElementSize, *pKidMaxElementSize);
+    } else {
+      kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
 
     // Remove the frame from its current parent

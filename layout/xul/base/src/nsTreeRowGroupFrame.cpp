@@ -877,7 +877,8 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     kidReflowState.mComputedHeight = mRowGroupHeight;
     nsHTMLReflowMetrics desiredSize(nsnull);
 
-    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
+                     0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 
     nscoord xpos = 0;
 
@@ -890,8 +891,7 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     }
 
     // Place the child
-    nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
-    mScrollbar->SetRect(&aPresContext, kidRect);
+    FinishReflowChild(aNextFrame, aPresContext, desiredSize, xpos, 0, 0);
 
     // Return our desired width
     aDesiredSize.width = aReflowState.reflowState.availableWidth;
@@ -999,7 +999,8 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
                                      kidAvailSize, aReason);
     
     kidReflowState.mComputedHeight = mRowGroupHeight;
-    rv = ReflowChild(mScrollbar, aPresContext, desiredSize, kidReflowState, aStatus);
+    rv = ReflowChild(mScrollbar, aPresContext, desiredSize, kidReflowState,
+                     0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
     if (NS_FAILED(rv))
       return rv;
 
@@ -1014,8 +1015,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     }
 
     // Place the child
-    nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
-    mScrollbar->SetRect(&aPresContext, kidRect);
+    FinishReflowChild(mScrollbar, aPresContext, desiredSize, xpos, 0, 0);
   }
   return rv;
 }

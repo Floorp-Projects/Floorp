@@ -2809,6 +2809,20 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
   return NS_OK;
 }
 
+static void
+PlaceFrameView(nsIPresContext* aPresContext,
+               nsIFrame*       aFrame)
+{
+  nsIView*  view;
+  aFrame->GetView(aPresContext, &view);
+  if (view) {
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view, nsnull);
+
+  } else {
+    nsContainerFrame::PositionChildViews(aPresContext, aFrame);
+  }
+}
+
 void
 nsBlockFrame::SlideLine(nsBlockReflowState& aState,
                         nsLineBox* aLine, nscoord aDY)
@@ -2829,6 +2843,9 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
       r.y += aDY;
       kid->SetRect(aState.mPresContext, r);
     }
+
+    // Make sure the frame's view and any child views are updated
+    ::PlaceFrameView(aState.mPresContext, kid);
 
     // If the child has any floaters that impact the space-manager,
     // place them now so that they are present in the space-manager
@@ -2851,16 +2868,21 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     }
   }
   else {
-    if (aDY) {
-      // Adjust the Y coordinate of the frames in the line
-      nsRect r;
-      PRInt32 n = aLine->GetChildCount();
-      while (--n >= 0) {
+    // Adjust the Y coordinate of the frames in the line.
+    // Note: we need to re-position views even if aDY is 0, because
+    // one of our parent frames may have moved and so the view's position
+    // relative to its parent may have changed
+    nsRect r;
+    PRInt32 n = aLine->GetChildCount();
+    while (--n >= 0) {
+      if (aDY) {
         kid->GetRect(r);
         r.y += aDY;
         kid->SetRect(aState.mPresContext, r);
-        kid->GetNextSibling(&kid);
       }
+      // Make sure the frame's view and any child views are updated
+      ::PlaceFrameView(aState.mPresContext, kid);
+      kid->GetNextSibling(&kid);
     }
   }
 }
@@ -4161,6 +4183,16 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
                             nsLineBox* aLine,
                             const nsSize& aMaxElementSize)
 {
+  // If it's inline elements, then make sure the views are correctly
+  // positioned and sized
+  if (aLine->IsInline()) {
+    nsIFrame* frame = aLine->mFirstChild;
+    for (PRInt32 i = 0; i < aLine->GetChildCount(); i++) {
+      ::PlaceFrameView(aState.mPresContext, frame);
+      frame->GetNextSibling(&frame);
+    }
+  }
+
   // Update max-element-size
   if (aState.mComputeMaxElementSize) {
     aState.UpdateMaxElementSize(aMaxElementSize);
@@ -6087,7 +6119,6 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   nsReflowStatus  status;
   mBullet->WillReflow(*aState.mPresContext);
   mBullet->Reflow(*aState.mPresContext, aMetrics, reflowState, status);
-  mBullet->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
@@ -6098,6 +6129,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   const nsMargin& bp = aState.BorderPadding();
   nscoord y = bp.top;
   mBullet->SetRect(aState.mPresContext, nsRect(x, y, aMetrics.width, aMetrics.height));
+  mBullet->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 
 //XXX get rid of this -- its slow

@@ -318,7 +318,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     legendReflowState.mComputedWidth = NS_INTRINSICSIZE;
     legendReflowState.mComputedHeight = NS_INTRINSICSIZE;
 
-    ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
+    ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState,
+                0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 
     // get the legend's margin
     nsIStyleContext* legendSC = nsnull;
@@ -354,20 +355,23 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
        if (availSize.width < mLegendRect.width)
            availSize.width = mLegendRect.width;
     }
-  
+
+    // Tell the legend we're done with the reflow. We'll size and place it later on
+    mLegendFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
     // Try to reflow the area frame into the available space.
   nsHTMLReflowState contentReflowState(aPresContext, aReflowState,
                                        mContentFrame, availSize);
 
-  ReflowChild(mContentFrame, aPresContext, aDesiredSize, contentReflowState, aStatus);
+  ReflowChild(mContentFrame, aPresContext, aDesiredSize, contentReflowState,
+              borderPadding.left, borderPadding.top + mLegendSpace, 0, aStatus);
 
   // set the rect. make sure we add the margin back in.
   nsRect contentRect(borderPadding.left,borderPadding.top + mLegendSpace,aDesiredSize.width ,aDesiredSize.height);
 
   // Place the content area frame.
-  mContentFrame->SetRect(&aPresContext, contentRect);
+  FinishReflowChild(mContentFrame, aPresContext, aDesiredSize, contentRect.x, contentRect.y, 0);
 
   if (mLegendFrame) 
   {

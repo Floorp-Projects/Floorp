@@ -1037,10 +1037,8 @@ nsObjectFrame::HandleImage(nsIPresContext&          aPresContext,
     }
   }
 
-	ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
-
-	nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-	child->SetRect(&aPresContext, rect);
+	ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, 0, 0, 0, status);
+  FinishReflowChild(child, aPresContext, kidDesiredSize, 0, 0, 0);
 
 	aMetrics.width = kidDesiredSize.width;
 	aMetrics.height = kidDesiredSize.height;
