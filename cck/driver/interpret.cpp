@@ -795,6 +795,23 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					theApp.FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 					IsSameCache = FALSE;
 				}
+				// Switch pre-set target platform and create working installer 
+				else if (strcmp(pcmd, "ChangePlatform") ==0)	
+				{
+					WIDGET *w = findWidget(parms);
+					if (w)
+						if (wNotifyCode == CBN_SELCHANGE)
+						{
+							CString rootPath	= GetGlobal("Root");
+							CString configName	= GetGlobal("CustomizationList");
+							CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
+							char deletePath[MAX_SIZE];
+							strcpy(deletePath, outputPath);
+							int direxist = GetFileAttributes(outputPath+"\\Core");
+							if (direxist != -1)
+								CallDLL("IBEngine", "EraseDirectory", deletePath, w);
+						}
+				}
 				else if (strcmp(pcmd, "WriteCache") ==0)
 				{
 					WIDGET *w = findWidget(parms);
