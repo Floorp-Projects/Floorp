@@ -26,11 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= nkcacheservice
-XPIDL_MODULE    = nkcacheservice
+MODULE		= nkcache
 LIBRARY_NAME	= nkcacheservice
 IS_COMPONENT	= 1
-REQUIRES	= xpcom necko pref js
+REQUIRES	= xpcom string necko pref js
 
 EXPORTS		= \
 		nsCacheService.h \
@@ -48,8 +47,6 @@ CPPSRCS		= \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-LOCAL_INCLUDES	= -I$(srcdir)/../public -I$(srcdir)/../include
 
 LIBS           += \
 		$(XPCOM_LIBS) \
