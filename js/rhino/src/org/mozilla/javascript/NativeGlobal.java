@@ -486,10 +486,11 @@ public class NativeGlobal implements IdFunctionMaster {
         if (filename == null) {
             filename = Context.getSourcePositionFromStack(linep);
             if (filename == null) {
-                filename = "<eval'ed string>";
+                filename = "";
                 linep[0] = 1;
-            }
-        }
+            } 
+        } 
+        filename += "(eval)";
 
         try {
             StringReader in = new StringReader((String) x);

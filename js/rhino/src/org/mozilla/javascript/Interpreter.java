@@ -116,6 +116,7 @@ public class Interpreter extends LabelTable {
                                                   Object securityDomain)
     {        
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
+        itsData.itsSourceFile = itsSourceFile;
         itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);        
         debugSource = (StringBuffer) tree.getProp(Node.DEBUGSOURCE_PROP);
         if (itsFunctionList != null)
@@ -786,8 +787,8 @@ public class Interpreter extends LabelTable {
                             iCodeTop = addByte((byte) TokenStream.ONE, iCodeTop);
                         else {
                             iCodeTop = addByte((byte) TokenStream.NUMBER, iCodeTop);
-                            iCodeTop = addNumber(num, iCodeTop);
-                        }
+                       	    iCodeTop = addNumber(num, iCodeTop);
+                       	}
                 }
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
@@ -1691,7 +1692,7 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = local[slot];
                         break;
                     case TokenStream.CALLSPECIAL :
-                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
+                        int lineNum = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
                         name = getString(theData.itsStringTable, iCode, pc + 3);
                         count = (iCode[pc + 5] << 8) | (iCode[pc + 6] & 0xFF);
                         outArgs = new Object[count];
@@ -1701,7 +1702,7 @@ public class Interpreter extends LabelTable {
                         lhs = stack[stackTop];
                         stack[stackTop] = ScriptRuntime.callSpecial(
                                             cx, lhs, rhs, outArgs, 
-                                            thisObj, scope, name, i);
+                                            thisObj, scope, name, lineNum);
                         pc += 6;
                         break;
                     case TokenStream.CALL :
