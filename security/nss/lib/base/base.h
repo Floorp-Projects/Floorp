@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.11 $ $Date: 2001/12/12 20:23:05 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.12 $ $Date: 2002/01/31 19:18:55 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -54,6 +54,7 @@ static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.11 $ $
 #endif /* NSSBASE_H */
 
 #include "plhash.h"
+#include "prthread.h"
 
 PR_BEGIN_EXTERN_C
 
@@ -1386,7 +1387,8 @@ extern const NSSError NSS_ERROR_INVALID_POINTER;
 NSS_EXTERN PRStatus
 nss_NewThreadPrivateIndex
 (
-  PRUintn *ip
+  PRUintn *ip,
+  PRThreadPrivateDTOR dtor
 );
 
 /*
