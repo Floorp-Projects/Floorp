@@ -66,8 +66,8 @@
       <box class="box-padded" orient="vertical">    
         <grid>
           <columns>
-            <column/>
             <column flex="1"/>
+            <column flex="3"/>
           </columns>
           <rows>
             <row>
