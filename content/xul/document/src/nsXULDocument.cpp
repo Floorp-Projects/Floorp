@@ -905,22 +905,22 @@ XULDocumentImpl::~XULDocumentImpl()
         printf("# of builders: %lu\n", (unsigned long)cnt);
 #endif
 
-	    for (PRUint32 i = 0; i < cnt; ++i)
-	    {
-		// XXX we should QueryInterface() here
-		nsIRDFContentModelBuilder* builder
-		    = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
+        for (PRUint32 i = 0; i < cnt; ++i) {
+          nsIRDFContentModelBuilder* builder
+            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
 
-		NS_ASSERTION(builder != nsnull, "null ptr");
-		if (! builder)
-		    continue;
+          NS_ASSERTION(builder != nsnull, "null ptr");
+          if (! builder) continue;
 
-		rv = builder->SetDocument(nsnull);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "error creating content");
-		// XXX ignore error code?
+          rv = builder->SetDocument(nsnull);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from document");
+          // XXX ignore error code?
 
-		NS_RELEASE(builder);
-	    }
+          rv = builder->SetDataBase(nsnull);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from database");
+
+          NS_RELEASE(builder);
+        }
     }
 
     if (mCSSLoader) {

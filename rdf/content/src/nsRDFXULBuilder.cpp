@@ -136,7 +136,12 @@ class RDFXULBuilderImpl : public nsIRDFContentModelBuilder,
 {
 private:
     nsIRDFDocument*                     mDocument; // [WEAK]
+
+    // We are an observer of the composite datasource. The cycle is
+    // broken by out-of-band SetDataBase(nsnull) call when document is
+    // destroyed.
     nsCOMPtr<nsIRDFCompositeDataSource> mDB;
+
     nsCOMPtr<nsIContent>                mRoot;
     nsCOMPtr<nsIHTMLElementFactory>     mHTMLElementFactory;
 
@@ -563,17 +568,14 @@ RDFXULBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 NS_IMETHODIMP
 RDFXULBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
 {
-    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
-    if (! aDataBase)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDB == nsnull, "already initialized");
     if (mDB)
-        return NS_ERROR_ALREADY_INITIALIZED;
+        mDB->RemoveObserver(this);
 
     mDB = dont_QueryInterface(aDataBase);
 
-    mDB->AddObserver(this);
+    if (mDB)
+        mDB->AddObserver(this);
+
     return NS_OK;
 }
 

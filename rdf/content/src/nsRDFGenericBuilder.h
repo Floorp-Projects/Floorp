@@ -226,11 +226,16 @@ public:
     ForceTreeReflow(nsITimer* aTimer, void* aClosure);
 
 protected:
-    nsIRDFDocument*            mDocument;
-    nsIRDFCompositeDataSource* mDB;
-    nsIContent*                mRoot;
+    nsIRDFDocument*            mDocument; // [WEAK]
 
-    nsCOMPtr<nsITimer>		   mTimer;
+    // We are an observer of the composite datasource. The cycle is
+    // broken by out-of-band SetDataBase(nsnull) call when document is
+    // destroyed.
+    nsCOMPtr<nsIRDFCompositeDataSource> mDB;
+    nsCOMPtr<nsIContent>                mRoot;
+
+    nsCOMPtr<nsITimer> mTimer;
+
     static nsIRDFDataSource	*mLocalstore;
     static PRBool		persistLock;
 
