@@ -233,9 +233,10 @@ private:
 
   /**
    * Function to call when a load fails; this handles things like alt
-   * text, broken image icons, etc
+   * text, broken image icons, etc.  Returns NS_ERROR_FRAME_REPLACED
+   * if it called CantRenderReplacedElement, NS_OK otherwise.
    */
-  void HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell);
+  nsresult HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell);
   
   nsImageMap*         mImageMap;
 

@@ -638,13 +638,13 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     aPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame * aNewFrame = nsnull;
     rv = NS_NewImageFrame(shell, &aNewFrame);
-    if(rv != NS_OK)
+    if (NS_FAILED(rv))
       return rv;
 
     // XXX we're using the same style context for ourselves and the
     // image frame.  If this ever changes, please fix HandleChild() to deal.
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
-    if(rv == NS_OK)
+    if (NS_SUCCEEDED(rv))
     {
       nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame, aContext, nsnull, PR_FALSE);
       mFrames.AppendFrame(this, aNewFrame);

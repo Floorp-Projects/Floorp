@@ -1421,10 +1421,18 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
   
     // Create an image frame and initialize it
-    nsIFrame* imageFrame;
-    NS_NewImageFrame(shell, &imageFrame);
-    imageFrame->Init(aPresContext, content, aParentFrame, aStyleContext, nsnull);
-  
+    nsIFrame* imageFrame = nsnull;
+    rv = NS_NewImageFrame(shell, &imageFrame);
+    if (!imageFrame) {
+      return rv;
+    }
+
+    rv = imageFrame->Init(aPresContext, content, aParentFrame, aStyleContext, nsnull);
+    if (NS_FAILED(rv)) {
+      imageFrame->Destroy(aPresContext);
+      return rv == NS_ERROR_FRAME_REPLACED ? NS_OK : rv;
+    }
+
     // Return the image frame
     *aFrame = imageFrame;
 
@@ -4973,68 +4981,88 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       }
     }
     
-    InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        geometricParent, aStyleContext, nsnull, newFrame);
+    rv = InitAndRestoreFrame(aPresContext, aState, aContent, 
+                             geometricParent, aStyleContext, nsnull, newFrame);
+    if (rv == NS_ERROR_FRAME_REPLACED) {
+      // The frame called CantRenderReplacedElement from inside Init().  That
+      // failed to do anything useful, since the frame was not in the frame
+      // tree yet... Create an alternate frame ourselves
+      newFrame->Destroy(aPresContext);
 
-    // See if we need to create a view, e.g. the frame is absolutely
-    // positioned
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                             aStyleContext, aParentFrame, PR_FALSE);
+      if (aTag != nsHTMLAtoms::img && aTag != nsHTMLAtoms::input) {
+        // XXXbz This should really be made to work for <object> too...
+        return NS_OK;
+      }
 
-    // Process the child content if requested
-    nsFrameItems childItems;
-    if (processChildren) {
-      if (isPositionedContainingBlock) {
-        // The area frame becomes a container for child frames that are
-        // absolutely positioned
-        nsFrameConstructorSaveState absoluteSaveState;
-        aState.PushAbsoluteContainingBlock(aPresContext, newFrame, absoluteSaveState);
+      // Try to construct the alternate frame
+      newFrame = nsnull;
+      rv = ConstructAlternateFrame(aPresShell, aPresContext, aContent,
+                                   aStyleContext, geometricParent,
+                                   aParentFrame, newFrame);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ASSERTION(newFrame, "ConstructAlternateFrame needs better error-checking");
+    } else {
+      NS_ASSERTION(NS_SUCCEEDED(rv), "InitAndRestoreFrame failed");
+      // See if we need to create a view, e.g. the frame is absolutely
+      // positioned
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
+                                               aStyleContext, aParentFrame, PR_FALSE);
+
+      // Process the child content if requested
+      nsFrameItems childItems;
+      if (processChildren) {
+        if (isPositionedContainingBlock) {
+          // The area frame becomes a container for child frames that are
+          // absolutely positioned
+          nsFrameConstructorSaveState absoluteSaveState;
+          aState.PushAbsoluteContainingBlock(aPresContext, newFrame, absoluteSaveState);
         
-        // Process the child frames
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                             PR_TRUE, childItems, PR_FALSE);
+          // Process the child frames
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
         
-        // Set the frame's absolute list if there were any absolutely positioned children
-        if (aState.mAbsoluteItems.childList) {
-          newFrame->SetInitialChildList(aPresContext,
-                                        nsLayoutAtoms::absoluteList,
-                                        aState.mAbsoluteItems.childList);
+          // Set the frame's absolute list if there were any absolutely positioned children
+          if (aState.mAbsoluteItems.childList) {
+            newFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::absoluteList,
+                                          aState.mAbsoluteItems.childList);
+          }
+        }
+        else if (isFloaterContainer) {
+          // If the frame can contain floaters, then push a floater
+          // containing block
+          PRBool haveFirstLetterStyle, haveFirstLineStyle;
+          HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
+                                &haveFirstLetterStyle, &haveFirstLineStyle);
+          nsFrameConstructorSaveState floaterSaveState;
+          aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
+                                            PR_FALSE, PR_FALSE);
+        
+          // Process the child frames
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
+        
+          // Set the frame's floater list if there were any floated children
+          if (aState.mFloatedItems.childList) {
+            newFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::floaterList,
+                                          aState.mFloatedItems.childList);
+          }
+
+        } else {
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
         }
       }
-      else if (isFloaterContainer) {
-        // If the frame can contain floaters, then push a floater
-        // containing block
-        PRBool haveFirstLetterStyle, haveFirstLineStyle;
-        HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
-                              &haveFirstLetterStyle, &haveFirstLineStyle);
-        nsFrameConstructorSaveState floaterSaveState;
-        aState.PushFloaterContainingBlock(newFrame, floaterSaveState,
-                                          PR_FALSE, PR_FALSE);
-        
-        // Process the child frames
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                             PR_TRUE, childItems, PR_FALSE);
-        
-        // Set the frame's floater list if there were any floated children
-        if (aState.mFloatedItems.childList) {
-          newFrame->SetInitialChildList(aPresContext,
-                                        nsLayoutAtoms::floaterList,
-                                        aState.mFloatedItems.childList);
-        }
 
-      } else {
-        rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
-                             PR_TRUE, childItems, PR_FALSE);
+      // if there are any anonymous children create frames for them
+      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
+                            PR_FALSE, childItems);
+
+      // Set the frame's initial child list
+      if (childItems.childList) {
+        newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
       }
-    }
-
-    // if there are any anonymous children create frames for them
-    CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
-                          PR_FALSE, childItems);
-
-    // Set the frame's initial child list
-    if (childItems.childList) {
-      newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     }
   }
 
@@ -10757,7 +10785,8 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
                                                nsIPresContext*  aPresContext,
                                                nsIContent*      aContent,
                                                nsStyleContext*  aStyleContext,
-                                               nsIFrame*        aParentFrame,
+                                               nsIFrame*        aGeometricParent,
+                                               nsIFrame*        aContentParent,
                                                nsIFrame*&       aFrame)
 {
   nsresult rv;
@@ -10802,9 +10831,10 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   } else {
     NS_NewInlineFrame(aPresShell, &containerFrame);
   }
-  containerFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+  containerFrame->Init(aPresContext, aContent, aGeometricParent, aStyleContext, nsnull);
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
+                                           aStyleContext, aContentParent,
+                                           PR_FALSE);
 
   // If the frame is out-of-flow, then mark it as such
   if (isOutOfFlow) {
@@ -10942,7 +10972,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     // image can't be rendered
     nsIFrame* newFrame;
     rv = ConstructAlternateFrame(aPresShell, aPresContext, content, styleContext,
-                                 parentFrame, newFrame);
+                                 parentFrame, nsnull, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFrameManager> frameManager;
@@ -10956,6 +10986,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       frameManager->SetPrimaryFrameFor(content, newFrame);
 
       // Replace the old frame with the new frame
+      // XXXbz If this fails, we leak the content node newFrame points to!
       frameManager->ReplaceFrame(aPresContext, *presShell, parentFrame,
                                  listName, aFrame, newFrame);
 
@@ -12035,11 +12066,21 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
       // state onto a temporary state object.
       CaptureStateForFramesOf(aPresContext, aContent, mTempFrameTreeState);
 
-      // Save parent frame because this frame is going away
+      // Save parent frame because this frame is going away.  But if
+      // this is an out-of-flow, we want to get the _placeholder_'s
+      // parent.
       nsIFrame* parent = nsnull;
-      if (frame)
-        frame->GetParent(&parent);
+      if (frame) {
+        nsFrameState state;
+        frame->GetFrameState(&state);
+        if (state & NS_FRAME_OUT_OF_FLOW) {
+          shell->GetPlaceholderFrameFor(frame, &frame);
+          NS_ASSERTION(frame, "Out-of-flow with no placeholder?");
+        }
 
+        frame->GetParent(&parent);
+      }
+      
       // Remove the frames associated with the content object on which the
       // attribute change occurred.
       rv = ContentRemoved(aPresContext, container, aContent, indexInContainer, PR_FALSE);

@@ -326,15 +326,15 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   // find the highest ancestor that is a frameset
   nsresult rv = NS_OK;
   nsIFrame* parentFrame = nsnull;
-  GetParent((nsIFrame**)&parentFrame);
+  GetParent(&parentFrame);
   mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
   while (parentFrame) {
-    nsHTMLFramesetFrame* frameset;
-    rv = parentFrame->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame),
-				     (void**)&frameset);
-    if (NS_SUCCEEDED(rv)) {
+    nsHTMLFramesetFrame* frameset = nsnull;
+    CallQueryInterface(parentFrame, &frameset);
+    
+    if (frameset) {
       mTopLevelFrameset = frameset;
-      parentFrame->GetParent((nsIFrame**)&parentFrame);
+      parentFrame->GetParent(&parentFrame);
     } else {
       break;
     }
@@ -342,8 +342,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
 
   // create the view. a view is needed since it needs to be a mouse grabber
   nsIView* view;
-  nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),
-                                                 (void **)&view);
+  nsresult result = CallCreateInstance(kViewCID, &view);
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIViewManager> viewMan;
