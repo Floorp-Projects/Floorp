@@ -380,6 +380,9 @@ extern jschar *
 js_strchr(const jschar *s, jschar c);
 
 extern jschar *
+js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
+
+extern jschar *
 js_strncpy(jschar *t, const jschar *s, size_t n);
 
 /*
