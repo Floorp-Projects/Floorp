@@ -763,7 +763,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         entry->userField.Assign(userFieldName);
         entry->passField.Assign(passFieldName);
         EncryptDataUCS2(userValue, entry->userValue);
-        EncryptDataUCS2(userValue, entry->passValue);
+        EncryptDataUCS2(passValue, entry->passValue);
 
         AddSignonData(realm, entry);
         WriteSignonFile();
