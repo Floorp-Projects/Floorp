@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: Marc Mulcahy (marc.mulcahy@sun.com)
+ *
+ * Contributor(s): Paul Sandoz (paul.sandoz@sun.com)
+ *                 Bill Haneman (bill.haneman@sun.com)
+ *                 John Gaunt (jgaunt@netscape.com)
+ */
+
+#include "nsISupports.idl"
+
+interface nsIAccessible;
+
+[scriptable, uuid(0A7E98A9-CA7D-42F0-BFE1-2CFC35256038)]
+interface nsIAccessibleTable : nsISupports
+{
+           attribute nsIAccessible       caption;
+           attribute AString           summary;
+  readonly attribute long                columns;
+  readonly attribute nsIAccessibleTable  columnHeader;
+  readonly attribute long                rows;
+  readonly attribute nsIAccessibleTable  rowHeader;
+
+  void getSelectedColumns (out unsigned long columnsSize,
+          [retval, array, size_is(columnsSize)] out long columns);
+
+  void getSelectedRows (out unsigned long rowsSize,
+          [retval, array, size_is(rowsSize)] out long rows);
+
+    /**
+      * gets a cell
+      */
+  nsIAccessible cellRefAt (in long row, in long column);
+
+    /**
+      * get an index
+      */
+  long getIndexAt (in long row, in long column);
+  long getColumnAtIndex (in long index);
+  long getRowAtIndex (in long index);
+  long getColumnExtentAt (in long row, in long column);
+  long getRowExtentAt (in long row, in long column);
+
+  AString getColumnDescription (in long column);
+  AString getRowDescription (in long row);
+
+  boolean isColumnSelected (in long column);
+  boolean isRowSelected (in  long row);
+  boolean isCellSelected (in long row, in long column);
+};
