@@ -45,8 +45,8 @@ import java.lang.reflect.Method;
  * See ECMA 15.3.
  * @author Norris Boyd
  */
-public class NativeFunction extends BaseFunction {
-
+public class NativeFunction extends BaseFunction
+{
     /**
      * @param cx Current context
      *
@@ -55,17 +55,21 @@ public class NativeFunction extends BaseFunction {
      * @param justbody Whether the decompilation should omit the
      * function header and trailing brace.
      */
-
-    public String decompile(Context cx, int indent, boolean justbody) {
-        Object sourcesTree = getSourcesTree();
-        if (sourcesTree == null) {
+    public String decompile(Context cx, int indent, boolean justbody)
+    {
+        Object encodedSourcesTree = getSourcesTree();
+        if (encodedSourcesTree == null) {
             return super.decompile(cx, indent, justbody);
         } else {
-            return Parser.decompile(sourcesTree, indent, justbody);
+            final int INDENT_GAP = 4;
+            final int CASE_GAP = 2; // less how much for case labels
+            return Decompiler.decompile(encodedSourcesTree, justbody,
+                                        indent, INDENT_GAP, CASE_GAP);
         }
     }
 
-    public int getLength() {
+    public int getLength()
+    {
         Context cx = Context.getContext();
         if (cx != null && cx.getLanguageVersion() != Context.VERSION_1_2)
             return argCount;
@@ -75,7 +79,8 @@ public class NativeFunction extends BaseFunction {
         return activation.getOriginalArguments().length;
     }
 
-    public int getArity() {
+    public int getArity()
+    {
         return argCount;
     }
 
@@ -84,7 +89,8 @@ public class NativeFunction extends BaseFunction {
      * For backwards compatibility keep an old method name used by
      * Batik and possibly others.
      */
-    public String jsGet_name() {
+    public String jsGet_name()
+    {
         return getFunctionName();
     }
 
@@ -94,7 +100,8 @@ public class NativeFunction extends BaseFunction {
      * itself. Otherwise node is Object[] array, where array[0] holds node data
      * and array[1..array.length) holds child nodes.
      */
-    protected Object getSourcesTree() {
+    protected Object getSourcesTree()
+    {
         // The following is used only by optimizer, but is here to avoid
         // introduction of 2 additional classes there
         Class cl = getClass();
