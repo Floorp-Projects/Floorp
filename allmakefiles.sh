@@ -566,7 +566,6 @@ xpcom/tools/registry/Makefile
 
 MAKEFILES_xpinstall="
 xpinstall/Makefile
-xpinstall/notifier/Makefile
 xpinstall/packager/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
