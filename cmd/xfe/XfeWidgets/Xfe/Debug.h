@@ -69,7 +69,7 @@ XfeDebugRepTypeIndexToValue			(String			rep_type,
 /* for such widgets.													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-/* extern */ Boolean
+extern Boolean
 XfeDebugIsEnabled					(Widget		w);
 /*----------------------------------------------------------------------*/
 extern void
