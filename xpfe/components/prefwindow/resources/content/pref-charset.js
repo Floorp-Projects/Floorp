@@ -44,7 +44,7 @@ function Init()
       dump("*** " + pref_string_title +  " \n");
       pref_string_content = prefInt.CopyCharPref(pref_string_title);
       
-      //AddRemoveLatin1('add');
+      AddRemoveLatin1('add');
 			dump("*** Charset PrefString: " + pref_string_content + "\n");
 		}
 	}
@@ -235,7 +235,7 @@ function AddRemoveLatin1(action)
 
 			str = arrayOfPrefs[i];
 
-			if (str == 'iso-8859-1') {
+			if (str == 'ISO-8859-1') {
 
 				if (action == 'remove') {
 					arrayOfPrefs[i]=arrayOfPrefs[arrayOfPrefs.length-1];
@@ -251,7 +251,7 @@ function AddRemoveLatin1(action)
 	
 	if (action == 'add')	{
 
-		arrayOfPrefs[arrayOfPrefs.length]= 'iso-8859-1';
+		arrayOfPrefs[arrayOfPrefs.length]= 'ISO-8859-1';
 		pref_string_content = arrayOfPrefs.join(', ');
 
 	}
@@ -553,7 +553,6 @@ function Save()
 	  catch(ex)
 	  {
 		  confirm('exception' + ex);
- 		  //prefInt.SetDefaultCharPref(pref_string_title, "iso-8859-1, iso-2022-jp, shift_jis, euc-jp");
 	  }
 
 } //Save
