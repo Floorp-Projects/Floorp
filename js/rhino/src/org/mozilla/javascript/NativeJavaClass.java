@@ -102,6 +102,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                 result = nestedValue;
             } catch (ClassNotFoundException ex) {
                 throw members.reportMemberNotFound(name);
+            } catch (IllegalArgumentException e) {
+                throw members.reportMemberNotFound(name);
             }
         }
 		
