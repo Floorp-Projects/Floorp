@@ -1032,7 +1032,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nscoord tx, ty;
   mSpaceManager->GetTranslation(tx, ty);
   nsFrame::ListTag(stdout, mBlock);
-  printf(": PlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+  printf(": FlowAndPlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
          tx, ty, mSpaceManagerX, mSpaceManagerY,
          aFloaterCache->mRegion.x, aFloaterCache->mRegion.y,
          aFloaterCache->mRegion.width, aFloaterCache->mRegion.height);
