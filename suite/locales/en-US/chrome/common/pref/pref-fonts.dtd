@@ -16,7 +16,7 @@
 <!--LOCALIZATION NOTE fixedFont.option Don't translate this term. -->
 <!ENTITY  fixedFont.option "Filler">
 <!ENTITY  header2 "Sometimes a document will provide its own fonts.">
-<!ENTITY  useDefaultFontRadio "Use my default fonts, overriding document-specified fonts">
-<!--LOCALIZATION NOTE useDocFontRadio Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontRadio "Use document-specified fonts, but disable Dynamic Fonts">
-<!ENTITY  useDocFontsRadio "Use document-specified fonts, including Dynamic Fonts">
+<!ENTITY  useDefaultFont "Use my default fonts, overriding document-specified fonts">
+<!--LOCALIZATION NOTE useDocFont Translate 'Dynamic Fonts' according to Netscape Glossary -->
+<!ENTITY  useDocFontNonDynamic "Use document-specified fonts, but disable Dynamic Fonts">
+<!ENTITY  useDocFontDynamic "Use document-specified fonts, including Dynamic Fonts">
