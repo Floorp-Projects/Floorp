@@ -95,7 +95,7 @@ endif
 REPORT_BUILD = @echo $(notdir $<)
 
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-	ELOG := . $(topsrcdir)/build/autoconf/print-failed-commands.sh
+	ELOG := exec sh $(topsrcdir)/build/autoconf/print-failed-commands.sh
 else
 	ELOG :=
 endif
