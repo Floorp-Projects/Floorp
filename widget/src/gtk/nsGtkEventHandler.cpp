@@ -510,7 +510,6 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
                                      gpointer p)
 {
-  nsKeyEvent kevent;
   nsTextWidget* win = (nsTextWidget*)p;
 
   // work around for annoying things.
@@ -530,16 +529,18 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
     return PR_TRUE;
 
   NS_ADDREF(win);
-  InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
-  win->OnKey(kevent);
+  nsKeyEvent keyDownEvent;
+  InitKeyEvent(event, p, keyDownEvent, NS_KEY_DOWN);
+  win->OnKey(keyDownEvent);
 
   //
   // Second, dispatch the Key event as a key press event w/ a Unicode
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  InitKeyPressEvent(event,p, kevent);
-  win->OnKey(kevent);
+  nsKeyEvent keyPressEvent;
+  InitKeyPressEvent(event,p, keyPressEvent);
+  win->OnKey(keyPressEvent);
 
   NS_RELEASE(win);
   if (w)
@@ -584,7 +585,6 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
 //==============================================================
 gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
-  nsKeyEvent kevent;
   nsWidget *win = (nsWidget*)p;
 
   // if there's a focused window rewrite the event to use that window.
@@ -611,12 +611,13 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //   but lie about where it came from and say it is from the
   //   window that currently has focus inside our app...
   //
-  InitKeyEvent(event, win, kevent, NS_KEY_DOWN);
+  nsKeyEvent keyDownEvent;
+  InitKeyEvent(event, win, keyDownEvent, NS_KEY_DOWN);
   // if we need to suppress this NS_KEY_DOWN event, reset the flag
   if (suppressNextKeyDown == PR_TRUE)
     suppressNextKeyDown = PR_FALSE;
   else
-    win->OnKey(kevent);
+    win->OnKey(keyDownEvent);
 
 
   //
@@ -626,18 +627,20 @@ gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
   //
 
   // Call nsConvertCharCodeToUnicode() here to get kevent.charCode 
-  InitKeyPressEvent(event, win, kevent);
+  nsKeyEvent keyPressEvent;
+  InitKeyPressEvent(event, win, keyPressEvent);
 
   if (event->length) {
-    if (kevent.charCode || kevent.keyCode) {
-      // kevent.charCode or kevent.keyCode is valid, just pass to OnKey()
-      win->OnKey(kevent);
+    if (keyPressEvent.charCode || keyPressEvent.keyCode) {
+      // keyPressEvent.charCode or keyPressEvent.keyCode is valid, just 
+      // pass to OnKey()
+      win->OnKey(keyPressEvent);
     } else if (nsGtkIMEHelper::GetSingleton()) {
       // commit request from IME
       win->IMECommitEvent(event);
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key
-    win->OnKey(kevent);
+    win->OnKey(keyPressEvent);
   }
 
   NS_RELEASE(win);
