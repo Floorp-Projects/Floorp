@@ -447,7 +447,21 @@ HandleMailtoSubject(nsCString& aPath) {
       aPath.Append('?');
     }
 
-    aPath.AppendLiteral("subject=Form%20Post%20From%20Mozilla&");
+    // Get the default subject
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return;
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle("chrome://communicator/locale/layout/HtmlForm.properties",
+                                     getter_AddRefs(bundle));
+    if (NS_FAILED(rv))
+      return;
+    nsXPIDLString subjectStr;
+    bundle->GetStringFromName(NS_LITERAL_STRING("DefaultFormSubject").get(), getter_Copies(subjectStr));
+    aPath.AppendLiteral("subject=");
+    nsCString subjectStrEscaped;
+    aPath.Append(NS_EscapeURL(NS_ConvertUTF16toUTF8(subjectStr), esc_Query, subjectStrEscaped));
   }
 }
 
