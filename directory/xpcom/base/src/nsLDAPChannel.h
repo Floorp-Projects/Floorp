@@ -45,6 +45,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsILDAPMessageListener.h"
+#include "nsIProgressEventSink.h"
 
 // if the code related to the following #define ever gets removed, also
 // be sure to remove mCallback as well as the most (but not all) of the 
@@ -82,7 +83,7 @@ protected:
 
   // write down the pipe to whoever is consuming our data
   //
-  nsresult pipeWrite(char *str);
+  nsresult pipeWrite(const char *str);
   
   // instance vars for read/write nsIChannel attributes
   //
@@ -108,6 +109,7 @@ protected:
   PRUint32 mReadPipeOffset; // how many bytes written so far?
   PRBool mReadPipeClosed; // has the pipe already been closed?
   nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
+  nsCOMPtr<nsIProgressEventSink> mEventSink; // fire status against this
 
 };
 
