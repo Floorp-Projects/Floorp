@@ -116,8 +116,14 @@ imgContainerMNG::GetHeight(nscoord *aHeight)
 NS_IMETHODIMP
 imgContainerMNG::GetCurrentFrame(gfxIImageFrame * *aCurrentFrame)
 {
-  return mFrame->QueryInterface(NS_GET_IID(gfxIImageFrame), 
-				(void**)aCurrentFrame);
+  if (mFrame) {
+    *aCurrentFrame = mFrame;
+    NS_ADDREF(*aCurrentFrame);
+    return NS_OK;
+  } else {
+    *aCurrentFrame = 0;
+    return NS_ERROR_FAILURE;
+  }
 }
 
 //****************************************************************************
@@ -125,7 +131,10 @@ imgContainerMNG::GetCurrentFrame(gfxIImageFrame * *aCurrentFrame)
 NS_IMETHODIMP
 imgContainerMNG::GetNumFrames(PRUint32 *aNumFrames)
 {
-  *aNumFrames = 1;
+  if (mFrame)
+    *aNumFrames = 1;
+  else
+    *aNumFrames = 0;
   return NS_OK;
 }
 
@@ -463,6 +472,10 @@ il_mng_timeout_func(nsITimer *timer, void *data)
   int ret = mng_display_resume(handle);
   if (ret == MNG_NEEDMOREDATA)
     container->mResumeNeeded = PR_TRUE;
+  else if ((ret != MNG_NOERROR) && 
+           (ret != MNG_NEEDTIMERWAIT) &&
+           (ret != MNG_NEEDSECTIONWAIT))
+    container->mErrorPending = PR_TRUE;
 }
 
 static mng_bool
@@ -503,6 +516,7 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
   mBufferPtr = mBufferEnd = 0;
   mBuffer = 0;
   mResumeNeeded = PR_FALSE;
+  mErrorPending = PR_FALSE;
   mTimer = 0;
 
   // pass mng container as user data 
@@ -550,15 +564,20 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
   mng_setcb_memfree(mHandle, il_mng_free);
   mng_set_suspensionmode(mHandle, MNG_TRUE);
   
-  if (mng_readdisplay(mHandle) == MNG_NEEDMOREDATA)
+  int ret = mng_readdisplay(mHandle);
+  if (ret == MNG_NEEDMOREDATA)
     mResumeNeeded = PR_TRUE;
+  else if ((ret != MNG_NOERROR) && 
+           (ret != MNG_NEEDTIMERWAIT) &&
+           (ret != MNG_NEEDSECTIONWAIT))
+    mErrorPending = PR_TRUE;
 }
 
 
 /* ----------------------------------------------------------
  * Process data arriving from the stream for the MNG decoder.
  */
-void
+NS_IMETHODIMP
 imgContainerMNG::WriteMNG(nsIInputStream *inStr, 
 			  PRInt32 count,
 			  PRUint32 *_retval)
@@ -572,5 +591,14 @@ imgContainerMNG::WriteMNG(nsIInputStream *inStr,
     int ret = mng_display_resume(mHandle);
     if (ret == MNG_NEEDMOREDATA)
       mResumeNeeded = PR_TRUE;
+    else if ((ret != MNG_NOERROR) && 
+             (ret != MNG_NEEDTIMERWAIT) &&
+             (ret != MNG_NEEDSECTIONWAIT))
+      mErrorPending = PR_TRUE;
   }
+
+  if (mErrorPending)
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
 }

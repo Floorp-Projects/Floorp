@@ -87,7 +87,5 @@ nsMNGDecoder::WriteFrom(nsIInputStream *inStr,
 			PRUint32 count,
 			PRUint32 *_retval)
 {
-  NS_REINTERPRET_CAST(imgContainerMNG*, mImageContainer.get())->WriteMNG(inStr, count, _retval);
-  return NS_OK;
+  return NS_REINTERPRET_CAST(imgContainerMNG*, mImageContainer.get())->WriteMNG(inStr, count, _retval);
 }
-

@@ -53,7 +53,7 @@ public:
   imgContainerMNG();
   virtual ~imgContainerMNG();
 
-  void WriteMNG(nsIInputStream *inStr, PRInt32 count, PRUint32 *_retval);
+  NS_IMETHODIMP WriteMNG(nsIInputStream *inStr, PRInt32 count, PRUint32 *_retval);
   void InitMNG(nsMNGDecoder *decoder);
 
   nsWeakPtr                      mObserver;
@@ -81,6 +81,7 @@ public:
 
   PRPackedBool                   mResumeNeeded; // display_resume call needed?
   PRPackedBool                   mFrozen;       // animation frozen? 
+  PRPackedBool                   mErrorPending; // decode error to report?
 };
 
 #endif
