@@ -470,11 +470,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
         return NS_ERROR_REG_BADTYPE;
     }
 
-    // WARNING:
-    // regNSPRPath and regFile need to have the same scope
-    // since the regFile will point to data in regNSPRPath
-    nsNSPRPath regNSPRPath(*registryLocation);
-    const char *regFile = (const char *) regNSPRPath;
+    const char *regFile = registryLocation->GetNativePathCString();
 
 #ifdef DEBUG_dp
     printf("nsRegistry: Opening std registry %s\n", regFile);
