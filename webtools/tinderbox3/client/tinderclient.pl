@@ -938,7 +938,7 @@ EOM
   #
   # If the build command is specified, we build no matter what
   #
-  if ($build_vars->eat_command("build")) {
+  if ($client->eat_command("build")) {
     $build_vars->{SHOULD_BUILD} = 1;
   }
 
