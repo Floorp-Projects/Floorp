@@ -593,7 +593,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
         break;
       case kSpace:
       case kTab:
-        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsLiteralString((PRUnichar*)s, len)); 
+        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsLocalString((PRUnichar*)s, len)); 
         break;
       default:
         {
@@ -608,7 +608,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
             textToken->Bind(state->scanner, start, end);
           }
           else {
-            textToken->Bind(nsLiteralString(ptr, len));
+            textToken->Bind(nsLocalString(ptr, len));
           }
           newToken = textToken;
         }
