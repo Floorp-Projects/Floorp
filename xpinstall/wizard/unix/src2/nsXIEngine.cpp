@@ -549,15 +549,27 @@ int
 nsXIEngine::MakeUniqueTmpDir()
 {
     int err = E_DIR_CREATE;
-
-    mTmp = tempnam( (const char *) NULL, "xpi" );
-
-    if ( mTmp != (char *) NULL ) {
-      int tmperr;
-      tmperr = mkdir(mTmp, 0755);
-      if ( tmperr != -1 )
-        err = OK;
+    char tmpnam[MAXPATHLEN];
+    char *tmpdir = getenv("TMPDIR");
+    if (!tmpdir) tmpdir = getenv("TMP");
+    if (!tmpdir) tmpdir = getenv("TEMP");
+    if (!tmpdir) tmpdir = P_tmpdir;
+    snprintf(tmpnam, sizeof(tmpnam), "%s/xpi.XXXXXX", tmpdir);
+#ifdef HAVE_MKDTEMP
+    if (mkdtemp(tmpnam)) {
+      mTmp = strdup(tmpnam);
+      if (mTmp) err = OK;
     }
+#else
+    int fd = mkstemp(tmpnam);
+    if (fd < 0) return err;
+    close(fd);
+    if (unlink(tmpnam) < 0) return err;
+    mTmp = strdup(tmpnam);
+    if (!mTmp) return err;
+    if (mkdir(mTmp, 0755) < 0) return err;
+    err = OK;
+#endif
     return err;
 }
 
