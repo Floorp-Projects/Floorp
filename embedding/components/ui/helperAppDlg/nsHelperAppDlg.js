@@ -592,20 +592,27 @@ nsHelperAppDialog.prototype = {
             }
         }
         
-        // Update user pref for this mime type (if necessary). We do not
-        // store anything in the mime type preferences for the ambiguous
-        // type application/octet-stream.
-        if ( this.mLauncher.MIMEInfo.MIMEType != "application/octet-stream" )
-            this.updateHelperAppPref();
- 
         // Remove our web progress listener (a progress dialog will be
         // taking over).
         this.mLauncher.setWebProgressListener( null );
         
-        if ( this.dialogElement( "saveToDisk" ).selected )
-            this.mLauncher.saveToDisk( null, false );
-        else
-            this.mLauncher.launchWithApplication( null, false );
+        // saveToDisk and launchWithApplication can return errors in 
+        // certain circumstances (e.g. The user clicks cancel in the
+        // "Save to Disk" dialog. In those cases, we don't want to
+        // update the helper application preferences in the RDF file.
+        try {
+            if ( this.dialogElement( "saveToDisk" ).selected )
+                this.mLauncher.saveToDisk( null, false );
+            else
+                this.mLauncher.launchWithApplication( null, false );
+        
+            // Update user pref for this mime type (if necessary). We do not
+            // store anything in the mime type preferences for the ambiguous
+            // type application/octet-stream.
+            if ( this.mLauncher.MIMEInfo.MIMEType != "application/octet-stream" )
+                this.updateHelperAppPref();
+ 
+        } catch(e) { }
             
         // Unhook dialog from this object.
         this.mDialog.dialog = null;
