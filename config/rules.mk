@@ -791,7 +791,7 @@ $(MKDEPENDENCIES)::
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
 
 $(MKDEPEND)::
-	cd $(DEPTH)/config; make nsinstall
+	cd $(DEPTH)/config; $(MAKE) nsinstall
 	cd $(MKDEPEND_DIR); $(MAKE)
 
 # Rules to for detection
