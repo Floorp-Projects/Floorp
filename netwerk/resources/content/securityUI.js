@@ -44,8 +44,8 @@ function SetSecurityButton()
 
 function displayPageInfo()
 {
-   if (securityUI)
-     securityUI.displayPageInfoUI();
+   window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
+                     "dialog=no", null, "securityTab");
 }
 
 function DestroySecurity()
