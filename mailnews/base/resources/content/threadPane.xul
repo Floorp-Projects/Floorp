@@ -42,11 +42,11 @@ Contributors:
     <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true" class="treecol-image threadColumnHeader" currentView="unthreaded"
              display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
-    <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true" hidden="true" class="treecol-image junkStatusHeader"
-             display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
-    <splitter class="tree-splitter"/>
     <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
              label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true" class="treecol-image junkStatusHeader"
+             display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
     <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
              label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
