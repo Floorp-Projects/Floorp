@@ -119,6 +119,14 @@ public:
   virtual void FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                        float aStartAngle, float aEndAngle);
 
+  NS_IMETHOD  GetWidth(char aC, nscoord& aWidth);
+  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord& aWidth);
+  NS_IMETHOD  GetWidth(const nsString& aString, nscoord& aWidth);
+  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth);
+  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
+  NS_IMETHOD  GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                       nscoord& aWidth);
+
   virtual void DrawString(const char *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
                           nscoord aWidth);

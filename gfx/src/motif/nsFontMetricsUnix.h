@@ -50,12 +50,6 @@ public:
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
-  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const char *aString, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth);
-  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth);
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
@@ -85,9 +79,6 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
-
-  XChar2b *         mXstring;
-  PRUint32          mXstringSize;
 };
 
 #endif

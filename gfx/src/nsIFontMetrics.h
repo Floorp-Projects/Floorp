@@ -56,8 +56,7 @@ public:
 
   /**
    * Destroy this font metrics. This breaks the association between
-   * the font metrics and the device context (which means that calls
-   * to GetWidth following this call will fail).
+   * the font metrics and the device context.
    */
   NS_IMETHOD  Destroy() = 0;
 
@@ -93,38 +92,6 @@ public:
    * Positive values are above the baseline, negative below.
    */
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize) = 0;
-
-  /**
-   * Returns the width (in app units) of an 8-bit character
-   */
-  NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of a unicode character
-   */
-  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of an nsString
-   */
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of an 8-bit character string
-   */
-  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of an 8-bit character string
-   */
-  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength,
-                       nscoord& aWidth) = 0;
-
-  /**
-   * Returns the width (in app units) of a Unicode character string
-   */
-  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                       nscoord &aWidth) = 0;
 
   /**
    * Returns the height (in app units) of the font. This is ascent plus descent

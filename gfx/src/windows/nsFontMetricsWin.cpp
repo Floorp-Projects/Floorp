@@ -294,6 +294,8 @@ nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
   return NS_OK;
 }
 
+#if 0
+
 NS_IMETHODIMP
 nsFontMetricsWin :: GetWidth(char ch, nscoord& aWidth)
 {
@@ -373,6 +375,8 @@ nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
   aWidth = NSToCoordRound(float(size.cx) * dev2app);
   return NS_OK;
 }
+
+#endif
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetHeight(nscoord &aHeight)
