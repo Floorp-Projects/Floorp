@@ -822,6 +822,27 @@ nsresult nsMsgDatabase::InitMDBInfo()
 	return err;
 }
 
+// Returns if the db contains this key
+NS_IMETHODIMP nsMsgDatabase::ContainsKey(nsMsgKey key, PRBool *containsKey)
+{
+
+	nsresult	err = NS_OK;
+	mdb_bool	hasOid;
+	mdbOid		rowObjectId;
+
+	if (!containsKey || !m_mdbAllMsgHeadersTable)
+		return NS_ERROR_NULL_POINTER;
+	*containsKey = PR_FALSE;
+
+	rowObjectId.mOid_Id = key;
+	rowObjectId.mOid_Scope = m_hdrRowScopeToken;
+	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
+	if(NS_SUCCEEDED(err))
+		*containsKey = hasOid;
+
+	return err;
+}
+
 // get a message header for the given key. Caller must release()!
 NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr)
 {
@@ -919,15 +940,16 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 
 	}	
 
-	if (notify) 
-	{
+
+//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
+	RemoveHeaderFromDB(msgHdr);
+	
+	if (notify) {
         PRUint32 flags;
         (void)msg->GetFlags(&flags);
 		NotifyKeyDeletedAll(key, flags, instigator); // tell listeners
     }
 
-//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
-		RemoveHeaderFromDB(msgHdr);
 	if (commit)
 		Commit(kSmallCommit);			// ### dmb is this a good time to commit?
 	return NS_OK;
