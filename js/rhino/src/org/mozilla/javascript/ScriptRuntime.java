@@ -3468,7 +3468,7 @@ public class ScriptRuntime {
                                       Scriptable scope)
     {
         XMLLib xmlLib = currentXMLLib(cx);
-        return xmlLib.xmlPrimaryReference(xmlName, scope);
+        return xmlLib.xmlPrimaryReference(cx, xmlName, scope);
     }
 
 

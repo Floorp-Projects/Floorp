@@ -614,13 +614,16 @@ public final class XMLLibImpl extends XMLLib
     /**
      * See E4X 11.1 PrimaryExpression : PropertyIdentifier production
      */
-    public Reference xmlPrimaryReference(Object nameObject, Scriptable scope)
+    public Reference xmlPrimaryReference(Context cx,
+                                         Object nameObject,
+                                         Scriptable scope)
     {
         if (!(nameObject instanceof XMLName))
             throw new IllegalArgumentException();
 
         XMLName xmlName = (XMLName)nameObject;
         XMLObjectImpl xmlObj;
+        XMLObjectImpl firstXmlObject = null;
         for (;;) {
             // XML object can only present on scope chain as a wrapper
             // of XMLWithScope
@@ -629,10 +632,13 @@ public final class XMLLibImpl extends XMLLib
                 if (xmlObj.hasXMLProperty(xmlName)) {
                     break;
                 }
+                if (firstXmlObject == null) {
+                    firstXmlObject = xmlObj;
+                }
             }
             scope = scope.getParentScope();
             if (scope == null) {
-                xmlObj = null;
+                xmlObj = firstXmlObject;
                 break;
             }
         }
