@@ -38,16 +38,21 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsEUCKRToUnicode.cpp \
 		nsUnicodeToEUCKR.cpp \
-		nsUnicodeToKSC5601.cpp \
 		nsISO2022KRToUnicode.cpp \
 		nsUnicodeToISO2022KR.cpp \
 		nsCP949ToUnicode.cpp \
 		nsUnicodeToCP949.cpp \
-		nsUnicodeToX11Johab.cpp \
 		nsUnicodeToJohab.cpp \
 		nsJohabToUnicode.cpp \
+		$(NULL)
+
+ifdef MOZ_EXTRA_X11CONVERTERS
+CPPSRCS		+= \
+		nsUnicodeToKSC5601.cpp \
+		nsUnicodeToX11Johab.cpp \
 		nsUnicodeToJohabNoAscii.cpp \
 		$(NULL)
+endif
 
 EXPORTS		= nsUCvKOCID.h
 

@@ -52,10 +52,12 @@
   { 0xefc323e2, 0xec62, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
 
+#ifdef MOZ_EXTRA_X11CONVERTERS
 // Class ID for our UnicodeToBIG5NoAscii charset converter
 // {BA615195-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOBIG5NOASCII_CID \
   { 0xba615195, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
+#endif
 
 // Class ID for our CP950ToUnicode charset converter
 #define NS_CP950TOUNICODE_CID \

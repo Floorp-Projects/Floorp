@@ -42,7 +42,6 @@ CPPSRCS		= \
 		nsUnicodeToGB2312GL.cpp \
 		nsGBKToUnicode.cpp \
 		nsUnicodeToGBK.cpp \
-		nsUnicodeToGBKNoAscii.cpp \
 		nsISO2022CNToUnicode.cpp \
 		nsUnicodeToISO2022CN.cpp \
 		nsHZToUnicode.cpp \
@@ -51,6 +50,12 @@ CPPSRCS		= \
 		nsUnicodeToCP936.cpp \
 		nsGBKConvUtil.cpp \
 		$(NULL)
+
+ifdef MOZ_EXTRA_X11CONVERTERS
+CPPSRCS		+= \
+		nsUnicodeToGBKNoAscii.cpp \
+		$(NULL)
+endif
 
 EXPORTS		= nsUCvCnCID.h
 
