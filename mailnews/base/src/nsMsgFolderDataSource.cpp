@@ -58,6 +58,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Copy= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Move= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
 
 
 
@@ -93,6 +94,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_GetNewMessages, refcnt);
   NS_RELEASE2(kNC_Copy, refcnt);
   NS_RELEASE2(kNC_Move, refcnt);
+  NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
   mRDFService = nsnull;
@@ -132,6 +134,7 @@ nsresult nsMsgFolderDataSource::Init()
     mRDFService->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
     mRDFService->GetResource(NC_RDF_COPY, &kNC_Copy);
     mRDFService->GetResource(NC_RDF_MOVE, &kNC_Move);
+    mRDFService->GetResource(NC_RDF_MARKALLMESSAGESREAD, &kNC_MarkAllMessagesRead);
   }
   mInitialized = PR_TRUE;
   return NS_OK;
@@ -430,6 +433,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_GetNewMessages);
     cmds->AppendElement(kNC_Copy);
     cmds->AppendElement(kNC_Move);
+    cmds->AppendElement(kNC_MarkAllMessagesRead);
   }
 
   if (cmds != nsnull)
@@ -466,7 +470,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
 		    (aCommand == kNC_NewFolder) ||
 		    (aCommand == kNC_Copy) ||
 		    (aCommand == kNC_Move) ||
-			(aCommand == kNC_GetNewMessages))) {
+			(aCommand == kNC_GetNewMessages) ||
+			(aCommand == kNC_MarkAllMessagesRead))) {
         *aResult = PR_FALSE;
         return NS_OK;
       }
@@ -526,6 +531,10 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		else if((aCommand == kNC_Move))
 		{
 			rv = DoCopyToFolder(folder, aArguments, transactionManager, PR_TRUE);
+		}
+		else if((aCommand == kNC_MarkAllMessagesRead))
+		{
+			rv = folder->MarkAllMessagesRead();
 		}
 
     }

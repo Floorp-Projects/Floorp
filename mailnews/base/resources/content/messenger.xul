@@ -218,7 +218,7 @@ Rights Reserved.
 <!ENTITY markAsUnreadCmd.label "As Unread">  
 <!ENTITY markThreadAsReadCmd.label ".Thread As Read">  
 <!ENTITY markByDateCmd.label ".by Date...">  
-<!ENTITY markAllReadCmd.label ".All Read">  
+<!ENTITY markAllReadCmd.label "All Read">  
 <!ENTITY markFlaggedCmd.label ".Flag">  
 <!ENTITY ignoreThreadCmd.label ".Ignore Thread">  
 <!ENTITY watchThreadCmd.label ".Watch Thread">  

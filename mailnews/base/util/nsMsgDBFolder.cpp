@@ -434,3 +434,12 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMsgDBFolder::MarkAllMessagesRead(void)
+{
+	nsresult rv = GetDatabase();
+	
+	if(NS_SUCCEEDED(rv))
+		return mDatabase->MarkAllRead(nsnull);
+
+}

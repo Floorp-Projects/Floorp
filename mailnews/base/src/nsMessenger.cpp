@@ -115,6 +115,7 @@ public:
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
   NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead);
   NS_IMETHOD MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead);
+  NS_IMETHOD MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder);
 
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
@@ -866,6 +867,30 @@ nsMessenger::DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupports
 
 	return rv;
 
+}
+
+NS_IMETHODIMP
+nsMessenger::MarkAllMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *folder)
+{
+	nsresult rv;
+	nsCOMPtr<nsIRDFResource> folderResource;
+	nsCOMPtr<nsISupportsArray> folderArray;
+
+	if(!folder || !database)
+		return NS_ERROR_NULL_POINTER;
+
+	rv = folder->GetResource(getter_AddRefs(folderResource));
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(NS_FAILED(NS_NewISupportsArray(getter_AddRefs(folderArray))))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	folderArray->AppendElement(folderResource);
+
+	DoCommand(database, NC_RDF_MARKALLMESSAGESREAD, folderArray, nsnull);
+
+	return rv;
 }
 
 NS_IMETHODIMP

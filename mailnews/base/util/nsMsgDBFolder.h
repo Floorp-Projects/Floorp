@@ -62,6 +62,8 @@ public:
 	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
 
+	NS_IMETHOD MarkAllMessagesRead(void);
+
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase() = 0;

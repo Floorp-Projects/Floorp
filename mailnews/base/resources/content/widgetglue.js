@@ -357,7 +357,20 @@ function MsgMarkMsgAsRead(markRead)
 
 function MsgMarkThreadAsRead() {}
 function MsgMarkByDate() {}
-function MsgMarkAllRead() {}
+function MsgMarkAllRead()
+{
+	var folderTree = GetFolderTree();; 
+	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	if(selectedFolderList.length > 0)
+	{
+		var selectedFolder = selectedFolderList[0];
+		messenger.MarkAllMessagesRead(folderTree.database, selectedFolder);
+	}
+	else {
+		dump("Nothing was selected\n");
+	}
+}
+
 function MsgMarkAsFlagged() {}
 function MsgIgnoreThread() {}
 function MsgWatchThread() {}

@@ -175,6 +175,7 @@ protected:
   static nsIRDFResource* kNC_GetNewMessages;
   static nsIRDFResource* kNC_Copy;
   static nsIRDFResource* kNC_Move;
+  static nsIRDFResource* kNC_MarkAllMessagesRead;
 
 };
 
