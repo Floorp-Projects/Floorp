@@ -179,7 +179,7 @@ nsCacheService::CreateSession(const char *          clientID,
 /* void visitEntries (in nsICacheVisitor visitor); */
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
-    nsAutoLock cacheService(mCacheServiceLock);
+    nsAutoLock lock(mCacheServiceLock);
      
     // XXX record the fact that a visitation is in progress, i.e. keep
     // list of visitors in progress.
@@ -344,7 +344,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
     if (NS_FAILED(rv))  return rv;
 
-    nsAutoLock cacheService(mCacheServiceLock);
+    nsAutoLock lock(mCacheServiceLock);
     rv = ProcessRequest(request, result);
 
     // delete requests that have completed
@@ -466,6 +466,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 nsresult
 nsCacheService::ValidateEntry(nsCacheEntry * entry)
 {
+    nsAutoLock lock(mCacheServiceLock);
     nsCacheDevice * device = EnsureEntryHasDevice(entry);
     if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
 
@@ -565,6 +566,16 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
     }
 }
 
+
+nsresult        
+nsCacheService::GetFileForEntry(nsCacheEntry *         entry,
+                                nsIFile **             result)
+{
+    nsAutoLock lock(mCacheServiceLock);
+    nsCacheDevice * device = EnsureEntryHasDevice(entry);
+    if (!device)  return  NS_ERROR_UNEXPECTED; // XXX need better error here
+    return device->GetFileForEntry(entry, result);
+}
 
 void
 nsCacheService::DeactivateEntry(nsCacheEntry * entry)

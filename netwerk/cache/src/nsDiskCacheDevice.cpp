@@ -386,6 +386,13 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     return rv;
 }
 
+nsresult
+nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
+                                   nsIFile **        result)
+{
+    return getFileForKey(entry->Key()->get(), PR_FALSE, result);
+}
+
 /**
  * This routine will get called every time an open descriptor.
  */

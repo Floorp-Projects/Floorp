@@ -84,9 +84,12 @@ public:
 
     nsresult         GetTransportForEntry(nsCacheEntry *     entry,
                                           nsCacheAccessMode  mode,
-                                          nsITransport    ** result);
+                                          nsITransport **    result);
 
     void             CloseDescriptor(nsCacheEntryDescriptor * descriptor);
+
+    nsresult         GetFileForEntry(nsCacheEntry *         entry,
+                                     nsIFile **             result);
 
 
     /**
