@@ -55,23 +55,13 @@
  * should not.
  */
 #ifdef EXPORT_XPTC_API
-#define XPTC_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#define XPTC_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
-#ifdef _WIN32
-#    define XPTC_EXPORT           __declspec(dllexport)
+# define XPTC_PUBLIC_API(t)   PR_IMPLEMENT(t)
+# define XPTC_PUBLIC_DATA(t)  PR_IMPLEMENT_DATA(t)
+# define XPTC_EXPORT          NS_EXPORT
 #else
-#    define XPTC_EXPORT
-#endif
-#else
-#ifdef _WIN32
-#    define XPTC_PUBLIC_API(t)    __declspec(dllimport) t
-#    define XPTC_PUBLIC_DATA(t)   __declspec(dllimport) t
-#    define XPTC_EXPORT           __declspec(dllimport)
-#else
-#    define XPTC_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#    define XPTC_PUBLIC_DATA(t)   t
-#    define XPTC_EXPORT
-#endif
+# define XPTC_PUBLIC_API(t)   NS_IMPORT t
+# define XPTC_PUBLIC_DATA(t)  NS_IMPORT t
+# define XPTC_EXPORT          NS_IMPORT
 #endif
 #define XPTC_FRIEND_API(t)    XPTC_PUBLIC_API(t)
 #define XPTC_FRIEND_DATA(t)   XPTC_PUBLIC_DATA(t)
