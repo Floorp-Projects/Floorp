@@ -592,7 +592,7 @@ export:: $(JMC_STUBS) $(OBJDIR) $(JMC_OBJS)
 #//------------------------------------------------------------------------
 !if "$(EXPORTS)" != "$(NULL)"
 
-export::
+export:: $(EXPORTS)
     @echo +++ make: exporting headers
  	$(MAKE_INSTALL:/=\) $(MKCPYFLAGS) $(EXPORTS) $(PUBLIC)
 
