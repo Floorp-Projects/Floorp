@@ -47,7 +47,7 @@
         onload="window.opener.top.initPanel('chrome://browser/content/pref/pref-fonts.xul', window);"> 
 
   <stringbundle id="bundle_prefutilities"
-                src="chrome://communicator/locale/pref/prefutilities.properties"/>
+                src="chrome://browser/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" 
           src="chrome://browser/content/pref/pref-fonts.js"/>
   <script type="application/x-javascript">

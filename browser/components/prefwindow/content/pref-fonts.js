@@ -281,8 +281,7 @@ listElement.prototype =
               if (defaultFont)
                 {
                   var label = gPrefutilitiesBundle
-                    .getString("labelDefaultFont")
-                    .replace(/%font_family%/, defaultFont);
+                    .formatStringFromName("labelDefaultFont", defaultFont, 1);
                   itemNode = document.createElement( "menuitem" );
                   itemNode.setAttribute( "label", label );
                   itemNode.setAttribute( "value", "" ); // special blank value
