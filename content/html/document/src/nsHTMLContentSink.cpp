@@ -432,7 +432,7 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 
   // Strip quotes if present
   PRUnichar first = aResult.First();
-  if ((first == '"') || (first == '\'')) {
+  if ((first == '\"') || (first == '\'')) {
     if (aResult.Last() == first) {
       aResult.Cut(0, 1);
       PRInt32 pos = aResult.Length() - 1;
@@ -1840,10 +1840,15 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 
   // Strip out whitespace in the name for navigator compatability
   // XXX NAV QUIRK
-  nsAutoString name;
-  domMap->GetName(name);
-  name.StripWhitespace();
-  domMap->SetName(name);
+  nsHTMLValue name;
+  map->GetHTMLAttribute(nsHTMLAtoms::name, name);
+  if (eHTMLUnit_String == name.GetUnit()) {
+    nsAutoString tmp;
+    name.GetStringValue(tmp);
+    tmp.StripWhitespace();
+    name.SetStringValue(tmp);
+    map->SetHTMLAttribute(nsHTMLAtoms::name, name, PR_FALSE);
+  }
 
   // Add the map to the document
   mHTMLDocument->AddImageMap(domMap);
