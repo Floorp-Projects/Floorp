@@ -117,7 +117,7 @@ extern void KillPopData(char* data);
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
   m_totalMsgCount(0), m_isMove(PR_FALSE),
-  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE), 
+  m_dummyEnvelopeNeeded(PR_FALSE), m_leftOver(0), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE),
   m_dataBufferSize(0)
 {
 }
@@ -2375,6 +2375,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
 
   nsCString line;
   char tmpChar = 0;
+  PRInt32 lineLength, bytesWritten;
 
   while (start && end)
   {
@@ -2389,8 +2390,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         line += start;
         *end = tmpChar;
         line += MSG_LINEBREAK;
-      
-        mCopyState->m_fileStream->write(line.get(), line.Length()); 
+        
+        lineLength = line.Length();
+        bytesWritten = mCopyState->m_fileStream->write(line.get(), lineLength); 
+        if (bytesWritten != lineLength)
+        {
+          ThrowAlertMsg("copyMsgWriteFailed", mCopyState->m_msgWindow);
+          mCopyState->m_writeFailed = PR_TRUE;
+          return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
+        }
+
         if (mCopyState->m_parseMsgState)
           mCopyState->m_parseMsgState->ParseAFolderLine(line.get(),
                                                          line.Length());
@@ -2403,8 +2412,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
       NS_ASSERTION(strncmp(start, "From ", 5) == 0, 
                    "Fatal ... bad message format\n");
     }
-        
-    mCopyState->m_fileStream->write(start, end-start+linebreak_len);
+    
+    lineLength = end-start+linebreak_len;
+    bytesWritten = mCopyState->m_fileStream->write(start, lineLength);
+    if (bytesWritten != lineLength)
+    {
+      ThrowAlertMsg("copyMsgWriteFailed", mCopyState->m_msgWindow);
+      mCopyState->m_writeFailed = PR_TRUE;
+      return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
+    }
+
     if (mCopyState->m_parseMsgState)
       mCopyState->m_parseMsgState->ParseAFolderLine(start,
                                                        end-start+linebreak_len);
@@ -2447,7 +2464,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
   // we are the destination folder for a move/copy
   nsresult rv = copySucceeded ? NS_OK : NS_ERROR_FAILURE;
   if (!mCopyState) return NS_OK;
-  if (!copySucceeded)
+  if (!copySucceeded || mCopyState->m_writeFailed)
   {
     if (mCopyState->m_fileStream)
       mCopyState->m_fileStream->close();
@@ -2629,7 +2646,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
 {
   nsresult result;
 
-  if (!moveSucceeded && mCopyState)
+  if (!mCopyState)
+    return NS_OK;
+  if (!moveSucceeded || mCopyState->m_writeFailed)
   {
     //Notify that a completion finished.
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);

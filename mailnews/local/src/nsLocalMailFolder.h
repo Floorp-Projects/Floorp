@@ -81,15 +81,16 @@ struct nsLocalMailCopyState
   PRUint32 m_curCopyIndex;
   nsCOMPtr <nsIMsgMessageService> m_messageService;
   PRUint32 m_totalMsgCount;
-  PRBool m_isMove;
-  PRBool m_isFolder;   // isFolder move/copy
-  PRBool m_dummyEnvelopeNeeded;
   char *m_dataBuffer;
   PRUint32 m_dataBufferSize;
   PRUint32 m_leftOver;
-  PRBool m_copyingMultipleMessages;
-  PRBool m_fromLineSeen;
-  PRBool m_allowUndo;
+  PRPackedBool m_isMove;
+  PRPackedBool m_isFolder;   // isFolder move/copy
+  PRPackedBool m_dummyEnvelopeNeeded;
+  PRPackedBool m_copyingMultipleMessages;
+  PRPackedBool m_fromLineSeen;
+  PRPackedBool m_allowUndo;
+  PRPackedBool m_writeFailed;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,

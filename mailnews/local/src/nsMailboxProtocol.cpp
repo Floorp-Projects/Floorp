@@ -702,6 +702,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
  */
 nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, PRUint32 offset, PRUint32 length)
 {
+    nsresult rv = NS_OK;
     PRInt32 status = 0;
     ClearFlag(MAILBOX_PAUSE_FOR_READ); /* already paused; reset */
 
@@ -726,8 +727,8 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
 			case MAILBOX_ERROR_DONE:
 				{
 					nsCOMPtr <nsIMsgMailNewsUrl> anotherUrl = do_QueryInterface(m_runningUrl);
-					anotherUrl->SetUrlState(PR_FALSE, m_nextState == MAILBOX_DONE ?
-                                     NS_OK : NS_ERROR_FAILURE);
+          rv = m_nextState == MAILBOX_DONE ? NS_OK : NS_ERROR_FAILURE;
+					anotherUrl->SetUrlState(PR_FALSE, rv);
 					m_nextState = MAILBOX_FREE;
 				}
 				break;
@@ -735,7 +736,7 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
 			case MAILBOX_FREE:
 				// MAILBOX is a one time use connection so kill it if we get here...
 				CloseSocket(); 
-	            return NS_OK; /* final end */
+	            return rv; /* final end */
         
 			default: /* should never happen !!! */
 				m_nextState = MAILBOX_ERROR_DONE;
@@ -753,7 +754,7 @@ nsresult nsMailboxProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * 
           }
       } /* while(!MAILBOX_PAUSE_FOR_READ) */
     
-    return NS_OK;
+    return rv;
 }
 
 nsresult nsMailboxProtocol::CloseSocket()
