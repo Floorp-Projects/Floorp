@@ -96,6 +96,8 @@ function awSelectElementName()
     return selectElementType;
 }
 
+// TODO: replace awGetSelectItemIndex with recipient type index constants
+
 function awGetSelectItemIndex(itemData)
 {
     if (selectElementIndexTable == null)
@@ -573,7 +575,26 @@ function awAppendNewRow(setFocus)
     var select = newNode.getElementsByTagName(awSelectElementName());
     if ( select && select.length == 1 )
     {
-      select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
+      // It only makes sense to clone some field types; others 
+      // should not be cloned, since it just makes the user have
+      // to go to the trouble of selecting something else. In such
+      // cases let's default to 'To' (a reasonable default since
+      // we already default to 'To' on the first dummy field of
+      // a new message).
+      switch (lastRecipientType)
+      {
+        case  "addr_reply":
+        case  "addr_other":
+          select[0].selectedIndex = awGetSelectItemIndex("addr_to");
+          break;       
+        case "addr_followup":
+          select[0].selectedIndex = awGetSelectItemIndex("addr_newsgroups");
+          break;
+        default:
+        // e.g. "addr_to","addr_cc","addr_bcc","addr_newsgroups":
+          select[0].selectedIndex = awGetSelectItemIndex(lastRecipientType);
+      }
+    
       select[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
       if (input)
         _awSetAutoComplete(select[0], input[0]);
