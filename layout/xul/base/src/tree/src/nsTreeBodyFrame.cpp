@@ -101,6 +101,21 @@
 
 #define ELLIPSIS "..."
 
+// Enumeration function that cancels all the image requests in our cache
+PR_STATIC_CALLBACK(PRBool)
+CancelImageRequest(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsISupports* supports = NS_STATIC_CAST(nsISupports*, aData);
+  nsCOMPtr<imgIRequest> request = do_QueryInterface(supports);
+  nsCOMPtr<imgIDecoderObserver> observer;
+  request->GetDecoderObserver(getter_AddRefs(observer));
+  NS_ASSERTION(observer, "No observer?  We're leaking!");
+  request->Cancel(NS_ERROR_FAILURE);
+  imgIDecoderObserver* observer2 = observer;
+  NS_RELEASE(observer2);  // Balance out the addref from GetImage()
+  return PR_TRUE;
+}
+
 // The style context cache impl
 nsStyleContext*
 nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
@@ -332,7 +347,10 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
 // Destructor
 nsTreeBodyFrame::~nsTreeBodyFrame()
 {
-  delete mImageCache;
+  if (mImageCache) {
+    mImageCache->Enumerate(CancelImageRequest);
+    delete mImageCache;
+  }
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -1877,6 +1895,7 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
       return NS_ERROR_OUT_OF_MEMORY;
 
     listener->AddRow(aRowIndex);
+    nsCOMPtr<imgIDecoderObserver> imgDecoderObserver = listener;
 
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
@@ -1903,8 +1922,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     mImageGuard = PR_TRUE;
     // XXX: initialDocumentURI is NULL!
-    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, listener, doc,
-                       nsIRequest::LOAD_NORMAL, nsnull, nsnull,
+    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, imgDecoderObserver,
+                       doc, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
                        getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;
 
@@ -1920,6 +1939,8 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
         return NS_ERROR_OUT_OF_MEMORY;
     }
     mImageCache->Put(&key, imageRequest);
+    imgIDecoderObserver* decoderObserverPtr = imgDecoderObserver;
+    NS_ADDREF(decoderObserverPtr);  // Will get released when we remove the cache entry.
   }
   return NS_OK;
 }
@@ -3462,7 +3483,10 @@ NS_IMETHODIMP
 nsTreeBodyFrame::ClearStyleAndImageCaches()
 {
   mStyleCache.Clear();
-  delete mImageCache;
+  if (mImageCache) {
+    mImageCache->Enumerate(CancelImageRequest);
+    delete mImageCache;
+  }
   mImageCache = nsnull;
   mScrollbar = nsnull;
   return NS_OK;

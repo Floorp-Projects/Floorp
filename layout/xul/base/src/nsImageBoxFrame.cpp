@@ -424,8 +424,11 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
     mHasImage = PR_FALSE;
     aResize = PR_TRUE;
 
-    mImageRequest = nsnull;
-    
+    if (mImageRequest) {
+      mImageRequest->Cancel(NS_ERROR_FAILURE);
+      mImageRequest = nsnull;
+    }
+
     return;
   }
 

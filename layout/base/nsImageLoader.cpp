@@ -115,6 +115,9 @@ nsImageLoader::Load(nsIURI *aURI)
     if (eq) {
       return NS_OK;
     }
+
+    // Now cancel the old request so it won't hold a stale ref to us.
+    mRequest->Cancel(NS_ERROR_FAILURE);
   }
 
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
