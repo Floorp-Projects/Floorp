@@ -322,6 +322,23 @@ XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num)
     return PR_TRUE;
 }
 
+XPT_PUBLIC_API(PRBool)
+XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, uint16 num)
+{
+    XPTConstDescriptor *old = id->const_descriptors, *new;
+
+    /* XXX should grow in chunks to minimize realloc overhead */
+    new = PR_REALLOC(old,
+                     (id->num_constants + num) * sizeof(XPTConstDescriptor));
+    if (!new)
+        return PR_FALSE;
+
+    memset(new + id->num_constants, 0, sizeof(XPTConstDescriptor) * num);
+    id->const_descriptors = new;
+    id->num_constants += num;
+    return PR_TRUE;
+}
+
 XPT_PUBLIC_API(uint32)
 XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td)
 {
@@ -364,6 +381,7 @@ XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd)
       case TD_INT32:
       case TD_UINT32:
       case TD_PBSTR:            /* XXX check for pointer! */
+      case TD_PSTRING:
         size += 4;
         break;
       case TD_INT64:
