@@ -64,7 +64,6 @@ LLIBS=				\
 !endif
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)			\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	
 

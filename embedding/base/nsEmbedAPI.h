@@ -115,21 +115,6 @@ typedef MSG nsEmbedNativeEvent;
 #ifdef MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 
 /**
- * @fn nsresult NS_DoIdleEmbeddingStuff()
- *
- * This function should be called during the idle time in your application
- * or as each event is processed. This function ensures things such as
- * timers are fired correctly. It is recommended you call this function
- * even if has no perceived effect for your platform.
- *
- * @status UNDER_REVIEW
- *
- * @return NS_OK
- */
-extern nsresult NS_DoIdleEmbeddingStuff();
-
-
-/**
  * @fn nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled)
  *
  * This function gives Gecko the chance to process a native window events.

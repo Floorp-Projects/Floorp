@@ -3294,7 +3294,6 @@ void PrintListener::WaitForComplete()
             break;
         
         // Do idle stuff
-        ::NS_DoIdleEmbeddingStuff();
         ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 500, QS_ALLEVENTS);
     }
 

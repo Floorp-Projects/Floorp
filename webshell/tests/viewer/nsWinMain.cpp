@@ -42,14 +42,10 @@
 #include "JSConsole.h"
 #include "plevent.h"
 #include "nsIServiceManager.h"
-#include "nsIThread.h"
 #include "nsWidgetsCID.h"
-#include "nsTimerManager.h"
 
 JSConsole *gConsole;
 HINSTANCE gInstance, gPrevInstance;
-static nsITimer* gNetTimer;
-static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 nsNativeViewerApp::nsNativeViewerApp()
 {
@@ -72,10 +68,6 @@ nsNativeViewerApp::Run()
   MSG  msg;
   int  keepGoing = 1;
 
-  nsresult rv;
-  nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
-  if (NS_FAILED(rv)) return 0;
-
   // Pump all messages
   do {
     // Give priority to system messages (in particular keyboard, mouse,
@@ -94,15 +86,6 @@ nsNativeViewerApp::Run()
           DispatchMessage(&msg);
         }
       }
-
-    // process timer queue.
-    } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-      do {
-        //printf("fire\n");
-        queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-      } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-              !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
 
     } else {
        // Block and wait for any posted application message

@@ -50,14 +50,11 @@
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsSound.h"
-#include "nsITimer.h"
 
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
 
-#include "nsWindowsTimer.h"
-#include "nsTimerManager.h"
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
@@ -80,8 +77,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimer)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
@@ -208,14 +203,6 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/dragservice/win;1",
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-  { "Timer",
-    NS_TIMER_CID,
-    "@mozilla.org/timer;1",
-    nsTimerConstructor },
-  { "Timer Manager",
-    NS_TIMERMANAGER_CID,
-    "@mozilla.org/widget/timermanager;1",
-    nsTimerManagerConstructor },
 #ifdef IBMBIDI
   { "Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
@@ -225,11 +212,4 @@ static nsModuleComponentInfo components[] =
 };
 
 
-PR_STATIC_CALLBACK(void)
-nsWidgetWinModuleDtor(nsIModule *self)
-{
-  nsTimer::Shutdown();
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetModule, components,
-                              nsWidgetWinModuleDtor)
+NS_IMPL_NSGETMODULE(nsWidgetModule, components)

@@ -80,7 +80,6 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the DLL
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib        \
- $(DIST)\lib\timer_s.lib    \
  $(DIST)\lib\gkgfx.lib   \
  $(DIST)\lib\js3250.lib        \
  $(LIBNSPR)                     \

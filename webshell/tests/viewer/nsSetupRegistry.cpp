@@ -90,8 +90,6 @@ static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kDataFlavorCID,           NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-static NS_DEFINE_IID(kCTimerCID,            NS_TIMER_CID);
-static NS_DEFINE_IID(kCTimerManagerCID,            NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kSoundCID,            NS_SOUND_CID);
 static NS_DEFINE_IID(kCFilePickerCID, NS_FILEPICKER_CID);
 static NS_DEFINE_IID(kCPopUpCID,NS_POPUP_CID);
@@ -153,17 +151,9 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "@mozilla.org/widget/dragservice;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "@mozilla.org/sound;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "@mozilla.org/filepicker;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-#ifdef XP_PC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
 
 #ifdef IBMBIDI
   nsComponentManager::RegisterComponentLib(kCBidiKeyboardCID, "Bidi Keyboard", "@mozilla.org/widget/bidikeyboard;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
-
-#ifdef XP_MAC
-  nsComponentManager::RegisterComponentLib(kCTimerCID, "Timer", "@mozilla.org/timer;1", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   // WIDGETS

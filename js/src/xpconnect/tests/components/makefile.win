@@ -80,12 +80,6 @@ LLIBS=	$(LIBNSPR)	\
 		$(DIST)\lib\xpcom.lib	\
 		$(NULL)
 
-!ifndef XPCOM_STANDALONE
-LLIBS=	$(LLIBS)	\
-		$(DIST)\lib\timer_s.lib	\
-		$(NULL)
-!endif
-
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)

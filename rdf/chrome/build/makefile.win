@@ -44,7 +44,6 @@ SUB_LIBRARIES=                 \
 
 LLIBS=\
  $(DIST)\lib\xpcom.lib         \
- $(DIST)\lib\timer_s.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
