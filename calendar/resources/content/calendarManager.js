@@ -466,7 +466,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
       
          document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
 
-         refreshEventTree( false );
+         refreshEventTree( getAndSetEventTable() );
 
          refreshToDoTree( false );
    
@@ -626,7 +626,7 @@ function onResponseAndRefresh( )
       calendarToGet = null;
    }
 
-   refreshEventTree( false );
+   refreshEventTree( getAndSetEventTable() );
 
    refreshToDoTree( false );
 
@@ -681,7 +681,7 @@ function switchCalendar( event )
       
    gCalendarWindow.calendarManager.rdf.flush();
 
-   refreshEventTree( false );
+   refreshEventTree( getAndSetEventTable() );
 
    refreshToDoTree( false );
    
@@ -695,7 +695,7 @@ function deleteCalendar( )
 
    gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
 
-   refreshEventTree( false );
+   refreshEventTree( getAndSetEventTable() );
 
    refreshToDoTree( false );
 

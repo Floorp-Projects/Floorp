@@ -306,8 +306,6 @@ var toDoTreeView =
          dump( "\nTREE-> adding in highpriority property for row "+row+" and column "+column );
          props.AppendElement(aserv.getAtom("highpriority"));
       }
-
-    
    },
    getColumnProperties : function(){return false;},
    getRowProperties : function( row,props ){
