@@ -37,10 +37,7 @@ MODULE = security
 
 CSRCS = p7verify.c  
 
-REQUIRES = seccmd dbm
+REQUIRES = seccmd 
 
 PROGRAM = p7verify
-# PROGRAM = ./$(OBJDIR)/p7verify.exe
-
-USE_STATIC_LIBS = 1
 
