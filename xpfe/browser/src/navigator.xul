@@ -308,6 +308,22 @@
     }
   }
 
+  function BrowserFind() {
+    if (appCore != null) {
+        appCore.find();      
+    } else {
+        dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function BrowserFindAgain() {
+    if (appCore != null) {
+        appCore.findNext();      
+    } else {
+        dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function BrowserLoadURL()
   {
 	if (appCore == null)
@@ -591,8 +607,8 @@
 	   </menu>
     </menu>
     <menu name="Search">
-      <menuitem name="Find On This page..." onclick="BrowserReload();"/>
-      <menuitem name="Find Again" onclick="BrowserReload();"/>
+      <menuitem name="Find On This page..." onclick="BrowserFind();"/>
+      <menuitem name="Find Again" onclick="BrowserFindAgain();"/>
       <separator />
       <menuitem name="Search Parent Item..." onclick="BrowserReload();"/>
       <menuitem name="Search Parent2 Item..." onclick="BrowserReload();"/>
