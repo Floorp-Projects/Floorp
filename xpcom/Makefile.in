@@ -26,10 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= typelib base ds io components threads reflect proxy build tools sample
+DIRS		= typelib base ds io components threads reflect proxy build tools
 
 ifdef ENABLE_TESTS
 DIRS		+= \
+	sample \
 	typelib/xpt/tests \
 	reflect/xptinfo/tests \
 	reflect/xptcall/tests \
