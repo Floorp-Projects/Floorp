@@ -39,7 +39,7 @@ var gCurrentLoadingFolderSortType = 0;
 var gCurrentLoadingFolderSortOrder = 0;
 var gCurrentLoadingFolderViewType = 0;
 var gCurrentLoadingFolderViewFlags = 0;
-
+var gRerootOnFolderLoad = false;
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
@@ -110,8 +110,8 @@ var folderListener = {
                  if (gDBView) {
                    gDBView.suppressCommandUpdating = true;
                  }
-
-                 RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
+                 if (gRerootOnFolderLoad)
+                   RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
                  
                  if (gDBView) {
                    gDBView.suppressCommandUpdating = false;

@@ -201,34 +201,32 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   gCurrentLoadingFolderURI = uri;
   gNextMessageAfterDelete = null; // forget what message to select, if any
 
-  if(msgfolder.manyHeadersToDownload())
+  gCurrentFolderToReroot = uri;
+  gCurrentLoadingFolderViewFlags = viewFlags;
+  gCurrentLoadingFolderViewType = viewType;
+  gCurrentLoadingFolderSortType = sortType;
+  gCurrentLoadingFolderSortOrder = sortOrder;
+  if(msgfolder.manyHeadersToDownload)
   {
-  try
-  {
-    SetBusyCursor(window, true);
-    gCurrentFolderToReroot = uri;
-    gCurrentLoadingFolderViewFlags = viewFlags;
-    gCurrentLoadingFolderViewType = viewType;
-    gCurrentLoadingFolderSortType = sortType;
-    gCurrentLoadingFolderSortOrder = sortOrder;
-    msgfolder.startFolderLoading();
-    msgfolder.updateFolder(msgWindow);
-  }
-  catch(ex)
-  {
-        SetBusyCursor(window, false);
-        dump("Error loading with many headers to download: " + ex + "\n");
-  }
+    gRerootOnFolderLoad = true;
+    try
+    {
+      SetBusyCursor(window, true);
+      msgfolder.startFolderLoading();
+      msgfolder.updateFolder(msgWindow);
+    }
+    catch(ex)
+    {
+          SetBusyCursor(window, false);
+          dump("Error loading with many headers to download: " + ex + "\n");
+    }
   }
   else
   {
     SetBusyCursor(window, true);
-    gCurrentFolderToReroot = "";
-    gCurrentLoadingFolderViewFlags = 0;  // is this correct?
-    gCurrentLoadingFolderSortType = 0;  // is this correct?
-    gCurrentLoadingFolderSortOrder = 0;  // is this correct?
-    gCurrentLoadingFolderViewType = 0;  // is this correct?
     RerootFolder(uri, msgfolder, viewType, viewFlags, sortType, sortOrder);
+    gRerootOnFolderLoad = false;
+    msgfolder.startFolderLoading();
 
     //Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
     //notification before folder has actually changed.
