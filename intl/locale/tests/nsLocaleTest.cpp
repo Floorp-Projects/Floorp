@@ -925,6 +925,7 @@ posixlocale_test_special(void)
 	nsresult			    result;
   nsILocaleFactory* xp_factory;
   nsILocale*        xp_locale;
+  const PRUnichar *lc_name_unichar;
 	nsString*			    locale, *result_locale;
   nsString*         lc_message;
 
