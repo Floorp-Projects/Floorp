@@ -65,46 +65,55 @@ typedef enum {
   kWbClassPunct,
   kWbClassHanLetter,
   kWbClassKatakanaLetter,
-  kWbClassHiraganaLetter
+  kWbClassHiraganaLetter,
+  kWbClassHWKatakanaLetter,
+  kWbClassThaiLetter,
 } wb_class;
 
-#define IS_ASCII(c)            (0 != ( 0x7f & (c)))
+#define IS_ASCII(c)            (0 == ( 0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c)         ((( 'a' <= (c)) && ((c) <= 'z')) || (( 'A' <= (c)) && ((c) <= 'Z')))
 #define ASCII_IS_DIGIT(c)         (( '0' <= (c)) && ((c) <= '9'))
 #define ASCII_IS_SPACE(c)         (( ' ' == (c)) || ( '\t' == (c)) || ( '\r' == (c)) || ( '\n' == (c)))
+#define IS_ALPHABETICAL_SCRIPT(c) ((c) < 0x2E80) 
 
-#define IS_HAN(c)              (( 0x4e00 <= (c)) && ((c) <= 0x9fff))||(( 0xf900 <= (c)) && ((c) <= 0xfaff))
+// we change the beginning of IS_HAN from 0x4e00 to 0x3400 to relfect Unicode 3.0 
+#define IS_HAN(c)              (( 0x3400 <= (c)) && ((c) <= 0x9fff))||(( 0xf900 <= (c)) && ((c) <= 0xfaff))
 #define IS_KATAKANA(c)         (( 0x30A0 <= (c)) && ((c) <= 0x30FF))
 #define IS_HIRAGANA(c)         (( 0x3040 <= (c)) && ((c) <= 0x309F))
+#define IS_HALFWIDTHKATAKANA(c)         (( 0xFF60 <= (c)) && ((c) <= 0xFF9F))
+#define IS_THAI(c)         (0x0E00 == (0xFF80 & (c) )) // Look at the higest 9 bits
 
 PRUint8 nsSampleWordBreaker::GetClass(PRUnichar c)
 {
   // begin of the hack
-  if(IS_ASCII(c))
-  {
-    if(ASCII_IS_SPACE(c))
-      return kWbClassSpace;
-    else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c))
-      return kWbClassAlphaLetter;
-    else
-      return kWbClassPunct;
-  }
-  else if(IS_HAN(c)) {
-      return kWbClassHanLetter;
-  }
-  else if(IS_KATAKANA(c)) 
-  {
-      return kWbClassKatakanaLetter;
-  } 
-  else if(IS_HIRAGANA(c)) 
-  {
-      return kWbClassHiraganaLetter;
-  } 
-  else 
-  {
-      return kWbClassAlphaLetter;
-  }
 
+  if (IS_ALPHABETICAL_SCRIPT(c))  {
+	  if(IS_ASCII(c))  {
+		  if(ASCII_IS_SPACE(c)) {
+			  return kWbClassSpace;
+		  } else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c)) {
+			  return kWbClassAlphaLetter;
+		  } else {
+			  return kWbClassPunct;
+		  }
+	  } else if(IS_THAI(c))	{
+		  return kWbClassThaiLetter;
+	  } else {
+		  return kWbClassAlphaLetter;
+	  }
+  }  else {
+	  if(IS_HAN(c)) {
+		  return kWbClassHanLetter;
+	  } else if(IS_KATAKANA(c))   {
+		  return kWbClassKatakanaLetter;
+	  } else if(IS_HIRAGANA(c))   {
+		  return kWbClassHiraganaLetter;
+	  } else if(IS_HALFWIDTHKATAKANA(c))  {
+		  return kWbClassHWKatakanaLetter;
+	  } else  {
+		  return kWbClassAlphaLetter;
+	  }
+  }
   return 0;
 }
 
@@ -150,7 +159,11 @@ nsresult nsSampleWordBreaker::FindWord(
        break;
      }
   }
-
+  if(kWbClassThaiLetter == c)
+  {
+	// need to call Thai word breaker from here
+	// we should pass the whole Thai segment to the thai word breaker to find a shorter answer
+  }
   return NS_OK;
 }
 
@@ -161,12 +174,17 @@ nsresult nsSampleWordBreaker::Next(
   PRInt8 c1, c2;
   PRUint32 cur = aPos;
   c1 = this->GetClass(aText[cur]);
-
+ 
   for(cur++; cur <aLen; cur++)
   {
      c2 = this->GetClass(aText[cur]);
      if(c2 != c1) 
        break;
+  }
+  if(kWbClassThaiLetter == c1)
+  {
+	// need to call Thai word breaker from here
+	// we should pass the whole Thai segment to the thai word breaker to find a shorter answer
   }
   *oNext = cur;
   *oNeedMoreText = (cur == aLen) ? PR_TRUE : PR_FALSE;
@@ -180,11 +198,16 @@ nsresult nsSampleWordBreaker::Prev( const PRUnichar* aText, PRUint32 aLen, PRUin
   PRUint32 cur = aPos;
   c1 = this->GetClass(aText[cur]);
 
-  for(cur--; cur > 0; cur--)
+  for(; cur > 0; cur--)
   {
-     c2 = this->GetClass(aText[cur]);
-     if(c2 != c1) 
+     c2 = this->GetClass(aText[cur-1]);
+     if(c2 != c1)
        break;
+  }
+  if(kWbClassThaiLetter == c1)
+  {
+	// need to call Thai word breaker from here
+	// we should pass the whole Thai segment to the thai word breaker to find a shorter answer
   }
   *oPrev = cur;
   *oNeedMoreText = (cur == 0) ? PR_TRUE : PR_FALSE;
