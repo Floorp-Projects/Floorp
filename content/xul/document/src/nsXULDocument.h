@@ -47,6 +47,7 @@
 #include "nsIPrincipal.h"
 #include "nsIRDFDataSource.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
