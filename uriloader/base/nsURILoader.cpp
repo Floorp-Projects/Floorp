@@ -25,6 +25,8 @@
 #include "nsIContentHandler.h"
 #include "nsILoadGroup.h"
 #include "nsIDocumentLoader.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
@@ -241,7 +243,7 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
   m_windowTarget = aWindowTarget;
   mCommand = aCommand;
 
-  // now jut open the channel!
+  // now just open the channel!
   if (aChannel)
     rv =  aChannel->AsyncRead(this, nsnull);
   return rv;
@@ -680,6 +682,15 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
       if (newLoadCookie)
       {
         newLoadCookie->Init(loadCookie);
+        
+        // bind the web progress listener (if there is one) to the web progress
+        // instance of the doc loader..
+        nsCOMPtr<nsIDocumentLoader> docLoader (do_GetInterface(loadCookie));
+        nsCOMPtr<nsIWebProgress> webProgress (do_QueryInterface(docLoader));
+        nsCOMPtr<nsIWebProgressListener> webProgressListener (do_GetInterface(aWindowContext));
+        if (webProgress && webProgressListener)
+          webProgress->AddProgressListener(webProgressListener);
+
         rv = cntListener->SetLoadCookie (NS_STATIC_CAST(nsISupports *, (nsIInterfaceRequestor *) newLoadCookie));
         newLoadCookie->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(loadCookie)); 
       } // if we created a new cookie
