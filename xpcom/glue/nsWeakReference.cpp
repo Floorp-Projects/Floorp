@@ -77,7 +77,7 @@ nsSupportsWeakReference::GetWeakReference( nsIWeakReference** aInstancePtr )
 
     nsresult status;
     if ( !*aInstancePtr )
-      status = NS_NOINTERFACE;
+      status = NS_ERROR_OUT_OF_MEMORY;
     else
       {
         NS_ADDREF(*aInstancePtr);
