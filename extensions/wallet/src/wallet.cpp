@@ -43,6 +43,7 @@
 #include "singsign.h"
 
 #include "nsNetUtil.h"
+#include "nsILineInputStream.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsILocalFile.h"
@@ -60,11 +61,9 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 
-#include "nsFileStream.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIStringBundle.h"
-#include "nsIFileSpec.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "nsIContent.h"
@@ -1055,160 +1054,6 @@ wallet_ReadFromList(
 }
 
 
-/*************************************************************/
-/* The following routines are for reading/writing utf8 files */
-/*************************************************************/
-
-/*
- * For purposed of internationalization, characters are represented in memory as 16-bit
- * values (unicode, aka UCS-2) rather than 7 bit values (ascii).  For simplicity, the
- * unicode representation of an ascii character has the upper 9 bits of zero and the
- * lower 7 bits equal to the 7-bit ascii value.
- *
- * These 16-bit unicode values could be stored directly in files.  However such files would
- * not be readable by ascii editors even if they contained all ascii values.  To solve
- * this problem, the 16-bit unicode values are first encoded into a sequence of 8-bit
- * characters before being written to the file -- the encoding is such that unicode
- * characters which have the upper 9 bits of zero are encoded into a single 8-bit character
- * of the same value whereas the remaining unicode characters are encoded into a sequence of
- * more than one 8-bit character.
- *
- * There is a standard 8-bit-encoding of bit strings and it is called UTF-8.  The format of
- * UTF-8 is as follows:
- *
- * Up to  7 bits: 0xxxxxxx
- * Up to 11 bits: 110xxxxx 10xxxxxx
- * Up to 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
- * Up to 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
- * Up to 26 bits: 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
- * Up to 31 bits: 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
- *
- * Since we are converting unicode (16-bit) values, we need only be concerned with the
- * first three lines above.
- *
- * There are conversion routines provided in intl/uconv which convert between unicode and
- * UTF-8.  However these routines are extremely cumbersome to use.  So I have a very simple
- * pair of encoding/decoding routines for converting between unicode characters and UTF-8
- * sequences.  Here are the encoding/decoding algorithms that I use:
- *
- *   encoding 16-bit unicode to 8-bit utf8 stream:
- *      if (unicodeChar <= 0x7F) { // up to 7 bits
- *        utf8Char1 = 0xxxxxxx + lower 7 bits of unicodeChar
- *      } else if (unicodeChar <= 0x7FF) { // up to 11 bits
- *        utf8Char1 = 110xxxxx + upper 5 bits of unicodeChar
- *        utf8Char2 = 10xxxxxx + lower 6 bits of unicodeChar
- *      } else { // up to 16 bits
- *        utf8Char1 = 1110xxxx + upper 4 bits of unicodeChar
- *        utf8Char2 = 10xxxxxx + next 6 bits of unicodeChar
- *        utf8Char3 = 10xxxxxx + lower 6 bits of unicodeChar
- *      }
- *
- *   decoding 8-bit utf8 stream to 16-bit unicode:
- *      if (utf8Char1 starts with 0) {
- *        unicodeChar = utf8Char1;
- *      } else if (utf8Char1 starts with 110) {
- *        unicodeChar = (lower 5 bits of utf8Char1)<<6 
- *                    + (lower 6 bits of utf8Char2);
- *      } else if (utf8Char1 starts with 1110) {
- *        unicodeChar = (lower 4 bits of utf8Char1)<<12
- *                    + (lower 6 bits of utf8Char2)<<6
- *                    + (lower 6 bits of utf8Char3);
- *      } else {
- *        error;
- *      }
- *
- */
-
-void
-Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
-  if (c <= 0x7F) {
-    strm.put((char)c);
-  } else if (c <= 0x7FF) {
-    strm.put(((PRUnichar)0xC0) | ((c>>6) & 0x1F));
-    strm.put(((PRUnichar)0x80) | (c & 0x3F));
-  } else {
-    strm.put(((PRUnichar)0xE0) | ((c>>12) & 0xF));
-    strm.put(((PRUnichar)0x80) | ((c>>6) & 0x3F));
-    strm.put(((PRUnichar)0x80) | (c & 0x3F));
-  }
-}
-
-static char
-wallet_Get(nsInputFileStream& strm) {
-  const PRUint32 buflen = 1000;
-  static char buf[buflen+1];
-  static PRUint32 last = 0;
-  static PRUint32 next = 0;
-  if (next >= last) {
-    next = 0;
-    last = strm.read(buf, buflen);
-    if (last <= 0 || strm.eof()) {
-      /* note that eof is not set until we read past the end of the file */
-      return 0;
-    }
-  }
-  return (buf[next++]);
-}
-
-PRUnichar
-Wallet_UTF8Get(nsInputFileStream& strm) {
-  PRUnichar c = wallet_Get(strm);
-  if ((c & 0x80) == 0x00) {
-    return c;
-  } else if ((c & 0xE0) == 0xC0) {
-    return (((c & 0x1F)<<6) + (wallet_Get(strm) & 0x3F));
-  } else if ((c & 0xF0) == 0xE0) {
-    return (((c & 0x0F)<<12) + ((wallet_Get(strm) & 0x3F)<<6) +
-           (wallet_Get(strm) & 0x3F));
-  } else {
-    return 0; /* this is an error, input was not utf8 */
-  }
-}
-
-/*
- * I have an even a simpler set of routines if you are not concerned about UTF-8.  The
- * algorithms for those routines are as follows:
- *
- *   encoding 16-bit unicode to 8-bit simple stream:
- *      if (unicodeChar < 0xFF) {
- *        simpleChar1 = unicodeChar
- *      } else {
- *        simpleChar1 = 0xFF
- *        simpleChar2 = upper 8 bits of unicodeChar
- *        simpleChar3 = lower 8 bits of unicodeChar
- *      }
- *
- *   decoding 8-bit simple stream to 16-bit unicode:
- *      if (simpleChar1 < 0xFF) {
- *        unicodeChar = simpleChar1;
- *      } else {
- *        unicodeChar = 256*simpleChar2 + simpleChar3;
- *      }
- *
- */
-
-void
-Wallet_SimplePut(nsOutputFileStream& strm, PRUnichar c) {
-  if (c < 0xFF) {
-    strm.put((char)c);
-  } else {
-    strm.put((PRUnichar)0xFF);
-    strm.put((c>>8) & 0xFF);
-    strm.put(c & 0xFF);
-  }
-}
-
-PRUnichar
-Wallet_SimpleGet(nsInputFileStream& strm) {
-  PRUnichar c = (strm.get() & 0xFF);
-  if (c != 0xFF) {
-    return c;
-  } else {
-    return ((strm.get() & 0xFF)<<8) + (strm.get() & 0xFF);
-  }
-}
-
-
 /************************************************************/
 /* The following routines are for unlocking the stored data */
 /************************************************************/
@@ -1230,49 +1075,23 @@ const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 /* The following routines are for accessing the files */
 /******************************************************/
 
-nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
+nsresult Wallet_ProfileDirectory(nsIFile** aFile) {
   /* return the profile */
-  
-  nsresult res;
-  nsCOMPtr<nsIFile> aFile;
-  nsCAutoString pathBuf;
-  nsCOMPtr<nsIFileSpec> tempSpec;
-  
-  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
-  if (NS_FAILED(res)) return res;
-
-  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  
-  // TODO: Change the function to return an nsIFile
-  // and not do this conversion
-
-  res = tempSpec->GetFileSpec(&dirSpec);
-  
-  return res;
+  return NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aFile);
 }
 
-nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
+nsresult Wallet_DefaultsDirectory(nsIFile** aFile) {
 
   nsresult res;
-  nsCOMPtr<nsIFile> aFile;
-  nsCAutoString pathBuf;
-  nsCOMPtr<nsIFileSpec> tempSpec;
+  nsCOMPtr<nsIFile> file;
   
-  res = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(aFile));
+  res = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(file));
   if (NS_FAILED(res)) return res;
-  res = aFile->AppendNative(NS_LITERAL_CSTRING("wallet"));
+  res = file->AppendNative(NS_LITERAL_CSTRING("wallet"));
   if (NS_FAILED(res)) return res;
 
-  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  
-  // TODO: Change the function to return an nsIFile
-  // and not do this conversion
-
-  res = tempSpec->GetFileSpec(&dirSpec);
-  
-  return res;
+  NS_ADDREF(*aFile = file);
+  return NS_OK;
 }
 
 char *
@@ -1288,59 +1107,35 @@ Wallet_RandomName(char* suffix)
 }
 
 /*
- * get a line from a file
- * return -1 if end of file reached
+ * get a line from a file. stream must implement nsILineInputStream.
+ * return error if end of file reached
  * strip carriage returns and line feeds from end of line
+ * free with nsMemory::Free
  */
 
-static nsresult
-wallet_GetLine(nsInputFileStream& strm, const char** lineCString)
+nsresult
+wallet_GetLine(nsIInputStream* strm, const char** lineCString)
 {
-  const PRUint32 kInitialStringCapacity = 64;
+  nsCOMPtr<nsILineInputStream> lis(do_QueryInterface(strm));
+  NS_ENSURE_TRUE(lis, NS_ERROR_UNEXPECTED);
+
+  PRBool more;
   nsCAutoString line;
+  nsresult rv = lis->ReadLine(line, &more);
+  if (NS_FAILED(rv))
+    return rv;
 
-  /* read the line */
-  line.Truncate(0);
-  
-  PRInt32 stringLen = 0;
-  PRInt32 stringCap = kInitialStringCapacity;
-  line.SetCapacity(stringCap);
-  
-  char c;
-  static char lastC = '\0';
-  for (;;) {
-    c = wallet_Get(strm);
+  // Assume that we are past EOF if more==FALSE and line is empty
+  // this may be wrong if the file ends with an empty line, though
+  if (!more && line.IsEmpty())
+    return NS_ERROR_FAILURE;
 
-    /* check for eof */
-    if (c == 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    /* check for line terminator (mac=CR, unix=LF, win32=CR+LF */
-    if (c == '\n' && lastC == '\r') {
-        continue; /* ignore LF if preceded by a CR */
-    }
-    lastC = c;
-    if (c == '\n' || c == '\r') {
-      break;
-    }
-
-    stringLen ++;
-    // buffer string grows
-    if (stringLen == stringCap)
-    {
-      stringCap += stringCap;   // double buffer len
-      line.SetCapacity(stringCap);
-    }
-    line += c;
-  }
-  WALLET_FREEIF(*lineCString);
   *lineCString = ToNewCString(line);
-  return NS_OK;
+  return *lineCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 static PRBool
-wallet_GetHeader(nsInputFileStream& strm)
+wallet_GetHeader(nsIInputStream* strm)
 {
   const char* format = nsnull;
 
@@ -1348,7 +1143,7 @@ wallet_GetHeader(nsInputFileStream& strm)
   if (NS_FAILED(wallet_GetLine(strm, &format))) {
     return PR_FALSE;
   }
-  PRBool rv = !PL_strcmp(format, HEADER_VERSION);
+  PRBool rv = !strcmp(format, HEADER_VERSION);
   WALLET_FREEIF(format);
   return rv;
 }
@@ -1357,21 +1152,24 @@ wallet_GetHeader(nsInputFileStream& strm)
  * Write a line-feed to a file
  */
 static void
-wallet_EndLine(nsOutputFileStream& strm) {
-  strm.put('\n');
+wallet_EndLine(nsIOutputStream* strm) {
+  static const char nl = '\n';
+  PRUint32 dummy;
+  strm->Write(&nl, 1, &dummy);
 }
 
 /*
  * Write a line to a file
  */
-static void
-wallet_PutLine(nsOutputFileStream& strm, const char* line) {
-  strm.write(line, PL_strlen(line));
+void
+wallet_PutLine(nsIOutputStream* strm, const char* line) {
+  PRUint32 dummy;
+  strm->Write(line, strlen(line), &dummy);
   wallet_EndLine(strm);
 }
 
 static void
-wallet_PutHeader(nsOutputFileStream& strm) {
+wallet_PutHeader(nsIOutputStream* strm) {
 
   /* format revision number */
   wallet_PutLine(strm, HEADER_VERSION);
@@ -1386,23 +1184,33 @@ static void
 wallet_WriteToFile(const char * filename, nsVoidArray* list) {
   wallet_MapElement * mapElementPtr;
 
-  /* open output stream */
-  nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsOutputFileStream strm(dirSpec + filename, nsOutputFileStream::kDefaultMode, 0600);
-  if (!strm.is_open()) {
-    NS_ERROR("unable to open file");
-    return;
-  }
-
   /* make sure the list exists */
   if(!list) {
     return;
   }
+
+
+  /* open output stream */
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  file->AppendNative(nsDependentCString(filename));
+
+  nsCOMPtr<nsIOutputStream> fileOutputStream;
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
+                                       file,
+                                       -1,
+                                       0600);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIOutputStream> strm;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(strm), fileOutputStream, 4096);
+  if (NS_FAILED(rv))
+    return;
 
   /* put out the header */
   if (!PL_strcmp(filename, schemaValueFileName)) {
@@ -1427,9 +1235,17 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
     wallet_EndLine(strm);
   }
 
-  /* close the stream */
-  strm.flush();
-  strm.close();
+  // All went ok. Maybe except for problems in Write(), but the stream detects
+  // that for us
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
+  if (safeStream) {
+    rv = safeStream->Finish();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to save wallet file! possible dataloss");
+      return;
+    }
+  }
 }
 
 /*
@@ -1440,26 +1256,26 @@ wallet_ReadFromFile
     (const char * filename, nsVoidArray*& list, PRBool localFile, PlacementType placement = AT_END) {
 
   /* open input stream */
-  nsFileSpec dirSpec;
+  nsCOMPtr<nsIFile> file;
   nsresult rv;
   if (localFile) {
-    rv = Wallet_ProfileDirectory(dirSpec);
+    rv = Wallet_ProfileDirectory(getter_AddRefs(file));
   } else {
-    rv = Wallet_DefaultsDirectory(dirSpec);
+    rv = Wallet_DefaultsDirectory(getter_AddRefs(file));
   }
   if (NS_FAILED(rv)) {
     return;
   }
-  nsInputFileStream strm(dirSpec + filename);
-  if (!strm.is_open()) {
+  file->AppendNative(nsDependentCString(filename));
+  nsCOMPtr<nsIInputStream> strm;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(strm), file);
+  if (NS_FAILED(rv))
     return;
-  }
  
   /* read in the header */
   if (!PL_strcmp(filename, schemaValueFileName)) {
     if (!wallet_GetHeader(strm)) {
       /* something's wrong -- ignore the file */
-      strm.close();
       return;
     }
   }
@@ -1493,7 +1309,6 @@ wallet_ReadFromFile
       /* end of file reached */
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(helpMac->item1, helpMac->item2, dummy, list, PR_FALSE, placement);
-      strm.close();
       return;
     }
 
@@ -1528,7 +1343,6 @@ wallet_ReadFromFile
         if (NS_FAILED(wallet_GetLine(strm, &helpMac->item3))) {
           /* end of file reached */
           wallet_WriteToList(helpMac->item1, nsnull, itemList, list, PR_FALSE, placement);
-          strm.close();
           return;
         }
 
@@ -1548,7 +1362,6 @@ wallet_ReadFromFile
       }
     }
   }
-  strm.close();
 }
 
 
@@ -2980,8 +2793,8 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
 void
 WLLT_PostEdit(const nsString& walletList)
 {
-  nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
   if (NS_FAILED(rv)) {
     return;
   }
@@ -3004,12 +2817,21 @@ WLLT_PostEdit(const nsString& walletList)
     return;
   }
 
+  file->AppendNative(nsDependentCString(schemaValueFileName));
+
   /* open SchemaValue file */
-  nsOutputFileStream strm(dirSpec + schemaValueFileName, nsOutputFileStream::kDefaultMode, 0600);
-  if (!strm.is_open()) {
-    NS_ERROR("unable to open file");
+  nsCOMPtr<nsIOutputStream> fileOutputStream;
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
+                                       file,
+                                       -1,
+                                       0600);
+  if (NS_FAILED(rv))
     return;
-  }
+
+  nsCOMPtr<nsIOutputStream> strm;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(strm), fileOutputStream, 4096);
+  if (NS_FAILED(rv))
+    return;
 
   /* write the values in the walletList to the file */
   wallet_PutHeader(strm);
@@ -3026,7 +2848,21 @@ WLLT_PostEdit(const nsString& walletList)
   }
 
   /* close the file and read it back into the SchemaToValue list */
-  strm.close();
+  // All went ok. Maybe except for problems in Write(), but the stream detects
+  // that for us
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
+  if (safeStream) {
+    rv = safeStream->Finish();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to save wallet file! possible dataloss");
+      return;
+    }
+  }
+
+  strm = nsnull;
+  fileOutputStream = nsnull;
+
   wallet_Clear(&wallet_SchemaToValue_list);
   wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE);
 }
@@ -3078,12 +2914,12 @@ void
 WLLT_DeletePersistentUserData() {
 
   if (schemaValueFileName && schemaValueFileName[0]) {
-    nsFileSpec fileSpec;
-    nsresult rv = Wallet_ProfileDirectory(fileSpec);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
-      fileSpec += schemaValueFileName;
-      if (fileSpec.Valid() && fileSpec.IsFile())
-        fileSpec.Delete(PR_FALSE);
+      rv = file->AppendNative(nsDependentCString(schemaValueFileName));
+      if (NS_SUCCEEDED(rv))
+        file->Remove(PR_FALSE);
     }
   }
 }

@@ -52,7 +52,6 @@ GRE_MODULE	= 1
 PACKAGE_FILE = wallet.pkg
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  necko \
 		  dom \

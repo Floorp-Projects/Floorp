@@ -55,8 +55,6 @@
 #endif
 
 #include "nsIPref.h"
-#include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -67,6 +65,7 @@
 #include "nsReadableUtils.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsCRT.h"
 
 //#define SINGSIGN_LOGGING
 #ifdef SINGSIGN_LOGGING
@@ -1470,12 +1469,12 @@ void
 SI_DeletePersistentUserData() {
 
   if (signonFileName && signonFileName[0]) {
-    nsFileSpec fileSpec;
-    nsresult rv = Wallet_ProfileDirectory(fileSpec);
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
-      fileSpec += signonFileName;
-      if (fileSpec.Valid() && fileSpec.IsFile())
-        fileSpec.Delete(PR_FALSE);
+      rv = file->AppendNative(nsDependentCString(signonFileName));
+      if (NS_SUCCEEDED(rv))
+        file->Remove(PR_FALSE);
     }
   }
 }
@@ -1842,7 +1841,7 @@ public:
     
     NS_IMETHODIMP Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
     {
-        if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
+        if (!strcmp(aTopic, "profile-before-change")) {
             SI_ClearUserData();
         if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
             SI_DeletePersistentUserData();
@@ -1885,42 +1884,16 @@ static nsresult EnsureSingleSignOnProfileObserver()
  * strip carriage returns and line feeds from end of line
  */
 static PRInt32
-si_ReadLine(nsInputFileStream& strm, nsString& lineBuffer)
+si_ReadLine(nsIInputStream* strm, nsString& lineBuffer)
 {
-  const PRUint32 kInitialStringCapacity = 64;
-
-  lineBuffer.Truncate(0);
+  char* line;
+  nsresult rv = wallet_GetLine(strm, (const char**)&line);
+  if (NS_FAILED(rv))
+    return -1;
   
-  PRInt32 stringLen = 0;
-  PRInt32 stringCap = kInitialStringCapacity;
-  lineBuffer.SetCapacity(stringCap);
-
-  /* read the line */
-  PRUnichar c;
-  for (;;) {
-    c = Wallet_UTF8Get(strm);
-
-    /* note that eof is not set until we read past the end of the file */
-    if (strm.eof()) {
-      return -1;
-    }
-
-    if (c == '\n') {
-      break;
-    }
-    if (c != '\r') {
-      stringLen ++;
-      // buffer string grows
-      if (stringLen == stringCap)
-      {
-        stringCap += stringCap;   // double buffer len
-        lineBuffer.SetCapacity(stringCap);
-      }
-
-      lineBuffer += c;
-    }
-  }
-  return 0;
+  CopyUTF8toUTF16(line, lineBuffer);
+  nsMemory::Free(line);
+  return NS_OK;
 }
 
 /*
@@ -1944,19 +1917,22 @@ SI_LoadSignonData() {
 #endif
   
   /* open the signon file */
-  nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
   if (NS_FAILED(rv)) {
     return -1;
   }
+
 
   rv = EnsureSingleSignOnProfileObserver();
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register profile change observer");
 
   SI_InitSignonFileName();
-  nsInputFileStream strm(dirSpec+signonFileName);
+  file->AppendNative(nsDependentCString(signonFileName));
 
-  if (!strm.is_open()) {
+  nsCOMPtr<nsIInputStream> strm;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(strm), file);
+  if (NS_FAILED(rv)) {
     si_PartiallyLoaded = PR_TRUE;
     return 0;
   }
@@ -2070,20 +2046,6 @@ SI_LoadSignonData() {
  * This routine is called only if signon pref is enabled!!!
  */
 
-static void
-si_WriteChar(nsOutputFileStream& strm, PRUnichar c) {
-  Wallet_UTF8Put(strm, c);
-}
-
-static void
-si_WriteLine(nsOutputFileStream& strm, const nsAFlatString& lineBuffer) {
-
-  for (PRUint32 i=0; i<lineBuffer.Length(); i++) {
-    Wallet_UTF8Put(strm, lineBuffer.CharAt(i));
-  }
-  Wallet_UTF8Put(strm, '\n');
-}
-
 static int
 si_SaveSignonDataLocked(char * state, PRBool notify) {
   si_SignonURLStruct * url;
@@ -2103,20 +2065,30 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
 #endif
 
   /* do nothing if we are unable to open file that contains signon list */
-  nsFileSpec dirSpec;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = Wallet_ProfileDirectory(getter_AddRefs(file));
   if (NS_FAILED(rv)) {
     return 0;
   }
 
-  nsOutputFileStream strm(dirSpec + signonFileName, nsOutputFileStream::kDefaultMode, 0600);
-  if (!strm.is_open()) {
+  file->AppendNative(nsDependentCString(signonFileName));
+
+  nsCOMPtr<nsIOutputStream> fileOutputStream;
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream),
+                                       file,
+                                       -1,
+                                       0600);
+  if (NS_FAILED(rv))
     return 0;
-  }
+
+  nsCOMPtr<nsIOutputStream> strm;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(strm), fileOutputStream, 4096);
+  if (NS_FAILED(rv))
+    return 0;
 
   /* write out the format revision number */
 
-  si_WriteLine(strm, NS_ConvertASCIItoUCS2(HEADER_VERSION));
+  wallet_PutLine(strm, HEADER_VERSION);
 
   /* format for next part of file shall be:
    * passwordRealm -- first url/username on reject list
@@ -2132,10 +2104,10 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
     PRInt32 rejectCount = LIST_COUNT(si_reject_list);
     for (PRInt32 i=0; i<rejectCount; i++) {
       reject = NS_STATIC_CAST(si_Reject*, si_reject_list->ElementAt(i));
-      si_WriteLine(strm, NS_ConvertASCIItoUCS2(reject->passwordRealm));
+      wallet_PutLine(strm, reject->passwordRealm);
     }
   }
-  si_WriteLine(strm, NS_LITERAL_STRING("."));
+  wallet_PutLine(strm, ".");
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -2152,26 +2124,40 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
       PRInt32 userCount = url->signonUser_list.Count();
       for (PRInt32 i3=0; i3<userCount; i3++) {
         user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list.ElementAt(i3));
-        si_WriteLine
-          (strm, NS_ConvertASCIItoUCS2(url->passwordRealm));
+        wallet_PutLine(strm, url->passwordRealm);
 
         /* write out each data node of the user node */
         PRInt32 dataCount = user->signonData_list.Count();
         for (PRInt32 i4=0; i4<dataCount; i4++) {
           data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list.ElementAt(i4));
           if (data->isPassword) {
-            si_WriteChar(strm, '*');
+            static const char asterisk = '*';
+            PRUint32 dummy;
+            strm->Write(&asterisk, 1, &dummy);
           }
-          si_WriteLine(strm, nsAutoString(data->name));
-          si_WriteLine(strm, nsAutoString(data->value));
+          wallet_PutLine(strm, NS_ConvertUTF16toUTF8(data->name).get());
+          wallet_PutLine(strm, NS_ConvertUTF16toUTF8(data->value).get());
         }
-        si_WriteLine(strm, NS_LITERAL_STRING("."));
+        wallet_PutLine(strm, ".");
       }
     }
   }
   si_signon_list_changed = PR_FALSE;
-  strm.flush();
-  strm.close();
+
+  // All went ok. Maybe except for problems in Write(), but the stream detects
+  // that for us
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(strm);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
+  if (safeStream) {
+    rv = safeStream->Finish();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("failed to save wallet file! possible dataloss");
+      return 0;
+    }
+  }
+  strm = nsnull;
+  fileOutputStream = nsnull;
+
 
   /* Notify signon manager dialog to update its display */
   if (notify) {

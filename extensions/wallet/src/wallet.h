@@ -47,9 +47,11 @@
 #include "prtypes.h"
 #include "nsIPresShell.h"
 #include "nsString.h"
-#include "nsFileSpec.h"
 #include "nsIPrompt.h"
 
+class nsIInputStream;
+class nsIOutputStream;
+class nsIFile;
 class nsIDOMWindowInternal;
 class nsIDOMNode;
 
@@ -122,7 +124,20 @@ Wallet_Encrypt(const nsString& text, nsString& crypt);
 extern nsresult
 Wallet_Decrypt(const nsString& crypt, nsString& text);
 
-extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
+extern nsresult
+wallet_GetLine(nsIInputStream* strm, const char** lineCString);
+
+/**
+ * Writes a line to a stream, including a newline character.
+ * parameter should not include '\n'
+ */
+extern void
+wallet_PutLine(nsIOutputStream* strm, const char* line);
+
+/**
+ * Gets the current profile directory
+ */
+extern nsresult Wallet_ProfileDirectory(nsIFile** aFile);
 
 extern PRUnichar * Wallet_Localize(const char * genericString);
 
@@ -139,12 +154,6 @@ Wallet_Encrypt2(const nsString& text, nsString& crypt);
 
 extern nsresult
 Wallet_Decrypt2(const nsString& crypt, nsString& text);
-
-extern void
-Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c);
-
-extern PRUnichar
-Wallet_UTF8Get(nsInputFileStream& strm);
 
 extern void
 Wallet_SignonViewerReturn(const nsString& results);
