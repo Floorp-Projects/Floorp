@@ -31,8 +31,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIContentViewerFile.h"
-#include "nsIContentViewer.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsIWebProgress.h"
@@ -44,7 +42,6 @@
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
-#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
@@ -54,15 +51,11 @@
 // nsMsgPrintEngine implementation
 /////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsMsgPrintEngine::nsMsgPrintEngine()
 {
   mCurrentlyPrintingURI = -1;
-  mContentViewer = nsnull;
-  mViewerFile = nsnull;
-
   NS_INIT_REFCNT();
 }
 
@@ -72,20 +65,11 @@ nsMsgPrintEngine::~nsMsgPrintEngine()
 }
 
 // Implement AddRef and Release
-NS_IMPL_ADDREF(nsMsgPrintEngine)
-NS_IMPL_RELEASE(nsMsgPrintEngine)
-
-NS_IMPL_QUERY_INTERFACE4(nsMsgPrintEngine,
+NS_IMPL_ISUPPORTS4(nsMsgPrintEngine,
                          nsIMsgPrintEngine, 
                          nsIWebProgressListener, 
                          nsISupportsWeakReference,
                          nsIPrintListener);
-
-nsresult nsMsgPrintEngine::Init()
-{
-	return NS_OK;
-}
-
 
 // nsIWebProgressListener implementation
 NS_IMETHODIMP
@@ -102,7 +86,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
       // Tell the user we are loading...
       PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").GetUnicode());
       SetStatusMessage( msg );
-      PR_FREEIF(msg);
+      if (msg) nsCRT::free(msg);
     }
 
     if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
@@ -112,7 +96,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
       // Tell the user the message is loaded...
       PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
       SetStatusMessage( msg );
-      PR_FREEIF(msg);
+      if (msg) nsCRT::free(msg);
 
       NS_ASSERTION(mDocShell,"can't print, there is no docshell");
       if ( (!mDocShell) || (!aRequest) ) 
@@ -159,7 +143,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
             // Tell the user we started printing...
             msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
             SetStatusMessage( msg );
-            PR_FREEIF(msg);
+            if (msg) nsCRT::free(msg);
           }
         }
       }
@@ -287,7 +271,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     // Tell the user we are done...
     PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingComplete").GetUnicode());
     SetStatusMessage( msg );
-    PR_FREEIF(msg);
+    if (msg) nsCRT::free(msg);
     
     return NS_OK;
   }
@@ -336,7 +320,7 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
       rv = webNav->LoadURI(uri->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
 
-  PR_FREEIF(tString);
+  if (tString) nsCRT::free(tString);
   return rv;
 }
 
@@ -398,13 +382,10 @@ nsMsgPrintEngine::OnEndPrinting(PRUint32 aStatus)
 nsresult
 nsMsgPrintEngine::SetStatusMessage(PRUnichar *aMsgString)
 {
-  PRUnichar     *progressMsg;
-
   if ( (!mFeedback) || (!aMsgString) )
     return NS_OK;
 
-  progressMsg = nsCRT::strdup(aMsgString);
-  mFeedback->ShowStatusString(progressMsg);
+  mFeedback->ShowStatusString(aMsgString);
   return NS_OK;
 }
 

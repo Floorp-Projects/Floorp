@@ -51,8 +51,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init();
-
   // nsIMsgPrintEngine interface
   NS_DECL_NSIMSGPRINTENGINE
 
