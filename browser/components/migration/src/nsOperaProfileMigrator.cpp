@@ -86,6 +86,8 @@ static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define OPERA_PREFERENCES_FILE_NAME NS_LITERAL_STRING("opera6.ini")
 #define OPERA_HISTORY_FILE_NAME NS_LITERAL_STRING("global.dat")
 #define OPERA_BOOKMARKS_FILE_NAME NS_LITERAL_STRING("opera6.adr")
+#else
+#error Need to define location of Opera Profile data.
 #endif
 #define OPERA_COOKIES_FILE_NAME NS_LITERAL_STRING("cookies4.dat")
 

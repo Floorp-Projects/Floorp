@@ -49,7 +49,9 @@
 #endif
 #include "nsProfileMigrator.h"
 #include "nsDogbertProfileMigrator.h"
+#if !defined(XP_OS2)
 #include "nsOperaProfileMigrator.h"
+#endif
 #include "nsPhoenixProfileMigrator.h"
 #include "nsSeamonkeyProfileMigrator.h"
 #if defined(XP_WIN) && !defined(__MINGW32__)
@@ -74,7 +76,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsGNOMEShellService)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
+#if !defined(XP_OS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoenixProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
@@ -159,10 +163,12 @@ static const nsModuleComponentInfo components[] =
 
 #endif
 
+#if !defined(XP_OS2)
   { "Opera Profile Migrator",
     NS_OPERAPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera",
     nsOperaProfileMigratorConstructor },
+#endif
 
   { "Phoenix Profile Migrator",
     NS_PHOENIXPROFILEMIGRATOR_CID,
