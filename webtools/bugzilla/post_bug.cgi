@@ -63,6 +63,7 @@ my $dbh = Bugzilla->dbh;
 &Bugzilla::User::match_field ({
     'cc'            => { 'type' => 'multi'  },
     'assigned_to'   => { 'type' => 'single' },
+    'qa_contact'    => { 'type' => 'single' },
 });
 
 # The format of the initial comment can be structured by adding fields to the
@@ -142,10 +143,17 @@ my @bug_fields = ("version", "rep_platform",
                   "bug_status", "bug_file_loc", "short_desc",
                   "target_milestone", "status_whiteboard");
 
+# Retrieve the default QA contact if the field is empty
 if (Param("useqacontact")) {
-    SendSQL("SELECT initialqacontact FROM components " .
-            "WHERE id = $component_id");
-    my $qa_contact = FetchOneColumn();
+    my $qa_contact;
+    if (!UserInGroup("editbugs") || trim($::FORM{'qa_contact'}) eq "") {
+        SendSQL("SELECT initialqacontact FROM components " .
+                "WHERE id = $component_id");
+        $qa_contact = FetchOneColumn();
+    } else {
+        $qa_contact = DBNameToIdAndCheck(trim($::FORM{'qa_contact'}));
+    }
+
     if (defined $qa_contact && $qa_contact != 0) {
         $::FORM{'qa_contact'} = $qa_contact;
         push(@bug_fields, "qa_contact");

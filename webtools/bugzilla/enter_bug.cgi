@@ -310,19 +310,24 @@ elsif (1 == @{$::components{$product}}) {
 }
 
 my @components;
-SendSQL("SELECT name, description, login_name, realname
-             FROM components, profiles
-             WHERE product_id = $product_id
-             AND initialowner=userid
-             ORDER BY name");
-while (MoreSQLData()) {
-    my ($name, $description, $login, $realname) = FetchSQLData();
 
+my $dbh = Bugzilla->dbh;
+my $sth = $dbh->prepare(
+       q{SELECT name, description, p1.login_name, p2.login_name 
+           FROM components 
+      LEFT JOIN profiles p1 ON components.initialowner = p1.userid
+      LEFT JOIN profiles p2 ON components.initialqacontact = p2.userid
+          WHERE product_id = ?
+          ORDER BY name});
+
+$sth->execute($product_id);
+while (my ($name, $description, $owner, $qacontact)
+       = $sth->fetchrow_array()) {
     push @components, {
         name => $name,
         description => $description,
-        default_login => $login,
-        default_realname => $realname,
+        initialowner => $owner,
+        initialqacontact => $qacontact || '',
     };
 }
 
@@ -341,6 +346,9 @@ $vars->{'use_keywords'}          = 1 if (@::legal_keywords);
 $vars->{'assigned_to'}           = formvalue('assigned_to');
 $vars->{'assigned_to_disabled'}  = !UserInGroup('editbugs');
 $vars->{'cc_disabled'}           = 0;
+
+$vars->{'qa_contact'}           = formvalue('qa_contact');
+$vars->{'qa_contact_disabled'}  = !UserInGroup('editbugs');
 
 $vars->{'cloned_bug_id'}         = $cloned_bug_id;
 

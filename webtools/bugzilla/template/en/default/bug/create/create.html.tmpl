@@ -34,20 +34,34 @@
 <script type="text/javascript">
 <!--
 
-var default_owners = new Array([% component_.size %]);
+var initialowners = new Array([% component_.size %]);
+var last_initialowner;
 var components = new Array([% component_.size %]);
+[% IF Param("useqacontact") %]
+    var initialqacontacts = new Array([% component_.size %]);
+    var last_initialqacontact;
+[% END %]
 [% count = 0 %]
 [%- FOREACH c = component_ %]
     components[[% count %]] = "[% c.name FILTER js %]";
-    default_owners[[% count %]] = "[% c.default_login FILTER js %]";
+    initialowners[[% count %]] = "[% c.initialowner FILTER js %]";
+    [% IF Param("useqacontact") %]
+        initialqacontacts[[% count %]] = "[% c.initialqacontact FILTER js %]";
+    [% END %]
     [% count = count + 1 %]
 [%- END %]
-var last_default_owner;
+
 function set_assign_to() {
     // Based on the selected component, fill the "Assign To:" field
-    // with the default component owner.
+    // with the default component owner, and the the "QA Contact:" field
+    // with the default QA Contact.
     var form = document.Create;
     var assigned_to = form.assigned_to.value;
+
+[% IF Param("useqacontact") %]
+    var qa_contact = form.qa_contact.value;
+[% END %]
+
     var index = -1;
     if (form.component.type == 'select-one') {
         index = form.component.selectedIndex;
@@ -56,14 +70,23 @@ function set_assign_to() {
         index = 0;
     }
     if (index != -1) {
-        var owner = default_owners[index];
+        var owner = initialowners[index];
         var component = components[index];
-        if (assigned_to == last_default_owner
+        if (assigned_to == last_initialowner
             || assigned_to == owner
             || assigned_to == '') {
             form.assigned_to.value = owner;
-            last_default_owner = owner;
+            last_initialowner = owner;
         }
+        [% IF Param("useqacontact") %]
+            var contact = initialqacontacts[index];
+            if (qa_contact == last_initialqacontact
+                || qa_contact == contact
+                || qa_contact == '') {
+                  form.qa_contact.value = contact;
+                  last_initialqacontact = contact;
+            }
+        [% END %]
     }
 }
 -->
@@ -203,6 +226,22 @@ function set_assign_to() {
     </td>
   </tr>
   
+[% IF Param("useqacontact") %]
+    <tr>
+      <td align="right"><strong>QA Contact:</strong></td>
+      <td colspan="3">
+      [% INCLUDE global/userselect.html.tmpl
+         name => "qa_contact"
+         value => qa_contact
+         disabled => qa_contact_disabled
+         size => 32
+         emptyok => 1
+       %]
+        <noscript>(Leave blank to assign to default qa contact)</noscript>
+      </td>
+    </tr>
+[% END %]
+
   <tr>
     <td align="right"><strong>Cc:</strong></td>
     <td colspan="3">
