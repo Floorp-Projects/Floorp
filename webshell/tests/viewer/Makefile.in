@@ -175,7 +175,9 @@ install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 	$(INSTALL) $(srcdir)/mozilla-viewer.sh $(DIST)/bin
+endif
 
 unix/gtk/libviewer_gtk_s.a:
 	@$(MAKE) -C $(@D) $(@F)
