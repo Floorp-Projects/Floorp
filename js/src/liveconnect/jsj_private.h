@@ -194,6 +194,14 @@ struct JavaToJSSavedState {
 typedef struct JavaToJSSavedState JavaToJSSavedState;
 
 
+/* This object provides is the "anchor" by which netscape.javscript.JSObject
+   objects hold a reference to native JSObjects. */
+struct JSObjectHandle {
+    JSObject *js_obj;
+    JSContext *cx;      /* Creating context, needed for finalization */
+};
+typedef struct JSObjectHandle JSObjectHandle;
+
 
 /******************************** Globals ***********************************/
 

@@ -112,8 +112,7 @@ public:
      * @param pjobj              - return value.
      */
     NS_IMETHOD
-    //Eval(jsobject jsobj, nsIPrincipal **pNSIPrincipaArray, PRInt32 numPrincipals, const jchar* script, jobject *pjobj) = 0;
-    Eval(JNIEnv *jEnv, jsobject jsobj, const jchar* script, jsize length, jobject *pjobj) = 0;
+    Eval(JNIEnv *jEnv, jsobject jsobj, const char* codebase, const jchar* script, jsize length, jobject *pjobj) = 0;
 
     /**
      * Get the window object for a plugin instance.
