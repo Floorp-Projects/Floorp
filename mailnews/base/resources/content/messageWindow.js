@@ -556,7 +556,11 @@ function RerootFolderForStandAlone(uri)
   
   SetUpToolbarButtons(gCurrentFolderUri);
   
-  UpdateMailToolbar("reroot folder in stand alone window");   
+  UpdateMailToolbar("reroot folder in stand alone window");
+  
+  // hook for extra toolbar items
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  observerService.notifyObservers(window, "mail:setupToolbarItems", uri);
 } 
 
 function GetMsgHdrFromUri(messageUri)
