@@ -608,15 +608,11 @@ if ($action eq 'delete') {
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
 
-            my $query =
-                $::db->query("DELETE FROM attachments WHERE bug_id=$bugid")
-                or die "$::db_errstr";
-            $query =
-                $::db->query("DELETE FROM bugs_activity WHERE bug_id=$bugid")
-                or die "$::db_errstr";
-            $query =
-                $::db->query("DELETE FROM dependencies WHERE blocked=$bugid")
-                or die "$::db_errstr";
+            PushGlobalSQLState();
+            SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
+            SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
+            SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
+            PopGlobalSQLState();
         }
         print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
