@@ -478,12 +478,14 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
 
     // Convert the rect from pixels to twips
+    // Note the 1 pixel inflation of the damage rect
+    // to account for off by 1 pixel rounding errors.
     mPresContext->GetScaledPixelsToTwips(&p2t);
     changeRect = (const nsRect*) aParam3;
     damageRect.x = NSIntPixelsToTwips(changeRect->x, p2t);
-    damageRect.y = NSIntPixelsToTwips(changeRect->y, p2t);
+    damageRect.y = NSIntPixelsToTwips((changeRect->y - 1), p2t);
     damageRect.width = NSIntPixelsToTwips(changeRect->width, p2t);
-    damageRect.height = NSIntPixelsToTwips(changeRect->height, p2t);
+    damageRect.height = NSIntPixelsToTwips((changeRect->height + 1), p2t);
     DamageRepairFrames(&damageRect);
     break;
 
@@ -603,25 +605,49 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
       //       damage rect (image size)
 
       // Invalidate the entire frame
-      // XXX We really only need to invalidate the client area of the frame...
+      // XXX We really only need to invalidate the client area of the frame...    
       frame->GetRect(bounds);
       bounds.x = bounds.y = 0;
 
-      // XXX We should tell the frame the damage area and let it invalidate
-      // itself. Add some API calls to nsIFrame to allow a caller to invalidate
-      // parts of the frame...
-      frame->GetView(mPresContext, &view);
-      if (!view) {
-        frame->GetOffsetFromView(mPresContext, offset, &view);
-        bounds.x += offset.x;
-        bounds.y += offset.y;
-      }
+      // Invalidate the entire frame only if the frame has a tiled background
+      // image, otherwise just invalidate the intersection of the frame's bounds
+      // with the damaged rect.
+  
+      nsCOMPtr<nsIStyleContext> styleContext;
+      frame->GetStyleContext(getter_AddRefs(styleContext));
+      const nsStyleColor* color = (const nsStyleColor*)
+      styleContext->GetStyleData(eStyleStruct_Color);
 
-      nsCOMPtr<nsIViewManager> vm = nsnull;
-      nsresult rv = NS_OK;
-      rv = view->GetViewManager(*getter_AddRefs(vm));
-      if (NS_SUCCEEDED(rv) && vm) {
-        vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
+      if ((color->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
+          (color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) ||
+          (color->mBackgroundRepeat == NS_STYLE_BG_REPEAT_OFF)) {
+        // The frame does not have a background image so we are free
+        // to invalidate only the intersection of the damage rect and
+        // the frame's bounds.
+ 
+        if (aDamageRect) {
+          bounds.IntersectRect(*aDamageRect, bounds);
+        }
+      } 
+
+      if ((bounds.width > 0) && (bounds.height > 0)) {
+
+        // XXX We should tell the frame the damage area and let it invalidate
+        // itself. Add some API calls to nsIFrame to allow a caller to invalidate
+        // parts of the frame...
+        frame->GetView(mPresContext, &view);
+        if (!view) {
+          frame->GetOffsetFromView(mPresContext, offset, &view);
+          bounds.x += offset.x;
+          bounds.y += offset.y;
+        }
+
+        nsCOMPtr<nsIViewManager> vm = nsnull;
+        nsresult rv = NS_OK;
+        rv = view->GetViewManager(*getter_AddRefs(vm));
+        if (NS_SUCCEEDED(rv) && vm) {
+          vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
+        }
       }
     }
   }
