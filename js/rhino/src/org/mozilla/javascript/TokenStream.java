@@ -57,16 +57,11 @@ public class TokenStream {
      */
 
     public final static int
-        TSF_ERROR       = 0x0001,  // fatal error while scanning
-//         TSF_EOF         = 0x0002,  // hit end of file
-        TSF_NEWLINES    = 0x0004,  // tokenize newlines
-        TSF_FUNCTION    = 0x0008,  // scanning inside function body
-        TSF_RETURN_EXPR = 0x0010,  // function has 'return expr;'
-        TSF_RETURN_VOID = 0x0020,  // function has 'return;'
-//         TSF_INTERACTIVE = 0x0040,  // interactive parsing mode
-//         TSF_COMMAND     = 0x0080,  // command parsing mode
-//         TSF_LOOKAHEAD   = 0x0100,  // looking ahead for a token
-        TSF_REGEXP      = 0x0200;  // looking for a regular expression
+        TSF_NEWLINES    = 0x0001,  // tokenize newlines
+        TSF_FUNCTION    = 0x0002,  // scanning inside function body
+        TSF_RETURN_EXPR = 0x0004,  // function has 'return expr;'
+        TSF_RETURN_VOID = 0x0008,  // function has 'return;'
+        TSF_REGEXP      = 0x0010;  // looking for a regular expression
 
     /*
      * For chars - because we need something out-of-range
@@ -724,9 +719,6 @@ public class TokenStream {
     public int getToken() throws IOException {
         int c;
         tokenno++;
-        // If there was a fatal error, keep returning TOK_ERROR.
-        if ((flags & TSF_ERROR) != 0)
-            return ERROR;
 
         // Check for pushed-back token
         if (this.pushbackToken != EOF) {
@@ -1303,12 +1295,12 @@ public class TokenStream {
     public void reportSyntaxError(String messageProperty, Object[] args) {
         String message = Context.getMessage(messageProperty, args);
         if (scope != null) {
+            // We're probably in an eval. Need to throw an exception.
             throw NativeGlobal.constructError(
                             Context.getContext(), "SyntaxError",
                             message, scope, getSourceName(),
                             getLineno());
         } else {
-            flags |= TSF_ERROR;
             Context.reportError(message, getSourceName(),
                                 getLineno(), getLine(), getOffset());
         }

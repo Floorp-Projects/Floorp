@@ -72,14 +72,9 @@ class Parser {
     private void reportError(TokenStream ts, String messageId) 
         throws JavaScriptException
     {
-        if (this.ok) {
-            this.ok = false;
-
-            // Only report the error if the TokenStream hasn't had a chance to.
-            if ((ts.flags & ts.TSF_ERROR) == 0) {
-                ts.reportSyntaxError(messageId, null);
-            }
-        }
+        this.ok = false;
+        ts.reportSyntaxError(messageId, null);
+        
         /* Throw an exception to unwind the recursive descent parse. 
          * We use JavaScriptException here even though it is really 
          * a different use of the exception than it is usually used
@@ -113,7 +108,7 @@ class Parser {
          * we've collected all the source */
         Object tempBlock = nf.createLeaf(TokenStream.BLOCK);
 
-        while (this.ok) {
+        while (true) {
             ts.flags |= ts.TSF_REGEXP;
             tt = ts.getToken();
             ts.flags &= ~ts.TSF_REGEXP;
@@ -134,6 +129,7 @@ class Parser {
                     wellTerminated(ts, ts.FUNCTION);
                 } catch (JavaScriptException e) {
                     this.ok = false;
+                    break;
                 }
             } else {
                 ts.ungetToken(tt);
@@ -141,9 +137,10 @@ class Parser {
             }
         }
 
-        if (this.ok == false)
+        if (!this.ok) {
             // XXX ts.clearPushback() call here?
             return null;
+        }
 
         Object pn = nf.createScript(tempBlock, ts.getSourceName(),
                                     baseLineno, ts.getLineno(),
@@ -274,7 +271,6 @@ class Parser {
     {
         int tt = ts.peekTokenSameLine();
         if (tt == ts.ERROR) {
-            reportError(ts, "msg.scanner.caught.error");
             return false;
         }
 
@@ -717,7 +713,6 @@ class Parser {
             break;
 
         case ts.ERROR:
-            reportError(ts, "msg.scanner.caught.error");
             // Fall thru, to have a node for error recovery to work on
         case ts.EOL:
         case ts.SEMI:
@@ -1045,7 +1040,6 @@ class Parser {
             return nf.createUnary(ts.DELPROP, unaryExpr(ts, source));
 
         case ts.ERROR:
-            reportError(ts, "msg.scanner.caught.error");
             break;
 
         default:
@@ -1179,8 +1173,6 @@ class Parser {
                 break;
             }
         }
-        if (tt == ts.ERROR)
-            reportError(ts, "msg.scanner.caught.error");
 
         return pn;
     }
@@ -1342,7 +1334,6 @@ class Parser {
 
         case ts.ERROR:
             /* the scanner or one of its subroutines reported the error. */
-            reportError(ts, "msg.scanner.caught.error");
             break;
 
         default:
