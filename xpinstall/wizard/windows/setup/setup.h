@@ -66,9 +66,12 @@ typedef int PRInt32;
 #define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
 #define MAX_FILE_DOWNLOAD_RETRIES       3
 
-#define BAR_MARGIN    1
-#define BAR_SPACING   2
-#define BAR_WIDTH     6
+#define BAR_MARGIN                      1
+#define BAR_SPACING                     0
+#define BAR_WIDTH                       6
+#define BAR_LIBXPNET_MARGIN             1
+#define BAR_LIBXPNET_SPACING            0
+#define BAR_LIBXPNET_WIDTH              1
 
 /* UG: Upgrade */
 #define UG_NONE                         0
@@ -130,6 +133,7 @@ typedef int PRInt32;
 #define WIZ_CRC_PASS                    WIZ_OK
 #define WIZ_CRC_FAIL                    1028
 #define WIZ_SETUP_ALREADY_RUNNING       1029
+#define WIZ_TOO_MANY_NETWORK_ERRORS     1030
 
 /* FO: File Operation */
 #define FO_OK                           0

@@ -23,7 +23,7 @@
 #ifndef _XPNETHOOK_H_
 #define _XPNETHOOK_H_
 
-int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bRetry);
+int DownloadFiles(char *szInputIniFile, char *szDownloadDir, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd, BOOL bShowRetryMsg, BOOL bIgnoreNetworkError);
 
 #endif /* _XPNETHOOK_H_ */
 

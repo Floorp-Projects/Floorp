@@ -81,8 +81,32 @@ nsSocket::Open()
 
     int err;
     WSADATA wsaData;
-    WORD wVersionRequested = MAKEWORD(4, 0);
+    WORD wVersionRequested;
+    
+    /* We don't care which version we get because we're not
+     * doing any specific to a particular winsock version. */
+    /* Request for version 2.2 */
+    wVersionRequested = MAKEWORD(2, 2);
     err = WSAStartup(wVersionRequested, &wsaData);
+    if (err == WSAVERNOTSUPPORTED)
+    {
+        /* Request for version 1.1 */
+        wVersionRequested = MAKEWORD(1, 1);
+        err = WSAStartup(wVersionRequested, &wsaData);
+        if (err == WSAVERNOTSUPPORTED)
+        {
+            /* Request for version 1.0 */
+            wVersionRequested = MAKEWORD(0, 1);
+            err = WSAStartup(wVersionRequested, &wsaData);
+            if (err == WSAVERNOTSUPPORTED)
+            {
+                /* Request for version 0.4 */
+                wVersionRequested = MAKEWORD(4, 0);
+                err = WSAStartup(wVersionRequested, &wsaData);
+            }
+        }
+    }
+
     if (err != 0)
     {
         return E_WINSOCK;

@@ -28,7 +28,7 @@
 #include "zlib.h"
 
 #define BAR_MARGIN    1
-#define BAR_SPACING   2
+#define BAR_SPACING   0
 #define BAR_WIDTH     6
 #define MAX_BUF       4096
 #define WIZ_TEMP_DIR  "ns_temp"

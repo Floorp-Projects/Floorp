@@ -1043,11 +1043,15 @@ long RetrieveRedirectFile()
     return(1);
   }
 
-  lResult = DownloadFiles(szFileIdiGetRedirect, szTempDir, diAdvancedSettings.szProxyServer, diAdvancedSettings.szProxyPort, diAdvancedSettings.szProxyUser, diAdvancedSettings.szProxyPasswd, FALSE);
-  if(lResult != 0)
-    return(lResult);
-
-  return(0);
+  lResult = DownloadFiles(szFileIdiGetRedirect,
+                          szTempDir,
+                          diAdvancedSettings.szProxyServer,
+                          diAdvancedSettings.szProxyPort,
+                          diAdvancedSettings.szProxyUser,
+                          diAdvancedSettings.szProxyPasswd,
+                          FALSE,
+                          TRUE);
+  return(lResult);
 }
 
 int CRCCheckDownloadedArchives(char *szFileIdiGetArchives)
@@ -1208,7 +1212,8 @@ long RetrieveArchives()
                               diAdvancedSettings.szProxyPort,
                               diAdvancedSettings.szProxyUser,
                               diAdvancedSettings.szProxyPasswd,
-                              iRetries);
+                              iRetries,
+                              FALSE);
       if(lResult == WIZ_OK)
       {
         /* CRC check only the archives that were downloaded.

@@ -39,7 +39,7 @@ function updateWinReg()
     err     = winreg.setValueString(subkey, valname, value);
 
     valname = "Description";
-    value   = "$ProductName$ $UserAgentShort$";
+    value   = "$ProductName$ ($UserAgentShort$)";
     err     = winreg.setValueString(subkey, valname, value);
   }
 }
