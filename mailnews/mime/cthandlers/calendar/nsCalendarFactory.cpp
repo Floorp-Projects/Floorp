@@ -35,13 +35,13 @@ static NS_DEFINE_CID(kMimeContentTypeHandlerCID, NS_CALENDAR_CONTENT_TYPE_HANDLE
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
 
-class nsMsgFactory : public nsIFactory
+class nsCalendarFactory : public nsIFactory
 {   
 public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-  nsMsgFactory(const nsCID &aClass,
+  nsCalendarFactory(const nsCID &aClass,
                const char* aClassName,
                const char* aProgID,
                nsISupports*);
@@ -51,7 +51,7 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock);   
 
 protected:
-  virtual ~nsMsgFactory();   
+  virtual ~nsCalendarFactory();   
 
   nsCID mClassID;
   char* mClassName;
@@ -59,7 +59,7 @@ protected:
   nsIServiceManager* mServiceManager;
 };   
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass,
+nsCalendarFactory::nsCalendarFactory(const nsCID &aClass,
                            const char* aClassName,
                            const char* aProgID,
                            nsISupports *compMgrSupports)
@@ -74,7 +74,7 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
                                   (void **)&mServiceManager);
 }   
 
-nsMsgFactory::~nsMsgFactory()   
+nsCalendarFactory::~nsCalendarFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
@@ -84,7 +84,7 @@ nsMsgFactory::~nsMsgFactory()
 }   
 
 nsresult
-nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
+nsCalendarFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
   if (aResult == NULL)  
     return NS_ERROR_NULL_POINTER;  
@@ -105,11 +105,11 @@ nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;   
 }   
 
-NS_IMPL_ADDREF(nsMsgFactory)
-NS_IMPL_RELEASE(nsMsgFactory)
+NS_IMPL_ADDREF(nsCalendarFactory)
+NS_IMPL_RELEASE(nsCalendarFactory)
 
 nsresult
-nsMsgFactory::CreateInstance(nsISupports *aOuter,
+nsCalendarFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)  
 {  
@@ -149,7 +149,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 }  
 
 nsresult
-nsMsgFactory::LockFactory(PRBool aLock)  
+nsCalendarFactory::LockFactory(PRBool aLock)  
 {  
 	if (aLock)
 		PR_AtomicIncrement(&g_LockCount); 
@@ -171,7 +171,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, aServMgr);
+  *aFactory = new nsCalendarFactory(aClass, aClassName, aProgID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
