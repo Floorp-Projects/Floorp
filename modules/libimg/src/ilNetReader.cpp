@@ -22,6 +22,7 @@
 
 #include "if.h"
 #include "ilINetReader.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kINetReaderIID, IL_INETREADER_IID);
 
@@ -35,7 +36,7 @@ public:
 
   NS_IMETHOD WriteReady(PRUint32 *max_read);
   
-  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len);
+  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len, char* url);
 
   NS_IMETHOD Write(const unsigned char *str, int32 len);
 
@@ -79,11 +80,18 @@ NetReaderImpl::WriteReady(PRUint32* max_read)
 }
   
 NS_IMETHODIMP 
-NetReaderImpl::FirstWrite(const unsigned char *str, int32 len)
+NetReaderImpl::FirstWrite(const unsigned char *str, int32 len, char* url)
 {
     int ret = 0;
  
     if (ilContainer != NULL) {
+		FREE_IF_NOT_NULL(ilContainer->fetch_url);
+		if (url) {
+			ilContainer->fetch_url = nsCRT::strdup(url);
+		}
+		else {
+			ilContainer->fetch_url = NULL;
+		}
         ret = IL_StreamFirstWrite(ilContainer, str, len);
         if(ret == 0)
             return NS_OK;

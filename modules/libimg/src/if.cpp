@@ -1026,19 +1026,24 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     ic->fetch_url keeps the actual url for you.
      */ 
 
+	/* ic->fetch_url is being set in NetReaderImpl::FirstWrite(..). 
+	   This is just a backup code to set ic->fetch_url, in the case 
+	   we do not set ic->fetch_url in NetReaderImpl::FirstWrite(..).*/
 
-    FREE_IF_NOT_NULL(ic->fetch_url);
+//    FREE_IF_NOT_NULL(ic->fetch_url);
 
-    if (ic->url){
-        ic->fetch_url = ic->url->GetAddress();
-    }
-    else{
-    if(ic->url_address) /* check needed because of mkicons.c */
-            ic->fetch_url = PL_strdup(ic->url_address);
-    else
-        ic->fetch_url = NULL;
-    }
- 
+	if (!ic->fetch_url) {
+		if (ic->url) {
+			ic->fetch_url = ic->url->GetAddress();
+		}
+		else {
+			if(ic->url_address) // check needed because of mkicons.c
+					ic->fetch_url = PL_strdup(ic->url_address);
+			else
+				ic->fetch_url = NULL;
+		}
+	}
+
     /* Grab the URL's expiration date */
 
   if (ic->url)
