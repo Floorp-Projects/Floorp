@@ -1503,28 +1503,21 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
 
   GetOffsetFromView(aPresContext, origin, &parentWithView);
 
-  // if it's windowless, let's make correction for some more things
+  // if it's windowless, let's make sure we have our origin set right
+  // it may need to be corrected, like after scrolling
   if (aWindowless && parentWithView) {
     nsPoint correction(0,0);
 
-    // parent view may be scrolled
-    parentWithView->GetPosition(&correction.x, &correction.y);
-    origin += correction;
+    // Walk up all the views and add up their positions. This will give us our
+    // absolute position which is what we want to give the plugin
+    nsIView* theView = parentWithView;
+    while (theView) {
 
-    // offset from widget
-    nsIWidget* aWidget;
-    correction = nsPoint(0, 0);
-    parentWithView->GetOffsetFromWidget(&correction.x, &correction.y, aWidget);
-    origin += correction;
-
-    // offset from parent frame
-    nsIFrame* parentFrame;
-    GetParentWithView(aPresContext, &parentFrame);
-    if (parentFrame) {
-      correction = nsPoint(0, 0);
-      parentFrame->GetOffsetFromView(aPresContext, correction, &parentWithView);
+      theView->GetPosition(&correction.x, &correction.y);
       origin += correction;
-    }
+      
+      theView->GetParent(theView);
+    }  
   }
 
   float t2p;
