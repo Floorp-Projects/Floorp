@@ -64,9 +64,9 @@
 *
 * We only want to test that we don't CRASH on the sort. So it will be OK
 * if we get the JS "out of memory" error. Note this terminates the test
-* with exit code 1 in Rhino and exit code 3 in SpiderMonkey. Therefore we put
+* with exit code 3. Therefore we put
 *
-*                 |expectExitCode(n = 1,3)|
+*                       |expectExitCode(3);|
 *
 * The only problem will arise if the JS shell ever DOES have enough memory
 * to do the sort. Then this test will terminate with the normal exit code 0
@@ -116,12 +116,8 @@ var summary = "Testing that Array.sort() doesn't crash on very large arrays";
 printBugNumber(bug);
 printStatus(summary);
 
+expectExitCode(3);
 var IN_RHINO = inRhino();
-
-if (IN_RHINO)
-  expectExitCode(1);
-else
-  expectExitCode(3);
 
 if (!IN_RHINO)
 {
