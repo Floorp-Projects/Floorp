@@ -2156,9 +2156,10 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 NS_IMETHODIMP
-nsGenericElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
+nsGenericElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aStyleRule = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -61,7 +61,7 @@ public:
   NS_IMETHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
-  NS_IMETHOD WalkInlineStyleRules(nsRuleWalker* aRuleWalker) = 0;
+  NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule) = 0;
 
   /** NRA ***
    * Get a hint that tells the style system what to do when 

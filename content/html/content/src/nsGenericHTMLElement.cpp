@@ -2280,26 +2280,22 @@ nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 }
 
 nsresult
-nsGenericHTMLElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
+nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 {
-  nsresult result = NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIStyleRule> rule;
+  *aStyleRule = nsnull;
   
-  if (aRuleWalker && mAttributes) {
+  if (mAttributes) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::style, value)) {
       if (eHTMLUnit_ISupports == value.GetUnit()) {
         nsCOMPtr<nsISupports> supports = getter_AddRefs(value.GetISupportsValue());
         if (supports)
-          rule = do_QueryInterface(supports, &result);
+          CallQueryInterface(supports, aStyleRule);
       }
     }
   }
 
-  if (rule)
-    aRuleWalker->Forward(rule, PR_TRUE);
-
-  return result;
+  return NS_OK;
 }
 
 nsresult
