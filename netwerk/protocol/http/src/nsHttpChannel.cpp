@@ -732,6 +732,54 @@ nsHttpChannel::ProcessNormal()
     return rv;
 }
 
+nsresult
+nsHttpChannel::GetCallback(const nsIID &aIID, void **aResult)
+{
+    nsresult rv;
+    NS_ASSERTION(aResult, "Invalid argument in GetCallback!");
+    rv = mCallbacks->GetInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {
+        if (mLoadGroup) {
+            nsCOMPtr<nsIInterfaceRequestor> cbs;
+            rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+            if (NS_SUCCEEDED(rv))
+                rv = cbs->GetInterface(aIID, aResult);
+        }
+    }
+
+    return rv;
+}
+
+nsresult
+nsHttpChannel::PromptTempRedirect()
+{
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStringBundle> stringBundle;
+    rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(stringBundle));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLString messageString;
+    rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("RepostFormData").get(), getter_Copies(messageString));
+    //GetStringFromName can return NS_OK and NULL messageString.
+    if (NS_SUCCEEDED(rv) && messageString) {
+        PRBool repost = PR_FALSE;
+        nsCOMPtr<nsIPrompt> prompt;
+        rv = GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+        if (NS_FAILED(rv)) return rv;
+        if (prompt) {
+            prompt->Confirm(nsnull, messageString, &repost);
+            if (!repost)
+                return NS_ERROR_FAILURE;
+        }
+    }
+
+    return rv;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel <byte-range>
 //-----------------------------------------------------------------------------
@@ -1556,6 +1604,32 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
     if (httpChannel) {
+        if (redirectType == 307 && mUploadStream) {
+            //307 is Temporary Redirect response. Redirect the postdata to the new URI.
+            rv = PromptTempRedirect();
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream, &rv);
+            if (NS_FAILED(rv)) return rv;
+            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel, &rv);
+            if (NS_FAILED(rv)) return rv;
+                
+            if (mUploadStreamHasHeaders)
+                uploadChannel->SetUploadStream(mUploadStream, NS_LITERAL_CSTRING(""), -1);
+            else {
+                const char *ctype;
+                ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
+                const char *clength;
+                clength = mRequestHead.PeekHeader(nsHttp::Content_Length);
+                uploadChannel->SetUploadStream(mUploadStream, nsDependentCString(ctype), atoi(clength));
+            }
+
+            httpChannel->SetRequestMethod(nsDependentCString(mRequestHead.Method()));
+        }
+
         nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
         NS_ENSURE_TRUE(httpInternal, NS_ERROR_UNEXPECTED);
 
@@ -1929,21 +2003,9 @@ nsHttpChannel::PromptForUserPass(const char *host,
     LOG(("nsHttpChannel::PromptForUserPass [this=%x realm=%s]\n", this, realm));
 
     nsresult rv;
-    nsCOMPtr<nsIAuthPrompt> authPrompt(do_GetInterface(mCallbacks, &rv)); 
-    if (NS_FAILED(rv)) {
-        // Ok, perhaps the loadgroup's notification callbacks provide an auth prompt...
-        if (mLoadGroup) {
-            nsCOMPtr<nsIInterfaceRequestor> cbs;
-            rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-            if (NS_SUCCEEDED(rv))
-                authPrompt = do_GetInterface(cbs, &rv);
-        }
-        if (NS_FAILED(rv)) {
-            // Unable to prompt -- return
-            NS_WARNING("notification callbacks should provide nsIAuthPrompt");
-            return rv;
-        }
-    }
+    nsCOMPtr<nsIAuthPrompt> authPrompt;
+    rv = GetCallback(NS_GET_IID(nsIAuthPrompt), getter_AddRefs(authPrompt));
+    if (NS_FAILED(rv)) return rv;
 
     // construct the domain string
     // we always add the port to domain since it is used
