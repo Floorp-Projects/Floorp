@@ -18,7 +18,9 @@
    - Copyright (C) 1998-1999 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
-   - Contributor(s): loadrunner@betak.net
+   - Contributor(s):
+   -    loadrunner@betak.net
+   -    Neil Rashbrook <neil@parkwaycc.co.uk>
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
@@ -57,13 +59,22 @@
 
     <groupbox flex="1"><caption label="&documentCharsetTitle.label;"/>
         <label value="&documentCharsetDesc.label;"/>
-        <tree id="CharsetTree" flex="1"
-              style="height: 14em;" hidecolumnpicker="true"
-              onselect="SelectCharset();">
-           <treecols>
-               <treecol id="CharsetCol" flex="1" hideheader="true"/>
-           </treecols>
-           <treechildren/>
+        <tree id="CharsetTree" height="148" hidecolumnpicker="true" onselect="SelectCharset();"
+              datasources="rdf:charset-menu" ref="NC:DecodersRoot" flags="dont-build-content">
+            <treecols>
+                <treecol id="CharsetCol" flex="1" hideheader="true"/>
+            </treecols>
+            <template>
+                <rule>
+                    <treechildren>
+                        <treeitem uri="rdf:*">
+                            <treerow>
+                                <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                            </treerow>
+                        </treeitem>
+                    </treechildren>
+                </rule>
+            </template>
         </tree>
     </groupbox>
 
