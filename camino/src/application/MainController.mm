@@ -593,6 +593,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return NO;
 }
 
+- (void) applicationDidChangeScreenParameters:(NSNotification *)aNotification
+{
+  [NSApp makeWindowsPerform:@selector(display) inOrder:YES];
+}
+
 - (void) updatePrebinding
 {
   // Check our prebinding status.  If we didn't launch prebound,
