@@ -102,7 +102,7 @@ public:
 
   PRBool IsLoadingOrRunningTimeout() const
   {
-    return mIsDocumentLoaded || mRunningTimeout;
+    return !mIsDocumentLoaded || mRunningTimeout;
   }
 
   virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
