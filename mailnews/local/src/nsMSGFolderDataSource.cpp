@@ -206,6 +206,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   if ((mURI = PL_strdup(uri)) == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
+  gRDFService->RegisterDataSource(this);
+
   if (! kNC_Child) {
     gRDFService->GetResource(kURINC_child,   &kNC_Child);
     gRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
@@ -552,3 +554,21 @@ NS_IMETHODIMP nsMSGFolderDataSource::DoCommand(const char* aCommand,
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/*
+NS_IMETHODIMP nsMSGFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMSGFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMSGFolderDataSource::OnItemPropertyChanged(nsISupports *item, char *property, char *value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+*/
