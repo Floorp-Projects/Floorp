@@ -30,7 +30,9 @@ $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
 $LayoutPerformanceTest    = 0;
 $XULWindowOpenTest        = 0;
 $StartupPerformanceTest   = 0;
+
 $TestsPhoneHome           = 0;  # Should test report back to server?
+$results_server           = "tegu.mozilla.org";
 
 #
 # Timeouts, values are in seconds.

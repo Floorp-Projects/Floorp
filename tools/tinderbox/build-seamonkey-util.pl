@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.105 $ ';
+$::UtilsVersion = '$Revision: 1.106 $ ';
 
 package TinderUtils;
 
@@ -990,11 +990,12 @@ sub run_all_tests {
 			$test_result = 'success';
 
 			print_log "TinderboxPrint:" .
-			  "<a title=\"Best nav open time of 9 runs\" href=\"http://tegu.mozilla.org/graph/xulwinopen/query.cgi?tbox=" .
+			  "<a title=\"Best nav open time of 9 runs\" href=\"http://$Settings::results_server/graph/query.cgi?testname=xulwinopen&tbox=" .
 				::hostname() . "&autoscale=0&days=0\">Txul:$open_time" . "ms</a>\n";
 
 			if($Settings::TestsPhoneHome) {
-			  send_xulwinopen_results_to_server($open_time, "--", ::hostname());
+			  send_results_to_server($open_time, "--",
+									 "xulwinopen", ::hostname());
 			}
 		} else {
 			$test_result = 'testfailed';
@@ -1016,7 +1017,7 @@ sub run_all_tests {
 	  my $avg_startuptime = 0; # Average startup time.
 	  my @times;
 
-	  for($i=0; $i<10; $i++) {
+	  for($i=0; $i<1; $i++) {
 		# Settle OS.
 		run_system_cmd("sync; sleep 5", 35);
 		
@@ -1086,16 +1087,15 @@ sub run_all_tests {
 		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 		
 		my $min_startuptime_string = sprintf "%.2f", $min_startuptime/1000;
-		my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://tegu.mozilla.org/graph/startup/query.cgi?tbox=" 
+		my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox=" 
 		  . ::hostname() . "&autoscale=0&days=0\">Ts:" . $min_startuptime_string . "s</a>\n\n";
 		print_log "$print_string";
 
 		# Report data back to server
 		if($Settings::TestsPhoneHome) {
 		  print_log "phonehome = 1\n";
-		  send_startup_results_to_server($min_startuptime,
-										$times_string, 
-										::hostname());
+		  send_results_to_server($min_startuptime, $times_string, 
+								 "startup", ::hostname());
 		}
 
 	  }
@@ -1394,26 +1394,6 @@ sub print_test_errors {
 }
 
 
-sub send_startup_results_to_server () {
-    my ($value, $data, $tbox) = @_;
-  
-    $data =~ s/ /:/g;
-	my $tmpurl = 'http://tegu.mozilla.org/graph/startup/collect.cgi';
-    $tmpurl .= "?value=$value&data=$data&tbox=$tbox";
-
-	send_results_to_server($tmpurl);
-}
-
-sub send_xulwinopen_results_to_server () {
-    my ($value, $data, $tbox) = @_;
-  
-	my $tmpurl = 'http://tegu.mozilla.org/graph/xulwinopen/collect.cgi';
-    $tmpurl .= "?value=$value&data=$data&tbox=$tbox";
-
-	send_results_to_server($tmpurl);
-}
-
-
 # Report test results back to a server.
 # Netscape-internal now, will push to mozilla.org, ask
 # mcafee or jrgm for details.
@@ -1428,23 +1408,30 @@ sub send_xulwinopen_results_to_server () {
 # perl-libwww-perl-5.53-3.noarch.rpm
 #
 sub send_results_to_server () {
-    my ($url) = @_;
+    my ($value, $data, $testname, $tbox) = @_;
+
+    my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
+    $tmpurl .= "?value=$value&data=$data&testname=$testname&tbox=$tbox";
+    
+	print_log "send_results_to_server(): \n";
+	print_log "tmpurl = $tmpurl\n";
+	
     my $res = eval q{
         use LWP::UserAgent;
         use HTTP::Request;
         my $ua  = LWP::UserAgent->new;
         $ua->timeout(10); # seconds
-        my $req = HTTP::Request->new(GET => $url);
+        my $req = HTTP::Request->new(GET => $tmpurl);
         my $res = $ua->request($req);
         return $res;
     };
 	if ($@) {
 	  warn "Failed to submit startup results: $@";
-	  print_log "send_startup_results_to_server() failed.\n";
+	  print_log "send_results_to_server() failed.\n";
     } else {
-	  print "Startup results submitted to server: \n", 
+	  print "Results submitted to server: \n", 
 		$res->status_line, "\n", $res->content, "\n";
-	  print_log "send_startup_results_to_server() succeeded.\n";
+	  print_log "send_results_to_server() succeeded.\n";
     }
 
 }
