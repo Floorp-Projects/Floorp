@@ -52,10 +52,9 @@ public:
    * Initialize the content viewer. Make it a child of the
    * the given native parent widget.
    */
-  NS_IMETHOD Init(nsNativeWidget aNativeParent,
+  NS_IMETHOD Init(nsIWidget* aParentWidget,
                   nsIDeviceContext* aDeviceContext,
-                  const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto)=0;
+                  const nsRect& aBounds)=0;
 
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand) = 0;
 
