@@ -97,7 +97,7 @@ public:
 private:
     nsresult Restart();
     void     ParseLine(char *line);
-    void     ParseLineSegment(char *seg, PRUint32 len);
+    nsresult ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContentStart();
     nsresult HandleContent(char *, PRUint32 count, PRUint32 *contentRead, PRUint32 *contentRemaining);

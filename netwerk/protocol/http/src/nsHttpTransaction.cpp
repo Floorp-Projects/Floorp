@@ -34,6 +34,9 @@
 #include "pratom.h"
 #include "plevent.h"
 
+// mLineBuf is limited to this number of bytes.
+#define MAX_LINEBUF_LENGTH (1024 * 10)
+
 //-----------------------------------------------------------------------------
 // helpers
 //-----------------------------------------------------------------------------
@@ -381,28 +384,29 @@ nsHttpTransaction::ParseLine(char *line)
         mResponseHead->ParseHeaderLine(line);
 }
 
-void
+nsresult
 nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
 {
     NS_PRECONDITION(!mHaveAllHeaders, "already have all headers");
 
     if (!mLineBuf.IsEmpty() && mLineBuf.Last() == '\n') {
-        // if this segment is a continuation of the previous...
-        if (mHaveStatusLine && (*segment == ' ' || *segment == '\t')) {
-            // trim off the new line char
-            mLineBuf.Truncate(mLineBuf.Length() - 1);
-            mLineBuf.Append(segment, len);
-        }
-        else {
-            // trim off the new line char and parse the line
-            mLineBuf.Truncate(mLineBuf.Length() - 1);
+        // trim off the new line char, and if this segment is
+        // not a continuation of the previous or if we haven't
+        // parsed the status line yet, then parse the contents
+        // of mLineBuf.
+        mLineBuf.Truncate(mLineBuf.Length() - 1);
+        if (!mHaveStatusLine || (*segment != ' ' && *segment != '\t')) {
             ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
-            // stuff the segment into the line buf
-            mLineBuf.Assign(segment, len);
+            mLineBuf.Truncate();
         }
     }
-    else
-        mLineBuf.Append(segment, len);
+
+    // append segment to mLineBuf...
+    if (mLineBuf.Length() + len > MAX_LINEBUF_LENGTH) {
+        LOG(("excessively long header received, canceling transaction [trans=%x]", this));
+        return NS_ERROR_ABORT;
+    }
+    mLineBuf.Append(segment, len);
     
     // a line buf with only a new line char signifies the end of headers.
     if (mLineBuf.First() == '\n') {
@@ -412,10 +416,11 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
             LOG(("ignoring 100 response\n"));
             mHaveStatusLine = PR_FALSE;
             mResponseHead->Reset();
-            return;
+            return NS_OK;
         }
         mHaveAllHeaders = PR_TRUE;
     }
+    return NS_OK;
 }
 
 nsresult
@@ -423,6 +428,7 @@ nsHttpTransaction::ParseHead(char *buf,
                              PRUint32 count,
                              PRUint32 *countRead)
 {
+    nsresult rv;
     PRUint32 len;
     char *eol;
 
@@ -469,7 +475,9 @@ nsHttpTransaction::ParseHead(char *buf,
             len--;
 
         buf[len-1] = '\n';
-        ParseLineSegment(buf, len);
+        rv = ParseLineSegment(buf, len);
+        if (NS_FAILED(rv))
+            return rv;
 
         if (mHaveAllHeaders)
             return NS_OK;
@@ -485,7 +493,9 @@ nsHttpTransaction::ParseHead(char *buf,
         // ParseLineSegment if buf only contains a carriage return.
         if ((buf[len-1] == '\r') && (--len == 0))
             return NS_OK;
-        ParseLineSegment(buf, len);
+        rv = ParseLineSegment(buf, len);
+        if (NS_FAILED(rv))
+            return rv;
     }
     return NS_OK;
 }
@@ -873,7 +883,7 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
             // and there is still a header line unparsed.  let's make sure we parse
             // the remaining header line, and then hopefully, the response will be
             // usable (see bug 88792).
-            ParseLineSegment("\n", 1);
+            rv = ParseLineSegment("\n", 1);
         }
         return rv;
     }
