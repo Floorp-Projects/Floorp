@@ -77,6 +77,10 @@
         ]]>
         </property>
 
+        <property name="lastKeyPressed">  <![CDATA[ 0; ]]> </property>
+        <property name="noDirectMatch">   <![CDATA[ 0; ]]> </property>
+        <property name="menuOpen">        <![CDATA[ 0; ]]> </property>
+
         <property name="autoCompleteListener">
         <![CDATA[
         ({
@@ -99,6 +103,10 @@
                 if (result.defaultItemIndex > result.items.Count())
                     result.defaultItemIndex = 0;
                 
+                /* Do not alter the user input when deleting characters */
+                if (me.lastKeyPressed == 8 /*vk_back*/ || me.lastKeyPressed == 46 /*vk_delete*/)
+                    result.defaultItemIndex = -1;
+
                 var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                 
                 //Time to build the new edit field value
@@ -329,6 +337,7 @@
    		    return;
    		  
         me.privatefunc.closePopupMenu(me);
+        me.lastKeyPressed = 0;
 
 				if (me.disableAutocomplete == "true")
 					return;
@@ -353,6 +362,7 @@
  				if (popup && me.menuOpen != "true")
 					popup = null;
 
+        me.lastKeyPressed = event.keyCode;
 				switch (event.keyCode)
 				{
           case 9: /*vk_tab*/
