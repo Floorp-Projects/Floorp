@@ -263,7 +263,7 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select component");
+    PutHeader("Select component of $product");
     CheckProduct($product);
 
     if ($dobugcounts) {
@@ -330,7 +330,7 @@ $dobugcounts = 1;               # Stupid hack to force further PutTrailer()
 #
 
 if ($action eq 'add') {
-    PutHeader("Add component");
+    PutHeader("Add component of $product");
     CheckProduct($product);
 
     #print "This page lets you add a new product to bugzilla.\n";
@@ -358,7 +358,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new component");
+    PutHeader("Adding new component of $product");
     CheckProduct($product);
 
     # Cleanups and valididy checks
@@ -440,7 +440,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete component");
+    PutHeader("Delete component of $product");
     CheckComponent($product, $component);
 
     # display some data about the component
@@ -556,7 +556,7 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting component");
+    PutHeader("Deleting component of $product");
     CheckComponent($product,$component);
 
     # lock the tables before we start to change everything:
@@ -620,7 +620,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit component");
+    PutHeader("Edit component of $product");
     CheckComponent($product,$component);
 
     # get data of component
@@ -682,7 +682,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update component");
+    PutHeader("Update component of $product");
 
     my $componentold        = trim($::FORM{componentold}        || '');
     my $description         = trim($::FORM{description}         || '');

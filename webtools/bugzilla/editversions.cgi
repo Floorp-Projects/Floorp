@@ -222,7 +222,7 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select version");
+    PutHeader("Select version of $product");
     CheckProduct($product);
 
 =for me
@@ -277,7 +277,7 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add version");
+    PutHeader("Add version of $product");
     CheckProduct($product);
 
     #print "This page lets you add a new version to a bugzilla-tracked product.\n";
@@ -348,7 +348,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete version");
+    PutHeader("Delete version of $product");
     CheckVersion($product, $version);
 
     SendSQL("SELECT count(bug_id),product,version
@@ -412,7 +412,7 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting version");
+    PutHeader("Deleting version of $product");
     CheckVersion($product,$version);
 
     # lock the tables before we start to change everything:
@@ -477,7 +477,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit version");
+    PutHeader("Edit version of $product");
     CheckVersion($product,$version);
 
     print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
@@ -507,7 +507,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update version");
+    PutHeader("Update version of $product");
 
     my $versionold = trim($::FORM{versionold} || '');
 

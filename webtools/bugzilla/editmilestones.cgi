@@ -212,7 +212,7 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select milestone");
+    PutHeader("Select milestone for $product");
     CheckProduct($product);
 
     SendSQL("SELECT value,sortkey
@@ -255,7 +255,7 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add milestone");
+    PutHeader("Add milestone for $product");
     CheckProduct($product);
 
     #print "This page lets you add a new milestone to a $::bugzilla_name tracked product.\n";
@@ -283,7 +283,7 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new milestone");
+    PutHeader("Adding new milestone for $product");
     CheckProduct($product);
 
     # Cleanups and valididy checks
@@ -326,7 +326,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete milestone");
+    PutHeader("Delete milestone of $product");
     CheckMilestone($product, $milestone);
 
     SendSQL("SELECT count(bug_id),product,target_milestone
@@ -401,7 +401,7 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting milestone");
+    PutHeader("Deleting milestone of $product");
     CheckMilestone($product,$milestone);
 
     # lock the tables before we start to change everything:
@@ -466,7 +466,7 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit milestone");
+    PutHeader("Edit milestone of $product");
     CheckMilestone($product,$milestone);
 
     SendSQL("SELECT sortkey FROM milestones WHERE product=" .
@@ -502,7 +502,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update milestone");
+    PutHeader("Update milestone of $product");
 
     my $milestoneold = trim($::FORM{milestoneold} || '');
     my $sortkeyold = trim($::FORM{sortkeyold} || '0');
