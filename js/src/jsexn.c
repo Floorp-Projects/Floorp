@@ -549,6 +549,9 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
+    result = js_QuoteString(cx, result, '"');
+    if (!result)
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(result);
     return JS_TRUE;
 }
@@ -700,12 +703,32 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 
     /*
      * Try to get an appropriate prototype by looking up the corresponding
-     * exception constructor name in the current context.  If the constructor
-     * has been deleted or overwritten, this may fail or return NULL, and
-     * js_NewObject will fall back to using Object.prototype.
+     * exception constructor name in the scope chain of the current context's
+     * top stack frame, or in the global object if no frame is active.
+     *
+     * XXXbe hack around JSCLASS_NEW_RESOLVE code in js_LookupProperty that
+     *       checks cx->fp, cx->fp->pc, and js_CodeSpec[*cx->fp->pc] in order
+     *       to compute resolve flags such as JSRESOLVE_ASSIGNING.  The bug
+     *       is that this "internal" js_GetClassPrototype call may trigger a
+     *       resolve of exceptions[exn].name if the global object uses a lazy
+     *       standard class resolver (see JS_ResolveStandardClass), but the
+     *       current frame and bytecode end up affecting the resolve flags.
      */
-    if (!js_GetClassPrototype(cx, exceptions[exn].name, &errProto))
-        errProto = NULL;
+    {
+        JSStackFrame *fp = cx->fp;
+        jsbytecode *pc = NULL;
+        JSBool ok;
+
+        if (fp) {
+            pc = fp->pc;
+            fp->pc = NULL;
+        }
+        ok = js_GetClassPrototype(cx, exceptions[exn].name, &errProto);
+        if (pc)
+            fp->pc = pc;
+        if (!ok)
+            return JS_FALSE;
+    }
 
     /*
      * Use js_NewObject instead of js_ConstructObject, because

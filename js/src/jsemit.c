@@ -2481,6 +2481,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (!EmitElemOp(cx, pn2, op, cg))
                 return JS_FALSE;
             break;
+#if JS_HAS_LVALUE_RETURN
+          case TOK_LP:
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
+                               (ptrdiff_t)(CG_OFFSET(cg) - pn2->pn_offset))
+                               < 0) {
+                return JS_FALSE;
+            }
+            if (js_Emit1(cx, cg, op) < 0)
+                return JS_FALSE;
+            break;
+#endif
           default:
             JS_ASSERT(0);
         }
