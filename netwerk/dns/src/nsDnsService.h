@@ -46,6 +46,7 @@
 #include "nsWeakPtr.h"
 #if defined(XP_MAC)
 #include <OSUtils.h>
+#include <Files.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
 #elif defined (XP_WIN)

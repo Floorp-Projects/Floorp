@@ -7,4 +7,5 @@
 #define CPP_PROGRAM					"Foobar"
 
 #define OTUNIXERRORS	1
+#include <Files.h>
 #include <OpenTransport.h>
