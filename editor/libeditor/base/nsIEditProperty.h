@@ -71,6 +71,11 @@ SUB places text in subscript style
 SUP places text in superscript style 
 */
 
+  /** properties */
+  static nsIAtom *color;
+  static nsIAtom *face;
+  static nsIAtom *size;
+
   /** special strings */
   static nsString *allProperties;   // this magic string represents the union of all inline style tags
 

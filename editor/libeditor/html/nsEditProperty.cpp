@@ -41,6 +41,11 @@ nsIAtom * nsIEditProperty::sub;
 nsIAtom * nsIEditProperty::sup;
 nsIAtom * nsIEditProperty::tt;
 nsIAtom * nsIEditProperty::u;
+// properties
+nsIAtom * nsIEditProperty::color;
+nsIAtom * nsIEditProperty::face;
+nsIAtom * nsIEditProperty::size;
+// special
 nsString * nsIEditProperty::allProperties;
 
 void
@@ -59,6 +64,11 @@ nsEditProperty::InstanceInit()
   nsIEditProperty::sup =  NS_NewAtom("SUP");
   nsIEditProperty::tt =   NS_NewAtom("TT");
   nsIEditProperty::u =    NS_NewAtom("U");
+  // properties
+  nsIEditProperty::color= NS_NewAtom("COLOR");
+  nsIEditProperty::face = NS_NewAtom("FACE");
+  nsIEditProperty::size = NS_NewAtom("SIZE");
+  // special
   nsIEditProperty::allProperties = new nsString("moz_AllProperties");
 }
 
@@ -78,6 +88,11 @@ nsEditProperty::InstanceShutdown()
   NS_IF_RELEASE(nsIEditProperty::sup);
   NS_IF_RELEASE(nsIEditProperty::tt);
   NS_IF_RELEASE(nsIEditProperty::u);
+  // properties
+  NS_IF_RELEASE(nsIEditProperty::color);
+  NS_IF_RELEASE(nsIEditProperty::face);
+  NS_IF_RELEASE(nsIEditProperty::size);
+  // special
   if (nsIEditProperty::allProperties) {
     delete (nsIEditProperty::allProperties);
   }

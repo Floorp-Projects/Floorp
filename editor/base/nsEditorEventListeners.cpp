@@ -428,7 +428,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool any = PR_FALSE;
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
-            nsAutoString color = "color";
+            nsAutoString color = "COLOR";
             nsAutoString value = "red";
             mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
           }
@@ -447,7 +447,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool any = PR_FALSE;
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
-            nsAutoString color = "color";
+            nsAutoString color = "COLOR";
             nsAutoString value = "green";
             mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
           }
