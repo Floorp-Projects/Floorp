@@ -450,7 +450,7 @@
         <![CDATA[
           // open popup if key is up or down
           if (event.keyCode == KeyEvent.DOM_VK_UP || event.keyCode == KeyEvent.DOM_VK_DOWN ||
-              event.keyCode == KeyEvent.DOM_VK_F4) && !event.altKey && !event.ctrlKey && !event.shiftKey)) {
+              (event.keyCode == KeyEvent.DOM_VK_F4 && !event.altKey && !event.ctrlKey && !event.shiftKey)) {
             event.preventDefault();
             this.open = true;
           }
