@@ -332,7 +332,7 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   ZeroMemory(szDlgBrowseTitle, sizeof(szDlgBrowseTitle));
   NS_LoadString(hSetupRscInst, IDS_DLGBROWSETITLE, szDlgBrowseTitle, MAX_BUF);
 
-  ftitle[0] = 0;
+  ZeroMemory(ftitle, sizeof(ftitle));
   strcpy(fname, "*.*");
   of.lStructSize        = sizeof(OPENFILENAME);
   of.hwndOwner          = hDlg;
@@ -1365,14 +1365,14 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
       lstrcat(szBuf, "\\*.*");
       if((hDir = FindFirstFile(szBuf , &wfdFindFileData)) != INVALID_HANDLE_VALUE)
       {
-        if((wfdFindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
+        if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
         {
           SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
         }
 
         while(FindNextFile(hDir, &wfdFindFileData))
         {
-          if((wfdFindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
+          if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
             SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
         }
         FindClose(hDir);
