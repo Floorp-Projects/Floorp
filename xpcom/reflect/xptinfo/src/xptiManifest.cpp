@@ -250,21 +250,9 @@ out:
         if(exists && NS_FAILED(mainFile->Remove(PR_FALSE)))
             return PR_FALSE;
     
-        // XXX Would prefer MoveTo with a 'null' newdir, the but nsILocalFile
-        // implementation are broken.
-        // http://bugzilla.mozilla.org/show_bug.cgi?id=33098
-#if 1        
-        nsCOMPtr<nsILocalFile> dir;
-        if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(dir)) || !dir)
-            return PR_FALSE;
-
-        if(NS_FAILED(tempFile->CopyTo(dir, g_MainManifestFilename)))
-            return PR_FALSE;
-#else
-        // so let's try the MoveTo!
+        // MoveTo means rename.
         if(NS_FAILED(tempFile->MoveTo(nsnull, g_MainManifestFilename)))
             return PR_FALSE;
-#endif
     }
 
     return succeeded;
