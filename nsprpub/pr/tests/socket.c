@@ -542,7 +542,7 @@ UDP_Server(void *arg)
     memset(&netaddr, 0 , sizeof(netaddr));
     for (i = 0; i < (num_udp_clients * num_udp_datagrams_per_client); i++) {
         DPRINTF(("UDP_Server: calling PR_RecvFrom client  - ip = 0x%lx, port = %d bytes = %d inbuf = 0x%lx, inbuf[0] = 0x%lx\n",
-            netaddr.inet.ip, netaddr.inet.port, rv, in_buf->data,
+            netaddr.inet.ip, netaddr.inet.port, bytes, in_buf->data,
             in_buf->data[0]));
 
         rv = PR_RecvFrom(sockfd, in_buf->data, bytes, 0, &netaddr,
