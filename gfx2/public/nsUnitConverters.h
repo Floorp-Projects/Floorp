@@ -55,7 +55,7 @@
  * @ingroup conversion_constants
  * @note XXX this should be derived from platform FLOAT_MIN
  */
-#define CEIL_CONST_FLOAT              0.9999999999999999
+#define CEIL_CONST_FLOAT              0.99999999
 
 
 /**
