@@ -17,9 +17,6 @@
 #include "dataurl.h"
 #include "netcache.h"
 
-#ifdef JAVA
-#include "marimurl.h"
-#endif
 
 PUBLIC void
 NET_ClientProtocolInitialize(void)
