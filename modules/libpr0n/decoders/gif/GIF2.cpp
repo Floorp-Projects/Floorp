@@ -370,22 +370,24 @@ do_lzw(gif_struct *gs, const PRUint8 *q)
                     return -1;
             }
 
-            /* Define a new codeword in the dictionary. */
             *stackp++ = firstchar = suffix[code];
-            prefix[avail] = oldcode;
-            suffix[avail] = firstchar;
-            avail++;
-            if(avail >= MAX_BITS)
-                return -1;
 
-            /* If we've used up all the codewords of a given length
-             * increase the length of codewords by one bit, but don't
-             * exceed the specified maximum codeword size of 12 bits.
-             */
-            if (((avail & codemask) == 0) && (avail < 4096)) 
+            /* Define a new codeword in the dictionary. */            
+            if (avail < 4096)
             {
+              prefix[avail] = oldcode;
+              suffix[avail] = firstchar;
+              avail++;
+
+              /* If we've used up all the codewords of a given length
+               * increase the length of codewords by one bit, but don't
+               * exceed the specified maximum codeword size of 12 bits.
+               */
+              if (((avail & codemask) == 0) && (avail < 4096)) 
+              {
                 codesize++;
                 codemask += avail;
+              }
             }
             oldcode = incode;
             
