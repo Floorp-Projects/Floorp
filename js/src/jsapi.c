@@ -91,6 +91,24 @@ JS_GetEmptyStringValue(JSContext *cx)
     return STRING_TO_JSVAL(cx->runtime->emptyString);
 }
 
+static JSBool
+TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
+		     jsval **vpp, va_list *app)
+{
+    const char *format;
+    JSArgumentFormatMap *map;
+
+    format = *formatp;
+    for (map = cx->argumentFormatMap; map; map = map->next) {
+	if (!strncmp(format, map->format, map->length)) {
+	    *formatp = format + map->length;
+	    return map->formatter(cx, format, fromJS, vpp, app);
+	}
+    }
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR, format);
+    return JS_FALSE;
+}
+
 JS_PUBLIC_API(JSBool)
 JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 		    ...)
@@ -108,7 +126,7 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 		      const char *format, va_list ap)
 {
-    uintN i;
+    jsval *sp;
     JSBool required;
     char c;
     JSFunction *fun;
@@ -117,7 +135,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
     JSObject *obj;
 
     CHECK_REQUEST(cx);
-    i = 0;
+    sp = argv;
     required = JS_TRUE;
     while ((c = *format++) != '\0') {
 	if (isspace(c))
@@ -126,7 +144,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 	    required = JS_FALSE;
 	    continue;
 	}
-	if (i == argc) {
+	if (sp == argv + argc) {
 	    if (required) {
 		fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 		if (fun) {
@@ -143,41 +161,41 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 	}
 	switch (c) {
 	  case 'b':
-	    if (!js_ValueToBoolean(cx, argv[i], va_arg(ap, JSBool *)))
+	    if (!js_ValueToBoolean(cx, *sp, va_arg(ap, JSBool *)))
 		return JS_FALSE;
 	    break;
 	  case 'c':
-	    if (!js_ValueToUint16(cx, argv[i], va_arg(ap, uint16 *)))
+	    if (!js_ValueToUint16(cx, *sp, va_arg(ap, uint16 *)))
 		return JS_FALSE;
 	    break;
 	  case 'i':
-	    if (!js_ValueToECMAInt32(cx, argv[i], va_arg(ap, int32 *)))
+	    if (!js_ValueToECMAInt32(cx, *sp, va_arg(ap, int32 *)))
 		return JS_FALSE;
 	    break;
 	  case 'u':
-	    if (!js_ValueToECMAUint32(cx, argv[i], va_arg(ap, uint32 *)))
+	    if (!js_ValueToECMAUint32(cx, *sp, va_arg(ap, uint32 *)))
 		return JS_FALSE;
 	    break;
 	  case 'j':
-	    if (!js_ValueToInt32(cx, argv[i], va_arg(ap, int32 *)))
+	    if (!js_ValueToInt32(cx, *sp, va_arg(ap, int32 *)))
 		return JS_FALSE;
 	    break;
 	  case 'd':
-	    if (!js_ValueToNumber(cx, argv[i], va_arg(ap, jsdouble *)))
+	    if (!js_ValueToNumber(cx, *sp, va_arg(ap, jsdouble *)))
 		return JS_FALSE;
 	    break;
 	  case 'I':
-	    if (!js_ValueToNumber(cx, argv[i], &d))
+	    if (!js_ValueToNumber(cx, *sp, &d))
 		return JS_FALSE;
 	    *va_arg(ap, jsdouble *) = js_DoubleToInteger(d);
 	    break;
 	  case 's':
 	  case 'S':
 	  case 'W':
-	    str = js_ValueToString(cx, argv[i]);
+	    str = js_ValueToString(cx, *sp);
 	    if (!str)
 		return JS_FALSE;
-	    argv[i] = STRING_TO_JSVAL(str);
+	    *sp = STRING_TO_JSVAL(str);
 	    if (c == 's')
 		*va_arg(ap, char **) = JS_GetStringBytes(str);
 	    else if (c == 'W')
@@ -186,32 +204,31 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 		*va_arg(ap, JSString **) = str;
 	    break;
 	  case 'o':
-	    if (!js_ValueToObject(cx, argv[i], &obj))
+	    if (!js_ValueToObject(cx, *sp, &obj))
 		return JS_FALSE;
-	    argv[i] = OBJECT_TO_JSVAL(obj);
+	    *sp = OBJECT_TO_JSVAL(obj);
 	    *va_arg(ap, JSObject **) = obj;
 	    break;
 	  case 'f':
-	    fun = js_ValueToFunction(cx, &argv[i], JS_FALSE);
+	    fun = js_ValueToFunction(cx, sp, JS_FALSE);
 	    if (!fun)
 		return JS_FALSE;
-	    argv[i] = OBJECT_TO_JSVAL(fun->object);
+	    *sp = OBJECT_TO_JSVAL(fun->object);
 	    *va_arg(ap, JSFunction **) = fun;
 	    break;
 	  case 'v':
-	    *va_arg(ap, jsval *) = argv[i];
+	    *va_arg(ap, jsval *) = *sp;
 	    break;
 	  case '*':
 	    break;
-	  default: {
-	    char charBuf[2] = " ";
-	    charBuf[0] = c;
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR,
-				 charBuf);
-	    return JS_FALSE;
-	  }
+	  default:
+	    format--;
+	    if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp, &ap))
+		return JS_FALSE;
+	    /* NB: the formatter already updated sp, so we continue here. */
+	    continue;
 	}
-	i++;
+	sp++;
     }
     return JS_TRUE;
 }
@@ -300,13 +317,12 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 	  case 'v':
 	    *sp = va_arg(ap, jsval);
 	    break;
-	  default: {
-	    char charBuf[2] = " ";
-	    charBuf[0] = c;
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR,
-				 charBuf);
-	    goto bad;
-	  }
+	  default:
+	    format--;
+	    if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, &ap))
+		goto bad;
+	    /* NB: the formatter already updated sp, so we continue here. */
+	    continue;
 	}
 	sp++;
     }
@@ -322,6 +338,53 @@ JS_PopArguments(JSContext *cx, void *mark)
 {
     CHECK_REQUEST(cx);
     js_FreeStack(cx, mark);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_AddArgumentFormatter(JSContext *cx, const char *format,
+			JSArgumentFormatter formatter)
+{
+    size_t length;
+    JSArgumentFormatMap **mpp, *map;
+
+    length = strlen(format);
+    mpp = &cx->argumentFormatMap;
+    while ((map = *mpp) != NULL) {
+	/* Insert before any shorter string to match before prefixes. */
+	if (map->length < length)
+	    break;
+	if (map->length == length && !strcmp(map->format, format))
+	    goto out;
+	mpp = &map->next;
+    }
+    map = JS_malloc(cx, sizeof *map);
+    if (!map)
+	return JS_FALSE;
+    map->format = format;
+    map->length = length;
+    map->next = *mpp;
+    *mpp = map;
+out:
+    map->formatter = formatter;
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(void)
+JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
+{
+    size_t length;
+    JSArgumentFormatMap **mpp, *map;
+
+    length = strlen(format);
+    mpp = &cx->argumentFormatMap;
+    while ((map = *mpp) != NULL) {
+	if (map->length == length && !strcmp(map->format, format)) {
+	    *mpp = map->next;
+	    JS_free(cx, map);
+	    return;
+	}
+	mpp = &map->next;
+    }
 }
 
 JS_PUBLIC_API(JSBool)

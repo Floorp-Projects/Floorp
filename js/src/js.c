@@ -1032,6 +1032,40 @@ EscapeWideString(jschar *w)
     return enuf;
 }
 
+#include <stdarg.h>
+
+static JSBool
+ZZ_formatter(JSContext *cx, const char *format, JSBool fromJS, jsval **vpp,
+	     va_list *app)
+{
+    jsval *vp;
+    va_list ap;
+    jsdouble re, im;
+
+    printf("entering ZZ_formatter");
+    vp = *vpp;
+    ap = *app;
+    if (fromJS) {
+	if (!JS_ValueToNumber(cx, vp[0], &re))
+	    return JS_FALSE;
+	if (!JS_ValueToNumber(cx, vp[1], &im))
+	    return JS_FALSE;
+	*va_arg(ap, jsdouble *) = re;
+	*va_arg(ap, jsdouble *) = im;
+    } else {
+	re = va_arg(ap, jsdouble);
+	im = va_arg(ap, jsdouble);
+	if (!JS_NewNumberValue(cx, re, &vp[0]))
+	    return JS_FALSE;
+	if (!JS_NewNumberValue(cx, im, &vp[1]))
+	    return JS_FALSE;
+    }
+    *vpp = vp + 2;
+    *app = ap;
+    printf("leaving ZZ_formatter");
+    return JS_TRUE;
+}
+
 static JSBool
 ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1039,28 +1073,33 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jschar c = 0;
     int32 i = 0, j = 0;
     uint32 u = 0;
-    jsdouble d = 0, I = 0;
+    jsdouble d = 0, I = 0, re = 0, im = 0;
     char *s = NULL;
     JSString *str = NULL;
     jschar *w = NULL;
-    JSObject *obj = NULL;
+    JSObject *obj2 = NULL;
     JSFunction *fun = NULL;
     jsval v = JSVAL_VOID;
+    JSBool ok;
 
-    if (!JS_ConvertArguments(cx, argc, argv, "b/ciujdIsSWofv*",
-			     &b, &c, &i, &u, &j, &d, &I, &s, &str, &w, &obj,
-			     &fun, &v)) {
+    if (!JS_AddArgumentFormatter(cx, "ZZ", ZZ_formatter))
+	return JS_FALSE;;
+    ok = JS_ConvertArguments(cx, argc, argv, "b/ciujdIsSWofvZZ*",
+			     &b, &c, &i, &u, &j, &d, &I, &s, &str, &w, &obj2,
+			     &fun, &v, &re, &im);
+    JS_RemoveArgumentFormatter(cx, "ZZ");
+    if (!ok)
 	return JS_FALSE;
-    }
     fprintf(gOutFile,
 	    "b %u, c %x (%c), i %ld, u %lu, j %ld\n",
 	    b, c, (char)c, i, u, j);
     fprintf(gOutFile,
-	    "d %g, I %g, s %s, S %s, W %s, obj %s, fun %s, v %s\n",
+	    "d %g, I %g, s %s, S %s, W %s, obj %s, fun %s\n"
+	    "v %s, re %g, im %g\n",
 	    d, I, s, str ? JS_GetStringBytes(str) : "", EscapeWideString(w),
-	    JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj))),
+	    JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj2))),
 	    fun ? JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)) : "",
-	    JS_GetStringBytes(JS_ValueToString(cx, v)));
+	    JS_GetStringBytes(JS_ValueToString(cx, v)), re, im);
     return JS_TRUE;
 }
 #endif
