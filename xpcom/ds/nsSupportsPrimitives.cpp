@@ -109,7 +109,7 @@ NS_IMPL_ISUPPORTS2(nsSupportsStringImpl, nsISupportsString,
                    nsISupportsPrimitive)
 
 nsSupportsStringImpl::nsSupportsStringImpl()
-    : mData(nsnull)
+    : mData(0), mLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -158,8 +158,11 @@ NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength,
                                                       const char *aData)
 {
     // if the new string length is the same as the old,
-    // just copy into the old buffer to avoid reallocating
-    if ((aLength == mLength) && aData) {
+    // just copy into the old buffer to avoid reallocating. we
+    // can further avoid reallocating by reusing the same
+    // buffer if aLength <= mLength, but there's high potential
+    // for bloat there. see bug 80097 for discussion.
+    if ((aLength == mLength) && aData && mData) {
         nsCRT::memcpy(mData, aData, aLength * sizeof(char));
         return NS_OK;
     }
@@ -218,7 +221,7 @@ NS_IMPL_ISUPPORTS2(nsSupportsWStringImpl, nsISupportsWString,
                    nsISupportsPrimitive)
 
 nsSupportsWStringImpl::nsSupportsWStringImpl()
-    : mData(nsnull)
+    : mData(0), mLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -267,8 +270,11 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength,
                                                        const PRUnichar *aData)
 {
     // if the new string length is the same as the old,
-    // just copy into the old buffer to avoid reallocating
-    if ((aLength == mLength) && aData) {
+    // just copy into the old buffer to avoid reallocating. we
+    // can further avoid reallocating by reusing the same
+    // buffer if aLength <= mLength, but there's high potential
+    // for bloat there. see bug 80097 for discussion.
+    if ((aLength == mLength) && aData && mData) {
         nsCRT::memcpy(mData, aData, aLength * sizeof(PRUnichar));
         return NS_OK;
     }
