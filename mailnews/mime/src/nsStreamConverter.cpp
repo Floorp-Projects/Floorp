@@ -47,6 +47,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -115,6 +116,17 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
     struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
     if (msd)
     {
+      // set the default charset to be the folder charset if we have one associated with
+      // this url...
+      nsCOMPtr<nsIMsgI18NUrl> i18nUrl (do_QueryInterface(aURI));
+      if (i18nUrl)
+      {
+        nsXPIDLString uniCharset;
+        i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
+        nsAutoString charset(uniCharset);
+        if (!charset.IsEmpty())
+          msd->options->default_charset = charset.ToNewCString();
+      }
       char *urlString;
       if (NS_SUCCEEDED(aURI->GetSpec(&urlString)))
       {
@@ -498,8 +510,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  
-  SetStreamURI(aURI);
+    
   // now we want to create a pipe which we'll use for converting the data...
   nsCOMPtr<nsIPipeObserver> pipeObserver = do_QueryInterface(mEmitter);
   rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
@@ -557,6 +568,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       return NS_ERROR_OUT_OF_MEMORY;
     else
     {
+      SetStreamURI(aURI);
+
       //Do we need to setup an Mime Stream Converter Listener?
       if (mMimeStreamConverterListener)
         bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener);
@@ -766,6 +779,10 @@ nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
     printf("nsStreamConverter::OnStartRequest()\n");
 #endif
 
+#ifdef DEBUG_mscott
+  mConvertContentTime = PR_IntervalNow();
+#endif
+
 	// forward the start rquest to any listeners
   if (mOutListener)
   	mOutListener->OnStartRequest(mOutgoingChannel, ctxt);
@@ -831,6 +848,12 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
 
   // Make sure to do necessary cleanup!
   InternalCleanup();
+
+#ifdef DEBUG_mscott
+  // print out the mime timing information BEFORE we flush to layout
+  // otherwise we'll be including layout information.
+  printf("Time Spent in mime:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - mConvertContentTime));
+#endif
 
   // forward on top request to any listeners
   if (mOutListener)

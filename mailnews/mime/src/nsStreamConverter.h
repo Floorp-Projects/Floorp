@@ -88,6 +88,9 @@ private:
   nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
   PRBool 						mForwardInline;
   nsCOMPtr<nsIMsgIdentity>		mIdentity;
+#ifdef DEBUG_mscott  
+  PRTime mConvertContentTime;
+#endif
 }; 
 
 #endif /* nsStreamConverter_h_ */
