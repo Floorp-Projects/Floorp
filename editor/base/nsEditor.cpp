@@ -848,30 +848,19 @@ NS_IMETHODIMP nsEditor::Paste()
   nsString stuffToPaste;
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-  nsIClipboard* clipboard = 0;
+  nsIClipboard* clipboard;
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
-  nsITransferable * trans = 0;
-  
+  nsITransferable * trans;
   rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
-  if (nsnull != trans) {
+  //if (nsnull != trans) {
     //trans->AddDataFlavor("text/xif", "XIF Format");
-    trans->AddDataFlavor(kTextMime, "Text Format");
-  } else {
-    printf("nsEditor::Paste(), trans is null.\n");
-  }
+    //trans->AddDataFlavor(kTextMime, "Text Format");
+  //}
 
-  if(clipboard) {
-    clipboard->SetData(trans, nsnull);
-    clipboard->GetClipboard();
-  } else {
-    printf("nsEditor::Paste(), clipboard instance is null.\n");
-  }
-
-  if(trans) {
-    trans->GetTransferString(stuffToPaste);
-  }
+  clipboard->GetData(trans);
+  trans->GetTransferString(stuffToPaste);
 
   NS_IF_RELEASE(clipboard);
   NS_IF_RELEASE(trans);
