@@ -197,6 +197,7 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mCompleted(PR_FALSE),
     mStartSaving(PR_FALSE),
     mReplaceExisting(PR_TRUE),
+    mSerializingOutput(PR_FALSE),
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
     mWrapColumn(72),
