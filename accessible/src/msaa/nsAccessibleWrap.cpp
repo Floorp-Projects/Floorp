@@ -237,8 +237,9 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
     nsAutoString name;
     if (NS_FAILED(xpAccessible->GetName(name)))
       return S_FALSE;
-
-    *pszName = ::SysAllocString(name.get());
+    if (!name.IsVoid()) {
+      *pszName = ::SysAllocString(name.get());
+    }
     NS_ASSERTION(mIsInitialized, "Access node was not initialized");
   }
 

@@ -51,11 +51,12 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createRootAccessible(in nsIPresShell aShell, in nsIDocument aDocument);
 
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createXULAlertAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
   nsIAccessible createHTMLBlockAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessibleXBL(in nsIDOMNode aNode);
-  nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame);
+  nsIAccessible createHTMLAccessibleByMarkup(in nsISupports aFrame, in nsIWeakReference aWeakShell, in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLLIAccessible(in nsISupports aFrame, in nsISupports aBulletFrame, in AString aBulletText);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLCheckboxAccessibleXBL(in nsIDOMNode aNode);
