@@ -256,6 +256,7 @@ Java_org_mozilla_jss_ssl_SSLSocket_getImplementedCipherSuites;
 Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreferenceDefault;
 Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreferenceDefault;
 Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreference;
+Java_org_mozilla_jss_CryptoManager_configureOCSPNative;
 ;+    local:
 ;+       *;
 ;+};
