@@ -27,6 +27,8 @@ EXPORTS =	 						\
 			nsMsgComposeFact.h		\
 			nsIMsgCompFields.h		\
 			nsMsgCompFieldsFact.h	\
+			nsIMsgSend.h			\
+			nsMsgSendFact.h			\
 			nsISmtpUrl.h			\
 			MsgCompGlue.h			\
 			$(NULL)
