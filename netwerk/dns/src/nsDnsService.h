@@ -35,6 +35,7 @@
 #include <windows.h>
 #include <Winsock2.h>
 #endif
+#include "nsCOMPtr.h"
 
 //#ifdef DEBUG
 #define DNS_TIMING 1    // XXX remove later

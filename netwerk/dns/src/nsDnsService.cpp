@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-#include "nsCOMPtr.h"
 #include "nsDnsService.h"
 #include "nsIDNSListener.h"
 #include "nsIRequest.h"
