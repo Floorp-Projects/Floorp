@@ -21,6 +21,7 @@
 #include "nsIFrame.h"
 #include "nsCoord.h"
 #include "nsSize.h"
+#include "nsVoidArray.h"
 
 class nsIPresContext;
 class nsISpaceManager;
@@ -50,6 +51,7 @@ struct nsLineData {
   PRPackedBool mLastContentIsComplete;
   PRPackedBool mHasBullet;
   PRPackedBool mIsBlock;
+  nsVoidArray* mFloaters;  // placeholder frames for below current line floaters
 };
 
 //----------------------------------------------------------------------

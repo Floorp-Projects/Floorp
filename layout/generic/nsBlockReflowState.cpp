@@ -206,6 +206,7 @@ nsBlockFrame::nsBlockFrame(nsIContent* aContent, nsIFrame* aParent)
 nsBlockFrame::~nsBlockFrame()
 {
   DestroyLines();
+  delete mRunInFloaters;
 }
 
 void nsBlockFrame::DestroyLines()
@@ -566,8 +567,19 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
   }
 
   // Any below current line floaters to place?
+  // XXX We really want to know whether this is the initial reflow (reflow
+  // unmapped) or a subsequent reflow in which case we only need to offset
+  // the existing floaters...
   if (aState.mPendingFloaters.Count() > 0) {
-    PlaceBelowCurrentLineFloaters(aState, aState.mY);
+    if (nsnull == aLine->mFloaters) {
+      aLine->mFloaters = new nsVoidArray;
+    }
+    aLine->mFloaters->operator=(aState.mPendingFloaters);
+    aState.mPendingFloaters.Clear();
+  }
+
+  if (nsnull != aLine->mFloaters) {
+    PlaceBelowCurrentLineFloaters(aState, aLine->mFloaters, aState.mY);
     // XXX Factor in the height of the floaters as well when considering
     // whether the line fits.
     // The default policy is that if there isn't room for the floaters then
@@ -718,6 +730,11 @@ nsresult
 nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
 {
   nsresult rv = NS_OK;
+
+  // See if we have any run-in floaters to place
+  if (nsnull != mRunInFloaters) {
+    PlaceBelowCurrentLineFloaters(aState, mRunInFloaters, aState.mY);
+  }
 
   // Get some space to start reflowing with
   GetAvailableSpace(aState, aState.mY);
@@ -1438,7 +1455,19 @@ nsBlockFrame::AddFloater(nsIPresContext*   aPresContext,
       anchoredItems->AddAnchoredItem(aFloater,
                                      nsIAnchoredItems::anHTMLFloater,
                                      this);
-      PlaceFloater(aPresContext, aFloater, aPlaceholder, *state);
+
+      // Determine whether we place it at the top or we place it below the
+      // current line
+      if (IsLeftMostChild(aPlaceholder)) {
+        if (nsnull == mRunInFloaters) {
+          mRunInFloaters = new nsVoidArray;
+        }
+        mRunInFloaters->AppendElement(aPlaceholder);
+        PlaceFloater(aPresContext, aFloater, aPlaceholder, *state);
+      } else {
+        // Add the placeholder to our to-do list
+        state->mPendingFloaters.AppendElement(aPlaceholder);
+      }
       return PR_TRUE;
     }
   }
@@ -1446,17 +1475,20 @@ nsBlockFrame::AddFloater(nsIPresContext*   aPresContext,
   return PR_FALSE;
 }
 
+// XXX Deprecated
 void
 nsBlockFrame::PlaceFloater(nsIPresContext*   aPresContext,
                            nsIFrame*         aFloater,
                            PlaceholderFrame* aPlaceholder)
 {
+#if 0
   nsIPresShell* shell = aPresContext->GetShell();
   nsBlockReflowState* state = (nsBlockReflowState*) shell->GetCachedData(this);
   NS_RELEASE(shell);
   if (nsnull != state) {
     PlaceFloater(aPresContext, aFloater, aPlaceholder, *state);
   }
+#endif
 }
 
 PRBool
@@ -1489,55 +1521,49 @@ nsBlockFrame::IsLeftMostChild(nsIFrame* aFrame)
   return PR_TRUE;
 }
 
+// Used when placing run-in floaters (floaters displayed at the top of the
+// block as supposed to below the current line)
 void
 nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
                            nsIFrame*           aFloater,
                            PlaceholderFrame*   aPlaceholder,
                            nsBlockReflowState& aState)
 {
-  // If the floater is the left-most non-zero size child frame then insert
-  // it before the current line; otherwise add it to the below-current-line
-  // todo list, and we'll handle it when we flush out the line
-  if (IsLeftMostChild(aPlaceholder)) {
-    nsISpaceManager* sm = aState.mSpaceManager;
+  nsISpaceManager* sm = aState.mSpaceManager;
 
-    // Get the type of floater
-    nsStyleDisplay* floaterDisplay;
-    aFloater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)floaterDisplay);
+  // Get the type of floater
+  nsStyleDisplay* floaterDisplay;
+  aFloater->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)floaterDisplay);
 
-    // Commit some space in the space manager and adjust our current
-    // band of available space.
-    nsRect region;
-    aFloater->GetRect(region);
-    region.y = aState.mY;
-    if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
-      region.x = aState.mX;
-    } else {
-      NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats,
-                   "bad float type");
-      region.x = aState.mCurrentBand.availSpace.XMost() - region.width;
-    }
-
-    // XXX Don't forget the floater's margins...
-    sm->Translate(aState.mBorderPadding.left, 0);
-    sm->AddRectRegion(aFloater, region);
-
-    // Set the origin of the floater in world coordinates
-    nscoord worldX, worldY;
-    sm->GetTranslation(worldX, worldY);
-    aFloater->MoveTo(region.x + worldX, region.y + worldY);
-    sm->Translate(-aState.mBorderPadding.left, 0);
-
-    // Update the band of available space to reflect space taken up by
-    // the floater
-    GetAvailableSpace(aState, aState.mY);
-    if (nsnull != aState.mCurrentLine) {
-      nsLineLayout& lineLayout = *aState.mCurrentLine;
-      lineLayout.SetReflowSpace(aState.mCurrentBand.availSpace);
-    }
+  // Commit some space in the space manager, and adjust our current
+  // band of available space.
+  nsRect region;
+  aFloater->GetRect(region);
+  region.y = aState.mY;
+  if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
+    region.x = aState.mX;
   } else {
-    // Add the floater to our to-do list
-    aState.mPendingFloaters.AppendElement(aFloater);
+    NS_ASSERTION(NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats,
+                 "bad float type");
+    region.x = aState.mCurrentBand.availSpace.XMost() - region.width;
+  }
+
+  // XXX Don't forget the floater's margins...
+  sm->Translate(aState.mBorderPadding.left, 0);
+  sm->AddRectRegion(aFloater, region);
+
+  // Set the origin of the floater in world coordinates
+  nscoord worldX, worldY;
+  sm->GetTranslation(worldX, worldY);
+  aFloater->MoveTo(region.x + worldX, region.y + worldY);
+  sm->Translate(-aState.mBorderPadding.left, 0);
+
+  // Update the band of available space to reflect space taken up by
+  // the floater
+  GetAvailableSpace(aState, aState.mY);
+  if (nsnull != aState.mCurrentLine) {
+    nsLineLayout& lineLayout = *aState.mCurrentLine;
+    lineLayout.SetReflowSpace(aState.mCurrentBand.availSpace);
   }
 }
 
@@ -1545,17 +1571,19 @@ nsBlockFrame::PlaceFloater(nsIPresContext*     aPresContext,
 // upper-left origin of the containing block, or relative to aState.mY?
 void
 nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
+                                            nsVoidArray* aFloaterList,
                                             nscoord aY)
 {
-  NS_PRECONDITION(aState.mPendingFloaters.Count() > 0, "no floaters");
+  NS_PRECONDITION(aFloaterList->Count() > 0, "no floaters");
 
   nsISpaceManager* sm = aState.mSpaceManager;
   nsBlockBandData* bd = &aState.mCurrentBand;
 
   // XXX Factor this code with PlaceFloater()...
-  PRInt32 numFloaters = aState.mPendingFloaters.Count();
+  PRInt32 numFloaters = aFloaterList->Count();
   for (PRInt32 i = 0; i < numFloaters; i++) {
-    nsIFrame* floater = (nsIFrame*) aState.mPendingFloaters[i];
+    PlaceholderFrame* placeholderFrame = (PlaceholderFrame*)aFloaterList->ElementAt(i);
+    nsIFrame* floater = placeholderFrame->GetAnchoredItem();
     nsRect region;
 
     // Get the band of available space
@@ -1578,6 +1606,8 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
 
     // XXX Don't forget the floater's margins...
     sm->Translate(aState.mBorderPadding.left, 0);
+    // XXX Temporary incremental hack
+    sm->RemoveRegion(floater);
     sm->AddRectRegion(floater, region);
 
     // Set the origin of the floater in world coordinates
@@ -1586,8 +1616,6 @@ nsBlockFrame::PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
     floater->MoveTo(region.x + worldX, region.y + worldY);
     sm->Translate(-aState.mBorderPadding.left, 0);
   }
-
-  aState.mPendingFloaters.Clear();
 
   // Pass on updated available space to the current line
   if (nsnull != aState.mCurrentLine) {

@@ -284,7 +284,8 @@ protected:
                     PlaceholderFrame*   aPlaceholder,
                     nsBlockReflowState& aState);
   void PlaceBelowCurrentLineFloaters(nsBlockReflowState& aState,
-                                     nscoord aY);
+                                     nsVoidArray*        aFloaterList,
+                                     nscoord             aY);
 
   nsresult GetAvailableSpace(nsBlockReflowState& aState, nscoord aY);
 
@@ -299,6 +300,8 @@ protected:
   nsresult ReflowUnmapped(nsBlockReflowState& aState);
 
   nsLineData* mLines;
+  nsVoidArray* mRunInFloaters;  // placeholder frames for floaters to display
+                                // at the top line
 };
 
 #endif /* nsBlockFrame_h___ */
