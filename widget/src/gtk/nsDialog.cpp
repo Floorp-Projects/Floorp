@@ -64,6 +64,7 @@ NS_METHOD nsDialog::CreateNative(GtkWidget *parentWindow)
   gtk_widget_show(mShell);
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   gtk_container_add(GTK_CONTAINER(mShell), mWidget);
+  gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
   return NS_OK;
 }

@@ -116,10 +116,11 @@ NS_METHOD nsWindow::RemoveTooltips()
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, gpointer data)
 {
   nsWindow *win = (nsWindow *)data;
+//  win->mIsDestroying = PR_TRUE;
 /* bug 2503 */
 /* we need to send the WM_DELETE_WINDOW event.  not sure how. */
 
-  return TRUE;
+  return FALSE;
 }
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
@@ -152,7 +153,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
-  gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
   gtk_widget_set_events (mWidget,
                          GDK_BUTTON_PRESS_MASK |
@@ -208,7 +208,7 @@ void nsWindow::InitCallbacks(char * aName)
                      GTK_SIGNAL_FUNC(handle_size_allocate),
                      this);
 #endif
-  gtk_signal_connect(GTK_OBJECT(mWidget),
+  gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),
 		     this);
@@ -227,6 +227,10 @@ void nsWindow::InitCallbacks(char * aName)
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "leave_notify_event",
 		     GTK_SIGNAL_FUNC(handle_leave_notify_event),
+		     this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "draw",
+		     GTK_SIGNAL_FUNC(handle_draw_event),
 		     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "expose_event",

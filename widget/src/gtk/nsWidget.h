@@ -31,7 +31,6 @@
 
 #include <gtk/gtk.h>
 
-// #define USE_GTK_FIXED 1
 
 /**
  * Base of all GTK+ native widgets.

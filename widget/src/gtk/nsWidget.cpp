@@ -179,11 +179,7 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
   mBounds.x = aX;
   mBounds.y = aY;
   mMoveEventsPending++;
-#ifdef USE_GTK_FIXED
-  ::gtk_fixed_move(GTK_FIXED(mWidget->parent), mWidget, aX, aY);
-#else
   ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-#endif
   return NS_OK;
 }
 
@@ -205,6 +201,11 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
   }
 
+  if (aRepaint)
+    if (GTK_WIDGET_VISIBLE (mWidget))
+      ::gtk_widget_queue_draw (mWidget);
+
+/*
   if (aRepaint && GTK_IS_WIDGET (mWidget) &&
        GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
     
@@ -224,6 +225,7 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
     gdk_window_unref (event.window);
   }
+*/
   return NS_OK;
 }
 
@@ -455,7 +457,6 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
     if (gtk_widget_intersect(mWidget, &nRect, &wRect))
       ::gtk_widget_draw(mWidget, &wRect);
   else
-    if (gtk_widget_intersect(mWidget, &nRect, &wRect))
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.width, aRect.height,
                                    aRect.x, aRect.y);
@@ -465,8 +466,14 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_METHOD nsWidget::Update(void)
 {
+  GdkRectangle foo;
+  foo.width = mBounds.width;
+  foo.height = mBounds.height;
+  foo.x = 0;
+  foo.y = 0;
+
   if (!mIsDestroying) {
-    ::gtk_widget_draw(mWidget, NULL);
+    ::gtk_widget_draw(mWidget, &foo);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -551,7 +558,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 		      nsNativeWidget aNativeParent)
 {
   GtkWidget *parentWidget = nsnull;
-  mBounds = aRect;
 
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
@@ -570,9 +576,13 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   CreateNative (parentWidget);
-  gtk_widget_show(mWidget);
-  
-  Resize(mBounds.width, mBounds.height, PR_FALSE);
+
+  gtk_widget_set_app_paintable(mWidget, PR_TRUE);
+
+  Resize(aRect.width, aRect.height, PR_FALSE);
+  /* place the widget in its parent */
+  if (parentWidget)
+    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
 
   // connect the size allocate to the
   gtk_signal_connect(GTK_OBJECT(mWidget),
@@ -580,13 +590,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                      GTK_SIGNAL_FUNC(handle_size_allocate),
                      this);
 
-  /* place the widget in its parent */
-  if (parentWidget)
-#ifdef USE_GTK_FIXED
-    gtk_fixed_put(GTK_FIXED(parentWidget), mWidget, mBounds.x, mBounds.y);
-#else
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
-#endif
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
