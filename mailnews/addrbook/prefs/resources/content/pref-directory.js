@@ -7,6 +7,7 @@ var gNewServer = null;
 var gNewServerString = null;
 var gFromGlobalPref = false;
 var gUpdate = false;
+var gDeletedDirectories = new Array();
 
 function onEditDirectories()
 {
@@ -204,7 +205,7 @@ function LoadDirectories(popup)
       if (gRefresh)
         setupDirectoriesList();
     }
-    if (popup && gRefresh && gFromGlobalPref) {
+    if (popup && gFromGlobalPref) {
       var pref_string_title = "ldap_2.autoComplete.directoryServer";
       try {
         var directoryServer = gPrefInt.CopyCharPref(pref_string_title);
@@ -224,16 +225,19 @@ function LoadDirectories(popup)
         } 
 	  }
 	  var directoriesList =  document.getElementById("directoriesList");
-	  if (description != "")
-	  {
-	    directoriesList.label = description;
-	    directoriesList.value = directoryServer;
-	  }
-	  else
-	  {
-	    directoriesList.label = gAvailDirectories[0][1];
-	    directoriesList.value = gAvailDirectories[0][0];
-	  }
+      if ((directoryServer != "") && (description != ""))
+      {
+        directoriesList.label = description;
+        directoriesList.value = directoryServer;
+      }
+      else if(gAvailDirectories.length >= 1) {
+         directoriesList.label = gAvailDirectories[0][1];
+         directoriesList.value = gAvailDirectories[0][0];
+      }
+      else {
+        directoriesList.label = "";
+        directoriesList.value = null;
+      }
 	}
   }
 }
@@ -245,7 +249,7 @@ function onInitEditDirectories()
   if (directoriesTree_root) {
     LoadDirectoriesTree(directoriesTree_root);
   }
-  doSetOKCancel(onOK);
+  doSetOKCancel(onOK, cancel);
 }
 
 function LoadDirectoriesTree(tree)
@@ -369,13 +373,6 @@ function removeDirectory()
   var row  =  selectedNode.firstChild;
   var cell =  row.firstChild;
 
-  row.removeChild(cell);
-  selectedNode.removeChild(row);
-  directoriesTree_root.removeChild(selectedNode);
-  if (nextNode) {
-    directoriesTree.selectItem(nextNode)
-  } 
-
   if(gCurrentDirectoryServer && gCurrentDirectoryServerId) {
     if(!gPrefInt) { 
       try {
@@ -386,12 +383,36 @@ function removeDirectory()
         gPrefInt = null;
       }
     }
-    gPrefInt.DeleteBranch(gCurrentDirectoryServerId);
+    try {
+      var directoryServer = gPrefInt.CopyCharPref("ldap_2.autoComplete.directoryServer");
+    }
+    catch(ex)  {
+      directoryServer = "";
+    }
+    if (gCurrentDirectoryServerId == directoryServer)
+      gPrefInt.SetCharPref("ldap_2.autoComplete.directoryServer", "");
+    var len= gDeletedDirectories.length;
+    gDeletedDirectories[len] = gCurrentDirectoryServerId;
   }
+  row.removeChild(cell);
+  selectedNode.removeChild(row);
+  directoriesTree_root.removeChild(selectedNode);
+  if (nextNode) {
+    directoriesTree.selectItem(nextNode)
+  } 
   window.opener.gRefresh = true;
 }
 
 function onOK()
+{
+  var len = gDeletedDirectories.length;
+  for (var i=0; i< len; i++){
+    gPrefInt.DeleteBranch(gDeletedDirectories[i]);
+  }
+  window.close();
+}
+
+function cancel()
 {
   window.close();
 }
