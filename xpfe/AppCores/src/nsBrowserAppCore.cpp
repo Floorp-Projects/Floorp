@@ -349,7 +349,7 @@ newWind(char* urlName) {
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
   appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
-              nsnull, nsnull, 615, 650);
+              nsnull, nsnull, 615, 480);
 
   NS_RELEASE(url);
   
@@ -1238,7 +1238,7 @@ nsBrowserAppCore::NewWindow()
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
   appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
-              nsnull, nsnull, 615, 650);
+              nsnull, nsnull, 615, 480);
   NS_RELEASE(url);
   
 done:
@@ -1443,7 +1443,7 @@ nsBrowserAppCore::DoDialog()
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
 
   appShell->CreateDialogWindow(mWebShellWin, urlObj, controllerCID, window,
-                               nsnull, nsnull, 615, 650);
+                               nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 //  window->Resize(300, 200, PR_TRUE); (until Resize gets moved into nsIWebShellWindow)
 
