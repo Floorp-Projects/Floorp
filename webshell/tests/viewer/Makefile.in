@@ -119,6 +119,7 @@ EX_LIBS = \
 	-lnetutil \
 	-lnetwork \
 	$(NSPR_LIBS) \
+	-lpwcac \
 	-lraptorwebwidget \
 	-lreg \
 	-lremoturl \
@@ -134,14 +135,8 @@ EX_LIBS = \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	$(NULL)
-
-ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
-EX_LIBS += \
-	-lpwcac \
 	-ldbm \
 	$(NULL)
-endif
 
 PROGS = viewer
 
