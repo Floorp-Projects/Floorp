@@ -64,6 +64,7 @@ protected:
   nsViewerApp();
 
   void Destroy();
+  nsresult AutoregisterComponents();
 
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;

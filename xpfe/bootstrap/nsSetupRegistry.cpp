@@ -26,6 +26,8 @@
 #include "nsIFileLocator.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIEditor.h"
+#include "nsFileLocations.h"
+#include "nsIComponentManager.h"
 
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
@@ -79,6 +81,21 @@ static NS_DEFINE_IID(kGlobalHistoryCID,    NS_GLOBALHISTORY_CID);
 static NS_DEFINE_IID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  nsSpecialFileSpec sysdir(nsSpecialFileSpec::App_ComponentsDirectory);
+  nsprPath componentsDir(sysdir);
+
+  const char *componentsDirPath = (const char *) componentsDir;
+  if (componentsDirPath != NULL)
+  {
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
+  }
+  return rv;
+}
+
 /*
  * This evil file will go away when the XPCOM registry can be 
  * externally initialized!
@@ -94,6 +111,8 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 extern "C" void
 NS_SetupRegistry_1()
 {
+  NS_AutoregisterComponents();
+
   /*
    * Call the standard NS_SetupRegistry() implemented in 
    * webshell/tests/viewer/nsSetupregistry.cpp
