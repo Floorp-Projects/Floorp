@@ -215,11 +215,9 @@ function MonthView( calendarWindow )
 MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 {
    // get this month's events and display them
-  
    var monthEventList = this.calendarWindow.eventSource.getEventsForMonth( this.calendarWindow.getSelectedDate() );
    
    // remove old event boxes
-   
    var eventBoxList = document.getElementsByAttribute( "eventbox", "monthview" );
 
    var eventBox = null;
@@ -227,20 +225,16 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
    {
       eventBox = eventBoxList[ eventBoxIndex ];
-      
       eventBox.parentNode.removeChild( eventBox );
    }
    
    // clear calendarEvent counts, we only display 3 events per day 
    // count them by adding a property to the dayItem, which is zeroed here
-      
    for( var dayItemIndex = 0; dayItemIndex < this.dayBoxItemArray.length; ++dayItemIndex )
    {
       var dayItem = this.dayBoxItemArray[ dayItemIndex ];
-      
       dayItem.numEvents = 0;
    }  
-   
    this.kungFooDeathGripOnEventBoxes = new Array();
    
    // add each calendarEvent
@@ -315,9 +309,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          {
             //make one
             dotBoxHolder = document.createElement( "hbox" );
-            
             dotBoxHolder.setAttribute( "id", "dotboxholder"+calendarEventDisplay.event.start.day );
-            
             dotBoxHolder.setAttribute( "eventbox", "monthview" );
                         
             //add the box to the day.
@@ -326,9 +318,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          else
          {
             //otherwise, get the box
-            
             dotBoxHolder = document.getElementById( "dotboxholder"+calendarEventDisplay.event.start.day );
-
          }
          
          if( dotBoxHolder.childNodes.length < kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
@@ -340,24 +330,18 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
             
             //NOTE: This variable is named eventBox because it needs the same name as 
             // the regular boxes, for the next part of the function!
-            
             eventBox = document.createElement( "image" );
-            
             eventBox.setAttribute( "class", "month-view-event-dot-class" );
-            
             eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
             eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
-            
             eventBox.calendarEventDisplay = calendarEventDisplay;
-            
-            this.kungFooDeathGripOnEventBoxes.push( eventBox );
-            
             eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-   
             eventBox.setAttribute( "tooltip", "eventTooltip" );
    
+            this.kungFooDeathGripOnEventBoxes.push( eventBox );
+            
             //add the dot to the extra box.
             eventDotBox.appendChild( eventBox );
             dotBoxHolder.appendChild( eventDotBox );
@@ -367,7 +351,6 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       }
 
       // mark the box as selected, if the event is
-         
       if( this.calendarWindow.EventSelection.isSelectedEvent( calendarEventDisplay.event ) )
       {
          this.selectBoxForEvent( calendarEventDisplay.event ); 
