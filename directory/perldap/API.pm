@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.8 1998/08/10 21:56:09 clayton Exp $
+# $Id: API.pm,v 1.9 1998/08/13 04:11:20 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -305,2478 +305,2541 @@ bootstrap Mozilla::LDAP::API $VERSION;
 
 1;
 __END__
+
 =head1 NAME
 
-Mozilla::LDAP::API - Perl extension for blah blah blah
+  Mozilla::LDAP::API - Perl methods for LDAP C API calls
 
 =head1 SYNOPSIS
 
   use Mozilla::LDAP::API;
-  blah blah blah
+       or
+  use Mozilla::LDAP::API qw(:api :ssl :constant);
+       or
+  use Mozilla::LDAP::API qw(:api :ssl :apiv3 :constant);
 
 =head1 DESCRIPTION
 
-=head1 API Calls
+This package offers a direct interface to the LDAP C API calls from Perl.
+It is used internally by the other Mozilla::LDAP modules.  It is highly
+suggested that you use the object oriented interface in
+Mozilla::LDAP::Conn and Mozilla::LDAP::Entry unless you need to use
+asynchronous calls or other functionality not available in the OO interface.
 
-=item B<ldap_abandon>
+=head1 THIS DOCUMENT
 
-Description:
+This document has a number of known errors that will be corrected in the
+next revision.  Since it is not expected that users will need to use this
+interface frequently, priority was placed on other documents.  You can find
+examples of how to actually use the API calls under the test_api directory.
 
-Abandon an LDAP operation.
+=head1 CREATING AN ADD/MODIFY HASH
 
-Input:
-  o LD - LDAP Connection Handle
-  o MSGID - LDAP Message ID
+For the add and modify routines you will need to generate
+a list of attributes and values.
 
-Output:
+You will do this by creating a HASH table.  Each attribute in the
+hash contains associated values.  These values can be one of three
+things.
 
-  o STATUS
+  - SCALAR VALUE    (ex. "Clayton Donley")
+  - ARRAY REFERENCE (ex. ["Clayton Donley","Clay Donley"])
+  - HASH REFERENCE  (ex. {"r",["Clayton Donley"]}
+       note:  the value inside the HASH REFERENCE must currently
+               be an ARRAY REFERENCE.
 
-Availability: v2/v3
+The key inside the HASH REFERENCE must be one of the following for a
+modify operation:
+  - "a" for LDAP_MOD_ADD (Add these values to the attribute)
+  - "r" for LDAP_MOD_REPLACE (Replace these values in the attribute)
+  - "d" for LDAP_MOD_DELETE (Delete these values from the attribute)
 
-Example:
+Additionally, in add and modify operations, you may specify "b" if the
+attributes you are adding are BINARY (ex. "rb" to replace binary).
+
+Currently, it is only possible to do one operation per add/modify
+operation, meaning you can't do something like:
+
+   {"d",["Clayton"],"a",["Clay"]}   <-- WRONG!
+
+Using any combination of the above value types, you can do things like:
+
+%ldap_modifications = (
+   "cn", "Clayton Donley",                    # Replace 'cn' values
+   "givenname", ["Clayton","Clay"],           # Replace 'givenname' values
+   "mail", {"a",["donley\@cig.mcel.mot.com"],  #Add 'mail' values
+   "jpegphoto", {"rb",[$jpegphotodata]},      # Replace Binary jpegPhoto
+);
+
+Then remember to call the add or modify operations with a REFERENCE to
+this HASH.
+
+=head1 API Methods
+
+The following are the available API methods for Mozilla::LDAP::API.  Many
+of these items have bad examples and OUTPUT information.  Other information
+should be correct.
+
+=item B<ldap_abandon>(ld,msgid)
+
+DESCRIPTION:
+
+Abandon an asynchronous LDAP operation
+
+INPUT:
+  ld - LDAP Session Handle
+  msgid - Integer
+
+OUTPUT:
+  status - Integer
+
+AVAILABILITY: V2/V3
+
+EXAMPLE:
 
   $status = ldap_abandon($ld,$msgid);
 
-=item B<ldap_abandon_ext>
 
-Description:
+=item B<ldap_abandon_ext>(ld,msgid,serverctrls,clientctrls)
 
-  Abandon an LDAP operation w/ Controls
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o MSGID - LDAP Message ID
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+Abandon an asynchronous LDAP operation w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  msgid - Integer
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o STATUS
+OUTPUT:
+  status - Integer
 
-Availability: v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_abandon_ext($ld,$msgid,$serverctrls,$clientctrls);
 
-=item B<ldap_add>
 
-Description:
+=item B<ldap_add>(ld,dn,attrs)
 
-Asynchronously add an LDAP entry
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name to Add
-  o ATTRS - LDAP Add/Modify Hash
+Asynchronously add a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attrs - LDAP Add/Modify Hash
 
-  o MSGID
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $msgid = ldap_add($ld,$dn,$attrs);
+  $status = ldap_add($ld,$dn,$attrs);
 
-=item B<ldap_add_ext>
 
-Description:
+=item B<ldap_add_ext>(ld,dn,attrs,serverctrls,clientctrls,msgidp)
 
-Asynchronously add an LDAP entry w/ Controls
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTRS - LDAP Add/Modify Hash
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGID - LDAP Message ID
+Asynchronously add a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attrs - LDAP Add/Modify Hash
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o STATUS
-  o MSGID
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $status = ldap_add_ext($ld,$dn,$attrs,$serverctrls,$clientctrls,$msgid);
+  $status = ldap_add_ext($ld,$dn,$attrs,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_add_ext_s>
 
-Description:
+=item B<ldap_add_ext_s>(ld,dn,attrs,serverctrls,clientctrls)
 
-Synchronously add an LDAP entry w/ Controls.
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTRS - LDAP Add/Modify Hash
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+Synchronously add a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attrs - LDAP Add/Modify Hash
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o STATUS
+OUTPUT:
+  status - Integer
 
-Availability: v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_add_ext_s($ld,$dn,$attrs,$serverctrls,$clientctrls);
 
-=item B<ldap_add_s>
 
-Description:
+=item B<ldap_add_s>(ld,dn,attrs)
 
-Synchronously add an LDAP entry.
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTRS - Attribute List Reference
+Synchronously add a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attrs - LDAP Add/Modify Hash
 
-  o STATUS
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_add_s($ld,$dn,$attrs);
 
-=item B<ldap_ber_free>
 
-Description:
+=item B<ldap_ber_free>(ber,freebuf)
 
-Free a BER Structure
+DESCRIPTION:
 
-Input:
-  o BER - Opaque BER Structure
-  o FREEBUF - 1 to Free Buffer
+Free a BER element pointer
 
-Output:
+INPUT:
+  ber - BER Element Pointer
+  freebuf - Integer
 
-  o NONE
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  ldap_ber_free($ber,1);
+  $status = ldap_ber_free($ber,$freebuf);
 
-=item B<ldap_bind>
 
-Description:
+=item B<ldap_bind>(ld,dn,passwd,authmethod)
 
-Asynchronously bind to LDAP server.
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o PASSWD - Credentials
-  o AUTHMETHOD - LDAP_AUTH_SIMPLE or other defined AUTH methods
+Asynchronously bind to the LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  passwd - String
+  authmethod - Integer
 
-  o MSGID
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $msgid = ldap_bind($ld,$dn,$passwd,$authmethod);
+  $status = ldap_bind($ld,$dn,$passwd,$authmethod);
 
-=item B<ldap_bind_s>
 
-Description:
+=item B<ldap_bind_s>(ld,dn,passwd,authmethod)
 
-Synchronously bind to the LDAP server.
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o PASSWD - Authentication Credentials
-  o AUTHMETHOD - LDAP_AUTH_SIMPLE or other defined AUTH methods
+Synchronously bind to a LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  passwd - String
+  authmethod - Integer
 
-  o STATUS
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_bind_s($ld,$dn,$passwd,$authmethod);
 
-=item B<ldap_compare>
 
-Description:
+=item B<ldap_compare>(ld,dn,attr,value)
 
-Asynchronously compare an attribute/value pair to those in an LDAP entry.
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTR - Attribute String
-  o VALUE - Value String
+Asynchronously compare an attribute/value pair and an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attr - String
+  value - String
 
-  o MSGID
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $msgid = ldap_compare($ld,$dn,$attr,$value);
-
-=item B<ldap_compare_ext>
-
-Description:
-
-Asynchronously compare an attribute/value pair to those in an LDAP entry.
-Allow Controls.
+  $status = ldap_compare($ld,$dn,$attr,$value);
 
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTR - Attribute String
-  o BVALUE - Value Binary String
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGID - LDAP Message ID
+=item B<ldap_compare_ext>(ld,dn,attr,bvalue,serverctrls,clientctrls,msgidp)
 
-Output:
+DESCRIPTION:
 
-  o STATUS
+Asynchronously compare an attribute/value pair and an entry w/ Controls
 
-Availability: v3
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attr - String
+  bvalue - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-Example:
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-  $status = ldap_compare_ext($ld,$dn,$attr,$bvalue,$serverctrls,$clientctrls,
-     $msgid);
+AVAILABILITY: V2/V3
 
-=item B<ldap_compare_ext_s>
+EXAMPLE:
 
-Description:
+  $status = ldap_compare_ext($ld,$dn,$attr,$bvalue,$serverctrls,$clientctrls,$msgidp);
 
-Synchronously compare an attribute/value pair to those in an LDAP entry.
-Allow Controls.
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTR - Attribute String
-  o BVALUE - Value Binary String
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+=item B<ldap_compare_ext_s>(ld,dn,attr,bvalue,serverctrls,clientctrls)
 
-Output:
+DESCRIPTION:
 
-  o STATUS
+Synchronously compare an attribute/value pair to an entry w/ Controls
 
-Availability: v3
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attr - String
+  bvalue - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-Example:
+OUTPUT:
+  status - Integer
+
+AVAILABILITY: V3
+
+EXAMPLE:
 
   $status = ldap_compare_ext_s($ld,$dn,$attr,$bvalue,$serverctrls,$clientctrls);
 
-=item B<ldap_compare_s>
 
-Description:
+=item B<ldap_compare_s>(ld,dn,attr,value)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o ATTR - ....will be defined....
-  o VALUE - ....will be defined....
+Synchronously compare an attribute/value pair to an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  attr - String
+  value - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_compare_s($ld,$dn,$attr,$value);
 
-=item B<ldap_control_free>
 
-Description:
+=item B<ldap_control_free>(ctrl)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CTRL - ....will be defined....
+Free a LDAP control pointer
 
-Output:
+INPUT:
+  ctrl - LDAP Control Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_control_free($ctrl);
 
-=item B<ldap_controls_count>
 
-Description:
+=item B<ldap_controls_count>(ctrls)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CTRLS - LDAP Control
+Count the number of LDAP controls in a LDAP Control List
 
-Output:
+INPUT:
+  ctrls - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_controls_count($ctrls);
 
-=item B<ldap_controls_free>
 
-Description:
+=item B<ldap_controls_free>(ctrls)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CTRLS - LDAP Control
+Free a list of LDAP controls
 
-Output:
+INPUT:
+  ctrls - LDAP Control List Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_controls_free($ctrls);
 
-=item B<ldap_count_entries>
 
-Description:
+=item B<ldap_count_entries>(ld,result)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RESULT - ....will be defined....
+Count the number of LDAP entries returned
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  result - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $status = ldap_count_entries($ld,$result);
+  $count = ldap_count_entries($ld,$result);
 
-=item B<ldap_count_messages>
 
-Description:
+=item B<ldap_count_messages>(ld,result)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RESULT - ....will be defined....
+Count the number of LDAP messages returned
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  result - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_count_messages($ld,$result);
 
-=item B<ldap_count_references>
 
-Description:
+=item B<ldap_count_references>(ld,result)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RESULT - ....will be defined....
+Count the number of LDAP references returned
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  result - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_count_references($ld,$result);
 
-=item B<ldap_create_filter>
 
-Description:
+=item B<ldap_create_filter>(buf,buflen,pattern,prefix,suffix,attr,value,valwords)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o BUF - ....will be defined....
-  o BUFLEN - ....will be defined....
-  o PATTERN - ....will be defined....
-  o PREFIX - ....will be defined....
-  o SUFFIX - ....will be defined....
-  o ATTR - ....will be defined....
-  o VALUE - ....will be defined....
-  o VALWORDS - ....will be defined....
+Create a LDAP search filter
 
-Output:
+INPUT:
+  buf - String
+  buflen - Integer
+  pattern - String
+  prefix - String
+  suffix - String
+  attr - String
+  value - String
+  valwords - List Reference
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_create_filter($buf,$buflen,$pattern,$prefix,$suffix,$attr,$value,$valwords);
 
-=item B<ldap_create_persistentsearch_control>
 
-Description:
+=item B<ldap_create_persistentsearch_control>(ld,changetypes,changesonly,return_echg_ctrls,ctrl_iscritical,ctrlp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CHANGETYPES - ....will be defined....
-  o CHANGESONLY - ....will be defined....
-  o RETURN_ECHG_CTRLS - LDAP Control
-  o CTRL_ISCRITICAL - ....will be defined....
-  o CTRLP - ....will be defined....
+Create a persistent search control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  changetypes - Integer
+  changesonly - Integer
+  return_echg_ctrls - Integer
+  ctrl_iscritical - Integer
+  ctrlp - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  ctrlp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_create_persistentsearch_control($ld,$changetypes,$changesonly,$return_echg_ctrls,$ctrl_iscritical,$ctrlp);
 
-=item B<ldap_create_sort_control>
 
-Description:
+=item B<ldap_create_sort_control>(ld,sortKeyList,ctrl_iscritical,ctrlp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o SORTKEYLIST - ....will be defined....
-  o CTRL_ISCRITICAL - ....will be defined....
-  o CTRLP - ....will be defined....
+Create a LDAP sort control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  sortKeyList - Sort Key Pointer
+  ctrl_iscritical - Integer
+  ctrlp - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  ctrlp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_create_sort_control($ld,$sortKeyList,$ctrl_iscritical,$ctrlp);
 
-=item B<ldap_create_sort_keylist>
 
-Description:
+=item B<ldap_create_sort_keylist>(sortKeyList,string_rep)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o SORTKEYLIST - ....will be defined....
-  o STRING_REP - ....will be defined....
+Create a list of keys to be used by a sort control
 
-Output:
+INPUT:
+  sortKeyList - Sort Key Pointer
+  string_rep - String
 
-  o int
+OUTPUT:
+  status - Integer
+  sortKeyList - Sort Key Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_create_sort_keylist($sortKeyList,$string_rep);
 
-=item B<ldap_create_virtuallist_control>
 
-Description:
+=item B<ldap_create_virtuallist_control>(ld,ldvlistp,ctrlp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o LDVLISTP - ....will be defined....
-  o CTRLP - ....will be defined....
+Create a LDAP virtual list control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ctrlp - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  ctrlp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_create_virtuallist_control($ld,$ldvlistp,$ctrlp);
 
-=item B<ldap_delete>
 
-Description:
+=item B<ldap_delete>(ld,dn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
+Asynchronously delete a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_delete($ld,$dn);
 
-=item B<ldap_delete_ext>
 
-Description:
+=item B<ldap_delete_ext>(ld,dn,serverctrls,clientctrls,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGIDP - ....will be defined....
+Asynchronously delete a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_delete_ext($ld,$dn,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_delete_ext_s>
 
-Description:
+=item B<ldap_delete_ext_s>(ld,dn,serverctrls,clientctrls)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+Synchronously delete a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_delete_ext_s($ld,$dn,$serverctrls,$clientctrls);
 
-=item B<ldap_delete_s>
 
-Description:
+=item B<ldap_delete_s>(ld,dn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
+Synchronously delete a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_delete_s($ld,$dn);
 
-=item B<ldap_dn2ufn>
 
-Description:
+=item B<ldap_dn2ufn>(dn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o DN - Distinguished Name
+Change a DN to a "Friendly" name
 
-Output:
+INPUT:
+  dn - String
 
-  o char *
+OUTPUT:
+  status - String
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_dn2ufn($dn);
 
-=item B<ldap_err2string>
 
-Description:
+=item B<ldap_err2string>(err)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o ERR - ....will be defined....
+Return the string value of a LDAP error code
 
-Output:
+INPUT:
+  err - Integer
 
-  o char *
+OUTPUT:
+  status - String
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_err2string($err);
 
-=item B<ldap_explode_dn>
 
-Description:
+=item B<ldap_explode_dn>(dn,notypes)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o DN - Distinguished Name
-  o NOTYPES - ....will be defined....
+Split a given DN into its components.  Setting 'notypes' to 1 returns the
+components without their type names.
 
-Output:
+INPUT:
+  dn - String
+  notypes - Integer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_explode_dn($dn,$notypes);
 
-=item B<ldap_explode_rdn>
 
-Description:
+=item B<ldap_explode_rdn>(dn,notypes)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o DN - Distinguished Name
-  o NOTYPES - ....will be defined....
+Split a Relative DN into its components
 
-Output:
+INPUT:
+  dn - String
+  notypes - Integer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_explode_rdn($dn,$notypes);
 
-=item B<ldap_extended_operation>
 
-Description:
+=item B<ldap_extended_operation>(ld,requestoid,requestdata,serverctrls,clientctrls,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o REQUESTOID - ....will be defined....
-  o REQUESTDATA - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGIDP - ....will be defined....
+Perform an asynchronous extended operation
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  requestoid - String
+  requestdata - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_extended_operation($ld,$requestoid,$requestdata,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_extended_operation_s>
 
-Description:
+=item B<ldap_extended_operation_s>(ld,requestoid,requestdata,serverctrls,clientctrls,retoidp,retdatap)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o REQUESTOID - ....will be defined....
-  o REQUESTDATA - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o RETOIDP - ....will be defined....
-  o RETDATAP - ....will be defined....
+Perform a synchronous extended operation
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  requestoid - String
+  requestdata - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  retoidp - String
 
-  o int
+OUTPUT:
+  status - Integer
+  retoidp - Return OID
+  retdatap - Return Data
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_extended_operation_s($ld,$requestoid,$requestdata,$serverctrls,$clientctrls,$retoidp,$retdatap);
 
-=item B<ldap_first_attribute>
 
-Description:
+=item B<ldap_first_attribute>(ld,entry,ber)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o BER - ....will be defined....
+Return the first attribute returned for a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  ber - Ber Element Pointer
 
-  o char *
+OUTPUT:
+  status - String
+  ber - Ber Element Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_first_attribute($ld,$entry,$ber);
 
-=item B<ldap_first_entry>
 
-Description:
+=item B<ldap_first_entry>(ld,chain)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CHAIN - ....will be defined....
+Return the first entry in a LDAP result chain
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  chain - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_first_entry($ld,$chain);
 
-=item B<ldap_first_message>
 
-Description:
+=item B<ldap_first_message>(ld,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RES - ....will be defined....
+Return the first message in a LDAP result
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  res - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_first_message($ld,$res);
 
-=item B<ldap_first_reference>
 
-Description:
+=item B<ldap_first_reference>(ld,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RES - ....will be defined....
+Return the first reference in a LDAP result
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  res - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_first_reference($ld,$res);
 
-=item B<ldap_free_friendlymap>
 
-Description:
+=item B<ldap_free_friendlymap>(map)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o MAP - ....will be defined....
+Free a LDAP friendly map pointer
 
-Output:
+INPUT:
+  map - Friendly Map Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_free_friendlymap($map);
 
-=item B<ldap_free_sort_keylist>
 
-Description:
+=item B<ldap_free_sort_keylist>(sortKeyList)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o SORTKEYLIST - ....will be defined....
+Free a LDAP sort key pointer
 
-Output:
+INPUT:
+  sortKeyList - Sort Key Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_free_sort_keylist($sortKeyList);
 
-=item B<ldap_free_urldesc>
 
-Description:
+=item B<ldap_free_urldesc>(ludp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LUDP - ....will be defined....
+Free a LDAP URL description hash reference
 
-Output:
+INPUT:
+  ludp - URL Description Hash Reference
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_free_urldesc($ludp);
 
-=item B<ldap_friendly_name>
 
-Description:
+=item B<ldap_friendly_name>(filename,name,map)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o FILENAME - ....will be defined....
-  o NAME - ....will be defined....
-  o MAP - ....will be defined....
+Create a LDAP friendly name map
 
-Output:
+INPUT:
+  filename - String
+  name - String
+  map - Friendly Map Pointer
 
-  o char *
+OUTPUT:
+  status - String
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_friendly_name($filename,$name,$map);
 
-=item B<ldap_get_dn>
 
-Description:
+=item B<ldap_get_dn>(ld,entry)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
+Return the distinguished name for an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
 
-  o char *
+OUTPUT:
+  status - String
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_dn($ld,$entry);
 
-=item B<ldap_get_entry_controls>
 
-Description:
+=item B<ldap_get_entry_controls>(ld,entry,serverctrlsp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o SERVERCTRLSP - LDAP Control
+Return the controls for a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  serverctrlsp - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  serverctrlsp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_entry_controls($ld,$entry,$serverctrlsp);
 
-=item B<ldap_getfilter_free>
 
-Description:
+=item B<ldap_getfilter_free>(lfdp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LFDP - ....will be defined....
+Free a LDAP filter
 
-Output:
+INPUT:
+  lfdp - LDAP Filter Description Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_getfilter_free($lfdp);
 
-=item B<ldap_getfirstfilter>
 
-Description:
+=item B<ldap_getfirstfilter>(lfdp,tagpat,value)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LFDP - ....will be defined....
-  o TAGPAT - ....will be defined....
-  o VALUE - ....will be defined....
+Get the first generated filter
 
-Output:
+INPUT:
+  lfdp - LDAP Filter Description Pointer
+  tagpat - String
 
-  o LDAPFiltInfo *
+OUTPUT:
+  status - LDAP Filter Information Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_getfirstfilter($lfdp,$tagpat,$value);
 
-=item B<ldap_get_lang_values>
 
-Description:
+=item B<ldap_get_lang_values>(ld,entry,target,type)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o TARGET - ....will be defined....
-  o TYPE - ....will be defined....
+Get values for an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  target - String
+  type - String
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_lang_values($ld,$entry,$target,$type);
 
-=item B<ldap_get_lang_values_len>
 
-Description:
+=item B<ldap_get_lang_values_len>(ld,entry,target,type)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o TARGET - ....will be defined....
-  o TYPE - ....will be defined....
+Get binary values for an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  target - String
+  type - String
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_lang_values_len($ld,$entry,$target,$type);
 
-=item B<ldap_get_lderrno>
 
-Description:
+=item B<ldap_get_lderrno>(ld,m,s)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o  ... - ....will be defined....
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  m  - String Reference (or undef)
+  s  - String Reference (or undef)
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
-  $status = ldap_get_lderrno($ld,$ ...);
+  $status = ldap_get_lderrno($ld,\$m,\$s);
 
-=item B<ldap_getnextfilter>
 
-Description:
+=item B<ldap_getnextfilter>(lfdp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LFDP - ....will be defined....
+Get the next generated LDAP filter
 
-Output:
+INPUT:
+  lfdp - LDAP Filter Information Pointer
+ 
+OUTPUT:
+  status - LDAP Filter Information Pointer
 
-  o LDAPFiltInfo *
+AVAILABILITY: V2/V3
 
-Availability: v2/v3
-
-Example:
+EXAMPLE:
 
   $status = ldap_getnextfilter($lfdp);
 
-=item B<ldap_get_option>
 
-Description:
+=item B<ldap_get_option>(ld,option,optdata)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o OPTION - ....will be defined....
-  o OPTDATA - ....will be defined....
+Get an option for a LDAP session
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  option - Integer
+  optdata - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  optdata - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_option($ld,$option,$optdata);
 
-=item B<ldap_get_values>
 
-Description:
+=item B<ldap_get_values>(ld,entry,target)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o TARGET - ....will be defined....
+Get the values for a LDAP entry and attribute
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  target - String
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_values($ld,$entry,$target);
 
-=item B<ldap_get_values_len>
 
-Description:
+=item B<ldap_get_values_len>(ld,entry,target)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o TARGET - ....will be defined....
+Get the binary values for a LDAP entry and attribute
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  target - String
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_get_values_len($ld,$entry,$target);
 
-=item B<ldap_init>
 
-Description:
+=item B<ldap_init>(host,port)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o HOST - ....will be defined....
-  o PORT - ....will be defined....
+Initialize a LDAP session
 
-Output:
+INPUT:
+  host - String
+  port - Integer
 
-  o LDAP *
+OUTPUT:
+  status - LDAP Session Handle
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_init($host,$port);
 
-=item B<ldap_init_getfilter>
 
-Description:
+=item B<ldap_init_getfilter>(fname)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o FNAME - ....will be defined....
+Initialize the LDAP filter generation routines to a filename
 
-Output:
+INPUT:
+  fname - Filename String
 
-  o LDAPFiltDesc *
+OUTPUT:
+  status - LDAP Filter Description Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_init_getfilter($fname);
 
-=item B<ldap_init_getfilter_buf>
 
-Description:
+=item B<ldap_init_getfilter_buf>(buf,buflen)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o BUF - ....will be defined....
-  o BUFLEN - ....will be defined....
+Initialize the LDAP filter generation routines to a buffer
 
-Output:
+INPUT:
+  buf - String
+  buflen - Integer
 
-  o LDAPFiltDesc *
+OUTPUT:
+  status - LDAP Filter Description Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_init_getfilter_buf($buf,$buflen);
 
-=item B<ldap_is_ldap_url>
 
-Description:
+=item B<ldap_is_ldap_url>(url)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o URL - ....will be defined....
+Return 1 if an the argument is a valid LDAP URL
 
-Output:
+INPUT:
+  url - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_is_ldap_url($url);
 
-=item B<ldap_memcache_destroy>
 
-Description:
+=item B<ldap_memcache_destroy>(cache)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CACHE - ....will be defined....
+Destroy a memory cache
 
-Output:
+INPUT:
+  cache - LDAP Memory Cache Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_destroy($cache);
 
-=item B<ldap_memcache_flush>
 
-Description:
+=item B<ldap_memcache_flush>(cache,dn,scope)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CACHE - ....will be defined....
-  o DN - Distinguished Name
-  o SCOPE - ....will be defined....
+Flush a specific DN from the memory cache
 
-Output:
+INPUT:
+  cache - LDAP Memory Cache Pointer
+  dn - String
+  scope - Integer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_flush($cache,$dn,$scope);
 
-=item B<ldap_memcache_get>
 
-Description:
+=item B<ldap_memcache_get>(ld,cachep)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CACHEP - ....will be defined....
+Get the memory cache for a LDAP session
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  cachep - LDAP Memory Cache Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  cachep - LDAP Memory Cache Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_get($ld,$cachep);
 
-=item B<ldap_memcache_init>
 
-Description:
+=item B<ldap_memcache_init>(ttl,size,baseDNs,cachep)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o TTL - ....will be defined....
-  o SIZE - ....will be defined....
-  o BASEDNS - ....will be defined....
-  o CACHEP - ....will be defined....
+Initialize a LDAP memory cache
 
-Output:
+INPUT:
+  ttl - Integer
+  size - Integer
+  baseDNs - List Reference
+  cachep - LDAP Memory Cache Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  cachep - LDAP Memory Cache Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_init($ttl,$size,$baseDNs,$cachep);
 
-=item B<ldap_memcache_set>
 
-Description:
+=item B<ldap_memcache_set>(ld,cache)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CACHE - ....will be defined....
+Set the LDAP memory cache for the session
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  cache - LDAP Memory Cache Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_set($ld,$cache);
 
-=item B<ldap_memcache_update>
 
-Description:
+=item B<ldap_memcache_update>(cache)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o CACHE - ....will be defined....
+Update the specified memory cache
 
-Output:
+INPUT:
+  cache - LDAP Memory Cache Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memcache_update($cache);
 
-=item B<ldap_memfree>
 
-Description:
+=item B<ldap_memfree>(p)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o P - ....will be defined....
+Free memory allocated by the LDAP C API
 
-Output:
+INPUT:
+  p - Pointer
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_memfree($p);
 
-=item B<ldap_modify>
 
-Description:
+=item B<ldap_modify>(ld,dn,mods)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MODS - ....will be defined....
+Asynchronously modify a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mods - LDAP Add/Modify Hash
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modify($ld,$dn,$mods);
 
-=item B<ldap_modify_ext>
 
-Description:
+=item B<ldap_modify_ext>(ld,dn,mods,serverctrls,clientctrls,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MODS - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGIDP - ....will be defined....
+Asynchronously modify a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mods - LDAP Add/Modify Hash
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modify_ext($ld,$dn,$mods,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_modify_ext_s>
 
-Description:
+=item B<ldap_modify_ext_s>(ld,dn,mods,serverctrls,clientctrls)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MODS - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+Synchronously modify a LDAP entry w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mods - LDAP Add/Modify Hash
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modify_ext_s($ld,$dn,$mods,$serverctrls,$clientctrls);
 
-=item B<ldap_modify_s>
 
-Description:
+=item B<ldap_modify_s>(ld,dn,mods)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MODS - ....will be defined....
+Synchronously modify a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mods - LDAP Add/Modify Hash
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modify_s($ld,$dn,$mods);
 
-=item B<ldap_modrdn>
 
-Description:
+=item B<ldap_modrdn>(ld,dn,newrdn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
+Asynchronously modify the relative distinguished name of an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modrdn($ld,$dn,$newrdn);
 
-=item B<ldap_modrdn_s>
 
-Description:
+=item B<ldap_modrdn_s>(ld,dn,newrdn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
+Synchronously modify the relative distinguished name of an entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modrdn_s($ld,$dn,$newrdn);
 
-=item B<ldap_modrdn2>
 
-Description:
+=item B<ldap_modrdn2>(ld,dn,newrdn,deleteoldrdn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
-  o DELETEOLDRDN - ....will be defined....
+Asynchronously modify the relative distinguished name of an entry.
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
+  deleteoldrdn - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modrdn2($ld,$dn,$newrdn,$deleteoldrdn);
 
-=item B<ldap_modrdn2_s>
 
-Description:
+=item B<ldap_modrdn2_s>(ld,dn,newrdn,deleteoldrdn)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
-  o DELETEOLDRDN - ....will be defined....
+Synchronously modify the relative distinguished name of an entry.
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
+  deleteoldrdn - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_modrdn2_s($ld,$dn,$newrdn,$deleteoldrdn);
 
-=item B<ldap_mods_free>
 
-Description:
+=item B<ldap_msgfree>(lm)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o MODS - ....will be defined....
-  o FREEMODS - ....will be defined....
+Free memory allocated by a LDAP Message
 
-Output:
+INPUT:
+  lm - LDAP Message Pointer
 
-  o void
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
-
-  $status = ldap_mods_free($mods,$freemods);
-
-=item B<ldap_msgfree>
-
-Description:
-
-  Blah...Blah...
-
-Input:
-  o LM - ....will be defined....
-
-Output:
-
-  o int
-
-Availability: v2/v3
-
-Example:
+EXAMPLE:
 
   $status = ldap_msgfree($lm);
 
-=item B<ldap_msgid>
 
-Description:
+=item B<ldap_msgid>(lm)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LM - ....will be defined....
+Get the message id number from a LDAP message
 
-Output:
+INPUT:
+  lm - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_msgid($lm);
 
-=item B<ldap_msgtype>
 
-Description:
+=item B<ldap_msgtype>(lm)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LM - ....will be defined....
+Get the message type of a LDAP message
 
-Output:
+INPUT:
+  lm - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_msgtype($lm);
 
-=item B<ldap_multisort_entries>
 
-Description:
+=item B<ldap_multisort_entries>(ld,chain,attr)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CHAIN - ....will be defined....
-  o ATTR - ....will be defined....
+Sort entries by multiple keys
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  chain - LDAP Message Pointer
+  attr - List Reference
 
-  o int
+OUTPUT:
+  status - Integer
+  chain - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_multisort_entries($ld,$chain,$attr);
 
-=item B<ldap_next_attribute>
 
-Description:
+=item B<ldap_next_attribute>(ld,entry,ber)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
-  o BER - ....will be defined....
+Get the next attribute for a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
+  ber - Ber Element Pointer
 
-  o char *
+OUTPUT:
+  status - String
+  ber - BER Element Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_next_attribute($ld,$entry,$ber);
 
-=item B<ldap_next_entry>
 
-Description:
+=item B<ldap_next_entry>(ld,entry)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o ENTRY - ....will be defined....
+Get the next entry in the result chain
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  entry - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_next_entry($ld,$entry);
 
-=item B<ldap_next_message>
 
-Description:
+=item B<ldap_next_message>(ld,msg)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o MSG - ....will be defined....
+Get the next message in the result chain
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  msg - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_next_message($ld,$msg);
 
-=item B<ldap_next_reference>
 
-Description:
+=item B<ldap_next_reference>(ld,ref)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o REF - ....will be defined....
+Get the next reference in the result chain
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ref - LDAP Message Pointer
 
-  o LDAPMessage *
+OUTPUT:
+  status - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_next_reference($ld,$ref);
 
-=item B<ldap_parse_entrychange_control>
 
-Description:
+=item B<ldap_parse_entrychange_control>(ld,ctrls,chgtypep,prevdnp,chgnumpresentp,chgnump)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CTRLS - LDAP Control
-  o CHGTYPEP - ....will be defined....
-  o PREVDNP - ....will be defined....
-  o CHGNUMPRESENTP - ....will be defined....
-  o CHGNUMP - ....will be defined....
+Parse a LDAP entry change control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ctrls - LDAP Control List Pointer
+  chgtypep - Integer
+  prevdnp - String
+  chgnumpresentp - Integer
+  chgnump - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  chgtypep - Integer
+  prevdnp - String
+  chgnumpresentp - Integer
+  chgnump - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_entrychange_control($ld,$ctrls,$chgtypep,$prevdnp,$chgnumpresentp,$chgnump);
 
-=item B<ldap_parse_extended_result>
 
-Description:
+=item B<ldap_parse_extended_result>(ld,res,retoidp,retdatap,freeit)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RES - ....will be defined....
-  o RETOIDP - ....will be defined....
-  o RETDATAP - ....will be defined....
-  o FREEIT - ....will be defined....
+Parse a LDAP extended result
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  res - LDAP Message Pointer
+  retoidp - String
+  freeit - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  retoidp - String
+  retdatap - Binary List Reference
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_extended_result($ld,$res,$retoidp,$retdatap,$freeit);
 
-=item B<ldap_parse_reference>
 
-Description:
+=item B<ldap_parse_reference>(ld,ref,referalsp,serverctrlsp,freeit)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o REF - ....will be defined....
-  o REFERALSP - ....will be defined....
-  o SERVERCTRLSP - LDAP Control
-  o FREEIT - ....will be defined....
+Parse a LDAP Reference
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ref - LDAP Message Pointer
+  referalsp - List Reference
+  serverctrlsp - LDAP Control List Pointer
+  freeit - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  referalsp - List Reference
+  serverctrlsp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_reference($ld,$ref,$referalsp,$serverctrlsp,$freeit);
 
-=item B<ldap_parse_result>
 
-Description:
+=item B<ldap_parse_result>(ld,res,errcodep,matcheddnp,errmsgp,referralsp,serverctrlsp,freeit)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RES - ....will be defined....
-  o ERRCODEP - ....will be defined....
-  o MATCHEDDNP - ....will be defined....
-  o ERRMSGP - ....will be defined....
-  o REFERRALSP - ....will be defined....
-  o SERVERCTRLSP - LDAP Control
-  o FREEIT - ....will be defined....
+Parse a LDAP result
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  res - LDAP Message Pointer
+  errcodep - Integer
+  matcheddnp - String
+  errmsgp - String
+  referralsp - List Reference
+  serverctrlsp - LDAP Control List Pointer
+  freeit - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  errcodep - Integer
+  matcheddnp - String
+  errmsgp - String
+  referralsp - List Reference
+  serverctrlsp - LDAP Control List Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_result($ld,$res,$errcodep,$matcheddnp,$errmsgp,$referralsp,$serverctrlsp,$freeit);
 
-=item B<ldap_parse_sasl_bind_result>
 
-Description:
+=item B<ldap_parse_sasl_bind_result>(ld,res,servercredp,freeit)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o RES - ....will be defined....
-  o SERVERCREDP - ....will be defined....
-  o FREEIT - ....will be defined....
+Parse the results of an SASL bind operation
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  res - LDAP Message Pointer
+  freeit - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  servercredp - 
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_sasl_bind_result($ld,$res,$servercredp,$freeit);
 
-=item B<ldap_parse_sort_control>
 
-Description:
+=item B<ldap_parse_sort_control>(ld,ctrls,result,attribute)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CTRLS - LDAP Control
-  o RESULT - ....will be defined....
-  o ATTRIBUTE - ....will be defined....
+Parse a LDAP sort control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ctrls - LDAP Control List Pointer
+  result - LDAP Message Pointer
+  attribute - String
 
-  o int
+OUTPUT:
+  status - Integer
+  result - LDAP Message Pointer
+  attribute - String
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_sort_control($ld,$ctrls,$result,$attribute);
 
-=item B<ldap_parse_virtuallist_control>
 
-Description:
+=item B<ldap_parse_virtuallist_control>(ld,ctrls,target_posp,list_sizep,errcodep)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CTRLS - LDAP Control
-  o TARGET_POSP - ....will be defined....
-  o LIST_SIZEP - ....will be defined....
-  o ERRCODEP - ....will be defined....
+Parse a LDAP virtual list control
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  ctrls - LDAP Control List Pointer
+  target_posp - Integer
+  list_sizep - Integer
+  errcodep - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  target_posp - Integer
+  list_sizep - Integer
+  errcodep - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_parse_virtuallist_control($ld,$ctrls,$target_posp,$list_sizep,$errcodep);
 
-=item B<ldap_perror>
 
-Description:
+=item B<ldap_perror>(ld,s)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o S - ....will be defined....
+Print a LDAP error message
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  s - String
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_perror($ld,$s);
 
-=item B<ldap_rename>
 
-Description:
+=item B<ldap_rename>(ld,dn,newrdn,newparent,deleteoldrdn,serverctrls,clientctrls,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
-  o NEWPARENT - ....will be defined....
-  o DELETEOLDRDN - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGIDP - ....will be defined....
+Asynchronously rename a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
+  newparent - String
+  deleteoldrdn - Integer
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_rename($ld,$dn,$newrdn,$newparent,$deleteoldrdn,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_rename_s>
 
-Description:
+=item B<ldap_rename_s>(ld,dn,newrdn,newparent,deleteoldrdn,serverctrls,clientctrls)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o NEWRDN - ....will be defined....
-  o NEWPARENT - ....will be defined....
-  o DELETEOLDRDN - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
+Synchronously rename a LDAP entry
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  newrdn - String
+  newparent - String
+  deleteoldrdn - Integer
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_rename_s($ld,$dn,$newrdn,$newparent,$deleteoldrdn,$serverctrls,$clientctrls);
 
-=item B<ldap_result>
 
-Description:
+=item B<ldap_result>(ld,msgid,all,timeout,result)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o MSGID - LDAP Message ID
-  o ALL - ....will be defined....
-  o TIMEOUT - ....will be defined....
-  o RESULT - ....will be defined....
+Get the result for an asynchronous LDAP operation
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  msgid - Integer
+  all - Integer
+  timeout - Time in Seconds
+  result - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  result - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_result($ld,$msgid,$all,$timeout,$result);
 
-=item B<ldap_result2error>
 
-Description:
+=item B<ldap_result2error>(ld,r,freeit)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o R - ....will be defined....
-  o FREEIT - ....will be defined....
+Get the error number for a given result
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  r - LDAP Message Pointer
+  freeit - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_result2error($ld,$r,$freeit);
 
-=item B<ldap_sasl_bind>
 
-Description:
+=item B<ldap_sasl_bind>(ld,dn,mechanism,cred,serverctrls,clientctrls,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MECHANISM - ....will be defined....
-  o CRED - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o MSGIDP - ....will be defined....
+Asynchronously bind to the LDAP server using a SASL mechanism
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mechanism - String
+  cred - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_sasl_bind($ld,$dn,$mechanism,$cred,$serverctrls,$clientctrls,$msgidp);
 
-=item B<ldap_sasl_bind_s>
 
-Description:
+=item B<ldap_sasl_bind_s>(ld,dn,mechanism,cred,serverctrls,clientctrls,servercredp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o DN - Distinguished Name
-  o MECHANISM - ....will be defined....
-  o CRED - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o SERVERCREDP - ....will be defined....
+Synchronously bind to a LDAP server using a SASL mechanism
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  dn - String
+  mechanism - String
+  cred - Binary String
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  servercredp - 
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_sasl_bind_s($ld,$dn,$mechanism,$cred,$serverctrls,$clientctrls,$servercredp);
 
-=item B<ldap_search>
 
-Description:
+=item B<ldap_search>(ld,base,scope,filter,attrs,attrsonly)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o BASE - ....will be defined....
-  o SCOPE - ....will be defined....
-  o FILTER - ....will be defined....
-  o ATTRS - Attribute List Reference
-  o ATTRSONLY - ....will be defined....
+Asynchronously search the LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  base - String
+  scope - Integer
+  filter - String
+  attrs - List Reference
+  attrsonly - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_search($ld,$base,$scope,$filter,$attrs,$attrsonly);
 
-=item B<ldap_search_ext>
 
-Description:
+=item B<ldap_search_ext>(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,timeoutp,sizelimit,msgidp)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o BASE - ....will be defined....
-  o SCOPE - ....will be defined....
-  o FILTER - ....will be defined....
-  o ATTRS - Attribute List Reference
-  o ATTRSONLY - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o TIMEOUTP - ....will be defined....
-  o SIZELIMIT - ....will be defined....
-  o MSGIDP - ....will be defined....
+Asynchronously search the LDAP server w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  base - String
+  scope - Integer
+  filter - String
+  attrs - List Reference
+  attrsonly - Integer
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  timeoutp - Time in Seconds
+  sizelimit - Integer
+  msgidp - Integer
 
-  o int
+OUTPUT:
+  status - Integer
+  msgidp - Integer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_search_ext($ld,$base,$scope,$filter,$attrs,$attrsonly,$serverctrls,$clientctrls,$timeoutp,$sizelimit,$msgidp);
 
-=item B<ldap_search_ext_s>
 
-Description:
+=item B<ldap_search_ext_s>(ld,base,scope,filter,attrs,attrsonly,serverctrls,clientctrls,timeoutp,sizelimit,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o BASE - ....will be defined....
-  o SCOPE - ....will be defined....
-  o FILTER - ....will be defined....
-  o ATTRS - Attribute List Reference
-  o ATTRSONLY - ....will be defined....
-  o SERVERCTRLS - LDAP Control
-  o CLIENTCTRLS - LDAP Control
-  o TIMEOUTP - ....will be defined....
-  o SIZELIMIT - ....will be defined....
-  o RES - ....will be defined....
+Synchronously search the LDAP server w/ Controls
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  base - String
+  scope - Integer
+  filter - String
+  attrs - List Reference
+  attrsonly - Integer
+  serverctrls - LDAP Control List Pointer
+  clientctrls - LDAP Control List Pointer
+  timeoutp - Time in Seconds
+  sizelimit - Integer
+  res - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  res - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_search_ext_s($ld,$base,$scope,$filter,$attrs,$attrsonly,$serverctrls,$clientctrls,$timeoutp,$sizelimit,$res);
 
-=item B<ldap_search_s>
 
-Description:
+=item B<ldap_search_s>(ld,base,scope,filter,attrs,attrsonly,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o BASE - ....will be defined....
-  o SCOPE - ....will be defined....
-  o FILTER - ....will be defined....
-  o ATTRS - Attribute List Reference
-  o ATTRSONLY - ....will be defined....
-  o RES - ....will be defined....
+Synchronously search the LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  base - String
+  scope - Integer
+  filter - String
+  attrs - List Reference
+  attrsonly - Integer
+  res - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  res - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_search_s($ld,$base,$scope,$filter,$attrs,$attrsonly,$res);
 
-=item B<ldap_search_st>
 
-Description:
+=item B<ldap_search_st>(ld,base,scope,filter,attrs,attrsonly,timeout,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o BASE - ....will be defined....
-  o SCOPE - ....will be defined....
-  o FILTER - ....will be defined....
-  o ATTRS - Attribute List Reference
-  o ATTRSONLY - ....will be defined....
-  o TIMEOUT - ....will be defined....
-  o RES - ....will be defined....
+Synchronously search the LDAP server w/ Timeout
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  base - String
+  scope - Integer
+  filter - String
+  attrs - List Reference
+  attrsonly - Integer
+  timeout - Time in Seconds
+  res - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  res - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_search_st($ld,$base,$scope,$filter,$attrs,$attrsonly,$timeout,$res);
 
-=item B<ldap_set_filter_additions>
 
-Description:
+=item B<ldap_set_filter_additions>(lfdp,prefix,suffix)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LFDP - ....will be defined....
-  o PREFIX - ....will be defined....
-  o SUFFIX - ....will be defined....
+Add a prefix and suffix for filter generation
 
-Output:
+INPUT:
+  lfdp - LDAP Filter Description Pointer
+  prefix - String
+  suffix - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_set_filter_additions($lfdp,$prefix,$suffix);
 
-=item B<ldap_set_lderrno>
 
-Description:
+=item B<ldap_set_lderrno>(ld,e,m,s)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o E - ....will be defined....
-  o M - ....will be defined....
-  o S - ....will be defined....
+Set the LDAP error structure
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  e - Integer
+  m - String
+  s - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_set_lderrno($ld,$e,$m,$s);
 
-=item B<ldap_set_option>
 
-Description:
+=item B<ldap_set_option>(ld,option,optdata)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o OPTION - ....will be defined....
-  o OPTDATA - ....will be defined....
+Set a LDAP session option
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  option - Integer
+  optdata - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_set_option($ld,$option,$optdata);
 
-=item B<ldap_set_rebind_proc>
 
-Description:
+=item B<ldap_set_rebind_proc>(ld,rebindproc)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o REBINDPROC - ....will be defined....
+Set the LDAP rebind process
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
 
-  o void
+OUTPUT:
+  status - NONE
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_set_rebind_proc($ld,$rebindproc);
 
-=item B<ldap_simple_bind>
 
-Description:
+=item B<ldap_simple_bind>(ld,who,passwd)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o WHO - ....will be defined....
-  o PASSWD - ....will be defined....
+Asynchronously bind to the LDAP server using simple authentication
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  who - String
+  passwd - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_simple_bind($ld,$who,$passwd);
 
-=item B<ldap_simple_bind_s>
 
-Description:
+=item B<ldap_simple_bind_s>(ld,who,passwd)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o WHO - ....will be defined....
-  o PASSWD - ....will be defined....
+Synchronously bind to the LDAP server using simple authentication
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  who - String
+  passwd - String
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_simple_bind_s($ld,$who,$passwd);
 
-=item B<ldap_sort_entries>
 
-Description:
+=item B<ldap_sort_entries>(ld,chain,attr)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o CHAIN - ....will be defined....
-  o ATTR - ....will be defined....
+Sort the results of a LDAP search
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  chain - LDAP Message Pointer
+  attr - String
 
-  o int
+OUTPUT:
+  status - Integer
+  chain - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_sort_entries($ld,$chain,$attr);
 
-=item B<ldap_unbind>
 
-Description:
+=item B<ldap_unbind>(ld)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
+Asynchronously unbind from the LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_unbind($ld);
 
-=item B<ldap_unbind_s>
 
-Description:
+=item B<ldap_unbind_s>(ld)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
+Synchronously unbind from a LDAP server
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_unbind_s($ld);
 
-=item B<ldap_url_parse>
 
-Description:
+=item B<ldap_url_parse>(url)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o URL - ....will be defined....
+Parse a LDAP URL, returning a HASH of its components
 
-Output:
+INPUT:
+  url - String
 
-  o SV *
+OUTPUT:
+  status - 
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_url_parse($url);
 
-=item B<ldap_url_search>
 
-Description:
+=item B<ldap_url_search>(ld,url,attrsonly)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o URL - ....will be defined....
-  o ATTRSONLY - ....will be defined....
+Asynchronously search using a LDAP URL
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  url - String
+  attrsonly - Integer
 
-  o int
+OUTPUT:
+  status - Integer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_url_search($ld,$url,$attrsonly);
 
-=item B<ldap_url_search_s>
 
-Description:
+=item B<ldap_url_search_s>(ld,url,attrsonly,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o URL - ....will be defined....
-  o ATTRSONLY - ....will be defined....
-  o RES - ....will be defined....
+Synchronously search using a LDAP URL
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  url - String
+  attrsonly - Integer
+  res - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  res - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_url_search_s($ld,$url,$attrsonly,$res);
 
-=item B<ldap_url_search_st>
 
-Description:
+=item B<ldap_url_search_st>(ld,url,attrsonly,timeout,res)
 
-  Blah...Blah...
+DESCRIPTION:
 
-Input:
-  o LD - LDAP Connection Handle
-  o URL - ....will be defined....
-  o ATTRSONLY - ....will be defined....
-  o TIMEOUT - ....will be defined....
-  o RES - ....will be defined....
+Synchronously search using a LDAP URL w/ timeout
 
-Output:
+INPUT:
+  ld - LDAP Session Handle
+  url - String
+  attrsonly - Integer
+  timeout - Time in Seconds
+  res - LDAP Message Pointer
 
-  o int
+OUTPUT:
+  status - Integer
+  res - LDAP Message Pointer
 
-Availability: v2/v3
+AVAILABILITY: V2/V3
 
-Example:
+EXAMPLE:
 
   $status = ldap_url_search_st($ld,$url,$attrsonly,$timeout,$res);
 
-=item B<ldap_version>
-
-Description:
-
-  Blah...Blah...
-
-Input:
-  o VER - ....will be defined....
-
-Output:
-
-  o int
-
-Availability: v2/v3
-
-Example:
-
-  $status = ldap_version($ver);
-
 =head1 AUTHOR INFORMATION
 
-Address bug reports and comments to:
-xxx@netscape.com
+Address bug reports and comments to the Netscape DevEdge newsgroups at:
+nntps://secnews.netscape.com/netscape.dev.directory.
 
-=head1 CREDITS
+-head1 CREDITS
 
-Most of the Perl API code was developed by Clayton Donley.
+Most of the Perl API module was written by Clayton Donley to interface with
+C API routines from Netscape Communications Corp., Inc.
 
 =head1 BUGS
 
-LDAPv3 calls have not been tested at this point.  Use them at your own risk.
+Documentation needs much work.
+LDAPv3 calls not tested or supported in this version.
+NT can not use Perl Rebind processes, must use 'ldap_set_default_rebindproc'.
+Possible memory leak in ldap_search* is being investigated.
 
 =head1 SEE ALSO
 
-L<Mozilla::LDAP::Conn>, L<Mozilla::LDAP::Entry>, L<Mozilla::LDAP::LDIF>,
-and of course L<Perl>.
+L<Mozilla::LDAP::Conn>, L<Mozilla::LDAP::Entry>, and L<Perl>
 
 =cut
+
