@@ -178,7 +178,7 @@ public:
 //Mohamed  17-1-01
   NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi);
   NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const;
-  NS_IMETHOD GetBidiCharset(nsAutoString &aCharSet);
+  NS_IMETHOD GetBidiCharset(nsAWritableString &aCharSet);
 //Mohamed End
 #endif // IBMBIDI
 

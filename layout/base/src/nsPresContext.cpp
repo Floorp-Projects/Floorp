@@ -1569,7 +1569,7 @@ nsPresContext::GetIsBidiSystem(PRBool& aResult) const
 }
 
 NS_IMETHODIMP
-nsPresContext::GetBidiCharset(nsAutoString &aCharSet)
+nsPresContext::GetBidiCharset(nsAWritableString &aCharSet)
 {
   aCharSet = mCharset;
   return NS_OK;
