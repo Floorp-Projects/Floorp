@@ -1,5 +1,0 @@
-detect_glibc_*
-detect_x11_*
-detect_motif_*
-detect_*_gen.mk
-Makefile
