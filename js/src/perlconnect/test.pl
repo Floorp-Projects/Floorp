@@ -26,7 +26,7 @@ use JS;
 # int
 ($js->eval("100") == 100) or warn "Wrong value returned from eval()";
 # and string
-($js->eval("'test string'") == 'test string') or warn "Wrong value returned from eval()";
+($js->eval("'test string'") eq 'test string') or warn "Wrong value returned from eval()";
 # double TODO: double comparison?
 ($js->eval("1.25") == 1.25) or warn "Wrong value returned from eval()";
 # more complex eval:
