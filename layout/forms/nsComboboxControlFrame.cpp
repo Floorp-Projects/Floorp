@@ -794,6 +794,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
   PositionDropdown(aPresContext, aDesiredSize.height, absoluteTwips, absolutePixels);
 
   aStatus = NS_FRAME_COMPLETE;
+  COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 56, 22) 
   return rv;
 
 }
