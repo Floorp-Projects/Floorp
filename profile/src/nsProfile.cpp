@@ -524,7 +524,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif /* AUTOMATICALLY_MIGRATE_IF_ONLY_ONE_PROFILE */
                     *profstr = "resource:/res/profile/pm.xul";
                 }
-#endif
             }
         }
 
