@@ -237,7 +237,7 @@ PRInt32 net_NewsChunkSize=-1;  /* default */
 /* seconds that an idle NNTP conn can live */
 extern "C"
 {
-nsresult NS_NewArticleList(nsINNTPArticleList **articleList, const nsINNTPHost* newsHost, const nsINNTPNewsgroup* newsgroup);
+nsresult NS_NewArticleList(nsINNTPArticleList **articleList, const nsINNTPHost* newsHost, nsINNTPNewsgroup* newsgroup);
 nsresult NS_NewNewsgroup(nsINNTPNewsgroup **info, char *line, nsNNTPArticleSet *set, PRBool subscribed, nsINNTPHost *host, int depth);
 nsresult NS_NewNewsgroupList(nsINNTPNewsgroupList **aInstancePtrResult, nsINNTPHost *newsHost, nsINNTPNewsgroup *newsgroup);
 }
