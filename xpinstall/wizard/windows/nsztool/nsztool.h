@@ -22,8 +22,8 @@
  *     Sean Su <ssu@netscape.com>
  */
 
-#ifndef _NSZ_H_
-#define _NSZ_H_
+#ifndef _TESTXPI_H_
+#define _TESTXPI_H_
 
 #define MAX_BUF                         4096
 

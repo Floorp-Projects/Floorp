@@ -32,8 +32,6 @@
 
 //#define SSU_DEBUG
 
-#define APP_NAME "nsz.exe"
-
 /* Function to show the usage for this application */
 void ShowUsage(char *name)
 {
@@ -390,9 +388,10 @@ void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
     exit(1);
   }
 
-  dwFileSize  = GetFileSize(hInputFile, NULL);
-  lpBuf       = (LPBYTE)malloc(dwFileSize);
-  lpBufCmp    = (LPBYTE)malloc(dwFileSize + (sizeof(DWORD) * 2));
+  dwFileSize    = GetFileSize(hInputFile, NULL);
+  dwFileSizeCmp = dwFileSize;
+  lpBuf         = (LPBYTE)malloc(dwFileSize);
+  lpBufCmp      = (LPBYTE)malloc(dwFileSize + (sizeof(DWORD) * 2));
   if((lpBuf == NULL) || (lpBufCmp == NULL))
   {
     PrintError("Out of memory", ERROR_CODE_HIDE);
@@ -418,8 +417,19 @@ void AddFile(LPSTR lpszSeaExe, LPSTR lpszFile)
 
   if((hSeaExe = BeginUpdateResource(lpszSeaExe, FALSE)) == NULL)
   {
-    PrintError("BeginUpdateResource() error", ERROR_CODE_SHOW);
-    exit(1);
+    DWORD dwErr;
+
+    dwErr = GetLastError();
+    if(dwErr == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+      MessageBox(NULL, "This application does not run under this OS", NULL, MB_ICONEXCLAMATION);
+      exit(0);
+    }
+    else
+    {
+      PrintError("BeginUpdateResource() error", ERROR_CODE_SHOW);
+      exit(1);
+    }
   }
   if(!UpdateResource(hSeaExe, "FILE", szResourceName, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                      lpBufCmp, dwFileSizeCmp + (sizeof(DWORD) * 2)))
