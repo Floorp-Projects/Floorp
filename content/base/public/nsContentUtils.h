@@ -166,6 +166,9 @@ public:
                                                    const nsAString& aValue);
 
   static void Shutdown();
+  
+  // Checks if two nodes live in document coming from the same origin
+  static nsresult CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
 
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,

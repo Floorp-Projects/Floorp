@@ -159,6 +159,11 @@ NS_IMETHODIMP nsTreeWalker::GetCurrentNode(nsIDOMNode * *aCurrentNode)
 NS_IMETHODIMP nsTreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
 {
     NS_ENSURE_TRUE(aCurrentNode, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+    nsresult rv = nsContentUtils::CheckSameOrigin(mRoot, aCurrentNode);
+    if(NS_FAILED(rv))
+        return rv;
+
     mCurrentNode = aCurrentNode;
     return NS_OK;
 }
