@@ -2735,7 +2735,7 @@ nsGlobalWindow::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -2760,7 +2760,7 @@ nsGlobalWindow::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
@@ -2844,7 +2844,7 @@ nsGlobalWindow::SizeToContent()
    * block window.SizeToContent() by exiting
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize")) {
+  if (!CanSetProperty("dom.disable_window_move_resize") || IsFrame()) {
     return NS_OK;
   }
 
