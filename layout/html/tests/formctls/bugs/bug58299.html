@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>testcase</title>
+</head>
+<body>
+
+
+<form method=get action="search">
+<table>
+<tr>
+<td>
+<p>form outside table</p>
+<input type="text" value="text in here">
+<input type="submit">
+</td>
+</tr>
+</table>
+</form>
+
+<table>
+<tr>
+<td>
+<p>form nested inside table cell with the form controls</p>
+<form method=get action="search">
+<input type="text" value="text in here">
+<input type="submit">
+</form>
+</td>
+</tr>
+</table>
+
+</body>
+</html>

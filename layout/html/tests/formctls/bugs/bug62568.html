@@ -1,0 +1,301 @@
+<HTML>
+<head>
+<script>
+function ReplaceComponentSelect( aForm, anArray ) {
+    for ( var i = 0; i < anArray.length; i++ ) {
+        aForm.Component.options[i].text  = anArray[i];
+        aForm.Component.options[i].value = anArray[i];
+    }
+    if ( aForm.Component.length > anArray.length ) {
+        for ( ; i < aForm.Component.length; i++ ) {
+            aForm.Component.options[i].text = "";
+            aForm.Component.options[i].value = "";
+        }
+    }   
+}
+
+
+function UpdateComponentList(aForm) {
+
+   var product = aForm.Product.selectedIndex;
+    aForm.status.value = "working.....";
+    switch ( product ) {
+        case 0:
+        ReplaceComponentSelect( aForm, BrowserComponentArray );
+        break;
+        
+      case 1:
+        ReplaceComponentSelect( aForm, MailNewsComponentArray );
+        break;
+        
+        case 2:
+        ReplaceComponentSelect( aForm, DocumentationComponentArray );
+        break;
+        
+        case 3:
+        ReplaceComponentSelect( aForm, L10nComponentArray );
+        break;
+    }
+    aForm.status.value = "Done.";
+}
+
+var MailNewsComponentArray = [
+"Choose One...",
+"Account Manager", "Address Book", "Composition", "Filters",
+"Internationalization", "Localization", "Mail Back End",
+"Mail Database", "Mail Window Front End", "MIME", "Networking - General",
+"Networking - IMAP", "Networking - News", "Networking - POP", "Networking - SMTP",
+"Offline", "Printing", "Profile Migration", "Search", "Security: General", "Subscribe"
+];
+
+var BrowserComponentArray = [
+"Choose One...",
+"ActiveX Wrapper", "Bookmarks", "Browser-General", "Build Config",
+"chatzilla", "Compositor", "Cookies", "DOM Level 0", "DOM Level 1", "DOM Level 2",
+"DOM to Text Conversion", "DOM Viewer", "Editor", "Embedding APIs",
+"Embedding: Docshell", "Evangelism", "Event Handling", "Form Manager", "Form Submission", 
+"GTK Embedding Widget", "Help", "History: Global", "History: Session", "History: URLBar", 
+"HTML Element", "HTML Form Controls", "HTMLFrames",
+"HTMLTables", "Image Conversion Library", "ImageLib", "Installer",
+"Installer: XPI Packages", "Installer: XPInstall Engine",
+"Internationalization", "Java APIs for DOM", "Java APIs to WebShell",
+"Java to XPCOM Bridge", "Java-Implemented Plugins", "JavaScript Debugger",
+"Javascript Engine", "Keyboard Navigation", "Layout", "Live Connect", "Localization", 
+"MathML", "MozillaTranslator", "Networking", "Networking: Cache", 
+"Networking: File", "Networking: FTP", "Networking: HTTP", "OJI", "Parser",
+"Password Manager", "PICS", "Plug-ins", "Preferences", "Preferences: Backend", "Printing",
+"Profile Manager BackEnd", "Profile Manager FrontEnd", "Profile Migration",
+"RDF", "Search", "Security: CAPS", "Security: Crypto", "Security: General", 
+"Selection", "Sidebar", "Skinability", "Style System",
+"SVG", "Talkback", "Themes", "Threading", "User Interface: Design Feedback",
+"Viewer App", "Views", "XBL", "XML", "XP Apps", "XP Apps: Cmd-line Features",
+"XP Apps: GUI Features", "XP Miscellany", "XP Toolkit/Widgets",
+"XP Toolkit/Widgets: Menus", "XP Toolkit/Widgets: Trees", "XP Toolkit/Widgets: XUL", 
+"XP Utilities", "XPCOM", "XPCOM Registry",
+"XPConnect", "xpidl", "XSLT" ];
+
+var DocumentationComponentArray = [
+"Choose One...",
+"Mozilla Developer", "User", "Web Developer" ];
+
+var L10nComponentArray = [
+"Choose One...",
+"Bosnian/bs-BA", "Bulgarian/bg-BG", "Danish/da-DK", "Dutch/nl", "French/fr-FR", 
+"German-Austria/de-AT", "Italian/it-IT", "Norwegian/nno-no" ];
+</script>
+</head>
+
+<BODY>
+
+<form name=BugInfoForm>
+<select name="Product" onChange="UpdateComponentList(this.form)" size=3>
+    <option name="Browser" SELECTED value="Browser">
+    Browser or Editor (aka Composer)
+    <option name="MailNews" VALUE="MailNews">
+    Mail or News
+    <option name="Documentation" value="Documentation">
+    Documentation
+    <option name="Browser+Localizations" value="Browser+Localizations">
+    Language Packs or Localized Builds
+</select>
+<br>
+    <select name="Component" size=1 >
+    <option value="NOTSELECTED">
+    Choose One...
+    <OPTION VALUE="ActiveX Wrapper">
+    ActiveX Wrapper
+    <OPTION VALUE="Bookmarks">
+    Bookmarks
+    <OPTION VALUE="Browser-General">
+    Browser-General
+    <OPTION VALUE="Build Config">
+    Build Config
+    <OPTION VALUE="chatzilla">
+    chatzilla
+    <OPTION VALUE="Compositor">
+    Compositor
+    <OPTION VALUE="Cookies">
+    Cookies
+    <OPTION VALUE="DOM Level 0">
+    DOM Level 0
+    <OPTION VALUE="DOM Level 1">
+    DOM Level 1
+    <OPTION VALUE="DOM Level 2">
+    DOM Level 2
+    <OPTION VALUE="DOM to Text Conversion">
+    DOM to Text Conversion
+    <OPTION VALUE="DOM Viewer">
+    DOM Viewer
+    <OPTION VALUE="Editor">
+    Editor
+    <OPTION VALUE="Embedding APIs">
+    Embedding APIs
+    <OPTION VALUE="Embedding: Docshell">
+    Embedding: Docshell
+    <OPTION VALUE="Evangelism">
+    Evangelism
+    <OPTION VALUE="Event Handling">
+    Event Handling
+    <OPTION VALUE="Form Manager">
+    Form Manager
+    <OPTION VALUE="Form Submission">
+    Form Submission
+    <OPTION VALUE="GTK Embedding Widget">
+    GTK Embedding Widget
+    <OPTION VALUE="Help">
+    Help
+    <OPTION VALUE="History: Global">
+    History: Global
+    <OPTION VALUE="History: Session">
+    History: Session
+    <OPTION VALUE="History: URLBar">
+    History: URLBar
+    <OPTION VALUE="HTML Element">
+    HTML Element
+    <OPTION VALUE="HTML Form Controls">
+    HTML Form Controls
+    <OPTION VALUE="HTMLFrames">
+    HTMLFrames
+    <OPTION VALUE="HTMLTables">
+    HTMLTables
+    <OPTION VALUE="Image Conversion Library">
+    Image Conversion Library
+    <OPTION VALUE="ImageLib">
+    ImageLib
+    <OPTION VALUE="Installer">
+    Installer
+    <OPTION VALUE="Installer: XPI Packages">
+    Installer: XPI Packages
+    <OPTION VALUE="Installer: XPInstall Engine">
+    Installer: XPInstall Engine
+    <OPTION VALUE="Internationalization">
+    Internationalization
+    <OPTION VALUE="Java APIs for DOM">
+    Java APIs for DOM
+    <OPTION VALUE="Java APIs to WebShell">
+    Java APIs to WebShell
+    <OPTION VALUE="Java to XPCOM Bridge">
+    Java to XPCOM Bridge
+    <OPTION VALUE="Java-Implemented Plugins">
+    Java-Implemented Plugins
+    <OPTION VALUE="JavaScript Debugger">
+    JavaScript Debugger
+    <OPTION VALUE="Javascript Engine">
+    Javascript Engine
+    <OPTION VALUE="Keyboard Navigation">
+    Keyboard Navigation
+    <OPTION VALUE="Layout">
+    Layout
+    <OPTION VALUE="Live Connect">
+    Live Connect
+    <OPTION VALUE="Localization">
+    Localization
+    <OPTION VALUE="MathML">
+    MathML
+    <OPTION VALUE="MozillaTranslator">
+    MozillaTranslator
+    <OPTION VALUE="Networking">
+    Networking
+    <OPTION VALUE="Networking: Cache">
+    Networking: Cache
+    <OPTION VALUE="Networking: File">
+    Networking: File
+    <OPTION VALUE="Networking: FTP">
+    Networking: FTP
+    <OPTION VALUE="Networking: HTTP">
+    Networking: HTTP
+    <OPTION VALUE="OJI">
+    OJI
+    <OPTION VALUE="Parser">
+    Parser
+    <OPTION VALUE="Password Manager">
+    Password Manager
+    <OPTION VALUE="PICS">
+    PICS
+    <OPTION VALUE="Plug-ins">
+    Plug-ins
+    <OPTION VALUE="Preferences">
+    Preferences
+    <OPTION VALUE="Preferences: Backend">
+    Preferences: Backend
+    <OPTION VALUE="Printing">
+    Printing
+    <OPTION VALUE="Profile Manager BackEnd">
+    Profile Manager BackEnd
+    <OPTION VALUE="Profile Manager FrontEnd">
+    Profile Manager FrontEnd
+    <OPTION VALUE="Profile Migration">
+    Profile Migration
+    <OPTION VALUE="RDF">
+    RDF
+    <OPTION VALUE="Search">
+    Search
+    <OPTION VALUE="Security: CAPS">
+    Security: CAPS
+    <OPTION VALUE="Security: Crypto">
+    Security: Crypto
+    <OPTION VALUE="Security: General">
+    Security: General
+    <OPTION VALUE="Selection">
+    Selection
+    <OPTION VALUE="Sidebar">
+    Sidebar
+    <OPTION VALUE="Skinability">
+    Skinability
+    <OPTION VALUE="Style System">
+    Style System
+    <OPTION VALUE="SVG">
+    SVG
+    <OPTION VALUE="Talkback">
+    Talkback
+    <OPTION VALUE="Themes">
+    Themes
+    <OPTION VALUE="Threading">
+    Threading
+    <OPTION VALUE="User Interface: Design Feedback">
+    User Interface: Design Feedback
+    <OPTION VALUE="Viewer App">
+    Viewer App
+    <OPTION VALUE="Views">
+    Views
+    <OPTION VALUE="XBL">
+    XBL
+    <OPTION VALUE="XML">
+    XML
+    <OPTION VALUE="XP Apps">
+    XP Apps
+    <OPTION VALUE="XP Apps: Cmd-line Features">
+    XP Apps: Cmd-line Features
+    <OPTION VALUE="XP Apps: GUI Features">
+    XP Apps: GUI Features
+    <OPTION VALUE="XP Miscellany">
+    XP Miscellany
+    <OPTION VALUE="XP Toolkit/Widgets">
+    XP Toolkit/Widgets
+    <OPTION VALUE="XP Toolkit/Widgets: Menus">
+    XP Toolkit/Widgets: Menus
+    <OPTION VALUE="XP Toolkit/Widgets: Trees">
+    XP Toolkit/Widgets: Trees
+    <OPTION VALUE="XP Toolkit/Widgets: XUL">
+    XP Toolkit/Widgets: XUL
+    <OPTION VALUE="XP Utilities">
+    XP Utilities
+    <OPTION VALUE="XPCOM">
+    XPCOM
+    <OPTION VALUE="XPCOM Registry">
+    XPCOM Registry
+    <OPTION VALUE="XPConnect">
+    XPConnect
+    <OPTION VALUE="xpidl">
+    xpidl
+    <OPTION VALUE="XSLT">
+    XSLT
+</SELECT>
+<br>
+<input type=text name=status>
+</form>
+
+</BODY>
+</HTML>
+
+

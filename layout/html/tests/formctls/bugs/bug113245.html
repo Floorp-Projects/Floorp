@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+
+<!-- testcase: select_multipleselection_TABLE.html -->
+<!-- description: HTML 4.1 Form Control: Select (optgroup, option)  -->
+<!-- Author: Madhur Bhatia Date: 7/24/01 -->
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+-->
+<!-- Purpose: Testing the HTML Form Control - Select (optgroup, option) , to verify the control complies to the w3c standards -->
+<!-- Expected result: refer to the Test conditions in HTML Form Control matrix -->
+
+<title> HTML Form Control: Menu (select - Optgroup/Option) </title>
+</head>
+
+<body>
+
+<U>FORM WITHIN A TABLE TAG</U><BR>
+
+<table border="1" cellspacing="2" cellpadding="2">
+<form>
+<tr>
+<td>Multiple Item Selection:</td>
+<td><select name="fruits" multiple>
+	<option>banana</option>
+	<option>apple</option>
+	<option>orange</option>
+	<option>grapes</option>
+	<option>peach</option>
+	<option>guava</option>
+	</select>
+</td>
+</tr>
+<tr>
+<td>Multiple selection and size attribute &gt; 1  </td>
+<td><SELECT name="transport" size="5" multiple>
+		<OPTION selected label="none" value="none">None</OPTION>
+                <OPTGROUP label="air">
+                  <OPTION label="air1" value="aeroplane">Aeroplane</OPTION>
+                  <OPTION label="air2" value="helicopter">Helicopter</OPTION>
+                  <OPTION label="air3" value="hotairbaloon">Hot Air Baloon</OPTION>
+                </OPTGROUP>
+                <OPTGROUP label="water">
+                  <OPTION label="water1" value="ship">Ship</OPTION>
+                  <OPTION label="water2" value="submarine">Submarine</OPTION>
+                </OPTGROUP>
+                <OPTGROUP label="ground">
+                  <OPTION label="ground1" value="bus">Bus</OPTION>
+                  <OPTION label="ground2" value="car">Car</OPTION>
+                </OPTGROUP>
+	</SELECT>
+</td>
+</tr>
+</form>
+</table>
+<hr>
+<U>TABLE WITHIN A FORM TAG</U><BR>
+
+<form>
+<table border="1" cellspacing="2" cellpadding="2">
+<tr>
+<td>Multiple Item Selection:</td>
+<td><select name="fruits" multiple>
+	<option>banana</option>
+	<option>apple</option>
+	<option>orange</option>
+	<option>grapes</option>
+	<option>peach</option>
+	<option>guava</option>
+	</select>
+</td>
+</tr>
+<tr>
+<td>Multiple selection and size attribute &gt; 1  </td>
+<td><SELECT name="transport" size="5" multiple>
+		<OPTION selected label="none" value="none">None</OPTION>
+                <OPTGROUP label="air">
+                  <OPTION label="air1" value="aeroplane">Aeroplane</OPTION>
+                  <OPTION label="air2" value="helicopter">Helicopter</OPTION>
+                  <OPTION label="air3" value="hotairbaloon">Hot Air Baloon</OPTION>
+                </OPTGROUP>
+                <OPTGROUP label="water">
+                  <OPTION label="water1" value="ship">Ship</OPTION>
+                  <OPTION label="water2" value="submarine">Submarine</OPTION>
+                </OPTGROUP>
+                <OPTGROUP label="ground">
+                  <OPTION label="ground1" value="bus">Bus</OPTION>
+                  <OPTION label="ground2" value="car">Car</OPTION>
+                </OPTGROUP>
+	</SELECT>
+</td>
+</tr>
+</table>
+
+</form>
+
+</body>
+
+</html>
+

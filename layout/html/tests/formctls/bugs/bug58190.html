@@ -1,0 +1,140 @@
+<html>
+<style>
+body {background-color:white;}
+span {background-color:pink;}
+span.class1 {vertical-align:bottom; background-color:lightgray; color:blue;}
+p.correct {color: darkgreen;}
+p.buggy {color: red;}
+</style>
+<body>
+
+<h3>
+Simple text
+</h3>
+<p class=correct>Correct: the bottom of all the X's is aligned</p>
+<p>
+<span style="font-size: 9px">X9X</span>
+<span style="font-size:12px">X12X</span>
+<span style="font-size:16px">X16X</span>
+<span style="font-size:24px">X24X</span>
+<span style="font-size:36px">X36X</span>
+<span style="font-size:48px">X48X</span>
+</p>
+<hr>
+
+<h3>
+Simple text with "vertical-align:bottom"
+</h3>
+<p class=correct>Correct: the bottom of all the text boxes is aligned</p>
+<p>
+<span style="font-size: 9px; vertical-align:bottom;">X9X</span>
+<span style="font-size:12px; vertical-align:bottom;">X12X</span>
+<span style="font-size:16px; vertical-align:bottom;">X16X</span>
+<span style="font-size:24px; vertical-align:bottom;">X24X</span>
+<span style="font-size:36px; vertical-align:bottom;">X36X</span>
+<span style="font-size:48px; vertical-align:bottom;">X48X</span>
+</p>
+<hr>
+
+<h3>
+html4 buttons with "vertical-align:bottom"
+</h3>
+<p class=correct>Correct: the bottom of the X's from the normal text is aligned, and the bottom of the
+buttons is aligned with the bottom of the entire line box.</p>
+<p>
+<button style="font-size:9px; vertical-align:bottom;">X9X</button>
+<span style="font-size:12px">X12X</span>
+<button style="font-size:16px; vertical-align:bottom;">X16X</button>
+<span style="font-size:24px">X24X</span>
+<button style="font-size:36px; vertical-align:bottom;">X36X</button>
+<span style="font-size:48px">X48X</span>
+</p>
+<p>
+<span style="font-size:9px">X9X</span>
+<button style="font-size:12px; vertical-align:bottom;">X12X</button>
+<span style="font-size:16px">X16X</span>
+<button style="font-size:24px; vertical-align:bottom;">X24X</button>
+<span style="font-size:36px">X36X</span>
+<button style="font-size:48px; vertical-align:bottom;">X48X</button>
+</p>
+<p>
+<span style="font-size: 9px">X9X</span>
+<button style="font-size:9px; vertical-align:bottom;">X9X</button>
+<button style="font-size:12px; vertical-align:bottom;">X12X</button>
+<button style="font-size:16px; vertical-align:bottom;">X16X</button>
+<button style="font-size:24px; vertical-align:bottom;">X24X</button>
+<button style="font-size:36px; vertical-align:bottom;">X36X</button>
+<button style="font-size:48px; vertical-align:bottom;">X48X</button>
+<span style="font-size:48px">X48X</span>
+</p>
+<hr>
+
+
+<h3>
+Mixing text <span class=class1>with</span> and without <span class=class1>"vertical-align:bottom"</span>
+</h3>
+<p class=correct>Correct: the bottom of normal X's is aligned, and the bottom of the
+<span class=class1>styled boxes</span> is aligned with the bottom of the line box.</p>
+<p>
+<span style="font-size: 9px;" class=class1>X9X</span>
+<span style="font-size:12px">X12X</span>
+<span style="font-size:16px;" class=class1>X16X</span>
+<span style="font-size:24px">X24X</span>
+<span style="font-size:36px;" class=class1>X36X</span>
+<span style="font-size:48px">X48X</span>
+</p>
+<p>
+<span style="font-size: 9px">X9X</span>
+<span style="font-size:12px;" class=class1>X12X</span>
+<span style="font-size:16px">X16X</span>
+<span style="font-size:24px;" class=class1>X24X</span>
+<span style="font-size:36px">X36X</span>
+<span style="font-size:48px;" class=class1>X48X</span>
+</p>
+<p>
+<span style="font-size: 9px">X9X</span>
+<span style="font-size: 9px;" class=class1>X9X</span>
+<span style="font-size:12px;" class=class1>X12X</span>
+<span style="font-size:16px;" class=class1>X16X</span>
+<span style="font-size:24px;" class=class1>X24X</span>
+<span style="font-size:36px;" class=class1>X36X</span>
+<span style="font-size:48px;" class=class1>X48X</span>
+<span style="font-size:48px">X48X</span>
+</p>
+<hr>
+
+<h3>
+html4 buttons
+</h3>
+<p class=buggy>Bug: the bottom of the buttons is aligned with the baseline of the text.
+We should have instead the baseline of the buttons aligned with the baseline of the text.
+</p>
+<p>
+<button style="font-size:9px">X9X</button>
+<span style="font-size:12px">X12X</span>
+<button style="font-size:16px">X16X</button>
+<span style="font-size:24px">X24X</span>
+<button style="font-size:36px">X36X</button>
+<span style="font-size:48px">X48X</span>
+</p>
+<p>
+<span style="font-size:9px">X9X</span>
+<button style="font-size:12px">X12X</button>
+<span style="font-size:16px">X16X</span>
+<button style="font-size:24px">X24X</button>
+<span style="font-size:36px">X36X</span>
+<button style="font-size:48px">X48X</button>
+</p>
+<p>
+<button style="font-size:9px">X9X</button>
+<button style="font-size:12px">X12X</button>
+<button style="font-size:16px">X16X</button>
+<button style="font-size:24px">X24X</button>
+<button style="font-size:36px">X36X</button>
+<button style="font-size:48px">X48X</button>
+<span style="font-size:48px">X48X</span>
+</p>
+<hr>
+
+</body>
+</html>
