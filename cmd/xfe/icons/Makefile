@@ -73,30 +73,38 @@ ICONS += \
 	images/Splash.gif \
 	images/cparent.gif
 
-# Icons for the Outliner -- needed for Mail/News but also edit bookmarks
-ICONS += \
-	images/hidecolumn.gif \
-	images/hidecolumn.i.gif \
-	images/oparent.gif \
-	images/showcolumn.gif \
-	images/showcolumn.i.gif \
+# Icons for the Outliner
+ICONS += $(wildcard images/hidecolumn*.gif images/showcolumn*.gif) \
+	images/oparent.gif
+
+MAIL_OR_COMPOSE_ICONS = $(wildcard images/MNC*.gif \
+								   images/MNTB_Next*.gif \
+								   images/MN_*)
+
+ifdef MOZ_MAIL_NEWS
+ICONS += $(MAIL_OR_COMPOSE_ICONS) \
+    $(wildcard images/MNTB*.gif images/MNAB*.gif) \
 	images/threadoff.gif \
 	images/threadon.gif
-
-ICONS += $(wildcard images/M*.gif)
-ICONS += \
 	images/Desk_Address.gif \
 	images/Desk_Collabra.gif \
 	images/Desk_Messenger.gif \
 	images/Desk_MsgCenter.gif \
-	images/Desk_MsgCompose.gif \
 	images/Desk_NewMail.gif
+endif
+
+ifdef MOZ_COMPOSE
+ifndef MOZ_MAIL_NEWS
+ICONS += $(MAIL_OR_COMPOSE_ICONS)
+endif
+ICONS += \
+	images/Desk_MsgCompose.gif
+endif
 
 ifdef EDITOR
 ICONS += $(wildcard images/e*.gif images/Desk_Composer.gif)
 endif
 
-# Should the taskbar icons be broken up by type?
 ifdef MOZ_TASKBAR
 ICONS += $(wildcard images/Task*.gif)
 endif
