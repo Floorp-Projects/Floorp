@@ -267,10 +267,11 @@ PrefNameBuffer::FreeAllBuffers()
 {
     PrefNameBuffer *curr = gRoot;
     PrefNameBuffer *next;
-    do {
+    while (curr) {
         next = curr->mNext;
         delete curr;
-    } while ((curr = next) != nsnull);
+        curr = next;
+    }
     gRoot = nsnull;
 }
 
