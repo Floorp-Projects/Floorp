@@ -225,26 +225,23 @@ nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& charset, nsS
 // Get a default mail character set.
 char * INTL_GetDefaultMailCharset()
 {
+  nsresult res = NS_OK;
   char * retVal = nsnull;
-	nsIPref* prefs;
-	nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
-	{
+  {
 	  char prefValue[kMAX_CSNAME+1];
-  	PRInt32 prefLength = kMAX_CSNAME;
-		
-    prefs->Startup("prefs50.js");
-		res = prefs->GetCharPref("intl.character_set_name", prefValue, &prefLength);
-    if (NS_SUCCEEDED(res) && prefLength > 0) {
-      //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-			retVal = PL_strdup(prefValue);
-    }
-    else {
+	  PRInt32 prefLength = kMAX_CSNAME;
+	  res = prefs->GetCharPref("intl.character_set_name", prefValue, &prefLength);
+	  
+	  if (NS_SUCCEEDED(res) && prefLength > 0) 
+	  {
+		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
+		retVal = PL_strdup(prefValue);
+	  }
+	  else 
 			retVal = PL_strdup("us-ascii");
-    }
-		
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
-	}
+  }
 
   return (nsnull != retVal) ? retVal : PL_strdup("us-ascii");
 }

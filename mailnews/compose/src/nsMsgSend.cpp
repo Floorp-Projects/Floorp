@@ -259,16 +259,12 @@ char * WH_TempName(XP_FileType /*type*/, const char * prefix)
 	#define PREF_LENGTH 128 
 	char prefValue[PREF_LENGTH];
 	PRInt32 prefLength = PREF_LENGTH;
-	nsIPref* prefs;
-	res = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (prefs && NS_SUCCEEDED(res))
 	{
-		prefs->Startup("prefs50.js");
 		res = prefs->GetCharPref("browser.download_directory", prefValue, &prefLength);
 		if (NS_SUCCEEDED(res) && prefLength > 0)
 			tempPath = PL_strdup(prefValue);
-		
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
 	
 	if (tempPath.Last() != '\\')
