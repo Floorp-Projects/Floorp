@@ -132,6 +132,16 @@ enum nsCSSFrameType {
   eCSSFrameType_AbsoluteReplaced
 };
 
+// XXX Get rid of the enum
+#define NS_FRAME_IS_REPLACED(_ft)               \
+  ((eCSSFrameType_AbsoluteReplaced == (_ft)) || \
+   (eCSSFrameType_FloatingReplaced == (_ft)) || \
+   (eCSSFrameType_BlockReplaced == (_ft)) ||    \
+   (eCSSFrameType_InlineReplaced == (_ft)))
+
+#define NS_FRAME_IS_NOT_REPLACED(_ft)           \
+  (!NS_FRAME_IS_REPLACED(_ft))
+
 //----------------------------------------------------------------------
 
 /**
