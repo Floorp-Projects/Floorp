@@ -75,13 +75,15 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLFORMELEMENT_ELEMENTS:
       {
@@ -238,11 +240,12 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+        checkNamedItem = PR_TRUE;
     }
     NS_RELEASE(secMan);
   }
-  else if (JSVAL_IS_STRING(id)) {
+
+  if (checkNamedItem) {
     nsIDOMElement* prop;
     nsIDOMNSHTMLFormElement* b;
     nsAutoString name;
@@ -297,13 +300,15 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLFORMELEMENT_NAME:
       {

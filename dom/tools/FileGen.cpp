@@ -50,10 +50,15 @@ static const char *kNPLStr =  \
 " */\n";
 static const char *kDisclaimerStr = "/* AUTO-GENERATED. DO NOT EDIT!!! */\n";
 static const char *kObjTypeStr = "nsIDOM%s*";
-static const char *kObjTypePtrStr = "nsIDOM%sPtr";
 static const char *kUuidStr = "NS_IDOM%s_IID";
-static const char *kXPIDLObjTypeStr = "%s*";
+#ifdef USE_COMPTR
+static const char *kObjTypePtrStr = "nsCOMPtr<nsIDOM%s>";
+static const char *kXPIDLObjTypePtrStr = "nsCOMPtr<%s>";
+#else
+static const char *kObjTypePtrStr = "nsIDOM%sPtr";
 static const char *kXPIDLObjTypePtrStr = "%sPtr";
+#endif
+static const char *kXPIDLObjTypeStr = "%s*";
 static const char *kXPIDLUuidStr = "NS_I%s_IID";
 
 FileGen::FileGen()

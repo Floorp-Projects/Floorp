@@ -61,13 +61,15 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case WINDOWCOLLECTION_LENGTH:
       {
@@ -98,7 +100,8 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
     }
   }
-  else if (JSVAL_IS_STRING(id)) {
+
+  if (checkNamedItem) {
     nsIDOMWindow* prop;
     nsAutoString name;
 
@@ -144,13 +147,15 @@ SetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  PRBool checkNamedItem = PR_TRUE;
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
+    checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:

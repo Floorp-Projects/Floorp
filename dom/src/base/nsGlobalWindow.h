@@ -203,7 +203,7 @@ public:
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
 
 protected:
-  void          RunTimeout(nsTimeoutImpl *aTimeout);
+  PRBool        RunTimeout(nsTimeoutImpl *aTimeout);
   nsresult      ClearTimeoutOrInterval(PRInt32 aTimerID);
   nsresult      SetTimeoutOrInterval(JSContext *cx, jsval *argv, 
                                      PRUint32 argc, PRInt32* aReturn, 
