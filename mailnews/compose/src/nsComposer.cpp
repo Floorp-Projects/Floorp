@@ -118,7 +118,7 @@ nsComposerBootstrap::Initialize()
 
 
 nsresult
-NS_NewComposerBootstrap(nsIAppShellService **msgboot,
+NS_NewComposerBootstrap(const nsIID &aIID, void **msgboot,
                          nsIServiceManager *serviceManager)
 {
   if (!msgboot) return NS_ERROR_NULL_POINTER;
@@ -130,8 +130,7 @@ NS_NewComposerBootstrap(nsIAppShellService **msgboot,
   if (!bootstrap) return NS_ERROR_OUT_OF_MEMORY;
 
   
-  return bootstrap->QueryInterface(nsIAppShellService::GetIID(),
-                                   (void **)msgboot);
+  return bootstrap->QueryInterface(aIID, msgboot);
 
 }
 
@@ -147,13 +146,12 @@ NS_IMPL_ISUPPORTS(nsComposer, nsIComposer::GetIID())
 
 
 nsresult
-NS_NewComposer(nsIComposer **msg)
+NS_NewComposer(const nsIID &aIID, void **msg)
 {
   if (!msg) return NS_ERROR_NULL_POINTER;
   nsComposer *composer = 
     new nsComposer();
   if (!composer) return NS_ERROR_OUT_OF_MEMORY;
-  return composer->QueryInterface(nsIComposer::GetIID(),
-                                   (void**)&msg);
+  return composer->QueryInterface(aIID, msg);
 }
 

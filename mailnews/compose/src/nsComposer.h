@@ -39,11 +39,9 @@
 NS_BEGIN_EXTERN_C
 
 nsresult
-NS_NewComposer(nsIComposer **inst);
+NS_NewComposer(const nsIID &aIID, void **inst);
 
-nsresult
-NS_NewComposerBootstrap(nsIAppShellService** inst,
-                         nsIServiceManager* serviceManager);
+nsresult NS_NewComposerBootstrap(const nsIID &aIID, void ** inst, nsIServiceManager* serviceManager);
 
 NS_END_EXTERN_C
 
