@@ -236,7 +236,7 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
   if(nsnull == outString )
     return NS_ERROR_NULL_POINTER;
 
-  *outString = NULL;
+  *outString = '\0';
 
   nsresult rv = NS_OK;
 
