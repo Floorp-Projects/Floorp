@@ -27,26 +27,151 @@ interface nsIDOMEventListener;
 
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
+  /**
+   * Native (non-script) mechanism for adding an event listener for
+   * either a load or error event.
+   *
+   * @param type The event the listener is added for - either 
+   *             "load" or "error".
+   * @param listener The listener to be added.
+   */
   [noscript] void addEventListener(in string type, 
-                                 in nsIDOMEventListener listener);
+                                   in nsIDOMEventListener listener);
+
+  /**
+   * Native (non-script) mechanism for removing an event listener for
+   * either a load or error event.
+   *
+   * @param type The event the listener is removed for - either 
+   *             "load" or "error".
+   * @param listener The listener instance to be removed.
+   */
   [noscript] void removeEventListener(in string type,
-                                    in nsIDOMEventListener listener);
+                                      in nsIDOMEventListener listener);
+
+  /**
+   * Meant to be a script-only mechanism for setting a load event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the load event occurs, the function is invoked. 
+   * This attribute should not be used from native code!!
+   */
   attribute nsISupports onload;
+
+  /**
+   * Meant to be a script-only mechanism for setting an error event listener.
+   * The attribute is expected to be JavaScript function object. When
+   * the error event occurs, the function is invoked. 
+   * This attribute should not be used from native code!!
+   */
   attribute nsISupports onerror;
+
+  /**
+   * The response to the HTTP request is parsed as if it were a
+   * text/xml stream. This attributes represents the response as 
+   * a DOM Document object. NULL if the request is unsuccessful or
+   * has not yet been sent.
+   */
   readonly attribute nsIDOMDocument responseXML;
+
+  /**
+   * The status of the response to the HTTP request.
+   */
   readonly attribute unsigned long status;
+
+  /**
+   * The string representing the status of the response to the
+   * HTTP request.
+   */
   readonly attribute string statusText;
 
+  /**
+   * If the HTTP request has been sent already, this method will
+   * abort the request.
+   */
   void   abort();
+
+  /**
+   * Returns all of the HTTP response headers as a string string.
+   * 
+   * @returns A string containing all of the response headers. 
+   *          NULL if the response has not yet been received.
+   */
   string getAllResponseHeaders();  
+
+  /**
+   * Returns the text of the header with the specified name.
+   *
+   * @param header The name of the header to retrieve
+   * @returns A string containing the text of the header specified.
+   *          NULL if the response has not yet been received or the
+   *          header does not exist in the response.
+   */
   string getResponseHeader(in string header);
+
+  /**
+   * Native (non-script) method to initialize a request. Note that
+   * the HTTP request is not sent until the <code>send</code> method 
+   * is invoked.
+   *
+   * @param method The HTTP method - either "POST" or "GET".
+   * @param url The URL to which to send the request.
+   * @param async Whether the request is synchronous or asynchronous
+   *              i.e. whether send returns only after the response
+   *              is received or if it returns immediately after
+   *              sending the request. In the latter case, notification
+   *              of completion is sent through the event listeners.
+   * @param user A username for authentication if necessary.
+   * @param password A password for authentication if necessary.
+   */
   [noscript] void   openRequest(in string method, 
-                              in wstring url, 
-                              in boolean async,
-                              in string user, 
-                              in string password);
-  void   open(in string method, in wstring url);
+                                in string url, 
+                                in boolean async,
+                                in string user, 
+                                in string password);
+
+  /**
+   * Meant to be a script-only method for initializing a request.
+   * The parameters are similar to the ones detailed in the
+   * description of <code>openRequest</code>, but the last
+   * 3 are optional.
+   *
+   * @param method The HTTP method - either "POST" or "GET".
+   * @param url The URL to which to send the request.
+   * @param async (optional) Whether the request is synchronous or 
+   *              asynchronous i.e. whether send returns only after 
+   *              the response is received or if it returns immediately after
+   *              sending the request. In the latter case, notification
+   *              of completion is sent through the event listeners.
+   *              The default value is true.
+   * @param user (optional) A username for authentication if necessary. 
+   *             The default value is the empty string
+   * @param password (optional) A password for authentication if necessary.
+   *                 The default value is the empty string
+   */
+  void   open(in string method, in string url);
+
+  /**
+   * Sends the HTTP request. If the request is asynchronous, returns
+   * immediately after sending the request. If it is synchronous
+   * returns only after the response has been received.
+   *
+   * @param body Either an instance of nsIDOMDocument, nsIInputStream
+   *             or a string (nsISupportsWString in the native calling
+   *             case). This is used to populate the body of the
+   *             HTTP request if the HTTP request method is "POST".
+   *             If the parameter is a nsIDOMDocument, it is serialized.
+   *             If the parameter is a nsIInputStream, it is expected
+   *             to contain the ContentType: and ContentLength: headers
+   *             and trailing carriage-return/line-feed pairs.
+   */
   void   send(in nsISupports body);
+
+  /**
+   * Sets a HTTP request header.
+   *
+   * @param header The name of the header to set in the request.
+   * @param value The body of the header.
+   */
   void   setRequestHeader(in string header, in string value);  
 };
 

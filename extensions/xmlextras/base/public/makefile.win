@@ -26,7 +26,7 @@ XPIDLSRCS = .\nsIDOMSerializer.idl  \
 	    .\nsIDOMParser.idl      \
 	    $(NULL)
 
-MODULE=xmlextras 
+MODULE=xmlsoap
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -438,6 +438,7 @@ nsXMLHttpRequest::StuffReturnValue(nsIDOMEventListener* aListener)
       if (jsel) {
         jsel->GetFunctionObj(&obj);
         *val = OBJECT_TO_JSVAL(obj);
+        cc->SetReturnValueWasSet(JS_TRUE);
         return PR_TRUE;
       }
     }
@@ -579,6 +580,8 @@ nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
 NS_IMETHODIMP 
 nsXMLHttpRequest::GetStatusText(char * *aStatusText)
 {
+  NS_ENSURE_ARG_POINTER(aStatusText);
+  *aStatusText = nsnull;
   if (mChannel) {
     return mChannel->GetResponseString(aStatusText);
   }
@@ -602,6 +605,7 @@ NS_IMETHODIMP
 nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   if (mChannel) {
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     nsCAutoString headers;
@@ -643,6 +647,7 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
   NS_ENSURE_ARG(header);
   NS_ENSURE_ARG_POINTER(_retval);
 
+  *_retval = nsnull;
   if (mChannel) {
     nsCOMPtr<nsIAtom> headerAtom = dont_AddRef(NS_NewAtom(header));
     return mChannel->GetResponseHeader(headerAtom, _retval);
@@ -651,10 +656,10 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
   return NS_OK;
 }
 
-/* noscript void openRequest (in string method, in wstring url, in boolean async, in string user, in string password); */
+/* noscript void openRequest (in string method, in string url, in boolean async, in string user, in string password); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::OpenRequest(const char *method, 
-                              const PRUnichar *url, 
+                              const char *url, 
                               PRBool async, 
                               const char *user, 
                               const char *password)
@@ -680,8 +685,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsAutoString urlStr(url);
-  rv = NS_NewURI(getter_AddRefs(uri), urlStr, mBaseURI);
+  rv = NS_NewURI(getter_AddRefs(uri), url, mBaseURI);
   if (NS_FAILED(rv)) return rv;
 
   // Only http URLs are allowed
@@ -723,9 +727,9 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   return rv;
 }
 
-/* void open (in string method, in wstring url); */
+/* void open (in string method, in string url); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::Open(const char *method, const PRUnichar *url)
+nsXMLHttpRequest::Open(const char *method, const char *url)
 {
   nsresult rv;
   PRBool async = PR_TRUE;
