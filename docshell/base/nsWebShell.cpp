@@ -1839,7 +1839,12 @@ NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
     rv = parentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
                                           aCanHandleContent);
   else
-    *aCanHandleContent = PR_FALSE;
+    // i'm going to try something interesting...if we don't have a parent to dictate whether we
+    // can handle the content, let's say that we CAN handle the content instead of saying that we 
+    // can't. I was running into the scenario where we were running a chrome url to bring up the first window
+    // in the top level webshell. We didn't have a parent content listener yet because it was too early in
+    // the start up process...so we'd fail to load the url....
+    *aCanHandleContent = PR_TRUE;
   return NS_OK;
 } 
 
@@ -4348,6 +4353,8 @@ NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener**
     *aParent = mParentContentListener;
     NS_ADDREF(*aParent);
   }
+  else
+    rv = NS_ERROR_NULL_POINTER;
 
   return rv;
 }
