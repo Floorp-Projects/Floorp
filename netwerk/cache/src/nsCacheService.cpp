@@ -246,7 +246,7 @@ nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
 
     nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
 
-    //** acquire lock
+    //** acquire service lock PR_Lock(mCacheServiceLock);
     rv = ActivateEntry(request, &entry);
     if (NS_SUCCEEDED(rv)) {
         entry->AsyncOpen(request); //** release lock after request queued, etc.
@@ -272,7 +272,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     // doom existing entry if we are processing a FORCE-WRITE
     if (entry && (request->mAccessRequested == nsICache::ACCESS_WRITE)) {
-        Doom(entry);
+        DoomEntry_Internal(entry);
         entry = nsnull;
     }
 
@@ -284,20 +284,49 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
             if (!(request->mAccessRequested & nsICache::ACCESS_WRITE)) {
                 // this was a READ-ONLY request
                 rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
-                goto end;
+                goto error;
             }
 
-            entry = new nsCacheEntry(request->mKey, request->mStoragePolicy);
+            entry = new nsCacheEntry(request->mKey,
+                                     request->mStreamBased,
+                                     request->mStoragePolicy);
             if (!entry)
-                return NS_ERROR_OUT_OF_MEMORY;
+                return NS_ERROR_OUT_OF_MEMORY;            
+
+#if 0
+            //** we could bind entry to device early in somecases
+            if ((request->mStoragePolicy == nsICache::STORE_IN_MEMORY) ||
+                (!request->mStreamBased))
+            {
+                // we can bind the memory cache
+                rv = mMemoryDevice->BindEntry(entry);
+                if (NS_FAILED(rv)) {
+                    //** what to do?
+                    goto error;
+                }
+            } else if (request->mStoragePolicy == nsICache::STORE_ON_DISK) {
+                // we can bind to the disk cache
+                rv = mDiskDevice->BindEntry(entry);
+                if (NS_FAILED(rv)) {
+                    //** what to do?
+                    goto error;
+                }
+            }
+#endif
         }
 
         rv = mActiveEntries.AddEntry(entry);
-        if (NS_FAILED(rv)) goto end;
+        if (NS_FAILED(rv)) goto error;
     }
 
- end:
     *result = entry;
+    return NS_OK;
+    
+ error:
+    *result = nsnull;
+    if (entry) {
+        //** clean up
+    }
     return rv;
 }
 
@@ -321,11 +350,79 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
 
 
 nsresult
-nsCacheService::Doom(nsCacheEntry * entry)
+nsCacheService::BindEntry(nsCacheEntry * entry)
 {
-    //** remove from hashtable
-    //** put on doom list to wait for descriptors to close
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult  rv = NS_OK;
+
+    if (entry->IsStreamData() && entry->IsAllowedOnDisk()) {
+        //** disk (default)
+        rv = mDiskDevice->BindEntry(entry);
+    } else {
+        //** memory cache
+        //** assert entry->IsAllowedInMemory()
+        rv = mMemoryDevice->BindEntry(entry);
+    }
+    
+    if (NS_FAILED(rv)) {
+        //** what to do?
+    }
+
+    return rv;
+}
+
+
+nsresult
+nsCacheService::DoomEntry(nsCacheEntry * entry)
+{
+    nsAutoLock lock(mCacheServiceLock);
+    return DoomEntry_Internal(entry);
+}
+
+
+nsresult
+nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
+{
+    if (entry->IsDoomed())  return NS_OK;
+
+    nsresult  rv = NS_OK;
+    entry->MarkDoomed();
+
+    nsCacheDevice * device = entry->CacheDevice();
+    if (device) {
+        rv = device->DoomEntry(entry);
+        //** check rv, but what can we really do...
+    }
+
+    // remove from active entries
+    rv = mActiveEntries.RemoveEntry(entry);
+    if (NS_FAILED(rv)) {
+        //** what to do
+    }
+    
+    // put on doom list to wait for descriptors to close
+    NS_ASSERTION(PR_CLIST_IS_EMPTY(entry->GetListNode()),
+                 "doomed entry still on device list");
+
+    PR_APPEND_LINK(entry->GetListNode(), &mDoomedEntries);
+                 
+    return rv;
+}
+
+nsresult
+nsCacheService::GetTransportForEntry(nsCacheEntry * entry, nsITransport **result)
+{
+    nsAutoLock lock(mCacheServiceLock);
+    nsresult   rv = NS_OK;
+
+    nsCacheDevice * device = entry->CacheDevice();
+    if (!device) {
+        rv = BindEntry(entry);
+        if (NS_FAILED(rv)) return rv;
+
+        device = entry->CacheDevice();
+    }
+    
+    return device->GetTransportForEntry(entry, result);
 }
 
 
@@ -347,6 +444,7 @@ nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
 void
 nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 {
+    //** check if entry is doomed
     //** remove from hashtable
     nsCacheDevice * device = entry->CacheDevice();
     if (device) {

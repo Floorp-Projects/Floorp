@@ -28,6 +28,7 @@
 
 NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
 
+
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
     : mCacheEntry(entry), mAccessGranted(accessGranted)
@@ -35,6 +36,7 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
   NS_INIT_ISUPPORTS();
   PR_INIT_CLIST(&mListLink);
 }
+
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 {
@@ -62,7 +64,6 @@ nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGr
 }
 
 
-/* readonly attribute string key; */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetKey(char ** result)
 {
@@ -92,7 +93,6 @@ nsCacheEntryDescriptor::GetKey(char ** result)
 }
 
 
-/* readonly attribute unsigned long fetchCount; */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetFetchCount(PRInt32 *fetchCount)
 {
@@ -103,7 +103,7 @@ nsCacheEntryDescriptor::GetFetchCount(PRInt32 *fetchCount)
     return NS_OK;
 }
 
-/* readonly attribute PRTime lastFetched; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastFetched(PRTime *lastFetched)
 {
@@ -114,7 +114,7 @@ nsCacheEntryDescriptor::GetLastFetched(PRTime *lastFetched)
     return NS_OK;
 }
 
-/* readonly attribute PRTime lastValidated; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetLastValidated(PRTime *lastValidated)
 {
@@ -126,7 +126,6 @@ nsCacheEntryDescriptor::GetLastValidated(PRTime *lastValidated)
 }
 
 
-/* attribute PRTime expires; */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetExpirationTime(PRTime *expirationTime)
 {
@@ -136,6 +135,7 @@ nsCacheEntryDescriptor::GetExpirationTime(PRTime *expirationTime)
     *expirationTime = mCacheEntry->ExpirationTime();
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
@@ -147,7 +147,6 @@ nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
 }
 
 
-/* boolean isStreamBased (); */
 NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(PRBool *streamBased)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -166,6 +165,8 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *dataSize)
     *dataSize = mCacheEntry->DataSize();
     return NS_OK;
 }
+
+
 NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
@@ -173,6 +174,7 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
     mCacheEntry->SetDataSize(dataSize);
     return NS_OK;
 }
+
 
 NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
 {
@@ -183,7 +185,6 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
 }
 
 
-/* attribute nsISupports cacheElement; */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetCacheElement(nsISupports * *cacheElement)
 {
@@ -192,6 +193,7 @@ nsCacheEntryDescriptor::GetCacheElement(nsISupports * *cacheElement)
 
     return mCacheEntry->GetData(cacheElement);
 }
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
@@ -202,7 +204,7 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
     return mCacheEntry->SetData(cacheElement);
 }
 
-/* readonly attribute unsigned long accessGranted; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode *accessGranted)
 {
@@ -210,7 +212,7 @@ nsCacheEntryDescriptor::GetAccessGranted(nsCacheAccessMode *accessGranted)
     return NS_OK;
 }
 
-/* attribute unsigned long storageFlags; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *policy)
 {
@@ -218,6 +220,7 @@ nsCacheEntryDescriptor::GetStoragePolicy(nsCacheStoragePolicy *policy)
     
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
@@ -227,16 +230,16 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void doom (); */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Doom()
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsCacheService::GlobalInstance()->DoomEntry(mCacheEntry);
 }
 
-/* void doomAndFailPendingRequests (in nsresult status); */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 {
@@ -246,7 +249,6 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 }
 
 
-/* void markValid (); */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
@@ -256,6 +258,7 @@ nsCacheEntryDescriptor::MarkValid()
     }
     return NS_ERROR_NOT_AVAILABLE;
 }
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Close()
@@ -270,7 +273,6 @@ nsCacheEntryDescriptor::Close()
 }
 
 
-/* string getMetaDataElement (in string key); */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 {
@@ -293,7 +295,6 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 }
 
 
-/* void setMetadataElement (in string key, in string value); */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetMetadataElement(const char *key, const char *value)
 {
@@ -308,7 +309,6 @@ nsCacheEntryDescriptor::SetMetadataElement(const char *key, const char *value)
 }
 
 
-/* nsISimpleEnumerator getMetaDataEnumerator (); */
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator **_retval)
 {
@@ -317,7 +317,7 @@ nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator **_retval)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute nsISupports securityInfo; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
@@ -326,7 +326,7 @@ nsCacheEntryDescriptor::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute nsIProgressEventSink progressEventSink; */
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetProgressEventSink(nsIProgressEventSink * *aProgressEventSink)
 {
