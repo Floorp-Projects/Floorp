@@ -993,6 +993,9 @@ aContentType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
     } 
     else { 
       mParserContext->mScanner->Append(aSourceBuffer); 
+      if(!mParserContext->mPrevContext) {
+        ResumeParse(PR_FALSE);
+      }
     } 
   }//if 
   NS_RELEASE(me); 
@@ -1152,9 +1155,9 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
       mParserContext->mDTD->WillResumeParse();
       PRBool theFirstTime=PR_TRUE;
-      PRBool theIterationIsOk=(allowIteration || (!mParserContext->mPrevContext));
-      
-      while((result==NS_OK) && (theFirstTime || theIterationIsOk)) {
+      PRBool theIterationIsOk=(theFirstTime || allowIteration||(!mParserContext->mPrevContext));
+       
+      while((result==NS_OK) && (theIterationIsOk)) {
         theFirstTime=PR_FALSE;
         if(mUnusedInput.Length()>0) {
           if(mParserContext->mScanner) {
@@ -1196,26 +1199,27 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
 
           PRBool theContextIsStringBased=PRBool(CParserContext::eCTString==mParserContext->mContextType);
           if( (eOnStop==mParserContext->mStreamListenerState) || 
-              (!mParserContext->mMultipart) ||
-              (theContextIsStringBased)) {
+              (!mParserContext->mMultipart) || theContextIsStringBased) {
 
             if(!mParserContext->mPrevContext) {
+              if(eOnStop==mParserContext->mStreamListenerState) {
 
-              DidBuildModel(mStreamStatus);          
+                DidBuildModel(mStreamStatus);          
 
-              MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
-              MOZ_TIMER_STOP(mParseTime);
+                MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
+                MOZ_TIMER_STOP(mParseTime);
 
-              MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
-              MOZ_TIMER_PRINT(mParseTime);
+                MOZ_TIMER_LOG(("Parse Time (this=%p): ", this));
+                MOZ_TIMER_PRINT(mParseTime);
 
-              MOZ_TIMER_LOG(("DTD Time: "));
-              MOZ_TIMER_PRINT(mDTDTime);
+                MOZ_TIMER_LOG(("DTD Time: "));
+                MOZ_TIMER_PRINT(mDTDTime);
 
-              MOZ_TIMER_LOG(("Tokenize Time: "));
-              MOZ_TIMER_PRINT(mTokenizeTime);
+                MOZ_TIMER_LOG(("Tokenize Time: "));
+                MOZ_TIMER_PRINT(mTokenizeTime);
 
-              return result;
+                return result;
+              }
 
             }
             else {
