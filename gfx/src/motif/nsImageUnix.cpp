@@ -107,7 +107,6 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   mColorMap = new nsColorMap;
 
   if (mColorMap != nsnull) {
-printf("NUM PALETTE COLORS %d\n", mNumPalleteColors);
     mColorMap->NumColors = mNumPalleteColors;
     mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
     memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
