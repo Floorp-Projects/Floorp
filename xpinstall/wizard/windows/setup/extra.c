@@ -4842,17 +4842,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   DWORD           dwNumberOfFreeClusters;
   DWORD           dwTotalNumberOfClusters;
 
-  if((gSystemInfo.dwOSType & OS_WIN95_DEBUTE) && (NS_GetDiskFreeSpace != NULL))
-  {
-    ParsePath(szPath, szTempPath, MAX_BUF, FALSE, PP_ROOT_ONLY);
-    NS_GetDiskFreeSpace(szTempPath, 
-                        &dwSectorsPerCluster,
-                        &dwBytesPerSector,
-                        &dwNumberOfFreeClusters,
-                        &dwTotalNumberOfClusters);
-    ullReturn = ((ULONGLONG)dwBytesPerSector * (ULONGLONG)dwSectorsPerCluster * (ULONGLONG)dwNumberOfFreeClusters);
-  }
-  else if(NS_GetDiskFreeSpaceEx != NULL)
+  if(NS_GetDiskFreeSpaceEx != NULL)
   {
     LocateExistingPath(szPath, szExistingPath, sizeof(szExistingPath));
     AppendBackSlash(szExistingPath, sizeof(szExistingPath));
@@ -4882,6 +4872,17 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
     }
     ullReturn = uliFreeBytesAvailableToCaller.QuadPart;
   }
+  else if(NS_GetDiskFreeSpace != NULL)
+  {
+    ParsePath(szPath, szTempPath, MAX_BUF, FALSE, PP_ROOT_ONLY);
+    NS_GetDiskFreeSpace(szTempPath, 
+                        &dwSectorsPerCluster,
+                        &dwBytesPerSector,
+                        &dwNumberOfFreeClusters,
+                        &dwTotalNumberOfClusters);
+    ullReturn = ((ULONGLONG)dwBytesPerSector * (ULONGLONG)dwSectorsPerCluster * (ULONGLONG)dwNumberOfFreeClusters);
+  }
+
 
   if(ullReturn > 1024)
     ullReturn /= 1024;
