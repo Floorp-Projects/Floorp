@@ -118,7 +118,7 @@ nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharse
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& outCharset)
 {
   return NS_OK;
 }
