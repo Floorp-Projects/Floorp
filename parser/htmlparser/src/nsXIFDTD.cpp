@@ -320,6 +320,7 @@ static nsXIfTokenDeallocator gTokenKiller;
  *  @return  
  */
 nsXIFDTD::nsXIFDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
+  NS_INIT_REFCNT();
   mParser=0;
   mTokenizer=0;
   nsCRT::zero(mContextStack,sizeof(mContextStack));
