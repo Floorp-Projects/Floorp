@@ -504,6 +504,7 @@ function CommandUpdate_Mail()
 			messagePane.removeAttribute('draw-focus-border');
 	}*/
 		
+	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
@@ -529,7 +530,6 @@ function CommandUpdate_Mail()
 
 function ThreadTreeUpdate_Mail(command)
 {
-	goUpdateCommand('button_delete');
 	goUpdateCommand('button_reply');
 	goUpdateCommand('button_replyall');
 	goUpdateCommand('button_forward');

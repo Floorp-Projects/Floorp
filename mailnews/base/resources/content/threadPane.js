@@ -18,6 +18,7 @@
  * Rights Reserved.
  */
 
+var gOldNumSelected = 0;
 function ThreadPaneOnClick(event)
 {
     if (event.target.localName != "treecell" &&
@@ -215,8 +216,16 @@ function ThreadPaneSelectionChange()
 	var tree = GetThreadTree();
 	var selectedMessages = tree.selectedItems;
 	var numSelected = selectedMessages.length;
-	if(numSelected == 0 | numSelected == 1)
+	//If the current selected is 1 or 0 then we know that a change has taken place that might
+	//cause us to send out threadTree update notifications. We also care about this if the previous
+	//numSelected was 0 or 1 because we might be involved in something like a SelectAll where we won't
+	//get notified about the change from 0 to 1.
+	if(numSelected == 0 || numSelected == 1 || gOldNumSelected == 0 || gOldNumSelected == 1)
+	{
 		document.commandDispatcher.updateCommands('threadTree-select');
+	}
+	//Store the current number selected.
+	gOldNumSelected = numSelected;
 }
 
 function GetThreadTree()
