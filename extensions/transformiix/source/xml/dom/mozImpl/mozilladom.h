@@ -98,15 +98,6 @@ typedef Node Text;
 nsCOMPtr<nsIDOM##_txClass> ns##_txClass(do_QueryInterface(mMozObject)); \
 NS_ASSERTION(ns##_txClass, "This wrapper's Mozilla object went away!")
 
-// Forward declarations to make these friend of MozillaObjectWrapper.
-PR_STATIC_CALLBACK(const void *)
-txWrapperHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry);
-
-PR_STATIC_CALLBACK(PRBool)
-txWrapperHashMatchEntry(PLDHashTable *table,
-                        const PLDHashEntryHdr *entry,
-                        const void *key);
-
 /**
  * Base wrapper class for a Mozilla object. Owns the Mozilla object through an
  * nsCOMPtr<nsISupports>.
@@ -114,12 +105,6 @@ txWrapperHashMatchEntry(PLDHashTable *table,
 class MozillaObjectWrapper : public TxObject
 {
 public:
-    friend const void * txWrapperHashGetKey(PLDHashTable *table,
-                                            PLDHashEntryHdr *entry);
-    friend PRBool txWrapperHashMatchEntry(PLDHashTable *table,
-                                          const PLDHashEntryHdr *entry,
-                                          const void *key);
-
     /**
      * Construct a wrapper with the specified Mozilla object and document owner.
      *
