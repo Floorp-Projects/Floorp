@@ -42,20 +42,18 @@ nsUserInfo::~nsUserInfo()
 NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 
 NS_IMETHODIMP
-nsUserInfo::GetUsername(char **aUsername)
+nsUserInfo::GetFullname(char **aFullname)
 {
-#ifdef XP_UNIX
     struct passwd *pw = nsnull;
 
     pw = getpwuid (geteuid ());
 
     if (!pw || !pw->pw_gecos) return NS_ERROR_FAILURE;
 
+#ifdef DEBUG_sspitzer
     printf("name = %s\n", pw->pw_gecos);
+#endif
 
-    *aUsername = nsCRT::strdup(pw->pw_gecos);
+    *aFullname = nsCRT::strdup(pw->pw_gecos);
     return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED
-#endif /* XP_UNIX */
 }

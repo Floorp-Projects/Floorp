@@ -18,25 +18,42 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Seth Spitzer <sspitzer@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
-#include "nsISupports.idl"
+#include "nsUserInfo.h"
+#include "nsCRT.h"
 
-[scriptable, uuid(6c1034f0-1dd2-11b2-aa14-e6657ed7bb0b)]
-interface nsIUserInfo : nsISupports
+#ifdef XP_UNIX
+#include <pwd.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif /* XP_UNIX */
+
+nsUserInfo::nsUserInfo()
 {
-    /* the system may know our user's fullname*/
-    readonly attribute string fullname;
-};
+  NS_INIT_REFCNT();
+}
 
-%{C++
+nsUserInfo::~nsUserInfo()
+{
+}
 
-// 14c13684-1dd2-11b2-9463-bb10ba742554
-#define NS_USERINFO_CID \
-{  0x14c13684, 0x1dd2, 0x11b2, \
-  {0x94, 0x63, 0xbb, 0x10, 0xba, 0x74, 0x25, 0x54}}
+NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 
-#define NS_USERINFO_PROGID "component://netscape/userinfo"
+NS_IMETHODIMP
+nsUserInfo::GetFullname(char **aFullname)
+{
+    struct passwd *pw = nsnull;
 
-%}
+    pw = getpwuid (geteuid ());
+
+    if (!pw || !pw->pw_gecos) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_sspitzer
+    printf("name = %s\n", pw->pw_gecos);
+#endif
+
+    *aFullname = nsCRT::strdup(pw->pw_gecos);
+    return NS_OK;
+}
