@@ -245,19 +245,19 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 #define NS_BLOCK_MARGIN_ROOT     0x4
 #define NS_BLOCK_DOCUMENT_ROOT   0x8
 #define NS_AREA_NO_SPACE_MGR     0x10
-#define NS_AREA_WRAP_HEIGHT      0x20
+#define NS_AREA_WRAP_SIZE        0x20
 
 // Create a basic area frame. By default, area frames will extend
 // their height to cover any children that "stick out".
 extern nsresult NS_NewAreaFrame(nsIFrame** aNewFrame,
-                                PRUint32 aFlags = NS_AREA_WRAP_HEIGHT);
+                                PRUint32 aFlags = NS_AREA_WRAP_SIZE);
 
 // These AreaFrame's shrink wrap around their contents
 inline nsresult NS_NewTableCellInnerFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT);
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_SIZE);
 }
 inline nsresult NS_NewTableCaptionFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT);
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_SIZE);
 }
 
 // This type of AreaFrame is the document root and is a margin root for
@@ -273,7 +273,7 @@ inline nsresult NS_NewAbsoluteItemWrapperFrame(nsIFrame** aNewFrame) {
 
 // This type of AreaFrame shrink wraps
 inline nsresult NS_NewFloatingItemWrapperFrame(nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_HEIGHT|NS_BLOCK_SHRINK_WRAP);
+  return NS_NewAreaFrame(aNewFrame, NS_AREA_WRAP_SIZE|NS_BLOCK_SHRINK_WRAP);
 }
 
 // This type of AreaFrame doesn't use its own space manager and

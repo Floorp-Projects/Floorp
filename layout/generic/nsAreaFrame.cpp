@@ -30,6 +30,8 @@
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 
+#undef NOISY_MAX_ELEMENT_SIZE
+
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
@@ -291,20 +293,29 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
   }
 
-  // Compute our desired size taking into account floaters and child frames
-  // that stick outside our box. Note that if this frame has a height specified
-  // by CSS then we don't do this
-  if ((mFlags & NS_AREA_WRAP_HEIGHT) &&
-      (NS_UNCONSTRAINEDSIZE == aReflowState.computedHeight) &&
-      (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
-    nscoord contentYMost = aDesiredSize.height;
-    nscoord yMost = aDesiredSize.mCombinedArea.YMost();
-    if (yMost > contentYMost) {
-      // retain the border+padding for this element after the bottom
-      // most object.
-      aDesiredSize.height = yMost;
+  if (mFlags & NS_AREA_WRAP_SIZE) {
+    // When the area frame is supposed to wrap around all in-flow
+    // children, make sure its big enough to include those that stick
+    // outside the box.
+    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
+      nscoord xMost = aDesiredSize.mCombinedArea.XMost();
+      if (xMost > aDesiredSize.width) {
+        aDesiredSize.width = xMost;
+      }
+      nscoord yMost = aDesiredSize.mCombinedArea.YMost();
+      if (yMost > aDesiredSize.height) {
+        aDesiredSize.height = yMost;
+      }
     }
   }
+
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  ListTag(stdout);
+  printf(": maxElementSize=%d,%d desiredSize=%d,%d\n",
+         aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->width : 0,
+         aDesiredSize.maxElementSize ? aDesiredSize.maxElementSize->height : 0,
+         aDesiredSize.width, aDesiredSize.height);
+#endif
 
   // If we have children that stick outside our box, then remember the
   // combined area, because we'll need it later when sizing our view
