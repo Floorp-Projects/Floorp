@@ -27,7 +27,11 @@ JAVAHOME        = $(JDKHOME)
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = webclient
+ifneq ($(BAL_INTERFACE),)
+LIBRARY_NAME	= wc_share_bal
+else
 LIBRARY_NAME	= wc_share
+endif
 
 CPPSRCS = \
 	jni_util.cpp \
@@ -43,7 +47,12 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq ($(BAL_INTERFACE),)
+INCLUDES := -I../bal -I../bal/solaris $(INCLUDES) 
+else
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) 
+endif
+
 
 JAVAH_CLS= \
 	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
