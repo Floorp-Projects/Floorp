@@ -292,7 +292,6 @@ NS_METHOD GetSharedScriptableHelperForJSIID(PRUint32 language,
 
 /******************************************************/
 
-static JSBool gClassObjectsWereKilled = JS_FALSE;
 static JSBool gClassObjectsWereInited = JS_FALSE;
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
@@ -318,8 +317,6 @@ static const nsModuleComponentInfo CI_nsJSCID =
 
 JSBool xpc_InitJSxIDClassObjects()
 {
-    if(gClassObjectsWereKilled)
-        return JS_FALSE;
     if(gClassObjectsWereInited)
         return JS_TRUE;
 
@@ -366,7 +363,7 @@ void xpc_DestroyJSxIDClassObjects()
     NS_IF_RELEASE(NS_CLASSINFO_NAME(nsJSCID));
     NS_IF_RELEASE(gSharedScriptableHelperForJSIID);
 
-    gClassObjectsWereKilled = JS_TRUE;
+    gClassObjectsWereInited = JS_FALSE;
 }
 
 /***************************************************************************/

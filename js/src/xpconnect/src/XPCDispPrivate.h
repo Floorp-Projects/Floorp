@@ -1128,6 +1128,11 @@ class XPCIDispatchExtension
 {
 public:
     /**
+     * Reset the enabled flag if xpconnect is re-initialized.
+     */
+    static void InitStatics() { mIsEnabled = PR_TRUE; }
+
+    /**
      * returns true if IDispatch extension is enabled
      * @return true if IDispatch extension is enabled
      */

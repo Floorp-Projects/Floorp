@@ -105,6 +105,23 @@ static const nsModuleComponentInfo components[] = {
 #endif
 };
 
+PR_STATIC_CALLBACK(nsresult)
+xpcModuleCtor(nsIModule* self)
+{
+    nsXPConnect::InitStatics();
+    nsXPCException::InitStatics();
+    XPCWrappedNativeScope::InitStatics();
+    XPCPerThreadData::InitStatics();
+    nsJSRuntimeServiceImpl::InitStatics();
+    nsXPCThreadJSContextStackImpl::InitStatics();
+
+#ifdef XPC_IDISPATCH_SUPPORT
+    XPCIDispatchExtension::InitStatics();
+#endif
+
+    return NS_OK;
+}
+
 PR_STATIC_CALLBACK(void)
 xpcModuleDtor(nsIModule* self)
 {
@@ -119,4 +136,4 @@ xpcModuleDtor(nsIModule* self)
 #endif
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(xpconnect, components, xpcModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(xpconnect, components, xpcModuleCtor, xpcModuleDtor)

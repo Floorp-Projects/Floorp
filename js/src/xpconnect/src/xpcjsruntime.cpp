@@ -744,6 +744,8 @@ XPCJSRuntime::~XPCJSRuntime()
     }
 
     XPCConvert::RemoveXPCOMUCStringFinalizer();
+
+    gOldJSGCCallback = NULL;
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,

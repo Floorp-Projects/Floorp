@@ -69,7 +69,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsJSRuntimeServiceImpl,
                               nsIJSRuntimeService,
                               nsISupportsWeakReference)
 
-static nsJSRuntimeServiceImpl* gJSRuntimeService = nsnull;
+nsJSRuntimeServiceImpl*
+nsJSRuntimeServiceImpl::gJSRuntimeService = nsnull;
 
 nsJSRuntimeServiceImpl*
 nsJSRuntimeServiceImpl::GetSingleton()
