@@ -1897,12 +1897,12 @@ FE_ConnectToRemoteHost (MWContext *context, int url_type, char *hostname,
 	    {
 	      if (port && *port)
 		{
-		  short port_num = atoi(port);
+		  int port_num = atoi(port);
 
 		  if (port_num > 0)
 		    {
 		      char buf1[6];
-		      PR_snprintf (buf1, sizeof (buf1), "%.5d", port_num);
+		      PR_snprintf (buf1, sizeof (buf1), "%.5u", port_num);
 		      strcpy(out, buf1);
 		      out += strlen(buf1);
 		    }
