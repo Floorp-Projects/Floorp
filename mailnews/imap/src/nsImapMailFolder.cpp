@@ -2271,7 +2271,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr <nsIDBFolderInfo> transferInfo;
-      dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+      if (dbFolderInfo)
+        dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
       if (mDatabase)
       {
         dbFolderInfo = nsnull;
