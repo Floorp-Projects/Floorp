@@ -302,6 +302,7 @@ nsMessenger::Open3PaneWindow()
 		rv = appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    PR_TRUE,
+                                   PR_TRUE,
                                    NS_CHROME_ALL_CHROME,
                                    nsnull,      // callbacks
                                    NS_SIZETOCONTENT,           // width

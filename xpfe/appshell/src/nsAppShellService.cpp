@@ -107,6 +107,7 @@ public:
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                   nsIURI *aUrl, 
                                   PRBool aShowWindow,
+                                  PRBool aLoadDefaultPage,
                                   PRUint32 aChromeMask,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -129,7 +130,7 @@ protected:
 
   NS_IMETHOD JustCreateTopWindow(nsIWebShellWindow *aParent,
                                  nsIURI *aUrl, 
-                                 PRBool aShowWindow,
+                                 PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -292,8 +293,9 @@ void nsAppShellService::CreateHiddenWindow()
 #endif
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
-    rv = JustCreateTopWindow(nsnull, url, PR_FALSE, NS_CHROME_ALL_CHROME,
-                        nsnull, 100, 100, getter_AddRefs(newWindow));
+    rv = JustCreateTopWindow(nsnull, url, PR_FALSE, PR_FALSE,
+                        NS_CHROME_ALL_CHROME, nsnull, 100, 100,
+                        getter_AddRefs(newWindow));
     if (NS_SUCCEEDED(rv)) {
       mHiddenWindow = newWindow;
       // RegisterTopLevelWindow(newWindow); -- Mac only
@@ -523,7 +525,7 @@ nsAppShellService::PopThreadEventQueue() {
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
                                   nsIURI *aUrl, 
-                                  PRBool aShowWindow,
+                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
                                   PRUint32 aChromeMask,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -532,8 +534,9 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
 {
   nsresult rv;
 
-  rv = JustCreateTopWindow(aParent, aUrl, aShowWindow, aChromeMask,
-                                 aCallbacks, aInitialWidth, aInitialHeight,
+  rv = JustCreateTopWindow(aParent, aUrl, aShowWindow, aLoadDefaultPage,
+                                 aChromeMask, aCallbacks,
+                                 aInitialWidth, aInitialHeight,
                                  aResult);
 
   if (NS_SUCCEEDED(rv))
@@ -550,7 +553,7 @@ nsAppShellService::CreateTopLevelWindow(nsIWebShellWindow *aParent,
 NS_IMETHODIMP
 nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
                                  nsIURI *aUrl, 
-                                 PRBool aShowWindow,
+                                 PRBool aShowWindow, PRBool aLoadDefaultPage,
                                  PRUint32 aChromeMask,
                                  nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
@@ -598,7 +601,7 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, nsnull, aCallbacks,
+                            aShowWindow, aLoadDefaultPage, nsnull, aCallbacks,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {
@@ -670,7 +673,7 @@ nsAppShellService::RunModalDialog(
   } else {
     pushedQueue = PR_TRUE;
     PushThreadEventQueue();
-    rv = CreateTopLevelWindow(aParent, aUrl, PR_TRUE, aChromeMask,
+    rv = CreateTopLevelWindow(aParent, aUrl, PR_TRUE, PR_TRUE, aChromeMask,
             aCallbacks, aInitialWidth, aInitialHeight, &theWindow);
   }
 

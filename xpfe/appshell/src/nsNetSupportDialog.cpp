@@ -560,7 +560,8 @@ nsresult nsNetSupportDialog::DoDialog(  nsString& inXULURL  )
     return result;
   }
 
-  result = appShellService->CreateTopLevelWindow(nsnull, dialogURL, PR_TRUE,
+  result = appShellService->CreateTopLevelWindow(nsnull, dialogURL,
+                              PR_TRUE, PR_TRUE,
                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                               this, 300, 200, &dialogWindow);
   mWebShellWindow = dialogWindow;

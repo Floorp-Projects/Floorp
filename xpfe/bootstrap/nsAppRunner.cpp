@@ -670,7 +670,7 @@ int main1(int argc, char* argv[])
 
 	 		nsCOMPtr<nsIWebShellWindow>  profWindow;
 			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
-				PR_TRUE, NS_CHROME_ALL_CHROME,
+				PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
 				nsnull, profWinWidth, profWinHeight,
 				getter_AddRefs(profWindow));
 
@@ -722,7 +722,7 @@ int main1(int argc, char* argv[])
   if ( !useArgs ) {
       nsCOMPtr<nsIWebShellWindow> newWindow;
       rv = appShell->CreateTopLevelWindow(nsnull, url,
-                               PR_TRUE, NS_CHROME_ALL_CHROME,
+                               PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
                                nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                getter_AddRefs(newWindow));
   } else {

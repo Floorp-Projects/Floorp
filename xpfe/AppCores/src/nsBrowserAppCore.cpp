@@ -610,8 +610,8 @@ newWind(char* urlName)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
-              nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_TRUE,
+              NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
               getter_AddRefs(newWindow));
 
   NS_RELEASE(url);
@@ -679,7 +679,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, 
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                               cb, 504, 436, &window);
     if (window != nsnull) {
@@ -732,7 +732,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                                  NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                                  cb, 504, 436, &window);
     if (window != nsnull) {
@@ -784,7 +784,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                               cb, 504, 436, &window);
 
@@ -881,7 +881,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
     window = nsnull;
-    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE,
+    appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                               NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                               cb, 504, 436, &window);
     if (window != nsnull) {
@@ -1047,6 +1047,14 @@ nsBrowserAppCore::LoadInitialPage(void)
 
   // No URL was provided in the command line. Load the default provided
   // in the navigator.xul;
+
+  // but first, abort if the window doesn't want a default page loaded
+  if (mWebShellWin) {
+    PRBool loadDefault;
+    mWebShellWin->ShouldLoadDefaultPage(&loadDefault);
+    if (!loadDefault)
+      return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMElement>    argsElement;
 
@@ -1750,8 +1758,8 @@ nsBrowserAppCore::NewWindow()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, NS_CHROME_ALL_CHROME,
-              nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, PR_TRUE,
+              NS_CHROME_ALL_CHROME, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
               getter_AddRefs(newWindow));
   NS_RELEASE(url);
   

@@ -50,6 +50,15 @@ public:
 
   NS_IMETHOD LockUntilChromeLoad() = 0;
   NS_IMETHOD GetLockedState(PRBool& aResult) = 0;
+
+  /**
+   * Useful only during window initialization, this method knows whether
+   * the window should try to load a default page, or just wait for
+   * further instructions.
+   * @param aYes returns PR_TRUE iff a default page should be loaded.
+   * @return always NS_OK
+   */
+  NS_IMETHOD ShouldLoadDefaultPage(PRBool *aYes) = 0;
 };
 
 
