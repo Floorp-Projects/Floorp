@@ -78,6 +78,7 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/green-off.gif \
 		$(srcdir)/xul/tests/yellow-on.gif \
 		$(srcdir)/xul/tests/xtal.jpg \
+		$(srcdir)/xul/tests/blue_rock.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

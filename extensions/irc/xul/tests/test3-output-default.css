@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: Text; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -15,7 +15,7 @@
  * Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
  * New Dimenstions Consulting, Inc. All Rights Reserved.
  *
-/*
+ *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
@@ -26,14 +26,14 @@
 body {
 
     margin: 0px 0px 0px 0px;
-    background: black;
+    background: url(blue_rock.gif);
 
 }
 
 /* output from a chat session (contains msgs) */
 .chat-view {
 
-	vertical-align: text-bottom;
+    vertical-align: text-bottom;
 
 }
 
@@ -42,22 +42,20 @@ body {
 .msg {
 
     font-size: 10pt;
-	font-family: sans-serif;
+    font-family: sans-serif;
 
 }
 
 .msg[user="!ME"] {
 
-	background: lightgrey;
+    background: lightgrey;
 
 }
 
 /* message data in output window */
 .msg-data {
 
-	font-weight: bold;
     color: lightgrey;
-    background: #1a2a44;
 
 }
 
@@ -65,7 +63,12 @@ body {
 
 .msg-data[user="!ME"]{
 
-    background: black;
+
+}
+
+.msg-data[msgtype="EVAL"] {
+
+    font-family: monospace;
 
 }
 
@@ -73,30 +76,29 @@ body {
 .msg-data[msgtype="PART"] {
 
     width: 100%;
-	font-variant: small-caps;
-    background: lightgray;
-	color: black;
+    font-variant: small-caps;
+    color: lightblue;
 
 }
 
 .msg-data[msgtype="HELLO"] {
 
-    background: white;
-	color: darkgreen;
+    border: 1 white solid;
+    color: yellow;
 
 }
 
 .msg-data[msgtype="ERROR"] {
 
     background: red;
-	color: white;
+    color: white;
 
 }
 
 .msg-data[msgtype="USAGE"] {
 
     font-style: italic;
-	color: white;
+    color: white;
 
 }
 
@@ -108,27 +110,27 @@ body {
 
 .msg-data[msgtype="ACTION"] {
 
-	color: cyan;
+    color: lightmagenta;
 
 }
 
 .msg-data[msgtype="NOTICE"] {
 
-	color: yellow;
+    color: yellow;
 
 }
 
 .msg-data[msgtype="KICK"] {
 
     background: orange;
-	color: yellow;
+    color: yellow;
 
 }
 
 .msg-data[msgtype="QUIT"] {
 
     background: lightgrey;
-	color: brown;
+    color: brown;
 
 }
 
@@ -137,27 +139,26 @@ body {
 	
     text-align: center;
     vertical-align: middle;
-    color: lightgrey;
-	font-weight: bold;
-    background: grey;
+    color: white;
+    font-weight: bold;
+    border: 1 white solid;
 
 }
 
 .msg-user[parity="odd"]{
 
-    background: black;
 
 }
 
 .msg-user[user="!ME"] {
 
-    color : white;
+    color : yellow;
 
 }
 
 .msg-user[msgtype="ACTION"] {
 
-	font-style: italic;
+    font-style: italic;
 
 }
 
@@ -166,14 +167,14 @@ body {
 
     text-align: center;
     vertical-align: middle;
-	color: brown;
-	font-weight: bold;
-    background: lightgrey;
+    color: silver;
+    border: 1 white solid;
+    font-weight: bold;
 
 }
 
 .msg-type[user="!ME"] {
 
-    background: silver;
+    background: slategrey;
 
 }

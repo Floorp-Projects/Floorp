@@ -17,7 +17,7 @@
             break;
 
           case 3:
-            window.open ("test3.xul", "test1", "resizable=1", "chrome");
+            window.open ("test3.xul", "test3", "resizable=1");
             break;
         }
       }
@@ -28,12 +28,18 @@
     <h1>IRC Test Clients</h1>
 
     <p>
+      <script language="javascript">
+	if (navigator.userAgent.indexOf ("Mozilla/5.0") == -1)
+	  document.write ("<h1>The IRC Clients require Mozilla/5.0," +
+	                  "Things won't work for you.</h1>");
+      </script>  
       Welcome to the Mozilla IRC client tests page.  From here you
-      can select a sample client to try out.  It appears that you
+      can <a href="#samples">select a sample client</a> to try out.
+      It appears that you
       <b>
         <script language="javascript">
           if (Components.classes["component://misc/bs/connection"])
-            document.write ("do");
+	     document.write ("do");
           else
             document.write ("do not");
         </script>
@@ -59,14 +65,38 @@
       related to the IRC client is either JavaScript, XUL, or HTML, and
       therefore is platform independant.
     <p>
+      Currently, the security code which prevents unsigned scripts from 
+      doing Bad Things is incomplete.  In order to work around this limitation,
+      you must edit your <b>all.js</b> file, changing the lines:
+      <pre>
+pref("security.checkdomprops", true);
+pref("security.checkxpconnect", true);
+      </pre>
+      To read:
+      <pre>
+pref("security.checkdomprops", false);
+pref("security.checkxpconnect", false);
+      </pre>
+      This will disable the security code so that the IRC client can create
+      the XPCOM component it needs, and dynamically add content to the output
+      window.
+    <p>
+      <a name="samples">
+      <hr>
+      <h2>Sample clients...</h2>
+      <br>
       <button onclick="loadClient(3)">test3.xul</button>
       is very 
       close to what I expect
       the final client to be.  At least, I expect not to throw out too much of
-      this code.  The UI is open for discussion.  
+      this code.  The UI, on the otherhand, is potentially disposable.  
       <a href="./">irc/tests/</a>test3.css holds the styles
-      for this one.  test3 displays usage info when it starts up, and
-      /help can be used to display all possible commands.
+      for the UI, while <a href="./">irc/tests/</a>test3-output-default.css 
+      defines the default style of the output window.  test3 displays usage
+      info when it starts up, also /help can be used to display all possible
+      commands.
+    <h3>DISCLAIMER: test clients 1 and 2 have bitrotted, and may not work
+       "out of the box"</h3>
     <p>
       <button onclick="loadClient(2)">test2.html</button> is
       (you guessed it) the second
@@ -97,7 +127,7 @@
     <address><a href="mailto:rginda@ndcico.com"></a></address>
 <!-- Created: Wed Sep 15 23:34:25 XXX 1999 -->
 <!-- hhmts start -->
-Last modified: Mon Oct  4 02:46:58 XXX 1999
+Last modified: Tue Oct 26 16:42:09 PDT 1999
 <!-- hhmts end -->
   </body>
 </html>

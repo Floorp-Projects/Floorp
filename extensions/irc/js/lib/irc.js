@@ -461,7 +461,7 @@ function serv_poll(e)
     for (i in lines)
     {
         var ev = new CEvent("server", "rawdata", this, "onRawData");
-        ev.data = lines[i];
+        ev.data = lines[i].replace(/\r/g, "");
         this.parent.eventPump.addEvent (ev);
     }
     

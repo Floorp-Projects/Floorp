@@ -41,7 +41,7 @@ JSLIBFILES = \
     .\js\lib\connection-xpcom.js \
     .\js\lib\command-manager.js \
     .\js\lib\irc.js \
-	.\js\lib\irc-debug.js \
+    .\js\lib\irc-debug.js \
     $(NULL)
 
 XULLIBFILES = \
@@ -60,21 +60,22 @@ TESTFILES = \
     .\xul\tests\test2-handlers.js \
     .\xul\tests\csteel1.jpg \
     .\xul\tests\csteel2.jpg \
-	.\xul\tests\test3.xul \
-	.\xul\tests\test3.css \
-	.\xul\tests\test3-output-default.css \
-	.\xul\tests\test3-output-marble.css \
-	.\xul\tests\test3-static.js \
-	.\xul\tests\test3-handlers.js \
-	.\xul\tests\test3-commands.js \
-	.\xul\tests\g_green.gif \
-	.\xul\tests\g_green_on.gif \
-	.\xul\tests\g_grey.gif \
-	.\xul\tests\g_grey_on.gif \
-	.\xul\tests\green-on.gif \
-	.\xul\tests\green-off.gif \
-	.\xul\tests\yellow-on.gif \
-	.\xul\tests\xtal.jpg \
+    .\xul\tests\test3.xul \
+    .\xul\tests\test3.css \
+    .\xul\tests\test3-output-default.css \
+    .\xul\tests\test3-output-marble.css \
+    .\xul\tests\test3-static.js \
+    .\xul\tests\test3-handlers.js \
+    .\xul\tests\test3-commands.js \
+    .\xul\tests\g_green.gif \
+    .\xul\tests\g_green_on.gif \
+    .\xul\tests\g_grey.gif \
+    .\xul\tests\g_grey_on.gif \
+    .\xul\tests\green-on.gif \
+    .\xul\tests\green-off.gif \
+    .\xul\tests\yellow-on.gif \
+    .\xul\tests\xtal.jpg \
+    .\xul\tests\blue_rock.gif \
     $(NULL)
 
 

@@ -59,6 +59,8 @@ resource:///irc/tests/test3.xul
             oncommand="onDoStyleChange('default')"/>
            <menuitem value="Marble"
             oncommand="onDoStyleChange('marble')"/>
+           <menuitem value="Loud"
+            oncommand="onDoStyleChange('loud')"/>
            <menuseparator/>
            <menuitem value="Other..."
             oncommand="onDoStyleChange('other')"/>

@@ -100,8 +100,9 @@ function initHost(obj)
     obj.eventPump = new CEventPump (10);
     
     obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.primenet.com", port: 6667},
-                                  {name: "irc.cs.cmu.edu",   port: 6667}],
+	new CIRCNetwork ("efnet", [{name: "irc.freei.net", port: 6667},
+                                   {name: "irc.primenet.com", port: 6667},
+                                   {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
     obj.networks["linuxnet"] =
 	new CIRCNetwork ("linuxnet", [{name: "irc.mozilla.org", port: 6667}],
@@ -187,7 +188,6 @@ function setOutputStyle (style)
               "TYPE='text/css' MEDIA='screen'></head> " +
               "<body><div id='output' class='output-window'></div></body>" +
               "</html>");
-    
     client.output = oc.getElementById ("output");
     
 }

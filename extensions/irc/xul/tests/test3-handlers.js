@@ -748,6 +748,9 @@ function my_cjoin (e)
         if (ary[u] == e.user.nick)
             break;
     
+    if (!this.list)
+        this.list = new CListBox();
+
     if (u < ary.length - 1)
     {
         this.list.prepend (e.user.getDecoratedNick(),
