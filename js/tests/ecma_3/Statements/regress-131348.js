@@ -37,7 +37,7 @@
 * Date:    10 Apr 2002
 * SUMMARY: JS should NOT error on |for(i in undefined)|, |for(i in null)|
 *
-* ECMA-262 3rd Edition Final spec says ECMAScript SHOULD error on these.
+* ECMA-262 3rd Edition Final spec says such statements SHOULD error. See:
 * Section 12.6.4  The for-in Statement
 * Section 9.9     ToObject
 *
