@@ -80,6 +80,11 @@ ifdef MOZ_ENABLE_GTK
 DIRS           += widget/src/gtksuperwin widget/src/gtkxtbin
 endif
 
+# Linux installer needs standalone libjar, hence standalone zlib
+ifeq ($(OS_ARCH),Linux)
+DIRS		+= modules/zlib/standalone
+endif
+
 DIRS		+= \
 		widget/timer \
 		include \
@@ -92,7 +97,6 @@ DIRS		+= \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
-		modules/zlib/standalone \
 		modules/libjar \
 		caps \
 		expat \
