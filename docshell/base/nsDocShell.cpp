@@ -377,6 +377,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadReloadNormal:
         loadType = LOAD_RELOAD_NORMAL;
         break;
+    case nsIDocShellLoadInfo::loadReloadCharsetChange:
+        loadType = LOAD_RELOAD_CHARSET_CHANGE;
+        break;
     case nsIDocShellLoadInfo::loadReloadBypassCache:
         loadType = LOAD_RELOAD_BYPASS_CACHE;
         break;
@@ -413,6 +416,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_RELOAD_NORMAL:
         docShellLoadType = nsIDocShellLoadInfo::loadReloadNormal;
+        break;
+    case LOAD_RELOAD_CHARSET_CHANGE:
+        docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
         break;
     case LOAD_RELOAD_BYPASS_CACHE:
         docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassCache;
@@ -472,6 +478,9 @@ nsDocShell::LoadURI(nsIURI * aURI,
             break;
         case nsIDocShellLoadInfo::loadReloadNormal:
             loadType = LOAD_RELOAD_NORMAL;
+            break;
+        case nsIDocShellLoadInfo::loadReloadCharsetChange:
+            loadType = LOAD_RELOAD_CHARSET_CHANGE;
             break;
         case nsIDocShellLoadInfo::loadReloadBypassCache:
             loadType = LOAD_RELOAD_BYPASS_CACHE;
@@ -606,6 +615,9 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
             break;
         case nsIDocShellLoadInfo::loadReloadNormal:
             loadType = LOAD_RELOAD_NORMAL;
+            break;
+        case nsIDocShellLoadInfo::loadReloadCharsetChange:
+            loadType = LOAD_RELOAD_CHARSET_CHANGE;
             break;
         case nsIDocShellLoadInfo::loadReloadBypassCache:
             loadType = LOAD_RELOAD_BYPASS_CACHE;
@@ -2184,19 +2196,16 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
+    NS_ASSERTION(((aReloadFlags & 0xf) == 0),
+                 "Reload command not updated to use load flags!");
+
     // XXXTAB Convert reload type to our type
-    LoadType type;
+    LoadType type = LOAD_RELOAD_NORMAL;
     if (aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
-        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY) {
+        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY)
         type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-    }
-    else if (aReloadFlags & LOAD_HISTORY) {
-        // XXX: LOAD_HISTORY really means load from cache...
-        type = LOAD_HISTORY;
-    } 
-    else {
-        type = LOAD_RELOAD_NORMAL;
-    }
+    else if (aReloadFlags & LOAD_FLAGS_CHARSET_CHANGE)
+        type = LOAD_RELOAD_CHARSET_CHANGE;
 
     nsresult rv;
     /* If you change this part of code, make sure bug 45297 does not re-occur */
@@ -4484,7 +4493,8 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
              * post data result, *only* if it has expired from cache *and*
              * the user has given us permission to do so.
              */
-            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
+            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL
+                || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
                 if (cacheChannel && cacheKey)
                     cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
             }
@@ -4496,7 +4506,8 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
              * New cache may use it creatively on CGI pages with GET
              * method and even on those that say "no-cache"
              */
-            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL) {
+            if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL 
+                || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
                 if (cacheChannel && cacheKey)
                     cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
             }
@@ -4698,8 +4709,10 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     // Load attributes depend on load type...
     switch (mLoadType) {
     case LOAD_HISTORY:
+    case LOAD_RELOAD_CHARSET_CHANGE:
         loadFlags |= nsIRequest::LOAD_FROM_CACHE;
         break;
+    
 
     case LOAD_RELOAD_NORMAL:
         loadFlags |= nsIRequest::VALIDATE_ALWAYS;
