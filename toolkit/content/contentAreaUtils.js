@@ -40,6 +40,93 @@
  * Determine whether or not a given focused DOMWindow is in the content
  * area.
  **/
+ 
+function openNewTabWith(href, linkNode, event, securityCheck)
+{
+  if (securityCheck)
+    urlSecurityCheck(href, document); 
+
+  var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefService);
+  prefSvc = prefSvc.getBranch(null);
+
+  // should we open it in a new tab?
+  var loadInBackground = true;
+  try {
+    loadInBackground = prefSvc.getBoolPref("browser.tabs.loadInBackground");
+  }
+  catch(ex) {
+  }
+
+  if (event && event.shiftKey)
+    loadInBackground = !loadInBackground;
+
+  var browser = top.document.getElementById("content");  
+  var theTab = browser.addTab(href, getReferrer(document));
+  if (!loadInBackground)
+    browser.selectedTab = theTab;
+  
+  if (linkNode)
+    markLinkVisited(href, linkNode);
+}
+
+function openNewWindowWith(href, linkNode, securityCheck) 
+{
+  if (securityCheck)
+    urlSecurityCheck(href, document);
+
+  // if and only if the current window is a browser window and it has a document with a character
+  // set, then extract the current charset menu setting from the current document and use it to
+  // initialize the new browser window...
+  var charsetArg = null;
+  var wintype = document.firstChild.getAttribute('windowtype');
+  if (wintype == "navigator:browser")
+    charsetArg = "charset=" + window._content.document.characterSet;
+
+  var referrer = getReferrer(document);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer);
+  
+  if (linkNode)
+    markLinkVisited(href, linkNode);
+}
+
+function markLinkVisited(href, linkNode)
+{
+   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                               .getService(Components.interfaces.nsIGlobalHistory);
+   if (!globalHistory.isVisited(href)) {
+     globalHistory.addPage(href);
+     var oldHref = linkNode.href;
+     linkNode.href = "";
+     linkNode.href = oldHref;
+   }    
+}
+
+function urlSecurityCheck(url, doc) 
+{
+  // URL Loading Security Check
+  var focusedWindow = doc.commandDispatcher.focusedWindow;
+  var sourceURL = getContentFrameURI(focusedWindow);
+  const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+  var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(nsIScriptSecurityManager);
+  try {
+    secMan.checkLoadURIStr(sourceURL, url, nsIScriptSecurityManager.STANDARD);
+  } catch (e) {
+    throw "Load of " + url + " denied.";
+  }
+}
+
+function isContentFrame(aFocusedWindow)
+{
+  if (!aFocusedWindow)
+    return false;
+
+  var focusedTop = Components.lookupMethod(aFocusedWindow, 'top')
+                             .call(aFocusedWindow);
+
+  return (focusedTop == window.content);
+}
 
 function getContentFrameURI(aFocusedWindow)
 {
