@@ -53,31 +53,11 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
  */
 
 #define MK_OUT_OF_MEMORY -207
-#define MK_POP3_DELE_FAILURE -320
-#define MK_POP3_LIST_FAILURE -317
-#define MK_POP3_MESSAGE_WRITE_ERROR -322
-#define MK_POP3_NO_MESSAGES -316
 #define MK_POP3_OUT_OF_DISK_SPACE -321
-#define MK_POP3_PASSWORD_FAILURE -315
 #define MK_POP3_PASSWORD_UNDEFINED -313
-#define MK_POP3_RETR_FAILURE -319
-#define MK_POP3_SERVER_ERROR -311
-#define MK_POP3_USERNAME_FAILURE -314
-#define MK_POP3_USERNAME_UNDEFINED -312
-#define MK_TCP_READ_ERROR -252
-#define MK_TCP_WRITE_ERROR -236
-#define XP_ERRNO_EWOULDBLOCK WSAEWOULDBLOCK
 #define XP_NO_ANSWER 14401
-#define XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC 14402
-#define XP_RECEIVING_MESSAGE_OF 14403
-#define XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND 14404
 #define XP_THE_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC 14405
-#define XP_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION 14406
 #define XP_PASSWORD_FOR_POP3_USER 14590
-#define MK_MSG_DOWNLOAD_COUNT 14734
-#define MK_UNABLE_TO_CONNECT -281
-#define MK_CONNECTION_REFUSED -242
-#define MK_CONNECTION_TIMED_OUT -241
 
 #define OUTPUT_BUFFER_SIZE 8192 // maximum size of command string
 
@@ -272,6 +252,9 @@ private:
 
 	// progress state information
 	void UpdateProgressPercent (PRUint32 totalDone, PRUint32 total);
+	void UpdateStatus(PRInt32 aStatusID);
+	void UpdateStatusWithString(PRUnichar * aString);
+
 	PRInt32	m_bytesInMsgReceived; 
     PRInt32	m_totalFolderSize;    
   	PRInt32	m_totalDownloadSize; /* Number of bytes we're going to
@@ -298,7 +281,7 @@ private:
                                              PRUint32 length);
     PRInt32 WaitForResponse(nsIInputStream* inputStream, 
                             PRUint32 length);
-    PRInt32 Error(int err_code);
+    PRInt32 Error(PRInt32 err_code);
     PRInt32 SendAuth();
     PRInt32 AuthResponse(nsIInputStream* inputStream, 
                          PRUint32 length);

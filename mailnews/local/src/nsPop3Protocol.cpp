@@ -32,7 +32,11 @@
 #include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalStringBundle.h"
+#include "nsTextFormater.h"
 #include "nsCOMPtr.h"
+
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
 
 /* km
  *
@@ -416,13 +420,26 @@ nsPop3Protocol::~nsPop3Protocol()
 		delete m_lineStreamBuffer;
 }
 
+void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
+{
+	if (m_statusFeedback)
+	{
+		PRUnichar * statusString = LocalGetStringByID(aStatusID);
+		UpdateStatusWithString(statusString);
+		nsCRT::free(statusString);
+	}
+}
+
+void nsPop3Protocol::UpdateStatusWithString(PRUnichar * aStatusString)
+{
+	if (m_statusFeedback && aStatusString)
+		m_statusFeedback->ShowStatusString(aStatusString);
+}
 
 void nsPop3Protocol::UpdateProgressPercent (PRUint32 totalDone, PRUint32 total)
 {
 	if (m_statusFeedback && total > 0)
-	{
-		m_statusFeedback->ShowProgress((100 *(totalDone))  / total);	
-	}
+		m_statusFeedback->ShowProgress((100 *(totalDone))  / total);
 }
 
 void nsPop3Protocol::SetUsername(const char* name)
@@ -473,12 +490,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	// -*-*-*- To Do:
 	// Call SetUsername(accntName);
 	// Call SetPassword(aPassword);
-	nsXPIDLCString password;
-	rv = GetPassword(getter_Copies(password));
-	// if we didn't get a password back, abort the entire operation!
-	if (NS_FAILED(rv) || !password)
-		return NS_ERROR_FAILURE;
-	
+
 	nsCOMPtr<nsIURL> url = do_QueryInterface(aURL, &rv);
 	if (NS_FAILED(rv)) return rv;
 
@@ -636,22 +648,31 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 }
 
 PRInt32
-nsPop3Protocol::Error(int err_code)
+nsPop3Protocol::Error(PRInt32 err_code)
 {
+	// the error code is just the resource id for the error string...
+	// so print out that error message!
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		PRUnichar * alertString = LocalGetStringByID(err_code);
+		if (alertString)
+			dialog->Alert(alertString); 
+		nsCRT::free(alertString);
+	}
+		
+
 #if 0
     ce->URL_s->error_msg = NET_ExplainErrorDetails(err_code, 
 							m_pop3ConData->command_response ? m_pop3ConData->command_response :
 							XP_GetString( XP_NO_ANSWER ) );
-#else
-#ifdef DEBUG
-    printf("Pop3 Protocol Error: %d\n", err_code);
-#endif 
 #endif
 
 	m_pop3ConData->next_state = POP3_ERROR_DONE;
 	m_pop3ConData->pause_for_read = PR_FALSE;
 
-	return(err_code);
+	return -1;
 }
 
 PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer)
@@ -676,7 +697,7 @@ PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer)
 PRInt32 nsPop3Protocol::SendAuth()
 {
     if(!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_SERVER_ERROR));
+        return(Error(POP3_SERVER_ERROR));
 
 	nsCAutoString command("AUTH"CRLF);
 
@@ -739,7 +760,7 @@ PRInt32 nsPop3Protocol::AuthLogin()
     if(!m_pop3ConData->command_succeeded) 
 	{
         m_pop3CapabilityFlags &= ~POP3_HAS_AUTH_LOGIN;
-        return(Error(MK_POP3_SERVER_ERROR));
+        return(Error(POP3_SERVER_ERROR));
     }
 
 	nsCAutoString command("AUTH LOGIN" CRLF);
@@ -772,10 +793,10 @@ PRInt32 nsPop3Protocol::SendUsername()
 {
     /* check login response */
     if(!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_SERVER_ERROR));
+        return(Error(POP3_SERVER_ERROR));
 
     if(m_username.IsEmpty())
-        return(Error(MK_POP3_USERNAME_UNDEFINED));
+        return(Error(POP3_USERNAME_UNDEFINED));
 
 #if 0
     if (POP3_HAS_AUTH_LOGIN & m_pop3CapabilityFlags) 
@@ -805,11 +826,11 @@ PRInt32 nsPop3Protocol::SendPassword()
 {
     /* check username response */
     if (!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_USERNAME_FAILURE));
+        return(Error(POP3_USERNAME_FAILURE));
     nsXPIDLCString password;
 	nsresult rv = GetPassword(getter_Copies(password));
     if (NS_FAILED(rv) || !password || !(* (const char *) password))
-        return Error(MK_POP3_PASSWORD_UNDEFINED);
+        return Error(POP3_PASSWORD_UNDEFINED);
 
 #if 0
     if (POP3_HAS_AUTH_LOGIN & m_pop3CapabilityFlags) 
@@ -935,7 +956,7 @@ nsPop3Protocol::GetStat()
 
     /* check stat response */
     if(!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_PASSWORD_FAILURE));
+        return(Error(POP3_PASSWORD_FAILURE));
 
     /* stat response looks like:  %d %d
      * The first number is the number of articles
@@ -982,7 +1003,7 @@ nsPop3Protocol::GetStat()
 
         if(!m_pop3ConData->msg_del_started)
         {
-            return(Error(MK_POP3_MESSAGE_WRITE_ERROR));
+            return(Error(POP3_MESSAGE_WRITE_ERROR));
         }
     }
 
@@ -1065,7 +1086,7 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
      * will remain constant
      */
     if(!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_LIST_FAILURE));
+        return(Error(POP3_LIST_FAILURE));
 
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
@@ -1151,7 +1172,8 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
      * but it's alright since command_succeeded
      * will remain constant
      */
-    if(!m_pop3ConData->command_succeeded) {
+    if(!m_pop3ConData->command_succeeded) 
+	{
         
         /* UIDL, XTND and TOP are all unsupported for this mail server.
            Tell the user to join the 20th century.
@@ -1161,12 +1183,24 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
            `Maximum Message Size' prefs.  Some people really get their panties
            in a bunch if we download their mail anyway. (bug 11561)
            */
-#if 0
-        char *fmt = XP_GetString(XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC);
-        char *host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-        ce->URL_s->error_msg = PR_smprintf (fmt, (host ? host : "(null)"));
-        PR_FREEIF(host);
-#endif 
+
+		PRUnichar * statusTemplate = LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC);
+		if (statusTemplate)
+		{
+			nsCOMPtr<nsIURI> uri = do_QueryInterface(m_nsIPop3URL);
+			nsXPIDLCString hostName;
+			PRUnichar * statusString = nsnull;
+			uri->GetHost(getter_Copies(hostName));
+
+			if (hostName)
+				statusString = nsTextFormater::smprintf(statusTemplate, (const char *) hostName);  
+			else
+				statusString = nsTextFormater::smprintf(statusTemplate, "(null)"); 
+			UpdateStatusWithString(statusString);
+			nsTextFormater::smprintf_free(statusString);
+			nsCRT::free(statusTemplate);
+		}
+
         m_pop3ConData->next_state = POP3_ERROR_DONE;
         m_pop3ConData->pause_for_read = PR_FALSE;
         return -1;
@@ -1889,7 +1923,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
          * get the response code and byte size
          */
         if(!m_pop3ConData->command_succeeded)
-            return Error(MK_POP3_RETR_FAILURE);
+            return Error(POP3_RETR_FAILURE);
         
         /* a successful RETR response looks like: #num_bytes Junk
            from TOP we only get the +OK and data
@@ -1944,7 +1978,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 #endif
 													
         if(!m_pop3ConData->msg_closure)
-            return(Error(MK_POP3_MESSAGE_WRITE_ERROR));
+            return(Error(POP3_MESSAGE_WRITE_ERROR));
     }
     
     m_pop3ConData->pause_for_read = PR_TRUE;
@@ -2069,21 +2103,24 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
         m_pop3CapabilityFlags &= ~POP3_HAS_TOP;
         m_pop3ConData->truncating_cur_msg = PR_FALSE;
 
-#if 0
-        fmt = XP_GetString( XP_THE_POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND );
+		PRUnichar * statusTemplate = LocalGetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND);
+		if (statusTemplate)
+		{
+			nsCOMPtr<nsIURI> uri = do_QueryInterface(m_nsIPop3URL);
+			nsXPIDLCString hostName;
+			PRUnichar * statusString = nsnull;
+			uri->GetHost(getter_Copies(hostName));
 
-        host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-        size = PL_strlen(fmt) + PL_strlen(host ? host : "(null)") + 100;
-        buf = (char *) PR_CALLOC (size);
-        if (!buf) {
-            PR_FREEIF(host);
-            return MK_OUT_OF_MEMORY;
-        }
-        PR_snprintf (buf, size, fmt, host ? host : "(null)");
-        FE_Alert (ce->window_id, buf);
-        PR_Free (buf);
-        PR_FREEIF(host);
-        
+			if (hostName)
+				statusString = nsTextFormater::smprintf(statusTemplate, (const char *) hostName);  
+			else
+				statusString = nsTextFormater::smprintf(statusTemplate, "(null)"); 
+			UpdateStatusWithString(statusString);
+			nsTextFormater::smprintf_free(statusString);
+			nsCRT::free(statusTemplate);
+		}
+
+#if 0        
         PREF_GetBoolPref ("mail.auth_login", &prefBool);
 #endif 
         if (prefBool && (POP3_XSENDER_UNDEFINED & m_pop3CapabilityFlags ||
@@ -2176,7 +2213,7 @@ PRInt32 nsPop3Protocol::DeleResponse()
     /* the return from the delete will come here
      */
     if(!m_pop3ConData->command_succeeded)
-        return(Error(MK_POP3_DELE_FAILURE));
+        return(Error(POP3_DELE_FAILURE));
     
     
     /*	###chrisf
@@ -2284,7 +2321,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
     if(m_username.IsEmpty())
     {
         // net_pop3_block = PR_FALSE;
-        return(Error(MK_POP3_USERNAME_UNDEFINED));
+        return(Error(POP3_USERNAME_UNDEFINED));
     }
 
     while(!m_pop3ConData->pause_for_read)
@@ -2459,10 +2496,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             break;
             
         case POP3_SEND_USERNAME:
-#if 0
-            NET_Progress(ce->window_id,
-               XP_GetString(XP_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION) );
-#endif
+			UpdateStatus(POP3_CONNECT_HOST_CONTACTED_SENDING_LOGIN_INFORMATION);
             status = SendUsername();
             break;
             
@@ -2576,38 +2610,26 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                        in the status line.  Unfortunately, this tends to be running
                        in a progress pane, so we try to get the real pane and
                        show the message there. */
-#if 0
-                    MWContext* context = ce->window_id;
-                    if (m_pop3ConData->pane) {
-                        MSG_Pane* parentpane = MSG_GetParentPane(m_pop3ConData->pane);
-                        if (parentpane)
-                            context = MSG_GetContext(parentpane);
-                    }
-#endif
-                    if (m_totalDownloadSize <= 0) {
-#if 0
+
+                    if (m_totalDownloadSize <= 0) 
+					{
+						UpdateStatus(POP3_NO_MESSAGES);
                         /* There are no new messages.  */
-                        if (context)
-                            NET_Progress(context,
-                                         XP_GetString(MK_POP3_NO_MESSAGES));
-#endif 
                     }
-                    else {
-#if 0
-                        /* at least 1 message was queued to download */
-                        char *statusTemplate = XP_GetString (MK_MSG_DOWNLOAD_COUNT);
-                        char *statusString = PR_smprintf (statusTemplate,
+                    else 
+					{
+						PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
+						if (statusTemplate)
+						{
+							PRUnichar * statusString = nsTextFormater::smprintf(statusTemplate, 
                               m_pop3ConData->real_new_counter - 1,
                               m_pop3ConData->really_new_messages);  
-											/* (rb) not real
-                         count. m_pop3ConData->last_accessed_msg,
-                         m_pop3ConData->number_of_messages); */ 
-                        if (context)
-                            NET_Progress(context, statusString);
-                        PR_FREEIF(statusString);
-                        if (context == MSG_GetBiffContext())
-#endif 
-                            m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
+							UpdateStatusWithString(statusString);
+							nsTextFormater::smprintf_free(statusString);
+							nsCRT::free(statusTemplate);
+
+						}
+                        m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
                     }
                 }
             }
@@ -2676,7 +2698,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
             if(m_pop3ConData->msg_closure)
             {
                 m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
-                                                MK_POP3_MESSAGE_WRITE_ERROR);
+                                                POP3_MESSAGE_WRITE_ERROR);
                 m_pop3ConData->msg_closure = NULL;
                 m_nsIPop3Sink->AbortMailDelivery();
             }
@@ -2684,28 +2706,21 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
            
             if(m_pop3ConData->msg_del_started)
             {
-#if 0
-                char *statusTemplate = XP_GetString (MK_MSG_DOWNLOAD_COUNT);
-                char *statusString = PR_smprintf (statusTemplate,
-                                                  m_pop3ConData->real_new_counter, 
-                                                  m_pop3ConData->really_new_messages); 
-                                               /* m_pop3ConData->last_accessed_msg,
-                                                  m_pop3ConData->number_of_messages); */
-                MWContext* context = ce->window_id;
-                if (m_pop3ConData->pane) {
-                    MSG_Pane* parentpane = MSG_GetParentPane(m_pop3ConData->pane);
-                    if (parentpane) {
-                        context = MSG_GetContext(parentpane);
-                    }
-                }
-#endif
+
+				PRUnichar * statusTemplate = LocalGetStringByID(POP3_DOWNLOAD_COUNT);
+				if (statusTemplate)
+				{
+					PRUnichar * statusString = nsTextFormater::smprintf(statusTemplate, 
+                             m_pop3ConData->real_new_counter - 1,
+                              m_pop3ConData->really_new_messages);  
+					UpdateStatusWithString(statusString);
+					nsTextFormater::smprintf_free(statusString);
+					nsCRT::free(statusTemplate);
+
+				}
+
                 PR_ASSERT (!TestFlag(POP3_PASSWORD_FAILED));
                 m_nsIPop3Sink->AbortMailDelivery();
-#if 0
-                if (context)
-                    NET_Progress(context, statusString);
-                PR_FREEIF(statusString);
-#endif 
             }
 
             if (TestFlag(POP3_PASSWORD_FAILED))
