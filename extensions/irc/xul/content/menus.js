@@ -40,6 +40,31 @@ function initMenus()
         return "client.prefs['motif.current'] == " +
             "client.prefs['motif." + name + "']";
     };
+    
+    function isFontFamily(name)
+    {
+        return "cx.sourceObject.prefs['font.family'] == '" + name + "'";
+    };
+    
+    function isFontFamilyCustom()
+    {
+        return "!cx.sourceObject.prefs['font.family']." + 
+               "match(/^(default|(sans-)?serif|monospace)$/)";
+    };
+    
+    function isFontSize(size)
+    {
+        return "cx.fontSize == cx.fontSizeDefault + " + size;
+    };
+
+    function isFontSizeCustom()
+    {
+        // It's "custom" if it's set (non-zero/not default), not the default
+        // size (medium) and not +/-2 (small/large).
+        return "'fontSize' in cx && cx.fontSize != 0 && " +
+               "cx.fontSizeDefault != cx.fontSize && " +
+               "Math.abs((cx.fontSizeDefault - cx.fontSize) / 2) != 1";
+    };
 
     function onMenuCommand (event, window)
     {
@@ -124,6 +149,7 @@ function initMenus()
          ["leave",       {visibleif: "cx.channel && cx.channel.active"}],
          ["-"],
          [">popup:motifs"],
+         [">popup:fonts"],
          ["toggle-ccm",
                  {type: "checkbox",
                   checkedif: "client.prefs['collapseMsgs']"}],
@@ -167,6 +193,38 @@ function initMenus()
         ]
     };
     
+    client.menuSpecs["popup:fonts"] = {
+        label: MSG_MNU_FONTS,
+        getContext: getFontContext,
+        items:
+        [
+         ["font-size-bigger", {}],
+         ["font-size-smaller", {}],
+         ["-"],
+         ["font-size-default",
+                 {type: "checkbox", checkedif: "!cx.fontSize"}],
+         ["font-size-small",
+                 {type: "checkbox", checkedif: isFontSize(-2)}],
+         ["font-size-medium",
+                 {type: "checkbox", checkedif: isFontSize(0)}],
+         ["font-size-large",
+                 {type: "checkbox", checkedif: isFontSize(+2)}],
+         ["font-size-other", 
+                 {type: "checkbox", checkedif: isFontSizeCustom()}],
+         ["-"],
+         ["font-family-default",
+                 {type: "checkbox", checkedif: isFontFamily("default")}],
+         ["font-family-serif",
+                 {type: "checkbox", checkedif: isFontFamily("serif")}],
+         ["font-family-sans-serif",
+                 {type: "checkbox", checkedif: isFontFamily("sans-serif")}],
+         ["font-family-monospace",
+                 {type: "checkbox", checkedif: isFontFamily("monospace")}],
+         ["font-family-other", 
+                 {type: "checkbox", checkedif: isFontFamilyCustom()}]
+        ]
+    };
+
     var isopish = "(cx.channel.iAmOp() || cx.channel.iAmHalfOp())";
 
     client.menuSpecs["popup:opcommands"] = {

@@ -89,6 +89,8 @@ function initPrefs()
          ["deleteOnPart",       true],
          ["displayHeader",      true],
          ["guessCommands",      true],
+         ["font.family",        "lucida, sans-serif"],
+         ["font.size",          0],
          ["initialURLs",        []],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)]],
          ["log",                false],
@@ -189,6 +191,8 @@ function getNetworkPrefManager(network)
          ["connectTries",     defer],
          ["desc",             defer],
          ["displayHeader",    client.prefs["networkHeader"]],
+         ["font.family",      defer],
+         ["font.size",        defer],
          ["log",              client.prefs["networkLog"]],
          ["logFileName",      logDefault.path],
          ["motif.current",    defer],
@@ -259,6 +263,8 @@ function getChannelPrefManager(channel)
          ["charset",          defer],
          ["collapseMsgs",     defer],
          ["displayHeader",    client.prefs["channelHeader"]],
+         ["font.family",      defer],
+         ["font.size",        defer],
          ["log",              client.prefs["channelLog"]],
          ["logFileName",      logDefault.path],
          ["motif.current",    defer],
@@ -302,6 +308,8 @@ function getUserPrefManager(user)
          ["charset",          defer],
          ["collapseMsgs",     defer],
          ["displayHeader",    client.prefs["userHeader"]],
+         ["font.family",      defer],
+         ["font.size",        defer],
          ["motif.current",    defer],
          ["outputWindowURL",  defer],
          ["log",              client.prefs["userLog"]],
@@ -350,6 +358,11 @@ function onPrefChanged(prefName, newValue, oldValue)
             CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = newValue;
             break;
             
+        case "font.family":
+        case "font.size":
+            dispatch("sync-fonts");
+            break;
+
         case "showModeSymbols":
             if (newValue)
                 setListMode("symbol");
@@ -467,6 +480,11 @@ function onNetworkPrefChanged(network, prefName, newValue, oldValue)
             network.stayingPower = newValue;
             break;
         
+        case "font.family":
+        case "font.size":
+            dispatch("sync-fonts");
+            break;
+
         case "motif.current":
             dispatch("sync-motifs");
             break;
@@ -511,8 +529,14 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
 
     switch (prefName)
     {
+        case "font.family":
+        case "font.size":
+            dispatch("sync-fonts");
+            break;
+
         case "motif.current":
             dispatch("sync-motifs");
+            break;
 
         case "outputWindowURL":
             dispatch("sync-windows");
@@ -550,8 +574,14 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
 
     switch (prefName)
     {
+        case "font.family":
+        case "font.size":
+            dispatch("sync-fonts");
+            break;
+
         case "motif.current":
             dispatch("sync-motifs");
+            break;
 
         case "outputWindowURL":
             dispatch("sync-windows");

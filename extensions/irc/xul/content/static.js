@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.58";
+const __cz_version   = "0.9.59";
 const __cz_condition = "green";
 
 var warn;
@@ -812,6 +812,35 @@ function updateStalkExpression(network)
     network.stalkExpression = new RegExp(re, "i");
 }
 
+function getDefaultFontSize()
+{
+    const PREF_CTRID = "@mozilla.org/preferences-service;1";
+    const nsIPrefService = Components.interfaces.nsIPrefService;
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    
+    var prefService =
+        Components.classes[PREF_CTRID].getService(nsIPrefService);
+    var prefBranch = prefService.getBranch(null);
+    
+    // PX size pref: font.size.variable.x-western
+    var pxSize = 16;
+    try
+    {
+        pxSize = prefBranch.getIntPref("font.size.variable.x-western");
+    }
+    catch(ex) { }
+    
+    // DPI pref    : browser.display.screen_resolution
+    var dpi = 96;
+    try
+    {
+        dpi = prefBranch.getIntPref("browser.display.screen_resolution");
+    }
+    catch(ex) { }
+    
+    return Math.round((pxSize / dpi) * 72);
+}
+
 function getDefaultContext(cx)
 {
     return getObjectDetails(client.currentObject, cx);
@@ -912,6 +941,26 @@ function getUserlistContext(cx)
         }
     }
 
+    return cx;
+}
+
+function getFontContext(cx)
+{
+    cx = getObjectDetails(client.currentObject, cx);
+    cx.fontSizeDefault = getDefaultFontSize();
+    var view = client;
+    
+    if ("prefs" in cx.sourceObject)
+    {
+        cx.fontFamily = view.prefs["font.family"];
+        if (cx.fontFamily.match(/^(default|(sans-)?serif|monospace)$/))
+            delete cx.fontFamily;
+        
+        cx.fontSize = view.prefs["font.size"];
+        if (cx.fontSize == 0)
+            delete cx.fontSize;
+    }
+    
     return cx;
 }
 
@@ -2071,6 +2120,8 @@ function client_statechange (webProgress, request, stateFlags, status)
             cwin.initOutputWindow(client, frame.source, onMessageViewClick);
             cwin.changeCSS(frame.source.getTimestampCSS("data"), 
                            "cz-timestamp-format");
+            cwin.changeCSS(frame.source.getFontCSS("data"), 
+                           "cz-fonts");
             scrollDown(frame, true);
             webProgress.removeProgressListener(this);
         }
@@ -2630,6 +2681,33 @@ function this_getTimestampCSS(format)
         /* Completely remove the <td>s if they're off, neatens display. */
         css = ".msg-timestamp { display: none; }";
     }
+    
+    if (format == "data")
+        return "data:text/css," + encodeURIComponent(css);
+    return css;
+}
+
+client.getFontCSS =
+CIRCNetwork.prototype.getFontCSS =
+CIRCChannel.prototype.getFontCSS =
+CIRCUser.prototype.getFontCSS =
+function this_getFontCSS(format)
+{
+    /* See this_getTimestampCSS. */
+    var css;
+    var fs;
+    var fn;
+    
+    if (this.prefs["font.family"] != "default")
+        fn = "font-family: " + this.prefs["font.family"] + ";";
+    else
+        fn = "font-family: inherit;";
+    if (this.prefs["font.size"] != 0)
+        fs = "font-size: " + this.prefs["font.size"] + "pt;";
+    else
+        fs = "font-size: medium;";
+    
+    css = "body.chatzilla-body { " + fs + fn + " }";
     
     if (format == "data")
         return "data:text/css," + encodeURIComponent(css);

@@ -73,6 +73,10 @@ function initCommands()
          ["enable-plugin",     cmdAblePlugin,                      CMD_CONSOLE],
          ["eval",              cmdEval,                            CMD_CONSOLE],
          ["focus-input",       cmdFocusInput,                      CMD_CONSOLE],
+         ["font-family",       cmdFont,                            CMD_CONSOLE],
+         ["font-family-other", cmdFont,                                      0],
+         ["font-size",         cmdFont,                            CMD_CONSOLE],
+         ["font-size-other",   cmdFont,                                      0],
          ["goto-url",          cmdGotoURL,                                   0],
          ["goto-url-newwin",   cmdGotoURL,                                   0],
          ["goto-url-newtab",   cmdGotoURL,                                   0],
@@ -113,6 +117,7 @@ function initCommands()
          ["squery",            cmdSquery,           CMD_NEED_SRV | CMD_CONSOLE],
          ["stalk",             cmdStalk,                           CMD_CONSOLE],
          ["supports",          cmdSupports,         CMD_NEED_SRV | CMD_CONSOLE],
+         ["sync-fonts",        cmdSync,                                      0],
          ["sync-headers",      cmdSync,                                      0],
          ["sync-logs",         cmdSync,                                      0],
          ["sync-motifs",       cmdSync,                                      0],
@@ -143,6 +148,20 @@ function initCommands()
          ["name",             "pref username",                     CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
          ["j",                "join",                              CMD_CONSOLE],
+         // These are all the font family/size menu commands...
+         ["font-family-default",    "font-family default",                   0],
+         ["font-family-serif",      "font-family serif",                     0],
+         ["font-family-sans-serif", "font-family sans-serif",                0],
+         ["font-family-monospace",  "font-family monospace",                 0],
+         ["font-size-default",      "font-size default",                     0],
+         ["font-size-small",        "font-size small",                       0],
+         ["font-size-medium",       "font-size medium",                      0],
+         ["font-size-large",        "font-size large",                       0],
+         ["font-size-bigger",       "font-size bigger",                      0],
+         // This next command is not visible; it maps to Ctrl-=, which is what
+         // you get when the user tries to do Ctrl-+ (previous command's key).
+         ["font-size-bigger2",      "font-size bigger",                      0],
+         ["font-size-smaller",      "font-size smaller",                     0],
          ["toggle-oas",       "open-at-startup toggle",                      0],
          ["toggle-ccm",       "toggle-pref collapseMsgs",                    0],
          ["toggle-copy",      "toggle-pref copyMessages",                    0],
@@ -169,7 +188,7 @@ function initCommands()
     client.commandManager.defineCommands(cmdary);
 
     client.commandManager.argTypes.__aliasTypes__(["reason", "action", "text",
-                                                   "message", "params", 
+                                                   "message", "params", "font", 
                                                    "reason", "expression",
                                                    "ircCommand", "prefValue",
                                                    "newTopic", "commandList"],
@@ -637,6 +656,18 @@ function cmdSync(e)
 
     switch (e.command.name)
     {
+        case "sync-fonts":
+            fun = function () 
+                  {
+                      if (view.prefs["displayHeader"])
+                          view.setHeaderState(false);
+                      view.changeCSS(view.getFontCSS("data"), 
+                                     "cz-fonts");
+                      if (view.prefs["displayHeader"])
+                          view.setHeaderState(true);
+                  };
+            break;
+            
         case "sync-headers":
             fun = function () 
                   {
@@ -2225,5 +2256,95 @@ function cmdIgnore(e)
             display(MSG_IGNORE_LIST_1);
         else
             display(getMsg(MSG_IGNORE_LIST_2, arraySpeak(list)));
+    }
+}
+
+function cmdFont(e)
+{
+    var view = client;
+    var pref, val, pVal;
+    
+    if (e.command.name == "font-family")
+    {
+        pref = "font.family";
+        val = e.font;
+        
+        // Save new value, then display pref value.
+        if (val)
+            view.prefs[pref] = val;
+        
+        display(getMsg(MSG_FONTS_FAMILY_FMT, view.prefs[pref]));
+    }
+    else if (e.command.name == "font-size")
+    {
+        pref = "font.size";
+        val = e.fontSize;
+        
+        // Ok, we've got an input.
+        if (val)
+        {
+            // Get the current value, use user's default if needed.
+            pVal = view.prefs[pref];
+            if (pVal == 0)
+                pVal = getDefaultFontSize();
+            
+            // Handle user's input...
+            switch(val) {
+                case "default":
+                    val = 0;
+                    break;
+                    
+                case "small":
+                    val = getDefaultFontSize() - 2;
+                    break;
+                    
+                case "medium":
+                    val = getDefaultFontSize();
+                    break;
+                    
+                case "large":
+                    val = getDefaultFontSize() + 2;
+                    break;
+                    
+                case "smaller":
+                    val = pVal - 2;
+                    break;
+                    
+                case "bigger":
+                    val = pVal + 2;
+                    break;
+                    
+                default:
+                    val = Number(val);
+            }
+            // Save the new value.
+            view.prefs[pref] = val;
+        }
+        
+        // Show the user what the pref is set to.
+        if (view.prefs[pref] == 0)
+            display(MSG_FONTS_SIZE_DEFAULT);
+        else
+            display(getMsg(MSG_FONTS_SIZE_FMT, view.prefs[pref]));
+    }
+    else if (e.command.name == "font-family-other")
+    {
+        val = prompt(MSG_FONTS_FAMILY_PICK, view.prefs["font.family"]);
+        if (!val)
+            return;
+        
+        dispatch("font-family", { font: val });
+    }
+    else if (e.command.name == "font-size-other")
+    {
+        pVal = view.prefs["font.size"];
+        if (pVal == 0)
+            pVal = getDefaultFontSize();
+        
+        val = prompt(MSG_FONTS_SIZE_PICK, pVal);
+        if (!val)
+            return;
+        
+        dispatch("font-size", { fontSize: val });
     }
 }
