@@ -209,36 +209,52 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
-// below a certian pixel size scaled fonts produce poor results
+// below a certian pixel size outline scaled fonts produce poor results
 pref("font.scale.outline.min",      6);
+
+// below a certian pixel size anti-aliased bitmat scaled fonts 
+// produce poor results
+pref("font.scale.aa_bitmap.enable", false);
+pref("font.scale.aa_bitmap.min", 6);
+pref("font.scale.aa_bitmap.undersize", 80);
+pref("font.scale.aa_bitmap.oversize", 120);
+pref("font.scale.aa_bitmap.dark_text.min", 64);
+pref("font.scale.aa_bitmap.dark_text.gain", "0.5");
+pref("font.scale.aa_bitmap.light_text.min", 64);
+pref("font.scale.aa_bitmap.light_text.gain", "1.3");
+
 pref("font.scale.bitmap.min",       12);
 pref("font.scale.bitmap.undersize", 80);
 pref("font.scale.bitmap.oversize",  120);
 
 pref("font.scale.outline.min.ja",      10);
+pref("font.scale.aa_bitmap.min.ja",    12);
 pref("font.scale.bitmap.min.ja",       16);
 pref("font.scale.bitmap.undersize.ja", 80);
 pref("font.scale.bitmap.oversize.ja",  120);
 
 pref("font.scale.outline.min.ko",      10);
+pref("font.scale.aa_bitmap.min.ko",    12);
 pref("font.scale.bitmap.min.ko",       16);
 pref("font.scale.bitmap.undersize.ko", 80);
 pref("font.scale.bitmap.oversize.ko",  120);
 
 pref("font.scale.outline.min.zh-CN",      10);
+pref("font.scale.aa_bitmap.min.zh-CN",    12);
 pref("font.scale.bitmap.min.zh-CN",       16);
 pref("font.scale.bitmap.undersize.zh-CN", 80);
 pref("font.scale.bitmap.oversize.zh-CN",  120);
 
 pref("font.scale.outline.min.zh-TW",      10);
+pref("font.scale.aa_bitmap.min.zh-TW",    12);
 pref("font.scale.bitmap.min.zh-TW",       16);
 pref("font.scale.bitmap.undersize.zh-TW", 80);
 pref("font.scale.bitmap.oversize.zh-TW",  120);
 
 // minimum font sizes
 
-pref("font.min-size.variable.ja", 16);
-pref("font.min-size.fixed.ja", 16);
+pref("font.min-size.variable.ja", 10);
+pref("font.min-size.fixed.ja", 10);
 
 pref("font.min-size.variable.ko", 10);
 pref("font.min-size.fixed.ko", 10);
