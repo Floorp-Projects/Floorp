@@ -196,7 +196,7 @@ ObserverListEnumerator::GetNext(nsISupports** aResult)
         if ( weakRefFactory ) {
             nsCOMPtr<nsISupports> weakref = do_QueryReferent(weakRefFactory);
             NS_RELEASE(*aResult);
-            NS_ADDREF(*aResult = weakref);
+            NS_IF_ADDREF(*aResult = weakref);
 
             return NS_OK;
         }
