@@ -1031,9 +1031,10 @@ public:
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
   NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
 
+  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
+
   NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
-  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion, PRBool aIsSynchronous);
   NS_IMETHOD RepaintSelection(SelectionType aType);
   NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);  
@@ -1047,6 +1048,7 @@ public:
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
+
   NS_IMETHOD GetStyleContextFor(nsIFrame*         aFrame,
                                 nsIStyleContext** aStyleContext) const;
   NS_IMETHOD GetLayoutObjectFor(nsIContent*   aContent,
@@ -1285,6 +1287,7 @@ protected:
   void     PostReflowEvent();
   PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand,
                           nsVoidArray&         aQueue);
+  
   friend struct ReflowEvent;
 
     // utility to determine if we're in the middle of a drag
@@ -3218,27 +3221,32 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
   return mSelection->IntraLineMove(aForward, aExtend);  
 }
 
+
+
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
-#if 1
-  return ScrollPage(aForward);
-#else
-
+  nsresult result;
   nsCOMPtr<nsIViewManager> viewManager;
-  nsresult result = GetViewManager(getter_AddRefs(viewManager));
-  if (NS_SUCCEEDED(result) && viewManager)
-  {
-    nsIScrollableView *scrollView;
-    result = viewManager->GetRootScrollableView(&scrollView);
-    if (NS_SUCCEEDED(result) && scrollView)
-    {
-      
-    }
-  }
-  return result;
-#endif //0
+  nsIScrollableView *scrollableView;
+  result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_FAILED(result)) 
+    return result;
+  if (!viewManager) 
+    return NS_ERROR_UNEXPECTED;
+  result = viewManager->GetRootScrollableView(&scrollableView);
+  if (NS_FAILED(result)) 
+    return result;
+  if (!scrollableView) 
+    return NS_ERROR_UNEXPECTED;
+  nsIView *scrolledView;
+  result = scrollableView->GetScrolledView(scrolledView);
+  mSelection->CommonPageMove(aForward, aExtend, scrollableView, mSelection);
+  // do ScrollSelectionIntoView()
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
+
+
 
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
@@ -3334,93 +3342,66 @@ PresShell::CompleteScroll(PRBool aForward)
 NS_IMETHODIMP
 PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
-  nsCOMPtr<nsIDocument> document;
-  if (NS_FAILED(GetDocument(getter_AddRefs(document))) || !document)
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  NS_NAMED_LITERAL_STRING(bodyTag, "body");
-
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(document);
-  if (!doc) 
-    return NS_ERROR_FAILURE;
-  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-  if (NS_FAILED(result) ||!nodeList)
-    return result?result:NS_ERROR_FAILURE;
-
-
-  PRUint32 count; 
-  nodeList->GetLength(&count);
-
-  if (count < 1)
+  nsIScrollableView *scrollableView;
+  if (!mViewManager) 
+    return NS_ERROR_UNEXPECTED;
+  nsresult result = mViewManager->GetRootScrollableView(&scrollableView);
+  if (NS_FAILED(result)) 
+    return result;
+  if (!scrollableView) 
+    return NS_ERROR_UNEXPECTED;
+  nsIView *scrolledView;
+  result = scrollableView->GetScrolledView(scrolledView);
+  // get a frame
+  void *clientData;
+  scrolledView->GetClientData(clientData);
+  nsIFrame *frame = (nsIFrame *)clientData;
+  if (!frame)
     return NS_ERROR_FAILURE;
 
-  // Use the first body node in the list:
-  nsCOMPtr<nsIDOMNode> node;
-  result = nodeList->Item(0, getter_AddRefs(node)); 
-  if (NS_SUCCEEDED(result) && node)
+  PRInt8  outsideLimit = -1;//search from beginning
+  nsPeekOffsetStruct pos;
+  pos.mAmount = eSelectLine;
+  pos.mTracker = this;
+  pos.mContentOffset = 0;
+  pos.mContentOffsetEnd = 0;
+  pos.mScrollViewStop = PR_FALSE;//dont stop on scrolled views.
+  if (aForward)
   {
-    //return node->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)aBodyElement);
-    // Is above equivalent to this:
-    nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
-    if (bodyElement)
-    {
-      nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
-      if (bodyContent)
-      {
-        nsIFrame *frame = nsnull;
-        result = GetPrimaryFrameFor(bodyContent, &frame);
-        if (frame)
-        {
-          PRInt8  outsideLimit = -1;//search from beginning
-          nsPeekOffsetStruct pos;
-          pos.mAmount = eSelectLine;
-          pos.mTracker = this;
-          pos.mContentOffset = 0;
-          pos.mContentOffsetEnd = 0;
-          pos.mScrollViewStop = PR_FALSE;//dont stop on scrolled views.
-          if (aForward)
-          {
-            outsideLimit = 1;//search from end
-            nsRect rect;
-            frame->GetRect(rect);
-            pos.mDesiredX = rect.width * 2;//search way off to right of line
-            pos.mDirection = eDirPrevious; //seach backwards from the end
-          }
-          else
-          {
-            pos.mDesiredX = -1; //start before line
-            pos.mDirection = eDirNext; //search forwards from before beginning
-          }
-
-          do
-          {
-            result = nsFrame::GetNextPrevLineFromeBlockFrame(mPresContext,
-                                        &pos,
-                                        frame, 
-                                        0, //irrelavent since we set outsidelimit 
-                                        outsideLimit
-                                        );
-            if (NS_COMFALSE == result) //NS_COMFALSE should ALSO break
-              break;
-            if (NS_OK != result || !pos.mResultFrame ) 
-              return result?result:NS_ERROR_FAILURE;
-            nsCOMPtr<nsILineIteratorNavigator> newIt; 
-            //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
-            result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(newIt));
-            if (NS_SUCCEEDED(result) && newIt)
-              frame = pos.mResultFrame;
-          }
-          while (NS_SUCCEEDED(result));//end 'do'
-          
-          result = mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffsetEnd ,aExtend, PR_FALSE, pos.mPreferLeft);
-        }
-        // if we got this far, attempt to scroll no matter what the above result is
-        CompleteScroll(aForward);
-      }
-    }
+    outsideLimit = 1;//search from end
+    nsRect rect;
+    frame->GetRect(rect);
+    pos.mDesiredX = rect.width * 2;//search way off to right of line
+    pos.mDirection = eDirPrevious; //seach backwards from the end
   }
-  return result;
+  else
+  {
+    pos.mDesiredX = -1; //start before line
+    pos.mDirection = eDirNext; //search forwards from before beginning
+  }
+  
+  do
+  {
+    result = nsFrame::GetNextPrevLineFromeBlockFrame(mPresContext,
+                                &pos,
+                                frame, 
+                                0, //irrelavent since we set outsidelimit 
+                                outsideLimit
+                                );
+    if (NS_COMFALSE == result) //NS_COMFALSE should ALSO break
+      break;
+    if (NS_OK != result || !pos.mResultFrame ) 
+      return result?result:NS_ERROR_FAILURE;
+    nsCOMPtr<nsILineIteratorNavigator> newIt; 
+    //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
+    result = pos.mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(newIt));
+    if (NS_SUCCEEDED(result) && newIt)
+      frame = pos.mResultFrame;
+  }
+  while (NS_SUCCEEDED(result));//end 'do'
+  
+  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffsetEnd ,aExtend, PR_FALSE, pos.mPreferLeft);
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 
 NS_IMETHODIMP 

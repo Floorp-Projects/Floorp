@@ -331,6 +331,29 @@ public:
    */
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend)=0;
 
+  /**
+   * Scrolling then moving caret placement code in common to text areas and 
+   * content areas should be located in the implementer
+   * This method will accept the following parameters and perform the scroll 
+   * and caret movement.  It remains for the caller to call the final 
+   * ScrollCaretIntoView if that called wants to be sure the caret is always
+   * visible.
+   *
+   * @param aForward if PR_TRUE, scroll forward if not scroll backward
+   *
+   * @param aExtend  if PR_TRUE, extend selection to the new point
+   *
+   * @param aScrollableView the view that needs the scrolling
+   *
+   * @param aFrameSel the nsIFrameSelection of the caller.
+   *
+   * @return  always NS_OK
+   */
+  NS_IMETHOD CommonPageMove(PRBool aForward, 
+                            PRBool aExtend, 
+                            nsIScrollableView *aScrollableView, 
+                            nsIFrameSelection *aFrameSel)=0;
+
   /** Select All will generally be called from the nsiselectioncontroller implementations.
    *  it will select the whole doc
    */

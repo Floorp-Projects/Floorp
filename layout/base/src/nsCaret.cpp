@@ -244,7 +244,7 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed)
+NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed, nsIView **outView)
 {
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
@@ -256,6 +256,9 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   nsresult err;
   if (!domSelection)
     return NS_ERROR_NOT_INITIALIZED;    // no selection
+
+  if (outView)
+    *outView = nsnull;
 
   // fill in defaults for failure
   outCoordinates->x = -1;
@@ -321,18 +324,10 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   nsRect    clipRect;
   nsIView   *drawingView;     // views are not refcounted
 
-  //#59405, on windows and unix, the coordinate for IME need to be view (nearest native window) related.
-  if (aRelativeToType == eIMECoordinates)
-#if defined(XP_MAC) || defined(XP_MACOSX)
-   aRelativeToType = eTopLevelWindowCoordinates; 
-#else
-   aRelativeToType = eRenderingViewCoordinates; 
-#endif
 
-  GetViewForRendering(theFrame, aRelativeToType, viewOffset, clipRect, drawingView);
+  GetViewForRendering(theFrame, aRelativeToType, viewOffset, clipRect, &drawingView, outView);
   if (!drawingView)
     return NS_ERROR_UNEXPECTED;
-
   // ramp up to make a rendering context for measuring text.
   // First, we get the pres context ...
   nsCOMPtr<nsIPresContext> presContext;
@@ -365,8 +360,11 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   
   // we don't need drawingView anymore so reuse that; reset viewOffset values for our purposes
   if (aRelativeToType == eClosestViewCoordinates)
+  {
     theFrame->GetOffsetFromView(presContext, viewOffset, &drawingView);
-
+    if (outView)
+      *outView = drawingView;
+  }
   // now add the frame offset to the view offset, and we're done
   viewOffset += framePos;
   outCoordinates->x = viewOffset.x;
@@ -755,13 +753,24 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView* &outView)
+void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView)
 {
-  outView = nsnull;
-  
-  if (!caretFrame)
+
+  if (!caretFrame || !outRenderingView)
     return;
-    
+
+    //#59405, on windows and unix, the coordinate for IME need to be view (nearest native window) related.
+  if (coordType == eIMECoordinates)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+   coordType = eTopLevelWindowCoordinates; 
+#else
+   coordType = eRenderingViewCoordinates; 
+#endif
+
+  *outRenderingView = nsnull;
+  if (outRelativeView)
+    *outRelativeView = nsnull;
+  
   NS_ASSERTION(caretFrame, "Should have frame here");
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell)
@@ -778,7 +787,10 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   nsIView* theView = nsnull;
   caretFrame->GetOffsetFromView(presContext, withinViewOffset, &theView);
   if (theView == nsnull) return;
-  
+
+  if (outRelativeView && coordType == eClosestViewCoordinates)
+    *outRelativeView = theView;
+
   nsIView*    returnView = nsnull;    // views are not refcounted
   
   nscoord   x, y;
@@ -831,7 +843,9 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     {
       returnView->GetBounds(outClipRect);
     }
-    
+
+    if (outRelativeView)
+      *outRelativeView = returnView;
   }
   else
   {
@@ -854,13 +868,16 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
       viewOffset.x += x;
       viewOffset.y += y;
       
+      if (outRelativeView && coordType == eTopLevelWindowCoordinates)
+        *outRelativeView = theView;
+
       theView->GetParent(theView);
     } while (theView);
   
   }
   
   
-  outView = returnView;
+  *outRenderingView = returnView;
 }
 
 
@@ -932,7 +949,7 @@ void nsCaret::DrawCaret()
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
   nsIView   *drawingView;
-  GetViewForRendering(mLastCaretFrame, eRenderingViewCoordinates, viewOffset, clipRect, drawingView);
+  GetViewForRendering(mLastCaretFrame, eRenderingViewCoordinates, viewOffset, clipRect, &drawingView, nsnull);
   
   if (drawingView == nsnull)
     return;
