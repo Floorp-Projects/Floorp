@@ -383,7 +383,7 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 		
 		if (inDescription == PR_TRUE)
 		{
-			offset = line.Find("<");
+			offset = line.FindChar('<');
 			if (offset < 0)
 			{
 				if (description.Length() > 0)
@@ -503,7 +503,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	start += (sizeof(kHREFEquals) - 1);
 
 	// ...and find the next so we can chop the URL.
-	PRInt32 end = aLine.Find(PRUnichar('"'), start);
+	PRInt32 end = aLine.FindChar(PRUnichar('"'), PR_FALSE,start);
 	NS_ASSERTION(end >= 0, "unterminated string");
 	if (end < 0)
 		return NS_ERROR_UNEXPECTED;
@@ -528,7 +528,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 
 	// 2. Parse the name
 
-	start = aLine.Find(PRUnichar('>'), end + 1); // 'end' still points to the end of the URL
+	start = aLine.FindChar(PRUnichar('>'), PR_FALSE,end + 1); // 'end' still points to the end of the URL
 	NS_ASSERTION(start >= 0, "open anchor tag not terminated");
 	if (start < 0)
 		return NS_ERROR_UNEXPECTED;
@@ -549,7 +549,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 	start = aLine.Find(kTargetEquals, PR_TRUE);
 	if (start >= 0) {
 		start += (sizeof(kTargetEquals) - 1);
-		end = aLine.Find(PRUnichar('"'), start);
+		end = aLine.FindChar(PRUnichar('"'), PR_FALSE,start);
 		aLine.Mid(target, start, end - start);
 	}
 
@@ -740,7 +740,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 		return NS_ERROR_UNEXPECTED;
 
 	start += (sizeof(kOpenHeading) - 1);
-	start = aLine.Find(PRUnichar('>'), start); // skip to the end of the '<Hn>' tag
+	start = aLine.FindChar(PRUnichar('>'), PR_FALSE,start); // skip to the end of the '<Hn>' tag
 
 	if (start < 0) {
 		NS_WARNING("couldn't find end of header tag");
@@ -900,7 +900,7 @@ BookmarkParser::ParseAttribute(const nsString& aLine,
 		return NS_OK;
 
 	start += aAttributeLen;
-	PRInt32 end = aLine.Find(PRUnichar('"'), start);
+	PRInt32 end = aLine.FindChar(PRUnichar('"'), PR_FALSE,start);
 	aLine.Mid(aResult, start, end - start);
 
 	return NS_OK;
