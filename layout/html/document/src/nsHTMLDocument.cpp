@@ -2358,20 +2358,25 @@ nsHTMLDocument::CaptureEvents(PRInt32 aEventFlags)
   nsIEventListenerManager *manager;
 
   if (NS_OK == GetListenerManager(&manager)) {
-    //mManager->CaptureEvent(aListener);
+    manager->CaptureEvent(aEventFlags);
     NS_RELEASE(manager);
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP    
 nsHTMLDocument::ReleaseEvents(PRInt32 aEventFlags)
 {
-  if (nsnull != mListenerManager) {
-    //mListenerManager->ReleaseEvent(aListener);
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->ReleaseEvent(aEventFlags);
+    NS_RELEASE(manager);
     return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 

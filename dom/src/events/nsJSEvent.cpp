@@ -542,6 +542,111 @@ extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **
       vp = INT_TO_JSVAL(nsIDOMEvent::AT_TARGET);
       JS_SetProperty(jscontext, constructor, "AT_TARGET", &vp);
 
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEDOWN);
+      JS_SetProperty(jscontext, constructor, "MOUSEDOWN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEUP);
+      JS_SetProperty(jscontext, constructor, "MOUSEUP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEOVER);
+      JS_SetProperty(jscontext, constructor, "MOUSEOVER", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEOUT);
+      JS_SetProperty(jscontext, constructor, "MOUSEOUT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEMOVE);
+      JS_SetProperty(jscontext, constructor, "MOUSEMOVE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOUSEDRAG);
+      JS_SetProperty(jscontext, constructor, "MOUSEDRAG", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::CLICK);
+      JS_SetProperty(jscontext, constructor, "CLICK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::DBLCLICK);
+      JS_SetProperty(jscontext, constructor, "DBLCLICK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::KEYDOWN);
+      JS_SetProperty(jscontext, constructor, "KEYDOWN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::KEYUP);
+      JS_SetProperty(jscontext, constructor, "KEYUP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::KEYPRESS);
+      JS_SetProperty(jscontext, constructor, "KEYPRESS", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::DRAGDROP);
+      JS_SetProperty(jscontext, constructor, "DRAGDROP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::FOCUS);
+      JS_SetProperty(jscontext, constructor, "FOCUS", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::BLUR);
+      JS_SetProperty(jscontext, constructor, "BLUR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::SELECT);
+      JS_SetProperty(jscontext, constructor, "SELECT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::CHANGE);
+      JS_SetProperty(jscontext, constructor, "CHANGE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::RESET);
+      JS_SetProperty(jscontext, constructor, "RESET", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::SUBMIT);
+      JS_SetProperty(jscontext, constructor, "SUBMIT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::SCROLL);
+      JS_SetProperty(jscontext, constructor, "SCROLL", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::LOAD);
+      JS_SetProperty(jscontext, constructor, "LOAD", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::UNLOAD);
+      JS_SetProperty(jscontext, constructor, "UNLOAD", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::XFER_DONE);
+      JS_SetProperty(jscontext, constructor, "XFER_DONE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::ABORT);
+      JS_SetProperty(jscontext, constructor, "ABORT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::ERROR);
+      JS_SetProperty(jscontext, constructor, "ERROR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::LOCATE);
+      JS_SetProperty(jscontext, constructor, "LOCATE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::MOVE);
+      JS_SetProperty(jscontext, constructor, "MOVE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::RESIZE);
+      JS_SetProperty(jscontext, constructor, "RESIZE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::FORWARD);
+      JS_SetProperty(jscontext, constructor, "FORWARD", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::HELP);
+      JS_SetProperty(jscontext, constructor, "HELP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::BACK);
+      JS_SetProperty(jscontext, constructor, "BACK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::TEXT);
+      JS_SetProperty(jscontext, constructor, "TEXT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::ALT_MASK);
+      JS_SetProperty(jscontext, constructor, "ALT_MASK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::CONTROL_MASK);
+      JS_SetProperty(jscontext, constructor, "CONTROL_MASK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::SHIFT_MASK);
+      JS_SetProperty(jscontext, constructor, "SHIFT_MASK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMEvent::META_MASK);
+      JS_SetProperty(jscontext, constructor, "META_MASK", &vp);
+
     }
 
   }

@@ -1255,6 +1255,12 @@ nsGenericElement::GetNewListenerManager(nsIEventListenerManager** aResult)
 } 
 
 nsresult
+nsGenericElement::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
 nsGenericElement::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                    const nsIID& aIID)
 {

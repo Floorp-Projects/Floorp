@@ -519,6 +519,12 @@ nsGenericDOMDataNode::GetNewListenerManager(nsIEventListenerManager** aResult)
 } 
 
 nsresult
+nsGenericDOMDataNode::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
 nsGenericDOMDataNode::AddEventListenerByIID(nsIDOMEventListener* aListener,
                                        const nsIID& aIID)
 {

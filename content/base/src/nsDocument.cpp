@@ -2443,6 +2443,11 @@ nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePt
   return NS_NewEventListenerManager(aInstancePtrResult);
 } 
 
+nsresult nsDocument::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+} 
+
 nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, 
                                     nsEvent* aEvent, 
                                     nsIDOMEvent** aDOMEvent,

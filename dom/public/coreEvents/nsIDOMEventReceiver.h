@@ -33,6 +33,7 @@ class nsIDOMFocusListener;
 class nsIDOMLoadListener;
 class nsIDOMDragListener;
 class nsIEventListenerManager;
+class nsIDOMEvent;
 
 /*
  * DOM event source class.  Object that allow event registration and distribution 
@@ -52,6 +53,7 @@ public:
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult) = 0;
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult) = 0;
+  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
 
 };
 #endif // nsIDOMEventReceiver_h__
