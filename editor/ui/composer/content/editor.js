@@ -2037,8 +2037,8 @@ function UpdateWindowTitle()
     }
     // Set window title with " - Composer" appended
     var xulWin = document.documentElement;
-    window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + 
-                   xulWin.getAttribute("titlemodifier");
+    document.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + 
+                     xulWin.getAttribute("titlemodifier");
   } catch (e) { dump(e); }
 }
 

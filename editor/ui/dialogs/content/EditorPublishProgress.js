@@ -111,7 +111,7 @@ function Startup()
   var title = GetDocumentTitle();
   if (!title)
     title = "("+GetString("untitled")+")";
-  window.title = GetString("PublishProgressCaption").replace(/%title%/, title);
+  document.title = GetString("PublishProgressCaption").replace(/%title%/, title);
 
   document.getElementById("PublishToSite").value = 
     GetString("PublishToSite").replace(/%title%/, TruncateStringAtWordEnd(gPublishData.siteName, 25)); 
