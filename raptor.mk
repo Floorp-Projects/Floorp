@@ -52,12 +52,12 @@ DIRS =				\
   modules/security/freenav	\
   modules/libpref		\
   modules/libimg		\
+  base				\
   lib/xp			\
   lib/libnet			\
   lib/liblayer/include
 else
 DIRS =				\
-  base				\
   htmlparser			\
   dom				\
   gfx				\

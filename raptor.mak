@@ -75,9 +75,9 @@ DIST_DIRS =			\
   modules\security\freenav	\
   modules\libpref		\
   modules\libimg		\
+  base                          \
   lib\xp			\
-  lib\libnet			\
-  base
+  lib\libnet
 
 # The list of directories to build the raptor layout engine and
 # related libraries.
