@@ -34,6 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdlib.h>
 #include "nsIStorageStream.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -41,7 +42,8 @@
 
 int main()
 {
-  const char kData[4096] = {0};
+  char kData[4096];
+  memset(kData, 0, sizeof(kData));
 
   nsresult rv;
   nsCOMPtr<nsIStorageStream> stor;
