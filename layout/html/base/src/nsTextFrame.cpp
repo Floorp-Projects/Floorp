@@ -5381,7 +5381,15 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
-  if (!bp || isWhitespace) {
+  if (!bp) {
+    //empty text node, but we need to continue lookahead measurement
+    // AND we need to remember the text frame for later so that we don't 
+    // bother doing the word look ahead.
+    aLineLayout.RecordWordFrame(aTextFrame);
+    return 0;
+  }
+
+  if (isWhitespace) {
     // Don't bother measuring nothing
     *aStop = PR_TRUE;
     return 0;
