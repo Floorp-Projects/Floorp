@@ -431,6 +431,10 @@ nsComponentManagerImpl::PlatformInit(void)
     rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
     if (NS_FAILED(rv)) return rv;
 
+    // Set larger-than-standard buffer size to speed startup.
+    // This will be re-set at the end of PrePopulateRegistry()
+    mRegistry->SetBufferSize(500*1024);
+
     // Check the version of registry. Nuke old versions.
     nsRegistryKey xpcomRoot;
     rv = PlatformVersionCheck(&xpcomRoot);
@@ -902,7 +906,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         //  printf("Populating [ %s, %s ]\n", cidString, contractidString);
     }
 
-    (void)mRegistry->SetBufferSize( 10*1024 );
+    //(void)mRegistry->SetBufferSize( 10*1024 );
   
     mPrePopulationDone = PR_TRUE;
     return NS_OK;
@@ -1945,7 +1949,8 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     nsresult rv;
     mRegistry->SetBufferSize( 500*1024 );
     rv = AutoRegisterImpl(when, inDirSpec);
-    mRegistry->SetBufferSize( 10*1024 );
+    mRegistry->Flush();
+    //mRegistry->SetBufferSize( 10*1024 );
     return rv;
 }
 
