@@ -418,7 +418,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                 htmlContent->GetAttribute("href", href);
 
                 nsIURL* docURL = nsnull;
-                nsIDocument* doc = aContent->GetDocument();
+                nsIDocument* doc = nsnull;
+                aContent->GetDocument(doc);
                 if (nsnull != doc) {
                   docURL = doc->GetDocumentURL();
                   NS_RELEASE(doc);
