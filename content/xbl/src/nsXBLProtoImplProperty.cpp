@@ -215,7 +215,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      getter, 
                                      functionUri.get(),
                                      mGetterText->GetLineNumber(),
-                                     PR_FALSE,
+                                     PR_TRUE,
                                      (void **) &getterObject);
 
       // Make sure we free mGetterText here before setting mJSGetterObject, since
@@ -262,7 +262,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
                                      setter, 
                                      functionUri.get(),
                                      mSetterText->GetLineNumber(),
-                                     PR_FALSE,
+                                     PR_TRUE,
                                      (void **) &setterObject);
 
       // Make sure we free mSetterText here before setting mJSGetterObject, since
