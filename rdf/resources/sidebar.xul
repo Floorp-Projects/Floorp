@@ -52,9 +52,9 @@ function doSort(node)
   <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
   <xul:treehead>
     <xul:treeitem>
-      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#Name' html:onClick="return doSort(this);">Name</xul:treecell>
-      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#URL' html:onClick="return doSort(this);">URL</xul:treecell>
-      <xul:treecell xul:resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' html:onClick="return doSort(this);">Last Modified</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#Name' xul:onclick="return doSort(this);">Name</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#URL' xul:onclick="return doSort(this);">URL</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' xul:onclick="return doSort(this);">Last Modified</xul:treecell>
     </xul:treeitem>
   </xul:treehead>
 

@@ -7,7 +7,7 @@ tree {
  background-color: #eeeeee; 
  border: none; 
  border-spacing: 0px; 
- border-collapse: collapse; 
+// border-collapse: collapse; 
 } 
 
 treeitem { 
