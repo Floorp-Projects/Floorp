@@ -66,7 +66,8 @@ public class WrapFactory
      * @param cx the current Context for this thread
      * @param scope the scope of the executing script
      * @param obj the object to be wrapped. Note it can be null.
-     * @staticType the static type of the object to be wrapped
+     * @staticType type hint. If security restrictions prevent to wrap
+                   object based on its class, staticType will be used instead.
      * @return the wrapped value.
      */
     public Object wrap(Context cx, Scriptable scope,
@@ -98,7 +99,7 @@ public class WrapFactory
         if (cls.isArray()) {
             return NativeJavaArray.wrap(scope, obj);
         }
-        return wrapAsJavaObject(cx, scope, obj);
+        return wrapAsJavaObject(cx, scope, obj, staticType);
     }
 
     /**
@@ -117,7 +118,7 @@ public class WrapFactory
         if (cls.isArray()) {
             return NativeJavaArray.wrap(scope, obj);
         }
-        return wrapAsJavaObject(cx, scope, obj);
+        return wrapAsJavaObject(cx, scope, obj, null);
     }
 
     /**
@@ -133,13 +134,15 @@ public class WrapFactory
      * for Java objects.
      * @param cx the current Context for this thread
      * @param scope the scope of the executing script
-     * @param obj the object to be wrapped
+     * @param javaObject the object to be wrapped
+     * @staticType type hint. If security restrictions prevent to wrap
+                   object based on its class, staticType will be used instead.
      * @return the wrapped value which shall not be null
      */
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
-                                       Object javaObject)
+                                       Object javaObject, Class staticType)
     {
-        return new NativeJavaObject(scope, javaObject, null);
+        return new NativeJavaObject(scope, javaObject, staticType);
     }
 
     /**
