@@ -107,7 +107,7 @@ function fillViewMenu(aEvent)
     gConstructedViewMenuSortItems = true;
   }  
 
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
   const kPrefSvcIID = Components.interfaces.nsIPrefService;
   var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
   var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
@@ -139,7 +139,7 @@ function onViewMenuSortItemSelected(aEvent)
 {
   var resource = aEvent.target.getAttribute("resource");
   
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
   const kPrefSvcIID = Components.interfaces.nsIPrefService;
   var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
   var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");

@@ -74,7 +74,7 @@
         this.refreshSort();
         
         // Observe for changes in sort from other concurrent UI
-        const kPrefSvcContractID = "@mozilla.org/preferences;1";
+        const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
         const kPrefSvcIID = Components.interfaces.nsIPrefService;
         var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
         var prefs = prefSvc.getBranch(null);
@@ -120,7 +120,7 @@
         document.persist(this.id, "colinfo");
         
         // Unhook the sort change observer for this tree
-        const kPrefSvcContractID = "@mozilla.org/preferences;1";
+        const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
         const kPrefSvcIID = Components.interfaces.nsIPrefService;
         var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
         var prefs = prefSvc.getBranch(null);
@@ -157,7 +157,7 @@
       <method name="refreshSort">
         <body>
         <![CDATA[
-          const kPrefSvcContractID = "@mozilla.org/preferences;1";
+          const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
           const kPrefSvcIID = Components.interfaces.nsIPrefService;
           var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
           var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
@@ -724,7 +724,7 @@
         
         onCycleHeader: function (aColumnID, aHeaderElement)
         {
-          const kPrefSvcContractID = "@mozilla.org/preferences;1";
+          const kPrefSvcContractID = "@mozilla.org/preferences-service;1";
           const kPrefSvcIID = Components.interfaces.nsIPrefService;
           var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
           var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
