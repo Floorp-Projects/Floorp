@@ -38,6 +38,7 @@
 #include "nsISO88598ToUnicode.h"
 #include "nsISO88599ToUnicode.h"
 #include "nsISO885910ToUnicode.h"
+#include "nsISO885913ToUnicode.h"
 #include "nsISO885914ToUnicode.h"
 #include "nsISO885915ToUnicode.h"
 #include "nsISOIR111ToUnicode.h"
@@ -87,6 +88,7 @@
 #include "nsUnicodeToISO88598.h"
 #include "nsUnicodeToISO88599.h"
 #include "nsUnicodeToISO885910.h"
+#include "nsUnicodeToISO885913.h"
 #include "nsUnicodeToISO885914.h"
 #include "nsUnicodeToISO885915.h"
 #include "nsUnicodeToISOIR111.h"
@@ -220,6 +222,12 @@ FactoryData g_FactoryData[] =
     &kISO885910ToUnicodeCID,
     nsISO885910ToUnicode::CreateInstance,
     "ISO-8859-10",
+    "Unicode"
+  },
+  {
+    &kISO885913ToUnicodeCID,
+    nsISO885913ToUnicode::CreateInstance,
+    "ISO-8859-13",
     "Unicode"
   },
   {
@@ -515,6 +523,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToISO885910::CreateInstance,
     "Unicode",
     "ISO-8859-10"
+  },
+  {
+    &kUnicodeToISO885913CID,
+    nsUnicodeToISO885913::CreateInstance,
+    "Unicode",
+    "ISO-8859-13"
   },
   {
     &kUnicodeToISO885914CID,
