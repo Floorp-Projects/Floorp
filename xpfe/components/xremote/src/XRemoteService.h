@@ -66,7 +66,8 @@ class XRemoteService : public nsIXRemoteService {
 
   // remote command handlers
   nsresult OpenURL(nsCString &aArgument,
-		   nsIDOMWindowInternal *aParent);
+		   nsIDOMWindowInternal *aParent,
+		   PRBool aOpenBrowser);
 
   nsresult OpenURLDialog(nsIDOMWindowInternal *aParent);
 

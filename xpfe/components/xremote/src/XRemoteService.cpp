@@ -19,6 +19,7 @@
  */
 
 #include "XRemoteService.h"
+#include "XRemoteContentListener.h"
 
 #include <nsIGenericFactory.h>
 #include <nsIWebNavigation.h>
@@ -35,8 +36,13 @@
 #include <nsIWindowWatcher.h>
 #include <nsISupportsPrimitives.h>
 #include <nsIInterfaceRequestor.h>
+#include <nsIInterfaceRequestorUtils.h>
 #include <nsIDocShellTreeItem.h>
 #include <nsIDocShellTreeOwner.h>
+#include <nsIURILoader.h>
+#include <nsCURILoader.h>
+#include <nsIURI.h>
+#include <nsNetUtil.h>
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -170,7 +176,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
       rv = OpenURLDialog(domWindow);
     }
     else {
-      rv = OpenURL(argument, domWindow);
+      rv = OpenURL(argument, domWindow, PR_TRUE);
     }
   }
 
@@ -186,7 +192,30 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("saveas")) {
-    // XXX save files
+    if (argument.Length() == 0) {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+    }
+    else {
+      // check to see if it has a type on it
+      index = 0;
+      FindLastInList(argument, lastArgument, &index);
+      if (lastArgument.EqualsIgnoreCase("html")) {
+	argument.Truncate(index);
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+      else if (lastArgument.EqualsIgnoreCase("text", PR_TRUE)) {
+	argument.Truncate(index);
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+      else if (lastArgument.EqualsIgnoreCase("postscript", PR_TRUE)) {
+	argument.Truncate(index);
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+      else {
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+    }
+   
   }
 
   /*
@@ -202,7 +231,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
     // and openurl should work fine.
     nsCString tempArg("mailto:");
     tempArg.Append(argument);
-    rv = OpenURL(tempArg, domWindow);
+    rv = OpenURL(tempArg, domWindow, PR_FALSE);
   }
 
   /*
@@ -216,7 +245,21 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("addbookmark")) {
-    // XXX bookmarks
+    if (argument.Length() == 0) {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+    }
+    else {
+      index = 0;
+      FindLastInList(argument, lastArgument, &index);
+      if (!lastArgument.IsEmpty()) {
+	nsCString title(lastArgument);
+	argument.Truncate(index);
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+      else {
+	rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+    }
   }
 
   // bad command
@@ -481,7 +524,8 @@ XRemoteService::GetBrowserLocation(char **_retval)
 
 nsresult
 XRemoteService::OpenURL(nsCString &aArgument,
-			nsIDOMWindowInternal *aParent)
+			nsIDOMWindowInternal *aParent,
+			PRBool aOpenBrowser)
 {
   // see if there's a new window argument on the end
   nsCString lastArgument;
@@ -490,7 +534,9 @@ XRemoteService::OpenURL(nsCString &aArgument,
   FindLastInList(aArgument, lastArgument, &index);
   if (lastArgument.EqualsIgnoreCase("new-window")) {
     aArgument.Truncate(index);
-    newWindow = PR_TRUE;
+    // only open new windows if it's OK to do so
+    if (aOpenBrowser)
+      newWindow = PR_TRUE;
     // recheck for a possible noraise argument since it might have
     // been before the new-window argument
     FindLastInList(aArgument, lastArgument, &index);
@@ -498,14 +544,15 @@ XRemoteService::OpenURL(nsCString &aArgument,
       aArgument.Truncate(index);
   }
 
+  // if someone told us to open a new browser when we could and
+  // there's no parent then open a new window.
+  if (aOpenBrowser && !aParent)
+    newWindow = PR_TRUE;
+
   // try to fixup the argument passed in
 
   nsString url;
   url.AssignWithConversion(aArgument);
-
-  // if there's no parent passed in then this is a new window
-  if (!aParent)
-    newWindow = PR_TRUE;
 
   nsresult rv = NS_OK;
 
@@ -526,6 +573,44 @@ XRemoteService::OpenURL(nsCString &aArgument,
     nsCOMPtr<nsIDOMWindow> window;
     rv = OpenChromeWindow(aParent, urlString, "chrome,all,dialog=no",
 			  arg, getter_AddRefs(window));
+  }
+
+  // if no new window flag was set but there's no parent then we have
+  // to pass everything off to the uri loader
+  else if (!aParent) {
+    nsCOMPtr<nsIURILoader> loader;
+    loader = do_GetService(NS_URI_LOADER_CONTRACTID);
+    if (!loader)
+      return NS_ERROR_FAILURE;
+    
+    XRemoteContentListener *listener;
+    listener = new XRemoteContentListener();
+    if (!listener)
+      return NS_ERROR_FAILURE;
+
+    // we own it
+    NS_ADDREF(listener);
+    nsCOMPtr<nsISupports> listenerRef;
+    listenerRef = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener *,
+						   listener));
+    // now the listenerref is the only reference
+    NS_RELEASE(listener);
+
+    // create our uri object
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), url);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
+    // open a channel
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_OpenURI(getter_AddRefs(channel), uri);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
+    // load it
+    rv = loader->OpenURI(channel, nsIURILoader::viewUserClick,
+			 listenerRef);
   }
 
   else {
