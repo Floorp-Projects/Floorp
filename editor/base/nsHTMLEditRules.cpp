@@ -726,6 +726,58 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
     }
   }  
   
+  if (!*aCanOutdent)
+  {
+    // if we haven't found something to outdent yet, also check the parents
+    // of selection endpoints.  We might have a blockquote or list item 
+    // in the parent heirarchy.
+    
+    // gather up info we need for test
+    nsCOMPtr<nsIDOMNode> parent, tmp, root;
+    nsCOMPtr<nsIDOMElement> rootElem;
+    nsCOMPtr<nsISelection> selection;
+    PRInt32 selOffset;
+    res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
+    if (NS_FAILED(res)) return res;
+    if (!rootElem) return NS_ERROR_NULL_POINTER;
+    root = do_QueryInterface(rootElem);
+    if (!root) return NS_ERROR_NO_INTERFACE;
+    res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    if (!selection) return NS_ERROR_NULL_POINTER;
+    
+    // test start parent heirachy
+    res = mHTMLEditor->GetStartNodeAndOffset(selection, address_of(parent), &selOffset);
+    if (NS_FAILED(res)) return res;
+    while (parent && (parent!=root))
+    {
+      if (nsHTMLEditUtils::IsList(parent)     || 
+          nsHTMLEditUtils::IsListItem(parent) ||
+          nsHTMLEditUtils::IsBlockquote(parent))
+      {
+        *aCanOutdent = PR_TRUE;
+        break;
+      }
+      tmp=parent;
+      tmp->GetParentNode(getter_AddRefs(parent));
+    }
+
+    // test end parent heirachy
+    res = mHTMLEditor->GetEndNodeAndOffset(selection, address_of(parent), &selOffset);
+    if (NS_FAILED(res)) return res;
+    while (parent && (parent!=root))
+    {
+      if (nsHTMLEditUtils::IsList(parent)     || 
+          nsHTMLEditUtils::IsListItem(parent) ||
+          nsHTMLEditUtils::IsBlockquote(parent))
+      {
+        *aCanOutdent = PR_TRUE;
+        break;
+      }
+      tmp=parent;
+      tmp->GetParentNode(getter_AddRefs(parent));
+    }
+  }
   return res;
 }
 
