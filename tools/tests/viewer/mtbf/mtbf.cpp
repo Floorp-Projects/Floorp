@@ -108,6 +108,7 @@ void initializeSettings(int argc,char* argv[]){
   for(int i=0;i<argc;i++){
     if(0==strnicmp(argv[i],"-f",2)){
       //determine which url file to use...
+      strcpy(gURLPath, argv[i+1]);
       fstream in(gURLPath,ios::in);
       char buf[500];
       buf[0]=0;
@@ -115,7 +116,10 @@ void initializeSettings(int argc,char* argv[]){
       if(!buf[0]){
         ExitWithError("Unable to read the given URL file",gURLPath);
       }
-      else theURLFileIsValid=true;
+      else {
+	theURLFileIsValid=true;
+      }
+      
     }
     else if(0==strnicmp(argv[i],"-r",2)){
       //determine email recipient...
