@@ -241,17 +241,11 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedFor", info))) {
       details.Append(info);
-      details.Append(NS_LITERAL_STRING("\n"));
-    }
-
-    if (NS_SUCCEEDED(x509Proxy->GetSubjectName(temp1)) && !temp1.IsEmpty()) {
-      details.Append(NS_LITERAL_STRING("  "));
-      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpSubject", info))) {
-        details.Append(info);
-        details.Append(NS_LITERAL_STRING(": "));
+      details.Append(PRUnichar(' '));
+      if (NS_SUCCEEDED(x509Proxy->GetSubjectName(temp1)) && !temp1.IsEmpty()) {
+        details.Append(temp1);
       }
-      details.Append(temp1);
-      details.Append(NS_LITERAL_STRING("\n"));
+      details.Append(PRUnichar('\n'));
     }
 
     if (NS_SUCCEEDED(x509Proxy->GetSerialNumber(temp1)) && !temp1.IsEmpty()) {
@@ -264,9 +258,9 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
       nickWithSerial.Append(NS_LITERAL_STRING(" ["));
       nickWithSerial.Append(temp1);
-      nickWithSerial.Append(NS_LITERAL_STRING("]"));
+      nickWithSerial.Append(PRUnichar(']'));
 
-      details.Append(NS_LITERAL_STRING("\n"));
+      details.Append(PRUnichar('\n'));
     }
 
 
@@ -289,24 +283,24 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
         }
 
         if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(temp1)) && !temp1.IsEmpty()) {
-          details.Append(NS_LITERAL_STRING(" "));
+          details.Append(PRUnichar(' '));
           if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoFrom", info))) {
             details.Append(info);
+            details.Append(PRUnichar(' '));
           }
-          details.Append(NS_LITERAL_STRING(" "));
           details.Append(temp1);
         }
 
         if (NS_SUCCEEDED(validity->GetNotAfterLocalTime(temp1)) && !temp1.IsEmpty()) {
-          details.Append(NS_LITERAL_STRING(" "));
+          details.Append(PRUnichar(' '));
           if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoTo", info))) {
             details.Append(info);
+            details.Append(PRUnichar(' '));
           }
-          details.Append(NS_LITERAL_STRING(" "));
           details.Append(temp1);
         }
 
-        details.Append(NS_LITERAL_STRING("\n"));
+        details.Append(PRUnichar('\n'));
       }
     }
 
@@ -315,37 +309,41 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.Append(NS_LITERAL_STRING("  "));
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoPurposes", info))) {
         details.Append(info);
+        details.Append(NS_LITERAL_STRING(": "));
       }
-      details.Append(NS_LITERAL_STRING(": "));
       details.Append(temp1);
-      details.Append(NS_LITERAL_STRING("\n"));
+      details.Append(PRUnichar('\n'));
     }
 
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
       details.Append(info);
-      details.Append(NS_LITERAL_STRING("\n"));
+      details.Append(PRUnichar(' '));
+
+      if (NS_SUCCEEDED(x509Proxy->GetIssuerName(temp1)) && !temp1.IsEmpty()) {
+        details.Append(temp1);
+      }
+
+      details.Append(PRUnichar('\n'));
     }
 
-    if (NS_SUCCEEDED(x509Proxy->GetIssuerName(temp1)) && !temp1.IsEmpty()) {
-      details.Append(NS_LITERAL_STRING("  "));
-      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpSubject", info))) {
-        details.Append(info);
-        details.Append(NS_LITERAL_STRING(": "));
+    if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoStoredIn", info))) {
+      details.Append(info);
+      details.Append(PRUnichar(' '));
+
+      if (NS_SUCCEEDED(x509Proxy->GetTokenName(temp1)) && !temp1.IsEmpty()) {
+        details.Append(temp1);
       }
-      details.Append(temp1);
-      details.Append(NS_LITERAL_STRING("\n"));
     }
 
     /*
       the above produces output the following output:
 
-      Issued to: 
-        Subject: $subjectName
+      Issued to: $subjectName
         Serial number: $serialNumber
-        Valid from: $starting_date to $expriation_date
+        Valid from: $starting_date to $expiration_date
         Purposes: $purposes
-      Issued by:
-        Subject: $issuerName
+      Issued by: $issuerName
+      Stored in: $token
     */
   }
   

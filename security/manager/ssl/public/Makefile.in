@@ -45,6 +45,7 @@ MODULE = pipnss
 GRE_MODULE	= 1
 
 XPIDLSRCS = \
+    nsIFormSigningDialog.idl \
     nsIBadCertListener.idl \
     nsICertSelect.idl \
     nsIX509Cert.idl \
