@@ -193,5 +193,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
+#ifndef XP_MAC		// temporary
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+#endif // XP_MAC
 }
