@@ -51,7 +51,6 @@ CPPSRCS	= Double.cpp \
 	Tokenizer.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
-	txStringUtils.cpp \
 	txURIUtils.cpp
 
 ifdef TX_EXE
