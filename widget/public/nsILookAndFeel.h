@@ -52,6 +52,7 @@ public:
     eMetric_WindowBorderWidth,
     eMetric_WindowBorderHeight,
     eMetric_Widget3DBorder,
+    eMetric_TextFieldBorder,                              // Native border size
     eMetric_TextFieldHeight,
     eMetric_TextVerticalInsidePadding,                    // needed only because of GTK
     eMetric_TextShouldUseVerticalInsidePadding,           // needed only because of GTK
