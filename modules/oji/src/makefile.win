@@ -41,6 +41,8 @@ OBJS = .\$(OBJDIR)\jvmmgr.obj \
        .\$(OBJDIR)\lcglue.obj \
        .\$(OBJDIR)\nsCSecurityContext.obj \
        .\$(OBJDIR)\nsCJVMManagerFactory.obj \
+       .\$(OBJDIR)\nsCNullSecurityContext.obj \
+       .\$(OBJDIR)\ProxyClassLoader.obj \
        .\$(OBJDIR)\scd.obj
 
 #//------------------------------------------------------------------------
