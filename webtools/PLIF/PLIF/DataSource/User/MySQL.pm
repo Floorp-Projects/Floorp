@@ -110,7 +110,7 @@ sub setUser {
                                         WHERE userID = ?', $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey, $userID);
     } else {
         return $self->database($app)->execute('INSERT INTO user SET mode=?, password=?, adminMessage=?, newFieldID=?, newFieldValue=?, newFieldKey=?',
-                                              $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey)->ID;
+                                              $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldKey)->MySQLID;
     }
 }
 
@@ -181,7 +181,7 @@ sub setField {
                                        $category, $name, $type, $data, $mode, $fieldID);
     } else {
         return $self->database($app)->execute('INSERT INTO userDataTypes SET category=?, name=?, type=?, data=?, mode=?',
-                                              $category, $name, $type, $data, $mode)->ID;
+                                              $category, $name, $type, $data, $mode)->MySQLID;
     }
 }
 
@@ -235,7 +235,7 @@ sub setGroup {
                   'Invalid arguments to DataSource::User::setGroup: \'groupID\' and \'groupName\' both undefined');
     if (not defined($groupID)) {
         # add a new record
-        $groupID = $self->database($app)->execute('INSERT INTO groups SET name=?', $groupName)->ID;
+        $groupID = $self->database($app)->execute('INSERT INTO groups SET name=?', $groupName)->MySQLID;
     } elsif (defined($groupName)) {
         # replace the existing record
         $self->database($app)->execute('UPDATE groups SET name=? WHERE groupID = ?', $groupName, $groupID);
@@ -264,7 +264,7 @@ sub addRight {
     my $self = shift;
     my($app, $name) = @_;
     # only adds $name if it isn't there already, because name is a unique index
-    my $rightID = $self->database($app)->execute('INSERT INTO rights SET name=?', $name)->ID;
+    my $rightID = $self->database($app)->execute('INSERT INTO rights SET name=?', $name)->MySQLID;
 }
 
 

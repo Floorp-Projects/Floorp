@@ -132,6 +132,8 @@ sub variants {
     return $self->variantsCache->{$protocol};
 }
 
+
+# XXX The next four SO have to change...
 sub acceptType {
     my $self = shift;
     my($app, $protocol) = @_;
@@ -156,9 +158,14 @@ sub acceptLanguage {
     return $app->input->acceptLanguage;
 }
 
+
+# "Low Level" API
+
 sub getString {
     my $self = shift;
+    # my($app, $variant, $string) = @_;
     $self->notImplemented();
+    # return data
 }
 
 sub getDefaultString {
@@ -169,6 +176,50 @@ sub getDefaultString {
 
 sub getVariants {
     my $self = shift;
+    # my($app, $protocol) = @_;
+    $self->notImplemented();
+    # return id, quality, type, encoding, charset, language
+}
+
+sub getVariant {
+    my $self = shift;
+    # my($app, $id) = @_;
+    $self->notImplemented();
+    # return name, protocol, quality, type, encoding, charset, language, description, translator
+}
+
+sub getVariantStrings {
+    my $self = shift;
+    # my($app, $variant) = @_;
+    $self->notImplemented();
+    # return ( string => data )*;
+}
+
+sub getStringVariants {
+    my $self = shift;
+    # my($app, $string) = @_;
+    $self->notImplemented();
+    # return { name, protocol, quality, type, encoding, charset, language, description, translator, string }*;
+}
+
+sub getDescribedVariants {
+    my $self = shift;
+    # my($app) = @_;
+    $self->notImplemented();
+    # return [id, name, protocol, quality, type, encoding, charset, language, description, translator]*
+}
+
+# an undefined $id means "add me please"
+sub setVariant {
+    my $self = shift;
+    # my($app, $id, $name, $protocol, $quality, $type, $encoding, $charset, $language, $description, $translator) = @_;
+    $self->notImplemented();
+}
+
+sub setString {
+    my $self = shift;
+    # my($app, $variant, $string, $data) = @_;
+    # if $data = '' then delete the relevant string from the database
     $self->notImplemented();
 }
 

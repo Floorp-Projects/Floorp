@@ -30,7 +30,6 @@ package PLIF::Service::Coses;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
-use XML::Parser; # DEPENDENCY
 @ISA = qw(PLIF::Service);
 1;
 
@@ -44,7 +43,7 @@ sub expand {
     my $self = shift;
     my($app, $session, $protocol, $string, $data) = @_;
     my @index = (); my $index = 0;
-    my @stack = (); my $stack = $self->parseString($self->getString($app, $session, $protocol, $string));
+    my @stack = (); my $stack = $app->getService('service.xml')->parseString($self->getString($app, $session, $protocol, $string));
     my @scope = (); my $scope = {'data' => $data};
     my $result = '';
     if (not $scope->{'coses: skip sanitation'}) {
@@ -189,14 +188,6 @@ sub expand {
             }
         }
     }
-}
-
-sub parseString { 
-    my $self = shift;
-    my($string) = @_;
-    # parse string (it's an XML file)
-    my $parser = new XML::Parser(Style => 'Tree');
-    return $parser->parse($string);
 }
 
 sub getString {
@@ -390,6 +381,8 @@ sub sort {
         } elsif ($order eq 'reverse length') {
             return sort { length($a) <=> length($a) } @list;
         }
+        # XXX we need to also support:
+        #   Sorting by a particular subkey of a hash to sort an array of hashes
     } 
     # else:
     return reverse @list;

@@ -49,7 +49,68 @@ sub getVariants {
     return $self->database($app)->execute('SELECT id, quality, type, encoding, charset, language FROM stringVariants WHERE protocol = ?', $protocol)->rows;
 }
 
-# XXX setters would be nice too!
+sub getDescribedVariants {
+    my $self = shift;
+    my($app) = @_;
+    return $self->database($app)->execute('SELECT id, name, protocol, quality, type, encoding, charset, language, description, translator FROM stringVariants')->rows;
+}
+
+sub getVariant {
+    my $self = shift;
+    my($app, $id) = @_;
+    return $self->database($app)->execute('SELECT name, protocol, quality, type, encoding, charset, language, description, translator FROM stringVariants WHERE id = ?', $id)->row;
+}
+
+sub getVariantStrings {
+    my $self = shift;
+    my($app, $variant) = @_;
+    my %result = ();
+    foreach my $string ($self->database($app)->execute('SELECT name, data FROM strings WHERE variant = ?', $variant)->rows) {
+        $result{$string->[0]} = $string->[1];
+    }
+    return %result;
+}
+
+sub getStringVariants {
+    my $self = shift;
+    my($app, $string) = @_;
+    my @result = ();
+    foreach my $variant ($self->database($app)->execute('SELECT variant.name, variant.protocol, variant.quality, variant.type, variant.encoding, variant.charset, variant.language, variant.description, variant.translator, strings.data FROM stringVariants AS variant, strings WHERE strings.name = ? AND strings.variant = variant.name', $string)->rows) {
+        push(@result, {
+            'name' => $variant->[0],
+            'protocol' => $variant->[1],
+            'quality' => $variant->[2],
+            'type' => $variant->[3],
+            'encoding' => $variant->[4],
+            'charset' => $variant->[5],
+            'language' => $variant->[6],
+            'description' => $variant->[7],
+            'translator' => $variant->[8];
+            'string' => $variant->[9];
+        });
+    }
+    return @result;
+}
+
+sub setVariant {
+    my $self = shift;
+    my($app, $id, $name, $protocol, $quality, $type, $encoding, $charset, $language, $description, $translator) = @_;
+    if (defined($id)) {
+        $self->database($app)->execute('UPDATE stringVariants SET name=?, protocol=?, quality=?, type=?, encoding=?, charset=?, language=?, description=?, translator=? WHERE id = ?', $name, $protocol, $quality, $type, $encoding, $charset, $language, $description, $translator, $id);
+    } else {
+        return $self->database($app)->execute('INSERT INTO stringVariants SET name=?, protocol=?, quality=?, type=?, encoding=?, charset=?, language=?, description=?, translator=?', $name, $protocol, $quality, $type, $encoding, $charset, $language, $description, $translator)->MySQLID;
+    }
+}
+
+sub setString {
+    my $self = shift;
+    my($app, $variant, $string, $data) = @_;
+    if ((defined($data)) and (length($data) > 0)) {
+        $self->database($app)->execute('REPLACE INTO stringVariants SET variant=?, string=?, data=?', $variant, $string, $data);
+    } else {
+        $self->database($app)->execute('DELETE FROM stringVariants WHERE variant = ? AND string = ?', $variant, $string);
+    }
+}
 
 sub setupInstall {
     my $self = shift;

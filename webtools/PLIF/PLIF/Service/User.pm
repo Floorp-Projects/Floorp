@@ -221,6 +221,22 @@ sub resetAddressChange {
     return defined($self->doAddressChange());
 }
 
+# a convenience method for either setting a user setting from a new
+# value or getting the user's prefs
+sub setting {
+    my $self = shift;
+    my($variable, $setting) = @_;
+    $self->assert(ref($variable) eq 'SCALAR', 1, 'Internal Error: User object was expecting a scalar ref for setting() but didn\'t get one');
+    if (defined($$variable)) {
+        $self->getField('settings', $setting)->data($$variable);
+    } else {
+        my $field = $self->hasField('settings', $setting);
+        if (defined($field)) {
+            $$variable = $field->data;
+        }
+    }
+}
+
 sub hash {
     my $self = shift;
     my $result = $self->SUPER::hash();

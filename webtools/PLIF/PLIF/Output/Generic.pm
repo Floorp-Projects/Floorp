@@ -89,7 +89,7 @@ use PLIF::Output;
 # changing the underlying code.
 
 # To find the list of strings required, do this:
-#    my %strings = @{$self->getCollectingServiceList('dispatcher.output')->strings};
+#    my %strings = @{$app->getCollectingServiceList('dispatcher.output')->strings};
 
 sub protocol {
     return 'generic';
