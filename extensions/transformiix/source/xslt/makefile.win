@@ -19,8 +19,44 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 
-DIRS=base main net xml xpath xslt
+DIRS=util
+
+LIBRARY_NAME=transformix_xsl
+MODULE=transformix
+REQUIRES=xpcom raptor
+
+DEFINES=-DMOZILLA
+
+CPPSRCS=						\
+	XSLProcessor.cpp			\
+	ProcessorState.cpp			\
+	Names.cpp					\
+	$(NULL)
+
+CPP_OBJS=					\
+	.\$(OBJDIR)\XSLProcessor.obj	\
+	.\$(OBJDIR)\ProcessorState.obj	\
+	.\$(OBJDIR)\Names.obj	\
+	$(NULL)
+
+EXPORTS = 					\
+	XSLProcessor.h			\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I.\expr -I.\util -I..\xml\dom \
+      -I..\base -I ..\xml
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

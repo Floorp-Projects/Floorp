@@ -19,8 +19,35 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..\..
 
-DIRS=base main net xml xpath xslt
+LIBRARY_NAME=transformix_xslt_util
+MODULE=transformix
+REQUIRES=xpcom raptor
+
+CPPSRCS=			\
+	NodeStack.cpp		\
+	$(NULL)
+
+CPP_OBJS=				\
+	.\$(OBJDIR)\NodeStack.obj	\
+	$(NULL)
+
+EXPORTS =	\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
+      -I..\expr -I..\..\xml
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

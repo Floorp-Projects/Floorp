@@ -1,0 +1,115 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..\..\..\..\..
+
+LIBRARY_NAME=transformix_xpath
+MODULE=transformix
+REQUIRES=xpcom raptor
+
+CPPSRCS=				\
+	AdditiveExpr.cpp		\
+	AttributeExpr.cpp		\
+	AttributeValueTemplate.cpp	\
+	BasicNodeExpr.cpp		\
+	BooleanFunctionCall.cpp		\
+	BooleanResult.cpp		\
+	ElementExpr.cpp			\
+	ErrorFunctionCall.cpp		\
+	ExprLexer.cpp			\
+	ExprParser.cpp			\
+	FilterExpr.cpp			\
+	FunctionCall.cpp		\
+	IdentityExpr.cpp		\
+	LocationStep.cpp		\
+	MultiplicativeExpr.cpp		\
+        NodeSet.cpp			\
+	NodeSetFunctionCall.cpp		\
+	NumberExpr.cpp			\
+	NumberFunctionCall.cpp		\
+	NumberResult.cpp		\
+	ParentExpr.cpp			\
+	PathExpr.cpp			\
+	PredicateList.cpp		\
+	RelationalExpr.cpp		\
+	RootExpr.cpp			\
+	StringExpr.cpp			\
+	StringFunctionCall.cpp		\
+	StringResult.cpp		\
+	TextExpr.cpp			\
+	UnionExpr.cpp			\
+	VariableRefExpr.cpp		\
+	WildCardExpr.cpp		\
+	$(NULL)
+
+CPP_OBJS=						\
+	.\$(OBJDIR)\AdditiveExpr.obj			\
+	.\$(OBJDIR)\AttributeExpr.obj			\
+	.\$(OBJDIR)\AttributeValueTemplate.obj		\
+	.\$(OBJDIR)\BasicNodeExpr.obj			\
+	.\$(OBJDIR)\BooleanFunctionCall.obj		\
+	.\$(OBJDIR)\BooleanResult.obj			\
+	.\$(OBJDIR)\ElementExpr.obj			\
+	.\$(OBJDIR)\ErrorFunctionCall.obj		\
+	.\$(OBJDIR)\ExprLexer.obj			\
+	.\$(OBJDIR)\ExprParser.obj			\
+	.\$(OBJDIR)\FilterExpr.obj			\
+	.\$(OBJDIR)\FunctionCall.obj			\
+	.\$(OBJDIR)\IdentityExpr.obj			\
+	.\$(OBJDIR)\LocationStep.obj			\
+	.\$(OBJDIR)\MultiplicativeExpr.obj		\
+	.\$(OBJDIR)\NodeSet.obj				\
+	.\$(OBJDIR)\NodeSetFunctionCall.obj		\
+	.\$(OBJDIR)\NumberExpr.obj			\
+	.\$(OBJDIR)\NumberFunctionCall.obj		\
+	.\$(OBJDIR)\NumberResult.obj			\
+	.\$(OBJDIR)\ParentExpr.obj			\
+	.\$(OBJDIR)\PathExpr.obj			\
+	.\$(OBJDIR)\PredicateList.obj			\
+	.\$(OBJDIR)\RelationalExpr.obj			\
+	.\$(OBJDIR)\RootExpr.obj			\
+	.\$(OBJDIR)\StringExpr.obj			\
+	.\$(OBJDIR)\StringFunctionCall.obj		\
+	.\$(OBJDIR)\StringResult.obj			\
+	.\$(OBJDIR)\TextExpr.obj			\
+	.\$(OBJDIR)\UnionExpr.obj			\
+	.\$(OBJDIR)\VariableRefExpr.obj			\
+	.\$(OBJDIR)\WildCardExpr.obj			\
+	$(NULL)
+
+EXPORTS = \
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\util -I..\..\xml\dom \
+      -I..\..\xml -I ..\..\xsl
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
