@@ -2478,7 +2478,7 @@ void CRDFToolbarHolder::DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, in
 	COLORREF highlightColor = ::GetSysColor(COLOR_BTNHIGHLIGHT);
 	COLORREF shadowColor = ::GetSysColor(COLOR_BTNSHADOW);
 
-	if (m_nNumOpen >= i)
+	if (i < m_nNumOpen)
 	{
 		CRDFToolbar* pToolbar = (CRDFToolbar*)(m_pToolbarArray[i]->GetToolbar());
 		pToolbar->ComputeColorsForSeparators();
