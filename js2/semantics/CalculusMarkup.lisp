@@ -186,16 +186,21 @@
         (depict-item-or-list markup-stream name)))))
 
 
-; Emit markup for a tag's label, which must be a symbol.
+; Emit markup for a tag's label, which must be a symbol.  tag may be null, in
+; which case no link is generated.
 ; link should be one of:
 ;   :reference   if this is a reference or external reference to this label;
 ;   nil          if this use of the label should not be cross-referenced.
 (defun depict-label-name (markup-stream tag label link)
-  (unless (tag-find-field tag label)
-    (error "Tag ~A doesn't have label ~A" tag label))
-  (when (eq link :reference)
-    (setq link (tag-link tag)))
-  (depict-link (markup-stream link "R-" (tag-link-name-and-name tag) nil)
+  (if tag
+    (progn
+      (unless (tag-find-field tag label)
+        (error "Tag ~A doesn't have label ~A" tag label))
+      (when (eq link :reference)
+        (setq link (tag-link tag)))
+      (depict-link (markup-stream link "R-" (tag-link-name-and-name tag) nil)
+        (depict-char-style (markup-stream :field-name)
+          (depict markup-stream (symbol-lower-mixed-case-name label)))))
     (depict-char-style (markup-stream :field-name)
       (depict markup-stream (symbol-lower-mixed-case-name label)))))
 
@@ -235,8 +240,8 @@
 
 
 ; Emit markup for the given type expression.  level is non-nil if this is a recursive
-; call to depict-type-expr for which the markup-stream's style is :type-expression.
-; In this case level indicates the binding level imposed by the enclosing type expression.
+; call to depict-type-expr; in this case level indicates the binding level imposed by the
+; enclosing type expression.
 (defun depict-type-expr (markup-stream world type-expr &optional level)
   (cond
    ((identifier? type-expr)
@@ -244,10 +249,7 @@
       (depict-type-name markup-stream type-expr (if (symbol-type-user-defined type-name) :reference :external))))
    ((consp type-expr)
     (let ((depictor (get (world-intern world (first type-expr)) :depict-type-constructor)))
-      (if level
-        (apply depictor markup-stream world level (rest type-expr))
-        (depict-char-style (markup-stream :type-expression)
-          (apply depictor markup-stream world %%type%% (rest type-expr))))))
+      (apply depictor markup-stream world (or level %%type%%) (rest type-expr))))
    (t (error "Bad type expression: ~S" type-expr))))
 
 
@@ -663,6 +665,15 @@
       (depict-constant markup-stream 0))))
 
 
+; (nonempty <vector-expr>)
+(defun depict-nonempty (markup-stream world level vector-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %relational%)
+    (depict-logical-block (markup-stream 0)
+      (depict-length markup-stream world %term% vector-annotated-expr)
+      (depict markup-stream " " :not-equal " ")
+      (depict-constant markup-stream 0))))
+
+
 ; (length <vector-expr>)
 (defun depict-length (markup-stream world level vector-annotated-expr)
   (declare (ignore level))
@@ -807,11 +818,12 @@
 
 
 ; (& <label> <record-expr>)
-(defun depict-& (markup-stream world level tag label annotated-expr)
+(defun depict-& (markup-stream world level tags label annotated-expr)
   (depict-expr-parentheses (markup-stream level %suffix%)
     (depict-expression markup-stream world annotated-expr %suffix%)
     (depict markup-stream ".")
-    (depict-label-name markup-stream tag label :reference)))
+    (let ((tag (if (endp (cdr tags)) (car tags) nil)))
+      (depict-label-name markup-stream tag label :reference))))
 
 
 ;;; Unions

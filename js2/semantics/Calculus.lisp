@@ -1172,6 +1172,7 @@
 ; and is used for error reporting only.
 ;
 ; Coercions from :denormalized-tag types are not implemented, but they should not be necessary in practice.
+; Coercions from vectors to strings or from strings to vectors are not implemented either.
 (defun widening-coercion-code (world supertype type code expr)
   (if (type= type supertype)
     code
@@ -1229,6 +1230,14 @@
                       (list 'union-finite64-to-rational code)
                       code)))
                  (t (type-mismatch)))))
+            (:vector
+             (unless (eq kind :vector)
+               (type-mismatch))
+             (let* ((par (gensym "PAR"))
+                    (element-coercion-code (widening-coercion-code world (vector-element-type supertype) (vector-element-type type) par expr)))
+               (if (eq element-coercion-code par)
+                 code
+                 `(mapcar #'(lambda (,par) ,element-coercion-code) code))))
             (t (type-mismatch))))))))
 
 
@@ -2434,6 +2443,30 @@
     (values value type annotated-expr)))
 
 
+; Same as scan-value except that ensure that the value is a tag type or a union of tag types.
+; Return four values:
+;   The expression's value (a lisp expression)
+;   The expression's type
+;   A list of tags in the expression's type
+;   The annotated value-expr
+(defun scan-union-tag-value (world type-env value-expr)
+  (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
+    (flet ((bad-type ()
+             (error "Value ~S:~A should be a tag or union of tags" value-expr (print-type-to-string type))))
+      (let ((kind (type-kind type))
+            (tags nil))
+        (cond
+         ((eq kind :tag)
+          (setq tags (list (type-tag type))))
+         ((eq kind :union)
+          (setq tags (mapcar #'(lambda (type2) (if (eq (type-kind type2) :tag)
+                                                 (type-tag type2)
+                                                 (bad-type)))
+                             (type-parameters type))))
+         (t (bad-type)))
+        (values value type tags annotated-expr)))))
+
+
 ; Return the code for computing value-expr, which will be assigned to the symbol.  Check that the
 ; value has the given type.
 (defun scan-global-value (symbol value-expr type)
@@ -2806,6 +2839,20 @@
      (list 'expr-annotation:special-form special-form vector-annotated-expr))))
 
 
+; (nonempty <vector-expr>)
+; Returns true if the vector does not have zero elements.
+; This is equivalent to (/= (length <vector-expr>) 0) and depicts the same as the latter but
+; is implemented more efficiently.
+(defun scan-nonempty (world type-env special-form vector-expr)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
+    (values
+     (if (eq vector-type (world-string-type world))
+       `(/= (length ,vector-code) 0)
+       vector-code)
+     (world-boolean-type world)
+     (list 'expr-annotation:special-form special-form vector-annotated-expr))))
+
+
 ; (length <vector-expr>)
 ; Returns the number of elements in the vector.
 (defun scan-length (world type-env special-form vector-expr)
@@ -3023,14 +3070,32 @@
 ; (& <label> <record-expr>)
 ; Return the tag field's value.
 (defun scan-& (world type-env special-form label record-expr)
-  (multiple-value-bind (record-code record-type record-annotated-expr) (scan-tag-value world type-env record-expr)
-    (let ((tag (type-tag record-type)))
-      (multiple-value-bind (position field-type mutable) (scan-label tag label)
-        (declare (ignore mutable))
-        (values
-         (gen-nth-code position record-code)
-         field-type
-         (list 'expr-annotation:special-form special-form tag label record-annotated-expr))))))
+  (multiple-value-bind (record-code record-type tags record-annotated-expr) (scan-union-tag-value world type-env record-expr)
+    (declare (ignore record-type))
+    (let ((position-alist nil)
+          (field-types nil))
+      (dolist (tag tags)
+        (multiple-value-bind (position field-type mutable) (scan-label tag label)
+          (declare (ignore mutable))
+          (let ((entry (assoc position position-alist)))
+            (unless entry
+              (setq entry (cons position nil))
+              (push entry position-alist))
+            (assert-true (null (tag-keyword tag)))
+            (push (tag-name tag) (cdr entry))
+            (push field-type field-types))))
+      (assert-true position-alist)
+      (setq position-alist (sort position-alist #'< :key #'car))
+      (values
+       (if (endp (cdr position-alist))
+         (gen-nth-code (caar position-alist) record-code)
+         (let ((var (gensym "GET")))
+           `(let ((,var ,record-code))
+              (case (car ,var)
+                ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
+                          position-alist)))))
+       (apply #'make-union-type world field-types)
+       (list 'expr-annotation:special-form special-form tags label record-annotated-expr)))))
 
 
 ;;; Unions
@@ -3250,6 +3315,7 @@
 
 ; (&= <record-expr> <value-expr>)
 ; Writes the value of the field.
+; ***** Update to handle unions just as in &.
 (defun scan-&= (world type-env rest-statements last special-form label record-expr value-expr)
   (multiple-value-bind (record-code record-type record-annotated-expr) (scan-tag-value world type-env record-expr)
     (let ((tag (type-tag record-type)))
@@ -3783,6 +3849,7 @@
      (vector scan-vector-expr depict-vector-expr)
      (vector-of scan-vector-of depict-vector-expr)
      (empty scan-empty depict-empty)
+     (nonempty scan-nonempty depict-nonempty)
      (length scan-length depict-length)
      (nth scan-nth depict-nth)
      (subseq scan-subseq depict-subseq)
