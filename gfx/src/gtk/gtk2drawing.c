@@ -78,6 +78,7 @@ static GtkShadowType gMenuBarShadowType;
 static GtkShadowType gToolbarShadowType;
 
 static style_prop_t style_prop_func;
+static gboolean have_menu_shadow_type;
 
 gint
 moz_gtk_enable_style_props(style_prop_t styleGetProp)
@@ -425,6 +426,10 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 gint
 moz_gtk_init()
 {
+    have_menu_shadow_type =
+        (gtk_major_version > 2 ||
+         (gtk_major_version == 2 && gtk_minor_version >= 1));
+
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1264,8 +1269,13 @@ moz_gtk_menu_item_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
         style = gMenuItemWidget->style;
         TSOffsetStyleGCs(style, rect->x, rect->y);
-        gtk_widget_style_get(gMenuItemWidget, "selected_shadow_type",
-                             &shadow_type, NULL);
+        if (have_menu_shadow_type) {
+            gtk_widget_style_get(gMenuItemWidget, "selected_shadow_type",
+                                 &shadow_type, NULL);
+        } else {
+            shadow_type = GTK_SHADOW_OUT;
+        }
+
         gtk_paint_box(style, drawable, GTK_STATE_PRELIGHT, shadow_type,
                       cliprect, gMenuItemWidget, "menuitem", rect->x, rect->y,
                       rect->width, rect->height);
