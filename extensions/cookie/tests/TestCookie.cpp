@@ -57,7 +57,6 @@ static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
-static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
 nsresult
 SetACookie(nsICookieService *aCookieService, const char *aSpec1, const char *aSpec2, const char* aCookieString, const char *aServerTime)
@@ -164,7 +163,6 @@ InitPrefs(nsIPrefBranch *aPrefBranch)
     aPrefBranch->SetIntPref(kCookiesLifetimeCurrentSession, 0);
     aPrefBranch->SetIntPref(kCookiesLifetimeDays, 1);
     aPrefBranch->SetBoolPref(kCookiesAskPermission, PR_FALSE);
-    aPrefBranch->SetBoolPref(kCookiesStrictDomains, PR_FALSE); // optional
 }
 
 int

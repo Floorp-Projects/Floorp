@@ -216,7 +216,6 @@ class nsCookieService : public nsICookieService
     PRPackedBool                  mCookieIconVisible;
 
     // cached prefs
-    PRPackedBool                  mCookiesStrictDomains; // Optional pref to apply stricter domain checks
     PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
 
     /* mCookiesP3PString (below) consists of 8 characters having the following interpretation:

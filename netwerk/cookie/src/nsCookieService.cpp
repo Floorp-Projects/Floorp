@@ -123,7 +123,6 @@ static const PRUint32 BEHAVIOR_P3P           = 3;
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
 static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesP3PString_Default[] = "drdraaaa";
-static const char kCookiesStrictDomains[] = "network.cookie.strictDomains";
 
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
@@ -494,13 +493,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
         // reassign to default string
         mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
       }
-
-    } else if (pref.Equals(kCookiesStrictDomains)) {
-      rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
-      if (NS_FAILED(rv)) {
-        tempPrefValue = PR_FALSE;
-      }
-      mCookiesStrictDomains = tempPrefValue;
     }
   }
 
@@ -832,7 +824,6 @@ nsCookieService::InitPrefObservers()
     if (NS_SUCCEEDED(rv)) {
       prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
       prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
     }
 
     // initialize prefs
@@ -845,7 +836,6 @@ nsCookieService::InitPrefObservers()
     // only called if getting the prefbranch failed.
     mCookiesPermissions = BEHAVIOR_ACCEPT;
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
-    mCookiesStrictDomains = PR_FALSE;
   }
 }
 
@@ -869,15 +859,6 @@ nsCookieService::ReadPrefs()
     mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
     rv2 = rv;
   }
-
-  rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = PR_FALSE;
-    // we don't update rv2 here like we do for other prefs, since this pref
-    // is optional (most profiles won't have it set), and ReadPrefs' caller
-    // will NS_WARNING on NS_FAILED(rv2). so this is a little bit quieter...
-  }
-  mCookiesStrictDomains = tempPrefValue;
 
   return rv2;
 }
@@ -1936,24 +1917,12 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     }
 
     /*
-     * check that portion of host not in domain does not contain a dot
-     *    This satisfies the fourth requirement in section 4.3.2 of the cookie
-     *    spec rfc 2109 (see www.cis.ohio-state.edu/htbin/rfc/rfc2109.html).
-     *    It prevents host of the form x.y.co.nz from setting cookies in the
-     *    entire .co.nz domain.  Note that this doesn't really solve the problem,
-     *    it justs makes it more unlikely.  Sites such as y.co.nz can still set
-     *    cookies for the entire .co.nz domain.
-     *
-     *  Although this is the right thing to do(tm), it breaks too many sites.  
-     *  So only do it if the "network.cookie.strictDomains" pref is PR_TRUE.
-     *
+     * note: RFC2109 section 4.3.2 requires that we check the following:
+     * that the portion of host not in domain does not contain a dot.
+     * this prevents hosts of the form x.y.co.nz from setting cookies in the
+     * entire .co.nz domain. however, it's only a only a partial solution and
+     * it breaks sites (IE doesn't enforce it), so we don't perform this check.
      */
-    if (mCookiesStrictDomains) {
-      dot = hostFromURI.FindChar('.', 0, hostFromURI.Length() - aCookieAttributes.host.Length());
-      if (dot != kNotFound) {
-        return PR_FALSE;
-      }
-    }
 
   // no domain specified, use hostFromURI
   } else {
