@@ -3781,6 +3781,12 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 	  {
 	if (tmpEntry->URL_s == URL_s)
 		  {
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+              /* When the URL load gets redirected to another window,
+                 we need to notify the progress manager from the old
+                 window that the URL need no longer be tracked */
+            PM_StopBinding(tmpEntry->window_id, URL_s, -1, NULL);
+#endif
 			/* call the old exit routine now with the old context */
 			/* call with MK_CHANGING_CONTEXT, FE shouldn't free URL_s */
 			net_CallExitRoutineProxy(tmpEntry->exit_routine,
@@ -3796,6 +3802,12 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 			}
 			old_window_id = tmpEntry->window_id;
 	    tmpEntry->window_id = new_context;
+
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+            /* Inform the progress manager in the new context about
+               the URL that it just received */
+            PM_StartBinding(tmpEntry->window_id, URL_s);
+#endif
 
 #ifdef XP_WIN
 			/*
