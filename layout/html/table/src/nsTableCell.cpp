@@ -285,6 +285,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
               textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
             textStyle->mTextAlign = rowGroupAlign;
           }
+          NS_RELEASE(rowGroup);
         }
       }
     }
@@ -325,6 +326,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
               textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
             textStyle->mVerticalAlign.SetIntValue(rowGroupVAlign, eStyleUnit_Enumerated);
           }
+          NS_RELEASE(rowGroup);
         }
       }
     }
@@ -409,6 +411,7 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
               color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
             SetBackgroundFromAttribute(color, &value);
           }
+          NS_RELEASE(rowGroup);
         }
       }
     }
@@ -483,6 +486,7 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
               color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
             }
           }
+          NS_RELEASE(rowGroup);
         }
       }
     }
