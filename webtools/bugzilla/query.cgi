@@ -559,7 +559,7 @@ if (Param("usetargetmilestone")) {
     print "
 <td align=left valign=top>
 <SELECT NAME=\"target_milestone\" MULTIPLE SIZE=5>
-@{[make_options(\@::legal_target_milestone, $default{'component'}, $type{'component'})]}
+@{[make_options(\@::legal_target_milestone, $default{'target_milestone'}, $type{'target_milestone'})]}
 </SELECT>
 </td>";
 }
