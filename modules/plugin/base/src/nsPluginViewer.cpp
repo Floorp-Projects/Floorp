@@ -35,11 +35,12 @@
 #include "nsIWebShell.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIContentViewerFile.h"
-#include "nsIBrowserWindow.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -53,7 +54,6 @@ static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 
@@ -127,10 +127,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIContentViewer
-  NS_IMETHOD Init(nsNativeWidget aParent,
+  NS_IMETHOD Init(nsIWidget* aParentWidget,
                   nsIDeviceContext* aDeviceContext,
-                  const nsRect& aBounds,
-                  nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+                  const nsRect& aBounds);
   NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
@@ -284,12 +283,12 @@ PluginViewerImpl::GetContainer(nsISupports** aResult)
 
 
 NS_IMETHODIMP
-PluginViewerImpl::Init(nsNativeWidget aNativeParent,
+PluginViewerImpl::Init(nsIWidget* aParentWidget,
                        nsIDeviceContext* aDeviceContext,
-                       const nsRect& aBounds,
-                       nsScrollPreference aScrolling)
+                       const nsRect& aBounds)
 {
-  nsresult rv = MakeWindow(aNativeParent, aDeviceContext, aBounds);
+  nsresult rv = MakeWindow(aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
+   aDeviceContext, aBounds);
   if (NS_OK == rv) {
     mOwner = new pluginInstanceOwner();
     if (nsnull != mOwner) {
@@ -837,27 +836,17 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
 
       if (docShellItem)
       {
-        nsCOMPtr<nsIDocShellTreeItem> root;
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
 
-        docShellItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-
-        nsCOMPtr<nsIWebShell> rootWebShell(do_QueryInterface(root));
-        if (rootWebShell)
+        if(treeOwner)
         {
-          nsCOMPtr<nsIWebShellContainer> rootContainer;
+        nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
 
-          rv = rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
-
-          if (nsnull != rootContainer)
+        if(browserChrome)
           {
-            nsCOMPtr<nsIBrowserWindow> browserWindow(do_QueryInterface(rootContainer));
-
-            if (browserWindow)
-            {
-              nsAutoString  msg = nsAutoString(aStatusMsg);
-
-              rv = browserWindow->SetStatus(msg.GetUnicode());
-            }
+          nsAutoString  msg = nsAutoString(aStatusMsg);
+          browserChrome->SetJSStatus(msg.GetUnicode());
           }
         }
       }
