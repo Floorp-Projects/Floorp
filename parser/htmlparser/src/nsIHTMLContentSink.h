@@ -188,6 +188,24 @@ public:
 
   NS_IMETHOD DoFragment(PRBool aFlag)=0;
 
+  /**
+   * This gets called when handling illegal contents, especially
+   * in dealing with tables. This method creates a new context.
+   * 
+   * @update 04/04/99 harishd
+   * @param aPosition - The position from where the new context begins.
+   */
+  NS_IMETHOD BeginContext(PRInt32 aPosition)=0;
+  
+  /**
+   * This method terminates any new context that got created by
+   * BeginContext and switches back to the main context.  
+   *
+   * @update 04/04/99 harishd
+   * @param aPosition - Validates the end of a context.
+   */
+  NS_IMETHOD EndContext(PRInt32 aPosition)=0;
+
 };
 
 extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);

@@ -107,6 +107,8 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD DoFragment(PRBool aFlag);
+  NS_IMETHOD BeginContext(PRInt32 aPosition);
+  NS_IMETHOD EndContext(PRInt32 aPosition);
 
 protected:
 
