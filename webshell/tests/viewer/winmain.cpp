@@ -497,6 +497,7 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 
   static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
   static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
+  static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
   static NS_DEFINE_IID(kCButtonIID, NS_BUTTON_CID);
   static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
   static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
@@ -509,6 +510,7 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 
   NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
