@@ -1461,6 +1461,7 @@ public class Codegen extends Interpreter {
     /**
      * Generate the prologue for a function or script.
      *
+     * @param cx the context
      * @param tree the tree to generate code for
      * @param inFunction true if generating the prologue for a function
      *        (as opposed to a script)
@@ -1474,8 +1475,13 @@ public class Codegen extends Interpreter {
         contextLocal = reserveWordLocal(1);
         variableObjectLocal = reserveWordLocal(2);
         thisObjLocal = reserveWordLocal(3);
-
-        if (inFunction && !cx.hasCompileFunctionsWithDynamicScope()) {
+        
+        if (inFunction && !cx.hasCompileFunctionsWithDynamicScope() &&
+            directParameterCount == -1)
+        {
+            // Unless we're either using dynamic scope or we're in a
+            // direct call, use the enclosing scope of the function as our 
+            // variable object.
             aload(funObjLocal);
             classFile.add(ByteCode.INVOKEINTERFACE,
                           "org/mozilla/javascript/Scriptable",
