@@ -956,11 +956,11 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         // Ask the provider for data
         nsresult status = NS_ERROR_NOT_INITIALIZED;
         if (mProvider)
-            mProvider->OnDataWritable(this, 
-                                      mContext,
-                                      mSinkWrapper,
-                                      mOffset, 
-                                      transferAmt);
+            status = mProvider->OnDataWritable(this, 
+                                               mContext,
+                                               mSinkWrapper,
+                                               mOffset, 
+                                               transferAmt);
 
         if (NS_SUCCEEDED(status)) {
             // Find out what was written.
