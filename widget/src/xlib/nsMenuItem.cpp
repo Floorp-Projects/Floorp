@@ -105,6 +105,16 @@ NS_METHOD nsMenuItem::SetLabel(nsString &aText)
   return NS_OK;
 }
 
+NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 {
   return NS_OK;
