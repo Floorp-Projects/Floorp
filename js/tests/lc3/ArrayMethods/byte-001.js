@@ -49,14 +49,14 @@
         "b"+a.length,
         "sort",
         true,
-        getCharValues("JSaaciprtv") );
+        "105,112,114,116,118,74,83,97,97,99" );
 
     a[a.length] = new TestObject(
         "var b"+a.length+" = new java.lang.String(\"JavaScript\").getBytes(); b"+a.length+".sort().join() +''",
         "b"+a.length,
         "sort",
         true,
-        getCharValues("JSaaciprtv") );
+        "105,112,114,116,118,74,83,97,97,99" );
 
     test();
 
