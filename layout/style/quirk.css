@@ -36,7 +36,6 @@ ol dl {
 /* Quirk: UL under a DL has no margins  (b=32989) */
 dl ul {
   margin: 0 0 0 0;
-  color: red;
 }
 
 /* make orphaned li's have inside bullet */
