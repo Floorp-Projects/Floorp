@@ -200,7 +200,7 @@ Contributor(s): ______________________________________. -->
    
   <keyset>
     <key id="key_newNavigator"
-         key="&newNavigatorCmd.key;"
+         key="&browserCmd.commandkey;"
          command="cmd_newNavigator"
          modifiers="accel"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
