@@ -141,7 +141,9 @@ nsresult ConvertFromUnicode(const nsString aCharset,
           *outCString = (char *) PR_Malloc(dstLength + 1);
           if (*outCString != nsnull) {
             res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-            NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
+            // This may also happen for the case like requesting charset "ISO-8859-1" for text in CJK range.
+            // We don't want assertion for those cases.
+            // NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
           }
         }
         if (*outCString != nsnull) {
@@ -189,6 +191,7 @@ nsresult ConvertToUnicode(const nsString aCharset,
         // convert to unicode
         res = decoder->Convert(unichars, 0, &unicharLength, inCString, 0, &srcLen);
         outString.SetString(unichars, unicharLength);
+        PR_Free(unichars);
       }
       else {
         res = NS_ERROR_OUT_OF_MEMORY;
@@ -257,7 +260,7 @@ char * INTL_GetDefaultMailCharset()
 		retVal = PL_strdup(prefValue);
 	  }
 	  else 
-			retVal = PL_strdup("us-ascii");
+		retVal = PL_strdup("us-ascii");
   }
 
   return (nsnull != retVal) ? retVal : PL_strdup("us-ascii");
@@ -274,6 +277,7 @@ PRBool INTL_stateful_charset(const char *charset)
 // This is expensive (both memory and performance).
 // The check would be very simple if applied to an unicode text (e.g. nsString or utf-8).
 // Possible optimazaion is to search ESC(0x1B) in case of iso-2022-jp and iso-2022-kr.
+// Or convert and check line by line.
 PRBool INTL_7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
 {
   char *aCString;

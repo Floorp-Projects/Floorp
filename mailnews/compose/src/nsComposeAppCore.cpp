@@ -333,28 +333,10 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
 
 nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
-	nsresult res = NS_OK;
-	if (nsnull != mWindow) 
-	{
-		nsIDOMDocument* domDoc;
-		res = mWindow->GetDocument(&domDoc);
-		if (NS_SUCCEEDED(res) && nsnull != domDoc) 
-		{
-			nsIDocument * doc;
-			res = domDoc->QueryInterface(kIDocumentIID,(void**)&doc);
-			if (NS_SUCCEEDED(res) && nsnull != doc) 
-			{
-				doc->SetDocumentCharacterSet(aCharset);			
-				NS_RELEASE(doc);
-			}
-			
-			NS_RELEASE(domDoc);
-		}
-	}
   // Set charset, this will be used for the MIME charset labeling.
   mMsgCompFields->SetCharacterSet(nsAutoCString(aCharset), NULL);
 	
-	return res;
+	return NS_OK;
 }
 
 nsIScriptContext *    
@@ -635,6 +617,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
 {
 	nsresult rv;
 	nsString controllerCID;
+  char *default_mail_charset = nsnull;
 
 	mArgs = args;
 	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv); 
@@ -661,9 +644,12 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                    615,         // width
                                    650);        // height
 	
-	// Get the default charset from pref, use this as a mail charset.
-	// TODO: For reply/forward, original charset need to be used instead.
-	mMsgCompFields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
+  // Get the default charset from pref, use this as a mail charset.
+  default_mail_charset = INTL_GetDefaultMailCharset();
+  if (NULL != default_mail_charset) {
+    mMsgCompFields->SetCharacterSet(default_mail_charset, NULL);
+    PR_Free(default_mail_charset);
+  }
 
 	if (tree && nodeList && msgAppCore) {
 		nsCOMPtr<nsISupports> object;
