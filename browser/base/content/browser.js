@@ -3159,7 +3159,7 @@ function goPreferences(containerID, paneURL, itemID)
   if (lastPrefWindow)
     lastPrefWindow.focus();
   else {
-    var features = "chrome,titlebar,resizable,modal";
+    var features = "chrome,titlebar,resizable";
     openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
                features, paneURL, containerID, itemID);
   }
