@@ -54,6 +54,7 @@ file://s:/mozilla/layout/html/tests/table/bugs/bug6404.html
 file://s:/mozilla/layout/html/tests/table/bugs/bug647.html
 file://s:/mozilla/layout/html/tests/table/bugs/bug6933.html
 file://s:/mozilla/layout/html/tests/table/bugs/bug709.html
+file://s:/mozilla/layout/html/tests/table/bugs/bug7243.html
 file://s:/mozilla/layout/html/tests/table/bugs/bug727.html
 file://s:/mozilla/layout/html/tests/table/bugs/bug963.html
 
