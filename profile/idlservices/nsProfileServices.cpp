@@ -52,6 +52,7 @@ public:
 	NS_IMETHOD StartCommunicator(const char *profileName);
 	NS_IMETHOD GetCurrentProfile(char **_retval);
 	NS_IMETHOD MigrateProfile(const char *profileName);
+	NS_IMETHOD ProcessPREGInfo(const char *data);
 
 private:
 	nsIProfile *mProfile;
@@ -98,14 +99,13 @@ NS_IMPL_ISUPPORTS(ProfileServicesImpl, nsIProfileServices::GetIID());
 
 
 NS_IMETHODIMP
-ProfileServicesImpl::CreateNewProfile(const char* aPrefix)
+ProfileServicesImpl::CreateNewProfile(const char* data)
 {
-    NS_PRECONDITION(aPrefix != nsnull, "null ptr");
-    if (! aPrefix)
+    NS_PRECONDITION(data != nsnull, "null ptr");
+    if (! data)
         return NS_ERROR_NULL_POINTER;
 
-    printf("Hey : You are here..........%s \n", aPrefix);
-	mProfile->CreateNewProfile((char *)aPrefix);
+	mProfile->CreateNewProfile((char *)data);
     return NS_OK;
 }
 
@@ -124,7 +124,6 @@ ProfileServicesImpl::DeleteProfile(const char* profileName)
     if (! profileName)
         return NS_ERROR_NULL_POINTER;
 
-    printf("Hey : You are here..........%s \n", profileName);
 	mProfile->DeleteProfile(profileName);
     return NS_OK;
 }
@@ -145,7 +144,6 @@ ProfileServicesImpl::StartCommunicator(const char* profileName)
     if (! profileName)
         return NS_ERROR_NULL_POINTER;
 
-    printf("Hey : You are here..........%s \n", profileName);
 	mProfile->StartCommunicator(profileName);
     return NS_OK;
 }
@@ -154,7 +152,6 @@ NS_IMETHODIMP
 ProfileServicesImpl::GetCurrentProfile(char** profileName)
 {
 	mProfile->GetCurrentProfile(profileName);
-	printf("Current Profile = %s\n", *profileName);
     return NS_OK;
 }
 
@@ -165,7 +162,17 @@ ProfileServicesImpl::MigrateProfile(const char* profileName)
     if (! profileName)
         return NS_ERROR_NULL_POINTER;
 
-    printf("Hey : You are here..........%s \n", profileName);
 	mProfile->MigrateProfile(profileName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ProfileServicesImpl::ProcessPREGInfo(const char* data)
+{
+    NS_PRECONDITION(data != nsnull, "null ptr");
+    if (! data)
+        return NS_ERROR_NULL_POINTER;
+
+ 	mProfile->ProcessPREGInfo((char *)data);
     return NS_OK;
 }

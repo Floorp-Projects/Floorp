@@ -83,6 +83,7 @@ public:
 	NS_IMETHOD GetCookie(nsString& aCookie) = 0;
 	NS_IMETHOD ProcessPRegCookie() = 0;
 	NS_IMETHOD IsPregCookieSet(char **pregSet) = 0;
+	NS_IMETHOD ProcessPREGInfo(char* data) = 0;
 };
 
 #endif /* nsIProfile_h__ */
