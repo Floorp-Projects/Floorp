@@ -21,6 +21,8 @@
       <children/>
       
       <xul:hbox class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
+      
+      <children includes="statusbar"/>
     </content>
     
     <implementation>
