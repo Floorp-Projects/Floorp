@@ -52,8 +52,8 @@ compare_IIDs(const void *v1, const void *v2)
 /***************************************************************************/
 // implement JSContext2XPCContextMap...
 
-// static 
-JSContext2XPCContextMap* 
+// static
+JSContext2XPCContextMap*
 JSContext2XPCContextMap::newMap(int size)
 {
     JSContext2XPCContextMap* map = new JSContext2XPCContextMap(size);
@@ -80,8 +80,8 @@ JSContext2XPCContextMap::~JSContext2XPCContextMap()
 /***************************************************************************/
 // implement JSObject2WrappedJSMap...
 
-// static 
-JSObject2WrappedJSMap* 
+// static
+JSObject2WrappedJSMap*
 JSObject2WrappedJSMap::newMap(int size)
 {
     JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap(size);
@@ -108,8 +108,8 @@ JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
 /***************************************************************************/
 // implement Native2WrappedNativeMap...
 
-// static 
-Native2WrappedNativeMap* 
+// static
+Native2WrappedNativeMap*
 Native2WrappedNativeMap::newMap(int size)
 {
     Native2WrappedNativeMap* map = new Native2WrappedNativeMap(size);
@@ -135,8 +135,8 @@ Native2WrappedNativeMap::~Native2WrappedNativeMap()
 /***************************************************************************/
 // implement IID2WrappedJSClassMap...
 
-// static 
-IID2WrappedJSClassMap* 
+// static
+IID2WrappedJSClassMap*
 IID2WrappedJSClassMap::newMap(int size)
 {
     IID2WrappedJSClassMap* map = new IID2WrappedJSClassMap(size);
@@ -162,8 +162,8 @@ IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 /***************************************************************************/
 // implement IID2WrappedJSClassMap...
 
-// static 
-IID2WrappedNativeClassMap* 
+// static
+IID2WrappedNativeClassMap*
 IID2WrappedNativeClassMap::newMap(int size)
 {
     IID2WrappedNativeClassMap* map = new IID2WrappedNativeClassMap(size);

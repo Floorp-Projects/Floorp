@@ -20,9 +20,9 @@
 
 #include "xpcprivate.h"
 
-// static 
-XPCContext* 
-XPCContext::newXPCContext(JSContext* aJSContext, 
+// static
+XPCContext*
+XPCContext::newXPCContext(JSContext* aJSContext,
                         JSObject* aGlobalObj,
                         int WrappedJSMapSize,
                         int WrappedNativeMapSize,
@@ -38,7 +38,7 @@ XPCContext::newXPCContext(JSContext* aJSContext,
     NS_PRECONDITION(WrappedJSClassMapSize,"bad param");
     NS_PRECONDITION(WrappedNativeClassMapSize,"bad param");
 
-    xpcc = new XPCContext(aJSContext, 
+    xpcc = new XPCContext(aJSContext,
                         aGlobalObj,
                         WrappedJSMapSize,
                         WrappedNativeMapSize,
@@ -52,13 +52,13 @@ XPCContext::newXPCContext(JSContext* aJSContext,
        xpcc->GetWrappedNativeClassMap() &&
        nsXPCWrappedNativeClass::InitForContext(xpcc))
     {
-        return xpcc;    
+        return xpcc;
     }
     delete xpcc;
     return NULL;
 }
 
-XPCContext::XPCContext(JSContext* aJSContext, 
+XPCContext::XPCContext(JSContext* aJSContext,
                      JSObject* aGlobalObj,
                      int WrappedJSMapSize,
                      int WrappedNativeMapSize,

@@ -35,6 +35,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcbogusjs.obj	\
 	.\$(OBJDIR)\xpcbogusii.obj	\
+	.\$(OBJDIR)\xpcinvoke.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
 	.\$(OBJDIR)\nsXPConnect.obj	\
@@ -42,6 +43,7 @@ OBJS=					\
 
 EXPORTS =					\
     nsIXPConnect.h     \
+    xpcbogusii.h       \
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor

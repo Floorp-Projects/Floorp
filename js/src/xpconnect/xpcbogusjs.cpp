@@ -27,7 +27,7 @@ nsJSContext::nsJSContext(JSContext* cx)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-}        
+}
 
 nsresult
 nsJSContext::GetNative(JSContext** cx)
@@ -35,7 +35,7 @@ nsJSContext::GetNative(JSContext** cx)
     NS_PRECONDITION(cx,"bad param");
     *cx = mJSContext;
     return NS_OK;
-}        
+}
 
 /***************************************************************************/
 
@@ -52,7 +52,7 @@ nsJSObject::nsJSObject(nsIJSContext* aJSContext, JSObject* jsobj)
     if(NS_SUCCEEDED(mJSContext->GetNative(&cx)))
         JS_AddRoot(cx, &mJSObject);
 
-}        
+}
 
 nsJSObject::~nsJSObject()
 {
@@ -60,7 +60,7 @@ nsJSObject::~nsJSObject()
     if(NS_SUCCEEDED(mJSContext->GetNative(&cx)))
         JS_RemoveRoot(cx, &mJSObject);
     NS_RELEASE(mJSContext);
-}        
+}
 
 nsresult
 nsJSObject::GetNative(JSObject** jsobj)
@@ -68,7 +68,7 @@ nsJSObject::GetNative(JSObject** jsobj)
     NS_PRECONDITION(jsobj,"bad param");
     *jsobj = mJSObject;
     return NS_OK;
-}        
+}
 
 /***************************************************************************/
 
@@ -76,11 +76,11 @@ XPC_PUBLIC_API(nsIJSContext*)
 XPC_NewJSContext(JSContext* cx)
 {
     return new nsJSContext(cx);
-}        
+}
 
 XPC_PUBLIC_API(nsIJSObject*)
 XPC_NewJSObject(nsIJSContext* aJSContext, JSObject* jsobj)
 {
     return new nsJSObject(aJSContext, jsobj);
-}        
+}
 

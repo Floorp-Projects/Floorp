@@ -32,12 +32,12 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    mMethodBaseIndex = mParent ? 
-                        mParent->mMethodBaseIndex + 
+    mMethodBaseIndex = mParent ?
+                        mParent->mMethodBaseIndex +
                         mParent->mMethodCount : 0;
 
-    mConstantBaseIndex = mParent ? 
-                          mParent->mConstantBaseIndex + 
+    mConstantBaseIndex = mParent ?
+                          mParent->mConstantBaseIndex +
                           mParent->mConstantCount : 0;
 
     // XXX implement for real
@@ -67,7 +67,7 @@ nsInterfaceInfo::GetName(const char** name)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetIID(const nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
@@ -75,7 +75,7 @@ nsInterfaceInfo::GetIID(const nsIID** iid)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
 {
     NS_PRECONDITION(parent, "bad param");
@@ -83,7 +83,7 @@ nsInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetMethodCount(int* count)
 {
     NS_PRECONDITION(count, "bad param");
@@ -91,7 +91,7 @@ nsInterfaceInfo::GetMethodCount(int* count)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetConstantCount(int* count)
 {
     NS_PRECONDITION(count, "bad param");
@@ -99,7 +99,7 @@ nsInterfaceInfo::GetConstantCount(int* count)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetMethodInfo(unsigned index, const nsXPCMethodInfo** info)
 {
     NS_PRECONDITION(info, "bad param");
@@ -118,7 +118,7 @@ nsInterfaceInfo::GetMethodInfo(unsigned index, const nsXPCMethodInfo** info)
     return NS_OK;
 }
 
-nsresult 
+nsresult
 nsInterfaceInfo::GetConstant(unsigned index, const nsXPCConstant** constant)
 {
     NS_PRECONDITION(constant, "bad param");

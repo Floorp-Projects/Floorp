@@ -3,6 +3,9 @@
 #include "jsapi.h"
 #include <stdio.h>
 
+#include "xpcbogusii.h"
+
+
 /***************************************************************************/
 // {159E36D0-991E-11d2-AC3F-00C09300144B}
 #define NS_ITESTXPC_FOO_IID       \
@@ -11,7 +14,9 @@
 
 class nsITestXPCFoo : public nsISupports
 {
-    public:
+public:
+    NS_IMETHOD Test(int p1, int p2) = 0;
+    NS_IMETHOD Test2() = 0;
 };
 
 // {5F9D20C0-9B6B-11d2-9FFE-000064657374}
@@ -21,13 +26,15 @@ class nsITestXPCFoo : public nsISupports
 
 class nsITestXPCFoo2 : public nsITestXPCFoo
 {
-    public:
+public:
 };
 
 
 class nsTestXPCFoo : public nsITestXPCFoo2
 {
     NS_DECL_ISUPPORTS;
+    NS_IMETHOD Test(int p1, int p2);
+    NS_IMETHOD Test2();
     nsTestXPCFoo();
 };
 
@@ -38,7 +45,19 @@ nsresult nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
 }
- 
+
+nsresult nsTestXPCFoo::Test(int p1, int p2)
+{
+    printf("nsTestXPCFoo::Test called with p1 = %d and p2 = %d\n", p1, p2);
+    return NS_OK;
+}
+nsresult nsTestXPCFoo::Test2()
+{
+    printf("nsTestXPCFoo::Test2 called\n");
+    return NS_OK;
+}
+
+
 NS_IMPL_ADDREF(nsTestXPCFoo)
 NS_IMPL_RELEASE(nsTestXPCFoo)
 
@@ -94,7 +113,17 @@ int main()
 
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
-    
+
+    nsXPCVarient v[2];
+    v[0].type = nsXPCType::T_I32; v[0].val.i32 = 1;
+    v[1].type = nsXPCType::T_I32; v[1].val.i32 = 2;
+
+
+    uint32 p[2] = {1,2};
+
+    XPC_TestInvoke(foo, 3, 2, v);
+    XPC_TestInvoke(foo, 4, 0, NULL);
+
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
     if(NS_SUCCEEDED(xpc->WrapNative(xpccx, foo, kIFooIID, &wrapper)))
@@ -116,7 +145,7 @@ int main()
     }
     NS_RELEASE(foo);
 
-    JS_GC(cx);    
+    JS_GC(cx);
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();

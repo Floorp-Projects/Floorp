@@ -43,7 +43,7 @@ class nsXPConnect : public nsIXPConnect
 
     NS_IMETHOD InitJSContext(nsIJSContext* aJSContext,
                              nsIJSObject* aGlobalJSObj);
-    
+
     NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
                                 nsIInterfaceInfo** info);
 
@@ -92,7 +92,7 @@ private:
 class XPCContext
 {
 public:
-    static XPCContext* newXPCContext(JSContext* aJSContext, 
+    static XPCContext* newXPCContext(JSContext* aJSContext,
                                    JSObject* aGlobalObj,
                                    int WrappedJSMapSize,
                                    int WrappedNativeMapSize,
@@ -110,7 +110,7 @@ public:
     ~XPCContext();
 private:
     XPCContext();    // no implementation
-    XPCContext(JSContext* aJSContext, 
+    XPCContext(JSContext* aJSContext,
               JSObject* aGlobalObj,
               int WrappedJSMapSize,
               int WrappedNativeMapSize,
@@ -135,7 +135,7 @@ class nsXPCWrappedJS : public nsIXPConnectWrappedJS
 public:
     JSObject* GetJSObject(){return NULL;}
     nsXPCWrappedJSClass*  GetClass() {return NULL;}
-        
+
 };
 
 class nsXPCWrappedJSClass : public nsISupports
@@ -148,8 +148,8 @@ public:
 
 private:
     XPCContext* mXPCContext;
-    nsIID mIID;    
-        
+    nsIID mIID;
+
 };
 
 /*************************/
@@ -169,6 +169,8 @@ struct XPCNativeMemberDescriptor
     uintN           index; /* in InterfaceInfo for const, method, and get */
     uintN           index2; /* in InterfaceInfo for set */
     MemberCategory  category;
+    uintN           maxParamWordCount;
+    uintN           maxScratchWordCount;
 };
 
 // this interfaces exists just so we can refcount nsXPCWrappedNativeClass
@@ -207,37 +209,59 @@ public:
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
 
-    JSBool GetConstantAsJSVal(nsXPCWrappedNative* wrapper, 
-                              const XPCNativeMemberDescriptor* desc, 
+    JSBool GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
+                              const XPCNativeMemberDescriptor* desc,
                               jsval* vp);
 
-    JSBool GetAttributeAsJSVal(nsXPCWrappedNative* wrapper, 
-                               const XPCNativeMemberDescriptor* desc, 
-                               jsval* vp);
-
-    JSBool SetAttributeFromJSVal(nsXPCWrappedNative* wrapper, 
-                                 const XPCNativeMemberDescriptor* desc, 
-                                 jsval* vp);
-
-    JSBool CallWrappedMethod(nsXPCWrappedNative* wrapper, 
-                             const XPCNativeMemberDescriptor* desc, 
+    JSBool CallWrappedMethod(nsXPCWrappedNative* wrapper,
+                             const XPCNativeMemberDescriptor* desc,
                              JSBool isAttributeSet,
                              uintN argc, jsval *argv, jsval *vp);
+
+    JSBool GetAttributeAsJSVal(nsXPCWrappedNative* wrapper,
+                               const XPCNativeMemberDescriptor* desc,
+                               jsval* vp)
+    {
+        return CallWrappedMethod(wrapper, desc, JS_FALSE, 0, NULL, vp);
+    }
+
+    JSBool SetAttributeFromJSVal(nsXPCWrappedNative* wrapper,
+                                 const XPCNativeMemberDescriptor* desc,
+                                 jsval* vp)
+    {
+        return CallWrappedMethod(wrapper, desc, JS_TRUE, 1, vp, NULL);
+    }
 
     JSObject* GetInvokeFunObj(const XPCNativeMemberDescriptor* desc);
 
     ~nsXPCWrappedNativeClass();
 private:
     nsXPCWrappedNativeClass();   // not implemented
-    nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID, 
+    nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                            nsIInterfaceInfo* aInfo);
 
     const char* GetMethodName(int MethodIndex) const;
     JSContext* GetJSContext() {return mXPCContext->GetJSContext();}
 
+    uintN GetMaxParamWordCount(const XPCNativeMemberDescriptor* desc)
+    {
+        if(-1 == desc->maxParamWordCount)
+            SetDescriptorCounts(NS_CONST_CAST(XPCNativeMemberDescriptor*,desc));
+        return desc->maxParamWordCount;
+    }
+
+    uintN GetMaxScratchWordCount(const XPCNativeMemberDescriptor* desc)
+    {
+        if(-1 == desc->maxScratchWordCount)
+            SetDescriptorCounts(NS_CONST_CAST(XPCNativeMemberDescriptor*,desc));
+        return desc->maxScratchWordCount;
+    }
+
+    void SetDescriptorCounts(XPCNativeMemberDescriptor* desc);
+
 private:
     XPCContext* mXPCContext;
-    nsIID mIID;    
+    nsIID mIID;
     nsIInterfaceInfo* mInfo;
     int mMemberCount;
     XPCNativeMemberDescriptor* mMembers;
@@ -260,7 +284,7 @@ public:
     virtual ~nsXPCWrappedNative();
 private:
     nsXPCWrappedNative();    // not implemented
-    nsXPCWrappedNative(nsISupports* aObj, 
+    nsXPCWrappedNative(nsISupports* aObj,
                       nsXPCWrappedNativeClass* aClass,
                       nsXPCWrappedNative* root);
 
@@ -274,11 +298,17 @@ private:
     nsXPCWrappedNative* mNext;
 };
 
+/************************************************/
+
+// platform specific method invoker
+nsresult
+xpc_InvokeNativeMethod(void* that, PRUint32 index,
+                       uint32 paramCount, nsXPCVarient* params);
 
 /***************************************************************************/
 
 // the include of declarations of the maps comes last because they have
-// inlines which call methods on classes above. 
+// inlines which call methods on classes above.
 
 #include "xpcmaps.h"
 
