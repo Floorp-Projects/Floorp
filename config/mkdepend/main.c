@@ -48,6 +48,10 @@ in this Software without prior written authorization from The Open Group.
 #include <stdarg.h>
 #endif
 
+#ifdef XP_OS2
+#include <io.h>
+#endif
+
 #ifdef DEBUG
 int	_debugmask;
 #endif
@@ -116,7 +120,7 @@ catch (sig)
 	fatalerr ("got signal %d\n", sig);
 }
 
-#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32)
+#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(XP_OS2)
 #define USGISH
 #endif
 
@@ -540,7 +544,7 @@ char *getline(filep)
 
 			continue;
 		}
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 		else if (*p == '/' && *(p+1) == '/') { /* consume comments */
 			*p++ = ' ', *p++ = ' ';
 			while (*p && *p != '\n')
@@ -646,12 +650,12 @@ redirect(line, makefile)
 		fatalerr("cannot open \"%s\"\n", makefile);
 	sprintf(backup, "%s.bak", makefile);
 	unlink(backup);
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 	fclose(fdin);
 #endif
 	if (rename(makefile, backup) < 0)
 		fatalerr("cannot rename %s to %s\n", makefile, backup);
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 	if ((fdin = fopen(backup, "r")) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
 #endif
