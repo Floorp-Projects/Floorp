@@ -93,6 +93,7 @@ EmbedPrivate::EmbedPrivate(void)
   mChromeLoaded     = PR_FALSE;
   mListenersAttached = PR_FALSE;
   mMozWindowWidget  = 0;
+  mIsDestroyed      = PR_FALSE;
 
   PushStartup();
   if (!sWindowList) {
@@ -273,6 +274,12 @@ EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
 void
 EmbedPrivate::Destroy(void)
 {
+  // This flag might have been set from
+  // EmbedWindow::DestroyBrowserWindow() as well if someone used a
+  // window.close() or something or some other script action to close
+  // the window.  No harm setting it again.
+  mIsDestroyed = PR_TRUE;
+
   // Get the nsIWebBrowser object for our embedded window.
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -582,6 +589,9 @@ EmbedPrivate::ContentFinishedLoading(void)
 void
 EmbedPrivate::TopLevelFocusIn(void)
 {
+  if (mIsDestroyed)
+    return;
+
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -597,6 +607,9 @@ EmbedPrivate::TopLevelFocusIn(void)
 void
 EmbedPrivate::TopLevelFocusOut(void)
 {
+  if (mIsDestroyed)
+    return;
+
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -612,6 +625,9 @@ EmbedPrivate::TopLevelFocusOut(void)
 void
 EmbedPrivate::ChildFocusIn(void)
 {
+  if (mIsDestroyed)
+    return;
+
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
@@ -624,6 +640,9 @@ EmbedPrivate::ChildFocusIn(void)
 void
 EmbedPrivate::ChildFocusOut(void)
 {
+  if (mIsDestroyed)
+    return;
+
   nsCOMPtr<nsPIDOMWindow> piWin;
   GetPIDOMWindow(getter_AddRefs(piWin));
 
