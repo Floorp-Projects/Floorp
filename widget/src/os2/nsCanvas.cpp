@@ -180,6 +180,13 @@ PRBool nsCanvas::OnPaint()
                     if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
                     {
                       event.renderingContext->Init(mContext, surf);
+                      nsPaletteInfo palInfo;
+                      mContext->GetPaletteInfo(palInfo);
+                      if (palInfo.isPaletteDevice && palInfo.palette)
+                      {
+                          ULONG cclr;
+                          ::WinRealizePalette(mWnd, hPS, &cclr);
+                      }
                       rc = DispatchWindowEvent(&event);
                       event.renderingContext->DestroyDrawingSurface(surf);
                     }
