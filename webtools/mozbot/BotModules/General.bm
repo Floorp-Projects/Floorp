@@ -60,7 +60,7 @@ sub Told {
                 }
                 foreach (keys %$commands) {
                     $topicList{lc($_)} = [] unless defined($topicList{lc($_)});
-                    push(@{$topicList{lc($_)}}, $commands->{lc($_)});
+                    push(@{$topicList{lc($_)}}, $commands->{$_});
                 }
             }
             if (defined($topicList{lc($1)})) {
