@@ -360,7 +360,7 @@ void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
   }
 }
 
-
+MOZ_DECL_CTOR_COUNTER(HTMLCSSStyleSheetImpl);
 
 HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
   : nsIHTMLCSSStyleSheet(),
@@ -369,11 +369,15 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
     mFirstLineRule(nsnull),
     mFirstLetterRule(nsnull)
 {
+  MOZ_COUNT_CTOR(HTMLCSSStyleSheetImpl);
+
   NS_INIT_REFCNT();
 }
 
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
+  MOZ_COUNT_DTOR(HTMLCSSStyleSheetImpl);
+
   NS_RELEASE(mURL);
   if (nsnull != mFirstLineRule) {
     mFirstLineRule->mSheet = nsnull;
