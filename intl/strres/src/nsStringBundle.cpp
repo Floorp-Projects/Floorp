@@ -19,6 +19,7 @@
 #define NS_IMPL_IDS
 #include "nsID.h"
 
+#include "nsString2.h"
 #include "nsIProperties.h"
 #include "nsIStringBundle.h"
 #include "nscore.h"
@@ -77,6 +78,7 @@ nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
     return;
   }
   nsIInputStream *in = nsnull;
+
   *aResult = pNetService->OpenBlockingStream(aURL, nsnull, &in);
   if (NS_FAILED(*aResult)) {
 #ifdef NS_DEBUG
@@ -149,6 +151,8 @@ public:
 
   NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     nsIStringBundle** aResult);
+  NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
+    nsIStringBundle** aResult);
 };
 
 nsStringBundleService::nsStringBundleService()
@@ -162,6 +166,7 @@ nsStringBundleService::~nsStringBundleService()
 
 NS_IMPL_ISUPPORTS(nsStringBundleService, kIStringBundleServiceIID)
 
+/* deprecated */
 NS_IMETHODIMP
 nsStringBundleService::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
   nsIStringBundle** aResult)
@@ -180,6 +185,102 @@ nsStringBundleService::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     delete bundle;
   }
 
+  return ret;
+}
+
+NS_IMETHODIMP
+nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
+  nsIStringBundle** aResult)
+{
+
+  /* locale binding */
+  nsString2 strFile2;
+  if (aLocale) {
+    nsString	  lc_name;
+    nsString  	catagory("NSILOCALE_MESSAGES");
+    nsresult	  result	 = aLocale->GetCategory(&catagory, &lc_name);
+
+    NS_ASSERTION(result==NS_OK,"nsStringBundleService::CreateBundle: locale.GetCatagory failed");
+    NS_ASSERTION(lc_name.Length()>0,"nsStringBundleService::CreateBundle: locale.GetCatagory failed");
+
+    /* find the place to concatenate locale name 
+     */
+    PRInt32 count = 0;
+    nsString2 strFile(aURLSpec);
+    PRInt32   mylen = strFile.Length();
+
+    /* assume the name always end with this
+     */
+    PRInt32 dot = strFile.RFindCharInSet(".");
+    count = strFile.Left(strFile2, (dot>0)?dot:mylen);
+
+    /* get lang-country code
+     */
+    PRInt32 dash = lc_name.FindCharInSet("-");
+    if (dash > 0) {
+      /* 
+       */
+      nsString lc_name2;
+      nsString right;
+      count = lc_name.Left(lc_name2, dash);
+      count = lc_name.Right(right, (lc_name.Length()-dash-1));
+      lc_name2 += "_";
+      lc_name2 += right;
+      strFile2 += "_";
+      strFile2 += lc_name2;
+    }
+    else {
+      strFile2 += "_";
+      strFile2 += lc_name;
+    }
+ 
+    /* insert it
+     */   
+    if (dot > 0) {
+      nsString2 fileRight;
+      count = strFile.Right(fileRight, mylen-dot);
+      strFile2 += fileRight;
+    }
+#ifdef NS_DEBUG
+    printf("\n--NEW URL--%s\n", strFile2.ToNewCString());
+#endif
+  }
+  /* locale binding */
+
+  nsresult ret = NS_OK;
+
+  /* get the url
+   */
+  nsINetService* pNetService = nsnull;
+  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
+    (nsISupports**) &pNetService);
+  if (NS_FAILED(ret)) {
+    printf("cannot get net service\n");
+    return 1;
+  }
+  nsIURL *url = nsnull;
+  ret = pNetService->CreateURL(&url, strFile2, nsnull, nsnull,
+                               nsnull);
+  if (NS_FAILED(ret)) {
+    printf("cannot create URL\n");
+    return 1;
+  }
+
+  /* do it
+   */
+  nsStringBundle* bundle = new nsStringBundle(url, aLocale, &ret);
+  if (!bundle) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (NS_FAILED(ret)) {
+    delete bundle;
+    return ret;
+  }
+  ret = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  if (NS_FAILED(ret)) {
+    delete bundle;
+  }
+  delete url;
   return ret;
 }
 
