@@ -52,7 +52,6 @@ class nsWidgetModuleData
    LONG    lHtEntryfield;   // ideal height of an entryfield
    char   *pszFontNameSize; // fns for default widget font
    BOOL    bIsDBCS;         // true if system is dbcs
-   ULONG   ppMozilla;       // pres-param for hwnd <-> nsWindow*
 
    // xptoolkit services we look after, & the primaeval appshell too.
    nsIFontRetrieverService *fontService;

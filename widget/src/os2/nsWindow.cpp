@@ -108,18 +108,6 @@ nsIWidget         * gRollupWidget             = nsnull;
 PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 
 // --------------------------------------------------------------------------
-// HWND -> (nsWindow *) conversion ------------------------------------------
-
-nsWindow *NS_HWNDToWindow( HWND hwnd)
-{
-   nsWindow *pWnd = nsnull;
-
-   WinQueryPresParam( hwnd, gModuleData.ppMozilla, 0, NULL,
-                      sizeof pWnd, &pWnd, QPF_NOINHERIT);
-   return pWnd;
-}
-
-// --------------------------------------------------------------------------
 // NSWindow create / destroy ------------------------------------------------
 
 nsWindow::nsWindow() : nsBaseWidget()
@@ -127,7 +115,7 @@ nsWindow::nsWindow() : nsBaseWidget()
    NS_INIT_REFCNT();
 
    mWnd             = 0;
-   mFnWP            = 0;
+   mPrevWndProc     = 0;
    mParent          = 0;
    mNextID          = 1;
    mNextCmdID       = 1;
@@ -179,7 +167,7 @@ nsresult nsWindow::Create( nsNativeWidget aParent, const nsRect &aRect,
    HWND      hwndP = (HWND) aParent;
 
    if( hwndP && hwndP != HWND_DESKTOP)
-      pParent = NS_HWNDToWindow( hwndP);
+      pParent = GetNSWindowPtr(hwndP);
 
    // XXX WC_MOZILLA will probably need a change here
    //
@@ -508,6 +496,105 @@ BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
    return (hwnd1 == hwnd2);
 }
 
+PVOID APIENTRY WinQueryProperty(HWND hwnd, PCSZ  pszNameOrAtom);
+
+PVOID APIENTRY WinRemoveProperty(HWND hwnd, PCSZ  pszNameOrAtom);
+
+BOOL  APIENTRY WinSetProperty(HWND hwnd, PCSZ  pszNameOrAtom,
+                              PVOID pvData, ULONG ulFlags);
+
+static PCSZ GetNSWindowPropName() {
+  static ATOM atom = 0;
+
+  // this is threadsafe, even without locking;
+  // even if there's a race, GlobalAddAtom("nsWindowPtr")
+  // will just return the same value
+  if (!atom) {
+    atom = WinAddAtom(WinQuerySystemAtomTable(), "nsWindowPtr");
+  }
+
+  return (PCSZ)atom;
+}
+
+nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd) {
+  return (nsWindow *) ::WinQueryProperty(aWnd, GetNSWindowPropName());
+}
+
+BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr) {
+  if (ptr == NULL) {
+    ::WinRemoveProperty(aWnd, GetNSWindowPropName());
+    return TRUE;
+  } else {
+    return ::WinSetProperty(aWnd, GetNSWindowPropName(), (PVOID)ptr, 0);
+  }
+}
+
+//
+// DealWithPopups
+//
+// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
+//
+BOOL
+nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
+{
+  if ( gRollupListener && gRollupWidget) {
+#ifdef XP_OS2
+    if( inMsg == WM_ACTIVATE || inMsg == WM_BUTTON1DOWN ||
+        inMsg == WM_BUTTON2DOWN || inMsg == WM_BUTTON3DOWN) {
+#else
+    if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
+      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
+      inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE) {
+#endif
+      // Rollup if the event is outside the popup.
+      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
+      
+      // If we're dealing with menus, we probably have submenus and we don't
+      // want to rollup if the click is in a parent menu of the current submenu.
+      if (rollup) {
+        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+        if ( menuRollup ) {
+          nsCOMPtr<nsISupportsArray> widgetChain;
+          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+          if ( widgetChain ) {
+            PRUint32 count = 0;
+            widgetChain->Count(&count);
+            for ( PRUint32 i = 0; i < count; ++i ) {
+              nsCOMPtr<nsISupports> genericWidget;
+              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+              if ( widget ) {
+                nsIWidget* temp = widget.get();
+                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp) ) {
+                  rollup = PR_FALSE;
+                  break;
+                }
+              }
+            } // foreach parent menu widget
+          }
+        } // if rollup listener knows about menus
+      }
+
+      // if we've determined that we should still rollup everything, do it.
+      if ( rollup ) {
+        gRollupListener->Rollup();
+
+        // return TRUE tells Windows that the event is consumed, 
+        // false allows the event to be dispatched
+        //
+        // So if we are NOT supposed to be consuming events, let it go through
+        if (gRollupConsumeRollupEvent) {
+          *outResult = (MRESULT)TRUE;
+          return TRUE;
+        } 
+      }
+    } // if event that might trigger a popup to rollup    
+  } // if rollup listeners registered
+
+  return FALSE;
+
+} // DealWithPopups
+
 // --------------------------------------------------------------------------
 // PM messaging layer - wndproc, subclasser, default handler ----------------
 
@@ -520,7 +607,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 #endif
 
    // Get the nsWindow for this hwnd
-   nsWindow *wnd = NS_HWNDToWindow( hwnd);
+   nsWindow *wnd = nsWindow::GetNSWindowPtr(hwnd);
 
    // check to see if we have a rollup listener registered
    if( nsnull != gRollupListener && nsnull != gRollupWidget) {
@@ -577,7 +664,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
          HWND hwndChild = WinWindowFromID( hwnd, SHORT1FROMMP( mp1));
          if( hwndChild)
          {
-            nsWindow *w = NS_HWNDToWindow( hwndChild);
+            nsWindow *w = nsWindow::GetNSWindowPtr(hwndChild);
             if( w)
                wnd = w;
          }
@@ -605,24 +692,29 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
    return mRC;
 }
 
-// Subclass (or remove the subclass)
-void nsWindow::SubclassWindow( PRBool bState)
+// -----------------------------------------------------------------------
+//
+// Subclass (or remove the subclass from) this component's nsWindow
+//
+// -----------------------------------------------------------------------
+void nsWindow::SubclassWindow(BOOL bState)
 {
-   NS_PRECONDITION(WinIsWindow( 0/*hab*/, mWnd), "Invalid window handle");
+  if (NULL != mWnd) {
+    NS_PRECONDITION(::WinIsWindow(0, mWnd), "Invalid window handle");
     
-   if( PR_TRUE == bState)
-   {
-      mFnWP = WinSubclassWindow( mWnd, fnwpNSWindow);
-      // connect the this pointer to the window handle
-      nsWindow *pWin = this; // learn something new about C++ every day...
-      WinSetPresParam( mWnd, gModuleData.ppMozilla, sizeof pWin, &pWin);
-   } 
-   else
-   {
-      WinSubclassWindow( mWnd, mFnWP);
-      WinRemovePresParam( mWnd, gModuleData.ppMozilla);
-      mFnWP = nsnull;
-   }
+    if (bState) {
+        // change the nsWindow proc
+        mPrevWndProc = WinSubclassWindow(mWnd, fnwpNSWindow);
+        NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
+        // connect the this pointer to the nsWindow handle
+        SetNSWindowPtr(mWnd, this);
+    } 
+    else {
+        WinSubclassWindow(mWnd, mPrevWndProc);
+        SetNSWindowPtr(mWnd, NULL);
+        mPrevWndProc = NULL;
+    }
+  }
 }
 
 // 'Window procedure'
