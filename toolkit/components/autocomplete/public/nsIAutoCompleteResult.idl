@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(44864910-332C-46b0-A4F9-14A301DBCA80)]
+[scriptable, uuid(eb43e1dc-2060-4d8e-aebf-3efec4e21cf8)]
 interface nsIAutoCompleteResult : nsISupports
 {
   /**
@@ -87,4 +87,11 @@ interface nsIAutoCompleteResult : nsISupports
    * Get the style hint for the result at the given index
    */
   AString getStyleAt(in long index);
+
+  /**
+   * Remove the value at the given index from the autocomplete results.
+   * If removeFromDb is set to true, the value should be removed from
+   * persistent storage as well.
+   */
+  void removeValueAt(in long rowIndex, in boolean removeFromDb);
 };

@@ -49,7 +49,7 @@ native mdb_scope(mdb_scope);
 native mdb_column(mdb_column);
 
 /* noscript */
-[uuid(c5257f44-b4d0-41aa-a50b-5b7bcefcc235)]
+[uuid(e6396544-921d-4776-aa62-8bf2dc1ae058)]
 interface nsIAutoCompleteBaseResult : nsIAutoCompleteResult
 {
   void setSearchString(in AString searchString);
@@ -72,8 +72,6 @@ interface nsIAutoCompleteMdbResult : nsIAutoCompleteBaseResult
 		 in mdb_scope commentToken, in short commentType);
 
   void addRow(in nsIMdbRow row);
-
-  void removeRowAt(in unsigned long rowIndex, in boolean removeFromDb);
 
   nsIMdbRow getRowAt(in unsigned long rowIndex);
 

@@ -210,7 +210,7 @@ nsAutoCompleteMdbResult::AddRow(nsIMdbRow *aRow)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteMdbResult::RemoveRowAt(PRUint32 aRowIndex, PRBool aRemoveFromDb)
+nsAutoCompleteMdbResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDb)
 {
   nsIMdbRow *row = mResults.ObjectAt(aRowIndex);
   NS_ENSURE_TRUE(row, NS_ERROR_INVALID_ARG);

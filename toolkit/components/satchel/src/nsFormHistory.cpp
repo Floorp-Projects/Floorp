@@ -705,7 +705,7 @@ nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
       nsIMdbRow *row;
       result->GetRowAt(i, &row);
       if (!RowMatch(row, aInputName, aInputValue, nsnull))
-        result->RemoveRowAt(i, PR_FALSE);
+        result->RemoveValueAt(i, PR_FALSE);
     }
   } else {
     result = do_CreateInstance("@mozilla.org/autocomplete/mdb-result;1");
