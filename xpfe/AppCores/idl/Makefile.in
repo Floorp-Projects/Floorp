@@ -19,19 +19,13 @@ DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+MODULE=appcores
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef USE_XPIDL
-IDLSRCS =	\
+XPIDLSRCS =	\
 	nsIDOMBaseAppCore.idl	\
-	nsIDOMWindow.idl	\
-	nsIDOMNodeList.idl	\
-	nsIDOMXULTreeElement.idl\
-	nsIDOMXULElement.idl	\
-	nsIDOMEditorAppCore.idl	\
 	$(NULL)
-endif
 
 include $(topsrcdir)/config/config.mk
 
