@@ -94,7 +94,6 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 
 nsresult nsSound::PlaySound(Handle waveDataHandle, long waveDataSize)
 {
-#if !TARGET_CARBON
   Handle                  dataRef = nil;
   Movie                   movie = nil;
   MovieImportComponent    miComponent = nil;
@@ -157,9 +156,6 @@ bail:		// gasp, a goto label
     ::DisposeMovie(movie);
 
   return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
-#else
-  return NS_OK;
-#endif
 }
 
 
