@@ -121,8 +121,6 @@ public:
                      nscoord         aWidth,
                      nscoord         aHeight);
 
-  static nsIRegion* CreateRegion();
-
   /**
    * Get the "type" of the frame
    *

@@ -47,9 +47,9 @@ class nsIScrollableView;
 class nsIWidget;
 class nsICompositeListener;
 struct nsRect;
+class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
-class nsIRegion;
 
 enum nsContentQuality {
   nsContentQuality_kGood = 0,
@@ -278,7 +278,7 @@ public:
    *
    * XXX Currently we only support regions consisting of a single rectangle.
    */
-  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, nsIRegion *aRegion) = 0;
+  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion) = 0;
 
   /**
    * Set the visibility of a view.

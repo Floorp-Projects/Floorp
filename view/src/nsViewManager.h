@@ -171,7 +171,7 @@ public:
 
   NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly = PR_FALSE);
 
-  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, nsIRegion *aRegion);
+  NS_IMETHOD  SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion);
 
   NS_IMETHOD  SetViewBitBltEnabled(nsIView *aView, PRBool aEnable);
 
@@ -278,11 +278,11 @@ private:
   PRBool AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect,
     nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY, PRBool aAssumeIntersection);
   void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
-  nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect);
+  nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
     // Remove redundant PUSH/POP_CLIP pairs.
   void ComputeViewOffset(nsView *aView, nsPoint *aOrigin);
 
-  void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
+  void AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                         nsView* aRootView);
 
   // Predicates
@@ -364,6 +364,8 @@ public: // NOT in nsIViewManager, so private to the view module
 
   PRBool CanScrollWithBitBlt(nsView* aView);
 
+  nsresult CreateRegion(nsIRegion* *result);
+
 private:
   nsIDeviceContext  *mContext;
   float             mTwipsToPixels;
@@ -404,10 +406,6 @@ private:
   //list of view managers
   static nsVoidArray       *gViewManagers;
 
-  //compositor regions
-  nsIRegion         *mOpaqueRgn;
-  nsIRegion         *mTmpRgn;
-
   nsIBlender        *mBlender;
 
   nsIRenderingContext *mOffScreenCX;
@@ -417,7 +415,6 @@ private:
   nsISupportsArray  *mCompositeListeners;
   void DestroyZTreeNode(DisplayZTreeNode* aNode);
 
-  nsresult CreateRegion(nsIRegion* *result);
   nsCOMPtr<nsIFactory> mRegionFactory;
 protected:
   nsView            *mRootView;
