@@ -1,0 +1,7 @@
+nsIBinarySearchIterator.h
+nsILineBreaker.h
+nsILineBreakerFactory.h
+nsILinearIterator.h
+nsIWordBreaker.h
+nsIWordBreakerFactory.h
+nsLWBrkCIID.h
