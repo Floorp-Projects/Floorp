@@ -26,6 +26,17 @@ LIBRARY_NAME = shell
 
 DEFINES = -D_IMPL_NS_SHELL
 
+EXTRA_DSO_LDOPTS+= -L$(DIST)/lib /usr/lib/libc.a /usr/lib/libstdc++.a  \
+		$(DIST)/lib/libxpcom.a \
+		$(DIST)/lib/libraptorbase.a \
+		$(DIST)/lib/libraptorgfx.a \
+		$(DIST)/lib/libnspr21.a \
+		$(DIST)/lib/libplds21.a \
+		$(DIST)/lib/libplc21.a \
+		$(DIST)/lib/libmsgc21.a \
+		$(DIST)/lib/libreg.a \
+		$(DIST)/lib/libshell_s.a /usr/lib/libc.a
+
 LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
       -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/shell
 
