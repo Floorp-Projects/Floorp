@@ -25,8 +25,7 @@
 
 <!-- Keys -->
 
-<!ENTITY controlKey         '<kbd class="noMac">Ctrl</kbd><kbd
-                             class="mac">Cmd</kbd>' >
+<!ENTITY controlKey         '<kbd>Ctrl</kbd>' >
 <!ENTITY accelKey           '<kbd class="noMac">Ctrl</kbd><kbd
                              class="mac">Cmd</kbd>' >
 <!ENTITY altKey             '<kbd class="noMac">Alt</kbd><kbd
