@@ -245,24 +245,8 @@ NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     nsresult rv;
     rv = impl->Init();
     if (NS_SUCCEEDED(rv)) {
-        // We need to read this synchronously.
-        rv = impl->Refresh(PR_TRUE);
-
-        if (NS_SUCCEEDED(rv)) {
-            rv = impl->QueryInterface(aIID, aResult);
-        }
-        else {
-#ifdef	DEBUG
-	printf("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
-#endif
-        }
-        
-        // Register as an observer of profile changes
-        NS_WITH_SERVICE(nsIObserverService, svc, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-            if (NS_SUCCEEDED(rv) && svc) {
-            svc->AddObserver(impl, NS_LITERAL_STRING("profile-before-change").get());
-            svc->AddObserver(impl, NS_LITERAL_STRING("profile-do-change").get());
-        }
+        // Set up the result pointer
+        rv = impl->QueryInterface(aIID, aResult);
     }
 
     NS_RELEASE(impl);
@@ -407,6 +391,10 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     rv = remote->Init((const char*) nsFileURL(spec));
     if (NS_FAILED(rv)) return rv;
 
+    // Read the datasource synchronously.
+    rv = remote->Refresh(PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
     // register this as a named data source with the RDF service
     nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -418,6 +406,15 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
     rv = rdf->RegisterDataSource(this, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register local store");
     if (NS_FAILED(rv)) return rv;
+
+    // Register as an observer of profile changes
+    nsCOMPtr<nsIObserverService> obs =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
+    if (obs) {
+        obs->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
+        obs->AddObserver(this, NS_LITERAL_STRING("profile-do-change").get());
+    }
 
     return NS_OK;
 }
