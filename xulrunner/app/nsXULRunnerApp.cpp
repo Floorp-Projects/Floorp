@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
                 || IsArg(argv[1], "help")
                 || IsArg(argv[1], "?"))
   {
-    printf("Usage: %s [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n", argv[0]);
+    printf("Usage: " XULRUNNER_PROGNAME " [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n");
     if (argc > 1) {
       // display additional information
       printf("\n"
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
   }
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version"))) {
-    printf("Mozilla XULRunner %s (%s)\n", APP_VERSION, BUILD_ID);
+    printf("Mozilla XULRunner %s %s (Gecko:%s)\n", APP_VERSION, BUILD_ID, MOZILLA_VERSION);
     return 0;
   }
 
