@@ -36,6 +36,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIView.h"
 
 
 NS_IMPL_ADDREF(nsTreeItemDragCapturer)
@@ -138,7 +139,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   mTreeItem->FirstChild(mPresContext, nsnull, &rowFrame);
   NS_ASSERTION ( rowFrame, "couldn't get rowGroup's row frame" );
   rowFrame->GetRect(rowRect);
-   
+
   // compute the offset to top level in twips
   float t2p;
   mPresContext->GetTwipsToPixels(&t2p);
@@ -154,10 +155,20 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   } // until we reach the top  
 
   // subtract the offset from the mouse coord to put it into row relative coordinates.
-  xp -= frameOffsetX;
-  yp -= frameOffsetY;
   nsPoint pnt(xp, yp);
+  pnt.MoveBy ( -frameOffsetX, -frameOffsetY );
 
+  // Find the tree's view and take it's scroll position into account
+	nsIView *containingView = nsnull;
+	nsPoint	unusedOffset(0,0);
+	mTreeItem->GetOffsetFromView(mPresContext, unusedOffset, &containingView);
+  NS_ASSERTION(containingView, "No containing view!");
+  if ( !containingView )
+    return;
+  nscoord viewOffsetToParentX = 0, viewOffsetToParentY = 0;
+  containingView->GetPosition ( &viewOffsetToParentX, &viewOffsetToParentY );
+  pnt.MoveBy ( -viewOffsetToParentX, -viewOffsetToParentY );
+  
   // now check if item is a container
   PRBool isContainer = PR_FALSE;
   nsCOMPtr<nsIContent> treeItemContent;
@@ -170,7 +181,7 @@ nsTreeItemDragCapturer :: ComputeDropPosition ( nsIDOMEvent* aDragEvent, nscoord
   }
   else
     NS_WARNING("Not a DOM element");
-
+  
   // if we have a container, the area is broken up into 3 pieces (top, middle, bottom). If
   // it isn't it's only broken up into two (top and bottom)
   if ( isContainer ) {
