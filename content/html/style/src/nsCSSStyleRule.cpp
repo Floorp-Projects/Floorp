@@ -878,8 +878,8 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
               (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
-            font->mFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)defaultFont.size, scaleFactor);
-            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value + 1, (PRInt32)defaultFixedFont.size, scaleFactor);
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFont.size, scaleFactor);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(value, (PRInt32)defaultFixedFont.size, scaleFactor);
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
             PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentFont->mFont.size, (PRInt32)defaultFont.size, scaleFactor);
