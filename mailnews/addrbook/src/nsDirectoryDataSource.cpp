@@ -626,6 +626,7 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 		literal->GetValue(&name);
 
 		rv = directory->CreateNewDirectory(name, nsnull);
+		nsAllocator::Free(name);
 	}
 	return rv;
 }

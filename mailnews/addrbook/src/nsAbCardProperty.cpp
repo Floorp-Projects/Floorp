@@ -410,7 +410,7 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 		nsAutoString cardValue(value);
 		char* valueStr = cardValue.ToNewCString();
 		rv = SetAnonymousStringAttribute(attrname, valueStr);
-		delete[] valueStr;
+		nsAllocator::Free(valueStr);
 	}
 	return rv;
 }

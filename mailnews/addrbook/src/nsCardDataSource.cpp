@@ -454,6 +454,7 @@ nsresult nsAbCardDataSource::DoNewCard(nsIAbCard *card, nsISupportsArray *argume
 		PRUnichar *name;
 		literal->GetValue(&name);
 		nsString tempStr = name;
+		nsAllocator::Free(name);
 		nsAutoCString nameStr(tempStr);
 
 //		rv = card->CreateNewCard(nameStr);
