@@ -28,6 +28,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsReadableUtils.h"
 #include "nsClipboard.h"
 #include "nsMime.h"
 
@@ -50,7 +51,7 @@ nsMimeStoreData::nsMimeStoreData(const char* name,void* rawdata,PRInt32 rawlen)
 //----------------------------------------------------------
 nsMimeStore::nsMimeStore()
 {
-  mMimeStore.setAutoDelete(TRUE);     
+  mMimeStore.setAutoDelete(TRUE);
 }
 
 nsMimeStore::~nsMimeStore()
@@ -63,9 +64,9 @@ const char* nsMimeStore::format(int n) const
     return 0;
 
   // because of const
-  QList<nsMimeStoreData> *pMimeStore = (QList<nsMimeStoreData>*)&mMimeStore;  
+  QList<nsMimeStoreData> *pMimeStore = (QList<nsMimeStoreData>*)&mMimeStore;
 
-  nsMimeStoreData* msd;  
+  nsMimeStoreData* msd;
   msd = pMimeStore->at((unsigned int)n);
   return msd->flavorName;
 }
@@ -75,7 +76,7 @@ QByteArray nsMimeStore::encodedData(const char* name) const
   QByteArray qba;
 
   // because of const
-  QList<nsMimeStoreData> *pMimeStore = (QList<nsMimeStoreData>*)&mMimeStore;  
+  QList<nsMimeStoreData> *pMimeStore = (QList<nsMimeStoreData>*)&mMimeStore;
 
   nsMimeStoreData* msd;
   for (msd = pMimeStore->first(); msd != 0; msd = pMimeStore->next()) {
@@ -85,42 +86,38 @@ QByteArray nsMimeStore::encodedData(const char* name) const
     }
   }
 #ifdef NS_DEBUG
-  printf("nsMimeStore::encodedData requested unkown %s\n", name);
+  printf("nsMimeStore::encodedData requested unknown %s\n", name);
 #endif
   return qba;
 }
 
+PRBool nsMimeStore::ContainsFlavor(const char* name)
+{
+  for (nsMimeStoreData *msd = mMimeStore.first(); msd; msd = mMimeStore.next()) {
+    if (!strcmp(name, msd->flavorName))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 PRBool nsMimeStore::AddFlavorData(const char* name, void* data, PRInt32 len)
 {
-  nsMimeStoreData* msd;
-  for (msd = mMimeStore.first(); msd != 0; msd = mMimeStore.next()) {
-     if (strcmp(name, msd->flavorName) == 0)
-       return PR_FALSE;
-  }
+  if (ContainsFlavor(name))
+    return PR_FALSE;
   mMimeStore.append(new nsMimeStoreData(name, data, len));
 
-  if (strcmp(name, kUnicodeMime) == 0) {
-    // let's look if text/plain is not present yet
-    for (msd = mMimeStore.first(); msd != 0; msd = mMimeStore.next()) {
-      if (strcmp("text/plain", msd->flavorName) == 0)
-         return PR_TRUE;
-    }
-    // if we find text/unicode, also advertise text/plain (which we will convert
-    // on our own in nsDataObj::GetText().
-    len /= 2;
-    QChar* qch = new QChar[len];
-    for (PRInt32 c = 0; c < len; c++)
-       qch[c] = (QChar)((PRUnichar*)data)[c];
+  // we're done unless we're given text/unicode,
+  // and text/plain is not already advertised,
+  if (strcmp(name, kUnicodeMime) || ContainsFlavor(kTextMime))
+    return PR_TRUE;
+  // in which case we also advertise text/plain
+  // which we will convert on our own in nsDataObj::GetText().
 
-    QString ascii(qch, len);
-    delete qch;
-    char *as = new char[len];
-    for (PRInt32 c = 0; c < len; c++)
-      as[c] = ((const char*)ascii)[c];
+  char *as = ToNewCString(nsDependentString((PRUnichar*)data));
 
-    // let's text/plain be first for stupid programms 
-    mMimeStore.insert(0, new nsMimeStoreData("text/plain", as, len));
-  }
+  // let's text/plain be first for stupid programs
+  // Ownership of |as| is transfered to mMimeStore
+  mMimeStore.insert(0,new nsMimeStoreData(kTextMime,as,nsCRT::strlen(as) + 1));
   return PR_TRUE;
 }
 
@@ -148,7 +145,7 @@ const char* nsDragObject::format(int i) const
   const char* frm = mMimeStore->format(i);
 #ifdef NS_DEBUG
   printf("nsDragObject::format i=%i %s\n",i, frm);
-#endif  
+#endif
   return frm;
 }
 
