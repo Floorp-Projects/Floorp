@@ -46,7 +46,7 @@ NS_IMPL_RELEASE(ConsoleOutput)
 nsresult
 ConsoleOutput::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
@@ -142,7 +142,7 @@ NS_IMPL_RELEASE(TestTransaction)
 nsresult
 TestTransaction::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {

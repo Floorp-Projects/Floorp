@@ -147,7 +147,7 @@ NS_IMPL_RELEASE(nsEditor)
 nsresult
 nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
