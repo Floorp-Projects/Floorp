@@ -36,8 +36,8 @@ REQUIRES	= xpcom \
 		  mailnews \
 		  necko \
 		  msgbaseutil \
-          msgdb \
-          mime \
+          	  msgdb \
+          	  mime \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -45,6 +45,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= \
+		nsMsgMailViewsCID.h \
 		nsMsgMailViewList.h \
 		$(NULL)
 

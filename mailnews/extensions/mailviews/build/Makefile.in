@@ -39,8 +39,8 @@ REQUIRES	= xpcom \
 		  mailnews \
 		  necko \
 		  msgbaseutil \
-          msgdb \
-          mime \
+          	  msgdb \
+          	  mime \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
@@ -50,7 +50,6 @@ EXTRA_DSO_LIBS = msgbaseutil
 endif
 
 CPPSRCS		= nsMsgMailViewsFactory.cpp
-EXPORTS		= nsMsgMailViewsCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
