@@ -34,6 +34,10 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
   persist="width height screenX screenY"
   title="&window.title;">
 
+  <stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_filter" src="chrome://messenger/locale/filter.properties"/>
+  </stringbundleset>
+
   <script type="application/x-javascript" src="chrome://messenger/content/CustomHeaders.js"/>
   <script src="chrome://messenger/content/searchTermOverlay.js"/>
 

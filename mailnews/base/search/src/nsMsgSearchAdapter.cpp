@@ -1038,22 +1038,22 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 	case nsMsgSearchScope::offlineMail:
     if (!m_offlineMailTable)
       err = InitOfflineMailTable ();
-    if (customHeaders && m_offlineMailTable)
-      err = InitOtherHeadersInTable(m_offlineMailTable, customHeaders.get());
+    if (m_offlineMailTable)
+      err = SetOtherHeadersInTable(m_offlineMailTable, customHeaders.get());
 		*ppOutTable = m_offlineMailTable;
 		break;
 	case nsMsgSearchScope::onlineMail:
 		if (!m_onlineMailTable)
       err = InitOnlineMailTable ();
-    if (customHeaders && m_onlineMailTable)
-      err = InitOtherHeadersInTable(m_onlineMailTable, customHeaders.get());
+    if (m_onlineMailTable)
+      err = SetOtherHeadersInTable(m_onlineMailTable, customHeaders.get());
 		*ppOutTable = m_onlineMailTable;
 		break;
 	case nsMsgSearchScope::onlineMailFilter:
 		if (!m_onlineMailFilterTable)
 			err = InitOnlineMailFilterTable ();
-    if (customHeaders && m_onlineMailFilterTable)
-      err = InitOtherHeadersInTable(m_onlineMailFilterTable, customHeaders.get());
+    if (m_onlineMailFilterTable)
+      err = SetOtherHeadersInTable(m_onlineMailFilterTable, customHeaders.get());
 		*ppOutTable = m_onlineMailFilterTable;
 		break;
 	case nsMsgSearchScope::news:
@@ -1064,8 +1064,8 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 	case nsMsgSearchScope::localNews:
 		if (!m_localNewsTable)
 			err = InitLocalNewsTable();
-    if (customHeaders && m_localNewsTable)
-      err = InitOtherHeadersInTable(m_localNewsTable, customHeaders.get());
+    if (m_localNewsTable)
+      err = SetOtherHeadersInTable(m_localNewsTable, customHeaders.get());
 		*ppOutTable = m_localNewsTable;
 		break;
 #ifdef DOING_EXNEWSSEARCH
@@ -1108,7 +1108,7 @@ nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
 }
 
 nsresult 
-nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *aTable, const char *customHeaders)
+nsMsgSearchValidityManager::SetOtherHeadersInTable (nsIMsgSearchValidityTable *aTable, const char *customHeaders)
 {
   PRUint32 customHeadersLength = strlen(customHeaders);
   PRUint32 numHeaders=0;
@@ -1122,7 +1122,9 @@ nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *
   }
 
   NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + numHeaders < nsMsgSearchAttrib::kNumMsgSearchAttributes, "more headers than the table can hold");
-  for (i=nsMsgSearchAttrib::OtherHeader+1;i< (nsMsgSearchAttrib::OtherHeader + numHeaders+1) && nsMsgSearchAttrib::kNumMsgSearchAttributes;i++)
+
+  PRUint32 maxHdrs= PR_MIN(nsMsgSearchAttrib::OtherHeader + numHeaders+1, nsMsgSearchAttrib::kNumMsgSearchAttributes);
+  for (i=nsMsgSearchAttrib::OtherHeader+1;i< maxHdrs;i++)
   {
     aTable->SetAvailable (i, nsMsgSearchOp::Contains, 1);   // added for arbitrary headers
     aTable->SetEnabled   (i, nsMsgSearchOp::Contains, 1); 
@@ -1134,7 +1136,7 @@ nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *
     aTable->SetEnabled   (i, nsMsgSearchOp::Isnt, 1);
   }
    //because custom headers can change; so reset the table for those which are no longer used. 
-  for (PRUint32 j=nsMsgSearchAttrib::OtherHeader+numHeaders+1; j < nsMsgSearchAttrib::kNumMsgSearchAttributes; j++) 
+  for (PRUint32 j=maxHdrs; j < nsMsgSearchAttrib::kNumMsgSearchAttributes; j++) 
   {
     for (PRUint32 k=0; k < nsMsgSearchOp::kNumMsgSearchOperators; k++) 
     {

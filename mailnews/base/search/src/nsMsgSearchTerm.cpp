@@ -139,7 +139,12 @@ nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
         i++;
 
         //we know we can have a max of 50 custom headers
-        NS_ASSERTION(nsMsgSearchAttrib::OtherHeader + i < nsMsgSearchAttrib::kNumMsgSearchAttributes, "pref has more headers than the table can hold");
+        if ( nsMsgSearchAttrib::OtherHeader + i >= nsMsgSearchAttrib::kNumMsgSearchAttributes -1)
+        {
+           nsMemory::Free(headersString);
+           NS_ASSERTION(0, "pref has more headers than the table can hold");
+           return NS_MSG_CUSTOM_HEADERS_OVERFLOW;
+        }
       }
 
       *attrib += i; //this is *attrib for the new custom header 
@@ -533,8 +538,8 @@ nsMsgSearchTerm::ParseOperator(char *inStream)
 }
 
 // find the attribute code for this comma-delimited attribute. 
-nsMsgSearchAttribValue
-nsMsgSearchTerm::ParseAttribute(char *inStream)
+nsresult
+nsMsgSearchTerm::ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib)
 {
 	nsCAutoString			attributeStr;
 	PRInt16				attributeVal;
@@ -561,12 +566,12 @@ nsMsgSearchTerm::ParseAttribute(char *inStream)
 		*separator = '\0';
 
 	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
-	nsMsgSearchAttribValue attrib = (nsMsgSearchAttribValue) attributeVal;
+	*attrib = (nsMsgSearchAttribValue) attributeVal;
 	
-	if (attrib > nsMsgSearchAttrib::OtherHeader && attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
+	if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
 		m_arbitraryHeader =  inStream;
 	
-	return attrib;
+	return err;
 }
 
 // De stream one search term. If the condition looks like
@@ -578,7 +583,8 @@ nsMsgSearchTerm::ParseAttribute(char *inStream)
 nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)
 {
 	char *commaSep = PL_strchr(inStream, ',');
-	m_attribute = ParseAttribute(inStream);  // will allocate space for arbitrary header if necessary
+	nsresult rv = ParseAttribute(inStream, &m_attribute);  // will allocate space for arbitrary header if necessary
+  NS_ENSURE_SUCCESS(rv, rv);
 	if (!commaSep)
 		return NS_ERROR_INVALID_ARG;
 	char *secondCommaSep = PL_strchr(commaSep + 1, ',');

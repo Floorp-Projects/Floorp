@@ -27,6 +27,7 @@ var gHeaderInputElement;
 var gArrayHdrs;
 var gHdrsList;
 var gContainer;
+var gFilterBundle=null;
 
 function onLoad()
 {
@@ -116,11 +117,27 @@ function onOk()
   window.close();
 }
 
+function customHeaderOverflow()
+{
+  var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+  if (gArrayHdrs.length >= (nsMsgSearchAttrib.kNumMsgSearchAttributes - nsMsgSearchAttrib.OtherHeader - 1))
+  {
+    if (!gFilterBundle)
+      gFilterBundle = document.getElementById("bundle_filter");
+
+    alertText = gFilterBundle.getString("customHeaderOverflow");
+    window.alert(alertText);
+    return true;
+  }
+  return false;
+}
+
 function onAddHeader()
 {
   var newHdr = TrimString(gHeaderInputElement.value);
   gHeaderInputElement.value = "";
-  if (!newHdr) return;
+  if (!newHdr || customHeaderOverflow())
+    return;
   if (!duplicateHdrExists(newHdr))
   {
     gArrayHdrs[gArrayHdrs.length] = newHdr;

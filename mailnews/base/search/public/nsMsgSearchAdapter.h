@@ -226,7 +226,8 @@ protected:
 #ifdef DOING_EXNEWSSEARCH
 	nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
 #endif
-  nsresult InitOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders);
+  //set the custom headers in the table, changes whenever "mailnews.customHeaders" pref changes.
+  nsresult SetOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders); 
 
   nsresult InitLdapTable();
   nsresult InitLocalABTable();

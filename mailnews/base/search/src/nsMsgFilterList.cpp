@@ -575,6 +575,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
                 nsMemory::Free(utf8);
               }
               err = ParseCondition(value);
+              NS_ENSURE_SUCCESS(err, err);
             }
             break;
 		}
@@ -647,9 +648,9 @@ nsresult nsMsgFilterList::ParseCondition(nsCString &value)
                 else {
                     newTerm->m_booleanOp = nsMsgSearchBooleanOp::BooleanOR;
                 }
-                
-                if (newTerm->DeStreamNew(termDup, PL_strlen(termDup)) == NS_OK)
-                    m_curFilter->AppendTerm(newTerm);
+                err = newTerm->DeStreamNew(termDup, PL_strlen(termDup));
+                NS_ENSURE_SUCCESS(err, err);
+                m_curFilter->AppendTerm(newTerm);
             }
 			PR_FREEIF(termDup);
 		}

@@ -46,7 +46,7 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  txmgr \
 		  import \
-                  docshell \
+      docshell \
 		  $(NULL)
 
 CPPSRCS		= \

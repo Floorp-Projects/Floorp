@@ -106,7 +106,7 @@ protected:
 	nsresult MatchString (const char *stringToMatch, const char *charset,
                           PRBool *pResult);
 	nsresult		OutputValue(nsCString &outputStr);
-	nsMsgSearchAttribValue ParseAttribute(char *inStream);
+	nsresult ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib);
 	nsMsgSearchOpValue	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);
 	nsresult		InitHeaderAddressParser();
