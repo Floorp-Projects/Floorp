@@ -59,6 +59,6 @@ var contentAreaDNDObserver = {
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, iid: "nsISupportsWString" };
       return flavourList;
-    },
+    }
 
 };
