@@ -830,7 +830,7 @@ il_emit_row(
     PRUint8 XP_HUGE *dp;
     PRUint8 XP_HUGE *mp;
 	  PRUint8 XP_HUGE *maskp = NULL;
-    PRUint8 XP_HUGE *alphabits, *alphabitstart = NULL;
+    PRUint8 XP_HUGE *alphabitstart = NULL;
     PRUint8 *byte_mask = NULL;
 	  PRUint8 XP_HUGE *srcbuf = rgbbuf;
     PRUint8 *p = cbuf;

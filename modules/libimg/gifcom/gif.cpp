@@ -66,7 +66,7 @@ mailing address.
 #include "il.h"
 #include "prmem.h"
 
-#include "merrors.h"
+#include "ilErrors.h"
 #include "nsCRT.h"
 
 #include "gif.h"

@@ -25,6 +25,7 @@
 #include "ilINetContext.h"
 #include "ilIURL.h"
 #include "ilINetReader.h"
+#include "ilErrors.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
@@ -40,8 +41,6 @@
 #include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
-
-#include "merrors.h"
 
 #include "nsNetUtil.h"
 

@@ -26,7 +26,7 @@
 
 #include "if.h"
 
-#include "merrors.h"
+#include "ilErrors.h"
 
 #include "nsIImgDecoder.h"
 #include "nsImgDCallbk.h"
