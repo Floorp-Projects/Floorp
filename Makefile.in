@@ -22,76 +22,60 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# The list of directories that need to be built to build the standalone
-# nglayout test program. The order is important.
-DIRS =				\
-  config			\
-  build				\
-  $(NULL)
+DIRS		= config build
 
 ifndef MOZ_NATIVE_NSPR
-DIRS += $(topsrcdir)/nsprpub
+DIRS		+= $(topsrcdir)/nsprpub
 # NSPR does not use Makefile.in
 STATIC_MAKEFILES := $(topsrcdir)/nsprpub
 endif
 
-DIRS +=				\
-  dbm				\
-  modules/libreg		\
-  xpcom				\
-  $(NULL)
+DIRS		+= dbm modules/libreg xpcom
 
 ifndef MOZ_NATIVE_ZLIB
-DIRS += modules/zlib
+DIRS		+= modules/zlib
 endif
 
 ifndef MOZ_NATIVE_JPEG
-DIRS += jpeg
+DIRS		+= jpeg
 endif
 
-ifdef NECKO
-DIRS += netwerk
-else
-DIRS += network		\
-  lib/libpwcac			\
-  $(NULL)
-endif
-
-DIRS +=				\
-  modules/libutil		\
-  lib/xp			\
-  intl				\
-  js				\
-  modules/security/freenav	\
-  modules/libpref		\
-  modules/libimg		\
-  modules/oji			\
-  modules/plugin		\
-  modules/libjar		\
-  caps				\
-  expat             \
-  htmlparser			\
-  gfx				\
-  dom				\
-  view				\
-  widget			\
-  layout			\
-  db				\
-  rdf				\
-  webshell			\
-  editor			\
-  silentdl			\
-  xpinstall			\
-  sun-java			\
-  profile			\
-  $(NULL)
+DIRS		+= \
+		netwerk \
+		modules/libutil \
+		lib/xp \
+		intl \
+		js \
+		modules/security/freenav \
+		modules/libpref \
+		modules/libimg \
+		modules/oji \
+		modules/plugin \
+		modules/libjar \
+		caps \
+		expat \
+		htmlparser \
+		gfx \
+		dom \
+		view \
+		widget \
+		layout \
+		db \
+		rdf \
+		webshell \
+		editor \
+		silentdl \
+		xpinstall \
+		sun-java \
+		profile \
+		$(NULL)
 
 ifdef MOZ_BUILD_XPFE
-DIRS += xpfe extensions
+DIRS		+= xpfe extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
-DIRS += mailnews
+DIRS		+= mailnews
 endif
 
 include $(topsrcdir)/config/rules.mk
