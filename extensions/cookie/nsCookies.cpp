@@ -134,32 +134,45 @@ nsCookiePrefObserver::Init()
 
   // install and cache the preferences observer
   mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
-
-  // add observers
   if (NS_SUCCEEDED(rv)) {
-#ifdef MOZ_PHOENIX
-    prefInternal->AddObserver(kCookiesEnabled, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesForDomainOnly, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
-#else
-    prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesDisabledForMailNews, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesLifetimeEnabled, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesLifetimeDays, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
-#endif
-    prefInternal->AddObserver(kCookiesAskPermission, this, PR_TRUE);
-    prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
-  }
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
 
-  // initialize prefs
-  rv = ReadPrefs();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Error occured reading cookie preferences");
+    // add observers
+    if (NS_SUCCEEDED(rv)) {
+#ifdef MOZ_PHOENIX
+      prefInternal->AddObserver(kCookiesEnabled, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesForDomainOnly, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
+#else
+      prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesDisabledForMailNews, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesLifetimeEnabled, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesLifetimeDays, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesLifetimeCurrentSession, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
+#endif
+      prefInternal->AddObserver(kCookiesAskPermission, this, PR_TRUE);
+      prefInternal->AddObserver(kCookiesStrictDomains, this, PR_TRUE);
+    }
+
+    // initialize prefs
+    rv = ReadPrefs();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Error occured reading cookie preferences");
+    }
+
+  } else {
+    // only called if getting the prefbranch failed.
+#ifdef MOZ_PHOENIX
+    mCookiesDisabledForMailNews = PR_FALSE; // for efficiency
+#else
+    mCookiesDisabledForMailNews = PR_TRUE;
+    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
+#endif
+    mCookiesPermissions = PERMISSION_DontUse;
+    mCookiesLifetimeEnabled = PR_FALSE;
+    mCookiesAskPermission = PR_FALSE;
+    mCookiesStrictDomains = PR_FALSE;
   }
 
   return NS_OK;
@@ -403,7 +416,9 @@ nsCookiePrefObserver::ReadPrefs()
   rv = mPrefBranch->GetBoolPref(kCookiesStrictDomains, &mCookiesStrictDomains);
   if (NS_FAILED(rv)) {
     mCookiesStrictDomains = PR_FALSE;
-    rv2 = rv;
+    // we don't update rv2 here like we do for other prefs, since this pref
+    // is optional (most profiles won't have it set), and ReadPrefs' caller
+    // will NS_WARNING on NS_FAILED(rv2). so this is a little bit quieter...
   }
 
   return rv2;
@@ -543,11 +558,7 @@ COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime,
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-    if (cookieInList->isSession) {
-      continue;
-    }
-
-    if (nsInt64(cookieInList->expires) < aCurrentTime) {
+    if (!cookieInList->isSession && nsInt64(cookieInList->expires) < aCurrentTime) {
       sCookieList->RemoveElementAt(i);
       delete cookieInList;
       sCookieChanged = PR_TRUE;
@@ -1278,8 +1289,7 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
   // XXX removed the aFirstURI check, to make cookies from javascript work
   // bug 198870
   if (gCookiePrefObserver->mCookiesDisabledForMailNews &&
-      aFirstURI &&
-      (cookie_IsFromMailNews(firstURIScheme) ||
+      ((aFirstURI && cookie_IsFromMailNews(firstURIScheme)) ||
        cookie_IsFromMailNews(currentURIScheme))) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies disabled for mailnews");
     return nsICookie::STATUS_REJECTED;
@@ -1553,6 +1563,7 @@ cookie_CheckPath(cookie_CookieStruct *aCookie,
     if (hostURL) {
       hostURL->GetDirectory(aCookie->path);
     } else {
+      aHostURI->GetPath(aCookie->path);
       PRInt32 slash = aCookie->path.RFindChar('/');
       if (slash != kNotFound) {
         aCookie->path.Truncate(slash + 1);

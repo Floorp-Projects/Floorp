@@ -276,12 +276,7 @@ nsCookieService::SetCookieString(nsIURI *aHostURI, nsIPrompt *aPrompt, const cha
 NS_IMETHODIMP
 nsCookieService::SetCookieStringFromHttp(nsIURI *aHostURI, nsIURI *aFirstURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIHttpChannel* aHttpChannel) 
 {
-  nsCOMPtr<nsIURI> firstURI = aFirstURI;
-  if (!firstURI) {
-    firstURI = aHostURI;
-  }
-
-  COOKIE_SetCookie(aHostURI, firstURI, aPrompt, aCookieHeader, aServerTime, aHttpChannel);
+  COOKIE_SetCookie(aHostURI, aFirstURI, aPrompt, aCookieHeader, aServerTime, aHttpChannel);
   LazyWrite(PR_TRUE);
   return NS_OK;
 }
