@@ -104,6 +104,7 @@ INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector)
         break;
     case INTL_OldBookmarkCsidSel:                                                                  
     case INTL_DefaultTextWidgetCsidSel:                                         
+    case INTL_MenuCsidSel:                                         
         charsetID = (INTLCharSetID) ScriptToEncoding(FontToScript(applFont));   
         break;                                                                  
     default:                                                                    
