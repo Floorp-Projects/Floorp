@@ -26,7 +26,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-VPATH		= @srcdir@;@srcdir@/os2
+VPATH		= @srcdir@:@srcdir@/os2
 else
 VPATH		= @srcdir@:@srcdir@/unix
 endif
@@ -38,6 +38,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR	= os2
 else
 OSDIR	= unix
+endif
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OSHELPER	= $(OSDIR)/nsOSHelperAppService.cpp
+else
+OSHELPER	= nsOSHelperAppService.cpp
 endif
 
 EXPORTS = 	nsExternalHelperAppService.h \
@@ -53,7 +59,7 @@ XPIDLSRCS = \
 
 CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
-	$(OSDIR)/nsOSHelperAppService.cpp	\
+	$(OSHELPER) \
 	$(NULL)
 
 
