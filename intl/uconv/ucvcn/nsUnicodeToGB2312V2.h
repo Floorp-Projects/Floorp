@@ -45,14 +45,14 @@ public:
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
+protected:
+
 #ifdef INTEL_CHANGE
   NS_IMETHODIMP ConvertNoBuff(const PRUnichar * aSrc, 
                             PRInt32 * aSrcLength, 
                             char * aDest, 
                             PRInt32 * aDestLength);
 #endif
-
-protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
