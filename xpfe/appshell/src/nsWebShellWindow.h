@@ -184,7 +184,6 @@ protected:
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
-  void                     StoreBoundsToXUL(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();
 
@@ -203,11 +202,11 @@ protected:
   nsIDOMNode * contextMenuTest;
 
   nsCOMPtr<nsITimer>      mSPTimer;
-  PRBool                  mSPTimerSize, mSPTimerPosition;
+  PRBool                  mSPTimerSize, mSPTimerPosition, mSPTimerMode;
   PRLock *                mSPTimerLock;
   nsCOMPtr<nsIPrompt>     mPrompter;
 
-  void        SetPersistenceTimer(PRBool aSize, PRBool aPosition);
+  void        SetPersistenceTimer(PRBool aSize, PRBool aPosition, PRBool aMode);
   static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);
 
 private:
