@@ -17,8 +17,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Michael F. Judge (mjudge@netscape.com)
- *
  * Contributor(s): 
  * shaver@mozilla.org
  */
@@ -174,7 +172,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
   nsCOMPtr<nsISupports> generic(do_QueryInterface(dataWrapper));
   /* Length() is in characters, *2 gives bytes. */
   trans->SetTransferData(kXIFMime, generic, xifBuffer.Length() * 2);
-  mClipboard->SetData(trans, nsnull,0);
+  mClipboard->SetData(trans, nsnull,nsIClipboard::kSelectionClipboard);
 
 #ifdef DEBUG_CLIPBOARD
   static char *reasons[] = {

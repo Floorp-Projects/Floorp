@@ -17,11 +17,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author:
- *     Greg Kostello
- *
- * Contributor(s): 
- *     Michael F. Judge mjudge@netscape.com
  */
 
 #include "nsCOMPtr.h"
