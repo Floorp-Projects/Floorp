@@ -65,7 +65,7 @@ CPPSRCS = \
 	$(NULL)
 
 
-ifneq (,$(filter windows mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 windows mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsNativeTheme.cpp
 endif
 

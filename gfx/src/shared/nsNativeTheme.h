@@ -133,11 +133,13 @@ class nsNativeTheme
   PRBool IsReadOnly(nsIFrame* aFrame) {
       return CheckBooleanAttr(aFrame, mReadOnlyAtom);
   }
-  
-private:
-  nsIPresShell *GetPrimaryPresShell(nsIFrame* aFrame);
-  PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+
+  // These are used by nsNativeThemeGtk
+  nsIPresShell *GetPresShell(nsIFrame* aFrame);
   PRInt32 CheckIntAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+  PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom);
+
+private:
   PRBool GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue);
   PRBool GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected);
 
@@ -148,6 +150,8 @@ protected:
   nsCOMPtr<nsIAtom> mCheckedAtom;
   nsCOMPtr<nsIAtom> mSelectedAtom;
   nsCOMPtr<nsIAtom> mReadOnlyAtom;
+  nsCOMPtr<nsIAtom> mFirstTabAtom;
+  nsCOMPtr<nsIAtom> mFocusedAtom;
 
   // these should be set to appropriate platform values by the subclass, to
   // match the values in platform-forms.css.  These defaults match forms.css
@@ -159,8 +163,6 @@ protected:
   static PRBool   sListboxBGTransparent;
 
 private:
-  nsCOMPtr<nsIAtom> mFocusedAtom;
-  nsCOMPtr<nsIAtom> mFirstTabAtom;
   nsCOMPtr<nsIAtom> mDefaultAtom;
   nsCOMPtr<nsIAtom> mValueAtom;
   nsCOMPtr<nsIAtom> mModeAtom;
