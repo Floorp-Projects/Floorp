@@ -74,6 +74,10 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > .treecell-p
   list-style-image: url("chrome://communicator/skin/sidebar/sidebar-icon.gif");
 }
 
+.tree-cell-twisty {
+ display: none !important;
+}
+
 box#reorder {
   text-align: center;
 }
