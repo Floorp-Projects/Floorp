@@ -85,7 +85,7 @@ table {
 }
 
 /* Quirk: make sure backgrounds are inherited in tables */
-td, th, tr, thead, tbody, tfoot {
+td, th, tr {
   background: inherit;
 }
 
