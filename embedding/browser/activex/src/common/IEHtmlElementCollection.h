@@ -62,6 +62,7 @@ public:
 
 protected:
     virtual ~CIEHtmlElementCollection();
+    virtual HRESULT FindOrCreateIEElement(nsIDOMNode* pDomNode, CIEHtmlElement** ppIEHtmlElement);
 
 public:
     // Adds a node to the collection
