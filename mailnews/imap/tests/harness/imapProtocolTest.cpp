@@ -40,7 +40,8 @@
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
 #include "nsIImapLog.h"
-#include "nsIMsgIdentity.h"
+#include "nsIMsgIncomingServer.h"
+#include "nsIImapService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIImapLog.h"
 #include "nsIImapMailfolder.h"
@@ -77,6 +78,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -726,18 +728,22 @@ nsIMAP4TestDriver::ProcessTunnel(nsIImapProtocol* aProtocol,
 
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
-	nsresult rv = 0;
+	nsresult rv = NS_OK;
 
 	// we used to create an imap url here...but I don't think we need to.
 	// we should create the url before we run each unique imap command...
 
-	// now create a protocol instance...
-	rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull, nsIImapProtocol::GetIID(), (void **) &m_IMAP4Protocol);
-	if (NS_SUCCEEDED(rv))
-    {
-		m_protocolInitialized = PR_TRUE;
-        m_IMAP4Protocol->Initialize(m_eventQueue);
-    }
+	// now create a protocol instance using the imap service! 
+
+	nsIImapService * imapService = nsnull;
+	rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
+
+	if (NS_SUCCEEDED(rv) && imapService)
+	{
+		imapService->CreateImapConnection(m_eventQueue, &m_IMAP4Protocol);
+		nsServiceManager::ReleaseService(kCImapService, imapService);
+	}
+
 	return rv;
 }
 
@@ -888,26 +894,16 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
                                                    (nsISupports **) &mailSession);
 	if (NS_SUCCEEDED(result) && mailSession)
 	{
-		nsIMsgIdentity * msgIdentity = nsnull;
-		result = mailSession->GetCurrentIdentity(&msgIdentity);
-		if (NS_SUCCEEDED(result) && msgIdentity)
+		nsIMsgIncomingServer * server = nsnull;
+		result = mailSession->GetCurrentServer(&server);
+		if (NS_SUCCEEDED(result) && server)
 		{
-			const char * value = nsnull;
-			msgIdentity->GetRootFolderPath(&value);
-			printf("Root folder path: %s\n", value ? value : "");
-			msgIdentity->GetUserFullName(&value);
-			printf("User Name: %s\n", value ? value : "");
-			msgIdentity->GetPopServer(&value);
-			printf("Pop Server: %s\n", value ? value : "");
-			msgIdentity->GetPopPassword(&value);
-			printf("Pop Password: %s\n", value ? value : "");
-			msgIdentity->GetSmtpServer(&value);
-			printf("Smtp Server: %s\n", value ? value : "");
-			msgIdentity->GetImapServer(&value);
+			char * value = nsnull;
+			server->GetHostName(&value);
 			printf("Imap Server: %s\n", value ? value : "");
-			msgIdentity->GetImapName(&value);
-			printf("Imap User: %s\n", value ? value : "");
-			msgIdentity->GetImapPassword(&value);
+			server->GetUserName(&value);
+			printf("User Name: %s\n", value ? value : "");
+			server->GetPassword(&value);
 			printf("Imap Password: %s\n", value ? value : "");
 
 		}
