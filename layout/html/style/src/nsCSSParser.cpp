@@ -337,6 +337,9 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     if (!GetToken(errorCode, PR_TRUE)) {
       break;
     }
+    if (eCSSToken_HTMLComment == tk->mType) {
+      continue; // legal here only
+    }
     if (eCSSToken_AtKeyword == tk->mType) {
       ParseAtRule(errorCode);
       continue;
@@ -572,6 +575,7 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
 PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
 {
   PRBool first = PR_TRUE;
+  PRBool expectIdent = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       break;
@@ -585,16 +589,30 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
       } else if (',' != symbol) {
         UngetToken();
         return PR_FALSE;
+      } else if (expectIdent) {
+        UngetToken();
+        return PR_FALSE;
+      }
+      else {
+        expectIdent = PR_TRUE;
       }
     }
     else if (eCSSToken_Ident == mToken.mType) {
-      if (! first) {
-        aMedia.Append(',');
+      if (expectIdent) {
+        if (! first) {
+          aMedia.Append(',');
+        }
+        aMedia.Append(mToken.mIdent);
+        first = PR_FALSE;
+        expectIdent = PR_FALSE;
       }
-      aMedia.Append(mToken.mIdent);
-      first = PR_FALSE;
+      else {
+        UngetToken();
+        return PR_FALSE;
+      }
     }
     else {
+      UngetToken();
       break;
     }
   }
@@ -619,9 +637,6 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
         return PR_TRUE;
       }
     }
-    if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
-      SkipUntil(aErrorCode, ';');
-    }
   }
   else if (eCSSToken_Function == mToken.mType) {
     if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
@@ -639,12 +654,13 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
         }
       }
     }
-    if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
-      SkipUntil(aErrorCode, ';');
-    }
+  }
+  // invalid @import
+  if ((eCSSToken_Symbol != mToken.mType) || (';' != mToken.mSymbol)) {
+    SkipUntil(aErrorCode, ';');
   }
 
-  mInHead = PR_FALSE;
+//  mInHead = PR_FALSE; // an invalid @import doesn't block other @imports (I think) awaiting clarification
   return PR_TRUE;
 }
 
