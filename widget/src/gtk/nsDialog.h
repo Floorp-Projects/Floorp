@@ -48,7 +48,7 @@ public:
   //virtual void PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
-  NS_IMETHOD  nsDialog::CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
 };
 
 #endif // nsDialog_h__
