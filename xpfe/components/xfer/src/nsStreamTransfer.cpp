@@ -315,7 +315,7 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
         // try to overwrite c:\config.sys or something.
         nsCOMPtr<nsILocalFile> localFile;
         nsCAutoString suggestedFileName(suggestedName);
-        if ( NS_SUCCEEDED( NS_NewLocalFile( nsUnescape(suggestedFileName), PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
+        if ( NS_SUCCEEDED( NS_NewLocalFile( nsUnescape(NS_CONST_CAST(char*, suggestedFileName.get())), PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
             // We want base part of name only.
             nsXPIDLString baseName;
             if ( NS_SUCCEEDED( localFile->GetUnicodeLeafName( getter_Copies( baseName ) ) ) ) {

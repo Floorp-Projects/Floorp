@@ -2515,7 +2515,7 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
 }
 
 static void
-GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
+GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 {
 #ifdef NS_FONT_DEBUG_CALL_TRACE
   if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
@@ -2873,7 +2873,7 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
     hyphen = pattern.FindChar('-', PR_FALSE, hyphen + 1);
     pattern.Insert("-*-*-*-*-*-*-*-*-*-*", hyphen);
     nsFontNodeArray nodes;
-    GetFontNames(pattern, &nodes);
+    GetFontNames(pattern.get(), &nodes);
     if (nodes.Count() > 0) {
       node = nodes.GetElement(0);
     }

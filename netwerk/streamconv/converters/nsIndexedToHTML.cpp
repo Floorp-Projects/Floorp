@@ -157,7 +157,7 @@ nsIndexedToHTML::Handle201(char* buffer, nsString &pushBuffer)
     pushBuffer.AppendWithConversion(filename);
     pushBuffer.AppendWithConversion("\"> ");
 
-    nsUnescape(filename);
+    nsUnescape(NS_CONST_CAST(char*, filename.get()));
     pushBuffer.AppendWithConversion(filename);
     pushBuffer.AppendWithConversion("</a>");
     pushBuffer.AppendWithConversion("</td>\n");

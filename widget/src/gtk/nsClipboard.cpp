@@ -855,7 +855,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   {
     dataFlavor = kUnicodeMime;
   } else {
-    dataFlavor = type;
+    dataFlavor = type.get();
   }
 
   // Get data out of transferable.

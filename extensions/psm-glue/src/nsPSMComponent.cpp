@@ -629,8 +629,8 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         
         psmStatus = CMT_Hello( mControl, 
                                PROTOCOL_VERSION, 
-                               profilenameC, 
-                               NS_CONST_CAST(char*,(const char*)profilePath));        
+                               NS_CONST_CAST(char*,profilenameC.get()),
+                               NS_CONST_CAST(char*,profilePath.get()));
         if (psmStatus == CMTFailure)
             goto failure;
         

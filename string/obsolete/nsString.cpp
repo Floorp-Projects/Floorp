@@ -566,7 +566,7 @@ PRUnichar* nsCString::ToNewUnicode() const {
   if (result) {
     CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
     nsAutoString temp(desc);
-    temp.AssignWithConversion(*this);
+    temp.AssignWithConversion(mStr);
   }
   return result;
 }
@@ -589,7 +589,7 @@ char* nsCString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) co
 
     CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
     nsCAutoString temp(theDescr);
-    temp.Assign(*this, PR_MIN(mLength, aBufLength-1));
+    temp.Assign(mStr, PR_MIN(mLength, aBufLength-1));
     temp.mStr=0;
   }
   return aBuf;

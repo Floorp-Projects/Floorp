@@ -232,7 +232,6 @@ public:
     string conversion methods...
    *********************************************************************/
 //#ifndef STANDALONE_STRING_TESTS
-  operator char*() {return mStr;}
   operator const char*() const {return (const char*)mStr;}
 //#endif
 
@@ -528,24 +527,13 @@ class NS_COM NS_ConvertUCS2toUTF8
 
       explicit NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
 
-      operator const char*() const  // use |get()|
-        {
-          NS_WARNING("Implicit conversion from |NS_ConvertUCS2toUTF8| to |const char*| is deprecated, use |get()| instead.");
-          return get();
-        }
-
-      operator       char*()        // use |get()|
-        {
-          NS_WARNING("Implicit conversion from |NS_ConvertUCS2toUTF8| to |char*| is deprecated, use |NS_CONST_CAST()| and |get()| instead.");
-          return NS_CONST_CAST(char*, get());
-        }
-
     protected:
       void Append( const PRUnichar* aString, PRUint32 aLength );
 
     private:
         // NOT TO BE IMPLEMENTED
       NS_ConvertUCS2toUTF8( char );
+      operator const char*() const; // use |get()|
   };
 
 
