@@ -36,16 +36,14 @@
 [scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundle : nsISupports
 {
-  void GetStringFromID(in long aID, out wstring aResult);
-  void GetStringFromName([const] in wstring aName, out wstring aResult);
-  void GetEnumeration(out nsIBidirectionalEnumerator elements);
+  wstring GetStringFromID(in long aID);
+  wstring GetStringFromName([const] in wstring aName);
+  nsIBidirectionalEnumerator GetEnumeration();
 };
 
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
 interface nsIStringBundleService : nsISupports
 {
-   void CreateBundle([const] in string aURLSpec, in nsILocale aLocale,
-                     [retval] out nsIStringBundle aResult);
-   void CreateXPCBundle([const] in string aURLSpec, [const] in wstring aLocaleName,
-                     [retval] out nsIStringBundle aResult);
+   nsIStringBundle CreateBundle([const] in string aURLSpec, in nsILocale aLocale);
+   nsIStringBundle CreateXPCBundle([const] in string aURLSpec, [const] in wstring aLocaleName);
 };
