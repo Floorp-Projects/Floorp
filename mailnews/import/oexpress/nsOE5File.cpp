@@ -220,7 +220,7 @@ PRUint32 nsOE5File::ReadMsgIndex( nsIFileSpec *file, PRUint32 offset, PRUint32Ar
     if (next)
       while ((next = ReadMsgIndex( file, next, pArray)) != 0);
   }
-  delete pData;
+  delete [] pData;
   
   // return the pointer to the next subIndex
   return( vals[1]);

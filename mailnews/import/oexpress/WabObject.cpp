@@ -435,7 +435,7 @@ LPSPropValue CWAB::GetListProperty( LPDISTLIST pUser, ULONG tag)
 	LPSPropValue	lpProp = NULL;
 	ULONG	cValues = 0;
 	HRESULT hr = pUser->GetProps( pTag, 0, &cValues, &lpProp);
-	delete pTag;
+	delete [] pTag;
 	if (HR_FAILED( hr) || (cValues != 1)) {
 		if (lpProp)
 			m_lpWABObject->FreeBuffer( lpProp);
@@ -495,7 +495,7 @@ LPSPropValue CWAB::GetUserProperty( LPMAILUSER pUser, ULONG tag)
 			}
 		}
 	}
-	delete pTag;
+	delete [] pTag;
 	return( lpProp);
 }
 
