@@ -2203,10 +2203,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     JS_DHashTableRawRemove(table, entry);
                 else
                     JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-                if (table->entryCount == 0) {
-                    cx->resolving = NULL;
-                    JS_DHashTableDestroy(table);
-                }
                 if (!ok || *propp)
                     return ok;
             }

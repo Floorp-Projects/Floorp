@@ -42,6 +42,10 @@
 
 PR_BEGIN_EXTERN_C
 
+#ifdef DEBUG_brendan
+#define PL_DHASHMETER 1
+#endif
+
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE
 #define PL_DHASH_MIN_SIZE 16
@@ -180,10 +184,12 @@ struct PLDHashTable {
         PRUint32        misses;         /* searches that didn't find key */
         PRUint32        lookups;        /* number of PL_DHASH_LOOKUPs */
         PRUint32        addMisses;      /* adds that miss, and do work */
+        PRUint32        addOverRemoved; /* adds that recycled a removed entry */
         PRUint32        addHits;        /* adds that hit an existing entry */
         PRUint32        addFailures;    /* out-of-memory during add growth */
         PRUint32        removeHits;     /* removes that hit, and do work */
         PRUint32        removeMisses;   /* useless removes that miss */
+        PRUint32        removeFrees;    /* removes that freed entry directly */
         PRUint32        removeEnums;    /* removes done by Enumerate */
         PRUint32        grows;          /* table expansions */
         PRUint32        shrinks;        /* table contractions */

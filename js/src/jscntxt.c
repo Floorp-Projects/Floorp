@@ -245,6 +245,12 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         JS_free(cx, temp);
     }
 
+    /* Destroy the resolve recursion damper. */
+    if (cx->resolving) {
+        JS_DHashTableDestroy(cx->resolving);
+        cx->resolving = NULL;
+    }
+
     /* Finally, free cx itself. */
     free(cx);
 }
