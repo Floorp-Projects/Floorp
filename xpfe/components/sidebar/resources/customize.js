@@ -123,7 +123,12 @@ function getAttr(registry,service,attr_name) {
 }
 
 function selectChange() {
+  // Remove the selection in the other list
+  var other_panels = document.getElementById('other-panels');
+  other_panels.clearItemSelection();
+
   enableButtons();
+  enableOtherButtons();
 }
 
 function moveUp() {
@@ -286,6 +291,11 @@ function Save()
 
 function otherPanelSelected(event, target)
 { 
+ // Remove the selection in the "current" panels list
+ var current_panels = document.getElementById('selected-panels');
+ current_panels.clearItemSelection();
+ enableButtons();
+
  if (target.getAttribute('container') == 'true') {
    if (target.getAttribute('open') == 'true') {
 	 target.removeAttribute('open');
@@ -294,7 +304,11 @@ function otherPanelSelected(event, target)
    }
    return;
  }
+ enableOtherButtons();
+}
 
+function enableOtherButtons()
+{
   var add_button = document.getElementById('add_button');
   var preview_button = document.getElementById('preview_button');
   var other_panels = document.getElementById('other-panels');
