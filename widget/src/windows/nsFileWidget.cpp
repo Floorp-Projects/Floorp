@@ -160,6 +160,11 @@ NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
   return NS_OK;
 }
 
+NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
+{
+  return NS_OK;
+}
+
 
 //-------------------------------------------------------------------------
 //
