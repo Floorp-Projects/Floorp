@@ -2101,7 +2101,8 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
              {
                char className[19];
                ::WinQueryClassName((HWND)mp1, 19, className);
-               if (strcmp(className, WindowClass()))
+               if (strcmp(className, WindowClass()) != 0 && 
+                   strcmp(className, WC_SCROLLBAR_STRING) != 0)
                   isMozWindowTakingFocus = PR_FALSE;
    
                if( gJustGotDeactivate )
