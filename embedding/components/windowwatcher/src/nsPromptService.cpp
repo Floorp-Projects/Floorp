@@ -22,14 +22,13 @@
 
 #include "nsPromptService.h"
 
+#include "nsDialogParamBlock.h"
 #include "nsXPComFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
-
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 
 const char *kPromptURL="chrome://global/content/commonDialog.xul";
 const char *kSelectPromptURL="chrome://global/content/selectDialog.xul";
@@ -51,7 +50,8 @@ public:
     NS_IF_RELEASE(mBlock);
   }
   nsresult Init() {
-    return nsComponentManager::CreateInstance(kDialogParamBlockCID,
+    return nsComponentManager::CreateInstance(
+                                 NS_DIALOGPARAMBLOCK_CONTRACTID,
                                  0, NS_GET_IID(nsIDialogParamBlock),
                                  (void**) &mBlock);
   }
@@ -67,7 +67,7 @@ private:
  ************************ nsPromptService ***********************
  ****************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsPromptService, nsIPromptService)
+NS_IMPL_ISUPPORTS2(nsPromptService, nsIPromptService, nsPIPromptService)
 
 nsPromptService::nsPromptService() {
   NS_INIT_REFCNT();

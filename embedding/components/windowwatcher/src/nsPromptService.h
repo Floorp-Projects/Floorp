@@ -31,12 +31,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsIPromptService.h"
+#include "nsPIPromptService.h"
 #include "nsIWindowWatcher.h"
 
 class nsIDOMWindow;
 class nsIDialogParamBlock;
 
-class nsPromptService: public nsIPromptService {
+class nsPromptService: public nsIPromptService,
+                       public nsPIPromptService {
 
 public:
 
@@ -46,13 +48,10 @@ public:
   nsresult Init();
 
   NS_DECL_NSIPROMPTSERVICE
+  NS_DECL_NSPIPROMPTSERVICE
   NS_DECL_ISUPPORTS
 
 private:
-
-  nsresult DoDialog(nsIDOMWindow *aParent,
-                    nsIDialogParamBlock *aParamBlock,
-                    const char *aChromeURL);
 
   nsCOMPtr<nsIWindowWatcher> mWatcher;
 };
