@@ -127,8 +127,16 @@ nsXPCWrappedJS::AddRef(void)
     if(2 == cnt && IsValid())
     {
         XPCCallContext ccx(NATIVE_CALLER);
-        if(ccx.IsValid())
+        if(ccx.IsValid()) {
+#ifdef GC_MARK_DEBUG
+            mGCRootName = JS_smprintf("nsXPCWrappedJS::mJSObj[%s,0x%p,0x%p]",
+                                      GetClass()->GetInterfaceName(),
+                                      this, mJSObj);
+            JS_AddNamedRoot(ccx.GetJSContext(), &mJSObj, mGCRootName);
+#else
             JS_AddNamedRoot(ccx.GetJSContext(), &mJSObj, "nsXPCWrappedJS::mJSObj");
+#endif
+        }
     }
 
     return cnt;
@@ -159,8 +167,13 @@ do_decrement:
         if(IsValid())
         {
             XPCJSRuntime* rt = mClass->GetRuntime();
-            if(rt)
+            if(rt) {
                 JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
+#ifdef GC_MARK_DEBUG
+                JS_smprintf_free(mGCRootName);
+                mGCRootName = nsnull;
+#endif
+            }
         }
 
         // If we are not the root wrapper or if we are not being used from a
@@ -309,6 +322,9 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
       mRoot(root ? root : this),
       mNext(nsnull),
       mOuter(root ? nsnull : aOuter)
+#ifdef GC_MARK_DEBUG
+      , mGCRootName(nsnull)
+#endif
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;
