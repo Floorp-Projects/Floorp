@@ -116,10 +116,16 @@ public:
                    nsISupports* aExtraInfo);
 
   // DocObserver
-//  void LoadURL(const char* aURL);
   void HandleLinkClickEvent(const nsString& aURLSpec,
                             const nsString& aTargetSpec,
                             nsIPostData* aPostDat = 0);
+
+  nsresult LoadURL(const nsString& aURLSpec, 
+                   const char* aCommand,
+                   nsIViewerContainer* aContainer,
+                   nsIPostData* aPostData,
+                   nsISupports* aExtraInfo,
+                   nsIStreamObserver* anObserver);
 
   nsIWebWidget* mWebWidget;
   nsIWidget* mWindowWidget;
