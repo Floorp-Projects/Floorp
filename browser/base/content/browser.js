@@ -3754,7 +3754,7 @@ nsDefaultEngine.prototype =
  // Called whenever the user clicks in the content area,
  // except when left-clicking on links (special case)
  // should always return true for click to go through
- function contentAreaClick(event) 
+ function contentAreaClick(event, fieldNormalClicks) 
  {
    var target = event.target;
    var linkNode;
@@ -3781,7 +3781,15 @@ nsDefaultEngine.prototype =
        break;
    }
    if (linkNode) {
-     handleLinkClick(event, linkNode.href, linkNode);
+     if (fieldNormalClicks && !event.ctrlKey && !event.shiftKey && 
+         !event.altKey && !linkNode.getAttribute("target")) {
+       var url = getShortcutOrURI(linkNode.href);
+       if (!url)
+         return false;
+       loadURI(url);
+     }
+     else
+       handleLinkClick(event, linkNode.href, linkNode);
      return true;
    } else {
      // Try simple XLink
