@@ -183,7 +183,7 @@ printIncomingServer(nsIMsgIncomingServer *server)
   if (NS_SUCCEEDED(rv) && value) printf("\tHostName: %s\n", value);
 
   value=nsnull;
-  rv = server->GetUserName(&value);
+  rv = server->GetUsername(&value);
   if (NS_SUCCEEDED(rv) && value) printf("\tUserName: %s\n", value);
 
   value=nsnull;
