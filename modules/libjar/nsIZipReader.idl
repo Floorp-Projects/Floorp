@@ -110,9 +110,19 @@ interface nsIZipReader : nsISupports
 [scriptable, uuid(52c45d86-0cc3-11d4-986e-00c04fa0cf4a)]
 interface nsIZipReaderCache : nsISupports
 {
+    /**
+     * Initializes a new zip reader cache. 
+     * @param cacheSize - the number of released entries to maintain before
+     *   beginning to throw some out (note that the number of outstanding
+     *   entries can be much greater than this number -- this is the count
+     *   for those otherwise unused entries)
+     */
     void init(in unsigned long cacheSize);
+
+    /**
+     * Returns a (possibly shared) nsIZipReader for an nsIFile.
+     */
     nsIZipReader getZip(in nsIFile zipFile);
-    void releaseZip(in nsIZipReader zip);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

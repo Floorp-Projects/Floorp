@@ -147,7 +147,8 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
-                mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED)
+                mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED),
+                mReleaseTime(0), mCache(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -157,7 +158,30 @@ nsJAR::~nsJAR()
   Close();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJAR, nsIZipReader);
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(nsJAR, nsIZipReader)
+NS_IMPL_THREADSAFE_ADDREF(nsJAR)
+
+// Custom Release method works with nsZipReaderCache...
+nsrefcnt nsJAR::Release(void) 
+{
+  nsrefcnt count; 
+  NS_PRECONDITION(0 != mRefCnt, "dup release"); 
+  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt); 
+  NS_LOG_RELEASE(this, count, "nsJAR"); 
+  if (0 == count) {
+    mRefCnt = 1; /* stabilize */ 
+    /* enable this to find non-threadsafe destructors: */ 
+    /* NS_ASSERT_OWNINGTHREAD(_class); */ 
+    NS_DELETEXPCOM(this); 
+    return 0; 
+  }
+  else if (1 == count && mCache) {
+    mReleaseTime = PR_IntervalNow();
+    nsresult rv = mCache->ReleaseZip(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to release zip file");
+  }
+  return count; 
+} 
 
 //----------------------------------------------
 // nsJAR public implementation
@@ -1067,37 +1091,11 @@ nsJARItem::GetCRC32(PRUint32 *aCrc32)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-class nsZipCacheEntry
-{
-public:
-  nsZipCacheEntry(nsIZipReader* zip)
-    : mZip(zip), mUseCount(0), mNextOlder(nsnull) {}
-  ~nsZipCacheEntry() {}
-
-  static void* PR_CALLBACK
-  Clone(nsHashKey *aKey, void *aData, void* closure) {
-    NS_NOTREACHED("nsZipCacheEntry::Clone");    // should never be called
-    return nsnull;
-  }
-
-  static PRBool PR_CALLBACK
-  Delete(nsHashKey *aKey, void *aData, void* closure) {
-    nsZipCacheEntry* entry = (nsZipCacheEntry*)aData;
-    delete entry;
-    return PR_TRUE;
-  }
-
-  nsCOMPtr<nsIZipReader>        mZip;
-  nsrefcnt                      mUseCount;
-  nsZipCacheEntry*              mNextOlder;
-};
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
-    mZips((nsHashtableCloneElementFunc)nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
-    mFreeList(nsnull),
+    mZips(16),
     mFreeCount(0)
 {
   NS_INIT_REFCNT();
@@ -1115,10 +1113,19 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+static PRBool
+DropZipReaderCache(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsJAR* zip = (nsJAR*)aData;
+  zip->SetZipReaderCache(nsnull);
+  return PR_TRUE;
+}
+
 nsZipReaderCache::~nsZipReaderCache()
 {
   if (mLock)
     PR_DestroyLock(mLock);
+  mZips.Enumerate(DropZipReaderCache, nsnull);
 }
 
 NS_METHOD
@@ -1147,57 +1154,78 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   if (NS_FAILED(rv)) return rv;
 
   nsCStringKey key(path);
-  nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
-  if (entry) {
-    *result = entry->mZip;
-    NS_ADDREF(*result);         // addref for the caller
-    if (entry->mUseCount++ == 0) {
-      // remove from free list
-      nsZipCacheEntry** entryPtr = &mFreeList;
-      NS_ASSERTION(*entryPtr, "null free list");
-      while (*entryPtr != nsnull) {
-        if (*entryPtr == entry) {
-          *entryPtr = entry->mNextOlder;
-          entry->mNextOlder = nsnull;
-          --mFreeCount;
-          return NS_OK;
-        }
-        entryPtr = &(*entryPtr)->mNextOlder;
-      }
-      NS_NOTREACHED("couldn't find entry in free list");
+  nsJAR* zip = (nsJAR*)mZips.Get(&key); // AddRefs
+  if (zip) {
+    if (zip->GetReleaseTime() != PR_INTERVAL_NO_TIMEOUT) {
+      // this was an otherwise-free entry, so decrement our free counter
+      NS_ASSERTION(mFreeCount > 0, "mFreeCount screwed up");
+      mFreeCount--;
     }
-    return NS_OK;
   }
+  else {
+    zip = new nsJAR();
+    if (zip == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(zip);
+    zip->SetZipReaderCache(this);
 
-  // not found -- create a new one and cache it
-  nsCOMPtr<nsIZipReader> zip;
-  rv = nsJAR::Create(nsnull, NS_GET_IID(nsIZipReader), getter_AddRefs(zip));
-  if (NS_FAILED(rv)) return rv;
+    rv = zip->Init(zipFile);
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(zip);
+      return rv;
+    }
+    rv = zip->Open();
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(zip);
+      return rv;
+    }
 
-  rv = zip->Init(zipFile);
-  if (NS_FAILED(rv)) return rv;
-  rv = zip->Open();
-  if (NS_FAILED(rv)) return rv;
-
-  entry = new nsZipCacheEntry(zip);
-  if (entry == nsnull) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    PRBool collision = mZips.Put(&key, zip); // AddRefs to 2
+    NS_ASSERTION(!collision, "horked");
   }
-  entry->mUseCount++;
-  (void)mZips.Put(&key, entry);
   *result = zip;
-  NS_ADDREF(*result);   // addref for the caller
   return rv;
 }
 
-NS_IMETHODIMP
-nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
+static PRBool
+FindOldestZip(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsJAR** oldestPtr = (nsJAR**)closure;
+  nsJAR* oldest = *oldestPtr;
+  nsJAR* current = (nsJAR*)aData;
+  PRIntervalTime currentReleaseTime = current->GetReleaseTime();
+  if (currentReleaseTime != PR_INTERVAL_NO_TIMEOUT) {
+    if (oldest == nsnull ||
+        currentReleaseTime < oldest->GetReleaseTime()) {
+      *oldestPtr = current;
+    }    
+  }
+  return PR_TRUE;
+}
+
+nsresult
+nsZipReaderCache::ReleaseZip(nsJAR* zip)
 {
   nsresult rv;
   nsAutoLock lock(mLock);
 
+  mFreeCount++;
+  if (mZips.Count() <= mCacheSize)
+    return NS_OK;
+
+  nsJAR* oldest = nsnull;
+  if (mFreeCount == 1) {
+    // then this is our guy -- no need to search for the oldest
+    oldest = zip;
+  }
+  else {
+    mZips.Enumerate(FindOldestZip, &oldest);
+  }
+  NS_ASSERTION(oldest, "wacked");
+
+  // remove from hashtable
   nsCOMPtr<nsIFile> zipFile;
-  rv = zip->GetFile(getter_AddRefs(zipFile));
+  rv = oldest->GetFile(getter_AddRefs(zipFile));
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString path;
@@ -1205,36 +1233,9 @@ nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
   if (NS_FAILED(rv)) return rv;
 
   nsCStringKey key(path);
-  nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
-  if (entry == nsnull)
-    return NS_ERROR_FAILURE;
+  PRBool removed = mZips.Remove(&key);  // Releases
+  NS_ASSERTION(removed, "botched");
 
-  if (--entry->mUseCount == 0) {
-    // The first step in releasing a zip is to throw it on the LRU free list.
-    // That way it can be quickly re-opened if necessary. But if the free
-    // list grows too long, some need to be thrown out.
-
-    entry->mNextOlder = mFreeList;
-    mFreeList = entry;
-
-    if (++mFreeCount > mCacheSize) {
-      // throw out the oldest one:
-      nsZipCacheEntry** oldestPtr = &mFreeList;
-      NS_ASSERTION(*oldestPtr, "null free list");
-      while ((*oldestPtr)->mNextOlder != nsnull) {
-        oldestPtr = &(*oldestPtr)->mNextOlder;
-      }
-      nsZipCacheEntry* oldest = *oldestPtr;
-      *oldestPtr = nsnull;
-
-      nsZipCacheEntry* elt = (nsZipCacheEntry*)mZips.Remove(&key);
-      NS_ASSERTION(elt == entry, "Remove failed");
-      --mFreeCount;
-      delete oldest;    // release zip for good
-    }
-  }
-
-//  NS_RELEASE(zip);      // release for the caller
   return NS_OK;
 }
 

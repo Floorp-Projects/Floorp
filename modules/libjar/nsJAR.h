@@ -35,6 +35,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "prtypes.h"
+#include "prinrval.h"
 #if 0
 #include "xp_regexp.h"
 #endif
@@ -56,6 +57,7 @@
 
 class nsIInputStream;
 class nsJARManifestItem;
+class nsZipReaderCache;
 
 /*-------------------------------------------------------------------------
  * Class nsJAR declaration. 
@@ -80,6 +82,17 @@ class nsJAR : public nsIZipReader
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+    PRIntervalTime GetReleaseTime() {
+      if (mRefCnt == 1)
+        return mReleaseTime;
+      else
+        return PR_INTERVAL_NO_TIMEOUT;
+    }
+    
+    void SetZipReaderCache(nsZipReaderCache* cache) {
+      mCache = cache;
+    }
   
   protected:
     //-- Private data members
@@ -89,6 +102,8 @@ class nsJAR : public nsIZipReader
     PRBool                   mParsedManifest; // True if manifest has been parsed
     nsCOMPtr<nsIPrincipal>   mPrincipal;      // The entity which signed this file
     PRInt16                  mGlobalStatus;   // Global signature verification status
+    PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
+    nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in
 
     //-- Private functions
     nsresult ParseManifest(nsISignatureVerifier* verifier);
@@ -170,11 +185,12 @@ public:
   static NS_METHOD
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
+  nsresult ReleaseZip(nsJAR* reader);
+
 protected:
   PRLock*               mLock;
-  PRUint32              mCacheSize;
-  nsObjectHashtable     mZips;
-  nsZipCacheEntry*      mFreeList;
+  PRInt32               mCacheSize;
+  nsSupportsHashtable   mZips;
   PRUint32              mFreeCount;
 };
 
