@@ -95,6 +95,8 @@ public:
 	// this is for the temp message display hack
 	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell) = 0;
 
+    // Tell thread to die
+    NS_IMETHOD TellThreadToDie(PRBool isSafeToDie) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */
