@@ -204,6 +204,14 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
      || (!$::FORM{'id'} && $::FORM{'product'} ne $::FORM{'dontchange'}))
     && CheckonComment( "reassignbycomponent" ))
 {
+    # Check to make sure they actually have the right to change the product
+    if (!CheckCanChangeField('product', $::FORM{'id'}, $::oldproduct, $::FORM{'product'})) {
+        $vars->{'oldvalue'} = $::oldproduct;
+        $vars->{'newvalue'} = $::FORM{'product'};
+        $vars->{'field'} = 'product';
+        ThrowUserError("illegal_change", undef, "abort");            
+    }
+ 
     CheckFormField(\%::FORM, 'product', \@::legal_product);
     my $prod = $::FORM{'product'};
 
@@ -1062,6 +1070,13 @@ foreach my $id (@idlist) {
             "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
+    # Fun hack.  @::log_columns only contains the component_id,
+    # not the name (since bug 43600 got fixed).  So, we need to have
+    # this id ready for the loop below, otherwise anybody can
+    # change the component of a bug (we checked product above).
+    # http://bugzilla.mozilla.org/show_bug.cgi?id=180545
+    my $product_id = get_product_id($::FORM{'product'});
+    $::FORM{'component_id'} = get_component_id($product_id, $::FORM{'component'});
     my $i = 0;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
@@ -1069,9 +1084,17 @@ foreach my $id (@idlist) {
         $oldhash{$col} = $oldvalues[$i];
         if (exists $::FORM{$col}) {
             if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
-                $vars->{'oldvalue'} = $oldvalues[$i];
-                $vars->{'newvalue'} = $::FORM{$col};
-                $vars->{'field'} = $col;
+                # More fun hacking... don't display component_id
+                if ($col eq 'component_id') {
+                    $vars->{'oldvalue'} = get_component_name($product_id, $oldhash{'component_id'});
+                    $vars->{'newvalue'} = $::FORM{'component'};
+                    $vars->{'field'} = 'component';
+                }
+                else {
+                    $vars->{'oldvalue'} = $oldvalues[$i];
+                    $vars->{'newvalue'} = $::FORM{$col};
+                    $vars->{'field'} = $col;
+                }
                 ThrowUserError("illegal_change", undef, "abort");            
             }
         }
