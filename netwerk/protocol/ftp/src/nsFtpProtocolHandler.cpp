@@ -169,8 +169,13 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
 {
     nsresult rv = NS_OK;
 
-    rv = mProxySvc->ExamineForProxy(url, this);
-    if (NS_FAILED(rv)) return rv;
+    PRBool useProxy = PR_FALSE;
+    
+    if (NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy)
+    {
+        rv = mProxySvc->ExamineForProxy(url, this);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsFTPChannel* channel;
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsPIFTPChannel), (void**)&channel);
