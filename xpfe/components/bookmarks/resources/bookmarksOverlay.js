@@ -51,7 +51,7 @@ const NC_NS_CMD = NC_NS + "command?cmd=";
  *
  * There are also several places that need to be updated if you need
  * to change a command name. 
- *   1) the controller in ALL clients (bookmarksTree.js, personalToolbar.js)
+ *   1) the controller in ALL clients (bookmarks.xml, personalToolbar.js)
  *   2) the command nodes in the overlay
  *   3) the command human-readable name key in bookmark.properties
  *   4) the function 'getAllCmds' in bookmarksOverlay.js

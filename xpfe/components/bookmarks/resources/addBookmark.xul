@@ -47,7 +47,6 @@
    
   
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"/>
 
   <stringbundle id="bookmarksbundle"
