@@ -31,6 +31,9 @@
 |   Currently, this code is relatively useless for any other purpose.  In the  |
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
+
+const mailtolength = 7;
+
 function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
@@ -611,11 +614,10 @@ nsContextMenu.prototype = {
         var qmark = url.indexOf( "?" );
         var addresses;
         
-        if ( qmark > 7 ) {                   // 7 == length of "mailto:"
-            addresses = url.substring( 7, qmark );
-        } else {
-            addresses = url.substr( 7 );
-        }
+        if ( qmark > mailtolength ) 
+            addresses = url.substring( mailtolength, qmark );
+        else 
+            addresses = url.substr( mailtolength );
 
         var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
                                          Components.interfaces.nsIClipboardHelper );
@@ -804,6 +806,7 @@ nsContextMenu.prototype = {
         
         return ioService.newURI(baseURI.resolve(url), null, null).spec;
     },
+
     // Parse coords= attribute and return array.
     parseCoords : function ( area ) {
         return [];

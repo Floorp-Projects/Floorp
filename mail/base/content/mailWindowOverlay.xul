@@ -985,6 +985,14 @@
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
                   command="cmd_copyImageLocation"/>
+        <menuitem id="context-addemail"
+                  label="&AddToAddressBook.label;"
+                  accesskey="&AddToAddressBook.accesskey;"
+                  oncommand="addEmail();"/>
+        <menuitem id="context-composeemailto"
+                  label="&SendMailTo.label;"
+                  accesskey="&SendMailTo.accesskey;"
+                  oncommand="composeEmailTo();"/>
         <menuitem id="context-copyemail"
                   label="&copyEmailCmd.label;"
                   accesskey="&copyEmailCmd.accesskey;"

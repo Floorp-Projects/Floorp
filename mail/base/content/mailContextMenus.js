@@ -25,6 +25,8 @@
 
 //NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
+const mailtolength = 7;
+
 // Function to change the highlighted row back to the row that is currently
 // outline/dotted without loading the contents of either rows.  This is
 // triggered when the context menu for a given row is hidden/closed
@@ -474,13 +476,17 @@ function fillMessagePaneContextMenu()
   //Figure out separators
   ShowMenuItem("messagePaneContext-sep-open", ShowSeparator("messagePaneContext-sep-open"));
   ShowMenuItem("messagePaneContext-sep-reply", ShowSeparator("messagePaneContext-sep-reply"));
-  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit"));
+  ShowMenuItem("messagePaneContext-sep-edit", ShowSeparator("messagePaneContext-sep-edit") || gContextMenu.onMailtoLink);
   ShowMenuItem("messagePaneContext-sep-link", ShowSeparator("messagePaneContext-sep-link"));
   ShowMenuItem("messagePaneContext-sep-copy", ShowSeparator("messagePaneContext-sep-copy"));
   ShowMenuItem("messagePaneContext-sep-labels-1", ShowSeparator("messagePaneContext-sep-labels-1"));
   ShowMenuItem("messagePaneContext-sep-labels-2", ShowSeparator("messagePaneContext-sep-labels-2"));
+
+  ShowMenuItem( "context-addemail", gContextMenu.onMailtoLink );
+  ShowMenuItem( "context-composeemailto", gContextMenu.onMailtoLink );
   
-  if (!hideMailItems)
+  // if we are on an image, go ahead and show this separator
+  if (gContextMenu.onLink && !gContextMenu.onMailtoLink)
     ShowMenuItem("messagePaneContext-sep-edit", false);
 }
 
@@ -509,11 +515,60 @@ function ShowSeparator(aSeparatorID)
 
 function IsMenuItemShowing(menuID)
 {
-
   var item = document.getElementById(menuID);
   if (item)
     return item.hidden != "true";
   return false;
+}
+
+// message pane context menu helper methods
+function addEmail()
+{
+  var url = gContextMenu.linkURL();
+  var addresses = getEmail(url);
+  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+                    "",
+                     "chrome,resizable=no,titlebar,modal,centerscreen",
+                    {primaryEmail: addresses});
+}
+
+function composeEmailTo ()
+{
+  var url = gContextMenu.linkURL();
+  var addresses = getEmail(url);
+  var fields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+  var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+  fields.to = addresses;
+  params.type = Components.interfaces.nsIMsgCompType.New;
+  params.format = Components.interfaces.nsIMsgCompFormat.Default;
+  params.identity = accountManager.getFirstIdentityForServer(GetLoadedMsgFolder().server);
+  params.composeFields = fields;
+  msgComposeService.OpenComposeWindowWithParams(null, params);
+}
+
+// Extracts email address from url string
+function getEmail (url) 
+{
+  var qmark = url.indexOf( "?" );
+  var addresses;
+
+  if ( qmark > mailtolength ) 
+      addresses = url.substring( mailtolength, qmark );
+  else 
+     addresses = url.substr( mailtolength );
+  // Let's try to unescape it using a character set
+  // in case the address is not ASCII.
+  try {
+    var characterSet = Components.lookupMethod(this.target.ownerDocument, "characterSet")
+                                 .call(this.target.ownerDocument);
+    const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                 .getService(Components.interfaces.nsITextToSubURI);
+    addresses = textToSubURI.unEscapeNonAsciiURI(characterSet, addresses);
+  }
+  catch(ex) {
+    // Do nothing.
+  }
+  return addresses;
 }
 
 function CopyFolderUrl()
@@ -564,3 +619,4 @@ function CopyMessageUrl()
     dump("ex="+ex+"\n");
   }
 }
+
