@@ -28,8 +28,8 @@
 #include "nsStringFwd.h"
 #endif
 
-#ifndef nsPrivateSharableString_h___
-#include "nsPrivateSharableString.h"
+#ifndef nsBufferHandle_h___
+#include "nsBufferHandle.h"
 #endif
 
 #ifndef nsCharTraits_h___
@@ -46,7 +46,6 @@
    */
 
 class NS_COM nsAString
-    : public nsPrivateSharableString
   {
     public:
       typedef nsAString                     self_type;
@@ -67,6 +66,20 @@ class NS_COM nsAString
       // nsAString();                           // auto-generated default constructor OK (we're abstract anyway)
       // nsAString( const self_type& );         // auto-generated copy-constructor OK (again, only because we're abstract)
       virtual ~nsAString() { }                  // ...yes, I expect to be sub-classed
+
+
+      virtual PRUint32                                GetImplementationFlags() const;
+      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
+      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
+      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+
+        /**
+         * |GetBufferHandle()| will return either |0|, or a reasonable pointer.
+         * The meaning of |0| is that the string points to a non-contiguous or else empty representation.
+         * Otherwise |GetBufferHandle()| returns a handle that points to the single contiguous hunk of characters
+         * that make up this string.
+         */
+
 
       inline const_iterator& BeginReading( const_iterator& ) const;
       inline const_iterator& EndReading( const_iterator& ) const;
@@ -278,7 +291,6 @@ class NS_COM nsAString
   };
 
 class NS_COM nsACString
-    : public nsPrivateSharableCString
   {
     public:
       typedef nsACString                    self_type;
@@ -299,6 +311,20 @@ class NS_COM nsACString
       // nsACString();                          // auto-generated default constructor OK (we're abstract anyway)
       // nsACString( const self_type& );        // auto-generated copy-constructor OK (again, only because we're abstract)
       virtual ~nsACString() { }                 // ...yes, I expect to be sub-classed
+
+
+      virtual PRUint32                                GetImplementationFlags() const;
+      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
+      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
+      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+
+        /**
+         * |GetBufferHandle()| will return either |0|, or a reasonable pointer.
+         * The meaning of |0| is that the string points to a non-contiguous or else empty representation.
+         * Otherwise |GetBufferHandle()| returns a handle that points to the single contiguous hunk of characters
+         * that make up this string.
+         */
+
 
       inline const_iterator& BeginReading( const_iterator& ) const;
       inline const_iterator& EndReading( const_iterator& ) const;
