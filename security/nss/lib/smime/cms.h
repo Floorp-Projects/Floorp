@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.8 2001/01/04 06:02:43 wtc%netscape.com Exp $
+ * $Id: cms.h,v 1.9 2001/01/05 01:38:19 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -398,7 +398,7 @@ NSS_CMSAlgArray_GetIndexByAlgID(SECAlgorithmID **algorithmArray, SECAlgorithmID 
 extern int
 NSS_CMSAlgArray_GetIndexByAlgTag(SECAlgorithmID **algorithmArray, SECOidTag algtag);
 
-extern SECHashObject *
+extern const SECHashObject *
 NSS_CMSUtil_GetHashObjByAlgID(SECAlgorithmID *algid);
 
 /*

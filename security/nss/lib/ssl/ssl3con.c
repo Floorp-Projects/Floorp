@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.11 2001/01/03 19:50:36 larryh%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.12 2001/01/05 01:38:25 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -144,21 +144,7 @@ PRBool ssl3_global_policy_some_restricted = PR_FALSE;
 ** SSL_ConfigSecureServer(), and is used in ssl3_SendCertificateRequest().
 */
 CERTDistNames *ssl3_server_ca_list = NULL;
-
-/* statistics from ssl3_SendClientHello (sch) */
-long ssl3_sch_sid_cache_hits;
-long ssl3_sch_sid_cache_misses;
-long ssl3_sch_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleServerHello (hsh) */
-long ssl3_hsh_sid_cache_hits;
-long ssl3_hsh_sid_cache_misses;
-long ssl3_hsh_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleClientHello (hch) */
-long ssl3_hch_sid_cache_hits;
-long ssl3_hch_sid_cache_misses;
-long ssl3_hch_sid_cache_not_ok;
+static SSL3Statistics ssl3stats;
 
 /* indexed by SSL3BulkCipher */
 static const ssl3BulkCipherDef bulk_cipher_defs[] = {
@@ -337,6 +323,12 @@ ssl3_DecodeContentType(int msgType)
 }
 
 #endif
+
+SSL3Statistics * 
+SSL_GetStatistics(void)
+{
+    return &ssl3stats;
+}
 
 /* return pointer to ssl3CipherSuiteDef for suite, or NULL */
 /* XXX This does a linear search.  A binary search would be better. */
@@ -2510,7 +2502,7 @@ ssl3_SendClientHello(sslSocket *ss)
 	}
 
 	if (!sidOK) {
-	    ++ssl3_sch_sid_cache_not_ok;
+	    ++ssl3stats.sch_sid_cache_not_ok;
 	    (*ss->sec->uncache)(sid);
 	    ssl_FreeSID(sid);
 	    sid = NULL;
@@ -2518,7 +2510,7 @@ ssl3_SendClientHello(sslSocket *ss)
     }
 
     if (sid) {
-	++ssl3_sch_sid_cache_hits;
+	++ssl3stats.sch_sid_cache_hits;
 
 	rv = ssl3_NegotiateVersion(ss, sid->version);
 	if (rv != SECSuccess)
@@ -2528,7 +2520,7 @@ ssl3_SendClientHello(sslSocket *ss)
 		      sid->u.ssl3.sessionIDLength));
 	ss->ssl3->policy = sid->u.ssl3.policy;
     } else {
-	++ssl3_sch_sid_cache_misses;
+	++ssl3stats.sch_sid_cache_misses;
 
 	rv = ssl3_NegotiateVersion(ss, SSL_LIBRARY_VERSION_3_1_TLS);
 	if (rv != SECSuccess)
@@ -3813,7 +3805,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	}
 
 	/* Got a Match */
-	++ssl3_hsh_sid_cache_hits;
+	++ssl3stats.hsh_sid_cache_hits;
 	ss->ssl3->hs.ws         = wait_change_cipher;
 	ss->ssl3->hs.isResuming = PR_TRUE;
 
@@ -3861,9 +3853,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     } while (0);
 
     if (sid_match)
-	++ssl3_hsh_sid_cache_not_ok;
+	++ssl3stats.hsh_sid_cache_not_ok;
     else
-	++ssl3_hsh_sid_cache_misses;
+	++ssl3stats.hsh_sid_cache_misses;
 
     /* throw the old one away */
     sid->u.ssl3.resumable = PR_FALSE;
@@ -4628,7 +4620,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    ((ss->requireCertificate == 1) ||
 	     ((ss->requireCertificate == 2) && !ss->connected))) {
 
-	    ++ssl3_hch_sid_cache_not_ok;
+	    ++ssl3stats.hch_sid_cache_not_ok;
 	    ss->sec->uncache(sid);
 	    ssl_FreeSID(sid);
 	    sid = NULL;
@@ -4773,7 +4765,7 @@ compression_found:
 	 *
 	 * XXX make sure compression still matches
 	 */
-	++ssl3_hch_sid_cache_hits;
+	++ssl3stats.hch_sid_cache_hits;
 	ssl3->hs.isResuming = PR_TRUE;
 
 	ssl_GetXmitBufLock(ss); haveXmitBufLock = PR_TRUE;
@@ -4889,12 +4881,12 @@ compression_found:
     }
 
     if (sid) { 	/* we had a sid, but it's no longer valid, free it */
-	++ssl3_hch_sid_cache_not_ok;
+	++ssl3stats.hch_sid_cache_not_ok;
 	ss->sec->uncache(sid);
 	ssl_FreeSID(sid);
 	sid = NULL;
     }
-    ++ssl3_hch_sid_cache_misses;
+    ++ssl3stats.hch_sid_cache_misses;
 
     sid = ssl3_NewSessionID(ss, PR_TRUE);
     if (sid == NULL) {
@@ -5063,7 +5055,7 @@ suite_found:
     ss->sec->send            = ssl3_SendApplicationData;
 
     /* we don't even search for a cache hit here.  It's just a miss. */
-    ++ssl3_hch_sid_cache_misses;
+    ++ssl3stats.hch_sid_cache_misses;
     sid = ssl3_NewSessionID(ss, PR_TRUE);
     if (sid == NULL) {
     	errCode = PORT_GetError();

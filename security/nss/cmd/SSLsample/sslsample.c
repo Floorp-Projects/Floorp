@@ -391,23 +391,7 @@ printSecurityInfo(PRFileDesc *fd)
 	int    kp0;	/* total key bits */
 	int    kp1;	/* secret key bits */
 	int    result;
-
-#if 0
-/* statistics from ssl3_SendClientHello (sch) */
-extern long ssl3_sch_sid_cache_hits;
-extern long ssl3_sch_sid_cache_misses;
-extern long ssl3_sch_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleServerHello (hsh) */
-extern long ssl3_hsh_sid_cache_hits;
-extern long ssl3_hsh_sid_cache_misses;
-extern long ssl3_hsh_sid_cache_not_ok;
-#endif
-
-/* statistics from ssl3_HandleClientHello (hch) */
-extern long ssl3_hch_sid_cache_hits;
-extern long ssl3_hch_sid_cache_misses;
-extern long ssl3_hch_sid_cache_not_ok;
+	SSL3Statistics * ssl3stats = SSL_GetStatistics();
 
 	result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
 	if (result != SECSuccess)
@@ -420,8 +404,8 @@ extern long ssl3_hch_sid_cache_not_ok;
 	PR_Free(sp);
 
 	printf("%ld cache hits; %ld cache misses, %ld cache not reusable\n",
-		ssl3_hch_sid_cache_hits, ssl3_hch_sid_cache_misses,
-	ssl3_hch_sid_cache_not_ok);
+		ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
+	ssl3stats->hch_sid_cache_not_ok);
 
 }
 

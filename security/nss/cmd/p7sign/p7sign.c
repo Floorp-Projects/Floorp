@@ -35,7 +35,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.1 2000/03/31 20:12:30 relyea%netscape.com Exp $
+ * $Id: p7sign.c,v 1.2 2001/01/05 01:37:47 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -45,6 +45,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "cdbhdl.h"
+#include "sechash.h"	/* for HASH_GetHashObject() */
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -127,11 +128,11 @@ SignOut(void *arg, const char *buf, unsigned long len)
 static int
 CreateDigest(SECItem *data, char *digestdata, unsigned int *len, unsigned int maxlen)
 {
-    SECHashObject *hashObj;
+    const SECHashObject *hashObj;
     void *hashcx;
 
     /* XXX probably want to extend interface to allow other hash algorithms */
-    hashObj = &SECHashObjects[HASH_AlgSHA1];
+    hashObj = HASH_GetHashObject(HASH_AlgSHA1);
 
     hashcx = (* hashObj->create)();
     if (hashcx == NULL)

@@ -111,6 +111,8 @@ int certsTested;
 int MakeCertOK;
 int NoReuse;
 
+SSL3Statistics * ssl3stats;
+
 void
 disableSSL2Ciphers(void)
 {
@@ -299,21 +301,6 @@ myBadCertHandler( void *arg, PRFileDesc *fd)
     return (MakeCertOK ? SECSuccess : SECFailure);
 }
 
-/* statistics from ssl3_SendClientHello (sch) */
-extern long ssl3_sch_sid_cache_hits;
-extern long ssl3_sch_sid_cache_misses;
-extern long ssl3_sch_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleServerHello (hsh) */
-extern long ssl3_hsh_sid_cache_hits;
-extern long ssl3_hsh_sid_cache_misses;
-extern long ssl3_hsh_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleClientHello (hch) */
-extern long ssl3_hch_sid_cache_hits;
-extern long ssl3_hch_sid_cache_misses;
-extern long ssl3_hch_sid_cache_not_ok;
-
 void 
 printSecurityInfo(PRFileDesc *fd)
 {
@@ -341,9 +328,9 @@ printSecurityInfo(PRFileDesc *fd)
 
     PRINTF(
     "strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
-    	ssl3_hsh_sid_cache_hits, 
-	ssl3_hsh_sid_cache_misses,
-	ssl3_hsh_sid_cache_not_ok);
+    	ssl3stats->hsh_sid_cache_hits, 
+	ssl3stats->hsh_sid_cache_misses,
+	ssl3stats->hsh_sid_cache_not_ok);
 
 }
 
@@ -1076,9 +1063,14 @@ main(int argc, char **argv)
 	case 'w':
 	    passwd = optstate->value;
 	    break;
-	case '\0':
+
+	case 0:   /* positional parameter */
+	    if (hostName) {
+		Usage(progName);
+	    }
 	    hostName = PL_strdup(optstate->value);
 	    break;
+
 	default:
 	case '?':
 	    Usage(progName);
@@ -1108,6 +1100,7 @@ main(int argc, char **argv)
     	fputs("NSS_Init failed.\n", stderr);
 	exit(1);
     }
+    ssl3stats = SSL_GetStatistics();
 
     if (nickName) {
 
@@ -1143,20 +1136,26 @@ main(int argc, char **argv)
     client_main(port, connections, privKey, cert, hostName, nickName);
 
     /* some final stats. */
-    if (ssl3_hsh_sid_cache_hits + ssl3_hsh_sid_cache_misses +
-        ssl3_hsh_sid_cache_not_ok == 0) {
+    if (ssl3stats->hsh_sid_cache_hits + ssl3stats->hsh_sid_cache_misses +
+        ssl3stats->hsh_sid_cache_not_ok == 0) {
 	/* presumably we were testing SSL2. */
 	printf("strsclnt: %d server certificates tested.\n", certsTested);
     } else {
 	printf(
 	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
-	    ssl3_hsh_sid_cache_hits, 
-	    ssl3_hsh_sid_cache_misses,
-	    ssl3_hsh_sid_cache_not_ok);
+	    ssl3stats->hsh_sid_cache_hits, 
+	    ssl3stats->hsh_sid_cache_misses,
+	    ssl3stats->hsh_sid_cache_not_ok);
     }
-    exitVal = (ssl3_hsh_sid_cache_misses > 1) ||
-              (ssl3_hsh_sid_cache_not_ok != 0) ||
-	      (certsTested > 1);
+
+    if (!NoReuse)
+	exitVal = (ssl3stats->hsh_sid_cache_misses > 1) ||
+                (ssl3stats->hsh_sid_cache_not_ok != 0) ||
+                (certsTested > 1);
+    else
+	exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
+                (certsTested != connections);
+
 
     NSS_Shutdown();
     PR_Cleanup();

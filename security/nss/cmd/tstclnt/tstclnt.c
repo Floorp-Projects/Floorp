@@ -123,21 +123,7 @@ void printSecurityInfo(PRFileDesc *fd)
     int    kp0;	/* total key bits */
     int    kp1;	/* secret key bits */
     int    result;
-
-/* statistics from ssl3_SendClientHello (sch) */
-extern long ssl3_sch_sid_cache_hits;
-extern long ssl3_sch_sid_cache_misses;
-extern long ssl3_sch_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleServerHello (hsh) */
-extern long ssl3_hsh_sid_cache_hits;
-extern long ssl3_hsh_sid_cache_misses;
-extern long ssl3_hsh_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleClientHello (hch) */
-extern long ssl3_hch_sid_cache_hits;
-extern long ssl3_hch_sid_cache_misses;
-extern long ssl3_hch_sid_cache_not_ok;
+    SSL3Statistics * ssl3stats = SSL_GetStatistics();
 
     result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
     if (result != SECSuccess)
@@ -152,8 +138,8 @@ extern long ssl3_hch_sid_cache_not_ok;
 
     fprintf(stderr,
     	"%ld cache hits; %ld cache misses, %ld cache not reusable\n",
-    	ssl3_hch_sid_cache_hits, ssl3_hch_sid_cache_misses,
-	ssl3_hch_sid_cache_not_ok);
+    	ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
+	ssl3stats->hch_sid_cache_not_ok);
 
 }
 
@@ -214,24 +200,22 @@ milliPause(PRUint32 milli)
 }
 
 void
-disableSSL2Ciphers(void)
+disableAllSSLCiphers(void)
 {
-    int i;
-
-    /* disable all the SSL2 cipher suites */
-    for (i = 0; ssl2CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl2CipherSuites[i], SSL_NOT_ALLOWED);
-    }
-}
-
-void
-disableSSL3Ciphers(void)
-{
-    int i;
+    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    int             i            = SSL_NumImplementedCiphers;
+    SECStatus       rv;
 
     /* disable all the SSL3 cipher suites */
-    for (i = 0; ssl3CipherSuites[i] != 0;  ++i) {
-        SSL_EnableCipher(ssl3CipherSuites[i], SSL_NOT_ALLOWED);
+    while (--i >= 0) {
+	PRUint16 suite = cipherSuites[i];
+        rv = SSL_CipherPrefSetDefault(suite, SSL_NOT_ALLOWED);
+	if (rv != SECSuccess) {
+	    PRErrorCode err = PR_GetError();
+	    printf("SSL_CipherPrefSet didn't like value 0x%04x (i = %d): %s\n",
+	    	   suite, i, SECU_Strerror(err));
+	    exit(2);
+	}
     }
 }
 
@@ -379,8 +363,7 @@ int main(int argc, char **argv)
     /* all the SSL2 and SSL3 cipher suites are enabled by default. */
     if (cipherString) {
 	/* disable all the ciphers, then enable the ones we want. */
-	disableSSL2Ciphers();
-	disableSSL3Ciphers();
+	disableAllSSLCiphers();
     }
 
     /* Lookup host */

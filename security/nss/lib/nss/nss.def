@@ -373,6 +373,7 @@ HASH_Clone
 HASH_Create
 HASH_Destroy
 HASH_End
+HASH_GetHashObject
 HASH_HashBuf
 HASH_ResultLen
 HASH_ResultLenContext
@@ -787,7 +788,6 @@ RSA_PrivateKeyOp
 RSA_PublicKeyOp
 RSA_Sign
 RSA_SignRaw
-SECHashObjects
 SECITEM_AllocItem
 SECITEM_CompareItem
 SECITEM_CopyItem

@@ -4,7 +4,6 @@
 
 
 #ifdef INC_SSL
-extern int SECHashObjects;
 extern int nss_InitLock;
 
 extern void ATOB_AsciiToData();
@@ -134,7 +133,6 @@ extern void VFY_Update();
 
 void
 nss_referenceNSSFunctionsForSSL() {
-	int tmp1 = SECHashObjects;
 	int tmp2 = nss_InitLock;
 
 	ATOB_AsciiToData();
@@ -273,23 +271,28 @@ extern int SEC_PointerToOctetStringTemplate;
 extern int SEC_SetOfAnyTemplate;
 
 extern void CERT_CertListFromCert();
+extern void CERT_DestroyCertArray();
 extern void CERT_FindSMimeProfile();
 extern void CERT_GetCertIssuerAndSN();
 extern void CERT_ImportCerts();
+extern void CERT_OpenCertDBFilename();
 extern void CERT_SaveSMimeProfile();
 extern void CERT_VerifyCert();
 extern void DER_TimeToUTCTime();
 extern void PK11_CreatePBEAlgorithmID();
+extern void PK11_FindCertAndKeyByRecipientList();
 extern void PK11_FindCertAndKeyByRecipientListNew();
 extern void PK11_FortezzaHasKEA();
 extern void PK11_FortezzaMapSig();
 extern void PK11_GenerateNewParam();
 extern void PK11_GetKeyStrength();
 extern void PK11_IsHW();
+extern void PK11_PBEKeyGen();
 extern void PK11_ParamToAlgid();
 extern void PK11_SetPasswordFunc();
 extern void SEC_ASN1DecodeInteger();
 extern void SEC_ASN1DecoderClearFilterProc();
+extern void SEC_ASN1DecoderClearNotifyProc();
 extern void SEC_ASN1DecoderFinish();
 extern void SEC_ASN1DecoderSetFilterProc();
 extern void SEC_ASN1DecoderSetNotifyProc();
@@ -308,11 +311,6 @@ extern void SEC_PKCS5IsAlgorithmPBEAlg();
 extern void SEC_SignData();
 extern void SGN_Digest();
 extern void VFY_VerifyDigest();
-extern void CERT_OpenCertDBFilename();
-extern void CERT_DestroyCertArray();
-extern void PK11_PBEKeyGen();
-extern void PK11_FindCertAndKeyByRecipientList();
-extern void SEC_ASN1DecoderClearNotifyProc();
 
 nss_referenceNSSFunctionsForSMIME() {
 	int tmp1=CERT_IssuerAndSNTemplate;
@@ -368,63 +366,64 @@ nss_referenceNSSFunctionsForSMIME() {
 extern int CERT_CertificateRequestTemplate;
 
 extern void CERT_DecodeCertificatePoliciesExtension();
-extern void CERT_DestroyCertificatePoliciesExtension();
 extern void CERT_DecodeUserNotice();
-extern void DER_GeneralizedTimeToTime();
+extern void CERT_DestroyCertificatePoliciesExtension();
 extern void CERT_GenTime2FormattedAscii();
-extern void SECKEY_DeriveKeyDBPassword();
 extern void CERT_Hexify();
-extern void SECKEY_GetKeyDBVersion();
-extern void PK11_DoPassword();
-extern void PK11_FindKeyByKeyID();
-extern void PK11_NeedUserInit();
-extern void PK11_InitPin();
-extern void PK11_CheckUserPassword();
-extern void PK11_ChangePW();
-extern void MD5_Flatten();
-extern void MD5_Resurrect();
+extern void DER_GeneralizedTimeToTime();
+extern void HASH_GetHashObject();
 extern void MD2_Flatten();
 extern void MD2_Resurrect();
+extern void MD5_Flatten();
+extern void MD5_Resurrect();
+extern void NSSBase64Decoder_Create();
+extern void NSSBase64Decoder_Destroy();
+extern void NSSBase64Decoder_Update();
+extern void NSSBase64Encoder_Create();
+extern void NSSBase64Encoder_Destroy();
+extern void NSSBase64Encoder_Update();
+extern void PK11_ChangePW();
+extern void PK11_CheckUserPassword();
+extern void PK11_DoPassword();
+extern void PK11_FindKeyByKeyID();
+extern void PK11_InitPin();
+extern void PK11_NeedUserInit();
 extern void PQG_ParamGen();
 extern void PQG_VerifyParams();
 extern void SECITEM_ReallocItem();
-extern void NSSBase64Encoder_Create();
-extern void NSSBase64Encoder_Update();
-extern void NSSBase64Encoder_Destroy();
-extern void NSSBase64Decoder_Create();
-extern void NSSBase64Decoder_Update();
-extern void NSSBase64Decoder_Destroy();
-
+extern void SECKEY_DeriveKeyDBPassword();
+extern void SECKEY_GetKeyDBVersion();
 
 nss_CMDExports() {
 	int tmp1 = CERT_CertificateRequestTemplate;
 
 	CERT_DecodeCertificatePoliciesExtension();
-	CERT_DestroyCertificatePoliciesExtension();
 	CERT_DecodeUserNotice();
-	DER_GeneralizedTimeToTime();
+	CERT_DestroyCertificatePoliciesExtension();
 	CERT_GenTime2FormattedAscii();
-	SECKEY_DeriveKeyDBPassword();
 	CERT_Hexify();
-	SECKEY_GetKeyDBVersion();
-	PK11_DoPassword();
-	PK11_FindKeyByKeyID();
-	PK11_NeedUserInit();
-	PK11_InitPin();
-	PK11_CheckUserPassword();
-	PK11_ChangePW();
-	MD5_Flatten();
-	MD5_Resurrect();
+	DER_GeneralizedTimeToTime();
+	HASH_GetHashObject();
 	MD2_Flatten();
 	MD2_Resurrect();
+	MD5_Flatten();
+	MD5_Resurrect();
+	NSSBase64Decoder_Create();
+	NSSBase64Decoder_Destroy();
+	NSSBase64Decoder_Update();
+	NSSBase64Encoder_Create();
+	NSSBase64Encoder_Destroy();
+	NSSBase64Encoder_Update();
+	PK11_ChangePW();
+	PK11_CheckUserPassword();
+	PK11_DoPassword();
+	PK11_FindKeyByKeyID();
+	PK11_InitPin();
+	PK11_NeedUserInit();
 	PQG_ParamGen();
 	PQG_VerifyParams();
 	SECITEM_ReallocItem();
-	NSSBase64Encoder_Create();
-	NSSBase64Encoder_Update();
-	NSSBase64Encoder_Destroy();
-	NSSBase64Decoder_Create();
-	NSSBase64Decoder_Update();
-	NSSBase64Decoder_Destroy();
+	SECKEY_DeriveKeyDBPassword();
+	SECKEY_GetKeyDBVersion();
 }
 

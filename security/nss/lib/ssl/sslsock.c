@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.6 2001/01/03 19:50:53 larryh%netscape.com Exp $
+ * $Id: sslsock.c,v 1.7 2001/01/05 01:38:26 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -78,8 +78,7 @@ static cipherPolicy ssl_ciphers[] = {	   /*   Export           France   */
  {  0,					    SSL_NOT_ALLOWED, SSL_NOT_ALLOWED }
 };
 
-static
-sslSocketOps ssl_default_ops = {	/* No SSL, No Socks. */
+static const sslSocketOps ssl_default_ops = {	/* No SSL, No Socks. */
     ssl_DefConnect,
     NULL,
     ssl_DefBind,
@@ -94,8 +93,7 @@ sslSocketOps ssl_default_ops = {	/* No SSL, No Socks. */
     ssl_DefGetsockname
 };
 
-static
-sslSocketOps ssl_socks_ops = {		/* No SSL, has socks. */
+static const sslSocketOps ssl_socks_ops = {	/* No SSL, has socks. */
     ssl_SocksConnect,
     ssl_SocksAccept,
     ssl_SocksBind,
@@ -110,8 +108,7 @@ sslSocketOps ssl_socks_ops = {		/* No SSL, has socks. */
     ssl_SocksGetsockname
 };
 
-static
-sslSocketOps ssl_secure_ops = {		/* SSL, no socks. */
+static const sslSocketOps ssl_secure_ops = {	/* SSL, no socks. */
     ssl_SecureConnect,
     NULL,
     ssl_DefBind,
@@ -126,8 +123,7 @@ sslSocketOps ssl_secure_ops = {		/* SSL, no socks. */
     ssl_DefGetsockname
 };
 
-static
-sslSocketOps ssl_secure_socks_ops = {	/* Both SSL and Socks. */
+static const sslSocketOps ssl_secure_socks_ops = { /* Both SSL and Socks. */
     ssl_SecureSocksConnect,
     ssl_SecureSocksAccept,
     ssl_SocksBind,
@@ -214,19 +210,6 @@ ssl_FindSocket(PRFileDesc *fd)
     ss->fd = layer;
     return ss;
 }
-
-#if 0	/* dead code. */
-PRFileDesc *
-ssl_FindTop(sslSocket *ss)
-{
-    PRFileDesc *fd = ss->fd;
-
-    while (fd->higher != NULL)
-	fd = fd->higher;
-
-    return fd;
-}
-#endif
 
 sslSocket *
 ssl_DupSocket(sslSocket *os)

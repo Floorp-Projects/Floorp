@@ -374,6 +374,7 @@ NSS_3.2 {               # NSS 3.2 release
         HASH_Create;
         HASH_Destroy;
         HASH_End;
+        HASH_GetHashObject;
         HASH_HashBuf;
         HASH_ResultLen;
         HASH_ResultLenContext;
@@ -788,7 +789,6 @@ NSS_3.2 {               # NSS 3.2 release
         RSA_PublicKeyOp;
         RSA_Sign;
         RSA_SignRaw;
-        SECHashObjects;
         SECITEM_AllocItem;
         SECITEM_CompareItem;
         SECITEM_CopyItem;

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.2 $ $Date: 2001/01/05 01:38:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "builtins.h"
@@ -163,7 +163,7 @@ builtins_mdObject_GetAttributeSize
   return 0;
 }
 
-static NSSItem *
+static const NSSItem *
 builtins_mdObject_GetAttribute
 (
   NSSCKMDObject *mdObject,

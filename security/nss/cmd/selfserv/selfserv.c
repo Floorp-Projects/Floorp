@@ -46,6 +46,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(_WINDOWS)
+#include <process.h>	/* for getpid() */
+#endif
+
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -188,50 +192,6 @@ Usage(const char *progName)
 	progName);
 }
 
-static void
-networkStart(void)
-{
-#if defined(XP_WIN) && !defined(NSPR20)
-
-    WORD wVersionRequested;  
-    WSADATA wsaData; 
-    int err; 
-    wVersionRequested = MAKEWORD(1, 1); 
- 
-    err = WSAStartup(wVersionRequested, &wsaData); 
- 
-    if (err != 0) {
-		/* Tell the user that we couldn't find a useable winsock.dll. */ 
-		fputs("WSAStartup failed!\n", stderr);
-		exit(1);
-    }
-
-/* Confirm that the Windows Sockets DLL supports 1.1.*/ 
-/* Note that if the DLL supports versions greater */ 
-/* than 1.1 in addition to 1.1, it will still return */ 
-/* 1.1 in wVersion since that is the version we */ 
-/* requested. */ 
- 
-    if ( LOBYTE( wsaData.wVersion ) != 1 || 
-         HIBYTE( wsaData.wVersion ) != 1 ) { 
-		/* Tell the user that we couldn't find a useable winsock.dll. */ 
-		fputs("wrong winsock version\n", stderr);
-		WSACleanup(); 
-		exit(2); 
-    } 
-    /* The Windows Sockets DLL is acceptable. Proceed. */ 
-
-#endif
-}
-
-static void
-networkEnd(void)
-{
-#if defined(XP_WIN) && !defined(NSPR20)
-    WSACleanup();
-#endif
-}
-
 static const char *
 errWarn(char * funcString)
 {
@@ -246,30 +206,6 @@ errWarn(char * funcString)
 static void
 errExit(char * funcString)
 {
-#if defined (XP_WIN) && !defined(NSPR20)
-    int          err;
-    LPVOID       lpMsgBuf;
-
-    err = WSAGetLastError();
- 
-    FormatMessage(
-	FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	NULL,
-	err,
-	MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-	(LPTSTR) &lpMsgBuf,
-	0,
-	NULL 
-    );
-
-    /* Display the string. */
-  /*MessageBox( NULL, lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION ); */
-    fprintf(stderr, "%s\n", lpMsgBuf);
-
-    /* Free the buffer. */
-    LocalFree( lpMsgBuf );
-#endif
-
     errWarn(funcString);
     exit(3);
 }
@@ -330,25 +266,11 @@ void printSecurityInfo(PRFileDesc *fd)
     int    kp0;	/* total key bits */
     int    kp1;	/* secret key bits */
     int    result;
-
-/* statistics from ssl3_SendClientHello (sch) */
-extern long ssl3_sch_sid_cache_hits;
-extern long ssl3_sch_sid_cache_misses;
-extern long ssl3_sch_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleServerHello (hsh) */
-extern long ssl3_hsh_sid_cache_hits;
-extern long ssl3_hsh_sid_cache_misses;
-extern long ssl3_hsh_sid_cache_not_ok;
-
-/* statistics from ssl3_HandleClientHello (hch) */
-extern long ssl3_hch_sid_cache_hits;
-extern long ssl3_hch_sid_cache_misses;
-extern long ssl3_hch_sid_cache_not_ok;
+    SSL3Statistics * ssl3stats = SSL_GetStatistics();
 
     PRINTF("selfserv: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
-    	ssl3_hch_sid_cache_hits, ssl3_hch_sid_cache_misses,
-	ssl3_hch_sid_cache_not_ok);
+    	ssl3stats->hch_sid_cache_hits, ssl3stats->hch_sid_cache_misses,
+	ssl3stats->hch_sid_cache_not_ok);
 
     result = SSL_SecurityStatus(fd, &op, &cp, &kp0, &kp1, &ip, &sp);
     if (result == SECSuccess) {
@@ -439,9 +361,9 @@ launch_thread(
                 slot->b = b;
                 slot->c = c;
                 slot->startFunc = startFunc;
-                slot->prThread = PR_CreateThread(PR_USER_THREAD, thread_wrapper, slot,
-				                  PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-				                  PR_UNJOINABLE_THREAD, 0);
+                slot->prThread = PR_CreateThread(PR_USER_THREAD, 
+				thread_wrapper, slot, PR_PRIORITY_NORMAL, 
+				PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
                 if (slot->prThread == NULL) {
     	            printf("selfserv: Failed to launch thread!\n");
                     slot->state = rs_idle;
@@ -708,7 +630,8 @@ handle_connection(
 	newln = 0;
 	i     = 0;
 	rv = PR_Read(ssl_sock, pBuf, bufRem);
-	if (rv == 0) {
+	if (rv == 0 || 
+	    (rv < 0 && PR_END_OF_FILE_ERROR == PR_GetError())) {
 	    errWarn("HDX PR_Read hit EOF");
 	    break;
 	}
@@ -919,10 +842,9 @@ do_accepts(
 	}
 
         VLOG(("selfserv: do_accept: Got connection\n"));
-	if (bigBuf.data != NULL)
-	    result = launch_thread(handle_fdx_connection, tcp_sock, model_sock, requestCert);
-	else
-	    result = launch_thread(handle_connection, tcp_sock, model_sock, requestCert);
+	result = launch_thread((bigBuf.data != NULL) ? 
+	                        handle_fdx_connection : handle_connection, 
+	                        tcp_sock, model_sock, requestCert);
 
 	if (result != SECSuccess) {
 	    PR_Close(tcp_sock);
@@ -952,10 +874,8 @@ server_main(
     PRSocketOptionData opt;
     int         listenQueueDepth = 5 + (2 * maxThreads);
 
-    networkStart();
-    
     /* create the thread management serialization structs */
-  	threadLock = PZ_NewLock(nssILockSelfServ);
+    threadLock = PZ_NewLock(nssILockSelfServ);
     threadQ   = PZ_NewCondVar(threadLock);
     stopLock = PZ_NewLock(nssILockSelfServ);
     stopQ = PZ_NewCondVar(stopLock);
@@ -1096,7 +1016,6 @@ server_main(
     	PR_Close(model_sock);
     }
 
-    networkEnd();
 }
 
 SECStatus
@@ -1152,11 +1071,12 @@ main(int argc, char **argv)
     char *               tmp;
     CERTCertificate *    cert   [kt_kea_size] = { NULL };
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
+    int                  optionsFound = 0;
     unsigned short       port        = 0;
     SECStatus            rv;
     PRBool               useExportPolicy = PR_FALSE;
-    PLOptState			*optstate;
-	PLOptStatus          status;
+    PLOptState		*optstate;
+    PLOptStatus          status;
 
 
     tmp = strrchr(argv[0], '/');
@@ -1164,92 +1084,65 @@ main(int argc, char **argv)
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
 
-    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:i:f:rt:vw:x");
+    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:hi:f:rt:vw:x");
     while (status = PL_GetNextOpt(optstate) == PL_OPT_OK) {
-		switch(optstate->option) {
-		case '2':
-			fileName = optstate->value;
-			break;
-	
-		case '3': 
-			disableSSL3 = PR_TRUE;
-			break;
-	
-		case 'R': 
-			disableRollBack = PR_TRUE;
-			break;
-	
-		case 'T': 
-			disableTLS = PR_TRUE;
-			break;
-	
-		case 'c': 
-			cipherString = strdup(optstate->value);
-			break;
-	
-		case 'd': 
-			dir = optstate->value;
-			break;
-	
-		case 'f':
-			fNickName = optstate->value;
-			break;
-	
-		case 'h': 
-			Usage(progName);
-			exit(0);
-			break;
-	
-		case 'm': 
-			useModelSocket = PR_TRUE;
-			break;
-	
-		case 'n':
-			nickName = optstate->value;
-			break;
-	
-		case 'i':
-			pidFile = optstate->value;
-			break;
-	
-		case 'p': 
-			port = PORT_Atoi(optstate->value);
-			break;
-	
-		case 'r':
-			++requestCert;
-			break;
-	
-	    case 't':
-	        maxThreads = PORT_Atoi(optstate->value);
-	        if ( maxThreads > MAX_THREADS ) maxThreads = MAX_THREADS;
-	        if ( maxThreads < MIN_THREADS ) maxThreads = MIN_THREADS;
-	        break;
-	
-		case 'v':
-			verbose++;
-			break;
-	
-		case 'w':
-			passwd = optstate->value;
-			break;
-	
-		case 'x':
-			useExportPolicy = PR_TRUE;
-			break;
-		default:
-		case '?':
-			fprintf(stderr, "Unrecognized or bad option specified.\n");
-			fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
-			exit(4);
-			break;
-		}
-    }
-	if (status == PL_OPT_BAD) {
-		fprintf(stderr, "Unrecognized or bad option specified.\n");
-		fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
-		exit(5);
+	++optionsFound;
+	switch(optstate->option) {
+	case '2': fileName = optstate->value; break;
+
+	case '3': disableSSL3 = PR_TRUE; break;
+
+	case 'R': disableRollBack = PR_TRUE; break;
+
+	case 'T': disableTLS = PR_TRUE; break;
+
+	case 'c': cipherString = strdup(optstate->value); break;
+
+	case 'd': dir = optstate->value; break;
+
+	case 'f': fNickName = optstate->value; break;
+
+	case 'h': Usage(progName); exit(0); break;
+
+	case 'm': useModelSocket = PR_TRUE; break;
+
+	case 'n': nickName = optstate->value; break;
+
+	case 'i': pidFile = optstate->value; break;
+
+	case 'p': port = PORT_Atoi(optstate->value); break;
+
+	case 'r': ++requestCert; break;
+
+	case 't':
+	    maxThreads = PORT_Atoi(optstate->value);
+	    if ( maxThreads > MAX_THREADS ) maxThreads = MAX_THREADS;
+	    if ( maxThreads < MIN_THREADS ) maxThreads = MIN_THREADS;
+	    break;
+
+	case 'v': verbose++; break;
+
+	case 'w': passwd = optstate->value; break;
+
+	case 'x': useExportPolicy = PR_TRUE; break;
+
+	default:
+	case '?':
+	    fprintf(stderr, "Unrecognized or bad option specified.\n");
+	    fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+	    exit(4);
+	    break;
 	}
+    }
+    if (status == PL_OPT_BAD) {
+	fprintf(stderr, "Unrecognized or bad option specified.\n");
+	fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
+	exit(5);
+    }
+    if (!optionsFound) {
+	Usage(progName);
+	exit(51);
+    } 
 
     /* allocate the array of thread slots */
     threads = PR_Calloc(maxThreads, sizeof(perThread));
@@ -1259,25 +1152,25 @@ main(int argc, char **argv)
     }
 
     if ((nickName == NULL) && (fNickName == NULL)) {
-		fprintf (stderr, "Required arg '-n' (rsa nickname) not supplied.\n");
-		fprintf(stderr, "Run '%s -h' for usage information.\n");
+	fprintf(stderr, "Required arg '-n' (rsa nickname) not supplied.\n");
+	fprintf(stderr, "Run '%s -h' for usage information.\n", progName);
         exit(6);
     }
 
     if (port == 0) {
-		fprintf(stderr, "Required argument 'port' must be non-zero value\n");
-		exit(7);
-	}
+	fprintf(stderr, "Required argument 'port' must be non-zero value\n");
+	exit(7);
+    }
 
     if (pidFile) {
-		FILE *tmpfile=fopen(pidFile,"w+");
-	
-		if (tmpfile) {
-		    fprintf(tmpfile,"%d",getpid());
-		    fclose(tmpfile);
-		}
+	FILE *tmpfile=fopen(pidFile,"w+");
+
+	if (tmpfile) {
+	    fprintf(tmpfile,"%d",getpid());
+	    fclose(tmpfile);
+	}
     }
-	
+
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
@@ -1314,29 +1207,29 @@ main(int argc, char **argv)
     if (cipherString) {
     	int ndx;
 
-		/* disable all the ciphers, then enable the ones we want. */
-		disableSSL2Ciphers();
-		disableSSL3Ciphers();
-	
-		while (0 != (ndx = *cipherString++)) {
-		    int *cptr;
-		    int  cipher;
-	
-		    if (! isalpha(ndx)) {
-				fprintf(stderr, 
-					"Non-alphabetic char in cipher string (-c arg).\n");
-				exit(9);
-			}
-		    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
-		    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
-		    	/* do nothing */;
-		    if (cipher) {
-				SECStatus status;
-				status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
-				if (status != SECSuccess) 
-				    SECU_PrintError(progName, "SSL_CipherPrefSet()");
-		    }
-		}
+	/* disable all the ciphers, then enable the ones we want. */
+	disableSSL2Ciphers();
+	disableSSL3Ciphers();
+
+	while (0 != (ndx = *cipherString++)) {
+	    int *cptr;
+	    int  cipher;
+
+	    if (! isalpha(ndx)) {
+		fprintf(stderr, 
+			"Non-alphabetic char in cipher string (-c arg).\n");
+		exit(9);
+	    }
+	    cptr = islower(ndx) ? ssl3CipherSuites : ssl2CipherSuites;
+	    for (ndx &= 0x1f; (cipher = *cptr++) != 0 && --ndx > 0; ) 
+		/* do nothing */;
+	    if (cipher) {
+		SECStatus status;
+		status = SSL_CipherPrefSetDefault(cipher, SSL_ALLOWED);
+		if (status != SECSuccess) 
+		    SECU_PrintError(progName, "SSL_CipherPrefSet()");
+	    }
+	}
     }
 
     if (nickName) {

@@ -48,6 +48,7 @@
 #endif
 
 #include "pk11func.h"
+#include "sechash.h"
 
 /* from libevent.h */
 typedef void (*ETVoidPtrFunc) (void * data);
@@ -259,7 +260,7 @@ int jar_create_pk7
   {
   int nb;
   unsigned char buffer [4096], digestdata[32];
-  SECHashObject *hashObj;
+  const SECHashObject *hashObj;
   void *hashcx;
   unsigned int len;
 
@@ -276,7 +277,7 @@ int jar_create_pk7
     return JAR_ERR_GENERAL;
 
   /* we sign with SHA */
-  hashObj = &SECHashObjects [HASH_AlgSHA1];
+  hashObj = HASH_GetHashObject(HASH_AlgSHA1);
 
   hashcx = (* hashObj->create)();
   if (hashcx == NULL)

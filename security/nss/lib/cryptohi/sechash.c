@@ -87,7 +87,7 @@ sha1_NewContext(void) {
 	return (void *) PK11_CreateDigestContext(SEC_OID_SHA1);
 }
 
-SECHashObject SECHashObjects[] = {
+const SECHashObject SECHashObjects[] = {
   { 0,
     (void * (*)(void)) null_hash_new_context,
     (void * (*)(void *)) null_hash_clone_context,
@@ -125,6 +125,13 @@ SECHashObject SECHashObjects[] = {
 							PK11_DigestFinal
   },
 };
+
+const SECHashObject * 
+HASH_GetHashObject(HASH_HashType type)
+{
+    return &SECHashObjects[type];
+}
+
 
 unsigned int
 HASH_ResultLen(HASH_HashType type)

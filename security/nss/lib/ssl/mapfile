@@ -39,7 +39,7 @@ NSS_3.2 {               # NSS 3.2 release
         NSS_SetDomesticPolicy;
         NSS_SetExportPolicy;
         NSS_SetFrancePolicy;
-        SSL3_SendAlert;
+#       SSL3_SendAlert;
         SSL_AuthCertificate;
         SSL_AuthCertificateHook;
         SSL_BadCertHook;
@@ -63,12 +63,13 @@ NSS_3.2 {               # NSS 3.2 release
         SSL_ForceHandshake;
         SSL_GetClientAuthDataHook;
         SSL_GetSessionID;
+	SSL_GetStatistics;
         SSL_HandshakeCallback;
-        SSL_ImplementedCiphers;
+        SSL_ImplementedCiphers;			# data
         SSL_ImportFD;
         SSL_InheritMPServerSIDCache;
         SSL_InvalidateSession;
-        SSL_NumImplementedCiphers;
+        SSL_NumImplementedCiphers;		# data
         SSL_OptionGet;
         SSL_OptionGetDefault;
         SSL_OptionSet;
@@ -90,12 +91,6 @@ NSS_3.2 {               # NSS 3.2 release
         SSL_SetPolicy;
         SSL_SetSockPeerID;
         SSL_SetURL;
-        ssl3_hch_sid_cache_hits;
-        ssl3_hch_sid_cache_misses;
-        ssl3_hch_sid_cache_not_ok;
-        ssl3_hsh_sid_cache_hits;
-        ssl3_hsh_sid_cache_misses;
-        ssl3_hsh_sid_cache_not_ok;
     local:
         *;
 };
