@@ -31,7 +31,7 @@ class nsIPrefMigration : public nsISupports
 
     //NS_IMETHOD Startup() = 0;
     //NS_IMETHOD Shutdown()= 0;
-    NS_IMETHOD ProcessPrefs(char*, char*)=0;
+    NS_IMETHOD ProcessPrefs(char*, char*, nsresult*)=0;
 
 };
 
