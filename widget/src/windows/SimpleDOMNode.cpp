@@ -195,7 +195,7 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
   if (!content || !domElement) 
     return E_FAIL;
   PRInt32 numAttribs;
-  content->GetAttributeCount(numAttribs);
+  content->GetAttrCount(numAttribs);
   if (numAttribs > aMaxAttribs)
     numAttribs = aMaxAttribs;
   *aNumAttribs = NS_STATIC_CAST(unsigned short, numAttribs);
@@ -208,11 +208,11 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
     nsAutoString attributeValue;
     const PRUnichar *pszAttributeName; 
 
-    if (NS_SUCCEEDED(content->GetAttributeNameAt(index, nameSpaceID, *getter_AddRefs(nameAtom), *getter_AddRefs(prefixAtom)))) {
+    if (NS_SUCCEEDED(content->GetAttrNameAt(index, nameSpaceID, *getter_AddRefs(nameAtom), *getter_AddRefs(prefixAtom)))) {
       aNameSpaceIDs[index] = NS_STATIC_CAST(short, nameSpaceID);
       nameAtom->GetUnicode(&pszAttributeName);
       aAttribNames[index] = ::SysAllocString(pszAttributeName);
-      if (NS_SUCCEEDED(content->GetAttribute(nameSpaceID, nameAtom, attributeValue))) 
+      if (NS_SUCCEEDED(content->GetAttr(nameSpaceID, nameAtom, attributeValue))) 
         aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }
   }
