@@ -305,7 +305,11 @@ Rights Reserved.
 		<template> 
           <rule iscontainer="true" isempty="false">
             <menupopup>
-              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                 <menupopup>
                   <menuitem uri="..." value="&fileHereMenu.label;"/>
                   <menuseparator/>
@@ -315,7 +319,11 @@ Rights Reserved.
           </rule>
           <rule>
             <menupopup>
-			<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" />
+			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
             </menupopup>
           </rule>
         </template>
@@ -325,7 +333,11 @@ Rights Reserved.
 		<template>
           <rule iscontainer="true" isempty="false">
             <menupopup>
-			<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
               <menupopup>
                 <menuitem uri="..." value="&fileHereMenu.label;"/>
                 <menuseparator/>
@@ -335,7 +347,11 @@ Rights Reserved.
 		  </rule>
           <rule>
             <menupopup>
-			<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgCopyMessage(event.target)" />
+			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgCopyMessage(event.target)" 
+				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
 			</menupopup>
           </rule>
         </template>
