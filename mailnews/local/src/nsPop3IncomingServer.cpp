@@ -138,13 +138,6 @@ NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         DotFix,
                         "dot_fix")
 
-NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
-                        LimitMessageSize,
-                        "limit_message_size")
-
-NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
-                       MaxMessageSize,
-                       "max_size")
 nsresult 
 nsPop3IncomingServer::GetPop3CapabilityFlags(PRUint32 *flags)
 {

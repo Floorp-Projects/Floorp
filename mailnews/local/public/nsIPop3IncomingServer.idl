@@ -29,8 +29,6 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean deleteMailLeftOnServer;
   attribute boolean authLogin;
   attribute boolean dotFix;
-  attribute boolean limitMessageSize;
-  attribute long maxMessageSize;
   attribute unsigned long pop3CapabilityFlags;
 };
 

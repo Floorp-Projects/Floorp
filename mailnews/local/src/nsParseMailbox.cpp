@@ -985,13 +985,19 @@ int nsParseMailMessageState::InternSubject (struct message_header *header)
 	L = header->length;
 
 
+  PRUint32 flags;
+  (void)m_newMsgHdr->GetFlags(&flags);
 	/* strip "Re: " */
+	/* We trust the X-Mozilla-Status line to be the smartest in almost
+	 all things.  One exception, however, is the HAS_RE flag.  Since
+	 we just parsed the subject header anyway, we expect that parsing
+	 to be smartest.  (After all, what if someone just went in and
+	 edited the subject line by hand?) */
 	if (msg_StripRE((const char **) &key, &L))
-	{
-        PRUint32 flags;
-        (void)m_newMsgHdr->GetFlags(&flags);
-		m_newMsgHdr->SetFlags(flags | MSG_FLAG_HAS_RE);
-	}
+    flags |= MSG_FLAG_HAS_RE;
+	else
+    flags &= ~MSG_FLAG_HAS_RE;
+	m_newMsgHdr->SetFlags(flags); // this *does not* update the mozilla-status header in the local folder
 
 //  if (!*key) return 0; /* To catch a subject of "Re:" */
 
@@ -1105,11 +1111,6 @@ int nsParseMailMessageState::FinalizeHeaders()
 			flags &= ~MSG_FLAG_RUNTIME_ONLY;
 			priorityFlags = (nsMsgPriorityValue) ((flags & MSG_FLAG_PRIORITIES) >> 13);
 			flags &= ~MSG_FLAG_PRIORITIES;
-		  /* We trust the X-Mozilla-Status line to be the smartest in almost
-			 all things.  One exception, however, is the HAS_RE flag.  Since
-			 we just parsed the subject header anyway, we expect that parsing
-			 to be smartest.  (After all, what if someone just went in and
-			 edited the subject line by hand?) */
 		}
 		delta = (m_headerstartpos +
 			 (mozstatus->value - m_headers.GetBuffer()) -
@@ -1837,7 +1838,10 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 //	NS_RELEASE(myThis);
 	// Make sure no one else is writing into this folder
 	if (destIFolder && (err = destIFolder->AcquireSemaphore (myISupports)) != 0)
+  {
+    NS_ASSERTION(PR_FALSE, "why is this folder busy?");
 		return err;
+  }
 
 	NS_ASSERTION(m_inboxFileStream != 0, "no input file stream");
 	if (m_inboxFileStream == 0)

@@ -637,15 +637,19 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 
         m_pop3Server->GetLeaveMessagesOnServer(&m_pop3ConData->leave_on_server);
         PRBool limitMessageSize = PR_FALSE;
-        m_pop3Server->GetLimitMessageSize(&limitMessageSize);
-        if (limitMessageSize)
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
+        if (server)
         {
-            PRInt32 max_size = 0;
-            m_pop3Server->GetMaxMessageSize(&max_size);
-            if (max_size == 0) // default value
-                m_pop3ConData->size_limit = 50 * 1024;
-            else
-                m_pop3ConData->size_limit = max_size * 1024;
+          server->GetLimitMessageSize(&limitMessageSize);
+          if (limitMessageSize)
+          {
+              PRInt32 max_size = 0;
+              server->GetMaxMessageSize(&max_size);
+              if (max_size == 0) // default value
+                  m_pop3ConData->size_limit = 50 * 1024;
+              else
+                  m_pop3ConData->size_limit = max_size * 1024;
+          }
         }
 	}
 
