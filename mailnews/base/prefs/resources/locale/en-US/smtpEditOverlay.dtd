@@ -6,3 +6,4 @@
 <!ENTITY neverSecure.label "Never">
 <!ENTITY alwaysSecure.label "Always">
 <!ENTITY sometimesSecure.label "When available">
+<!ENTITY smtpEditTitle.label "SMTP Server">
