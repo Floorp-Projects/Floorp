@@ -391,8 +391,8 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else {
                 if (!spoolfile->failed()) {
-                    nsIOFileStream* m_outFileStream;
-                    nsParseNewMailState *m_newMailParser;
+                    nsIOFileStream* outFileStream;
+                    nsParseNewMailState *newMailParser;
                         
                     nsCOMPtr<nsIFileSpec> mailDirectory;
                     rv = in_server->GetLocalPath(getter_AddRefs(mailDirectory));
@@ -402,10 +402,10 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                     nsFileSpec fileSpec;
                     mailDirectory->GetFileSpec(&fileSpec);
                     fileSpec += "Inbox";
-                    m_outFileStream =
+                    outFileStream =
                         new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
-                    if (m_outFileStream) {
-                        m_outFileStream->seek(fileSpec.GetFileSize());
+                    if (outFileStream) {
+                        outFileStream->seek(fileSpec.GetFileSize());
                     }
                     else {
                         rv = NS_ERROR_UNEXPECTED;
@@ -413,12 +413,13 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                     }
                         
                     // create a new mail parser
-                    m_newMailParser = new nsParseNewMailState;
-                    if (m_newMailParser == nsnull) {
+                    newMailParser = new nsParseNewMailState;
+                    if (newMailParser == nsnull) {
                         rv = NS_ERROR_OUT_OF_MEMORY;
                         goto freebuff_and_unlock;
                     }
                         
+                    nsCOMPtr <nsIMsgParseMailMsgState> iParseMailMsgState = NS_STATIC_CAST(nsIMsgParseMailMsgState*, newMailParser);
                     nsCOMPtr <nsIFolder> serverFolder;
                     rv =
                         in_server->GetRootFolder(getter_AddRefs(serverFolder));
@@ -438,8 +439,8 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                                                          getter_AddRefs(inbox));
                       }
                     }
-                    rv = m_newMailParser->Init(serverFolder, inbox, 
-                                               fileSpec, m_outFileStream);
+                    rv = newMailParser->Init(serverFolder, inbox, 
+                                               fileSpec, outFileStream);
                     if (NS_FAILED(rv))
                         goto freebuff_and_unlock;
                         
@@ -479,8 +480,8 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
                                 //     fprintf(stderr, "%d: %s", numlines, buffer);
 
-                                m_newMailParser->HandleLine(buffer, PL_strlen(buffer));
-                                *m_outFileStream << buffer;
+                                newMailParser->HandleLine(buffer, PL_strlen(buffer));
+                                *outFileStream << buffer;
 
                                 numlines++;
 
@@ -488,14 +489,14 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                                     !spoolfile->eof()) {
                                     PL_strcpy(buffer, "X-Mozilla-Status: 8000"
                                               MSG_LINEBREAK);
-                                    m_newMailParser->HandleLine(buffer,
+                                    newMailParser->HandleLine(buffer,
                                                                 PL_strlen(buffer));
-                                    *m_outFileStream << buffer;
+                                    *outFileStream << buffer;
                                     PL_strcpy(buffer, "X-Mozilla-Status2: 00000000"
                                               MSG_LINEBREAK);
-                                    m_newMailParser->HandleLine(buffer,
+                                    newMailParser->HandleLine(buffer,
                                                                 PL_strlen(buffer));
-                                    *m_outFileStream << buffer;
+                                    *outFileStream << buffer;
                                             
                                 }
                             }
@@ -503,14 +504,12 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                         
                         
                     // END
-                    m_outFileStream->flush();	// try this.
-                    m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
-                    if (m_outFileStream->is_open())
-                      m_outFileStream->close();
-                    delete m_outFileStream;
-                    m_outFileStream = 0;
-                    delete m_newMailParser;
-                    m_newMailParser = nsnull;
+                    outFileStream->flush();	// try this.
+                    newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
+                    if (outFileStream->is_open())
+                      outFileStream->close();
+                    delete outFileStream;
+                    outFileStream = 0;
 
                     // truncate the spool file here.
                     nsFileSpec * filespecForTrunc =
