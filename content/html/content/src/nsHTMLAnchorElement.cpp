@@ -26,6 +26,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsHTMLAtoms.h"
@@ -188,7 +189,6 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 
 
@@ -416,6 +416,32 @@ nsHTMLAnchorElement::SetHref(const nsAReadableString& aValue)
                                                           aValue, PR_TRUE);
 }
 
+NS_IMETHODIMP
+nsHTMLAnchorElement::GetTarget(nsAWritableString& aValue)
+{
+  aValue.Truncate();
+
+  nsresult rv;
+  rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_HTML,
+                                                        nsHTMLAtoms::target,
+                                                        aValue);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    nsCOMPtr<nsIHTMLDocument>doc(do_QueryInterface(mDocument));
+    if (doc) {
+      rv = doc->GetBaseTarget(aValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetTarget(const nsAReadableString& aValue)
+{
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_HTML,
+                                                          nsHTMLAtoms::target,
+                                                          aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
