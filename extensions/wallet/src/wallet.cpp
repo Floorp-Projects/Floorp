@@ -425,7 +425,15 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
         return rv;
     }
 
+    /* Turn off the cache since we are doing our own caching of this file */
+
+    nsLoadFlags loadAttribs = 0;
+    pChannel->GetLoadAttributes(&loadAttribs);
+    loadAttribs |= nsIChannel::FORCE_RELOAD;
+    pChannel->SetLoadAttributes(loadAttribs);
+
     /* Trigger the async download */
+
     rv = pChannel->AsyncRead(listener,  // IStreamListener consumer
                              nsnull);   // ISupports context
 
