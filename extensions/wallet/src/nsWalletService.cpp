@@ -44,6 +44,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
 
+// for making the leap from nsIDOMWindowInternal -> nsIPresShell
+#include "nsIScriptGlobalObject.h"
+
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
@@ -89,13 +92,39 @@ NS_IMETHODIMP nsWalletlibService::WALLET_DeleteAll() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* status) {
-  ::WLLT_RequestToCapture(shell, win, status);
+NS_IMETHODIMP
+nsWalletlibService::WALLET_RequestToCapture(nsIDOMWindowInternal* aWin,
+                                            PRUint32* status)
+{
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin);
+  nsCOMPtr<nsIDocShell> docShell; 
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
+
+  nsCOMPtr<nsIPresShell> presShell;
+  if(docShell) 
+   docShell->GetPresShell(getter_AddRefs(presShell));
+  
+  ::WLLT_RequestToCapture(presShell, aWin, status);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win, PRBool* status) {
-  return ::WLLT_Prefill(shell, quick, win);
+NS_IMETHODIMP
+nsWalletlibService::WALLET_Prefill(PRBool quick,
+                                   nsIDOMWindowInternal* aWin,
+                                   PRBool* status)
+{
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  scriptGlobalObject = do_QueryInterface(aWin);
+  nsCOMPtr<nsIDocShell> docShell; 
+  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
+  
+  nsCOMPtr<nsIPresShell> presShell;
+  if(docShell)
+    docShell->GetPresShell(getter_AddRefs(presShell));
+
+  return ::WLLT_Prefill(presShell, quick, aWin);
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){

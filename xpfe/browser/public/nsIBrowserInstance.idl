@@ -47,14 +47,6 @@ interface nsIBrowserInstance : nsISupports {
     void gotoHistoryIndex(in PRInt32 index);
 	void updateGoMenu(in nsIDOMNode goMenu);
     
-    // Wallet (should reside elsewhere, somehow).
-    boolean walletPreview(in nsIDOMWindowInternal win, in nsIDOMWindowInternal form);
- 
-    boolean walletChangePassword();
-    boolean walletQuickFillin(in nsIDOMWindowInternal win);
-    PRUint32 walletRequestToCapture(in nsIDOMWindowInternal win);
-    
-    
     // Infrastructure.
     void init();
     void setContentWindow( in nsIDOMWindowInternal aWindow );

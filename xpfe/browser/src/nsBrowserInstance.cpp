@@ -97,7 +97,6 @@
 #include "nsFileLocations.h"
 
 #include "nsIFileSpec.h"
-#include "nsIWalletService.h"
 
 #include "nsCURILoader.h"
 #include "nsIContentHandler.h"
@@ -126,8 +125,6 @@
 #include "nsISecureBrowserUI.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -1008,134 +1005,6 @@ nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex)
 
 }
 
-NS_IMETHODIMP    
-nsBrowserInstance::WalletPreview(nsIDOMWindowInternal* aWin, nsIDOMWindowInternal* aForm, PRBool* status)
-{
-  NS_PRECONDITION(aForm != nsnull, "null ptr");
-  if (! aForm)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  scriptGlobalObject = do_QueryInterface(aForm); 
-  nsCOMPtr<nsIDocShell> docShell; 
-  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
-
-  nsCOMPtr<nsIPresShell> presShell;
-  if(docShell)
-   docShell->GetPresShell(getter_AddRefs(presShell));
-  nsIWalletService *walletservice;
-  nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(presShell, PR_FALSE, aForm, status);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-    if (NS_FAILED(res)) { /* this just means that there was nothing to prefill */
-      return NS_OK;
-    }
-  } else {
-    return res;
-  }
-
-   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWin));
-   NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIScriptContext> scriptContext;
-   sgo->GetContext(getter_AddRefs(scriptContext));
-   NS_ENSURE_TRUE(scriptContext, NS_ERROR_FAILURE);
-
-   JSContext* jsContext = (JSContext*)scriptContext->GetNativeContext();
-   NS_ENSURE_TRUE(jsContext, NS_ERROR_FAILURE);
-
-   void* mark;
-   jsval* argv;
-
-   argv = JS_PushArguments(jsContext, &mark, "sss", "chrome://communicator/content/wallet/WalletPreview.xul", "_blank", 
-                  //"chrome,dialog=yes,modal=yes,all");
-                  "chrome,modal=yes,dialog=yes,all,width=504,height=436");
-   NS_ENSURE_TRUE(argv, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIDOMWindowInternal> newWindow;
-   aWin->OpenDialog(jsContext, argv, 3, getter_AddRefs(newWindow));
-   JS_PopArguments(jsContext, mark);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsBrowserInstance::WalletChangePassword(PRBool* status)
-{
-  nsIWalletService *walletservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_ChangePassword(status);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-  }
-  return NS_OK;
-}
-
-#include "nsIDOMHTMLDocument.h"
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
-NS_IMETHODIMP    
-nsBrowserInstance::WalletQuickFillin(nsIDOMWindowInternal* aWin, PRBool* status)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aWin);
-  nsCOMPtr<nsIDocShell> docShell; 
-  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
-
-  nsCOMPtr<nsIPresShell> presShell;
-  if(docShell)
-   docShell->GetPresShell(getter_AddRefs(presShell));
-  nsIWalletService *walletservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(presShell, PR_TRUE, aWin, status);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-    return NS_OK;
-  } else {
-    return res;
-  }
-}
-
-NS_IMETHODIMP    
-nsBrowserInstance::WalletRequestToCapture(nsIDOMWindowInternal* aWin, PRUint32* status)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aWin);
-  nsCOMPtr<nsIDocShell> docShell; 
-  scriptGlobalObject->GetDocShell(getter_AddRefs(docShell)); 
-
-  nsCOMPtr<nsIPresShell> presShell;
-  if(docShell) 
-   docShell->GetPresShell(getter_AddRefs(presShell));
-  nsIWalletService *walletservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_RequestToCapture(presShell, aWin, status);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-    return NS_OK;
-  } else {
-    return res;
-  }
-}
 
 NS_IMETHODIMP    
 nsBrowserInstance::Init()

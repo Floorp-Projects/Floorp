@@ -42,7 +42,6 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsIWalletService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
@@ -85,8 +84,6 @@
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
-static NS_DEFINE_CID(kBrowserContentHandlerCID, NS_BROWSERCONTENTHANDLER_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
@@ -1007,13 +1004,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
 
-  // Fire up the walletService. Why the heck is this here?
-  NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
-//  if (NS_SUCCEEDED(rv))
-//  {
-//    // this is a no-op. What is going on?
-//    walletService->WALLET_FetchFromNetCenter();
-//  }
 
 	InitCachePrefs();
 	
