@@ -688,6 +688,8 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleE
 {
   if (result)
     *result = nsnull;
+  if (!mDatabase)
+    GetDatabase(nsnull);
   if (mDatabase)
 		return mDatabase->EnumerateMessages(result);
   return NS_ERROR_UNEXPECTED;
