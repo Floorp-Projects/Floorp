@@ -140,6 +140,10 @@ Contributor(s): ______________________________________. -->
 	      <menuitem accesskey="&sendLinkCmd.label;" observes="Browser:SendLink"/>
 	      <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
 	      <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
+	      <menuseparator/>
+	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
+	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
+	      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
 	      <menu value="&offlineMenu.label;" disabled ="true"  accesskey="&offlineMenu.accesskey;">
 	        <menupopup>
@@ -148,10 +152,6 @@ Contributor(s): ______________________________________. -->
 	          <menuitem accesskey="&offlineSynchronizeCmd.accesskey;" observes="Browser:Synchronize"/>
 	        </menupopup>
 	      </menu>
-	      <menuseparator/>
-	      <menuitem accesskey="&printSetupCmd.accesskey;" observes="Browser:PrintSetup"/>
-	      <menuitem accesskey="&printPreviewCmd.accesskey;" observes="Browser:PrintPreview"/>
-	      <menuitem accesskey="&printCmd.accesskey;" key="printKb" observes="Browser:Print"/>
 	      <menuseparator />
 	  </menupopup>
 	</menu>
