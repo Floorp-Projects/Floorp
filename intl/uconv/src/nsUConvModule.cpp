@@ -113,13 +113,92 @@ nsUConvModule::Shutdown()
 {
 }
 
+//----------------------------------------
+// This is a mid-range hack, in terms of ugliness.
+// 
+//     * shaver considers rewriting nsUConvModule.cpp
+// <jag> shaver: don't do it, not today. Long term
+//
+// So blame jag.
+
+struct Components {
+  nsModuleComponentInfo info;
+  const char* mCharsetSrc;
+  const char* mCharsetDest;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+  { { "Charset Conversion Manager", NS_ICHARSETCONVERTERMANAGER_CID,
+      NS_CHARSETCONVERTERMANAGER_CONTRACTID, NS_NewCharsetConverterManager },
+    NULL, NULL, },
+
+  { { "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
+      NS_UNICODEDECODEHELPER_CONTRACTID, NS_NewUnicodeDecodeHelper },
+    NULL, NULL, },
+
+  { { "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
+      NS_UNICODEENCODEHELPER_CONTRACTID, NS_NewUnicodeEncodeHelper },
+    NULL, NULL, },
+
+  { { "Platform Charset Information", NS_PLATFORMCHARSET_CID,
+      NS_PLATFORMCHARSET_CONTRACTID, NS_NewPlatformCharset },
+    NULL, NULL, },
+
+  { { "Charset Alias Information",  NS_CHARSETALIAS_CID,
+      NS_CHARSETALIAS_CONTRACTID, NS_NewCharsetAlias },
+    NULL, NULL, },
+
+  { { NS_CHARSETMENU_PID, NS_CHARSETMENU_CID,
+      NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
+      NS_NewCharsetMenu},
+    NULL, NULL, },
+
+  { { "Text To Sub URI Helper", NS_TEXTTOSUBURI_CID,
+      NS_ITEXTTOSUBURI_CONTRACTID, NS_NewTextToSubURI },
+    NULL, NULL, },
+
+  { { "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID,
+      NS_ISO88591TOUNICODE_CONTRACTID, NS_NewISO88591ToUnicode },
+    "ISO-8859-1", "Unicode", },
+
+  { { "windows-1252 To Unicode Converter", NS_CP1252TOUNICODE_CID,
+      NS_CP1252TOUNICODE_CONTRACTID, NS_NewCP1252ToUnicode },
+    "windows-1252", "Unicode", },
+
+  { { "x-mac-roman To Unicode Converter", NS_MACROMANTOUNICODE_CID,
+      NS_MACROMANTOUNICODE_CONTRACTID, NS_NewMacRomanToUnicode },
+    "x-mac-roman", "Unicode", },
+
+  { { "UTF-8 To Unicode Converter", NS_UTF8TOUNICODE_CID,
+      NS_UTF8TOUNICODE_CONTRACTID, NS_NewUTF8ToUnicode },
+    "UTF-8", "Unicode", },
+
+  { { "Unicode To ISO-8859-1 Converter", NS_UNICODETOISO88591_CID,
+      NS_UNICODETOISO88591_CONTRACTID, NS_NewUnicodeToISO88591 },
+    "Unicode", "ISO-8859-1", },
+
+  { { "Unicode To windows-1252 Converter", NS_UNICODETOCP1252_CID,
+      NS_UNICODETOCP1252_CONTRACTID, NS_NewUnicodeToCP1252 },
+    "Unicode", "windows-1252", },
+
+  { { "Unicode To x-mac-roman Converter", NS_UNICODETOMACROMAN_CID,
+      NS_UNICODETOMACROMAN_CONTRACTID, NS_NewUnicodeToMacRoman },
+    "Unicode", "x-mac-roman", },
+
+  { { "Unicode To UTF-8 Converter", NS_UNICODETOUTF8_CID,
+      NS_UNICODETOUTF8_CONTRACTID, NS_NewUnicodeToUTF8 },
+    "Unicode", "UTF-8", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
 NS_IMETHODIMP
 nsUConvModule::GetClassObject(nsIComponentManager *aCompMgr,
                               const nsCID& aClass,
                               const nsIID& aIID,
                               void** r_classObj)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_UNEXPECTED;
 
   // Defensive programming: Initialize *r_classObj in case of error below
   if (!r_classObj) {
@@ -137,53 +216,11 @@ nsUConvModule::GetClassObject(nsIComponentManager *aCompMgr,
 
   nsCOMPtr<nsIGenericFactory> fact;
 
-  if (aClass.Equals(kCharsetConverterManagerCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewCharsetConverterManager);
-  }
-  else if (aClass.Equals(kUnicodeDecodeHelperCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeDecodeHelper);
-  }
-  else if (aClass.Equals(kUnicodeEncodeHelperCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeEncodeHelper);
-  }
-  else if (aClass.Equals(kPlatformCharsetCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewPlatformCharset);
-  }
-  else if (aClass.Equals(kCharsetAliasCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewCharsetAlias);
-  }
-  else if (aClass.Equals(kCharsetMenuCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewCharsetMenu);
-  }
-  else if (aClass.Equals(kTextToSubURICID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewTextToSubURI);
-  }
-  else if (aClass.Equals(kISO88591ToUnicodeCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewISO88591ToUnicode);
-  }
-  else if (aClass.Equals(kCP1252ToUnicodeCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewCP1252ToUnicode);
-  }
-  else if (aClass.Equals(kMacRomanToUnicodeCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewMacRomanToUnicode);
-  }
-  else if (aClass.Equals(kUTF8ToUnicodeCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUTF8ToUnicode);
-  }
-  else if (aClass.Equals(kUnicodeToISO88591CID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToISO88591);
-  }
-  else if (aClass.Equals(kUnicodeToCP1252CID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToCP1252);
-  }
-  else if (aClass.Equals(kUnicodeToMacRomanCID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToMacRoman);
-  }
-  else if (aClass.Equals(kUnicodeToUTF8CID)) {
-    rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewUnicodeToUTF8);
-  }
-  else {
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
+  for (unsigned int i = 0; i < NUM_COMPONENTS; i++) {
+    if (aClass.Equals(gComponents[i].info.mCID)) {
+      rv = NS_NewGenericFactory(getter_AddRefs(fact), &gComponents[i].info);
+      break;
+    }
   }
 
   if (fact) {
@@ -192,51 +229,6 @@ nsUConvModule::GetClassObject(nsIComponentManager *aCompMgr,
 
   return rv;
 }
-
-//----------------------------------------
-
-struct Components {
-  const char* mDescription;
-  const nsID* mCID;
-  const char* mContractID;
-  const char* mCharsetSrc;
-  const char* mCharsetDest;
-};
-
-// The list of components we register
-static Components gComponents[] = {
-  { "Charset Conversion Manager", &kCharsetConverterManagerCID,
-    NS_CHARSETCONVERTERMANAGER_CONTRACTID, NULL, NULL, },
-  { "Unicode Decode Helper", &kUnicodeDecodeHelperCID,
-    NS_UNICODEDECODEHELPER_CONTRACTID, NULL, NULL, },
-  { "Unicode Encode Helper", &kUnicodeEncodeHelperCID,
-    NS_UNICODEENCODEHELPER_CONTRACTID, NULL, NULL, },
-  { "Platform Charset Information", &kPlatformCharsetCID,
-    NS_PLATFORMCHARSET_CONTRACTID, NULL, NULL, },
-  { "Charset Alias Information",  &kCharsetAliasCID,
-    NS_CHARSETALIAS_CONTRACTID, NULL, NULL, },
-  { NS_CHARSETMENU_PID, &kCharsetMenuCID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID, NULL, NULL, },
-  { "Text To Sub URI Helper", &kTextToSubURICID,
-    NS_ITEXTTOSUBURI_CONTRACTID, NULL, NULL, },
-  { "ISO-8859-1 To Unicode Converter", &kISO88591ToUnicodeCID,
-    NS_ISO88591TOUNICODE_CONTRACTID, "ISO-8859-1", "Unicode", },
-  { "windows-1252 To Unicode Converter", &kCP1252ToUnicodeCID,
-    NS_CP1252TOUNICODE_CONTRACTID, "windows-1252", "Unicode", },
-  { "x-mac-roman To Unicode Converter", &kMacRomanToUnicodeCID,
-    NS_MACROMANTOUNICODE_CONTRACTID, "x-mac-roman", "Unicode", },
-  { "UTF-8 To Unicode Converter", &kUTF8ToUnicodeCID,
-    NS_UTF8TOUNICODE_CONTRACTID, "UTF-8", "Unicode", },
-  { "Unicode To ISO-8859-1 Converter", &kUnicodeToISO88591CID,
-    NS_UNICODETOISO88591_CONTRACTID, "Unicode", "ISO-8859-1", },
-  { "Unicode To windows-1252 Converter", &kUnicodeToCP1252CID,
-    NS_UNICODETOCP1252_CONTRACTID, "Unicode", "windows-1252", },
-  { "Unicode To x-mac-roman Converter", &kUnicodeToMacRomanCID,
-    NS_UNICODETOMACROMAN_CONTRACTID, "Unicode", "x-mac-roman", },
-  { "Unicode To UTF-8 Converter", &kUnicodeToUTF8CID,
-    NS_UNICODETOUTF8_CONTRACTID, "Unicode", "UTF-8", },
-};
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 NS_IMETHODIMP
 nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
@@ -268,20 +260,20 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                         cp->mContractID, aPath, PR_TRUE,
+    rv = aCompMgr->RegisterComponentSpec(cp->info.mCID, cp->info.mDescription,
+                                         cp->info.mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsUConvModule: unable to register %s component => %x\n",
-             cp->mDescription, rv);
+             cp->info.mDescription, rv);
 #endif
       break;
     }
 
     // register Unicode converter component info here.
     if (NULL != cp->mCharsetSrc) {
-      cid_string = cp->mCID->ToString();                             
+      cid_string = cp->info.mCID.ToString();                             
       sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);         
       nsCRT::free(cid_string);                                                    
 
@@ -306,7 +298,7 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
   else  {
 #ifdef DEBUG
       printf("nsUConvModule: unable to register %s component => %x\n",
-             cp->mDescription, rv);
+             cp->info.mDescription, rv);
 #endif
   }
 
@@ -327,11 +319,11 @@ nsUConvModule::UnregisterSelf(nsIComponentManager *aCompMgr,
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+    nsresult rv = aCompMgr->UnregisterComponentSpec(cp->info.mCID, aPath);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsUConvModule: unable to unregister %s component => %x\n",
-             cp->mDescription, rv);
+             cp->info.mDescription, rv);
 #endif
     }
     cp++;

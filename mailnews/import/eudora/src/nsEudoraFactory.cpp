@@ -38,9 +38,9 @@ static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
 ///////////////////////////////////////////////////////////////////////
 
 NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
-                                            nsIFile *aPath,
-                                            const char *registryLocation,
-                                            const char *componentType)
+                         nsIFile *aPath, const char *registryLocation,
+                         const char *componentType,
+                         const nsModuleComponentInfo *info)
 {	
 	nsresult rv;
 
@@ -67,7 +67,7 @@ static nsModuleComponentInfo components[] = {
 		NS_EUDORAIMPORT_CID,
 		"@mozilla.org/import/import-eudora;1", 
 		nsEudoraImportConstructor,
-		&EudoraRegister,
+		EudoraRegister,
 		nsnull
 	}
 };

@@ -226,6 +226,10 @@ nsViewModule::~nsViewModule(void)
     NS_ASSERTION(mObjCount <= 0, "Module released while having outstanding objects.");
 }
 
+static nsModuleComponentInfo ViewManagerCI = {
+  NULL, NS_VIEW_MANAGER_CID, NULL, nsViewManagerConstructor
+};
+
 //
 // The class object for us is just the factory and nothing more.
 //
@@ -244,7 +248,7 @@ nsViewModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass
     if (aClass.Equals(kCViewManager))
     {
         nsCOMPtr<nsIGenericFactory> factory;
-        rv = NS_NewGenericFactory(getter_AddRefs(factory), &nsViewManagerConstructor);
+        rv = NS_NewGenericFactory(getter_AddRefs(factory), &ViewManagerCI);
         if (NS_SUCCEEDED(rv))
         {
             rv = factory->QueryInterface(aIID, aFactory);

@@ -398,10 +398,10 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_INTERFACE_MAP_ENTRY(nsISupports)                                                       \
   NS_INTERFACE_MAP_END
 
-#define NS_IMPL_QUERY_INTERFACE1(_class, _i1)                                                 \
-  NS_INTERFACE_MAP_BEGIN(_class)                                                              \
-    NS_INTERFACE_MAP_ENTRY(_i1)                                                               \
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                                        \
+#define NS_IMPL_QUERY_INTERFACE1(_class, _i1)                                  \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                         \
   NS_INTERFACE_MAP_END
 
 #define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                                            \
@@ -1242,6 +1242,101 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
   }
 
 } // extern "C++"
+
+///////////////////////////////////////////////////////////////////////////////
+// Macros for implementing nsIClassInfo-related stuff.
+///////////////////////////////////////////////////////////////////////////////
+
+// include here instead of at the top because it requires the nsISupport decl
+#include "nsIClassInfo.h"
+
+#define NS_CLASSINFO_NAME(_class) _class##_classInfoGlobal
+#define NS_CI_INTERFACE_GETTER_NAME(_class) _class##_GetInterfacesHelper
+
+#define NS_DECL_CLASSINFO(_class)                                              \
+  extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *, nsIID ***);           \
+  nsIClassInfo *NS_CLASSINFO_NAME(_class);
+
+#define NS_IMPL_QUERY_CLASSINFO(_class)                                        \
+  if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                               \
+    extern nsIClassInfo *NS_CLASSINFO_NAME(_class);                            \
+    foundInterface = NS_STATIC_CAST(nsIClassInfo*, NS_CLASSINFO_NAME(_class)); \
+  } else
+
+#define NS_CLASSINFO_HELPER_BEGIN(_class, _c)                                  \
+NS_IMETHODIMP                                                                  \
+NS_CI_INTERFACE_GETTER_NAME(_class)(PRUint32 *count, nsIID ***array)           \
+{                                                                              \
+    *count = _c;                                                               \
+    *array = (nsIID **)nsMemory::Alloc(sizeof (nsIID *) * _c);
+
+#define NS_CLASSINFO_HELPER_ENTRY(_i, _interface)                              \
+    (*array)[_i] = (nsIID *)nsMemory::Clone(&NS_GET_IID(_interface),           \
+                                            sizeof(nsIID));
+
+#define NS_CLASSINFO_HELPER_END                                                \
+    return NS_OK;                                                              \
+}
+
+#define NS_IMPL_CI_INTERFACE_GETTER1(_class, _interface)                       \
+   NS_CLASSINFO_HELPER_BEGIN(_class, 1)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(0, _interface)                                  \
+   NS_CLASSINFO_HELPER_END
+
+#define NS_IMPL_QUERY_INTERFACE1_CI(_class, _i1)                               \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                         \
+    NS_IMPL_QUERY_CLASSINFO(_class)                                            \
+  NS_INTERFACE_MAP_END
+
+#define NS_IMPL_ISUPPORTS1_CI(_class, _interface)                              \
+  NS_IMPL_ADDREF(_class)                                                       \
+  NS_IMPL_RELEASE(_class)                                                      \
+  NS_IMPL_QUERY_INTERFACE1_CI(_class, _interface)                              \
+  NS_IMPL_CI_INTERFACE_GETTER1(_class, _interface)
+
+#define NS_IMPL_CI_INTERFACE_GETTER2(_class, _i1, _i2)                         \
+   NS_CLASSINFO_HELPER_BEGIN(_class, 2)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                         \
+     NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                         \
+   NS_CLASSINFO_HELPER_END
+
+#define NS_IMPL_QUERY_INTERFACE2_CI(_class, _i1, _i2)                          \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                         \
+    NS_IMPL_QUERY_CLASSINFO(_class)                                            \
+  NS_INTERFACE_MAP_END
+
+#define NS_IMPL_ISUPPORTS2_CI(_class, _i1, _i2)                                \
+  NS_IMPL_ADDREF(_class)                                                       \
+  NS_IMPL_RELEASE(_class)                                                      \
+  NS_IMPL_QUERY_INTERFACE2_CI(_class, _i1, _i2)                                \
+  NS_IMPL_CI_INTERFACE_GETTER2(_class, _i1, _i2)
+
+#define NS_IMPL_CI_INTERFACE_GETTER3(_class, _i1, _i2, _i3)                    \
+   NS_CLASSINFO_HELPER_BEGIN(_class, 3)                                        \
+     NS_CLASSINFO_HELPER_ENTRY(0, _i1)                                         \
+     NS_CLASSINFO_HELPER_ENTRY(1, _i2)                                         \
+     NS_CLASSINFO_HELPER_ENTRY(2, _i3)                                         \
+   NS_CLASSINFO_HELPER_END
+
+#define NS_IMPL_QUERY_INTERFACE3_CI(_class, _i1, _i2, _i3)                     \
+  NS_INTERFACE_MAP_BEGIN(_class)                                               \
+    NS_INTERFACE_MAP_ENTRY(_i1)                                                \
+    NS_INTERFACE_MAP_ENTRY(_i2)                                                \
+    NS_INTERFACE_MAP_ENTRY(_i3)                                                \
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, _i1)                         \
+    NS_IMPL_QUERY_CLASSINFO(_class)                                            \
+  NS_INTERFACE_MAP_END
+
+#define NS_IMPL_ISUPPORTS3_CI(_class, _i1, _i2, _i3)                           \
+  NS_IMPL_ADDREF(_class)                                                       \
+  NS_IMPL_RELEASE(_class)                                                      \
+  NS_IMPL_QUERY_INTERFACE3_CI(_class, _i1, _i2, _i3)                           \
+  NS_IMPL_CI_INTERFACE_GETTER3(_class, _i1, _i2, _i3)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Macros for checking the trueness of an expression passed in within an 

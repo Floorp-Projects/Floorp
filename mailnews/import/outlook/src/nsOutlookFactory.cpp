@@ -43,9 +43,9 @@ static NS_DEFINE_CID(kOutlookImportCID,    	NS_OUTLOOKIMPORT_CID);
 
 
 NS_METHOD OutlookRegister(nsIComponentManager *aCompMgr,
-                                            nsIFile *aPath,
-                                            const char *registryLocation,
-                                            const char *componentType)
+                          nsIFile *aPath, const char *registryLocation,
+                          const char *componentType,
+                          const nsModuleComponentInfo *info)
 {
 	nsresult rv;
 	
@@ -71,7 +71,7 @@ static nsModuleComponentInfo components[] = {
 		NS_OUTLOOKIMPORT_CID,
 		"@mozilla.org/import/import-outlook;1", 
 		nsOutlookImportConstructor,
-		&OutlookRegister,
+		OutlookRegister,
 		nsnull
 	}
 };

@@ -102,7 +102,8 @@ static NS_IMETHODIMP                                                  \
 _InstanceClass##RegSelf (nsIComponentManager *aCompMgr,               \
                          nsIFile *aPath,                              \
                          const char* registryLocation,                \
-                         const char* componentType)                   \
+                         const char* componentType,                   \
+                         const nsModuleComponentInfo *info)           \
 {                                                                     \
    nsCID cid = _CID;                                                  \
    return nsUConverterRegSelf( _From, _To, cid);                      \
@@ -110,7 +111,8 @@ _InstanceClass##RegSelf (nsIComponentManager *aCompMgr,               \
 static NS_IMETHODIMP                                                  \
 _InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
                            nsIFile *aPath,                            \
-                           const char* registryLocation)              \
+                           const char* registryLocation,              \
+                           const nsModuleComponentInfo *info)         \
 {                                                                     \
   printf("UnRegSelf " _From " to " _To "converter not implement\n");  \
   return NS_OK;                                                       \

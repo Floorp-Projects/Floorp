@@ -26,73 +26,137 @@
 
 #include "nsGenericFactory.h"
 #include "nsCRT.h"
-nsGenericFactory::nsGenericFactory(ConstructorProcPtr constructor)
-	: mConstructor(constructor), mDestructor(NULL)
+nsGenericFactory::nsGenericFactory(nsModuleComponentInfo *info)
+    : mInfo(info)
 {
-	NS_INIT_ISUPPORTS();
+    NS_INIT_ISUPPORTS();
+    if (mInfo && mInfo->mClassInfoGlobal)
+        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
 }
 
 nsGenericFactory::~nsGenericFactory()
 {
-	if (mDestructor != NULL)
-		(*mDestructor) ();
+    if (mInfo) {
+        if (mInfo->mFactoryDestructor)
+            mInfo->mFactoryDestructor();
+        if (mInfo->mClassInfoGlobal)
+            *mInfo->mClassInfoGlobal = 0;
+    }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsGenericFactory,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsGenericFactory,
                               nsIGenericFactory, 
-                              nsIFactory)
+                              nsIFactory,
+                              nsIClassInfo)
 
-NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+NS_IMETHODIMP nsGenericFactory::CreateInstance(nsISupports *aOuter,
+                                               REFNSIID aIID, void **aResult)
 {
-	return mConstructor(aOuter, aIID, aResult);
+    return mInfo->mConstructor(aOuter, aIID, aResult);
 }
 
 NS_IMETHODIMP nsGenericFactory::LockFactory(PRBool aLock)
 {
-	return NS_OK;
+    // XXX do we care if (mInfo->mFlags & THREADSAFE)?
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsGenericFactory::SetConstructor(ConstructorProcPtr constructor)
+NS_IMETHODIMP nsGenericFactory::GetInterfaces(PRUint32 *countp,
+                                              nsIID* **array)
 {
-	mConstructor = constructor;
-	return NS_OK;
+    if (!mInfo->mGetInterfacesProc) {
+        *countp = 0;
+        *array = nsnull;
+        return NS_OK;
+    }
+    return mInfo->mGetInterfacesProc(countp, array);
 }
 
-NS_IMETHODIMP nsGenericFactory::SetDestructor(DestructorProcPtr destructor)
+NS_IMETHODIMP nsGenericFactory::GetHelperForLanguage(PRUint32 language,
+                                                     nsISupports **helper)
 {
-	mDestructor = destructor;
-	return NS_OK;
+    if (mInfo->mGetLanguageHelperProc)
+        return mInfo->mGetLanguageHelperProc(language, helper);
+    *helper = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetContractID(char **aContractID)
+{
+    if (mInfo->mContractID) {
+        *aContractID = (char *)nsMemory::Alloc(strlen(mInfo->mContractID) + 1);
+        if (!*aContractID)
+            return NS_ERROR_OUT_OF_MEMORY;
+        strcpy(*aContractID, mInfo->mContractID);
+    } else {
+        *aContractID = nsnull;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID **aClassID)
+{
+    *aClassID = (nsCID *)nsMemory::Clone(&mInfo->mCID, sizeof(nsCID));
+    if (!*aClassID)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetImplementationLanguage(PRUint32 *langp)
+{
+    *langp = nsIClassInfo::LANGUAGE_CPP;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetFlags(PRUint32 *flagsp)
+{
+    *flagsp = mInfo->mFlags;
+    return NS_OK;
+}
+
+// nsIGenericFactory: component-info accessors
+NS_IMETHODIMP nsGenericFactory::SetComponentInfo(nsModuleComponentInfo *info)
+{
+    if (mInfo && mInfo->mClassInfoGlobal)
+        *mInfo->mClassInfoGlobal = 0;
+    mInfo = info;
+    if (mInfo && mInfo->mClassInfoGlobal)
+        *mInfo->mClassInfoGlobal = NS_STATIC_CAST(nsIClassInfo *, this);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetComponentInfo(nsModuleComponentInfo **infop)
+{
+    *infop = mInfo;
+    return NS_OK;
 }
 
 NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-	// sorry, aggregation not spoken here.
-	nsresult res = NS_ERROR_NO_AGGREGATION;
-	if (outer == NULL) {
-		nsGenericFactory* factory = new nsGenericFactory;
-		if (factory != NULL) {
-			res = factory->QueryInterface(aIID, aInstancePtr);
-			if (res != NS_OK)
-				delete factory;
-		} else {
-			res = NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
-	return res;
+    // sorry, aggregation not spoken here.
+    nsresult res = NS_ERROR_NO_AGGREGATION;
+    if (outer == NULL) {
+        nsGenericFactory* factory = new nsGenericFactory;
+        if (factory != NULL) {
+            res = factory->QueryInterface(aIID, aInstancePtr);
+            if (res != NS_OK)
+                delete factory;
+        } else {
+            res = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    return res;
 }
 
 NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
-                     nsIGenericFactory::ConstructorProcPtr constructor,
-                     nsIGenericFactory::DestructorProcPtr destructor)
+                     nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsIGenericFactory* fact;
     rv = nsGenericFactory::Create(NULL, NS_GET_IID(nsIGenericFactory), (void**)&fact);
     if (NS_FAILED(rv)) return rv;
-    rv = fact->SetConstructor(constructor);
-    if (NS_FAILED(rv)) goto error;
-    rv = fact->SetDestructor(destructor);
+    rv = fact->SetComponentInfo(info);
     if (NS_FAILED(rv)) goto error;
     *result = fact;
     return rv;
@@ -177,7 +241,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
         nsModuleComponentInfo* desc = mComponents;
         for (PRUint32 i = 0; i < mComponentCount; i++) {
             if (desc->mCID.Equals(aClass)) {
-                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc->mConstructor);
+                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
                 if (NS_FAILED(rv)) return rv;
 
                 (void)mFactories.Put(&key, fact);
@@ -192,7 +256,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
         nsCRT::free(cs);
 #endif
         // XXX put in stop-gap so that we don't search for this one again
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
+        return NS_ERROR_FACTORY_NOT_REGISTERED;
     }
   found:    
     rv = fact->QueryInterface(aIID, r_classObj);
@@ -226,7 +290,8 @@ nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
         // Call the registration hook of the component, if any
         if (cp->mRegisterSelfProc)
         {
-            rv = cp->mRegisterSelfProc(aCompMgr, aPath, registryLocation, componentType);
+            rv = cp->mRegisterSelfProc(aCompMgr, aPath, registryLocation,
+                                       componentType, cp);
             if (NS_FAILED(rv)) {
 #ifdef DEBUG
                 printf("nsGenericModule %s: Register hook for %s component returned error => %x\n",
@@ -254,7 +319,7 @@ nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
         // Call the unregistration hook of the component, if any
         if (cp->mUnregisterSelfProc)
         {
-            cp->mUnregisterSelfProc(aCompMgr, aPath, registryLocation);
+            cp->mUnregisterSelfProc(aCompMgr, aPath, registryLocation, cp);
         }
         // Unregister the component
         nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);

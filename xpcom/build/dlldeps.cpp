@@ -134,7 +134,7 @@ void XXXNeverCalled()
     xptc_dummy();
     xptc_dummy2();
     XPTI_GetInterfaceInfoManager();
-    NS_NewGenericFactory(NULL, NULL, NULL);
+    NS_NewGenericFactory(NULL, NULL);
     NS_NewHashtableEnumerator(NULL, NULL, NULL, NULL);
     nsCWeakProxy(0, 0);
     nsCWeakReferent(0);

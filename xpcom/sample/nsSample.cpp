@@ -56,10 +56,13 @@ nsSampleImpl::~nsSampleImpl()
  * you could use NS_IMPL_ADDREF() and NS_IMPL_RELEASE() to take care of the
  * simple stuff, but you would have to create QueryInterface on your own.
  * nsSampleFactory.cpp is an example of this approach.
- * Notice that the second parameter to the macro is the static IID accessor
- * method, and NOT the #defined IID.
+ * Notice that the second parameter to the macro is name of the interface, and
+ * NOT the #defined IID.
+ *
+ * The _CI variant adds support for nsIClassInfo, which permits introspection
+ * and interface flattening.
  */
-NS_IMPL_ISUPPORTS1(nsSampleImpl, nsISample);
+NS_IMPL_ISUPPORTS1_CI(nsSampleImpl, nsISample);
 
 /**
  * Notice that in the protoype for this function, the NS_IMETHOD macro was

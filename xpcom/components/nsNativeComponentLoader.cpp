@@ -846,9 +846,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             nsCOMPtr<nsIFile> dllSpec;
             if (NS_SUCCEEDED(dll->GetDllSpec(getter_AddRefs(dllSpec))) && dllSpec)
             {
-              nsXPIDLCString leafName;
-              dllSpec->GetLeafName(getter_Copies(leafName));
-              fileName.AssignWithConversion(leafName);
+              nsXPIDLCString dllLeafName;
+              dllSpec->GetLeafName(getter_Copies(dllLeafName));
+              fileName.AssignWithConversion(dllLeafName);
             }
             statusMsg.Append(fileName);
             

@@ -650,7 +650,8 @@ static NS_METHOD
 RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                         nsIFile *aPath,
                         const char *registryLocation,
-                        const char *componentType)
+                        const char *componentType,
+                        const nsModuleComponentInfo *info)
 {
     // get the registry
     nsIRegistry* registry;

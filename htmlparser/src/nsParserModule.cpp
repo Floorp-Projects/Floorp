@@ -159,25 +159,6 @@ static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
 static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
-struct Components {
-  const char* mDescription;
-  const nsID* mCID;
-};
-
-static Components gComponents[] = {
-  { "Parser", &kParserCID },
-  { "Logging sink", &kLoggingSinkCID },
-  { "Well formed DTD", &kWellFormedDTDCID },
-  { "Navigator HTML DTD", &kNavDTDCID },
-  { "OTHER DTD", &kCOtherDTDCID },
-  { "Transitional DTD", &kCTransitionalDTDCID },
-  { "ViewSource DTD", &kViewSourceDTDCID },
-  { "HTML Content Sink Stream", &kHTMLContentSinkStreamCID },
-  { "ParserService", &kParserServiceCID },
-};
-
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]));
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
@@ -187,6 +168,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
+
+static nsModuleComponentInfo gComponents[] = {
+  { "Parser", NS_PARSER_CID, NULL, nsParserConstructor },
+  { "Logging sink", NS_LOGGING_SINK_CID, NULL, nsLoggingSinkConstructor },
+  { "Well formed DTD", NS_WELLFORMEDDTD_CID, NULL, CWellFormedDTDConstructor },
+  { "Navigator HTML DTD", NS_CNAVDTD_CID, NULL, CNavDTDConstructor },
+  { "OTHER DTD", NS_COTHER_DTD_CID, NULL, COtherDTDConstructor },
+  { "Transitional DTD", NS_CTRANSITIONAL_DTD_CID, NULL,
+    CTransitionalDTDConstructor },
+  { "ViewSource DTD", NS_VIEWSOURCE_DTD_CID, NULL, CViewSourceHTMLConstructor },
+  { "HTML Content Sink Stream", NS_HTMLCONTENTSINKSTREAM_CID, NULL,
+    nsHTMLContentSinkStreamConstructor },
+  { "ParserService", NS_PARSERSERVICE_CID, NULL, nsParserServiceConstructor }
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 //----------------------------------------------------------------------
 
@@ -205,19 +201,7 @@ protected:
   void Shutdown();
 
   PRBool mInitialized;
-  nsCOMPtr<nsIGenericFactory> mParserFactory;
-  nsCOMPtr<nsIGenericFactory> mParserNodeFactory;
-  nsCOMPtr<nsIGenericFactory> mLoggingSinkFactory;
-  nsCOMPtr<nsIGenericFactory> mWellFormedDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mNavHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mOtherHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mTransitionalHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mViewSourceHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mHTMLContentSinkStreamFactory;
-  nsCOMPtr<nsIGenericFactory> mParserServiceFactory;
 };
-
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
 nsParserModule::nsParserModule()
   : mInitialized(PR_FALSE)
@@ -230,7 +214,7 @@ nsParserModule::~nsParserModule()
   Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsParserModule, kIModuleIID)
+NS_IMPL_ISUPPORTS1(nsParserModule, nsIModule)
 
 nsresult
 nsParserModule::Initialize()
@@ -277,71 +261,11 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
 
   nsCOMPtr<nsIGenericFactory> fact;
 
-  if (aClass.Equals(kParserCID)) {
-    if (!mParserFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mParserFactory), 
-                                &nsParserConstructor);
+  for (unsigned int i = 0; i < NUM_COMPONENTS; i++) {
+    if (aClass.Equals(gComponents[i].mCID)) {
+      rv = NS_NewGenericFactory(getter_AddRefs(fact), &gComponents[i]);
+      break;
     }
-    fact = mParserFactory;
-  }
-  else if (aClass.Equals(kLoggingSinkCID)) {
-    if (!mLoggingSinkFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mLoggingSinkFactory), 
-                                &nsLoggingSinkConstructor);
-    }
-    fact = mLoggingSinkFactory;
-  }
-  else if (aClass.Equals(kWellFormedDTDCID)) {
-    if (!mWellFormedDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mWellFormedDTDFactory), 
-                                &CWellFormedDTDConstructor);
-    }
-    fact = mWellFormedDTDFactory;
-  }
-  else if (aClass.Equals(kNavDTDCID)) {
-    if (!mNavHTMLDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mNavHTMLDTDFactory), 
-                                &CNavDTDConstructor);
-    }
-    fact = mNavHTMLDTDFactory;
-  }
-  else if (aClass.Equals(kCOtherDTDCID)) {
-    if (!mOtherHTMLDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mOtherHTMLDTDFactory), 
-                                &COtherDTDConstructor);
-    }
-    fact = mOtherHTMLDTDFactory;
-  }
-  else if (aClass.Equals(kCTransitionalDTDCID)) {
-    if (!mTransitionalHTMLDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mTransitionalHTMLDTDFactory), 
-                                &CTransitionalDTDConstructor);
-    }
-    fact = mTransitionalHTMLDTDFactory;
-  }
-  else if (aClass.Equals(kViewSourceDTDCID)) {
-    if (!mViewSourceHTMLDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mViewSourceHTMLDTDFactory), 
-                                &CViewSourceHTMLConstructor);
-    }
-    fact = mViewSourceHTMLDTDFactory;
-  }
-  else if (aClass.Equals(kHTMLContentSinkStreamCID)) {
-    if (!mHTMLContentSinkStreamFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mHTMLContentSinkStreamFactory), 
-                                &nsHTMLContentSinkStreamConstructor);
-    }
-    fact = mHTMLContentSinkStreamFactory;
-  }
-  else if (aClass.Equals(kParserServiceCID)) {
-    if (!mParserServiceFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mParserServiceFactory), 
-                                &nsParserServiceConstructor);
-    }
-    fact = mParserServiceFactory;
-  }
-  else {
-		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
   }
 
   if (fact) {
@@ -358,10 +282,9 @@ nsParserModule::RegisterSelf(nsIComponentManager *aCompMgr,
                              const char* componentType)
 {
   nsresult rv = NS_OK;
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
+  nsModuleComponentInfo* cp = gComponents, *end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+    rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
                                          nsnull, aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
@@ -380,10 +303,9 @@ nsParserModule::UnregisterSelf(nsIComponentManager *aCompMgr,
                                nsIFile* aPath,
                                const char* registryLocation)
 {
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
+  nsModuleComponentInfo* cp = gComponents, *end = cp + NUM_COMPONENTS;
   while (cp < end) {
-    nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+    nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       printf("nsParserModule: unable to unregister %s component => %x\n",

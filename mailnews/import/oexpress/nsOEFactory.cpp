@@ -43,7 +43,8 @@ static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
 NS_METHOD OERegister(nsIComponentManager *aCompMgr,
                      nsIFile *aPath,
                      const char *registryLocation,
-                     const char *componentType)
+                     const char *componentType,
+                     const nsModuleComponentInfo *info)
 {
 	nsresult rv;
 	
@@ -70,7 +71,7 @@ static nsModuleComponentInfo components[] = {
 		NS_OEIMPORT_CID,
 		"@mozilla.org/import/import-oe;1", 
 		nsOEImportConstructor,
-		&OERegister,
+		OERegister,
 		nsnull
 	}
 };

@@ -32,7 +32,7 @@ NS_DECLARE_ID(kUTF8ToUnicodeCID,
 
 #define NS_UTF8TOUNICODE_CONTRACTID "@mozilla.org/intl/unicode/decoder;1?charset=UTF-8"
 
-//#define NS_ERROR_UCONV_NOUTF8TOUNICODE  \
+//#define NS_ERROR_UCONV_NOUTF8TOUNICODE  
 //  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_UCONV, 0x31)
 
 //----------------------------------------------------------------------

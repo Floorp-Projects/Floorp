@@ -46,7 +46,8 @@
 
 // This function is called at component registration time
 static NS_METHOD nsAccessProxyRegistrationProc(nsIComponentManager *aCompMgr,
-  nsIFile *aPath, const char *registryLocation, const char *componentType)
+  nsIFile *aPath, const char *registryLocation, const char *componentType,
+  const nsModuleComponentInfo *info)
 {
   // This function performs the extra step of installing us as
   // an application component. This makes sure that we're

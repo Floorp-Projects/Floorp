@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -101,6 +101,13 @@ void nsMsgDBModule::Shutdown()
     mMsgRetentionSettingsFactory = null_nsCOMPtr();
 }
 
+static nsModuleComponentInfo
+  MailDbInfo = { NULL, NS_MAILDB_CID, NULL, nsMailDatabaseConstructor },
+  NewsDbInfo = { NULL, NS_NEWSDB_CID, NULL, nsNewsDatabaseConstructor },
+  ImapDbInfo = { NULL, NS_IMAPDB_CID, NULL, nsImapMailDatabaseConstructor },
+  MsgRetentionInfo = { NULL, NS_MSG_RETENTIONSETTINGS_CID, NULL,
+                       nsMsgRetentionSettingsConstructor };
+
 // Create a factory object for creating instances of aClass.
 NS_IMETHODIMP nsMsgDBModule::GetClassObject(nsIComponentManager *aCompMgr,
                                const nsCID& aClass,
@@ -130,25 +137,29 @@ NS_IMETHODIMP nsMsgDBModule::GetClassObject(nsIComponentManager *aCompMgr,
     if (aClass.Equals(kCMailDB))
     {
         if (!mMailDBFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMailDBFactory), &nsMailDatabaseConstructor);
+            rv = NS_NewGenericFactory(getter_AddRefs(mMailDBFactory),
+                                      &MailDbInfo);
         fact = mMailDBFactory;
     }
     else if (aClass.Equals(kCNewsDB))
     {
         if (!mNewsDBFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mNewsDBFactory), &nsNewsDatabaseConstructor);
+            rv = NS_NewGenericFactory(getter_AddRefs(mNewsDBFactory),
+                                      &NewsDbInfo);
         fact = mNewsDBFactory;
     }
     else if (aClass.Equals(kCImapDB))
     {
         if (!mImapDBFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mImapDBFactory), &nsImapMailDatabaseConstructor);
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapDBFactory),
+                                      &ImapDbInfo);
         fact = mImapDBFactory;
     }
     else if (aClass.Equals(kCMsgRetentionSettings))
     {
       if (!mMsgRetentionSettingsFactory)
-        rv = NS_NewGenericFactory(getter_AddRefs(mMsgRetentionSettingsFactory), &nsMsgRetentionSettingsConstructor);
+        rv = NS_NewGenericFactory(getter_AddRefs(mMsgRetentionSettingsFactory),
+                                  &MsgRetentionInfo);
       fact = mMsgRetentionSettingsFactory;
     }
     if (fact)

@@ -1125,7 +1125,8 @@ JSCLAutoContext::~JSCLAutoContext()
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
 static NS_METHOD
 RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                 const char *registryLocation, const char *componentType)
+                 const char *registryLocation, const char *componentType,
+                 const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -1139,7 +1140,8 @@ RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static NS_METHOD
 UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                   const char *registryLocation)
+                   const char *registryLocation,
+                   const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =

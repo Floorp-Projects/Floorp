@@ -44,23 +44,6 @@
 #include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_CID(kMailboxUrlCID, NS_MAILBOXURL_CID);
-static NS_DEFINE_CID(kMailboxParserCID, NS_MAILBOXPARSER_CID);
-static NS_DEFINE_CID(kMailboxServiceCID, NS_MAILBOXSERVICE_CID);
-static NS_DEFINE_CID(kLocalMailFolderResourceCID, NS_LOCALMAILFOLDERRESOURCE_CID);
-static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
-#ifdef HAVE_MOVEMAIL
-static NS_DEFINE_CID(kMovemailServiceCID, NS_MOVEMAILSERVICE_CID);
-static NS_DEFINE_CID(kMovemailIncomingServerCID, NS_MOVEMAILINCOMINGSERVER_CID);
-#endif /* HAVE_MOVEMAIL */
-static NS_DEFINE_CID(kNoneServiceCID, NS_NONESERVICE_CID);
-static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
-static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
-static NS_DEFINE_CID(kNoIncomingServerCID, NS_NOINCOMINGSERVER_CID);
-static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
-static NS_DEFINE_CID(kLocalStringServiceCID, NS_MSG_LOCALSTRINGSERVICE_CID);
-
-
 // private factory declarations for each component we know how to produce
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailboxUrl)
@@ -81,334 +64,77 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMovemailIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
 
-// Module implementation for the sample library
-class nsMsgLocalModule : public nsIModule
-{
-public:
-    nsMsgLocalModule();
-    virtual ~nsMsgLocalModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mMailboxUrlFactory;
-    nsCOMPtr<nsIGenericFactory> mPop3UrlFactory;
-    nsCOMPtr<nsIGenericFactory> mMailboxParserFactory;
-    nsCOMPtr<nsIGenericFactory> mMailboxServiceFactory;
-    nsCOMPtr<nsIGenericFactory> mPop3ServiceFactory;
-#ifdef HAVE_MOVEMAIL
-    nsCOMPtr<nsIGenericFactory> mMovemailServiceFactory;
-#endif /* HAVE_MOVEMAIL */
-    nsCOMPtr<nsIGenericFactory> mNoneServiceFactory;
-    nsCOMPtr<nsIGenericFactory> mLocalMailFolderFactory;
-    nsCOMPtr<nsIGenericFactory> mParseMailMsgStateFactory;
-    nsCOMPtr<nsIGenericFactory> mPop3IncomingServerFactory;
-#ifdef HAVE_MOVEMAIL
-    nsCOMPtr<nsIGenericFactory> mMovemailIncomingServerFactory;
-#endif /* HAVE_MOVEMAIL */
-    nsCOMPtr<nsIGenericFactory> mNoIncomingServerFactory;
-    nsCOMPtr<nsIGenericFactory> mLocalStringBundleFactory;
-};
-
-
-nsMsgLocalModule::nsMsgLocalModule()
-    : mInitialized(PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-nsMsgLocalModule::~nsMsgLocalModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS1(nsMsgLocalModule, nsIModule)
-
-// Perform our one-time intialization for this module
-nsresult nsMsgLocalModule::Initialize()
-{
-    if (mInitialized)
-        return NS_OK;
-
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void nsMsgLocalModule::Shutdown()
-{
-    // Release the factory object
-    mMailboxUrlFactory = null_nsCOMPtr();
-    mPop3UrlFactory = null_nsCOMPtr();
-    mMailboxParserFactory = null_nsCOMPtr();
-    mMailboxServiceFactory = null_nsCOMPtr();
-    mPop3ServiceFactory = null_nsCOMPtr();
-#ifdef HAVE_MOVEMAIL
-    mMovemailServiceFactory = null_nsCOMPtr();
-#endif /* HAVE_MOVEMAIL */
-    mNoneServiceFactory = null_nsCOMPtr();
-    mLocalMailFolderFactory = null_nsCOMPtr();
-    mParseMailMsgStateFactory = null_nsCOMPtr();
-    mPop3IncomingServerFactory = null_nsCOMPtr();
-#ifdef HAVE_MOVEMAIL
-    mMovemailIncomingServerFactory = null_nsCOMPtr();
-#endif /* HAVE_MOVEMAIL */
-    mNoIncomingServerFactory = null_nsCOMPtr();
-    mLocalStringBundleFactory = null_nsCOMPtr();
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-    nsresult rv = NS_OK;
-
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj)
-        return NS_ERROR_INVALID_POINTER;
-
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    if (!mInitialized) 
-    {
-        rv = Initialize();
-        if (NS_FAILED(rv)) // Initialization failed! yikes!
-            return rv;
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsCOMPtr<nsIGenericFactory> fact;
-
-    if (aClass.Equals(kMailboxUrlCID))
-    {
-        if (!mMailboxUrlFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMailboxUrlFactory), &nsMailboxUrlConstructor);
-        fact = mMailboxUrlFactory;
-    }
-    else if (aClass.Equals(kPop3UrlCID))
-    {
-        if (!mPop3UrlFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mPop3UrlFactory), &nsPop3URLConstructor);
-        fact = mPop3UrlFactory;
-    }
-    else if (aClass.Equals(kMailboxParserCID)) 
-    {
-        if (!mMailboxParserFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMailboxParserFactory), &nsMsgMailboxParserConstructor);
-        fact = mMailboxParserFactory;
-    }
-    else if (aClass.Equals(kMailboxServiceCID)) 
-    {
-        if (!mMailboxServiceFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMailboxServiceFactory), &nsMailboxServiceConstructor);
-        fact = mMailboxServiceFactory;
-    }
-    else if (aClass.Equals(kPop3ServiceCID)) 
-    {
-        if (!mPop3ServiceFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mPop3ServiceFactory), &nsPop3ServiceConstructor);
-        fact = mPop3ServiceFactory;
-    }
-#ifdef HAVE_MOVEMAIL
-    else if (aClass.Equals(kMovemailServiceCID)) 
-    {
-        if (!mMovemailServiceFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMovemailServiceFactory), &nsMovemailServiceConstructor);
-        fact = mMovemailServiceFactory;
-    }
-#endif /* HAVE_MOVEMAIL */
-    else if (aClass.Equals(kNoneServiceCID)) 
-    {
-        if (!mNoneServiceFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mNoneServiceFactory), &nsNoneServiceConstructor);
-        fact = mNoneServiceFactory;
-    }
-    else if (aClass.Equals(kLocalMailFolderResourceCID)) 
-    {
-        if (!mLocalMailFolderFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mLocalMailFolderFactory), &nsMsgLocalMailFolderConstructor);
-        fact = mLocalMailFolderFactory;
-    }
-    else if (aClass.Equals(kParseMailMsgStateCID)) 
-    {
-        if (!mParseMailMsgStateFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mParseMailMsgStateFactory), &nsParseMailMessageStateConstructor);
-        fact = mParseMailMsgStateFactory;
-    }
-    else if (aClass.Equals(kPop3IncomingServerCID)) 
-    {
-        if (!mPop3IncomingServerFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mPop3IncomingServerFactory), &nsPop3IncomingServerConstructor);
-        fact = mPop3IncomingServerFactory;
-    }
-#ifdef HAVE_MOVEMAIL
-    else if (aClass.Equals(kMovemailIncomingServerCID)) 
-    {
-        if (!mMovemailIncomingServerFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMovemailIncomingServerFactory), &nsMovemailIncomingServerConstructor);
-        fact = mMovemailIncomingServerFactory;
-    }
-#endif /* HAVE_MOVEMAIL */
-    else if (aClass.Equals(kNoIncomingServerCID)) 
-    {
-        if (!mNoIncomingServerFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mNoIncomingServerFactory), &nsNoIncomingServerConstructor);
-        fact = mNoIncomingServerFactory;
-    }
-    else if (aClass.Equals(kLocalStringServiceCID)) 
-    {
-      if (!mLocalStringBundleFactory)
-       rv = NS_NewGenericFactory(getter_AddRefs(mLocalStringBundleFactory), &nsLocalStringServiceConstructor);
-      fact = mLocalStringBundleFactory;
-    }
-    
-    if (fact)
-        rv = fact->QueryInterface(aIID, r_classObj);
-
-    return rv;
-}
-
-struct Components {
-    const char* mDescription;
-    const nsID* mCID;
-    const char* mContractID;
-};
-
 // The list of components we register
-static Components gComponents[] = {
-    { "Mailbox URL", &kMailboxUrlCID,
-      NS_MAILBOXURL_CONTRACTID },
-    { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_CONTRACTID1 },
-    { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_CONTRACTID2 },
-    { "Mailbox Service", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_CONTRACTID3 },
-    { "Mailbox Protocol Handler", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_CONTRACTID4 },
-    { "Mailbox Parser", &kMailboxParserCID,
-      NS_MAILBOXPARSER_CONTRACTID },
-    { "Pop3 URL", &kPop3UrlCID,
-      NS_POP3URL_CONTRACTID },
-    { "Pop3 Service", &kPop3ServiceCID,
-      NS_POP3SERVICE_CONTRACTID1 },
-    { "POP Protocol Handler", &kPop3ServiceCID,
-      NS_POP3SERVICE_CONTRACTID2 },
-    { "None Service", &kNoneServiceCID,
-      NS_NONESERVICE_CONTRACTID },
+static nsModuleComponentInfo gComponents[] = {
+    { "Mailbox URL", NS_MAILBOXURL_CID,
+      NS_MAILBOXURL_CONTRACTID, nsMailboxUrlConstructor },
+
+    { "Mailbox Service", NS_MAILBOXSERVICE_CID,
+      NS_MAILBOXSERVICE_CONTRACTID1, nsMailboxServiceConstructor },
+
+    { "Mailbox Service", NS_MAILBOXSERVICE_CID,
+      NS_MAILBOXSERVICE_CONTRACTID2, nsMailboxServiceConstructor },
+
+    { "Mailbox Service", NS_MAILBOXSERVICE_CID,
+      NS_MAILBOXSERVICE_CONTRACTID3, nsMailboxServiceConstructor },
+
+    { "Mailbox Protocol Handler", NS_MAILBOXSERVICE_CID,
+      NS_MAILBOXSERVICE_CONTRACTID4, nsMailboxServiceConstructor },
+
+    { "Mailbox Parser", NS_MAILBOXPARSER_CID,
+      NS_MAILBOXPARSER_CONTRACTID, nsMsgMailboxParserConstructor },
+
+    { "Pop3 URL", NS_POP3URL_CID,
+      NS_POP3URL_CONTRACTID, nsPop3URLConstructor },
+
+    { "Pop3 Service", NS_POP3SERVICE_CID,
+      NS_POP3SERVICE_CONTRACTID1, nsPop3ServiceConstructor },
+
+    { "POP Protocol Handler", NS_POP3SERVICE_CID,
+      NS_POP3SERVICE_CONTRACTID2, nsPop3ServiceConstructor },
+
+    { "None Service", NS_NONESERVICE_CID,
+      NS_NONESERVICE_CONTRACTID, nsNoneServiceConstructor },
+
 #ifdef HAVE_MOVEMAIL
-    { "Movemail Service", &kMovemailServiceCID,
-      NS_MOVEMAILSERVICE_CONTRACTID },
+    { "Movemail Service", NS_MOVEMAILSERVICE_CID,
+      NS_MOVEMAILSERVICE_CONTRACTID, nsMovemailServiceConstructor },
 #endif /* HAVE_MOVEMAIL */
-    { "pop3 Protocol Information", &kPop3ServiceCID,
-      NS_POP3PROTOCOLINFO_CONTRACTID },
-    { "none Protocol Information", &kNoneServiceCID,
-      NS_NONEPROTOCOLINFO_CONTRACTID },
+
+    { "pop3 Protocol Information", NS_POP3SERVICE_CID,
+      NS_POP3PROTOCOLINFO_CONTRACTID, nsPop3ServiceConstructor },
+
+    { "none Protocol Information", NS_NONESERVICE_CID,
+      NS_NONEPROTOCOLINFO_CONTRACTID, nsNoneServiceConstructor },
+
 #ifdef HAVE_MOVEMAIL
-    { "movemail Protocol Information", &kMovemailServiceCID,
-      NS_MOVEMAILPROTOCOLINFO_CONTRACTID },
+    { "movemail Protocol Information", NS_MOVEMAILSERVICE_CID,
+      NS_MOVEMAILPROTOCOLINFO_CONTRACTID, nsMovemailServiceConstructor },
 #endif /* HAVE_MOVEMAIL */
-    { "Local Mail Folder Resource Factory", &kLocalMailFolderResourceCID,
-      NS_LOCALMAILFOLDERRESOURCE_CONTRACTID },
-    { "Pop3 Incoming Server", &kPop3IncomingServerCID,
-      NS_POP3INCOMINGSERVER_CONTRACTID },
-#ifdef HAVE_MOVEMAIL
-    { "Movemail Incoming Server", &kMovemailIncomingServerCID,
-      NS_MOVEMAILINCOMINGSERVER_CONTRACTID },
+
+    { "Local Mail Folder Resource Factory", NS_LOCALMAILFOLDERRESOURCE_CID,
+      NS_LOCALMAILFOLDERRESOURCE_CONTRACTID, nsMsgLocalMailFolderConstructor },
+
+    { "Pop3 Incoming Server", NS_POP3INCOMINGSERVER_CID,
+      NS_POP3INCOMINGSERVER_CONTRACTID, nsPop3IncomingServerConstructor },
+
+#ifdef HAVE_MOVEMAIL 
+    { "Movemail Incoming Server", NS_MOVEMAILINCOMINGSERVER_CID,
+      NS_MOVEMAILINCOMINGSERVER_CONTRACTID, nsMovemailIncomingServerConstructor },
 #endif /* HAVE_MOVEMAIL */
-    { "No Incoming Server", &kNoIncomingServerCID,
-      NS_NOINCOMINGSERVER_CONTRACTID },
-    { "Parse MailMessage State", &kParseMailMsgStateCID,
-      NS_PARSEMAILMSGSTATE_CONTRACTID },
-    { "Mailbox String Bundle Service", &kLocalStringServiceCID,
-      NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID },
-    { "Pop String Bundle Service", &kLocalStringServiceCID,
-      NS_MSG_POPSTRINGSERVICE_CONTRACTID },
+
+    { "No Incoming Server", NS_NOINCOMINGSERVER_CID,
+      NS_NOINCOMINGSERVER_CONTRACTID, nsNoIncomingServerConstructor },
+
+    { "Parse MailMessage State", NS_PARSEMAILMSGSTATE_CID,
+      NS_PARSEMAILMSGSTATE_CONTRACTID, nsParseMailMessageStateConstructor },
+
+    { "Mailbox String Bundle Service", NS_MSG_LOCALSTRINGSERVICE_CID,
+      NS_MSG_MAILBOXSTRINGSERVICE_CONTRACTID, nsLocalStringServiceConstructor },
+
+    { "Pop String Bundle Service", NS_MSG_LOCALSTRINGSERVICE_CID,
+      NS_MSG_POPSTRINGSERVICE_CONTRACTID, nsLocalStringServiceConstructor },
 };
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
-NS_IMETHODIMP nsMsgLocalModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                                             nsIFile* aPath,
-                                             const char* registryLocation,
-                                             const char* componentType)
-{
-    nsresult rv = NS_OK;
+NS_IMPL_NSGETMODULE("local mail services", gComponents);
 
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) 
-    {
-        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
-                                             cp->mContractID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) 
-            break;
-        cp++;
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP nsMsgLocalModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                                               nsIFile* aPath,
-                                               const char* registryLocation)
-{
-    Components* cp = gComponents;
-    Components* end = cp + NUM_COMPONENTS;
-    while (cp < end) 
-    {
-        aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-        cp++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload)
-        return NS_ERROR_INVALID_POINTER;
-
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-
-static nsMsgLocalModule *gModule = NULL;
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                            nsIFile* aPath,
-                                            nsIModule** return_cobj)
-{
-    nsresult rv = NS_OK;
-
-    NS_ASSERTION(return_cobj, "Null argument");
-    NS_ASSERTION(gModule == NULL, "nsMsgLocalModule: Module already created.");
-
-    // Create an initialize the imap module instance
-    nsMsgLocalModule *module = new nsMsgLocalModule();
-    if (!module)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = module->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-    if (NS_FAILED(rv)) 
-    {
-        delete module;
-        module = nsnull;
-    }
-    gModule = module;                  // WARNING: Weak Reference
-    return rv;
-}

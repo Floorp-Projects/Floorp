@@ -38,9 +38,9 @@ static NS_DEFINE_CID(kTextImportCID,    	NS_TEXTIMPORT_CID);
 
 
 NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
-                                            nsIFile *aPath,
-                                            const char *registryLocation,
-                                            const char *componentType)
+                       nsIFile *aPath, const char *registryLocation,
+                       const char *componentType,
+                       const nsModuleComponentInfo *info)
 {	
 	nsresult rv;
 
@@ -67,7 +67,7 @@ static nsModuleComponentInfo components[] = {
 		NS_TEXTIMPORT_CID,
 		"@mozilla.org/import/import-text;1", 
 		nsTextImportConstructor,
-		&TextRegister,
+		TextRegister,
 		nsnull
 	}
 };

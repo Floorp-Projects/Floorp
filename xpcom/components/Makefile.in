@@ -38,7 +38,7 @@ CPPSRCS		= \
 		nsRegistry.cpp \
 		nsRepository.cpp \
 		nsServiceManager.cpp \
-        nsCategoryManager.cpp \
+		nsCategoryManager.cpp \
 		xcDll.cpp \
 		$(NULL)
 
@@ -54,6 +54,7 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsICategoryHandler.idl \
 		nsICategoryManager.idl \
+		nsIClassInfo.idl \
 		nsIComponentLoader.idl \
 		nsIComponentManager.idl \
 		nsIFactory.idl \

@@ -33,7 +33,8 @@
 
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
-main()
+int
+main(void)
 {
     nsresult rv;
 

@@ -122,7 +122,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicAuth);
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
 static NS_METHOD
 RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                  const char *registryLocation, const char *componentType)
+                  const char *registryLocation, const char *componentType,
+                  const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -135,7 +136,8 @@ RegisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static NS_METHOD
 UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                    const char *registryLocation)
+                    const char *registryLocation,
+                    const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -230,7 +232,9 @@ static char *g_StreamConverterArray[] = {
 // a graph of converters for potential chaining.
 static NS_METHOD
 RegisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                         const char *registryLocation, const char *componentType) {
+                         const char *registryLocation,
+                         const char *componentType,
+                         const nsModuleComponentInfo *info) {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catmgr =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
@@ -251,7 +255,8 @@ RegisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
 // same as RegisterStreamConverters except the reverse.
 static NS_METHOD
 UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
-                           const char *registryLocation) {
+                           const char *registryLocation,
+                           const nsModuleComponentInfo *info) {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catmgr =
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
