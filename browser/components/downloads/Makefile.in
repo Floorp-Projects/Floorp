@@ -28,5 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS    = public src
 
+MODULE = helperAppDlg
+
+EXTRA_COMPONENTS = \
+  content/nsHelperAppDlg.js \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 

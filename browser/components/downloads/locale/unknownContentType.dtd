@@ -1,0 +1,16 @@
+<!ENTITY  intro.label                 "You have chosen to open">
+<!ENTITY  from.label                  "from:">
+<!ENTITY  actionQuestion.label        "What should &brandShortName; do with this file?">
+
+<!ENTITY  openWith.label              "Open with">
+<!ENTITY  openWith.accesskey          "o">
+<!ENTITY  other.label                 "Other...">
+
+<!ENTITY  save.label                  "Save to Disk">
+<!ENTITY  save.accesskey              "s">
+
+<!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
+<!ENTITY  rememberChoice.accesskey    "a">
+
+<!ENTITY  settingsChange.label        "Settings can be changed in the Downloads section of Tools, Options.">
+
