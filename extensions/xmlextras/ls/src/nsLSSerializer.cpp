@@ -38,9 +38,11 @@
 
 #include "nsLSSerializer.h"
 #include "nsDOMSerializer.h"
+#include "nsIDOMLSSerializerFilter.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #include "nsIDOMClassInfo.h"
 
@@ -56,6 +58,7 @@ NS_IMPL_ADDREF(nsLSSerializer)
 NS_IMPL_RELEASE(nsLSSerializer)
 
 nsLSSerializer::nsLSSerializer()
+  : mNewLine(NS_LINEBREAK, NS_LINEBREAK_LEN)
 {
 }
 
@@ -90,13 +93,17 @@ nsLSSerializer::SetNewLine(const nsAString & aNewLine)
 NS_IMETHODIMP
 nsLSSerializer::GetFilter(nsIDOMLSSerializerFilter * *aFilter)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aFilter = mFilter;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLSSerializer::SetFilter(nsIDOMLSSerializerFilter * aFilter)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mFilter = aFilter;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -116,14 +123,7 @@ nsLSSerializer::WriteToURI(nsIDOMNode *nodeArg, const nsAString & uri,
 NS_IMETHODIMP
 nsLSSerializer::WriteToString(nsIDOMNode *nodeArg, nsAString & _retval)
 {
-  nsXPIDLString str;
-
-  nsresult rv = mInnerSerializer->SerializeToString(nodeArg,
-                                                    getter_Copies(str));
-
-  _retval = str;
-
-  return rv;
+  return mInnerSerializer->SerializeToString(nodeArg, _retval);
 }
 
 nsresult

@@ -43,7 +43,11 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIXMLHttpRequest.h"
 
+#include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+
+class nsIDOMLSParserFilter;
+
 
 #define NS_LSPARSER_CID                               \
   { /* 7956d067-dfab-43c1-a11c-c7b10e0d8dca */        \
@@ -53,9 +57,6 @@
 #define NS_LSPARSER_CONTRACTID \
   "@mozilla.org/dom/lsparser;1"
 
-
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
 
 class nsLSParser : public nsIDOMLSParser,
                    public nsIDOMEventTarget
@@ -83,6 +84,7 @@ public:
 
 private:
   nsCOMPtr<nsIXMLHttpRequest> mXMLHttpRequest;
+  nsCOMPtr<nsIDOMLSParserFilter> mFilter;
 
   nsCOMArray<nsIDOMEventListener> mLoadListeners;
   nsCOMArray<nsIDOMEventListener> mProgressListeners;

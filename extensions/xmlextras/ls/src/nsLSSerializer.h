@@ -44,6 +44,8 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
+class nsIDOMLSSerializerFilter;
+
 
 #define NS_LSSERIALIZER_CID                           \
   { /* 17a4357c-f052-47a1-8e1d-37fe22b94a61 */        \
@@ -69,6 +71,7 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMSerializer> mInnerSerializer;
+  nsCOMPtr<nsIDOMLSSerializerFilter> mFilter;
 
   nsCString mNewLine;
 };

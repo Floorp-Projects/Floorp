@@ -40,6 +40,7 @@
 #include "nsLSEvent.h"
 #include "nsAutoPtr.h"
 #include "nsXMLHttpRequest.h"
+#include "nsIDOMLSParserFilter.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventListener.h"
@@ -72,19 +73,25 @@ nsLSParser::~nsLSParser()
 NS_IMETHODIMP
 nsLSParser::GetDomConfig(nsIDOMDOMConfiguration * *aDomConfig)
 {
+  *aDomConfig = nsnull;
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsLSParser::GetFilter(nsIDOMLSParserFilter * *aFilter)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aFilter = mFilter;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLSParser::SetFilter(nsIDOMLSParserFilter * aFilter)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mFilter = aFilter;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
