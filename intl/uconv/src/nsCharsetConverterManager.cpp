@@ -161,6 +161,7 @@ public:
   NS_IMETHOD GetCharsetDetectorList(nsISupportsArray ** aResult);
 
   NS_IMETHOD GetCharsetAtom(const PRUnichar * aCharset, nsIAtom ** aResult);
+  NS_IMETHOD GetCharsetAtom2(const char * aCharset, nsIAtom ** aResult);
   NS_IMETHOD GetCharsetTitle(const nsIAtom * aCharset, PRUnichar ** aResult);
   NS_IMETHOD GetCharsetTitle2(const nsIAtom * aCharset, nsString * aResult);
   NS_IMETHOD GetCharsetData(const nsIAtom * aCharset, const PRUnichar * aProp, 
@@ -1035,6 +1036,15 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
   NS_ADDREF(*aResult);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom2(
+                                         const char * aCharset, 
+                                         nsIAtom ** aResult)
+{
+  nsAutoString str;
+  str.AssignWithConversion(aCharset);
+  return GetCharsetAtom(str.GetUnicode(), aResult);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
