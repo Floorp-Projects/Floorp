@@ -27,6 +27,7 @@ $MozConfigFileName = 'mozconfig';
 $MozProfileName = 'default';
 $BloatTestTimeout  = 120;    # seconds
 $DomTestTimeout	   = 45;     # seconds
+$LayoutPerformanceTestTimeout  = 1200;    # seconds
 
 #- Set these to what makes sense for your system
 $Make          = 'gmake';       # Must be GNU make
