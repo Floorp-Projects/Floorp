@@ -2116,7 +2116,6 @@ fe_save_history_timer (XtPointer closure, XtIntervalId *id)
 {
   Boolean init_only_p = (Boolean) ((int) closure);
   if (! init_only_p) {
-    fe_SaveBookmarks ();
     GH_SaveGlobalHistory ();
     NET_WriteCacheFAT (0, False);
     NET_SaveCookies(NULL);
@@ -2583,8 +2582,6 @@ fe_MotionWidgetToMWContext (Widget widget)
 void
 fe_MinimalNoUICleanup()
 {
-  fe_SaveBookmarks ();
-
   PREF_SavePrefFile();
   
 #ifdef JAVA

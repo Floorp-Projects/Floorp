@@ -96,13 +96,6 @@ extern "C" {
 #include "prefs.h"
 #include "icondata.h"
 
-#define BookmarkStruct HotlistStruct
-#define HOT_GetBookmarkList HOT_GetHotlistList
-#define HOT_SaveBookmark HOT_SaveHotlist
-#define HOT_SearchBookmark HOT_SearchHotlist
-#define HOT_ReadBookmarkFromDisk HOT_ReadHotlistFromDisk
-#define HOT_FreeBookmarks HOT_FreeHotlist
-
 #define PERFECT_SCROLL
 
 extern Atom WM_SAVE_YOURSELF;
@@ -675,13 +668,10 @@ XtPointer fe_WidgetTreeWalkChildren(Widget widget,
 				    XtPointer data);
 Widget    fe_FindWidget(Widget top, char* name); /* find widget by name */
 
-
 extern void fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height);
 extern void fe_NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
 extern void fe_ImageComplete(MWContext *, IL_Pixmap * image);
 extern void fe_load_default_font(MWContext *);
-
-
 
 XP_END_PROTOS
 

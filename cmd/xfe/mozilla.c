@@ -70,7 +70,6 @@
 #endif
 #include "e_kit.h"
 
-#include "bkmks.h"		/* for drag and drop in mail compose */
 #include "icons.h"
 #include "icondata.h"
 
@@ -151,7 +150,6 @@ extern XP_Bool fe_IsCalendarInstalled(void);
 
 /* for XP_GetString() */
 #include <xpgetstr.h>
-extern int XFE_RESOURCES_NOT_INSTALLED_CORRECTLY;
 extern int XFE_USAGE_MSG1;
 extern int XFE_USAGE_MSG2;
 extern int XFE_USAGE_MSG3;
@@ -161,12 +159,10 @@ extern int XFE_USAGE_MSG4;
 extern int XFE_USAGE_MSG5;
 extern int XFE_VERSION_COMPLAINT_FORMAT;
 extern int XFE_INAPPROPRIATE_APPDEFAULT_FILE;
-extern int XFE_INVALID_GEOMETRY_SPEC;
 extern int XFE_UNRECOGNISED_OPTION;
 extern int XFE_APP_HAS_DETECTED_LOCK;
 extern int XFE_ANOTHER_USER_IS_RUNNING_APP;
 extern int XFE_APPEARS_TO_BE_RUNNING_ON_HOST_UNDER_PID;
-extern int XFE_APPEARS_TO_BE_RUNNING_ON_ANOTHER_HOST_UNDER_PID;
 extern int XFE_YOU_MAY_CONTINUE_TO_USE;
 extern int XFE_OTHERWISE_CHOOSE_CANCEL;
 extern int XFE_EXISTED_BUT_WAS_NOT_A_DIRECTORY;
@@ -217,9 +213,8 @@ extern int XFE_MOZILLA_NO_XKEYSYMDB_FILE_FOUND;
 
 extern void fe_showCalendar(Widget toplevel);
 
-extern void fe_createBookmarks(Widget toplevel, void */*XXX XFE_Frame*/, Chrome *chromespec);
-extern MWContext* fe_showBookmarks(Widget toplevel, void *parent_frame, Chrome *chromespec);
-extern MWContext* fe_showHistory(Widget toplevel, void *parent_frame, Chrome *chromespec);
+extern void fe_showBookmarks(Widget toplevel);
+extern void fe_showHistory(Widget toplevel);
 
 #ifdef MOZ_MAIL_NEWS
 extern MWContext* fe_showInbox(Widget toplevel, void *parent_frame, Chrome *chromespec, XP_Bool with_reuse, XP_Bool getNewMail);
@@ -2988,9 +2983,6 @@ main
     }
 #endif
 
-  /* These actions have to be initialized before fe_createBookmarks()
-   * to avoid XtWarnings at startup about unknown actions.
-   */
   fe_InitCommandActions ();
   fe_InitMouseActions ();
   fe_InitKeyActions ();
@@ -3002,9 +2994,6 @@ main
   /* Initialize RDF */
   {
     RDF_InitParamsStruct rdf_params;
-
-    /* we need some initial context, so create bookmarks */
-    fe_createBookmarks(toplevel, NULL, NULL);
 
     rdf_params.profileURL 
       = XP_PlatformFileToURL(fe_config_dir);
@@ -3085,8 +3074,6 @@ main
 			  if (fe_globalData.startup_nethelp)
 			  {
 #ifdef NETHELP_STARTUP_FLAG
-				  /* we need some initial context, so create bookmarks */
-				  fe_createBookmarks(toplevel, NULL, NULL);
 				  /* the bookmarks context gets used in FE_GetNetHelpContext */
 				  XP_NetHelp(NULL, HELP_COMMUNICATOR);
 #endif
@@ -3214,13 +3201,13 @@ main
 	  /* -bookmarks: show bookmarks */
 	  if (fe_globalData.startup_bookmarks)
 	  {
-		  fe_showBookmarks(toplevel,NULL,NULL);
+		  fe_showBookmarks(toplevel);
 	  }
 	  
 	  /* -history: show history */
 	  if (fe_globalData.startup_history)
 	  {
-		  fe_showHistory(toplevel,NULL,NULL);
+		  fe_showHistory(toplevel);
 	  }
   }
   else
@@ -3250,10 +3237,6 @@ main
 			  
 			  MWContext * task_bar_context;
 
-			  /* Make sure the bookmark frame is alive, since the floating
-				 task bar uses it as its parent frame */
-			  fe_createBookmarks(toplevel, NULL, NULL);
-			  
 			  task_bar_context = XP_NewContext();
 			  
 			  task_bar_context->fe.data = XP_NEW_ZAP(fe_ContextData);
@@ -3297,8 +3280,6 @@ main
 			  if (fe_globalData.startup_nethelp)
 			  {
 #ifdef NETHELP_STARTUP_FLAG
-				  /* we need some initial context, so create bookmarks */
-				  fe_createBookmarks(toplevel, NULL, NULL);
 				  /* the bookmarks context gets used in FE_GetNetHelpContext */
 				  XP_NetHelp(NULL, HELP_COMMUNICATOR);
 
@@ -3315,13 +3296,13 @@ main
 			  /* -bookmarks: show bookmarks */
 			  if (fe_globalData.startup_bookmarks)
 			  {
-				  fe_showBookmarks(toplevel,NULL,NULL);
+				  fe_showBookmarks(toplevel);
 			  }
 	  
 			  /* -history: show history */
 			  if (fe_globalData.startup_history)
 			  {
-				  fe_showHistory(toplevel,NULL,NULL);
+				  fe_showHistory(toplevel);
 			  }
 		  }
 	  }
