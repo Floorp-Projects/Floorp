@@ -361,10 +361,12 @@ extern "C" void ProfileMigrationController(void *data)
 
     MigrateProfileItem* item = (MigrateProfileItem*)migrator->mProfilesToMigrate.ElementAt(index);
     if (item)
+    {
       rv = migrator->ProcessPrefsCallback(item->oldFile, item->newFile);
+      migrator->mErrorCode = rv;
+    }
   }
 
-  
   NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
   if(NS_FAILED(rv))
     return;
@@ -407,6 +409,14 @@ nsPrefMigration::ProcessPrefsFromJS()  // called via js so that we can have prog
   return NS_OK;
 }  
     
+
+NS_IMETHODIMP
+nsPrefMigration::GetError(PRUint32 *error)
+{
+  *error = mErrorCode;
+  return NS_OK;
+}
+
 nsresult
 nsPrefMigration::ConvertPersistentStringToFileSpec(const char *str, nsIFileSpec *path)
 {
@@ -418,9 +428,9 @@ nsPrefMigration::ConvertPersistentStringToFileSpec(const char *str, nsIFileSpec 
 }
      
 /*--------------------------------------------------------------------------
- * Process Prefs is the primary funtion for the class nsPrefMigration.
+ * ProcessPrefsCallback is the primary funtion for the class nsPrefMigration.
  *
- * Called by: The Profile Manager
+ * Called by: The Profile Manager (nsProfile.cpp)
  * INPUT: The specific profile path (prefPath) and the 5.0 installed path
  * OUTPUT: The modified 5.0 prefs files
  * RETURN: Success or a failure code
@@ -446,7 +456,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsCOMPtr<nsIFileSpec> newMOVEMAILMailPath;
 #endif /* HAVE_MOVEMAIL */
   PRBool exists;
-  
+
+  nsFileSpec tempSpec;
+
   PRInt32 serverType = POP_4X_MAIL_TYPE; 
   char *popServerName = nsnull;
   
@@ -477,8 +489,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   
            
   if (serverType == POP_4X_MAIL_TYPE) {
-  	rv = NS_NewFileSpec(getter_AddRefs(newPOPMailPath));
+    rv = NS_NewFileSpec(getter_AddRefs(newPOPMailPath));
     if (NS_FAILED(rv)) return rv;
+
     rv = NS_NewFileSpec(getter_AddRefs(oldPOPMailPath));
     if (NS_FAILED(rv)) return rv;
   
@@ -492,46 +505,50 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       if (NS_FAILED(rv)) return rv;
       
       // if we are here, then PREF_MAIL_DIRECTORY was not set.
-			// but we still need it in the actual pref migration
-			rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
-			if (NS_FAILED(rv)) return rv;
-			
-			rv = newPOPMailPath->FromFileSpec(newProfilePath);
-			if (NS_FAILED(rv)) return rv;
-			
-			rv = newPOPMailPath->Exists(&exists);
-      		if (NS_FAILED(rv)) return rv;
-      		if (!exists)  {
-  				rv = newPOPMailPath->CreateDir();
-  				if (NS_FAILED(rv)) return rv;
-  			}
-      
-			rv = newPOPMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
-			if (NS_FAILED(rv)) return rv;
+      // but we still need it in the actual pref migration
+      rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldPOPMailPath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newPOPMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newPOPMailPath->Exists(&exists);
+      if (NS_FAILED(rv)) return rv;
+      if (!exists)  {
+        rv = newPOPMailPath->CreateDir();
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      rv = newPOPMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
+      if (NS_FAILED(rv)) return rv;
     }
-	rv = newPOPMailPath->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists)  {
-		rv = newPOPMailPath->CreateDir();
-		if (NS_FAILED(rv)) return rv;
-	}
-	rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newPOPMailPath, PR_FALSE); 
-	if (NS_FAILED(rv)) return rv;
-	
+
+    rv = newPOPMailPath->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)  {
+      rv = newPOPMailPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
+    
+    rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newPOPMailPath, PR_FALSE); 
+    if (NS_FAILED(rv)) return rv;
+
     m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
+
     rv = newPOPMailPath->AppendRelativeUnixPath(popServerName);
     if (NS_FAILED(rv)) return rv;
-	rv = newPOPMailPath->Exists(&exists);
-	
-	if (NS_FAILED(rv)) return rv;
-	if (!exists)  {
-		rv = newPOPMailPath->CreateDir();
-		if (NS_FAILED(rv)) return rv;
-	}
+    
+    rv = newPOPMailPath->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)  {
+      rv = newPOPMailPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
   }
   else if (serverType == IMAP_4X_MAIL_TYPE) {
     rv = NS_NewFileSpec(getter_AddRefs(newIMAPLocalMailPath));
     if (NS_FAILED(rv)) return rv;
+    
     rv = NS_NewFileSpec(getter_AddRefs(oldIMAPLocalMailPath));
     if (NS_FAILED(rv)) return rv;
       
@@ -541,6 +558,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       /* default paths */
       rv = oldIMAPLocalMailPath->FromFileSpec(oldProfilePath);
       if (NS_FAILED(rv)) return rv;
+    
       rv = oldIMAPLocalMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
       
@@ -552,81 +570,88 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = newIMAPLocalMailPath->FromFileSpec(newProfilePath);
       if (NS_FAILED(rv)) return rv;
       
-		rv = newIMAPLocalMailPath->Exists(&exists);
-		if (NS_FAILED(rv)) return rv;
-		if (!exists)  {
-			rv = newIMAPLocalMailPath->CreateDir();
-			if (NS_FAILED(rv)) return rv;
-		}
+      rv = newIMAPLocalMailPath->Exists(&exists);
+      if (NS_FAILED(rv)) return rv;
+      if (!exists)  {
+        rv = newIMAPLocalMailPath->CreateDir();
+        if (NS_FAILED(rv)) return rv;
+      }
+      
       rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
-      
     }
-    
+
     /* Now create the new "Mail/Local Folders" directory */
-	rv = newIMAPLocalMailPath->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists)  {
-		newIMAPLocalMailPath->CreateDir();
-	}
-	rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, PR_FALSE); 
-	if (NS_FAILED(rv)) return rv;
-	
-	rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
-	if (NS_FAILED(rv)) return rv;
-	rv = newIMAPLocalMailPath->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists)  {
-		rv = newIMAPLocalMailPath->CreateDir();
-		if (NS_FAILED(rv)) return rv;
-	}
+    rv = newIMAPLocalMailPath->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)  {
+      newIMAPLocalMailPath->CreateDir();
+    }
+    rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newIMAPLocalMailPath, PR_FALSE); 
+    if (NS_FAILED(rv)) return rv;
+
+    rv = newIMAPLocalMailPath->AppendRelativeUnixPath(NEW_LOCAL_MAIL_DIR_NAME);
+    if (NS_FAILED(rv)) return rv;
+    rv = newIMAPLocalMailPath->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)  {
+      rv = newIMAPLocalMailPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
+    if (NS_FAILED(rv)) return rv;
     
-	rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
-	if (NS_FAILED(rv)) return rv;
-	rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
-	if (NS_FAILED(rv)) return rv;
-      
+    rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
+    if (NS_FAILED(rv)) return rv;
+
     /* Next get IMAP mail summary files location */
     rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_IMAPMAIL_DIR_NAME, PREF_MAIL_IMAP_ROOT_DIR,newIMAPMailPath,oldIMAPMailPath);
     if (NS_FAILED(rv)) {
- 			/* default paths */
-			rv = oldIMAPMailPath->FromFileSpec(oldProfilePath);
-			if (NS_FAILED(rv)) return rv;
-			rv = oldIMAPMailPath->AppendRelativeUnixPath(OLD_IMAPMAIL_DIR_NAME);
-			if (NS_FAILED(rv)) return rv;
+      /* default paths */
+      rv = oldIMAPMailPath->FromFileSpec(oldProfilePath);
+      if (NS_FAILED(rv)) return rv;
       
-			// if we are here, then PREF_MAIL_IMAP_ROOT_DIR was not set.
-			// but we still need it in the actual pref migration
-			rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
-			if (NS_FAILED(rv)) return rv;   
+      rv = oldIMAPMailPath->AppendRelativeUnixPath(OLD_IMAPMAIL_DIR_NAME);
+      if (NS_FAILED(rv)) return rv;
+
+      // if we are here, then PREF_MAIL_IMAP_ROOT_DIR was not set.
+      // but we still need it in the actual pref migration
+      rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
+      if (NS_FAILED(rv)) return rv;   
       
-			rv = newIMAPMailPath->FromFileSpec(newProfilePath);
-			if (NS_FAILED(rv)) return rv;
-			
-			rv = newIMAPMailPath->Exists(&exists);
-			if (NS_FAILED(rv)) return rv;
-			if (!exists)  {
-				rv = newIMAPMailPath->CreateDir();
-				if (NS_FAILED(rv)) return rv;
-			}
-			rv = newIMAPMailPath->AppendRelativeUnixPath(NEW_IMAPMAIL_DIR_NAME);
-			if (NS_FAILED(rv)) return rv;
+      rv = newIMAPMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newIMAPMailPath->Exists(&exists);
+      if (NS_FAILED(rv)) return rv;
+      if (!exists)  {
+        rv = newIMAPMailPath->CreateDir();
+        if (NS_FAILED(rv)) return rv;
+      }
+
+      rv = newIMAPMailPath->AppendRelativeUnixPath(NEW_IMAPMAIL_DIR_NAME);
+      if (NS_FAILED(rv)) return rv;
     }
+
     rv = newIMAPMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
       rv = newIMAPMailPath->CreateDir();
       if (NS_FAILED(rv)) return rv;
     }
+
     rv = m_prefs->SetFilePref(PREF_MAIL_IMAP_ROOT_DIR, newIMAPMailPath, PR_FALSE); 
     if (NS_FAILED(rv)) return rv;
   }
+
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
     printf("sorry, movemail not supported yet.\n");
 
     rv = NS_NewFileSpec(getter_AddRefs(newMOVEMAILMailPath));
     if (NS_FAILED(rv)) return rv;
+
     rv = NS_NewFileSpec(getter_AddRefs(oldMOVEMAILMailPath));
     if (NS_FAILED(rv)) return rv;
   
@@ -635,41 +660,43 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       /* use the default locations */
       rv = oldMOVEMAILMailPath->FromFileSpec(oldProfilePath);
       if (NS_FAILED(rv)) return rv;
-          
+
       rv = oldMOVEMAILMailPath->AppendRelativeUnixPath(OLD_MAIL_DIR_NAME);
       if (NS_FAILED(rv)) return rv;
       
       // if we are here, then PREF_MAIL_DIRECTORY was not set.
-			// but we still need it in the actual pref migration
-			rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldMOVEMAILMailPath);
-			if (NS_FAILED(rv)) return rv;
-			
-			rv = newMOVEMAILMailPath->FromFileSpec(newProfilePath);
-			if (NS_FAILED(rv)) return rv;
-			
-			rv = newMOVEMAILMailPath->Exists(&exists);
+      // but we still need it in the actual pref migration
+      rv = SetPremigratedFilePref(PREF_MAIL_DIRECTORY, oldMOVEMAILMailPath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newMOVEMAILMailPath->FromFileSpec(newProfilePath);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = newMOVEMAILMailPath->Exists(&exists);
       if (NS_FAILED(rv)) return rv;
       if (!exists)  {
         rv = newMOVEMAILMailPath->CreateDir();
         if (NS_FAILED(rv)) return rv;
       }
-      
-			rv = newMOVEMAILMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
-			if (NS_FAILED(rv)) return rv;
+
+      rv = newMOVEMAILMailPath->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
+      if (NS_FAILED(rv)) return rv;
     }
+
     rv = newMOVEMAILMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
       rv = newMOVEMAILMailPath->CreateDir();
       if (NS_FAILED(rv)) return rv;
     }
+
     rv = m_prefs->SetFilePref(PREF_MAIL_DIRECTORY, newMOVEMAILMailPath, PR_FALSE); 
     if (NS_FAILED(rv)) return rv;
-    
+
     rv = newMOVEMAILMailPath->AppendRelativeUnixPath(NEW_MOVEMAIL_DIR_NAME);
     if (NS_FAILED(rv)) return rv;
+
     rv = newMOVEMAILMailPath->Exists(&exists);
-    
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {
       rv = newMOVEMAILMailPath->CreateDir();
@@ -683,65 +710,73 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     return NS_ERROR_UNEXPECTED;
   }
   
-	rv = NS_NewFileSpec(getter_AddRefs(newNewsPath));
-	if (NS_FAILED(rv)) return rv;
-	rv = NS_NewFileSpec(getter_AddRefs(oldNewsPath));
-	if (NS_FAILED(rv)) return rv;
+  rv = NS_NewFileSpec(getter_AddRefs(newNewsPath));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = NS_NewFileSpec(getter_AddRefs(oldNewsPath));
+  if (NS_FAILED(rv)) return rv;
   
   /* Create the new News directory from the setting in prefs.js or a default */
   rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_NEWS_DIR_NAME, PREF_NEWS_DIRECTORY, newNewsPath,oldNewsPath);
   if (NS_FAILED(rv)) {
-		/* default paths */
-		rv = oldNewsPath->FromFileSpec(oldProfilePath);
-		if (NS_FAILED(rv)) return rv;
-		rv = oldNewsPath->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
-		if (NS_FAILED(rv)) return rv;
+    /* default paths */
+    rv = oldNewsPath->FromFileSpec(oldProfilePath);
+    if (NS_FAILED(rv)) return rv;
+    rv = oldNewsPath->AppendRelativeUnixPath(OLD_NEWS_DIR_NAME);
+    if (NS_FAILED(rv)) return rv;
 
 
-		// if we are here, then PREF_NEWS_DIRECTORY was not set.
-		// but we still need it in the actual pref migration
-		rv = SetPremigratedFilePref(PREF_NEWS_DIRECTORY, oldNewsPath);
-		if (NS_FAILED(rv)) return rv; 
+    // if we are here, then PREF_NEWS_DIRECTORY was not set.
+    // but we still need it in the actual pref migration
+    rv = SetPremigratedFilePref(PREF_NEWS_DIRECTORY, oldNewsPath);
+    if (NS_FAILED(rv)) return rv; 
 
-		rv = newNewsPath->FromFileSpec(newProfilePath);
-		if (NS_FAILED(rv)) return rv;
-		
-		rv = newNewsPath->Exists(&exists);
-		if (NS_FAILED(rv)) return rv;
-		if (!exists)  {
-			rv = newNewsPath->CreateDir();
-			if (NS_FAILED(rv)) return rv;
-		}
-		rv = newNewsPath->AppendRelativeUnixPath(NEW_NEWS_DIR_NAME);
-		if (NS_FAILED(rv)) return rv;
+    rv = newNewsPath->FromFileSpec(newProfilePath);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = newNewsPath->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)  {
+      rv = newNewsPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = newNewsPath->AppendRelativeUnixPath(NEW_NEWS_DIR_NAME);
+    if (NS_FAILED(rv)) return rv;
   }
-	rv = newNewsPath->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists)  {
-		rv = newNewsPath->CreateDir();
-		if (NS_FAILED(rv)) return rv;
-	}
-	rv = m_prefs->SetFilePref(PREF_NEWS_DIRECTORY, newNewsPath, PR_FALSE); 
-	if (NS_FAILED(rv)) return rv;
-#if 1 
-  printf("TODO:  port / fix / turn on the code that checks for space before copying.\n");
-#else  
+
+  rv = newNewsPath->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  if (!exists)  {
+    rv = newNewsPath->CreateDir();
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = m_prefs->SetFilePref(PREF_NEWS_DIRECTORY, newNewsPath, PR_FALSE); 
+  if (NS_FAILED(rv)) return rv;
+  
   PRUint32 totalMailSize = 0, 
            totalNewsSize = 0, 
            totalProfileSize = 0,
            totalRequired = 0;
 
-  rv = GetSizes(oldProfilePath, PR_FALSE, &totalProfileSize);
-  rv = GetSizes(oldNewsPath, PR_TRUE, &totalNewsSize);
+  oldProfilePath->GetFileSpec(&tempSpec);
+  rv = GetSizes(tempSpec, PR_FALSE, &totalProfileSize);
+  oldNewsPath->GetFileSpec(&tempSpec);
+  rv = GetSizes(tempSpec, PR_TRUE, &totalNewsSize);
+  
   if(serverType == IMAP_4X_MAIL_TYPE) {
-    rv = GetSizes(oldIMAPLocalMailPath, PR_TRUE, &totalMailSize);
+    oldIMAPLocalMailPath->GetFileSpec(&tempSpec);
+    rv = GetSizes(tempSpec, PR_TRUE, &totalMailSize);
   }
   else if (serverType == POP_4X_MAIL_TYPE) {
-    rv = GetSizes(oldPOPMailPath, PR_TRUE, &totalMailSize);
+    oldPOPMailPath->GetFileSpec(&tempSpec);
+    rv = GetSizes(tempSpec, PR_TRUE, &totalMailSize);
   }
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
-    rv = GetSizes(oldMOVEMAILMailPath, PR_TRUE, &totalMailSize);
+    oldMOVEMAILMailPath->GetFileSpec(&tempSpec);
+    rv = GetSizes(tempSpec, PR_TRUE, &totalMailSize);
   }
 #endif /* HAVE_MOVEMAIL */
   else {
@@ -753,19 +788,23 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   
   /* Get the drive name or letter for the profile tree */
   char *profile_hd_name = nsnull;
-  GetDriveName(oldProfilePath, &profile_hd_name);
+  oldProfilePath->GetFileSpec(&tempSpec);
+  GetDriveName(tempSpec, &profile_hd_name);
   
   /* Get the drive name or letter for the mail (IMAP-local or POP) tree */
   char *mail_hd_name = nsnull;
   if (serverType == IMAP_4X_MAIL_TYPE) {
-    GetDriveName(oldIMAPLocalMailPath, &mail_hd_name);
+    oldIMAPLocalMailPath->GetFileSpec(&tempSpec);
+    GetDriveName(tempSpec, &mail_hd_name);
   }
   else if (serverType == POP_4X_MAIL_TYPE) {
-    GetDriveName(oldPOPMailPath, &mail_hd_name);
+    oldPOPMailPath->GetFileSpec(&tempSpec);
+    GetDriveName(tempSpec, &mail_hd_name);
   }
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
-    GetDriveName(oldMOVEMAILMailPath, &mail_hd_name);
+    oldMOVEMAILMailPath->GetFileSpec(&tempSpec);
+    GetDriveName(tempSpec, &mail_hd_name);
   }
 #endif /* HAVE_MOVEMAIL */
   else {
@@ -774,17 +813,18 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   
   /* Get the drive name or letter for the news tree */
   char *news_hd_name = nsnull;
-  GetDriveName(oldNewsPath, &news_hd_name);
+  oldNewsPath->GetFileSpec(&tempSpec);
+  GetDriveName(tempSpec, &news_hd_name);
 
-  
   /* Check to see if all the dirs are on the same drive (the default case) */
   if((PL_strcmp(profile_hd_name, mail_hd_name) == 0) &&
      (PL_strcmp(profile_hd_name, news_hd_name) == 0)) /* All dirs are on the same drive */
   {
     totalRequired = totalProfileSize + totalMailSize + totalNewsSize;
-    if(NS_FAILED(CheckForSpace(newProfilePath, totalRequired)))
+    newProfilePath->GetFileSpec(&tempSpec);
+    if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
     {
-	    return NS_ERROR_ABORT;  /* Need error code for not enough space */
+      return NOT_ENOUGH_SPACE;
     }
   }
   else
@@ -793,50 +833,57 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     {
       totalRequired = totalMailSize + totalNewsSize;
       if (serverType == IMAP_4X_MAIL_TYPE)
+      {
+        newIMAPLocalMailPath->GetFileSpec(&tempSpec);
+        if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          if(NS_FAILED(CheckForSpace(newIMAPLocalMailPath, totalRequired)))
-            {
-              return NS_ERROR_ABORT; /* Need error code for not enough space */
-            }
+          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
         }
+      }
       else if (serverType == POP_4X_MAIL_TYPE) 
+      {
+        newPOPMailPath->GetFileSpec(&tempSpec);
+        if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          if(NS_FAILED(CheckForSpace(newPOPMailPath, totalRequired)))
-            {
-              return NS_ERROR_ABORT; /* Need error code for not enough space */
-            }
+            return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
         }
+      }
 #ifdef HAVE_MOVEMAIL
       else if (serverType == MOVEMAIL_4X_MAIL_TYPE)
+      {
+        newMOVEMAILMailPath->GetFileSpec(&tempSpec);
+        if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          if(NS_FAILED(CheckForSpace(newMOVEMAILMailPath, totalRequired)))
-            {
-              return NS_ERROR_ABORT; /* Need error code for not enough space */
-            }
+          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
         }
+      }
 #endif /* HAVE_MOVEMAIL */
       else
-        {
-          NS_ASSERTION(0,"error, unknown mail server type");
-          return NS_ERROR_FAILURE;
-        }
-      if(NS_FAILED(CheckForSpace(newProfilePath, totalProfileSize)))
-        {
-          return NS_ERROR_ABORT; /* Need error code for not enough space */
-        }
+      {
+        NS_ASSERTION(0,"error, unknown mail server type");
+        return NS_ERROR_FAILURE;
+      }
+      newProfilePath->GetFileSpec(&tempSpec);
+      if(NS_FAILED(CheckForSpace(tempSpec, totalProfileSize)))
+      {
+          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
+      }
+
     }
     else
     {
       if(PL_strcmp(profile_hd_name, mail_hd_name) == 0) /* Mail and profile on same drive */
       {
         totalRequired = totalProfileSize + totalMailSize;
-        if(NS_FAILED(CheckForSpace(newProfilePath, totalRequired)))
+        newProfilePath->GetFileSpec(&tempSpec);
+        if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
         }
-        if(NS_FAILED(CheckForSpace(newNewsPath, totalNewsSize)))
+        newNewsPath->GetFileSpec(&tempSpec);
+        if(NS_FAILED(CheckForSpace(tempSpec, totalNewsSize)))
         {
-          return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
         }
       }
       else
@@ -844,77 +891,88 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
         if(PL_strcmp(profile_hd_name, news_hd_name) == 0) /* News and profile on same drive */
         {
           totalRequired = totalProfileSize + totalNewsSize;
-          if(NS_FAILED(CheckForSpace(newProfilePath, totalRequired)))
+          newProfilePath->GetFileSpec(&tempSpec);
+          if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
           {
-            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
           }
-		  if (serverType == IMAP_4X_MAIL_TYPE)
-		  {
-            if(NS_FAILED(CheckForSpace(newIMAPMailPath, totalMailSize)))
-			{
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
-			}
-		  }
-		  else if (serverType == POP_4X_MAIL_TYPE) 
-        {
-          if(NS_FAILED(CheckForSpace(newPOPMailPath, totalMailSize)))
+          if (serverType == IMAP_4X_MAIL_TYPE)
+          {
+            newIMAPMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
+              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
             }
-        }
+          }
+          else if (serverType == POP_4X_MAIL_TYPE) 
+          {
+            newPOPMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
+            {
+              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            }
+          }
 #ifdef HAVE_MOVEMAIL
-      else if (serverType == MOVEMAIL_4X_MAIL_TYPE) 
-        {
-          if(NS_FAILED(CheckForSpace(newMOVEMAILMailPath, totalMailSize)))
+          else if (serverType == MOVEMAIL_4X_MAIL_TYPE) 
+          {
+            newMOVEMAILMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
+               return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
             }
-        }
+          }
 #endif /* HAVE_MOVEMAIL */
-      else
-        {
-          NS_ASSERTION(0,"unknown mail server type");
-          return NS_ERROR_FAILURE;
-        }
+          else
+          {
+            NS_ASSERTION(0,"unknown mail server type");
+            return NS_ERROR_FAILURE;
+          }
         }
         else
         {
           /* All the trees are on different drives */
-		  if (serverType == IMAP_4X_MAIL_TYPE)
-		  {
-            if(NS_FAILED(CheckForSpace(newIMAPMailPath, totalMailSize)))
-			{
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
-			}
-		  }
-		  else if (serverType == POP_4X_MAIL_TYPE)
-        {
-          if(NS_FAILED(CheckForSpace(newPOPMailPath, totalMailSize)))
-            {
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
-            }
-        }
-#ifdef HAVE_MOVEMAIL
-      else if (serverType == MOVEMAIL_4X_MAIL_TYPE)
-        {
-          if(NS_FAILED(CheckForSpace(newPOPMailPath, totalMailSize)))
-            {
-              return NS_ERROR_ABORT;  /* Need error code for not enough space */
-            }
-        }
-#endif /* HAVE_MOVEMAIL */
-      else
-        {
-          NS_ASSERTION(0,"unknown mail server type");
-          return NS_ERROR_FAILURE;
-        }
-          if(NS_FAILED(CheckForSpace(newNewsPath, totalNewsSize)))
+          if (serverType == IMAP_4X_MAIL_TYPE)
           {
-            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+            newIMAPMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
+            {
+              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            }
           }
-          if(NS_FAILED(CheckForSpace(newProfilePath, totalProfileSize)))
+          else if (serverType == POP_4X_MAIL_TYPE)
           {
-            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+            newPOPMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
+            {
+              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            }
+          }
+#ifdef HAVE_MOVEMAIL
+          else if (serverType == MOVEMAIL_4X_MAIL_TYPE)
+          {
+            newPOPMailPath->GetFileSpec(&tempSpec);
+            if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
+            {
+              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            }
+          }
+#endif /* HAVE_MOVEMAIL */
+          else
+          {
+            NS_ASSERTION(0,"unknown mail server type");
+            return NS_ERROR_FAILURE;
+          }
+          
+          newNewsPath->GetFileSpec(&tempSpec);
+          if(NS_FAILED(CheckForSpace(tempSpec, totalNewsSize)))
+          {
+            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+          }
+          
+          newProfilePath->GetFileSpec(&tempSpec);
+          if(NS_FAILED(CheckForSpace(tempSpec, totalProfileSize)))
+          {
+            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
           }
         }
       } /* else */
@@ -924,7 +982,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   PR_FREEIF(profile_hd_name);
   PR_FREEIF(mail_hd_name);
   PR_FREEIF(news_hd_name);
-#endif /* 1 */
 
   PRBool needToRenameFilterFiles;
   if (PL_strcmp(IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x)) {
@@ -1240,7 +1297,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
 
 
 /*--------------------------------------------------------------------------
- * GetDriveName gets the drive letter (on Windows) or the volume name (on Mac)
+ * GetStringFromSpec gets the drive letter (on Windows) or the volume name (on Mac)
  *
  * INPUT: an nsFileSpec path
  * 
@@ -1291,6 +1348,7 @@ nsPrefMigration::GetDriveName(nsFileSpec inputPath, char**driveName)
     rv = GetStringFromSpec(oldParent,driveName);
     
     oldParent.GetParent(newParent);
+    /* XXX: Fix: This is a hack until nsIFile hopefully fixes finding the root of the volume. */
     /* Since GetParent doesn't return an error if there's no more parents
      * I have to compare the results of the parent value (string) to see 
      * if they've changed. */
@@ -1309,7 +1367,7 @@ nsPrefMigration::GetDriveName(nsFileSpec inputPath, char**driveName)
  *        requiredSpace - The space needed on the new profile drive
  *
  * RETURNS: NS_OK if enough space is available
- *          NS_ERROR_FAILURE if there is not enough space
+ *          NOT_ENOUGH_SPACE (error -200) if there is not enough space
  *
  * Todo: you may want to change this proto from a float to a int64.
  *--------------------------------------------------------------------------*/
@@ -1355,7 +1413,7 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
 	    printf("newsrc file == %s\n",folderName);
 #endif /* DEBUG_seth */
 
-	    fileOrDirName.CopyToDir(newPath);
+	fileOrDirName.CopyToDir(newPath);
 
         nsFileSpec newFile = newPath;
         newFile += fileOrDirNameStr;
@@ -1715,6 +1773,7 @@ nsPrefMigration::RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *f
   return rv;
 }
 
+
 #ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
 #define BUFFER_LEN	128
 nsresult
@@ -1896,9 +1955,11 @@ nsPrefConverter::~nsPrefConverter()
 {
 }
 
+
 nsPrefConverter::nsPrefConverter()
 {
-  NS_INIT_REFCNT();
+
+   NS_INIT_REFCNT();
 }
 
 NS_IMPL_ISUPPORTS(nsPrefConverter, NS_GET_IID(nsIPrefConverter))

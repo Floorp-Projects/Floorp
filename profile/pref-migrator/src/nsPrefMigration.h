@@ -81,12 +81,19 @@ class nsPrefMigration: public nsIPrefMigration
       nsVoidArray mProfilesToMigrate;
       nsresult ProcessPrefsCallback(const char* oldProfilePathStr, const char * newProfilePathStr);
       void WaitForThread();
-    
+
+      PRUint32 mErrorCode;
+
+      enum
+      {
+            NOT_ENOUGH_SPACE            = 200,
+      };
+
     private:
       
       static nsPrefMigration* mInstance;
 	
-	  nsresult ConvertPersistentStringToFileSpec(const char *str, nsIFileSpec *path);
+      nsresult ConvertPersistentStringToFileSpec(const char *str, nsIFileSpec *path);
       nsresult CreateNewUser5Tree(nsIFileSpec* oldProfilePath, 
                                   nsIFileSpec* newProfilePath);
 
@@ -128,15 +135,16 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult RenameAndMove4xImapFilterFile(nsIFileSpec *profilePath, const char *hostname);
       nsresult RenameAndMove4xImapFilterFiles(nsIFileSpec *profilePath);
 #endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
-	  nsresult RenameAndMove4xPopStateFile(nsIFileSpec *profilePath);
+      nsresult RenameAndMove4xPopStateFile(nsIFileSpec *profilePath);
       nsresult RenameAndMove4xPopFilterFile(nsIFileSpec *profilePath);
-	  nsresult RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x);
+      nsresult RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x);
   
       nsresult SetPremigratedFilePref(const char *pref_name, nsIFileSpec *filePath);
 #ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
       nsresult GetPremigratedFilePref(const char *pref_name, nsIFileSpec **filePath);
 #endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
       
+
       nsIPref* m_prefs;
       nsresult getPrefService();
       nsCOMPtr<nsIFileSpec> m_prefsFile; 
