@@ -99,6 +99,19 @@
         (format *error-output* "External links:~%~{  ~A~%~}" external-links)))))
 
 
+; Return a list of all prefixes of the form "A-" where "A" is any character for all defined links.
+(defun links-defined-prefixes (links)
+  (let ((prefix-letters nil))
+    (maphash #'(lambda (name link-state)
+                 (when (and (eq link-state :defined)
+                            (>= (length name) 2)
+                            (eql (char name 1) #\-))
+                   (pushnew (char name 0) prefix-letters)))
+             links)
+    (mapcar #'(lambda (letter) (coerce (list letter #\-) 'string))
+            prefix-letters)))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; MARKUP ENVIRONMENTS
 

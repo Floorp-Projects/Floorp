@@ -586,8 +586,7 @@
       (markup-stream-append1 html-stream '((script (type "text/javascript") (language "JavaScript1.2") (src "../unicodeCompatibility.js")))))
     (depict-division-style (html-stream 'body)
       (funcall emitter html-stream))
-    (let ((links (markup-env-links (html-stream-env html-stream))))
-      (warn-missing-links links))
+    (warn-missing-links (markup-env-links (html-stream-env html-stream)))
     html-stream))
 
 

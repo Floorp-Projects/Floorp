@@ -343,6 +343,7 @@
     (:nonterminal-num 46)
     (:nonterminal cs :nonterminal-num i :palatino :maroon :no-language)
     ((+ :styles) (* :nonterminal additive sbasedon :default-paragraph-font-num "Nonterminal;"))
+    (:nonterminal-index-entry v i :palatino :maroon :no-language)
     
     (:nonterminal-attribute-num 47)
     (:nonterminal-attribute cs :nonterminal-attribute-num i 0 :no-language)
@@ -359,18 +360,21 @@
     (:type-name-num 51)
     (:type-name cs :type-name-num scaps :times :red :no-language)
     ((+ :styles) (* :type-name additive sbasedon :default-paragraph-font-num "Type Name;"))
+    (:type-name-index-entry v scaps :times :red :no-language)
     
     (:field-name-num 52)
     (:field-name cs :field-name-num :helvetica :no-language)
     ((+ :styles) (* :field-name additive sbasedon :default-paragraph-font-num "Field Name;"))
     
     (:tag-name-num 53)
-    (:tag-name cs :tag-name-num :helvetica b :no-language)
+    (:tag-name cs :tag-name-num b :helvetica :no-language)
     ((+ :styles) (* :tag-name additive sbasedon :default-paragraph-font-num "Tag Name;"))
+    (:tag-name-index-entry v b :helvetica :no-language)
     
     (:global-variable-num 54)
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
+    (:global-variable-index-entry v i :times :dark-green :no-language)
     
     (:variable-num 55)
     (:variable cs :variable-num i :times :green :no-language)
@@ -524,6 +528,13 @@
     (:grammar-rule . t)
     (:js2 . t)
     (:es4 . t)))
+
+
+(defparameter *rtf-link-prefixes*
+  '(("N-" #\n :nonterminal-index-entry "Nonterminals")
+    ("R-" #\r :tag-name-index-entry "Tags")
+    ("T-" #\t :type-name-index-entry "Types")
+    ("V-" #\v :global-variable-index-entry "Globals")))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -857,10 +868,10 @@
 
 
 ; Make a new, empty, open, top-level rtf-stream with the given definitions
-; for its markup-env.
-(defun make-top-level-rtf-stream (rtf-definitions)
+; for its markup-env.  If links is true, allow links.
+(defun make-top-level-rtf-stream (rtf-definitions links)
   (let ((head (list nil))
-        (markup-env (make-markup-env nil)))
+        (markup-env (make-markup-env links)))
     (markup-env-define-alist markup-env rtf-definitions)
     (allocate-rtf-stream markup-env head head *markup-stream-top-level* *markup-logical-line-width* nil nil)))
 
@@ -908,11 +919,30 @@
   (list :right-header-group (assert-type title string) " " (time-to-short-string time) 'tab :page-number-field))
 
 
+(defun generate-indexes (rtf-stream)
+  (let ((showed-heading nil)
+        (prefixes (links-defined-prefixes (markup-env-links (rtf-stream-env rtf-stream)))))
+    (dolist (link-prefix *rtf-link-prefixes*)
+      (when (member (first link-prefix) prefixes :test #'string=)
+        (unless showed-heading
+          (depict-paragraph (rtf-stream :heading1)
+            (depict rtf-stream "Index"))
+          (setq showed-heading t))
+        (depict-paragraph (rtf-stream :heading2)
+          (depict rtf-stream (fourth link-prefix)))
+        (depict-paragraph (rtf-stream :normal)
+          (markup-stream-append1
+           rtf-stream
+           (list 'field
+                 (list '* 'fldinst (concatenate 'string "INDEX \\e \" \" \\c \"3\" \\f " (string (second link-prefix))))
+                 (list 'fldrslt "Update fields to generate this index"))))))))
+
+
 ; Create a top-level rtf-stream and call emitter to emit its contents.
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
-; Return the top-level rtf-stream.
-(defun depict-rtf-top-level (title emitter &optional (rtf-definitions *rtf-definitions*))
-  (let* ((top-rtf-stream (make-top-level-rtf-stream rtf-definitions))
+; Return the top-level rtf-stream.  If links is true, allow links.
+(defun depict-rtf-top-level (title links emitter &optional (rtf-definitions *rtf-definitions*))
+  (let* ((top-rtf-stream (make-top-level-rtf-stream rtf-definitions links))
          (rtf-stream (make-rtf-stream (markup-stream-env top-rtf-stream)
                                       *markup-stream-paragraph-level*
                                       *markup-logical-line-width*
@@ -930,7 +960,10 @@
     ;(markup-stream-append1 rtf-stream :left-footer-group)
     ;(markup-stream-append1 rtf-stream :right-footer-group)
     (funcall emitter rtf-stream)
+    (when links
+      (generate-indexes rtf-stream))
     (markup-stream-append1 top-rtf-stream (markup-stream-unexpanded-output rtf-stream))
+    (warn-missing-links (markup-env-links (rtf-stream-env rtf-stream)))
     top-rtf-stream))
 
 
@@ -938,14 +971,14 @@
 ; emitter takes one argument -- an rtf-stream to which it should emit paragraphs.
 ; Write the resulting RTF to the text file with the given name (relative to the
 ; local directory).
-(defun depict-rtf-to-local-file (filename title emitter &optional (rtf-definitions *rtf-definitions*))
-  (let ((top-rtf-stream (depict-rtf-top-level title emitter rtf-definitions)))
+(defun depict-rtf-to-local-file (filename title emitter &optional (rtf-definitions *rtf-definitions*) (links t))
+  (let ((top-rtf-stream (depict-rtf-top-level title links emitter rtf-definitions)))
     (write-rtf-to-local-file filename (markup-stream-output top-rtf-stream)))
   filename)
 
 
-(defun debug-depict-rtf (title emitter &optional (rtf-definitions *rtf-definitions*))
-  (let ((top-rtf-stream (depict-rtf-top-level title emitter rtf-definitions)))
+(defun debug-depict-rtf (title emitter &optional (rtf-definitions *rtf-definitions*) (links t))
+  (let ((top-rtf-stream (depict-rtf-top-level title links emitter rtf-definitions)))
     (markup-stream-output top-rtf-stream)))
 
 
@@ -1139,8 +1172,16 @@
 
 
 (defmethod depict-anchor ((rtf-stream rtf-stream) link-prefix link-name duplicate)
-  (declare (ignore link-prefix link-name duplicate))
-  (assert-true (= (markup-stream-level rtf-stream) *markup-stream-content-level*)))
+  (assert-true (= (markup-stream-level rtf-stream) *markup-stream-content-level*))
+  (let ((links (markup-env-links (rtf-stream-env rtf-stream))))
+    (when (record-link-definition links link-prefix link-name duplicate)
+      (let ((prefix-entry (assoc link-prefix *rtf-link-prefixes* :test #'equal)))
+        (when prefix-entry
+          (markup-stream-append1
+           rtf-stream
+           (list 'xe
+                 (list (third prefix-entry) link-name)
+                 (list 'v 'xef (char-code (second prefix-entry))))))))))
 
 
 (defmethod depict-link-reference-f ((rtf-stream rtf-stream) link-prefix link-name external emitter)
@@ -1293,6 +1334,7 @@
 (write-rtf-to-local-file ":private:Edition4a.rtf" r)
 
 (setq r (read-rtf-from-local-file ":private:Edition4b.rtf"))
+(setq r (read-rtf-from-local-file ":private:ParserSemanticsJS2.rtf"))
 
 
 (each-rtf-tag r 'listid #'(lambda (rtf)
