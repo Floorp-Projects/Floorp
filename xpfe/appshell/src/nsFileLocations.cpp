@@ -55,9 +55,9 @@
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#if defined(NS_USING_PROFILES) \
-    static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
-#endif // XP_PC
+#if defined(NS_USING_PROFILES)
+static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
+#endif // NS_USING_PROFILES
 
 #ifdef XP_MAC
 #pragma export on
