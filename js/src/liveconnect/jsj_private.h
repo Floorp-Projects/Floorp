@@ -86,6 +86,13 @@ extern char* strdup(const char* str);
 #    endif
 #endif
 
+// This file doesn't include prtypes.h, which defines PR_BEGIN_EXTERN_C,
+// and I certainly don't want to pull it in to such a high level include
+// file, so I'll just do what prtypes.h does. edburns 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*************************** Type Declarations ******************************/
 
 /* Forward type declarations */
@@ -644,5 +651,10 @@ enum JSJErrNum {
     JSJ_Err_Limit
 #undef MSGDEF
 };
+
+#ifdef __cplusplus
+} 
+// end extern "C"
+#endif
 
 #endif   /* _JSJAVA_PVT_H */
