@@ -144,8 +144,8 @@ void BasicTableLayoutStrategy::SetMaxElementSize(nsSize* aMaxElementSize)
     nsMargin borderPadding;
     const nsStylePosition* tablePosition;
     const nsStyleSpacing* tableSpacing;
-    mTableFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
-    mTableFrame->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
+    mTableFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)tablePosition));
+    mTableFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding);
     if (tablePosition->mWidth.GetUnit()==eStyleUnit_Coord)
     {
@@ -282,9 +282,9 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
     // Get the columns's style
     const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
     const nsStyleTable* colTableStyle;
-    colFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct*&)colTableStyle);
+    colFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)colTableStyle);
 
     // Get fixed column width if it has one
     if (eStyleUnit_Coord==colPosition->mWidth.GetUnit()) 
@@ -393,7 +393,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             nsTableColFrame *cf;
             mTableFrame->GetColumnFrame(i+colIndex, cf);
             const nsStylePosition* colPos;
-            cf->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPos);
+            cf->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPos);
             if (colPos->mWidth.GetUnit() != eStyleUnit_Auto &&
                (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN!=cf->GetWidthSource()))
             {
@@ -863,9 +863,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableDoesNotFit()
 
     // Get the columns's style
     const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
     const nsStyleTable* colTableStyle;
-    colFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct*&)colTableStyle);
+    colFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)colTableStyle);
     //if (PR_FALSE==IsFixedWidth(colPosition, colTableStyle))
     {
       minAdjustedColWidth = colFrame->GetAdjustedMinColWidth();
@@ -940,9 +940,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
     PRInt32 firstRowIndex = -1;
 
     const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);    
+    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);    
     const nsStyleTable* colTableStyle;
-    colFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct*&)colTableStyle);
+    colFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)colTableStyle);
 
     // first, deal with any cells that span into this column from a pervious column
       // go through the list backwards so we can delete easily
@@ -1675,9 +1675,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
     PRInt32 rowIndex;
     PRInt32 firstRowIndex = -1;
     const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
     const nsStyleTable* colTableStyle;
-    colFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct*&)colTableStyle);
+    colFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct*&)colTableStyle);
 
     // first, deal with any cells that span into this column from a pervious column
       // go through the list backwards so we can delete easily
@@ -2405,7 +2405,7 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
   nsTableColFrame* colFrame;
   mTableFrame->GetColumnFrame(aColIndex, colFrame);
   const nsStylePosition* colPosition;
-  colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+  colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
   switch (colPosition->mWidth.GetUnit())
   {
   case eStyleUnit_Coord:
