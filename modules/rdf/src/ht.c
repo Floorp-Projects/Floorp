@@ -1016,13 +1016,15 @@ initViews (HT_Pane pane)
 
 
 
-PR_PUBLIC_API(void)
-HT_NewWorkspace(HT_Pane pane, char *id, char *optionalTitle)
+void
+htNewWorkspace(HT_Pane pane, char *id, char *optionalTitle, uint32 workspacePos)
 {
 	RDF_Resource		r;
 
-	XP_ASSERT(id != NULL);
 	XP_ASSERT(pane != NULL);
+	XP_ASSERT(id != NULL);
+	if (pane == NULL)	return;
+	if (id == NULL)		return;
 
 	if ((r = RDF_GetResource(pane->db, id, 0)) == NULL)
 	{
@@ -1039,10 +1041,31 @@ HT_NewWorkspace(HT_Pane pane, char *id, char *optionalTitle)
 			RDF_Assert(pane->db, r, gCoreVocab->RDF_name, 
 				   optionalTitle, RDF_STRING_TYPE);
 		}
+		if (workspacePos != 0)
+		{
+			RDF_Assert(pane->db, r, gNavCenter->RDF_WorkspacePos,
+				(void *)&workspacePos, RDF_INT_TYPE);
+		}
 		RDFUtil_SetDefaultSelectedView(r);
 		RDF_Assert(pane->db, r, gCoreVocab->RDF_parent,
 			gNavCenter->RDF_Top, RDF_RESOURCE_TYPE);
 	}
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_NewWorkspace(HT_Pane pane, char *id, char *optionalTitle)
+{
+	HT_View			viewList;
+	RDF_Resource		r;
+
+	XP_ASSERT(pane != NULL);
+	XP_ASSERT(id != NULL);
+	if (pane == NULL)	return;
+	if (id == NULL)		return;
+
+	htNewWorkspace(pane, id, optionalTitle, 0);
 }
 
 
@@ -5193,9 +5216,15 @@ HT_Properties (HT_Resource node)
 PR_PUBLIC_API(RDF_Resource)
 HT_GetRDFResource (HT_Resource node)
 {
+	RDF_Resource		r = NULL;
+
 	XP_ASSERT(node != NULL);
 
-	return (node->node);
+	if (node != NULL)
+	{
+		r = node->node;
+	}
+	return (r);
 }
 
 
@@ -5715,40 +5744,94 @@ PR_PUBLIC_API(HT_DropAction)
 HT_CanDropHTRAtPos(HT_Resource dropTarget, HT_Resource obj, PRBool before)
 {
 	HT_Resource		dropParent;
-	HT_DropAction		ok;
+	HT_View			viewList;
+	HT_Pane			pane;
+	HT_DropAction		action = DROP_NOT_ALLOWED;
 
+	XP_ASSERT(dropTarget != NULL);
+	XP_ASSERT(obj != NULL);
+	if (dropTarget == NULL)	return(action);
+	if (obj == NULL)	return(action);
+	
 	dropParent = dropTarget->parent;
-	ok = dropOn(dropParent, obj, 1);
-	if (ok && nlocalStoreHasAssertion(gLocalStore, dropTarget->node,
-		gCoreVocab->RDF_parent, dropParent->node, RDF_RESOURCE_TYPE, 1))
+
+	if ((dropParent == NULL) && (obj->parent == NULL))
 	{
+		/* workspace reordering */
+
+		if (!htIsOpLocked(obj->parent, gNavCenter->RDF_WorkspacePosLock))
+		{
+			if (before)
+			{
+				if (!htIsOpLocked(dropTarget, gNavCenter->RDF_WorkspacePosLock))
+				{
+					action = COPY_MOVE_CONTENT;
+				}
+			}
+			else
+			{
+				if ((pane = HT_GetPane(HT_GetView(dropTarget))) != NULL)
+				{
+					viewList = pane->viewList;
+					while (viewList != NULL)
+					{
+						if (HT_TopNode(viewList) == dropTarget)
+						{
+							viewList = viewList->next;
+							break;
+						}
+						viewList = viewList->next;
+					}
+					if (viewList != NULL)
+					{
+						if (!htIsOpLocked(HT_TopNode(viewList), gNavCenter->RDF_WorkspacePosLock))
+						{
+							action = COPY_MOVE_CONTENT;
+						}
+					}
+				}
+			}
+		}
 	}
 	else
-	{
-		ok = DROP_NOT_ALLOWED;
+	{	
+		action = dropOn(dropParent, obj, 1);
+		if (action && nlocalStoreHasAssertion(gLocalStore, dropTarget->node,
+			gCoreVocab->RDF_parent, dropParent->node, RDF_RESOURCE_TYPE, 1))
+		{
+		}
+		else
+		{
+			action = DROP_NOT_ALLOWED;
+		}
 	}
-	return (ok);
+	return (action);
 }
  
 	
   
 PR_PUBLIC_API(HT_DropAction)
-HT_CanDropURLAtPos(HT_Resource dropTarget, char* url, PRBool before)
+HT_CanDropURLAtPos(HT_Resource dropTarget, char *url, PRBool before)
 {
 	HT_Resource		dropParent;
-	HT_DropAction		ok;
+	HT_DropAction		action = DROP_NOT_ALLOWED;
+
+	XP_ASSERT(dropTarget != NULL);
+	XP_ASSERT(url != NULL);
+	if (dropTarget == NULL)	return(DROP_NOT_ALLOWED);
+	if (url == NULL)	return(DROP_NOT_ALLOWED);
 
 	dropParent = dropTarget->parent;
-	ok = dropURLOn(dropParent, url, NULL, 1);
-	if (ok &&  nlocalStoreHasAssertion(gLocalStore, dropTarget->node,
+	action = dropURLOn(dropParent, url, NULL, 1);
+	if (action &&  nlocalStoreHasAssertion(gLocalStore, dropTarget->node,
 		gCoreVocab->RDF_parent, dropParent->node, RDF_RESOURCE_TYPE, 1))
 	{
 	}
 	else
 	{
-		ok = DROP_NOT_ALLOWED;
+		action = DROP_NOT_ALLOWED;
 	}
-	return (ok);
+	return (action);
 }
 
 
@@ -5756,12 +5839,41 @@ HT_CanDropURLAtPos(HT_Resource dropTarget, char* url, PRBool before)
 PR_PUBLIC_API(HT_DropAction)
 HT_DropHTRAtPos(HT_Resource dropTarget, HT_Resource obj, PRBool before)
 {
-	HT_DropAction		ac;
+	HT_DropAction		action = DROP_NOT_ALLOWED;
+	uint32			workspacePos;
 
-	ac = copyMoveRDFLinkAtPos(dropTarget, obj, before);
-	resynchContainer (dropTarget->parent);
-	refreshItemList(dropTarget, HT_EVENT_VIEW_REFRESH);
-	return (ac);
+	XP_ASSERT(dropTarget != NULL);
+	XP_ASSERT(obj != NULL);
+	if (dropTarget == NULL)	return(DROP_NOT_ALLOWED);
+	if (obj == NULL)	return(DROP_NOT_ALLOWED);
+
+	if (dropTarget->parent == NULL)
+	{
+		if (obj->parent == NULL)
+		{
+			/* workspace reordering */
+
+			htSetWorkspaceOrder(obj->node, dropTarget->node, !before);
+			action = COPY_MOVE_CONTENT;
+		}
+		else
+		{
+			/* new workspace, specifying position */
+
+			workspacePos = (HT_GetView(dropTarget))->workspacePos;
+			if (before && (workspacePos>0))	--workspacePos;
+			htNewWorkspace(HT_GetPane(HT_GetView(dropTarget)),
+				resourceID(HT_GetRDFResource(obj)), NULL, workspacePos);
+// crap
+		}
+	}
+	else
+	{
+		action = copyMoveRDFLinkAtPos(dropTarget, obj, before);
+		resynchContainer (dropTarget->parent);
+		refreshItemList(dropTarget, HT_EVENT_VIEW_REFRESH);
+	}
+	return (action);
 }
 
 
@@ -6185,9 +6297,15 @@ HT_GetViewType (HT_Pane pane, HT_ViewType viewType)
 PR_PUBLIC_API(HT_Pane)
 HT_GetPane (HT_View view)
 {
-	XP_ASSERT(view != NULL);
+	HT_Pane		pane = NULL;
 
-	return view->pane;
+	XP_ASSERT(view != NULL);
+	
+	if (view != NULL)
+	{
+		pane = view->pane;
+	}
+	return(pane);
 }
 
 

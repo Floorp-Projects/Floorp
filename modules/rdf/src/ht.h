@@ -100,7 +100,7 @@ typedef struct _HT_PaneStruct {
 	PRBool				personaltoolbar;
 	PRBool				bookmarkmenu;
 	PRBool				special;
-    char*               windowURL;
+	char				*windowURL;
 } HT_PaneStruct;
 
 typedef	struct HT_ColumnStruct {
@@ -236,6 +236,7 @@ void				refreshPanes();
 HT_Pane				paneFromResource(RDF_Resource resource, HT_Notification notify, PRBool autoFlushFlag, PRBool autoOpenFlag);
 RDF				newHTPaneDB();
 PRBool				initViews (HT_Pane pane);
+void				htNewWorkspace(HT_Pane pane, char *id, char *optionalTitle, uint32 workspacePos);
 HT_PaneStruct *			HT_GetHTPaneList ();
 HT_PaneStruct *			HT_GetNextHTPane (HT_PaneStruct* pane);
 void				htSetWorkspaceOrder(RDF_Resource src, RDF_Resource dest, PRBool afterDestFlag);
