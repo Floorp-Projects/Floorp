@@ -139,6 +139,12 @@ NS_IMETHODIMP nsPermissionManager::Add
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPermissionManager::TestForBlocking
+    (const char * objectURL, PRInt32 type, PRBool* blocked) {
+  ::PERMISSION_TestForBlocking(objectURL, blocked, type, mIOService);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPermissionManager::RemoveAll(void) {
   ::PERMISSION_RemoveAll();
   return NS_OK;

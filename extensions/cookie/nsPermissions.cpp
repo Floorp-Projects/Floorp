@@ -724,3 +724,34 @@ PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type,
   }
   Permission_AddHost(host, permission, type, PR_TRUE);
 }
+
+PUBLIC void
+PERMISSION_TestForBlocking(const char * objectURL, PRBool* blocked, PRInt32 type,
+               nsIIOService* ioService) {
+  if (!objectURL) {
+    return;
+  }
+  nsresult rv = NS_OK;
+  nsXPIDLCString host;
+  PRUint32 start,end;
+  NS_ASSERTION(ioService, "IOService not available");
+  rv = ioService->ExtractUrlPart(objectURL, nsIIOService::url_Host |
+                                 nsIIOService::url_Port, &start, &end, getter_Copies(host));
+
+  const char * hostPtr = host.get();
+  while (PR_TRUE) {
+    PRBool permission;
+    rv = permission_CheckFromList(hostPtr, permission, type);
+    if (NS_SUCCEEDED(rv) && !permission) {
+      *blocked = PR_TRUE;
+      return;
+    }
+    hostPtr = PL_strchr(hostPtr, '.');
+    if (!hostPtr) {
+      break;
+    }
+    hostPtr++; /* get past the period */
+  }
+  *blocked = PR_FALSE;
+  return;
+}
