@@ -206,12 +206,12 @@ sub check_netmask {
 
   {
    name => 'cookiepath',
-   desc => 'Path, relative to your web document root, to which to restrict' .
-           'Bugzilla cookies.  Normally this is the URI portion of your URL' .
-           'base.  Begin with a / (single slash mark).  For instance, if' .
-           'Bugzilla serves from http://www.somedomain.com/bugzilla/, set' .
-           'this parameter to /bugzilla/ .  Setting it to / will allow' .
-           'all sites served by this web server or virtual host to read' .
+   desc => 'Path, relative to your web document root, to which to restrict ' .
+           'Bugzilla cookies.  Normally this is the URI portion of your URL ' .
+           'base.  Begin with a / (single slash mark).  For instance, if ' .
+           'Bugzilla serves from http://www.somedomain.com/bugzilla/, set ' .
+           'this parameter to /bugzilla/ .  Setting it to / will allow ' .
+           'all sites served by this web server or virtual host to read ' .
            'Bugzilla cookies.',
    type => 't',
    default => '/'
