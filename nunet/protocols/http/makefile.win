@@ -15,17 +15,15 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
+#------------------------------------------------------------------------
+#
+# Makefile to build the pluggable HTTP 
+#
+#------------------------------------------------------------------------
 
-DEPTH=..
-
-DIRS= \
-	public 		\
-	base 		\
-	protocols 	\
+DEPTH=..\..\..
+DIRS= 	\
+	src			\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
-
-INCLUDE = $(INCLUDE)
-

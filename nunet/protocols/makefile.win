@@ -16,16 +16,23 @@
 # Reserved.
 
 IGNORE_MANIFEST=1
+#
 
-DEPTH=..
+#------------------------------------------------------------------------
+#
+# Makefile to build the pluggable protocols
+# If you decide to add any new directories here, 
+# make sure you have read the README.TXT file! - Gagan Saksena
+#
+#------------------------------------------------------------------------
 
+
+DEPTH=..\..
+include <$(DEPTH)\config\config.mak> 
 DIRS= \
-	public 		\
-	base 		\
-	protocols 	\
-	$(NULL)
+#file \
+    http \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
-
-INCLUDE = $(INCLUDE)
 
