@@ -7,7 +7,7 @@
 <window id="open-save-attachment"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	flex="100%" class="dialog" title="&openSaveAttachment.title;" 
-	align="vertical" onload="onLoad();" >
+	align="vertical" onload="onLoad();" onclose="onCancel();" >
 
 	<script language="JavaScript" src="chrome://global/content/strres.js"/>
 	<script src="chrome://messenger/content/openSaveAttachment.js"/>
