@@ -1670,7 +1670,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   // if ( (tmpSpec) && (!bodyPart) )
   if (tmpSpec)
   {
-    char *tmpSpecStr = PR_smprintf("file://%s", tmpSpec->GetNativePathCString());
+    char *tmpSpecStr = PR_smprintf("file:///%s", tmpSpec->GetNativePathCString());
 
     if (tmpSpecStr)
     {
