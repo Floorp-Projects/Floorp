@@ -84,7 +84,7 @@ typedef struct {
 #define	kNoMultiLine	-1
 
 static MAPIFields	gMapiFields[] = {
-	{ 35, kIsMultiLine, PR_COMMENT},
+	{ 35, kIsMultiLine, PR_BODY},
 	{ 6, kNoMultiLine, PR_BUSINESS_TELEPHONE_NUMBER},
 	{ 7, kNoMultiLine, PR_HOME_TELEPHONE_NUMBER},
 	{ 25, kNoMultiLine, PR_COMPANY_NAME},
