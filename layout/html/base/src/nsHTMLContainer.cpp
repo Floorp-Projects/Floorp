@@ -29,6 +29,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsDOMNodeList.h"
 #include "nsUnitConversion.h"
+#include "nsStyleUtil.h"
 #include "nsIURL.h"
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
@@ -588,6 +589,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
           font->mFont.name = family;
           font->mFixedFont.name = family;
         }
+        font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
       }
 
       // pointSize: int, enum
@@ -596,35 +598,31 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         // XXX should probably sanitize value
         font->mFont.size = parentFont->mFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
         font->mFixedFont.size = parentFont->mFixedFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
       }
       else if (value.GetUnit() == eHTMLUnit_Enumerated) {
         font->mFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
         font->mFixedFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
       }
       else {
-        // size: int, enum
-        GetAttribute(nsHTMLAtoms::size, value);
-        if ((value.GetUnit() == eHTMLUnit_Integer) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
-          static float kFontScale[7] = {
-            0.6874999f,  // size=1
-            0.85f,    // 2
-            1.0f,     // 3
-            1.175f,   // 4
-            1.5f,     // 5
-            2.0f,     // 6
-            3.0f      // 7
-          };
-          PRInt32 size = value.GetIntValue();
+        // size: int, enum , NOTE: this does not count as an explicit size
+        // also this has no effect if font is already explicit
+        if (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+          GetAttribute(nsHTMLAtoms::size, value);
+          if ((value.GetUnit() == eHTMLUnit_Integer) || (value.GetUnit() == eHTMLUnit_Enumerated)) { 
+            PRInt32 size = value.GetIntValue();
         
-          const nsFont& normal = aPresContext->GetDefaultFont();  // XXX should be BASEFONT
-          const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();  // XXX should be BASEFONT
+            const nsFont& normal = aPresContext->GetDefaultFont(); 
+            const nsFont& normalFixed = aPresContext->GetDefaultFixedFont(); 
 
-          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
-            size = 3 + size;  // XXX should be BASEFONT, not three
+            if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
+              size = 3 + size;  // XXX should be BASEFONT, not three
+            }
+            size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+            font->mFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normal.size);
+            font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(size, (PRInt32)normalFixed.size);
           }
-          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-          font->mFont.size = (nscoord)((float)normal.size * kFontScale[size - 1]);
-          font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[size - 1]);
         }
       }
 
@@ -769,6 +767,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         nsStyleColor* color = (nsStyleColor*)
           aContext->GetMutableStyleData(eStyleStruct_Color);
         color->mColor = value.GetColorValue();
+        aPresContext->SetDefaultColor(color->mColor);
       }
     }
   }
