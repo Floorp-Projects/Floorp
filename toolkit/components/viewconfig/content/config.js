@@ -431,15 +431,39 @@ const gSortFunctions =
   valueCol: valueColSortFunction
 };
 
-function updateContextMenu(popup) {
-  if (view.selection.currentIndex < 0)
-    return false;
-  var pref = gPrefView[view.selection.currentIndex];
-  var reset = popup.lastChild;
-  reset.setAttribute("disabled", pref.lockCol != PREF_IS_USER_SET);
-  var modify = reset.previousSibling;
-  modify.setAttribute("disabled", pref.lockCol == PREF_IS_LOCKED);
-  return true;
+function updateContextMenu()
+{
+  var lockCol = PREF_IS_LOCKED;
+  var typeCol = nsIPrefBranch.PREF_STRING;
+  var valueCol = "";
+  var copyDisabled = true;
+
+  if (view.selection.currentIndex >= 0) {
+    var prefRow = gPrefView[view.selection.currentIndex];
+    lockCol = prefRow.lockCol;
+    typeCol = prefRow.typeCol;
+    valueCol = prefRow.valueCol;
+    copyDisabled = false;
+  }
+
+  var copyName = document.getElementById("copyName");
+  copyName.setAttribute("disabled", copyDisabled);
+
+  var copyValue = document.getElementById("copyValue");
+  copyValue.setAttribute("disabled", copyDisabled);
+
+  var resetSelected = document.getElementById("resetSelected");
+  resetSelected.setAttribute("disabled", lockCol != PREF_IS_USER_SET);
+
+  var canToggle = typeCol == nsIPrefBranch.PREF_BOOL && valueCol != "";
+
+  var modifySelected = document.getElementById("modifySelected");
+  modifySelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
+  modifySelected.hidden = canToggle;
+
+  var toggleSelected = document.getElementById("toggleSelected");
+  toggleSelected.setAttribute("disabled", lockCol == PREF_IS_LOCKED);
+  toggleSelected.hidden = !canToggle;
 }
 
 function copyName()
@@ -454,7 +478,8 @@ function copyValue()
 
 function ModifySelected()
 {
-  ModifyPref(gPrefView[view.selection.currentIndex]);
+  if (view.selection.currentIndex >= 0)
+    ModifyPref(gPrefView[view.selection.currentIndex]);
 }
 
 function ResetSelected()
@@ -467,7 +492,6 @@ function NewPref(type)
 {
   var result = { value: "" };
   var dummy = { value: 0 };
-  // XXX get these from a string bundle
   if (gPromptService.prompt(window,
                             gConfigBundle.getFormattedString("new_title", [gTypeStrs[type]]),
                             gConfigBundle.getString("new_prompt"),
@@ -484,7 +508,8 @@ function NewPref(type)
   }
 }
 
-function gotoPref(pref) {
+function gotoPref(pref)
+{
   // make sure the pref exists and is displayed in the current view
   var index = pref in gPrefHash ? getViewIndexOfPref(gPrefHash[pref]) : -1;
   if (index >= 0) {
@@ -500,29 +525,24 @@ function ModifyPref(entry)
 {
   if (entry.lockCol == PREF_IS_LOCKED)
     return false;
-  var result = { value: entry.valueCol };
-  var dummy = { value: 0 };
-  // XXX get this from a string bundle
-  if (!gPromptService.prompt(window,
-                             gConfigBundle.getFormattedString("modify_title", [gTypeStrs[entry.typeCol]]),
-                             entry.prefCol,
-                             result,
-                             null,
-                             dummy))
-    return false;
-  switch (entry.typeCol) {
-    case nsIPrefBranch.PREF_BOOL:
-      gPrefBranch.setBoolPref(entry.prefCol, result.value == "true" || !!parseInt(result.value, 10));
-      break;
-    case nsIPrefBranch.PREF_INT:
+  var title = gConfigBundle.getFormattedString("modify_title", [gTypeStrs[entry.typeCol]]);
+  if (entry.typeCol == nsIPrefBranch.PREF_BOOL) {
+    var check = { value: entry.valueCol == "false" };
+    if (!entry.valueCol && !gPromptService.select(window, title, entry.prefCol, 2, [false, true], check))
+      return false;
+    gPrefBranch.setBoolPref(entry.prefCol, check.value);
+  } else {
+    var result = { value: entry.valueCol };
+    var dummy = { value: 0 };
+    if (!gPromptService.prompt(window, title, entry.prefCol, result, null, dummy))
+      return false;
+    if (entry.typeCol == nsIPrefBranch.PREF_INT) {
       gPrefBranch.setIntPref(entry.prefCol, parseInt(result.value, 10));
-      break;
-    default:
-    case nsIPrefBranch.PREF_STRING:
+    } else {
       var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
       supportsString.data = result.value;
       gPrefBranch.setComplexValue(entry.prefCol, nsISupportsString, supportsString);
-      break;
+    }
   }
   return true;
 }
