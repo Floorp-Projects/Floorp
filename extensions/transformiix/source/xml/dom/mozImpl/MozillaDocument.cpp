@@ -455,7 +455,7 @@ CDATASection* Document::createCDATASection(nsIDOMCDATASection* aCdata)
 {
     CDATASection* cdataWrapper = NULL;
 
-    if (cdataWrapper)
+    if (aCdata)
     {
         nsISupportsKey key(aCdata);
         cdataWrapper = (CDATASection*)wrapperHashTable->Get(&key);

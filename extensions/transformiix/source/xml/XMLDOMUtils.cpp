@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.10 2001/01/22 20:23:44 axel%pike.org Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.11 2001/01/31 11:48:55 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/01/22 20:23:44 $
+ * @version $Revision: 1.11 $ $Date: 2001/01/31 11:48:55 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -157,7 +157,8 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
             for (UInt32 i = 0; i < nl->getLength(); i++) {
                 nodeType = nl->item(i)->getNodeType();
                 if ((nodeType == Node::TEXT_NODE) ||
-                    (nodeType == Node::ELEMENT_NODE))
+                    (nodeType == Node::ELEMENT_NODE) ||
+                    (nodeType == Node::CDATA_SECTION_NODE))
                     {
                         getNodeValue(nl->item(i),target);
                     }
@@ -165,6 +166,7 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
             break;
         }
         case Node::TEXT_NODE :
+        case Node::CDATA_SECTION_NODE :
             target->append ( ((Text*)node)->getData() );
             break;
         case Node::COMMENT_NODE :
