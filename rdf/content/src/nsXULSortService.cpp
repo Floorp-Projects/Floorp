@@ -195,7 +195,6 @@ nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
 nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel);
-nsresult	PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 
 static nsresult	GetResourceValue(nsIRDFResource *res1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
 static nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsIRDFNode **, PRBool &isCollationKey);
@@ -1386,84 +1385,6 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 
 
 
-nsresult
-XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel)
-{
-	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
-        nsCOMPtr<nsIContent>	child;
-	nsresult		rv;
-
-	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
-	for (childIndex=0; childIndex<numChildren; childIndex++)
-	{
-		if (NS_FAILED(rv = container->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
-		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return(rv);
-		if (nameSpaceID == kNameSpaceID_XUL)
-		{
-			nsCOMPtr<nsIAtom> tag;
-
-			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))
-				return rv;
-			nsString	tagName;
-			tag->ToString(tagName);
-			for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
-			printf("Child #%d: tagName='%s'\n", childIndex, tagName.ToNewCString());
-
-			PRInt32		attribIndex, numAttribs;
-			child->GetAttributeCount(numAttribs);
-			for (attribIndex = 0; attribIndex < numAttribs; attribIndex++)
-			{
-				PRInt32			attribNameSpaceID;
-				nsCOMPtr<nsIAtom> 	attribAtom;
-
-				if (NS_SUCCEEDED(rv = child->GetAttributeNameAt(attribIndex, attribNameSpaceID,
-					*getter_AddRefs(attribAtom))))
-				{
-					nsString	attribName, attribValue;
-					attribAtom->ToString(attribName);
-					rv = child->GetAttribute(attribNameSpaceID, attribAtom, attribValue);
-					if (rv == NS_CONTENT_ATTR_HAS_VALUE)
-					{
-						for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
-						printf("Attrib #%d: name='%s' value='%s'\n", attribIndex,
-							attribName.ToNewCString(),
-							attribValue.ToNewCString());
-					}
-				}
-			}
-			if ((tag.get() == kTreeItemAtom) || (tag.get() == kTreeChildrenAtom) || (tag.get() == kTreeCellAtom))
-			{
-				PrintTreeChildren(child, colIndex, indentLevel+1);
-			}
-		}
-		else
-		{
-			for (PRInt32 loop=0; loop<indentLevel; loop++) printf("    ");
-			printf("(Non-XUL node)  ");
-			nsCOMPtr<nsIDOMText> text;
-			rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(text));
-			if (NS_SUCCEEDED(rv))
-			{
-				for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
-				printf("(kIDOMTextIID)  ");
-
-				nsAutoString val;
-				text->GetData(val);
-				if (val.Length())
-				{
-					printf("value='");
-					fputs(val, stdout);
-					printf("'");
-				}
-			}
-			printf("\n");
-		}
-	}
-	return(NS_OK);
-}
-
-
-
 NS_IMETHODIMP
 XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
@@ -1540,10 +1461,6 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	}
 
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
-
-#if 0
-	if (NS_FAILED(rv = PrintTreeChildren(treeBody, colIndex, 0)))	return(rv);
-#endif
 	return(NS_OK);
 }
 
@@ -1552,5 +1469,5 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 nsresult
 NS_NewXULSortService(nsIXULSortService** mgr)
 {
-    return XULSortServiceImpl::GetSortService(mgr);
+	return XULSortServiceImpl::GetSortService(mgr);
 }
