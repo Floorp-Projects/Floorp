@@ -433,14 +433,23 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
 
             APPEND_CHAR_TO_STACK('(');
             for (i = 0; i < fp->argc; i++) {
-                /* Avoid toSource() and function decompilation bloat for now. */
+                /* Avoid toSource bloat and fallibility for object types. */
                 v = fp->argv[i];
-                if (JSVAL_IS_FUNCTION(cx, v)) {
+                if (JSVAL_IS_PRIMITIVE(v)) {
+                    argsrc = js_ValueToSource(cx, v);
+                } else if (JSVAL_IS_FUNCTION(cx, v)) {
+                    /* XXX Avoid function decompilation bloat for now. */
                     argsrc = JS_GetFunctionId(JS_ValueToFunction(cx, v));
                     if (!argsrc)
                         argsrc = js_ValueToSource(cx, v);
                 } else {
-                    argsrc = js_ValueToString(cx, v);
+                    /* XXX Avoid toString on objects, it takes too long and
+                           uses too much memory, for too many classes (see
+                           Mozilla bug 166743). */
+                    char buf[100];
+                    JS_snprintf(buf, sizeof buf, "[object %s]",
+                                OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v))->name);
+                    argsrc = JS_NewStringCopyZ(cx, buf);
                 }
                 if (!argsrc) {
                     ok = JS_FALSE;
@@ -882,10 +891,15 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     uintN lineno;
     JSExnPrivate *privateData;
 
-    /* Find the exception index associated with this error. */
+    /*
+     * Tell our caller to report immediately if cx has no active frames, or if
+     * this report is just a warning.
+     */
     JS_ASSERT(reportp);
-    if (JSREPORT_IS_WARNING(reportp->flags))
+    if (!cx->fp || JSREPORT_IS_WARNING(reportp->flags))
         return JS_FALSE;
+
+    /* Find the exception index associated with this error. */
     errorNumber = (JSErrNum) reportp->errorNumber;
     exn = errorToExceptionNum[errorNumber];
     JS_ASSERT(exn < JSEXN_LIMIT);
