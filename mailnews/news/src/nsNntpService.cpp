@@ -546,7 +546,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         //break;
       }
       else {
-        if (host != currentHost) {
+        if (!host.Equals(currentHost)) {
           printf("todo, implement an alert:  no cross posting to multiple hosts!\n"); 
           CRTFREEIF(list);
           return NS_ERROR_FAILURE;
@@ -702,7 +702,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         host = currentHost;
       }
       else {
-        if (host != currentHost) {
+        if (!host.Equals(currentHost)) {
 #ifdef DEBUG_sspitzer
           printf("no cross posting to multiple hosts!\n");
 #endif

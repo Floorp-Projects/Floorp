@@ -91,7 +91,7 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 	if (NS_FAILED(rv)) return rv;
 
     nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
-	newsrcFileName += hostname;
+	newsrcFileName.Append(hostname);
 #ifdef DO_HASHING_OF_HOSTNAME
     NS_MsgHashIfNecessary(newsrcFileName);
 #endif /* DO_HASHING_OF_HOSTNAME */
