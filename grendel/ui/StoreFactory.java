@@ -100,15 +100,55 @@ public class StoreFactory {
 
     proto = urlName.getProtocol();
 
+    // ### Very wrong temporary hack -- special case "berkeley" and "pop3",
+    // since they doesn't play with the proper registration mechanism right
+    // now.
     Store store = null;
     ViewedStore viewedStore = null;
 
     try {
-      store = fSession.getStore(proto);
-    } catch (MessagingException e) {
-      System.out.println("Got exception " + e +
-                         " while creating store of type " + proto);
-      e.printStackTrace();
+      Class c = null;
+      if (proto.equalsIgnoreCase("berkeley")) {
+        c = Class.forName("grendel.storage.BerkeleyStore");
+      // Two pop3 providers  
+      } else if (proto.equalsIgnoreCase("gpop3")) {
+        c = Class.forName("grendel.storage.PopStore");
+      } else if (proto.equalsIgnoreCase("spop3")) {
+        c = Class.forName("com.sun.mail.pop3.POP3Store;");
+      // Two news providers  
+      } else if (proto.equalsIgnoreCase("gnews")) {
+        c = Class.forName("grendel.storage.NewsStore");
+      } else if (proto.equalsIgnoreCase("dnews")) {
+        c = Class.forName("dog.mail.nntp.NNTPStore");
+      // Defaults
+      } else if (proto.equalsIgnoreCase("pop3")) {
+        c = Class.forName("com.sun.mail.pop3.POP3Store;");
+      } else if (proto.equalsIgnoreCase("news")) {
+        c = Class.forName("grendel.storage.NewsStore");
+      }
+
+      if (c != null) {
+        Object args[] = { fSession, urlName };
+        Class types[] = { args[0].getClass(), args[1].getClass() };
+        Constructor cc = c.getConstructor(types);
+        store = (Store) cc.newInstance(args);
+      }
+    } catch (ClassNotFoundException c) {        // Class.forName
+    } catch (NoSuchMethodException c) {         // Constructor.getConstructor
+    } catch (IllegalAccessException c) {        // Constructor.newInstance
+    } catch (IllegalArgumentException c) {      // Constructor.newInstance
+    } catch (InstantiationException c) {        // Constructor.newInstance
+    } catch (InvocationTargetException c) {     // Constructor.newInstance
+    }
+
+    if (store == null) {
+      try {
+        store = fSession.getStore(proto);
+      } catch (MessagingException e) {
+        System.out.println("Got exception " + e +
+                           " while creating store of type" + proto);
+        e.printStackTrace();
+      }
     }
 
     viewedStore = new ViewedStoreBase(store,
