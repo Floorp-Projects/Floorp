@@ -250,6 +250,8 @@ protected:
   NS_IMETHODIMP           ShowModalInternal();
   void                    ExitModalLoop() { mContinueModalLoop = PR_FALSE; }
 
+  nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
+
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsIXULWindowCallbacks*  mCallbacks;
@@ -264,6 +266,8 @@ protected:
                                // created as the XUL file for this window loads.
 
   nsIDOMNode * contextMenuTest;
+
+  nsString mStatus;
 private:
 
   static void * HandleModalDialogEvent(PLEvent *aEvent);

@@ -1,5 +1,7 @@
   var appCore = null;
   var appCoreName = "";
+  var defaultStatus = "default status text";
+
   function Startup()
   {
     dump("Doing Startup...\n");
@@ -699,6 +701,9 @@
             var status = document.getElementById("Browser:Status");
             if ( status ) {
                 var text = status.getAttribute("value");
+                if ( text == "" ) {
+                    text = defaultStatus;
+                }
                 var statusText = document.getElementById("statusText");
                 if ( statusText ) {
                     statusText.setAttribute( "value", text );
@@ -764,6 +769,7 @@
 						var msg = "Document: Done (" + elapsed + " secs)";
 						dump( msg + "\n" );
                         status.setAttribute("value",msg);
+                        defaultStatus = msg;
                     }
 					startTime = 0;
                 }
