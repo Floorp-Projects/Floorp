@@ -134,6 +134,23 @@ protected:
 };
 
 
+class nsInsertTagCommand : public nsBaseComposerCommand
+{
+public:
+
+              nsInsertTagCommand(const char* aTagName);
+  virtual     ~nsInsertTagCommand();
+    
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSICONTROLLERCOMMAND
+
+protected:
+
+  const char* mTagName;
+};
+
+
 class nsListCommand : public nsBaseStateUpdatingCommand
 {
 public:
@@ -190,7 +207,7 @@ protected:
 protected:
 
   PRPackedBool  mGotState;
-  nsString      mStateString;
+//  nsString      mStateString;
 
 };
 
@@ -216,6 +233,20 @@ protected:
 
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsString& outStateString, PRBool& outMixed);
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams);
+  virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
+};
+
+class nsFontSizeStateCommand : public nsMultiStateCommand
+{
+public:
+                   nsFontSizeStateCommand();
+
+protected:
+  virtual nsresult GetCurrentState(nsIEditor *aEditor,
+                                   nsString& outStateString,
+                                   PRBool& outMixed);
+  virtual nsresult GetCurrentState(nsIEditor *aEditor,
+                                   nsICommandParams* aParams);
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState);
 };
 
