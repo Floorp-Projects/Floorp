@@ -1992,7 +1992,7 @@ nsRegistryFactory::LockFactory(PRBool aLock)
 
 // This is a temporary hack; needs work to support dynamic binding
 // via nsComponentManager and support for multiple factories per DLL.
-extern "C" NS_EXPORT nsresult
+nsresult
 NS_RegistryGetFactory(nsIFactory** aFactory ) {
     nsresult rv = NS_OK;
 
