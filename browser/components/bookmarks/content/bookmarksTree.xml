@@ -864,11 +864,10 @@ dump("ONSELECTION CHANGED\n")
           </rule>
         </template>
         <treecols anonid="treecols">
-          <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
-                        class="sortDirectionIndicator"
-                        persist="width hidden ordinal" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                        sortActive="true" sortDirection="none"/>
+          <treecol id="Name" flex="1" primary="true" 
+                   hideheader="true"
+                   persist="width hidden ordinal" 
+                   sort="rdf:http://home.netscape.com/NC-rdf#Name"/>
         </treecols>
       </tree>
     </xbl:content>
