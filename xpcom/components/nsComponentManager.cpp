@@ -3391,7 +3391,7 @@ nsComponentManagerImpl::RegisterFactoryLocation(const nsCID & aClass,
                                    aClassName, 
                                    aContractID, 
                                    aFile,
-                                   (loaderStr ? loaderStr : registryName),
+                                   (loaderStr ? loaderStr : registryName.get()),
                                    PR_TRUE, 
                                    PR_TRUE,
                                    (aType ? aType : nativeComponentType) );
