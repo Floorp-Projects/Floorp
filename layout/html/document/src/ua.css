@@ -456,6 +456,12 @@ APPLET {
 AREA {
   display: none;
 }
+BASE {
+  display: none;
+}
+BASEFONT {
+  display: none;
+}
 HEAD {
   display: none;
 }
@@ -488,6 +494,10 @@ NOFRAMES {
 }
 
 /* Pseudo-element style */
+
+:IB-PSEUDO {
+  display: block;
+}
 
 :SCROLLBAR-LOOK {
   background-color: #c0c0c0;

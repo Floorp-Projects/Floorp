@@ -26,7 +26,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h" 
 #include "nsIPresContext.h" 
-#include "nsIImageMap.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMElement.h"
@@ -49,6 +48,7 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLMapElement.h"
 #include "nsINameSpaceManager.h"
 
 #ifdef PCB_USE_PROTOCOL_CONNECTION
@@ -143,8 +143,7 @@ nsHTMLDocument::~nsHTMLDocument()
   }
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
-    nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
-
+    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
     NS_RELEASE(map);
   }
   if (mForms) {
@@ -220,8 +219,7 @@ nsHTMLDocument::Reset(nsIURL *aURL)
   NS_IF_RELEASE(mAnchors);
 
   for (i = 0; i < mImageMaps.Count(); i++) {
-    nsIImageMap*  map = (nsIImageMap*)mImageMaps.ElementAt(i);
-
+    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
     NS_RELEASE(map);
   }
   if (mForms) {
@@ -352,7 +350,8 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLDocument::AddImageMap(nsIImageMap* aMap)
+NS_IMETHODIMP
+nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
 {
   NS_PRECONDITION(nsnull != aMap, "null ptr");
   if (nsnull == aMap) {
@@ -365,8 +364,9 @@ NS_IMETHODIMP nsHTMLDocument::AddImageMap(nsIImageMap* aMap)
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsHTMLDocument::GetImageMap(const nsString& aMapName,
-                                          nsIImageMap** aResult)
+NS_IMETHODIMP
+nsHTMLDocument::GetImageMap(const nsString& aMapName,
+                            nsIDOMHTMLMapElement** aResult)
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -376,7 +376,7 @@ NS_IMETHODIMP nsHTMLDocument::GetImageMap(const nsString& aMapName,
   nsAutoString name;
   PRInt32 i, n = mImageMaps.Count();
   for (i = 0; i < n; i++) {
-    nsIImageMap* map = (nsIImageMap*) mImageMaps.ElementAt(i);
+    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
     if (NS_OK == map->GetName(name)) {
       if (name.EqualsIgnoreCase(aMapName)) {
         *aResult = map;
