@@ -128,14 +128,6 @@ SetupRegistry(void)
     // netlib
     nsRepository::RegisterFactory(kNetServiceCID,            NETLIB_DLL, PR_FALSE, PR_FALSE);
 
-    // rdf
-    nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFServiceCID,            RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFContentSinkCID,        RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFCompositeDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kRDFXMLDataSourceCID,      RDF_DLL,    PR_FALSE, PR_FALSE);
-
     // parser
     nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
