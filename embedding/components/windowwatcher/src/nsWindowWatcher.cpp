@@ -1037,6 +1037,8 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
                  ? nsIWebBrowserChrome::CHROME_SCROLLBARS : 0;
   chromeFlags |= WinHasOption(aFeatures, "resizable", 0, &presenceFlag)
                  ? nsIWebBrowserChrome::CHROME_WINDOW_RESIZE : 0;
+  chromeFlags |= WinHasOption(aFeatures, "minimizable", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_MIN : 0;
 
   /* OK.
      Normal browser windows, in spite of a stated pattern of turning off
