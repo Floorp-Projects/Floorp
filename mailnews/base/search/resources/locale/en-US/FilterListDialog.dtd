@@ -1,11 +1,12 @@
 <!ENTITY window.title "Message Filters">
 <!ENTITY numberColumn.label "Number">
-<!ENTITY nameColumn.label "Name">
-<!ENTITY activeColumn.label "Active">
+<!ENTITY nameColumn.label "Description">
+<!ENTITY activeColumn.label "Enabled">
 <!ENTITY newButton.label "New">
 <!ENTITY editButton.label "Edit">
 <!ENTITY deleteButton.label "Delete">
 <!ENTITY logFilterUseCheckbox.label "Log Filter Use">
 <!ENTITY viewLogButton.label "View Log">
 <!ENTITY description.label "Description">
-<!ENTITY filterHeader.label "Filters will be applied in the following order:">
+<!ENTITY filterHeader.label "Filters which are Enabled will be run in the order shown below.">
+<!ENTITY runFiltersNow.label "Run Filter(s) Now">
