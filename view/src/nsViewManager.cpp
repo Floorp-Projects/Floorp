@@ -67,6 +67,9 @@ static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+#define ARENA_ALLOCATE(var, pool, type) \
+    {void *_tmp_; PL_ARENA_ALLOCATE(_tmp_, pool, sizeof(type)); \
+    var = NS_REINTERPRET_CAST(type*, _tmp_); }
 /**
    XXX TODO XXX
 
@@ -1127,8 +1130,8 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
           // need to insert a POP for the last sequence and a PUSH for the next sequence
           DisplayListElement2 *newPop, *newPush;
 
-          PL_ARENA_ALLOCATE(NS_REINTERPRET_CAST(void*,newPop), &aPool, sizeof(DisplayListElement2));
-          PL_ARENA_ALLOCATE(NS_REINTERPRET_CAST(void*,newPush), &aPool, sizeof(DisplayListElement2));
+          ARENA_ALLOCATE(newPop, &aPool, DisplayListElement2);
+          ARENA_ALLOCATE(newPush, &aPool, DisplayListElement2);
 
           *newPop = *ePop;
           newPop->mZIndex = e->mZIndex;
@@ -3322,7 +3325,7 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
 static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode, PLArenaPool &aPool)
 {
   if (nsnull == aNode) {
-    PL_ARENA_ALLOCATE(NS_REINTERPRET_CAST(void*,aNode), &aPool, sizeof(DisplayZTreeNode));
+    ARENA_ALLOCATE(aNode, &aPool, DisplayZTreeNode);
 
     if (nsnull == aNode) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3587,12 +3590,12 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
   }
 
   DisplayListElement2* element;
-  PL_ARENA_ALLOCATE(NS_REINTERPRET_CAST(void*,element), &aPool, sizeof(*element));
+  ARENA_ALLOCATE(element, &aPool, DisplayListElement2);
   if (element == nsnull) {
     return PR_TRUE;
   }
   DisplayZTreeNode* node;
-  PL_ARENA_ALLOCATE(NS_REINTERPRET_CAST(void*,node), &aPool, sizeof(*node));
+  ARENA_ALLOCATE(node, &aPool, DisplayZTreeNode);
   if (nsnull == node) {
     return PR_TRUE;
   }
