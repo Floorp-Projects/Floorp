@@ -1206,38 +1206,41 @@ NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISup
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupports *ctxt, nsresult aStatus, const PRUnichar* aMsg)
 {
-    PR_CEnterMonitor(this);
 
-    PRBool killThread = PR_FALSE;
+  PRBool killThread = PR_FALSE;
 
-    if (NS_FAILED(aStatus)) {
-        switch (aStatus) {
-            case NS_ERROR_UNKNOWN_HOST:
-                AlertUserEventUsingId(IMAP_UNKNOWN_HOST_ERROR);
-                killThread = PR_TRUE;
-                break;
-            case NS_ERROR_CONNECTION_REFUSED:
-                AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
-                killThread = PR_TRUE;
-                break;
-            case NS_ERROR_NET_TIMEOUT:
-                AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
-                killThread = PR_TRUE;
-                break;
-            default:
-                break;
-        }
-
-        if (killThread == PR_TRUE) {
-          ClearFlag(IMAP_CONNECTION_IS_OPEN);
-          TellThreadToDie(PR_FALSE);
-        }
+  if (NS_FAILED(aStatus)) 
+  {
+    switch (aStatus) 
+    {
+        case NS_ERROR_UNKNOWN_HOST:
+            AlertUserEventUsingId(IMAP_UNKNOWN_HOST_ERROR);
+            killThread = PR_TRUE;
+            break;
+        case NS_ERROR_CONNECTION_REFUSED:
+            AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
+            killThread = PR_TRUE;
+            break;
+        case NS_ERROR_NET_TIMEOUT:
+            AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
+            killThread = PR_TRUE;
+            break;
+        default:
+            break;
     }
 
-    m_channel = null_nsCOMPtr();
-    m_outputStream = null_nsCOMPtr();
-    m_inputStream = null_nsCOMPtr();
-    PR_CExitMonitor(this);
+  }
+
+  PR_CEnterMonitor(this);
+  if (killThread == PR_TRUE) 
+  {
+    ClearFlag(IMAP_CONNECTION_IS_OPEN);
+    TellThreadToDie(PR_FALSE);
+  }
+  m_channel = null_nsCOMPtr();
+  m_outputStream = null_nsCOMPtr();
+  m_inputStream = null_nsCOMPtr();
+  PR_CExitMonitor(this);
   return NS_OK;
 }
 
