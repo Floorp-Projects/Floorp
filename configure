@@ -857,7 +857,7 @@ then
 	*
 	*   To clean up the source tree:
 	*     1. cd $_topsrcdir
-	*     2. gmake -f client.mk cleansrcdir
+	*     2. gmake distclean
 	***
 	EOF
     exit 1
@@ -10373,7 +10373,7 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if test ! -z "$MISSING_FULLCIRCLE"; then
+if test "$MISSING_FULLCIRCLE"; then
     echo
     echo "Could not find FullCircle library -- ignoring it"
     echo
