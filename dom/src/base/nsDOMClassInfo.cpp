@@ -356,6 +356,10 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
   (NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
+#define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
+  (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
+   nsIXPCScriptable::WANT_SETPROPERTY)
+
 #define DOCUMENT_SCRIPTABLE_FLAGS                                             \
   (NODE_SCRIPTABLE_FLAGS |                                                    \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
@@ -513,7 +517,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLAnchorElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLAppletElement, nsHTMLAppletElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLAreaElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLBRElement, nsHTMLElementSH,
@@ -535,7 +539,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLDivElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLEmbedElement, nsHTMLPluginObjElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFieldSetElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFontElement, nsHTMLElementSH,
@@ -585,7 +589,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLOListElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLObjectElement, nsHTMLPluginObjElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
+                           EXTERNAL_OBJ_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLOptGroupElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLOptionElement, nsHTMLElementSH,
@@ -5860,7 +5864,7 @@ IsObjInProtoChain(JSContext *cx, JSObject *obj, JSObject *proto)
 }
 
 
-// Note that this PostCreate() method is not called only by XPConnect when
+// Note that not only XPConnect calls this PostCreate() method when
 // it creates wrappers, nsObjectFrame also calls this method when a
 // plugin is loaded if the embed/object element is already wrapped to
 // get the scriptable plugin inserted into the embed/object's proto
@@ -5985,6 +5989,36 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   //
 
   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                                 JSContext *cx, JSObject *obj, jsval id,
+                                 jsval *vp, PRBool *_retval)
+{
+  JSString *id_str = ::JS_ValueToString(cx, id);
+  if (!id_str) {
+    *_retval = JS_FALSE;
+    return NS_ERROR_FAILURE;
+  }
+
+  JSObject *pi_obj = ::JS_GetPrototype(cx, obj);
+  const jschar *id_chars = ::JS_GetStringChars(id_str);
+  size_t id_length = ::JS_GetStringLength(id_str);
+
+  jsval found;
+  *_retval = ::JS_LookupUCProperty(cx, pi_obj, id_chars, id_length, &found);
+  if (! *_retval) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (found == JSVAL_TRUE) {
+    *_retval = ::JS_SetUCProperty(cx, pi_obj, id_chars, id_length, vp);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  return nsElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 
