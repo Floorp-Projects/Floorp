@@ -144,7 +144,7 @@ sv_PrintValidity(FILE *out, CERTValidity *v, char *m)
 void
 sv_PrintObjectID(FILE *out, SECItem *oid, char *m)
 {
-    char *name;
+    const char *name;
     SECOidData *oiddata;
     
     oiddata = SECOID_FindOID(oid);
@@ -839,7 +839,7 @@ sv_PrintPKCS7Digested(FILE *out, SEC_PKCS7DigestedData *src)
 int
 sv_PrintPKCS7ContentInfo(FILE *out, SEC_PKCS7ContentInfo *src, char *m)
 {
-    char *desc;
+    const char *desc;
     SECOidTag kind;
     int rv;
 

@@ -106,7 +106,7 @@ usage(void)
     fprintf(stderr,
 	"usage: %s [-C cwd] [-L linkprefix] [-m mode] [-o owner] [-g group]\n"
 	"       %*s [-DdltR] file [file ...] directory\n",
-	program, strlen(program), "");
+	program, (int)strlen(program), "");
     exit(2);
 }
 

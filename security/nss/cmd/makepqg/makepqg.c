@@ -35,9 +35,11 @@
 #include "prtime.h"
 #include "prlong.h"
 
+#include "nss.h"
 #include "secutil.h"
 #include "secitem.h"
 #include "pk11func.h"
+#include "pk11pqg.h"
 #include "pqgutil.h"
 #include "secrng.h"
 

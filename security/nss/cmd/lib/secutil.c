@@ -984,7 +984,7 @@ secu_PrintContextSpecific(FILE *out, SECItem *i, char *m, int level)
     SECU_PrintAsHex(out, &tmp, m, level+1);
 }
 
-static
+static void
 secu_PrintUniversal(FILE *out, SECItem *i, char *m, int level)
 {
 	switch (i->data[0] & SEC_ASN1_TAGNUM_MASK) {
@@ -1056,7 +1056,7 @@ secu_PrintValidity(FILE *out, CERTValidity *v, char *m, int level)
 void
 SECU_PrintObjectID(FILE *out, SECItem *oid, char *m, int level)
 {
-    char *name;
+    const char *name;
     SECOidData *oiddata;
     
     oiddata = SECOID_FindOID(oid);

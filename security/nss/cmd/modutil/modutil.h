@@ -57,6 +57,8 @@ Error ListModule(char *moduleName);
 Error ListModules();
 Error ChangePW(char *tokenName, char *pwFile, char *newpwFile);
 Error EnableModule(char *moduleName, char *slotName, PRBool enable);
+Error RawAddModule(char *dbmodulespec, char *modulespec);
+Error RawListModule(char *modulespec);
 Error SetDefaultModule(char *moduleName, char *slotName, char *mechanisms);
 Error UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms);
 void out_of_memory(void);

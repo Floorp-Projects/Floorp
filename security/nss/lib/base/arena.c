@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.3 $ $Date: 2001/10/08 19:26:01 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.4 $ $Date: 2002/03/15 06:04:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -51,6 +51,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.3 $ $Date:
 
 #include "prlock.h"
 #include "plarena.h"
+
+#include <string.h>
 
 /*
  * NSSArena

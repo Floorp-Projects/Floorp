@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.28 2001/12/07 02:09:45 jpierre%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.29 2002/03/15 06:04:30 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -400,7 +400,7 @@ signed_data(struct signOptionsStr *signOptions)
 	    fprintf(stderr, "password [NULL]\n");
 	fprintf(stderr, "certUsage [%d]\n", signOptions->options->certUsage);
 	if (signOptions->options->certHandle)
-	    fprintf(stderr, "certdb [%x]\n", signOptions->options->certHandle);
+	    fprintf(stderr, "certdb [%p]\n", signOptions->options->certHandle);
 	else
 	    fprintf(stderr, "certdb [NULL]\n");
 	if (signOptions->nickname)
@@ -1337,8 +1337,8 @@ main(int argc, char **argv)
 	pwcb     = (options.password != NULL) ? ownpw                    : NULL;
 	pwcb_arg = (options.password != NULL) ? (void *)options.password : NULL;
 	if (cms_verbose) {
-	    fprintf(stderr, "cmsg [%x]\n", cmsg);
-	    fprintf(stderr, "arena [%x]\n", arena);
+	    fprintf(stderr, "cmsg [%p]\n", cmsg);
+	    fprintf(stderr, "arena [%p]\n", arena);
 	    if (pwcb_arg)
 		fprintf(stderr, "password [%s]\n", (char *)pwcb_arg);
 	    else

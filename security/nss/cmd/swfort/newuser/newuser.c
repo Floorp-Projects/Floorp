@@ -43,6 +43,7 @@
 /*#include "secmodi.h"*/
 #include "cert.h"
 #include "key.h"
+#include "nss.h"
 #include "swforti.h"
 #include "secutil.h"
 #include "secrng.h"
@@ -603,7 +604,7 @@ extern void
 fill_in(SECItem *item, unsigned char *data, int len);
 
 char *userLabel = "INKS0002                            ";
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	char *progname = *argv++;
 	char *commonName = NULL;
