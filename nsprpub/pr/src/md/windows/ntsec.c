@@ -75,26 +75,26 @@ void _PR_NT_InitSids(void)
     DWORD dwLength;
     BOOL rv;
 
-    /* Create a well-known SID for the Everyone group. */
-    if (!AllocateAndInitializeSid(&SIDAuthWorld, 1,
-            SECURITY_WORLD_RID,
-            0, 0, 0, 0, 0, 0, 0,
-            &_pr_nt_sids.everyone)) {
-        /*
-         * On non-NT systems, this function is not implemented,
-         * and neither are the other security functions. There
-         * is no point in going further.
-         */
-        PR_ASSERT(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED);
-        return;
-    }
-
     /*
      * Look up and make a copy of the owner and primary group
      * SIDs in the access token of the calling process.
      */
     rv = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
-    PR_ASSERT(rv != 0);
+    if (rv == 0) {
+        /*
+         * On non-NT systems, this function is not implemented
+         * (error code ERROR_CALL_NOT_IMPLEMENTED), and neither are
+         * the other security functions.  There is no point in
+         * going further.
+         *
+         * A process with insufficient access permissions may fail
+         * with the error code ERROR_ACCESS_DENIED.
+         */
+        PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
+                ("_PR_NT_InitSids: OpenProcessToken() failed. Error: %d",
+                GetLastError()));
+        return;
+    }
 
     rv = GetTokenInformation(hToken, TokenOwner, infoBuffer,
             sizeof(infoBuffer), &dwLength);
@@ -116,6 +116,13 @@ void _PR_NT_InitSids(void)
     PR_ASSERT(rv != 0);
 
     rv = CloseHandle(hToken);
+    PR_ASSERT(rv != 0);
+
+    /* Create a well-known SID for the Everyone group. */
+    rv = AllocateAndInitializeSid(&SIDAuthWorld, 1,
+            SECURITY_WORLD_RID,
+            0, 0, 0, 0, 0, 0, 0,
+            &_pr_nt_sids.everyone);
     PR_ASSERT(rv != 0);
 }
 
