@@ -79,7 +79,6 @@ nsWindow::nsWindow()
   mLowerLeft = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
-  mIsDestroyingWindow = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
   mSuperWin = 0;
@@ -103,17 +102,16 @@ nsWindow::~nsWindow()
   IndentByDepth(stdout);
   printf("nsWindow::~nsWindow:%p\n", this);
 #endif
-  mIsDestroyingWindow = PR_TRUE;
   // make sure that we release the grab indicator here
   if (mGrabWindow == this) {
     mIsGrabbing = PR_FALSE;
     mGrabWindow = NULL;
   }
+  // make sure to release our focus window
+  if (this == focusWindow) {
+    focusWindow = NULL;
+  }
   if (nsnull != mShell || nsnull != mSuperWin) {
-    // make sure to release our focus window
-    if (this == focusWindow) {
-      focusWindow = NULL;
-    }
     Destroy();
   }
 #ifdef USE_SUPERWIN
@@ -186,8 +184,8 @@ NS_IMETHODIMP nsWindow::Destroy()
 {
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
-  printf("nsWindow::Destroy:%p: isDestroyingWindow=%s widget=%p shell=%p parent=%p\n",
-         this, mIsDestroyingWindow ? "yes" : "no", mWidget, mShell, mParent);
+  printf("nsWindow::Destroy:%p: widget=%p shell=%p parent=%p\n",
+         this, mWidget, mShell, mParent);
 #endif
   NS_IF_RELEASE(mMenuBar);
 
@@ -195,33 +193,30 @@ NS_IMETHODIMP nsWindow::Destroy()
   // knows about the close so that if this is the main application
   // window, for example, the application will exit as it should.
 
-  if (mIsDestroyingWindow == PR_TRUE) {
-    NS_IF_RELEASE(mParent);
-    nsBaseWidget::Destroy();
-    if (PR_FALSE == mOnDestroyCalled) {
-        nsWidget::OnDestroy();
-    }
-
-    if (mMozArea) {
-      /* destroy the moz area.  the superwin will be destroyed by that mozarea */
-      gtk_widget_destroy(mMozArea);
-      mMozArea = nsnull;
-      mSuperWin = nsnull;
-    }
-    else if (mSuperWin) {
-      /* destroy our superwin if we are a child window*/
-      gdk_superwin_destroy(mSuperWin);
-      mSuperWin = nsnull;
-    }
-
-    if (mShell) {
-    	if (GTK_IS_WIDGET(mShell))
-     		gtk_widget_destroy(mShell);
-    	mShell = nsnull;
-    }
-
+  NS_IF_RELEASE(mParent);
+  nsBaseWidget::Destroy();
+  if (PR_FALSE == mOnDestroyCalled) {
+    nsWidget::OnDestroy();
   }
-
+  
+  if (mMozArea) {
+    /* destroy the moz area.  the superwin will be destroyed by that mozarea */
+    gtk_widget_destroy(mMozArea);
+    mMozArea = nsnull;
+    mSuperWin = nsnull;
+  }
+  else if (mSuperWin) {
+    /* destroy our superwin if we are a child window*/
+    gdk_superwin_destroy(mSuperWin);
+    mSuperWin = nsnull;
+  }
+  
+  if (mShell) {
+    if (GTK_IS_WIDGET(mShell))
+      gtk_widget_destroy(mShell);
+    mShell = nsnull;
+  }
+  
   return NS_OK;
 }
 
@@ -350,18 +345,13 @@ NS_IMETHODIMP nsWindow::Update(void)
     UnqueueDraw();
 
   if (!mUpdateArea->IsEmpty()) {
-    if (!mIsDestroying) {
-      PRInt32 x, y, width, height;
-
-      mUpdateArea->GetBoundingBox (&x, &y, &width, &height);
-      DoPaint (x, y, width, height, mUpdateArea);
-
-      mUpdateArea->SetTo(0, 0, 0, 0);
-      return NS_OK;
-    }
-    else {
-      return NS_ERROR_FAILURE;
-    }
+    PRInt32 x, y, width, height;
+    
+    mUpdateArea->GetBoundingBox (&x, &y, &width, &height);
+    DoPaint (x, y, width, height, mUpdateArea);
+    
+    mUpdateArea->SetTo(0, 0, 0, 0);
+    return NS_OK;
   }
   else {
     //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
@@ -708,9 +698,6 @@ nsWindow::SetFocus(void)
 nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
 {
   
-  if (mIsDestroying)
-    return;
-
   GTK_WIDGET_SET_FLAGS(mMozArea, GTK_HAS_FOCUS);
 
   nsGUIEvent event;
@@ -771,9 +758,6 @@ nsWindow::OnFocusInSignal(GdkEventFocus * aGdkFocusEvent)
 /* virtual */ void
 nsWindow::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 {
-
-  if (mIsDestroying)
-    return;
 
   GTK_WIDGET_UNSET_FLAGS(mMozArea, GTK_HAS_FOCUS);
 
@@ -862,7 +846,6 @@ nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
   NS_ADDREF(win);
-  win->SetIsDestroying( PR_TRUE );
   win->Destroy();
   NS_RELEASE(win);
   return TRUE;
