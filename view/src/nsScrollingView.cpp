@@ -711,9 +711,9 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       } // switch
     } break;
 
+#if 0
     case NS_MOUSE_MOVE:
     {
-#if 0
       nsRect  brect;
       nscoord lx, ly;
 
@@ -751,7 +751,6 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
         mScrollingTimer->Cancel();
         NS_RELEASE(mScrollingTimer);
       }
-#endif
       break;
     }
 
@@ -799,6 +798,7 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       }
       break;
     }
+#endif
 
     default:
       break;

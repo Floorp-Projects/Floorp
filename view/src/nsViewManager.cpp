@@ -25,8 +25,10 @@
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsView.h"
+#include "nsIScrollbar.h"
 
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -793,20 +795,59 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
     default:
     {
+      nsIView* baseView;
       nsIView* view;
+      nsPoint offset;
+      nsIScrollbar* sb;
+
+      //Find the view whose coordinates system we're in.
+      baseView = nsView::GetViewFor(aEvent->widget);
         
-      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent))
+      //Find the view to which we're initially going to send the event 
+      //for hittesting.
+      if (nsnull != mMouseGrabber && NS_IS_MOUSE_EVENT(aEvent)) {
         view = mMouseGrabber;
-      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent))
+      }
+      else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
         view = mKeyGrabber;
-      else
-        view = nsView::GetViewFor(aEvent->widget);
+      }
+      else if (NS_OK == aEvent->widget->QueryInterface(kIScrollbarIID, (void**)&sb)) {
+        view = baseView;
+        NS_RELEASE(sb);
+      }
+      else {
+        view = mRootView;
+      }
 
-      if (nsnull != view)
-      {
+      if (nsnull != view) {
+        //Calculate the proper offset for the view we're going to
+        offset.x = offset.y = 0;
+        if (baseView != view) {
+          //Get offset from root of baseView
+          nsIView *parent;
+          nsRect bounds;
+
+          parent = baseView;
+          while (nsnull != parent) {
+            parent->GetBounds(bounds);
+            offset.x += bounds.x;
+            offset.y += bounds.y;
+            parent->GetParent(parent);
+          }
+
+          //Subtract back offset from root of view
+          parent = view;
+          while (nsnull != parent) {
+            parent->GetBounds(bounds);
+            offset.x -= bounds.x;
+            offset.y -= bounds.y;
+            parent->GetParent(parent);
+          }
+      
+        }
+
+        //Dispatch the event
         float p2t, t2p;
-
-        // pass on to view somewhere else to deal with
 
         mContext->GetDevUnitsToAppUnits(p2t);
         mContext->GetAppUnitsToDevUnits(t2p);
@@ -814,11 +855,16 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
         aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
-        
+        aEvent->point.x += offset.x;
+        aEvent->point.y += offset.y;
+
         view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
                                   NS_VIEW_FLAG_CHECK_PARENT |
                                   NS_VIEW_FLAG_CHECK_SIBLINGS,
                           aStatus);
+
+        aEvent->point.x -= offset.x;
+        aEvent->point.y -= offset.y;
 
         aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
         aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
