@@ -102,8 +102,9 @@ wsRealizeBrowserEvent::handleEvent ()
     }
     
     // create our BrowserContainer, which implements many many things.
+    CBrowserContainer *browserContainer;
     
-    mInitContext->browserContainer = 
+    mInitContext->browserContainer = browserContainer = 
         new CBrowserContainer(mInitContext->webBrowser, mInitContext->env, 
                               mInitContext);
     
@@ -121,6 +122,10 @@ wsRealizeBrowserEvent::handleEvent ()
     
     // set the docloaderobserver PENDING(edburns): how to we make our
     // presence as a nsIWebProgressListener know?n
+    nsWeakPtr weakling(
+                       dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, browserContainer))));
+    webBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
+    
 
 	printf("Creation Done.....\n");
     // Get the WebNavigation Object from the DocShell

@@ -65,11 +65,8 @@ WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
                          0);
 
     // check gNewWindowInitContext to see if the initialization had completed
-    void* threadId = PR_GetCurrentThread();
     while (!gNewWindowInitContext) {
-        if (threadId == (void *) gEmbeddedThread) {
-            processEventLoop(mInitContext);
-        }
+        processEventLoop(mInitContext);
         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     }
 

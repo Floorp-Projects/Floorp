@@ -230,11 +230,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         return;
     }
 
-    void* threadId = PR_GetCurrentThread();
-    if (threadId == (void *) gEmbeddedThread) {
-        //        printf("--------- Thread ID ---- %p\n",gEmbeddedThread);
-        processEventLoop(initContext);
-    }
+    processEventLoop(initContext);
 }
 
 /**
@@ -400,6 +396,12 @@ Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllList
 
 int processEventLoop(WebShellInitContext * initContext) 
 {
+    if (PR_GetCurrentThread() != gEmbeddedThread)
+        return 0;
+    
+    if (nsnull == initContext)
+        return 0;
+    
 #ifdef XP_UNIX
     while(gtk_events_pending()) {
         gtk_main_iteration();
@@ -778,11 +780,7 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
 #endif
 
-    // PENDING(kyle): not sure if we need to check this, but it does prevent some crash from happening
-    void* threadId = PR_GetCurrentThread();
-    if (threadId == (void *) gEmbeddedThread)
-        // Just need to loop once to clear out events before returning
-        processEventLoop(initContext);
+    processEventLoop(initContext);
     
     return rv;
 }

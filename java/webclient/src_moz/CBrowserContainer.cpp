@@ -598,7 +598,6 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
             return rv;
         }
         
-        domWin->GetDocument(getter_AddRefs(mInitContext->currentDocument));
         doStartDocumentLoad(uname.get());
     }
     if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
