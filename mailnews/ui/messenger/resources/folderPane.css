@@ -1,11 +1,11 @@
 window { 
  display: block; 
  background-color:white;
- background-image: url(http://www-ksl.stanford.edu/logo.csd.gif);
 } 
 
 tree { 
  display: table; 
+ background-color:white;
  border: none; 
  border-spacing: 0px; 
  //border-collapse: collapse; 
@@ -26,7 +26,7 @@ treebody {
 
 treecell { 
  display: table-cell; 
- color: white;
+ color: black;
  font-family: Verdana;
  font-size: 10pt;
 } 
