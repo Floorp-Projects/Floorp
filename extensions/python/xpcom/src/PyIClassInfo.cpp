@@ -123,7 +123,7 @@ Py_nsIClassInfo::getattr(const char *name)
 	nsresult nr;
 	PyObject *ret = NULL;
 	if (strcmp(name, "contractID")==0) {
-		char *str_ret;
+		char *str_ret = NULL;
 		Py_BEGIN_ALLOW_THREADS;
 		nr = pI->GetContractID(&str_ret);
 		Py_END_ALLOW_THREADS;
@@ -131,7 +131,7 @@ Py_nsIClassInfo::getattr(const char *name)
 		ret = MakeStringOrNone(str_ret);
 		nsMemory::Free(str_ret);
 	} else if (strcmp(name, "classDescription")==0) {
-		char *str_ret;
+		char *str_ret = NULL;
 		Py_BEGIN_ALLOW_THREADS;
 		nr = pI->GetClassDescription(&str_ret);
 		Py_END_ALLOW_THREADS;
@@ -139,7 +139,7 @@ Py_nsIClassInfo::getattr(const char *name)
 		ret = MakeStringOrNone(str_ret);
 		nsMemory::Free(str_ret);
 	} else if (strcmp(name, "classID")==0) {
-		nsIID *iid;
+		nsIID *iid = NULL;
 		Py_BEGIN_ALLOW_THREADS;
 		nr = pI->GetClassID(&iid);
 		Py_END_ALLOW_THREADS;
