@@ -1,0 +1,10 @@
+toolkit.jar:
+  content/mozapps/profile/createProfileWizard.js  (content/createProfileWizard.js)
+  content/mozapps/profile/createProfileWizard.xul (content/createProfileWizard.xul)
+  content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
+  content/mozapps/profile/profileSelection.xul    (content/profileSelection.xul)
+
+en-US.jar:
+  locale/en-US/mozapps/profile/createProfileWizard.dtd      (locale/createProfileWizard.dtd)
+  locale/en-US/mozapps/profile/profileSelection.properties  (locale/profileSelection.properties)
+  locale/en-US/mozapps/profile/profileSelection.dtd         (locale/profileSelection.dtd)

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE wizard [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+%brandDTD;
+<!ENTITY % profileDTD SYSTEM "chrome://mozapps/locale/profile/createProfileWizard.dtd">
+%profileDTD;
+]>
+
+<wizard id="createProfileWizard"
+        title="&newprofile.title;"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onwizardfinish="return onFinish();"
+        onload="initWizard();"
+        style="&window.size;">
+  
+  <stringbundle id="bundle_profileManager"
+                src="chrome://mozapps/locale/profile/profileSelection.properties"/>
+
+  <script type="application/x-javascript"
+          src="chrome://mozapps/content/profile/createProfileWizard.js"/>
+
+  <wizardpage id="explanation" onpageshow="enableNextButton();">
+    <description>&profileCreationExplanation_1.text;</description>
+    <description>&profileCreationExplanation_2.text;</description>
+    <description>&profileCreationExplanation_3.text;</description>
+    <spacer flex="1"/>
+    <description>&profileCreationExplanation_4.text;</description>
+  </wizardpage>
+
+  <wizardpage id="createProfile" onpageshow="initSecondWizardPage();">
+    <description>&profileCreationIntro.text;</description> 
+
+    <label accesskey="&profilePrompt.accesskey;" control="ProfileName">&profilePrompt.label;</label> 
+    <textbox id="profileName" value="&profileDefaultName;"
+             oninput="updateProfileName(this.value);"/>
+    
+    <separator/>
+
+    <description>&profileDirExplanation.text;</description>
+
+    <vbox class="indent" flex="1" style="overflow: auto;">
+      <description id="profileDisplay">*</description>
+    </vbox>
+
+    <hbox>
+      <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();" 
+              accesskey="&button.choosefolder.accesskey;"/>
+
+      <button id="useDefault" label="&button.usedefault.label;"
+              oncommand="setDisplayToDefaultFolder(); updateProfileDisplay();"
+              accesskey="&button.usedefault.accesskey;" disabled="true"/>
+    </hbox>
+
+    <separator/>
+
+    <description id="finishText">*</description>
+  </wizardpage>
+
+</wizard>
