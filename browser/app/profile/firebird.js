@@ -404,10 +404,6 @@ pref("network.http.pipelining.maxrequests" , 4);
 pref("network.http.proxy.ssl.connect",true);
 // </http>
 
-// This preference controls whether or not internationalized domain names (IDN)
-// are handled.  IDN requires a nsIIDNService implementation.
-pref("network.enableIDN", true);
-
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
 pref("network.standard-url.escape-utf8", true);
