@@ -154,6 +154,7 @@ protected:
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
+  NS_INIT_REFCNT();
   mContext = nsnull;
   mScriptObject = nsnull;
   mDocument = nsnull;
@@ -230,7 +231,8 @@ GlobalWindowImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
   NS_PRECONDITION(nsnull != aScriptObject, "null arg");
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptWindow(aContext, this, nsnull, &mScriptObject);
+    res = NS_NewScriptWindow(aContext, (nsIDOMWindow*)this,
+                             nsnull, &mScriptObject);
     JS_AddNamedRoot((JSContext *)aContext->GetNativeContext(),
                     &mScriptObject, "window_object");
   }
@@ -784,6 +786,7 @@ NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 //
 NavigatorImpl::NavigatorImpl()
 {
+  NS_INIT_REFCNT();
   mScriptObject = nsnull;
 }
 
