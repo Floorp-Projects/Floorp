@@ -800,6 +800,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, same content.\n");
 
         AdjustPointsInNewContent(aPresContext, aEvent, aFrame);
+        addRangeToSelectionTrackers(currentContent, currentContent, kInsertInAddList);
 
       } else if (gDoc->IsBefore(newContent, currentContent)) {
         if (SELECTION_DEBUG) printf("HandleDrag::New Frame, is Before.\n");
