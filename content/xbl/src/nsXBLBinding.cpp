@@ -845,7 +845,8 @@ nsXBLBinding::ExecuteAttachedHandler()
   if (mNextBinding)
     mNextBinding->ExecuteAttachedHandler();
 
-  mPrototypeBinding->BindingAttached(mBoundElement);
+  if (AllowScripts())
+    mPrototypeBinding->BindingAttached(mBoundElement);
 
   return NS_OK;
 }
@@ -853,7 +854,8 @@ nsXBLBinding::ExecuteAttachedHandler()
 NS_IMETHODIMP 
 nsXBLBinding::ExecuteDetachedHandler()
 {
-  mPrototypeBinding->BindingDetached(mBoundElement);
+  if (AllowScripts())
+    mPrototypeBinding->BindingDetached(mBoundElement);
 
   if (mNextBinding)
     mNextBinding->ExecuteDetachedHandler();
