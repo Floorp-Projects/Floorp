@@ -196,7 +196,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   InitAccessKey();
 
-  if (mAccessKey)
+  if (mAccessKey && mAccessKeyFocuses)
   {
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
     PRUint32 theChar;
