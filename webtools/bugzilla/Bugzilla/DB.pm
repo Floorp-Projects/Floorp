@@ -54,13 +54,21 @@ sub ConnectToDatabase {
 }
 
 # XXX - mod_perl
-my $_current_sth;
+# These use |our| instead of |my| because they need to be cleared from
+# Bugzilla.pm. See bug 192531 for details.
+our $_current_sth;
+our @SQLStateStack = ();
 sub SendSQL {
     my ($str) = @_;
 
     require Bugzilla;
 
     $_current_sth = Bugzilla->dbh->prepare($str);
+
+    # This is really really ugly, but its what we get for not doing
+    # error checking for 5 years. See bug 189446 and bug 192531
+    $_current_sth->{RaiseError} = 0;
+
     return $_current_sth->execute;
 }
 
@@ -98,21 +106,13 @@ sub FetchSQLData {
         return @result;
     }
 
-    # This is really really ugly, but its what we get for not doing
-    # error checking for 5 years. See bug 189446.
-    {
-        local $_current_sth->{RaiseError};
-        return $_current_sth->fetchrow_array;
-    }
+    return $_current_sth->fetchrow_array;
 }
 
 sub FetchOneColumn {
     my @row = FetchSQLData();
     return $row[0];
 }
-
-# XXX - mod_perl
-my @SQLStateStack = ();
 
 sub PushGlobalSQLState() {
     push @SQLStateStack, $_current_sth;
