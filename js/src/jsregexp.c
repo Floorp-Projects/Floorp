@@ -666,7 +666,7 @@ loop:
 	    c = *++cp;
 	    if (!JS7_ISDEC(c)) {
                 js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                            NULL, JSREPORT_ERROR,
+                                            JSREPORT_ERROR,
                                             JSMSG_BAD_QUANTIFIER, state->cp);
 	        return NULL;
 	    }
@@ -675,7 +675,7 @@ loop:
 	        min = 10 * min + (uint32)JS7_UNDEC(c);
 	        if (min >> 16) {
                     js_ReportCompileErrorNumber(state->context,
-                                                state->tokenStream, NULL,
+                                                state->tokenStream,
                                                 JSREPORT_ERROR,
                                                 JSMSG_MIN_TOO_BIG, state->cp);
 		    return NULL;
@@ -690,7 +690,6 @@ loop:
 		        if (max >> 16) {
                             js_ReportCompileErrorNumber(state->context,
                                                         state->tokenStream,
-                                                        NULL,
                                                         JSREPORT_ERROR,
                                                         JSMSG_MAX_TOO_BIG, up);
 			    return NULL;
@@ -701,7 +700,6 @@ loop:
 		    if (min > max) {
                         js_ReportCompileErrorNumber(state->context,
                                                     state->tokenStream,
-                                                    NULL,
                                                     JSREPORT_ERROR,
                                                     JSMSG_OUT_OF_ORDER, up);
 		        return NULL;
@@ -716,7 +714,6 @@ loop:
           zero_quant:
                     js_ReportCompileErrorNumber(state->context,
                                                 state->tokenStream,
-                                                NULL,
                                                 JSREPORT_ERROR,
                                                 JSMSG_ZERO_QUANTIFIER,
                                                 state->cp);
@@ -727,7 +724,6 @@ loop:
 	    if (*cp != '}') {
                 js_ReportCompileErrorNumber(state->context,
                                             state->tokenStream,
-                                            NULL,
                                             JSREPORT_ERROR,
                                             JSMSG_UNTERM_QUANTIFIER, state->cp);
 	        return NULL;
@@ -858,7 +854,6 @@ ParseAtom(CompilerState *state)
 	cp = state->cp;
 	if (*cp != ')') {
             js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        NULL,
                                         JSREPORT_ERROR,
                                         JSMSG_MISSING_PAREN, ocp);
 	    return NULL;
@@ -903,7 +898,6 @@ ParseAtom(CompilerState *state)
         while ((c = *++cp) != ']') {
 	    if (cp == state->cpend) {
                 js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                            NULL,
                                             JSREPORT_ERROR,
                                             JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
@@ -923,7 +917,6 @@ ParseAtom(CompilerState *state)
 	c = *++cp;
         if (cp == state->cpend) {
             js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        NULL,
                                         JSREPORT_ERROR,
                                         JSMSG_TRAILING_SLASH);
 	    return NULL;
@@ -1254,7 +1247,7 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
 	      default: {
 		char charBuf[2] = " ";
 		charBuf[0] = (char)*cp;
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_BAD_FLAG, charBuf);
 		return NULL;
 	      }

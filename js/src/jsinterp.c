@@ -173,59 +173,68 @@ static JSClass prop_iterator_class = {
  */
 #define STORE_NUMBER(cx, n, d)                                                \
     JS_BEGIN_MACRO                                                            \
-        jsint i_;                                                             \
-        jsval v_;                                                             \
+        jsint _i;                                                             \
+        jsval _v;                                                             \
                                                                               \
-        if (JSDOUBLE_IS_INT(d, i_) && INT_FITS_IN_JSVAL(i_)) {                \
-            v_ = INT_TO_JSVAL(i_);                                            \
+        if (JSDOUBLE_IS_INT(d, _i) && INT_FITS_IN_JSVAL(_i)) {                \
+            _v = INT_TO_JSVAL(_i);                                            \
         } else {                                                              \
-            ok = js_NewDoubleValue(cx, d, &v_);                               \
+            ok = js_NewDoubleValue(cx, d, &_v);                               \
             if (!ok)                                                          \
                 goto out;                                                     \
         }                                                                     \
-        STORE_OPND(n, v_);                                                    \
+        STORE_OPND(n, _v);                                                    \
     JS_END_MACRO
 
-#define PUSH_NUMBER(cx, d)                                                    \
-    JS_BEGIN_MACRO                                                            \
-        sp++;                                                                 \
-        STORE_NUMBER(cx, -1, d);                                              \
-    JS_END_MACRO
+#define PUSH_NUMBER(cx, d)      { sp++; STORE_NUMBER(cx, -1, d); }
 
 #define FETCH_NUMBER(cx, n, d)                                                \
     JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
+        jsval _v;                                                             \
                                                                               \
-        v_ = FETCH_OPND(n);                                                   \
-        VALUE_TO_NUMBER(cx, v_, d);                                           \
+        _v = FETCH_OPND(n);                                                   \
+        VALUE_TO_NUMBER(cx, _v, d);                                           \
     JS_END_MACRO
 
-#define FETCH_INT(cx, n, i)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_ = FETCH_OPND(n);                                             \
-        if (JSVAL_IS_INT(v_)) {                                               \
-            i = JSVAL_TO_INT(v_);                                             \
-        } else {                                                              \
-            SAVE_SP(fp);                                                      \
-            ok = js_ValueToECMAInt32(cx, v_, &i);                             \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
+/*
+ * This FETCH variant is called only for bitwise operators, so we don't bother
+ * to inline it.  The calls in Interpret must therefore SAVE_SP first!
+ */
+static JSBool
+FetchInt(JSContext *cx, jsint n, jsint *ip)
+{
+    JSStackFrame *fp;
+    jsval *sp, v;
 
-#define FETCH_UINT(cx, n, ui)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_ = FETCH_OPND(n);                                             \
-        jsint i_;                                                             \
-        if (JSVAL_IS_INT(v_) && (i_ = JSVAL_TO_INT(v_)) >= 0) {               \
-            ui = (uint32) i_;                                                 \
-        } else {                                                              \
-            SAVE_SP(fp);                                                      \
-            ok = js_ValueToECMAUint32(cx, v_, &ui);                           \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
+    fp = cx->fp;
+    RESTORE_SP(fp);
+    v = FETCH_OPND(n);
+    if (JSVAL_IS_INT(v)) {
+        *ip = JSVAL_TO_INT(v);
+        return JS_TRUE;
+    }
+    return js_ValueToECMAInt32(cx, v, (int32 *)ip);
+}
+
+static JSBool
+FetchUint(JSContext *cx, jsint n, jsuint *ip)
+{
+    JSStackFrame *fp;
+    jsval *sp, v;
+    jsint i;
+
+    fp = cx->fp;
+    RESTORE_SP(fp);
+    v = FETCH_OPND(n);
+    if (JSVAL_IS_INT(v) && (i = JSVAL_TO_INT(v)) >= 0) {
+        *ip = i;
+        return JS_TRUE;
+    }
+    return js_ValueToECMAUint32(cx, v, (uint32 *)ip);
+}
+
+#define FETCH_INT(cx, n, ip)    (SAVE_SP(fp), FetchInt(cx, n, ip))
+#define FETCH_UINT(cx, n, ip)   (SAVE_SP(fp), FetchUint(cx, n, ip))
 
 /*
  * Optimized conversion macros that test for the desired type in v before
@@ -278,9 +287,9 @@ static JSClass prop_iterator_class = {
 #if JS_BUG_VOID_TOSTRING
 #define CHECK_VOID_TOSTRING(cx, v)                                            \
     if (JSVAL_IS_VOID(v)) {                                                   \
-        JSString *str_;                                                       \
-        str_ = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]); \
-        v = STRING_TO_JSVAL(str_);                                            \
+        JSString *_str;                                                       \
+        _str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]); \
+        v = STRING_TO_JSVAL(_str);                                            \
     }
 #else
 #define CHECK_VOID_TOSTRING(cx, v)  ((void)0)
@@ -506,10 +515,9 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
  * "Call" objects that have private data) may not be referred to by 'this',
  * as dictated by ECMA.
  *
- * N.B.: fp->argv must be set, fp->argv[-1] the nominal 'this' paramter as
- * a jsval, and fp->argv[-2] must be the callee object reference, usually a
- * function object.  Also, fp->constructing must be set if we are preparing
- * for a constructor call.
+ * N.B.: fp->argv must be set, and fp->argv[-2] must be the callee object
+ * reference, usually a function object.  Also, fp->constructing must be
+ * set if we are preparing for a constructor call.
  */
 static JSBool
 ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
@@ -554,7 +562,6 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
         }
     }
     fp->thisp = thisp;
-    fp->argv[-1] = OBJECT_TO_JSVAL(thisp);
     return JS_TRUE;
 }
 
@@ -906,7 +913,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.sharpArray = down->sharpArray;
     } else {
         obj = chain;
-        if (cx->options & JSOPTION_VAROBJFIX) {
+        if (!(special & JSFRAME_VAROBJBUG)) {
             while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
                 obj = tmp;
         }
@@ -1214,14 +1221,13 @@ js_Interpret(JSContext *cx, jsval *result)
      */
     onbranch = cx->branchCallback;
     ok = JS_TRUE;
-#define CHECK_BRANCH(len)                                                     \
-    JS_BEGIN_MACRO                                                            \
-        if (len <= 0 && onbranch) {                                           \
-            SAVE_SP(fp);                                                      \
-            if (!(ok = (*onbranch)(cx, script)))                              \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
+#define CHECK_BRANCH(len) {                                                   \
+    if (len <= 0 && onbranch) {                                               \
+        SAVE_SP(fp);                                                          \
+        if (!(ok = (*onbranch)(cx, script)))                                  \
+            goto out;                                                         \
+    }                                                                         \
+}
 
     pc = script->code;
     endpc = pc + script->length;
@@ -1461,28 +1467,23 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
-#define FETCH_ELEMENT_ID(n, id)                                               \
-    JS_BEGIN_MACRO                                                            \
-        /* If the index is not a jsint, atomize it. */                        \
-        id = (jsid) FETCH_OPND(n);                                            \
-        if (JSVAL_IS_INT(id)) {                                               \
-            atom = NULL;                                                      \
-        } else {                                                              \
-            SAVE_SP(fp);                                                      \
-            atom = js_ValueToStringAtom(cx, (jsval)id);                       \
-            if (!atom) {                                                      \
-                ok = JS_FALSE;                                                \
-                goto out;                                                     \
-            }                                                                 \
-            id = (jsid)atom;                                                  \
+#define FETCH_ELEMENT_ID(n, id) {                                             \
+    /* If the index is not a jsint, atomize it. */                            \
+    id = (jsid) FETCH_OPND(n);                                                \
+    if (JSVAL_IS_INT(id)) {                                                   \
+        atom = NULL;                                                          \
+    } else {                                                                  \
+        SAVE_SP(fp);                                                          \
+        atom = js_ValueToStringAtom(cx, (jsval)id);                           \
+        if (!atom) {                                                          \
+            ok = JS_FALSE;                                                    \
+            goto out;                                                         \
         }                                                                     \
-    JS_END_MACRO
+        id = (jsid)atom;                                                      \
+    }                                                                         \
+}
 
-#define POP_ELEMENT_ID(id)                                                    \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_ELEMENT_ID(-1, id);                                             \
-        sp--;                                                                 \
-    JS_END_MACRO
+#define POP_ELEMENT_ID(id)      { FETCH_ELEMENT_ID(-1, id); sp--; }
 
 #if JS_HAS_IN_OPERATOR
           case JSOP_IN:
@@ -1679,13 +1680,13 @@ js_Interpret(JSContext *cx, jsval *result)
 
             switch (op) {
               case JSOP_FORARG:
-                slot = GET_ARGNO(pc);
+                slot = (uintN)GET_ARGNO(pc);
                 JS_ASSERT(slot < fp->fun->nargs);
                 fp->argv[slot] = rval;
                 break;
 
               case JSOP_FORVAR:
-                slot = GET_VARNO(pc);
+                slot = (uintN)GET_VARNO(pc);
                 JS_ASSERT(slot < fp->fun->nvars);
                 fp->vars[slot] = rval;
                 break;
@@ -1728,61 +1729,58 @@ js_Interpret(JSContext *cx, jsval *result)
             PUSH_OPND(rval);
             break;
 
-#define PROPERTY_OP(n, call)                                                  \
-    JS_BEGIN_MACRO                                                            \
-        /* Pop the left part and resolve it to a non-null object. */          \
-        lval = FETCH_OPND(n);                                                 \
-        VALUE_TO_OBJECT(cx, lval, obj);                                       \
+#define PROPERTY_OP(n, call) {                                                \
+    /* Pop the left part and resolve it to a non-null object. */              \
+    lval = FETCH_OPND(n);                                                     \
+    VALUE_TO_OBJECT(cx, lval, obj);                                           \
                                                                               \
-        /* Get or set the property, set ok false if error, true if success. */\
-        SAVE_SP(fp);                                                          \
-        call;                                                                 \
-        if (!ok)                                                              \
-            goto out;                                                         \
-    JS_END_MACRO
+    /* Get or set the property, set ok false if error, true if success. */    \
+    SAVE_SP(fp);                                                              \
+    call;                                                                     \
+    if (!ok)                                                                  \
+        goto out;                                                             \
+}
 
-#define ELEMENT_OP(n, call)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_ELEMENT_ID(n, id);                                              \
-        PROPERTY_OP(n-1, call);                                               \
-    JS_END_MACRO
+#define ELEMENT_OP(n, call) {                                                 \
+    FETCH_ELEMENT_ID(n, id);                                                  \
+    PROPERTY_OP(n-1, call);                                                   \
+}
 
 /*
  * Direct callers, i.e. those who do not wrap CACHED_GET and CACHED_SET calls
- * in PROPERTY_OP or ELEMENT_OP macro calls must SAVE_SP(fp); beforehand, just
+ * in PROPERT_OP or ELEMENT_OP macro calls must SAVE_SP(fp); beforehand, just
  * in case a getter or setter function is invoked.
  */
-#define CACHED_GET(call)                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (!OBJ_IS_NATIVE(obj)) {                                            \
-            ok = call;                                                        \
-        } else {                                                              \
-            JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);           \
-            if (prop) {                                                       \
-                JSScope *scope_ = OBJ_SCOPE(obj);                             \
-                sprop = (JSScopeProperty *)prop;                              \
-                sprop->nrefs++;                                               \
-                slot = (uintN)sprop->slot;                                    \
-                rval = (slot != SPROP_INVALID_SLOT)                           \
-                       ? LOCKED_OBJ_GET_SLOT(obj, slot)                       \
-                       : JSVAL_VOID;                                          \
-                JS_UNLOCK_SCOPE(cx, scope_);                                  \
-                ok = SPROP_GET(cx, sprop, obj, obj, &rval);                   \
-                if (ok) {                                                     \
-                    JS_LOCK_SCOPE(cx, scope_);                                \
-                    sprop = js_DropScopeProperty(cx, scope_, sprop);          \
-                    if (sprop && SPROP_HAS_VALID_SLOT(sprop))                 \
-                        LOCKED_OBJ_SET_SLOT(obj, slot, rval);                 \
-                    JS_UNLOCK_SCOPE(cx, scope_);                              \
-                }                                                             \
-            } else {                                                          \
-                JS_UNLOCK_OBJ(cx, obj);                                       \
-                ok = call;                                                    \
-                /* No fill here: js_GetProperty fills the cache. */           \
+#define CACHED_GET(call) {                                                    \
+    if (!OBJ_IS_NATIVE(obj)) {                                                \
+        ok = call;                                                            \
+    } else {                                                                  \
+        JS_LOCK_OBJ(cx, obj);                                                 \
+        PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);               \
+        if (prop) {                                                           \
+            JSScope *_scope = OBJ_SCOPE(obj);                                 \
+            sprop = (JSScopeProperty *)prop;                                  \
+            sprop->nrefs++;                                                   \
+            slot = (uintN)sprop->slot;                                        \
+            rval = (slot != SPROP_INVALID_SLOT)                               \
+                   ? LOCKED_OBJ_GET_SLOT(obj, slot)                           \
+                   : JSVAL_VOID;                                              \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
+            ok = SPROP_GET(cx, sprop, obj, obj, &rval);                       \
+            if (ok) {                                                         \
+                JS_LOCK_SCOPE(cx, _scope);                                    \
+                sprop = js_DropScopeProperty(cx, _scope, sprop);              \
+                if (sprop && SPROP_HAS_VALID_SLOT(sprop))                     \
+                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);                     \
+                JS_UNLOCK_SCOPE(cx, _scope);                                  \
             }                                                                 \
+        } else {                                                              \
+            JS_UNLOCK_OBJ(cx, obj);                                           \
+            ok = call;                                                        \
+            /* No fill here: js_GetProperty fills the cache. */               \
         }                                                                     \
-    JS_END_MACRO
+    }                                                                         \
+}
 
 #if JS_BUG_SET_ENUMERATE
 #define SET_ENUMERATE_ATTR(sprop) ((sprop)->attrs |= JSPROP_ENUMERATE)
@@ -1790,36 +1788,35 @@ js_Interpret(JSContext *cx, jsval *result)
 #define SET_ENUMERATE_ATTR(sprop) ((void)0)
 #endif
 
-#define CACHED_SET(call)                                                      \
-    JS_BEGIN_MACRO                                                            \
-        if (!OBJ_IS_NATIVE(obj)) {                                            \
-            ok = call;                                                        \
-        } else {                                                              \
-            JS_LOCK_OBJ(cx, obj);                                             \
-            PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);           \
-            if ((sprop = (JSScopeProperty *)prop) &&                          \
-                !(sprop->attrs & JSPROP_READONLY)) {                          \
-                JSScope *scope_ = OBJ_SCOPE(obj);                             \
-                sprop->nrefs++;                                               \
-                JS_UNLOCK_SCOPE(cx, scope_);                                  \
-                ok = SPROP_SET(cx, sprop, obj, obj, &rval);                   \
-                if (ok) {                                                     \
-                    JS_LOCK_SCOPE(cx, scope_);                                \
-                    sprop = js_DropScopeProperty(cx, scope_, sprop);          \
-                    if (sprop && SPROP_HAS_VALID_SLOT(sprop)) {               \
-                        LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);          \
-                        SET_ENUMERATE_ATTR(sprop);                            \
-                        GC_POKE(cx, JSVAL_NULL);  /* XXX second arg ignored */\
-                    }                                                         \
-                    JS_UNLOCK_SCOPE(cx, scope_);                              \
+#define CACHED_SET(call) {                                                    \
+    if (!OBJ_IS_NATIVE(obj)) {                                                \
+        ok = call;                                                            \
+    } else {                                                                  \
+        JS_LOCK_OBJ(cx, obj);                                                 \
+        PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);               \
+        if ((sprop = (JSScopeProperty *)prop) &&                              \
+            !(sprop->attrs & JSPROP_READONLY)) {                              \
+            JSScope *_scope = OBJ_SCOPE(obj);                                 \
+            sprop->nrefs++;                                                   \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
+            ok = SPROP_SET(cx, sprop, obj, obj, &rval);                       \
+            if (ok) {                                                         \
+                JS_LOCK_SCOPE(cx, _scope);                                    \
+                sprop = js_DropScopeProperty(cx, _scope, sprop);              \
+                if (sprop && SPROP_HAS_VALID_SLOT(sprop)) {                   \
+                    LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);              \
+                    SET_ENUMERATE_ATTR(sprop);                                \
+                    GC_POKE(cx, JSVAL_NULL);  /* XXX second arg ignored! */   \
                 }                                                             \
-            } else {                                                          \
-                JS_UNLOCK_OBJ(cx, obj);                                       \
-                ok = call;                                                    \
-                /* No fill here: js_SetProperty writes through the cache. */  \
+                JS_UNLOCK_SCOPE(cx, _scope);                                  \
             }                                                                 \
+        } else {                                                              \
+            JS_UNLOCK_OBJ(cx, obj);                                           \
+            ok = call;                                                        \
+            /* No fill here: js_SetProperty writes through the cache. */      \
         }                                                                     \
-    JS_END_MACRO
+    }                                                                         \
+}
 
           case JSOP_SETCONST:
             obj = fp->varobj;
@@ -1859,17 +1856,16 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, rval);
             break;
 
-#define INTEGER_OP(OP, EXTRA_CODE)                                            \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_INT(cx, -1, j);                                                 \
-        FETCH_INT(cx, -2, i);                                                 \
-        if (!ok)                                                              \
-            goto out;                                                         \
-        EXTRA_CODE                                                            \
-        i = i OP j;                                                           \
-        sp--;                                                                 \
-        STORE_NUMBER(cx, -1, i);                                              \
-    JS_END_MACRO
+#define INTEGER_OP(OP, EXTRA_CODE) {                                          \
+    SAVE_SP(fp);                                                              \
+    ok = FetchInt(cx, -1, &j) && FetchInt(cx, -2, &i);                        \
+    if (!ok)                                                                  \
+        goto out;                                                             \
+    EXTRA_CODE                                                                \
+    i = i OP j;                                                               \
+    sp--;                                                                     \
+    STORE_NUMBER(cx, -1, i);                                                  \
+}
 
 #define BITWISE_OP(OP)          INTEGER_OP(OP, (void) 0;)
 #define SIGNED_SHIFT_OP(OP)     INTEGER_OP(OP, j &= 31;)
@@ -1895,84 +1891,82 @@ js_Interpret(JSContext *cx, jsval *result)
 #define COMPARE_DOUBLES(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
 #endif
 
-#define RELATIONAL_OP(OP)                                                     \
-    JS_BEGIN_MACRO                                                            \
-        rval = FETCH_OPND(-1);                                                \
-        lval = FETCH_OPND(-2);                                                \
-        /* Optimize for two int-tagged operands (typical loop control). */    \
-        if ((lval & rval) & JSVAL_INT) {                                      \
-            ltmp = lval ^ JSVAL_VOID;                                         \
-            rtmp = rval ^ JSVAL_VOID;                                         \
-            if (ltmp && rtmp) {                                               \
-                cond = JSVAL_TO_INT(lval) OP JSVAL_TO_INT(rval);              \
-            } else {                                                          \
-                d  = ltmp ? JSVAL_TO_INT(lval) : *rt->jsNaN;                  \
-                d2 = rtmp ? JSVAL_TO_INT(rval) : *rt->jsNaN;                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                  \
-            }                                                                 \
+#define RELATIONAL_OP(OP) {                                                   \
+    rval = FETCH_OPND(-1);                                                    \
+    lval = FETCH_OPND(-2);                                                    \
+    /* Optimize for two int-tagged operands (typical loop control). */        \
+    if ((lval & rval) & JSVAL_INT) {                                          \
+        ltmp = lval ^ JSVAL_VOID;                                             \
+        rtmp = rval ^ JSVAL_VOID;                                             \
+        if (ltmp && rtmp) {                                                   \
+            cond = JSVAL_TO_INT(lval) OP JSVAL_TO_INT(rval);                  \
         } else {                                                              \
-            VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_NUMBER, &lval);               \
-            VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_NUMBER, &rval);               \
-            if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {             \
+            d  = ltmp ? JSVAL_TO_INT(lval) : *rt->jsNaN;                      \
+            d2 = rtmp ? JSVAL_TO_INT(rval) : *rt->jsNaN;                      \
+            cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                      \
+        }                                                                     \
+    } else {                                                                  \
+        VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_NUMBER, &lval);                   \
+        VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_NUMBER, &rval);                   \
+        if (JSVAL_IS_STRING(lval) && JSVAL_IS_STRING(rval)) {                 \
+            str  = JSVAL_TO_STRING(lval);                                     \
+            str2 = JSVAL_TO_STRING(rval);                                     \
+            cond = js_CompareStrings(str, str2) OP 0;                         \
+        } else {                                                              \
+            VALUE_TO_NUMBER(cx, lval, d);                                     \
+            VALUE_TO_NUMBER(cx, rval, d2);                                    \
+            cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                      \
+        }                                                                     \
+    }                                                                         \
+    sp--;                                                                     \
+    STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                                   \
+}
+
+#define EQUALITY_OP(OP, IFNAN) {                                              \
+    rval = FETCH_OPND(-1);                                                    \
+    lval = FETCH_OPND(-2);                                                    \
+    ltmp = JSVAL_TAG(lval);                                                   \
+    rtmp = JSVAL_TAG(rval);                                                   \
+    if (ltmp == rtmp) {                                                       \
+        if (ltmp == JSVAL_STRING) {                                           \
+            str  = JSVAL_TO_STRING(lval);                                     \
+            str2 = JSVAL_TO_STRING(rval);                                     \
+            cond = js_CompareStrings(str, str2) OP 0;                         \
+        } else if (ltmp == JSVAL_DOUBLE) {                                    \
+            d  = *JSVAL_TO_DOUBLE(lval);                                      \
+            d2 = *JSVAL_TO_DOUBLE(rval);                                      \
+            cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                         \
+        } else {                                                              \
+            /* Handle all undefined (=>NaN) and int combinations. */          \
+            cond = lval OP rval;                                              \
+        }                                                                     \
+    } else {                                                                  \
+        if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {                     \
+            cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) OP 1;         \
+        } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {              \
+            cond = 1 OP 0;                                                    \
+        } else {                                                              \
+            if (ltmp == JSVAL_OBJECT) {                                       \
+                VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &lval);             \
+                ltmp = JSVAL_TAG(lval);                                       \
+            } else if (rtmp == JSVAL_OBJECT) {                                \
+                VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rval);             \
+                rtmp = JSVAL_TAG(rval);                                       \
+            }                                                                 \
+            if (ltmp == JSVAL_STRING && rtmp == JSVAL_STRING) {               \
                 str  = JSVAL_TO_STRING(lval);                                 \
                 str2 = JSVAL_TO_STRING(rval);                                 \
                 cond = js_CompareStrings(str, str2) OP 0;                     \
             } else {                                                          \
                 VALUE_TO_NUMBER(cx, lval, d);                                 \
                 VALUE_TO_NUMBER(cx, rval, d2);                                \
-                cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                  \
-            }                                                                 \
-        }                                                                     \
-        sp--;                                                                 \
-        STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
-    JS_END_MACRO
-
-#define EQUALITY_OP(OP, IFNAN)                                                \
-    JS_BEGIN_MACRO                                                            \
-        rval = FETCH_OPND(-1);                                                \
-        lval = FETCH_OPND(-2);                                                \
-        ltmp = JSVAL_TAG(lval);                                               \
-        rtmp = JSVAL_TAG(rval);                                               \
-        if (ltmp == rtmp) {                                                   \
-            if (ltmp == JSVAL_STRING) {                                       \
-                str  = JSVAL_TO_STRING(lval);                                 \
-                str2 = JSVAL_TO_STRING(rval);                                 \
-                cond = js_CompareStrings(str, str2) OP 0;                     \
-            } else if (ltmp == JSVAL_DOUBLE) {                                \
-                d  = *JSVAL_TO_DOUBLE(lval);                                  \
-                d2 = *JSVAL_TO_DOUBLE(rval);                                  \
                 cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
-            } else {                                                          \
-                /* Handle all undefined (=>NaN) and int combinations. */      \
-                cond = lval OP rval;                                          \
-            }                                                                 \
-        } else {                                                              \
-            if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {                 \
-                cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) OP 1;     \
-            } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {          \
-                cond = 1 OP 0;                                                \
-            } else {                                                          \
-                if (ltmp == JSVAL_OBJECT) {                                   \
-                    VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &lval);         \
-                    ltmp = JSVAL_TAG(lval);                                   \
-                } else if (rtmp == JSVAL_OBJECT) {                            \
-                    VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rval);         \
-                    rtmp = JSVAL_TAG(rval);                                   \
-                }                                                             \
-                if (ltmp == JSVAL_STRING && rtmp == JSVAL_STRING) {           \
-                    str  = JSVAL_TO_STRING(lval);                             \
-                    str2 = JSVAL_TO_STRING(rval);                             \
-                    cond = js_CompareStrings(str, str2) OP 0;                 \
-                } else {                                                      \
-                    VALUE_TO_NUMBER(cx, lval, d);                             \
-                    VALUE_TO_NUMBER(cx, rval, d2);                            \
-                    cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                 \
-                }                                                             \
             }                                                                 \
         }                                                                     \
-        sp--;                                                                 \
-        STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
-    JS_END_MACRO
+    }                                                                         \
+    sp--;                                                                     \
+    STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                                   \
+}
 
           case JSOP_EQ:
             EQUALITY_OP(==, JS_FALSE);
@@ -1983,40 +1977,39 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
 #if !JS_BUG_FALLIBLE_EQOPS
-#define NEW_EQUALITY_OP(OP, IFNAN)                                            \
-    JS_BEGIN_MACRO                                                            \
-        rval = FETCH_OPND(-1);                                                \
-        lval = FETCH_OPND(-2);                                                \
-        ltmp = JSVAL_TAG(lval);                                               \
-        rtmp = JSVAL_TAG(rval);                                               \
-        if (ltmp == rtmp) {                                                   \
-            if (ltmp == JSVAL_STRING) {                                       \
-                str  = JSVAL_TO_STRING(lval);                                 \
-                str2 = JSVAL_TO_STRING(rval);                                 \
-                cond = js_CompareStrings(str, str2) OP 0;                     \
-            } else if (ltmp == JSVAL_DOUBLE) {                                \
-                d  = *JSVAL_TO_DOUBLE(lval);                                  \
-                d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
-            } else {                                                          \
-                cond = lval OP rval;                                          \
-            }                                                                 \
+#define NEW_EQUALITY_OP(OP, IFNAN) {                                          \
+    rval = FETCH_OPND(-1);                                                    \
+    lval = FETCH_OPND(-2);                                                    \
+    ltmp = JSVAL_TAG(lval);                                                   \
+    rtmp = JSVAL_TAG(rval);                                                   \
+    if (ltmp == rtmp) {                                                       \
+        if (ltmp == JSVAL_STRING) {                                           \
+            str  = JSVAL_TO_STRING(lval);                                     \
+            str2 = JSVAL_TO_STRING(rval);                                     \
+            cond = js_CompareStrings(str, str2) OP 0;                         \
+        } else if (ltmp == JSVAL_DOUBLE) {                                    \
+            d  = *JSVAL_TO_DOUBLE(lval);                                      \
+            d2 = *JSVAL_TO_DOUBLE(rval);                                      \
+            cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                         \
         } else {                                                              \
-            if (ltmp == JSVAL_DOUBLE && JSVAL_IS_INT(rval)) {                 \
-                d  = *JSVAL_TO_DOUBLE(lval);                                  \
-                d2 = JSVAL_TO_INT(rval);                                      \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
-            } else if (JSVAL_IS_INT(lval) && rtmp == JSVAL_DOUBLE) {          \
-                d  = JSVAL_TO_INT(lval);                                      \
-                d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
-            } else {                                                          \
-                cond = lval OP rval;                                          \
-            }                                                                 \
+            cond = lval OP rval;                                              \
         }                                                                     \
-        sp--;                                                                 \
-        STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
-    JS_END_MACRO
+    } else {                                                                  \
+        if (ltmp == JSVAL_DOUBLE && JSVAL_IS_INT(rval)) {                     \
+            d  = *JSVAL_TO_DOUBLE(lval);                                      \
+            d2 = JSVAL_TO_INT(rval);                                          \
+            cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                         \
+        } else if (JSVAL_IS_INT(lval) && rtmp == JSVAL_DOUBLE) {              \
+            d  = JSVAL_TO_INT(lval);                                          \
+            d2 = *JSVAL_TO_DOUBLE(rval);                                      \
+            cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                         \
+        } else {                                                              \
+            cond = lval OP rval;                                              \
+        }                                                                     \
+    }                                                                         \
+    sp--;                                                                     \
+    STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                                   \
+}
 
           case JSOP_NEW_EQ:
             NEW_EQUALITY_OP(==, JS_FALSE);
@@ -2072,8 +2065,10 @@ js_Interpret(JSContext *cx, jsval *result)
           {
             uint32 u;
 
-            FETCH_INT(cx, -1, j);
-            FETCH_UINT(cx, -2, u);
+            SAVE_SP(fp);
+            ok = FetchInt(cx, -1, &j) && FetchUint(cx, -2, &u);
+            if (!ok)
+                goto out;
             j &= 31;
             d = u >> j;
             sp--;
@@ -2134,14 +2129,13 @@ js_Interpret(JSContext *cx, jsval *result)
             }
             break;
 
-#define BINARY_OP(OP)                                                         \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_NUMBER(cx, -1, d2);                                             \
-        FETCH_NUMBER(cx, -2, d);                                              \
-        d = d OP d2;                                                          \
-        sp--;                                                                 \
-        STORE_NUMBER(cx, -1, d);                                              \
-    JS_END_MACRO
+#define BINARY_OP(OP) {                                                       \
+    FETCH_NUMBER(cx, -1, d2);                                                 \
+    FETCH_NUMBER(cx, -2, d);                                                  \
+    d = d OP d2;                                                              \
+    sp--;                                                                     \
+    STORE_NUMBER(cx, -1, d);                                                  \
+}
 
           case JSOP_SUB:
             BINARY_OP(-);
@@ -2197,7 +2191,9 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_BITNOT:
-            FETCH_INT(cx, -1, i);
+            ok = FETCH_INT(cx, -1, &i);
+            if (!ok)
+                goto out;
             d = (jsdouble) ~i;
             STORE_NUMBER(cx, -1, d);
             break;
@@ -2397,99 +2393,66 @@ js_Interpret(JSContext *cx, jsval *result)
             CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
             if (!ok)
                 goto out;
+            VALUE_TO_NUMBER(cx, rval, d);
 
-            /* The expression result goes in rtmp, the updated value in rval. */
-            if (JSVAL_IS_INT(rval) &&
-                rval != INT_TO_JSVAL(JSVAL_INT_MIN) &&
-                rval != INT_TO_JSVAL(JSVAL_INT_MAX)) {
-                if (cs->format & JOF_POST) {
-                    rtmp = rval;
-                    (cs->format & JOF_INC) ? (rval += 2) : (rval -= 2);
-                } else {
-                    (cs->format & JOF_INC) ? (rval += 2) : (rval -= 2);
-                    rtmp = rval;
-                }
-            } else {
+            /* Compute the post- or pre-incremented value. */
+            if (cs->format & JOF_INC)
+                d2 = (cs->format & JOF_POST) ? d++ : ++d;
+            else
+                d2 = (cs->format & JOF_POST) ? d-- : --d;
 
-/*
- * Initially, rval contains the value to increment or decrement, which is not
- * yet converted.  As above, the expression result goes in rtmp, the updated
- * value goes in rval.
- */
-#define NONINT_INCREMENT_OP()                                                 \
-    JS_BEGIN_MACRO                                                            \
-        VALUE_TO_NUMBER(cx, rval, d);                                         \
-        if (cs->format & JOF_POST) {                                          \
-            rtmp = rval;                                                      \
-            if (!JSVAL_IS_NUMBER(rtmp)) {                                     \
-                ok = js_NewNumberValue(cx, d, &rtmp);                         \
-                if (!ok)                                                      \
-                    goto out;                                                 \
-            }                                                                 \
-            (cs->format & JOF_INC) ? d++ : d--;                               \
-            ok = js_NewNumberValue(cx, d, &rval);                             \
-        } else {                                                              \
-            (cs->format & JOF_INC) ? ++d : --d;                               \
-            ok = js_NewNumberValue(cx, d, &rval);                             \
-            rtmp = rval;                                                      \
-        }                                                                     \
-        if (!ok)                                                              \
-            goto out;                                                         \
-    JS_END_MACRO
-
-                NONINT_INCREMENT_OP();
-            }
-
+            /* Set obj[id] to the resulting number. */
+            ok = js_NewNumberValue(cx, d, &rval);
+            if (!ok)
+                goto out;
             CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
             if (!ok)
                 goto out;
-            PUSH_OPND(rtmp);
+            PUSH_NUMBER(cx, d2);
             break;
 
-/*
- * NB: This macro can't use JS_BEGIN_MACRO/JS_END_MACRO around its body because
- * it must break from the switch case that calls it, not from the do...while(0)
- * loop created by the JS_BEGIN/END_MACRO brackets.
- */
-#define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OP,MINMAX)                      \
-    slot = (uintN)SLOT;                                                       \
-    JS_ASSERT(slot < fp->fun->COUNT);                                         \
-    vp = fp->BASE + slot;                                                     \
-    rval = *vp;                                                               \
-    if (JSVAL_IS_INT(rval) &&                                                 \
-        rval != INT_TO_JSVAL(JSVAL_INT_##MINMAX)) {                           \
-        PRE = rval;                                                           \
-        rval OP 2;                                                            \
-        *vp = rval;                                                           \
-        PUSH_OPND(PRE);                                                       \
-        break;                                                                \
-    }                                                                         \
-    goto do_nonint_fast_incop;
-
           case JSOP_INCARG:
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, +=, MAX);
           case JSOP_DECARG:
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, -=, MIN);
           case JSOP_ARGINC:
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, +=, MAX);
           case JSOP_ARGDEC:
-            FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, -=, MIN);
+            slot = (uintN)GET_ARGNO(pc);
+            JS_ASSERT(slot < fp->fun->nargs);
+            rval = fp->argv[slot];
+            VALUE_TO_NUMBER(cx, rval, d);
+
+            /* Compute the post- or pre-incremented value. */
+            if (cs->format & JOF_INC)
+                d2 = (cs->format & JOF_POST) ? d++ : ++d;
+            else
+                d2 = (cs->format & JOF_POST) ? d-- : --d;
+
+            ok = js_NewNumberValue(cx, d, &rval);
+            if (!ok)
+                goto out;
+            fp->argv[slot] = rval;
+            PUSH_NUMBER(cx, d2);
+            break;
 
           case JSOP_INCVAR:
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, +=, MAX);
           case JSOP_DECVAR:
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, -=, MIN);
           case JSOP_VARINC:
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, +=, MAX);
           case JSOP_VARDEC:
-            FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, -=, MIN);
+            slot = (uintN)GET_VARNO(pc);
+            JS_ASSERT(slot < fp->fun->nvars);
+            rval = fp->vars[slot];
+            VALUE_TO_NUMBER(cx, rval, d);
 
-#undef FAST_INCREMENT_OP
+            /* Compute the post- or pre-incremented value. */
+            if (cs->format & JOF_INC)
+                d2 = (cs->format & JOF_POST) ? d++ : ++d;
+            else
+                d2 = (cs->format & JOF_POST) ? d-- : --d;
 
-          do_nonint_fast_incop:
-            NONINT_INCREMENT_OP();
-            *vp = rval;
-            PUSH_OPND(rtmp);
+            ok = js_NewNumberValue(cx, d, &rval);
+            if (!ok)
+                goto out;
+            fp->vars[slot] = rval;
+            PUSH_NUMBER(cx, d2);
             break;
 
           case JSOP_GETPROP:
@@ -2538,21 +2501,7 @@ js_Interpret(JSContext *cx, jsval *result)
             sp -= 3;
             break;
 
-/*
- * LAZY_ARGS_THISP allows the JSOP_ARGSUB bytecode to defer creation of the
- * arguments object until it is truly needed.  JSOP_ARGSUB optimizes away
- * arguments objects when the only uses of the 'arguments' parameter are to
- * fetch individual actual parameters.  But if such a use were then invoked,
- * e.g., arguments[i](), the 'this' parameter would and must bind to the
- * caller's arguments object.  So JSOP_ARGSUB sets obj to LAZY_ARGS_THISP.
- */
-#define LAZY_ARGS_THISP ((JSObject *) 1)
-
           case JSOP_PUSHOBJ:
-            if (obj == LAZY_ARGS_THISP && !(obj = js_GetArgsObject(cx, fp))) {
-                ok = JS_FALSE;
-                goto out;
-            }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
@@ -2828,7 +2777,9 @@ js_Interpret(JSContext *cx, jsval *result)
                     break;
                 i = JSVAL_TO_INT(rval);
             } else {
-                FETCH_INT(cx, -1, i);
+                ok = FETCH_INT(cx, -1, &i);
+                if (!ok)
+                    goto out;
                 sp--;
             }
 
@@ -2994,54 +2945,25 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_ARGUMENTS:
-            SAVE_SP(fp);
-            ok = js_GetArgsValue(cx, fp, &rval);
-            if (!ok)
-                goto out;
-            PUSH_OPND(rval);
-            break;
-
-          case JSOP_ARGSUB:
-            id = (jsid) INT_TO_JSVAL(GET_ARGNO(pc));
-            SAVE_SP(fp);
-            ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
-            if (!ok)
-                goto out;
+            /* XXXbe if (!TEST_BIT(slot, fp->overrides))... */
+            obj = js_GetArgsObject(cx, fp);
             if (!obj) {
-                /*
-                 * If arguments was not overridden by eval('arguments = ...'),
-                 * set obj to the magic cookie respected by ComputeThis, just
-                 * in case this bytecode is part of an 'arguments[i](j, k)' or
-                 * similar such invocation sequence, where the function that
-                 * is invoked expects its 'this' parameter to be the caller's
-                 * arguments object.
-                 */
-                obj = LAZY_ARGS_THISP;
-            }
-            PUSH_OPND(rval);
-            break;
-
-#undef LAZY_ARGS_THISP
-
-          case JSOP_ARGCNT:
-            id = (jsid) rt->atomState.lengthAtom;
-            SAVE_SP(fp);
-            ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
-            if (!ok)
+                ok = JS_FALSE;
                 goto out;
-            PUSH_OPND(rval);
+            }
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
           case JSOP_GETARG:
             obj = NULL;
-            slot = GET_ARGNO(pc);
+            slot = (uintN)GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             PUSH_OPND(fp->argv[slot]);
             break;
 
           case JSOP_SETARG:
             obj = NULL;
-            slot = GET_ARGNO(pc);
+            slot = (uintN)GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
@@ -3050,14 +2972,14 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_GETVAR:
             obj = NULL;
-            slot = GET_VARNO(pc);
+            slot = (uintN)GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             PUSH_OPND(fp->vars[slot]);
             break;
 
           case JSOP_SETVAR:
             obj = NULL;
-            slot = GET_VARNO(pc);
+            slot = (uintN)GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);

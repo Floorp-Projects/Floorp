@@ -117,7 +117,7 @@ static JSParser PrimaryExpr;
 #define MUST_MATCH_TOKEN(tt, errno)                                           \
     JS_BEGIN_MACRO                                                            \
         if (js_GetToken(cx, ts) != tt) {                                      \
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, errno); \
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, errno);       \
             return NULL;                                                      \
         }                                                                     \
     JS_END_MACRO
@@ -184,7 +184,7 @@ WellTerminated(JSContext *cx, JSTokenStream *ts, JSTokenType lastExprType)
             return JS_TRUE;
         }
 #endif
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_SEMI_BEFORE_STMNT);
         return JS_FALSE;
     }
@@ -212,7 +212,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_NAME;
     (void) js_GetToken(cx, ts);
     if (CURRENT_TOKEN(ts).t_op != JSOP_NOP) {
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_BAD_GETTER_OR_SETTER,
                                     (op == JSOP_GETTER)
                                     ? js_getter_str
@@ -220,7 +220,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_ERROR;
     }
     CURRENT_TOKEN(ts).t_op = op;
-    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+    if (!js_ReportCompileErrorNumber(cx, ts,
                                      JSREPORT_WARNING |
                                      JSREPORT_STRICT,
                                      JSMSG_DEPRECATED_USAGE,
@@ -262,8 +262,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     if (!pn) {
         ok = JS_FALSE;
     } else if (!js_MatchToken(cx, ts, TOK_EOF)) {
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                    JSMSG_SYNTAX_ERROR);
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
         ok = JS_FALSE;
     } else {
         pn->pn_type = TOK_LC;
@@ -381,12 +380,12 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
             JSBool ok;
             if (fun->atom) {
                 char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                ok = js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_NO_RETURN_VALUE, name);
             } else {
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                ok = js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_ANON_NO_RETURN_VALUE);
@@ -488,7 +487,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 if (SPROP_GETTER(sprop, pobj) == js_GetArgument) {
                     if (JS_HAS_STRICT_OPTION(cx)) {
                         OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
-                        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+                        if (!js_ReportCompileErrorNumber(cx, ts,
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,
@@ -567,7 +566,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             pn2 = ALE_NODE(ale);
             op = pn2->pn_op;
             if ((JS_HAS_STRICT_OPTION(cx) || op == JSOP_DEFCONST) &&
-                !js_ReportCompileErrorNumber(cx, ts, NULL,
+                !js_ReportCompileErrorNumber(cx, ts,
                                              (op != JSOP_DEFCONST)
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
                                              : JSREPORT_ERROR,
@@ -687,7 +686,7 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     if (pn->pn_type == TOK_ASSIGN && pn->pn_op == JSOP_NOP) {
         JSBool rewrite = JS_HAS_STRICT_OPTION(cx) ||
                          !JSVERSION_IS_ECMA(cx->version);
-        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+        if (!js_ReportCompileErrorNumber(cx, ts,
                                          JSREPORT_WARNING | JSREPORT_STRICT,
                                          JSMSG_EQUAL_AS_ASSIGN,
                                          rewrite
@@ -823,7 +822,7 @@ ImportExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 
   bad_import:
-    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_IMPORT);
+    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, JSMSG_BAD_IMPORT);
     return NULL;
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
@@ -973,7 +972,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             switch (tt) {
               case TOK_DEFAULT:
                 if (seenDefault) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_TOO_MANY_DEFAULTS);
                     return NULL;
                 }
@@ -993,7 +992,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 }
                 PN_APPEND(pn2, pn3);
                 if (pn2->pn_count == JS_BIT(16)) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_TOO_MANY_CASES);
                     return NULL;
                 }
@@ -1003,7 +1002,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
 
               default:
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_BAD_SWITCH);
                 return NULL;
             }
@@ -1128,7 +1127,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 : (pn1->pn_type != TOK_NAME &&
                    pn1->pn_type != TOK_DOT &&
                    pn1->pn_type != TOK_LB)) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_BAD_FOR_LEFTSIDE);
                 return NULL;
             }
@@ -1137,7 +1136,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2 = (pn1->pn_type == TOK_VAR) ? pn1->pn_head : pn1;
             if (pn2->pn_type == TOK_NAME &&
                 pn2->pn_atom == cx->runtime->atomState.argumentsAtom) {
-                tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                tc->flags |= TCF_FUN_SETS_ARGS | TCF_FUN_HEAVYWEIGHT;
             }
 
             /* Parse the object expression as the right operand of 'in'. */
@@ -1224,7 +1223,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         while (js_PeekToken(cx, ts) == TOK_CATCH) {
             /* check for another catch after unconditional catch */
             if (catchtail != pn && !catchtail->pn_kid1->pn_expr) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_CATCH_AFTER_GENERAL);
                 return NULL;
             }
@@ -1292,7 +1291,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn->pn_kid3 = NULL;
         }
         if (!pn->pn_kid2 && !pn->pn_kid3) {
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                         JSMSG_CATCH_OR_FINALLY);
             return NULL;
         }
@@ -1318,12 +1317,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_CATCH_WITHOUT_TRY);
         return NULL;
 
       case TOK_FINALLY:
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_FINALLY_WITHOUT_TRY);
         return NULL;
 
@@ -1340,7 +1339,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (label) {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
@@ -1350,7 +1349,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_TOUGH_BREAK);
                     return NULL;
                 }
@@ -1373,15 +1372,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (label) {
             for (stmt2 = NULL; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
                 if (stmt->type == STMT_LABEL) {
                     if (stmt->label == label) {
                         if (!stmt2 || !STMT_IS_LOOP(stmt2)) {
-                            js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                        JSREPORT_ERROR,
+                            js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                         JSMSG_BAD_CONTINUE);
                             return NULL;
                         }
@@ -1394,7 +1392,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_BAD_CONTINUE);
                     return NULL;
                 }
@@ -1425,7 +1423,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         /* Deprecate after parsing, in case of WERROR option. */
         if (JS_HAS_STRICT_OPTION(cx)) {
-            if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+            if (!js_ReportCompileErrorNumber(cx, ts,
                                              JSREPORT_WARNING | JSREPORT_STRICT,
                                              JSMSG_DEPRECATED_USAGE,
                                              js_with_statement_str)) {
@@ -1452,7 +1450,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
       case TOK_RETURN:
         if (!(tc->flags & TCF_IN_FUNCTION)) {
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                         JSMSG_BAD_RETURN);
             return NULL;
         }
@@ -1496,12 +1494,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             fun = cx->fp->fun;
             if (fun->atom) {
                 char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                ok = js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_NO_RETURN_VALUE, name);
             } else {
-                ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                ok = js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_ANON_NO_RETURN_VALUE);
@@ -1554,14 +1552,14 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         if (js_PeekToken(cx, ts) == TOK_COLON) {
             if (pn2->pn_type != TOK_NAME) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_BAD_LABEL);
                 return NULL;
             }
             label = pn2->pn_atom;
             for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
                 if (stmt->type == STMT_LABEL && stmt->label == label) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_DUPLICATE_LABEL);
                     return NULL;
                 }
@@ -1665,7 +1663,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if ((JS_HAS_STRICT_OPTION(cx) ||
                  pn->pn_op == JSOP_DEFCONST ||
                  pn2->pn_op == JSOP_DEFCONST) &&
-                !js_ReportCompileErrorNumber(cx, ts, NULL,
+                !js_ReportCompileErrorNumber(cx, ts,
                                              (pn->pn_op != JSOP_DEFCONST &&
                                               pn2->pn_op != JSOP_DEFCONST)
                                              ? JSREPORT_WARNING|JSREPORT_STRICT
@@ -1710,7 +1708,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 currentGetter = js_GetArgument;
                 currentSetter = js_SetArgument;
                 if (JS_HAS_STRICT_OPTION(cx)) {
-                    ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                    ok = js_ReportCompileErrorNumber(cx, ts,
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_VAR_HIDES_ARG,
@@ -1794,7 +1792,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
         if (js_MatchToken(cx, ts, TOK_ASSIGN)) {
             if (CURRENT_TOKEN(ts).t_op != JSOP_NOP) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_BAD_VAR_INIT);
                 ok = JS_FALSE;
             } else {
@@ -1806,7 +1804,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                  ? JSOP_SETCONST
                                  : JSOP_SETNAME;
                     if (atom == cx->runtime->atomState.argumentsAtom)
-                        tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                        tc->flags |= TCF_FUN_SETS_ARGS | TCF_FUN_HEAVYWEIGHT;
                 }
             }
         }
@@ -1903,7 +1901,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_NAME:
         pn2->pn_op = JSOP_SETNAME;
         if (pn2->pn_atom == cx->runtime->atomState.argumentsAtom)
-            tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            tc->flags |= TCF_FUN_SETS_ARGS | TCF_FUN_HEAVYWEIGHT;
         break;
       case TOK_DOT:
         pn2->pn_op = JSOP_SETPROP;
@@ -1917,7 +1915,7 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 #endif
       default:
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_BAD_LEFTSIDE_OF_ASS);
         return NULL;
     }
@@ -2139,7 +2137,7 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
         kid->pn_type != TOK_LB) {
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_BAD_OPERAND, name);
         return NULL;
     }
@@ -2165,7 +2163,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
              ? (preorder ? JSOP_INCNAME : JSOP_NAMEINC)
              : (preorder ? JSOP_DECNAME : JSOP_NAMEDEC);
         if (kid->pn_atom == cx->runtime->atomState.argumentsAtom)
-            tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            tc->flags |= TCF_FUN_SETS_ARGS | TCF_FUN_HEAVYWEIGHT;
         break;
 
       case TOK_DOT:
@@ -2558,7 +2556,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     break;
                   case TOK_RC:
                     if (JS_HAS_STRICT_OPTION(cx) &&
-                        !js_ReportCompileErrorNumber(cx, ts, NULL,
+                        !js_ReportCompileErrorNumber(cx, ts,
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_TRAILING_COMMA)) {
@@ -2566,7 +2564,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                     }
                     goto end_obj_init;
                   default:
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_BAD_PROP_ID);
                     return NULL;
                 }
@@ -2580,7 +2578,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 }
 #endif
                 if (tt != TOK_COLON) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                                 JSMSG_COLON_AFTER_ID);
                     return NULL;
                 }
@@ -2705,8 +2703,8 @@ skip:
         badWord = js_DeflateString(cx, CURRENT_TOKEN(ts).ptr,
                                    (size_t) CURRENT_TOKEN(ts).pos.end.index
                                           - CURRENT_TOKEN(ts).pos.begin.index);
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                    JSMSG_RESERVED_ID, badWord);
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, JSMSG_RESERVED_ID,
+                                    badWord);
         JS_free(cx, badWord);
         return NULL;
 
@@ -2715,8 +2713,7 @@ skip:
         return NULL;
 
       default:
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
-                                    JSMSG_SYNTAX_ERROR);
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
         return NULL;
     }
 
@@ -2724,7 +2721,7 @@ skip:
     if (defsharp) {
         if (notsharp) {
   badsharp:
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                         JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
