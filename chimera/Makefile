@@ -55,8 +55,8 @@ TARGET		= Navigator
 endif
 
 all:
-	(pbxbuild -target $(TARGET) -buildstyle $(BUILDSTYLE))
+	pbxbuild -target $(TARGET) -buildstyle $(BUILDSTYLE)
 
 clean clobber:
-	(rm -rf build)
+	rm -rf build
 
