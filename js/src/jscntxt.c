@@ -127,7 +127,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     if (first) {
         ok = (rt->atomState.liveAtoms == 0)
              ? js_InitAtomState(cx, &rt->atomState)
-             : JS_TRUE;
+             : js_InitPinnedAtoms(cx, &rt->atomState);
         if (ok)
             ok = js_InitScanner(cx);
         if (ok)

@@ -268,6 +268,9 @@ js_MarkAtomState(JSAtomState *state, uintN gcflags, JSGCThingMarker mark,
 extern void
 js_SweepAtomState(JSAtomState *state);
 
+extern JSBool
+js_InitPinnedAtoms(JSContext *cx, JSAtomState *state);
+
 extern void
 js_UnpinPinnedAtoms(JSAtomState *state);
 
