@@ -3495,18 +3495,29 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
 
   if (IsMozEditorBogusNode(aNode)) return PR_FALSE;
   
-  // we got this far, so see if it has a frame.  If so, we'll edit it.
-  nsIFrame *resultFrame;
-  nsCOMPtr<nsIContent>content;
+  // see if it has a frame.  If so, we'll edit it.
+  // special case for textnodes: frame must have width.
+  nsCOMPtr<nsIContent> content;
   content = do_QueryInterface(aNode);
   if (content)
   {
+    nsIFrame *resultFrame;
     nsresult result = shell->GetPrimaryFrameFor(content, &resultFrame);
     if (NS_FAILED(result) || !resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
-    return PR_TRUE;
+    nsCOMPtr<nsITextContent> text(do_QueryInterface(content));
+    if (!text)
+      return PR_TRUE;  // not a text node; has a frame
+    nsFrameState fs;
+    resultFrame->GetFrameState(&fs);
+    if ((fs & NS_FRAME_IS_DIRTY)) // we can only trust width data for undirty frames
+      return PR_TRUE;  // assume all text nodes with dirty frames are editable
+    nsRect rect;
+    resultFrame->GetRect(rect);
+    if (rect.width > 0) 
+      return PR_TRUE;  // text node has width
   }
-  return PR_FALSE;  // it's not a content object (???) so it's not editable
+  return PR_FALSE;  // didn't pass any editability test
 }
 
 PRBool
