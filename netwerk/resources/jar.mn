@@ -1,9 +1,4 @@
-comm.jar:
-*       content/necko/contents.rdf  (content/contents.rdf)
-        content/necko/redirect_loop.xul  (content/redirect_loop.xul)
-
 en-US.jar:
 *       locale/en-US/necko/contents.rdf   (locale/en-US/contents.rdf)
         locale/en-US/necko/necko.properties   (locale/en-US/necko.properties)
-        locale/en-US/necko/redirect_loop.dtd  (locale/en-US/redirect_loop.dtd)
         locale/en-US/communicator/security.properties  (locale/en-US/security.properties)
