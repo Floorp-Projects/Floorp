@@ -127,7 +127,7 @@ AppDirServiceProvider::GetProductDirectory(nsILocalFile **aLocalFile)
   nsresult rv;
   FSRef   foundRef;
   
-  OSErr err = ::FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &foundRef);
+  OSErr err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &foundRef);
   if (err != noErr)
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsILocalFileMac> localDir(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
