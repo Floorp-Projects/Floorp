@@ -132,7 +132,7 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     // the listener prematurely.
     nsCOMPtr<nsIStreamListener> l(listener);
 
-    rv = listener->OnStartRequest(ctxt);
+    rv = listener->OnStartRequest(this, ctxt);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 amt;
@@ -147,11 +147,11 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
             amt = PR_MIN((PRUint32)readCount, amt);
         if (amt == 0) 
             break;
-        rv = listener->OnDataAvailable(ctxt, mInputStream, 0, amt);
+        rv = listener->OnDataAvailable(this, ctxt, mInputStream, 0, amt);
         if (NS_FAILED(rv)) break;
     }
 
-    rv = listener->OnStopRequest(ctxt, rv, nsnull);     // XXX error message 
+    rv = listener->OnStopRequest(this, ctxt, rv, nsnull);     // XXX error message 
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;

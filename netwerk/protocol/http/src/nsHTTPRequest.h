@@ -239,8 +239,8 @@ public:
     NS_IMETHOD          GetUserAgent(char* *o_Value);
 
     // nsIStreamObserver functions
-    NS_IMETHOD OnStartRequest(nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg);
 

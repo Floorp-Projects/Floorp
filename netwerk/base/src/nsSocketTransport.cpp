@@ -294,11 +294,11 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
       case eSocketState_Connected:
         // Fire a notification for read...
         if (mReadListener) {
-          mReadListener->OnStartRequest(mReadContext);
+          mReadListener->OnStartRequest(this, mReadContext);
         }
         // Fire a notification for write...
         if (mWriteObserver) {
-          mWriteObserver->OnStartRequest(mWriteContext);
+          mWriteObserver->OnStartRequest(this, mWriteContext);
         }
         break;
 
@@ -312,7 +312,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         // Fire a notification that the read has finished...
         if (eSocketState_DoneWrite != mCurrentState) {
           if (mReadListener) {
-            mReadListener->OnStopRequest(mReadContext, rv, nsnull);
+            mReadListener->OnStopRequest(this, mReadContext, rv, nsnull);
             NS_RELEASE(mReadListener);
             NS_IF_RELEASE(mReadContext);
           }
@@ -324,7 +324,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         // Fire a notification that the write has finished...
         if (eSocketState_DoneRead != mCurrentState) {
           if (mWriteObserver) {
-            mWriteObserver->OnStopRequest(mWriteContext, rv, nsnull);
+            mWriteObserver->OnStopRequest(this, mWriteContext, rv, nsnull);
             NS_RELEASE(mWriteObserver);
             NS_IF_RELEASE(mWriteContext);
           }
@@ -726,7 +726,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     if (totalBytesWritten && mReadListener) {
       nsresult rv1;
 
-      rv1 = mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
+      rv1 = mReadListener->OnDataAvailable(this, mReadContext, mReadStream, mSourceOffset, 
                                            totalBytesWritten);
       //
       // If the consumer returns failure, then cancel the operation...

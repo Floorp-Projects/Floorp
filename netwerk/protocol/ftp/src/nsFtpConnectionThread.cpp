@@ -54,7 +54,8 @@ nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     return NS_NOINTERFACE; 
 }
 
-nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener* aListener) {
+nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener* aListener,
+                                             nsIChannel* channel, nsISupports* context) {
     NS_INIT_REFCNT();
     
     mEventQueue = aEventQ; // whoever creates us must provide an event queue
@@ -68,12 +69,18 @@ nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamLi
     mAscii = PR_TRUE;
     mLength = 0;
     mConnected = PR_FALSE;
+    mChannel = channel;
+    NS_ADDREF(channel);
+    mContext = context;
+    NS_IF_ADDREF(context);
 
     mLock = PR_NewLock();
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
-    NS_IF_RELEASE(mListener);
+    NS_RELEASE(mListener);
+    NS_RELEASE(mChannel);
+    NS_IF_RELEASE(mContext);
     NS_IF_RELEASE(mEventQueue);
     PR_DestroyLock(mLock);
 }
@@ -146,7 +153,7 @@ nsFtpConnectionThread::Run() {
 
     // tell the user that we've begun the transaction.
     nsFtpOnStartRequestEvent* event =
-        new nsFtpOnStartRequestEvent(mListener, nsnull);
+        new nsFtpOnStartRequestEvent(mListener, mChannel, mContext);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -198,7 +205,7 @@ nsFtpConnectionThread::Run() {
                 // We have error'd out. Stop binding and pass the error back to the user.
                 PRUnichar* errorMsg = nsnull;
                 nsFtpOnStopRequestEvent* event =
-                    new nsFtpOnStopRequestEvent(mListener, nsnull);
+                    new nsFtpOnStopRequestEvent(mListener, mChannel, mContext);
                 if (!event)
                     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -863,8 +870,8 @@ nsFtpConnectionThread::Run() {
 
                         // tell the user about the data.
                         nsFtpOnDataAvailableEvent* event =
-                            new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
-                                                                              // XXX needs to clean up this new.
+                            new nsFtpOnDataAvailableEvent(mListener, mChannel, mContext); // XXX the destroy event method
+                                                                                          // XXX needs to clean up this new.
                         if (!event) {
                             rv = NS_ERROR_OUT_OF_MEMORY;
                             mState = FTP_ERROR;
@@ -979,8 +986,8 @@ nsFtpConnectionThread::Run() {
 
                         // tell the user about the data.
                         nsFtpOnDataAvailableEvent* event =
-                            new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
-                                                                              // XXX needs to clean up this new.
+                            new nsFtpOnDataAvailableEvent(mListener, mChannel, mContext); // XXX the destroy event method
+                                                                                          // XXX needs to clean up this new.
                         if (!event) {
                             rv = NS_ERROR_OUT_OF_MEMORY;
                             mState = FTP_ERROR;

@@ -44,11 +44,12 @@ public:
   NS_IMETHOD GetNumCharsRead(PRInt32* aNumBytes);
 
   // nsIStreamObserver methods
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
   // nsIStreamListener methods
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+                             nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 
 #if 0
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -136,32 +137,24 @@ nsUnicharStreamLoader::GetNumCharsRead(PRInt32* aNumBytes)
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStartRequest(nsISupports *ctxt)
+nsUnicharStreamLoader::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsUnicharStreamLoader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                                     nsresult status, const PRUnichar *errorMsg)
 {
   (*mFunc)(this, *mData, mRef, status);
 
   return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP 
-nsUnicharStreamLoader::GetBindInfo(nsIURI* aURL,
-                                   nsStreamBindingInfo* aInfo)
-{
-  return NS_OK;
-}
-#endif // 0
-
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP 
-nsUnicharStreamLoader::OnDataAvailable(nsISupports *ctxt, 
+nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                                        nsIInputStream *inStr, 
                                        PRUint32 sourceOffset, PRUint32 count)
 {

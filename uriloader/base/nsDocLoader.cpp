@@ -132,17 +132,17 @@ public:
 
 #ifdef NECKO
     // nsIStreamObserver methods:
-	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
+	NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+	NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, 
                              const PRUnichar *errorMsg);
 	
 	// nsIStreamListener methods:
-	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, 
+	NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, 
                                PRUint32 sourceOffset, PRUint32 count);
 
     // nsIProgressEventSink methods:
-    NS_IMETHOD OnProgress(nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax);
-    NS_IMETHOD OnStatus(nsISupports *ctxt, const PRUnichar *aMsg);
+    NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg);
 #else
     /* nsIStreamListener interface methods... */
     NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
@@ -1650,7 +1650,8 @@ NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aIn
 #endif
 
 #ifdef NECKO
-NS_METHOD nsDocumentBindInfo::OnProgress(nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+NS_METHOD nsDocumentBindInfo::OnProgress(nsIChannel* channel, nsISupports *ctxt,
+                                         PRUint32 aProgress, PRUint32 aProgressMax)
 #else
 NS_METHOD nsDocumentBindInfo::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
@@ -1658,8 +1659,6 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUin
     nsresult rv = NS_OK;
 
 #ifdef NECKO
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-    if (channel == nsnull) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
@@ -1713,7 +1712,7 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUin
 
 
 #ifdef NECKO
-NS_METHOD nsDocumentBindInfo::OnStatus(nsISupports *ctxt, const PRUnichar *aMsg)
+NS_METHOD nsDocumentBindInfo::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg)
 #else
 NS_METHOD nsDocumentBindInfo::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
@@ -1721,8 +1720,6 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
     nsresult rv = NS_OK;
 
 #ifdef NECKO
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-    if (channel == nsnull) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
@@ -1762,7 +1759,7 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDocumentBindInfo::OnStartRequest(nsISupports *ctxt)
+nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -1771,8 +1768,6 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
     nsIContentViewer* viewer = nsnull;
 
 #ifdef NECKO
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-    if (channel == nsnull) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
@@ -1855,7 +1850,7 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
      */
     if (nsnull != m_NextStream) {
 #ifdef NECKO
-        rv = m_NextStream->OnStartRequest(channel);
+        rv = m_NextStream->OnStartRequest(channel, ctxt);
 #else
         rv = m_NextStream->OnStartRequest(aURL, aContentType);
 #endif
@@ -1876,7 +1871,7 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
 #ifdef NECKO
-        nsresult rv2 = m_Observer->OnStartRequest(channel);
+        nsresult rv2 = m_Observer->OnStartRequest(channel, ctxt);
 #else
         nsresult rv2 = m_Observer->OnStartRequest(aURL, aContentType);
 #endif
@@ -1892,7 +1887,7 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 
 #ifdef NECKO
-NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsISupports *ctxt,
+NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
                                               nsIInputStream *aStream, 
                                               PRUint32 sourceOffset, 
                                               PRUint32 aLength)
@@ -1903,8 +1898,6 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURI* aURL, nsIInputStream *aStr
     nsresult rv = NS_OK;
 
 #ifdef NECKO
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-    if (channel == nsnull) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
@@ -1945,7 +1938,7 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURI* aURL, nsIInputStream *aStr
 
         NS_ADDREF(listener);
 #ifdef NECKO
-        rv = listener->OnDataAvailable(ctxt, aStream, sourceOffset, aLength);
+        rv = listener->OnDataAvailable(channel, ctxt, aStream, sourceOffset, aLength);
 #else
         rv = listener->OnDataAvailable(aURL, aStream, aLength);
 #endif
@@ -1960,8 +1953,8 @@ done:
 
 
 #ifdef NECKO
-NS_METHOD nsDocumentBindInfo::OnStopRequest(nsISupports *ctxt, nsresult aStatus, 
-                                            const PRUnichar *aMsg)
+NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                                            nsresult aStatus, const PRUnichar *aMsg)
 #else
 NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 #endif
@@ -1969,8 +1962,6 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
     nsresult rv = NS_OK;
 
 #ifdef NECKO
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-    if (channel == nsnull) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIURI> aURL;
     rv = channel->GetURI(getter_AddRefs(aURL));
     if (NS_FAILED(rv)) return rv;
@@ -2015,7 +2006,7 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
 
     if (nsnull != m_NextStream) {
 #ifdef NECKO
-        rv = m_NextStream->OnStopRequest(ctxt, aStatus, aMsg);
+        rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
 #else
         rv = m_NextStream->OnStopRequest(aURL, aStatus, aMsg);
 #endif
@@ -2025,7 +2016,7 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
 #ifdef NECKO
-        (void) m_Observer->OnStopRequest(ctxt, aStatus, aMsg);
+        (void) m_Observer->OnStopRequest(channel, ctxt, aStatus, aMsg);
 #else
         (void) m_Observer->OnStopRequest(aURL, aStatus, aMsg);
 #endif

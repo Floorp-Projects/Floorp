@@ -1870,7 +1870,8 @@ nsBrowserWindow::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTak
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnProgress(nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
+                            PRUint32 aProgress, PRUint32 aProgressMax)
 #else
 nsBrowserWindow::OnProgress(nsIURI* aURL,
                             PRUint32 aProgress,
@@ -1880,8 +1881,6 @@ nsBrowserWindow::OnProgress(nsIURI* aURL,
   nsresult rv;
 
 #ifdef NECKO
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-  if (channel == nsnull) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
@@ -1919,7 +1918,7 @@ nsBrowserWindow::OnProgress(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnStatus(nsISupports *ctxt, const PRUnichar *aMsg)
+nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg)
 #else
 nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
@@ -1933,7 +1932,7 @@ nsBrowserWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnStartRequest(nsISupports *ctxt)
+nsBrowserWindow::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 nsBrowserWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -1941,8 +1940,6 @@ nsBrowserWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
   nsresult rv;
 
 #ifdef NECKO
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-  if (channel == nsnull) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
@@ -1974,7 +1971,8 @@ nsBrowserWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserWindow::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+nsBrowserWindow::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                               nsresult status, const PRUnichar *errorMsg)
 #else
 nsBrowserWindow::OnStopRequest(nsIURI* aURL,
                                nsresult status,
@@ -1984,8 +1982,6 @@ nsBrowserWindow::OnStopRequest(nsIURI* aURL,
   nsresult rv;
 
 #ifdef NECKO
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(ctxt);
-  if (channel == nsnull) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;

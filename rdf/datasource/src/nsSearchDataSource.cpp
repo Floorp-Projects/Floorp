@@ -52,6 +52,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#include "nsIChannel.h"
 #else
 #include "nsIPostToServer.h"
 #endif // NECKO
@@ -112,10 +113,10 @@ public:
 
 #ifdef NECKO
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
 	// stream observer
 
@@ -1509,7 +1510,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnStartRequest(nsISupports *ctxt)
+SearchDataSourceCallback::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 SearchDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
 #endif
@@ -1552,7 +1553,8 @@ SearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) 
+SearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+					nsresult status, const PRUnichar *errorMsg) 
 #else
 SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg) 
 #endif
@@ -1561,13 +1563,9 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	nsIRDFLiteral		*literal = nsnull;
 	nsresult		rv;
 #ifdef NECKO
-	nsIURI*				aURL = (nsIURI*)ctxt;	// this is true because of how NS_OpenURI works...
-#ifdef DEBUG
-	// but verify anyway
-	rv = ctxt->QueryInterface(nsIURI::GetIID(), (void**)aURL);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "bad assumption about NS_OpenURI");
-	NS_RELEASE(aURL);
-#endif
+	nsCOMPtr<nsIURI> aURL;
+	rv = channel->GetURI(getter_AddRefs(aURL));
+	if (NS_FAILED(rv)) return rv;
 #endif
 
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
@@ -2023,8 +2021,8 @@ SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIInputStream *aIStream,
-					PRUint32 sourceOffset, PRUint32 aLength)
+SearchDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *aIStream,
+					  PRUint32 sourceOffset, PRUint32 aLength)
 #else
 SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 #endif

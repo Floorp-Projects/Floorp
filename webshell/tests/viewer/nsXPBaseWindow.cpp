@@ -602,7 +602,7 @@ NS_IMETHODIMP nsXPBaseWindow::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 //----------------------------------------
 #ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsISupports *ctxt)
+NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -612,8 +612,8 @@ NS_IMETHODIMP nsXPBaseWindow::OnStartRequest(nsIURI* aURL, const char *aContentT
 
 //----------------------------------------
 #ifdef NECKO
-NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsISupports *ctxt, nsresult status, 
-                                            const PRUnichar *errorMsg)
+NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                                            nsresult status, const PRUnichar *errorMsg)
 #else
 NS_IMETHODIMP nsXPBaseWindow::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif

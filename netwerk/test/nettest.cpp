@@ -69,9 +69,9 @@ public:
                                PRUint32 aLength);
 
 	// stream observer methods
-    NS_IMETHOD OnStartRequest(nsISupports* context);
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
 
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus,
                              nsIString* aMsg);
 
@@ -124,7 +124,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsISupports *context,
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStartRequest(nsISupports *context) {
+NS_IMETHODIMP TestConsumer::OnStartRequest(nsIChannel* channel, nsISupports *context) {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStartRequest: URL: %p, Content type: %s\n", mUrl, "XXX some context");
     }
@@ -132,7 +132,8 @@ NS_IMETHODIMP TestConsumer::OnStartRequest(nsISupports *context) {
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnStopRequest(nsISupports *context, nsresult aStatus, nsIString *aMsg) {
+NS_IMETHODIMP TestConsumer::OnStopRequest(nsISupports *context, nsIChannel* channel,
+                                          nsresult aStatus, nsIString *aMsg) {
     if (bTraceEnabled) {
         printf("\n+++ TestConsumer::OnStopRequest... URL: %p status: %d\n", mUrl, aStatus);
     }

@@ -338,20 +338,29 @@ nsLoadGroup::PropagateUp(PropagateUpFun fun, void* closure)
     return NS_OK;
 }
 
+struct OnStartRequestArgs {
+    nsIChannel*         channel;
+    nsISupports*        context;
+};
+
 static nsresult
 OnStartRequestFun(nsIStreamObserver* obs, void* closure)
 {
-    nsISupports* ctxt = (nsISupports*)closure;
-    return obs->OnStartRequest(ctxt);
+    OnStartRequestArgs* args = (OnStartRequestArgs*)closure;
+    return obs->OnStartRequest(args->channel, args->context);
 }
 
 NS_IMETHODIMP
-nsLoadGroup::OnStartRequest(nsISupports *ctxt)
+nsLoadGroup::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
-    return PropagateUp(OnStartRequestFun, ctxt);
+    OnStartRequestArgs args;
+    args.channel = channel;
+    args.context = ctxt;
+    return PropagateUp(OnStartRequestFun, &args);
 }
 
 struct OnStopRequestArgs {
+    nsIChannel* channel;
     nsISupports* ctxt;
     nsresult status;
     const PRUnichar* errorMsg;
@@ -361,14 +370,16 @@ static nsresult
 OnStopRequestFun(nsIStreamObserver* obs, void* closure)
 {
     OnStopRequestArgs* args = (OnStopRequestArgs*)closure;
-    return obs->OnStopRequest(args->ctxt, args->status, args->errorMsg);
+    return obs->OnStopRequest(args->channel, args->ctxt, 
+                              args->status, args->errorMsg);
 }
 
 NS_IMETHODIMP
-nsLoadGroup::OnStopRequest(nsISupports *ctxt, nsresult status, 
-                           const PRUnichar *errorMsg)
+nsLoadGroup::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                           nsresult status, const PRUnichar *errorMsg)
 {
     OnStopRequestArgs args;
+    args.channel = channel;
     args.ctxt = ctxt;
     args.status = status;
     args.errorMsg = errorMsg;
@@ -379,6 +390,7 @@ nsLoadGroup::OnStopRequest(nsISupports *ctxt, nsresult status,
 // nsIStreamListener methods:
 
 struct OnDataAvailableArgs {
+    nsIChannel* channel;
     nsISupports* ctxt;
     nsIInputStream *inStr;
     PRUint32 sourceOffset;
@@ -390,17 +402,18 @@ OnDataAvailableFun(nsIStreamObserver* obs, void* closure)
 {
     OnDataAvailableArgs* args = (OnDataAvailableArgs*)closure;
     nsIStreamListener* l = NS_STATIC_CAST(nsIStreamListener*, obs);
-    return l->OnDataAvailable(args->ctxt, args->inStr,
+    return l->OnDataAvailable(args->channel, args->ctxt, args->inStr,
                               args->sourceOffset, args->count);
 }
 
 NS_IMETHODIMP
-nsLoadGroup::OnDataAvailable(nsISupports *ctxt, 
+nsLoadGroup::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                              nsIInputStream *inStr, 
                              PRUint32 sourceOffset, 
                              PRUint32 count)
 {
     OnDataAvailableArgs args;
+    args.channel = channel;
     args.ctxt = ctxt;
     args.inStr = inStr;
     args.sourceOffset = sourceOffset;

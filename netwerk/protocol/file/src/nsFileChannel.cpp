@@ -210,7 +210,7 @@ public:
         nsresult rv;
         rv = mOutputStream->Write(buf, count, writeCount);
         if (NS_FAILED(rv)) return rv;
-        rv = mListener->OnDataAvailable(mContext, mInputStream, mOffset, *writeCount);
+        rv = mListener->OnDataAvailable(mChannel, mContext, mInputStream, mOffset, *writeCount);
         mOffset += *writeCount;
         return rv;
     }
@@ -229,7 +229,7 @@ public:
         nsresult rv;
         rv = mOutputStream->WriteFrom(inStr, count, writeCount);
         if (NS_FAILED(rv)) return rv;
-        rv = mListener->OnDataAvailable(mContext, mInputStream, mOffset, *writeCount);
+        rv = mListener->OnDataAvailable(mChannel, mContext, mInputStream, mOffset, *writeCount);
         mOffset += *writeCount;
         return rv;
     }
@@ -241,13 +241,15 @@ public:
         NS_INIT_REFCNT();
     }
 
-    nsresult Init(nsISupports* context, nsIStreamListener* listener,
+    nsresult Init(nsIChannel* channel, nsISupports* context, nsIStreamListener* listener,
                   PRUint32 growBySize, PRUint32 maxSize) {
         nsresult rv;
         rv = NS_NewPipe(&mInputStream, &mOutputStream,
                         growBySize, maxSize, PR_TRUE, nsnull);
         if (NS_FAILED(rv)) return rv;
 
+        mChannel = channel;
+        NS_ADDREF(mChannel);
         mContext = context;
         NS_IF_ADDREF(mContext);
         mListener = listener;
@@ -256,6 +258,7 @@ public:
     }
 
     virtual ~nsAsyncOutputStream() {
+        NS_IF_RELEASE(mChannel);
         NS_IF_RELEASE(mContext);
         NS_IF_RELEASE(mListener);
         NS_IF_RELEASE(mInputStream);
@@ -264,13 +267,14 @@ public:
 
     static NS_METHOD Create(nsIBufferInputStream* *inStr,
                             nsIBufferOutputStream* *outStr,
-                            nsISupports* context, nsIStreamListener* listener,
+                            nsIChannel* channel, nsISupports* context,
+                            nsIStreamListener* listener,
                             PRUint32 growBySize, PRUint32 maxSize) {
         nsAsyncOutputStream* str = new nsAsyncOutputStream();
         if (str == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(str);
-        nsresult rv = str->Init(context, listener, growBySize, maxSize);
+        nsresult rv = str->Init(channel, context, listener, growBySize, maxSize);
         if (NS_FAILED(rv)) {
             NS_RELEASE(str);
             return rv;
@@ -282,6 +286,7 @@ public:
     }
 
 protected:
+    nsIChannel*                 mChannel;
     nsISupports*                mContext;
     nsIStreamListener*          mListener;
     nsIBufferInputStream*       mInputStream;
@@ -406,7 +411,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     rv = nsAsyncOutputStream::Create(&mBufferInputStream,
                                      &mBufferOutputStream,
-                                     ctxt, mListener, 
+                                     this, ctxt, mListener, 
                                      NS_FILE_TRANSPORT_SEGMENT_SIZE,
                                      NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
@@ -527,7 +532,7 @@ nsFileChannel::Process(void)
           NS_ASSERTION(mSourceOffset == 0, "implement seek");
 
           if (mListener) {
-              mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
+              mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
               if (NS_FAILED(mStatus)) goto error;
           }
 
@@ -556,7 +561,7 @@ nsFileChannel::Process(void)
 
           // and feed the buffer to the application via the buffer stream:
           if (mListener) {
-              mStatus = mListener->OnDataAvailable(mContext, mBufferInputStream, mSourceOffset, amt);
+              mStatus = mListener->OnDataAvailable(this, mContext, mBufferInputStream, mSourceOffset, amt);
               if (NS_FAILED(mStatus)) goto error;
           }
           
@@ -569,7 +574,7 @@ nsFileChannel::Process(void)
           nsISupports* fs;
 
           if (mListener) {
-              mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
+              mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
               if (NS_FAILED(mStatus)) goto error;
           }
 
@@ -603,7 +608,7 @@ nsFileChannel::Process(void)
           mBufferOutputStream->Flush();
           if (mListener) {
               // XXX where do we get the error message?
-              (void)mListener->OnStopRequest(mContext, mStatus, nsnull);
+              (void)mListener->OnStopRequest(this, mContext, mStatus, nsnull);
           }
 
           NS_IF_RELEASE(mBufferOutputStream);

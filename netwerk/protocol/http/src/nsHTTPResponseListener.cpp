@@ -53,7 +53,8 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_ReadLength(0),
     m_bHeadersDone(PR_FALSE),
     m_HeaderBuffer(eOneByte),
-    m_ResponseContext(nsnull)
+    m_ResponseContext(nsnull),
+    m_Channel(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -79,7 +80,8 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
+nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
+                                        nsISupports* context,
                                         nsIInputStream *i_pStream, 
                                         PRUint32 i_SourceOffset,
                                         PRUint32 i_Length)
@@ -144,7 +146,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
                     "OnDataAvailable.\tlength:%d\n", this, i_Length));
 
-            rv = m_pConsumer->OnDataAvailable(m_ResponseContext, i_pStream, 0, 
+            rv = m_pConsumer->OnDataAvailable(channel, m_ResponseContext, i_pStream, 0, 
                                               i_Length);
         }
     } else {
@@ -157,7 +159,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
+nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
     nsresult rv;
 
@@ -191,7 +193,7 @@ nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
     if (NS_SUCCEEDED(rv)) {
         // Pass the notification out to the consumer...
         if (m_pConsumer) {
-            rv = m_pConsumer->OnStartRequest(m_ResponseContext);
+            rv = m_pConsumer->OnStartRequest(m_Channel, m_ResponseContext);
         } else {
             NS_ERROR("No Stream Listener...");
             rv = NS_ERROR_NULL_POINTER;
@@ -202,9 +204,10 @@ nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
 }
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
-                                 nsresult i_Status,
-                                 const PRUnichar* i_pMsg)
+nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
+                                      nsISupports* i_pContext,
+                                      nsresult i_Status,
+                                      const PRUnichar* i_pMsg)
 {
     nsresult rv;
 
@@ -213,7 +216,7 @@ nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
 
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
-        rv = m_pConsumer->OnStopRequest(m_ResponseContext, i_Status, i_pMsg);
+        rv = m_pConsumer->OnStopRequest(channel, m_ResponseContext, i_Status, i_pMsg);
     } else {
         NS_ERROR("No Stream Listener...");
         rv = NS_ERROR_NULL_POINTER;

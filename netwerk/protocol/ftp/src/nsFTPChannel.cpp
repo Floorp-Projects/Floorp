@@ -221,7 +221,7 @@ nsFTPChannel::Get(void) {
     nsresult rv;
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
-        new nsFtpConnectionThread(mEventQueue, this);
+        new nsFtpConnectionThread(mEventQueue, this, this, nsnull);
     NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
     NS_ADDREF(protocolInterpreter);
 
@@ -244,7 +244,7 @@ nsFTPChannel::Put(void) {
     nsresult rv;
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
-        new nsFtpConnectionThread(mEventQueue, this);
+        new nsFtpConnectionThread(mEventQueue, this, this, nsnull);
     NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
     NS_ADDREF(protocolInterpreter);
 
@@ -274,12 +274,12 @@ nsFTPChannel::SetStreamListener(nsIStreamListener *aListener) {
 // nsIStreamObserver methods:
 
 NS_IMETHODIMP
-nsFTPChannel::OnStartRequest(nsISupports* context) {
+nsFTPChannel::OnStartRequest(nsIChannel* channel, nsISupports* context) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OnStopRequest(nsISupports* context,
+nsFTPChannel::OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg) {
     // Release the lock so the user get's the data stream
@@ -290,7 +290,7 @@ nsFTPChannel::OnStopRequest(nsISupports* context,
 // nsIStreamListener methods:
 
 NS_IMETHODIMP
-nsFTPChannel::OnDataAvailable(nsISupports* context,
+nsFTPChannel::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                               nsIInputStream *aIStream, 
                               PRUint32 aSourceOffset,
                               PRUint32 aLength) {

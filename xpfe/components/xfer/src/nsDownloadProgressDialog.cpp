@@ -217,7 +217,7 @@ nsDownloadProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnDataAvailable(nsISupports* aContext, nsIInputStream *aIStream,
+nsDownloadProgressDialog::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIInputStream *aIStream,
                                           PRUint32 offset, PRUint32 aLength)
 #else
 nsDownloadProgressDialog::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
@@ -270,7 +270,7 @@ nsDownloadProgressDialog::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnStartRequest(nsISupports* aContext)
+nsDownloadProgressDialog::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 #else
 nsDownloadProgressDialog::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -281,7 +281,8 @@ nsDownloadProgressDialog::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnProgress(nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+nsDownloadProgressDialog::OnProgress(nsIChannel* channel, nsISupports* aContext,
+                                     PRUint32 aProgress, PRUint32 aProgressMax)
 #else
 nsDownloadProgressDialog::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
@@ -297,7 +298,8 @@ nsDownloadProgressDialog::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
+nsDownloadProgressDialog::OnStatus(nsIChannel* channel, nsISupports* aContext,
+                                   const PRUnichar* aMsg)
 #else
 nsDownloadProgressDialog::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
@@ -310,7 +312,8 @@ nsDownloadProgressDialog::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsDownloadProgressDialog::OnStopRequest(nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
+nsDownloadProgressDialog::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
+                                        nsresult aStatus, const PRUnichar* aMsg)
 #else
 nsDownloadProgressDialog::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 #endif

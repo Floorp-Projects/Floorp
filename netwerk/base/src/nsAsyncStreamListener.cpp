@@ -22,6 +22,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIEventQueue.h"
+#include "nsIChannel.h"
 
 class nsAsyncStreamObserver : public nsIStreamObserver
 {
@@ -29,8 +30,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, 
+                              nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel,
+                             nsISupports* context, 
                              nsresult aStatus,
                              const PRUnichar* aMsg);
 
@@ -68,19 +71,21 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnStartRequest(nsISupports* context) 
+    NS_IMETHOD OnStartRequest(nsIChannel* channel,
+                              nsISupports* context) 
     { 
-        return nsAsyncStreamObserver::OnStartRequest(context); 
+        return nsAsyncStreamObserver::OnStartRequest(channel, context); 
     }
 
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel,
+                             nsISupports* context, 
                              nsresult aStatus,
                              const PRUnichar* aMsg) 
     { 
-        return nsAsyncStreamObserver::OnStopRequest(context, aStatus, aMsg); 
+        return nsAsyncStreamObserver::OnStopRequest(channel, context, aStatus, aMsg); 
     }
 
-    NS_IMETHOD OnDataAvailable(nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
@@ -101,7 +106,7 @@ class nsStreamListenerEvent : public PLEvent
 {
 public:
     nsStreamListenerEvent(nsAsyncStreamObserver* listener,
-                          nsISupports* context);
+                          nsIChannel* channel, nsISupports* context);
     virtual ~nsStreamListenerEvent();
 
     nsresult Fire(nsIEventQueue* aEventQ);
@@ -113,22 +118,25 @@ protected:
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsAsyncStreamObserver*      mListener;
-    nsISupports*                 mContext;
+    nsIChannel*                 mChannel;
+    nsISupports*                mContext;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
-                                             nsISupports* context)
-    : mListener(listener), mContext(context)
+                                             nsIChannel* channel, nsISupports* context)
+    : mListener(listener), mChannel(channel), mContext(context)
 {
     NS_ADDREF(mListener);
+    NS_ADDREF(mChannel);
     NS_IF_ADDREF(mContext);
 }
 
 nsStreamListenerEvent::~nsStreamListenerEvent()
 {
     NS_RELEASE(mListener);
+    NS_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
 }
 
@@ -188,8 +196,9 @@ class nsOnStartRequestEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStartRequestEvent(nsAsyncStreamObserver* listener, 
-                          nsISupports* context)
-        : nsStreamListenerEvent(listener, context), mContentType(nsnull) {}
+                          nsIChannel* channel, nsISupports* context)
+        : nsStreamListenerEvent(listener, channel, context),
+          mContentType(nsnull) {}
     virtual ~nsOnStartRequestEvent();
 
     NS_IMETHOD HandleEvent();
@@ -208,17 +217,17 @@ NS_IMETHODIMP
 nsOnStartRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  return receiver->OnStartRequest(mContext);
+  return receiver->OnStartRequest(mChannel, mContext);
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStartRequest(nsISupports* context)
+nsAsyncStreamObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnStartRequestEvent* event = 
-        new nsOnStartRequestEvent(this, context);
+        new nsOnStartRequestEvent(this, channel, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -241,8 +250,8 @@ class nsOnStopRequestEvent : public nsStreamListenerEvent
 {
 public:
     nsOnStopRequestEvent(nsAsyncStreamObserver* listener, 
-                         nsISupports* context)
-        : nsStreamListenerEvent(listener, context),
+                         nsISupports* context, nsIChannel* channel)
+        : nsStreamListenerEvent(listener, channel, context),
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopRequestEvent();
 
@@ -270,19 +279,19 @@ NS_IMETHODIMP
 nsOnStopRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
-  return receiver->OnStopRequest(mContext, mStatus, mMessage);
+  return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamObserver::OnStopRequest(nsISupports* context,
-                                          nsresult aStatus,
-                                          const PRUnichar* aMsg)
+nsAsyncStreamObserver::OnStopRequest(nsIChannel* channel, nsISupports* context,
+                                     nsresult aStatus,
+                                     const PRUnichar* aMsg)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
 
     nsOnStopRequestEvent* event = 
-        new nsOnStopRequestEvent(this, context);
+        new nsOnStopRequestEvent(this, context, channel);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -307,8 +316,8 @@ class nsOnDataAvailableEvent : public nsStreamListenerEvent
 {
 public:
     nsOnDataAvailableEvent(nsAsyncStreamObserver* listener, 
-                           nsISupports* context)
-        : nsStreamListenerEvent(listener, context),
+                           nsIChannel* channel, nsISupports* context)
+        : nsStreamListenerEvent(listener, channel, context),
           mIStream(nsnull), mLength(0) {}
     virtual ~nsOnDataAvailableEvent();
 
@@ -342,11 +351,12 @@ NS_IMETHODIMP
 nsOnDataAvailableEvent::HandleEvent()
 {
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
-  return receiver->OnDataAvailable(mContext, mIStream, mSourceOffset, mLength);
+  return receiver->OnDataAvailable(mChannel, mContext,
+                                   mIStream, mSourceOffset, mLength);
 }
 
 NS_IMETHODIMP 
-nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
+nsAsyncStreamListener::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                        nsIInputStream *aIStream, 
                                        PRUint32 aSourceOffset,
                                        PRUint32 aLength)
@@ -355,7 +365,7 @@ nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
     if (NS_FAILED(rv)) return rv;
 
     nsOnDataAvailableEvent* event = 
-        new nsOnDataAvailableEvent(this, context);
+        new nsOnDataAvailableEvent(this, channel, context);
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 

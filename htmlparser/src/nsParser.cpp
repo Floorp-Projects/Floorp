@@ -970,7 +970,7 @@ nsresult nsParser::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo){
  */
 nsresult
 #ifdef NECKO
-nsParser::OnProgress(nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+nsParser::OnProgress(nsIChannel* channel, nsISupports* aContext, PRUint32 aProgress, PRUint32 aProgressMax)
 #else
 nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
@@ -978,7 +978,7 @@ nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
   nsresult result=0;
 #ifdef NECKO
   if (nsnull != mProgressEventSink) {
-    mProgressEventSink->OnProgress(aContext, aProgress, aProgressMax);
+    mProgressEventSink->OnProgress(channel, aContext, aProgress, aProgressMax);
   }
 #else
   if (nsnull != mObserver) {
@@ -997,7 +997,7 @@ nsParser::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
  */
 nsresult
 #ifdef NECKO
-nsParser::OnStatus(nsISupports* aContext, const PRUnichar* aMsg)
+nsParser::OnStatus(nsIChannel* channel, nsISupports* aContext, const PRUnichar* aMsg)
 #else
 nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
@@ -1005,7 +1005,7 @@ nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
   nsresult result=0;
 #ifdef NECKO
   if (nsnull != mProgressEventSink) {
-    mProgressEventSink->OnStatus(aContext, aMsg);
+    mProgressEventSink->OnStatus(channel, aContext, aMsg);
   }
 #else
   if (nsnull != mObserver) {
@@ -1028,7 +1028,7 @@ nsParser::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 #ifdef NECKO
-nsresult nsParser::OnStartRequest(nsISupports* aContext)
+nsresult nsParser::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 #else
 nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
 #endif
@@ -1037,7 +1037,7 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
 
   if (nsnull != mObserver) {
 #ifdef NECKO
-    mObserver->OnStartRequest(aContext);
+    mObserver->OnStartRequest(channel, aContext);
 #else
     mObserver->OnStartRequest(aURL, aSourceType);
 #endif
@@ -1047,18 +1047,13 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
   mParserContext->mDTD=0;
 #ifdef NECKO
   nsresult rv;
-  nsIChannel* channel;
-  rv = aContext->QueryInterface(nsIChannel::GetIID(), (void**)&channel);
-  if (NS_SUCCEEDED(rv)) {
-    char* contentType;
-    rv = channel->GetContentType(&contentType);
-    if (NS_FAILED(rv)) {
-        NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
-    }
-    mParserContext->mSourceType = contentType;
-    nsCRT::free(contentType);
-    NS_RELEASE(channel);
+  char* contentType;
+  rv = channel->GetContentType(&contentType);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
   }
+  mParserContext->mSourceType = contentType;
+  nsCRT::free(contentType);
 #else
   mParserContext->mSourceType=aSourceType;
 #endif
@@ -1079,7 +1074,8 @@ nsresult nsParser::OnStartRequest(nsIURI* aURL, const char *aSourceType)
  *  @return  error code (usually 0)
  */
 #ifdef NECKO
-nsresult nsParser::OnDataAvailable(nsISupports* aContext, nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
+nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
+                                   nsIInputStream *pIStream, PRUint32 sourceOffset, PRUint32 aLength)
 #else
 nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 aLength)
 #endif
@@ -1152,7 +1148,8 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
  *  @return  
  */
 #ifdef NECKO
-nsresult nsParser::OnStopRequest(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+nsresult nsParser::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
+                                 nsresult status, const PRUnichar* aMsg)
 #else
 nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
@@ -1172,7 +1169,7 @@ nsresult nsParser::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
   // parser isn't yet enabled?
   if (nsnull != mObserver) {
 #ifdef NECKO
-    mObserver->OnStopRequest(aContext, status, aMsg);
+    mObserver->OnStopRequest(channel, aContext, status, aMsg);
 #else
     mObserver->OnStopRequest(aURL, status, aMsg);
 #endif

@@ -64,11 +64,11 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
 
 #ifdef NECKO
         // nsIStreamObserver
-        NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-        NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
-                                 const PRUnichar *errorMsg);
+        NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+        NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                                 nsresult status, const PRUnichar *errorMsg);
         // nsIStreamListener
-        NS_IMETHOD OnDataAvailable(nsISupports *ctxt, 
+        NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                                    nsIInputStream *inStr,
                                    PRUint32 sourceOffset, 
                                    PRUint32 count);

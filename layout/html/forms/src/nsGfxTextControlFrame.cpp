@@ -1596,7 +1596,7 @@ NS_IMPL_RELEASE(EnderTempObserver);
 
 nsresult
 EnderTempObserver::QueryInterface(const nsIID& aIID,
-                            void** aInstancePtrResult)
+                                  void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
   if (nsnull == aInstancePtrResult) {
@@ -1632,7 +1632,7 @@ EnderTempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-EnderTempObserver::OnStartRequest(nsISupports *ctxt)
+EnderTempObserver::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 EnderTempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -1642,7 +1642,7 @@ EnderTempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-EnderTempObserver::OnStopRequest(nsISupports *ctxt, nsresult status,
+EnderTempObserver::OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status,
                                  const PRUnichar *errorMsg)
 #else
 EnderTempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)

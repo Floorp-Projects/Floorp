@@ -56,15 +56,15 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamListener functions
-    NS_IMETHOD OnDataAvailable(nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
 
-    NS_IMETHOD OnStartRequest(nsISupports* context);
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
 
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                             nsresult aStatus,
                             const PRUnichar* aMsg);
 
@@ -90,6 +90,7 @@ protected:
     nsString            m_HeaderBuffer;
 
     nsCOMPtr<nsISupports> m_ResponseContext;
+    nsCOMPtr<nsIChannel>  m_Channel;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

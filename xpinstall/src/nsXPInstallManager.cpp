@@ -288,7 +288,7 @@ nsXPInstallManager::OnStatus(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsXPInstallManager::OnStartRequest(nsISupports *ctxt)
+nsXPInstallManager::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 nsXPInstallManager::OnStartRequest(nsIURI* aURL, 
                              const char *aContentType)
@@ -300,8 +300,8 @@ nsXPInstallManager::OnStartRequest(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsXPInstallManager::OnStopRequest(nsISupports *ctxt, nsresult status, 
-                                  const PRUnichar *errorMsg)
+nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                                  nsresult status, const PRUnichar *errorMsg)
 #else
 nsXPInstallManager::OnStopRequest(nsIURI* aURL,
                                         nsresult status,
@@ -337,7 +337,7 @@ nsXPInstallManager::OnStopRequest(nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsXPInstallManager::OnDataAvailable(nsISupports *ctxt, 
+nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                                     nsIInputStream *pIStream,
                                     PRUint32 sourceOffset, 
                                     PRUint32 length)
