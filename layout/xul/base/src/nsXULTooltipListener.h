@@ -48,6 +48,7 @@
 #include "nsITimer.h"
 #include "nsIRootBox.h"
 #include "nsIOutlinerBoxObject.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 
 class nsXULTooltipListener : public nsIDOMMouseListener,
@@ -118,7 +119,7 @@ protected:
 
   nsIRootBox* mRootBox;
   nsIContent* mSourceNode;
-  nsIContent* mTargetNode;
+  nsCOMPtr<nsIContent> mTargetNode;
   nsIContent* mCurrentTooltip;
 
   // a timer for showing the tooltip
