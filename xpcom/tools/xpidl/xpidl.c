@@ -44,7 +44,7 @@ FindMode(char *mode)
 gboolean enable_debug       = FALSE;
 gboolean enable_warnings    = FALSE;
 gboolean verbose_mode       = FALSE;
-gboolean emit_js_stub_decls = TRUE; /* XXX change default to FALSE */
+gboolean emit_js_stub_decls = FALSE;
 
 static char xpidl_usage_str[] =
 "Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
