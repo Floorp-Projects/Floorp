@@ -1,6 +1,7 @@
 /******* Splitters *******/
 
 splitter {
+  border: none;
    cursor: e-resize;
    min-width: 5px;
    min-height: 5px;
