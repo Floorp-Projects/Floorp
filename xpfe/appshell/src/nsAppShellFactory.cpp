@@ -46,10 +46,11 @@
 #include "nsFileLocations.h"
 
 #ifdef XP_MAC
-#include "nsUserInfoMac.h"
-#else
-#include "nsUserInfo.h"
+#include "nsMacMIMEDataSource.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacMIMEDataSource);
 #endif
+
+#include "nsUserInfo.h"
 
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
@@ -117,6 +118,13 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_USERINFO_PROGID,
     nsUserInfoConstructor,
   },
+ #if XP_MAC
+   { "MacMIME data source",
+    NS_NATIVEMIMEDATASOURCE_CID,
+    NS_NATIVEMIMEDATASOURCE_PROGID,
+    nsMacMIMEDataSourceConstructor,
+  },
+ #endif
 };
 
 NS_IMPL_NSGETMODULE("appshell", gAppShellModuleInfo)
