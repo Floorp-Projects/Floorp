@@ -1546,9 +1546,13 @@ NS_IMETHODIMP nsAccessible::ExtendSelection()
 }
 
 /* unsigned long getExtState (); */
-NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *_retval)
+NS_IMETHODIMP nsAccessible::GetExtState(PRUint32 *aExtState)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE; // Node shut down
+  }
+  *aExtState = 0;
+  return NS_OK;
 }
 
 /* [noscript] void getNativeInterface(out voidPtr aOutAccessible); */

@@ -38,12 +38,14 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibleTreeWalker.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFrame.h"
+#include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
 
 // --- checkbox -----
@@ -327,62 +329,32 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *aState)
 {
-  // can be
-  // focusable, focused, protected. readonly, unavailable, selected
-  if (!mDOMNode) {
+  // can be focusable, focused, protected. readonly, unavailable, selected
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content) {
     return NS_ERROR_FAILURE;  // Node has been Shutdown()
   }
 
-  nsAccessible::GetState(_retval);
-  *_retval |= STATE_FOCUSABLE;
-
-  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mDOMNode));
-
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  PRBool isReadOnly = PR_FALSE;
-  elt->HasAttribute(NS_LITERAL_STRING("readonly"), &isReadOnly);
-  if (isReadOnly)
-    *_retval |= STATE_READONLY;
-
-  nsIFrame *frame = GetFrame();
-  if (frame) {
-    nsPresContext *context = GetPresContext();
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-    nsCOMPtr<nsISelectionController> selCon;
-    frame->GetSelectionController(context,getter_AddRefs(selCon));
-    if (selCon) {
-      nsCOMPtr<nsISelection> domSel;
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-      if (domSel) {
-        PRBool isCollapsed = PR_TRUE;
-        domSel->GetIsCollapsed(&isCollapsed);
-        if (!isCollapsed)
-          *_retval |=STATE_SELECTED;
-      }
-    }
+  nsFormControlAccessible::GetState(aState);
+  nsAutoString typeString;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::type, typeString);
+  if (typeString.LowerCaseEqualsLiteral("password")) {
+    *aState |= STATE_PROTECTED;
   }
-
-
-  if (!textArea) {
-    if (inputElement) {
-      /////// ====== Must be a password field, so it uses nsIDOMHTMLFormControl ==== ///////
-      PRUint32 moreStates = 0;
-      nsresult rv = nsFormControlAccessible::GetState(&moreStates);
-      *_retval |= moreStates;
-      return rv;
-    }
-    return NS_ERROR_FAILURE;
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::readonly)) {
+    *aState |= STATE_READONLY;
   }
-
-  PRBool disabled = PR_FALSE;
-  textArea->GetDisabled(&disabled);
-  if (disabled)
-    *_retval |= STATE_UNAVAILABLE;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetExtState(PRUint32 *aExtState)
+{
+  nsresult rv = nsFormControlAccessible::GetExtState(aExtState);
+  *aExtState |= EXT_STATE_SINGLE_LINE;
+  return rv;
 }
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetNumActions(PRUint8 *_retval)

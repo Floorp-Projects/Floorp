@@ -154,6 +154,7 @@ public:
   NS_IMETHOD GetName(nsAString& aName) { return GetXULName(aName); }
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState);
+  NS_IMETHOD GetExtState(PRUint32 *aExtState);
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_TEXT; return NS_OK; }
 };
 

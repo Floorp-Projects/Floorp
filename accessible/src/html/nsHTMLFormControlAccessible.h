@@ -50,7 +50,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
-  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *aState); 
 };
 
 class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
@@ -102,6 +102,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
   NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetExtState(PRUint32 *aExtState); 
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessibleWrap
