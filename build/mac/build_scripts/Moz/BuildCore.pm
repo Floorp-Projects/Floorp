@@ -182,7 +182,7 @@ sub ConfigureBuildSystem()
 
     printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $main::UNIVERSAL_INTERFACES_VERSION);
 
-    UpdateConfigHeader(":mozilla:config:mac:DefinesOptions.h");
+    UpdateConfigHeader($main::DEFINESOPTIONS_FILE);
 
     # alias required CodeWarrior libs into the Essential Files folder (only the Profiler lib now)
     MakeLibAliases();

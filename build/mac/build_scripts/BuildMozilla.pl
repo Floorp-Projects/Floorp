@@ -44,6 +44,7 @@ use Moz::BuildCore;
 #-------------------------------------------------------------
 
 my($prefs_file_name) = "Mozilla opt build prefs";
+my($config_header_file_name) = ":mozilla:config:mac:MozillaDefinesOptions.h";
 
 #-------------------------------------------------------------
 # hashes to hold build options
@@ -70,7 +71,7 @@ SetupBuildRootDir(":mozilla:build:mac:build_scripts");
 
 # Set up all the flags on $main::, like DEBUG, CARBON etc.
 # Override the defaults using the preferences files.
-SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:");
+SetupDefaultBuildOptions(0, ":mozilla:dist:viewer:", $config_header_file_name);
 
 my($do_checkout)    = 0;
 my($do_build)       = 1;
