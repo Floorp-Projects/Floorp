@@ -55,4 +55,4 @@ function OtherTasksOnLoad()
   }
 }
 
-addEventListener("load",OtherTasksOnLoad,true);
+addEventListener("load", OtherTasksOnLoad, false);
