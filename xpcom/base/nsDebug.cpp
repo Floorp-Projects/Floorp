@@ -335,7 +335,8 @@ NS_ErrorAccordingToNSPR()
 // This wrapper around PR_CurrentThread is simply here for debug builds so
 // that clients linking with xpcom don't also have to link with nspr explicitly.
 
-#ifdef NS_DEBUG
+#if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
+
 #include "nsISupportsUtils.h"
 #include "prthread.h"
 
@@ -372,6 +373,6 @@ NS_CheckThreadSafe(void* owningThread, const char* msg)
   }
 }
 
-#endif // NS_DEBUG
+#endif // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
 
 ////////////////////////////////////////////////////////////////////////////////
