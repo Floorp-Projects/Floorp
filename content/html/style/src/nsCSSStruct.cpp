@@ -1075,9 +1075,11 @@ public:
 
   NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const;
 
+#ifdef DEBUG
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
   
   NS_IMETHOD Count(PRUint32* aCount);
   NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn);
@@ -4674,6 +4676,7 @@ CSSDeclarationImpl::ToString(nsAWritableString& aString)
   return NS_OK;
 }
 
+#ifdef DEBUG
 void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -4804,6 +4807,7 @@ void CSSDeclarationImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   }
   aSizeOfHandler->AddSize(tag, aSize);
 }
+#endif
 
 NS_IMETHODIMP
 CSSDeclarationImpl::Count(PRUint32* aCount)

@@ -1888,11 +1888,13 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return ret;
 }
 
+#ifdef DEBUG
 PRUint32
 nsGenericElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
 {
   return 0;
 }
+#endif
 
 NS_IMETHODIMP
 nsGenericElement::GetContentID(PRUint32* aID)
@@ -3390,6 +3392,7 @@ nsGenericContainerElement::GetAttrCount(PRInt32& aResult) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 void
 nsGenericContainerElement::ListAttributes(FILE* out) const
 {
@@ -3513,6 +3516,7 @@ nsresult
 nsGenericContainerElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
   return NS_OK;
 }
+#endif
 
 nsresult
 nsGenericContainerElement::CanContainChildren(PRBool& aResult) const
@@ -3713,11 +3717,11 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
+#ifdef DEBUG
 PRUint32
 nsGenericContainerElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
 {
   PRUint32 sum = 0;
-#ifdef DEBUG
   if (mAttributes) {
     // Add in array of attributes size
     PRUint32 asize;
@@ -3736,8 +3740,7 @@ nsGenericContainerElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
       }
     }
   }
-#endif
 
   return sum;
 }
-
+#endif

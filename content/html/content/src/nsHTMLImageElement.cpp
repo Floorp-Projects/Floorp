@@ -132,7 +132,9 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc);
@@ -974,6 +976,7 @@ nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLImageElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -981,6 +984,7 @@ nsHTMLImageElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)

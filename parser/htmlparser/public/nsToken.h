@@ -228,6 +228,7 @@ class CToken {
      */
     virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
 
+#ifdef DEBUG
     /**
      * Causes token to dump itself in debug form to given output stream
      * @update	gess5/11/98
@@ -241,6 +242,7 @@ class CToken {
      * @param   out is the output stream where token should write itself
      */
     virtual void DebugDumpSource(nsOutputStream& out);
+#endif
 
     /**
      * Getter which retrieves type of token

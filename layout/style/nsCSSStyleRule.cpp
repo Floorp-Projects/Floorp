@@ -255,6 +255,7 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   return PR_FALSE;
 }
 
+#ifdef DEBUG
 /******************************************************************************
 * SizeOf method:
 *
@@ -298,6 +299,7 @@ void nsAttrSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mNext->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 MOZ_DECL_CTOR_COUNTER(nsCSSSelector)
 
@@ -571,6 +573,7 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
   return weight;
 }
 
+#ifdef DEBUG
 /******************************************************************************
 * SizeOf method:
 *
@@ -676,6 +679,7 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mNext->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 // pseudo-elements are stored in the selectors' chain using fictional elements;
 // these fictional elements have mTag starting with a colon
@@ -855,13 +859,6 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
 
 // -- CSSImportantRule -------------------------------
 
-static nscoord CalcLength(const nsCSSValue& aValue, const nsFont& aFont, 
-                          nsIPresContext* aPresContext);
-static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                       const nsStyleCoord& aParentCoord,
-                       PRInt32 aMask, const nsFont& aFont, 
-                       nsIPresContext* aPresContext);
-
 // New map helpers shared by both important and regular rules.
 static nsresult MapFontForDeclaration(nsICSSDeclaration* aDecl, nsCSSFont& aFont);
 static nsresult MapDisplayForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay);
@@ -897,9 +894,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
 protected:
   virtual ~CSSImportantRule(void);
@@ -991,6 +990,7 @@ CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1050,6 +1050,7 @@ void CSSImportantRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 // -- nsDOMStyleRuleDeclaration -------------------------------
 
@@ -1354,9 +1355,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -2263,6 +2266,7 @@ MapUIForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSU
 
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -2339,6 +2343,7 @@ void CSSStyleRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mImportantRule->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetType(PRUint16* aType)

@@ -130,7 +130,9 @@ class CStartToken: public CHTMLToken {
             void          SetAttributed(PRBool aValue);
             PRBool        IsEmpty(void);
             void          SetEmpty(PRBool aValue);
+#ifdef DEBUG
     virtual void          DebugDumpSource(nsOutputStream& out);
+#endif
     virtual const nsAReadableString& GetStringValue();
     virtual void          GetSource(nsString& anOutputString);
     virtual void          AppendSource(nsString& anOutputString);
@@ -180,7 +182,9 @@ class CEndToken: public CHTMLToken {
     virtual PRInt32     GetTypeID(void);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
+#ifdef DEBUG
     virtual void        DebugDumpSource(nsOutputStream& out);
+#endif
     virtual const nsAReadableString& GetStringValue();
     virtual void        GetSource(nsString& anOutputString);
     virtual void        AppendSource(nsString& anOutputString);
@@ -234,7 +238,9 @@ class CEntityToken : public CHTMLToken {
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     static  nsresult    ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner);
     static  PRInt32     TranslateToUnicodeStr(PRInt32 aValue,nsString& aString);
+#ifdef DEBUG
     virtual  void       DebugDumpSource(nsOutputStream& out);
+#endif
     virtual const nsAReadableString& GetStringValue(void);
     virtual void        GetSource(nsString& anOutputString);
     virtual void        AppendSource(nsString& anOutputString);
@@ -364,11 +370,15 @@ class CAttributeToken: public CHTMLToken {
     virtual void          BindKey(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
     virtual const nsString&     GetValue(void) {return mTextValue;}
     virtual void          SanitizeKey();
+#ifdef DEBUG
     virtual void          DebugDumpToken(nsOutputStream& out);
+#endif
     virtual const nsAReadableString& GetStringValue(void);
     virtual void          GetSource(nsString& anOutputString);
     virtual void          AppendSource(nsString& anOutputString);
+#ifdef DEBUG
     virtual void          DebugDumpSource(nsOutputStream& out);
+#endif
             PRBool        mLastAttribute;
 
               PRBool   mHasEqualWithoutValue;

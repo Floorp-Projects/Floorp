@@ -186,9 +186,11 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   // nsIStyleRule methods
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -242,6 +244,7 @@ CSSCharsetRuleImpl::Init(const nsString& aEncoding)
 
 IMPL_STYLE_RULE_INHERIT(CSSCharsetRuleImpl, nsCSSRule);
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -291,6 +294,7 @@ void CSSCharsetRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
   aSize -= sizeof(mEncoding); // counted in sizeof(*this) and nsString->SizeOf()
   aSizeOfHandler->AddSize(tag,aSize);
 }
+#endif
 
 NS_IMETHODIMP
 CSSCharsetRuleImpl::GetType(PRInt32& aType) const
@@ -398,9 +402,11 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   // nsIStyleRule methods
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -470,6 +476,7 @@ NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT(CSSImportRuleImpl, nsCSSRule);
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -526,6 +533,7 @@ void CSSImportRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
   aSizeOfHandler->AddSize(tag,aSize);
 
 }
+#endif
 
 NS_IMETHODIMP
 CSSImportRuleImpl::GetType(PRInt32& aType) const
@@ -719,9 +727,11 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   // nsIStyleRule methods
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -860,6 +870,7 @@ CSSMediaRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
   return nsCSSRule::SetStyleSheet(aSheet);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -955,6 +966,7 @@ void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     }
   }
 }
+#endif
 
 NS_IMETHODIMP
 CSSMediaRuleImpl::GetType(PRInt32& aType) const
@@ -1257,9 +1269,11 @@ public:
   DECL_STYLE_RULE_INHERIT
 
   // nsIStyleRule methods
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -1315,6 +1329,7 @@ NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT(CSSNameSpaceRuleImpl, nsCSSRule);
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1379,6 +1394,7 @@ void CSSNameSpaceRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aS
   }
   aSizeOfHandler->AddSize(tag, aSize);
 }
+#endif
 
 NS_IMETHODIMP
 CSSNameSpaceRuleImpl::GetType(PRInt32& aType) const

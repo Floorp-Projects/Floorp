@@ -232,37 +232,6 @@ public:
   NS_IMETHOD GetAttrCount(PRInt32& aCountResult) const = 0;
 
   /**
-   * Get the size of the content object. The size value should include
-   * all subordinate data referenced by the content that is not
-   * accounted for by child content. However, this value should not
-   * include the frame objects, style contexts, views or other data
-   * that lies logically outside the content model.
-   *
-   * If the implementation so chooses, instead of returning the total
-   * subordinate data it may instead use the sizeof handler to store
-   * away subordinate data under its own key so that the subordinate
-   * data may be tabulated independently of the frame itself.
-   *
-   * The caller is responsible for recursing over all children that
-   * the content contains.
-   */
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
-
-  /**
-   * List the content (and anything it contains) out to the given
-   * file stream. Use aIndent as the base indent during formatting.
-   * Returns NS_OK unless a file error occurs.
-   */
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
-
-  /**
-   * Dump the content (and anything it contains) out to the given
-   * file stream. Use aIndent as the base indent during formatting.
-   * Returns NS_OK unless a file error occurs.
-   */
-  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
-
-  /**
    * Inform content of range ownership changes.  This allows content
    * to do the right thing to ranges in the face of changes to the content
    * model.
@@ -331,6 +300,39 @@ public:
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) = 0;
 
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
+
+#ifdef DEBUG
+  /**
+   * Get the size of the content object. The size value should include
+   * all subordinate data referenced by the content that is not
+   * accounted for by child content. However, this value should not
+   * include the frame objects, style contexts, views or other data
+   * that lies logically outside the content model.
+   *
+   * If the implementation so chooses, instead of returning the total
+   * subordinate data it may instead use the sizeof handler to store
+   * away subordinate data under its own key so that the subordinate
+   * data may be tabulated independently of the frame itself.
+   *
+   * The caller is responsible for recursing over all children that
+   * the content contains.
+   */
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
+
+  /**
+   * List the content (and anything it contains) out to the given
+   * file stream. Use aIndent as the base indent during formatting.
+   * Returns NS_OK unless a file error occurs.
+   */
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+
+  /**
+   * Dump the content (and anything it contains) out to the given
+   * file stream. Use aIndent as the base indent during formatting.
+   * Returns NS_OK unless a file error occurs.
+   */
+  NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
+#endif
 };
 
 // nsresult codes for GetAttr

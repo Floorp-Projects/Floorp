@@ -353,6 +353,7 @@ nsVoidArray::~nsVoidArray()
     PR_Free(NS_REINTERPRET_CAST(char*, mImpl));
 }
 
+#ifdef DEBUG
 void
 nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -361,6 +362,7 @@ nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     *aResult = sizeof(*this) + (mImpl ? SIZEOF_IMPL(GetArraySize()) : 0);
   }
 }
+#endif
 
 void* nsVoidArray::ElementAt(PRInt32 aIndex) const
 {
@@ -749,6 +751,7 @@ nsStringArray::operator=(const nsStringArray& other)
   return *this;
 }
 
+#ifdef DEBUG
 void  
 nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -763,6 +766,7 @@ nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     sum += size;
   }
 }
+#endif
 
 void 
 nsStringArray::StringAt(PRInt32 aIndex, nsAWritableString& aString) const
@@ -948,6 +952,7 @@ nsCStringArray::operator=(const nsCStringArray& other)
   return *this;
 }
 
+#ifdef DEBUG
 void  
 nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -962,6 +967,7 @@ nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     sum += size;
   }
 }
+#endif
 
 void 
 nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const

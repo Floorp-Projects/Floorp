@@ -122,12 +122,6 @@ public:
   virtual PRUint32 Length() const { return mLength; }
 
   /**
-   * Retrieve the size of this string
-   * @return string length
-   */
-  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-
-  /**
    * Call this method if you want to force a different string length
    * @update  gess7/30/98
    * @param   aLength -- contains new length for mStr
@@ -485,6 +479,14 @@ public:
    */
   static  PRBool IsDigit(PRUnichar ch);
 
+#ifdef DEBUG
+  /**
+   * Retrieve the size of this string
+   * @return string length
+   */
+  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
+
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
@@ -531,11 +533,13 @@ public:
     nsAutoString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
     nsAutoString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 
+#ifdef DEBUG
     /**
      * Retrieve the size of this string
      * @return string length
      */
     virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
     
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };

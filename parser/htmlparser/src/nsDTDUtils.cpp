@@ -1394,6 +1394,7 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,ns
   return result;
 }
 
+#ifdef DEBUG
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {
 #ifdef RICKG_DEBUG
 
@@ -1430,6 +1431,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
   }
 #endif
 }
+#endif
 
 
 /*************************************************************************

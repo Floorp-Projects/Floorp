@@ -92,9 +92,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
@@ -118,9 +120,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
   nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
@@ -233,7 +237,9 @@ public:
   NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
 
@@ -408,6 +414,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 BodyRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -452,6 +459,7 @@ void BodyRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   return;
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -685,6 +693,7 @@ BodyFixupRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -733,6 +742,7 @@ void BodyFixupRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   return;
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -1090,6 +1100,7 @@ nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 a
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLBodyElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -1097,3 +1108,4 @@ nsHTMLBodyElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

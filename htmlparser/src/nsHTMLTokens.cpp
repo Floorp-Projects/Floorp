@@ -248,6 +248,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
 }
 
 
+#ifdef DEBUG
 /*
  *  Dump contents of this token to givne output stream
  *  
@@ -260,6 +261,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
   if(!mAttributed)
     out << ">";
 }
+#endif
 
 const nsAReadableString& CStartToken::GetStringValue()
 {
@@ -435,6 +437,7 @@ PRInt32 CEndToken::GetTokenType(void) {
   return eToken_end;
 }
 
+#ifdef DEBUG
 /*
  *  Dump contents of this token to givne output stream
  *  
@@ -445,6 +448,7 @@ PRInt32 CEndToken::GetTokenType(void) {
 void CEndToken::DebugDumpSource(nsOutputStream& out) {
   out << "</" << NS_LossyConvertUCS2toASCII(mTextValue).get() << ">";
 }
+#endif
 
 const nsAReadableString& CEndToken::GetStringValue()
 {
@@ -1432,6 +1436,7 @@ void CAttributeToken::SanitizeKey() {
   return;
 }
 
+#ifdef DEBUG
 /*
  *  Dump contents of this token to given output stream
  *  
@@ -1445,6 +1450,7 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
       << NS_LossyConvertUCS2toASCII(mTextValue).get() << ": " << mTypeID
       << nsEndl;
 }
+#endif
 
 const nsAReadableString& CAttributeToken::GetStringValue(void)
 {
@@ -1768,6 +1774,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
   return result;
 }
 
+#ifdef DEBUG
 /*
  *  Dump contents of this token to givne output stream
  *  
@@ -1783,6 +1790,7 @@ void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
   if(mLastAttribute)
     out << ">";
 }
+#endif
 
 void CAttributeToken::SetKey(const nsAReadableString& aKey)
 {
@@ -2114,6 +2122,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   return value;
 }
 
+#ifdef DEBUG
 /*
  *  Dump contents of this token to givne output stream
  *  
@@ -2126,6 +2135,7 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
   out << "&" << *cp;
   delete[] cp;
 }
+#endif
 
 const nsAReadableString& CEntityToken::GetStringValue(void)
 {

@@ -261,10 +261,12 @@ public:
   NS_IMETHOD SetStyleRuleSupplier(nsIStyleRuleSupplier* aSupplier)=0;
   NS_IMETHOD GetStyleRuleSupplier(nsIStyleRuleSupplier** aSupplier)=0;
 
+#ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
-
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
+#endif
+
   virtual void ResetUniqueStyleItems(void) = 0;
 
   // If changing the given attribute cannot affect style context, aAffects

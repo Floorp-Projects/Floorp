@@ -75,7 +75,9 @@ public:
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 // construction, destruction
@@ -183,6 +185,7 @@ nsHTMLFieldSetElement::GetType(PRInt32* aType)
   }
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer,
                               PRUint32* aResult) const
@@ -191,3 +194,4 @@ nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer,
 
   return NS_OK;
 }
+#endif

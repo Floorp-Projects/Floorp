@@ -84,9 +84,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+#endif
 
   nscolor             mColor;
   nsIHTMLStyleSheet*  mSheet;
@@ -99,7 +101,9 @@ public:
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   void Reset() {
     mForegroundSet = PR_FALSE;
@@ -163,6 +167,7 @@ HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -206,6 +211,7 @@ void HTMLColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
   : HTMLColorRule(aSheet)
@@ -231,6 +237,7 @@ HTMLDocumentColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 /******************************************************************************
 * SizeOf method:
 *
@@ -268,6 +275,7 @@ void HTMLDocumentColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 class GenericTableRule: public nsIStyleRule {
 public:
@@ -286,9 +294,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   void Reset()
   {
@@ -346,6 +356,7 @@ GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -389,6 +400,7 @@ void GenericTableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 // -----------------------------------------------------------
 // this rule handles <th> inheritance
@@ -603,9 +615,11 @@ public:
                                     nsIHTMLMappedAttributes*& aUniqueMapped);
   NS_IMETHOD DropMappedAttributes(nsIHTMLMappedAttributes* aMapped);
 
+#ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   // If changing the given attribute cannot affect style context, aAffects
   // will be PR_FALSE on return.
@@ -1250,6 +1264,7 @@ HTMLStyleSheetImpl::DropMappedAttributes(nsIHTMLMappedAttributes* aMapped)
   return NS_OK;
 }
 
+#ifdef DEBUG
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
@@ -1392,6 +1407,7 @@ void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
 
   // that's it
 }
+#endif
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,

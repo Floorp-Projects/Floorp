@@ -204,8 +204,10 @@ struct nsGenericDOMDataNode {
     aResult = 0;
     return NS_OK;
   }
+#ifdef DEBUG
   nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+#endif
   nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -223,8 +225,10 @@ struct nsGenericDOMDataNode {
   nsresult GetListenerManager(nsIContent* aOuterContent,
                               nsIEventListenerManager** aInstancePtrResult);
 
+#ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
+#endif
 
   nsresult CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
@@ -445,6 +449,16 @@ struct nsGenericDOMDataNode {
     return _g.RemoveEventListener(aType, aListener, aUseCapture); \
   }                                                                     
 
+#ifdef DEBUG
+#define DEBUG_METHODS                                                      \
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
+  NS_IMETHOD DumpContent(FILE* out,                                        \
+                         PRInt32 aIndent,                                  \
+                         PRBool aDumpAll) const;
+#else
+#define DEBUG_METHODS
+#endif
+
 #define NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(_g)        \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
     return _g.GetDocument(aResult);                                        \
@@ -523,10 +537,7 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const {                        \
     return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
-  NS_IMETHOD DumpContent(FILE* out,                                        \
-                         PRInt32 aIndent,                                  \
-                         PRBool aDumpAll) const;                           \
+  DEBUG_METHODS                                                            \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \

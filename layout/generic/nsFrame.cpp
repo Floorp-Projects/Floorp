@@ -2695,11 +2695,7 @@ nsFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-#ifdef DEBUG
   *aResult = sizeof(*this);
-#else
-  *aResult = 0;
-#endif
   return NS_OK;
 }
 

@@ -93,7 +93,9 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   // The cached visited state
@@ -269,6 +271,7 @@ nsHTMLAreaElement::SetHref(const nsAReadableString& aValue)
                                                      aValue, PR_TRUE);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -276,6 +279,7 @@ nsHTMLAreaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP    
 nsHTMLAreaElement::GetProtocol(nsAWritableString& aProtocol)

@@ -3411,6 +3411,7 @@ nsXULElement::GetAttrCount(PRInt32& aResult) const
 }
 
 
+#ifdef DEBUG
 static void
 rdf_Indent(FILE* out, PRInt32 aIndent)
 {
@@ -3551,12 +3552,11 @@ nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
         return NS_ERROR_NULL_POINTER;
     }
     PRUint32 sum = 0;
-#ifdef DEBUG
     sum += (PRUint32) sizeof(*this);
-#endif
     *aResult = sum;
     return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
@@ -5045,12 +5045,14 @@ nsXULElement::IsContentOfType(PRUint32 aFlags)
   return !(aFlags & ~(eELEMENT | eXUL));
 }
 
+#ifdef DEBUG
 void nsXULElement::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 {
   // XXX - implement this if you want the sizes of XUL style rules
   //       dumped during StyleSize dump
   return;
 }
+#endif
 
 
 nsresult

@@ -110,7 +110,9 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
@@ -631,6 +633,7 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
   }
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SizeOf(nsISizeOfHandler* aSizer,
                               PRUint32* aResult) const
@@ -639,6 +642,7 @@ nsHTMLTextAreaElement::SizeOf(nsISizeOfHandler* aSizer,
 
   return NS_OK;
 }
+#endif
 
 
 // Controllers Methods

@@ -817,6 +817,7 @@ nsGenericDOMDataNode::SetBindingParent(nsIContent* aParent)
   return NS_OK;
 }  
 
+#ifdef DEBUG
 nsresult
 nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                              size_t aInstanceSize) const
@@ -825,14 +826,13 @@ nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
     return NS_ERROR_NULL_POINTER;
   }
   PRUint32 sum = 0;
-#ifdef DEBUG
   sum += (PRUint32) aInstanceSize;
   sum += mText.GetLength() *
     (mText.Is2b() ? sizeof(PRUnichar) : sizeof(char));
-#endif
   *aResult = sum;
   return NS_OK;
 }
+#endif
 
 //----------------------------------------------------------------------
 

@@ -78,7 +78,9 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -299,6 +301,7 @@ nsHTMLHRElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRule
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLHRElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -306,3 +309,4 @@ nsHTMLHRElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

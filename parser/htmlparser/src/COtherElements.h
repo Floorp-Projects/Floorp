@@ -2039,12 +2039,14 @@ public:
   }
 
   void InitializeElements();
+#ifdef DEBUG
   void DebugDumpGroups(CElement* aParent);
   void DebugDumpContainment(const char* aTitle);
   void DebugDumpContainment(CElement* aParent);
 
   void DebugDumpInlineElements(const char* aTitle);
   void DebugDumpBlockElements(const char* aTitle);
+#endif
 
   CElement* mElements[150];  //add one here for special handling of a given element
   CElement  mDfltElements[150];
@@ -2373,6 +2375,7 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_head]=&mHeadElement;
 }
 
+#ifdef DEBUG
 void CElementTable::DebugDumpGroups(CElement* aTag){
 
   const char* tag=nsHTMLTags::GetStringValue(aTag->mTag);
@@ -2530,6 +2533,7 @@ void CElementTable::DebugDumpContainment(const char* aTitle){
     //DebugDumpGroups(mElements[i]);
   } //for
 }
+#endif
 
 /******************************************************************************
   Yes, I know it's inconvenient to find this methods here, but it's easier

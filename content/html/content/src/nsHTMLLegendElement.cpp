@@ -81,7 +81,9 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAWritableString& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -227,6 +229,7 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
                                                               aValue, aResult);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLLegendElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -234,3 +237,4 @@ nsHTMLLegendElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

@@ -76,9 +76,11 @@ public:
   // The new mapping function.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   nsIHTMLCSSStyleSheet*  mSheet;
 };
@@ -147,6 +149,7 @@ CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 CSSFirstLineRule::List(FILE* out, PRInt32 aIndent) const
 {
@@ -190,6 +193,7 @@ void CSSFirstLineRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     mSheet->SizeOf(aSizeOfHandler, localSize);
   }
 }
+#endif
 
 // -----------------------------------------------------------
 
@@ -260,9 +264,11 @@ public:
 
   // XXX style rule enumerations
 
+#ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+#endif
 
   // If changing the given attribute cannot affect style context, aAffects
   // will be PR_FALSE on return.
@@ -576,6 +582,7 @@ HTMLCSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
   return NS_OK;
 }
 
+#ifdef DEBUG
 void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
@@ -641,6 +648,7 @@ void HTMLCSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &a
     aSizeOfHandler->AddSize(tag,localSize);
   }
 }
+#endif
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::AttributeAffectsStyle(nsIAtom *aAttribute,

@@ -117,7 +117,9 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
 protected:
   nsresult RegUnRegAccessKey(PRBool aDoReg);
@@ -467,6 +469,7 @@ nsHTMLAnchorElement::SetTarget(const nsAReadableString& aValue)
                                                      aValue, PR_TRUE);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -474,6 +477,7 @@ nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif
 
 
 NS_IMETHODIMP    

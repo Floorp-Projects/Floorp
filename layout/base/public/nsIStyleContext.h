@@ -94,10 +94,10 @@ public:
   NS_IMETHOD AddStyleBit(const PRUint32& aBit)=0;
   NS_IMETHOD GetStyleBits(PRUint32* aBits)=0;
 
-  // debugging
-  virtual void  List(FILE* out, PRInt32 aIndent) = 0;
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 #ifdef DEBUG
+  // debugging
+  virtual void List(FILE* out, PRInt32 aIndent) = 0;
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
   virtual void DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)=0;
 #endif
 

@@ -2316,6 +2316,7 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
 #include <fstream.h>
 #endif
 
+#ifdef DEBUG
 void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitle){
 #ifdef  RICKG_DEBUG
 
@@ -2474,4 +2475,4 @@ void nsHTMLElement::DebugDumpContainType(const char* aFilename){
   out<<endl<<endl;
 #endif
 }
-
+#endif

@@ -236,6 +236,7 @@ struct HTMLAttribute {
     return PR_FALSE;
   }
 
+#ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;
@@ -243,6 +244,7 @@ struct HTMLAttribute {
     *aResult = sizeof(*this);
     return NS_OK;
   }
+#endif
 
   nsIAtom*        mAttribute;
   nsHTMLValue     mValue;
@@ -338,9 +340,11 @@ public:
   // The new mapping functions.
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult);
+#endif
 
   nsIHTMLStyleSheet*  mSheet;
   PRInt32             mUseCount;
@@ -755,6 +759,7 @@ nsHTMLMappedAttributes::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLMappedAttributes::List(FILE* out, PRInt32 aIndent) const
 {
@@ -798,6 +803,7 @@ void nsHTMLMappedAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
   aResult = sizeof(*this);
   aSizer->AddSize(tag, aResult);
 }
+#endif
 
 //--------------------
 
@@ -859,9 +865,11 @@ public:
 #endif
   NS_IMETHOD Reset(void);
 
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult);
+#endif
 
 protected:
   virtual nsresult SetAttributeName(nsIAtom* aAttrName, PRBool& aFound);
@@ -1502,6 +1510,7 @@ HTMLAttributesImpl::Reset(void)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 {
@@ -1564,6 +1573,7 @@ void HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
   tag = getter_AddRefs(NS_NewAtom("HTMLAttributesImpl"));
   aSizer->AddSize(tag, aResult);
 }
+#endif
 
 extern NS_HTML nsresult
   NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult)

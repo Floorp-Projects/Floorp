@@ -68,7 +68,9 @@ public:
   // nsIDOMHTMLBaseElement
   NS_DECL_NSIDOMHTMLBASEELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -152,6 +154,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Target, target)
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLBaseElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -159,3 +162,4 @@ nsHTMLBaseElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

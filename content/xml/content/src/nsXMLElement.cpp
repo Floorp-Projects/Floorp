@@ -707,6 +707,7 @@ nsXMLElement::GetID(nsIAtom*& aResult) const
 }
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsXMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -714,11 +715,7 @@ nsXMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
     return NS_ERROR_NULL_POINTER;
   }
 
-#ifdef DEBUG
   *aResult = sizeof(*this);
-#else
-  *aResult = 0;
-#endif
   return NS_OK;
 }
-
+#endif

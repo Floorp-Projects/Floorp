@@ -121,13 +121,6 @@ public:
   virtual PRUint32 Length() const { return mLength; }
 
   /**
-   * Retrieve the size of this string
-   * @return string length
-   */
-  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-
-
-  /**
    * Call this method if you want to force a different string capacity
    * @update  gess7/30/98
    * @param   aLength -- contains new length for mStr
@@ -438,7 +431,16 @@ public:
   PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
 
+
+#ifdef DEBUG
+  /**
+   * Retrieve the size of this string
+   * @return string length
+   */
+  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+
   void    DebugDump(void) const;
+#endif
 
 private:
     // NOT TO BE IMPLEMENTED
@@ -485,11 +487,13 @@ public:
     nsCAutoString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
     nsCAutoString& operator=( char aChar )                                { Assign(aChar); return *this; }
 
+#ifdef DEBUG
     /**
      * Retrieve the size of this string
      * @return string length
      */
     virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
     
     char mBuffer[kDefaultStringSize];
 };

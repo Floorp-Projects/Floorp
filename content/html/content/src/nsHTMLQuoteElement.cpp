@@ -68,7 +68,9 @@ public:
   // nsIDOMHTMLQuoteElement
   NS_DECL_NSIDOMHTMLQUOTEELEMENT
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 };
 
 nsresult
@@ -150,6 +152,7 @@ nsHTMLQuoteElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLQuoteElement, Cite, cite)
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsHTMLQuoteElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
@@ -157,3 +160,4 @@ nsHTMLQuoteElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
   return NS_OK;
 }
+#endif

@@ -152,10 +152,12 @@ public:
   NS_IMETHOD GetAttrCount(PRInt32& aResult) const {
     return mInner.GetAttributeCount(aResult);
   }
+#ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
     return NS_OK;
   }
+#endif
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
@@ -203,17 +205,15 @@ public:
     return mInner.GetListenerManager(this, aResult);
   }
 
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;
     }
-#ifdef DEBUG
     *aResult = sizeof(*this);
-#else
-    *aResult = 0;
-#endif
     return NS_OK;
   }
+#endif
 
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult)
     { return mInner.GetText(aFragmentsResult); }
@@ -357,6 +357,7 @@ nsCommentNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
   return result;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 {
@@ -374,6 +375,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   fputs("-->\n", out);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsCommentNode::HandleDOMEvent(nsIPresContext* aPresContext,

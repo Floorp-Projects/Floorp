@@ -203,8 +203,10 @@ class HTMLContentSink : public nsIHTMLContentSink,
                         public nsIScriptLoaderObserver,
                         public nsITimerCallback,
                         public nsICSSLoaderObserver,
-                        public nsIDocumentObserver,
-                        public nsIDebugDumpContent
+                        public nsIDocumentObserver
+#ifdef DEBUG
+                        ,public nsIDebugDumpContent
+#endif
 {
 public:
   HTMLContentSink();
@@ -328,8 +330,10 @@ public:
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
 
+#ifdef DEBUG
   // nsIDebugDumpContent
   NS_IMETHOD DumpContentModel();
+#endif
 
   PRBool IsTimeToNotify();
   PRBool IsInScript();
@@ -2414,6 +2418,7 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
+#ifdef DEBUG
 NS_IMPL_ISUPPORTS7(HTMLContentSink, 
                    nsIHTMLContentSink,
                    nsIContentSink,
@@ -2422,6 +2427,15 @@ NS_IMPL_ISUPPORTS7(HTMLContentSink,
                    nsICSSLoaderObserver,
                    nsIDocumentObserver,
                    nsIDebugDumpContent)
+#else
+NS_IMPL_ISUPPORTS6(HTMLContentSink, 
+                   nsIHTMLContentSink,
+                   nsIContentSink,
+                   nsIScriptLoaderObserver,
+                   nsITimerCallback,
+                   nsICSSLoaderObserver,
+                   nsIDocumentObserver)
+#endif
 
 static PRBool
 IsScriptEnabled(nsIDocument *aDoc, nsIWebShell *aContainer)
@@ -5278,6 +5292,7 @@ HTMLContentSink::DoFragment(PRBool aFlag)
   return NS_OK; 
 }
 
+#ifdef DEBUG
 /**
  *  This will dump content model into the output file.
  *  
@@ -5311,6 +5326,7 @@ HTMLContentSink::DumpContentModel()
   }
   return result;
 }
+#endif
 
 // If the content sink can interrupt the parser (@see mCanInteruptParsing)
 // then it needs to schedule a dummy parser request to delay the document
