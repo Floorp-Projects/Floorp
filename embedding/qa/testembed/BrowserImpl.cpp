@@ -552,6 +552,7 @@ NS_IMETHODIMP CBrowserImpl::DoContent(const char *aContentType, PRBool aIsConten
 
 	return NS_OK;
 }
+
 NS_IMETHODIMP CBrowserImpl::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
 {
 	nsCAutoString contentStr;
@@ -627,4 +628,3 @@ NS_IMETHODIMP CBrowserImpl::SetParentContentListener(nsIURIContentListener * aPa
 
 	return NS_OK;	
 }
-

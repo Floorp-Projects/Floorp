@@ -110,6 +110,9 @@ protected:
 	afx_msg void OnTestsAddWebProgListener();
 	afx_msg void OnTestsAddHistoryListener();
 	afx_msg void OnTestsRemovehistorylistener();
+	afx_msg void OnTestsAddUriContentListenerByWebBrowser();
+	afx_msg void OnTestsAddUriContentListenerByUriLoader();
+	afx_msg void OnTestsAddUriContentListenerByOpenUri();
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();

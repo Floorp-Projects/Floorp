@@ -240,7 +240,7 @@ nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
 	   return NULL;
 	}
 	else
-	   RvTestResult(rv, "NS_OpenURI", 1);
+	   RvTestResult(rv, "NS_NewChannel", 1);
 
 	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));

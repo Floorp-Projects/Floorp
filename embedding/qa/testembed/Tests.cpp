@@ -91,6 +91,9 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
 	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
+	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIWEBBROWSER, OnTestsAddUriContentListenerByWebBrowser)
+	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_ADDFROMNSIURILOADER, OnTestsAddUriContentListenerByUriLoader)
+	ON_COMMAND(ID_TESTS_ADDURICONTENTLISTENER_OPENURI, OnTestsAddUriContentListenerByOpenUri)
 
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
@@ -486,6 +489,51 @@ void CTests::OnTestsRemovehistorylistener()
 	RvTestResult(rv, "RemoveWebBrowserListener(). Remove History Lstnr test", 2);
 }
 
+void CTests::OnTestsAddUriContentListenerByWebBrowser()
+{
+    nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
+
+	RvTestResult(rv, "AddWebBrowserListener(). add nsIURIContentListener test", 2);
+}
+
+void CTests::OnTestsAddUriContentListenerByUriLoader()
+{
+	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
+	RvTestResult(rv, "nsIURILoader() object test", 1);
+	if (!myLoader) {
+		QAOutput("Didn't get urILoader object. test failed", 2);
+		return;
+	}
+	nsCOMPtr<nsIURIContentListener> cntListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	if (!cntListener) {
+		QAOutput("Didn't get urIContentListener object. test failed", 2);
+		return;
+	}
+	else {
+		rv = myLoader->RegisterContentListener(cntListener);
+		RvTestResult(rv, "nsIUriLoader->RegisterContentListener() test", 2);
+	}
+}
+
+void CTests::OnTestsAddUriContentListenerByOpenUri()
+{
+	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
+	RvTestResult(rv, "nsIURILoader() object test", 1);
+	if (!myLoader) {
+		QAOutput("Didn't get urILoader object. test failed", 2);
+		return;
+	}
+	nsCOMPtr<nsIChannel> theChannel;
+	nsCOMPtr<nsIURI> theURI;
+	NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
+	NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+	RvTestResult(rv, "nsIUriLoader->OpenURI() test", 2);
+}
+
 // *********************************************************
 // *********************************************************
 //					TOOLS to help us
@@ -556,12 +604,13 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+/*
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
     rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 
 	RvTestResult(rv, "AddWebBrowserListener(). nsIURIContentListener test", 2);
-
+*/
 	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
 	RvTestResult(rv, "nsIURILoader() object test", 1);
 
@@ -569,8 +618,18 @@ void CTests::OnToolsTestYourMethod()
 	if (!cntListener)
 		QAOutput("Didn't get urIContentListener object.", 2);
 	else {
+		/*
 		rv = myLoader->RegisterContentListener(cntListener);
-		RvTestResult(rv, "RegisterContentListener() test", 1);
+		RvTestResult(rv, "RegisterContentListener() test", 2);
+		*/
+		nsCOMPtr<nsIChannel> theChannel;
+		nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
+		nsCOMPtr<nsIURI> theURI;
+		NS_NewURI(getter_AddRefs(theURI), "http://www.yahoo.com");
+		NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+		nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+		myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
+
 	}
 
 }
