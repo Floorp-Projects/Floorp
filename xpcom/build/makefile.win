@@ -37,6 +37,7 @@ LINCS =                          \
         -I..\io                  \
         -I..\components          \
         -I..\threads             \
+        -I..\threads\_xpidlgen   \
         -I..\reflect\xptinfo\src \
         -I..\proxy\src           \
 	$(NULL)

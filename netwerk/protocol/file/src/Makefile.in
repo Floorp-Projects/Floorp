@@ -29,7 +29,6 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom necko raptor
 
 CPPSRCS		= \
-		nsDirectoryIndexStream.cpp \
 		nsFileChannel.cpp \
 		nsFileProtocolHandler.cpp \
 		nsFileProtocolFactory.cpp \

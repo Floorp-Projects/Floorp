@@ -161,24 +161,9 @@ public:
                          nsIContentViewerContainer* aContainer,
                          nsIStreamListener** aResult);
 
-  // nsISupports interface
   NS_DECL_ISUPPORTS
-
-  // nsIStreamObserver interface
-  NS_IMETHOD OnStartRequest(nsIChannel* aChannel, nsISupports* aContext);
-
-  NS_IMETHOD OnStopRequest(nsIChannel* aChannel,
-                           nsISupports* aContext,
-                           nsresult aStatus,
-                           const PRUnichar* aErrorMsg);
-
-  // nsIStreamListener interface
-  NS_IMETHOD OnDataAvailable(nsIChannel* aChannel,
-                             nsISupports* aContext,
-                             nsIInputStream* aStream,
-                             PRUint32 aSourceOffset,
-                             PRUint32 aCount);
-
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 };
 
 

@@ -93,11 +93,9 @@ public:
 	
 	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
 	// OnDataAvailable. We then read and process the incoming data from the input stream. 
-	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
-	NS_IMETHOD OnStartRequest(nsIChannel * aChannel,nsISupports *ctxt);
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-
-	NS_IMETHOD OnStopRequest(nsIChannel * aChannel,nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
 	// This is evil, I guess, but this is used by libmsg to tell a running imap url
 	// about headers it should download to update a local database.

@@ -17,14 +17,15 @@
  */
 
 #include "nsInputStreamChannel.h"
-#include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIMIMEService.h"
+#include "nsIFileTransportService.h"
+
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
-
+static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
@@ -67,7 +68,11 @@ nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsInputStreamChannel, NS_GET_IID(nsIChannel));
+NS_IMPL_ISUPPORTS4(nsInputStreamChannel, 
+                   nsIChannel,
+                   nsIRequest,
+                   nsIStreamObserver,
+                   nsIStreamListener);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -75,6 +80,8 @@ NS_IMPL_ISUPPORTS(nsInputStreamChannel, NS_GET_IID(nsIChannel));
 NS_IMETHODIMP
 nsInputStreamChannel::IsPending(PRBool *result)
 {
+    if (mFileTransport)
+        return mFileTransport->IsPending(result);
     *result = PR_FALSE;
     return NS_OK;
 }
@@ -82,18 +89,24 @@ nsInputStreamChannel::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsInputStreamChannel::Cancel(void)
 {
+    if (mFileTransport)
+        return mFileTransport->Cancel();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::Suspend(void)
 {
+    if (mFileTransport)
+        return mFileTransport->Suspend();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::Resume(void)
 {
+    if (mFileTransport)
+        return mFileTransport->Resume();
     return NS_OK;
 }
 
@@ -130,6 +143,7 @@ NS_IMETHODIMP
 nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                                 nsISupports *ctxt, nsIStreamListener *listener)
 {
+#if 0
     // currently this happens before AsyncRead returns -- hope that's ok
     nsresult rv;
 
@@ -154,12 +168,45 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     rv = listener->OnStopRequest(this, ctxt, rv, nsnull);       // XXX error message 
     return rv;
+#else
+    nsresult rv;
+
+    mRealListener = listener;
+
+    if (mLoadGroup) {
+        nsCOMPtr<nsILoadGroupListenerFactory> factory;
+        //
+        // Create a load group "proxy" listener...
+        //
+        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+        if (factory) {
+            nsIStreamListener *newListener;
+            rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
+            if (NS_SUCCEEDED(rv)) {
+                mRealListener = newListener;
+                NS_RELEASE(newListener);
+            }
+        }
+
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = fts->CreateTransportFromStream(mInputStream, "load", nsnull,
+                                        getter_AddRefs(mFileTransport));
+    if (NS_FAILED(rv)) return rv;
+
+    return mFileTransport->AsyncRead(startPosition, readCount, ctxt, this);
+#endif
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition,
-                      PRInt32 writeCount, nsISupports *ctxt,
-                      nsIStreamObserver *observer)
+                                 PRInt32 writeCount, nsISupports *ctxt,
+                                 nsIStreamObserver *observer)
 {
     // we don't do output
     return NS_ERROR_FAILURE;
@@ -212,8 +259,8 @@ nsInputStreamChannel::GetContentType(char * *aContentType)
     }
 
     // if all else fails treat it as text/html?
-	if (!*aContentType) 
-		*aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType) 
+        *aContentType = nsCRT::strdup(DUMMY_TYPE);
     if (!*aContentType) {
         rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
@@ -252,6 +299,46 @@ nsInputStreamChannel::SetOwner(nsISupports * aOwner)
 {
     mOwner = aOwner;
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsInputStreamChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
+{
+    NS_ASSERTION(mRealListener, "No listener...");
+    return mRealListener->OnStartRequest(this, context);
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
+                                    nsresult aStatus, const PRUnichar* aMsg)
+{
+    nsresult rv;
+
+    rv = mRealListener->OnStopRequest(this, context, aStatus, aMsg);
+
+    if (mLoadGroup) {
+        if (NS_SUCCEEDED(rv)) {
+            mLoadGroup->RemoveChannel(this, context, aStatus, aMsg);
+        }
+    }
+
+    // Release the reference to the consumer stream listener...
+    mRealListener = null_nsCOMPtr();
+    mFileTransport = null_nsCOMPtr();
+    return rv;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context,
+                                      nsIInputStream *aIStream, PRUint32 aSourceOffset,
+                                      PRUint32 aLength)
+{
+    return mRealListener->OnDataAvailable(this, context, aIStream,
+                                          aSourceOffset, aLength);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

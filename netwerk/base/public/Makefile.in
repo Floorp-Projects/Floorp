@@ -42,12 +42,12 @@ XPIDLSRCS	= \
 		nsINetNotify.idl \
 		nsILoadGroup.idl \
 		nsIStreamConverter2.idl \
+		nsIFileTransportService.idl \
+		nsISocketTransportService.idl \
 		$(NULL)
 
 EXPORTS		= \
 		netCore.h \
-		nsIFileTransportService.h \
-		nsISocketTransportService.h \
 		nsIProxy.h \
 		$(NULL)
 

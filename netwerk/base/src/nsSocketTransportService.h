@@ -42,21 +42,8 @@ class nsSocketTransportService : public nsISocketTransportService,
 {
 public:
   NS_DECL_ISUPPORTS
-
-  // nsISocketTransportService methods:
-  NS_IMETHOD CreateTransport(const char* aHost, 
-                             PRInt32 aPort,
-                             nsIChannel** aResult);
-
-  NS_IMETHOD CreateTransport(const char* aHost, 
-                             PRInt32 aPort,
-                             const char* aSocketType,
-                             nsIChannel** aResult);
-
-  NS_IMETHOD Shutdown(void);
-
-  // nsIRunnable methods:
-  NS_IMETHOD Run(void);
+  NS_DECL_NSISOCKETTRANSPORTSERVICE
+  NS_DECL_NSIRUNNABLE
 
   // nsSocketTransportService methods:
   nsSocketTransportService();

@@ -56,16 +56,9 @@ public:
 
     virtual ~nsHTTPChannel();
 
-    // Functions from nsISupports
     NS_DECL_ISUPPORTS
-
-    // nsIRequest methods:
     NS_DECL_NSIREQUEST
-
-    // nsIChannel methods:
     NS_DECL_NSICHANNEL
-
-    // nsIHTTPChannel methods:
     NS_DECL_NSIHTTPCHANNEL
 
     // nsHTTPChannel methods:

@@ -56,21 +56,9 @@ public:
   InputTestConsumer();
   virtual ~InputTestConsumer();
 
-  // ISupports interface...
   NS_DECL_ISUPPORTS
-
-  // IStreamListener interface...
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-
-  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                             nsIInputStream *aIStream, 
-                             PRUint32 aSourceOffset,
-                             PRUint32 aLength);
-
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
-
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
 };
 
 
@@ -133,28 +121,21 @@ class TestWriteObserver : public nsIStreamObserver
 {
 public:
 
-  TestWriteObserver(nsIChannel* aTransport);
+  TestWriteObserver(nsIChannel* aChannel);
   virtual ~TestWriteObserver();
 
-  // ISupports interface...
   NS_DECL_ISUPPORTS
-
-  // IStreamObserver interface...
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
+  NS_DECL_NSISTREAMOBSERVER
 
 protected:
   nsIChannel* mTransport;
 };
 
 
-TestWriteObserver::TestWriteObserver(nsIChannel* aTransport)
+TestWriteObserver::TestWriteObserver(nsIChannel* aChannel)
 {
   NS_INIT_REFCNT();
-  mTransport = aTransport;
+  mTransport = aChannel;
   NS_ADDREF(mTransport);
 }
 

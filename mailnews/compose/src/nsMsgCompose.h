@@ -149,21 +149,13 @@ public:
     QuotingOutputStreamListener(const PRUnichar *originalMsgURI, PRBool quoteHeaders);
     virtual ~QuotingOutputStreamListener(void);
 
-    // nsISupports interface
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
-	// nsIStreamListener interface
-	NS_IMETHOD OnDataAvailable(nsIChannel * aChannel, 
-							 nsISupports    *ctxt, 
-                             nsIInputStream *inStr, 
-                             PRUint32       sourceOffset, 
-                             PRUint32       count);
-	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
-
-	NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
-	NS_IMETHOD  ConvertToPlainText();
-	NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
+    NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+	  NS_IMETHOD  ConvertToPlainText();
+	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:
     nsMsgCompose *				mComposeObj;

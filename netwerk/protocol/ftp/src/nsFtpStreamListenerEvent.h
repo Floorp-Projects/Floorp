@@ -24,7 +24,6 @@
 #include "nscore.h"
 #include "nsString.h"
 
-
 class nsFtpStreamListenerEvent : public PLEvent {
 public:
     nsFtpStreamListenerEvent(nsIStreamListener* listener,

@@ -1143,6 +1143,7 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
   } 
   if (aIID.Equals(NS_GET_IID(nsIChannel)) ||
+      aIID.Equals(NS_GET_IID(nsIRequest)) ||
       aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
     NS_ADDREF_THIS(); 

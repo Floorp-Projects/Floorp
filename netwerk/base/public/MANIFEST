@@ -4,4 +4,3 @@
 
 netCore.h
 nsIProxy.h
-nsISocketTransportService.h

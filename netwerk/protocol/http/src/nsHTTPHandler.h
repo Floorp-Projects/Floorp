@@ -122,8 +122,8 @@ public:
         create one. 
     */
     virtual nsresult RequestTransport(nsIURI *i_Uri, 
-                              nsHTTPChannel* i_Channel, 
-                              nsIChannel** o_pTrans);
+                                      nsHTTPChannel* i_Channel, 
+                                      nsIChannel** o_pTrans);
     /*
         Remove this transport from the list.
     */

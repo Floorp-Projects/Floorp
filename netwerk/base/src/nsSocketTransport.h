@@ -123,13 +123,8 @@ class nsSocketTransport : public nsIChannel,
 #endif
 {
 public:
-  // nsISupports methods:
   NS_DECL_ISUPPORTS
-
-  // nsIRequest methods:
   NS_DECL_NSIREQUEST
-
-  // nsIChannel methods:
   NS_DECL_NSICHANNEL
 
 #ifndef NSPIPE2
@@ -239,9 +234,7 @@ protected:
   nsCOMPtr<nsIBufferInputStream>  mWritePipeIn;
   nsCOMPtr<nsIBufferOutputStream> mWritePipeOut;
 #endif
-  
   PRUint32 mSourceOffset;
-
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
 

@@ -28,12 +28,15 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsIOService.obj                \
         .\$(OBJDIR)\nsSocketTransport.obj          \
         .\$(OBJDIR)\nsSocketTransportService.obj   \
-        .\$(OBJDIR)\nsStdURL.obj              \
+        .\$(OBJDIR)\nsFileTransport.obj            \
+        .\$(OBJDIR)\nsFileTransportService.obj     \
+        .\$(OBJDIR)\nsStdURL.obj                   \
         .\$(OBJDIR)\nsSimpleURI.obj                \
         .\$(OBJDIR)\nsNetModuleMgr.obj             \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \
         .\$(OBJDIR)\nsLoadGroup.obj                \
         .\$(OBJDIR)\nsInputStreamChannel.obj       \
+        .\$(OBJDIR)\nsDirectoryIndexStream.obj     \
         $(NULL)
 
 INCS = $(INCS)                  \

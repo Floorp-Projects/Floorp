@@ -73,9 +73,7 @@ public:
   NS_DECL_ISUPPORTS
 
 #ifdef NECKO
-  // nsIStreamObserver methods:
-  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_DECL_NSISTREAMOBSERVER
 #else
   // nsIStreamObserver
   NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);

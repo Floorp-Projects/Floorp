@@ -56,10 +56,6 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
-    nsresult DispatchRequest(nsIRunnable* runnable);
-    nsresult Suspend(nsFileChannel* request);
-    nsresult Resume(nsFileChannel* request);
-    nsresult ProcessPendingRequests(void);
 
 protected:
     nsIThreadPool*      mPool;

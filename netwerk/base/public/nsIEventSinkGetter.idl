@@ -21,6 +21,6 @@
 [scriptable, uuid(fb65fd70-1881-11d3-9337-00104ba0fd40)]
 interface nsIEventSinkGetter : nsISupports
 {
-    nsISupports GetEventSink(in string verb, in nsIIDRef eventSinkIID);
+    nsISupports GetEventSink(in string command, in nsIIDRef eventSinkIID);
 };
 
