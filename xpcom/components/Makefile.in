@@ -35,7 +35,7 @@ CPPSRCS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIComponent.idl	\
+		nsIModule.idl	\
 		$(NULL)
 
 EXPORTS		= \
