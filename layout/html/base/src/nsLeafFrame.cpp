@@ -81,7 +81,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   nsMargin borderPadding;
   AddBordersAndPadding(aPresContext, aReflowState, aMetrics, borderPadding);
   if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = aMetrics.width;
+    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
   aStatus = NS_FRAME_COMPLETE;
 

@@ -593,12 +593,12 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.descent = 0;
     aDesiredSize.mMaximumWidth = aDesiredSize.width;
     if (aDesiredSize.mComputeMEW) {
-        // if the legend is wider use it
-        if (aDesiredSize.mMaxElementWidth < mLegendRect.width)
-            aDesiredSize.mMaxElementWidth = mLegendRect.width;
+        aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
 
-        // add in padding.
-        aDesiredSize.mMaxElementWidth += borderPadding.left + borderPadding.right;
+        // if the legend is wider use it
+        if (aDesiredSize.mMaxElementWidth < mLegendRect.width + borderPadding.left + borderPadding.right)
+            aDesiredSize.mMaxElementWidth = mLegendRect.width + borderPadding.left + borderPadding.right;
+
     }
     aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
     if (mLegendFrame)

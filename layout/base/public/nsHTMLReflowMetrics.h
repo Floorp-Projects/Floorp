@@ -187,7 +187,21 @@ struct nsHTMLReflowMetrics {
     width = height = 0;
     ascent = descent = 0;
   }
-  
+
+ /**
+  * set the maxElementWidth to the desired width. If the frame has a percent
+  * width specification it can be shrinked to 0 if the containing frame shrinks
+  * so we need to report 0 otherwise the incr. reflow will fail
+  * @param aWidthUnit - the width unit from the corresponding reflowstate
+  */
+  void nsHTMLReflowMetrics::SetMEWToActualWidth(nsStyleUnit aWidthUnit) {
+    if (aWidthUnit != eStyleUnit_Percent) {
+      mMaxElementWidth = width;
+    } else {
+      mMaxElementWidth = 0;
+    }
+  }
+
   nsHTMLReflowMetrics& operator=(const nsHTMLReflowMetrics& aOther)
   {
     mMaxElementWidth = aOther.mMaxElementWidth;

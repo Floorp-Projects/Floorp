@@ -904,10 +904,10 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
-
-     if (mRect.width > minSize.width &&
-         aReflowState.mComputedWidth == NS_INTRINSICSIZE)
-       *maxElementWidth = minSize.width;
+       if (aReflowState.mStylePosition->mWidth.GetUnit() == eStyleUnit_Percent ||
+           (mRect.width > minSize.width &&
+           aReflowState.mComputedWidth == NS_INTRINSICSIZE))
+         *maxElementWidth = minSize.width;
      else
        *maxElementWidth = mRect.width;
   }

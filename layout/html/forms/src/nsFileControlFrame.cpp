@@ -441,6 +441,9 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
           txtRect.height = aDesiredSize.height;
           mTextFrame->SetRect(txtRect);
         }
+        if (aDesiredSize.mComputeMEW) {
+           aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
+        }
       }
 
       // Do RTL positioning

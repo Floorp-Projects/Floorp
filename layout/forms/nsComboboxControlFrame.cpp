@@ -1038,7 +1038,7 @@ nsComboboxControlFrame::ReflowCombobox(nsPresContext *         aPresContext,
   REFLOW_NOISY_MSG3("**AdjustCombobox - Reflow: WW: %d  HH: %d\n", aDesiredSize.width, aDesiredSize.height);
 
   if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
 
   aDesiredSize.ascent =
@@ -1549,7 +1549,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // Set the max element size to be the same as the desired element size.
   if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
 
 #if 0
@@ -1590,6 +1590,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
   aDesiredSize.mOverflowArea.height = aDesiredSize.height;
 
+  FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 
