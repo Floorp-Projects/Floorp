@@ -804,6 +804,12 @@ void DumpVersion(char *appname)
 	printf("%s: version info\n", appname);
 }
 
+#ifdef NS_TRACE_MALLOC
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include "nsTraceMalloc.h"
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -816,29 +822,112 @@ int main(int argc, char* argv[])
 
   /* Handle -help and -version command line arguments. They should return quick, so we deal with them here */
   for (i=1; i<argc; i++) {
-	if ((PL_strcasecmp(argv[i], "-h") == 0) || (PL_strcasecmp(argv[i], "-help") == 0) 
+    if ((PL_strcasecmp(argv[i], "-h") == 0)
+        || (PL_strcasecmp(argv[i], "-help") == 0) 
 #ifdef XP_UNIX
-|| (PL_strcasecmp(argv[i], "--help") == 0)
+        || (PL_strcasecmp(argv[i], "--help") == 0)
 #endif /* XP_UNIX */
 #ifdef XP_PC
-|| (PL_strcasecmp(argv[i], "/h") == 0) || (PL_strcasecmp(argv[i], "/help") == 0) || (PL_strcasecmp(argv[i], "/?") == 0)
+        || (PL_strcasecmp(argv[i], "/h") == 0)
+        || (PL_strcasecmp(argv[i], "/help") == 0)
+        || (PL_strcasecmp(argv[i], "/?") == 0)
 #endif /* XP_PC */
-    ) {
-		DumpHelp(argv[0]);
-		return 0;
-	}
-	else if ((PL_strcasecmp(argv[i], "-v") == 0) || (PL_strcasecmp(argv[i], "-version") == 0) 
+      ) {
+      DumpHelp(argv[0]);
+      return 0;
+    }
+    if ((PL_strcasecmp(argv[i], "-v") == 0)
+        || (PL_strcasecmp(argv[i], "-version") == 0) 
 #ifdef XP_UNIX
-|| (PL_strcasecmp(argv[i], "--version") == 0)
+        || (PL_strcasecmp(argv[i], "--version") == 0)
 #endif /* XP_UNIX */
 #ifdef XP_PC
-|| (PL_strcasecmp(argv[i], "/v") == 0) || (PL_strcasecmp(argv[i], "/version") == 0)
+        || (PL_strcasecmp(argv[i], "/v") == 0)
+        || (PL_strcasecmp(argv[i], "/version") == 0)
 #endif /* XP_PC */
-    ) {
-		DumpVersion(argv[0]);
-		return 0;
-	}
+      ) {
+      DumpVersion(argv[0]);
+      return 0;
+    }
   }
+
+#ifdef NS_TRACE_MALLOC
+  /*
+   * Look for the --trace-malloc <logfile> option early, to avoid missing
+   * early mallocs (we miss static constructors whose output overflows the
+   * log file's static 16K output buffer; see xpcom/base/nsTraceMalloc.c).
+   */
+  for (i = 1; i < argc; i++) {
+    if (PL_strcasecmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
+      char *logfile;
+      int logfd, pipefds[2];
+
+      logfile = argv[i+1];
+      switch (*logfile) {
+        case '|':
+          logfd = -1;
+          if (pipe(pipefds) == 0) {
+            pid_t pid = fork();
+            if (pid == 0) {
+              /* In child: set up stdin, parse args from logfile, and exec. */
+              int maxargc, nargc;
+              char **nargv, *token;
+
+              if (pipefds[0] != 0) {
+                dup2(pipefds[0], 0);
+                close(pipefds[0]);
+              }
+              close(pipefds[1]);
+
+              logfile = strtok(logfile + 1, " \t");
+              maxargc = 3;
+              nargv = (char **) malloc((maxargc + 1) * sizeof(char *));
+              if (!nargv) exit(1);
+              nargc = 0;
+              nargv[nargc++] = logfile;
+              while ((token = strtok(NULL, " \t")) != NULL) {
+                if (nargc == maxargc) {
+                  maxargc *= 2;
+                  nargv = (char**) realloc(nargv, (maxargc+1) * sizeof(char*));
+                  if (!nargv) exit(1);
+                }
+                nargv[nargc++] = token;
+              }
+              nargv[nargc] = NULL;
+
+              (void) setsid();
+              execvp(logfile, nargv);
+              exit(127);
+            }
+
+            if (pid > 0) {
+              /* In parent: set logfd to the write side of the pipe. */
+              close(pipefds[0]);
+              logfd = pipefds[1];
+            }
+          }
+          break;
+
+        default:
+          logfd = open(logfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+          break;
+      }
+
+      if (logfd < 0) {
+        fprintf(stderr, "%s: can't open %s: %s\n", argv[0], logfile, strerror(errno));
+        return 1;
+      }
+
+      NS_TraceMalloc(logfd);
+
+      /* Now remove --trace-malloc and its argument from argv. */
+      for (argc -= 2; i < argc; i++)
+        argv[i] = argv[i+2];
+      argv[argc] = NULL;
+      break;
+    }
+  }
+#endif
     
   // Call the code to install our handler
 #ifdef MOZ_JPROF
