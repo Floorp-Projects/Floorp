@@ -48,6 +48,7 @@
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
+#include "nsTreeFrame.h"
 //#include "nsToolboxFrame.h"
 //#include "nsToolbarFrame.h"
 #endif
@@ -438,6 +439,27 @@ protected:
                              nsIStyleContext* aStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
                              nsIFrame*&       aNewFrame);
+
+  nsresult ConstructTreeFrame(nsIPresContext*  aPresContext,
+                               nsIContent*      aContent,
+                               nsIFrame*        aParent,
+                               nsIStyleContext* aStyleContext,
+                               nsAbsoluteItems& aAboluteItems,
+                               nsIFrame*&       aNewFrame);
+
+  nsresult ConstructTreeBodyFrame(nsIPresContext*  aPresContext,
+                                       nsIContent*      aContent,
+                                       nsIFrame*        aParent,
+                                       nsIStyleContext* aStyleContext,
+                                       nsIFrame*&       aNewScrollFrame,
+                                       nsIFrame*&       aNewFrame);
+
+  nsresult ConstructTreeCellFrame(nsIPresContext*  aPresContext,
+                                   nsIContent*      aContent,
+                                   nsIFrame*        aParentFrame,
+                                   nsIStyleContext* aStyleContext,
+                                   nsAbsoluteItems& aAbsoluteItems,
+                                   nsIFrame*&       aNewFrame);
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
@@ -1851,6 +1873,34 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewTextControlFrame(aNewFrame);
 	else if (aTag == nsXULAtoms::widget)
 	  rv = NS_NewObjectFrame(aNewFrame);
+	
+	// The following code is used to construct a tree view from the XUL content
+	// model.  It has to take the hierarchical tree content structure and build a flattened
+	// table row frame structure.
+	else if (aTag == nsXULAtoms::tree)
+	{
+	  isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
+      nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                           aParentFrame;
+      rv = ConstructTreeFrame(aPresContext, aContent, geometricParent, aStyleContext,
+                               aAbsoluteItems, aNewFrame);
+      // Note: tree construction function takes care of initializing the frame,
+      // processing children, and setting the initial child list
+      if (isAbsolutelyPositioned) {
+        nsIFrame* placeholderFrame;
+
+        CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                  aParentFrame, placeholderFrame);
+
+        // Add the absolutely positioned frame to its containing block's list
+        // of child frames
+        aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+        // Add the placeholder frame to the flow
+        aNewFrame = placeholderFrame;
+      }
+      return rv;
+	}
 	else if (aTag == nsXULAtoms::toolbox) {
 	  processChildren = PR_TRUE;
 	  //rv = NS_NewToolboxFrame(aNewFrame);
@@ -1899,6 +1949,237 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 
   return rv;
 }
+
+nsresult
+HTMLStyleSheetImpl::ConstructTreeFrame(nsIPresContext*   aPresContext,
+                                        nsIContent*      aContent,
+                                        nsIFrame*        aParent,
+                                        nsIStyleContext* aStyleContext,
+                                        nsAbsoluteItems& aAbsoluteItems,
+                                        nsIFrame*&       aNewFrame)
+{
+  nsIFrame* childList;
+  nsIFrame* innerFrame;
+  nsIFrame* innerChildList = nsnull;
+  nsIFrame* captionFrame = nsnull;
+
+  // Create an anonymous table outer frame which holds the caption and the
+  // table frame
+  NS_NewTableOuterFrame(aNewFrame);
+
+  // Init the table outer frame and see if we need to create a view, e.g.
+  // the frame is absolutely positioned
+  aNewFrame->Init(*aPresContext, aContent, aParent, aStyleContext);
+  nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                           aStyleContext, PR_FALSE);
+
+  // Create the inner table frame
+  NS_NewTreeFrame(innerFrame);
+  childList = innerFrame;
+
+  // Have the inner table frame use a pseudo style context based on the outer table frame's
+  /* XXX: comment this back in and use this as the inner table's p-style asap
+  nsIStyleContext *innerTableStyleContext = 
+    aPresContext->ResolvePseudoStyleContextFor (aContent, 
+                                                nsHTMLAtoms::tablePseudo,
+                                                aStyleContext);
+  */
+  innerFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
+  // this should be "innerTableStyleContext" but I haven't tested that thoroughly yet
+
+  // Iterate the child content
+  nsIFrame* lastChildFrame = nsnull;
+  PRInt32   count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsIFrame* grandChildList=nsnull;  // to be used only when pseudoframes need to be created
+    nsIContent* childContent;
+    aContent->ChildAt(i, childContent);
+
+    if (nsnull != childContent) {
+      nsIFrame*         frame       = nsnull;
+      nsIFrame*         scrollFrame = nsnull;
+      nsIStyleContext*  childStyleContext;
+
+      // Resolve the style context
+      childStyleContext = aPresContext->ResolveStyleContextFor(childContent, aStyleContext);
+
+	  // Get the element's tag
+	  nsIAtom*  tag;
+	  childContent->GetTag(tag);
+      
+	  if (tag != nsnull)
+	  {
+		  if (tag == nsXULAtoms::treecaption)
+		  {
+			// Have we already created a caption? If so, ignore this caption
+			if (nsnull == captionFrame) {
+			  NS_NewAreaFrame(captionFrame, 0);
+			  captionFrame->Init(*aPresContext, childContent, aNewFrame, childStyleContext);
+			  // Process the caption's child content and set the initial child list
+			  nsIFrame* captionChildList;
+			  ProcessChildren(aPresContext, childContent, captionFrame,
+							  aAbsoluteItems, captionChildList);
+			  captionFrame->SetInitialChildList(*aPresContext, nsnull, captionChildList);
+
+			  // Prepend the caption frame to the outer frame's child list
+			  innerFrame->SetNextSibling(captionFrame);
+			}
+		  }
+		  else if (tag == nsXULAtoms::treebody ||
+			       tag == nsXULAtoms::treehead)
+		  {
+		  
+			  ConstructTreeBodyFrame(aPresContext, childContent, innerFrame, 
+                                         childStyleContext, scrollFrame, frame);
+		  }
+
+		  // Note: The row and cell cases have been excised, since the tree view's rows must occur
+		  // inside row groups.  The column case has been excised for now until I decide what the
+		  // appropriate syntax will be for tree columns.
+
+          else
+		  {
+			// For non table related frames (e.g. forms) make them children of the outer table frame
+			// XXX also need to deal with things like table cells and create anonymous frames...
+			nsIFrame* nonTableRelatedFrame;
+			ConstructFrameByTag(aPresContext, childContent, aNewFrame, tag, childStyleContext,
+								aAbsoluteItems, nonTableRelatedFrame);
+			childList->SetNextSibling(nonTableRelatedFrame);
+		  }
+	  }
+	  
+	  NS_IF_RELEASE(tag);
+      
+      // If it's not a caption frame, then link the frame into the inner
+      // frame's child list
+      if (nsnull != frame) {
+        // Process the children, and set the frame's initial child list
+        nsIFrame* childChildList;
+        if (nsnull==grandChildList) {
+          ProcessChildren(aPresContext, childContent, frame, aAbsoluteItems,
+                          childChildList);
+          grandChildList = childChildList;
+        } else {
+          ProcessChildren(aPresContext, childContent, grandChildList,
+                          aAbsoluteItems, childChildList);
+          grandChildList->SetInitialChildList(*aPresContext, nsnull, childChildList);
+        }
+        frame->SetInitialChildList(*aPresContext, nsnull, grandChildList);
+  
+        // Link the frame into the child list
+        nsIFrame* outerMostFrame = (nsnull == scrollFrame) ? frame : scrollFrame;
+        if (nsnull == lastChildFrame) {
+          innerChildList = outerMostFrame;
+        } else {
+          lastChildFrame->SetNextSibling(outerMostFrame);
+        }
+        lastChildFrame = outerMostFrame;
+      }
+
+      NS_RELEASE(childStyleContext);
+      NS_RELEASE(childContent);
+    }
+  }
+
+  // Set the inner table frame's list of initial child frames
+  innerFrame->SetInitialChildList(*aPresContext, nsnull, innerChildList);
+
+  // Set the anonymous table outer frame's initial child list
+  aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+  return NS_OK;
+}
+
+nsresult
+HTMLStyleSheetImpl::ConstructTreeBodyFrame(nsIPresContext*  aPresContext,
+                                                nsIContent*      aContent,
+                                                nsIFrame*        aParent,
+                                                nsIStyleContext* aStyleContext,
+                                                nsIFrame*&       aNewScrollFrame,
+                                                nsIFrame*&       aNewFrame)
+{
+  const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
+
+  if (IsScrollable(aPresContext, styleDisplay)) {
+    // Create a scroll frame
+    NS_NewScrollFrame(aNewScrollFrame);
+ 
+    // Initialize it
+    aNewScrollFrame->Init(*aPresContext, aContent, aParent, aStyleContext);
+
+    // The scroll frame gets the original style context, and the scrolled
+    // frame gets a SCROLLED-CONTENT pseudo element style context that
+    // inherits the background properties
+    nsIStyleContext*  scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                        (aContent, nsHTMLAtoms::scrolledContentPseudo, aStyleContext);
+
+    // Create an area container for the frame
+    NS_NewTableRowGroupFrame(aNewFrame);
+
+    // Initialize the frame and force it to have a view
+    aNewFrame->Init(*aPresContext, aContent, aNewScrollFrame, scrolledPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
+    NS_RELEASE(scrolledPseudoStyle);
+
+    aNewScrollFrame->SetInitialChildList(*aPresContext, nsnull, aNewFrame);
+  } else {
+    NS_NewTableRowGroupFrame(aNewFrame);
+    aNewFrame->Init(*aPresContext, aContent, aParent, aStyleContext);
+    aNewScrollFrame = nsnull;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+HTMLStyleSheetImpl::ConstructTreeCellFrame(nsIPresContext*  aPresContext,
+                                            nsIContent*      aContent,
+                                            nsIFrame*        aParentFrame,
+                                            nsIStyleContext* aStyleContext,
+                                            nsAbsoluteItems& aAbsoluteItems,
+                                            nsIFrame*&       aNewFrame)
+{
+  nsresult  rv;
+
+  // Create a table cell frame
+  rv = NS_NewTableCellFrame(aNewFrame);
+  if (NS_SUCCEEDED(rv)) {
+    // Initialize the table cell frame
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+
+    // Create an area frame that will format the cell's content
+    nsIFrame*   cellBodyFrame;
+
+    rv = NS_NewAreaFrame(cellBodyFrame, 0);
+    if (NS_FAILED(rv)) {
+      aNewFrame->DeleteFrame(*aPresContext);
+      aNewFrame = nsnull;
+      return rv;
+    }
+  
+    // Resolve pseudo style and initialize the body cell frame
+    nsIStyleContext*  bodyPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                          nsHTMLAtoms::cellContentPseudo, aStyleContext);
+    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle);
+    NS_RELEASE(bodyPseudoStyle);
+
+    // Process children and set the body cell frame's initial child list
+    nsIFrame* childList;
+    rv = ProcessChildren(aPresContext, aContent, cellBodyFrame, aAbsoluteItems,
+                         childList);
+    if (NS_SUCCEEDED(rv)) {
+      cellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    }
+
+    // Set the table cell frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, cellBodyFrame);
+  }
+
+  return rv;
+}
+
 #endif
 
 nsresult
