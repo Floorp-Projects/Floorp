@@ -550,6 +550,8 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
             aMetric = 7; // everything that can be focused
           else
             aMetric = 1; // Textboxes
+
+          ::CFRelease(fullKeyboardAccessProperty);
         }
         else // By default, "Full keyboard accees" preference is off
           aMetric = 1;
