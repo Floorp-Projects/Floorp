@@ -640,7 +640,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
     // gtk_widget_show_all(mWidget); Maybe?
   } else {
   }
-  
+
 /*
   mShown = bState;
   if (bState) {
@@ -914,7 +914,7 @@ nsCursor nsWindow::GetCursor()
 
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
-  if (!mWidget->window)
+  if (!mWidget || !mWidget->window)
     return NS_ERROR_FAILURE;
 
   // Only change cursor if it's changing
