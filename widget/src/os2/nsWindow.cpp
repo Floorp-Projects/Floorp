@@ -352,7 +352,8 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    // Record passed in things
    mAppShell = aAppShell;
-   // OS2TODO - build break 6/16/00 due to nsCOMPtr changes NS_IF_ADDREF( mAppShell);
+//   NS_IF_ADDREF( mAppShell);
+   GetAppShell();  // Let the base widget class update the refcount for us....
    mEventCallback = aHandleEventFunction;
 
    if( mParent)
