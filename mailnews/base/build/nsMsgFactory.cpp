@@ -213,14 +213,7 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
 	}
 	else if (mClassID.Equals(kCMsgMailSessionCID))
 	{
-		nsMsgMailSession * session = new nsMsgMailSession();
-		if (session == nsnull)
-			rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = session->QueryInterface(aIID,  aResult);
-      if (NS_FAILED(rv))
-        delete session;
-    }
+		rv = NS_NewMsgMailSession(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCMessengerCID)) 
 	{
