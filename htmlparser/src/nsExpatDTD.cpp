@@ -136,8 +136,7 @@ nsExpatDTD::nsExpatDTD() : nsIDTD(), mFilename("") {
  */
 nsExpatDTD::~nsExpatDTD(){
   mParser=0; //just to prove we destructed...
-  if(mTokenizer)
-    delete (nsExpatTokenizer*)mTokenizer;
+  NS_IF_RELEASE(mTokenizer);
   if (mExpatParser)
     XML_ParserFree(mExpatParser);
 }
@@ -328,7 +327,7 @@ void nsExpatDTD::SetupExpatCallbacks(void) {
  */
 nsITokenizer* nsExpatDTD::GetTokenizer(void) {
   if(!mTokenizer) {
-    mTokenizer=new nsExpatTokenizer();
+    nsresult result=NS_New_Expat_Tokenizer(&mTokenizer);
     mExpatParser = XML_ParserCreate(NULL);
     if (mExpatParser) {
       SetupExpatCallbacks();

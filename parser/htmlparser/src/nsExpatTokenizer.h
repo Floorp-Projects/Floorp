@@ -42,6 +42,12 @@
   {0x483836aa, 0xcabe, 0x11d2, { 0xab, 0xcb, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
 
 
+// {575C063A-AE9C-11d3-B9FD-001083023C0E}
+#define NS_EXPATTOKENIZER_CID  \
+{ 0x575c063a, 0xae9c, 0x11d3, \
+  {0xb9, 0xfd, 0x0, 0x10, 0x83, 0x2, 0x3c, 0xe}}
+
+
 /***************************************************************
   Notes: 
  ***************************************************************/
@@ -54,6 +60,9 @@ CLASS_EXPORT_HTMLPARS nsExpatTokenizer : public nsHTMLTokenizer {
 public:
           nsExpatTokenizer(nsString* aURL = nsnull);      
   virtual ~nsExpatTokenizer();
+
+  virtual const   nsIID& GetCID();
+  static  const   nsIID& GetIID();
 
           NS_DECL_ISUPPORTS
 
@@ -136,6 +145,6 @@ protected:
   nsString mLastLine;
 };
 
-extern NS_HTMLPARS nsresult NS_Expat_Tokenizer(nsIDTD** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsITokenizer** aInstancePtrResult);
 
 #endif

@@ -72,7 +72,7 @@ protected:
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewXMLTokenizer(nsIDTD** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewXMLTokenizer(nsITokenizer** aInstancePtrResult);
 
 #endif
 

@@ -58,6 +58,21 @@ static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 static const char* kChromeProtocol = "chrome";
 static const char* kDTDDirectory = "dtd/";
 
+const nsIID&
+nsExpatTokenizer::GetIID()
+{
+  return kClassIID;
+}
+
+  
+const nsIID&
+nsExpatTokenizer::GetCID()
+{
+  static NS_DEFINE_IID(kCID, NS_EXPATTOKENIZER_CID);
+  return kCID;
+}
+
+
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object
@@ -107,7 +122,7 @@ nsExpatTokenizer::FreeTokenRecycler(void) {
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsIDTD** aInstancePtrResult) {
+NS_HTMLPARS nsresult NS_New_Expat_Tokenizer(nsITokenizer** aInstancePtrResult) {
   nsExpatTokenizer* it = new nsExpatTokenizer();
   if (it == 0) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -182,6 +197,7 @@ nsExpatTokenizer::~nsExpatTokenizer(){
     XML_ParserFree(mExpatParser);
     mExpatParser = nsnull;
   }
+  gTokenDeque=0;
 }
 
 
@@ -281,7 +297,7 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, 
     token->SetError(error);
 
     CToken* theToken = (CToken* )token;
-    AddToken(theToken, NS_OK, *gTokenDeque,gTokenRecycler);
+    AddToken(theToken, NS_OK, gTokenDeque,gTokenRecycler);
   }
 }
 
@@ -290,6 +306,9 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength,
   nsresult result=NS_OK;
   PR_ASSERT((aBuffer && aLength) || (aBuffer == nsnull && aLength == 0));
   if (mExpatParser) {
+
+    nsCOMPtr<nsExpatTokenizer> me=this;
+
     if (!XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal)) {
       PushXMLErrorToken(aBuffer, aLength, aIsFinal);
       result=NS_ERROR_HTMLPARSER_STOPPARSING;
@@ -365,7 +384,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
     theString.SetString((PRUnichar *) name);
-    AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
+    AddToken(theToken,NS_OK,gTokenDeque,gTokenRecycler);
     int theAttrCount=0;
     while(*atts){
       theAttrCount++;
@@ -377,7 +396,7 @@ void nsExpatTokenizer::HandleStartElement(void *userData, const XML_Char *name, 
         theValue.SetString((PRUnichar *) (*atts++));
       }
       CToken* theTok=(CToken*)theAttrToken;
-      AddToken(theTok,NS_OK,*gTokenDeque,gTokenRecycler);
+      AddToken(theTok,NS_OK,gTokenDeque,gTokenRecycler);
     }
     theToken->SetAttributeCount(theAttrCount);
   }
@@ -391,7 +410,7 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
     theString.SetString((PRUnichar *) name);
-    AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
+    AddToken(theToken,NS_OK,gTokenDeque,gTokenRecycler);
   }
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -425,7 +444,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
         nsString& theString=newToken->GetStringValueXXX();
         theString.Append((PRUnichar *) s,len);
       }
-      AddToken(newToken,NS_OK,*gTokenDeque,gTokenRecycler);
+      AddToken(newToken,NS_OK,gTokenDeque,gTokenRecycler);
     }
     else {
       //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -438,7 +457,7 @@ void nsExpatTokenizer::HandleComment(void *userData, const XML_Char *name) {
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
     theString.SetString((PRUnichar *) name);
-    AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
+    AddToken(theToken,NS_OK,gTokenDeque,gTokenRecycler);
   }
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -457,7 +476,7 @@ void nsExpatTokenizer::HandleEndCdataSection(void *userData) {
 
   // We've reached the end of the current CDATA section. Push the current
   // CDATA token onto the token queue 
-  AddToken(currentCDataToken,NS_OK,*gTokenDeque,gTokenRecycler);
+  AddToken(currentCDataToken,NS_OK,gTokenDeque,gTokenRecycler);
 
   XML_SetUserData(gExpatParser, nsnull);
 }
@@ -473,7 +492,7 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Cha
       theString.Append((PRUnichar *) data);
     }
     theString.Append("?>");
-    AddToken(theToken,NS_OK,*gTokenDeque,gTokenRecycler);
+    AddToken(theToken,NS_OK,gTokenDeque,gTokenRecycler);
   }
   else{
     //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
@@ -487,7 +506,7 @@ void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len)
   
   while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
     newLine = gTokenRecycler->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
-    AddToken(newLine, NS_OK, *gTokenDeque, gTokenRecycler);
+    AddToken(newLine, NS_OK, gTokenDeque, gTokenRecycler);
   }
 }
 
@@ -705,7 +724,7 @@ void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData,
     str.Append(" ");
     str.Append((PRUnichar*) doctypeName);
     str.Append(">");
-    AddToken(token,NS_OK,*gTokenDeque,gTokenRecycler);
+    AddToken(token,NS_OK,gTokenDeque,gTokenRecycler);
   }
 }
 
