@@ -642,7 +642,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = NS_CheckPortSafety(port, "pop3");
+    rv = NS_CheckPortSafety(port, "pop");
     if (NS_FAILED(rv))
         return rv;
 

@@ -1202,10 +1202,7 @@ NS_IMETHODIMP nsNntpService::GetDefaultPort(PRInt32 *aDefaultPort)
 
 NS_IMETHODIMP nsNntpService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    if (port == NEWS_PORT || port == 995 || port == 532) // port 995 is NNTP/SSL, 532 is netnews
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
+    *_retval = PR_TRUE; // allow news on any port
     return NS_OK;
 }
 
