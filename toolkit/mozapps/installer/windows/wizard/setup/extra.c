@@ -3147,14 +3147,8 @@ HRESULT ProcessXpinstallEngine()
   if(!IsInstallerProductGRE())
     rv = ProcessGre(&gGre);
 
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, TRUE);
-
   if((WIZ_OK == rv) && (siCFXpcomFile.bStatus == STATUS_ENABLED))
     rv = ProcessXpcomFile();
-
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, FALSE);
 
   return(rv);
 }
@@ -5581,6 +5575,10 @@ void InitSiComponents(char *szFileIni)
         /* get attributes of component */
         GetPrivateProfileString(szComponentSection, "Attributes", "", szBuf, sizeof(szBuf), szFileIni);
         siCTemp->dwAttributes = ParseComponentAttributes(szBuf, 0, FALSE);
+
+        /* get the component's file count */
+        GetPrivateProfileString(szComponentSection, "FileCount", "", szBuf, sizeof(szBuf), szFileIni);
+        siCTemp->iFileCount = atoi(szBuf);
 
         /* get the random percentage value and select or deselect the component (by default) for
          * installation */
