@@ -21,6 +21,7 @@
                 goBack = id; 
                 goForward = id; 
                 goHome = id; 
+                importBookmarks = id; 
                 manageBookmarks = id; 
                 newTab = id; 
                 newWindow = id; 
