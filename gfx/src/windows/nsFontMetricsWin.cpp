@@ -3509,14 +3509,15 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
   }
 
   // see if we can keep the same font for adjacent characters
+  PRInt32 lastCharLen;
   while (currChar < lastChar) {
     if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
       nextFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
-      currChar += 2;
+      lastCharLen = 2;
     }
     else {
       nextFont = LocateFont(aDC, *currChar, count);
-      ++currChar;
+      lastCharLen = 1;
     }
     if (nextFont != currFont) {
       // We have a substring that can be represented with the same font, and
@@ -3526,8 +3527,10 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
         return NS_OK;
       // continue with the next substring, re-using the available loaded fonts
       firstChar = currChar;
+
       currFont = nextFont; // use the font found earlier for the char
     }
+    currChar += lastCharLen;
   }
 
   //do it for last part of the string
