@@ -424,6 +424,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
     }
   }
 
+  if (mNextBinding)
+    mNextBinding->InstallEventHandlers(aBoundElement);
+
   return NS_OK;
 }
 
