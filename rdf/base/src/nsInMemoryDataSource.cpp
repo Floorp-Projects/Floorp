@@ -765,26 +765,43 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)
         }
     }
     else
-    while (mAssertion) {
-        nsIRDFResource* next = mAssertion->u.as.mProperty;
+        while (mAssertion) {
+            nsIRDFResource* next = mAssertion->u.as.mProperty;
 
-        PRBool alreadyReturned = PR_FALSE;
-        for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
-            if (mAlreadyReturned[i] == mCurrent) {
-                alreadyReturned = PR_TRUE;
-                break;
+            // "next" is the property arc we are tentatively going to return
+            // in a subsequent GetNext() call.  It is important to do two
+            // things, however, before that can happen:
+            //   1) Make sure it's not an arc we've already returned.
+            //   2) Make sure that |mAssertion| is not left pointing to
+            //      another assertion that has the same property as this one.
+            // The first is a practical concern; the second a defense against
+            // an obscure crash and other erratic behavior.  To ensure the
+            // second condition, skip down the chain until we find the next 
+            // assertion with a property that doesn't match the current one.
+            // (All these assertions would be skipped via mAlreadyReturned
+            // checks anyways; this is even a bit faster.)
+
+            do {
+                mAssertion = (mSource ? mAssertion->mNext :
+                        mAssertion->u.as.mInvNext);
+            }
+            while (mAssertion && (next == mAssertion->u.as.mProperty));
+
+            PRBool alreadyReturned = PR_FALSE;
+            for (PRInt32 i = mAlreadyReturned.Count() - 1; i >= 0; --i) {
+                if (mAlreadyReturned[i] == next) {
+                    alreadyReturned = PR_TRUE;
+                    break;
+                }
+            }
+
+            if (! alreadyReturned) {
+                mCurrent = next;
+                NS_ADDREF(mCurrent);
+                *aResult = PR_TRUE;
+                return NS_OK;
             }
         }
-
-        mAssertion = (mSource ? mAssertion->mNext : mAssertion->u.as.mInvNext);
-
-        if (! alreadyReturned) {
-            mCurrent = next;
-            NS_ADDREF(mCurrent);
-            *aResult = PR_TRUE;
-            return NS_OK;
-        }
-    }
 
     *aResult = PR_FALSE;
     return NS_OK;
