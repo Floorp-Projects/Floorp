@@ -434,15 +434,40 @@ LABEL {
 BUTTON {
   display: inline;
   vertical-align: bottom;
-  background-color: white; 
-  border: 3px outset gray;
-  padding: 3px;
   cursor: default;
+}
+BUTTON {
+  display: inline;
+  vertical-align: bottom;
+  /*background-color: white; */
+  /*border: 3px outset gray;*/
+  /*padding: 3px;*/
+  background-color: rgb(192,192,192); 
+  border: 2px solid rgb(192,192,192);
+  padding: 2px;
+  cursor: default;
+}
+BUTTON.ROLLOVER {
+  border: 2px outset rgb(192,192,192);
+}
+BUTTON.DISABLED {
+  border: 2px solid rgb(192,192,192);
+  color: rgb(225,225,225);
 }
 SELECT {
   vertical-align: bottom;
 }
 OPTION {
+}
+OPTION.SELECTED {
+  border:   1px solid rgb(0,0,128);
+  background-color: rgb(0,0,128);
+  color: rgb(255,255,255);
+}
+OPTION.SELECTEDFOCUS {
+  border:   1px dotted white;
+  background-color: rgb(0,0,128);
+  color: rgb(255,255,255);
 }
 TEXTAREA {
   vertical-align: bottom;
@@ -583,4 +608,29 @@ NOFRAMES {
 
 :MOZ-COMMENT {
   display: none;
+}
+
+:DROPDOWN-VISIBLE {
+  visibility: visible;
+}
+
+:DROPDOWN-HIDDEN {
+  visibility: hidden;
+}
+
+:COMBOBOX-TEXT {
+  color: black;
+  padding-left: 2px;
+}
+
+:COMBOBOX-TEXTSELECTED {
+  background-color: rgb(0,0,128);
+  color: white;
+  border: 1px solid rgb(0,0,128);
+}
+
+:COMBOBOX-TEXTSELECTEDFOCUS {
+  background-color: rgb(0,0,128);
+  color: white;
+  border: 1px dotted white;
 }
