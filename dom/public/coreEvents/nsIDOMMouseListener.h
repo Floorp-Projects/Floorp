@@ -41,14 +41,14 @@ public:
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult MouseDown(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a mouse up event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseUp(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a mouse click event
@@ -56,7 +56,7 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseClick(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a mouse click event
@@ -64,21 +64,21 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    *
    */
-  virtual nsresult MouseDblClick(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a mouse enter event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOver(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
    * Processes a mouse leave event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
-  virtual nsresult MouseOut(const nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) = 0;
 
 };
 

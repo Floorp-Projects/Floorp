@@ -160,7 +160,7 @@ public:
 
 NS_IMETHOD GetType(nsString& aType) = 0;
 
-NS_IMETHOD GetTarget(nsIDOMNode*& aTarget) = 0;
+NS_IMETHOD GetTarget(nsIDOMNode** aTarget) = 0;
 
 NS_IMETHOD GetScreenX(PRInt32& aX) = 0;
 NS_IMETHOD GetScreenY(PRInt32& aY) = 0;
