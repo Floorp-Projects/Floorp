@@ -433,7 +433,7 @@ nsHttpChannel::SetupTransaction()
 
     return mTransaction->SetupRequest(&mRequestHead, mUploadStream, 
                                       mUploadStreamHasHeaders, 
-                                      mConnectionInfo->UsingHttpProxy() && !mConnectionInfo->UsingSSL());
+                                      mConnectionInfo->UsingHttpProxy() && mConnectionInfo->UsingSSL());
 }
 
 void
