@@ -3951,8 +3951,9 @@ fe_GravityCorrectForms (MWContext *context, int x_off, int y_off)
   {
     if (XtIsManaged (kids[nkids]))
     {
-        _XfeX(kids[nkids]) = _XfeX(kids[nkids]) + x_off;
-        _XfeY(kids[nkids]) = _XfeY(kids[nkids]) + y_off;
+        XtMoveWidget(kids[nkids],
+                     _XfeX(kids[nkids]) + x_off,
+                     _XfeY(kids[nkids]) + y_off);
     }
   }
 }
