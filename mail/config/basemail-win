@@ -303,6 +303,11 @@ res\html.css
 res\quirk.css
 res\forms.css
 res\platform-forms.css
+res\charsetData.properties
+res\charsetalias.properties
+res\langGroups.properties
+res\language.properties
+res\wincharset.properties
 res\builtin\*
 res\entityTables\*
 
