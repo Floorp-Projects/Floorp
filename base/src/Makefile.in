@@ -27,7 +27,11 @@ DEFINES +=-D_IMPL_NS_BASE
 ifeq ($(OS_TARGET),Rhapsody)
 DIRS = rhapsody
 else
+ifeq ($(USE_NGLAYOUT_GTK),1)
+DIRS = gtk
+else
 DIRS = unix
+endif
 endif
 
 LIBRARY_NAME = raptorbase
