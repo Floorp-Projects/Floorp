@@ -1162,37 +1162,41 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
   
     // See if we're paginated
     if (aPresContext->IsPaginated()) {
-      // nsScrollFrame*  scrollFrame;
-      nsIFrame* pageSequenceFrame;
+      nsIFrame*  scrollFrame;
+      nsIFrame*  pageSequenceFrame;
 
-#if 0
+      // XXX This isn't the correct style context pseudo element to use...
+      nsIStyleContext*  pseudoStyle;
+      pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                      nsHTMLAtoms::columnPseudo, aStyleContext);
+
       // Wrap the simple page sequence frame in a scroll frame
-      // XXX Only do this if it's print oreview
-      if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
-#endif
+      // XXX Only do this if it's print preview
+      if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aNewFrame, scrollFrame)) {
+        // Set the scroll frame's style context
+        scrollFrame->SetStyleContext(aPresContext, pseudoStyle);
 
-      // Create a simple page sequence frame
-      rv = NS_NewSimplePageSequenceFrame(aContent, aNewFrame, pageSequenceFrame);
-      if (NS_SUCCEEDED(rv)) {
-        nsIFrame* childList;
-
-        // Set the page sequence frame's style context
-        // XXX This isn't the correct style context to use...
-        nsIStyleContext*  pseudoStyle;
-        pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                                 nsHTMLAtoms::columnPseudo,
-                                                                 aStyleContext);
-        pageSequenceFrame->SetStyleContext(aPresContext, pseudoStyle);
-        NS_RELEASE(pseudoStyle);
-
-        // Process the child content, and set the page sequence frame's initial
-        // child list
-        rv = ProcessChildren(aPresContext, pageSequenceFrame, aContent, childList);
+        // Create a simple page sequence frame
+        rv = NS_NewSimplePageSequenceFrame(aContent, scrollFrame, pageSequenceFrame);
         if (NS_SUCCEEDED(rv)) {
-          pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+          nsIFrame* childList;
   
+          // Set the page sequence frame's style context
+          pageSequenceFrame->SetStyleContext(aPresContext, pseudoStyle);
+          NS_RELEASE(pseudoStyle);
+  
+          // Process the child content, and set the page sequence frame's initial
+          // child list
+          rv = ProcessChildren(aPresContext, pageSequenceFrame, aContent, childList);
+          if (NS_SUCCEEDED(rv)) {
+            pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    
+            // Set the scroll frame's initial child list
+            scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+          }
+
           // Set the root frame's initial child list
-          aNewFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+          aNewFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
         }
       }
     } else {

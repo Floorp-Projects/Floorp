@@ -165,10 +165,10 @@ nsScrollFrame::CreateScrollingView()
     nsIScrollableView* scrollingView;
     view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
 
-    //create widgets for scrolling
+    // Create widgets for scrolling
     scrollingView->CreateScrollControls();
 
-    // Set the scroll prefrence
+    // Set the scroll preference
     nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
                                     ? nsScrollPreference_kAlwaysScroll :
                                       nsScrollPreference_kAuto;
