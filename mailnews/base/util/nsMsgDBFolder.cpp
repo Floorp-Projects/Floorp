@@ -50,6 +50,7 @@ static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
+nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgFailedAtom=nsnull;
 nsrefcnt nsMsgDBFolder::mInstanceCount=0;
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsMsgDBFolder, nsMsgFolder,
@@ -63,6 +64,7 @@ nsMsgDBFolder::nsMsgDBFolder(void)
   if (mInstanceCount++ <=0) {
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
     mDeleteOrMoveMsgCompletedAtom = NS_NewAtom("DeleteOrMoveMsgCompleted");
+    mDeleteOrMoveMsgFailedAtom = NS_NewAtom("DeleteOrMoveMsgFailed");
   }
 }
 
@@ -71,6 +73,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
   if (--mInstanceCount == 0) {
     NS_IF_RELEASE(mFolderLoadedAtom);
     NS_IF_RELEASE(mDeleteOrMoveMsgCompletedAtom);
+    NS_IF_RELEASE(mDeleteOrMoveMsgFailedAtom);
   }
 	//shutdown but don't shutdown children.
 	Shutdown(PR_FALSE);
