@@ -716,6 +716,7 @@ void CObserverService::RegisterObservers(nsString& aTopic) {
   if(result == NS_OK){
     nsIEnumerator* theEnum = nsnull;
     result = theObserverService->EnumerateObserverList(aTopic.GetUnicode(), &theEnum);
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, theObserverService);
     if(result == NS_OK) {
       nsIElementObserver *theElementObserver = nsnull;
       nsISupports *inst = nsnull;
