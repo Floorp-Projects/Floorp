@@ -754,12 +754,6 @@
 			settings = {
 			};
 		};
-		F50A2F68027EA78B01000102 = {
-			fileRef = F52627CD027E976B01000102;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F50BC9A40239FA8D010001CA = {
 			children = (
 				F557149D023B46BF010001CA,
@@ -1409,8 +1403,9 @@
 		};
 		F52627CD027E976B01000102 = {
 			isa = PBXBundleReference;
-			path = Navigation.prefPane;
-			refType = 3;
+			name = Navigation.prefPane;
+			path = build/Navigation.prefPane;
+			refType = 4;
 		};
 		F52627CE027E976B01000102 = {
 			buildPhases = (
@@ -2119,6 +2114,18 @@
 		};
 		F540BD1D029ED17901026D5D = {
 			fileRef = F540BD1C029ED17901026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540BD2402ABB11E01026D5D = {
+			fileRef = F52627CD027E976B01000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F540BD2502ABB11E01026D5D = {
+			fileRef = F57F2062029997E701000106;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3500,7 +3507,8 @@
 			dstPath = Contents/PreferencePanes;
 			dstSubfolderSpec = 1;
 			files = (
-				F50A2F68027EA78B01000102,
+				F540BD2402ABB11E01026D5D,
+				F540BD2502ABB11E01026D5D,
 				F57F20740299A34101000106,
 			);
 			isa = PBXCopyFilesBuildPhase;
