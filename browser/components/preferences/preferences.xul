@@ -47,10 +47,17 @@
 %preferencesDTD;
 ]>
 
+#ifdef XP_WIN
+#define USE_WIN_TITLE_STYLE
+#endif
+#ifdef XP_OS2
+#define USE_WIN_TITLE_STYLE
+#endif
+
 <prefwindow type="prefwindow"
             id="BrowserPreferences"
             windowtype="Browser:Preferences"
-#ifdef XP_WIN
+#ifdef USE_WIN_TITLE_STYLE
             title="&prefWindow.titleWin;"
 #else
 #ifdef XP_UNIX
@@ -60,7 +67,7 @@
 #endif
 #endif
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-#ifdef XP_WIN
+#ifdef USE_WIN_TITLE_STYLE
             style="&prefWindow.styleWin;">
 #else
 #ifdef XP_MACOSX
