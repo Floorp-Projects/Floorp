@@ -139,7 +139,7 @@ pref("accessibility.typeaheadfind", true);
 pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
-pref("accessibility.typeaheadfind.enablesound", true);
+pref("accessibility.typeaheadfind.soundURL", "default");
 
 // Dialog modality issues
 pref("browser.prefWindowModal", true);
