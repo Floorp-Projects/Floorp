@@ -920,22 +920,19 @@ END
     # YYYY-MM-DD
     my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
     if (-e 'data/template') {
-        unless (-d 'data/template' && -e 'data/template/.lastRebuild' &&
-                (stat('data/template/.lastRebuild'))[9] >= $lastTemplateParamChange) {
-            print "Removing existing compiled templates ...\n";
+        print "Removing existing compiled templates ...\n";
 
-            # If File::Path::rmtree reported errors, then I'd use that
-            use File::Find;
-            sub remove {
-                return if $_ eq ".";
-                if (-d $_) {
-                    rmdir $_ || die "Couldn't rmdir $_: $!\n";
-                } else {
-                    unlink $_ || die "Couldn't unlink $_: $!\n";
-                }
+        # If File::Path::rmtree reported errors, then I'd use that
+        use File::Find;
+        sub remove {
+            return if $_ eq ".";
+            if (-d $_) {
+                rmdir $_ || die "Couldn't rmdir $_: $!\n";
+            } else {
+                unlink $_ || die "Couldn't unlink $_: $!\n";
             }
-            finddepth(\&remove, 'data/template');
         }
+        finddepth(\&remove, 'data/template');
     }
 
     # Precompile stuff. This speeds up initial access (so the template isn't
@@ -943,11 +940,8 @@ END
     # to get the permissions right.
     eval("use Template");
     my $redir = ($^O =~ /MSWin32/i) ? "NUL" : "/dev/null";
-    my $template = Template->new(
+    my $provider = Template::Provider->new(
       {
-        # Output to /dev/null here
-        OUTPUT => $redir,
-
         # Colon-separated list of directories containing templates.
         INCLUDE_PATH => "template/en/custom:template/en/default",
 
@@ -965,7 +959,8 @@ END
          url_quote => sub { return $_; },
          csv => sub { return $_; },
         },
-      }) || die ("Could not create Template: " . Template->error() . "\n");
+      }) || die ("Could not create Template Provider: "
+                 . Template::Provider->error() . "\n");
 
     sub compile {
         # no_chdir doesn't work on perl 5.005
@@ -980,8 +975,9 @@ END
 
         chdir($::baseDir);
 
-        $template->process($name, {})
-          || die "Could not compile $name:" . $template->error() . "\n";
+        # Do this to avoid actually processing the templates
+        my ($data, $err) = $provider->fetch($name);
+        die "Could not compile $name: " . $data . "\n" if $err;
 
         chdir($origDir);
     }
@@ -1012,10 +1008,6 @@ END
 
         find(\&compile, "template/en/default");
     }
-
-    # update the time on the stamp file
-    open FILE, '>data/template/.lastRebuild'; close FILE;
-    utime $lastTemplateParamChange, $lastTemplateParamChange, ('data/template/.lastRebuild');
 }
 
 # Just to be sure ...

@@ -69,7 +69,7 @@ foreach my $file(@Support::Templates::referenced_files) {
 }
 
 # Processes all the templates to make sure they have good syntax
-my $template = Template->new(
+my $provider = Template::Provider->new(
 {
     INCLUDE_PATH => $include_path ,
     # Need to define filters used in the codebase, they don't
@@ -86,29 +86,23 @@ my $template = Template->new(
 }
 );
 
-open SAVEOUT, ">&STDOUT";     # stash the original output stream
-open SAVEERR, ">&STDERR";
-open STDOUT, "> /dev/null";   # discard all output
-open STDERR, "> /dev/null";
 foreach my $file(@Support::Templates::actual_files) {
     my $path = File::Spec->catfile($include_path, $file);
     if (-e $path) {
-        if ($template->process($file)) {
+        my ($data, $err) = $provider->fetch($file);
+
+        if (!$err) {
             ok(1, "$file syntax ok");
         }
         else {
             ok(0, "$file has bad syntax --ERROR");
-            print $fh $template->error() . "\n";
+            print $fh $data . "\n";
         }
     }
     else {
         ok(1, "$path doesn't exist, skipping test");
     }
 }
-open STDOUT, ">&SAVEOUT";     # redirect back to original stream
-open STDERR, ">&SAVEERR";
-close SAVEOUT;
-close SAVEERR;
 
 # check to see that all templates have a version string:
 
