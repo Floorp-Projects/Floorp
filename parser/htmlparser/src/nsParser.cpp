@@ -46,8 +46,6 @@
 #include "nsParserCIID.h"
  
 //#define rickgdebug 
- 
-#define TEST_DOCTYPES 1
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
