@@ -1058,7 +1058,6 @@ void nsCaret::GetCaretRectAndInvert()
   {
     nsPoint   framePos(0, 0);
     nsRect    caretRect = frameRect;
-    PRBool    aCanCacheFrameOffset = PR_FALSE;
     nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
     nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
 
