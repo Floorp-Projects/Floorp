@@ -2326,7 +2326,8 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    if (colon == -1 || fSlash == -1 || (fSlash > -1) && (colon > fSlash)) {
       if (colon < (((PRInt32)uriString.Length())-1)) {
          if (colon != -1) port = uriString.CharAt(colon+1);
-         if (colon == -1 || uriString.IsDigit(port)) {
+         if (colon == -1 || uriString.IsDigit(port) ||
+                 uriString.CharAt(0) == '[') {
             // find host name
             PRInt32 hostPos = uriString.FindCharInSet("./:");
             if (hostPos == -1) 
