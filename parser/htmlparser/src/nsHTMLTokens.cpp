@@ -1078,6 +1078,26 @@ nsresult ConsumeStrictComment(nsScanner& aScanner, nsString& aString) {
       currentEnd = end;
     }
   }
+
+  // This might have been empty comment: <!>
+  // Or it could have been something completely bogus like: <!This is foobar>
+  // Handle both cases below
+  aScanner.CurrentPosition(current);
+  beginData = current;
+  if (FindCharInReadable('>', current, end)) {
+#if 0
+    // XXX We should do this, but it HANGS until bug 112943 is fixed:
+    aString = Substring(beginData, current);
+#else
+    // XXX Instead we can do this EVIL HACK (from jag):
+    PRUint32 len = Distance(beginData, current);
+    aString.SetLength(len);
+    PRUnichar* dest = NS_CONST_CAST(PRUnichar*, aString.get());
+    copy_string(beginData, current, dest);
+#endif    
+    aScanner.SetPosition(++current);
+    return NS_OK;
+  }
   
   return kEOF; // not really an nsresult, but...
 }
