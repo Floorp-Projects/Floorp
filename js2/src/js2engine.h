@@ -108,6 +108,9 @@ public:
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
 
+
+    js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
+
     uint8 *pc;
     BytecodeContainer *bCon;
     JS2Metadata *meta;

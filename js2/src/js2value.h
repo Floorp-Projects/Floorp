@@ -49,6 +49,7 @@
 #define JS2VAL_UNINITIALIZED     0x80    /* reserve this object reference value as an indication
                                             that a variable has yet to be initialized  */
 #define JS2VAL_IS_INITIALIZED(v)      (v != JS2VAL_UNINITIALIZED)
+#define JS2VAL_IS_UNINITIALIZED(v)    (v == JS2VAL_UNINITIALIZED)
 
 /* Type tag bitfield length and derived macros. */
 #define JS2VAL_TAGBITS           3

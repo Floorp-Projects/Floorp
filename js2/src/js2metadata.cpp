@@ -159,29 +159,16 @@ namespace MetaData {
                                 // the type and the value are 'future'
                             }
                             break;
-                        case Attribute::Abstract:
                         case Attribute::Virtual:
                         case Attribute::Final: 
                             {
                                 JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                                InstanceMember *m = NULL;
-                                switch (memberMod) {
-                                case Attribute::Abstract:
-                                    if (v->initializer)
-                                        reportError(Exception::syntaxError, "Abstract member may not have initializer", p->pos);
-                                    m = new InstanceAccessor(NULL, false);
-                                    break;
-                                case Attribute::Virtual:
-                                    m = new InstanceVariable(immutable, false);
-                                    c->slotCount++;
-                                    break;
-                                case Attribute::Final: 
-                                    m = new InstanceVariable(immutable, true);
-                                    c->slotCount++;
-                                    break;
-                                }
+                                InstanceMember *m = new InstanceVariable(immutable, (memberMod == Attribute::Final), c->slotCount++);
                                 defineInstanceMember(c, cxt, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                             }
+                            break;
+                        default:
+                            reportError(Exception::definitionError, "Illegal attribute", p->pos);
                             break;
                         }
                     }
@@ -1219,13 +1206,13 @@ doBinary:
         else
             writeStatus = new OverrideStatus(NULL, id);
 
-        if ((!readStatus->overriddenMember && (readStatus->overriddenMember != PotentialConflict))
-                || (!writeStatus->overriddenMember && (writeStatus->overriddenMember != PotentialConflict))) {
+        if ((readStatus->overriddenMember && (readStatus->overriddenMember != PotentialConflict))
+                || (writeStatus->overriddenMember && (writeStatus->overriddenMember != PotentialConflict))) {
             if ((overrideMod != Attribute::DoOverride) && (overrideMod != Attribute::OverrideUndefined))
                 reportError(Exception::definitionError, "Illegal override", pos);
         }
         else {
-            if ((readStatus->overriddenMember = PotentialConflict) || (writeStatus->overriddenMember == PotentialConflict)) {
+            if ((readStatus->overriddenMember == PotentialConflict) || (writeStatus->overriddenMember == PotentialConflict)) {
                 if ((overrideMod != Attribute::DontOverride) && (overrideMod != Attribute::OverrideUndefined))
                     reportError(Exception::definitionError, "Illegal override", pos);
             }
@@ -1411,7 +1398,7 @@ doBinary:
         return false;   // 'None'
     }
 
-    bool JS2Metadata::writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
+    bool JS2Metadata::writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
         ASSERT(container && ((container->kind == DynamicInstanceKind) 
                                 || (container->kind == GlobalObjectKind)
@@ -1533,14 +1520,8 @@ readClassProperty:
         case PackageKind:
         case FunctionKind: 
         case BlockKind: 
-            {
-                StaticMember *m = findFlatMember(checked_cast<Frame *>(container), multiname, ReadAccess, phase);
-                if (!m && (container->kind == GlobalObjectKind))
-                    return readDynamicProperty(container, multiname, lookupKind, phase, rval);
-                else
-                    return readStaticMember(m, phase, rval);
-            }
-            break;
+            return readProperty(checked_cast<Frame *>(container), multiname, lookupKind, ReadAccess, phase);
+
         case ClassKind:
             {
                 MemberDescriptor m2;
@@ -1559,6 +1540,7 @@ readClassProperty:
 
         case PrototypeInstanceKind: 
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
+
         default:
             ASSERT(false);
             return false;
@@ -1571,22 +1553,10 @@ readClassProperty:
                     && ((JS2VAL_TO_OBJECT(thisObjVal)->kind == DynamicInstanceKind)
                         || (JS2VAL_TO_OBJECT(thisObjVal)->kind == FixedInstanceKind)));
         JS2Object *thisObj = JS2VAL_TO_OBJECT(thisObjVal);
-        Slot *s;
-        uint32 slotCount;
-        if (thisObj->kind == DynamicInstanceKind) {
-            s = checked_cast<DynamicInstance *>(thisObj)->slots;
-            slotCount = checked_cast<DynamicInstance *>(thisObj)->type->slotCount;
-        }
-        else {
-            s = checked_cast<FixedInstance *>(thisObj)->slots;
-            slotCount = checked_cast<FixedInstance *>(thisObj)->type->slotCount;
-        }
-        for (uint32 i = 0; i < slotCount; i++) {
-            if (s[i].id == id)
-                return &s[i];
-        }
-        ASSERT(false);
-        return NULL;
+        if (thisObj->kind == DynamicInstanceKind)
+            return &checked_cast<DynamicInstance *>(thisObj)->slots[id->slotIndex];
+        else
+            return &checked_cast<FixedInstance *>(thisObj)->slots[id->slotIndex];
     }
 
 
@@ -1601,7 +1571,8 @@ readClassProperty:
                 if ((phase == CompilePhase) && !mv->immutable)
                     reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
                 Slot *s = findSlot(containerVal, mv);
-
+                if (JS2VAL_IS_UNINITIALIZED(s->value))
+                    reportError(Exception::uninitializedError, "Reference to uninitialized instance variable", engine->errorPos());
                 *rval = s->value;
                 return true;
             }
@@ -1624,6 +1595,75 @@ readClassProperty:
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
         else
             return readStaticMember(m, phase, rval);
+    }
+
+    // Write the value of a property in the container. Return true/false if that container has
+    // the property or not.
+    bool JS2Metadata::writeProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
+    {
+        if (JS2VAL_IS_PRIMITIVE(containerVal))
+            return false;
+        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
+        switch (container->kind) {
+        case AttributeObjectKind:
+        case MultinameKind:
+            return false;
+
+        case FixedInstanceKind: 
+        case DynamicInstanceKind:
+            {
+                InstanceBinding *ib = resolveInstanceMemberName(objectType(containerVal), multiname, WriteAccess, phase);
+                if ((ib == NULL) && (container->kind == DynamicInstanceKind))
+                    return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
+                else
+                    return writeInstanceMember();
+            }
+
+        case SystemKind:
+        case GlobalObjectKind: 
+        case PackageKind:
+        case FunctionKind: 
+        case BlockKind: 
+            return writeProperty(checked_cast<Frame *>(container), multiname, lookupKind, createIfMissing, newValue, phase);
+
+        case ClassKind:
+            break;
+
+        case PrototypeInstanceKind: 
+            return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
+
+        default:
+            ASSERT(false);
+            return false;
+        }
+
+    }
+
+    bool JS2Metadata::writeInstanceMember(JS2Object *thisObj, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase)
+    {
+        if (phase == CompilePhase)
+            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+        InstanceMember *m = findInstanceMember(c, qname, WriteAccess);
+        if (m == NULL) return false;
+        switch (m->kind) {
+        case InstanceMember::InstanceVariableKind:
+            {
+                InstanceVariable *mv = checked_cast<InstanceVariable *>(m);
+                Slot *s = findSlot(containerVal, mv);
+                if (mv->immutable && JS2VAL_IS_INITIALIZED(s->value))
+                    reportError(Exception::propertyAccessError, "Reinitialization of constant", engine->errorPos());
+                s->value = engine->assignmentConversion(newValue, mv->type);
+                return true;
+            }
+        
+        case InstanceMember::InstanceMethodKind:
+        case InstanceMember::InstanceAccessorKind:
+            reportError(Exception::propertyAccessError, "Attempt to write to a method", engine->errorPos());
+            break;
+        }
+        ASSERT(false);
+        return false;
+
     }
 
     // Write the value of a property in the frame. Return true/false if that frame has

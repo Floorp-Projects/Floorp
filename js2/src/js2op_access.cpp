@@ -31,6 +31,7 @@
 * file under either the NPL or the GPL.
 */
 
+    // Read a multiname property from a base object, push the value onto the stack
     case eDotRead:
         {
             LookupKind lookup(false, NULL);
@@ -42,7 +43,22 @@
         }
         break;
 
-    // Pop a multiname object and read it's value from the environment on to the stack.
+    // Write the top value to a multiname property in a base object, leave
+    // the value on the stack top
+    case eDotWrite:
+        {
+            retval = pop();
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &retval))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            push(retval);
+        }
+        break;
+
+    // Read the multiname from the current environment, push it's value on the stack
     case eLexicalRead: 
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
@@ -52,14 +68,14 @@
 	}
         break;
 
-    // Pop a value and a multiname. Write the value to the multiname in the environment, leave
+    // Write the top value to the multiname in the environment, leave
     // the value on the stack top.
     case eLexicalWrite: 
         {
+            retval = top();
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             meta->env.lexicalWrite(meta, mn, retval, true, phase);
-            push(retval);
 	}
         break;
 

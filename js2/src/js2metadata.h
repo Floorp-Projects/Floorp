@@ -134,7 +134,7 @@ public:
 class Attribute : public JS2Object {
 public:
     enum AttributeKind { TrueAttr, FalseAttr, NamespaceAttr, CompoundAttr };
-    enum MemberModifier { NoModifier, Static, Constructor, Operator, Abstract, Virtual, Final};
+    enum MemberModifier { NoModifier, Static, Constructor, Abstract, Virtual, Final};
     enum OverrideModifier { NoOverride, DoOverride, DontOverride, OverrideUndefined };
 
 
@@ -308,10 +308,11 @@ public:
 
 class InstanceVariable : public InstanceMember {
 public:
-    InstanceVariable(bool immutable, bool final) : InstanceMember(InstanceVariableKind, final), immutable(immutable) { }
+    InstanceVariable(bool immutable, bool final, uint32 slotIndex) : InstanceMember(InstanceVariableKind, final), immutable(immutable), slotIndex(slotIndex) { }
     JS2Class *type;                 // Type of values that may be stored in this variable
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
     bool immutable;                 // true if this variable's value may not be changed once set
+    uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
 };
 
 class InstanceMethod : public InstanceMember {
@@ -418,7 +419,8 @@ public:
 // A SLOT record describes the value of one fixed property of one instance.
 class Slot {
 public:
-    InstanceVariable *id;        // The instance variable whose value this slot carries
+// We keep the slotIndex in the InstanceVariable rather than go looking for a specific id
+//    InstanceVariable *id;        // The instance variable whose value this slot carries
     js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
 };
 
@@ -509,8 +511,8 @@ public:
     Multiname *propertyMultiname;   // A nonempty set of qualified names to which this reference can refer (b
                                     // qualified with the namespace q or all currently open namespaces in the
                                     // example above)
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); bCon->addMultiname(propertyMultiname); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); bCon->addMultiname(propertyMultiname); }
 };
 
 
@@ -699,8 +701,9 @@ public:
     bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
 
 
+    bool writeProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
-    bool writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
+    bool writeDynamicProperty(JS2Object *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase);
     bool writeStaticMember(StaticMember *m, js2val newValue, Phase phase);
 
 
