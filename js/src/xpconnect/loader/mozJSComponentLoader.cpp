@@ -14,6 +14,13 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "prlog.h"
@@ -57,7 +64,7 @@ const char kJSRuntimeServiceProgID[] = "nsJSRuntimeService";
 const char kXPConnectServiceProgID[] = "nsIXPConnect";
 const char kJSContextStackProgID[] =   "nsThreadJSContextStack";
 
-static JSBool
+static JSBool PR_CALLBACK
 Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -106,7 +113,7 @@ mozJSComponentLoader::mozJSComponentLoader()
     NS_INIT_REFCNT();
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 UnrootGlobals(PLHashEntry *he, PRIntn i, void *arg)
 {
     JSContext *cx = (JSContext *)arg;
@@ -115,7 +122,7 @@ UnrootGlobals(PLHashEntry *he, PRIntn i, void *arg)
     return HT_ENUMERATE_REMOVE;
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 UnloadAndReleaseModules(PLHashEntry *he, PRIntn i, void *arg)
 {
     nsIModule *module = NS_STATIC_CAST(nsIModule *, he->value);
@@ -188,7 +195,7 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
     return rv;
 }
 
-static void
+static void PR_CALLBACK
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
     nsresult rv;

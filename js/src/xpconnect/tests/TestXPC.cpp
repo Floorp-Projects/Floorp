@@ -30,6 +30,13 @@
  * and other provisions required by the GPL.  If you do not delete
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /* API tests for XPConnect - use xpcshell for JS tests. */
@@ -64,7 +71,7 @@ static void SetupRegistry()
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
 
-static JSBool
+static JSBool PR_CALLBACK
 Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     uintN i, n;
@@ -82,7 +89,7 @@ Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
+static JSBool PR_CALLBACK
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     uintN i;
@@ -123,7 +130,7 @@ static JSClass global_class = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
-static void
+static void PR_CALLBACK
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     printf(message);

@@ -30,6 +30,17 @@
  * and other provisions required by the GPL.  If you do not delete
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /*
@@ -91,7 +102,11 @@
 #define fd_atan atan
 #define fd_atan2 atan2
 #define fd_ceil ceil
+#ifdef XP_OS2_VACPP    /* OS2TODO */
+#define fd_copysign 
+#else
 #define fd_copysign copysign
+#endif
 #define fd_cos cos
 #define fd_exp exp
 #define fd_fabs fabs

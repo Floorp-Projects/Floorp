@@ -30,6 +30,17 @@
  * and other provisions required by the GPL.  If you do not delete
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /*
@@ -580,10 +591,10 @@ jsj_LogError(const char *error_msg);
 extern const JSErrorFormatString * 
 jsj_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
-JS_DLL_CALLBACK JSJHashNumber
+JSJHashNumber JS_DLL_CALLBACK
 jsj_HashJavaObject(const void *key, void* env);
 
-JS_DLL_CALLBACK intN
+intN JS_DLL_CALLBACK
 jsj_JavaObjectComparator(const void *v1, const void *v2, void *arg);
 
 extern JSJavaThreadState *
