@@ -66,6 +66,8 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -1027,6 +1029,23 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   	      if (NS_SUCCEEDED(rv))
 		        prefs->GetBoolPref("mail.auto_quote", &mQuotingToFollow);
+
+          // HACK: if we are replying to a message and that message used a charset over ride
+          // (as speciifed in the top most window (assuming the reply originated from that window)
+          // then use that over ride charset instead of the charset specified in the message
+	        nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_PROGID);          
+          if (mailSession)
+          {
+            nsCOMPtr<nsIMsgWindow>    msgWindow;
+          	mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+            if (msgWindow)
+            {
+              nsXPIDLString mailCharset;
+              msgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
+              if (mailCharset && (* (const PRUnichar *) mailCharset) )
+                aCharset = mailCharset;
+            }
+          }
           
           // get an original charset, used for a label, UTF-8 is used for the internal processing
           if (!aCharset.IsEmpty())
@@ -1073,9 +1092,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
                 recipStr.AppendWithConversion(", ");
               recipStr += ccListStr;
               {
-nsCAutoString recipStrCStr; recipStrCStr.AssignWithConversion(recipStr);
-m_compFields->SetCc(recipStrCStr);
-}
+                nsCAutoString recipStrCStr; recipStrCStr.AssignWithConversion(recipStr);
+                m_compFields->SetCc(recipStrCStr);
+              }
               
               if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
@@ -1564,7 +1583,10 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
 
-  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
+  nsXPIDLString msgCharSet;
+  m_compFields->GetCharacterSet(getter_Copies(msgCharSet));
+
+  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, msgCharSet);
   return rv;
 }
 
