@@ -22,9 +22,11 @@ contact: </text>
    </p>
    <p>
     <input type="hidden" name="command" value="SendPassword">
-    <select name="protocol">
-     <!-- XXX -->
-     <option name="e-mail">email</option>
+    <select name="protocol">]]>
+ <set variable="protocol" value="(data.contacts)" order="case insensitive lexical" source="values">
+  <br/><text value="     &lt;option name=&quot;(protocol)&quot;&gt;(protocol)&lt;/option&gt;"/>
+ </set>
+<![CDATA[
     </select>
     <input type="text" name="address" value="">
     <input type="hidden" name="pendingCommands" value="
