@@ -21,6 +21,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsIURL.h"
 
 
 /* 6CFFCEB0-CB8C-11d2-8065-006008128C4E */
@@ -40,7 +41,7 @@
 // to add to the list =).
 //////////////////////////////////////////////////////////////////////////////////
 
-class nsIMsgMailNewsUrl : public nsISupports
+class nsIMsgMailNewsUrl : public nsIURL
 {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IMSGMAILNEWSURL_IID; return iid; }
