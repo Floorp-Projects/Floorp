@@ -17,14 +17,33 @@
 
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
+MAKE_OBJ_TYPE	= DLL
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgcoreutil
-MODULE= mailnews
-REQUIRES=xpcom nspr dom
+DEFINES=-D_IMPL_NS_MSG_BASE -DWIN32_LEAN_AND_MEAN
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+LINCS=                       \
+        -I$(PUBLIC)\xpcom    \
+        -I$(PUBLIC)\mailnews \
+        -I$(PUBLIC)\raptor   \
+        -I$(PUBLIC)\rdf      \
+        -I$(PUBLIC)\rdfutil  \
+        -I$(PUBLIC)\pref     \
+        -I$(PUBLIC)\js		 \
+		-I$(PUBLIC)\netlib	 \
+		-I$(PUBLIC)\dom		 \
+		-I$(PUBLIC)\appcores	\
+		-I$(PUBLIC)\security	\
+		$(NULL)
+
+LLIBS=								\
+	$(DIST)\lib\xpcom32.lib			\
+	$(DIST)\lib\raptorbase.lib		\
+	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\rdfutil_s.lib		\
+	$(LIBNSPR)						\
+	$(NULL)
 
 CPPSRCS=                     \
 	nsMsgGroupRecord.cpp     \
@@ -58,6 +77,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMessage.obj \
 	$(NULL)
 
+MODULE= mailnews
 
 EXPORTS=                \
 	nsMsgLineBuffer.h	\
@@ -74,27 +94,10 @@ EXPORTS=                \
 	nsMessage.h \
 	$(NULL)
 
-LINCS=                       \
-        -I$(PUBLIC)\xpcom    \
-        -I$(PUBLIC)\mailnews \
-        -I$(PUBLIC)\raptor   \
-        -I$(PUBLIC)\rdf      \
-        -I$(PUBLIC)\rdfutil  \
-        -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js		 \
-		-I$(PUBLIC)\netlib	 \
-		-I$(PUBLIC)\dom		 \
-		-I$(PUBLIC)\appcores	\
-		-I$(PUBLIC)\security	\
-		$(NULL)
 
-LLIBS=										\
-			$(MSGLIBS)						\
-			$(DIST)\lib\xpcom32.lib			\
-			$(DIST)\lib\raptorbase.lib		\
-			$(DIST)\lib\plc3.lib			\
-			$(LIBNSPR)						\
-			$(NULL)
+DLLNAME = msgcoreutil
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -103,11 +106,10 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-#install:: $(DLL)
-#	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-
-libs:: $(LIBRARY)
-       $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+libs:: $(DLL)
+       $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	   $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\bin\$(DLLNAME).dll
