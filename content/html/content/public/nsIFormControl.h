@@ -99,7 +99,7 @@ public:
    * Set the form for this form control.
    * @param aForm the form
    * @param aRemoveFromForm set false if you do not want this element removed
-   *                        from the form.  (Used by evil DemoteForm() method.)
+   *        from the form.  (Used by nsFormControlList::Clear())
    * @return NS_OK
    */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
