@@ -93,6 +93,9 @@ typedef unsigned long HMTX;
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
 #include "nsIDOMWindow.h"
+#include "nsEscape.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
 #include "nsISocketTransportService.h"
 
 #include "nsIHTTPChannel.h" // add this to the ick include list...we need it to QI for post data interface
@@ -104,6 +107,8 @@ typedef unsigned long HMTX;
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kPlatformCharsetCID,  NS_PLATFORMCHARSET_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 
 
 #if defined(XP_PC) && !defined(XP_OS2)
@@ -1307,44 +1312,30 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 
 static void convertFileToURL(const nsString &aIn, nsString &aOut)
 {
-  char szFile[1000];
-  aIn.ToCString(szFile, sizeof(szFile));
+  aOut = aIn;
 #ifdef XP_PC
   // Check for \ in the url-string (PC)
-  if (PL_strchr(szFile, '\\')) {
+  if(kNotFound != aIn.FindChar(PRUnichar('\\'))) {
 #else
 #if XP_UNIX
   // Check if it starts with / or \ (UNIX)
-  if (*(szFile) == '/' || *(szFile) == '\\') {
+  const PRUnichar * up = aIn.GetUnicode();
+  if((PRUnichar('/') == *up) ||
+     (PRUnichar('\\') == *up)) {
 #else
   if (0) {  
   // Do nothing (All others for now) 
 #endif
 #endif
-    PRInt32 len = strlen(szFile);
-    PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-    char* lpszFileURL = (char *)PR_Malloc(sum + 1);
 
 #ifdef XP_PC
     // Translate '\' to '/'
-    for (PRInt32 i = 0; i < len; i++) {
-      if (szFile[i] == '\\') {
-        szFile[i] = '/';
-      }
-      if (szFile[i] == ':') {
-        szFile[i] = '|';
-      }
-    }
+    aOut.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
+    aOut.ReplaceChar(PRUnichar(':'), PRUnichar('|'));
 #endif
 
     // Build the file URL
-    PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
-    aOut = lpszFileURL;
-    PR_Free((void *)lpszFileURL);
-  }
-  else
-  {
-    aOut = aIn;
+    aOut.Insert(FILE_PROTOCOL,0);
   }
 }
 
@@ -1923,6 +1914,48 @@ nsWebShell::LoadURI(nsIURI * aUri,
   return rv;
 }
 
+
+static nsresult convertURLToFileCharset(nsString& aIn, nsCString& aOut)
+{
+    nsresult rv=NS_OK;
+    aOut = "";
+    // for file url, we need to convert the nsString to the file system
+    // charset before we pass to NS_NewURI
+    static nsAutoString fsCharset("");
+    // find out the file system charset first
+    if(0 == fsCharset.Length()) {
+       fsCharset = "ISO-8859-1"; // set the fallback first.
+       NS_WITH_SERVICE(nsIPlatformCharset, plat, kPlatformCharsetCID, &rv);
+       NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get nsIPlatformCharset");
+       if(NS_SUCCEEDED(rv)) {
+         rv = plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset);
+         NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPlatformCharset GetCharset failed");
+       }
+    }
+    // We probably should cache ccm here.
+    // get a charset converter from the manager
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get CharsetConverterManager");
+    nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
+    if(NS_SUCCEEDED(rv)){
+       rv = ccm->GetUnicodeEncoder(&fsCharset, getter_AddRefs(fsEncoder));
+       NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get encoder");
+       if(NS_SUCCEEDED(rv)){
+          PRInt32 bufLen = 0;
+          rv = fsEncoder->GetMaxLength(aIn.GetUnicode(), aIn.Length(), &bufLen);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "GetMaxLength failed");
+          aOut.SetCapacity(bufLen+1);
+          PRInt32 srclen = aIn.Length();
+          rv = fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
+                    (char*)aOut.GetBuffer(), &bufLen);
+          if(NS_SUCCEEDED(rv)) {
+             ((char*)aOut.GetBuffer())[bufLen]='\0';
+             aOut.SetLength(bufLen);
+          }
+       }
+    }
+    return rv;
+}
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char* aCommand,
@@ -1951,7 +1984,17 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // first things first. try to create a uri out of the string.
   nsCOMPtr<nsIURI> uri;
   nsXPIDLCString  spec;
-  rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
+  if(0==urlStr.Find("file:",0)) {
+    // if this is file url, we need to  convert the URI
+    // from Unicode to the FS charset
+    nsCAutoString inFSCharset;
+    rv = convertURLToFileCharset(urlStr, inFSCharset);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
+    if (NS_SUCCEEDED(rv)) 
+      rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
+  } else {
+    rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
+  }
   if (NS_FAILED(rv)) {
     // no dice.
     nsAutoString urlSpec;
@@ -1959,7 +2002,12 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
     // see if we've got a file url.
     convertFileToURL(urlStr, urlSpec);
-    rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+    nsCAutoString inFSCharset;
+    rv = convertURLToFileCharset(urlSpec, inFSCharset);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
+    if (NS_SUCCEEDED(rv)) 
+      rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
+
     if (NS_FAILED(rv)) {
       NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
 
@@ -1969,6 +2017,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       PRInt32 qMarkLoc = -1, spaceLoc = -1;
 
       if (keywordsEnabled) {
+          rv = NS_ERROR_FAILURE;
           // These are keyword formatted strings
           // "what is mozilla"
           // "what is mozilla?"
@@ -1995,18 +2044,21 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
               }
 
               if (keyword) {
-                  nsAutoString keywordSpec("keyword:");
-                  keywordSpec.Append(aURLSpec);
-                  rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
-              } else {
-                  rv = NS_ERROR_FAILURE;
-              }
-          } else {
-              rv = NS_ERROR_FAILURE;
-          }
-      } else {
-          rv = NS_ERROR_FAILURE;
-      }
+                  nsCAutoString keywordSpec("keyword:");
+                  char *utf8Spec = urlStr.ToNewUTF8String();
+                  if(utf8Spec) {
+                      char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
+                      if(escapedUTF8Spec) {
+                          keywordSpec.Append(escapedUTF8Spec);
+                          rv = NS_NewURI(getter_AddRefs(uri), keywordSpec.GetBuffer(), nsnull);
+                          nsAllocator::Free(escapedUTF8Spec);
+                      } // escapedUTF8Spec
+                      nsAllocator::Free(utf8Spec);
+                  } // utf8Spec
+              } // keyword 
+          } // FindChar
+      } // keywordEnable
+   
 
       PRInt32 colon = -1;
       if (NS_FAILED(rv)) {
@@ -2073,7 +2125,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
    rv = uri->GetSpec(getter_Copies(spec));
    if (NS_FAILED(rv)) return rv;
-  
+
   // Get hold of Root webshell
   nsCOMPtr<nsIWebShell>  root;
   nsCOMPtr<nsISessionHistory> shist;
