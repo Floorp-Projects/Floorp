@@ -134,6 +134,10 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult DoTheCopy(nsIFileSpec *oldPath, 
                          nsIFileSpec *newPath,
                          PRBool readSubdirs); 
+      nsresult DoTheCopy(nsIFileSpec *oldPath,
+                         nsIFileSpec *newPath,
+                         const char *fileOrDirName,
+                         PRBool isDirectory = PR_FALSE);
 
       nsresult DoTheCopyAndRename(nsIFileSpec *oldPath, 
                               nsIFileSpec *newPath,

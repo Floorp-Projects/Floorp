@@ -107,10 +107,12 @@
 #define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
-#define HISTORY_FILE_NAME_IN_4x "history.dat"
 #define NEWSRC_PREFIX_IN_4x ".newsrc-"
 #define SNEWSRC_PREFIX_IN_4x ".snewsrc-"
 #define POPSTATE_FILE_IN_4x "popstate"
+#define PSM_CERT7_DB "cert7.db"
+#define PSM_KEY3_DB "key3.db"
+#define PSM_SECMODULE_DB "secmodule.db"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
@@ -118,8 +120,11 @@
 #define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
 #define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
-#define HISTORY_FILE_NAME_IN_4x "Netscape History"
 #define POPSTATE_FILE_IN_4x "Pop State"
+#define SECURITY_PATH "Security"
+#define PSM_CERT7_DB "Certificates7"
+#define PSM_KEY3_DB "Key Database3"
+#define PSM_SECMODULE_DB "Security Modules"
 #else /* XP_PC */
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
@@ -127,7 +132,9 @@
 #define NEWS_SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmark.htm"
-#define HISTORY_FILE_NAME_IN_4x "history.dat"
+#define PSM_CERT7_DB "cert7.db"
+#define PSM_KEY3_DB "key3.db"
+#define PSM_SECMODULE_DB "secmod.db"
 #endif /* XP_UNIX */
 
 #define SUMMARY_SUFFIX_IN_5x ".msf"
@@ -137,7 +144,6 @@
 #define POPSTATE_FILE_IN_5x	"popstate.dat"
 #define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_5x "history.dat"
-#define RENAMED_OLD_HISTORY_FILE_NAME "old "HISTORY_FILE_NAME_IN_4x
 
 // only UNIX had movemail in 4.x
 #ifdef XP_UNIX
@@ -1119,8 +1125,23 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     needToRenameFilterFiles = PR_FALSE;
   }
   
-  rv = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
+  // just copy what we need
+  rv = DoTheCopy(oldProfilePath, newProfilePath, COOKIES_FILE_NAME_IN_4x);
   if (NS_FAILED(rv)) return rv;
+  rv = DoTheCopy(oldProfilePath, newProfilePath, BOOKMARKS_FILE_NAME_IN_4x);
+  if (NS_FAILED(rv)) return rv;
+#if defined(XP_MAC)
+  rv = DoTheCopy(oldProfilePath, newProfilePath, SECURITY_PATH, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+#else
+  rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_CERT7_DB);
+  if (NS_FAILED(rv)) return rv;
+  rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_KEY3_DB);
+  if (NS_FAILED(rv)) return rv;
+  rv = DoTheCopy(oldProfilePath, newProfilePath, PSM_SECMODULE_DB);
+  if (NS_FAILED(rv)) return rv;
+#endif /* XP_MAC */
+
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
@@ -1683,6 +1704,61 @@ nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool 
   return DoTheCopyAndRename(oldPath, newPath, readSubdirs, PR_FALSE, "", "");
 }
 
+nsresult
+nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, const char *fileOrDirName, PRBool isDirectory)
+{
+  nsresult rv;
+
+  if (isDirectory)
+  {
+    nsCOMPtr<nsIFileSpec> oldSubPath;
+
+    NS_NewFileSpec(getter_AddRefs(oldSubPath));
+    oldSubPath->FromFileSpec(oldPath);
+    rv = oldSubPath->AppendRelativeUnixPath(fileOrDirName);
+    if (NS_FAILED(rv)) return rv;
+    PRBool exist;
+    rv = oldSubPath->Exists(&exist);
+    if (NS_FAILED(rv)) return rv;
+    if (!exist)
+    {
+      rv = oldSubPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    nsCOMPtr<nsIFileSpec> newSubPath;
+
+    NS_NewFileSpec(getter_AddRefs(newSubPath));
+    newSubPath->FromFileSpec(newPath);
+    rv = newSubPath->AppendRelativeUnixPath(fileOrDirName);
+    if (NS_FAILED(rv)) return rv;
+    rv = newSubPath->Exists(&exist);
+    if (NS_FAILED(rv)) return rv;
+    if (!exist)
+    {
+      rv = newSubPath->CreateDir();
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    DoTheCopy(oldSubPath, newSubPath, PR_TRUE);
+  }
+  else
+  {
+    nsCOMPtr<nsIFileSpec> file;
+    NS_NewFileSpec(getter_AddRefs(file));
+    file->FromFileSpec(oldPath);
+    rv = file->AppendRelativeUnixPath(fileOrDirName);
+    if( NS_FAILED(rv) ) return rv;
+    PRBool exist;
+    rv = file->Exists(&exist);
+    if( NS_FAILED(rv) ) return rv;
+    if( exist) {
+      file->CopyToDir(newPath);
+    }
+  }
+
+  return rv;
+}
 
 #if defined(NEED_TO_FIX_4X_COOKIES)
 /* this code only works on the mac.  in 4.x, the line endings where '\r' on the mac.
@@ -1830,7 +1906,6 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
   nsresult rv;
   PRInt32 serverType;
   nsFileSpec fs;
-  nsCOMPtr<nsIFileSpec> historyFile;
 
   rv = profilePath->GetFileSpec(&fs);
   if (NS_FAILED(rv)) return rv;
@@ -1882,20 +1957,6 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
 	if (NS_FAILED(rv)) return rv;
   }
 #endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
-
-  // TODO remove any 4.x files that should not be left around
-  //
-  // examples: prefs, history
-  NS_NewFileSpec(getter_AddRefs(historyFile));
-  historyFile->FromFileSpec(profilePath);
-
-  rv = historyFile->AppendRelativeUnixPath(HISTORY_FILE_NAME_IN_5x);
-  PRBool fileExists;
-  rv = historyFile->Exists(&fileExists);
-  if (NS_FAILED(rv)) return rv;
-  if (fileExists) {
-	historyFile->Rename(RENAMED_OLD_HISTORY_FILE_NAME);
-  }
 
   return rv;
 }
