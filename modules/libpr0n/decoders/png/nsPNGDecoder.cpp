@@ -302,26 +302,19 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   PRInt32 alpha_bits = 1;
 
   if (channels > 3) {
-
-    if (color_type || PNG_COLOR_MASK_ALPHA) {
-      /* check if alpha is coming from a tRNS chunk and is binary */
-      if (num_trans) {
-        alpha_bits = 1;
-
-          /* if it's not a indexed color image, tRNS means binary */
-        if (color_type == PNG_COLOR_TYPE_PALETTE) {
-          for (int i=0; i<num_trans; i++) {
-            if ((trans[i] != 0) && (trans[i] != 255)) {
-              alpha_bits = 8;
-              break;
-            }
+    /* check if alpha is coming from a tRNS chunk and is binary */
+    if (num_trans) {
+      /* if it's not a indexed color image, tRNS means binary */
+      if (color_type == PNG_COLOR_TYPE_PALETTE) {
+        for (int i=0; i<num_trans; i++) {
+          if ((trans[i] != 0) && (trans[i] != 255)) {
+            alpha_bits = 8;
+            break;
           }
-        } else {
-          alpha_bits = 8/*png_ptr->pixel_depth*/;   /* 8 */
         }
       }
     } else {
-      alpha_bits = 1;
+      alpha_bits = 8;
     }
   }
 
