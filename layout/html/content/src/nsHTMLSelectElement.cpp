@@ -870,7 +870,7 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 
   // Update the widget
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame);
+  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame, PR_FALSE);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     nsISelectControlFrame* selectFrame = nsnull;
     result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
