@@ -15,15 +15,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..
+DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS=public        \
-     src           \
-     tests         \
-!if "$(MSSDK)" != ""
-     embed         \
-!endif
-     $(NULL)
+DIRS= ActiveX
 
 include <$(DEPTH)\config\rules.mak>
