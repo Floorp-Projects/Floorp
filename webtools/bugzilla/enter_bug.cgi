@@ -317,7 +317,11 @@ $vars->{'component_'} = \@components;
 $default{'component_'} = formvalue('component');
 
 $vars->{'assigned_to'} = formvalue('assigned_to');
+$vars->{'assigned_to_disabled'} = !UserInGroup('editbugs');
+
 $vars->{'cc'} = formvalue('cc');
+$vars->{'cc_disabled'} = 0;
+
 $vars->{'product'} = $product;
 $vars->{'bug_file_loc'} = formvalue('bug_file_loc', "http://");
 $vars->{'short_desc'} = formvalue('short_desc');

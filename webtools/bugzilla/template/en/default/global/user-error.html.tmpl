@@ -436,10 +436,14 @@
     You tried to change the 
     <strong>[% field_descs.$field FILTER html %]</strong> field 
     from <em>[% oldvalue FILTER html %]</em> to 
-    <em>[% newvalue FILTER html %]</em>, 
-    but only the owner or submitter of the [% terms.bug %], or a 
-    sufficiently empowered user, may change that field.
-  
+    <em>[% newvalue FILTER html %]</em>, but only
+    [% IF privs < 3 %]
+      the owner
+      [% IF privs < 2 %] or reporter [% END %]
+      of the [% terms.bug %], or
+    [% END %]
+    a sufficiently empowered user may change that field.
+
   [% ELSIF error == "illegal_changed_in_last_x_days" %]
     [% title = "Your Search Makes No Sense" %]
     The <em>Changed in last ___ days</em> field must be a simple number. 

@@ -43,19 +43,20 @@
     [% knum = knum + 1 %]
   [% END %]
 
-  [% IF bug.user.canedit %]
-    [% IF bug.isopened %]
-      [% IF bug.bug_status != "ASSIGNED" && bug.user.canconfirm %]
-        <input type="radio" id="knob-accept" name="knob" value="accept">
-        <label for="knob-accept">
-          Accept [% terms.bug %] (
-          [% IF bug.isunconfirmed %]confirm [% terms.bug %], [% END %]change
-          status to <b>ASSIGNED</b>)
-        </label>
-        <br>
-        [% knum = knum + 1 %]
-      [% END %]
+  [% IF bug.isopened && bug.bug_status != "ASSIGNED" && bug.user.canedit
+        && (!bug.isunconfirmed || bug.user.canconfirm) %]
+    <input type="radio" id="knob-accept" name="knob" value="accept">
+    <label for="knob-accept">
+      Accept [% terms.bug %] (
+      [% IF bug.isunconfirmed %]confirm [% terms.bug %], [% END %]change
+      status to <b>ASSIGNED</b>)
+    </label>
+    <br>
+    [% knum = knum + 1 %]
+  [% END %]
 
+  [% IF bug.user.canedit || bug.user.isreporter %]
+    [% IF bug.isopened %]
       [% IF bug.resolution %]
         <input type="radio" id="knob-clear" name="knob" value="clearresolution">
         <label for="knob-clear">
@@ -90,45 +91,47 @@
       <br>
       [% knum = knum + 1 %]
 
-      <input type="radio" id="knob-reassign" name="knob" value="reassign">
-      <label for="knob-reassign">
-        <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
-        [% terms.bug %] to
-      </label>
-      [% safe_assigned_to = FILTER js; bug.assigned_to.login; END %]
-      [% INCLUDE global/userselect.html.tmpl
-           name => "assigned_to"
-           value => bug.assigned_to.login
-           size => 32
-           onchange => "if ((this.value != '$safe_assigned_to') && (this.value != '')) {
-                          document.changeform.knob[$knum].checked=true;
-                        }"
-      %]
-      <br>
-      [% IF bug.isunconfirmed && bug.user.canconfirm %]
-        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
-        <label for="andconfirm">
-          and confirm [% terms.bug %] (change status to <b>NEW</b>)
+      [% IF bug.user.canedit %]
+        <input type="radio" id="knob-reassign" name="knob" value="reassign">
+        <label for="knob-reassign">
+          <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
+          [% terms.bug %] to
         </label>
+        [% safe_assigned_to = FILTER js; bug.assigned_to.login; END %]
+        [% INCLUDE global/userselect.html.tmpl
+             name => "assigned_to"
+             value => bug.assigned_to.login
+             size => 32
+             onchange => "if ((this.value != '$safe_assigned_to') && (this.value != '')) {
+                               document.changeform.knob[$knum].checked=true;
+                          }"
+        %]
         <br>
-      [% END %]
-      [% knum = knum + 1 %]
+        [% IF bug.isunconfirmed && bug.user.canconfirm %]
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
+          <label for="andconfirm">
+            and confirm [% terms.bug %] (change status to <b>NEW</b>)
+          </label>
+          <br>
+        [% END %]
+        [% knum = knum + 1 %]
 
-      <input type="radio" id="knob-reassign-cmp" name="knob" value="reassignbycomponent">
-      <label for="knob-reassign-cmp">
-        Reassign [% terms.bug %] to owner
-        [% " and QA contact" IF Param('useqacontact') %]
-        of selected component
-      </label>
-      <br>
-      [% IF bug.isunconfirmed && bug.user.canconfirm %]
-        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
-        <label for="compconfirm">
-          and confirm [% terms.bug %] (change status to <b>NEW</b>)
+        <input type="radio" id="knob-reassign-cmp" name="knob" value="reassignbycomponent">
+        <label for="knob-reassign-cmp">
+          Reassign [% terms.bug %] to owner
+          [% " and QA contact" IF Param('useqacontact') %]
+          of selected component
         </label>
         <br>
+        [% IF bug.isunconfirmed && bug.user.canconfirm %]
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
+          <label for="compconfirm">
+            and confirm [% terms.bug %] (change status to <b>NEW</b>)
+          </label>
+          <br>
+        [% END %]
+        [% knum = knum + 1 %]
       [% END %]
-      [% knum = knum + 1 %]
     [% ELSE %]
       [% IF bug.resolution != "MOVED" ||
            (bug.resolution == "MOVED" && bug.user.canmove) %]

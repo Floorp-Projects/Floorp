@@ -187,6 +187,7 @@ function set_assign_to() {
       [% INCLUDE global/userselect.html.tmpl
          name => "assigned_to"
          value => assigned_to
+         disabled => assigned_to_disabled
          size => 32
          emptyok => 1
        %]
@@ -200,6 +201,7 @@ function set_assign_to() {
       [% INCLUDE global/userselect.html.tmpl
          name => "cc"
          value => cc
+         disabled => cc_disabled
          size => 45
          emptyok => 1
          multiple => 5

@@ -23,11 +23,13 @@
 #                 Dave Miller <justdave@syndicomm.com>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Myk Melez <myk@mozilla.org>
+#                 Frédéric Buclin <LpSolit@netscape.net>
 
 use strict;
 
 my $UserInEditGroupSet = -1;
 my $UserInCanConfirmGroupSet = -1;
+my $PrivilegesRequired = 0;
 
 use lib qw(.);
 
@@ -237,14 +239,10 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         $vars->{'oldvalue'} = $::oldproduct;
         $vars->{'newvalue'} = $::FORM{'product'};
         $vars->{'field'} = 'product';
-        ThrowUserError("illegal_change",
-                       { oldvalue => $::oldproduct,
-                         newvalue => $::FORM{'product'},
-                         field => 'product',
-                       },
-                       "abort");
+        $vars->{'privs'} = $PrivilegesRequired;
+        ThrowUserError("illegal_change", $vars, "abort");
     }
- 
+
     CheckFormField(\%::FORM, 'product', \@::legal_product);
     my $prod = $::FORM{'product'};
 
@@ -350,34 +348,18 @@ sub CheckCanChangeField {
     # START DO_NOT_CHANGE
     my ($field, $bugid, $oldvalue, $newvalue) = (@_);
 
-    # Convert email IDs into addresses for $oldvalue
-    if (($field eq "assigned_to") || 
-        ($field eq "reporter") || 
-        ($field eq "qa_contact")) 
-    {
-        if ($oldvalue =~ /^\d+$/) {
-            if ($oldvalue == 0) {
-                $oldvalue = "";
-            } else {
-                $oldvalue = DBID_to_name($oldvalue);
-            }
-        }
-    }
-
     # Return true if they haven't changed this field at all.
     if ($oldvalue eq $newvalue) {
         return 1;
-    }    
-    elsif (trim($oldvalue) eq trim($newvalue)) {
+    } elsif (trim($oldvalue) eq trim($newvalue)) {
         return 1;
     # numeric fields need to be compared using == 
-    } elsif (($field eq "estimated_time" || $field eq "remaining_time") &&
-             $oldvalue == $newvalue) {
+    } elsif (($field eq "estimated_time" || $field eq "remaining_time")
+             && $oldvalue == $newvalue)
+    {
         return 1;
     }
-        
-    
-    
+
     # A resolution change is always accompanied by a status change. So, we 
     # always OK resolution changes; if they really can't do this, we will 
     # notice it when status is checked. 
@@ -390,7 +372,15 @@ sub CheckCanChangeField {
     if ($field =~ /^longdesc/) {
         return 1;
     }
-    
+
+    # Ignore the assigned_to field if the bug is not being reassigned
+    if ($field eq "assigned_to"
+        && $::FORM{'knob'} ne "reassignbycomponent"
+        && $::FORM{'knob'} ne "reassign")
+    {
+        return 1;
+    }
+
     # START DO_NOT_CHANGE
     # Find out whether the user is a member of the "editbugs" and/or
     # "canconfirm" groups. $UserIn*GroupSet are caches of the return value of 
@@ -403,23 +393,31 @@ sub CheckCanChangeField {
         $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
     }
     # END DO_NOT_CHANGE
-    
-    # Allow anyone with "editbugs" to change anything.
+
+    # If the user isn't allowed to change a field, we must tell him who can.
+    # We store the required permission set into the $PrivilegesRequired
+    # variable which gets passed to the error template.
+    #
+    # $PrivilegesRequired = 0 : no privileges required;
+    # $PrivilegesRequired = 1 : the reporter, owner or an empowered user;
+    # $PrivilegesRequired = 2 : the owner or an empowered user;
+    # $PrivilegesRequired = 3 : an empowered user.
+
+    # Allow anyone with "editbugs" privs to change anything.
     if ($UserInEditGroupSet) {
         return 1;
     }
-    
-    # Allow anyone with "canconfirm" to confirm bugs.
-    if ($UserInCanConfirmGroupSet) {
-        if (($field eq "canconfirm") ||
-            (($field eq "bug_status") && 
-             ($oldvalue eq $::unconfirmedstate) &&
-             IsOpenedState($newvalue)))
-        {
-            return 1;
-        }
+
+    # *Only* users with "canconfirm" privs can confirm bugs.
+    if ($field eq "canconfirm"
+        || ($field eq "bug_status"
+            && $oldvalue eq $::unconfirmedstate
+            && IsOpenedState($newvalue)))
+    {
+        $PrivilegesRequired = 3;
+        return $UserInCanConfirmGroupSet;
     }
-    
+
     # START DO_NOT_CHANGE
     # $reporterid, $ownerid and $qacontactid are caches of the results of
     # the call to find out the owner, reporter and qacontact of the current bug.
@@ -431,46 +429,48 @@ sub CheckCanChangeField {
     }    
     # END DO_NOT_CHANGE
 
-    # Allow the owner to change anything.
-    if ($ownerid eq $whoid) {
+    # Allow the owner to change anything else.
+    if ($ownerid == $whoid) {
         return 1;
     }
     
-    # Allow the QA contact to change anything.
-    if (Param('useqacontact') && ($qacontactid eq $whoid)) {
+    # Allow the QA contact to change anything else.
+    if (Param('useqacontact') && ($qacontactid == $whoid)) {
         return 1;
     }
     
-    # The reporter's a more complicated case...
-    if ($reporterid eq $whoid) {
-        # Reporter may not:
-        # - confirm his own bugs (this assumes he doesn't have canconfirm, or we
-        #   would have returned "1" earlier)
-        if (($field eq "bug_status") && 
-            ($oldvalue eq $::unconfirmedstate) &&
-             IsOpenedState($newvalue))
-        {
+    # The reporter is a more complicated case...
+    if ($reporterid == $whoid) {
+        $PrivilegesRequired = 2;
+
+        # The reporter may not:
+        # - reassign bugs, unless the bugs are assigned to him;
+        #   in that case we will have already returned 1 above
+        #   when checking for the owner of the bug.
+        if ($field eq "assigned_to") {
             return 0;
         }
-        
-        # - change the target milestone            
-        if  ($field eq "target_milestone")  {
+        # - change the QA contact
+        if ($field eq "qa_contact") {
             return 0;
-        }       
-        
+        }
+        # - change the target milestone
+        if ($field eq "target_milestone") {
+            return 0;
+        }
         # - change the priority (unless he could have set it originally)
-        if (($field eq "priority") &&
-            !Param('letsubmitterchoosepriority'))
+        if ($field eq "priority"
+            && !Param('letsubmitterchoosepriority'))
         {
             return 0;
         }
-        
-        # Allow reporter to change anything else.
+        # Allow the reporter to change anything else.
         return 1;
     }
-  
+
     # If we haven't returned by this point, then the user doesn't have the
     # necessary permissions to change this field.
+    $PrivilegesRequired = 1;
     return 0;
 }
 
@@ -619,19 +619,23 @@ sub ChangeStatus {
         } else {
             $::query .= "bug_status = " . SqlQuote($str);
         }
-        $::FORM{'bug_status'} = $str; # Used later for call to
-                                      # CheckCanChangeField to make sure this
-                                      # is really kosher.
+        # If bugs are reassigned and their status is "UNCONFIRMED", they
+        # should keep this status instead of "NEW" as suggested here.
+        # This point is checked for each bug later in the code.
+        $::FORM{'bug_status'} = $str;
     }
 }
 
 sub ChangeResolution {
     my ($str) = (@_);
-    if (!$::FORM{'dontchange'} ||
-       ($str ne $::FORM{'dontchange'})) {
+    if (!$::FORM{'dontchange'}
+        || $str ne $::FORM{'dontchange'})
+    {
         DoComma();
         $::query .= "resolution = " . SqlQuote($str);
-        $::FORM{'resolution'} = $str; # Used later by CheckCanChangeField
+        # We define this variable here so that customized installations
+        # may set rules based on the resolution in CheckCanChangeField.
+        $::FORM{'resolution'} = $str;
     }
 }
 
@@ -761,18 +765,6 @@ if (Param("usebugaliases") && defined($::FORM{'alias'})) {
     }
 }
 
-if (defined $::FORM{'qa_contact'}) {
-    my $name = trim($::FORM{'qa_contact'});
-    if ($name ne $::FORM{'dontchange'}) {
-        my $id = 0;
-        if ($name ne "") {
-            $id = DBNameToIdAndCheck($name);
-        }
-        DoComma();
-        $::query .= "qa_contact = $id";
-    }
-}
-
 # jeff.hedlund@matrixsi.com time tracking data processing:
 if (UserInGroup(Param('timetrackinggroup'))) {
     foreach my $field ("estimated_time", "remaining_time") {
@@ -874,6 +866,26 @@ if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{massc
     }
 }
 
+# Store the new assignee and QA contact IDs (if any). This is the
+# only way to keep these informations when bugs are reassigned by
+# component as $::FORM{'assigned_to'} and $::FORM{'qa_contact'}
+# are not the right fields to look at.
+
+my $assignee;
+my $qacontact;
+
+if (defined $::FORM{'qa_contact'}
+    && $::FORM{'knob'} ne "reassignbycomponent")
+{
+    $qacontact = 0;
+    my $name = trim($::FORM{'qa_contact'});
+    # The QA contact cannot be deleted from show_bug.cgi for a single bug!
+    if ($name ne $::FORM{'dontchange'}) {
+        $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
+        DoComma();
+        $::query .= "qa_contact = $qacontact";
+    }
+}
 
 CheckFormFieldDefined(\%::FORM, 'knob');
 SWITCH: for ($::FORM{'knob'}) {
@@ -907,19 +919,20 @@ SWITCH: for ($::FORM{'knob'}) {
                 ThrowUserError("resolving_remaining_time");
             }
         }
-        
-        # don't resolve as fixed while still unresolved blocking bugs
-        if (Param("noresolveonopenblockers") && ($::FORM{'resolution'} eq 'FIXED')) {
-           my @dependencies = CountOpenDependencies(@idlist);
-           if (scalar @dependencies > 0) {
-               ThrowUserError("still_unresolved_bugs", 
-                               { dependencies     => \@dependencies,
-                                 dependency_count => scalar @dependencies });
-            }          
-        }
-
         # Check here, because its the only place we require the resolution
         CheckFormField(\%::FORM, 'resolution', \@::settable_resolution);
+
+        # don't resolve as fixed while still unresolved blocking bugs
+        if (Param("noresolveonopenblockers")
+            && $::FORM{'resolution'} eq 'FIXED')
+        {
+            my @dependencies = CountOpenDependencies(@idlist);
+            if (scalar @dependencies > 0) {
+                ThrowUserError("still_unresolved_bugs",
+                               { dependencies     => \@dependencies,
+                                 dependency_count => scalar @dependencies });
+            }
+        }
         ChangeStatus('RESOLVED');
         ChangeResolution($::FORM{'resolution'});
         last SWITCH;
@@ -930,12 +943,13 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         ChangeStatus('NEW');
         DoComma();
-        if (!defined$::FORM{'assigned_to'} ||
-            trim($::FORM{'assigned_to'}) eq "") {
+        if (!defined $::FORM{'assigned_to'}
+            || trim($::FORM{'assigned_to'}) eq "")
+        {
             ThrowUserError("reassign_to_empty");
         }
-        my $newid = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
-        $::query .= "assigned_to = $newid";
+        $assignee = DBNameToIdAndCheck(trim($::FORM{'assigned_to'}));
+        $::query .= "assigned_to = $assignee";
         last SWITCH;
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
@@ -951,14 +965,13 @@ SWITCH: for ($::FORM{'knob'}) {
         ChangeStatus('NEW');
         SendSQL("SELECT initialowner FROM components " .
                 "WHERE components.id = $comp_id");
-        my $newid = FetchOneColumn();
+        $assignee = FetchOneColumn();
         DoComma();
-        $::query .= "assigned_to = $newid";
+        $::query .= "assigned_to = $assignee";
         if (Param("useqacontact")) {
             SendSQL("SELECT initialqacontact FROM components " .
                     "WHERE components.id = $comp_id");
-            my $qacontact = FetchOneColumn();
-            $qacontact = 0 unless (defined $qacontact && $qacontact != 0);
+            $qacontact = FetchOneColumn() || 0;
             DoComma();
             $::query .= "qa_contact = $qacontact";
         }
@@ -1130,8 +1143,6 @@ foreach my $id (@idlist) {
             "group_control_map AS oldcontrolmap READ, " .
             "group_control_map AS newcontrolmap READ, " .
             "group_control_map READ");
-    my @oldvalues = SnapShotBug($id);
-    my %oldhash;
     # Fun hack.  @::log_columns only contains the component_id,
     # not the name (since bug 43600 got fixed).  So, we need to have
     # this id ready for the loop below, otherwise anybody can
@@ -1143,31 +1154,58 @@ foreach my $id (@idlist) {
         $::FORM{'component_id'} = 
                             get_component_id($product_id, $::FORM{'component'});
     }
-    
+
+    # It may sound crazy to set %formhash for each bug as $::FORM{}
+    # will not change, but %formhash is modified below and we prefer
+    # to set it again.
     my $i = 0;
+    my @oldvalues = SnapShotBug($id);
+    my %oldhash;
+    my %formhash;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
-        $oldvalues[$i] = '' unless defined($oldvalues[$i]);
+        $oldvalues[$i] = '' unless defined $oldvalues[$i];
         $oldhash{$col} = $oldvalues[$i];
-        if (exists $::FORM{$col}) {
-            if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
-                # More fun hacking... don't display component_id
-                my $vars;
-                if ($col eq 'component_id') {
-                    $vars->{'oldvalue'} = 
-                                   get_component_name($oldhash{'component_id'});
-                    $vars->{'newvalue'} = $::FORM{'component'};
-                    $vars->{'field'} = 'component';
-                }
-                else {
-                    $vars->{'oldvalue'} = $oldvalues[$i];
-                    $vars->{'newvalue'} = $::FORM{$col};
-                    $vars->{'field'} = $col;
-                }
-                ThrowUserError("illegal_change", $vars, "abort");
-            }
-        }
+        $formhash{$col} = $::FORM{$col} if defined $::FORM{$col};
         $i++;
+    }
+    # If the user is reassigning bugs, we need to:
+    # - convert $newhash{'assigned_to'} and $newhash{'qa_contact'}
+    #   email addresses into their corresponding IDs;
+    # - update $newhash{'bug_status'} to its real state if the bug
+    #   is in the unconfirmed state.
+    $formhash{'qa_contact'} = $qacontact if Param('useqacontact');
+    if ($::FORM{'knob'} eq 'reassignbycomponent'
+        || $::FORM{'knob'} eq 'reassign')
+    {
+        $formhash{'assigned_to'} = $assignee;
+        if ($oldhash{'bug_status'} eq $::unconfirmedstate) {
+            $formhash{'bug_status'} = $oldhash{'bug_status'};
+        }
+    }
+    foreach my $col (@::log_columns) {
+        if (exists $formhash{$col}
+            && !CheckCanChangeField($col, $id, $oldhash{$col}, $formhash{$col}))
+        {
+            my $vars;
+            if ($col eq 'component_id') {
+                # Display the component name
+                $vars->{'oldvalue'} = get_component_name($oldhash{$col});
+                $vars->{'newvalue'} = $::FORM{'component'};
+                $vars->{'field'} = 'component';
+            } elsif ($col eq 'assigned_to' || $col eq 'qa_contact') {
+                # Display the assignee or QA contact email address
+                $vars->{'oldvalue'} = DBID_to_name($oldhash{$col});
+                $vars->{'newvalue'} = DBID_to_name($formhash{$col});
+                $vars->{'field'} = $col;
+            } else {
+                $vars->{'oldvalue'} = $oldhash{$col};
+                $vars->{'newvalue'} = $formhash{$col};
+                $vars->{'field'} = $col;
+            }
+            $vars->{'privs'} = $PrivilegesRequired;
+            ThrowUserError("illegal_change", $vars, "abort");
+        }
     }
 
     # When editing multiple bugs, users can specify a list of keywords to delete
@@ -1184,6 +1222,7 @@ foreach my $id (@idlist) {
         $vars->{'oldvalue'} = $oldhash{keywords};
         $vars->{'newvalue'} = "no keywords";
         $vars->{'field'} = "keywords";
+        $vars->{'privs'} = $PrivilegesRequired;
         ThrowUserError("illegal_change", $vars, "abort");
     }
 

@@ -404,20 +404,22 @@ sub user {
     # Display everything as if they have all the permissions in the
     # world; their permissions will get checked when they log in and
     # actually try to make the change.
-    my $privileged = (!Bugzilla->user->id)
-                     || Bugzilla->user->in_group("editbugs")
-                     || Bugzilla->user->id == $self->{'assigned_to'}{'id'}
-                     || (Param('useqacontact') && $self->{'qa_contact'} &&
-                         Bugzilla->user->id == $self->{'qa_contact'}{'id'});
-    my $isreporter = Bugzilla->user->id && 
-                     Bugzilla->user->id == $self->{'reporter'}{'id'};
+    my $unknown_privileges = !Bugzilla->user->id
+                             || Bugzilla->user->in_group("editbugs");
+    my $canedit = $unknown_privileges
+                  || Bugzilla->user->id == $self->{'assigned_to'}{'id'}
+                  || (Param('useqacontact')
+                      && $self->{'qa_contact'}
+                      && Bugzilla->user->id == $self->{'qa_contact'}{'id'});
+    my $canconfirm = $unknown_privileges
+                     || Bugzilla->user->in_group("canconfirm");
+    my $isreporter = Bugzilla->user->id
+                     && Bugzilla->user->id == $self->{'reporter'}{'id'};
 
-    my $canedit = $privileged || $isreporter;
-    my $canconfirm = $privileged || Bugzilla->user->in_group("canconfirm");
-
-    $self->{'user'} = {canmove    => $canmove, 
-                       canconfirm => $canconfirm, 
-                       canedit    => $canedit,};
+    $self->{'user'} = {canmove    => $canmove,
+                       canconfirm => $canconfirm,
+                       canedit    => $canedit,
+                       isreporter => $isreporter};
     return $self->{'user'};
 }
 

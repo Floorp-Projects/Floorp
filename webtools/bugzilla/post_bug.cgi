@@ -130,7 +130,7 @@ my $sql_product = SqlQuote($::FORM{'product'});
 my $sql_component = SqlQuote($::FORM{'component'});
 
 # Default assignee is the component owner.
-if ($::FORM{'assigned_to'} eq "") {
+if (!UserInGroup("editbugs") || $::FORM{'assigned_to'} eq "") {
     SendSQL("SELECT initialowner FROM components " .
             "WHERE id = $component_id");
     $::FORM{'assigned_to'} = FetchOneColumn();

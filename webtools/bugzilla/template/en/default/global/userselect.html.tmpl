@@ -20,6 +20,7 @@
   # name: mandatory; field name
   # value: optional; default field value/selection
   # onchange: optional; onchange attribute value
+  # disabled: optional; if true, the field is disabled
   # accesskey: optional, input only; accesskey attribute value
   # size: optional, input only; size attribute value
   # emptyok: optional, select only;  if true, prepend menu option to start of select
@@ -30,6 +31,7 @@
 [% IF Param("usemenuforusers") %]
 <select name="[% name FILTER html %]"
   [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
+  [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
   [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
   [% IF multiple %] multiple="multiple" size="[% multiple FILTER html %]" [% END %]
 >
@@ -48,9 +50,10 @@
 <input
   name="[% name FILTER html %]"
   value="[% value FILTER html %]"
+  [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
+  [% IF disabled %] disabled="[% disabled FILTER html %]" [% END %]
   [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
   [% IF size %] size="[% size FILTER html %]" [% END %]
-  [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
 >
 [% END %]
 
