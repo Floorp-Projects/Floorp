@@ -65,6 +65,22 @@ static PRLogModuleInfo *gStandardURLLog;
 #define LOG_ENABLED() PR_LOG_TEST(gStandardURLLog, PR_LOG_DEBUG)
 
 //----------------------------------------------------------------------------
+
+static PRInt32
+AppendEscaped(nsACString &buf, const char *str, PRInt32 len, PRInt16 mask)
+{
+    nsCAutoString escaped;
+    NS_EscapeURL(str, len, mask, escaped);
+    if (escaped.IsEmpty())
+        buf.Append(str, len);
+    else {
+        buf.Append(escaped);
+        len = escaped.Length();
+    }
+    return len;
+}
+
+//----------------------------------------------------------------------------
 // nsStandardURL <public>
 //----------------------------------------------------------------------------
 
@@ -726,20 +742,32 @@ nsStandardURL::SetScheme(const char *scheme)
 {
     LOG(("nsStandardURL::SetScheme [scheme=%s]\n", scheme));
 
+    if (!(scheme && *scheme)) {
+        NS_ERROR("cannot remove the scheme from an url");
+        return NS_ERROR_UNEXPECTED;
+    }
     if (mScheme.mLen < 0) {
         NS_ERROR("uninitialized");
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    mFile = 0;
-
     PRInt32 len = strlen(scheme);
+    if (!IsValidScheme(scheme, len)) {
+        NS_ERROR("the given url scheme contains invalid characters");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    mFile = 0;
     PRInt32 shift = ReplaceSegment(mScheme.mPos, mScheme.mLen, scheme, len);
 
     if (shift) {
         mScheme.mLen = len;
         ShiftFromAuthority(shift);
     }
+
+    // ensure new scheme is lowercase
+    // XXX the string code's ToLowerCase doesn't operate on substrings
+    ToLowerCase((char *)mSpec.get() + mScheme.mPos, mScheme.mLen);
     return NS_OK;
 }
 
@@ -784,12 +812,15 @@ nsStandardURL::SetPreHost(const char *prehost)
                                 &passwordPos, &passwordLen);
     if (NS_FAILED(rv)) return rv;
 
+    // build new prehost in |buf|
     nsCAutoString buf;
     if (usernameLen > 0) {
-        buf.Assign(prehost + usernamePos, usernameLen);
+        usernameLen = AppendEscaped(buf, prehost + usernamePos,
+                                    usernameLen, esc_Username);
         if (passwordLen >= 0) {
             buf.Append(':');
-            buf.Append(prehost + passwordPos, passwordLen);
+            passwordLen = AppendEscaped(buf, prehost + passwordPos,
+                                        passwordLen, esc_Password);
         }
         if (mUsername.mLen < 0)
             buf.Append('@');
@@ -830,13 +861,32 @@ nsStandardURL::SetUsername(const char *username)
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (mUsername.mLen < 0 || !(username && *username))
+    if (!(username && *username))
         return SetPreHost(username);
 
     mFile = 0;
 
     PRInt32 len = strlen(username);
-    PRInt32 shift = ReplaceSegment(mUsername.mPos, mUsername.mLen, username, len);
+
+    // escape username if necessary
+    nsCAutoString escaped;
+    NS_EscapeURL(username, len, esc_Username, escaped);
+    if (!escaped.IsEmpty()) {
+        username = escaped.get();
+        len = escaped.Length();
+    }
+
+    PRInt32 shift;
+
+    if (mUsername.mLen < 0) {
+        mSpec.Insert(username, mAuthority.mPos, len + 1);
+        mSpec.SetCharAt('@', mAuthority.mPos + len);
+        mUsername.mPos = mAuthority.mPos;
+        mAuthority.mLen += len;
+        shift = len + 1;
+    }
+    else
+        shift = ReplaceSegment(mUsername.mPos, mUsername.mLen, username, len);
 
     if (shift) {
         mUsername.mLen = len;
@@ -877,6 +927,14 @@ nsStandardURL::SetPassword(const char *password)
         mSpec.Insert(':', mPassword.mPos);
         mPassword.mPos++;
         mPassword.mLen = 0;
+    }
+
+    // escape password if necessary
+    nsCAutoString escaped;
+    NS_EscapeURL(password, len, esc_Password, escaped);
+    if (!escaped.IsEmpty()) {
+        password = escaped.get();
+        len = escaped.Length();
     }
 
     shift = ReplaceSegment(mPassword.mPos, mPassword.mLen, password, len);
@@ -986,45 +1044,15 @@ nsStandardURL::SetPath(const char *path)
 
     mFile = 0;
 
-    // XXX this needs to normalize the path
-
     if (path && path[0]) {
-        // replace path
+        nsCAutoString spec;
 
-        nsresult rv;
-        PRUint32 pathPos;
-        PRInt32 pathLen;
+        spec.Assign(mSpec.get(), mPath.mPos);
+        if (path[0] != '/')
+            spec.Append('/');
+        spec.Append(path);
 
-        // locate the real path (the parser may filter leading or trailing junk)
-        rv = gNoAuthParser->ParseURL(path, -1,
-                                     nsnull, nsnull, nsnull, nsnull,
-                                     &pathPos, &pathLen);
-        if (NS_FAILED(rv)) return rv;
-
-        if (mPath.mLen > 0) {
-            // ensure that path starts with a leading '/'
-            PRUint32 start = mPath.mPos;
-            if (path[0] != '/')
-                start++;
-
-            mSpec.Replace(start, mPath.mLen,
-                          nsDependentCString(path + pathPos, pathLen));
-
-            // calculate corrected path length
-            mPath.mLen = pathLen + (start - mPath.mPos);
-        }
-        else {
-            mPath.mPos = mAuthority.mPos + mAuthority.mLen;
-            mPath.mLen = pathLen;
-            if (path[0] != '/') {
-                mSpec.Append('/');
-                mPath.mLen++;
-            }
-            mSpec.Append(path);
-        }
-
-        // and finally, parse the new path
-        ParsePath(mSpec.get(), mPath.mPos, -1);
+        return SetSpec(spec.get());
     }
     else if (mPath.mLen > 1) {
         mSpec.Cut(mPath.mPos + 1, mPath.mLen - 1);
@@ -1280,8 +1308,63 @@ nsStandardURL::SetFilePath(const char *filepath)
 {
     LOG(("nsStandardURL::SetFilePath [filepath=%s]\n", filepath));
 
-    NS_NOTYETIMPLEMENTED("");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // if there isn't a filepath, then there can't be anything
+    // after the path either.  this url is likely uninitialized.
+    if (mFilePath.mLen < 0)
+        return SetPath(filepath);
+
+    if (filepath && *filepath) {
+        nsCAutoString spec;
+        PRUint32 dirPos, basePos, extPos;
+        PRInt32 dirLen, baseLen, extLen;
+        nsresult rv;
+
+        rv = gNoAuthParser->ParseFilePath(filepath, -1,
+                                          &dirPos, &dirLen,
+                                          &basePos, &baseLen,
+                                          &extPos, &extLen);
+        if (NS_FAILED(rv)) return rv;
+
+        // build up new candidate spec
+        spec.Assign(mSpec.get(), mPath.mPos);
+
+        // ensure leading '/'
+        if (filepath[dirPos] != '/')
+            spec.Append('/');
+
+        // append filepath components
+        if (dirLen > 0)
+            AppendEscaped(spec, filepath + dirPos, dirLen, esc_Directory);
+        if (baseLen > 0)
+            AppendEscaped(spec, filepath + basePos, baseLen, esc_FileBaseName);
+        if (extLen >= 0) {
+            spec.Append('.');
+            if (extLen > 0)
+                AppendEscaped(spec, filepath + extPos, extLen, esc_FileExtension);
+        }
+
+        // compute the ending position of the current filepath
+        if (mFilePath.mLen >= 0) {
+            PRUint32 end = mFilePath.mPos + mFilePath.mLen;
+            if (mSpec.Length() > end)
+                spec.Append(mSpec.get() + end, mSpec.Length() - end);
+        }
+
+        return SetSpec(spec.get());
+    }
+    else if (mPath.mLen > 1) {
+        mSpec.Cut(mPath.mPos + 1, mFilePath.mLen - 1);
+        // left shift param, query, and ref
+        ShiftFromParam(1 - mFilePath.mLen);
+        // these contain only a '/'
+        mPath.mLen = 1;
+        mDirectory.mLen = 1;
+        mFilePath.mLen = 1;
+        // these are no longer defined
+        mBasename.mLen = -1;
+        mExtension.mLen = -1;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1332,6 +1415,14 @@ nsStandardURL::SetQuery(const char *query)
         mQuery.mLen = 0;
     }
 
+    // escape query if necessary
+    nsCAutoString escaped;
+    NS_EscapeURL(query, queryLen, esc_Password, escaped);
+    if (!escaped.IsEmpty()) {
+        query = escaped.get();
+        queryLen = escaped.Length();
+    }
+
     PRInt32 shift = ReplaceSegment(mQuery.mPos, mQuery.mLen, query, queryLen);
 
     if (shift) {
@@ -1374,6 +1465,14 @@ nsStandardURL::SetRef(const char *ref)
         mSpec.Append('#');
         mRef.mPos = mSpec.Length();
         mRef.mLen = 0;
+    }
+
+    // escape ref if necessary
+    nsCAutoString escaped;
+    NS_EscapeURL(ref, refLen, esc_Password, escaped);
+    if (!escaped.IsEmpty()) {
+        ref = escaped.get();
+        refLen = escaped.Length();
     }
 
     ReplaceSegment(mRef.mPos, mRef.mLen, ref, refLen);
@@ -1434,30 +1533,36 @@ nsStandardURL::SetFileName(const char *filename)
         }
     }
     else {
-        PRInt32 filenameLen = basename.mLen;
-        if (extension.mLen >= 0)
-            filenameLen += (extension.mLen + 1);
+        nsCAutoString newFilename;
+        basename.mLen = AppendEscaped(newFilename, filename + basename.mPos,
+                                      basename.mLen, esc_FileBaseName);
+        if (extension.mLen >= 0) {
+            newFilename.Append('.');
+            extension.mLen = AppendEscaped(newFilename, filename + extension.mPos,
+                                           extension.mLen, esc_FileExtension);
+        }
+
         if (mBasename.mLen < 0) {
             // insert new filename
             mBasename.mPos = mDirectory.mPos + mDirectory.mLen;
-            mSpec.Insert(filename + basename.mPos, mBasename.mPos, filenameLen);
-            ShiftFromParam(filenameLen);
+            mSpec.Insert(newFilename, mBasename.mPos);
+            ShiftFromParam(newFilename.Length());
         }
         else {
             // replace existing filename
-            PRInt32 oldLen = mBasename.mLen;
+            PRUint32 oldLen = PRUint32(mBasename.mLen);
             if (mExtension.mLen >= 0)
                 oldLen += (mExtension.mLen + 1);
-            mSpec.Replace(mBasename.mPos, oldLen,
-                          nsDependentCString(filename + basename.mPos, filenameLen));
-            if (oldLen != filenameLen)
-                ShiftFromParam(filenameLen - oldLen);
+            mSpec.Replace(mBasename.mPos, oldLen, newFilename);
+            if (oldLen != newFilename.Length())
+                ShiftFromParam(newFilename.Length() - oldLen);
         }
+
         mBasename.mLen = basename.mLen;
         mExtension.mLen = extension.mLen;
         if (mExtension.mLen >= 0)
             mExtension.mPos = mBasename.mPos + mBasename.mLen + 1;
-        mFilePath.mLen = mDirectory.mLen + filenameLen;
+        mFilePath.mLen = mDirectory.mLen + newFilename.Length();
     }
     return NS_OK;
 }

@@ -38,6 +38,7 @@
 
 #include <string.h>
 #include "nsURLParsers.h"
+#include "nsURLHelper.h"
 #include "nsIURI.h"
 #include "prtypes.h"
 #include "nsString.h"
@@ -50,25 +51,6 @@ CountConsecutiveSlashes(const char *str, PRInt32 len)
     PRUint32 count = 0;
     while (len-- && *str++ == '/') ++count;
     return count;
-}
-
-static PRBool
-IsValidScheme(const char *scheme, PRUint32 schemeLen)
-{
-    // first char much be alpha
-    if (!nsCRT::IsAsciiAlpha(*scheme))
-        return PR_FALSE;
-    
-    for (; schemeLen && *scheme; ++scheme, --schemeLen) {
-        if (!(nsCRT::IsAsciiAlpha(*scheme) ||
-              nsCRT::IsAsciiDigit(*scheme) ||
-              *scheme == '+' ||
-              *scheme == '.' ||
-              *scheme == '-'))
-            return PR_FALSE;
-    }
-
-    return PR_TRUE;
 }
 
 //----------------------------------------------------------------------------

@@ -225,3 +225,22 @@ nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
     }
     return NS_ERROR_MALFORMED_URI;
 }
+
+PRBool
+IsValidScheme(const char *scheme, PRUint32 schemeLen)
+{
+    // first char much be alpha
+    if (!nsCRT::IsAsciiAlpha(*scheme))
+        return PR_FALSE;
+    
+    for (; schemeLen && *scheme; ++scheme, --schemeLen) {
+        if (!(nsCRT::IsAsciiAlpha(*scheme) ||
+              nsCRT::IsAsciiDigit(*scheme) ||
+              *scheme == '+' ||
+              *scheme == '.' ||
+              *scheme == '-'))
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
