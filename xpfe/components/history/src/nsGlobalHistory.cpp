@@ -97,6 +97,7 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 #define HISTORY_EXPIRE_NOW_TIMEOUT 3 * PR_MSEC_PER_SEC
 
 #define MSECS_PER_DAY PR_MSEC_PER_SEC * 60 * 60 * 24
+
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -464,12 +465,11 @@ nsGlobalHistory::nsGlobalHistory()
   // commonly used prefixes that should be chopped off all 
   // history and input urls before comparison
 
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("http://www."));
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("http://"));
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("www."));
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://www."));
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("https://"));
-  mIgnorePrefixes.AppendString(NS_LITERAL_STRING("ftp://"));
+  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("http://"));
+  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("https://"));
+  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("ftp://"));
+  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
+  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -3560,7 +3560,7 @@ nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
   
   nsAutoString url2;
   url2.AssignWithConversion(url.get());
-  PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue); 
+  PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue, mExclude); 
   
   return result;
 }
@@ -3620,17 +3620,23 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
 
   AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
 
-  // pass user input through filter before search
-  nsSharableString filtered = AutoCompletePrefilter(nsDependentString (searchString));
-  // if the filtered string needs to have any prefixes removed, then we don't want
-  // to use it, so bail out here
-  if (filtered.Length() == 0 || filtered.Length() != nsCRT::strlen(searchString)) {
+  // if the search string is empty after it has had prefixes removed, then 
+  // there is no need to proceed with the search
+  nsAutoString cut(searchString);
+  AutoCompleteCutPrefix(cut, nsnull);
+  if (cut.Length() == 0) {
     listener->OnAutoComplete(results, status);
     return NS_OK;
   }
   
+  // pass string through filter and then determine which prefixes to exclude
+  // when chopping prefixes off of history urls during comparison
+  nsSharableString filtered = AutoCompletePrefilter(nsDependentString(searchString));
+  AutocompleteExclude exclude;
+  AutoCompleteGetExcludeInfo(filtered, &exclude);
+  
   // perform the actual search here
-  rv = AutoCompleteSearch(filtered, previousSearchResult, results);
+  rv = AutoCompleteSearch(filtered, &exclude, previousSearchResult, results);
 
   // describe the search results
   if (NS_SUCCEEDED(rv)) {
@@ -3656,7 +3662,7 @@ nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
     // notify the listener
     listener->OnAutoComplete(results, status);
   }
-
+  
   return NS_OK;
 }
 
@@ -3682,6 +3688,7 @@ nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
 
 nsresult
 nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
+                                    AutocompleteExclude* aExclude,
                                     nsIAutoCompleteResults* aPrevResults,
                                     nsIAutoCompleteResults* aResults)
 {
@@ -3716,7 +3723,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
       nsAutoString url;
       item->GetValue(url);
       
-      if (AutoCompleteCompare(url, aSearchString))
+      if (AutoCompleteCompare(url, aSearchString, aExclude))
         resultItems->AppendElement(item);
     }    
   } else {
@@ -3725,7 +3732,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
     // prepare the search enumerator
     AutoCompleteEnumerator* enumerator;
     enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
-                                            kToken_NameColumn, aSearchString);
+                                            kToken_NameColumn, aSearchString, aExclude);
     rv = enumerator->Init(mEnv, mTable);
     if (NS_FAILED(rv)) return rv;
   
@@ -3773,31 +3780,75 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
   return NS_OK;
 }
 
+// If aURL begins with a protocol or domain prefix from our lists,
+// then mark their index in an AutocompleteExclude struct.
 void
-nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL)
+nsGlobalHistory::AutoCompleteGetExcludeInfo(nsAReadableString& aURL, AutocompleteExclude* aExclude)
+{
+  aExclude->schemePrefix = -1;
+  aExclude->hostnamePrefix = -1;
+  
+  PRInt32 index = 0;
+  PRInt32 i;
+  for (i = 0; i < mIgnoreSchemes.Count(); ++i) {
+    nsString* string = mIgnoreSchemes.StringAt(i);    
+    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+      aExclude->schemePrefix = i;
+      index = string->Length();
+      break;
+    }
+  }
+  
+  for (i = 0; i < mIgnoreHostnames.Count(); ++i) {
+    nsString* string = mIgnoreHostnames.StringAt(i);    
+    if (Substring(aURL, index, string->Length()).Equals(*string)) {
+      aExclude->hostnamePrefix = i;
+      break;
+    }
+  }
+}
+
+// Cut any protocol and domain prefixes from aURL, except for those which
+// are specified in aExclude
+void
+nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL, AutocompleteExclude* aExclude)
 {
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
   PRInt32 idx = 0;
-  for (PRInt32 i = 0; i < mIgnorePrefixes.Count(); ++i) {
-    nsString* string = mIgnorePrefixes.StringAt(i);    
+  PRInt32 i;
+  for (i = 0; i < mIgnoreSchemes.Count(); ++i) {
+    if (aExclude && i == aExclude->schemePrefix)
+      continue;
+    nsString* string = mIgnoreSchemes.StringAt(i);    
     if (Substring(aURL, 0, string->Length()).Equals(*string)) {
       idx = string->Length();
       break;
     }
   }
-  
-  if (idx)
+
+  if (idx > 0)
+    aURL.Cut(0, idx);
+
+  idx = 0;
+  for (i = 0; i < mIgnoreHostnames.Count(); ++i) {
+    if (aExclude && i == aExclude->hostnamePrefix)
+      continue;
+    nsString* string = mIgnoreHostnames.StringAt(i);    
+    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+      idx = string->Length();
+      break;
+    }
+  }
+
+  if (idx > 0)
     aURL.Cut(0, idx);
 }
 
 nsSharableString
 nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
 {
-  // XXX using nsAutoString here only because nsAString's Cut method doesn't work
-  //     and it hasn't implemented ToLowerCase yet
   nsAutoString url(aSearchString);
-  AutoCompleteCutPrefix(url);
 
   PRInt32 slash = url.FindChar('/', 0);
   if (slash >= 0) {
@@ -3817,9 +3868,11 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
 }
 
 PRBool
-nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, const nsAReadableString& aUserURL)
+nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, 
+                                     const nsAReadableString& aUserURL, 
+                                     AutocompleteExclude* aExclude)
 {
-  AutoCompleteCutPrefix(aHistoryURL);
+  AutoCompleteCutPrefix(aHistoryURL, aExclude);
   
   return Substring(aHistoryURL, 0, aUserURL.Length()).Equals(aUserURL);
 }

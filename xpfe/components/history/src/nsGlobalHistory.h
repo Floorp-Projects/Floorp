@@ -95,6 +95,14 @@ class searchTerm;
 //   nsIGlobalHistory interface.
 //
 
+
+// Used to describe what prefixes shouldn't be cut from
+// history urls when doing an autocomplete url comparison.
+struct AutocompleteExclude {
+  PRInt32 schemePrefix;
+  PRInt32 hostnamePrefix;
+};
+
 class nsGlobalHistory : nsSupportsWeakReference,
                         public nsIGlobalHistory,
                         public nsIBrowserHistory,
@@ -177,14 +185,19 @@ protected:
   // 
   // autocomplete stuff
   //
-  nsStringArray mIgnorePrefixes;
+  nsStringArray mIgnoreSchemes;
+  nsStringArray mIgnoreHostnames;
   
   nsresult AutoCompleteSearch(const nsAReadableString& aSearchString,
+                              AutocompleteExclude* aExclude,
                               nsIAutoCompleteResults* aPrevResults,
                               nsIAutoCompleteResults* aResults);
-  void AutoCompleteCutPrefix(nsAWritableString& aURL);
+  void AutoCompleteCutPrefix(nsAWritableString& aURL, AutocompleteExclude* aExclude);
+  void AutoCompleteGetExcludeInfo(nsAReadableString& aURL, AutocompleteExclude* aExclude);
   nsSharableString AutoCompletePrefilter(const nsAReadableString& aSearchString);
-  PRBool AutoCompleteCompare(nsAString& aHistoryURL, const nsAReadableString& aUserURL);
+  PRBool AutoCompleteCompare(nsAString& aHistoryURL, 
+                             const nsAReadableString& aUserURL,
+                             AutocompleteExclude* aExclude);
 
   // caching of PR_Now() so we don't call it every time we do
   // a history query
@@ -358,6 +371,7 @@ protected:
     nsGlobalHistory* mHistory;
     mdb_column mURLColumn;
     mdb_column mCommentColumn;
+    AutocompleteExclude* mExclude;
     const nsAReadableString& mSelectValue;
 
     virtual ~AutoCompleteEnumerator();
@@ -366,12 +380,13 @@ protected:
     AutoCompleteEnumerator(nsGlobalHistory* aHistory,
                            mdb_column aURLColumn,
                            mdb_column aCommentColumn,
-                           const nsAReadableString& aSelectValue) :
+                           const nsAReadableString& aSelectValue,
+                           AutocompleteExclude* aExclude) :
       mHistory(aHistory),
       mURLColumn(aURLColumn),
       mCommentColumn(aCommentColumn),
-      mSelectValue(aSelectValue)
-    {}
+      mSelectValue(aSelectValue),
+      mExclude(aExclude) {}
 
   protected:
     virtual PRBool   IsResult(nsIMdbRow* aRow);
