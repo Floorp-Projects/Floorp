@@ -359,8 +359,8 @@ void CBrowserShell::Stop()
 
 void CBrowserShell::LoadURL(Ptr urlText, SInt32 urlTextLen)
 {
-	nsAutoString urlString(urlText, urlTextLen);
-   LoadURL(urlString);
+    nsAutoString urlString; urlString.AssignWithConversion(urlText, urlTextLen);
+    LoadURL(urlString);
 }
 
 
