@@ -529,7 +529,10 @@ nsPop3Sink::AbortMailDelivery(nsIPop3Protocol *protocol)
   we have truncated the inbox, so berkeley mailbox and msf file are in sync*/
   if (m_newMailParser)
     m_newMailParser->UpdateDBFolderInfo();
-  nsresult rv = ReleaseFolderLock();
+#ifdef DEBUG
+  nsresult rv =
+#endif
+    ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
 #ifdef DEBUG
@@ -731,7 +734,6 @@ nsresult nsPop3Sink::HandleTempDownloadFailed(nsIMsgWindow *msgWindow)
     (void) msgWindow->GetRootDocShell(getter_AddRefs(docShell));
     parentWindow = do_QueryInterface(docShell);
   }
-  PRBool confirmed = PR_FALSE;
   if (promptService && confirmString)
   {
     PRInt32 dlgResult  = -1;

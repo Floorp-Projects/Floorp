@@ -172,7 +172,6 @@ NS_IMETHODIMP nsMsgGroupThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inRepl
 nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child, nsMsgDBView *view)
 {
   nsresult ret = NS_OK;
-  PRBool keyAdded = PR_FALSE;
   nsMsgKey newHdrKey;
   child->GetMessageKey(&newHdrKey);
   PRUint32 insertIndex = 0;
@@ -199,12 +198,9 @@ nsresult nsMsgGroupThread::AddMsgHdrInDateOrder(nsIMsgDBHdr *child, nsMsgDBView 
 
 nsresult nsMsgGroupThread::AddChildFromGroupView(nsIMsgDBHdr *child, nsMsgDBView *view)
 {
-  nsresult ret = NS_OK;
   PRUint32 newHdrFlags = 0;
   PRUint32 msgDate;
   nsMsgKey newHdrKey = 0;
-  PRBool parentKeyNeedsSetting = PR_TRUE;
-  PRBool hdrAddedToThread = PR_FALSE;
   
   child->GetFlags(&newHdrFlags);
   child->GetMessageKey(&newHdrKey);
@@ -214,7 +210,6 @@ nsresult nsMsgGroupThread::AddChildFromGroupView(nsIMsgDBHdr *child, nsMsgDBView
 
   child->AndFlags(~(MSG_FLAG_WATCHED | MSG_FLAG_IGNORED), &newHdrFlags);
   PRUint32 numChildren;
-  PRUint32 childIndex = 0;
   
   // get the num children before we add the new header.
   GetNumChildren(&numChildren);

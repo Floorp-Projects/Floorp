@@ -760,7 +760,6 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
         Log("SetupWithUrl", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
-        PRBool isSecure = PR_FALSE;
         const char *connectionType = nsnull;
         
         if (m_socketType == nsIMsgIncomingServer::useSSL) 
@@ -1179,7 +1178,7 @@ nsImapProtocol::ImapThreadMainLoop()
 
 void nsImapProtocol::HandleIdleResponses()
 {
-  PRInt32 oldRecent = GetServerStateParser().NumberOfRecentMessages();
+  // PRInt32 oldRecent = GetServerStateParser().NumberOfRecentMessages();
   nsCAutoString commandBuffer(GetServerCommandTag());
   commandBuffer.Append(" IDLE"CRLF);
 

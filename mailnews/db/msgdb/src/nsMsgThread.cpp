@@ -407,7 +407,6 @@ nsresult nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *oldTopLevelHdr
     if (NS_SUCCEEDED(ret) && curHdr)
     {
       nsMsgKey oldThreadParent, curHdrKey;
-      nsIMsgDBHdr *curMsgHdr = curHdr;
       nsMsgHdr* oldTopLevelMsgHdr = NS_STATIC_CAST(nsMsgHdr*, oldTopLevelHdr);      // closed system, cast ok
       curHdr->GetThreadParent(&oldThreadParent);
       curHdr->GetMessageKey(&curHdrKey);

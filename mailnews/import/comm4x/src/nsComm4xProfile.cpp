@@ -87,9 +87,9 @@ NS_IMPL_ISUPPORTS1(nsComm4xProfile, nsIComm4xProfile)
 NS_IMETHODIMP
 nsComm4xProfile::GetProfileList(PRUint32 *length, PRUnichar ***profileNames)
 {
-    nsresult rv;
 // on win/mac/os2, NS4x uses a registry to determine profile locations
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+    nsresult rv;
 
     nsCOMPtr<nsIFile> regFile;
     rv = NS_GetSpecialDirectory(OLDREG_DIR, getter_AddRefs(regFile));
@@ -149,8 +149,8 @@ nsComm4xProfile::GetMailDir(const PRUnichar *aProfile, PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     *_retval = nsnull;
-    nsresult rv = NS_OK;
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MACOSX)
+    nsresult rv;
     nsCOMPtr <nsILocalFile> resolvedLocation = do_CreateInstance("@mozilla.org/file/local;1");
     // on macos, registry entries are UTF8 encoded
     NS_ConvertUTF16toUTF8 profileName(aProfile);
