@@ -128,11 +128,7 @@ ImageNetContextSyncImpl::CreateURL(const char*      aURL,
 {
   ilIURL *url;
 
-#ifdef NECKO
-  if (NS_NewImageURL(&url, aURL) == NS_OK)
-#else
   if (NS_NewImageURL(&url, aURL, nsnull) == NS_OK)
-#endif
   {
     return url;
   }

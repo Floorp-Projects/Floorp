@@ -243,11 +243,8 @@ ImageURLImpl::SetOwnerId(int aOwnerId)
 }
 
 extern "C" NS_GFX_(nsresult)
-NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL 
-#ifndef NECKO
-               , nsILoadGroup* aLoadGroup
-#endif
-  )
+NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL,
+               nsILoadGroup* aLoadGroup)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
