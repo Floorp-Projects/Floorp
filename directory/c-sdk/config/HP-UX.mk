@@ -137,6 +137,13 @@ endif
 
 # 11.00 is similar to 10.30.
 ifeq ($(OS_RELEASE),B.11.00)
+MODERN_HPUX=1
+endif
+ifeq ($(OS_RELEASE),B.11.11)
+MODERN_HPUX=1
+endif
+
+ifdef MODERN_HPUX
 	ifneq ($(NS_USE_GCC), 1)
 		CCC			        = /opt/aCC/bin/aCC -ext
 		ifeq ($(USE_64),1)

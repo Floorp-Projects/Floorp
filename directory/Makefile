@@ -130,7 +130,7 @@ else
 endif
 	@if [ -d $(CONFIGDIR)/ ]; then \
 		cd $(CONFIGDIR); \
-		gmake; \
+		gmake -f Makefile.client; \
 	else \
 		echo "No $(CONFIGDIR) directory found"; \
 	fi
@@ -205,7 +205,7 @@ clean clobber:	FORCE
 	fi
 	@if [ -d $(CONFIGDIR) ]; then \
 		cd $(CONFIGDIR); \
-		gmake cleanconfig; \
+		gmake -f Makefile.client cleanconfig; \
 	fi
 
 FORCE:

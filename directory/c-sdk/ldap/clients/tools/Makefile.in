@@ -202,9 +202,6 @@ EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(LDAP_LIBNAME) \
 	     -l$(LBER_LIBNAME) \
 	     -ldl -lresolv -lpthread 
 EXTRA_LIBS += -L$(DIST)/lib $(DYNAMICNSPR)
-# On Linux, we must link with stdc++ because one of
-# our object files (convutf8.o) was compiled as a C++ object.
-EXTRA_LIBS += -lstdc++
 endif
 
 ifeq ($(OS_ARCH), HP-UX)

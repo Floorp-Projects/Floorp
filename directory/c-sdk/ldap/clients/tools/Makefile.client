@@ -394,7 +394,7 @@ install:: $(OBJDEST) libdir $(BINS)
 #
 # Simple, local dependencies
 #
-LDAPTOOL_COMMON_DEPS = ldaptool.h Makefile
+LDAPTOOL_COMMON_DEPS = ldaptool.h Makefile.client
 $(LDAPTOOLCOMMON_OBJ):	$(LDAPTOOL_COMMON_DEPS)
 $(LDAPDELETE_OBJ):	$(LDAPTOOL_COMMON_DEPS)
 $(LDAPMODIFY_OBJ):	$(LDAPTOOL_COMMON_DEPS) fileurl.h
