@@ -214,6 +214,9 @@ sub setup_env {
             "to the location of the test library.\n";
     }
 
+    # make sure that the test dir ends with a trailing slash
+    $test_dir .= '/';
+
     chdir $src_dir;
 
     # figure out which platform we're on, and figure out where the object
