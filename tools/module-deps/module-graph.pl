@@ -367,6 +367,22 @@ sub print_module_deps {
 }
 
 
+sub get_matrix_size {
+    my (%matrix) = @_;
+
+  	my $i;
+	my $j;
+
+	$i = 0;
+    $j = 0;
+	foreach $i ( keys %matrix ) {
+	  $j++;
+	}
+
+	return $j;
+}
+
+
 # main
 {
   parse_args();
@@ -388,5 +404,12 @@ sub print_module_deps {
   # the required modules for that module.
   if($opt_start_module) {
 	print_module_deps();
+  }
+
+  if($debug) {
+	print "----- sizes -----\n";
+	print "            deps: " . get_matrix_size(%deps) . "\n";
+	print "toplevel_modules: " . get_matrix_size(%toplevel_modules) . "\n";
+	print "       clustered: " . get_matrix_size(%clustered) . "\n";
   }
 }
