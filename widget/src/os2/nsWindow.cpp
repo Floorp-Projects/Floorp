@@ -102,10 +102,9 @@ static int WINDOWCOUNT = 0;
 //        Revised 05-06-99 to use pres-params
 //        Revised 19-06-99 drag'n'drop, etc.
 
-// XXX don't deliver click-events to obscured parents
-BOOL g_bHandlingMouseClick = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
+BOOL nsWindow::sIsRegistered       = FALSE;
 
 ////////////////////////////////////////////////////
 // Rollup Listener - global variable defintions
@@ -683,15 +682,12 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 
    if( wnd)
    {
-      BOOL bPreHandling = g_bHandlingMouseClick;
       if( PR_FALSE == wnd->ProcessMessage( msg, mp1, mp2, mRC) &&
           WinIsWindow( (HAB)0, hwnd) && wnd->GetPrevWP())
       {
          mRC = (wnd->GetPrevWP())( hwnd, msg, mp1, mp2);
 
       }
-      if( !bPreHandling)
-         g_bHandlingMouseClick = FALSE;
    }
    else
       /* erm */ mRC = WinDefWindowProc( hwnd, msg, mp1, mp2);
@@ -774,10 +770,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    // Set up parent data - don't addref to avoid circularity
    mParent = aParent;
-
-   // Set up window style: first give subclass a chance to prepare
-   if( aInitData)
-      PreCreateWidget( aInitData);
 
    ULONG style = WindowStyle();
    if( aInitData)
@@ -1067,17 +1059,11 @@ NS_METHOD nsWindow::Show(PRBool bState)
       HWND hwnd = GetMainWindow();
       if( bState == PR_TRUE)
       {
-         if( WinQueryWindow( hwnd, QW_PARENT) ==
-             WinQueryObjectWindow(HWND_DESKTOP) )
-            WinSetParent( hwnd, HWND_DESKTOP, FALSE);
          WinShowWindow( hwnd, TRUE);
       }
       else
       {
          WinShowWindow( hwnd, FALSE);
-         if( WinQueryWindow( hwnd, QW_PARENT) ==
-             WinQueryDesktopWindow(HWND_DESKTOP, NULLHANDLE) )
-            WinSetParent( hwnd, HWND_OBJECT, FALSE);
       }
    }
 
@@ -1330,19 +1316,6 @@ NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
    aRect.y = 0;
    aRect.width = mBounds.width;
    aRect.height = mBounds.height;
-   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set the background color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
-{
-   if( mWnd)
-      SetPresParam( PP_BACKGROUNDCOLOR, aColor);
-   mBackground = aColor;
    return NS_OK;
 }
 
@@ -2479,10 +2452,6 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
 
   nsMouseEvent event;
 
-  // Stop multiple messages for the same PM action
-  if( g_bHandlingMouseClick)
-    return result;
-
   // Mouse leave & enter messages don't seem to have position built in.
   if( aEventType && aEventType != NS_MOUSE_ENTER && aEventType != NS_MOUSE_EXIT)
   {
@@ -2645,7 +2614,6 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
       }
     }
 #endif //OS2TODO
-    g_bHandlingMouseClick = TRUE;
     NS_RELEASE(event.widget);
     return result;
   }
@@ -2687,7 +2655,6 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     } // switch
   } 
 
-  g_bHandlingMouseClick = TRUE;
   NS_RELEASE(event.widget);
   return result;
 }
@@ -2855,15 +2822,6 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-// We don' wan' no steekin' borda!
-NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-  aWidth = 0;
-  aHeight = 0;
-  return NS_OK;
-}
-
-
 // --------------------------------------------------------------------------
 // OS2-specific routines to emulate Windows behaviors
 // --------------------------------------------------------------------------
@@ -2883,48 +2841,6 @@ BOOL nsWindow::SetWindowPos( HWND ib, long x, long y, long cx, long cy, ULONG fl
    // When the window is actually sized, mBounds will be updated in the fnwp.
 
    return bDeferred;
-}
-
-// --------------------------------------------------------------------------
-// Colours, fonts, painting -------------------------------------------------
-
-nscolor nsWindow::QueryPresParam( ULONG ppID)
-{
-   nscolor col = 0;
-   RGB2    rgb;
-   ULONG   found = 0;
-
-   WinQueryPresParam( mWnd, ppID, 0, &found,
-                      sizeof( RGB2), &rgb, QPF_PURERGBCOLOR);
-
-   if( found == ppID)
-      col = NS_RGB( rgb.bRed, rgb.bGreen, rgb.bBlue);
-   return col;
-}
-
-void nsWindow::SetPresParam( ULONG ppID, const nscolor &c)
-{
-   RGB2 rgb = { NS_GET_B( c), NS_GET_G( c), NS_GET_R( c), 0 };
-   WinSetPresParam( mWnd, ppID, sizeof( RGB2), &rgb);
-}
-
-nscolor nsWindow::GetForegroundColor()
-{
-   return (mWnd ? QueryPresParam( PP_FOREGROUNDCOLOR) : mForeground);
-}
-
-nsresult nsWindow::SetForegroundColor( const nscolor &aColor)
-{
-   if( mWnd)
-      SetPresParam( PP_FOREGROUNDCOLOR, aColor);
-   mForeground = aColor;
-
-   return NS_OK;
-}
-
-nscolor nsWindow::GetBackgroundColor()
-{
-   return (mWnd ? QueryPresParam( PP_BACKGROUNDCOLOR) : mBackground);
 }
 
 nsresult nsWindow::GetWindowText( nsString &aStr, PRUint32 *rc)
@@ -2967,37 +2883,6 @@ void nsWindow::RemoveFromStyle( ULONG style)
       WinSetWindowULong( mWnd, QWL_STYLE, oldStyle);
    }
 }
-
-void nsWindow::GetStyle( ULONG &out)
-{
-   if( mWnd)
-      out = WinQueryWindowULong( mWnd, QWL_STYLE);
-}
-
-
-#if 0 // Handled by XP code now
-// --------------------------------------------------------------------------
-// Tooltips -----------------------------------------------------------------
-
-nsresult nsWindow::SetTooltips( PRUint32 cTips, nsRect *areas[])
-{
-   nsTooltipManager::GetManager()->SetTooltips( this, cTips, areas);
-   return NS_OK;
-}
-
-nsresult nsWindow::UpdateTooltips( nsRect *aNewTips[])
-{
-   nsTooltipManager::GetManager()->UpdateTooltips( this, aNewTips);
-   return NS_OK;
-}
-
-nsresult nsWindow::RemoveTooltips()
-{
-   nsTooltipManager::GetManager()->RemoveTooltips( this);
-   return NS_OK;
-}
-
-#endif
 
 // --------------------------------------------------------------------------
 // Drag'n'drop --------------------------------------------------------------
@@ -3144,18 +3029,16 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    return rc;
 }
 
-// Creation hooks
-static BOOL bRegistered;
 PCSZ nsWindow::WindowClass()
 {
-   if( !bRegistered)
-   {
-      BOOL rc = WinRegisterClass( 0 /*hab*/, NSCANVASCLASS,
-                                  WinDefWindowProc, 0, 4);
-      NS_ASSERTION(rc, "Couldn't register canvas class");
-      bRegistered = TRUE;
-   }
+    const PCSZ className = "MozillaWindowClass";
 
-   return (PCSZ) NSCANVASCLASS;
+    if (!nsWindow::sIsRegistered)
+    {
+        nsWindow::sIsRegistered = WinRegisterClass((HAB)0, className,
+                                                   WinDefWindowProc, 0, 4);
+    }
+
+    return className;
 }
 

@@ -37,8 +37,6 @@
 #include "nsFrameWindow.h"
 #include "nsIRollupListener.h"
 
-static PRBool haveHiddenWindow = PR_FALSE;
-
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
@@ -49,7 +47,6 @@ extern HWND   gHwndBeingDestroyed;
 
 nsFrameWindow::nsFrameWindow() : nsWindow()
 {
-   hwndFrame    = 0;
    fnwpDefFrame = 0;
    mWindowType  = eWindowType_toplevel;
 }
@@ -63,7 +60,7 @@ void nsFrameWindow::SetWindowListVisibility( PRBool bState)
    HSWITCH hswitch;
    SWCNTRL swctl;
 
-   hswitch = WinQuerySwitchHandle(hwndFrame, 0);
+   hswitch = WinQuerySwitchHandle(GetMainWindow(), 0);
    if( hswitch)
    {
       WinQuerySwitchEntry( hswitch, &swctl);
@@ -111,15 +108,11 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    // Set flags only if not first hidden window created by nsAppShellService
 
-   // This line is being commented out to address the problem of the profile manager's windows
-   // being created w/out title-bars
-   // OS2TODO -- insure this does not affect any other portion of the application 
-   // if (haveHiddenWindow)
      fcd.flCreateFlags = GetFCFlags();
 
    // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which
    // is an extra bonus feature :-)
-   hwndFrame = WinCreateWindow( HWND_DESKTOP,
+   mFrameWnd = WinCreateWindow( HWND_DESKTOP,
                                 WC_FRAME,
                                 0, 0,                  // text, style
                                 0, 0, 0, 0,            // position
@@ -128,15 +121,12 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                 0,                     // ID
                                 &fcd, 0);
 
-   if (hwndFrame && !haveHiddenWindow)
-     haveHiddenWindow = PR_TRUE;
-
    SetWindowListVisibility( PR_FALSE);  // Hide from Window List until shown
 
    // This is a bit weird; without an icon, we get WM_PAINT messages
    // when minimized.  They don't stop, giving maxed cpu.  Go figure.
 
-   NS_ASSERTION( hwndFrame, "Couldn't create frame");
+   NS_ASSERTION( mFrameWnd, "Couldn't create frame");
 
    // Frames have a minimum height based on the pieces they are created with,
    // such as titlebar, menubar, frame borders, etc.  We need this minimum
@@ -165,24 +155,24 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    // Now create the client as a child of us, triggers resize and sets
    // up the client size (with any luck...)
-   nsWindow::RealDoCreate( hwndFrame, nsnull, frameRect, aHandleEventFunction,
+   nsWindow::RealDoCreate( mFrameWnd, nsnull, frameRect, aHandleEventFunction,
                            aContext, aAppShell, aInitData, hwndO);
 
    // Subclass frame
-   fnwpDefFrame = WinSubclassWindow( hwndFrame, fnwpFrame);
-   WinSetWindowPtr( hwndFrame, QWL_USER, this);
-   BOOL brc = (BOOL) WinSendMsg( hwndFrame, WM_SETICON,
+   fnwpDefFrame = WinSubclassWindow( mFrameWnd, fnwpFrame);
+   WinSetWindowPtr( mFrameWnd, QWL_USER, this);
+   BOOL brc = (BOOL) WinSendMsg( mFrameWnd, WM_SETICON,
                                  MPFROMLONG( gWidgetModuleData->GetFrameIcon()), 0);
 
    // make the client the client.
    WinSetWindowUShort( mWnd, QWS_ID, FID_CLIENT);
-   WinSendMsg( hwndFrame, WM_UPDATEFRAME, 0, 0); // possibly superfluous
+   WinSendMsg( mFrameWnd, WM_UPDATEFRAME, 0, 0); // possibly superfluous
 
    // Set up initial client size
    UpdateClientSize();
 
    // Record frame hwnd somewhere that the window object can see during dtor
-   mHackDestroyWnd = hwndFrame;
+   mHackDestroyWnd = mFrameWnd;
 }
 
 ULONG nsFrameWindow::GetFCFlags()
@@ -241,7 +231,7 @@ ULONG nsFrameWindow::GetFCFlags()
 void nsFrameWindow::UpdateClientSize()
 {
    RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
-   WinCalcFrameRect( hwndFrame, &rcl, TRUE); // provided == frame rect
+   WinCalcFrameRect( mFrameWnd, &rcl, TRUE); // provided == frame rect
    mSizeClient.width = rcl.xRight - rcl.xLeft;
    mSizeClient.height = rcl.yTop - rcl.yBottom;
    mSizeBorder.width = (mBounds.width - mSizeClient.width) / 2;
@@ -251,18 +241,11 @@ void nsFrameWindow::UpdateClientSize()
 nsresult nsFrameWindow::GetClientBounds( nsRect &aRect)
 {
    RECTL rcl = { 0, 0, mBounds.width, mBounds.height };
-   WinCalcFrameRect( hwndFrame, &rcl, TRUE); // provided == frame rect
+   WinCalcFrameRect( mFrameWnd, &rcl, TRUE); // provided == frame rect
    aRect.x = rcl.xLeft;
    aRect.y = mBounds.height - rcl.yTop;
    aRect.width = mSizeClient.width;
    aRect.height = mSizeClient.height;
-   return NS_OK;
-}
-
-nsresult nsFrameWindow::GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight)
-{
-   aWidth = mSizeBorder.width;
-   aHeight = mSizeBorder.height;
    return NS_OK;
 }
 
@@ -354,7 +337,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
          // When the frame is sized, do stuff to recalculate client size.
          if( pSwp->fl & SWP_SIZE && !(pSwp->fl & SWP_MINIMIZE))
          {
-            mRC = (*fnwpDefFrame)( hwndFrame, msg, mp1, mp2);
+            mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
             bDone = TRUE;
 
             mBounds.width = pSwp->cx;
@@ -382,8 +365,8 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       }
 
       case WM_DESTROY:
-         WinSubclassWindow( hwndFrame, fnwpDefFrame);
-         WinSetWindowPtr( hwndFrame, QWL_USER, 0);
+         WinSubclassWindow( mFrameWnd, fnwpDefFrame);
+         WinSetWindowPtr( mFrameWnd, QWL_USER, 0);
          break;
 
       // adjust client size when menu appears or disappears.
@@ -400,8 +383,8 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
              * the deactivation event if we've hit some destructors or done
              * some destroy work.  Especially w.r.t the focus controller
              */
-            if( (hwndFrame != gHwndBeingDestroyed) || 
-                (!WinIsChild( hwndFrame, gHwndBeingDestroyed )) )
+            if( (mFrameWnd != gHwndBeingDestroyed) || 
+                (!WinIsChild( mFrameWnd, gHwndBeingDestroyed )) )
             {
                gJustGotDeactivate = PR_TRUE;
             }
@@ -410,7 +393,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
    }
 
    if( !bDone)
-      mRC = (*fnwpDefFrame)( hwndFrame, msg, mp1, mp2);
+      mRC = (*fnwpDefFrame)( mFrameWnd, msg, mp1, mp2);
 
    return mRC;
 }
