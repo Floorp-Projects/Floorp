@@ -487,9 +487,9 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
 
         inet->CleanupPollingTimer(aTimer);
         // Keep scheduling callbacks as long as there are URLs to process...
-        if (0 < NET_TotalNumberOfProcessingURLs) {
+///        if (0 < NET_TotalNumberOfProcessingURLs) {
             inet->SchedulePollingTimer();
-        }
+///        }
     }
 }
 
