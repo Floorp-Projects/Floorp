@@ -41,11 +41,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNode.h"
 
-// Deal with |#define index(a,b) strchr(a,b)| macro in Toolkit types.h
-#if defined(XP_OS2_VACPP) && defined(index)
-#undef index
-#endif
-
 /**
  * Helper class for iterating children during frame construction.
  * This class should always be used in lieu of the straight content
