@@ -149,7 +149,9 @@ nsSocketTransport::nsSocketTransport():
     mSocketTimeout        (PR_INTERVAL_NO_TIMEOUT),
     mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS)),
     mWasConnected (PR_FALSE) ,
-    mIdleTimeoutInSeconds(0)
+    mIdleTimeoutInSeconds (0),
+    mOnStartWriteFired    (PR_FALSE),
+    mOnStartReadFired     (PR_FALSE)
 {
     NS_INIT_REFCNT();
     
@@ -1811,11 +1813,10 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
     
     // Create a marshalling stream listener to receive notifications...
     if (NS_SUCCEEDED(rv))
-    {
+    {        
+        mOnStartReadFired = PR_FALSE;
         rv = NS_NewAsyncStreamListener(getter_AddRefs(mReadListener),
             aListener, NS_CURRENT_EVENTQ);
-        
-        mOnStartReadFired = PR_FALSE;
     }
     
     if (NS_SUCCEEDED(rv))

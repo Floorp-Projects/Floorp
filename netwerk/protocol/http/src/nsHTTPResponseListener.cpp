@@ -137,7 +137,7 @@ nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
 {
     PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this));
   
-    return mResponseDataListener -> OnStartRequest (mChannel, aContext);
+    return mChannel -> AssureResponseOnStartFired ();
 }
 
 NS_IMETHODIMP
@@ -153,7 +153,7 @@ nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
     // is no socket transport involved nsnull is passed as the
     // transport...
     //
-    return mChannel -> ResponseCompleted (mResponseDataListener, aStatus, aErrorMsg);
+    return mChannel -> ResponseCompleted (aStatus, aErrorMsg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +340,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
             if (statusCode == 304)  // no content
             {
-                rv = FinishedResponseHeaders ();
+                rv = mChannel -> FinishedResponseHeaders ();
                 if (NS_FAILED (rv))
                     return rv;
 
@@ -379,7 +379,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
             }
             else
             {
-                rv = FinishedResponseHeaders ();
+                rv = mChannel -> FinishedResponseHeaders ();
                 if (NS_FAILED (rv))
                     return rv;
             }
@@ -508,7 +508,7 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                         if (status != 304 || !mChannel -> mCachedResponse)
                         {
-                            mChannel -> ResponseCompleted (mResponseDataListener, NS_OK, nsnull);
+                            mChannel -> ResponseCompleted (NS_OK, nsnull);
                             mChannel -> mHTTPServerListener = 0;
                         }
 
@@ -611,7 +611,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
         //
         mHeadersDone = PR_TRUE;
         if (mResponse) {
-            (void)FinishedResponseHeaders();
+            mChannel -> FinishedResponseHeaders();
         }
     }
 
@@ -625,7 +625,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
 
         if (status != 304 || !mChannel -> mCachedResponse)
         {
-            mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
+            mChannel -> ResponseCompleted (i_Status, i_pMsg);
 
             mChannel -> mHTTPServerListener = 0;
         }
@@ -680,7 +680,7 @@ nsHTTPServerListener::OnStopRequest (nsIChannel* channel, nsISupports* i_pContex
             while (NS_SUCCEEDED (mPipelinedRequest -> AdvanceToNextRequest ()))
             {
                 OnStartRequest (nsnull, nsnull);
-                mChannel -> ResponseCompleted (mResponseDataListener, i_Status, i_pMsg);
+                mChannel -> ResponseCompleted (i_Status, i_pMsg);
                 mChannel -> mHTTPServerListener = 0;
             }
 
@@ -722,7 +722,7 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
     nsresult rv;
 
     if (mHeadersDone) {
-        rv = FinishedResponseHeaders();
+        rv = mChannel -> FinishedResponseHeaders();
         if (NS_FAILED(rv)) return rv;
         
         if (mBytesReceived && mResponseDataListener) {
@@ -940,28 +940,4 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
   }
 
   return mResponse->ParseHeader(mHeaderBuffer);
-}
-
-nsresult
-nsHTTPServerListener::FinishedResponseHeaders ()
-{
-    nsresult rv;
-
-    rv = mChannel -> FinishedResponseHeaders ();
-    if (NS_FAILED(rv)) return rv;
-
-    //
-    // Fire the OnStartRequest notification - now that user data is available
-    //
-    if (NS_SUCCEEDED(rv) && mResponseDataListener)
-    {
-        rv = mResponseDataListener -> OnStartRequest (mChannel, mChannel -> mResponseContext);
-        if (NS_FAILED(rv))
-        {
-            PR_LOG(gHTTPLog, PR_LOG_ERROR, ("\tOnStartRequest [this=%x]. Consumer failed!"
-                        "Status: %x\n", this, rv));
-        }
-    } 
-
-    return rv;
 }

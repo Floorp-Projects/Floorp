@@ -792,11 +792,7 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
 
         while (req)
         {
-            nsCOMPtr<nsIStreamListener> consumer;
-            req -> mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
-
-            if (consumer)
-                req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
+            req -> mConnection -> ResponseCompleted (rv, i_Msg);
 
             // Notify the HTTPChannel that the request has finished
 

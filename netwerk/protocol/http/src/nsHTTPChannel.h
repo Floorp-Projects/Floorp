@@ -90,8 +90,8 @@ public:
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
 
-    nsresult            ResponseCompleted(nsIStreamListener* aListener,
-                                          nsresult aStatus,
+    nsresult            AssureResponseOnStartFired ();
+    nsresult            ResponseCompleted(nsresult aStatus,
                                           const PRUnichar* aMsg);
 
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
@@ -154,6 +154,8 @@ protected:
     
     // Called mOpenObserver->OnStartRequest
     PRBool                              mFiredOpenOnStartRequest;
+    PRBool                              mFiredResponseOnStartRequest;
+    PRBool                              mResponseCompleted;
 
     // Auth related stuff-
     /* 
