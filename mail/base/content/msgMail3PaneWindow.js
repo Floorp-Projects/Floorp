@@ -882,10 +882,6 @@ function UpgradeFolderPaneUI()
   var folderPaneUIVersion = pref.getIntPref("mail.ui.folderpane.version");
 
   if (folderPaneUIVersion == 1) {
-    var folderUnreadCol = document.getElementById("folderUnreadCol");
-    folderUnreadCol.setAttribute("hidden", "true");
-    var folderTotalCol = document.getElementById("folderTotalCol");
-    folderTotalCol.setAttribute("hidden", "true");
     pref.setIntPref("mail.ui.folderpane.version", 2);
   } // we fall through to the == 2 case so we'll upgrade v 1 profiles correctly
   if (folderPaneUIVersion <= 2) {
