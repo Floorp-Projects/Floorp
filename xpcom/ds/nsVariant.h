@@ -53,21 +53,21 @@ struct NS_COM nsDiscriminatedUnion
         struct {
             nsISupports* mInterfaceValue;
             nsIID        mInterfaceID;
-        };
+        } iface;
         struct {
             nsIID        mArrayInterfaceID;
             void*        mArrayValue;
             PRUint32     mArrayCount;
             PRUint16     mArrayType;
-        };
+        } array;
         struct {
             char*        mStringValue;
             PRUint32     mStringLength;
-        };
+        } str;
         struct {
             PRUnichar*   mWStringValue;
             PRUint32     mWStringLength;
-        };
+        } wstr;
     };
     PRUint16       mType;
 };
