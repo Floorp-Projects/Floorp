@@ -468,8 +468,8 @@ si_SaveSignonDataLocked(PRBool fullSave);
 PUBLIC int
 SI_LoadSignonData(PRBool fullLoad);
 
-PRIVATE void
-si_RemoveAllSignonData();
+PUBLIC void
+SI_RemoveAllSignonData();
 
 #ifdef DefaultIsOff
 PRIVATE PRBool
@@ -530,7 +530,7 @@ si_GetSignonRememberingPref(void) {
    */
   if (si_list_invalid) {
     /*
-     * set si_list_invalid to PR_FALSE first because si_RemoveAllSignonData
+     * set si_list_invalid to PR_FALSE first because SI_RemoveAllSignonData
      * calls si_GetSignonRememberingPref
      */
     si_list_invalid = PR_FALSE;
@@ -1275,8 +1275,8 @@ si_FreeReject(si_Reject * reject);
  * Remove all the signons and free everything
  */
 
-PRIVATE void
-si_RemoveAllSignonData() {
+PUBLIC void
+SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
     while (si_RemoveUser(NULL, nsAutoString(""), PR_FALSE, PR_TRUE)) {
@@ -1747,7 +1747,7 @@ SI_LoadSignonData(PRBool fullLoad) {
 
 #ifdef APPLE_KEYCHAIN
   if (KeychainManagerAvailable()) {
-    si_RemoveAllSignonData();
+    SI_RemoveAllSignonData();
     return si_LoadSignonDataFromKeychain();
   }
 #endif
@@ -1769,12 +1769,12 @@ SI_LoadSignonData(PRBool fullLoad) {
     return -1;
   }
 
-  si_RemoveAllSignonData();
+  SI_RemoveAllSignonData();
 
   if (fullLoad) {
     PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     if (si_KeyTimedOut()) {
-      si_RemoveAllSignonData();
+      SI_RemoveAllSignonData();
     }
     while (!si_SetKey()) {
       if ((Wallet_CancelKey() || Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {
@@ -2002,7 +2002,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   if (fullSave2) {
     PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
     if (si_KeyTimedOut()) {
-      si_RemoveAllSignonData();
+      SI_RemoveAllSignonData();
     }
     while (!si_SetKey()) {
       if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !si_ConfirmYN(message)) {

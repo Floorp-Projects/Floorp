@@ -1326,11 +1326,14 @@ Wallet_KeySet() {
   return keySet;
 }
 
+extern void SI_RemoveAllSignonData();
+
 PUBLIC PRBool
 Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
   if (Wallet_KeySet() && (curTime >= keyExpiresTime)) {
     keySet = PR_FALSE;
+    SI_RemoveAllSignonData();
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -2701,6 +2704,7 @@ void WLLT_ChangePassword() {
 
   /* force the user to supply old database key, for security */
   wallet_KeyTimeoutImmediately();
+  SI_RemoveAllSignonData();
 
   /* read in user data using old key */
   wallet_Initialize(PR_TRUE);
