@@ -231,7 +231,7 @@ output_row(gif_struct *gs)
      */
 	if (gs->progressive_display && gs->interlaced && (gs->ipass < 4))
 	{
-        uint row_dup, row_shift;
+        uint row_dup=0, row_shift=0;
 
         switch (gs->ipass) {
         case 1:
@@ -668,7 +668,7 @@ gif_delay_time_callback(void *closure)
 static int
 gif_clear_screen(gif_struct *gs)
 {
-    uint erase_width, erase_height, erase_x_offset, erase_y_offset;
+    uint erase_width=0, erase_height=0, erase_x_offset=0, erase_y_offset=0;
     PRBool erase;
     il_container *ic = gs->ic;
 

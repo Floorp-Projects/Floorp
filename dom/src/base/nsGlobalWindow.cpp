@@ -1346,7 +1346,7 @@ GlobalWindowImpl::Open(JSContext *cx,
     }
 
     nsAutoString mURL, mEmpty;
-    nsIURL* mDocURL;
+    nsIURL* mDocURL = 0;
     nsIDocument* mDoc;
 
     mURL.SetString(JS_GetStringChars(mJSStrURL));

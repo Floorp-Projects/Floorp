@@ -246,7 +246,7 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
 //  XXX FIX ME
   PRInt32     desiredpix = NSToIntRound(app2dev * desired);
   XFontStruct *curfont;
-  PRInt32     closestmin = -1, minidx;
+  PRInt32     closestmin = -1, minidx = 0;
 
   //first try an exact or closest smaller match...
   

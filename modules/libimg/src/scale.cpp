@@ -691,7 +691,7 @@ il_emit_row(
     IL_Pixmap *mask = ic->mask;
     NI_PixmapHeader *src_header = ic->src_header;
     NI_PixmapHeader *img_header = &image->header;
-    NI_PixmapHeader *mask_header;
+    NI_PixmapHeader *mask_header = 0;
     NI_ColorSpace *src_color_space = src_header->color_space;
     NI_ColorSpace *img_color_space = img_header->color_space;
 	uint8 XP_HUGE *out;
