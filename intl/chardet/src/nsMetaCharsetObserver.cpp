@@ -288,17 +288,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      res = mAlias->GetPreferred(newCharset, preferred);
                      if(NS_SUCCEEDED(res))
                      {
-                        const char* newCharsetStr = preferred.ToNewCString();
-                        NS_ASSERTION(newCharsetStr, "out of memory");
-                        if(nsnull != newCharsetStr) 
-                        {
-                           res = NotifyWebShell(aDocumentID, newCharsetStr, 
-                                      kCharsetFromMetaTag);
-                           delete [] (char*)newCharsetStr;
-                           return res;
-                        } // if(nsnull...)
-                        if(newCharsetStr)
-                           delete [] (char*)newCharsetStr;
+                        res = NotifyWebShell(aDocumentID, NS_ConvertUCS2toUTF8(preferred.GetUnicode()), 
+                                   kCharsetFromMetaTag);
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
