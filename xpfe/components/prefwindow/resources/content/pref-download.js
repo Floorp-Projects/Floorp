@@ -22,11 +22,6 @@ function PlaySoundCheck()
   document.getElementById("browse").disabled = disableCustomUI;
 }
 
-function onCustomWavInput()
-{
-  document.getElementById("preview").disabled = (document.getElementById("mailnewsSoundFileUrl").value == "");
-}
-
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function Browse()
@@ -42,10 +37,11 @@ function Browse()
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK) {
     var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
-    mailnewsSoundFileUrl.value = fp.file.path;
+    // convert the nsILocalFile into a nsIFile url 
+    mailnewsSoundFileUrl.value = fp.fileURL.spec;
   }
 
-  onCustomWavInput();
+  document.getElementById("preview").disabled = (document.getElementById("mailnewsSoundFileUrl").value == "");
 }
 
 var gSound = null;
