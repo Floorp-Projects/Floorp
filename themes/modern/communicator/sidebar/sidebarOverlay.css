@@ -1,0 +1,153 @@
+/* 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corp. Portions created by Netscape Communications
+ * Corp. are Copyright (C) 1999 Netscape Communications Corp. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): Stephen Lamm <slamm@netscape.com>
+ */ 
+
+splitter#sidebar-splitter {
+	margin-right: 2px;
+	margin-top: 2px;
+	padding: 0px;
+	border: none;
+	background-color: #003366;
+}
+
+splitter#sidebar-splitter #bottomright-cap {
+	min-height: 8px; 
+	background-image: url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
+	background-repeat: no-repeat;
+	background-position: 100% 100%;
+}
+
+splitter#sidebar-splitter #topright-cap {
+	min-height: 8px; 
+	background-image: url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
+	background-repeat: no-repeat;
+	background-position: 100% 0%;
+}
+
+splitter#sidebar-splitter grippy {
+	margin: 0px;
+	border: 2px solid #003366;
+	padding: 0px;
+	background-color: #6699CC;
+	list-style-image: none;
+}
+
+splitter#sidebar-splitter grippy:hover {
+	background-color: #99CCFF;
+}
+
+splitter#sidebar-splitter grippy:active {
+	background-color: #99CCFF;
+}
+
+/**/
+
+box#sidebar-box {
+  margin-top: 2px;
+  width: 162px;
+  min-height: 1px;
+  max-width: 400px;
+  border: none;
+  border-bottom: 8px solid #003366;
+}
+
+box#sidebar-panels {
+  min-width: 1px;
+  min-height: 1px;
+}
+
+iframe.panel-frame {
+  min-width: 1px;
+}
+
+/*
+ *  Sidebar and Panel title buttons
+ */
+.sidebar-main-header {
+  color: #CCFFFF;
+  background-color: #003366;
+  padding: 0px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.sidebar-main-header > text {
+  font-weight: bold;
+  margin: 2px;
+}
+
+menu#panel-picker:hover {
+  background-color: #336699;
+}
+
+menu#panel-picker > .menu-right {
+  list-style-image: url("chrome://global/skin/toolbar-menu-arrow.gif");
+}
+
+sidebarheader[type="box"] {
+  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-box);
+}
+
+sidebarheader[type="splitter"] {
+  behavior: url(chrome://global/content/globalBindings.xml#sidebar-header-splitter);
+  /* a vertical splitter */
+  cursor: n-resize;
+}
+
+box.texttab {
+	min-width: 10px;
+}
+
+box.texttab > .remain-space {
+	width: 30px;
+}
+
+box#sidebar-panels > box.texttab:first-child {
+	background-color: white;
+}
+
+box#sidebar-panels > box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+
+box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab {
+	background-color: white;
+}
+
+box#sidebar-panels-bottom > box.texttab[hidden] + box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+box#sidebar-panels-bottom > box.texttab + box.texttab {
+	background-color: #CCCCCC;
+}
+
+box#title-box { 
+  min-width: 10px;
+}
+
+*[hidden="true"] {
+  display: none;
+}
+
+*[collapsed="true"] {
+  visibility: collapsed;
+}

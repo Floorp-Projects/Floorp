@@ -1,0 +1,90 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/*
+
+  Style rules specific to the directory listing window.
+
+*/
+
+@import url(chrome://communicator/skin/);
+
+treecol[sortActive="true"] {
+  background-color: lightgray;
+}
+
+/* Hide the twisty when type != DIRECTORY (XXX is there a '!=' in CSS?) */
+treeitem[type="FILE"] > treerow > treecell > .twisty {
+  list-style-image: none;
+}
+
+/* Show an animated icon when a directory is loading */
+treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .twisty {
+  list-style-image: url("resource:/res/rdf/loading.gif");
+}
+
+/* Show an animated icon when a symbolic link is loading */
+treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > treecell > .twisty {
+  list-style-image: url("resource:/res/rdf/loading.gif");
+}
+
+/* Make a filenames look like links */
+treeitem > treerow > treecell.filename {
+  color: #666699;
+  text-decoration: underline;
+}
+
+treeitem > treerow > treecell.filename:hover {
+  color: #333366;
+  text-decoration: underline;
+}
+
+treeitem > treerow > treecell.filename:active {
+  color: #990000;
+  text-decoration: underline;
+}
+
+/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename {
+  color: inherit;
+  text-decoration: inherit;
+  font-style: italic;
+}
+
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:hover {
+  color: inherit;
+  text-decoration: inherit;
+  font-style: italic;
+}
+
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:active {
+  color: inherit;
+  text-decoration: inherit;
+  font-style: italic;
+}
+
+/* Override rule in xul.css that colors the selected row blue */
+treeitem[selected="true"] > treerow {
+  color: inherit;
+  background-color: inherit;
+}
+

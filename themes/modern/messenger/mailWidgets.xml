@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+
+<bindings   id="mailBindings"
+            xmlns="http://www.mozilla.org/xbl"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding id="search-menulist-abstract" extends="xul:box">
+    <content>
+      <xul:menulist inherits="flex" oncommand="this.parentNode.onSelect(event)">
+        <xul:menupopup/>
+      </xul:menulist>
+    </content>
+
+    <interface>
+      <property readonly="true" name="validityManager">
+        <![CDATA[
+           Components.classes['mozilla.mail.search.validityManager.1'].getService(Components.interfaces.nsIMsgSearchValidityManager);
+        ]]>
+      </property>
+      <property name="searchScope">
+        <!-- scope ID - retrieve the table -->
+        <setter>
+          <![CDATA[
+            this.internalScope = val;
+            this.refreshList();
+            if (this.target) this.target.searchScope = val;
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+            return this.internalScope;
+          ]]>
+        </getter>
+      </property>
+
+      <property name="validityTable" readonly="true" onget="return this.validityManager.getTable(this.searchScope)"/>
+
+      <property name="valueStrings" readonly="true">
+        <getter>
+          <![CDATA[
+            var strings = new Array;
+            var ids = this.valueIds;
+            var bundle = this.stringBundle;
+            for (var i=0; i<ids.length; i++)
+                strings[i] = this.stringBundle.GetStringFromID(ids[i]);
+            return strings;
+          ]]>
+        </getter>
+      </property>
+      <property name="target" readonly="true">
+        <getter>
+          <![CDATA[
+            return document.getElementById(this.getAttribute("for"));
+          ]]>
+        </getter>
+      </property>
+      <method name="refreshList">
+        <body>
+          <![CDATA[
+            dump("refreshing <" + this.tagName + ">\n");
+            var menuItemIds = this.valueIds;
+            var menuItemStrings = this.valueStrings;
+
+            var menulist = this.anonymousContent[0];
+            var popup = menulist.firstChild;
+
+            // save our old "data" so we can restore it later
+            var oldData = menulist.data;
+
+            // remove the old popup children
+            while (popup.hasChildNodes())
+              popup.removeChild(popup.lastChild);
+
+            var newSelection;
+            for (var i=0; i<menuItemIds.length; i++) {
+              // create the menuitem
+              var menuitem = document.createElement("menuitem");
+              menuitem.setAttribute("value", menuItemStrings[i]);
+              menuitem.setAttribute("data", menuItemIds[i]);
+              popup.appendChild(menuitem);
+
+              // try to restore the selection
+              if (!newSelection || oldData == menuItemIds[i].toString()) {
+                newSelection = menuitem;
+              }
+            }
+
+            // now restore the selection
+            menulist.selectedItem = newSelection
+          ]]>
+        </body>
+      </method>
+      <method name="onSelect">
+        <argument name="event"/>
+        <body>
+          <![CDATA[
+            dump("onSelect!\n");
+            var menulist = this.anonymousContent[0];
+            if (this.target) this.target.searchAttribute = menulist.data;
+          ]]>
+        </body>
+      </method>
+    </interface>
+    <handler type="command" value="dump('onCommand!\n');"/>
+  </binding>
+  <binding id="searchattribute"
+           extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
+    <interface>
+      <property name="stringBundle">
+          <![CDATA[
+           srGetStrBundle("chrome://messenger/locale/search-attributes.properties");
+          ]]>
+      </property>
+      <property name="valueIds" readonly="true">
+        <getter>
+          <![CDATA[
+            var length = new Object;
+            return this.validityTable.getAvailableAttributes(length);
+          ]]>
+        </getter>
+      </property>
+    </interface>
+  </binding>
+  <binding id="searchoperator"
+           extends="chrome://messenger/skin/mailWidgets.xml#search-menulist-abstract">
+    <interface>
+      <property name="stringBundle">
+          <![CDATA[
+            srGetStrBundle("chrome://messenger/locale/search-operators.properties");
+          ]]>
+      </property>
+      <property name="valueIds" readonly="true">
+        <getter>
+          <![CDATA[
+            var length = new Object;
+            return this.validityTable.getAvailableOperators(this.searchAttribute,length);
+          ]]>
+        </getter>
+      </property>
+      <property name="searchAttribute">
+        <setter>
+          <![CDATA[
+            this.internalSearchAttribute = val;
+            this.refreshList();
+          ]]>
+        </setter>
+        <getter>
+          <![CDATA[
+            return this.internalSearchAttribute;
+          ]]>
+        </getter>
+      </property>
+    </interface>
+  </binding>
+
+</bindings>
