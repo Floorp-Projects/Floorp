@@ -557,7 +557,6 @@ mime_intl_insert_message_header_1(char        **body,
 	if (!body || !hdr_value || !hdr_str)
 		return;
 
-	mime_intl_mimepart_2_str(hdr_value, mailcharset);
 	if (htmlEdit)
 	{
 		mime_SACat(body, HEADER_START_JUNK);
@@ -575,7 +574,17 @@ mime_intl_insert_message_header_1(char        **body,
 	}
 	else
 		mime_SACat(body, ": ");
-	mime_SACat(body, *hdr_value);
+
+  // MIME decode header and convert to UTF-8
+  nsAutoString ucs2 = mime_decode_string(*hdr_value);
+  char* utf8 = ucs2.ToNewUTF8String();
+  if (NULL != utf8) {
+    mime_SACat(body, utf8);
+    Recycle(utf8);
+  }
+  else 
+    mime_SACat(body, *hdr_value); // raw MIME encoded string
+
 	if (htmlEdit)
 		mime_SACat(body, HEADER_END_JUNK);
 }
@@ -1038,6 +1047,17 @@ mime_insert_forwarded_message_headers(char            **body,
 		PRInt32     show_headers = 0;
     nsresult    res;
     
+    // convert body from mail charset to UTF-8
+    char *utf8 = NULL;
+    nsAutoString ucs2;
+    if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(mailcharset, *body, ucs2))) {
+      utf8 = ucs2.ToNewUTF8String();
+      if (NULL != utf8) {
+        PR_Free(*body);
+        *body = utf8;
+      }
+    }
+
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
     if (NS_SUCCEEDED(res) && prefs)
       res = prefs->GetIntPref("mail.show_headers", &show_headers);
@@ -1312,7 +1332,14 @@ mime_parse_stream_complete (nsMIMESession *stream)
         }
         // setting the charset while we were creating the composition fields
         // fields->SetCharacterSet(nsString("UTF-8").GetUnicode());
-        fields->SetBody(mime_decode_string(body, PR_FALSE).GetUnicode());
+
+      // convert from UTF-8 to UCS2
+      nsAutoString ucs2;
+      if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
+        fields->SetBody(ucs2.GetUnicode());
+      else
+        fields->SetBody(nsAutoString(body).GetUnicode());
+
         PR_FREEIF(body);
       } // end if (messageBody)
   
