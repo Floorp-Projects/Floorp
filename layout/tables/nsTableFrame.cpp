@@ -4704,6 +4704,7 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
   if (NS_STYLE_BORDER_COLLAPSE==GetBorderCollapseStyle())
   {
     nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+	if (border) {
     aBorder.left = border->mWidth;
     border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     aBorder.right = border->mWidth;
@@ -4711,6 +4712,7 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
     aBorder.top = border->mWidth;
     border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
     aBorder.bottom = border->mWidth;
+	}
   }
   else
   {
