@@ -56,6 +56,10 @@
 #define NS_KEYCHAINPROMPT_CID                    \
     { 0x64997e60, 0x17fe, 0x11d4, {0x8c, 0xee, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3}}
 
+// {CE002B28-92B7-4701-8621-CC925866FB87}
+#define NS_COOKIEPROMPTSERVICE_CID \
+    {0xCE002B28, 0x92B7, 0x4701, {0x86, 0x21, 0xCC, 0x92, 0x58, 0x66, 0xFB, 0x87}}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(SecurityDialogs);
 NS_GENERIC_FACTORY_CONSTRUCTOR(CocoaPromptService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(KeychainPrompt);
@@ -114,6 +118,12 @@ static const nsModuleComponentInfo gAppComponents[] = {
     NS_DOWNLOAD_CID,
     NS_DOWNLOAD_CONTRACTID,
     nsDownloadListenerConstructor
+  },
+  {
+	"Cookie Service",
+	NS_COOKIEPROMPTSERVICE_CID,
+	NS_COOKIEPROMPTSERVICE_CONTRACTID,
+	CocoaPromptServiceConstructor
   }
 };
 

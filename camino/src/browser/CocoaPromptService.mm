@@ -57,7 +57,7 @@ CocoaPromptService::~CocoaPromptService()
 {
 }
 
-NS_IMPL_ISUPPORTS1(CocoaPromptService, nsIPromptService);
+NS_IMPL_ISUPPORTS2(CocoaPromptService, nsIPromptService, nsICookiePromptService);
 
 /* void alert (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text); */
 NS_IMETHODIMP
@@ -455,3 +455,31 @@ CocoaPromptService::GetButtonStringFromFlags(PRUint32 btnFlags,
 
   return btnStr;
 }
+
+
+//
+// CookieDialog
+//
+// Implements the interface on nsICookiePromptService to pose the cookie dialog. For
+// starters, just use a rather simple text string.
+//
+NS_IMETHODIMP
+CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const nsACString & hostname, PRInt32 cookiesFromHost, PRBool changingCookie, PRBool *rememberDecision, PRBool *_retval)
+{
+  NSString* dialogText = [NSString stringWithFormat:NSLocalizedString(@"CookieText",@"CookieText"),
+                           PromiseFlatCString(hostname).get()];
+  PRUnichar* textStr = [dialogText createNewUnicodeBuffer];
+  NSString* checkboxText = NSLocalizedString(@"CookieCheckbox", @"CookieCheckbox");
+  PRUnichar* checkboxStr = [checkboxText createNewUnicodeBuffer];
+  NSString* titleText = NSLocalizedString(@"CookieTitle", @"CookieTitle");
+  PRUnichar* titleStr = [titleText createNewUnicodeBuffer];
+
+  ConfirmCheck(parent, titleStr, textStr, checkboxStr, rememberDecision, _retval);
+
+  nsMemory::Free(textStr);
+  nsMemory::Free(checkboxStr);
+  nsMemory::Free(titleStr);
+  return NS_OK;
+}
+
+

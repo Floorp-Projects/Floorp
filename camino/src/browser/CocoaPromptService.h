@@ -41,10 +41,11 @@
 
 #include "nsIStringBundle.h"
 #include "nsIPromptService.h"
+#include "nsICookiePromptService.h"
 #include "nsCOMPtr.h"
 #import <Cocoa/Cocoa.h>
 
-class CocoaPromptService : public nsIPromptService
+class CocoaPromptService : public nsIPromptService, public nsICookiePromptService
 {
 public:
   CocoaPromptService();
@@ -52,6 +53,7 @@ public:
 
   NS_DECL_ISUPPORTS;
   NS_DECL_NSIPROMPTSERVICE;
+  NS_DECL_NSICOOKIEPROMPTSERVICE;
 
 private:
   NSWindow *GetNSWindowForDOMWindow(nsIDOMWindow* window);
