@@ -37,7 +37,6 @@
 #include "nsIURL.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsLocalStringBundle.h"
-
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
@@ -1621,21 +1620,18 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 {
 	m_msgMovedByFilter = PR_FALSE;
 
-	nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
-	nsIMsgFolder *inbox;
+	nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
+	nsCOMPtr<nsIMsgFolder> inbox;
 	nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
 	if (rootMsgFolder)
 	{
 		PRUint32 numFolders;
-		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1, &numFolders);
-		if (inbox)
-			NS_ADDREF(inbox);
+		rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, getter_AddRefs(inbox), 1, &numFolders);
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
 		nsresult matchTermStatus;
         matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, msgHdr, inbox, 
 											m_mailDB, headers, headersSize, this);
-		NS_IF_RELEASE(inbox);
 	}
 
 	if (pMoved)
@@ -1654,13 +1650,16 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		NS_ASSERTION(PR_FALSE, "need to return status!");
 		return NS_ERROR_NULL_POINTER;
 	}
+
+	*applyMore = PR_TRUE;
+
 	// look at action - currently handle move
 #ifdef DEBUG_bienvenu
 	printf("got a rule hit!\n");
 #endif
 	if (NS_SUCCEEDED(filter->GetAction(&actionType, &value)))
 	{
-		nsIMsgDBHdr	*msgHdr = m_newMsgHdr;
+		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
 		nsCAutoString trashNameVal;
 
@@ -1734,7 +1733,10 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 				}
 				nsresult err = MoveIncorporatedMessage(msgHdr, m_mailDB, (char *) value, filter);
 				if (NS_SUCCEEDED(err))
+				{
 					m_msgMovedByFilter = PR_TRUE;
+					*applyMore = PR_FALSE;
+				}
 
 			}
 			break;
