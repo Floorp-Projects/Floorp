@@ -232,7 +232,7 @@ nsFontMetricsWin::RealizeFont()
 
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
 //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);  XXX not really supported on windows
-    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent
+    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.52f); // 52% of ascent, best average for true type
     mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
     mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
 
@@ -245,7 +245,7 @@ nsFontMetricsWin::RealizeFont()
     // Make a best-effort guess at extended metrics
     // this is based on general typographic guidelines
     ::GetTextMetrics(dc, &metrics);
-    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent
+    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent, best guess for non-true type
     mSuperscriptOffset = mXHeight;     // XXX temporary code!
     mSubscriptOffset = mXHeight;     // XXX temporary code!
 
