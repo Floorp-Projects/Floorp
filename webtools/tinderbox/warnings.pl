@@ -264,7 +264,7 @@ __END_HEADER
       print "$count";
       print "</td><td>&nbsp;</td>";
     }
-    print "<tr>";
+    print "</tr>";
   }
   print "</table><p>";
 
