@@ -35,13 +35,186 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIServiceManager.h"
+#include "ipcSocketProviderUnix.h"
+#include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "netCore.h"
+#include "nsCOMPtr.h"
 
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcTransportUnix.h"
 #include "ipcTransport.h"
+#include "ipcm.h"
+
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+
+//-----------------------------------------------------------------------------
+// ipcTransport (XP_UNIX specific methods)
+//-----------------------------------------------------------------------------
+
+nsresult
+ipcTransport::InitUnix(const nsACString &socketPath)
+{
+    mSocketPath = socketPath;
+    ipcSocketProviderUnix::SetSocketPath(socketPath);
+    return NS_OK;
+}
+
+nsresult
+ipcTransport::Shutdown()
+{
+    LOG(("ipcTransport::Shutdown\n"));
+
+    mHaveConnection = PR_FALSE;
+
+    if (mReadRequest) {
+        mReadRequest->Cancel(NS_BINDING_ABORTED);
+        mReadRequest = nsnull;
+    }
+    if (mWriteRequest) {
+        mWriteRequest->Cancel(NS_BINDING_ABORTED);
+        mWriteRequest = nsnull;
+        mWriteSuspended = PR_FALSE;
+    }
+    mTransport = nsnull;
+    return NS_OK;
+}
+
+nsresult
+ipcTransport::SendMsg_Internal(ipcMessage *msg)
+{
+    LOG(("ipcTransport::SendMsg_Internal [dataLen=%u]\n", msg->DataLen()));
+
+    mSendQ.EnqueueMsg(msg);
+
+    if (!mWriteRequest) {
+        if (!mTransport)
+            return NS_ERROR_FAILURE;
+
+        nsresult rv = mTransport->AsyncWrite(&mSendQ, nsnull, 0, PRUint32(-1), 0,
+                                             getter_AddRefs(mWriteRequest));
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (mWriteSuspended) {
+        mWriteRequest->Resume();
+        mWriteSuspended = PR_FALSE;
+    }
+    return NS_OK;
+}
+
+nsresult
+ipcTransport::Connect()
+{
+    nsresult rv;
+
+    LOG(("ipcTransport::Connect\n"));
+
+    if (++mConnectionAttemptCount > 20) {
+        LOG(("  giving up after 20 unsuccessful connection attempts\n"));
+        return NS_ERROR_ABORT;
+    }
+
+    rv = CreateTransport();
+    if (NS_FAILED(rv)) return rv; 
+
+    rv = mTransport->AsyncRead(&mReceiver, nsnull, 0, PRUint32(-1), 0,
+                               getter_AddRefs(mReadRequest));
+    return rv;
+}
+
+void
+ipcTransport::OnStartRequest(nsIRequest *req)
+{
+    nsresult status;
+    req->GetStatus(&status);
+
+    if (NS_SUCCEEDED(status) && !mHaveConnection && !mSentHello) {
+        //
+        // send CLIENT_HELLO; expect CLIENT_ID in response.
+        //
+        SendMsg_Internal(new ipcmMessageClientHello(mAppName.get()));
+        mSentHello = PR_TRUE;
+    }
+}
+
+void
+ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
+{
+    LOG(("ipcTransport::OnStopRequest [status=%x]\n", status));
+
+    if (mHaveConnection) {
+        mHaveConnection = PR_FALSE;
+        if (mObserver)
+            mObserver->OnConnectionLost();
+    }
+
+    if (status == NS_BINDING_ABORTED)
+        return;
+
+    if (NS_FAILED(status) && !mTimer) {
+        nsresult rv;
+        //
+        // connection failure
+        //
+        rv = SpawnDaemon();
+        if (NS_FAILED(rv)) {
+            LOG(("  failed to spawn daemon [rv=%x]\n", rv));
+            return;
+        }
+        mSpawnedDaemon = PR_TRUE;
+
+        //
+        // re-initialize connection after timeout
+        //
+        mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) {
+            LOG(("  failed to create timer [rv=%x]\n", rv));
+            return;
+        }
+
+        // use a simple exponential growth algorithm 2^(n-1)
+        PRUint32 ms = 500 * (1 << (mConnectionAttemptCount - 1));
+        if (ms > 10000)
+            ms = 10000;
+
+        LOG(("  waiting %u milliseconds\n", ms));
+
+        rv = mTimer->Init(this, ms, nsITimer::TYPE_ONE_SHOT);
+        if (NS_FAILED(rv)) {
+            LOG(("  failed to initialize timer [rv=%x]\n", rv));
+            return;
+        }
+    }
+
+    if (req == mReadRequest)
+        mReadRequest = nsnull;
+    else if (req == mWriteRequest) {
+        mWriteRequest = nsnull;
+        mWriteSuspended = PR_FALSE;
+    }
+}
+
+nsresult
+ipcTransport::CreateTransport()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISocketTransportService> sts(
+            do_GetService(kSocketTransportServiceCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = sts->CreateTransportOfType(IPC_SOCKET_TYPE,
+                                    "127.0.0.1",
+                                    IPC_PORT,
+                                    nsnull,
+                                    1024,
+                                    1024*16,
+                                    getter_AddRefs(mTransport));
+    return rv;
+}
 
 //-----------------------------------------------------------------------------
 // ipcSendQueue

@@ -88,7 +88,7 @@ public:
 #endif
         { NS_INIT_ISUPPORTS(); }
 
-    virtual ~ipcTransport();
+    virtual ~ipcTransport() {}
 
     nsresult Init(const nsACString &appName,
                   const nsACString &socketPath, // ignored if not UNIX
@@ -137,6 +137,10 @@ private:
     PRFileDesc            *mFD;
     PRPackedBool           mWriteSuspended;
 
+    //
+    // unix specific helpers
+    //
+    nsresult InitUnix(const nsACString &socketPath);
     nsresult CreateTransport();
 
 public:
