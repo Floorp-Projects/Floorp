@@ -47,6 +47,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
+#include "nsIAreaFrame.h"
 
 #define MAX_LINE_COUNT 50000
 
@@ -67,6 +68,7 @@
 #undef NOISY_VERTICAL_MARGINS
 #undef NOISY_REFLOW_REASON
 #undef REFLOW_STATUS_COVERAGE
+#undef NOISY_SPACEMANAGER
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
@@ -81,6 +83,7 @@
 #undef NOISY_VERTICAL_MARGINS
 #undef NOISY_REFLOW_REASON
 #undef REFLOW_STATUS_COVERAGE
+#undef NOISY_SPACEMANAGER
 #endif
 
 //----------------------------------------------------------------------
@@ -94,9 +97,6 @@ static PRBool gShowDirtyLines = PR_FALSE;
 #ifdef NOISY_INCREMENTAL_REFLOW
 static PRInt32 gNoiseIndent;
 static const char* kReflowCommandType[] = {
-  "FrameAppended",
-  "FrameInserted",
-  "FrameRemoved",
   "ContentChanged",
   "StyleChanged",
   "PullupReflow",
@@ -239,6 +239,27 @@ public:
 #endif
   }
 
+  void GetAvailableSpace(nscoord aY) {
+#ifdef DEBUG
+    // Verify that the caller setup the coordinate system properly
+    nscoord wx, wy;
+    mSpaceManager->GetTranslation(wx, wy);
+    NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
+                 "bad coord system");
+#endif
+    mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
+
+#ifdef NOISY_INCREMENTAL_REFLOW
+    if (mReflowState.reason == eReflowReason_Incremental) {
+      nsFrame::IndentBy(stdout, gNoiseIndent);
+      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+             mAvailSpaceRect.x, mAvailSpaceRect.y,
+             mAvailSpaceRect.width, mAvailSpaceRect.height,
+             mBand.GetTrapezoidCount());
+    }
+#endif
+  }
+
   void InitFloater(nsLineLayout& aLineLayout,
                    nsPlaceholderFrame* aPlaceholderFrame);
 
@@ -248,16 +269,11 @@ public:
 
   PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
 
-  void PlaceFloater(nsPlaceholderFrame* aFloater,
-                    const nsMargin& aFloaterMargins,
-                    const nsMargin& aFloaterOffsets,
+  void PlaceFloater(nsFloaterCache* aFloaterCache,
                     PRBool* aIsLeftFloater,
                     nsPoint* aNewOrigin);
 
-  void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
-                                     PRBool aReflowFloaters);
-
-  void PlaceCurrentLineFloaters(nsVoidArray* aFloaters);
+  void PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
 
   void ClearFloaters(nscoord aY, PRUint8 aBreakType);
 
@@ -389,6 +405,8 @@ public:
   // The combined area of all floaters placed so far
   nsRect mFloaterCombinedArea;
 
+  nsFloaterCacheFreeList mFloaterCacheFreeList;
+
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.
   nsIFrame* mPrevChild;
@@ -414,7 +432,17 @@ public:
 
   // Temporary line-reflow state. This state is used during the reflow
   // of a given line, but doesn't have meaning before or after.
-  nsVoidArray mPendingFloaters;
+
+  // The list of floaters that are "current-line" floaters. These are
+  // added to the line after the line has been reflowed, to keep the
+  // list fiddling from being N^2.
+  nsFloaterCacheFreeList mCurrentLineFloaters;
+
+  // The list of floaters which are "below current-line"
+  // floaters. These are reflowed/placed after the line is reflowed
+  // and placed. Again, this is done to keep the list fiddling from
+  // being N^2.
+  nsFloaterCacheFreeList mBelowCurrentLineFloaters;
 
   PRBool mComputeMaxElementSize;
 
@@ -773,38 +801,46 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     newLineY += collapsedTopMargin;
     mPrevBottomMargin = bottomMargin;
   }
-  nsRect  oldCombinedArea = aLine->mCombinedArea;
+
+  // Save away the old combined area for later
+  nsRect oldCombinedArea = aLine->mCombinedArea;
+
+  // Slide the frames in the line by the computed delta. This also
+  // updates the lines Y coordinate and the combined area's Y
+  // coordinate.
   nscoord finalDeltaY = newLineY - aLine->mBounds.y;
-  if (0 != finalDeltaY) {
-    // Slide the frames in the line by the computed delta. This also
-    // updates the lines Y coordinate and the combined area's Y
-    // coordinate.
-    mBlock->SlideLine(mPresContext, mSpaceManager, aLine, finalDeltaY);
-  }
+  mBlock->SlideLine(mPresContext, mSpaceManager, aLine, finalDeltaY);
 
-  // Now that the line's Y coordinate is updated, place floaters back
-  // into the space manager
-  if (nsnull != aLine->mFloaters) {
-    mY = aLine->mBounds.y;
-    if (0 == aLine->mBounds.height) {
-      mY += mPrevBottomMargin;
+  // Place floaters for this line into the space manager
+  if (aLine->mFloaters.NotEmpty()) {
+    // Place the floaters into the space-manager again. Also slide
+    // them, just like the regular frames on the line.
+    nsRect r;
+    nsFloaterCache* fc = aLine->mFloaters.Head();
+    while (fc) {
+      fc->mRegion.y += finalDeltaY;
+      fc->mCombinedArea.y += finalDeltaY;
+      nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
+      floater->GetRect(r);
+      floater->MoveTo(r.x, r.y + finalDeltaY);
+#ifdef NOISY_SPACEMANAGER
+      nscoord tx, ty;
+      mSpaceManager->GetTranslation(tx, ty);
+      nsFrame::ListTag(stdout, mBlock);
+      printf(": RecoverStateFrom: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+             tx, ty, mSpaceManagerX, mSpaceManagerY,
+             fc->mRegion.x, fc->mRegion.y,
+             fc->mRegion.width, fc->mRegion.height);
+#endif
+      mSpaceManager->AddRectRegion(floater, fc->mRegion);
+      fc = fc->Next();
     }
-    PlaceCurrentLineFloaters(aLine->mFloaters);
-    mY = aLine->mBounds.YMost();
-    PlaceBelowCurrentLineFloaters(aLine->mFloaters, PR_FALSE);
   }
-
-  // XXX Recover floater combined area
-  //   XXX not necessary at the moment because
-  //   PlaceCurrentLineFloaters and PlaceBelowCurrentLineFloaters
-  //   always reflow the floaters...
 
   // Recover mY
   mY = aLine->mBounds.YMost();
 
   // Compute the damage area
-  // XXX Currently just use the union of the old and new combined area, but
-  // at some point we need to bitblt instead...
   if (aDamageRect) {
     if (0 == finalDeltaY) {
       aDamageRect->Empty();
@@ -1442,6 +1478,13 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                                nsHTMLReflowMetrics& aMetrics)
 {
   const nsMargin& borderPadding = aState.BorderPadding();
+#ifdef NOISY_FINAL_SIZE
+  ListTag(stdout);
+  printf(": mY=%d mIsBottomMarginRoot=%s mPrevBottomMargin=%d bp=%d,%d\n",
+         aState.mY, aState.mIsBottomMarginRoot ? "yes" : "no",
+         aState.mPrevBottomMargin,
+         borderPadding.top, borderPadding.bottom);
+#endif
 
   // Special check for zero sized content: If our content is zero
   // sized then we collapse into nothingness.
@@ -1577,6 +1620,15 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // When style defines the height use it for the max-element-size
       // because we can't shrink any smaller.
       maxHeight = aMetrics.height;
+
+      // Don't carry out a bottom margin when our height is fixed
+      // unless the bottom of the last line adjoins the bottom of our
+      // content area.
+      if (!aState.mIsBottomMarginRoot) {
+        if (aState.mY + aState.mPrevBottomMargin != aMetrics.height) {
+          aState.mPrevBottomMargin = 0;
+        }
+      }
     }
     else {
       nscoord autoHeight = aState.mY;
@@ -1680,10 +1732,20 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
       line = line->mNext;
     }
-    if (mBullet && !mLines) {
+
+    // Factor the bullet in; normally the bullet will be factored into
+    // the line-box's combined area. However, if the line is a block
+    // line then it won't; if there are no lines, it won't. So just
+    // factor it in anyway (it can't hurt if it was already done).
+    if (mBullet) {
       nsRect r;
       mBullet->GetRect(r);
-      xa = r.x;
+      if (r.x < xa) xa = r.x;
+      if (r.y < ya) ya = r.y;
+      nscoord xmost = r.XMost();
+      if (xmost > xb) xb = xmost;
+      nscoord ymost = r.YMost();
+      if (ymost > yb) yb = ymost;
     }
   }
 #ifdef NOISY_COMBINED_AREA
@@ -1865,20 +1927,20 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
     if (line->Contains(aFrame)) {
       break;
     }
-    if (nsnull != line->mFloaters) {
-      nsVoidArray& a = *line->mFloaters;
-      PRInt32 i, n = a.Count();
-      for (i = 0; i < n; i++) {
-        nsPlaceholderFrame* ph = (nsPlaceholderFrame*) a[i];
-        if (aFrame == ph->GetOutOfFlowFrame()) {
+    if (line->mFloaters.NotEmpty()) {
+      nsFloaterCache* fc = line->mFloaters.Head();
+      while (fc) {
+        if (aFrame == fc->mPlaceholder->GetOutOfFlowFrame()) {
           isFloater = PR_TRUE;
           goto done;
         }
+        fc = fc->Next();
       }
     }
     prevLine = line;
     line = line->mNext;
   }
+
  done:
   *aIsFloaterResult = isFloater;
   *aPrevLineResult = prevLine;
@@ -1911,39 +1973,71 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
 void
 nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
                                     nsLineBox* aLine,
+                                    const nsRect& aOldCombinedArea,
                                     nscoord aDeltaY)
 {
-  if (aLine->mCombinedArea.YMost() > aLine->mBounds.YMost()) {
-    // The line has an object that extends outside of its bounding box.
-    nscoord impactYA = aLine->mCombinedArea.y;
-    nscoord impactYB = aLine->mCombinedArea.YMost();
-#ifdef NOISY_INCREMENTAL_REFLOW
-    if (aState.mReflowState.reason == eReflowReason_Incremental) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("impactYA=%d impactYB=%d deltaY=%d\n",
-             impactYA, impactYB, aDeltaY);
+  // See if the line has a relevant combined area, and if it does if
+  // the combined area has changed.
+  if (aLine->mCombinedArea != aLine->mBounds) {
+    if (aLine->mCombinedArea != aOldCombinedArea) {
+      // The line's combined-area changed. Therefore we need to damage
+      // the lines below that were previously (or are now) impacted by
+      // the change. It's possible that a floater shrunk or grew so
+      // use the larger of the impacted area.
+      nscoord newYMost = aLine->mCombinedArea.YMost();
+      nscoord oldYMost = aOldCombinedArea.YMost();
+      nscoord impactYB = newYMost < oldYMost ? oldYMost : newYMost;
+      nscoord impactYA = aLine->mCombinedArea.y;
+
+      // Loop over each subsequent line and mark them dirty if they
+      // intersect the impacted area. Note: we cannot stop after the
+      // first non-intersecting line because lines might be
+      // overlapping because of negative margins.
+      nsLineBox* next = aLine->mNext;
+      while (nsnull != next) {
+        nscoord lineYA = next->mBounds.y + aDeltaY;
+        nscoord lineYB = lineYA + next->mBounds.height;
+        if ((lineYB >= impactYA) && (lineYA < impactYB)) {
+          next->MarkDirty();
+        }
+        next = next->mNext;
+      }
     }
-#endif
+    else {
+      // The line's combined area didn't change from last
+      // time. Therefore just sliding subsequent lines will work.
+      return;
+    }
+  }
 
-    // XXX Because we don't know what it is (it might be a floater; it
-    // might be something that is just relatively positioned) we
-    // *assume* that it's a floater and that lines that follow will
-    // need reflowing.
-
-    // Note: we cannot stop after the first non-intersecting line
-    // because lines might be overlapping because of negative margins.
+  if (aDeltaY) {
     nsLineBox* next = aLine->mNext;
     while (nsnull != next) {
-      nscoord lineYA = next->mBounds.y + aDeltaY;
-      nscoord lineYB = lineYA + next->mBounds.height;
-      if ((lineYA < impactYB) && (impactYA < lineYB)) {
-#ifdef NOISY_INCREMENTAL_REFLOW
-        if (aState.mReflowState.reason == eReflowReason_Incremental) {
-          IndentBy(stdout, gNoiseIndent);
-          printf("line=%p setting dirty\n", next);
+      if (!next->IsDirty()) {
+        // Cases we need to find:
+        //
+        // 1. the line was impacted by a floater and now isn't
+        // 2. the line wasn't impacted by a floater and now is
+        //
+        //XXXPerf: An optimization: if the line was and is completely
+        //impacted by a floater and the floater hasn't changed size,
+        //then we don't need to mark the line dirty.
+        aState.GetAvailableSpace(next->mBounds.y + aDeltaY);
+        PRBool wasImpactedByFloater = next->IsImpactedByFloater();
+        PRBool isImpactedByFloater = 0 != aState.mBand.GetFloaterCount();
+        if (wasImpactedByFloater != isImpactedByFloater) {
+          next->MarkDirty();
         }
-#endif
-        next->MarkDirty();
+        else if (isImpactedByFloater) {
+          //XXX: Maybe the floater itself changed size?
+          if (next->IsBlock()) {
+            //XXXPerf
+            // Case:
+            // It's possible that more/less of the line is impacted by
+            // the floater than last time. So reflow.
+            next->MarkDirty();
+          }
+        }
       }
       next = next->mNext;
     }
@@ -1996,15 +2090,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // the running deltaY value - the running value is implicit in
       // aState.mY.
       nscoord oldHeight = line->mBounds.height;
+      nsRect oldCombinedArea = line->mCombinedArea;
 
       // Reflow the dirty line. If it's an incremental reflow, then have
       // it invalidate the dirty area
-      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ? PR_TRUE :
-                      PR_FALSE);
+      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow);
       if (NS_FAILED(rv)) {
         return rv;
       }
-      DidReflowLine(aState, line, keepGoing);
       if (!keepGoing) {
         if (0 == line->ChildCount()) {
           DeleteLine(aState, line);
@@ -2020,7 +2113,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // subsequent lines.
       nsLineBox* next = line->mNext;
       if ((nsnull != next) && !next->IsDirty()) {
-        PropogateReflowDamage(aState, line, deltaY);
+        PropogateReflowDamage(aState, line, oldCombinedArea, deltaY);
       }
     }
     else {
@@ -2107,7 +2200,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       if (NS_FAILED(rv)) {
         return rv;
       }
-      DidReflowLine(aState, line, keepGoing);
       if (!keepGoing) {
         if (0 == line->ChildCount()) {
           DeleteLine(aState, line);
@@ -2207,7 +2299,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   nsRect  oldCombinedArea = aLine->mCombinedArea;
 
   if (aLine->IsBlock()) {
-    NS_ASSERTION(nsnull == aLine->mFloaters, "bad line");
+    NS_ASSERTION(aLine->mFloaters.IsEmpty(), "bad line");
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
     
     // We expect blocks to damage any area inside their bounds that is
@@ -2360,7 +2452,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
       aLine->mFirstChild = frame;
       aLine->SetIsBlock(fromLine->IsBlock());
       NS_ASSERTION(aLine->CheckIsBlock(), "bad line isBlock");
-      NS_ASSERTION(nsnull == aLine->mFloaters, "bad line floaters");
+      NS_ASSERTION(aLine->mFloaters.IsEmpty(), "bad line floaters");
     }
     NS_ASSERTION(aLine->mChildCount < MAX_LINE_COUNT, "bad line child count");
     if (0 != --fromLine->mChildCount) {
@@ -2406,108 +2498,101 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 }
 
 void
-nsBlockFrame::DidReflowLine(nsBlockReflowState& aState,
-                            nsLineBox* aLine,
-                            PRBool aLineReflowStatus)
-{
-  // If the line no longer needs a floater array, get rid of it and
-  // save some memory
-  nsVoidArray* array = aLine->mFloaters;
-  if (nsnull != array) {
-    if (0 == array->Count()) {
-      delete array;
-      aLine->mFloaters = nsnull;
-    }
-    else {
-      array->Compact();
-    }
-  }
-}
-
-void
 nsBlockFrame::SlideLine(nsIPresContext* aPresContext,
                         nsISpaceManager* aSpaceManager,
                         nsLineBox* aLine, nscoord aDY)
 {
-#if 0
-ListTag(stdout); printf(": SlideLine: line=%p dy=%d\n", aLine, aDY);
-#endif
-  // Adjust the Y coordinate of the frames in the line
-  nsRect r;
+  // Adjust line state
+  aLine->mBounds.y += aDY;
+  aLine->mCombinedArea.y += aDY;
+
+  // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
-  PRInt32 n = aLine->ChildCount();
-  while (--n >= 0) {
+  if (!kid) {
+    return;
+  }
+
+  if (aLine->IsBlock()) {
+    nsRect r;
     kid->GetRect(r);
     r.y += aDY;
     kid->SetRect(r);
 
-    // If the child has any floaters that impact the space manager,
-    // slide them now.
-    nsIHTMLReflow* ihr;
-    if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
-      ihr->MoveInSpaceManager(aPresContext, aSpaceManager, 0, aDY);
+    // If the child has any floaters that impact the space-manager,
+    // place them now so that they are present in the space-manager
+    // again (they were removed by the space-manager's frame when
+    // the reflow began).
+    nsBlockFrame* bf;
+    nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**) &bf);
+    if (NS_SUCCEEDED(rv)) {
+      // Translate spacemanager to the child blocks upper-left
+      // corner so that when it places its floaters (which are
+      // relative to it) the right coordinates are used.
+      aSpaceManager->Translate(r.x, r.y);
+      bf->UpdateSpaceManager(aPresContext, aSpaceManager);
+      aSpaceManager->Translate(-r.x, -r.y);
     }
-
-    kid->GetNextSibling(&kid);
   }
-
-  // Adjust line state
-  aLine->mBounds.y += aDY;
-  aLine->mCombinedArea.y += aDY;
-}
-
-void
-nsBlockFrame::SlideFloaters(nsIPresContext* aPresContext,
-                            nsISpaceManager* aSpaceManager,
-                            nsLineBox* aLine, nscoord aDY)
-{
-  nsVoidArray* floaters = aLine->mFloaters;
-  if (nsnull != floaters) {
-    nsRect r;
-    PRInt32 i, n = floaters->Count();
-    for (i = 0; i < n; i++) {
-      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-      nsIFrame* floater = ph->GetOutOfFlowFrame();
-      floater->GetRect(r);
-      r.y += aDY;
-      floater->SetRect(r);
+  else {
+    if (aDY) {
+      // Adjust the Y coordinate of the frames in the line
+      nsRect r;
+      PRInt32 n = aLine->ChildCount();
+      while (--n >= 0) {
+        kid->GetRect(r);
+        r.y += aDY;
+        kid->SetRect(r);
+        kid->GetNextSibling(&kid);
+      }
     }
   }
 }
 
-NS_IMETHODIMP
-nsBlockFrame::MoveInSpaceManager(nsIPresContext* aPresContext,
-                                 nsISpaceManager* aSpaceManager,
-                                 nscoord aDeltaX, nscoord aDeltaY)
+nsresult
+nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
+                                 nsISpaceManager* aSpaceManager)
 {
-#if 0
-ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
-#endif
   nsLineBox* line = mLines;
   while (nsnull != line) {
-    // Move the floaters in the spacemanager
-    nsVoidArray* floaters = line->mFloaters;
-    if (nsnull != floaters) {
-      PRInt32 i, n = floaters->Count();
-      for (i = 0; i < n; i++) {
-        nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-        nsIFrame* floater = ph->GetOutOfFlowFrame();
-        aSpaceManager->OffsetRegion(floater, aDeltaX, aDeltaY);
-#if 0
-((nsFrame*)kid)->ListTag(stdout); printf(": offset=%d,%d\n", aDeltaX, aDeltaY);
+    // Place the floaters in the spacemanager
+    if (line->mFloaters.NotEmpty()) {
+      nsFloaterCache* fc = line->mFloaters.Head();
+      while (fc) {
+        nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
+        aSpaceManager->AddRectRegion(floater, fc->mRegion);
+#ifdef NOISY_SPACEMANAGER
+        nscoord tx, ty;
+        aSpaceManager->GetTranslation(tx, ty);
+        nsFrame::ListTag(stdout, this);
+        printf(": UpdateSpaceManager: AddRectRegion: tx=%d,%d {%d,%d,%d,%d}\n",
+               tx, ty,
+               fc->mRegion.x, fc->mRegion.y,
+               fc->mRegion.width, fc->mRegion.height);
 #endif
+        fc = fc->Next();
       }
     }
 
     // Tell kids about the move too
-    PRInt32 n = line->ChildCount();
-    nsIFrame* kid = line->mFirstChild;
-    while (--n >= 0) {
-      nsIHTMLReflow* ihr;
-      if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
-        ihr->MoveInSpaceManager(aPresContext, aSpaceManager, aDeltaX, aDeltaY);
+    if (line->mFirstChild && line->IsBlock()) {
+      // If the child has any floaters that impact the space-manager,
+      // place them now so that they are present in the space-manager
+      // again (they were removed by the space-manager's frame when
+      // the reflow began).
+      nsBlockFrame* bf;
+      nsresult rv = line->mFirstChild->QueryInterface(kBlockFrameCID,
+                                                      (void**) &bf);
+      if (NS_SUCCEEDED(rv)) {
+        nsPoint origin;
+        bf->GetOrigin(origin);
+
+        // Translate spacemanager to the child blocks upper-left
+        // corner so that when it places its floaters (which are
+        // relative to it) the right coordinates are used.
+        aSpaceManager->Translate(origin.x, origin.y);
+        bf->UpdateSpaceManager(aPresContext, aSpaceManager);
+        aSpaceManager->Translate(-origin.x, -origin.y);
       }
-      kid->GetNextSibling(&kid);
     }
     
     line = line->mNext;
@@ -2638,7 +2723,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   // Determine if this line is "essentially" the first line
   nsLineBox* line = mLines;
   while (line != aLine) {
-    if ((nsnull != line->mFloaters) && (0 != line->mFloaters->Count())) {
+    if (line->mFloaters.NotEmpty()) {
       // A line which preceeds aLine is not empty therefore the top
       // margin applies.
       aState.mApplyTopMargin = PR_TRUE;
@@ -2737,6 +2822,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   // When reflowing a block frame we always get the available space
   aState.GetAvailableSpace();
+  aLine->SetLineIsImpactedByFloater(0 != aState.mBand.GetFloaterCount());
 
   // Prepare the block reflow engine
   const nsStyleDisplay* display;
@@ -3049,17 +3135,15 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    PRBool* aKeepReflowGoing,
                                    PRUint8* aLineReflowStatus)
 {
-  if (nsnull != aLine->mFloaters) {
-    // Forget all of the floaters on the line
-    aLine->mFloaters->Clear();
-  }
+  // Forget all of the floaters on the line
+  aState.mFloaterCacheFreeList.Append(aLine->mFloaters);
   aState.mFloaterCombinedArea.SetRect(0, 0, 0, 0);
-  aState.mPendingFloaters.Clear();
 
   // Setup initial coordinate system for reflowing the inline frames
   // into. Apply a previous block frame's bottom margin first.
   aState.mY += aState.mPrevBottomMargin;
   aState.GetAvailableSpace();
+  aLine->SetLineIsImpactedByFloater(0 != aState.mBand.GetFloaterCount());
 
   const nsMargin& borderPadding = aState.BorderPadding();
   nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
@@ -3584,17 +3668,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
   PostPlaceLine(aState, aLine, maxElementSize);
 
+  // Add the already placed current-line flaoters to the line
+  aLine->mFloaters.Append(aState.mCurrentLineFloaters);
+
   // Any below current line floaters to place?
-  if (0 != aState.mPendingFloaters.Count()) {
-    // Now is the time that we reflow them and update the computed
-    // line combined area.
-    aState.PlaceBelowCurrentLineFloaters(&aState.mPendingFloaters, PR_TRUE);
-    aState.mPendingFloaters.Clear();
+  if (aState.mBelowCurrentLineFloaters.NotEmpty()) {
+    // Reflow the below-current-line floaters, then add them to the
+    // lines floater list.
+    aState.PlaceBelowCurrentLineFloaters(aState.mBelowCurrentLineFloaters);
+    aLine->mFloaters.Append(aState.mBelowCurrentLineFloaters);
   }
 
   // When a line has floaters, factor them into the combined-area
   // computations.
-  if (nsnull != aLine->mFloaters) {
+  if (aLine->mFloaters.NotEmpty()) {
     // Combine the floater combined area (stored in aState) and the
     // value computed by the line layout code.
     CombineRects(aState.mFloaterCombinedArea, aLine->mCombinedArea);
@@ -3646,8 +3733,7 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
 
   // Only update the max-element-size's height value if the floater is
   // part of the current line.
-  if ((nsnull != aLine->mFloaters) &&
-      (0 != aLine->mFloaters->Count())) {
+  if (aLine->mFloaters.NotEmpty()) {
     // If the maximum-height of the tallest floater is larger than the
     // maximum-height of the content then update the max-element-size
     // height
@@ -3680,63 +3766,6 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     }
 #endif
     aState.mKidXMost = xmost;
-  }
-}
-
-static nsresult
-FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
-{
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display,
-                       (const nsStyleStruct*&) display);
-  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-    if (nsnull == aArray) {
-      aArray = new nsVoidArray();
-      if (nsnull == aArray) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    aArray->AppendElement(aFrame);
-  }
-
-  if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-    nsIFrame* kid;
-    aFrame->FirstChild(nsnull, &kid);
-    while (nsnull != kid) {
-      nsresult rv = FindFloatersIn(kid, aArray);
-      if (NS_OK != rv) {
-        return rv;
-      }
-      kid->GetNextSibling(&kid);
-    }
-  }
-  return NS_OK;
-}
-
-void
-nsBlockFrame::FindFloaters(nsLineBox* aLine)
-{
-  nsVoidArray* floaters = aLine->mFloaters;
-  if (nsnull != floaters) {
-    // Empty floater array before proceeding
-    floaters->Clear();
-  }
-
-  nsIFrame* frame = aLine->mFirstChild;
-  PRInt32 n = aLine->ChildCount();
-  while (--n >= 0) {
-    FindFloatersIn(frame, floaters);
-    frame->GetNextSibling(&frame);
-  }
-
-  aLine->mFloaters = floaters;
-
-  // Get rid of floater array if we don't need it
-  if (nsnull != floaters) {
-    if (0 == floaters->Count()) {
-      delete floaters;
-      aLine->mFloaters = nsnull;
-    }
   }
 }
 
@@ -4338,6 +4367,24 @@ nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
   }
 }
 
+static nsISpaceManager*
+FindSpaceManager(nsIFrame* aFrame)
+{
+  nsISpaceManager* spaceManager;
+  while (aFrame) {
+    nsIAreaFrame* af;
+    nsresult rv = aFrame->QueryInterface(kIAreaFrameIID, (void**) &af);
+    if (NS_SUCCEEDED(rv)) {
+      af->GetSpaceManager(&spaceManager);
+      if (spaceManager) {
+        return spaceManager;
+      }
+    }
+    aFrame->GetParent(&aFrame);
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
                           nsIPresShell&   aPresShell,
@@ -4350,24 +4397,25 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
     // Remove floater from the floater list first
     mFloaters.RemoveFrame(aOldFrame);
 
+    // Find nearest space-manager and remove the floater from its
+    // region list
+    nsCOMPtr<nsISpaceManager> spaceManager =
+      getter_AddRefs(FindSpaceManager(this));
+    if (spaceManager) {
+      spaceManager->RemoveRegion(aOldFrame);
+    }
+
     // Find which line contains the floater
     nsLineBox* line = mLines;
     while (nsnull != line) {
-      nsVoidArray* floaters = line->mFloaters;
-      if (nsnull != floaters) {
-        PRInt32 i, count = floaters->Count();
-        for (i = 0; i < count; i++) {
-          nsPlaceholderFrame* ph = (nsPlaceholderFrame*)floaters->ElementAt(i);
-          if (ph->GetOutOfFlowFrame() == aOldFrame) {
-            // Note: the placeholder is part of the line's child list
-            // and will be removed later.
-            // XXX stop storing pointers to the placeholder in the line list???
-            ph->SetOutOfFlowFrame(nsnull);
-            floaters->RemoveElementAt(i);
-            aOldFrame->Destroy(aPresContext);
-            goto found_it;
-          }
-        }
+      nsFloaterCache* fc = line->mFloaters.Find(aOldFrame);
+      if (fc) {
+        // Note: the placeholder is part of the line's child list
+        // and will be removed later.
+        fc->mPlaceholder->SetOutOfFlowFrame(nsnull);
+        line->mFloaters.Remove(fc);
+        aOldFrame->Destroy(aPresContext);
+        goto found_it;
       }
       line = line->mNext;
     }
@@ -4706,15 +4754,17 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
 {
   NS_PRECONDITION(nsnull != mCurrentLine, "null ptr");
 
-  // Update the current line's floater array
-  if (nsnull == mCurrentLine->mFloaters) {
-    mCurrentLine->mFloaters = new nsVoidArray();
-  }
-  mCurrentLine->mFloaters->AppendElement(aPlaceholder);
+  // Allocate a nsFloaterCache for the floater
+  nsFloaterCache* fc = mFloaterCacheFreeList.Alloc();
+  fc->mPlaceholder = aPlaceholder;
+  fc->mIsCurrentLineFloater = aLineLayout.CanPlaceFloaterNow();
 
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
-  if (aLineLayout.CanPlaceFloaterNow()) {
+  if (fc->mIsCurrentLineFloater) {
+    // Record this floater in the current-line list
+    mCurrentLineFloaters.Append(fc);
+
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
     // that's a child of our block) we need to restore the space
@@ -4726,18 +4776,17 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
 
-    nsRect combinedArea;
-    nsMargin floaterMargins;
-    nsMargin floaterOffsets;
-    mBlock->ReflowFloater(*this, aPlaceholder, combinedArea, floaterMargins,
-                          floaterOffsets);
+    // Reflow the floater
+    mBlock->ReflowFloater(*this, aPlaceholder, fc->mCombinedArea,
+                          fc->mMargins, fc->mOffsets);
 
+    // And then place it
     PRBool isLeftFloater;
     nsPoint origin;
-    PlaceFloater(aPlaceholder, floaterMargins, floaterOffsets,
-                 &isLeftFloater, &origin);
+    PlaceFloater(fc, &isLeftFloater, &origin);
 
     // Update the floater combined-area
+    nsRect combinedArea = fc->mCombinedArea;
     combinedArea.x += origin.x;
     combinedArea.y += origin.y;
     CombineRects(combinedArea, mFloaterCombinedArea);
@@ -4754,8 +4803,8 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
   }
   else {
     // This floater will be placed after the line is done (it is a
-    // below current line floater).
-    mPendingFloaters.AppendElement(aPlaceholder);
+    // below-current-line floater).
+    mBelowCurrentLineFloaters.Append(fc);
   }
 }
 
@@ -4900,9 +4949,7 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
 }
 
 void
-nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
-                                 const nsMargin& aFloaterMargins,
-                                 const nsMargin& aFloaterOffsets,
+nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
                                  PRBool* aIsLeftFloater,
                                  nsPoint* aNewOrigin)
 {
@@ -4912,7 +4959,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // placement are for the floater only, not for any non-floating
   // content.
   nscoord saveY = mY;
-  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
+  nsIFrame* floater = aFloaterCache->mPlaceholder->GetOutOfFlowFrame();
 
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
@@ -4940,8 +4987,8 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
 
   // Adjust the floater size by its margin. That's the area that will
   // impact the space manager.
-  region.width += aFloaterMargins.left + aFloaterMargins.right;
-  region.height += aFloaterMargins.top + aFloaterMargins.bottom;
+  region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
+  region.height += aFloaterCache->mMargins.top + aFloaterCache->mMargins.bottom;
 
   // Find a place to place the floater. The CSS2 spec doesn't want
   // floaters overlapping each other or sticking out of the containing
@@ -4987,16 +5034,34 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // Place the floater in the space manager
   mSpaceManager->AddRectRegion(floater, region);
 
+  // Save away the floaters region in the spacemanager, after making
+  // it relative to the containing block's frame instead of relative
+  // to the spacemanager translation (which is inset by the
+  // border+padding).
+  aFloaterCache->mRegion.x = region.x + borderPadding.left;
+  aFloaterCache->mRegion.y = region.y + borderPadding.top;
+  aFloaterCache->mRegion.width = region.width;
+  aFloaterCache->mRegion.height = region.height;
+#ifdef NOISY_SPACEMANAGER
+  nscoord tx, ty;
+  mSpaceManager->GetTranslation(tx, ty);
+  nsFrame::ListTag(stdout, mBlock);
+  printf(": PlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+         tx, ty, mSpaceManagerX, mSpaceManagerY,
+         region.x, region.y,
+         region.width, region.height);
+#endif
+
   // Set the origin of the floater frame, in frame coordinates. These
   // coordinates are <b>not</b> relative to the spacemanager
   // translation, therefore we have to factor in our border/padding.
-  nscoord x = borderPadding.left + aFloaterMargins.left + region.x;
-  nscoord y = borderPadding.top + aFloaterMargins.top + region.y;
+  nscoord x = borderPadding.left + aFloaterCache->mMargins.left + region.x;
+  nscoord y = borderPadding.top + aFloaterCache->mMargins.top + region.y;
 
   // If floater is relatively positioned, factor that in as well
   if (NS_STYLE_POSITION_RELATIVE == floaterPosition->mPosition) {
-    x += aFloaterOffsets.left;
-    y += aFloaterOffsets.top;
+    x += aFloaterCache->mOffsets.left;
+    y += aFloaterCache->mOffsets.top;
   }
   floater->MoveTo(x, y);
   if (aNewOrigin) {
@@ -5023,70 +5088,54 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
  * Place below-current-line floaters.
  */
 void
-nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
-                                                  PRBool aReflowFloaters)
+nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 {
-  NS_PRECONDITION(aFloaters->Count() > 0, "no floaters");
+  nsFloaterCache* fc = aList.Head();
+  while (fc) {
+    if (!fc->mIsCurrentLineFloater) {
+      mBlock->ReflowFloater(*this, fc->mPlaceholder, fc->mCombinedArea,
+                            fc->mMargins, fc->mOffsets);
 
-  PRInt32 numFloaters = aFloaters->Count();
-  for (PRInt32 i = 0; i < numFloaters; i++) {
-    nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
-      aFloaters->ElementAt(i);
-    if (!IsLeftMostChild(placeholderFrame)) {
-// XXX_perf
-      // Before we can place it we have to reflow it
-      nsRect combinedArea;
-      nsMargin floaterMargins;
-      nsMargin floaterOffsets;
-      mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
-                            floaterMargins, floaterOffsets);
-
+      // Place the floater
       PRBool isLeftFloater;
       nsPoint origin;
-      PlaceFloater(placeholderFrame, floaterMargins, floaterOffsets,
-                   &isLeftFloater, &origin);
+      PlaceFloater(fc, &isLeftFloater, &origin);
 
       // Update the floater combined-area
+      nsRect combinedArea = fc->mCombinedArea;
       combinedArea.x += origin.x;
       combinedArea.y += origin.y;
       CombineRects(combinedArea, mFloaterCombinedArea);
     }
+    fc = fc->Next();
   }
 }
 
+#if 0
 /**
  * Place current-line floaters.
  */
 void
-nsBlockReflowState::PlaceCurrentLineFloaters(nsVoidArray* aFloaters)
+nsBlockReflowState::PlaceCurrentLineFloaters(nsFloaterCacheList& aList)
 {
-  NS_PRECONDITION(aFloaters->Count() > 0, "no floaters");
-
-  PRInt32 numFloaters = aFloaters->Count();
-  for (PRInt32 i = 0; i < numFloaters; i++) {
-    nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
-      aFloaters->ElementAt(i);
-    if (IsLeftMostChild(placeholderFrame)) {
-// XXX_perf
-      // Before we can place it we have to reflow it
-      nsRect combinedArea;
-      nsMargin floaterMargins;
-      nsMargin floaterOffsets;
-      mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
-                            floaterMargins, floaterOffsets);
-
+  nsFloaterCache* fc = aList.Head();
+  while (fc) {
+    if (fc->mIsCurrentLineFloater) {
+      // Place the floater
       PRBool isLeftFloater;
       nsPoint origin;
-      PlaceFloater(placeholderFrame, floaterMargins, floaterOffsets,
-                   &isLeftFloater, &origin);
+      PlaceFloater(fc, &isLeftFloater, &origin);
 
-      // Update the floater combined-area
+      // Update the running floater combined-area
+      nsRect combinedArea = fc->mCombinedArea;
       combinedArea.x += origin.x;
       combinedArea.y += origin.y;
       CombineRects(combinedArea, mFloaterCombinedArea);
     }
+    fc = fc->Next();
   }
 }
+#endif
 
 void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
@@ -5239,19 +5288,19 @@ nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect)
 {
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
-    nsVoidArray* floaters = line->mFloaters;
-    if (nsnull == floaters) {
+    if (line->mFloaters.IsEmpty()) {
       continue;
     }
-    PRInt32 i, n = floaters->Count();
-    for (i = 0; i < n; i++) {
-      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
+    nsFloaterCache* fc = line->mFloaters.Head();
+    while (fc) {
+      nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_BACKGROUND);
+                 floater, NS_FRAME_PAINT_LAYER_BACKGROUND);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_FLOATERS);
+                 floater, NS_FRAME_PAINT_LAYER_FLOATERS);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_FOREGROUND);
+                 floater, NS_FRAME_PAINT_LAYER_FOREGROUND);
+      fc = fc->Next();
     }
   }
 }
@@ -5895,12 +5944,10 @@ nsBlockFrame::BuildFloaterList()
   nsIFrame* current = nsnull;
   nsLineBox* line = mLines;
   while (nsnull != line) {
-    if (nsnull != line->mFloaters) {
-      nsVoidArray& array = *line->mFloaters;
-      PRInt32 i, n = array.Count();
-      for (i = 0; i < n; i++) {
-        nsPlaceholderFrame* ph = (nsPlaceholderFrame*) array[i];
-        nsIFrame* floater = ph->GetOutOfFlowFrame();
+    if (line->mFloaters.NotEmpty()) {
+      nsFloaterCache* fc = line->mFloaters.Head();
+      while (fc) {
+        nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
         if (nsnull == head) {
           current = head = floater;
         }
@@ -5908,6 +5955,7 @@ nsBlockFrame::BuildFloaterList()
           current->SetNextSibling(floater);
           current = floater;
         }
+        fc = fc->Next();
       }
     }
     line = line->mNext;
@@ -6064,10 +6112,11 @@ nsAnonymousBlockFrame::RemoveFirstFrame()
   if (nsnull != line) {
     nsIFrame* firstChild = line->mFirstChild;
 
+#if XXX
     // If the line has floaters on it, see if the frame being removed
     // is a placeholder frame. If it is, then remove it from the lines
     // floater array and from the block frames floater child list.
-    if (nsnull != line->mFloaters) {
+    if (line->mFloaters.NotEmpty()) {
       // XXX UNTESTED!
       nsPlaceholderFrame* placeholderFrame;
       nsVoidArray& floaters = *line->mFloaters;
@@ -6088,6 +6137,7 @@ nsAnonymousBlockFrame::RemoveFirstFrame()
         }
       }
     }
+#endif
 
     if (1 == line->mChildCount) {
       // Remove line when last frame goes away
