@@ -146,7 +146,7 @@ protected:
   void FreeAreas();
 
   nsresult UpdateAreas();
-  nsresult UpdateAreasForBlock(nsIContent* aParent);
+  nsresult UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor);
 
   static PRBool IsAncestorOf(nsIContent* aContent,
                              nsIContent* aAncestorContent);
