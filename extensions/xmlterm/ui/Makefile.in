@@ -39,16 +39,6 @@ VPATH      = @srcdir@
 srcdir     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = content skin locale
-
-CHROME_DIR = packages/xmlterm
-
-CHROME_TYPE = content skin locale
-CHROME_MISC_DIR = .
-CHROME_MISC = \
-	manifest.rdf \
-	$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 include $(srcdir)/../config/xmlterm_config.mk
