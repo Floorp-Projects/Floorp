@@ -599,10 +599,6 @@ spacer {
   display: inline;
 }
 
-label, description {
-  display: block;
-}
-
 description {
   -moz-binding: url("chrome://global/content/bindings/text.xml#text-base");
 }

@@ -54,7 +54,6 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsIContent.h"
-#include "nsSpaceManager.h"
 #include "nsHTMLParts.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -138,7 +137,6 @@ nsAdaptorPrintReason(nsHTMLReflowState& aReflowState)
 nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFrame):nsBox(aPresShell)
 {
   mFrame = aFrame;
-  mSpaceManager = nsnull;
   mWasCollapsed = PR_FALSE;
   mCachedMaxElementHeight = 0;
   mStyleChange = PR_FALSE;
@@ -147,6 +145,26 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   mIncludeOverflow = PR_TRUE;
   mPresShell = aPresShell;
   NeedsRecalc();
+
+#ifdef DEBUG
+  // If we're wrapping a block (we may not be!), be sure the block
+  // gets a space manager.
+  static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
+  void *block;
+  mFrame->QueryInterface(kBlockFrameCID, &block);
+  if (block) {
+    nsFrameState state;
+    mFrame->GetFrameState(&state);
+    NS_ASSERTION(state & NS_BLOCK_SPACE_MGR, "block has no space manager");
+  }
+#ifdef DEBUG_waterson
+  else {
+    printf("*** nsBoxToBlockAdaptor: wrapping non-block frame ");
+    nsFrame::ListTag(stdout, mFrame);
+    printf("\n");
+  }
+#endif /* DEBUG_waterson */
+#endif /* DEBUG */
 }
 
 NS_IMETHODIMP
@@ -244,7 +262,6 @@ nsBoxToBlockAdaptor::operator delete(void* aPtr, size_t sz)
 
 nsBoxToBlockAdaptor::~nsBoxToBlockAdaptor()
 {
-  delete mSpaceManager;
 }
 
 
@@ -679,20 +696,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
  // if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
   //   printf("In debug\n");
   */
-
-  if (!mSpaceManager) {
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      mSpaceManager = new nsSpaceManager(shell, mFrame);
-  }
-
-  // Modify the reflow state and set the space manager
-  nsHTMLReflowState&  nonConstState = (nsHTMLReflowState&)aReflowState;
-  nonConstState.mSpaceManager = mSpaceManager;
-
-  // Clear the spacemanager's regions.
-  mSpaceManager->ClearRegions();
-  
 
   aStatus = NS_FRAME_COMPLETE;
 

@@ -367,7 +367,7 @@ IsFrameSpecial(nsIFrame* aFrame)
   return state & NS_FRAME_IS_SPECIAL;
 }
 
-static inline void
+static void
 GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aResult)
 {
   // We only store the "special sibling" annotation with the first
@@ -5081,12 +5081,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // TEXT CONSTRUCTION
       else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
                aTag == nsXULAtoms::description) {
-        isReplaced = PR_TRUE;
         if ((aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) && 
             (! aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value))) {
-          return NS_OK;
+          processChildren = PR_TRUE;
+          rv = NS_NewAreaFrame(aPresShell, &newFrame,
+                               NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
         }
-        rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
+        else {
+          isReplaced = PR_TRUE;
+          rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
+        }
       }
       // End of TEXT CONSTRUCTION logic
 
@@ -10404,6 +10408,24 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame, 
                                             aNameSpaceID, aAttribute,
                                             changeList, aHint, maxHint);
+
+        if (IsFrameSpecial(primaryFrame)) {
+          // Block-in-inline construction, oh no! Compute style
+          // changes for the IB siblings, too.
+          // XXXwaterson ComputeStyleChangeFor is broken when
+          // re-resolving the style for the anonymous block. Don't
+          // know why yet: deep magic there.
+          nsIFrame *sibling = primaryFrame;
+          while (1) {
+            GetSpecialSibling(frameManager, sibling, &sibling);
+            if (! sibling)
+              break;
+
+            frameManager->ComputeStyleChangeFor(aPresContext, sibling,
+                                                aNameSpaceID, aAttribute,
+                                                changeList, aHint, maxHint);
+          }
+        }
       } else {
 #ifdef DEBUG_shaver
         fputc('-', stderr);
@@ -10456,6 +10478,12 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, maxHint);
+
+          // XXXwaterson should probably check for special IB siblings
+          // here, and propagate the AttributeChanged notification to
+          // them, as well. Currently, inline and block frames don't
+          // do anything on this notification, so it's not that big a
+          // deal.
         default:
           break;
       }
