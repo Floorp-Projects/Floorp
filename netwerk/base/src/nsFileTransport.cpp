@@ -74,7 +74,7 @@ PRLogModuleInfo* gFileTransportLog = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define DEFAULT_TYPE "text/html"
+#define DEFAULT_TYPE "application/x-unknown-content-type"
 
 class nsLocalFileSystem : public nsIFileSystem
 {
