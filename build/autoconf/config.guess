@@ -749,6 +749,9 @@ EOF
 	        echo mips-unknown-sysv${UNAME_RELEASE}
 	fi
         exit 0 ;;
+    *:QNX:*:*)
+	echo i386-pc-qnx`${UNAME_VERSION} | cut -c1-1`
+	exit 0 ;;
 esac
 
 #echo '(No uname command or uname output not recognized.)' 1>&2
