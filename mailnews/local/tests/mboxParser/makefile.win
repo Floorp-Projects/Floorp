@@ -60,6 +60,6 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\pop3Test.exe
+	rm -f $(DIST)\bin\mboxParserTest.exe
 
 $(PROGRAM):: $(OBJS) $(MYLIBS)
