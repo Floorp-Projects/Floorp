@@ -94,6 +94,7 @@ CPPSRCS +=	XPCDispObject.cpp	\
 		XPCIDispatchExtension.cpp \
 		XPCDispParams.cpp \
 		XPCDispParamPropJSClass.cpp \
+		XPCIDispatchClassInfo.cpp \
 		nsDispatchSupport.cpp \
 		$(NULL)
 endif

@@ -1277,6 +1277,33 @@ private:
     static nsDispatchSupport* mInstance;
 };
 
+/**
+ * Provides class info for IDispatch based objects
+ */
+class XPCIDispatchClassInfo : public nsIClassInfo
+{
+public:
+    /**
+     * Returns a single instance of XPCIDispatchClassInfo
+     * @return the lone instance
+     */
+    static XPCIDispatchClassInfo* GetSingleton();
+    /**
+     * Releases our hold on the instance
+     */
+    static void FreeSingleton();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSICLASSINFO
+private:
+    /**
+     * Only our methods create and destroy instances
+     */
+    XPCIDispatchClassInfo() {}
+    virtual ~XPCIDispatchClassInfo() {}
+
+    static XPCIDispatchClassInfo*  sInstance;
+};
+
 #include "XPCDispInlines.h"
 
 #endif
