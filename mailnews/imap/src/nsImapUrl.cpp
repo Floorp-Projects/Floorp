@@ -309,9 +309,9 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsCString *aResult)
 	// the part. Pop and news work this way also.
 	// this algorithm truncates the "&part" string.
 	char *currentChar = m_listOfMessageIds;
-	while (*currentChar && (*currentChar != '&'))
+	while (*currentChar && (*currentChar != '?'))
 		currentChar++;
-	if (*currentChar == '&')
+	if (*currentChar == '?')
 		bytesToCopy = currentChar - m_listOfMessageIds;
 
 	// we should also strip off anything after "/;section="
