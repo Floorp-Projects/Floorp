@@ -109,17 +109,6 @@ protected:
     */
   virtual PRBool NeedsReflow(const nsSize& aMaxSize);
 
-  /** returns PR_TRUE if the data obtained from the first reflow pass
-    * is cached and still valid (ie, no content or style change notifications.)
-    */
-  virtual PRBool IsFirstPassValid();
-
-  /** setter for mFirstPassValid. 
-    * should be called with PR_FALSE when:
-    *   content changes, style changes, or context changes
-    */
-  virtual void SetFirstPassValid(PRBool aValidState);
-
   /** create all child frames for this table */
   virtual void CreateChildFrames(nsIPresContext*  aPresContext);
 
@@ -253,9 +242,6 @@ private:
   /** used to cache reflow results so we can optimize out reflow in some circumstances */
   nsReflowMetrics mDesiredSize;
   nsSize mMaxElementSize;
-
-  /** we can skip the first pass on captions if mFirstPassValid is true */
-  PRBool mFirstPassValid;
 
 };
 
