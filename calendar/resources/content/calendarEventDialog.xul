@@ -207,7 +207,7 @@
 										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
 										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
                                
-                               <menulist id="alarm-length-units" labelnumber="labelplural">
+                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural">
 											  <menupopup>
 													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
 													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
