@@ -29,6 +29,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
@@ -251,17 +253,18 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption : 
-    case eSystemAttr_Font_Icon : 
-    case eSystemAttr_Font_Menu : 
-    case eSystemAttr_Font_MessageBox : 
-    case eSystemAttr_Font_SmallCaption : 
-    case eSystemAttr_Font_StatusBar : 
-    case eSystemAttr_Font_Tooltips : 
-    case eSystemAttr_Font_Widget :
+    case eSystemAttr_Font_Caption:
+    case eSystemAttr_Font_Icon:
+    case eSystemAttr_Font_Menu:
+    case eSystemAttr_Font_MessageBox:
+    case eSystemAttr_Font_SmallCaption:
+    case eSystemAttr_Font_StatusBar:
+    case eSystemAttr_Font_Tooltips:
+    case eSystemAttr_Font_Widget:
       status = NS_ERROR_FAILURE;
       break;
-  } // switch 
+  } // switch
+
   gtk_style_unref(style);
 
   return NS_OK;
@@ -277,9 +280,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContex
 NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {
-  aPixel = ::gdk_rgb_xpixel_from_rgb ((aColor & 0xff) << 16 |
-                                      (aColor & 0xff00) |
-                                      ((aColor >> 16) & 0xff));
+  aPixel = ::gdk_rgb_xpixel_from_rgb (NS_TO_GDK_RGB(aColor));
 
   return NS_OK;
 }

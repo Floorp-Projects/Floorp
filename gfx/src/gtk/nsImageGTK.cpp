@@ -26,8 +26,6 @@
 
 #define IsFlagSet(a,b) (a & b)
 
-#undef CHEAP_PERFORMANCE_MEASUREMENT
-
 // Defining this will trace the allocation of images.  This includes
 // ctor, dtor and update.
 #undef TRACE_IMAGE_ALLOCATION
@@ -71,8 +69,8 @@ nsImageGTK::~nsImageGTK()
   }
 
   if (nsnull != mImagePixmap) {
-      gdk_pixmap_unref(mImagePixmap);
-    }
+    gdk_pixmap_unref(mImagePixmap);
+  }
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::~nsImageGTK(this=%p)\n",
@@ -84,9 +82,8 @@ NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 //------------------------------------------------------------
 
-nsresult
- nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
-                  PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
+nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
+                          PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
   g_return_val_if_fail ((aWidth != 0) || (aHeight != 0), NS_ERROR_FAILURE);
 
@@ -153,7 +150,7 @@ nsresult
       // 32-bit align each row
       mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
 
-      mAlphaBits = new unsigned char[mAlphaRowBytes * aHeight];
+      mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
       break;
@@ -162,6 +159,7 @@ nsresult
       mAlphaBits = nsnull;
       mAlphaWidth = 0;
       mAlphaHeight = 0;
+      mAlphaDepth = 8;
       g_print("TODO: want an 8bit mask for an image..\n");
       break;
   }
@@ -171,103 +169,7 @@ nsresult
 
 //------------------------------------------------------------
 
-void nsImageGTK::ComputMetrics()
-{
-  mRowBytes = CalcBytesSpan(mWidth);
-  mSizeImage = mRowBytes * mHeight;
-}
-
-PRInt32
-nsImageGTK::GetHeight()
-{
-  return mHeight;
-}
-
-PRInt32
-nsImageGTK::GetWidth()
-{
-  return mWidth;
-}
-
-PRUint8*
-nsImageGTK::GetBits()
-{
-  return mImageBits;
-}
-
-void*
-nsImageGTK::GetBitInfo()
-{
-  return nsnull;
-}
-
-PRInt32
-nsImageGTK::GetLineStride()
-{
-  return mRowBytes;
-}
-
-nsColorMap*
-nsImageGTK::GetColorMap()
-{
-  return nsnull;
-}
-
-PRBool
-nsImageGTK::IsOptimized()
-{
-  return PR_TRUE;
-}
-
-PRUint8*
-nsImageGTK::GetAlphaBits()
-{
-  return mAlphaBits;
-}
-
-PRInt32
-nsImageGTK::GetAlphaWidth()
-{
-  return mAlphaWidth;
-}
-
-PRInt32
-nsImageGTK::GetAlphaHeight()
-{
-  return mAlphaHeight;
-}
-
-PRInt32
-nsImageGTK::GetAlphaLineStride()
-{
-  return mAlphaRowBytes;
-}
-
-nsIImage*
-nsImageGTK::DuplicateImage()
-{
-  return nsnull;
-}
-
-void
-nsImageGTK::SetAlphaLevel(PRInt32 aAlphaLevel)
-{
-}
-
-PRInt32
-nsImageGTK::GetAlphaLevel()
-{
-  return 0;
-}
-
-void
-nsImageGTK::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
-{
-}
-
-//------------------------------------------------------------
-
-PRInt32  nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
+PRInt32 nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
 {
   PRInt32 spanbytes;
 
@@ -279,13 +181,92 @@ PRInt32  nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
   return(spanbytes);
 }
 
+void nsImageGTK::ComputMetrics()
+{
+  mRowBytes = CalcBytesSpan(mWidth);
+  mSizeImage = mRowBytes * mHeight;
+}
+
+PRInt32 nsImageGTK::GetHeight()
+{
+  return mHeight;
+}
+
+PRInt32 nsImageGTK::GetWidth()
+{
+  return mWidth;
+}
+
+PRUint8 *nsImageGTK::GetBits()
+{
+  return mImageBits;
+}
+
+void *nsImageGTK::GetBitInfo()
+{
+  return nsnull;
+}
+
+PRInt32 nsImageGTK::GetLineStride()
+{
+  return mRowBytes;
+}
+
+nsColorMap *nsImageGTK::GetColorMap()
+{
+  return nsnull;
+}
+
+PRBool nsImageGTK::IsOptimized()
+{
+  return PR_TRUE;
+}
+
+PRUint8 *nsImageGTK::GetAlphaBits()
+{
+  return mAlphaBits;
+}
+
+PRInt32 nsImageGTK::GetAlphaWidth()
+{
+  return mAlphaWidth;
+}
+
+PRInt32 nsImageGTK::GetAlphaHeight()
+{
+  return mAlphaHeight;
+}
+
+PRInt32
+nsImageGTK::GetAlphaLineStride()
+{
+  return mAlphaRowBytes;
+}
+
+nsIImage *nsImageGTK::DuplicateImage()
+{
+  return nsnull;
+}
+
+void nsImageGTK::SetAlphaLevel(PRInt32 aAlphaLevel)
+{
+}
+
+PRInt32 nsImageGTK::GetAlphaLevel()
+{
+  return 0;
+}
+
+void nsImageGTK::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
+{
+}
+
 //------------------------------------------------------------
 
 // set up the palette to the passed in color array, RGB only in this array
-void
-nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
-                         PRUint8 aFlags,
-                         nsRect *aUpdateRect)
+void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
+                              PRUint8 aFlags,
+                              nsRect *aUpdateRect)
 {
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::ImageUpdated(this=%p,%d)\n",
@@ -308,10 +289,6 @@ nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
     }
   }
 }
-
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT
-static PRTime gConvertTime, gStartTime, gPixmapTime, gEndTime;
-#endif
 
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
@@ -370,10 +347,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   GC      gc;
   XGCValues gcv;
 
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT
-  gStartTime = gPixmapTime = PR_Now();
-#endif
-
   // Create gc clip-mask on demand
   if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
   {
@@ -430,11 +403,23 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     x_image->data = 0;          /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
 
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT
-    gPixmapTime = PR_Now();
-#endif
   }
 
+#if 0
+  // this code doesn't work right.  leaving here for future reference.
+  if ((mAlphaBits != nsnull) && (nsnull == mAlphaPixmap))
+  {
+    GdkImage *img;
+    GdkGC *gc;
+    mAlphaPixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, 1);
+    gc = gdk_gc_new(mAlphaPixmap);
+    gdk_gc_set_function(gc, GDK_COPY);
+    img = gdk_image_new_bitmap(gdk_rgb_get_visual(), mAlphaBits, aWidth, aHeight);
+    gdk_draw_image(mAlphaPixmap,gc,img,0,0,0,0,aWidth,aHeight);
+    gdk_image_destroy(img);
+    gdk_gc_unref(gc);
+  }
+#endif
   // Render unique image bits onto an off screen pixmap only once
   // The image bits can change as a result of ImageUpdated() - for
   // example: animated GIFs.
@@ -448,11 +433,10 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
            mDepth);
 #endif
 
-    GdkVisual * rgb_visual = gdk_rgb_get_visual();
-    gint rgb_depth = rgb_visual->depth;
-
     // Create an off screen pixmap to hold the image bits.
-    mImagePixmap = gdk_pixmap_new(nsnull, aWidth, aHeight, rgb_depth);
+    mImagePixmap = gdk_pixmap_new(nsnull,
+                                  aWidth, aHeight,
+                                  gdk_rgb_get_visual()->depth);
 
     // Make sure the clip region is clear, since we are rendering the 
     // image bits to an off screen pixmap and this always happens at the
@@ -484,16 +468,17 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
          aHeight);
 #endif
 
-  // Draw the image pixmap onto the drawing surface
-  gdk_draw_pixmap(drawing->GetDrawable(),           // drawable
-                  drawing->GetGC(),                 // gc
-                  mImagePixmap,                     // src
-                  0,                                // xsrc
-                  0,                                // ysrc
-                  aX,                               // xdest
-                  aY,                               // ydest
-                  aWidth,                           // width
-                  aHeight);                         // height
+  // copy our off screen pixmap onto the window.
+
+  gdk_window_copy_area(drawing->GetDrawable(),      // dest window
+                       drawing->GetGC(),            // gc
+                       aX,                          // xsrc
+                       aY,                          // ysrc
+                       mImagePixmap,                // source window
+                       0,                           // xdest
+                       0,                           // ydest
+                       aWidth,                      // width
+                       aHeight);                    // height
 
   if (mAlphaPixmap != nsnull)
   {
@@ -501,17 +486,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
     gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
     gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
   }
-
-#ifdef CHEAP_PERFORMANCE_MEASUREMENT
-  gEndTime = PR_Now();
-
-  printf("nsImageGTK::Draw(this=%p,w=%d,h=%d) total=%lld pixmap=%lld, cvt=%lld\n",
-         this,
-         aWidth, aHeight,
-         gEndTime - gStartTime,
-         gPixmapTime - gStartTime,
-         gConvertTime - gPixmapTime);
-#endif
 
   return NS_OK;
 }
