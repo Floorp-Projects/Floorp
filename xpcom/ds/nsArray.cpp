@@ -46,6 +46,9 @@ struct findIndexOfClosure
     PRUint32 resultIndex;
 };
 
+static PRBool FindElementCallback(nsISupports* aElement, void* aClosure);
+
+
 NS_IMPL_ISUPPORTS2(nsArray, nsIArray, nsIMutableArray)
 
 nsArray::~nsArray()
@@ -80,8 +83,6 @@ nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
         *aResult = mArray.IndexOf(aElement);
         if (*aResult == -1)
             return NS_ERROR_FAILURE;
-        
-        NS_ADDREF(*aResult);
         return NS_OK;
     }
 
@@ -130,7 +131,8 @@ nsArray::Clear()
     return NS_OK;
 }
 
-nsArray::FindElementCallback(void *aElement, void* aClosure)
+PRBool
+FindElementCallback(nsISupports *aElement, void* aClosure)
 {
     findIndexOfClosure* closure =
         NS_STATIC_CAST(findIndexOfClosure*, aClosure);
@@ -143,4 +145,28 @@ nsArray::FindElementCallback(void *aElement, void* aClosure)
     closure->resultIndex++;
 
     return PR_TRUE;
+}
+
+nsresult
+NS_NewArray(nsIArray** aResult)
+{
+    nsArray* arr = new nsArray;
+    if (!arr) return NS_ERROR_OUT_OF_MEMORY;
+
+    *aResult = NS_STATIC_CAST(nsIArray*,arr);
+    NS_ADDREF(*aResult);
+    
+    return NS_OK;
+}
+
+nsresult
+NS_NewArray(const nsCOMArray_base& aBaseArray, nsIArray** aResult)
+{
+    nsArray* arr = new nsArray(aBaseArray);
+    if (!arr) return NS_ERROR_OUT_OF_MEMORY;
+    
+    *aResult = NS_STATIC_CAST(nsIArray*, arr);
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 }
