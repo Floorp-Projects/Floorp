@@ -32,7 +32,9 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
+ifdef BUILD_OFFICIAL
 TARGETS		+= $(DEPTH)/build/build_number
+endif
 
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
@@ -85,9 +87,10 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	$(INSTALL) -m 444 $@ $(DIST)/bin
 
 #update build number from within make script
-$(DEPTH)/build/build_number: $(OBJDIR)/bdate$(BIN_SUFFIX) FORCE
+$(DEPTH)/build/build_number: FORCE
 	$(RM) $@
-	$(OBJDIR)/bdate$(BIN_SUFFIX) > $@
+	perl5 bdate.pl > $@
+	perl5 aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
