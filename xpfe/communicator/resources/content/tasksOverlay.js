@@ -359,13 +359,6 @@ function WalletAction( action )
       case "capture":
       default:
         status = appCore.walletRequestToCapture(window._content);
-        if (status == -1) { /* UnableToCapture */
-          window.alert(strings.getAttribute("UnableToCapture"));
-        } else if (status == 0) { /* Captured */
-          window.alert(strings.getAttribute("Captured"));
-        } else if (status == +1) { /* NotCaptured */
-          window.alert(strings.getAttribute("NotCaptured"));
-        }
         break;
     }
   }
