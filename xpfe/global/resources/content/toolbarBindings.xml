@@ -57,7 +57,7 @@ Contributor(s):
         ]]>
         </body>
       </method>
-      <method name="grippyClicked">
+      <method name="grippyTriggered">
         <body>
         <![CDATA[
           var toolbox = this.returnNode("toolbox");
@@ -71,9 +71,9 @@ Contributor(s):
       </method>
     </implementation>  
     <handlers>
-      <handler event="click">
+      <handler event="command">
       <![CDATA[
-        this.grippyClicked();
+        this.grippyTriggered();
       ]]>
       </handler>
     </handlers>
