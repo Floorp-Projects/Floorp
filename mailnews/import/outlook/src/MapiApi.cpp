@@ -505,13 +505,12 @@ BOOL CMapiApi::OpenMdbEntry( LPMDB lpMdb, ULONG cbEntry, LPENTRYID pEntryId, LPU
 {	
 	ULONG		ulObjType;
 	HRESULT		hr;
-	hr =	lpMdb->OpenEntry(	cbEntry,
+    hr = m_lpSession->OpenEntry(cbEntry,
 								pEntryId,
 								NULL,
 								0,
 								&ulObjType,
 								(LPUNKNOWN *) ppOpen);
-
 	if (FAILED(hr)) {
 		MAPI_TRACE2( "OpenMdbEntry failed: 0x%lx, %d\n", (long)hr, (int)hr);
 		return( FALSE);

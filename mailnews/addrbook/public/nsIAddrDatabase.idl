@@ -257,4 +257,14 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
      *        The column value (example: jabroni316)
      */
     [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aLDIFAttributeName, in AString aColValue);
+
+    void AddListCardColumnsToRow(in nsIAbCard aPCard,
+                                            in nsIMdbRow aPListRow,
+                                            in unsigned long aPos,
+                                            out nsIAbCard aPNewCard,
+                                            in boolean aInMailingList);
+    void InitCardFromRow(in nsIAbCard aNewCard,in nsIMdbRow aCardRow);
+    void SetListAddressTotal(in nsIMdbRow aListRow, in PRUint32 aTotal);
+    nsIMdbRow FindRowByCard(in nsIAbCard aCard);
+
 };

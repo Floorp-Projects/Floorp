@@ -322,6 +322,12 @@ public:
 
   static void PRTime2Seconds(PRTime prTime, PRUint32 *seconds);
   
+
+    NS_IMETHOD AddListCardColumnsToRow(nsIAbCard *aPCard, nsIMdbRow *aPListRow, PRUint32 aPos, nsIAbCard** aPNewCard, PRBool aInMailingList);
+    NS_IMETHOD InitCardFromRow(nsIAbCard *aNewCard, nsIMdbRow* aCardRow);
+    NS_IMETHOD SetListAddressTotal(nsIMdbRow* aListRow, PRUint32 aTotal);
+    NS_IMETHOD FindRowByCard(nsIAbCard * card,nsIMdbRow **aRow);
+
 protected:
   
   static void		AddToCache(nsAddrDatabase* pAddrDB) {GetDBCache()->AppendElement(pAddrDB);}
@@ -346,16 +352,13 @@ protected:
 	nsresult GetIntColumn(nsIMdbRow *cardRow, mdb_token outToken, 
 							PRUint32* pValue, PRUint32 defaultValue);
 	nsresult GetBoolColumn(nsIMdbRow *cardRow, mdb_token outToken, PRBool* pValue);
-	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
 	nsresult GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listRow);
 	nsresult GetListFromDB(nsIAbDirectory *newCard, nsIMdbRow* listRow);
 	nsresult AddRecordKeyColumnToRow(nsIMdbRow *pRow);
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
-	nsresult AddListCardColumnsToRow(nsIAbCard *pCard, nsIMdbRow *pListRow, PRUint32 pos, nsIAbCard** pNewCard, PRBool aInMailingList);
 	nsresult AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIMdbRow *listRow);
 	nsresult CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
 	nsresult CreateCardFromDeletedCardsTable(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbCard **result);
-	nsresult SetListAddressTotal(nsIMdbRow* listRow, PRUint32 total);
 	nsresult DeleteCardFromListRow(nsIMdbRow* pListRow, mdb_id cardRowID);
 	void DeleteCardFromAllMailLists(mdb_id cardRowID);
 	nsresult NotifyListEntryChange(PRUint32 abCode, nsIAbDirectory *dir, nsIAddrDBListener *instigator);

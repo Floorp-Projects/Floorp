@@ -51,46 +51,46 @@ class nsIImportFieldMap;
 
 class nsOutlookMail {
 public:
-    nsOutlookMail();
-    ~nsOutlookMail();
-
-	nsresult GetMailFolders( nsISupportsArray **pArray);
-	nsresult GetAddressBooks( nsISupportsArray **pArray);
-	nsresult ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount);
-	nsresult ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, const PRUnichar *pName, PRUint32 id, nsIAddrDatabase *pDb, nsString& errors);
-
-
+  nsOutlookMail();
+  ~nsOutlookMail();
+  
+  nsresult GetMailFolders( nsISupportsArray **pArray);
+  nsresult GetAddressBooks( nsISupportsArray **pArray);
+  nsresult ImportMailbox( PRUint32 *pDoneSoFar, PRBool *pAbort, PRInt32 index, const PRUnichar *pName, nsIFileSpec *pDest, PRInt32 *pMsgCount);
+  nsresult ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, const PRUnichar *pName, PRUint32 id, nsIAddrDatabase *pDb, nsString& errors);
+  
+  
 private:
-	void	OpenMessageStore( CMapiFolder *pNextFolder);
-	BOOL	WriteData( nsIFileSpec *pDest, const char *pData, PRInt32 len);
-	BOOL	WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& attachCount, BOOL *pTerminate);
-	BOOL	WriteStr( nsIFileSpec *pDest, const char *pStr);
-	BOOL	WriteMimeMsgHeader( nsIFileSpec *pDest, CMapiMessage *pMsg);
-	BOOL	WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, BOOL terminate);
-
-	nsresult	DeleteFile( nsIFileSpec *pSpec);
-	void		EmptyAttachments( void);
-	void		BuildAttachments( CMapiMessage& msg, int count);
-	void		DumpAttachments( void);
-
-	PRBool		IsAddressBookNameUnique( nsString& name, nsString& list);
-	void		MakeAddressBookNameUnique( nsString& name, nsString& list);
-	void		SanitizeValue( nsString& val);
-	void		SplitString( nsString& val1, nsString& val2);
-	PRBool		BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
-  nsresult  CreateList( const PRUnichar * pName, nsIAddrDatabase *pDb);
+  void  OpenMessageStore( CMapiFolder *pNextFolder);
+  BOOL  WriteData( nsIFileSpec *pDest, const char *pData, PRInt32 len);
+  BOOL  WriteMessage( nsIFileSpec *pDest, CMapiMessage *pMsg, int& attachCount, BOOL *pTerminate);
+  BOOL  WriteStr( nsIFileSpec *pDest, const char *pStr);
+  BOOL  WriteMimeMsgHeader( nsIFileSpec *pDest, CMapiMessage *pMsg);
+  BOOL  WriteMimeBoundary( nsIFileSpec *pDest, CMapiMessage *pMsg, BOOL terminate);
+  
+  nsresult  DeleteFile( nsIFileSpec *pSpec);
+  void      EmptyAttachments( void);
+  void      BuildAttachments( CMapiMessage& msg, int count);
+  void      DumpAttachments( void);
+  
+  PRBool    IsAddressBookNameUnique( nsString& name, nsString& list);
+  void      MakeAddressBookNameUnique( nsString& name, nsString& list);
+  void      SanitizeValue( nsString& val);
+  void      SplitString( nsString& val1, nsString& val2);
+  PRBool    BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
+  nsresult  CreateList( const PRUnichar * pName, nsIAddrDatabase *pDb, LPMAPIPROP pUserList, nsIImportFieldMap *pFieldMap);
   void SetDefaultContentType(CMapiMessage &msg, nsCString &cType);
-
+  
 private:
-	PRBool				m_gotFolders;
-	PRBool				m_gotAddresses;
-	PRBool				m_haveMapi;
-	CMapiApi			m_mapi;
-	CMapiFolderList		m_folderList;
-	CMapiFolderList		m_addressList;
-	CMapiFolderList		m_storeList;
-	LPMDB				m_lpMdb;
-	nsVoidArray			m_attachments;
+  PRBool            m_gotFolders;
+  PRBool            m_gotAddresses;
+  PRBool            m_haveMapi;
+  CMapiApi          m_mapi;
+  CMapiFolderList   m_folderList;
+  CMapiFolderList   m_addressList;
+  CMapiFolderList   m_storeList;
+  LPMDB             m_lpMdb;
+  nsVoidArray       m_attachments;
 };
 
 #endif /* nsOutlookMail_h___ */
