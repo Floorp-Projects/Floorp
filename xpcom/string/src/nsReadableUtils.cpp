@@ -150,16 +150,30 @@ NS_COM
 void
 LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
-    aDest.Truncate();
-    LossyAppendUTF16toASCII(aSource, aDest);
+    aDest.SetLength(aSource.Length());
+
+    nsAString::const_iterator fromBegin, fromEnd;
+
+      // right now, this won't work on multi-fragment destinations
+    nsACString::iterator toBegin;
+    LossyConvertEncoding<PRUnichar, char> converter(aDest.BeginWriting(toBegin).get());
+
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 NS_COM
 void
 CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
   {
-    aDest.Truncate();
-    AppendASCIItoUTF16(aSource, aDest);
+    aDest.SetLength(aSource.Length());
+
+    nsACString::const_iterator fromBegin, fromEnd;
+
+      // right now, this won't work on multi-fragment destinations
+    nsAString::iterator toBegin;
+    LossyConvertEncoding<char, PRUnichar> converter(aDest.BeginWriting(toBegin).get());
+
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 NS_COM
