@@ -938,7 +938,10 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURI* aURL)
     return NS_ERROR_NULL_POINTER;
   
   mSetUpListener = PR_TRUE;
-  mPluginStreamInfo->SetSeekable(PR_FALSE);
+
+  //~~~XXX We set it deliberately to true for now until netlib implements
+  // a mechanism for retreiving this info. This will make Acrobat work.
+  mPluginStreamInfo->SetSeekable(PR_TRUE);
   //mPluginStreamInfo->SetModified(??);
 
   char* urlString;
