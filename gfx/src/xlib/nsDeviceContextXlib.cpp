@@ -23,6 +23,7 @@
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
 #include "nspr.h"
+
 #include "xlibrgb.h"
 
 #include "nsGfxPSCID.h"
@@ -33,8 +34,6 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
-
-static void _EvilInitilizeGlobals();
 
 nsDeviceContextXlib::nsDeviceContextXlib()
   : DeviceContextImpl()
@@ -62,39 +61,33 @@ nsDeviceContextXlib::~nsDeviceContextXlib()
   mSurface = nsnull;
 }
 
-// EVIL
-extern Display *  gDisplay;
-extern Screen *   gScreen;
-extern Visual *   gVisual;
-extern int        gDepth;
-
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::Init()\n"));
 
   mWidget = aNativeWidget;
 
-  // This is EVIL and has to be fixed by inventing an interface for it.
-  mDisplay = gDisplay;
-  mScreen = gScreen;
-  mVisual = gVisual;
-  mDepth = gDepth;
+  mDisplay = xlib_rgb_get_display();
+  mScreen = xlib_rgb_get_screen();
+  mVisual = xlib_rgb_get_visual();
+  mDepth = xlib_rgb_get_depth();
 
-  static PRBool firstTime = TRUE;
 
-  if (firstTime)
+#ifdef DEBUG
+  static PRBool once = PR_TRUE;
+
+  if (once)
   {
-    firstTime = PR_FALSE;
+    once = PR_FALSE;
 
-    _EvilInitilizeGlobals();
-
-    printf("nsDeviceContextXlib::Init(dpy=%p  screen=%p  visual=%p  depth=%d)\n",
+    printf("nsDeviceContextXlib::Init(dpy=%p  screen=%p  visual=%p  depth=%d)\
+n",
            mDisplay,
            mScreen,
            mVisual,
            mDepth);
   }
-
+#endif /* DEBUG */
 
   CommonInit();
 
@@ -408,9 +401,4 @@ NS_IMETHODIMP nsDeviceContextXlib::EndPage(void)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::EndPage()\n"));
   return NS_OK;
-}
-
-static void _EvilInitilizeGlobals()
-{
-  // foo
 }

@@ -55,6 +55,10 @@ class nsAppShell : public nsIAppShell
 
 protected:
   nsIEventQueueService * mEventQueueService;
+
+
+  Display * mDisplay;
+  Screen *  mScreen;
 };
 
 #endif // nsAppShell_h__
