@@ -886,8 +886,6 @@ browser/components/build/Makefile
 browser/components/cookieviewer/Makefile
 browser/components/history/Makefile
 browser/components/prefwindow/Makefile
-browser/components/prefwindow/content/Makefile
-browser/components/prefwindow/locale/Makefile
 browser/components/security/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/public/Makefile
