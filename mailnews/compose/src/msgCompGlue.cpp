@@ -12,7 +12,7 @@
 #include "msgCore.h"
 #include "rosetta_mailnews.h"
 
-#include "msgCompGlue.h"
+#include "nsMsgTransition.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
