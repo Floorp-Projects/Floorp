@@ -213,11 +213,8 @@ public class Interpreter extends LabelTable {
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
 
         VariableTable varTable = theFunction.getVariableTable();
-        boolean needsActivation = theFunction.requiresActivation() ||
-                                  (cx.isGeneratingDebugChanged() &&
-                                   cx.isGeneratingDebug());
         generateICodeFromTree(theFunction.getLastChild(),
-                              varTable, needsActivation,
+                              varTable, theFunction.requiresActivation(),
                               securityDomain);
 
         itsData.itsName = theFunction.getFunctionName();
@@ -1513,10 +1510,16 @@ public class Interpreter extends LabelTable {
                                      theData.itsFromEvalCode);
         }
 
-        DebugFrame frame = null;
+        DebugFrame debuggerFrame = null;
+        boolean useActivationVars = false;
         if (cx.debugger != null) {
-            frame = cx.debugger.enterFrame(cx, scope, thisObj, args,
-                                           (DebuggableScript)fnOrScript);
+            if (!theData.itsNeedsActivation) {
+                useActivationVars = true;
+                scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
+                                                 thisObj, args);
+            }
+            debuggerFrame = cx.debugger.enterFrame
+                    (cx, scope, thisObj, args, (DebuggableScript)fnOrScript);
         }
 
         Object result = undefined;
@@ -2126,35 +2129,60 @@ public class Interpreter extends LabelTable {
                     break;
                 case TokenStream.SETVAR : {
                     int slot = (iCode[++pc] & 0xFF);
-                    stack[VAR_SHFT + slot] = stack[stackTop];
-                    sDbl[VAR_SHFT + slot] = sDbl[stackTop];
+                    if (!useActivationVars) {
+                        stack[VAR_SHFT + slot] = stack[stackTop];
+                        sDbl[VAR_SHFT + slot] = sDbl[stackTop];
+                    }else {
+                        Object val = stack[stackTop];
+                        if (val == DBL_MRK) val = doubleWrap(sDbl[stackTop]);
+                        activationPut(fnOrScript, scope, slot, val);
+                    }
                     break;
                 }
                 case TokenStream.GETVAR : {
                     int slot = (iCode[++pc] & 0xFF);
                     ++stackTop;
-                    stack[stackTop] = stack[VAR_SHFT + slot];
-                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                    if (!useActivationVars) {
+                        stack[stackTop] = stack[VAR_SHFT + slot];
+                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                    }else {
+                        stack[stackTop]
+                            = activationGet(fnOrScript, scope, slot);
+                    }
                     break;
                 }
                 case TokenStream.VARINC : {
                     int slot = (iCode[++pc] & 0xFF);
                     ++stackTop;
-                    stack[stackTop] = stack[VAR_SHFT + slot];
-                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-                    stack[VAR_SHFT + slot] = DBL_MRK;
-                    sDbl[VAR_SHFT + slot]
-                        = stack_double(stack, sDbl, stackTop) + 1.0;
+                    if (!useActivationVars) {
+                        stack[stackTop] = stack[VAR_SHFT + slot];
+                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                        stack[VAR_SHFT + slot] = DBL_MRK;
+                        sDbl[VAR_SHFT + slot]
+                            = stack_double(stack, sDbl, stackTop) + 1.0;
+                    }else {
+                        Object val = activationGet(fnOrScript, scope, slot);
+                        stack[stackTop] = val;
+                        val = doubleWrap(ScriptRuntime.toNumber(val) + 1.0);
+                        activationPut(fnOrScript, scope, slot, val);
+                    }
                     break;
                 }
                 case TokenStream.VARDEC : {
                     int slot = (iCode[++pc] & 0xFF);
                     ++stackTop;
-                    stack[stackTop] = stack[VAR_SHFT + slot];
-                    sDbl[stackTop] = sDbl[VAR_SHFT + slot];
-                    stack[VAR_SHFT + slot] = DBL_MRK;
-                    sDbl[VAR_SHFT + slot]
-                        = stack_double(stack, sDbl, stackTop) - 1.0;
+                    if (!useActivationVars) {
+                        stack[stackTop] = stack[VAR_SHFT + slot];
+                        sDbl[stackTop] = sDbl[VAR_SHFT + slot];
+                        stack[VAR_SHFT + slot] = DBL_MRK;
+                        sDbl[VAR_SHFT + slot]
+                            = stack_double(stack, sDbl, stackTop) - 1.0;
+                    }else {
+                        Object val = activationGet(fnOrScript, scope, slot);
+                        stack[stackTop] = val;
+                        val = doubleWrap(ScriptRuntime.toNumber(val) - 1.0);
+                        activationPut(fnOrScript, scope, slot, val);
+                    }
                     break;
                 }
                 case TokenStream.ZERO :
@@ -2297,10 +2325,10 @@ public class Interpreter extends LabelTable {
                 case BREAKPOINT_ICODE : {
                     int line = getShort(iCode, pc + 1);
                     cx.interpreterLine = line;
-                    if (frame != null) {
+                    if (debuggerFrame != null) {
                         boolean breakpoint
                             = ((iCode[pc] & 0xff) == BREAKPOINT_ICODE);
-                        frame.onLineChange(cx, line, breakpoint);
+                        debuggerFrame.onLineChange(cx, line, breakpoint);
                     }
                     pc += 2;
                     break;
@@ -2359,8 +2387,8 @@ public class Interpreter extends LabelTable {
                     break;
                 }
 
-                if (exType != OTHER && frame != null) {
-                    frame.onExceptionThrown(cx, ex);
+                if (exType != OTHER && debuggerFrame != null) {
+                    debuggerFrame.onExceptionThrown(cx, ex);
                 }
 
                 boolean rethrow = true;
@@ -2397,8 +2425,8 @@ public class Interpreter extends LabelTable {
                 }
 
                 if (rethrow) {
-                    if (frame != null) {
-                        frame.onExit(cx, true, ex);
+                    if (debuggerFrame != null) {
+                        debuggerFrame.onExit(cx, true, ex);
                     }
                     if (theData.itsNeedsActivation) {
                         ScriptRuntime.popActivation(cx);
@@ -2428,8 +2456,8 @@ public class Interpreter extends LabelTable {
                 scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
             }
         }
-        if (frame != null) {
-            frame.onExit(cx, false, result);
+        if (debuggerFrame != null) {
+            debuggerFrame.onExit(cx, false, result);
         }
         if (theData.itsNeedsActivation) {
             ScriptRuntime.popActivation(cx);
@@ -2687,6 +2715,25 @@ public class Interpreter extends LabelTable {
         } while (count != 0);
         return args;
     }
+
+    private static Object activationGet(NativeFunction f,
+                                        Scriptable activation, int slot)
+    {
+        String name = f.argNames[slot];
+        Object val = activation.get(name, activation);
+    // Activation parameter or var is permanent
+        if (val == Scriptable.NOT_FOUND) Context.codeBug();
+        return val;
+    }
+
+    private static void activationPut(NativeFunction f,
+                                      Scriptable activation, int slot,
+                                      Object value)
+    {
+        String name = f.argNames[slot];
+        activation.put(name, activation, value);
+    }
+
 
     private int version;
     private boolean inLineStepMode;
