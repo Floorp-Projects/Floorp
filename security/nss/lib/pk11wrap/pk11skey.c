@@ -375,6 +375,39 @@ PK11_VerifyKeyOK(PK11SymKey *key) {
     return (PRBool)(key->series == key->slot->series);
 }
 
+#define MAX_TEMPL_ATTRS 16 /* maximum attributes in template */
+
+/* This mask includes all CK_FLAGs with an equivalent CKA_ attribute. */
+#define CKF_KEY_OPERATION_FLAGS 0x000e7b00UL
+
+static unsigned int
+pk11_FlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
+{
+
+    const static CK_ATTRIBUTE_TYPE attrTypes[12] = {
+	CKA_ENCRYPT,      CKA_DECRYPT, 0 /* DIGEST */,     CKA_SIGN,
+	CKA_SIGN_RECOVER, CKA_VERIFY,  CKA_VERIFY_RECOVER, 0 /* GEN */,
+	0 /* GEN PAIR */, CKA_WRAP,    CKA_UNWRAP,         CKA_DERIVE 
+    };
+
+    const CK_ATTRIBUTE_TYPE *pType	= attrTypes;
+          CK_ATTRIBUTE      *attr	= attrs;
+          CK_FLAGS          test	= CKF_ENCRYPT;
+
+
+    PR_ASSERT(!(flags & ~CKF_KEY_OPERATION_FLAGS));
+    flags &= CKF_KEY_OPERATION_FLAGS;
+
+    for (; flags && test <= CKF_DERIVE; test <<= 1, ++pType) {
+    	if (test & flags) {
+	    flags ^= test;
+	    PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
+	    ++attr;
+	}
+    }
+    return (attr - attrs);
+}
+
 static PK11SymKey *
 pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                   PK11Origin origin, CK_ATTRIBUTE *keyTemplate, 
@@ -429,9 +462,36 @@ PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
     PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
     PK11_SETATTRS(attrs, operation, &cktrue, 1); attrs++;
-    /* PK11_SETATTRS(attrs, CKA_VALUE, key->data, key->len); attrs++; */
     templateCount = attrs - keyTemplate;
-    PR_ASSERT(templateCount <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
+    PR_ASSERT(templateCount+1 <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
+
+    keyType = PK11_GetKeyType(type,key->len);
+    symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
+    					templateCount, key, wincx);
+    return symKey;
+}
+
+/*
+ * turn key bits into an appropriate key object
+ */
+PK11SymKey *
+PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
+     PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key,
+     CK_FLAGS flags, void *wincx)
+{
+    PK11SymKey *    symKey;
+    unsigned int    templateCount = 0;
+    CK_OBJECT_CLASS keyClass 	= CKO_SECRET_KEY;
+    CK_KEY_TYPE     keyType 	= CKK_GENERIC_SECRET;
+    CK_BBOOL        cktrue 	= CK_TRUE; /* sigh */
+    CK_ATTRIBUTE    keyTemplate[MAX_TEMPL_ATTRS];
+    CK_ATTRIBUTE *  attrs 	= keyTemplate;
+
+    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
+    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
+    templateCount = attrs - keyTemplate;
+    templateCount += pk11_FlagsToAttributes(flags, attrs, &cktrue);
+    PR_ASSERT(templateCount+1 <= sizeof(keyTemplate)/sizeof(CK_ATTRIBUTE));
 
     keyType = PK11_GetKeyType(type,key->len);
     symKey = pk11_ImportSymKeyWithTempl(slot, type, origin, keyTemplate, 
@@ -2314,38 +2374,6 @@ PK11_Derive( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, SECItem *param,
 				   keySize, NULL, 0);
 }
 
-#define MAX_TEMPL_ATTRS 16 /* maximum attributes in template */
-
-/* This mask includes all CK_FLAGs with an equivalent CKA_ attribute. */
-#define CKF_KEY_OPERATION_FLAGS 0x000e7b00UL
-
-static unsigned int
-pk11_FlagsToAttributes(CK_FLAGS flags, CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue)
-{
-
-    const static CK_ATTRIBUTE_TYPE attrTypes[12] = {
-	CKA_ENCRYPT,      CKA_DECRYPT, 0 /* DIGEST */,     CKA_SIGN,
-	CKA_SIGN_RECOVER, CKA_VERIFY,  CKA_VERIFY_RECOVER, 0 /* GEN */,
-	0 /* GEN PAIR */, CKA_WRAP,    CKA_UNWRAP,         CKA_DERIVE 
-    };
-
-    const CK_ATTRIBUTE_TYPE *pType	= attrTypes;
-          CK_ATTRIBUTE      *attr	= attrs;
-          CK_FLAGS          test	= CKF_ENCRYPT;
-
-
-    PR_ASSERT(!(flags & ~CKF_KEY_OPERATION_FLAGS));
-    flags &= CKF_KEY_OPERATION_FLAGS;
-
-    for (; flags && test <= CKF_DERIVE; test <<= 1, ++pType) {
-    	if (test & flags) {
-	    flags ^= test;
-	    PK11_SETATTRS(attr, *pType, ckTrue, sizeof *ckTrue); 
-	    ++attr;
-	}
-    }
-    return (attr - attrs);
-}
 
 PK11SymKey *
 PK11_DeriveWithFlags( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, 
