@@ -706,10 +706,7 @@ sub do_directory {
                 $href_close = "</A>";
             }
             print "<TD>$href_open$rev$href_close<BR>";
-            my $email = $revision_author{$rev};
-            $email =~ s/%netscape.com$//;
-            print "$email</TD>";
-            #print "<A HREF='mailto:$revision_author{$rev}'>$email</A></TD>";
+            print "$revision_author{$rev}</TD>";
         }
 
         print "</TR>\n";
