@@ -73,7 +73,7 @@ public:
      */
     NS_IMETHOD	
     GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj);
+              int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
      * get member of a Native JSObject for a given index.
@@ -85,7 +85,7 @@ public:
      */
     NS_IMETHOD	
     GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext,  jobject *pjobj);
+            int numPrincipals, nsISupports *securitySupports,  jobject *pjobj);
 
     /**
      * set member of a Native JSObject for a given name.
@@ -98,7 +98,7 @@ public:
      */
     NS_IMETHOD	
     SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject jobj, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext);
+              int numPrincipals, nsISupports *securitySupports);
 
     /**
      * set member of a Native JSObject for a given index.
@@ -111,7 +111,7 @@ public:
      */
     NS_IMETHOD	
     SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject jobj,  void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext);
+            int numPrincipals, nsISupports *securitySupports);
 
     /**
      * remove member of a Native JSObject for a given name.
@@ -121,7 +121,7 @@ public:
      */
     NS_IMETHOD	
     RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext);
+                 int numPrincipals, nsISupports *securitySupports);
 
     /**
      * call a method of Native JSObject. 
@@ -133,7 +133,7 @@ public:
      */
     NS_IMETHOD	
     Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray jobjArr, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj);
+         int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
      * Evaluate a script with a Native JS Object representing scope.
@@ -146,7 +146,7 @@ public:
      */
     NS_IMETHOD	
     Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
-         int numPrincipals, void *pNSISecurityContext, jobject *pjobj);
+         int numPrincipals, nsISupports *securitySupports, jobject *pjobj);
 
     /**
      * Get the window object for a plugin instance.
@@ -159,7 +159,7 @@ public:
      */
     NS_IMETHOD	
     GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jsobject *pobj);
+              int numPrincipals, nsISupports *securitySupports, jsobject *pobj);
 
     /**
      * Get the window object for a plugin instance.
@@ -186,6 +186,7 @@ public:
     virtual ~nsCLiveconnect(void);
 
 protected:
+    void* mJavaClient;
 };
 
 #endif // nsCLiveconnect_h___

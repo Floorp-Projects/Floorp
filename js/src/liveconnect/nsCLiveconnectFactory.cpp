@@ -81,6 +81,17 @@ NSCanUnload(nsISupports* serviceMgr)
     return PR_FALSE;
 }
 
+extern "C" NS_EXPORT nsresult
+JSJ_RegisterLiveConnectFactory()
+{
+    nsCOMPtr<nsIFactory> factory = new nsCLiveconnectFactory;
+    if (factory != NULL) {
+        return nsComponentManager::RegisterFactory(kCLiveconnectCID, "LiveConnect",
+                                                  "@mozilla.org/liveconnect/liveconnect;1",
+                                                  factory, PR_TRUE);
+    }
+    return NS_ERROR_FACTORY_NOT_LOADED;
+}
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports 

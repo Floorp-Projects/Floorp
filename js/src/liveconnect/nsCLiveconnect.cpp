@@ -161,7 +161,7 @@ nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
  */
 NS_METHOD	
 nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
+                     int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -178,7 +178,7 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     JSBool             dummy_bool     = PR_FALSE;
     JSErrorReporter    saved_state    = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -217,7 +217,7 @@ done:
  */
 NS_METHOD	
 nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext,  jobject *pjobj)
+                     int numPrincipals, nsISupports *securitySupports,  jobject *pjobj)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -234,7 +234,7 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsA
     JSBool             dummy_bool     = PR_FALSE;
     JSErrorReporter    saved_state    = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
@@ -268,7 +268,7 @@ done:
  */
 NS_METHOD	
 nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject java_obj, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext)
+                     int numPrincipals, nsISupports *securitySupports)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -282,7 +282,7 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -316,7 +316,7 @@ done:
  */
 NS_METHOD	
 nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,  void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext)
+                     int numPrincipals, nsISupports *securitySupports)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -330,7 +330,7 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -355,7 +355,7 @@ done:
  */
 NS_METHOD	
 nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
-                             int numPrincipals, void *pNSISecurityContext)
+                             int numPrincipals, nsISupports *securitySupports)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -369,7 +369,7 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     jsval              js_val;
     JSErrorReporter    saved_state    = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -399,7 +399,7 @@ done:
  */
 NS_METHOD	
 nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray java_args, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
+                     int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -421,7 +421,7 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     JSErrorReporter    saved_state    = NULL;
     jobject            result         = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -478,7 +478,7 @@ done:
 
 NS_METHOD	
 nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
+                     int numPrincipals, nsISupports *securitySupports, jobject *pjobj)
 {
     if(jEnv == NULL || obj == 0)
     {
@@ -498,7 +498,7 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
     JSPrincipals      *principals     = NULL;
     JSBool             eval_succeeded = PR_FALSE;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
@@ -511,15 +511,15 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
     }
 
     /* Set up security stuff */
-    principals = NULL;
     if (JSJ_callbacks && JSJ_callbacks->get_JSPrincipals_from_java_caller)
-        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, principalsArray, numPrincipals, pNSISecurityContext);
-    codebase = principals ? (const char *)principals->codebase : NULL;
+        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, principalsArray, numPrincipals, securitySupports);
+    codebase = principals ? principals->codebase : NULL;
 
     /* Have the JS engine evaluate the unicode string */
     eval_succeeded = JS_EvaluateUCScriptForPrincipals(cx, js_obj, principals,
                                                       script, length,
                                                       codebase, 0, &js_val);
+
     if (!eval_succeeded)
         goto done;
 
@@ -528,6 +528,8 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize leng
                                    &dummy_cost, &result, &dummy_bool);
 
 done:
+    if (principals)
+        JSPRINCIPALS_DROP(cx, principals);
     if (!jsj_exit_js(cx, jsj_env, saved_state))
        return NS_ERROR_FAILURE;
     
@@ -547,33 +549,32 @@ done:
  *                             in which a applet/bean resides.
  */
 NS_METHOD	
-nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principalsArray[], 
-                     int numPrincipals, void *pNSISecurityContext, jsobject *pobj)
+nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArray[], 
+                     int numPrincipals, nsISupports *securitySupports, jsobject *pobj)
 {
     if(jEnv == NULL || JSJ_callbacks == NULL)
     {
        return NS_ERROR_FAILURE;
     }
 
+    // associate this Java client with this LiveConnect connection.
+    mJavaClient = pJavaObject;
+
     char              *err_msg        = NULL;
     JSContext         *cx             = NULL;
     JSObject          *js_obj         = NULL;
     JSErrorReporter    saved_state    = NULL;
-    jobject            java_obj       = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-//      int                dummy_cost     = 0; // unused
-//      JSBool             dummy_bool     = PR_FALSE; // unused
     JSObjectHandle    *handle         = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, java_applet_obj, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, securitySupports);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
     AutoPushJSContext autopush(cx);
     
     err_msg = NULL;
-    java_obj = NULL;
-    js_obj = JSJ_callbacks->map_java_object_to_js_object(jEnv, java_applet_obj, &err_msg);
+    js_obj = JSJ_callbacks->map_java_object_to_js_object(jEnv, mJavaClient, &err_msg);
     if (!js_obj) {
         if (err_msg) {
             JS_ReportError(cx, err_msg);
@@ -582,7 +583,6 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principals
         goto done;
     }
 #ifdef PRESERVE_JSOBJECT_IDENTITY
-    //*pjobj = java_obj;
     *pobj = (jint)js_obj;
 #else
 	/* FIXME:  to handle PRESERVE_JSOBJECT_IDENTITY case, this needs to
@@ -646,7 +646,7 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
     jstring            result         = NULL;
     JSString          *jsstr          = NULL;
 
-    jsj_env = jsj_enter_js(jEnv, NULL, NULL, &cx, NULL, &saved_state, NULL, 0, NULL );
+    jsj_env = jsj_enter_js(jEnv, mJavaClient, NULL, &cx, NULL, &saved_state, NULL, 0, NULL );
     if (!jsj_env)
        return NS_ERROR_FAILURE;
 
@@ -670,6 +670,7 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
 // from nsCLiveconnect:
 
 nsCLiveconnect::nsCLiveconnect(nsISupports *aOuter)
+    :   mJavaClient(NULL)
 {
     NS_INIT_AGGREGATED(aOuter);
 #ifdef PRESERVE_JSOBJECT_IDENTITY
@@ -680,4 +681,3 @@ nsCLiveconnect::nsCLiveconnect(nsISupports *aOuter)
 nsCLiveconnect::~nsCLiveconnect()
 {
 }
-

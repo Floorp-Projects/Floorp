@@ -765,9 +765,7 @@ nsJVMManager::GetJVMStatus(void)
     return fStatus;
 }
 
-#ifdef XP_MAC
-#define JSJDLL "LiveConnect"
-#endif
+extern "C" nsresult JSJ_RegisterLiveConnectFactory(void);
 
 PRBool
 nsJVMManager::MaybeStartupLiveConnect(void)
@@ -776,18 +774,7 @@ nsJVMManager::MaybeStartupLiveConnect(void)
         return PR_TRUE;
 
 	do {
-#if 0
-		// beard: this code is no longer necessary under Seamonkey, the
-		// factory is already registered up front or automatically.	
-		static PRBool registeredLiveConnectFactory = PR_FALSE;
-		if (!registeredLiveConnectFactory) {
-            NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-            registeredLiveConnectFactory = 
-                (nsComponentManager::RegisterComponent(kCLiveconnectCID, NULL, NULL,
-                                               (const char *)JSJDLL, PR_FALSE,
-                                               PR_FALSE) == NS_OK);
-        }
-#endif
+		static PRBool registeredLiveConnectFactory = NS_SUCCEEDED(JSJ_RegisterLiveConnectFactory());
         if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
             JVM_InitLCGlue();
             nsIJVMPlugin* plugin = GetJVMPlugin();
