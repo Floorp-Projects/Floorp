@@ -316,15 +316,11 @@ nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
   // Start - Temporary fix for Bug 36558
   //-------------------------------
   mGoodToGo = PR_FALSE;
-  nsIDocument * document;
-  nsresult rv = aContent->GetDocument(document);
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = aContent->GetDocument(*getter_AddRefs(document));
   if (NS_SUCCEEDED(rv) && document) {
-    nsIXULDocument * xulDoc;
-    if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIXULDocument), (void**)&xulDoc))) {
-      mGoodToGo = PR_FALSE;
-    } else {
-      mGoodToGo = PR_TRUE;
-    }
+    nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(document));
+    mGoodToGo = xulDoc?PR_FALSE:PR_TRUE;
   }
   //-------------------------------
   // Done - Temporary fix for Bug 36558
