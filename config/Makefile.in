@@ -132,8 +132,3 @@ show_objname:
 	@echo $(OBJDIR)
 
 .PHONY: show_objname
-
-#RUN_MOZILLA_SCRIPT= $(topsrcdir)/build/run-mozilla.sh
-
-#export:: $(RUN_MOZILLA_SCRIPT)
-#	$(INSTALL) $(RUN_MOZILLA_SCRIPT) $(DIST)/bin
