@@ -101,7 +101,7 @@ inline void SimpleMultiset<Elt>::copy(const SimpleMultiset &src)
 		nNodes = src.nNodes;
 		Node **link = &nodes;
 		for (const Node *srcNode = src.nodes; srcNode; srcNode = srcNode->next) {
-			Node *dstNode = new Node(srcNode.element, srcNode.count);
+			Node *dstNode = new Node(srcNode->element, srcNode->count);
 			*link = dstNode;
 			link = &dstNode->next;
 		}
