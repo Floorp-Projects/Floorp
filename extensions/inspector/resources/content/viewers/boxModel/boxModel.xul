@@ -18,17 +18,7 @@
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>  
 
-  <commandset id="cmdsBoxModel">
-    <command id="cmdCapture" oncommand="viewer.capture()"/>
-    <command id="cmdSaveImage" oncommand="viewer.saveImage()"/>
-    <command id="cmdOpenColorPicker" oncommand="viewer.openColorPicker()"/>
-    <command id="cmdToggleOutlines" oncommand="viewer.toggleOutlines()"/>
-    <command id="cmdToggleFill" oncommand="viewer.toggleFill()"/>
-    <command id="cmdZoom" oncommand="viewer.zoomMenulist()"/>
-  </commandset>
-  
   <groupbox>
     <caption>
       <menulist id="mlStats" value="position" oncommand="viewer.showStatGroup(this.value)">
@@ -70,45 +60,5 @@
       </rows>
     </grid>
   </groupbox>
-  
-  <vbox id="bxCaptureStuff" flex="1">
-    <groupbox id="tbxImage">
-      <caption label="&boxImage.label;"/>
-      <hbox align="center" flex="1">
-        <button label="&boxImageCapture.label;" command="cmdCapture"/>
-        <button label="&boxColorPicker.label;" command="cmdOpenColorPicker"/>
-        <button label="&boxSaveImage.label;" command="cmdSaveImage"/>
-        <spacer flex="1"/>
-        
-        <checkbox id="cbxShowOutlines" label="&boxShowOutlines.label;" command="cmdToggleOutlines"/>
-        <checkbox id="cbxFillOutlines" label="&boxFillOutlines.label;" command="cmdToggleFill"/>
-        <menulist id="mlZoom" value="1" command="cmdZoom">
-          <menupopup>
-            <menuitem value="1" label="&zoom1x.label;"/>
-            <menuitem value="2" label="&zoom2x.label;"/>
-            <menuitem value="4" label="&zoom4x.label;"/>
-            <menuitem value="8" label="&zoom8x.label;"/>
-            <menuitem value="16" label="&zoom16x.label;"/>
-            <menuitem value="32" label="&zoom32x.label;"/>
-          </menupopup>
-        </menulist>
-      </hbox>
-    </groupbox>
-
-    <hbox id="bxZoom" align="start" flex="1">
-      <stack id="bxZoomStack">
-        <html:img id="imgZoom"/>
-        <hbox id="bxMargin" flex="1" 
-             onmouseover="viewer.onRegionOver(event)" 
-             onmouseout="viewer.onRegionOut(event)">
-          <hbox id="bxBorder" flex="1">
-            <hbox id="bxPadding" flex="1">
-              <hbox id="bxContent" flex="1"/>
-            </hbox>
-          </hbox>
-        </hbox>
-      </stack>
-    </hbox>
-  </vbox>
 
 </page>

@@ -39,24 +39,3 @@
 <!ENTITY boxMargin.label "Margin">
 <!ENTITY boxBorder.label "Border">
 <!ENTITY boxPadding.label "Padding">
-
-<!ENTITY boxImage.label "Image">
-<!ENTITY boxImageCapture.label "Capture">
-<!ENTITY boxSaveImage.label "Save As...">
-
-<!ENTITY boxShowOutlines.label "Show Boxes">
-<!ENTITY boxFillOutlines.label "Fill Boxes">
-
-<!ENTITY boxColorPicker.label "Pick Color...">
-<!ENTITY boxColorPicker.title "Color Picker">
-<!ENTITY boxStartPicking.label "Start">
-<!ENTITY boxStopPicking.label "Stop">
-<!ENTITY boxClosePicker.label "Close">
-
-<!ENTITY zoom.label "Zoom">
-<!ENTITY zoom1x.label "&zoom.label; 1x">
-<!ENTITY zoom2x.label "&zoom.label; 2x">
-<!ENTITY zoom4x.label "&zoom.label; 4x">
-<!ENTITY zoom8x.label "&zoom.label; 8x">
-<!ENTITY zoom16x.label "&zoom.label; 16x">
-<!ENTITY zoom32x.label "&zoom.label; 32x">

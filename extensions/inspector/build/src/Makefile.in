@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  locale \
 		  necko \
-		  imglib2 \
 		  $(NULL)
 IS_COMPONENT = 1
 
@@ -59,25 +58,11 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES += -I$(srcdir)/../../base/src/win
-SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)inscreencap_s.$(LIB_SUFFIX) \
-		$(NULL)
-ifdef GNU_CC
-OS_LIBS		+= -lgdi32
-endif
-endif
-
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
-	$(PNG_LIBS) \
-	$(ZLIB_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-
