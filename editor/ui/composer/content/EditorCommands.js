@@ -57,11 +57,11 @@ function EditorOnLoad() {
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     // Continue with normal startup.
-    EditorStartup( 'html' );
+    EditorStartup( 'html', document.getElementById("content-frame"));
     return;
 }
   
-function EditorStartup(editorType)
+function EditorStartup(editorType, editorElement)
 {
   dump("Doing Editor Startup...\n");
   contentWindow = window.content;
@@ -70,9 +70,10 @@ function EditorStartup(editorType)
   window.addEventListener("load", EditorDocumentLoaded, true, false);  
   
   dump("Trying to make an Editor Shell through the component manager...\n");
-  var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+/*  var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
   if (editorShell)
     editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+
   if (!editorShell)
   {
     dump("Failed to create editor shell\n");
@@ -80,9 +81,9 @@ function EditorStartup(editorType)
     window.close();
     return;
   }
-  
+*/
   // store the editor shell in the window, so that child windows can get to it.
-  window.editorShell = editorShell;
+  var editorShell = window.editorShell = editorElement.editorShell;
   
   editorShell.Init();
   editorShell.SetWebShellWindow(window);
