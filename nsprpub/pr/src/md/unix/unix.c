@@ -2348,6 +2348,7 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
 
 PRIntervalTime intr_timeout_ticks;
 
+#if defined(SOLARIS) || defined(IRIX)
 static void sigsegvhandler() {
 	fprintf(stderr,"Received SIGSEGV\n");
 	fflush(stderr);
@@ -2365,6 +2366,7 @@ static void sigbushandler() {
 	fflush(stderr);
     pause();
 }
+#endif /* SOLARIS, IRIX */
 
 #endif  /* !defined(_PR_PTHREADS) */
 
@@ -2543,7 +2545,7 @@ PR_Now(void)
 	return s;
 }
 
-PR_IMPLEMENT(PRIntervalTime) _PR_UNIX_GetInterval()
+PRIntervalTime _PR_UNIX_GetInterval()
 {
 	struct timeval time;
 	PRIntervalTime ticks;
@@ -2558,7 +2560,7 @@ PR_IMPLEMENT(PRIntervalTime) _PR_UNIX_GetInterval()
 	return ticks;
 }  /* _PR_SUNOS_GetInterval */
 
-PR_IMPLEMENT(PRIntervalTime) _PR_UNIX_TicksPerSecond()
+PRIntervalTime _PR_UNIX_TicksPerSecond()
 {
 	return 1000;  /* this needs some work :) */
 }

@@ -395,7 +395,9 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByName(
     const char* name, char* buffer, PRInt32 buflen, PRProtoEnt* result)
 {
 	PRStatus rv = PR_SUCCESS;
+#if defined(_PR_HAVE_GETPROTO_R)
 	struct protoent* res = (struct protoent*)result;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -474,7 +476,9 @@ PR_IMPLEMENT(PRStatus) PR_GetProtoByNumber(
     PRInt32 number, char* buffer, PRInt32 buflen, PRProtoEnt* result)
 {
 	PRStatus rv = PR_SUCCESS;
+#if defined(_PR_HAVE_GETPROTO_R)
 	struct protoent* res = (struct protoent*)result;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
