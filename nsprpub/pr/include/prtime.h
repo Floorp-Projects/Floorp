@@ -152,7 +152,7 @@ typedef struct PRExplodedTime {
  *         to GMT before applying the DST rules.
  */
 
-typedef PRTimeParameters (PR_CALLBACK_DECL *PRTimeParamFn)(const PRExplodedTime *gmt);
+typedef PRTimeParameters (PR_CALLBACK *PRTimeParamFn)(const PRExplodedTime *gmt);
 
 /**********************************************************************/
 /****************************** FUNCTIONS *****************************/
