@@ -380,6 +380,7 @@ titledbutton.toolbar[disabled="true"]:active {
 box#status-bar {
 	min-width: 1em;
 	background-color: #CCCCCC;
+	user-focus: ignore;
 }
 
 titledbutton.status-bar {
@@ -430,6 +431,7 @@ grippy{
 	padding: 0px;
 	background-color: #6699CC;
 	list-style-image: none;
+	cursor: pointer;
 }
 
 grippy:hover{
@@ -521,6 +523,10 @@ progressmeter {
 
 /********* XP Menus ***********/
 
+menubar {
+	background-color: #EEEEEE;
+}
+
 menu {
 	color: black;
 }
@@ -539,7 +545,7 @@ menuitem[disabled="true"] {
 
 /* XXX menupopups have to have a color explicitly specified. this is a bug */
 menupopup, popup {
-  background-color: white;
+  background-color: #EEEEEE;
   border: 1px white outset;
 }
 
@@ -718,6 +724,10 @@ menuitem[checked="true"][menuactive="true"] > .menu-left {
 
 menu > .menu-right {
   list-style-image: url("chrome://global/skin/menu-arrow.gif");
+}
+
+menu[disabled="true"] > .menu-right {
+  list-style-image: url("chrome://global/skin/menu-arrow-disabled.gif");
 }
 
 menu[menuactive="true"] > .menu-right {
@@ -1337,6 +1347,7 @@ window html|input[type=password] {
 window html|input {
   background-color: transparent;
   color: black;
+  user-focus: normal;
 }
 
 window html|input[type=radio] {

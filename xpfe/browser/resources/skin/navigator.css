@@ -37,7 +37,6 @@ titledbutton#reload-button {
 	margin: 0px; 
 	font: inherit;
 	border: none;
-	user-focus: normal;
 } 
 
 box#url-bar-box {
