@@ -714,7 +714,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
 //ahmed
 #ifdef IBMBIDI
-  nsBidiOptions bidiOptions;
+  PRUint32 bidiOptions;
   aPresContext->GetBidi(&bidiOptions);
   mCtrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
   mTextDir          = GET_BIDI_OPTION_DIRECTION(bidiOptions);
