@@ -94,17 +94,10 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
 PATH=$(DIST)\bin;$(PATH)
 
 install:: $(DLL)
-!if "$(WINOS)" == "WIN95"
     $(MAKE_INSTALL) $(DLL) $(DIST)\bin
     $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
-!else
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
-    $(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
-    regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
-!endif
 
 clobber::
-    -regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
     -del $(DEFFILE)
 
 $(DEFFILE) : mkctldef.bat
