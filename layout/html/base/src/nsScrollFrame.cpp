@@ -46,6 +46,15 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext);
+
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+
   NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
                        nsDidReflowStatus aStatus);
 
@@ -66,6 +75,78 @@ protected:
 private:
   nsresult CreateScrollingView();
 };
+
+NS_IMETHODIMP
+nsScrollFrame::Init(nsIPresContext&  aPresContext,
+                    nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsIStyleContext* aStyleContext)
+{
+  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,
+                                            aParent, aStyleContext);
+
+  // Create the scrolling view
+  CreateScrollingView();
+  return rv;
+}
+  
+NS_IMETHODIMP
+nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
+{
+  nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
+                                                           aChildList);
+
+  // Get our view
+  nsIView*        myView;
+  nsIViewManager* viewManager;
+
+  GetView(myView);
+  NS_ASSERTION(nsnull != myView, "no view");
+  myView->GetViewManager(viewManager);
+
+  // Get the scrolled frame's view. Note that it must already have a view
+  nsIView*  scrolledView;
+
+  mFirstChild->GetView(scrolledView);
+  NS_ASSERTION(nsnull != scrolledView, "no view");
+
+  // If the scrolled view is currently inserted in the view hierarchy then
+  // remove it. We'll add it to the scrolling view below
+  nsIView*  parentView;
+  scrolledView->GetParent(parentView);
+  if (nsnull != parentView) {
+    viewManager->RemoveChild(parentView, scrolledView);
+  }
+
+  // Set it as the scrolling view's scrolled view
+  nsIScrollableView*  scrollingView;
+  myView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+  scrollingView->SetScrolledView(scrolledView);
+
+  // Get the color style info
+  const nsStyleColor* color;
+  mFirstChild->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
+  
+  // If the background is transparent then inform the view manager
+  if (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) {
+    viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
+  }
+
+  // Set the opacity
+  viewManager->SetViewOpacity(scrolledView, color->mOpacity);
+
+  // We need to allow the view's position to be different than the
+  // frame's position
+  nsFrameState  state;
+  mFirstChild->GetFrameState(state);
+  state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
+  mFirstChild->SetFrameState(state);
+
+  NS_RELEASE(viewManager);
+  return rv;
+}
 
 NS_IMETHODIMP
 nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
@@ -148,11 +229,9 @@ nsScrollFrame::CreateScrollingView()
     // Set the view's opacity
     viewManager->SetViewOpacity(view, color->mOpacity);
 
-    // If the background is transparent then inform the view manager
-    PRBool  isTransparent = (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags);
-    if (isTransparent) {
-      viewManager->SetViewContentTransparency(view, PR_TRUE);
-    }
+    // Because we only paintg the border and we don't paint a background,
+    // inform the view manager that we have transparent content
+    viewManager->SetViewContentTransparency(view, PR_TRUE);
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
@@ -176,35 +255,6 @@ nsScrollFrame::CreateScrollingView()
 
     // Remember our view
     SetView(view);
-
-    // Create a view for the scroll view frame
-    nsIView*  scrolledView;
-    rv = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&scrolledView);
-    if (NS_OK == rv) {
-      // Bind the view to the frame
-      mFirstChild->SetView(scrolledView);
-  
-      // Initialize the view
-      scrolledView->Init(viewManager, nsRect(0, 0, 0, 0), parentView);
-
-      // Set it as the scrolling view's scrolled view
-      scrollingView->SetScrolledView(scrolledView);
-  
-      // If the background is transparent then inform the view manager
-      if (isTransparent) {
-        viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
-      }
-
-      // Set the opacity
-      viewManager->SetViewOpacity(scrolledView, color->mOpacity);
-
-      // We need to allow the view's position to be different than the
-      // frame's position
-      nsFrameState  state;
-      mFirstChild->GetFrameState(state);
-      state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
-      mFirstChild->SetFrameState(state);
-    }
   }
 
   NS_RELEASE(viewManager);
@@ -225,14 +275,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nsIFrame* targetFrame;
   nsIFrame* nextFrame;
 
-  // Special handling for initial reflow and incremental reflow
-  switch (aReflowState.reason) {
-  case eReflowReason_Initial:
-    // Create the scrolling view and the scrolled view
-    CreateScrollingView();
-    break;
-
-  case eReflowReason_Incremental:
+  // Special handling for incremental reflow
+  if (eReflowReason_Incremental == aReflowState.reason) {
     // See whether we're the target of the reflow command
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
@@ -255,7 +299,6 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // child frame
     aReflowState.reflowCommand->GetNext(nextFrame);
     NS_ASSERTION(nextFrame == mFirstChild, "unexpected reflow command next-frame");
-    break;
   }
 
   // Calculate the amount of space needed for borders
