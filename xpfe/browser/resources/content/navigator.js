@@ -987,7 +987,7 @@ function BrowserEditBookmarks()
       return;
 
     trans.addDataFlavor( "text/unicode" );
-    clipboard.getData(trans);
+    clipboard.getData(trans, clipboard.kSelectionClipboard);
 
 	var data = new Object();
 	var dataLen = new Object();
