@@ -39,7 +39,8 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  xpconnect \
-		  webshell
+		  webshell \
+		  unicharutil
 
 CPPSRCS		= \
 		nsSVGAnimatedLength.cpp \
@@ -73,6 +74,7 @@ CPPSRCS		= \
 		nsSVGRect.cpp \
 		nsSVGRectElement.cpp \
 		nsSVGSVGElement.cpp \
+		nsSVGStyleElement.cpp \
 		nsSVGStyleValue.cpp \
 		nsSVGTSpanElement.cpp \
 		nsSVGTextElement.cpp \

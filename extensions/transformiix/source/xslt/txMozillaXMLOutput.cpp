@@ -264,6 +264,23 @@ void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
         endHTMLElement(element);
     }
 
+    if (mCreatingNewDocument) {
+        // Handle all sorts of stylesheets
+        nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
+            do_QueryInterface(mCurrentNode);
+        if (ssle) {
+            ssle->SetEnableUpdates(PR_TRUE);
+            if (ssle->UpdateStyleSheet(nsnull, mNotifier) ==
+                NS_ERROR_HTMLPARSER_BLOCK) {
+                nsCOMPtr<nsIStyleSheet> stylesheet;
+                ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
+                if (mNotifier) {
+                    mNotifier->AddStyleSheet(stylesheet);
+                }
+            }
+        }
+    }
+
     // Add the element to the tree if it wasn't added before and take one step
     // up the tree
     // we can't use GetParentNode to check if mCurrentNode is the
@@ -416,6 +433,14 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
     }
 
     if (mCreatingNewDocument) {
+        // Handle all sorts of stylesheets
+        nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
+            do_QueryInterface(element);
+        if (ssle) {
+            ssle->InitStyleLinkElement(nsnull, PR_FALSE);
+            ssle->SetEnableUpdates(PR_FALSE);
+        }
+
         nsCOMPtr<nsIContent> cont = do_QueryInterface(element);
         NS_ASSERTION(cont, "element doesn't implement nsIContent");
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
@@ -569,14 +594,6 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
         rv = aElement->AppendChild(meta, getter_AddRefs(dummy));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append meta");
     }
-    else if (mCreatingNewDocument) {
-        nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
-            do_QueryInterface(aElement);
-        if (ssle) {
-            ssle->InitStyleLinkElement(nsnull, PR_FALSE);
-            ssle->SetEnableUpdates(PR_FALSE);
-        }
-    }
 }
 
 void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement)
@@ -655,23 +672,6 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement)
         TX_ToLowerCase(httpEquiv);
         nsCOMPtr<nsIAtom> header = do_GetAtom(httpEquiv);
         processHTTPEquiv(header, value);
-    }
-
-    // Handle all sorts of stylesheets
-    if (mCreatingNewDocument) {
-        nsCOMPtr<nsIStyleSheetLinkingElement> ssle =
-            do_QueryInterface(aElement);
-        if (ssle) {
-            ssle->SetEnableUpdates(PR_TRUE);
-            rv = ssle->UpdateStyleSheet(nsnull, mNotifier);
-            if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
-                nsCOMPtr<nsIStyleSheet> stylesheet;
-                ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
-                if (mNotifier) {
-                    mNotifier->AddStyleSheet(stylesheet);
-                }
-            }
-        }
     }
 }
 

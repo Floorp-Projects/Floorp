@@ -67,6 +67,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGRectElement.idl \
 		nsIDOMSVGSVGElement.idl \
 		nsIDOMSVGStylable.idl \
+		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
 		nsIDOMSVGTextPositionElem.idl \

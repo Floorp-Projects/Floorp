@@ -70,6 +70,8 @@ nsresult
 NS_NewSVGTSpanElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 
 class nsSVGElementFactory : public nsIElementFactory
@@ -147,13 +149,15 @@ nsSVGElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
     return NS_NewSVGForeignObjectElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::path)
     return NS_NewSVGPathElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::text)
+  if (name == nsSVGAtoms::text)
     return NS_NewSVGTextElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::tspan)
+  if (name == nsSVGAtoms::tspan)
     return NS_NewSVGTSpanElement(aResult, aNodeInfo);
-  else if (name == nsSVGAtoms::image)
+  if (name == nsSVGAtoms::image)
     return NS_NewSVGImageElement(aResult, aNodeInfo);
-  
+  if (name == nsSVGAtoms::style)
+    return NS_NewSVGStyleElement(aResult, aNodeInfo);
+
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
