@@ -1127,7 +1127,7 @@ var attachmentAreaDNDObserver = {
   onDragStart: function (aEvent, aAttachmentData, aDragAction)
   {
     var target = aEvent.target;
-    if (target.localName == "descriptionitem")
+    if (target.localName == "listitem")
     {
       var attachmentUrl = target.getAttribute("attachmentUrl");
       var attachmentDisplayName = target.getAttribute("label");
