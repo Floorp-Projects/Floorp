@@ -12,6 +12,15 @@ will tell you what has been changed in the last week.
 
 
 
+10/7/98 Added a new table called "products".  Right now, this is used
+only to have a description for each product, and that description is
+only used when initially adding a new bug.  Anyway, you *must* create
+the new table (which you can do by running the new makeproducttable.sh
+script).  If you just leave it empty, things will work much as they
+did before, or you can add descriptions for some or all of your
+products.
+
+
 9/15/98 Everything has been ported to Perl.  NO MORE TCL.  This
 transition should be relatively painless, except for the "params"
 file.  This is the file that contains parameters you've set up on the

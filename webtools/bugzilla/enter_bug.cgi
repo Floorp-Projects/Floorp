@@ -41,9 +41,15 @@ if (!defined $::FORM{'product'}) {
         
         print "<H2>First, you must pick a product on which to enter\n";
         print "a bug.</H2>\n";
+        print "<table>";
         foreach my $p (sort (@prodlist)) {
-            print "<a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a><br>\n";
+            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
+            if (defined $::proddesc{$p}) {
+                print "<td valign=top>$::proddesc{$p}</td>\n";
+            }
+            print "</tr>";
         }
+        print "</table>\n";
         exit;
     }
     $::FORM{'product'} = $prodlist[0];

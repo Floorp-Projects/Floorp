@@ -235,6 +235,13 @@ sub GenerateVersionTable {
         $carray{$c} = 1;
     }
 
+    SendSQL("select product, description from products");
+    while (@line = FetchSQLData()) {
+        my ($p, $d) = (@line);
+        $::proddesc{$p} = $d;
+    }
+            
+
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
@@ -280,6 +287,7 @@ sub GenerateVersionTable {
                   'bug_status', 'resolution', 'resolution_no_dup') {
         print FID GenerateCode('@::legal_' . $i);
     }
+    print FID GenerateCode('%::proddesc');
 
     print FID "1;\n";
     close FID;
