@@ -141,12 +141,16 @@ JVM_AddToClassPath(const char* dirPath)
 static nsIJVMConsole*
 GetConsole(void)
 {
-    nsIJVMConsole* console = NULL;
+    // PENDING(edburns): workaround for bug 76677, make sure the JVM is
+    // started.
+    JNIEnv* env = JVM_GetJNIEnv();
+    if (!env)
+        return nsnull;
+    
+    nsIJVMConsole* console = nsnull;
     nsIJVMPlugin* jvm = GetRunningJVM();
-    if (jvm) {
+    if (jvm)
         jvm->QueryInterface(kIJVMConsoleIID, (void**)&console);
-        // jvm->Release(); // GetRunningJVM no longer calls AddRef
-    }
     return console;
 }
 
