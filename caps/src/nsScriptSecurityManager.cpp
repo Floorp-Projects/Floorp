@@ -880,17 +880,17 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
 
         nsCOMPtr<nsIAggregatePrincipal> subjectAgg(do_QueryInterface(aSubject, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
-        PRBool subjectSetDomain = PR_FALSE;
-        subjectAgg->WasCodebaseChanged(&subjectSetDomain);
+        PRBool subjectDomainChanged = PR_FALSE;
+        subjectAgg->GetDomainChanged(&subjectDomainChanged);
 
         nsCOMPtr<nsIAggregatePrincipal> objectAgg(do_QueryInterface(aObject, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
-        PRBool objectSetDomain = PR_FALSE;
-        objectAgg->WasCodebaseChanged(&objectSetDomain);
+        PRBool objectDomainChanged = PR_FALSE;
+        objectAgg->GetDomainChanged(&objectDomainChanged);
 
         // If both or neither explicitly set their domain, allow the access
-        if (!(subjectSetDomain || objectSetDomain) ||
-            (subjectSetDomain && objectSetDomain))
+        if (!(subjectDomainChanged || objectDomainChanged) ||
+            (subjectDomainChanged && objectDomainChanged))
             return NS_OK;
     }
 

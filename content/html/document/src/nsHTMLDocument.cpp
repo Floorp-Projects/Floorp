@@ -2029,8 +2029,10 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
   rv = agg->SetCodebase(newCodebase);
 
   // Bug 13871: Frameset spoofing - note that document.domain was set
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv)) {
+    agg->SetDomainChanged(PR_TRUE);
     mDomainWasSet = PR_TRUE;
+  }
 
   return rv;
 }
