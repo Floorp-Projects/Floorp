@@ -666,7 +666,7 @@ function go( msg )
 					{
 						pageName = pageHistory.substring( x + 1, pageHistory.length );
 						globals.document.vars.pageHistory.value = pageHistory.substring( 0, x + 1 );
-						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) 
+						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) ||
 							( pageName == "error2.htm" ) )
 							historyCleanup = true;
 					}
