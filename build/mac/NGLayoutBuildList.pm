@@ -267,6 +267,7 @@ sub BuildDist()
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:src:MANIFEST",						"$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:public:MANIFEST",					"$distdirectory:libimg:");
+    InstallFromManifest(":mozilla:modules:libimg:public_com:MANIFEST",					"$distdirectory:libimg:");
 
 	#PLUGIN
     InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",					"$distdirectory:plugin:");
@@ -600,6 +601,9 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
 
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:gifcom.mcp",				"gifcom$D.shlb", "gifcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:pngcom.mcp",				"pngcom$D.shlb", "pngcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:jpegcom.mcp",				"jpegcom$D.shlb", "jpegcom.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
