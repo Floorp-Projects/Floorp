@@ -71,23 +71,58 @@
 	</box>
 </html:form> 
 
-<!-- Temporary hack to turn on invalidate area flashing -->  
+<!-- Event Debugging -->  
 <html:form>
 	<box align="vertical" style="width: 100%;">
 		<html:fieldset style="width: 100%;">
     	<html:legend align="left">
-		<html:div>&widgetFlashing.label;</html:div> 
+		<html:div>&debugEventDebugging.label;</html:div> 
 		</html:legend>
-     	    <box align="horizontal">
-				<html:input type="checkbox" id="pref:0:bool:nglayout.widget.flash_invalidate_areas" />
-				<html:label for="pref:0:bool:nglayout.widget.flash_invalidate_areas" accesskey="n" tabindex="0">
-				&widgetFlashing.label;
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.paint_flashing" />
+				<html:label for="pref:0:bool:nglayout.debug.paint_flashing" accesskey="n" tabindex="0">
+				&debugPaintFlashing.label;
 				</html:label>
-          </box> 
+			</html:div>
+
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.paint_dumping" />
+				<html:label for="pref:0:bool:nglayout.debug.paint_dumping" accesskey="n" tabindex="0">
+				&debugPaintDumping.label;
+				</html:label>
+			</html:div>
+
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.invalidate_dumping" />
+				<html:label for="pref:0:bool:nglayout.debug.invalidate_dumping" accesskey="n" tabindex="0">
+				&debugInvalidateDumping.label;
+				</html:label>
+			</html:div>
+
+ 			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.event_dumping" />
+				<html:label for="pref:0:bool:nglayout.debug.event_dumping" accesskey="n" tabindex="0">
+				&debugEventDumping.label;
+				</html:label>
+			</html:div>
+
+ 			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.motion_event_dumping" />
+				<html:label for="pref:0:bool:nglayout.debug.motion_event_dumping" accesskey="n" tabindex="0">
+				&debugMotionEventDumping.label;
+				</html:label>
+			</html:div>
+ 
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.crossing_event_dumping" />
+				<html:label for="pref:0:bool:nglayout.debug.crossing_event_dumping" accesskey="n" tabindex="0">
+				&debugCrossingEventDumping.label;
+				</html:label>
+			</html:div>
+
 		</html:fieldset>
 	</box>
 </html:form> 
-
 
 </html:div>
 </window>

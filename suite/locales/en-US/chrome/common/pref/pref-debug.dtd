@@ -11,5 +11,11 @@
 <!ENTITY partialGfxWidgets.label "partial-gfx">
 <!ENTITY gfxWidgets.label "gfx">
 
-<!-- Debug: Flash Invalidate() areas -->
-<!ENTITY widgetFlashing.label "Flash Invalidate() Areas">
+<!-- Event Debugging -->
+<!ENTITY debugEventDebugging.label "Event Debugging">
+<!ENTITY debugPaintFlashing.label "Paint Flashing">
+<!ENTITY debugPaintDumping.label "Paint Dumping">
+<!ENTITY debugInvalidateDumping.label "Invalidate Dumping">
+<!ENTITY debugEventDumping.label "Event Dumping">
+<!ENTITY debugMotionEventDumping.label "Motion Event Dumping">
+<!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
