@@ -139,8 +139,6 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view = GetView();
   view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
-  // XXX Hack
-  mPresContext = aPresContext;
   return rv;
 }
 
@@ -463,7 +461,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
   scrollbar = GetContentOfBox(scrollbarBox);
   PRBool isHorizontal = IsHorizontal();
 
-  if (isDraggingThumb(aPresContext))
+  if (isDraggingThumb())
   {
       // we want to draw immediately if the user doing it directly with the
       // mouse that makes redrawing much faster.
@@ -618,7 +616,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        // stop capturing
       //printf("stop capturing\n");
       AddListener();
-      DragThumb(aPresContext, PR_FALSE);
+      DragThumb(PR_FALSE);
       mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
       return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     }
@@ -676,8 +674,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
       parent = parent->GetParent();
     }
 
-    RemoveListener();
-    DragThumb(mPresContext, PR_TRUE);
+    DragThumb(PR_TRUE);
 
     if (isHorizontal)
       mThumbStart = thumbFrame->GetPosition().x;
@@ -844,7 +841,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
     if (mediator) {
       mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
       UpdateAttribute(scrollbar, newpos, PR_FALSE, aIsSmooth);
-      CurrentPositionChanged(mPresContext);
+      CurrentPositionChanged(GetPresContext());
       return;
     }
   }
@@ -867,7 +864,7 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   // This is EVIL, we shouldn't be messing with GetFrameForPoint just to get
   // thumb mouse drag events to arrive at the slider!
-  if (isDraggingThumb(aPresContext))
+  if (isDraggingThumb())
   {
     // XXX I assume it's better not to test for visibility here.
     *aFrame = this;
@@ -907,19 +904,21 @@ nsSliderFrame::SetInitialChildList(nsIPresContext* aPresContext,
 nsresult
 nsSliderMediator::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  if (mSlider)
+  // Only process the event if the thumb is not being dragged.
+  if (mSlider && !mSlider->isDraggingThumb())
     return mSlider->MouseDown(aMouseEvent);
-  else
-    return NS_OK;
+
+  return NS_OK;
 }
 
 nsresult
 nsSliderMediator::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (mSlider)
+  // Only process the event if the thumb is not being dragged.
+  if (mSlider && !mSlider->isDraggingThumb())
     return mSlider->MouseUp(aMouseEvent);
-  else
-    return NS_OK;
+
+  return NS_OK;
 }
 
 nsresult
@@ -947,8 +946,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     // mouseEvent has click coordinates in pixels, convert to twips first
     isHorizontal ? mouseEvent->GetClientX(&pospx) : mouseEvent->GetClientY(&pospx);
     float p2t;
-    // XXX hack
-    mPresContext->GetScaledPixelsToTwips(&p2t);
+    GetPresContext()->GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
     pos = pospx * onePixel;
 
@@ -995,8 +993,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     SetCurrentPosition(scrollbar, thumbFrame, pospx, PR_FALSE);
   }
 
-  RemoveListener();
-  DragThumb(mPresContext, PR_TRUE);
+  DragThumb(PR_TRUE);
   PRInt32 c = 0;
   if (isHorizontal)
      mouseEvent->GetClientX(&c);
@@ -1024,8 +1021,8 @@ nsSliderFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSliderFrame :: DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
+void
+nsSliderFrame::DragThumb(PRBool aGrabMouseEvents)
 {
     // get its view
   nsIView* view = GetView();
@@ -1043,12 +1040,10 @@ nsSliderFrame :: DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents
       }
     }
   }
-
-  return NS_OK;
 }
 
 PRBool
-nsSliderFrame :: isDraggingThumb(nsIPresContext* aPresContext)
+nsSliderFrame::isDraggingThumb()
 {
     // get its view
   nsIView* view = GetView();
