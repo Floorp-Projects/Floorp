@@ -523,12 +523,11 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 nsIAtom* GetChildListFor(const nsIFrame* aFrame)
 {
   nsIAtom* childList = nsnull;
-  nsIAtom* frameType;
-  aFrame->GetFrameType(&frameType);
-  if (nsLayoutAtoms::tableCaptionFrame == frameType) { 
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (nsLayoutAtoms::tableCaptionFrame == frameType.get()) { 
     childList = nsLayoutAtoms::captionList;
   }
-  NS_IF_RELEASE(frameType);
   return childList;
 }
 
@@ -1343,6 +1342,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
                                          PR_FALSE, getter_AddRefs(adjStyleContext));
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         outerFrame, adjStyleContext, nsnull, aNewCaptionFrame);
+    aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewCaptionFrame);
   }
 
   // The caption frame is a floater container
@@ -5813,7 +5813,7 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
   else {
     // Append the frames to the end of the parent's child list
     rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
-                                       nsnull, aFrameList);
+                                     GetChildListFor(aFrameList), aFrameList);
   }
   NS_IF_RELEASE(parentType);
 
