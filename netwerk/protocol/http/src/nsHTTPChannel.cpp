@@ -1319,7 +1319,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (NS_FAILED(rv)) return rv;
     rv = mCacheEntry->SetAnnotation("HTTP headers", 
             allHeaders.Length()+1, 
-            allHeaders.GetBuffer());
+            allHeaders.get());
     if (NS_FAILED(rv)) return rv;
 
     mCacheEntry->SetUpdateInProgress(PR_TRUE);
@@ -1993,10 +1993,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             authLine.Left(authType, space);
 
 #if defined(DEBUG_shaver) || defined(DEBUG_gagan)
-        fprintf(stderr, "Auth type: \"%s\"\n", authType.GetBuffer());
+        fprintf(stderr, "Auth type: \"%s\"\n", authType.get());
 #endif
         // normalize to lowercase
-        char *authLower = nsCRT::strdup(authType.GetBuffer());
+        char *authLower = authType.ToNewCString();
         for (int i = 0; authLower[i]; i++)
             authLower[i] = tolower(authLower[i]);
 
@@ -2037,7 +2037,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         // later on change to only show realm and then host's info. 
         // find the realm 
         PRBool foundRealm = PR_FALSE;
-        const char* realm = authLine.GetBuffer() + authType.Length();
+        const char* realm = authLine.get() + authType.Length();
         while (realm && nsCRT::IsAsciiSpace(*realm)) realm++;
 
         if (nsCRT::strncasecmp(realm, "realm", 5) == 0)
@@ -2065,7 +2065,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 
         // if we couldn't find the realm, just append the whole auth line
         if (!foundRealm)
-            message.AppendWithConversion(authLine.GetBuffer());
+            message.AppendWithConversion(authLine);
 
         // but, if we did find a realm and this is the first time trying to
         // authenticate this channel (indicated by mAuthRealm == NULL), then 
@@ -2129,7 +2129,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         }
 
         if (NS_FAILED(rv) ||
-            NS_FAILED(rv = auth->Authenticate(mURI, "http", authLine.GetBuffer(),
+            NS_FAILED(rv = auth->Authenticate(mURI, "http", authLine.get(),
                                               userBuf, passwdBuf, mPrompter,
                                               getter_Copies(authString))))
             return rv;
@@ -2453,7 +2453,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     if (NS_FAILED(rv)) return rv;
 
     rv = mCacheEntry->SetAnnotation("HTTP headers", allHeaders.Length()+1, 
-                                     allHeaders.GetBuffer());
+                                     allHeaders.get());
     if (NS_FAILED(rv)) return rv;
 
     // Fake it so that HTTP headers come from cached versions
@@ -2644,8 +2644,8 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
         }
 
         if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
-                (0 == PL_strncasecmp(ref.GetBuffer(), "http",4)))
-            return SetRequestHeader(nsHTTPAtoms::Referer, ref.GetBuffer());
+                (0 == PL_strncasecmp(ref.get(), "http",4)))
+            return SetRequestHeader(nsHTTPAtoms::Referer, ref.get());
     }
     return NS_OK; 
 }

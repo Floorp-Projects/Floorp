@@ -484,7 +484,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			filter->SetFilterList(NS_STATIC_CAST(nsIMsgFilterList*,this));
 
             PRUnichar *unicodeString =
-                nsTextFormatter::smprintf(unicodeFormatter, value.GetBuffer());
+                nsTextFormatter::smprintf(unicodeFormatter, value.get());
 			filter->SetFilterName(unicodeString);
             nsTextFormatter::smprintf_free(unicodeString);
 			m_curFilter = filter;
@@ -497,7 +497,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			break;
 		case nsIMsgFilterList::attribDescription:
 			if (m_curFilter)
-				m_curFilter->SetFilterDesc(value.GetBuffer());
+				m_curFilter->SetFilterDesc(value.get());
 			break;
 		case nsIMsgFilterList::attribType:
 			if (m_curFilter)
@@ -518,7 +518,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
 			{
 				nsMsgPriorityValue outPriority;
-				nsresult res = NS_MsgGetPriorityFromString(value.GetBuffer(), &outPriority);
+				nsresult res = NS_MsgGetPriorityFromString(value.get(), &outPriority);
 				if (NS_SUCCEEDED(res))
 				{
 					m_curFilter->SetAction(m_curFilter->m_action.m_type);
@@ -546,7 +546,7 @@ nsresult nsMsgFilterList::ParseCondition(nsCString &value)
 {
 	PRBool	done = PR_FALSE;
 	nsresult	err = NS_OK;
-	const char *curPtr = value.GetBuffer();
+	const char *curPtr = value.get();
 	while (!done)
 	{
 		// insert code to save the boolean operator if there is one for this search term....

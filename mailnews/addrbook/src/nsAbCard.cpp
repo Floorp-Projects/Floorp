@@ -195,7 +195,7 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
   nsMemory::Free(utf8Name);
 
 	nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+  rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 	nsCOMPtr<nsIAbCard> card(do_QueryInterface(res, &rv));

@@ -778,7 +778,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
           onlineName.AppendWithConversion(hierarchyDelimiter);
         onlineName.AppendWithConversion(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
-        imapFolder->SetOnlineName(onlineName.GetBuffer());
+        imapFolder->SetOnlineName(onlineName.get());
         imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
         imapFolder->SetBoxFlags(flags);
         // store the online name as the mailbox name in the db folder info
@@ -1248,7 +1248,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
 	   char *leafName = dirSpec.GetLeafName();
 	   if (nsCRT::strcmp(leafName, newNameStr) != 0 )
 	   {
-           dirSpec.Rename(newNameStr.GetBuffer());      // in case of rename operation leaf names will differ
+           dirSpec.Rename(newNameStr.get());      // in case of rename operation leaf names will differ
 		   nsCRT::free(leafName);
 		   return rv;
 	   }
@@ -1268,10 +1268,10 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
 	   NS_ENSURE_SUCCESS(rv,rv);
 	  
 	   nsCString oldPathStr (dirSpec.GetNativePathCString());
-       srcDir->InitWithPath(oldPathStr.GetBuffer());
+       srcDir->InitWithPath(oldPathStr.get());
 	   
        nsCString newPathStr (parentPath.GetNativePathCString());
-       destDir->InitWithPath(newPathStr.GetBuffer());
+       destDir->InitWithPath(newPathStr.get());
        
 	   rv = RecursiveCopy(srcDir, destDir);
        
@@ -1536,7 +1536,7 @@ NS_IMETHODIMP nsImapMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement 
   nsresult rv = nsMsgDBFolder::WriteToFolderCacheElem(element);
   element->SetInt32Property("boxFlags", m_boxFlags);
   element->SetInt32Property("hierDelim", (PRInt32) m_hierarchyDelimiter);
-  element->SetStringProperty("onlineName", m_onlineFolderName.GetBuffer());
+  element->SetStringProperty("onlineName", m_onlineFolderName.get());
   return rv;
 }
 
@@ -1806,7 +1806,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
   {
     nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        this, &srcKeyArray, messageIds.GetBuffer(), nsnull,
+        this, &srcKeyArray, messageIds.get(), nsnull,
         PR_TRUE, isMove, m_eventQueue, nsnull);
     if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
     undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
@@ -2433,7 +2433,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 
 
   if(NS_SUCCEEDED(rv))
-    rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
+    rv = rdfService->GetResource(msgURI.get(), getter_AddRefs(res));
 
   if(NS_SUCCEEDED(rv))
   {
@@ -3165,15 +3165,15 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
         result += ct;
         result += MSG_LINEBREAK;
         
-        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+        m_tempMessageStream->Write(result.get(), result.Length(),
                                    &writeCount);
         result = "X-Mozilla-Status: 0001";
         result += MSG_LINEBREAK;
-        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+        m_tempMessageStream->Write(result.get(), result.Length(),
                                    &writeCount);
         result =  "X-Mozilla-Status2: 00000000";
         result += MSG_LINEBREAK;
-        m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+        m_tempMessageStream->Write(result.get(), result.Length(),
                                    &writeCount);
     }
     return rv;
@@ -4434,7 +4434,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
     rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
 
     nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
+        srcFolder, &srcKeyArray, messageIds.get(), this,
         PR_TRUE, isMove, m_eventQueue, urlListener);
 
     if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
@@ -4884,14 +4884,14 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   copySupport = do_QueryInterface(m_copyState);
   if (imapService)
     rv = imapService->OnlineMessageCopy(m_eventQueue,
-                                            srcFolder, messageIds.GetBuffer(),
+                                            srcFolder, messageIds.get(),
                                             this, PR_TRUE, isMove,
                                             urlListener, nsnull,
                                             copySupport, msgWindow);
   if (NS_SUCCEEDED(rv))
   {
     nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
+        srcFolder, &srcKeyArray, messageIds.get(), this,
         PR_TRUE, isMove, m_eventQueue, urlListener);
     if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
     if (isMove)
@@ -5002,7 +5002,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     if( m_copyState ) 
         copySupport = do_QueryInterface(m_copyState);
     rv = imapService->AppendMessageFromFile(m_eventQueue, fileSpec, this,
-                                            messageId.GetBuffer(),
+                                            messageId.get(),
                                             PR_TRUE, isDraftOrTemplate,
                                             urlListener, nsnull,
                                             copySupport);
@@ -5325,7 +5325,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
           onlineName.AppendWithConversion(hierarchyDelimiter);
           onlineName.AppendWithConversion(folderNameStr);
           imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
-          imapFolder->SetOnlineName(onlineName.GetBuffer());
+          imapFolder->SetOnlineName(onlineName.get());
           imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
           imapFolder->SetBoxFlags(boxflags);
 
@@ -5415,7 +5415,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
      nsCOMPtr<nsIFileSpec> newPathSpec;
      rv = NS_NewFileSpec(getter_AddRefs(newPathSpec));
      if (NS_FAILED(rv)) return rv;
-     rv = newPathSpec->SetNativePath(newPathStr.GetBuffer());
+     rv = newPathSpec->SetNativePath(newPathStr.get());
 	 	  
      nsFileSpec newPath;
      rv = newPathSpec->GetFileSpec(&newPath);
@@ -5440,7 +5440,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
      onlineCName.AppendWithConversion(hierarchyDelimiter);
      onlineCName.Append(leafName);
      imapFolder->SetVerifiedAsOnlineFolder(verified);
-     imapFolder->SetOnlineName(onlineCName.GetBuffer());
+     imapFolder->SetOnlineName(onlineCName.get());
      imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
      imapFolder->SetBoxFlags(boxflags);
 

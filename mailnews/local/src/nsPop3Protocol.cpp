@@ -524,7 +524,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
             mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
 
             if (m_commandResponse.Length())
-                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
+                passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.get(), (const char *) userName, (const char *) hostName);
             else
             {
                 PRUnichar * noAnswerText = nsnull;
@@ -2598,7 +2598,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 else
                     PR_snprintf (prompt, len, fmt2,
                                  (m_commandResponse.Length()
-                                  ? m_commandResponse.GetBuffer()
+                                  ? m_commandResponse.get()
                                   : XP_GetString(XP_NO_ANSWER)),
                                  net_pop3_username, host);
 #if defined(CookiesAndSignons)                                        

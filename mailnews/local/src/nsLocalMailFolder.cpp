@@ -258,7 +258,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   }
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -1197,17 +1197,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
         parentFolder->PropagateDelete(this, PR_FALSE);
     }
 
-    oldPathSpec->Rename(newNameStr.GetBuffer());
+    oldPathSpec->Rename(newNameStr.get());
 
 	newNameStr += ".msf";
-	oldSummarySpec.Rename(newNameStr.GetBuffer());
+	oldSummarySpec.Rename(newNameStr.get());
 
 	
 	if (NS_SUCCEEDED(rv) && cnt > 0) {
 		// rename "*.sbd" directory
 		nsCAutoString newNameDirStr(convertedNewName);
 		newNameDirStr += ".sbd";
-		dirSpec.Rename(newNameDirStr.GetBuffer());
+		dirSpec.Rename(newNameDirStr.get());
 	}
 
 	PR_Free((void*) convertedNewName);
@@ -2052,7 +2052,7 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
   
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(resource));
+		rv = rdfService->GetResource(msgURI.get(), getter_AddRefs(resource));
     }
 
 	if(NS_SUCCEEDED(rv))
@@ -2146,19 +2146,19 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
     {
       strcpy(statusStrBuf, "X-Mozilla-Status: 0001" MSG_LINEBREAK);
     }
-    *(mCopyState->m_fileStream) << result.GetBuffer();
+    *(mCopyState->m_fileStream) << result.get();
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
-          result.GetBuffer(), result.Length());
+          result.get(), result.Length());
     *(mCopyState->m_fileStream) << statusStrBuf;
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
         statusStrBuf, nsCRT::strlen(statusStrBuf));
     result = "X-Mozilla-Status2: 00000000" MSG_LINEBREAK;
-    *(mCopyState->m_fileStream) << result.GetBuffer();
+    *(mCopyState->m_fileStream) << result.get();
     if (mCopyState->m_parseMsgState)
         mCopyState->m_parseMsgState->ParseAFolderLine(
-          result.GetBuffer(), result.Length());
+          result.get(), result.Length());
     mCopyState->m_fromLineSeen = PR_TRUE;
   }
   else 
@@ -2249,9 +2249,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
             *end = tmpChar;
             line += MSG_LINEBREAK;
         
-            mCopyState->m_fileStream->write(line.GetBuffer(), line.Length()); 
+            mCopyState->m_fileStream->write(line.get(), line.Length()); 
             if (mCopyState->m_parseMsgState)
-              mCopyState->m_parseMsgState->ParseAFolderLine(line.GetBuffer(),
+              mCopyState->m_parseMsgState->ParseAFolderLine(line.get(),
                                                             line.Length());
             goto keepGoing;
           }

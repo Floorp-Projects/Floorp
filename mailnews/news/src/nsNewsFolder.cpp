@@ -226,7 +226,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
 	uri.Append(name);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
 	if (NS_FAILED(rv)) return rv;
   
     nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
@@ -501,7 +501,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
   nsCAutoString tmpPath((nsFilePath)path); //ducarroz: please don't cast a nsFilePath to char* on Mac
-  *url = PR_smprintf("%s%s", NEWS_SCHEME, tmpPath.GetBuffer());
+  *url = PR_smprintf("%s%s", NEWS_SCHEME, tmpPath.get());
 #else
   const char *pathName = path;
   *url = PR_smprintf("%s%s", NEWS_SCHEME, pathName);
@@ -1013,7 +1013,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
   rv = nsBuildNewsMessageURI(mBaseMessageURI, key, msgURI);
   if (NS_FAILED(rv)) return rv;
   
-  rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
+  rv = rdfService->GetResource(msgURI.get(), getter_AddRefs(res));
   
   
   if (NS_FAILED(rv)) return rv;
@@ -1704,7 +1704,7 @@ NS_IMETHODIMP nsMsgNewsFolder::RemoveMessage(nsMsgKey key)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr <nsIRDFResource> res;
-  rv = rdfService->GetResource(msgURI.GetBuffer(), getter_AddRefs(res));
+  rv = rdfService->GetResource(msgURI.get(), getter_AddRefs(res));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDBMessage> dbMessage = do_QueryInterface(res);

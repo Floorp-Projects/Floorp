@@ -134,7 +134,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
                                messages, PR_TRUE, m_msgWindow,
                                /*nsIMsgCopyServiceListener* listener*/ nsnull, PR_FALSE);
 //			   rv = imapService->OnlineMessageCopy(eventQueue,
-//						m_sourceFolder, messageIds.GetBuffer(),
+//						m_sourceFolder, messageIds.get(),
 //						destFolder, PR_TRUE, PR_TRUE,
 //						urlListener, nsnull, nsnull);
 			}

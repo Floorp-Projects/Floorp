@@ -89,7 +89,7 @@ protected:
 	
   // protocol specific code to parse a url...
   virtual nsresult ParseUrl();
-	virtual const char * GetUserName() { return m_userName.GetBuffer();}
+	virtual const char * GetUserName() { return m_userName.get();}
 
 	// data retrieved from parsing the url: (Note the url could be a post from file or it could be inthe url)
   nsCString   m_toPart;

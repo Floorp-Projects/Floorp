@@ -1792,7 +1792,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
         printf("Counting LOCAL attachment %d: %s\n", 
-                mCompFieldLocalAttachments, str.GetBuffer());
+                mCompFieldLocalAttachments, str.get());
 #endif
       }
       else    // This is a remote URL...
@@ -1800,7 +1800,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
         mCompFieldRemoteAttachments++;
 #ifdef NS_DEBUG
         printf("Counting REMOTE attachment %d: %s\n", 
-                mCompFieldRemoteAttachments, str.GetBuffer());
+                mCompFieldRemoteAttachments, str.get());
 #endif
       }
 
@@ -1849,7 +1849,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
       if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding LOCAL attachment %d: %s\n", newLoc, str.get());
 #endif
 #ifdef XP_WIN
         str.ReplaceChar('|', ':');
@@ -1968,7 +1968,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       if (str.CompareWithConversion("file://", PR_TRUE, 7) != 0)
       {
 #ifdef NS_DEBUG
-        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());
+        printf("Adding REMOTE attachment %d: %s\n", newLoc, str.get());
 #endif
 
         m_attachments[newLoc].mDeleteFile = PR_TRUE;

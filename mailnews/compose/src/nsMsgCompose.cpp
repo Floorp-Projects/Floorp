@@ -1083,7 +1083,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         nsCOMPtr<nsIIOService> serv (do_GetService(kIOServiceCID, &rv));
         if (!unencodedURL.IsEmpty() && NS_SUCCEEDED(rv) && serv)
         {
-          if (NS_SUCCEEDED(serv->Escape(unencodedURL.GetBuffer(),
+          if (NS_SUCCEEDED(serv->Escape(unencodedURL.get(),
                    nsIIOService::url_FileBaseName | nsIIOService::url_Forced,
                    getter_Copies(myGetter))))
           {

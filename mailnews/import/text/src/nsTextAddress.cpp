@@ -999,7 +999,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
     nsCAutoString colType(typeSlot);
     nsCAutoString column(valueSlot);
 
-	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
+	mdb_u1 firstByte = (mdb_u1)(colType.get())[0];
 	switch ( firstByte )
 	{
 	case 'b':

@@ -117,7 +117,7 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
   mRequest = request;
   rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
                                    mData.Length(),
-                                   mData.GetBuffer());
+                                   mData.get());
   return rv;
 }
 

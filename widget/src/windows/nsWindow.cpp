@@ -4245,14 +4245,14 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   //
   if (!nsToolkit::mIsNT) {
     unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
-      mIMECompString->GetBuffer(),
+      mIMECompString->get(),
       mIMECompString->Length(),
       NULL,0);
 
     mIMECompUnicode->SetCapacity(unicharSize+1);
 
     unicharSize = ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
-      mIMECompString->GetBuffer(),
+      mIMECompString->get(),
       mIMECompString->Length(),
       (PRUnichar*)mIMECompUnicode->GetUnicode(),
       mIMECompUnicode->mCapacity);
@@ -4408,11 +4408,11 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		(*textRangeListResult)[0].mStartOffset=0;
 		substringLength = nsToolkit::mIsNT ? mIMECompUnicode->Length() :
       ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,
-				mIMECompString->GetBuffer(), maxlen,NULL,0);
+				mIMECompString->get(), maxlen,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
 		substringLength = nsToolkit::mIsNT ? cursor :
-      ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
+      ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->get(),
 								cursor,NULL,0);
 		(*textRangeListResult)[1].mStartOffset=substringLength;
 		(*textRangeListResult)[1].mEndOffset = substringLength;
@@ -4434,7 +4434,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		
 		substringLength =  nsToolkit::mIsNT ? cursor :
       ::MultiByteToWideChar(gCurrentKeyboardCP,
-          MB_PRECOMPOSED,mIMECompString->GetBuffer(),cursor,NULL,0);
+          MB_PRECOMPOSED,mIMECompString->get(),cursor,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -4457,7 +4457,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 
 			lastUnicodeOffset += nsToolkit::mIsNT ? current - lastMBCSOffset :
         ::MultiByteToWideChar(gCurrentKeyboardCP,
-          MB_PRECOMPOSED,mIMECompString->GetBuffer()+lastMBCSOffset,
+          MB_PRECOMPOSED,mIMECompString->get()+lastMBCSOffset,
 				current-lastMBCSOffset,NULL,0);
 
 			(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset;
@@ -4565,8 +4565,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompString->SetCapacity(compStrLen+1);
 
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompString->GetBuffer(), mIMECompString->mCapacity, compStrLen);
-      ((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+        (LPVOID)mIMECompString->get(), mIMECompString->mCapacity, compStrLen);
+      ((char*)mIMECompString->get())[compStrLen] = '\0';
       mIMECompString->mLength = compStrLen;
     }
 #ifdef DEBUG_IME
@@ -4703,9 +4703,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
       NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
         GCS_COMPSTR,
-        (char*)mIMECompString->GetBuffer(),
+        (char*)mIMECompString->get(),
         mIMECompString->mCapacity, compStrLen);
-      ((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+      ((char*)mIMECompString->get())[compStrLen] = '\0';
       mIMECompString->mLength = compStrLen;
     }
 #ifdef DEBUG_IME
@@ -4735,7 +4735,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       ((PRUnichar*)mIMECompUnicode->GetUnicode())[0] = '\0';
       mIMECompUnicode->mLength = 0;
     } else {
-      ((char*)mIMECompString->GetBuffer())[0] = '\0';
+      ((char*)mIMECompString->get())[0] = '\0';
       mIMECompString->mLength = 0;
     }
 		HandleTextEvent(hIMEContext,PR_FALSE);
@@ -4781,7 +4781,7 @@ BOOL nsWindow::OnIMEEndComposition()
       ((PRUnichar*)mIMECompUnicode->GetUnicode())[0] = '\0';
       mIMECompUnicode->mLength = 0;
     } else {
-      ((char*)mIMECompString->GetBuffer())[0] = '\0';
+      ((char*)mIMECompString->get())[0] = '\0';
       mIMECompString->mLength = 0;
     }
 		HandleTextEvent(hIMEContext, PR_FALSE);

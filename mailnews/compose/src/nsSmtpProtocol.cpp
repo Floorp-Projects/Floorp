@@ -1668,7 +1668,7 @@ nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 	contractID.Append('/');
 	contractID.Append(redirectionTypeStr);
 
-	m_logonRedirector = do_GetService(contractID.GetBuffer(), &rv);
+	m_logonRedirector = do_GetService(contractID.get(), &rv);
 	if (m_logonRedirector && NS_SUCCEEDED(rv))
 	{
 		nsXPIDLCString password;

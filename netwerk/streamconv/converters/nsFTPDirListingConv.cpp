@@ -77,7 +77,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
 
     // set our internal state to reflect the server type
     nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
-    const char *from = fromMIMEString.GetBuffer();
+    const char *from = fromMIMEString.get();
     NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
 
     from = PL_strstr(from, "/ftp-dir-");
@@ -153,7 +153,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
 
 #ifndef DEBUG_valeski
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
-        convertedData.Length(), convertedData.GetBuffer()) );
+        convertedData.Length(), convertedData.get()) );
 #else
     char *unescData = convertedData.ToNewCString();
     nsUnescape(unescData);
@@ -195,7 +195,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
 
     // set our internal state to reflect the server type
     nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
-    const char *from = fromMIMEString.GetBuffer();
+    const char *from = fromMIMEString.get();
     NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
 
     from = PL_strstr(from, "/ftp-dir-");
@@ -240,7 +240,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, 
-        ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw %s, TO application/http-index-format\n", fromMIMEString.GetBuffer()));
+        ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw %s, TO application/http-index-format\n", fromMIMEString.get()));
 
     return NS_OK;
 }
@@ -318,7 +318,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 
 #ifndef DEBUG_valeski
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
-        indexFormat.Length(), indexFormat.GetBuffer()) );
+        indexFormat.Length(), indexFormat.get()) );
 #else
     char *unescData = indexFormat.ToNewCString();
     nsUnescape(unescData);
@@ -862,7 +862,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
                 } else {
                     nsCAutoString size(size_s);
                     size.StripWhitespace();
-                    thisEntry->mContentLen = atol(size.GetBuffer());
+                    thisEntry->mContentLen = atol(size.get());
                 }
 
                 ConvertDOSDate(date, thisEntry->mMDTM);

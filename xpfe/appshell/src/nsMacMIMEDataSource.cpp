@@ -58,11 +58,11 @@ static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 	
 
 	nsCString mimetype((char*) &entry.MIMEType[1], entry.MIMEType[0] );
-	info->SetMIMEType( mimetype.GetBuffer() );
+	info->SetMIMEType( mimetype.get() );
 	
 	// remove the .
 	nsCString extension((char*) &entry.extension[2], entry.extension[0]-1 );
-	info->AppendExtension( extension.GetBuffer() );
+	info->AppendExtension( extension.get() );
 	
 	return NS_OK;
 }

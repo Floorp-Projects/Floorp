@@ -202,8 +202,8 @@ nsLoggingProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar*
     for ( unsigned int i=0; i < name.Length(); ++i)
         uline.Append('-');
 
-    *mLogStream << "     " << name.GetBuffer() << nsEndl;
-    *mLogStream << "     " << uline.GetBuffer() << nsEndl;
+    *mLogStream << "     " << name.get() << nsEndl;
+    *mLogStream << "     " << uline.get() << nsEndl;
 
     *mLogStream << nsEndl;
 //    *mLogStream << "     Starting Installation at " << time << nsEndl;   

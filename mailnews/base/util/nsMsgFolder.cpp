@@ -354,7 +354,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 	uri.Append(subFolderName);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri.get(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -680,7 +680,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     if (NS_FAILED(rv)) return rv;
 
     if (serverPath) {
-      rv = serverPath->AppendRelativeUnixPath(newPath.GetBuffer());
+      rv = serverPath->AppendRelativeUnixPath(newPath.get());
       NS_ASSERTION(NS_SUCCEEDED(rv),"failed to append to the serverPath");
       if (NS_FAILED(rv)) {
       	mPath = null_nsCOMPtr();

@@ -197,7 +197,7 @@ void CProfileManager::DoManageProfilesDialog()
     for (PRUint32 index = 0; index < listLen; index++)
     {
           CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(profileList[index]), cStr);
-          table->InsertRows(1, LONG_MAX, cStr.GetBuffer(), cStr.Length(), true);
+          table->InsertRows(1, LONG_MAX, cStr.get(), cStr.Length(), true);
           
           if (nsCRT::strcmp(profileList[index], currProfileName.get()) == 0)
             selectedCell.row = index + 1;

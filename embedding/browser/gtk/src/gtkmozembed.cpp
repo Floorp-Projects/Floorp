@@ -1384,7 +1384,7 @@ gtk_moz_embed_get_location     (GtkMozEmbed *embed)
 
   nsCString currentURI;
   embed_private->GetCurrentURI(currentURI);
-  retval = nsCRT::strdup(currentURI.GetBuffer());
+  retval = currentURI.ToNewCString();
 
   return retval;
 }

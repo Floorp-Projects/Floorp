@@ -492,7 +492,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 	else
 		NS_ASSERTION(PR_FALSE, "didn't find close quote");
 	
-	return PL_strdup(returnString.GetBuffer());
+	return returnString.ToNewCString();
 }
 
 

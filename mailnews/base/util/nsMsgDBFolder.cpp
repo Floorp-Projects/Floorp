@@ -729,7 +729,7 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 
 	// Now, we have to loop until we find a filename that doesn't already
 	// exist on the disk
-	path.SetLeafName(mangledLeaf.GetBuffer());
+	path.SetLeafName(mangledLeaf.get());
   path.MakeUnique();
   *resultName = path.GetLeafName();
 	return NS_OK;
@@ -1371,7 +1371,7 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
     randomStore->Tell(&curStorePos);
     m_offlineHeader->SetMessageOffset(curStorePos);
   }
-  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+  m_tempMessageStream->Write(result.get(), result.Length(),
                              &writeCount);
   if (randomStore)
   {
@@ -1382,11 +1382,11 @@ nsresult nsMsgDBFolder::WriteStartOfNewLocalMessage()
 
   result = "X-Mozilla-Status: 0001";
   result += MSG_LINEBREAK;
-  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+  m_tempMessageStream->Write(result.get(), result.Length(),
                              &writeCount);
   result =  "X-Mozilla-Status2: 00000000";
   result += MSG_LINEBREAK;
-  nsresult rv = m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+  nsresult rv = m_tempMessageStream->Write(result.get(), result.Length(),
                              &writeCount);
   return rv;
 }

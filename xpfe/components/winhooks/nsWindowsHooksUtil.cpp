@@ -74,7 +74,7 @@ struct RegistryEntry {
     // Return value name in proper form for passing to ::Reg functions
     // (i.e., emptry string is converted to a NULL pointer).
     const char* valueNameArg() const {
-        return valueName.IsEmpty() ? NULL : valueName.GetBuffer();
+        return valueName.IsEmpty() ? NULL : valueName.get();
     }
 
     nsCString  fullName() const;

@@ -1493,11 +1493,11 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   /* check native fonts */
   nsCAutoString namepsnativefont("print.psnativefont.");
   namepsnativefont.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsnativefont.GetBuffer(), &psnativefont);
+  gPrefs->CopyCharPref(namepsnativefont.get(), &psnativefont);
 
   nsCAutoString namepsnativecode("print.psnativecode.");
   namepsnativecode.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsnativecode.GetBuffer(), &psnativecode);
+  gPrefs->CopyCharPref(namepsnativecode.get(), &psnativecode);
 
   /* psnativefont and psnativecode both should be set */
   if (!psnativefont || !psnativecode) {
@@ -1512,13 +1512,13 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
   } else {
     nsCAutoString namepsfontorder("print.psfontorder.");
     namepsfontorder.AppendWithConversion(lang);
-    gPrefs->GetIntPref(namepsfontorder.GetBuffer(), &psfontorder);
+    gPrefs->GetIntPref(namepsfontorder.get(), &psfontorder);
   }
 
   /* check UCS fonts */
   nsCAutoString namepsunicodefont("print.psunicodefont.");
   namepsunicodefont.AppendWithConversion(lang);
-  gPrefs->CopyCharPref(namepsunicodefont.GetBuffer(), &psunicodefont);
+  gPrefs->CopyCharPref(namepsunicodefont.get(), &psunicodefont);
 
   nsresult res = NS_OK;
 

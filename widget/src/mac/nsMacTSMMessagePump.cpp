@@ -284,7 +284,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	nsCAutoString mbcsText;
 	Size text_size = ::GetHandleSize(text.dataHandle);
 	mbcsText.SetCapacity(text_size+1);
-	char* mbcsTextPtr = (char*)mbcsText.GetBuffer();
+	char* mbcsTextPtr = (char*)mbcsText.get();
 	strncpy(mbcsTextPtr,*(text.dataHandle),text_size);
 	mbcsTextPtr[text_size]=0;
 	

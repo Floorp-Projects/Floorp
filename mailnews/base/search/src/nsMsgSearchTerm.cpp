@@ -809,19 +809,19 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	switch (m_operator)
 	{
 	case nsMsgSearchOp::Contains:
-		if ((nsnull != utf8) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
+		if ((nsnull != utf8) && ((n_str.get())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
 			PL_strcasestr(utf8, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
-		if ((nsnull != utf8) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
+		if ((nsnull != utf8) && ((n_str.get())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
 			!PL_strcasestr(utf8, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
 		if(utf8)
 		{
-			if ((n_str.GetBuffer())[0])
+			if ((n_str.get())[0])
 			{
 				if (n_str.EqualsWithConversion(utf8, PR_TRUE /*ignore case*/) /* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;
@@ -833,7 +833,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	case nsMsgSearchOp::Isnt:
 		if(utf8)
 		{
-			if ((n_str.GetBuffer())[0])
+			if ((n_str.get())[0])
 			{
 				if (!n_str.EqualsWithConversion(utf8, PR_TRUE)/* INTL_StrIs(csid, n_header, n_str)*/ )
 					result = PR_TRUE;

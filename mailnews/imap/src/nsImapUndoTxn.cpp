@@ -206,13 +206,13 @@ nsImapMoveCopyMsgTxn::Undo(void)
             if (NS_FAILED(rv)) return rv;
             rv = imapService->SubtractMessageFlags(
                 m_eventQueue, m_srcFolder, srcListener, nsnull,
-                m_srcMsgIdString.GetBuffer(), kImapMsgDeletedFlag,
+                m_srcMsgIdString.get(), kImapMsgDeletedFlag,
                 m_idsAreUids);
             if (NS_FAILED(rv)) return rv;
             if (DeleteIsMoveToTrash(m_srcFolder))
                 rv = imapService->GetHeaders(m_eventQueue, m_srcFolder,
                                              srcListener, nsnull,
-                                             m_srcMsgIdString.GetBuffer(),
+                                             m_srcMsgIdString.get(),
                                              PR_TRUE); 
         }
     }
@@ -229,7 +229,7 @@ nsImapMoveCopyMsgTxn::Undo(void)
         if (NS_FAILED(rv)) return rv;
         rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
                                           dstListener, nsnull,
-                                          m_dstMsgIdString.GetBuffer(),
+                                          m_dstMsgIdString.get(),
                                           kImapMsgDeletedFlag,
                                           m_idsAreUids);
     }
@@ -262,7 +262,7 @@ nsImapMoveCopyMsgTxn::Redo(void)
 
             rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
                                               srcListener, nsnull,
-                                              m_srcMsgIdString.GetBuffer(),
+                                              m_srcMsgIdString.get(),
                                               kImapMsgDeletedFlag,
                                               m_idsAreUids);
         }
@@ -280,14 +280,14 @@ nsImapMoveCopyMsgTxn::Redo(void)
         if (NS_FAILED(rv)) return rv;
         rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
                                                dstListener, nsnull,
-                                               m_dstMsgIdString.GetBuffer(),
+                                               m_dstMsgIdString.get(),
                                                kImapMsgDeletedFlag,
                                                m_idsAreUids);
         if (NS_FAILED(rv)) return rv;
         if (DeleteIsMoveToTrash(m_dstFolder))
             rv = imapService->GetHeaders(m_eventQueue, m_dstFolder,
                                          dstListener, nsnull,
-                                         m_dstMsgIdString.GetBuffer(),
+                                         m_dstMsgIdString.get(),
                                          PR_TRUE);
     }
 	return rv;

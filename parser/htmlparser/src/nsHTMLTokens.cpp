@@ -1427,7 +1427,7 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
   char buffer[200];
   nsCAutoString str;
   CopyUCS2toASCII(mTextKey, str);
-  out << "[" << GetClassName() << "] " << str.GetBuffer() << "=";
+  out << "[" << GetClassName() << "] " << str.get() << "=";
   mTextValue.ToCString(buffer,sizeof(buffer));
   out << buffer << ": " << mTypeID << nsEndl;
 }
@@ -1682,7 +1682,7 @@ void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
   static char buffer[1000];
   nsCAutoString str;
   CopyUCS2toASCII(mTextKey, str);
-  out << " " << str.GetBuffer();
+  out << " " << str.get();
   if(mTextValue.Length()){
     mTextValue.ToCString(buffer,sizeof(buffer));
     out << "=" << buffer;

@@ -191,7 +191,7 @@ nsFtpControlConnection::Write(nsCString& command)
 
     PRUint32 len = command.Length();
     PRUint32 cnt;
-    nsresult rv = mOutStream->Write(command.GetBuffer(), len, &cnt);
+    nsresult rv = mOutStream->Write(command.get(), len, &cnt);
     if (NS_SUCCEEDED(rv) && len==cnt) {
         if (mSuspendedWrite) {
             mSuspendedWrite = PR_FALSE;

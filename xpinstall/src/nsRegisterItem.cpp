@@ -245,13 +245,13 @@ PRInt32 nsRegisterItem::Complete()
     {
         // We can register right away
         if (mChromeType & CHROME_SKIN)
-            rv = reg->InstallSkin(mURL.GetBuffer(), isProfile, PR_TRUE);
+            rv = reg->InstallSkin(mURL.get(), isProfile, PR_TRUE);
 
         if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_LOCALE))
-            rv = reg->InstallLocale(mURL.GetBuffer(), isProfile);
+            rv = reg->InstallLocale(mURL.get(), isProfile);
 
         if (NS_SUCCEEDED(rv) && (mChromeType & CHROME_CONTENT))
-            rv = reg->InstallPackage(mURL.GetBuffer(), isProfile);
+            rv = reg->InstallPackage(mURL.get(), isProfile);
     }
     else
     {
@@ -407,7 +407,7 @@ char* nsRegisterItem::toString()
 
     if (rsrcVal)
     {
-        PR_snprintf(buffer, 1024, rsrcVal, mURL.GetBuffer());
+        PR_snprintf(buffer, 1024, rsrcVal, mURL.get());
         nsCRT::free(rsrcVal);
     }
 

@@ -82,7 +82,7 @@ public:
 	PRBool IsBooleanOpAND() { return m_booleanOp == nsMsgSearchBooleanOp::BooleanAND ? PR_TRUE : PR_FALSE;}
 	nsMsgSearchBooleanOperator GetBooleanOp() {return m_booleanOp;}
 	// maybe should return nsString &   ??
-	const char * GetArbitraryHeader() {return m_arbitraryHeader.GetBuffer();}
+	const char * GetArbitraryHeader() {return m_arbitraryHeader.get();}
 
 	static char *	EscapeQuotesInStr(const char *str);
 

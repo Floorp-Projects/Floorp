@@ -115,7 +115,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (atPos != -1) {
     hostname.Left(username, atPos);	
 #ifdef DEBUG_NEWS
-    printf("username = %s\n",username.GetBuffer());
+    printf("username = %s\n",username.get());
 #endif
   }
 
@@ -138,15 +138,15 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     hostname.Right(exacthostname, hostname.Length() - atPos - 1);
   }
   else {
-    exacthostname = hostname.GetBuffer();
+    exacthostname = hostname.get();
 #ifdef DEBUG_NEWS
-    printf("exacthostname = %s, hostname = %s\n",exacthostname.GetBuffer(),hostname.GetBuffer());
+    printf("exacthostname = %s, hostname = %s\n",exacthostname.get(),hostname.get());
 #endif
   } 
 
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = nsGetNewsServer(username.GetBuffer(),
-                       exacthostname.GetBuffer(), getter_AddRefs(server));
+  rv = nsGetNewsServer(username.get(),
+                       exacthostname.get(), getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
   // now ask the server what it's root is

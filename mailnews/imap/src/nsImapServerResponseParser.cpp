@@ -1300,7 +1300,7 @@ void nsImapServerResponseParser::envelope_data()
 					headerNonNil = PR_FALSE;
 			}
 			if (headerNonNil)
-				fServerConnection.HandleMessageDownLoadLine(headerLine.GetBuffer(), PR_FALSE);
+				fServerConnection.HandleMessageDownLoadLine(headerLine.get(), PR_FALSE);
 		}
 		else
 			break;
@@ -1324,7 +1324,7 @@ void nsImapServerResponseParser::xaolenvelope_data()
 		nsSubsumeCStr subject(CreateNilString(), PR_TRUE);
 		nsCAutoString subjectLine("Subject: ");
 		subjectLine += subject;
-		fServerConnection.HandleMessageDownLoadLine(subjectLine.GetBuffer(), PR_FALSE);
+		fServerConnection.HandleMessageDownLoadLine(subjectLine.get(), PR_FALSE);
 		fNextToken++; // eat the next '('
 		if (ContinueParse())
 		{
@@ -1333,7 +1333,7 @@ void nsImapServerResponseParser::xaolenvelope_data()
 			{
 				nsCAutoString fromLine("From: ");
 				parse_address(fromLine);
-				fServerConnection.HandleMessageDownLoadLine(fromLine.GetBuffer(), PR_FALSE);
+				fServerConnection.HandleMessageDownLoadLine(fromLine.get(), PR_FALSE);
 				if (ContinueParse())
 					fNextToken = GetNextToken();	// skip attachment size
 				if (ContinueParse())
@@ -1421,7 +1421,7 @@ void nsImapServerResponseParser::internal_date()
 			dateLine += strValue;
 			nsCRT::free(strValue);
 		}
-		fServerConnection.HandleMessageDownLoadLine(dateLine.GetBuffer(), PR_FALSE);
+		fServerConnection.HandleMessageDownLoadLine(dateLine.get(), PR_FALSE);
 	}
 	// advance the parser.
 	fNextToken = GetNextToken();

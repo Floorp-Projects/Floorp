@@ -1236,7 +1236,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 	switch (mInitType)
 	{
 		case eInitWithPath:
-			const char* temp = mWorkingPath.GetBuffer();
+			const char* temp = mWorkingPath.get();
 			if (temp == nsnull)
 				return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -1255,7 +1255,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 			// See if we've had a path appended
 			if (mAppendedPath.Length())
 			{
-				const char* temp = mAppendedPath.GetBuffer();
+				const char* temp = mAppendedPath.get();
 				if (temp == nsnull)
 					return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -1533,7 +1533,7 @@ nsLocalFile::Delete(PRBool recursive)
 	if (NS_FAILED(rv))
 		return rv;
 
-	const char *filePath = mResolvedPath.GetBuffer();
+	const char *filePath = mResolvedPath.get();
 	OSErr macerror;
 	if (isDir && recursive)
 		macerror = ::DeleteDirectory( mResolvedSpec.vRefNum, mResolvedSpec.parID, mResolvedSpec.name );
@@ -1780,7 +1780,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 			parentPath.Truncate(offset);
 
 			nsCOMPtr<nsILocalFile> localFile;
-			rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
+			rv =  NS_NewLocalFile(parentPath.get(), mFollowSymlinks, getter_AddRefs(localFile));
 			if (NS_SUCCEEDED(rv) && localFile)
 			{
 				rv = localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);

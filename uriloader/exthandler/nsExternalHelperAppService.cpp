@@ -1192,7 +1192,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
   if (fileExt.First() == '.') 
     fileExt.Cut(0, 1); // cut the '.'
  
-  nsCStringKey key(fileExt.GetBuffer());
+  nsCStringKey key(fileExt.get());
 
   *_retval = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
   NS_IF_ADDREF(*_retval);
@@ -1206,7 +1206,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
   nsCAutoString MIMEType(aMIMEType);
   MIMEType.ToLowerCase();
 
-  nsCStringKey key(MIMEType.GetBuffer());
+  nsCStringKey key(MIMEType.get());
 
   *_retval = (nsIMIMEInfo *) mMimeInfoCache->Get(&key);
   NS_IF_ADDREF(*_retval);

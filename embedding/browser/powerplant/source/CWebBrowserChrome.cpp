@@ -527,7 +527,7 @@ NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUni
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 
     theDialog->Show();
     theDialog->Select();
@@ -561,7 +561,7 @@ NS_IMETHODIMP CWebBrowserChrome::AlertCheck(const PRUnichar *dialogTitle,
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
@@ -600,7 +600,7 @@ NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRU
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 
     theDialog->Show();
     theDialog->Select();
@@ -640,7 +640,7 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');   			
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
@@ -688,7 +688,7 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *responseText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Rslt'));
     theDialog->SetLatentSub(responseText);
@@ -741,7 +741,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *userText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Name'));
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
@@ -801,7 +801,7 @@ NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, co
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
     cStr.ReplaceChar('\n', '\r');
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
     
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
  
@@ -881,7 +881,7 @@ NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inMsg), cStr);
     cStr.ReplaceChar('\n', '\r');
-    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 
     checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));    
     if (inCheckboxMsg && inoutCheckboxState)
@@ -905,13 +905,13 @@ NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage
         if (inEditfield1Msg)
         {
           CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield1Msg), cStr);
-          edit1Msg->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+          edit1Msg->SetText(const_cast<char *>(cStr.get()), cStr.Length());
         }    
         edit1Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV1'));
         if (inoutEditfield1Value)
         {
           CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield1Value), cStr);
-          edit1Value->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+          edit1Value->SetText(const_cast<char *>(cStr.get()), cStr.Length());
         }
         
         if (inNumberEditfields > 1)
@@ -920,13 +920,13 @@ NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage
             if (inEditfield2Msg)
             {
               CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield2Msg), cStr);
-              edit2Msg->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+              edit2Msg->SetText(const_cast<char *>(cStr.get()), cStr.Length());
             }
             edit2Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV2'));
             if (inoutEditfield2Value)
             {
               CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield2Value), cStr);
-              edit2Value->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+              edit2Value->SetText(const_cast<char *>(cStr.get()), cStr.Length());
             }
         }
         else

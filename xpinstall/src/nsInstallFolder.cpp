@@ -540,7 +540,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             // so do our best with the vanilla conversion.
             nsCAutoString tmp;
             tmp.AssignWithConversion(segment);
-            mFileSpec->Append(tmp.GetBuffer());
+            mFileSpec->Append(tmp.get());
         }
     } while ( curr != kNotFound );
 }

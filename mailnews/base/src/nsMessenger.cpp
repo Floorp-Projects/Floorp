@@ -587,7 +587,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
     urlString.Right(mimePart, urlString.Length() - sectionPos);
     fullMessageUri.AppendWithConversion(mimePart);
    
-    messageUri = fullMessageUri.GetBuffer();
+    messageUri = fullMessageUri.get();
   }
   {
     aListener->m_channel = null_nsCOMPtr();

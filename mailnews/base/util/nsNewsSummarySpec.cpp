@@ -70,6 +70,6 @@ void nsNewsSummarySpec::CreateSummaryFileName()
 	// Append .msf (message summary file) 
 	fullLeafName += ".msf";	
 
-	SetLeafName(fullLeafName.GetBuffer());
+	SetLeafName(fullLeafName.get());
 	PL_strfree(leafName);
 }

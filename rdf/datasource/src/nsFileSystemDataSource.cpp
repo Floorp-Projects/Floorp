@@ -1284,7 +1284,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		}
 
 		nsCOMPtr<nsIRDFResource>	fileRes;
-		gRDFService->GetResource(fullURI.GetBuffer(), getter_AddRefs(fileRes));
+		gRDFService->GetResource(fullURI.get(), getter_AddRefs(fileRes));
 
 		nameArray->AppendElement(fileRes);
 

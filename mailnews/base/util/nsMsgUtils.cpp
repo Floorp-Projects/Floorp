@@ -306,24 +306,24 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
   nsCAutoString str(name);
 
 #ifdef DEBUG_NS_MsgHashIfNecessary
-  printf("in: %s\n",str.GetBuffer());
+  printf("in: %s\n",str.get());
 #endif
 
   // Given a name, use either that name, if it fits on our
   // filesystem, or a hashified version of it, if the name is too
   // long to fit.
   char hashedname[MAX_LEN + 1];
-  PRBool needshash = PL_strlen(str.GetBuffer()) > MAX_LEN;
+  PRBool needshash = PL_strlen(str.get()) > MAX_LEN;
 #if defined(XP_WIN16)  || defined(XP_OS2)
   if (!needshash) {
-    needshash = PL_strchr(str.GetBuffer(), '.') != NULL ||
-      PL_strchr(str.GetBuffer(), ':') != NULL;
+    needshash = PL_strchr(str.get(), '.') != nsnull ||
+      PL_strchr(str.get(), ':') != nsnull;
   }
 #endif
-  PL_strncpy(hashedname, str.GetBuffer(), MAX_LEN + 1);
+  PL_strncpy(hashedname, str.get(), MAX_LEN + 1);
   if (needshash) {
     PR_snprintf(hashedname + MAX_LEN - 8, 9, "%08lx",
-                (unsigned long) StringHash(str.GetBuffer()));
+                (unsigned long) StringHash(str.get()));
   }
   name = hashedname;
 #ifdef DEBUG_NS_MsgHashIfNecessary

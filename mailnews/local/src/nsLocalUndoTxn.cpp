@@ -177,14 +177,14 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                     if (addFlag)
                         rv =imapService->AddMessageFlags(eventQueue, folder,
                                                         urlListener, nsnull,
-                                                        msgIds.GetBuffer(),
+                                                        msgIds.get(),
                                                         kImapMsgDeletedFlag,
                                                         PR_TRUE);
                     else
                         rv = imapService->SubtractMessageFlags(eventQueue,
                                                               folder,
                                                          urlListener, nsnull,
-                                                         msgIds.GetBuffer(),
+                                                         msgIds.get(),
                                                          kImapMsgDeletedFlag,
                                                          PR_TRUE);
                     if (NS_SUCCEEDED(rv) && m_msgWindow)

@@ -653,11 +653,11 @@ void AddressBookParser::AddTabRowToDatabase()
 
 	for (int i = 0; i < nSize; i++)
 	{
-        char c = (mLine.GetBuffer())[i];
+        char c = (mLine.get())[i];
 		while (c != '\t')
 		{
 			column.Append(c);
-			c = (mLine.GetBuffer()) [++i];
+			c = (mLine.get()) [++i];
 		}
 		
 		nCol += 1;
@@ -1081,7 +1081,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
     nsCAutoString colType(typeSlot);
     nsCAutoString column(valueSlot);
 
-	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
+	mdb_u1 firstByte = (mdb_u1)(colType.get())[0];
 	switch ( firstByte )
 	{
 	case 'b':

@@ -344,7 +344,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     newsgroupURI.Append("/");
     newsgroupURI.Append((const char *)m_newsgroupName);
     
-    rv = nsNewsURI2Path(kNewsMessageRootURI, newsgroupURI.GetBuffer(), pathResult);
+    rv = nsNewsURI2Path(kNewsMessageRootURI, newsgroupURI.get(), pathResult);
     if (NS_FAILED(rv)) {
         return rv;
     }

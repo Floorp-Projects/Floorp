@@ -194,10 +194,10 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 #if defined(PR_LOGGING)
     nsCString logString(buffer);
     logString.ReplaceChar(CRLF, ' ');
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, logString.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) reading %d bytes: \"%s\"", this, aCount, logString.get()));
 
 #ifdef DEBUG_dougt
-//printf("@@@ %s\n", logString.GetBuffer());
+//printf("@@@ %s\n", logString.get());
 #endif
 
 #endif
@@ -707,7 +707,7 @@ nsFtpState::Process() {
                     mNextState = FTP_ERROR;
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) FAILED\n", this));
                 } else {
-                    char *lf = PL_strchr(mResponseMsg.GetBuffer(), LF);
+                    char *lf = PL_strchr(mResponseMsg.get(), LF);
                     if (lf && lf+1 && *(lf+1)) 
                         // we have a double resposne
                         mState = FTP_COMPLETE;
@@ -1552,7 +1552,7 @@ nsFtpState::R_pasv() {
 
     nsMemory::Free(response);
 
-    const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer();
+    const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
 
     // now we know where to connect our data channel
     rv = CreateTransport(hostStr, 
@@ -2069,10 +2069,10 @@ nsFtpState::ControlAsyncWrite(nsCString& command)
 #if defined(PR_LOGGING)
     nsCString logString(command);
     logString.ReplaceChar(CRLF, ' ');
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Writing \"%s\"\n", this, logString.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Writing \"%s\"\n", this, logString.get()));
 
 #ifdef DEBUG_dougt
-//printf("!!! %s\n", logString.GetBuffer());
+//printf("!!! %s\n", logString.get());
 #endif
 
 #endif

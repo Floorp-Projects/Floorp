@@ -113,7 +113,7 @@ static char *nsMailboxGetURI(const char *nativepath)
 				pathStr.Cut(sbdIndex, 4);
 			}
 
-            uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.GetBuffer());
+            uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.get());
 
             break;
         }

@@ -238,7 +238,7 @@ nsLocaleService::nsLocaleService(void)
                 if ( lang == nsnull ) {
                     nsCAutoString langcstr("en-US");
                     platformLocale.AssignWithConversion("en_US");
-	            lang = nsCRT::strdup( langcstr.GetBuffer() );
+	            lang = langcstr.ToNewCString();
                     result = posixConverter->GetXPLocale(lang,&xpLocale);
                     nsCRT::free(lang); 
 	        }
@@ -295,7 +295,7 @@ nsLocaleService::nsLocaleService(void)
                 char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
                     nsCAutoString langcstr("en-US");
-	            lang = nsCRT::strdup( langcstr.GetBuffer() );
+	            lang = langcstr.ToNewCString();
                     result = os2Converter->GetXPLocale(lang,&xpLocale);
                     nsCRT::free(lang); 
 	        }

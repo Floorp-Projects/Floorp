@@ -2072,7 +2072,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       if (convertedStr.Length() >= nameBuffSize)
         return NS_ERROR_FAILURE;
 
-      PL_strcpy(fontName, convertedStr.GetBuffer());
+      PL_strcpy(fontName, convertedStr.get());
 
       // get a font size from pref
       aPrefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
@@ -2108,7 +2108,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       if (convertedStr.Length() >= nameBuffSize)
         return NS_ERROR_FAILURE;
 
-      PL_strcpy(fontName, convertedStr.GetBuffer());
+      PL_strcpy(fontName, convertedStr.get());
 
       // get a font size from pref
       rv = aPrefs->GetIntPref(!styleFixed ? "mailnews.font.size.html" : "mailnews.font.size.plain", fontPixelSize);

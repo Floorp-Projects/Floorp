@@ -264,9 +264,9 @@ nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
         NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
                         kCImapHostSessionList, &rv);
         if (NS_SUCCEEDED(rv))
-            hostSession->SetOnlineDirForHost(serverKey, dirString.GetBuffer());
+            hostSession->SetOnlineDirForHost(serverKey, dirString.get());
     }
-    return SetCharValue("server_sub_directory", dirString.GetBuffer());
+    return SetCharValue("server_sub_directory", dirString.get());
 }
 
 
@@ -1999,7 +1999,7 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 	contractID.Append('/');
 	contractID.Append(redirectorType);
 
-	m_logonRedirector = do_GetService(contractID.GetBuffer(), &rv);
+	m_logonRedirector = do_GetService(contractID.get(), &rv);
 	if (m_logonRedirector && NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr <nsIMsgLogonRedirectionRequester> logonRedirectorRequester;
@@ -2158,7 +2158,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
 			m_waitingForConnectionInfo = PR_FALSE;
 			if (NS_SUCCEEDED(rv) && protocolInstance)
       {
-				protocolInstance->OverrideConnectionInfo(pHost, pPort, cookie.GetBuffer());
+				protocolInstance->OverrideConnectionInfo(pHost, pPort, cookie.get());
 				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
 				if (NS_SUCCEEDED(rv) && url)
 				{

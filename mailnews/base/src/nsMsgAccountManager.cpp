@@ -288,7 +288,7 @@ nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
   do {
       aResult = prefix;
       aResult.AppendInt(i++);
-      findEntry.key = aResult.GetBuffer();
+      findEntry.key = aResult.get();
     
     accounts->EnumerateForwards(findAccountByKey, (void *)&findEntry);
 
@@ -689,7 +689,7 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
 
   // now write the new account list back to the prefs
   rv = m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                              newAccountList.GetBuffer());
+                              newAccountList.get());
   if (NS_FAILED(rv)) return rv;
 
 
@@ -1262,9 +1262,9 @@ nsMsgAccountManager::LoadAccounts()
       
       if (!str.IsEmpty()) {
 #ifdef DEBUG_ACCOUNTMANAGER
-	  printf("account = %s\n",(const char *)str.GetBuffer());
+	  printf("account = %s\n",str.get());
 #endif
-          rv = GetAccount(str.GetBuffer(), getter_AddRefs(account));
+          rv = GetAccount(str.get(), getter_AddRefs(account));
       }
 
       // force load of accounts (need to find a better way to do this
@@ -1451,7 +1451,7 @@ nsMsgAccountManager::createKeyedAccount(const char* key,
   rv = getPrefService();
   if (NS_SUCCEEDED(rv))
     m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                         mAccountKeyList.GetBuffer());
+                         mAccountKeyList.get());
 
   *aAccount = account;
   NS_ADDREF(*aAccount);

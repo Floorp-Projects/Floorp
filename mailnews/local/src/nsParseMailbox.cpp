@@ -177,7 +177,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
 				msgHdr->GetSubject(&subject);
 #ifdef DEBUG_bienvenu
 				// leak nsString return values...
-				printf("hdr key = %d, author = %s subject = %s\n", key, author.GetBuffer(), subject.GetBuffer());
+				printf("hdr key = %d, author = %s subject = %s\n", key, author.get(), subject.get());
 #endif
 			}
 		}

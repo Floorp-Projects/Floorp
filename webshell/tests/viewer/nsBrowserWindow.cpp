@@ -2206,7 +2206,7 @@ NS_IMETHODIMP
 nsBrowserWindow::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
 {
   nsCAutoString str; str.AssignWithConversion(text);
-  printf("%cBrowser Window Alert: %s\n", '\007', str.GetBuffer());
+  printf("%cBrowser Window Alert: %s\n", '\007', str.get());
 
   return NS_OK;
 }
@@ -2218,7 +2218,7 @@ nsBrowserWindow::AlertCheck(const PRUnichar *dialogTitle,
                             PRBool *checkValue)
 {
   nsCAutoString str; str.AssignWithConversion(text);
-  printf("%cBrowser Window AlertCheck: %s\n", '\007', str.GetBuffer());
+  printf("%cBrowser Window AlertCheck: %s\n", '\007', str.get());
 
   return NS_OK;
 }
@@ -2232,7 +2232,7 @@ nsBrowserWindow::Confirm(const PRUnichar *dialogTitle,
   nsCAutoString str; str.AssignWithConversion(text);
   const char* msg= nsnull;
 
-  msg = str.GetBuffer();
+  msg = str.get();
   if (nsnull != msg) {
     printf("Browser Window Confirm: %s (y/n)? ", msg);
     char c;
@@ -2273,7 +2273,7 @@ nsBrowserWindow::Prompt(const PRUnichar *dialogTitle,
   const char* msg= nsnull;
   char buf[256];
 
-  msg = str.GetBuffer();
+  msg = str.get();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
 
@@ -2300,7 +2300,7 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
   const char* msg = nsnull;
   char buf[256];
 
-  msg = str.GetBuffer();
+  msg = str.get();
   if (nsnull != msg) {
     nsAutoString response;
     printf("Browser Window: %s\n", msg);
@@ -2332,7 +2332,7 @@ nsBrowserWindow::PromptPassword(const PRUnichar *dialogTitle,
   const char* msg = nsnull;
   char buf[256];
 
-  msg = str.GetBuffer();
+  msg = str.get();
   if (nsnull != msg) {
     printf("Browser Window: %s\n", msg);
     printf("%cPassword: ", '\007');

@@ -915,7 +915,7 @@ NS_IMETHODIMP
 SetCopyResponseUidProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetCopyResponseUid(
-        m_proxy->m_protocol, &m_copyKeyArray, m_msgIdString.GetBuffer(),
+        m_proxy->m_protocol, &m_copyKeyArray, m_msgIdString.get(),
         m_Url);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();

@@ -62,7 +62,7 @@ nsMsgSearchDataSource::Init()
     
     nsCAutoString uri("mailsearch:#");
     uri.AppendInt(mURINum);
-    getRDFService()->GetResource(uri.GetBuffer(), getter_AddRefs(mSearchRoot));
+    getRDFService()->GetResource(uri.get(), getter_AddRefs(mSearchRoot));
 
     NS_NewISupportsArray(getter_AddRefs(mSearchResults));
     return NS_OK;

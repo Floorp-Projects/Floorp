@@ -860,8 +860,8 @@ ImportMailThread( void *stuff)
 				rv = box->GetDepth( &newDepth);
 				if (newDepth > depth) {
 					ConvertFromUnicode(lastName.GetUnicode(), strName);
-					IMPORT_LOG1( "* Finding folder for child named: %s\n", strName.GetBuffer());
-					rv = curProxy->GetChildNamed( strName.GetBuffer(), getter_AddRefs( subFolder));
+					IMPORT_LOG1( "* Finding folder for child named: %s\n", strName.get());
+					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
 					if (NS_FAILED( rv)) {
 						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.GetUnicode(), &error);
 						pData->fatalError = PR_TRUE;
@@ -905,26 +905,26 @@ ImportMailThread( void *stuff)
 				
 				ConvertFromUnicode(lastName.GetUnicode(), strName);
 				exists = PR_FALSE;
-				rv = curProxy->ContainsChildNamed( strName.GetBuffer(), &exists);
+				rv = curProxy->ContainsChildNamed( strName.get(), &exists);
 				if (exists) {
 					char *pSubName = nsnull;
-					curProxy->GenerateUniqueSubfolderName( strName.GetBuffer(), nsnull, &pSubName);
+					curProxy->GenerateUniqueSubfolderName( strName.get(), nsnull, &pSubName);
 					if (pSubName) {
 						strName.Assign(pSubName);
 						nsMemory::Free(pSubName);
 					}
 				}
-				ConvertToUnicode(strName.GetBuffer(), lastName);
+				ConvertToUnicode(strName.get(), lastName);
 				
-				IMPORT_LOG1( "* Creating new import folder: %s\n", strName.GetBuffer());
+				IMPORT_LOG1( "* Creating new import folder: %s\n", strName.get());
 				nsAutoString newName;
-				ConvertToUnicode(strName.GetBuffer(), newName);
+				ConvertToUnicode(strName.get(), newName);
 
 				rv = curProxy->CreateSubfolder( newName.GetUnicode(),nsnull);
 				
 				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
-					rv = curProxy->GetChildNamed( strName.GetBuffer(), getter_AddRefs( subFolder));
+					rv = curProxy->GetChildNamed( strName.get(), getter_AddRefs( subFolder));
 					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
 					if (NS_SUCCEEDED( rv)) {
 						newFolder = do_QueryInterface( subFolder);

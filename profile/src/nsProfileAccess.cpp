@@ -1066,14 +1066,14 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         // So, there is no need to decode into unicode further.
         nsCAutoString temp; 
         temp = (const char*) NS_ConvertUCS2toUTF8(profile);
-        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer())));
+        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
         nsAutoString convertedProfName((const PRUnichar*) NS_ConvertUTF8toUCS2(profileName));
 #else
         nsCAutoString temp; temp.AssignWithConversion(profile);
 
-        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer())));
+        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
         nsAutoString convertedProfName;
-        ConvertStringToUnicode(charSet, profileName.GetBuffer(), convertedProfName);
+        ConvertStringToUnicode(charSet, profileName.get(), convertedProfName);
 #endif
 
         PRBool exists = PR_FALSE;
@@ -1153,7 +1153,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
             if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
-            printf("%s exists:  %d\n",profileLocation.GetBuffer(), exists);
+            printf("%s exists:  %d\n",profileLocation.get(), exists);
 #endif
             if (exists) {
                 ProfileStruct*  profileItem     = new ProfileStruct();
@@ -1446,7 +1446,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         // Unescape profile location
         nsCAutoString tempLoc; 
         tempLoc = (const char*) NS_ConvertUCS2toUTF8(profLoc);
-        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.GetBuffer())));
+        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
         nsAutoString convertedProfLoc((const PRUnichar*) NS_ConvertUTF8toUCS2(profileLocation));
 #else
 		nsAutoString charSet;
@@ -1456,9 +1456,9 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         // Unescape profile location and convert it to the right format
         nsCAutoString tempLoc; tempLoc.AssignWithConversion(profLoc);
 
-        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.GetBuffer())));
+        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
         nsAutoString convertedProfLoc;
-        ConvertStringToUnicode(charSet, profileLocation.GetBuffer(), convertedProfLoc);
+        ConvertStringToUnicode(charSet, profileLocation.get(), convertedProfLoc);
 #endif
 
         // Now we have a unicode path - make it into a file

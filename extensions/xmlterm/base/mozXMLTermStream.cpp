@@ -611,7 +611,7 @@ NS_IMETHODIMP mozXMLTermStream::Write(const PRUnichar* buf)
     return result;
 #endif // !NO_WORKAROUND
 
-  printf("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.GetBuffer());
+  printf("mozXMLTermStream::Write: str=%s\n", mUTF8Buffer.get());
 
   XMLT_LOG(mozXMLTermStream::Write,51,("returning mUTF8Offset=%d\n",
                                        mUTF8Offset));

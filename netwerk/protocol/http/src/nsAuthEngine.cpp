@@ -282,7 +282,7 @@ nsAuthEngine::SetProxyAuthString(const char* host, PRInt32 port, const char* i_A
     if (!mIOService)
         return NS_ERROR_FAILURE; // Init didn't make ioservice?
 
-    rv = mIOService->NewURI(spec.GetBuffer(), nsnull, getter_AddRefs(uri));
+    rv = mIOService->NewURI(spec.get(), nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     return SetAuth(uri, i_AuthString, nsnull, PR_TRUE);

@@ -142,7 +142,7 @@ public:
 	virtual ~nsIMAPMailboxInfo();
 	void SetChildrenListed(PRBool childrenListed) { m_childrenListed = childrenListed; }
 	PRBool GetChildrenListed() { return m_childrenListed; }
-	const char *GetMailboxName() { return m_mailboxName.GetBuffer(); }
+	const char *GetMailboxName() { return m_mailboxName.get(); }
 	char	GetDelimiter() { return m_delimiter; }
 
 protected:

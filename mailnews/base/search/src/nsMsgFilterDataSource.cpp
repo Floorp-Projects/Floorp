@@ -316,7 +316,7 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
         Recycle(utf8Name);
         
         nsCOMPtr<nsIRDFResource> filterResource;
-        rv = getRDFService()->GetResource(filterUri.GetBuffer(),
+        rv = getRDFService()->GetResource(filterUri.get(),
                               getter_AddRefs(filterResource));
         if (NS_SUCCEEDED(rv))
             aResult->AppendElement(filterResource);

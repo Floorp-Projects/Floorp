@@ -253,7 +253,7 @@ public:
 	nsresult Initialize(nsIURI * aURL);
     virtual nsresult LoadUrl(nsIURI *aURL, nsISupports * aConsumer = nsnull);
 
-    const char* GetUsername() { return m_username.GetBuffer(); };
+    const char* GetUsername() { return m_username.get(); };
     void SetUsername(const char* name);
 
     nsresult GetPassword(char ** aPassword, PRBool *okayValue);

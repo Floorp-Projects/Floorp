@@ -755,7 +755,7 @@ PRBool initPref ()
     defaultPrefFile = "./";
   defaultPrefFile += "default_prefs.js";
 
-  fileSpec->SetUnixStyleFilePath (defaultPrefFile.GetBuffer());
+  fileSpec->SetUnixStyleFilePath (defaultPrefFile.get());
 
   PRBool exists = false;
   fileSpec->Exists(&exists);
@@ -787,7 +787,7 @@ main(int argc, char* argv[])
     rv = cache->GetDescription(&description);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache description");
     nsCAutoString descStr(description);
-    printf("Testing: %s\n", descStr.GetBuffer());
+    printf("Testing: %s\n", descStr.get());
 
     rv = cache->RemoveAll();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't clear cache");

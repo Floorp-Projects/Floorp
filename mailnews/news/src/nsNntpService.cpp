@@ -344,7 +344,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   }
 
 #ifdef DEBUG_NEWS
-  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, newsgroupName.GetBuffer(), *key);
+  printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, newsgroupName.get(), *key);
 #endif
 
   nsFileSpec pathResult;
@@ -560,7 +560,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 
     if (!str.IsEmpty()) {
 #ifdef DEBUG_NEWS
-      printf("value = %s\n", str.GetBuffer());
+      printf("value = %s\n", str.get());
 #endif
       nsCAutoString theRest;
       nsCAutoString currentHost;
@@ -583,7 +583,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       }
       
 #ifdef DEBUG_NEWS
-      printf("theRest == %s\n",theRest.GetBuffer());
+      printf("theRest == %s\n",theRest.get());
 #endif
       
       // theRest is "group" or "host/group"
@@ -593,7 +593,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         theRest.Left(currentHost, slashpos);
         theRest.Right(currentGroup, slashpos);
 #ifdef DEBUG_NEWS
-        printf("currentHost == %s\n", currentHost.GetBuffer());
+        printf("currentHost == %s\n", currentHost.get());
 #endif
       }
       else if (newshost && nsCRT::strlen(newshost) > 0)
@@ -693,7 +693,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
 
     if (!str.IsEmpty()) {
 #ifdef DEBUG_NEWS
-      printf("value = %s\n", str.GetBuffer());
+      printf("value = %s\n", str.get());
 #endif
       nsCAutoString currentHost;
       nsCAutoString theRest;
@@ -716,7 +716,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
       }
       
 #ifdef DEBUG_NEWS
-      printf("theRest == %s\n",theRest.GetBuffer());
+      printf("theRest == %s\n",theRest.get());
 #endif
       
       // theRest is "group" or "host/group"
@@ -728,7 +728,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
         theRest.Left(currentHost, slashpos);
         
 #ifdef DEBUG_NEWS
-        printf("currentHost == %s\n", currentHost.GetBuffer());
+        printf("currentHost == %s\n", currentHost.get());
 #endif
         // from "host/group", put "group" into currentGroup;
         theRest.Right(currentGroup, theRest.Length() - currentHost.Length() - 1);
@@ -796,7 +796,7 @@ nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, char **_retv
   }
   CRTFREEIF(list);
   
-  *_retval = nsCRT::strdup(retvalStr.GetBuffer());
+  *_retval = retvalStr.ToNewCString();
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
   
 #ifdef DEBUG_NEWS
@@ -1504,7 +1504,7 @@ NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     searchUrl.Append(aSearchUri);
     nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(aSearchSession);
 
-    rv = ConstructNntpUrl(searchUrl.GetBuffer(), asciiNewsgroupName.GetBuffer(), nsMsgKey_None, urlListener,  aMsgWindow, getter_AddRefs(uri));
+    rv = ConstructNntpUrl(searchUrl.get(), asciiNewsgroupName.get(), nsMsgKey_None, urlListener,  aMsgWindow, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));

@@ -110,7 +110,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
                 PRInt32 i = contentDisp.Find( key );
                 if ( i != kNotFound ) {
                     // Name comes after that.
-                    suggestedName = contentDisp.GetBuffer() + i + PL_strlen( key ) + 1;
+                    suggestedName = contentDisp.get() + i + PL_strlen( key ) + 1;
                 }
             }
         }

@@ -528,7 +528,7 @@ nsresult nsMsgSearchSession::GetNextUrl()
   nsresult rv = GetMessageServiceFromURI((const char *) folderUri, getter_AddRefs(msgService));
 
   if (NS_SUCCEEDED(rv) && msgService && currentTerm)
-    msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.GetBuffer());
+    msgService->Search(this, m_window, currentTerm->m_folder, nextUrl.get());
 
 	return rv;
   }

@@ -526,7 +526,7 @@ nsSingleSignOnPrompt::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text
   nsresult rv;
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
-  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.GetBuffer(), mPrompt, _retval, savePassword);
+  rv = SINGSIGN_Prompt(dialogTitle, text, defaultText, result, realm.get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -539,7 +539,7 @@ nsSingleSignOnPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle, co
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
   rv = SINGSIGN_PromptUsernameAndPassword(dialogTitle, text, user, pwd,
-                                          realm.GetBuffer(), mPrompt, _retval, savePassword);
+                                          realm.get(), mPrompt, _retval, savePassword);
   return rv;
 }
 
@@ -552,7 +552,7 @@ nsSingleSignOnPrompt::PromptPassword(const PRUnichar *dialogTitle, const PRUnich
   nsCAutoString realm;
   realm.AssignWithConversion(passwordRealm);     // XXX should be PRUnichar*
   rv = SINGSIGN_PromptPassword(dialogTitle, text, pwd,
-                               realm.GetBuffer(), mPrompt, _retval, savePassword);
+                               realm.get(), mPrompt, _retval, savePassword);
   return rv;
 }
 

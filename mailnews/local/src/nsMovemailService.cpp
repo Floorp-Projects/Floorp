@@ -141,7 +141,7 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
     // step 1: create SPOOLNAME.mozlock
 #ifdef MOVEMAIL_DEBUG
     fprintf(stderr, "\n ...... maker(%s) ......\n",
-            mozlockstr.GetBuffer());
+            mozlockstr.get());
 #endif
     rv = tmplocfile->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
     if ( (NS_FAILED(rv) &&
@@ -163,7 +163,7 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
     
     do {
         link_result =
-            link(mozlockstr.GetBuffer(),lockstr.GetBuffer());
+            link(mozlockstr.get(),lockstr.get());
 
         retry_count++;
 
@@ -500,7 +500,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                 PR_Free(buffer);
             }
 
-            YieldSpoolLock(wholeboxname.GetBuffer());
+            YieldSpoolLock(wholeboxname.get());
         }
 
         in_server->SetServerBusy(PR_FALSE);

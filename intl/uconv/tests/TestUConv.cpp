@@ -177,13 +177,13 @@ void nsTestLog::DelTrace(char * aTrace)
 
 void nsTestLog::PrintError(char * aCall, int aError)
 {
-  const char * trace = mTrace.GetBuffer();
+  const char * trace = mTrace.get();
   printf("ERROR at %s%s code=0x%x.\n", trace, aCall, aError);
 }
 
 void nsTestLog::PrintError(char * aCall, char * aMessage)
 {
-  const char * trace = mTrace.GetBuffer();
+  const char * trace = mTrace.get();
   printf("ERROR at %s%s reason: %s.\n", trace, aCall, aMessage);
 }
 

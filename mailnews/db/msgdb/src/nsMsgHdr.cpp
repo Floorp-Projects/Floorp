@@ -284,7 +284,7 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 
 nsresult nsMsgHdr::ParseReferences(nsCString &references)
 {
-	const char *startNextRef = references.GetBuffer();
+	const char *startNextRef = references.get();
 	nsCAutoString resultReference;
 
 	while (startNextRef && *startNextRef)
@@ -636,7 +636,7 @@ NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(PRUnichar* *resultAuthor)
 				char charsetName[128];
 				PL_strncpy(charsetName, charset, sizeof(charsetName));
 
-				ret = converter->DecodeMimePartIIStr(cSender.GetBuffer(), charsetName, &resultStr);
+				ret = converter->DecodeMimePartIIStr(cSender.get(), charsetName, &resultStr);
 				if (NS_SUCCEEDED(ret))
 				{
 					ret = headerParser->ExtractHeaderAddressName (charsetName, resultStr, &name);

@@ -516,7 +516,7 @@ nsXMLMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retva
     nsCAutoString fileExt(aFileExt);
     fileExt.ToLowerCase();
 
-    nsCStringKey key(fileExt.GetBuffer());
+    nsCStringKey key(fileExt.get());
 
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;
@@ -532,7 +532,7 @@ nsXMLMIMEDataSource::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retva
     nsCAutoString MIMEType(aMIMEType);
     MIMEType.ToLowerCase();
 
-    nsCStringKey key(MIMEType.GetBuffer());
+    nsCStringKey key(MIMEType.get());
 
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;

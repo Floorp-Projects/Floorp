@@ -150,7 +150,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIRequest *request,
                                                     (const nsIID*)(&NS_GET_IID(nsIChannel)),
                                                     (nsISupports*)channel.get(),
                                                     aContentType,
-                                                    (const char*)contentDisp.GetBuffer() );
+                                                    contentDisp.get() );
                     if ( argv ) {
                         nsCOMPtr<nsIDOMWindowInternal> newWindow;
                         rv = aWindow->OpenDialog( jsContext, argv, 6, getter_AddRefs( newWindow ) );

@@ -196,7 +196,7 @@ nsMsgFilterDelegateFactory::getFilterList(const char *aUri,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFResource> filterListResource;
-    rdf->GetResource(folderUri.GetBuffer(), getter_AddRefs(filterListResource));
+    rdf->GetResource(folderUri.get(), getter_AddRefs(filterListResource));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return filterListResource->GetDelegate("filter",

@@ -189,7 +189,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	return rv;
 }
 
-nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
+nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
 									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
 									 nsIUrlListener * aUrlListener,
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 
 	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if (NS_FAILED(rv)) return rv;
-    rv = rdfService->GetResource(folderUri.GetBuffer(),
+    rv = rdfService->GetResource(folderUri.get(),
                                  getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);
@@ -369,7 +369,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     popSpec += uidl;
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = BuildPop3Url((char *)popSpec.GetBuffer(), folder, popServer,
+    rv = BuildPop3Url(popSpec.get(), folder, popServer,
                       urlListener, _retval, nsnull, port); 
     if (NS_SUCCEEDED(rv))
     {
@@ -390,7 +390,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
             offset = messageUri.Find("&");
             if (offset)
                 messageUri.Truncate(offset);
-            popurl->SetMessageUri(messageUri.GetBuffer());
+            popurl->SetMessageUri(messageUri.get());
             nsCOMPtr<nsIPop3Sink> pop3Sink;
             rv = popurl->GetPop3Sink(getter_AddRefs(pop3Sink));
             if (NS_SUCCEEDED(rv))

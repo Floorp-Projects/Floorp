@@ -255,9 +255,9 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
           if (NS_SUCCEEDED(result) && parentNode) {
             result = parentNode->GetNodeName(nodeName);
             if (NS_SUCCEEDED(result)) {
-              nsCAutoString CNodeName = nodeName;
+              nsCAutoString CNodeName; CNodeName.AssignWithConversion(nodeName);
               XMLT_LOG(mozXMLTermKeyListener::KeyPress,58,("nodeName=%s\n",
-                                              CNodeName.GetBuffer()));
+                                              CNodeName.get()));
             }
             childNode = parentNode;
           } else {

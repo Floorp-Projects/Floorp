@@ -204,7 +204,7 @@ NS_IMETHODIMP PhMozEmbedChrome::OpenStream (const char *aBaseURI, const char *aC
   uri = do_CreateInstance(kSimpleURICID, &rv);
   if (NS_FAILED(rv))
     return rv;
-  rv = uri->SetSpec(spec.GetBuffer());
+  rv = uri->SetSpec(spec.get());
   if (NS_FAILED(rv))
     return rv;
 

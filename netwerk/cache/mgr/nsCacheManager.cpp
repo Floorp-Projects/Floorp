@@ -311,7 +311,7 @@ nsCacheManager::GetCachedNetData(const char *aUriSpec, const char *aSecondaryKey
                      "same URL using different caches");
         NS_ADDREF(cachedData);
     } else {
-        rv = spaceManager->GetCachedNetData(cacheKey.GetBuffer(), cacheKey.Length(),
+        rv = spaceManager->GetCachedNetData(cacheKey.get(), cacheKey.Length(),
                                             cache, &cachedData);
         if (NS_FAILED(rv)) return rv;
 
@@ -376,7 +376,7 @@ nsCacheManager::Contains(const char *aUriSpec, const char *aSecondaryKey,
         return NS_OK;
     } else {
         // No active cache entry, see if there is a dormant one
-        return cache->Contains(cacheKey.GetBuffer(), cacheKey.Length(), aResult);
+        return cache->Contains(cacheKey.get(), cacheKey.Length(), aResult);
     }
 }
 

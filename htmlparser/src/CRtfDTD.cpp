@@ -545,7 +545,7 @@ NS_IMETHODIMP CRtfDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 }
 
 NS_IMETHODIMP CRtfDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).GetBuffer());
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
   return NS_OK;
 }
 

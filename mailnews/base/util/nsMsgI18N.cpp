@@ -170,7 +170,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
     res = ccm->GetUnicodeDecoder(&convCharset, getter_AddRefs(decoder));
     if(NS_SUCCEEDED(res)) {
 
-      const char *originalSrcPtr = inString.GetBuffer();
+      const char *originalSrcPtr = inString.get();
       char *currentSrcPtr = NS_CONST_CAST(char *, originalSrcPtr);
       PRInt32 originalLength = inString.Length();
       PRInt32 srcLength;

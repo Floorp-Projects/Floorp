@@ -217,7 +217,7 @@ void nsCSSScanner::ReportError(const nsAReadableString& aError)
          mFileName.get(),
          mLineNumber,
          mColNumber,
-         NS_ConvertUCS2toUTF8(aError).GetBuffer());
+         NS_ConvertUCS2toUTF8(aError).get());
 
   // Log it to the JavaScript console
   nsCOMPtr<nsIConsoleService> consoleService

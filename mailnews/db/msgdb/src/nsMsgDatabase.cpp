@@ -3125,8 +3125,8 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
     //nsresult rv = NS_OK;
 	mdbYarn	subjectYarn;
 
-	subjectYarn.mYarn_Buf = (void*)subject.GetBuffer();
-	subjectYarn.mYarn_Fill = PL_strlen(subject.GetBuffer());
+	subjectYarn.mYarn_Buf = (void*)subject.get();
+	subjectYarn.mYarn_Fill = PL_strlen(subject.get());
 	subjectYarn.mYarn_Form = 0;
 	subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
 
@@ -3240,8 +3240,8 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsCString &msgID)
     nsresult rv = NS_OK;
 	mdbYarn	messageIdYarn;
 
-	messageIdYarn.mYarn_Buf = (void*)msgID.GetBuffer();
-	messageIdYarn.mYarn_Fill = PL_strlen(msgID.GetBuffer());
+	messageIdYarn.mYarn_Buf = (void*)msgID.get();
+	messageIdYarn.mYarn_Fill = PL_strlen(msgID.get());
 	messageIdYarn.mYarn_Form = 0;
 	messageIdYarn.mYarn_Size = messageIdYarn.mYarn_Fill;
 
@@ -3272,8 +3272,8 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsCString &subject)
     nsresult rv = NS_OK;
 	mdbYarn	subjectYarn;
 
-	subjectYarn.mYarn_Buf = (void*)subject.GetBuffer();
-	subjectYarn.mYarn_Fill = PL_strlen(subject.GetBuffer());
+	subjectYarn.mYarn_Buf = (void*)subject.get();
+	subjectYarn.mYarn_Fill = PL_strlen(subject.get());
 	subjectYarn.mYarn_Form = 0;
 	subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
 
@@ -3379,7 +3379,7 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 		threadHdr->AddRef();
 //		err = msgHdr->GetSubject(subject);
 //		threadHdr->SetThreadKey(msgHdr->m_messageKey);
-//		threadHdr->SetSubject(subject.GetBuffer());
+//		threadHdr->SetSubject(subject.get());
 
 		// need to add the thread table to the db.
 		AddToThread(msgHdr, threadHdr, nsnull, PR_FALSE);

@@ -304,7 +304,7 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer, const PRInt32 uniLen
 	}
 
   NS_ConvertUCS2toUTF8 temp(uniBuffer, uniLength);
-  *aBuffer = nsCRT::strdup(temp.GetBuffer());
+  *aBuffer = temp.ToNewCString();
   return (*aBuffer) ? 0 : -1;
 }
 

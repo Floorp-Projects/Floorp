@@ -126,7 +126,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
     query.Trim(" "); // pull leading/trailing spaces.
 
     // encode
-    char * encQuery = nsEscape(query.GetBuffer(), url_Path);
+    char * encQuery = nsEscape(query.get(), url_Path);
     if (!encQuery) return nsnull;
     query = encQuery;
     nsMemory::Free(encQuery);
@@ -165,7 +165,7 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     rv = uri->GetPath(getter_Copies(path));
     if (NS_FAILED(rv)) return rv;
 
-    char *httpSpec = MangleKeywordIntoHTTPURL(path, mKeywordURL.GetBuffer());
+    char *httpSpec = MangleKeywordIntoHTTPURL(path, mKeywordURL.get());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);

@@ -36,6 +36,7 @@
 #include "nsMsgSearchScopeTerm.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgSearchValue.h"
+#include "nsReadableUtils.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -619,7 +620,9 @@ nsMsgFilter::GetVersion()
 #ifdef DEBUG
 void nsMsgFilter::Dump()
 {
-	printf("filter %s type = %c desc = %s\n", m_filterName.GetBuffer(), m_type + '0', m_description.GetBuffer());
+	nsCString s;
+	CopyUCS2toASCII(m_filterName, s);
+	printf("filter %s type = %c desc = %s\n", s.get(), m_type + '0', m_description.get());
 }
 #endif
 

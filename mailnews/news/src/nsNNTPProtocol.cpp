@@ -2410,15 +2410,15 @@ PRInt32 nsNNTPProtocol::BeginArticle()
               result += ct;
               result += MSG_LINEBREAK;
 
-              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+              m_tempArticleStream->Write(result.get(), result.Length(),
                                          &writeCount);
               result = "X-Mozilla-Status: 0001";
               result += MSG_LINEBREAK;
-              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+              m_tempArticleStream->Write(result.get(), result.Length(),
                                          &writeCount);
               result =  "X-Mozilla-Status2: 00000000";
               result += MSG_LINEBREAK;
-              m_tempArticleStream->Write(result.GetBuffer(), result.Length(),
+              m_tempArticleStream->Write(result.get(), result.Length(),
                                          &writeCount);
           }
       }
@@ -2630,25 +2630,25 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
     case 'F': case 'f':
         if (header.Find("From",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelFromHdr);
-			m_cancelFromHdr = PL_strdup(value.GetBuffer());
+			m_cancelFromHdr = value.ToNewCString();
         }
         break;
     case 'M': case 'm':
         if (header.Find("Message-ID",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelID);
-			m_cancelID = PL_strdup(value.GetBuffer());
+			m_cancelID = value.ToNewCString();
         }
         break;
     case 'N': case 'n':
         if (header.Find("Newsgroups",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelNewsgroups);
-			m_cancelNewsgroups = PL_strdup(value.GetBuffer());
+			m_cancelNewsgroups = value.ToNewCString();
         }
         break;
      case 'D': case 'd':
         if (header.Find("Distributions",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelDistribution);
-			m_cancelDistribution = PL_strdup(value.GetBuffer());
+			m_cancelDistribution = value.ToNewCString();
         }       
         break;
     }

@@ -105,7 +105,7 @@ nsresult nsHTTPResponse::SetContentType(const char* i_ContentType)
 {
     nsCAutoString cType(i_ContentType);
     cType.ToLowerCase();
-    mContentType = cType.GetBuffer();
+    mContentType = cType.get();
     return NS_OK;
 }
 
@@ -292,7 +292,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
       return rv;
     } 
 
-    token = str.GetBuffer();
+    token = str.get();
     rv = SetServerVersion(token);
     if (NS_FAILED(rv)) return rv;
 
@@ -328,7 +328,7 @@ nsresult nsHTTPResponse::ParseStatusLine(nsCString& aStatusLine)
     //
     // Parse the Reason-Phrase:: *<TEXT excluding CR,LF>
     //
-    token = aStatusLine.GetBuffer();
+    token = aStatusLine.get();
     SetStatusString(token);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
@@ -380,7 +380,7 @@ nsresult nsHTTPResponse::ParseHeader(nsCString& aHeaderString)
     aHeaderString.Cut(0, colonOffset+1);
     aHeaderString.Trim(" ");
 
-    headerAtom = getter_AddRefs(NS_NewAtom(headerKey.GetBuffer()));
+    headerAtom = dont_AddRef(NS_NewAtom(headerKey.get()));
     if (headerAtom) {
         rv = ProcessHeader(headerAtom, aHeaderString);
     } else {
@@ -416,7 +416,7 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
             semicolon = aValue.FindChar(';');
             if (kNotFound != semicolon) {
                 aValue.Left(buffer, semicolon);
-                SetContentType(buffer.GetBuffer());
+                SetContentType(buffer.get());
 
                 // Does the Content-Type contain a charset attribute?
                 aValue.Mid(buffer, semicolon+1, -1);
@@ -424,11 +424,11 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
                 if (0 == buffer.Find("charset=", PR_TRUE)) {
                     // Set the charset in the HTTPChannel...
                     buffer.Cut(0, 8);
-                    SetCharset(buffer.GetBuffer());
+                    SetCharset(buffer.get());
                 }
             } 
             else {
-                SetContentType(aValue.GetBuffer());
+                SetContentType(aValue.get());
             }
         }
     }
@@ -452,7 +452,7 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
     //
     // Set the response header...
     //
-    rv = SetHeader(aHeader, aValue.GetBuffer());
+    rv = SetHeader(aHeader, aValue.get());
 
     return rv;
 }
@@ -525,7 +525,7 @@ nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
     if (offset == kNotFound)
         return NS_OK;
 
-    *aMaxAge = (PRUint32)atol(header.GetBuffer() + offset + 8);
+    *aMaxAge = (PRUint32)atol(header.get() + offset + 8);
     *aMaxAgeIsPresent = PR_TRUE;
     return NS_OK;
 }
@@ -847,7 +847,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x]."
                "\tIgnoring response header: \'%s\'\n",
-              this, nameBuffer.GetBuffer()));
+              this, nameBuffer.get()));
 #endif /* PR_LOGGING */
       } else {
       // Delete the current header value (if any)...
@@ -868,7 +868,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
         nameBuffer.AssignWithConversion(name);
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x].\tNew response header: \'%s: %s\'\n",
-              this, nameBuffer.GetBuffer(), (const char*)headerValue));
+              this, nameBuffer.get(), (const char*)headerValue));
 #endif /* PR_LOGGING */
       }
     }

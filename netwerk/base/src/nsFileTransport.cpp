@@ -349,7 +349,7 @@ nsFileTransport::Cancel(nsresult status)
         rv = mService->DispatchRequest(this);
     }
 
-    LOG(("nsFileTransport: Cancel [this=%x %s]\n", this, mStreamName.GetBuffer()));
+    LOG(("nsFileTransport: Cancel [this=%x %s]\n", this, mStreamName.get()));
     return rv;
 }
 
@@ -358,7 +358,7 @@ nsFileTransport::Suspend()
 {
     nsAutoLock lock(mLock);
     if (mRunState != CANCELED) {
-        LOG(("nsFileTransport: Suspend [this=%x %s]\n", this, mStreamName.GetBuffer()));
+        LOG(("nsFileTransport: Suspend [this=%x %s]\n", this, mStreamName.get()));
         PR_AtomicIncrement(&mSuspendCount);
         mService->AddSuspendedTransport(this);
     }
@@ -370,7 +370,7 @@ nsFileTransport::Resume()
 {
     nsAutoLock lock(mLock);
     if (mRunState != CANCELED) {
-        LOG(("nsFileTransport: Resume [this=%x %s]\n", this, mStreamName.GetBuffer()));
+        LOG(("nsFileTransport: Resume [this=%x %s]\n", this, mStreamName.get()));
         // Allow negative suspend count
         PR_AtomicDecrement(&mSuspendCount);
         mService->RemoveSuspendedTransport(this);
@@ -385,7 +385,7 @@ nsFileTransport::Resume()
     }
     else
         LOG(("nsFileTransport: Resume ignored [this=%x %s] status=%x cancelstatus=%x\n",
-            this, mStreamName.GetBuffer(), mStatus, mCancelStatus));
+            this, mStreamName.get(), mStatus, mCancelStatus));
     return NS_OK;
 }
 
@@ -466,7 +466,7 @@ nsFileTransport::AsyncRead(nsIStreamListener *aListener,
     mXferState = OPEN_FOR_READ;
 
     LOG(("nsFileTransport: AsyncRead [this=%x %s] mOffset=%d mTransferAmount=%d\n",
-        this, mStreamName.GetBuffer(), mOffset, mTransferAmount));
+        this, mStreamName.get(), mOffset, mTransferAmount));
 
 #ifdef TIMING
     mStartTime = PR_IntervalNow();
@@ -509,7 +509,7 @@ nsFileTransport::AsyncWrite(nsIStreamProvider *aProvider,
     mXferState = OPEN_FOR_WRITE;
 
     LOG(("nsFileTransport: AsyncWrite [this=%x %s] mOffset=%d mTransferAmount=%d\n",
-        this, mStreamName.GetBuffer(), mOffset, mTransferAmount));
+        this, mStreamName.get(), mOffset, mTransferAmount));
 
 #ifdef TIMING
     mStartTime = PR_IntervalNow();
@@ -592,7 +592,7 @@ nsFileTransport::Process(void)
     switch (mXferState) {
       case OPEN_FOR_READ: { 
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
-        LOG(("nsFileTransport: OPEN_FOR_READ [this=%x %s] status=%x\n", this, mStreamName.GetBuffer(), mStatus));
+        LOG(("nsFileTransport: OPEN_FOR_READ [this=%x %s] status=%x\n", this, mStreamName.get(), mStatus));
         if (mListener) {
             nsresult rv = mListener->OnStartRequest(this, mContext);  // always send the start notification
             if (NS_SUCCEEDED(mStatus))
@@ -604,7 +604,7 @@ nsFileTransport::Process(void)
       }
 
       case START_READ: {
-        LOG(("nsFileTransport: START_READ [this=%x %s]\n", this, mStreamName.GetBuffer()));
+        LOG(("nsFileTransport: START_READ [this=%x %s]\n", this, mStreamName.get()));
 
         PR_AtomicIncrement(&mService->mInUseTransports);
     
@@ -668,7 +668,7 @@ nsFileTransport::Process(void)
             transferAmt = PR_MIN(transferAmt, mTransferAmount);
 
         LOG(("nsFileTransport: READING [this=%x %s] transferAmt=%u mBufferMaxSize=%u\n",
-            this, mStreamName.GetBuffer(), transferAmt, mBufferMaxSize));
+            this, mStreamName.get(), transferAmt, mBufferMaxSize));
 
         // Zero the number of bytes read on the source wrapper
         mSourceWrapper->ZeroBytesRead();
@@ -686,19 +686,19 @@ nsFileTransport::Process(void)
         //
         if (status == NS_BASE_STREAM_WOULD_BLOCK) {
             LOG(("nsFileTransport: READING [this=%x %s] listener would block; suspending self.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = NS_OK;
             PR_AtomicIncrement(&mSuspendCount);
         }
         else if (status == NS_BASE_STREAM_CLOSED) {
             LOG(("nsFileTransport: READING [this=%x %s] done reading file.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = NS_OK;
             mXferState = END_READ;
         }
         else if (NS_FAILED(status)) {
             LOG(("nsFileTransport: READING [this=%x %s] error reading file.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = status;
             mXferState = END_READ;
         }
@@ -714,12 +714,12 @@ nsFileTransport::Process(void)
 
             if (0 == total || 0 == mTransferAmount) {
                 LOG(("nsFileTransport: READING [this=%x %s] done reading file.\n",
-                    this, mStreamName.GetBuffer()));
+                    this, mStreamName.get()));
                 mXferState = END_READ;
             }
             else
                 LOG(("nsFileTransport: READING [this=%x %s] read %u bytes [offset=%u]\n",
-                    this, mStreamName.GetBuffer(), total, mOffset));
+                    this, mStreamName.get(), total, mOffset));
 
 // what about check for background flags! dougt
             if (mProgress && (mTransferAmount >= 0)) {
@@ -736,7 +736,7 @@ nsFileTransport::Process(void)
         PR_AtomicDecrement(&mService->mInUseTransports);
 
         LOG(("nsFileTransport: END_READ [this=%x %s] status=%x\n",
-            this, mStreamName.GetBuffer(), mStatus));
+            this, mStreamName.get(), mStatus));
 
 #if defined (DEBUG_dougt) || defined (DEBUG_warren)
         NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
@@ -773,7 +773,7 @@ nsFileTransport::Process(void)
 
       case OPEN_FOR_WRITE: {
         LOG(("nsFileTransport: OPEN_FOR_WRITE [this=%x %s]\n",
-            this, mStreamName.GetBuffer()));
+            this, mStreamName.get()));
         mStatus = mStreamIO->Open(&mContentType, &mTotalAmount);
         if (mProvider) {
             // always send the start notification
@@ -788,7 +788,7 @@ nsFileTransport::Process(void)
 
       case START_WRITE: {
         LOG(("nsFileTransport: START_WRITE [this=%x %s]\n",
-            this, mStreamName.GetBuffer()));
+            this, mStreamName.get()));
 
         PR_AtomicIncrement(&mService->mInUseTransports);
 
@@ -858,19 +858,19 @@ nsFileTransport::Process(void)
         //
         if (status == NS_BASE_STREAM_WOULD_BLOCK) {
             LOG(("nsFileTransport: WRITING [this=%x %s] provider would block; suspending self.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = NS_OK;
             PR_AtomicIncrement(&mSuspendCount);
         }
         else if (status == NS_BASE_STREAM_CLOSED) {
             LOG(("nsFileTransport: WRITING [this=%x %s] no more data to be written.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = NS_OK;
             mXferState = END_WRITE;
         }
         else if (NS_FAILED(status)) {
             LOG(("nsFileTransport: WRITING [this=%x %s] provider failed.\n",
-                this, mStreamName.GetBuffer()));
+                this, mStreamName.get()));
             mStatus = status;
             mXferState = END_WRITE;
         }
@@ -886,12 +886,12 @@ nsFileTransport::Process(void)
 
             if (total == 0 || mTransferAmount == 0) {
                 LOG(("nsFileTransport: WRITING [this=%x %s] done writing file.\n",
-                    this, mStreamName.GetBuffer()));
+                    this, mStreamName.get()));
                 mXferState = END_WRITE;
             }
             else 
                 LOG(("nsFileTransport: WRITING [this=%x %s] wrote %u bytes [offset=%u]\n",
-                    this, mStreamName.GetBuffer(), total, mOffset));
+                    this, mStreamName.get(), total, mOffset));
 // what about check for background flag dougt!
             if (mProgress && (mTransferAmount >= 0))
                 mProgress->OnProgress(this, mContext,
@@ -903,7 +903,7 @@ nsFileTransport::Process(void)
 
       case END_WRITE: {
         LOG(("nsFileTransport: END_WRITE [this=%x %s] status=%x\n",
-            this, mStreamName.GetBuffer(), mStatus));
+            this, mStreamName.get(), mStatus));
 
         PR_AtomicDecrement(&mService->mInUseTransports);
 
@@ -959,7 +959,7 @@ void
 nsFileTransport::DoClose(void)
 {
     LOG(("nsFileTransport: CLOSING [this=%x %s] status=%x\n",
-        this, mStreamName.GetBuffer(), mStatus));
+        this, mStreamName.get(), mStatus));
 
     if (mStreamIO) {
         nsresult rv = mStreamIO->Close(mStatus);

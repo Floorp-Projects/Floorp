@@ -311,7 +311,7 @@ nsSOAPCall::CreateBodyEntry(PRBool aNewParameters)
   nsCOMPtr<nsIDOMElement> entry;
   nsCOMPtr<nsIDOMNode> dummy;
   
-  rv = mEnvelopeDocument->CreateElementNS(NS_ConvertASCIItoUCS2(mTargetObjectURI.GetBuffer()), 
+  rv = mEnvelopeDocument->CreateElementNS(NS_ConvertASCIItoUCS2(mTargetObjectURI.get()), 
                                           mMethodName, getter_AddRefs(entry));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
@@ -675,7 +675,7 @@ nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
   nsCOMPtr<nsIURI> uri;
   nsXPIDLCString protocol;
 
-  rv = NS_NewURI(getter_AddRefs(uri), mDestinationURI.GetBuffer());
+  rv = NS_NewURI(getter_AddRefs(uri), mDestinationURI.get());
   if (NS_FAILED(rv)) return rv;
 
   uri->GetScheme(getter_Copies(protocol));

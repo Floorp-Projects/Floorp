@@ -216,7 +216,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     else
       NS_MsgCreatePathStringFromFolderURI(curPos, newPath);
 
-    pathResult+=newPath.GetBuffer();
+    pathResult+=newPath.get();
   }
 
   return NS_OK;

@@ -224,7 +224,7 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 	int termLength = nsCRT::strlen(xpatTemplate) + nsCRT::strlen(attribEncoding) + pattern.Length() + 1;
 	char *termEncoding = new char [termLength];
 	if (termEncoding)
-		PR_snprintf (termEncoding, termLength, xpatTemplate, attribEncoding, pattern.GetBuffer());
+		PR_snprintf (termEncoding, termLength, xpatTemplate, attribEncoding, pattern.get());
 
 	return termEncoding;
 }

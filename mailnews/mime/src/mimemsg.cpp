@@ -804,7 +804,7 @@ MimeMessage_partial_message_html(const char *data, void *closure,
 	char *fmt2 = MimeGetStringByID(1038);
 	char *fmt3 = MimeGetStringByID(1039);
 	char *msgUrl = PR_smprintf("%s&messageid=%s&uidl=%s",
-							   orig_url.GetBuffer(), escapedMsgId, uidl);
+							   orig_url.get(), escapedMsgId, uidl);
 	partialMsgHtml = PR_smprintf("%s%s%s%s", fmt1,fmt2, msgUrl, fmt3);
 	PR_FREEIF(uidl);
 	PR_FREEIF(msgId);
