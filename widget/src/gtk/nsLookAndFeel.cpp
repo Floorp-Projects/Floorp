@@ -19,7 +19,9 @@
 #include "nsLookAndFeel.h"
 
 #define GDK_COLOR_TO_NS_RGB(c) \
-  ((nscolor) NS_RGB(c.red, c.green, c.blue))
+  ((nscolor) NS_RGB(c.green, c.blue, c.red))
+//    ((nscolor) NS_RGB(c.red, c.green, c.blue))
+
 
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
@@ -32,17 +34,38 @@ nsLookAndFeel::nsLookAndFeel()
 {
   NS_INIT_REFCNT();
   mStyle = gtk_style_new();
+  gdk_rgb_init();
+  //  mWindow = gdk_pixmap_new(nsnull, 1, 1, 1);
+
+  GdkWindowAttr attributes;
+  gint attributes_mask;
+
+  attributes.window_type = GDK_WINDOW_TEMP;
+  attributes.x = 0;
+  attributes.y = 0;
+  attributes.width = 1;
+  attributes.height = 1;
+  attributes.wclass = GDK_INPUT_OUTPUT;
+  attributes.visual = gdk_rgb_get_visual();
+  attributes.colormap = gdk_rgb_get_cmap();
+  attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
+
+  mWindow = gdk_window_new(nsnull, &attributes, attributes_mask);
+
+  gtk_style_attach(mStyle, mWindow);
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
   gtk_style_unref(mStyle);
+  gdk_window_unref(mWindow);
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
-
+  GdkGCValues values;
+  aColor = 0;
 
   switch (aID) {
   case eColor_WindowBackground:
@@ -95,23 +118,12 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   case eColor_background:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
-  case eColor_buttonface:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-    break;
-  case eColor_buttonhighlight:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
-    break;
-  case eColor_buttonshadow:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-    break;
-  case eColor_buttontext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
-    break;
+
   case eColor_captiontext:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor_graytext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_INSENSITIVE]);
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_highlight:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
@@ -141,11 +153,38 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor_scrollbar:
-  case eColor_threeddarkshadow:
+    break;
+
   case eColor_threedface:
+  case eColor_buttonface:
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
+    break;
+  case eColor_buttonhighlight:
+    // ?
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
+    break;
+  case eColor_buttonshadow:
+    gdk_gc_get_values(mStyle->dark_gc[GTK_STATE_NORMAL], &values);
+    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
+    break;
+  case eColor_buttontext:
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
+    break;
+
+  case eColor_threeddarkshadow:
+  case eColor_threedshadow: // i think these should be the same
+    gdk_gc_get_values(mStyle->dark_gc[GTK_STATE_NORMAL], &values);
+    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
+    break;
+
   case eColor_threedhighlight:
+    //    aColor = GDK_COLOR_TO_NS_RGB();
+    break;
   case eColor_threedlightshadow:
-  case eColor_threedshadow:
+    gdk_gc_get_values(mStyle->light_gc[GTK_STATE_NORMAL], &values);
+    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
+    //    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
+    break;
   case eColor_window:
   case eColor_windowframe:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
@@ -155,11 +194,13 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     break;
 
   default:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
+    /* default color is BLACK */
+    aColor = 0;
     res    = NS_ERROR_FAILURE;
     break;
   }
 
+  //  printf("%i, %i, %i\n", NS_GET_R(aColor), NS_GET_B(aColor), NS_GET_G(aColor));
 
   return res;
 }
@@ -172,13 +213,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 0;
     break;
   case eMetric_WindowBorderWidth:
-    aMetric = mStyle->klass->xthickness;
+    //    aMetric = mStyle->klass->xthickness;
     break;
   case eMetric_WindowBorderHeight:
-    aMetric = mStyle->klass->ythickness;
+    //    aMetric = mStyle->klass->ythickness;
     break;
   case eMetric_Widget3DBorder:
-    aMetric = 4;
+    //    aMetric = 4;
     break;
   case eMetric_TextFieldHeight:
     {
@@ -239,7 +280,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     aMetric = 20;
     break;
   default:
-    aMetric = -1;
+    aMetric = 0;
     res     = NS_ERROR_FAILURE;
   }
 
