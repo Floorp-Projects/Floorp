@@ -91,7 +91,8 @@ nsMIMEHeaderParamImpl::GetParameter(const nsACString& aHeaderVal,
     nsXPIDLCString charset;
     rv = GetParameterInternal(PromiseFlatCString(aHeaderVal).get(), aParamName, 
                               getter_Copies(charset), aLang, getter_Copies(med));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return rv; 
 
     // convert to UTF-8 after charset conversion and RFC 2047 decoding 
     // if necessary.
