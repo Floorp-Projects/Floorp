@@ -32,10 +32,6 @@ class nsIOFileStream;
 class nsFileSpec;
 class nsOfflineImapOperation;
 
-// this is the version number for the mail db. If the file format changes, we 
-// just reparse the mail folder. 
-const int kMailDBVersion = 1;
-
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
@@ -56,7 +52,7 @@ public:
 	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}
 
-	virtual PRUint32		GetCurVersion() {return kMailDBVersion;}
+	virtual PRUint32		GetCurVersion() {return kMsgDBVersion;}
 	
 	NS_IMETHOD			GetOfflineOpForKey(nsMsgKey opKey, PRBool create, nsIMsgOfflineImapOperation **op);
   NS_IMETHOD      RemoveOfflineOp(nsIMsgOfflineImapOperation *op);

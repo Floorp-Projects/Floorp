@@ -69,8 +69,14 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 #define MSG_HASH_SIZE 512
 
-const int kMsgDBVersion = 1;
 const PRInt32 kMaxHdrsInCache = 512;
+
+// special keys
+static const nsMsgKey kAllMsgHdrsTableKey = 1; 
+static const nsMsgKey kTableKeyForThreadOne = 0xfffffffe;
+static const nsMsgKey kFirstPseudoKey = 0xfffffffd;
+static const nsMsgKey kIdStartOfFake = 0xffffff80;
+
 
 // we never need to call this because we check the use cache first,
 // and any hdr in this cache will be in the use cache.
@@ -600,7 +606,7 @@ void nsMsgDatabase::DumpCache()
 
 nsMsgDatabase::nsMsgDatabase()
     : m_dbFolderInfo(nsnull), 
-	  m_nextPseudoMsgKey(-1),
+	  m_nextPseudoMsgKey(kFirstPseudoKey),
       m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbAllMsgHeadersTable(nsnull), m_dbName(""), m_newSet(nsnull),
       m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
@@ -1154,10 +1160,16 @@ nsresult nsMsgDatabase::InitNewDB()
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
 			mdb_err mdberr;
+	    struct mdbOid allMsgHdrsTableOID;
 
-            mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
-				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
-//			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
+	    if (!store)
+		    return NS_ERROR_NULL_POINTER;
+
+	    allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+	    allMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
+
+	    mdberr  = GetStore()->NewTableWithOid(GetEnv(), &allMsgHdrsTableOID, m_hdrTableKindToken, 
+                                         PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 
 			m_dbFolderInfo = dbFolderInfo;
 
@@ -1178,11 +1190,10 @@ nsresult nsMsgDatabase::InitExistingDB()
 		err = GetStore()->GetTable(GetEnv(), &gAllMsgHdrsTableOID, &m_mdbAllMsgHeadersTable);
 		if (err == NS_OK)
 		{
-			m_dbFolderInfo = new nsDBFolderInfo(this);	 // mscott: This is bad!!! Should be going through component manager
+			m_dbFolderInfo = new nsDBFolderInfo(this);
 			if (m_dbFolderInfo)
 			{
-				NS_ADDREF(m_dbFolderInfo); // mscott: acquire a ref count. we shouldn't do this & should be going through
-									       // the component manager instead.
+				NS_ADDREF(m_dbFolderInfo); 
 				err = m_dbFolderInfo->InitFromExistingDB();
 			}
 		}
@@ -1193,8 +1204,12 @@ nsresult nsMsgDatabase::InitExistingDB()
     if (NS_SUCCEEDED(err) && !m_mdbAllMsgHeadersTable)
     {
 			nsIMdbStore *store = GetStore();
-			mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
-				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
+	    struct mdbOid allMsgHdrsTableOID;
+	    allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
+	    allMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
+
+	    mdb_err mdberr  = GetStore()->NewTableWithOid(GetEnv(), &allMsgHdrsTableOID, m_hdrTableKindToken, 
+                                         PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
       if (mdberr != NS_OK || !m_mdbAllMsgHeadersTable)
         err = NS_ERROR_FAILURE;
     }
@@ -1251,7 +1266,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			{
 				// The table of all message hdrs will have table id 1.
 				gAllMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
-				gAllMsgHdrsTableOID.mOid_Id = 1;
+				gAllMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
 				gAllThreadsTableOID.mOid_Scope = m_threadRowScopeToken;
 				gAllThreadsTableOID.mOid_Id = 1;
 
@@ -3394,33 +3409,38 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 // make the passed in header a thread header
 nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 {
+  
+  if (!msgHdr)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsMsgThread *threadHdr = nsnull;
+  
+  nsXPIDLCString subject;
+  nsMsgKey threadKey = msgHdr->m_messageKey;
+  // can't have a thread with key 1 since that's the table id of the all msg hdr table,
+  // so give it kTableKeyForThreadOne (0xfffffffe).
+  if (threadKey == 1)
+    threadKey = kTableKeyForThreadOne;
 
-	if (!msgHdr)
-		return NS_ERROR_NULL_POINTER;
-
-	nsMsgThread *threadHdr = nsnull;
-	
-	nsXPIDLCString subject;
-
-	nsresult err = msgHdr->GetSubject(getter_Copies(subject));
-
-	err = CreateNewThread(msgHdr->m_messageKey, subject, &threadHdr);
-	msgHdr->SetThreadId(msgHdr->m_messageKey);
-	if (threadHdr)
-	{
-//		nsCString subject;
-
-		threadHdr->AddRef();
-//		err = msgHdr->GetSubject(subject);
-//		threadHdr->SetThreadKey(msgHdr->m_messageKey);
-//		threadHdr->SetSubject(subject.get());
-
-		// need to add the thread table to the db.
-		AddToThread(msgHdr, threadHdr, nsnull, PR_FALSE);
-
-		threadHdr->Release();
-	}
-	return err;
+  nsresult err = msgHdr->GetSubject(getter_Copies(subject));
+  
+  err = CreateNewThread(threadKey, subject, &threadHdr);
+  msgHdr->SetThreadId(threadKey);
+  if (threadHdr)
+  {
+    //		nsCString subject;
+    
+    threadHdr->AddRef();
+    //		err = msgHdr->GetSubject(subject);
+    //		threadHdr->SetThreadKey(msgHdr->m_messageKey);
+    //		threadHdr->SetSubject(subject.get());
+    
+    // need to add the thread table to the db.
+    AddToThread(msgHdr, threadHdr, nsnull, PR_FALSE);
+    
+    threadHdr->Release();
+  }
+  return err;
 }
 
 
@@ -3551,7 +3571,7 @@ NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
 NS_IMETHODIMP nsMsgDatabase::GetNextPseudoMsgKey(nsMsgKey *nextPseudoMsgKey)
 {
   NS_ENSURE_ARG_POINTER(nextPseudoMsgKey);
-  *nextPseudoMsgKey = m_nextPseudoMsgKey;
+  *nextPseudoMsgKey = m_nextPseudoMsgKey--;
   return NS_OK;
 }
 
@@ -3560,6 +3580,27 @@ NS_IMETHODIMP nsMsgDatabase::SetNextPseudoMsgKey(nsMsgKey nextPseudoMsgKey)
   m_nextPseudoMsgKey = nextPseudoMsgKey;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDatabase::GetNextFakeOfflineMsgKey(nsMsgKey *nextFakeOfflineMsgKey)
+{
+  NS_ENSURE_ARG_POINTER(nextFakeOfflineMsgKey);
+  // iterate over hdrs looking for first non-existant fake offline msg key
+	nsMsgKey fakeMsgKey = kIdStartOfFake;
+
+  PRBool containsKey;
+  do
+  {
+     ContainsKey(fakeMsgKey, &containsKey);
+     if (!containsKey)
+       break;
+     fakeMsgKey--;
+  }
+  while (containsKey);
+
+  *nextFakeOfflineMsgKey = fakeMsgKey;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgDatabase::HasThreads(PRBool *hasThreads)
 {

@@ -117,7 +117,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 		{
 			// this will make the db folder info release its ref to the mail db...
 			NS_IF_RELEASE(mailDB->m_dbFolderInfo);
-			mailDB->Close(PR_TRUE);
+			mailDB->ForceClosed();
 			if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 				summarySpec.Delete(PR_FALSE);
 
@@ -135,7 +135,8 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 		else if (err != NS_OK)
 		{
 			*pMessageDB = NULL;
-      mailDB->Close(PR_FALSE);
+      if (mailDB)
+        mailDB->Close(PR_FALSE);
 			delete mailDB;
       summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
 			mailDB = NULL;

@@ -47,6 +47,8 @@ class nsIMsgThread;
 class nsIDBFolderInfo;
 class nsIMsgHeaderParser;
 
+const PRInt32 kMsgDBVersion = 1;
+
 class nsMsgDatabase : public nsIMsgDatabase 
 {
 public:
