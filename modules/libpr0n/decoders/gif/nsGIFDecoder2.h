@@ -26,9 +26,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIImageDecoder.h"
-#include "nsIImageContainer.h"
+#include "gfxIImageContainer.h"
 #include "nsIImageDecoderObserver.h"
-#include "nsIImageFrame.h"
+#include "gfxIImageFrame.h"
 #include "lpIImageRequest.h"
 
 #include "GIF2.h"
@@ -58,8 +58,8 @@ public:
   
   NS_METHOD ProcessData(unsigned char *data, PRUint32 count);
   
-  nsCOMPtr<nsIImageContainer> mImageContainer;
-  nsCOMPtr<nsIImageFrame> mImageFrame;
+  nsCOMPtr<gfxIImageContainer> mImageContainer;
+  nsCOMPtr<gfxIImageFrame> mImageFrame;
   nsCOMPtr<lpIImageRequest> mImageRequest;
   nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
   

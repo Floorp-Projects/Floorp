@@ -39,7 +39,7 @@
 
 
 NS_IMPL_ISUPPORTS5(nsImageRequest, lpIImageRequest, 
-                   nsIImageDecoderObserver, nsIImageContainerObserver,
+                   nsIImageDecoderObserver, gfxIImageContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
 nsImageRequest::nsImageRequest() : 
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsImageRequest::Cancel(nsresult status)
 }
 
 /* readonly attribute nsIImage image; */
-NS_IMETHODIMP nsImageRequest::GetImage(nsIImageContainer * *aImage)
+NS_IMETHODIMP nsImageRequest::GetImage(gfxIImageContainer * *aImage)
 {
   *aImage = mImage;
   NS_IF_ADDREF(*aImage);
@@ -134,10 +134,10 @@ NS_IMETHODIMP nsImageRequest::GetImageStatus(PRUint32 *aStatus)
 
 
 
-/** nsIImageContainerObserver methods **/
+/** gfxIImageContainerObserver methods **/
 
-/* [noscript] void frameChanged (in nsIImageContainer container, in nsISupports cx, in nsIImageFrame newframe, in nsRect dirtyRect); */
-NS_IMETHODIMP nsImageRequest::FrameChanged(nsIImageContainer *container, nsISupports *cx, nsIImageFrame *newframe, nsRect * dirtyRect)
+/* [noscript] void frameChanged (in gfxIImageContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
+NS_IMETHODIMP nsImageRequest::FrameChanged(gfxIImageContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -168,8 +168,8 @@ NS_IMETHODIMP nsImageRequest::OnStartDecode(lpIImageRequest *request, nsISupport
   return NS_OK;
 }
 
-/* void onStartContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequest::OnStartContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStartContainer (in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStartContainer(lpIImageRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
   mState |= onStartContainer;
 
@@ -186,8 +186,8 @@ NS_IMETHODIMP nsImageRequest::OnStartContainer(lpIImageRequest *request, nsISupp
   return NS_OK;
 }
 
-/* void onStartFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequest::OnStartFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStartFrame (in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStartFrame(lpIImageRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -200,8 +200,8 @@ NS_IMETHODIMP nsImageRequest::OnStartFrame(lpIImageRequest *request, nsISupports
   return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame, [const] in nsRect rect); */
-NS_IMETHODIMP nsImageRequest::OnDataAvailable(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame, const nsRect * rect)
+/* [noscript] void onDataAvailable (in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect); */
+NS_IMETHODIMP nsImageRequest::OnDataAvailable(lpIImageRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -214,8 +214,8 @@ NS_IMETHODIMP nsImageRequest::OnDataAvailable(lpIImageRequest *request, nsISuppo
   return NS_OK;
 }
 
-/* void onStopFrame (in lpIImageRequest request, in nsISupports cx, in nsIImageFrame frame); */
-NS_IMETHODIMP nsImageRequest::OnStopFrame(lpIImageRequest *request, nsISupports *cx, nsIImageFrame *frame)
+/* void onStopFrame (in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStopFrame(lpIImageRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -228,8 +228,8 @@ NS_IMETHODIMP nsImageRequest::OnStopFrame(lpIImageRequest *request, nsISupports 
   return NS_OK;
 }
 
-/* void onStopContainer (in lpIImageRequest request, in nsISupports cx, in nsIImageContainer image); */
-NS_IMETHODIMP nsImageRequest::OnStopContainer(lpIImageRequest *request, nsISupports *cx, nsIImageContainer *image)
+/* void onStopContainer (in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStopContainer(lpIImageRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
   mState |= onStopContainer;
 
@@ -289,7 +289,7 @@ NS_IMETHODIMP nsImageRequest::OnStartRequest(nsIChannel *channel, nsISupports *c
     // no image decoder for this mimetype :(
     channel->Cancel(NS_BINDING_ABORTED);
 
-    // XXX notify the person that owns us now that wants the nsIImageContainer off of us?
+    // XXX notify the person that owns us now that wants the gfxIImageContainer off of us?
 
     return NS_ERROR_FAILURE;
   }

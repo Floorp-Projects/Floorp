@@ -38,7 +38,7 @@
 
 #include "nsMemory.h"
 
-#include "nsIImageContainerObserver.h"
+#include "gfxIImageContainerObserver.h"
 
 // XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
 
@@ -346,12 +346,12 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   gfx_format format;
 
   if (channels == 3) {
-    format = nsIGFXFormat::RGB;
+    format = gfxIFormats::RGB;
   } else if (channels > 3) {
     if (alpha_bits == 8) {
       decoder->mImage->GetPreferredAlphaChannelFormat(&format);
     } else if (alpha_bits == 1) {
-      format = nsIGFXFormat::RGB_A1;
+      format = gfxIFormats::RGB_A1;
     }
   }
 
@@ -449,12 +449,12 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     PRUint8 *aptr, *cptr;
 
     switch (format) {
-    case nsIGFXFormat::RGB:
-    case nsIGFXFormat::BGR:
+    case gfxIFormats::RGB:
+    case gfxIFormats::BGR:
       decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
       break;
-    case nsIGFXFormat::RGB_A1:
-    case nsIGFXFormat::BGR_A1:
+    case gfxIFormats::RGB_A1:
+    case gfxIFormats::BGR_A1:
       {
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;
@@ -471,8 +471,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
       }
       break;
-    case nsIGFXFormat::RGB_A8:
-    case nsIGFXFormat::BGR_A8:
+    case gfxIFormats::RGB_A8:
+    case gfxIFormats::BGR_A8:
       {
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;
@@ -486,8 +486,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
       }
       break;
-    case nsIGFXFormat::RGBA:
-    case nsIGFXFormat::BGRA:
+    case gfxIFormats::RGBA:
+    case gfxIFormats::BGRA:
       decoder->mFrame->SetImageData(line, bpr, row_num*bpr);
       break;
     }

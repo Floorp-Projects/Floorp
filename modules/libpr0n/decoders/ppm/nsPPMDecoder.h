@@ -28,9 +28,9 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIImageContainer.h"
+#include "gfxIImageContainer.h"
 #include "nsIImageDecoderObserver.h"
-#include "nsIImageFrame.h"
+#include "gfxIImageFrame.h"
 #include "lpIImageRequest.h"
 
 #define NS_PPMDECODER_CID \
@@ -52,8 +52,8 @@ public:
   virtual ~nsPPMDecoder();
 
 private:
-  nsCOMPtr<nsIImageContainer> mImage;
-  nsCOMPtr<nsIImageFrame> mFrame;
+  nsCOMPtr<gfxIImageContainer> mImage;
+  nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<lpIImageRequest> mRequest;
   nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 

@@ -32,7 +32,7 @@
 
 #include "nsIComponentManager.h"
 
-#include "nsIImageContainerObserver.h"
+#include "gfxIImageContainerObserver.h"
 
 NS_IMPL_ISUPPORTS2(nsJPEGDecoder, nsIImageDecoder, nsIOutputStream)
 
@@ -234,7 +234,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
     mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, nsIGFXFormat::RGB);
+    mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, gfxIFormats::RGB);
     mImage->AppendFrame(mFrame);
     mObserver->OnStartFrame(nsnull, nsnull, mFrame);
 

@@ -24,10 +24,10 @@
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImageFrame.h"
+#include "gfxIImageFrame.h"
 #include "nsMemory.h"
 
-#include "nsIImageContainerObserver.h"
+#include "gfxIImageContainerObserver.h"
 
 #ifndef XP_MAC
 #endif
@@ -320,9 +320,9 @@ int HaveDecodedRow(
   // is added in GIF89a and control blocks are how the extensions are done.
   // How annoying.
   if(! decoder->mImageFrame) {
-    gfx_format format = nsIGFXFormat::RGB;
+    gfx_format format = gfxIFormats::RGB;
     if (decoder->mGIFStruct.is_transparent)
-      format = nsIGFXFormat::RGB_A1;
+      format = gfxIFormats::RGB_A1;
 
 #ifdef XP_PC
     // XXX this works...
@@ -343,7 +343,7 @@ int HaveDecodedRow(
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);
 
-    if (format == nsIGFXFormat::RGB_A1 || format == nsIGFXFormat::BGR_A1)
+    if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1)
       decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
   } else {
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
@@ -374,8 +374,8 @@ int HaveDecodedRow(
     PRUint8* rowBufIndex = aRowBufPtr;
         
     switch (format) {
-    case nsIGFXFormat::RGB:
-    case nsIGFXFormat::BGR:
+    case gfxIFormats::RGB:
+    case gfxIFormats::BGR:
       {
         while(rowBufIndex != decoder->mGIFStruct.rowend) {
 #ifdef XP_PC
@@ -393,8 +393,8 @@ int HaveDecodedRow(
         decoder->mImageFrame->SetImageData((PRUint8*)aRGBrowBufPtr, bpr, aRowNumber*bpr);
       }
       break;
-    case nsIGFXFormat::RGB_A1:
-    case nsIGFXFormat::BGR_A1:
+    case gfxIFormats::RGB_A1:
+    case gfxIFormats::BGR_A1:
       {
         memset(decoder->alphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;

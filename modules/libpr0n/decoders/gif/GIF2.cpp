@@ -631,7 +631,7 @@ process_buffered_gif_input_data(gif_struct* gs)
 
 /******************************************************************************/
 // XXX: this isn't how we work anymore. We don't delay decoding of subsequent
-// frames. The nsIImageContainer is notified of the delay times and it manages
+// frames. The gfxIImageContainer is notified of the delay times and it manages
 // the frame display. This means it must wait for a new frame's FrameEnd callback
 // before displaying it, and wait for the GIFEnd callback before starting the 
 // second animation loop.
