@@ -49,6 +49,39 @@ nsMimeConverter::~nsMimeConverter()
 }
 
 nsresult 
+nsMimeConverter::DecodeMimePartIIStr(const nsCString& header, 
+                                           nsCString& charset, 
+                                           nsString& decodedString,
+                                     PRBool eatContinuations)
+{
+  char charsetNameBuffer[kMAX_CSNAME+1];
+  char *decodedCstr = nsnull;
+  nsresult res = NS_OK;
+
+  // apply MIME decode.
+  decodedCstr = MIME_DecodeMimePartIIStr(header,
+                                           charsetNameBuffer, eatContinuations);
+  if (nsnull == decodedCstr) {
+    // no decode needed and no default charset was specified
+    if (charset.IsEmpty()) {
+      decodedString.Assign(header);
+    }
+    else {
+      // no MIME encoded, convert default charset to unicode
+      res = ConvertToUnicode((nsAutoString) charset, header, decodedString);
+    }
+  }
+  else {
+    // assign the charset encoded in MIME header
+    charset.Assign(charsetNameBuffer);
+    // convert MIME charset to unicode
+    res = ConvertToUnicode((nsAutoString) charset, (const char *) decodedCstr, decodedString);
+    PR_FREEIF(decodedCstr);
+  }
+  return res;
+}
+
+nsresult 
 nsMimeConverter::DecodeMimePartIIStr(const nsString& header, 
                                            nsString& charset, 
                                            nsString& decodedString,
