@@ -105,8 +105,6 @@
             in click rather than mousedown so that you can drag a
             selected group of items */
 
-           var column = document.getElementById(col.value);
-
            // if the last row has changed in between the time we 
            // mousedown and the time we click, don't fire the select handler.
            // see bug #92366
