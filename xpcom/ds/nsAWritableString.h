@@ -336,28 +336,6 @@ operator!=( const nsWritingIterator<CharT>& lhs, const nsWritingIterator<CharT>&
 
 
 template <class CharT>
-nsWritingIterator<CharT>
-copy_backward_chunky( nsReadingIterator<CharT> first, nsReadingIterator<CharT> last, nsWritingIterator<CharT> result )
-  {
-    while ( first != last )
-      {
-        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_backward(), result.size_backward()) );
-        if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(first.operator->() - last.operator->()));
-
-        nsCharTraits<CharT>::move(result.operator->(), first.operator->(), lengthToCopy);
-
-        first -= PRInt32(lengthToCopy);
-        result -= PRInt32(lengthToCopy);
-      }
-
-    return result;
-  }
-
-
-
-
-template <class CharT>
 void
 basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
   {
@@ -389,7 +367,7 @@ basic_nsAWritableString<CharT>::Insert( const basic_nsAReadableString<CharT>& aR
     PRUint32 oldLength = Length();
     SetLength(oldLength + aReadable.Length());
     if ( aPosition < oldLength )
-      copy_backward_chunky<CharT>(BeginReading(aPosition), BeginReading(oldLength), EndWriting());
+      string_copy_backward(BeginReading(aPosition), BeginReading(oldLength), EndWriting());
     else
       aPosition = oldLength;
     string_copy(aReadable.BeginReading(), aReadable.EndReading(), BeginWriting(aPosition));
@@ -422,7 +400,7 @@ basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, 
       string_copy(BeginReading(cutEnd), EndReading(), BeginWriting(replacementEnd));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_backward_chunky<CharT>(BeginReading(cutEnd), BeginReading(oldLength), BeginWriting(replacementEnd));
+      string_copy_backward(BeginReading(cutEnd), BeginReading(oldLength), BeginWriting(replacementEnd));
 
     string_copy(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
   }
