@@ -1176,12 +1176,15 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(prop));      /// XXX Hack alert! Look in nsIEditProperty.h for this
   if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
  
+  static const PRUnichar sEmptyStr = PRUnichar('\0');
   switch (mEditorType)
   {
     case ePlainTextEditorType:
         // should we allow this?
     case eHTMLTextEditorType:
-      err = mEditor->SetInlineProperty(styleAtom, nsDependentString(attr), nsDependentString(value));
+      err = mEditor->SetInlineProperty(styleAtom,
+                                    nsDependentString(attr?attr:&sEmptyStr),
+                                    nsDependentString(value?value:&sEmptyStr));
       break;
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
