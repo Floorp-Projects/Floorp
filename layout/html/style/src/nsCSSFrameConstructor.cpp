@@ -6084,7 +6084,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   // it might have dynamically changed from scrollable to not scrollable,
   // and that might need to be propagated.
   PRBool propagatedScrollToViewport = PR_FALSE;
-  if (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::body)) {
+  if (aContent->GetNodeInfo()->Equals(nsHTMLAtoms::body) &&
+      aContent->IsContentOfType(nsIContent::eHTML)) {
     propagatedScrollToViewport =
       PropagateScrollToViewport(aPresContext) == aContent;
   }
