@@ -548,7 +548,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   //  Scroll to Anchor only if the document was *not* loaded through history means. 
   PRUint32 documentLoadType = 0;
   docShell->GetLoadType(&documentLoadType);
-  ScrollToRef(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY == 0);
+  ScrollToRef(!(documentLoadType & nsIDocShell::LOAD_CMD_HISTORY));
 #else
   ScrollToRef(PR_TRUE);
 #endif
