@@ -29,22 +29,24 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsUCVJA2Dll.cpp			\
 	nsEUCJPToUnicode.cpp		\
+	nsISO2022JPToUnicode.cpp	\
 	$(NULL)
 
-CPP_OBJS=				\
-	.\$(OBJDIR)\nsUCVJA2Dll.obj 	\
-	.\$(OBJDIR)\nsEUCJPToUnicode.obj\
+CPP_OBJS=					\
+	.\$(OBJDIR)\nsUCVJA2Dll.obj 		\
+	.\$(OBJDIR)\nsEUCJPToUnicode.obj	\
+	.\$(OBJDIR)\nsISO2022JPToUnicode.obj	\
 	$(NULL)
 
 CSRCS =					\
 	$(NULL)
 
 OBJS = 					\
-        $(NULL)
+    $(NULL)
 
 LINCS=					\
-	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
+	-I$(PUBLIC)\raptor 		\
 	-I$(PUBLIC)\uconv		\
 	$(NULL)
 
@@ -53,14 +55,13 @@ EXPORTS= nsUCVJA2CID.h			\
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
- $(DIST)\lib\raptorbase.lib 		\
  $(LIBNSPR)
 
 MISCDEP = $(LLIBS)
 
 LCFLAGS = 		\
-        $(LCFLAGS) \
-        $(DEFINES) \
+        $(LCFLAGS)	\
+        $(DEFINES)	\
         $(NULL)
 
 include <$(DEPTH)\layout\config\rules.mak>
