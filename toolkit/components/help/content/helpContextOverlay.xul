@@ -63,7 +63,7 @@
       		oncommand="ZoomManager.prototype.getInstance().reduce();"/>
       <menuitem id="zoom-in"
       		label="&textZoomEnlargeBtn.label;"
-      		accesskey="textZoomEnlargeBtn.accesskey;"
+      		accesskey="&textZoomEnlargeBtn.accesskey;"
       		oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     </popup>
   </popupset>
