@@ -6,13 +6,21 @@ rem dialog box
 set XPCOM_DEBUG_BREAK_SAVE=%XPCOM_DEBUG_BREAK%
 set XPCOM_DEBUG_BREAK=warn
 
+set HAS_SUBST=0
+if exist s:\mozilla\layout\tests\block\rtest.bat set HAS_SUBST=1
+if not exist s:\mozilla\layout\tests\block\rtest.bat subst s: %MOZ_SRC%
+
 cd base
 call rtest.bat %1
 
 cd ..\bugs
 call rtest.bat %1
 
-cd ..
+cd ..\..\table
+call rtest.bat %1
+cd ..\block
+
+if %HAS_SUBST%=0 subst s: /D
 
 set XPCOM_DEBUG_BREAK=%XPCOM_DEBUG_BREAK_SAVE%
 
