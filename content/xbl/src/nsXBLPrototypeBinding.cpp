@@ -253,11 +253,25 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+#ifdef DEBUG
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aInfo->DocumentURI()));
+  NS_ASSERTION(url, "Must be a nsIURL!");
+  if (url) {
+    nsCAutoString debugRef;
+    url->GetRef(debugRef);
+    NS_ASSERTION(ref.IsEmpty(), "Document URI must not have a ref");
+  }
+#endif
+  
+  nsCAutoString baseSpec;
+  nsIURI* docURI = aInfo->DocumentURI();
+  docURI->GetSpec(baseSpec);
+  baseSpec.Append(NS_LITERAL_CSTRING("#") + aID);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                          NS_LITERAL_CSTRING("#") + aID,
+                          baseSpec,
                           nsnull,
-                          aInfo->DocumentURI());
+                          docURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBindingURI = do_QueryInterface(uri, &rv);
