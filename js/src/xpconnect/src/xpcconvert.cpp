@@ -749,11 +749,14 @@ XPCConvert::JSValToXPCException(JSContext* cx,
 
             // XXX should be able to extract info from 'regular' JS Exceptions
 
-            jsval prop;
+            uintN ignored;
+            JSBool found;
 
             // heuristic to see if it might be usable as an xpcexception
-            if(JS_GetProperty(cx, obj, "message", &prop) &&
-               JS_GetProperty(cx, obj, "code", &prop))
+            if(JS_GetPropertyAttributes(cx, obj, "message", &ignored, &found) &&
+               found &&
+               JS_GetPropertyAttributes(cx, obj, "code", &ignored, &found) &&
+               found)
             {
                 // lets try to build a wrapper around the JSObject
                 XPCContext* xpcc;
