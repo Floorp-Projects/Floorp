@@ -11,7 +11,7 @@ replaceXPI(ChromeDefaults.zip,no.jar,defaults/profile/%REGION%/bookmarks.html,%C
 replaceXPI(ChromeDefaults.zip,no.jar,defaults/profile/panels.rdf,%SidebarPath%)
 replaceXPI(ChromeDefaults.zip,no.jar,defaults/profile/%REGION%/panels.rdf,%SidebarPath%)
 replaceXPI(ChromeDefaults.zip,chrome/comm.jar,content/communicator/communicatorOverlay.xul,%HlpRDF%)
-modifyDTD(ChromeDefaults.zip,chrome/%lang%-%REGION%.jar,locale/%lang%-%REGION%/navigator/navigator.dtd,mainWindow.titlemodifier,%CompanyName%)
+modifyDTD(ChromeDefaults.zip,chrome/%lang%-%REGION%.jar,locale/%lang%-%REGION%/navigator/navigator-title.dtd,mainWindow.titlemodifier,%CompanyName%)
 modifyProperties(ChromeDefaults.zip,chrome/%REGION%.jar,locale/%REGION%/navigator-region/region.properties,browser.startup.homepage,%HomePageURL%)
 modifyProperties(ChromeDefaults.zip,chrome/%REGION%.jar,locale/%REGION%/navigator-region/region.properties,browser.throbber.url,%AnimatedLogoURL%)
 modifyProperties(ChromeDefaults.zip,chrome/%REGION%.jar,locale/%REGION%/editor-region/region-ns.properties,editor.throbber.url,%AnimatedLogoURL%)
