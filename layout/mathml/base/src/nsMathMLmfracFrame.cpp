@@ -264,8 +264,8 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   nsIFrame* frameDen = nsnull;
   nsIFrame* frameNum = mFrames.FirstChild();
   if (frameNum) 
-    frameNum->GetNextSibling(&frameDen);
-  if (!frameNum || !frameDen || HasNextSibling(frameDen)) {
+    frameDen = frameNum->GetNextSibling();
+  if (!frameNum || !frameDen || frameDen->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);

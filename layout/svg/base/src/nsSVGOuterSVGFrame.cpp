@@ -118,8 +118,6 @@ public:
                                PRInt32         aModType,
                                PRInt32         aHint);
 
-//  NS_IMETHOD SetView(nsIPresContext* aPresContext, nsIView* aView);
-
   NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
@@ -482,16 +480,12 @@ nsSVGOuterSVGFrame::DidReflow(nsIPresContext*   aPresContext,
   nsIFrame* frame = this;
   nsPoint origin(0,0);
   do {
-    nsPoint tmpOrigin;
-    frame->GetOrigin(tmpOrigin);
-    origin += tmpOrigin;
+    origin += frame->GetPosition();
 
-    nsFrameState state;
-    frame->GetFrameState(&state);
-    if(state & NS_FRAME_OUT_OF_FLOW)
+    if(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
       break;
 
-    frame->GetParent(&frame);
+    frame = frame->GetParent();
   } while(frame);
   
   float pxPerTwips = GetPxPerTwips();
@@ -532,20 +526,17 @@ nsSVGOuterSVGFrame::AppendFrames(nsIPresContext* aPresContext,
 
   // get the view manager, so that we can wrap this up in a batch
   // update.
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewManager> vm;
-  mPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = aPresContext->GetViewManager();
 
   vm->BeginUpdateViewBatch();
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged(); //XXX use different function
     }
-    kid->GetNextSibling(&kid);
   }
 
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
@@ -580,20 +571,17 @@ nsSVGOuterSVGFrame::InsertFrames(nsIPresContext* aPresContext,
 
   // get the view manager, so that we can wrap this up in a batch
   // update.
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewManager> vm;
-  mPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = aPresContext->GetViewManager();
 
   vm->BeginUpdateViewBatch();
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged(); //XXX use different function
     }
-    kid->GetNextSibling(&kid);
   }
 
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
@@ -626,20 +614,17 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIPresContext* aPresContext,
 
   // get the view manager, so that we can wrap this up in a batch
   // update.
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewManager> vm;
-  mPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = aPresContext->GetViewManager();
 
   vm->BeginUpdateViewBatch();
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged(); //XXX use different function
     }
-    kid->GetNextSibling(&kid);
   }
 
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
@@ -690,15 +675,6 @@ nsSVGOuterSVGFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 
-//----------------------------------------------------------------------
-//
-// NS_IMETHODIMP
-// nsSVGOuterSVGFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
-// {
-//   mView = aView;
-//   return nsSVGOuterSVGFrameBase::SetView(aPresContext, aView);  
-// }
-
 nsresult
 nsSVGOuterSVGFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      const nsPoint& aPoint,
@@ -719,9 +695,9 @@ nsSVGOuterSVGFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   *aFrame = this;
-  nsIFrame* kid = mFrames.FirstChild();
   nsIFrame* hit = nsnull;
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
@@ -732,7 +708,6 @@ nsSVGOuterSVGFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // have a singly linked list...
       }
     }
-    kid->GetNextSibling(&kid);
   }
     
   return NS_OK;
@@ -777,13 +752,12 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
   Paint(&SVGCtx);
 
   // paint children:
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame)
       SVGFrame->Paint(&SVGCtx);
-    kid->GetNextSibling(&kid);
   }
   
   SVGCtx.Render();
@@ -832,15 +806,10 @@ nsSVGOuterSVGFrame::InvalidateRegion(ArtUta* uta, PRBool bRedraw)
   
   if (!uta && !bRedraw) return NS_OK;
 
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPresContext> presCtx;
-  mPresShell->GetPresContext(getter_AddRefs(presCtx));
-  NS_ENSURE_TRUE(presCtx, NS_ERROR_FAILURE);
-  nsIView* view = GetClosestView(presCtx);
+  nsIView* view = GetClosestView();
   NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIViewManager> vm;
-  view->GetViewManager(*getter_AddRefs(vm));
+  nsIViewManager* vm = view->GetViewManager();
 
   vm->BeginUpdateViewBatch();
   if (uta) {
@@ -884,21 +853,17 @@ nsSVGOuterSVGFrame::NotifyRedrawSuspended()
 
  // get the view manager, so that we can wrap this up in a batch
   // update.
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewManager> vm;
-  mPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = GetPresContext()->GetViewManager();
 
   vm->BeginUpdateViewBatch();
  
-  
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawSuspended();
     }
-    kid->GetNextSibling(&kid);
   }
   return NS_OK;
 }
@@ -915,18 +880,15 @@ nsSVGOuterSVGFrame::NotifyRedrawUnsuspended()
 
   // get the view manager, so that we can wrap this up in a batch
   // update.
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIViewManager> vm;
-  mPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = GetPresContext()->GetViewManager();
   
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawUnsuspended();
     }
-    kid->GetNextSibling(&kid);
   }
 
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);

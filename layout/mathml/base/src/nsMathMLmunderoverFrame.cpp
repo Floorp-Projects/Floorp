@@ -139,7 +139,7 @@ nsMathMLmunderoverFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPres
         aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     }
     index++;
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   return NS_OK;
 
@@ -181,9 +181,9 @@ nsMathMLmunderoverFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
   nsIFrame* underscriptFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)
-    baseFrame->GetNextSibling(&underscriptFrame);
+    underscriptFrame = baseFrame->GetNextSibling();
   if (underscriptFrame)
-    underscriptFrame->GetNextSibling(&overscriptFrame);
+    overscriptFrame = underscriptFrame->GetNextSibling();
   if (!baseFrame || !underscriptFrame || !overscriptFrame)
     return NS_OK; // a visual error indicator will be reported later during layout
 
@@ -319,10 +319,10 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   nsIFrame* underFrame = nsnull;
   nsIFrame* baseFrame = mFrames.FirstChild();
   if (baseFrame)
-    baseFrame->GetNextSibling(&underFrame);
+    underFrame = baseFrame->GetNextSibling();
   if (underFrame)
-    underFrame->GetNextSibling(&overFrame);
-  if (!baseFrame || !underFrame || !overFrame || HasNextSibling(overFrame)) {
+    overFrame = underFrame->GetNextSibling();
+  if (!baseFrame || !underFrame || !overFrame || overFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);

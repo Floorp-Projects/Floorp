@@ -140,8 +140,8 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
   aFrame->FirstChild(aPresContext, nsnull, &baseFrame);
   nsIFrame* subScriptFrame = nsnull;
   if (baseFrame)
-    baseFrame->GetNextSibling(&subScriptFrame);
-  if (!baseFrame || !subScriptFrame || HasNextSibling(subScriptFrame)) {
+    subScriptFrame = baseFrame->GetNextSibling();
+  if (!baseFrame || !subScriptFrame || subScriptFrame->GetNextSibling()) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return NS_STATIC_CAST(nsMathMLContainerFrame*, 

@@ -194,7 +194,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
     if (++count == selection) 
       mSelectedFrame = childFrame;
 
-    childFrame->GetNextSibling(&childFrame);
+    childFrame = childFrame->GetNextSibling();
   }
   // cater for invalid user-supplied selection
   if (selection > count || selection < 1) 
@@ -243,8 +243,7 @@ nsMathMLmactionFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
 {
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
-    nsPoint pt;
-    pt.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+    nsPoint pt(aPoint.x - mRect.x, aPoint.y - mRect.y);
     return childFrame->GetFrameForPoint(aPresContext, pt, aWhichLayer, aFrame);
   }
   return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
@@ -314,8 +313,7 @@ nsMathMLmactionFrame::Reflow(nsIPresContext*          aPresContext,
                                        childFrame, availSize, reason);
     rv = ReflowChild(childFrame, aPresContext, aDesiredSize,
                      childReflowState, aStatus);
-    childFrame->SetRect(aPresContext,
-                        nsRect(aDesiredSize.descent,aDesiredSize.ascent,
+    childFrame->SetRect(nsRect(aDesiredSize.descent,aDesiredSize.ascent,
                         aDesiredSize.width,aDesiredSize.height));
     mBoundingMetrics = aDesiredSize.mBoundingMetrics;
     FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);

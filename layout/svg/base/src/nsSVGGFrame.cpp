@@ -206,14 +206,13 @@ nsSVGGFrame::AppendFrames(nsIPresContext* aPresContext,
   // Insert the new frames
   mFrames.AppendFrames(this, aFrameList);
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged(); //XXX use different function
     }
-    kid->GetNextSibling(&kid);
   }
 
   return rv;
@@ -234,14 +233,13 @@ nsSVGGFrame::InsertFrames(nsIPresContext* aPresContext,
 #endif
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged(); //XXX use different function
     }
-    kid->GetNextSibling(&kid);
   }
   
   return rv;
@@ -287,13 +285,12 @@ NS_IMETHODIMP
 nsSVGGFrame::DidModifySVGObservable (nsISVGValue* observable)
 {
   
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame)
       SVGFrame->NotifyCTMChanged();
-    kid->GetNextSibling(&kid);
   }  
   return NS_OK;
 }
@@ -305,13 +302,12 @@ nsSVGGFrame::DidModifySVGObservable (nsISVGValue* observable)
 NS_IMETHODIMP
 nsSVGGFrame::Paint(nsSVGRenderingContext* renderingContext)
 {
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame)
       SVGFrame->Paint(renderingContext);
-    kid->GetNextSibling(&kid);
   }
 
   return NS_OK;
@@ -342,8 +338,8 @@ NS_IMETHODIMP
 nsSVGGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
@@ -355,7 +351,6 @@ nsSVGGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
         // have a singly linked list...
       }
     }
-    kid->GetNextSibling(&kid);
   }
   
   return *hit ? NS_OK : NS_ERROR_FAILURE;
@@ -364,14 +359,13 @@ nsSVGGFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
 NS_IMETHODIMP
 nsSVGGFrame::NotifyCTMChanged()
 {
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCTMChanged();
     }
-    kid->GetNextSibling(&kid);
   }
   return NS_OK;
 }
@@ -379,14 +373,13 @@ nsSVGGFrame::NotifyCTMChanged()
 NS_IMETHODIMP
 nsSVGGFrame::NotifyRedrawSuspended()
 {
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawSuspended();
     }
-    kid->GetNextSibling(&kid);
   }
   return NS_OK;
 }
@@ -394,14 +387,13 @@ nsSVGGFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGGFrame::NotifyRedrawUnsuspended()
 {
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
+  for (nsIFrame* kid = mFrames.FirstChild(); kid;
+       kid = kid->GetNextSibling()) {
     nsISVGFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyRedrawUnsuspended();
     }
-    kid->GetNextSibling(&kid);
   }
   return NS_OK;
 }
