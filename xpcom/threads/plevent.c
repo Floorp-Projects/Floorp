@@ -924,7 +924,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
     SendMessage(self->eventReceiverWindow, WM_CLOSE, 0, 0);
 
 #elif defined(XP_OS2)
-    WinDestroyWindow(self->eventReceiverWindow);
+    // See above Windows comment
+    WinSendMsg(self->eventReceiverWindow, WM_CLOSE, 0, 0);
 #elif defined(MAC_USE_CARBON_EVENT)
     EventComparatorUPP comparator = NewEventComparatorUPP(_md_CarbonEventComparator);
     PR_ASSERT(comparator != NULL);
