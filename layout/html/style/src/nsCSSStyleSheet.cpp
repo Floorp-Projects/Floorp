@@ -25,12 +25,22 @@
 #include "nsIHTMLContent.h"
 #include "nsIFrame.h"
 #include "nsString.h"
+#include "nsIPtr.h"
+
+//#define DEBUG_REFS
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
+NS_DEF_PTR(nsIHTMLContent);
+NS_DEF_PTR(nsIContent);
+NS_DEF_PTR(nsIStyleRule);
+NS_DEF_PTR(nsICSSStyleRule);
+NS_DEF_PTR(nsIURL);
+NS_DEF_PTR(nsISupportsArray);
+NS_DEF_PTR(nsICSSStyleSheet);
 
 class CSSStyleSheetImpl : public nsICSSStyleSheet {
 public:
@@ -77,10 +87,10 @@ protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
 
-  nsIURL*             mURL;
-  CSSStyleSheetImpl*  mFirstChild;
-  nsISupportsArray*   mRules;
-  CSSStyleSheetImpl*  mNext;
+  nsIURLPtr             mURL;
+  nsICSSStyleSheetPtr   mFirstChild;
+  nsISupportsArrayPtr   mRules;
+  nsICSSStyleSheetPtr   mNext;
 };
 
 
@@ -118,22 +128,28 @@ void CSSStyleSheetImpl::operator delete(void* ptr)
   }
 }
 
-
+#ifdef DEBUG_REFS
+static PRInt32 gInstanceCount;
+#endif
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
   : nsICSSStyleSheet(),
-    mURL(aURL), mFirstChild(nsnull), mRules(nsnull), mNext(nsnull)
+    mURL(nsnull), mFirstChild(nsnull), mRules(nsnull), mNext(nsnull)
 {
   NS_INIT_REFCNT();
-  NS_ADDREF(mURL);
+  mURL.SetAddRef(aURL);
+#ifdef DEBUG_REFS
+  ++gInstanceCount;
+  fprintf(stdout, "%d + CSSStyleSheet size: %d\n", gInstanceCount, sizeof(*this));
+#endif
 }
 
 CSSStyleSheetImpl::~CSSStyleSheetImpl()
 {
-  NS_RELEASE(mURL);
-  NS_IF_RELEASE(mFirstChild);
-  NS_IF_RELEASE(mRules);
-  NS_IF_RELEASE(mNext);
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
+#endif
 }
 
 NS_IMPL_ADDREF(CSSStyleSheetImpl)
@@ -171,14 +187,13 @@ PRBool CSSStyleSheetImpl::SelectorMatches(nsCSSSelector* aSelector, nsIContent* 
 
   if ((nsnull == aSelector->mTag) || (aSelector->mTag == aContent->GetTag())) {
     if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mTag)) {
-      nsIHTMLContent* htmlContent;
-      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+      nsIHTMLContentPtr htmlContent;
+      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, htmlContent.Query())) {
         if ((nsnull == aSelector->mClass) || (aSelector->mClass == htmlContent->GetClass())) {
           if ((nsnull == aSelector->mID) || (aSelector->mID == htmlContent->GetID())) {
             result = PR_TRUE;
           }
         }
-        NS_RELEASE(htmlContent);
       }
     }
     else {
@@ -199,49 +214,44 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aResults, "null arg");
 
   PRInt32 matchCount = 0;
-  CSSStyleSheetImpl*  child = mFirstChild;
+  nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
     matchCount += child->RulesMatching(aPresContext, aContent, aParentFrame, aResults);
-    child = child->mNext;
+    child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
   PRInt32 count = ((nsnull != mRules) ? mRules->Count() : 0);
 
   for (PRInt32 index = 0; index < count; index++) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
 
     nsCSSSelector* selector = rule->FirstSelector();
     if (SelectorMatches(selector, aContent)) {
       selector = selector->mNext;
       nsIFrame* frame = aParentFrame;
       while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-        nsIContent* content;
-         
-        frame->GetContent(content);
+        nsIContentPtr content;
+        frame->GetContent(content.AssignRef());
         if (SelectorMatches(selector, content)) {
           selector = selector->mNext;
         }
         frame->GetGeometricParent(frame);
-        NS_RELEASE(content);
       }
       if (nsnull == selector) { // ran out, it matched
-        nsIStyleRule* iRule;
-        if (NS_OK == rule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+        nsIStyleRulePtr iRule;
+        if (NS_OK == rule->QueryInterface(kIStyleRuleIID, iRule.Query())) {
           aResults->AppendElement(iRule);
-          NS_RELEASE(iRule);
           matchCount++;
         }
       }
     }
-    NS_RELEASE(rule);
   }
   return matchCount;
 }
 
 nsIURL* CSSStyleSheetImpl::GetURL(void)
 {
-  NS_ADDREF(mURL);
-  return mURL;
+  return mURL.AddRef();
 }
 
 PRBool CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL)
@@ -250,10 +260,10 @@ PRBool CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL)
 
   PRBool result = (*mURL == *aURL);
 
-  CSSStyleSheetImpl*  child = mFirstChild;
+  nsICSSStyleSheet*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
     result = child->ContainsStyleSheet(aURL);
-    child = child->mNext;
+    child = ((CSSStyleSheetImpl*)child)->mNext;
   }
   return result;
 }
@@ -263,16 +273,15 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
   if (nsnull == mFirstChild) {
-    mFirstChild = (CSSStyleSheetImpl*)aSheet;
+    mFirstChild.SetAddRef(aSheet);
   }
   else {
-    CSSStyleSheetImpl* child = mFirstChild;
-    while (nsnull != child->mNext) {
-      child = child->mNext;
+    nsICSSStyleSheet* child = mFirstChild;
+    while (nsnull != ((CSSStyleSheetImpl*)child)->mNext) {
+      child = ((CSSStyleSheetImpl*)child)->mNext;
     }
-    child->mNext = (CSSStyleSheetImpl*)aSheet;
+    ((CSSStyleSheetImpl*)child)->mNext.SetAddRef(aSheet);
   }
-  NS_ADDREF(aSheet);
 }
 
 void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
@@ -281,17 +290,15 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
   if (nsnull == mRules) {
-    if (NS_OK != NS_NewISupportsArray(&mRules))
+    if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
       return;
   }
   PRInt32 index = mRules->Count();
   while (0 <= --index) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     if (rule->GetWeight() > weight) { // insert before rules with equal or lesser weight
-      NS_RELEASE(rule);
       break;
     }
-    NS_RELEASE(rule);
   }
   mRules->InsertElementAt(aRule, index + 1);
 }
@@ -303,18 +310,16 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
   if (nsnull == mRules) {
-    if (NS_OK != NS_NewISupportsArray(&mRules))
+    if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
       return;
   }
   PRInt32 count = mRules->Count();
   PRInt32 index = -1;
   while (++index < count) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     if (rule->GetWeight() < weight) { // insert after rules with equal or greater weight (before lower weight)
-      NS_RELEASE(rule);
       break;
     }
-    NS_RELEASE(rule);
   }
   mRules->InsertElementAt(aRule, index);
 }
@@ -332,18 +337,17 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs(buffer, out);
   fputs("\n", out);
 
-  CSSStyleSheetImpl*  child = mFirstChild;
+  const nsICSSStyleSheet*  child = mFirstChild;
   while (nsnull != child) {
     child->List(out, aIndent + 1);
-    child = child->mNext;
+    child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
   PRInt32 count = ((nsnull != mRules) ? mRules->Count() : 0);
 
   for (index = 0; index < count; index++) {
-    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     rule->List(out, aIndent);
-    NS_RELEASE(rule);
   }
 }
 
