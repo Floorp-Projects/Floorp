@@ -759,7 +759,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS2(nsDownload, nsIWebProgressListener, nsIDownload)
+NS_IMPL_ISUPPORTS2(nsDownload, nsIDownload, nsIWebProgressListener)
 
 nsDownload::nsDownload():mStartTime(0),
                          mPercentComplete(0),
@@ -767,7 +767,7 @@ nsDownload::nsDownload():mStartTime(0),
                          mMaxBytes(0),
                          mDownloadState(NOTSTARTED),
                          mLastUpdate(-500),
-                         mOpeningWith(NS_LITERAL_STRING(""))
+                         mOpeningWith(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
