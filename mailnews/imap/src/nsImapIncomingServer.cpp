@@ -643,7 +643,16 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
     if (connection)
-      rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
+    {
+      if (ConnectionTimeOut(connection))
+      {
+        connection = null_nsCOMPtr();
+        i--; cnt--; // if the connection times out, we'll remove it from the array,
+            // so we need to adjust the array index.
+      }
+      else
+        rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
+    }
     if (NS_FAILED(rv)) 
     {
         connection = null_nsCOMPtr();
