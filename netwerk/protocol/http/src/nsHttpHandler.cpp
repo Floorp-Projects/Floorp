@@ -1897,7 +1897,7 @@ nsHttpHandler::SetProductSub(const nsACString &value)
 NS_IMETHODIMP
 nsHttpHandler::GetProductComment(nsACString &value)
 {
-    mProductComment = value;
+    value = mProductComment;
     return NS_OK;
 }
 NS_IMETHODIMP
@@ -1911,7 +1911,7 @@ nsHttpHandler::SetProductComment(const nsACString &value)
 NS_IMETHODIMP
 nsHttpHandler::GetPlatform(nsACString &value)
 {
-    mPlatform = value;
+    value = mPlatform;
     return NS_OK;
 }
 
