@@ -2802,7 +2802,7 @@ EOF
     DLL_SUFFIX="exe"
     if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
 		CROSS_COMPILE=1
-	NSPR_LIBS="-lnspr3 -lplc3 -lplds3"
+	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
     fi
     ;;
 
@@ -6397,14 +6397,14 @@ else
 MISSING_NSPR="$MISSING_NSPR -lplc$NSPR_VERSION"
 fi
 
-echo $ac_n "checking for PL_GetEvent in -lplds3""... $ac_c" 1>&6
-echo "configure:6402: checking for PL_GetEvent in -lplds3" >&5
-ac_lib_var=`echo plds3'_'PL_GetEvent | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for PL_GetEvent in -lplds$NSPR_VERSION""... $ac_c" 1>&6
+echo "configure:6402: checking for PL_GetEvent in -lplds$NSPR_VERSION" >&5
+ac_lib_var=`echo plds$NSPR_VERSION'_'PL_GetEvent | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lplds3 $NSPR_LIBS $LIBS"
+LIBS="-lplds$NSPR_VERSION $NSPR_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 6410 "configure"
 #include "confdefs.h"
