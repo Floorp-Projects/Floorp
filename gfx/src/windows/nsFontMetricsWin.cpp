@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
+#include "nsTextFormater.h"
 #include "prmem.h"
 #include "plhash.h"
 
@@ -1499,15 +1500,19 @@ nsFontWin*
 nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
 {
   if (*aName) {
-    // XXX UTF-8 conversion?
-    nsString* fontName = new nsString(*aName);
+    PRUnichar name[LF_FACESIZE] = { 0 };
+    PRUnichar format[] = { '%', 's', 0 };
+    PRUint32 n = nsTextFormater::snprintf(name, LF_FACESIZE, format, *aName);
     nsAllocator::Free(*aName);
     *aName = nsnull;
-    if (fontName) {
-      nsFontWin* font = LoadFont(aDC, fontName);
-      delete fontName;
-      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
-        return font;
+    if (n && (n != (PRUint32) -1)) {
+      nsString* fontName = new nsAutoString(name);
+      if (fontName) {
+        nsFontWin* font = LoadFont(aDC, fontName);
+        delete fontName;
+        if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+          return font;
+        }
       }
     }
   }
