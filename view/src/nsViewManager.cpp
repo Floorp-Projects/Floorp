@@ -18,7 +18,6 @@
 
 #include "nsViewManager.h"
 #include "nsUnitConversion.h"
-#include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
