@@ -260,7 +260,8 @@ CSSLoaderImpl::DropDocumentReference(void)
   // Flush out pending datas just so we don't leak by accident.  These
   // loads should short-circuit through the mDocument check in
   // LoadSheet and just end up in SheetComplete immediately
-  mPendingDatas.Enumerate(StartAlternateLoads, this);
+  if (mPendingDatas.IsInitialized())
+    mPendingDatas.Enumerate(StartAlternateLoads, this);
   return NS_OK;
 }
 
