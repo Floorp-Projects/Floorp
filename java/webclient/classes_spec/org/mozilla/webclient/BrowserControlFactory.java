@@ -44,7 +44,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.5 2001/07/27 20:57:51 ashuk%eng.sun.com Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.6 2001/09/10 22:02:05 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -214,35 +214,19 @@ private static String determinePlatformCanvasClassName()
     // none loads, then I return a error message.
     // If you think up of a better way, let me know.
     // -- Mark
+    // Here is what I think is a better way: query the os.name property.
+    // This works in JDK1.4, as well.
+    // -- edburns
+
+    String osName = System.getProperty("os.name");
     
-    
-    Class win32DrawingSurfaceInfoClass;
-    
-    try {
-        win32DrawingSurfaceInfoClass = 
-            Class.forName("sun.awt.windows.WDrawingSurfaceInfo");
-    }
-    catch (Exception e) {
-        win32DrawingSurfaceInfoClass = null;
-    }
-    
-    if (win32DrawingSurfaceInfoClass != null) {
-        result = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
-    }
-    
-    if (null == result) {
-        Class motifDrawingSurfaceInfoClass; 
-        try {
-            motifDrawingSurfaceInfoClass = 
-                Class.forName("sun.awt.motif.MDrawingSurfaceInfo");
-        }
-        catch (Exception e) {
-            motifDrawingSurfaceInfoClass = null;
-        }
-        
-        if (motifDrawingSurfaceInfoClass != null) {
-            result = "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas";
-        }
+    if (null != osName) {
+       if (-1 != osName.indexOf("indows")) {
+           result = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
+       }
+       else {
+           result = "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas";
+       }
     }
     
     return result;
@@ -260,7 +244,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.5 2001/07/27 20:57:51 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.6 2001/09/10 22:02:05 edburns%acm.org Exp $");
 
     BrowserControlCanvas canvas = null;
     BrowserControl control = null;
