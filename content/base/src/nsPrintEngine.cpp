@@ -3166,6 +3166,44 @@ nsPrintEngine::PrintDocContent(nsPrintObject* aPO, nsresult& aStatus)
 }
 
 //-------------------------------------------------------
+// helper function - To calculate the correct position of
+// an iframe
+//
+// ASSUMPTION: x,y must be initialized before calling!
+//
+static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
+{
+  if (aPO->mParent != nsnull) {
+    nsCOMPtr<nsIFrameManager> frameMan;
+    // we would not have gotten here if any of these ptrs were null
+    aPO->mParent->mPresShell->GetFrameManager(getter_AddRefs(frameMan));
+    NS_ASSERTION(frameMan, "No Frame manager!");
+    if (frameMan) {
+      // This gets out HTMLIFrame
+      nsIFrame* frame;
+      frameMan->GetPrimaryFrameFor(aPO->mContent, &frame);
+      if (frame) {
+        // This gets the "inner" frame, 
+        // and then traverse out ot the pageContentFrame
+        frame->FirstChild(aPO->mParent->mPresContext, nsnull, &frame);
+        while (frame) {
+          nsRect r;
+          frame->GetRect(r);
+          aX += r.x;
+          aY += r.y;
+          nsCOMPtr<nsIAtom> frameType;
+          frame->GetFrameType(getter_AddRefs(frameType));
+          if (nsLayoutAtoms::pageContentFrame == frameType.get()) {
+            break;
+          }
+          frame->GetParent(&frame);
+        }
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------
 nsresult
 nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDonePrinting)
 {
@@ -3209,6 +3247,11 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
     PRBool doOffsetting           = PR_FALSE;
     PRBool doAddInParentsOffset   = PR_TRUE;
     PRBool skipSetTitle           = PR_FALSE;
+
+    // NOTE:
+    // When printing "Each Frame Separately" or "Selected Frame (of a frameset)"
+    // "doAddInParentsOffset" gets turned off for an iframe,
+    // which means it won't add in its parent's x,y
 
     if (aPO->mFrameType == eFrame) {
       switch (mPrt->mPrintFrameType) {
@@ -3283,17 +3326,26 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
       if (doOffsetting) {
         nscoord x = 0;
         nscoord y = 0;
-        nsPrintObject * po = aPO;
-        while (po != nsnull) {
-          //if (mPrt->mPrintFrameType != nsIPrintSettings::kSelectedFrame || po != aPO->mParent) {
-          PRBool isParent = po == aPO->mParent;
-          if (!isParent || (isParent && doAddInParentsOffset)) {
+        // For IFrames, we locate the "inner" frame in the Parent document
+        // then start calculating the location as we walk our way out to the 
+        // the pageContentFrame
+        if (aPO->mFrameType == eIFrame) {
+          GetIFramePosition(aPO, x, y);
+          if (doAddInParentsOffset) {
+            x += aPO->mParent->mRect.x;
+            y += aPO->mParent->mRect.y;
+          }
+        } else {
+          nsPrintObject * po = aPO;
+          while (po != nsnull) {
             x += po->mRect.x;
             y += po->mRect.y;
+            po = po->mParent;
           }
-          po = po->mParent;
         }
         pageSequence->SetOffset(x, y);
+        aPO->mRect.x = x;
+        aPO->mRect.y = y;
       }
     }
 
