@@ -66,40 +66,40 @@ public class ScriptRuntime {
      * that they won't cause problems by being loaded early.
      */
 
-    public final static Class 
-		BooleanClass      = classOrNull("java.lang.Boolean"),
-		ByteClass         = classOrNull("java.lang.Byte"),
-		CharacterClass    = classOrNull("java.lang.Character"),
-		ClassClass        = classOrNull("java.lang.Class"),
-		DoubleClass       = classOrNull("java.lang.Double"),
-		FloatClass        = classOrNull("java.lang.Float"),
-		IntegerClass      = classOrNull("java.lang.Integer"),
-		LongClass         = classOrNull("java.lang.Long"),
-		NumberClass       = classOrNull("java.lang.Number"),
-		ObjectClass       = classOrNull("java.lang.Object"),
-		ShortClass        = classOrNull("java.lang.Short"),
-		StringClass       = classOrNull("java.lang.String"),
+    public final static Class
+        BooleanClass      = classOrNull("java.lang.Boolean"),
+        ByteClass         = classOrNull("java.lang.Byte"),
+        CharacterClass    = classOrNull("java.lang.Character"),
+        ClassClass        = classOrNull("java.lang.Class"),
+        DoubleClass       = classOrNull("java.lang.Double"),
+        FloatClass        = classOrNull("java.lang.Float"),
+        IntegerClass      = classOrNull("java.lang.Integer"),
+        LongClass         = classOrNull("java.lang.Long"),
+        NumberClass       = classOrNull("java.lang.Number"),
+        ObjectClass       = classOrNull("java.lang.Object"),
+        ShortClass        = classOrNull("java.lang.Short"),
+        StringClass       = classOrNull("java.lang.String"),
 
-		SerializableClass = classOrNull("java.io.Serializable"),
+        SerializableClass = classOrNull("java.io.Serializable"),
 
-		DateClass         = classOrNull("java.util.Date");
+        DateClass         = classOrNull("java.util.Date");
 
     // It will be null under JDK 1.1 as Comparable is only since JDK 1.2
     public final static Class
         ComparableClass = classOrNull("java.lang.Comparable");
 
-	public final static Class 
-		ContextClass      = classOrNull("org.mozilla.javascript.Context"),
-		FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
-		NativeGlobalClass = classOrNull("org.mozilla.javascript.NativeGlobal"),
-		NativeScriptClass = classOrNull("org.mozilla.javascript.NativeScript"),
-		NativeWithClass   = classOrNull("org.mozilla.javascript.NativeWith"),
-		ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
-		ScriptableObjectClass = classOrNull(
-			                       "org.mozilla.javascript.ScriptableObject"),
-		UndefinedClass    = classOrNull("org.mozilla.javascript.Undefined");
-    
-	/**
+    public final static Class
+        ContextClass      = classOrNull("org.mozilla.javascript.Context"),
+        FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
+        NativeGlobalClass = classOrNull("org.mozilla.javascript.NativeGlobal"),
+        NativeScriptClass = classOrNull("org.mozilla.javascript.NativeScript"),
+        NativeWithClass   = classOrNull("org.mozilla.javascript.NativeWith"),
+        ScriptableClass   = classOrNull("org.mozilla.javascript.Scriptable"),
+        ScriptableObjectClass = classOrNull(
+                                   "org.mozilla.javascript.ScriptableObject"),
+        UndefinedClass    = classOrNull("org.mozilla.javascript.Undefined");
+
+    /**
      * Convert the value to a boolean.
      *
      * See ECMA 9.2.
@@ -1776,7 +1776,7 @@ public class ScriptRuntime {
     // ------------------
 
     private static ScriptableObject getGlobal(Context cx) {
-    	final String GLOBAL_CLASS = "org.mozilla.javascript.tools.shell.Global";
+        final String GLOBAL_CLASS = "org.mozilla.javascript.tools.shell.Global";
         Class globalClass = classOrNull(GLOBAL_CLASS);
         if (globalClass != null) {
             try {
