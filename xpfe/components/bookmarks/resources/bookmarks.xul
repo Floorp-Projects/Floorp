@@ -104,13 +104,13 @@
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
          loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
-           <treecell><html:hr width="100%" align="center" size="1" /></treecell>
+           <treecell><treeindentation/><separator class="groove" flex="1" align="center"/></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
+           <treecell><separator flex="1" align="center" class="groove" /></treecell>
          </treerow>
        </treeitem>  		
       </treechildren>
@@ -123,9 +123,12 @@
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
          loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell indent="true"
+           <treecell class="treecell-bookmark treecell-indent"
              value="rdf:http://home.netscape.com/NC-rdf#Name"
-             src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+             src="rdf:http://home.netscape.com/NC-rdf#Icon"
+             web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+             rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+             loading="rdf:http://home.netscape.com/NC-rdf#loading" />
            <treecell 
              value="rdf:http://home.netscape.com/NC-rdf#URL"/>
            <treecell
@@ -177,14 +180,14 @@
 
   <treehead>
     <treerow id="headRow">
-      <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
-      <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
-      <treecell value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
-      <treecell value="&tree.header.lastvisit.label;" onclick="return doSort('LastVisitColumn');" observes="LastVisitColumn" />
-      <treecell value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
-      <treecell value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
-      <treecell allowevents="true" id="popupCell">
+      <treecell class="treecell-header" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
+      <treecell class="treecell-header" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
+      <treecell class="treecell-header" value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
+      <treecell class="treecell-header" value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
+      <treecell class="treecell-header" value="&tree.header.lastvisit.label;" onclick="return doSort('astVisitColumn');" observes="LastVisitColumn" />
+      <treecell class="treecell-header" value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
+      <treecell class="treecell-header" value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+      <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
           <titledbutton src="chrome://global/skin/opentwisty.gif"/>
           <menupopup popupanchor="bottomright" 
@@ -210,7 +213,7 @@ necessary for win32 or gtk, but we can use this area for information
 (maybe full URL of selected item or the like) in the future.
 -->
 <box id="status-bar" style="min-height:16px; max-height:16px;">
-  <titledbutton class="status-bar" align="left" value=""/>
+  <button class="status-bar" align="left" value=""/>
 </box>
 
 </window>

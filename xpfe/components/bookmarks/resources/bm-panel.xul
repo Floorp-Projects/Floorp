@@ -37,8 +37,6 @@
   <html:script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
   <html:script src="chrome://global/content/strres.js"/>
 
-  <html:div style="width:100px;height:100px" flex="1">
-
 <popupset>
 <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
 	<menu />
@@ -46,7 +44,7 @@
 </popupset>
 
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
-      style="height: 100%; width:100%;"
+      flex="1"
       multiple="true"
       ondragover="return DragOverTree(event);"
       ondraggesture="return BeginDragTree(event);"
@@ -60,7 +58,7 @@
             <treeitem uri="...">
               <treerow>
                 <treecell>
-                  <html:hr width="75%" align="center" size="1" />
+                  <treeindentation/><separator width="75%" align="center" class="groove" />
                 </treecell>
               </treerow>
             </treeitem>  		
@@ -69,9 +67,17 @@
 
         <rule>
           <treechildren>
-            <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+            <treeitem uri="..." persist="open"
+              web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+              loading="rdf:http://home.netscape.com/NC-rdf#loading">
               <treerow>
-                <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+                <treecell class="treecell-bookmark treecell-indent"
+                  value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+                  rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                  loading="rdf:http://home.netscape.com/NC-rdf#loading" />
               </treerow>
             </treeitem>
           </treechildren>
@@ -80,6 +86,5 @@
 
       <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
     </tree>
-  </html:div>
 </window>
 
