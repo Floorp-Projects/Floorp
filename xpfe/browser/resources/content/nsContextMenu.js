@@ -455,9 +455,11 @@ nsContextMenu.prototype = {
         // Get clipboard.
         var clipboard = this.getService( "component://netscape/widget/clipboard",
                                          "nsIClipboard" );
+
         // Create tranferable that will transfer the text.
         var transferable = this.createInstance( "component://netscape/widget/transferable",
                                                 "nsITransferable" );
+
         if ( clipboard && transferable ) {
           transferable.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
@@ -470,6 +472,27 @@ nsContextMenu.prototype = {
             clipboard.setData( transferable, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
           }
         }
+
+        // Create a second transferable to copy selection.  Unix needs this,
+        // other OS's will probably map to a no-op.
+        var transferableForSelection = this.createInstance( "component://netscape/widget/transferable",
+                                                         "nsITransferable" );
+        
+        if ( clipboard && transferableForSelection ) {
+          transferableForSelection.addDataFlavor( "text/unicode" );
+          // Create wrapper for text.
+          var data = this.createInstance( "component://netscape/supports-wstring",
+                                          "nsISupportsWString" );
+          if ( data ) {
+            data.data = text ;
+            transferableForSelection.setTransferData( "text/unicode", data, text.length * 2 );
+            // Put on clipboard.
+            clipboard.setData( transferableForSelection, null, 
+                               Components.interfaces.nsIClipboard.kSelectionClipboard );
+          }
+        }
+
+
     },
     // Save specified URL in user-selected file.
     savePage : function ( url ) {
