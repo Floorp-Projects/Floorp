@@ -164,7 +164,7 @@ PRIVATE void uFillInfoFormate0(const uTable *uT,const uMapCell *cell,PRUint32* i
    PRUint16 begin, end, i;
    begin = cell->fmt.format0.srcBegin;
    end = cell->fmt.format0.srcEnd;
-   if( (begin >> 5) == (end >> 5)) // High 17 bits are the same 
+   if( (begin >> 5) == (end >> 5)) /* High 17 bits are the same */
    {
       for(i = begin; i <= end; i++)
         SET_REPRESENTABLE(info, i);
