@@ -246,6 +246,13 @@ esmtp_value_encode(char *addr)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ADDREF_INHERITED(nsSmtpProtocol, nsMsgProtocol)
+NS_IMPL_RELEASE_INHERITED(nsSmtpProtocol, nsMsgProtocol)
+
+NS_INTERFACE_MAP_BEGIN(nsSmtpProtocol)
+    NS_INTERFACE_MAP_ENTRY(nsIMsgLogonRedirectionRequester)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
+
 nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
     : nsMsgProtocol(aURL, aURL)
 {
@@ -270,20 +277,17 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
 	m_urlErrorState = NS_ERROR_FAILURE;
 
-    if (!SMTPLogModule)
-        SMTPLogModule = PR_NewLogModule("SMTP");
+  if (!SMTPLogModule)
+     SMTPLogModule = PR_NewLogModule("SMTP");
 
 	if (aURL) 
-		m_runningURL = do_QueryInterface(aURL);
+    m_runningURL = do_QueryInterface(aURL);
 
     // extract out message feedback if there is any.
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
 	if (mailnewsUrl)
 		mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
 
-	// call base class to set up the url 
-	rv = OpenNetworkSocket(aURL);
-	
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
@@ -292,26 +296,29 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
 	m_continuationResponse = -1; 
-
-    // ** may want to consider caching the server capability to save lots of
-    // round trip communication between the client and server
-    nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL);
-    nsCOMPtr<nsISmtpServer> smtpServer;
-    smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
-    if (smtpServer)
-        smtpServer->GetAuthMethod(&m_prefAuthMethod);
-    else
-        m_prefAuthMethod = PREF_AUTH_NONE;
-    m_tlsEnabled = PR_FALSE;
-
+  m_tlsEnabled = PR_FALSE;
 	m_addressCopy = nsnull;
 	m_addresses = nsnull;
 	m_addressesLeft = nsnull;
 	m_verifyAddress = nsnull;	
 	m_totalAmountWritten = 0;
 	m_totalMessageSize = 0;
-
 	m_originalContentLength = 0;
+
+  // ** may want to consider caching the server capability to save lots of
+  // round trip communication between the client and server
+  nsCOMPtr<nsISmtpServer> smtpServer;
+  m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+  if (smtpServer)
+      smtpServer->GetAuthMethod(&m_prefAuthMethod);
+  else
+      m_prefAuthMethod = PREF_AUTH_NONE;
+    
+  rv = RequestOverrideInfo(smtpServer);
+  // if we aren't waiting for a login override, then go ahead an
+  // open the network connection like we normally would have.
+  if (NS_FAILED(rv) || !TestFlag(SMTP_WAIT_FOR_REDIRECTION))  
+	  rv = OpenNetworkSocket(aURL);
 }
 
 const char * nsSmtpProtocol::GetUserDomainName()
@@ -439,23 +446,23 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 	char cont_char;
 	PRInt32 status = 0;
 
-    status = ReadLine(inputStream, length, &line);
+  status = ReadLine(inputStream, length, &line);
 
-    if(status == 0)
-    {
-        m_nextState = SMTP_ERROR_DONE;
-        ClearFlag(SMTP_PAUSE_FOR_READ);
+  if(status == 0)
+  {
+    m_nextState = SMTP_ERROR_DONE;
+    ClearFlag(SMTP_PAUSE_FOR_READ);
 
-	nsresult rv = nsExplainErrorDetails(NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+	  nsresult rv = nsExplainErrorDetails(NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
-        m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-        return(NS_ERROR_SMTP_SERVER_ERROR);
-    }
+    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
+    return(NS_ERROR_SMTP_SERVER_ERROR);
+  }
 
     /* if TCP error of if there is not a full line yet return
      */
-    if(status < 0)
+  if(status < 0)
 	{
 	nsresult rv = nsExplainErrorDetails(NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
 	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
@@ -469,49 +476,49 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 		return status;
 	}
 
-    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
+  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
 	cont_char = ' '; /* default */
-    sscanf(line, "%d%c", &m_responseCode, &cont_char);
+  sscanf(line, "%d%c", &m_responseCode, &cont_char);
 
 	if(m_continuationResponse == -1)
-    {
+  {
 		if (cont_char == '-')  /* begin continuation */
 			m_continuationResponse = m_responseCode;
 
 		if(PL_strlen(line) > 3)
 			m_responseText = line+4;
-    }
-    else
-    {    /* have to continue */
+  }
+  else
+  {    /* have to continue */
 		if (m_continuationResponse == m_responseCode && cont_char == ' ')
 			m_continuationResponse = -1;    /* ended */
 
 		m_responseText += "\n";
-        if(PL_strlen(line) > 3)
+    if(PL_strlen(line) > 3)
 			m_responseText += line+4;
-    }
+  }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
 	{
 		m_nextState = m_nextStateAfterResponse;
 		ClearFlag(SMTP_PAUSE_FOR_READ); /* don't pause */
 	}
-    else
-    {
-        inputStream->Available(&length); // refresh the length as it has changed...
-        if (!length)
-            SetFlag(SMTP_PAUSE_FOR_READ);
-    }
+  else
+  {
+    inputStream->Available(&length); // refresh the length as it has changed...
+    if (!length)
+       SetFlag(SMTP_PAUSE_FOR_READ);
+  }
 
-    return(0);  /* everything ok */
+  return(0);  /* everything ok */
 }
 
 PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-    PRInt32 status = 0;
+  PRInt32 status = 0;
 	nsCAutoString buffer ("HELO ");
 
-    if(m_responseCode != 220)
+  if(m_responseCode != 220)
 	{
 		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
 		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
@@ -521,22 +528,22 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 	buffer += CRLF;
 	
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer);
+  status = SendData(url, buffer);
 
-    m_nextState = SMTP_RESPONSE;
-    m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
-    SetFlag(SMTP_PAUSE_FOR_READ);
+  m_nextState = SMTP_RESPONSE;
+  m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
+  SetFlag(SMTP_PAUSE_FOR_READ);
 
-    return(status);
+  return(status);
 }
     
 
 PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRUint32 length) 
 {
-    PRInt32 status = 0;
+  PRInt32 status = 0;
 	nsCAutoString buffer("EHLO ");
 
-    if(m_responseCode != 220)
+  if(m_responseCode != 220)
 	{
 		m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
 		return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
@@ -546,13 +553,13 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 	buffer += CRLF;
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-    status = SendData(url, buffer);
+  status = SendData(url, buffer);
 
-    m_nextState = SMTP_RESPONSE;
-    m_nextStateAfterResponse = SMTP_SEND_EHLO_RESPONSE;
-    SetFlag(SMTP_PAUSE_FOR_READ);
+  m_nextState = SMTP_RESPONSE;
+  m_nextStateAfterResponse = SMTP_SEND_EHLO_RESPONSE;
+  SetFlag(SMTP_PAUSE_FOR_READ);
 
-    return(status);
+  return(status);
 }
     
 
@@ -571,9 +578,10 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
 		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
 	}
-	else {
+	else 
+  {
 		senderIdentity->GetEmail(getter_Copies(emailAddress));
-        }
+  }
 
 	/* don't check for a HELO response because it can be bogus and
 	 * we don't care
@@ -769,11 +777,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 length)
 {
   PRInt32 status = 0;
-  nsresult rv;
   nsCOMPtr<nsISmtpServer> smtpServer;
-  nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL, &rv);
-  if (NS_SUCCEEDED(rv))
-      smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
+  m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
 
   switch (m_responseCode/100) 
   {
@@ -803,21 +808,15 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
 
 PRInt32 nsSmtpProtocol::AuthLoginUsername()
 {
- // NOTE from sspitzer:
- // when it comes time to implement this, get the smtp user name from
- // the m_runningURL.  don't get it from prefs.
-
   char buffer[512];
   nsresult rv;
   PRInt32 status = 0;
   nsXPIDLCString username;
   char *base64Str = nsnull;
-  nsXPIDLCString password;
+  nsXPIDLCString origPassword;
+  nsCAutoString password;
   nsCOMPtr<nsISmtpServer> smtpServer;
-  nsCOMPtr<nsISmtpUrl> smtpUrl = do_QueryInterface(m_runningURL, &rv);
-
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = smtpUrl->GetSmtpServer(getter_AddRefs(smtpServer));
+  rv = m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
   rv = smtpServer->GetUsername(getter_Copies(username));
@@ -825,9 +824,16 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   if (!(const char*) username || nsCRT::strlen((const char*)username) == 0)
 	  return NS_ERROR_SMTP_USERNAME_UNDEFINED;
 
-  rv = GetPassword(getter_Copies(password));
-  if (!(const char *)password || nsCRT::strlen((const char*)password) == 0)
+  if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
+  {
+    rv = GetPassword(getter_Copies(origPassword));
+    password = origPassword;
+    if (password.IsEmpty())
       return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
+
+  }
+  else
+    password = mLogonCookie;
   
   if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
   {
@@ -879,27 +885,32 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
    */
   PRInt32 status = 0;
   nsresult rv;
-  nsXPIDLCString password;
-  rv = GetPassword(getter_Copies(password));
-  if (!(const char *)password || nsCRT::strlen((const char *)password)==0)
-      return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
+  nsXPIDLCString origPassword;
+  nsCAutoString password;
 
-  char *base64Str = NULL;
-  
-  base64Str = PL_Base64Encode((const char *)password, 
-                              nsCRT::strlen((const char *)password), nsnull);
+  if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
+  {
+    rv = GetPassword(getter_Copies(origPassword));
+    PRInt32 passwordLength = nsCRT::strlen((const char *) origPassword);
+    if (!(const char*) origPassword || passwordLength == 0)
+	    return NS_ERROR_SMTP_USERNAME_UNDEFINED;
+  }
+  else
+    password = mLogonCookie;
 
-  if (base64Str) {
-      char buffer[512];
-      PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
-      nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-      status = SendData(url, buffer);
-      m_nextState = SMTP_RESPONSE;
-      m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
-      SetFlag(SMTP_PAUSE_FOR_READ);
-      PR_FREEIF(base64Str);
-      
-      return (status);
+  if (!password.IsEmpty()) 
+  {
+    char *base64Str = PL_Base64Encode((const char *)password, nsCRT::strlen(password), nsnull);
+
+    char buffer[512];
+    PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
+    nsCRT::free(base64Str);
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+    status = SendData(url, buffer);
+    m_nextState = SMTP_RESPONSE;
+    m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
+    SetFlag(SMTP_PAUSE_FOR_READ);   
+    return (status);
   }
 
   return -1;
@@ -1109,7 +1120,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 PRInt32 nsSmtpProtocol::SendMessageInFile()
 {
 	nsCOMPtr<nsIFileSpec> fileSpec;
-    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	m_runningURL->GetPostMessageFile(getter_AddRefs(fileSpec));
 	if (url && fileSpec)
         PostMessage(url, fileSpec);
@@ -1199,37 +1210,46 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 {
 	nsresult rv = NS_OK;
-    PRInt32 status = 0; 
-	m_continuationResponse = -1;  /* init */
-	//nsISmtpUrl * smtpUrl = nsnull;
 
+  // if we are currently waiting for login redirection information
+  // then hold off on loading the url....but be sure to remember 
+  // aConsumer so we can use it later...
+  if (TestFlag(SMTP_WAIT_FOR_REDIRECTION))
+  {
+    // mark a pending load...
+    SetFlag(SMTP_LOAD_URL_PENDING);
+    mPendingConsumer = aConsumer;
+    return NS_OK;
+  }
+  else
+    ClearFlag(SMTP_LOAD_URL_PENDING); 
+
+  // otherwise begin loading the url
+
+  PRInt32 status = 0; 
+	m_continuationResponse = -1;  /* init */
 	if (aURL)
 	{
 		m_runningURL = do_QueryInterface(aURL);
 
-        // we had a bug where we failed to bring up an alert if the host
-        // name was empty....so throw up an alert saying we don't have
-        // a host name and inform the caller that we are not going to
-        // run the url...
+    // we had a bug where we failed to bring up an alert if the host
+    // name was empty....so throw up an alert saying we don't have
+    // a host name and inform the caller that we are not going to
+    // run the url...
 
-        nsXPIDLCString hostName;
-        aURL->GetHost(getter_Copies(hostName));
-        if (!hostName)
-        {
-           nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
-           if (aMsgUrl)
-           {
-               aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
-               rv = aMsgUrl->SetUrlState(PR_FALSE /* we aren't running the url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER); // set the url as a url currently being run...
-           }
-            return NS_ERROR_BUT_DONT_SHOW_ALERT;
-        }
-
-
-#ifdef UNREADY_CODE
-		m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
-#endif
-			
+    nsXPIDLCString hostName;
+    aURL->GetHost(getter_Copies(hostName));
+    if (!hostName)
+    {
+       nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+       if (aMsgUrl)
+       {
+           aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
+           rv = aMsgUrl->SetUrlState(PR_FALSE /* we aren't running the url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER); // set the url as a url currently being run...
+       }
+        return NS_ERROR_BUT_DONT_SHOW_ALERT;
+    }
+	
 		PRBool postMessage = PR_FALSE;
 		m_runningURL->GetPostMessage(&postMessage);
 
@@ -1237,7 +1257,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 		{
 			char *addrs1 = 0;
 			char *addrs2 = 0;
-    		m_nextState = SMTP_RESPONSE;
+   		m_nextState = SMTP_RESPONSE;
 			m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 
 			/* Remove duplicates from the list, to prevent people from getting
@@ -1271,7 +1291,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 					m_nextState = SMTP_ERROR_DONE;
 					ClearFlag(SMTP_PAUSE_FOR_READ);
 					status = NS_MSG_NO_RECIPIENTS;
-                			m_urlErrorState = NS_MSG_NO_RECIPIENTS;
+          m_urlErrorState = NS_MSG_NO_RECIPIENTS;
 					return(status);
 				}
 
@@ -1509,72 +1529,144 @@ done:
     return rv;
 }
 
-#ifdef UNREADY_CODE
-static void
-MessageSendingDone(URL_Struct* url, int status, MWContext* context)
+
+nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 {
-    if (status < 0) {
-		char *error_msg = NET_ExplainErrorDetails(status, 0, 0, 0, 0);
-		if (error_msg) {
-			FE_Alert(context, error_msg);
-		}
-		PR_FREEIF(error_msg);
-    }
-    if (url->post_data) {
-		PR_FREEIF(url->post_data);
-		url->post_data = NULL;
-    }
-    if (url->post_headers) {
-		PR_FREEIF(url->post_headers);
-		url->post_headers = NULL;
-    }
-    NET_FreeURLStruct(url);
+  NS_ENSURE_ARG(aSmtpServer);
+
+	nsresult rv;
+	nsCAutoString progID(NS_MSGLOGONREDIRECTORSERVICE_PROGID);
+
+  // go get the redirection type...
+  nsXPIDLCString redirectionTypeStr; 
+  aSmtpServer->GetRedirectorType(getter_Copies(redirectionTypeStr));
+
+  const char * redirectionType = (const char *) redirectionTypeStr;
+
+  // if we don't have a redirection type, then get out and proceed normally.
+  if (!redirectionType || !*redirectionType )
+    return NS_OK;
+
+	progID.Append('/');
+	progID.Append(redirectionTypeStr);
+
+	m_logonRedirector = do_GetService(progID.GetBuffer(), &rv);
+	if (m_logonRedirector && NS_SUCCEEDED(rv))
+	{
+		nsXPIDLCString password;
+		nsXPIDLCString userName;
+
+		aSmtpServer->GetUsername(getter_Copies(userName));
+		GetPassword(getter_Copies(password));
+		rv = m_logonRedirector->Logon(userName, password, NS_STATIC_CAST(nsIMsgLogonRedirectionRequester *, this), nsMsgLogonRedirectionServiceIDs::Smtp);
+	}
+
+  // this protocol instance now needs to wait until
+  // we receive the login redirection information so set the appropriate state
+  // flag
+  SetFlag(SMTP_WAIT_FOR_REDIRECTION);
+  SetFlag(SMTP_USE_LOGIN_REDIRECTION);
+  
+  // even though we haven't started to send the message yet, 
+  // we are going off and doing an asynch operation to get the redirection
+  // information. So start the url as being run.
+  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
+  // this will cause another dialog to get thrown up....
+	mailNewsUrl->SetUrlState(PR_TRUE /* start running url */, NS_OK);
+  UpdateStatus(NS_SMTP_CONNECTING_TO_SERVER);
+  // and update the status
+
+	return rv;
+}
+
+NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, PRBool aBadPassword)
+{
+  nsCOMPtr<nsISmtpServer> smtpServer;
+  m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+  NS_ENSURE_TRUE(smtpServer, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(m_logonRedirector, NS_ERROR_FAILURE);
+
+  // step (1) force a log off...
+  // logoff 
+  nsXPIDLCString userName;
+	smtpServer->GetUsername(getter_Copies(userName));
+  m_logonRedirector->Logoff(userName);
+  m_logonRedirector = nsnull; // we don't care about it anymore
+	
+  // step (2) alert the user about the error
+  nsCOMPtr<nsIPrompt> dialog (do_GetService(kCNetSupportDialogCID));
+  if (dialog && pErrMsg && pErrMsg[0])
+    dialog->Alert(pErrMsg);
+
+  // step (3) if they entered a bad password, forget about it!
+	if (aBadPassword && smtpServer)
+    smtpServer->ForgetPassword();
+
+  // step (4) we need to let the originator of the send url request know that an
+  // error occurred and we aren't sending the message...in our case, this will
+  // force the user back into the compose window and they can try to send it 
+  // again.
+  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
+  // this will cause another dialog to get thrown up....
+	mailNewsUrl->SetUrlState(PR_FALSE /* stopped running url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+	return NS_OK;
+}
+  
+  /* Logon Redirection Progress */
+NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionProgress(nsMsgLogonRedirectionState pState)
+{
+	return NS_OK;
+}
+
+  /* reply with logon redirection data. */
+NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, unsigned short aPort, const char * aCookieData,  unsigned short aCookieSize)
+{
+  NS_ENSURE_ARG(aHost);
+  
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISmtpServer> smtpServer;
+  m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+  NS_ENSURE_TRUE(smtpServer, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(m_logonRedirector, NS_ERROR_FAILURE);
+ 
+  // logoff 
+	nsXPIDLCString userName;
+  smtpServer->GetUsername(getter_Copies(userName));
+  m_logonRedirector->Logoff(userName);
+  m_logonRedirector = nsnull; // we don't care about it anymore
+	
+  // remember the logon cookie
+  mLogonCookie.SetString(aCookieData, aCookieSize);
+
+  //currently the server isn't returning a valid auth logon capability
+  // this line is just a HACK to force us to use auth login.
+  SetFlag(SMTP_AUTH_LOGIN_ENABLED);
+  // currently the account manager isn't properly setting the authMethod
+  // preference for servers which require redirectors. This is another 
+  // HACK ALERT....we'll force it to be set...
+  m_prefAuthMethod = PREF_AUTH_LOGIN;
+
+  // now that we have a host and port to connect to, 
+  // open up the channel...
+  rv = OpenNetworkSocketWithInfo(nsCAutoString(aHost), aPort);
+
+  // we are no longer waiting for a logon redirection reply
+  ClearFlag(SMTP_WAIT_FOR_REDIRECTION);
+
+  // check to see if we had a pending LoadUrl call...be sure to
+  // do this after we clear the SMTP_WAIT_FOR_REDIRECTION flag =).
+  nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+  if (TestFlag(SMTP_LOAD_URL_PENDING))
+    rv = LoadUrl(url , mPendingConsumer);
+
+  mPendingConsumer = nsnull; // we don't need to remember this anymore...
+
+  // since we are starting this url load out of the normal loading process,
+  // we probably should stop the url from running and throw up an error dialog
+  // if for some reason we didn't successfully load the url...
+
+  // we may want to always return NS_OK regardless of an error
+  return rv;
 }
 
 
-
-int
-NET_SendMessageUnattended(MWContext* context, char* to, char* subject,
-						  char* otherheaders, char* body)
-{
-    char* urlstring;
-    URL_Struct* url;
-    int16 win_csid;
-    int16 csid;
-    char* convto;
-    char* convsub;
-
-    win_csid = INTL_DefaultWinCharSetID(context);
-    csid = INTL_DefaultMailCharSetID(win_csid);
-    convto = IntlEncodeMimePartIIStr(to, csid, PR_TRUE);
-    convsub = IntlEncodeMimePartIIStr(subject, csid, PR_TRUE);
-
-    urlstring = PR_smprintf("mailto:%s", convto ? convto : to);
-
-    if (!urlstring) return NS_ERROR_OUT_OF_MEMORY;
-    url = NET_CreateURLStruct(urlstring, NET_DONT_RELOAD);
-    PR_FREEIF(urlstring);
-    if (!url) return NS_ERROR_OUT_OF_MEMORY;
-
-    
-
-    url->post_headers = PR_smprintf("To: %s\n\
-Subject: %s\n\
-%s\n",
-								 convto ? convto : to,
-								 convsub ? convsub : subject,
-								 otherheaders);
-    if (convto) PR_FREEIF(convto);
-    if (convsub) PR_FREEIF(convsub);
-    if (!url->post_headers) return NS_ERROR_OUT_OF_MEMORY;
-	url->post_data = PL_strdup(body);
-	if (!url->post_data) return NS_ERROR_OUT_OF_MEMORY;
-    url->post_data_size = PL_strlen(url->post_data);
-    url->post_data_is_file = PR_FALSE;
-    url->method = URL_POST_METHOD;
-    url->internal_url = PR_TRUE;
-    return NET_GetURL(url, FO_PRESENT, context, MessageSendingDone);
-    
-}
-
-#endif

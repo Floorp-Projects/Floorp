@@ -28,6 +28,8 @@
 #include "nsXPIDLString.h"
 #include "nsISmtpUrl.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIMsgLogonRedirector.h"
+
 #include "nsCOMPtr.h"
 
  /* states of the machine
@@ -59,12 +61,25 @@ SMTP_AUTH_EXTERNAL_RESPONSE                         // 20
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
-#define SMTP_PAUSE_FOR_READ			0x00000001  /* should we pause for the next read */
-#define SMTP_EHLO_DSN_ENABLED		0x00000002
-#define SMTP_AUTH_LOGIN_ENABLED		0x00000004
+#define SMTP_PAUSE_FOR_READ			    0x00000001  /* should we pause for the next read */
+#define SMTP_EHLO_DSN_ENABLED		    0x00000002
+#define SMTP_AUTH_LOGIN_ENABLED		  0x00000004
 #define SMTP_AUTH_PLAIN_ENABLED     0x00000008
 #define SMTP_AUTH_EXTERNAL_ENABLED  0x00000010
 #define SMTP_EHLO_STARTTLS_ENABLED  0x00000020
+// if we are using a login redirection
+// and we are waiting for it to give us the
+// host and port to connect to, then this flag
+// will be set...
+#define SMTP_WAIT_FOR_REDIRECTION   0x00000040
+// if we are using login redirection and we received a load Url
+// request while we were stil waiting for the redirection information
+// then we'll look in this field 
+#define SMTP_LOAD_URL_PENDING       0x00000080
+// if we are using login redirection, then this flag will be set.
+// Note, this is different than the flag for whether we are waiting
+// for login redirection information.
+#define SMTP_USE_LOGIN_REDIRECTION  0x00000100
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
@@ -74,15 +89,19 @@ typedef enum _PrefAuthMethod {
     PREF_AUTH_TLS_ONLY = 4
 } PrefAuthMethod;
 
-class nsSmtpProtocol : public nsMsgProtocol
+class nsSmtpProtocol : public nsMsgProtocol,
+                       public nsIMsgLogonRedirectionRequester
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIMSGLOGONREDIRECTIONREQUESTER
+
 	// Creating a protocol instance requires the URL which needs to be run.
 	nsSmtpProtocol(nsIURI * aURL);
 	virtual ~nsSmtpProtocol();
 
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
-    virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
+  virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
@@ -92,21 +111,33 @@ public:
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 private:
+  // logon redirection related variables and methods
+  nsresult RequestOverrideInfo(nsISmtpServer * aSmtpServer); // kicks off the request to get redirection info for the server
+  nsCString mLogonCookie; // an opaque cookie we pass to certain servers to logon
+  // if we are asked to load a url while we are blocked waiting for redirection information,
+  // then we'll store the url consumer in mPendingConsumer until we can actually load
+  // the url.
+  nsCOMPtr<nsISupports> mPendingConsumer;
+  // we cache the logon redirector in the short term so after we receive
+  // the redirect information we can logoff the redirector...
+  nsCOMPtr <nsIMsgLogonRedirector> m_logonRedirector;
+
 	// the nsISmtpURL that is currently running
 	nsCOMPtr<nsISmtpUrl>		m_runningURL;
-	// the error state we want to set on the url
+
+  // the error state we want to set on the url
 	nsresult			m_urlErrorState;
 	PRUint32 m_LastTime;
-    nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+  nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
 	SmtpState	m_nextState;
-    SmtpState	m_nextStateAfterResponse;
-    PRInt32     m_responseCode;    /* code returned from Smtp server */
+  SmtpState	m_nextStateAfterResponse;
+  PRInt32     m_responseCode;    /* code returned from Smtp server */
 	PRInt32 	m_previousResponseCode; 
 	PRInt32		m_continuationResponse;
-    nsCString   m_responseText;   /* text returned from Smtp server */
+  nsCString   m_responseText;   /* text returned from Smtp server */
 	PRUint32    m_port;
 
 	char	   *m_addressCopy;
@@ -115,17 +146,17 @@ private:
 	char	   *m_verifyAddress;
 	nsXPIDLCString m_mailAddr;
 	
-    // *** the following should move to the smtp server when we support
-    // multiple smtp servers
-    PRInt32 m_prefAuthMethod;
-    PRBool m_tlsEnabled;
+  // *** the following should move to the smtp server when we support
+  // multiple smtp servers
+  PRInt32 m_prefAuthMethod;
+  PRBool m_tlsEnabled;
 
 	// message specific information
 	PRInt32		m_totalAmountWritten;
 	PRUint32	m_totalMessageSize;
     
 	char		*m_dataBuf;
-    PRUint32	 m_dataBufSize;
+  PRUint32	 m_dataBufSize;
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
@@ -140,8 +171,8 @@ private:
 
 	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
 
-    void UpdateStatus(PRInt32 aStatusID);
-    void UpdateStatusWithString(PRUnichar * aStatusString);
+  void UpdateStatus(PRInt32 aStatusID);
+  void UpdateStatusWithString(PRUnichar * aStatusString);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 
@@ -177,7 +208,7 @@ private:
 
 	// extract domain name from userName field in the url...
 	const char * GetUserDomainName();
-    nsresult GetPassword(char **aPassword);
+  nsresult GetPassword(char **aPassword);
 };
 
 #endif  // nsSmtpProtocol_h___
