@@ -1243,7 +1243,9 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
         }
     }
 
-    if (init) {
+    if (!init) {
+        ok = JS_TRUE;
+    } else {
         if (!table) {
             table = JS_NewDHashTable(JS_DHashGetStubOps(),
                                      NULL,
