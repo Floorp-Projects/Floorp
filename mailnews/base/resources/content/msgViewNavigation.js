@@ -185,7 +185,7 @@ function GetRootFoldersInFolderPaneOrder()
 
   var serversMsgFolders = Array(numServers);
   for (var i = 0; i < numServers; i++)
-    serversMsgFolders[i] = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).RootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+    serversMsgFolders[i] = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
   // sort accounts, so they are in the same order as folder pane
   serversMsgFolders.sort(compareServerSortOrder);
