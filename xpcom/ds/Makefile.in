@@ -39,6 +39,7 @@ CSRCS = \
 CPPSRCS		= \
 		nsArena.cpp \
 		nsAtomTable.cpp \
+		nsAtomService.cpp \
 		nsAVLTree.cpp \
 		nsByteBuffer.cpp \
 		nsCRT.cpp \
@@ -69,6 +70,7 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsAVLTree.h \
+		nsAtomService.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsDeque.h \
@@ -104,6 +106,7 @@ EXPORTS		= \
 
 XPIDLSRCS	= \
 		nsIAtom.idl \
+		nsIAtomService.idl \
 		nsICollection.idl \
 		nsIEnumerator.idl \
 		nsIObserver.idl \
