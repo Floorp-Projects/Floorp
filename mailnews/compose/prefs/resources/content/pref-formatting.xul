@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="Init()">
+      onload="Init()"
+      headertitle="&pane.title;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -32,8 +33,6 @@
                 prefattribute="value"
                 wsm_attributes="value"/>
   
-  <hbox class="box-smallheader" title="&pane.title;"/>
-
   <description>&sendMaildesc.label;</description>
 
   <radiogroup id="mailDefaultHTMLAction"

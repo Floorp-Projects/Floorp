@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="onLoad();">
+      onload="onLoad();"
+      headertitle="&pane.title;">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
@@ -25,8 +26,6 @@
   }
   ]]>
   </script>  
-    
-  <hbox class="box-smallheader" title="&pane.title;"/>
 
   <groupbox>
     <caption label="&emailCollectiontitle.label;"/>
