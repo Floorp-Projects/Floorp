@@ -73,7 +73,10 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+#if 0
+// see nsHTMLButtonControlFrame::Reflow()
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+#endif
 
 nsresult
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
