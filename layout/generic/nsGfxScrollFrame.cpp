@@ -1730,13 +1730,13 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
     return;
 
   if (!aVisible) {
-     content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
   } else {
     // disable laziness; we never want to recreate these scrollbars again
     // once we've created them
     // disable laziness FIRST so only one recreation happens.
-     content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::lazy, PR_TRUE);
-     content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
+    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::lazy, PR_TRUE);
+    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
   }
 
   nsCOMPtr<nsIScrollbarFrame> scrollbar(do_QueryInterface(aScrollbar));
