@@ -108,6 +108,7 @@ pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", false);
 
 pref("browser.chrome.toolbar_tips",         true);
+// 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
 pref("browser.chrome.toolbar_style",        2);
 
 pref("browser.toolbars.showbutton.bookmarks", true);
