@@ -128,6 +128,16 @@ public:
   }
 
   NS_IMETHOD
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext)
+  {
+    return NS_OK;
+  }
+
+  NS_IMETHOD
   UpdatePresentationData(nsIPresContext* aPresContext,
                          PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,

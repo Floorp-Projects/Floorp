@@ -95,15 +95,10 @@ nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
                                     aContext, aPrevInFlow);
 
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
   mSqrChar.SetData(aPresContext, sqrChar);
   ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
   return rv;
 }
 

@@ -36,22 +36,13 @@ public:
   friend nsresult NS_NewMathMLmunderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
   UpdatePresentationData(nsIPresContext* aPresContext,

@@ -99,10 +99,26 @@ nsMathMLmmultiscriptsFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
-  return rv;
+
+  // check whether or not this is an embellished operator
+  EmbellishOperator();
+  // The REC says:
+  // The <mmultiscripts> element increments scriptlevel by 1, and sets
+  // displaystyle to "false", within each of its arguments except base, but
+  // leaves both attributes unchanged within base. 
+  // XXX Need to update the compression flags in the sub/sup pairs as per TeX
+  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
+    ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

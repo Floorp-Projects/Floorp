@@ -105,7 +105,7 @@ public:
 
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
- 
+
   NS_IMETHOD
   GetFrameType(nsIAtom** aType) const;
 
@@ -185,6 +185,17 @@ public:
   // --------------------------------------------------------------------------
   // Additional methods 
 
+  // helper to sync our automatic data and notify our parent to reflow us
+  // when changes (e.g., append/insert/remove) happen in our child list
+  virtual nsresult
+  ChildListChanged(nsIPresContext* aPresContext,
+                   nsIPresShell&   aPresShell);
+
+  // helper to wrap non-MathML frames so that foreign elements (e.g., html:img)
+  // can mix better with other surrounding MathML markups
+  virtual nsresult
+  WrapForeignFrames(nsIPresContext* aPresContext);
+
   // helper to get the preferred size that a container frame should use to fire
   // the stretch on its stretchy child frames.
   virtual void
@@ -194,10 +205,8 @@ public:
                           nsStretchDirection   aStretchDirection,
                           nsBoundingMetrics&   aPreferredStretchSize);
 
-  // error handlers to report than an error (typically invalid markup)
-  // was encountered during reflow. By default the user will see the
-  // Unicode REPLACEMENT CHAR U+FFFD at the spot where the error was
-  // encountered.
+  // error handlers to provide a visual feedback to the user when an error
+  // (typically invalid markup) was encountered during reflow.
   virtual nsresult
   ReflowError(nsIPresContext*      aPresContext,
               nsIRenderingContext& aRenderingContext,
@@ -290,6 +299,13 @@ public:
                                        PRUint32        aFlagsValues,
                                        PRUint32        aFlagsToUpdate);
 
+  // helper to let the rebuild of automatic data (presentation data
+  // and embellishement data) walk through a subtree that may contain
+  // non-MathML container frames
+  static void
+  RebuildAutomaticDataFor(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame);
+
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 };
@@ -307,20 +323,16 @@ class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
   friend nsresult NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  // beware, mFrames is not set by nsBlockFrame, FirstChild() is your friend
-  // when you need to access the child list of the block
+  // beware, mFrames is not set by nsBlockFrame
+  // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
-    nsresult rv;
-
-    rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-
+    nsresult rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected scriptsizes
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
-
     return rv;
   }
 
@@ -328,6 +340,8 @@ protected:
   nsMathMLmathBlockFrame() {}
   virtual ~nsMathMLmathBlockFrame() {}
 };
+
+// --------------
 
 class nsMathMLmathInlineFrame : public nsInlineFrame {
 public:
@@ -338,12 +352,9 @@ public:
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
-    nsresult rv;
-    rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-
+    nsresult rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected scriptsizes
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
-
     return rv;
   }
 
@@ -351,4 +362,5 @@ protected:
   nsMathMLmathInlineFrame() {}
   virtual ~nsMathMLmathInlineFrame() {}
 };
+
 #endif /* nsMathMLContainerFrame_h___ */

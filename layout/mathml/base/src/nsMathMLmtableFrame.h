@@ -40,6 +40,10 @@ public:
   // Overloaded nsIMathMLFrame methods
 
   NS_IMETHOD
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+
+  NS_IMETHOD
   UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
                                     PRInt32         aFirstIndex,
                                     PRInt32         aLastIndex,

@@ -203,7 +203,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
   NS_NAMED_LITERAL_STRING(trueStr, "true");
 
   //////////////////////////////////////
-  // process attributes that depend on the index of the row
+  // process attributes that depend on the index of the row:
   // rowalign, rowlines
 
   // see if the rowalign attribute is not already set
@@ -224,7 +224,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
   }
   // if we are not on the first row, see if |rowlines| was specified on the table.
   // Note that we pass 'rowIndex-1' because the CSS rule in mathml.css is associated
-  // to 'border-top', and it as if we draw the line on behalf of the previous row.
+  // to 'border-top', and it is as if we draw the line on behalf of the previous cell.
   // This way of doing so allows us to handle selective lines, [row]\hline[row][row]',
   // and cases of spanning cells without further complications.
   if (rowIndex > 0) {
@@ -249,7 +249,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
   }
 
   //////////////////////////////////////
-  // process attributes that depend on the index of the column
+  // process attributes that depend on the index of the column:
   // columnalign, columnlines, XXX need columnwidth too
 
   // see if the columnalign attribute is not already set
@@ -269,7 +269,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
   }
   // if we are not on the first column, see if |columnlines| was specified on
   // the table. Note that we pass 'colIndex-1' because the CSS rule in mathml.css
-  // is associated to 'border-left', and it as if we draw the line on behalf
+  // is associated to 'border-left', and it is as if we draw the line on behalf
   // of the previous cell. This way of doing so allows us to handle selective lines,
   // e.g., 'r|cl', and cases of spanning cells without further complications.
   if (colIndex > 0) {
@@ -392,18 +392,13 @@ nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
-                               nsIContent*      aContent,
-                               nsIFrame*        aParent,
-                               nsIStyleContext* aContext,
-                               nsIFrame*        aPrevInFlow)
+nsMathMLmtableOuterFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                               nsIFrame*       aParent)
 {
-  nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
   // XXX the REC says that by default, displaystyle=false in <mtable>
 
-  // now, inherit the scriptlevel and displaystyle from our parent
-  GetPresentationDataFrom(aParent, mPresentationData);
+  // let the base class inherit the scriptlevel and displaystyle from our parent
+  nsMathMLFrame::InheritAutomaticData(aPresContext, aParent);
 
   // see if the displaystyle attribute is there and let it override what we inherited
   nsAutoString value;
@@ -416,6 +411,21 @@ nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
       mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmtableOuterFrame::Init(nsIPresContext*  aPresContext,
+                               nsIContent*      aContent,
+                               nsIFrame*        aParent,
+                               nsIStyleContext* aContext,
+                               nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // now, inherit the scriptlevel and displaystyle from our parent
+  InheritAutomaticData(aPresContext, aParent);
 
   return rv;
 }
@@ -473,7 +483,6 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     // alignments that are resolved during the reflow of cell frames.
 
     nscoord oldComputedWidth = reflowState.mComputedWidth;
-    reflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
     reflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
     reflowState.reason = eReflowReason_Initial;
 
@@ -693,7 +702,7 @@ nsMathMLmtdInnerFrame::Init(nsIPresContext*  aPresContext,
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
 
   // now, inherit the scriptlevel and displaystyle from our parent
-  GetPresentationDataFrom(aParent, mPresentationData);
+  InheritAutomaticData(aPresContext, aParent);
 
   return rv;
 }

@@ -68,22 +68,6 @@ nsMathMLmsubFrame::~nsMathMLmsubFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
-      nsIContent*      aContent,
-      nsIFrame*        aParent,
-      nsIStyleContext* aContext,
-      nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsMathMLContainerFrame::Init
-    (aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmsubFrame::Place (nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,

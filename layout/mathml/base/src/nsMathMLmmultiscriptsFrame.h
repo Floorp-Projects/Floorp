@@ -43,29 +43,13 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
+
+  NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
-
-  NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
-  {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    // The REC says:
-    // The <mmultiscripts> element increments scriptlevel by 1, and sets
-    // displaystyle to "false", within each of its arguments except base, but
-    // leaves both attributes unchanged within base. 
-    // XXX Need to update the compression flags in the sub/sup pairs as per TeX
-    UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
-      ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
-    // check whether or not this is an embellished operator
-    EmbellishOperator();
-    return rv;
-  }
 
 protected:
   nsMathMLmmultiscriptsFrame();

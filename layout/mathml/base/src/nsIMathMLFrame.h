@@ -175,6 +175,30 @@ public:
   NS_IMETHOD
   SetPresentationData(const nsPresentationData& aPresentationData) = 0;
 
+  /* InheritAutomaticData() / TransmitAutomaticData() :
+   * There are precise rules governing each MathML frame and its children.
+   * Properties such as the scriptlevel or the embellished nature of a frame
+   * depend on those rules. Also, certain properties that we use to emulate
+   * TeX rendering rules are frame-dependent too. These two methods are meant
+   * to be implemented by frame classes that need to assert specific properties
+   * within their subtrees.
+   *
+   * InheritAutomaticData() is called in a top-down manner [like nsIFrame::Init],
+   * as we descend the frame tree during its construction, whereas
+   * TransmitAutomaticData() is called in a bottom-up manner, as we ascend the
+   * frame tree after its construction [like nsIFrame::SetInitialChildList].
+   * However, unlike Init() and SetInitialChildList() which are called only
+   * once during the life-time of a frame, these two methods are called
+   * whenever we are walking the frame tree to handle dynamic changes that
+   * happen in the content model.
+   */
+
+  NS_IMETHOD
+  InheritAutomaticData(nsIPresContext* aPresContext, nsIFrame* aParent) = 0;
+
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext) = 0;
+
  /* UpdatePresentationData :
   * Increments the scriptlevel of the frame, and updates its displaystyle and
   * compression flags. The displaystyle flag of an environment gets updated

@@ -729,6 +729,49 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
  * =============================================================================
  */
 
+// We use this to wrap non-MathML frames so that foreign elements (e.g.,
+// html:img) can mix better with other surrounding MathML markups.
+// Currently we only wrap nsInlineFrames because problems were observed only
+// in the presence of such frames. By construction, a foreign frame wrapper
+// has one and only one child, and the life of the wrapper is bound to the
+// life of that unique child. Not all child list operations are applicable
+// with a wrapper. One must either use the parent (or the unique child)
+// for such operations (@see nsMathMLForeignFrameWrapper).
+nsresult
+nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
+{
+  nsIFrame* next = mFrames.FirstChild();
+  while (next) {
+    nsIFrame* child = next;
+    next->GetNextSibling(&next);
+    nsInlineFrame* inlineFrame;
+    child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);
+    if (inlineFrame) {
+      // create a new wrapper frame to wrap this child
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      nsIFrame* wrapper;
+      nsresult rv = NS_NewMathMLForeignFrameWrapper(shell, &wrapper);
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIStyleContext> newStyleContext;
+      aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock,
+                                                 mStyleContext, PR_FALSE,
+                                                 getter_AddRefs(newStyleContext));
+      rv = wrapper->Init(aPresContext, mContent, this, newStyleContext, nsnull);
+      if (NS_FAILED(rv)) {
+        wrapper->Destroy(aPresContext);
+        return rv;
+      }
+      mFrames.ReplaceFrame(this, child, wrapper);
+      child->SetParent(wrapper);
+      child->SetNextSibling(nsnull);
+      aPresContext->ReParentStyleContext(child, newStyleContext);
+      wrapper->SetInitialChildList(aPresContext, nsnull, child);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
@@ -821,7 +864,7 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // now, inherit the scriptlevel and displaystyle from our parent
-  GetPresentationDataFrom(aParent, mPresentationData);
+  InheritAutomaticData(aPresContext, aParent);
 
   return rv;
 }
@@ -834,8 +877,7 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                             nsIFrame*       aChildList)
 {
   // First, let the base class do its job
-  nsresult rv;
-  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // Next, since we are an inline frame, and since we are a container, we have to
   // be very careful with the way we treat our children. Things look okay when
@@ -847,44 +889,72 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // In short, the nsInlineFrame class expects a number of *invariants* that are not
   // met when we mix things.
 
-  // So what we do here is to wrap children that happen to be nsInlineFrames in
-  // anonymous block frames.
-  // XXX Question: Do we have to handle Insert/Remove/Append on behalf of
-  //     these anonymous blocks?
-  //     Note: By construction, our anonymous blocks have only one child.
+  // So wrap foreign children in nsMathMLForeignFrameWrapper frames
+  WrapForeignFrames(aPresContext);
 
-  nsIFrame* next = mFrames.FirstChild();
-  while (next) {
-    nsIFrame* child = next;
-    next->GetNextSibling(&next);
-    nsInlineFrame* inlineFrame = nsnull;
-    child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);
-    if (inlineFrame) {
-      // create a new anonymous block frame to wrap this child...
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      nsIFrame* anonymous;
-      rv = NS_NewBlockFrame(shell, &anonymous);
-      if (NS_FAILED(rv))
-        return rv;
-      nsCOMPtr<nsIStyleContext> newStyleContext;
-      aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock,
-                                                 mStyleContext, PR_FALSE,
-                                                 getter_AddRefs(newStyleContext));
-      rv = anonymous->Init(aPresContext, mContent, this, newStyleContext, nsnull);
-      if (NS_FAILED(rv)) {
-        anonymous->Destroy(aPresContext);
-        return rv;
-      }
-      mFrames.ReplaceFrame(this, child, anonymous);
-      child->SetParent(anonymous);
-      child->SetNextSibling(nsnull);
-      aPresContext->ReParentStyleContext(child, newStyleContext);
-      anonymous->SetInitialChildList(aPresContext, nsnull, child);
+  // Now that our subtree is fully constructed, set the automatic
+  // presentation data and embellishment data that apply in our subtree
+  return TransmitAutomaticData(aPresContext);
+}
+
+// There are precise rules governing children of a MathML frame,
+// and properties such as the scriptlevel or depends on those rules.
+// Hence for things to work, caller must use Append/Insert/etc wisely.
+
+nsresult
+nsMathMLContainerFrame::ChildListChanged(nsIPresContext* aPresContext,
+                                         nsIPresShell&   aPresShell)
+{
+  // wrap any new foreign child that may have crept in
+  WrapForeignFrames(aPresContext);
+
+  // re-sync our presentation data and embellishment data
+#ifdef DEBUG_rbs
+  PRBool old = NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags);
+#endif
+
+  RebuildAutomaticDataFor(aPresContext, this);
+
+#ifdef DEBUG_rbs
+  PRBool now = NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags);
+  if (old != now)
+    NS_WARNING("REMIND: case where the embellished hierarchy has to be rebuilt too");
+#endif
+
+  // grab the scriptlevel of our parent and re-resolve the style data in
+  // our subtree to sync any change of script sizes
+  nsPresentationData parentData;
+  GetPresentationDataFrom(mParent, parentData);
+  PropagateScriptStyleFor(aPresContext, this, parentData.scriptLevel);
+ 
+  // Ask our parent frame to reflow us
+  return ReflowDirtyChild(&aPresShell, nsnull);
+}
+
+/* static */ void
+nsMathMLContainerFrame::RebuildAutomaticDataFor(nsIPresContext* aPresContext,
+                                                nsIFrame*       aFrame)
+{
+  // 1. As we descend the tree, make each child frame inherit data from
+  // the parent
+  // 2. As we ascend the tree, transmit any specific change that we want
+  // down the subtrees
+  nsIFrame* childFrame;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  while (childFrame) {
+    nsIMathMLFrame* childMathMLFrame;
+    childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&childMathMLFrame);
+    if (childMathMLFrame) {
+      childMathMLFrame->InheritAutomaticData(aPresContext, aFrame);
     }
+    RebuildAutomaticDataFor(aPresContext, childFrame);
+    childFrame->GetNextSibling(&childFrame);
   }
-
-  return rv;
+  nsIMathMLFrame* mathMLFrame;
+  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (mathMLFrame) {
+    mathMLFrame->TransmitAutomaticData(aPresContext);
+  }
 }
 
 NS_IMETHODIMP
@@ -898,8 +968,7 @@ nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
   }
   if (aFrameList) {
     mFrames.AppendFrames(this, aFrameList);
-    // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    return ChildListChanged(aPresContext, aPresShell);
   }
   return NS_OK;
 }
@@ -917,8 +986,7 @@ nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
   if (aFrameList) {
     // Insert frames after aPrevFrame
     mFrames.InsertFrames(this, aPrevFrame, aFrameList);
-    // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    return ChildListChanged(aPresContext, aPresShell);
   }
   return NS_OK;
 }
@@ -932,44 +1000,9 @@ nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (aOldFrame) {
-    // Loop and destroy the frame and all of its continuations.
-    PRBool generateReflowCommand = PR_FALSE;
-    nsIFrame* oldFrameParent;
-    aOldFrame->GetParent(&oldFrameParent);
-    while (aOldFrame) {
-      // If the frame being removed has zero size then don't bother
-      // generating a reflow command, otherwise make sure we do.
-      nsRect rect;
-      aOldFrame->GetRect(rect);
-      if (!rect.IsEmpty()) {
-        generateReflowCommand = PR_TRUE;
-      }
-      // When the parent is an inline frame we have a simple task - just
-      // remove the frame from its parent's list and generate a reflow
-      // command.
-      nsIFrame* oldFrameNextInFlow;
-      aOldFrame->GetNextInFlow(&oldFrameNextInFlow);
-      nsSplittableType st;
-      aOldFrame->IsSplittable(st);
-      if (NS_FRAME_NOT_SPLITTABLE != st) {
-        nsSplittableFrame::RemoveFromFlow(aOldFrame);
-      }
-      nsIFrame* firstSibling;
-      oldFrameParent->FirstChild(aPresContext, nsnull, &firstSibling);
-      nsFrameList frameList(firstSibling);
-      frameList.DestroyFrame(aPresContext, aOldFrame);
-      aOldFrame = oldFrameNextInFlow;
-      if (aOldFrame) {
-        aOldFrame->GetParent(&oldFrameParent);
-      }
-    }
-    if (generateReflowCommand) {
-      // Ask the parent frame to reflow me.
-      ReflowDirtyChild(&aPresShell, nsnull);
-    }
-  }
-  return NS_OK;
+  // remove the child frame
+  mFrames.DestroyFrame(aPresContext, aOldFrame);
+  return ChildListChanged(aPresContext, aPresShell);
 }
 
 NS_IMETHODIMP
@@ -982,11 +1015,16 @@ nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
   if (aListName || !aOldFrame || !aNewFrame) {
     return NS_ERROR_INVALID_ARG;
   }
-  // Replace the old frame with the new frame in the list, then remove the old frame
+  // Replace the old frame with the new frame in the list
   mFrames.ReplaceFrame(this, aOldFrame, aNewFrame);
+
+  // XXX now destroy the old frame, really? the usage of ReplaceFrame() vs.
+  // XXX ReplaceFrameAndDestroy() is ambiguous - see bug 122748
+  // XXX The style system doesn't call ReplaceFrame() and that's why
+  // XXX nobody seems to have been biten by the ambiguity yet
   aOldFrame->Destroy(aPresContext);
-  // Ask the parent frame to reflow me.
-  return ReflowDirtyChild(&aPresShell, nsnull);
+
+  return ChildListChanged(aPresContext, aPresShell);
 }
 
 NS_IMETHODIMP
@@ -1537,6 +1575,7 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsIPresContext*      aPresContext,
 
 
 //==========================
+
 nsresult
 NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -1551,6 +1590,8 @@ NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   *aNewFrame = it;
   return NS_OK;
 }
+
+//==========================
 
 nsresult
 NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)

@@ -42,6 +42,16 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext)
+  {
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+    return NS_OK;
+  }
+
+  NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,

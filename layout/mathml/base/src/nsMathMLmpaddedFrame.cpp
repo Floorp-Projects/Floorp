@@ -90,8 +90,6 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-
   /*
   parse the attributes
 
@@ -140,9 +138,6 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
   return rv;
 }
 

@@ -36,13 +36,6 @@ public:
   friend nsresult NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
@@ -58,12 +51,14 @@ public:
                     nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+  TransmitAutomaticData(nsIPresContext* aPresContext)
   {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+
+    // check whether or not this is an embellished operator
+    EmbellishOperator();
     // 1. The REC says:
     // The <msup> element increments scriptlevel by 1, and sets displaystyle to
     // "false", within superscript, but leaves both attributes unchanged within base.
@@ -72,9 +67,7 @@ public:
     UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
       ~NS_MATHML_DISPLAYSTYLE,
        NS_MATHML_DISPLAYSTYLE);
-    // check whether or not this is an embellished operator
-    EmbellishOperator();
-    return rv;
+    return NS_OK;
   }
 
 protected:
