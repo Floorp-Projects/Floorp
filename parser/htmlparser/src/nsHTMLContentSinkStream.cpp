@@ -992,7 +992,7 @@ nsHTMLContentSinkStream::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMod
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
    
-  Write("<!");
+ // Write("<!");
 
   return NS_OK;
 }

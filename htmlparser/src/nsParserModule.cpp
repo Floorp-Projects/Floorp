@@ -31,6 +31,9 @@
 #include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 #include "nsXIFDTD.h"
+#include "COtherDTD.h"
+#include "CRtfDTD.h"
+#include "nsViewSourceHTML.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsHTMLEntities.h"
@@ -98,6 +101,9 @@ static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kXIFDTDCID, NS_XIF_DTD_CID);
+static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
+static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
+static NS_DEFINE_CID(kRtfDTDCID, NS_CRTF_DTD_CID);
 static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
 static NS_DEFINE_CID(kHTMLToTXTSinkStreamCID, NS_HTMLTOTXTSINKSTREAM_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -114,6 +120,9 @@ static Components gComponents[] = {
   { "Well formed DTD", &kWellFormedDTDCID },
   { "Navigator HTML DTD", &kNavDTDCID },
   { "XIF DTD", &kXIFDTDCID },
+  { "OTHER DTD", &kCOtherDTDCID },
+  { "ViewSource DTD", &kViewSourceDTDCID },
+  { "Rtf DTD", &kRtfDTDCID },
   { "HTML Content Sink Stream", &kHTMLContentSinkStreamCID },
   { "HTML To Text Sink Stream", &kHTMLToTXTSinkStreamCID },
   { "ParserService", &kParserServiceCID },
@@ -127,6 +136,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFDTD)
+NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CRtfDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLToTXTSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
@@ -154,6 +166,9 @@ protected:
   nsCOMPtr<nsIGenericFactory> mWellFormedDTDFactory;
   nsCOMPtr<nsIGenericFactory> mNavHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mXIFDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mOtherHTMLDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mViewSourceHTMLDTDFactory;
+  nsCOMPtr<nsIGenericFactory> mRtfHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mHTMLContentSinkStreamFactory;
   nsCOMPtr<nsIGenericFactory> mHTMLToTXTSinkStreamFactory;
   nsCOMPtr<nsIGenericFactory> mParserServiceFactory;
@@ -260,6 +275,27 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
                                 &nsXIFDTDConstructor);
     }
     fact = mXIFDTDFactory;
+  }  
+  else if (aClass.Equals(kCOtherDTDCID)) {
+    if (!mOtherHTMLDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mOtherHTMLDTDFactory), 
+                                &COtherDTDConstructor);
+    }
+    fact = mOtherHTMLDTDFactory;
+  }
+  else if (aClass.Equals(kViewSourceDTDCID)) {
+    if (!mViewSourceHTMLDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mViewSourceHTMLDTDFactory), 
+                                &CViewSourceHTMLConstructor);
+    }
+    fact = mViewSourceHTMLDTDFactory;
+  }
+  else if (aClass.Equals(kRtfDTDCID)) {
+    if (!mRtfHTMLDTDFactory) {
+      rv = NS_NewGenericFactory(getter_AddRefs(mRtfHTMLDTDFactory), 
+                                &CRtfDTDConstructor);
+    }
+    fact = mRtfHTMLDTDFactory;
   }
   else if (aClass.Equals(kHTMLContentSinkStreamCID)) {
     if (!mHTMLContentSinkStreamFactory) {

@@ -42,14 +42,23 @@
 #include "CRtfDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
-
-//#define rickgdebug 
-
+#include "prenv.h" 
+#include "nsParserCIID.h"
  
+//#define rickgdebug 
+ 
+#define TEST_DOCTYPES 1
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+
+static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
+static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
+static NS_DEFINE_CID(kRtfDTDCID, NS_CRTF_DTD_CID);
 
 static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartRequest() must be called before OnDataAvailable()";
@@ -427,6 +436,194 @@ eParseMode nsParser::GetParseMode(void){
 }
 
 
+/*************************************************************************************************
+  First, let's define our modalities:
+
+     1. compatibility-mode: behave as much like nav4 as possible (unless it's too broken to bother)
+     2. standard-mode: do html as well as you can per spec, and throw out navigator quirks
+     3. strict-mode: adhere to the strict DTD specificiation to the highest degree possible
+
+  Assume the doctype is in the following form:
+    <!DOCTYPE [Top Level Element] [Availability] "[Registration]// [Owner-ID]     //  [Type] [desc-text] // [Language]" "URI|text-identifier"> 
+              [HTML]              [PUBLIC|...]    [+|-]            [W3C|IETF|...]     [DTD]  "..."          [EN]|...]   "..."  
+
+
+  Here are the new rules for DTD handling; comments welcome:
+
+       XHTML and XML documents are always strict-mode:
+            example:  <!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">
+
+       HTML strict dtd's enable strict-mode:
+            example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+            example: <!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">
+
+       HTML 4.0 (or greater) transitional, frameset, (etc), without URI enables compatibility-mode:
+            example: <!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">
+
+       HTML 4.0 (or greater) transitional, frameset, (etc), with a URI that points to the strict.dtd will become strict:
+            example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" 
+            "http://www.w3.org/TR/REC-html40/strict.dtd">
+
+       doctypes with systemID's or internal subset are handled in strict-mode:
+            example: <!DOCTYPE HTML PUBLIC PublicID SystemID>
+            example: <!DOCTYPE HTML SYSTEM SystemID>
+            example: <!DOCTYPE HTML (PUBLIC PublicID SystemID? | SYSTEM SystemID) [ Internal-SS ]>
+
+       All other doctypes (<4.0), and documents without a doctype are handled in compatibility-mode.
+
+*****************************************************************************************************/
+ 
+/**
+ *  This is called when it's time to find out 
+ *  what mode the parser/DTD should run for this document.
+ *  (Each parsercontext can have it's own mode).
+ *  
+ *  @update  gess 02/17/00
+ *  @return  parsermode (define in nsIParser.h)
+ */
+static 
+void DetermineParseMode(nsString& aBuffer,eParseMode& aParseMode,eParserDocType aDocType) {
+  const char* theModeStr= PR_GetEnv("PARSE_MODE");
+
+  aParseMode = eParseMode_unknown;
+    
+  PRInt32 theIndex=aBuffer.Find("DOCTYPE",PR_TRUE,0,10);
+  if(kNotFound<theIndex) {
+  
+    //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
+    PRInt32 theGTPos=aBuffer.FindChar(kGreaterThan,theIndex+1);
+    PRInt32 theEnd=(kNotFound==theGTPos) ? 512 : MinInt(512,theGTPos);
+    PRInt32 theSubIndex=aBuffer.Find("//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));  //skip to the type and desc-text...
+    PRInt32 theErr=0;
+    PRInt32 theMajorVersion=3;
+
+    //note that if we don't find '>', then we just scan the first 512 bytes.
+
+    if(0<=theSubIndex) {
+      PRInt32 theStartPos=theSubIndex+5;
+      PRInt32 theCount=theEnd-theStartPos;
+
+      if(kNotFound<theSubIndex) {
+
+        theSubIndex=aBuffer.Find("XHTML",PR_TRUE,theStartPos,theCount);
+        if(0<=theSubIndex) {
+          aDocType=eXHTMLText;
+          aParseMode=eParseMode_strict;
+        }
+        else {
+          theSubIndex=aBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
+          if(0<=theSubIndex) {
+            aDocType=eHTML4Text;
+            aParseMode=eParseMode_strict;
+            theMajorVersion=4;
+            theSubIndex+=15;
+          }
+          else {
+            theSubIndex=aBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);
+            if(0<=theSubIndex) {
+              aDocType=eHTML4Text;
+              aParseMode=eParseMode_strict;
+              theMajorVersion=3;
+            }
+            else {
+              theSubIndex=aBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theStartPos,theCount);
+              if(0<=theSubIndex) {
+                aDocType=eHTML3Text;
+                aParseMode=eParseMode_quirks;
+                theSubIndex+=20;
+              }
+            } 
+          }
+        }
+      }
+
+      theStartPos=theSubIndex+5;
+      theCount=theEnd-theStartPos;
+      nsAutoString theNum;
+
+        //get the next substring from the buffer, which should be a number.
+        //now see what the version number is...
+
+      theStartPos=aBuffer.FindCharInSet("123456789",theStartPos);
+      if(0<=theStartPos) {
+        PRInt32 theTerminal=aBuffer.FindCharInSet(" />",theStartPos+1);
+        if(theTerminal) {
+          aBuffer.Mid(theNum,theStartPos,theTerminal-theStartPos);
+        }
+        else aBuffer.Mid(theNum,theStartPos,3);
+        theMajorVersion=theNum.ToInteger(&theErr);
+      }
+
+      //now see what the
+      theStartPos+=theNum.Length();
+      theCount=theEnd-theStartPos;
+      if((aBuffer.Find("TRANSITIONAL",PR_TRUE,theStartPos,theCount)>kNotFound)||
+         (aBuffer.Find("LOOSE",PR_TRUE,theStartPos,theCount)>kNotFound)       ||
+         (aBuffer.Find("FRAMESET",PR_TRUE,theStartPos,theCount)>kNotFound)    ||
+         (aBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+         (aBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+         (aBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
+        aParseMode=eParseMode_quirks;
+      }
+
+      //one last thing: look for a URI that specifies the strict.dtd
+      theStartPos+=6;
+      theCount=theEnd-theStartPos;
+      theSubIndex=aBuffer.Find("STRICT.DTD",PR_TRUE,theStartPos,theCount);
+      if(0<theSubIndex) {
+        //Since we found it, regardless of what's in the descr-text, kick into strict mode.
+        aParseMode=eParseMode_strict;
+        aDocType=eHTML4Text;
+      }
+
+      if (0==theErr){
+        switch(theMajorVersion) {
+          case 0: case 1: case 2: case 3:
+            if(aDocType!=eXHTMLText){
+              aParseMode=eParseMode_quirks; //be as backward compatible as possible
+              aDocType=eHTML3Text;
+            }
+            break;
+  
+          default:
+              //XXX hack -- someday, the next line of code will be criticized 
+              //for it's lack of vision...
+            if(theMajorVersion>20) {
+              aParseMode=eParseMode_noquirks;
+            }
+            break;
+        } //switch
+      }
+ 
+    } //if
+    else {
+      PRInt32 thePos=aBuffer.Find("HTML",PR_TRUE,1,50);
+      if(kNotFound!=thePos) {
+        aDocType=eHTML4Text;
+        PRInt32 theIDPos=aBuffer.Find("PublicID",thePos);
+        if(kNotFound==theIDPos)
+          theIDPos=aBuffer.Find("SystemID",thePos);
+        aParseMode=(kNotFound==theIDPos) ? eParseMode_quirks : eParseMode_strict;
+      }
+    }
+  }
+  else if(kNotFound<(theIndex=aBuffer.Find("?XML",PR_TRUE,0,128))) {
+    aDocType=eXMLText;
+    aParseMode=eParseMode_strict;
+  }
+
+  if(theModeStr) {
+    if(0==nsCRT::strcasecmp(theModeStr,"strict"))
+      aParseMode=eParseMode_strict;    
+  }
+  else {
+    if(eParseMode_unknown==aParseMode) {
+      aBuffer.InsertWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n",0);
+      aDocType=eHTML3Text;
+      aParseMode=eParseMode_quirks;
+    }
+  }
+}
 
 /**
  *  
@@ -494,6 +691,131 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
     return PR_TRUE;
   }
   return PR_FALSE;
+}
+
+/**
+ *  Call this method to determine a DTD for a DOCTYPE
+ *  
+ *  @update  harishd 05/01/00
+ *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
+ *  @param   aDocTypeStr -- A doctype for which a DTD is to be selected.
+ *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
+ *                          Note: aParseMode might be required.
+ *  @param   aCommand    -- A command for which a DTD is to be selected.
+ *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
+ *  @return  NS_OK if succeeded else ERROR.
+ */
+nsresult nsParser::CreateCompatibleDTDForDocType(nsIDTD** aDTD, nsString* aDocTypeStr)
+{
+  nsresult       result=NS_OK;
+  const nsCID*   theDTDClassID=0;
+  
+  if(aDocTypeStr) {
+    eParseMode     theParseMode=eParseMode_unknown;
+    eParserDocType theDocType=ePlainText;
+
+    DetermineParseMode(*aDocTypeStr,theParseMode,theDocType);
+
+    switch(theDocType) {
+      case eHTML4Text:
+        if(theParseMode==eParseMode_strict) {
+          theDTDClassID=&kCOtherDTDCID;
+          break;
+        }
+      case eHTML3Text:
+        theDTDClassID=&kNavDTDCID;
+        break;
+      case eXHTMLText:
+      case eXMLText:
+        theDTDClassID=&kWellFormedDTDCID;
+        break;
+      default:
+        theDTDClassID=&kNavDTDCID;
+        break;
+    }
+  }
+
+  result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
+
+  return result;
+
+}
+
+/**
+ *  Call this method to determine a DTD for a given mime type.
+ *  
+ *  @update  harishd 05/01/00
+ *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
+ *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
+ *                          Note: aParseMode might be required.
+ *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
+ *  @return  NS_OK if succeeded else ERROR.
+ */
+nsresult CreateCompatibleDTDForMimeType(nsIDTD** aDTD, const nsString* aMimeType=nsnull, 
+                                        eParseMode aParseMode=eParseMode_unknown)
+{
+  nsresult result=NS_OK;
+  const nsCID*   theDTDClassID=0;
+      
+  if(aMimeType) {
+    
+    NS_ASSERTION(aParseMode!=eParseMode_unknown,"DTD selection might require a parsemode");
+
+    if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
+      if(aParseMode==eParseMode_strict) {
+        theDTDClassID=&kCOtherDTDCID;
+      }
+      else {
+        theDTDClassID=&kNavDTDCID;
+      }
+    }
+    else if(aMimeType->EqualsWithConversion(kPlainTextContentType)) {
+      theDTDClassID=&kNavDTDCID;
+    }
+    else if(aMimeType->EqualsWithConversion(kXMLTextContentType) ||
+       aMimeType->EqualsWithConversion(kXULTextContentType) ||
+       aMimeType->EqualsWithConversion(kRDFTextContentType)) {
+      theDTDClassID=&kWellFormedDTDCID;
+    }
+    else if(aMimeType->EqualsWithConversion(kXIFTextContentType)) {
+      theDTDClassID=&kRtfDTDCID;
+    }
+    else {
+      theDTDClassID=&kNavDTDCID;
+    }
+    result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
+  }
+
+  return result;
+}
+
+/**
+ *  Call this method to determine a DTD for a given command
+ *  
+ *  @update  harishd 05/01/00
+ *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
+ *  @param   aCommand    -- A command for which a DTD is to be selected.
+ *  @return  NS_OK if succeeded else ERROR.
+ */
+nsresult CreateCompatibleDTDForCommand(nsIDTD**  aDTD, eParserCommands aCommand=eViewNormal)
+{
+  nsresult result=NS_OK;
+  const nsCID*   theDTDClassID=0;
+
+  switch(aCommand) {
+    case eViewSource:
+      theDTDClassID=&kViewSourceDTDCID;
+      break;
+    case eViewNormal:
+      theDTDClassID=&kNavDTDCID;
+      break;
+    case eViewErrors:
+    default:
+      break;
+  }
+  result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
+  
+  return result;
 }
 
 #ifdef TEST_DOCTYPES
@@ -608,7 +930,7 @@ static const char* doctypes[] = {
  */
 nsresult nsParser::WillBuildModel(nsString& aFilename){
 
-  nsresult result=NS_OK;
+  nsresult       result=NS_OK;
 
 #if TEST_DOCTYPES
 
@@ -617,9 +939,13 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   if(!tested) {
     tested=PR_TRUE;
+    eParseMode       theParseMode=eParseMode_unknown;
+    eParserDocType   theDocumentType=ePlainText;
+    
     while(*theDocType) {
-      nsAutoString theType(*theDocType);
-      eParseMode result=mParserContext->DetermineParseMode(theType);
+      nsAutoString theType;
+      theType.AssignWithConversion(*theDocType);
+      DetermineParseMode(theType,theParseMode,theDocumentType);
       theDocType++;
     }
   }
@@ -631,7 +957,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       mMinorIteration=-1; 
       
       nsString& theBuffer=mParserContext->mScanner->GetBuffer();
-      mParserContext->DetermineParseMode(theBuffer);  
+      DetermineParseMode(theBuffer,mParserContext->mParseMode,mParserContext->mDocType);  
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);

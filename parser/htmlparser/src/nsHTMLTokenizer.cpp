@@ -540,7 +540,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       if(NS_SUCCEEDED(result)) {
         
         //XXX - Find a better soution to record content
-        if(theTag==eHTMLTag_textarea && !mRecordTrailingContent) {
+        if((theTag==eHTMLTag_textarea || theTag==eHTMLTag_xmp) && !mRecordTrailingContent) {
           mRecordTrailingContent=PR_TRUE;
         }
           
@@ -589,7 +589,8 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
   nsresult result=NS_OK;
   
   if(aToken) {
-    if(aToken->GetTypeID()==eHTMLTag_textarea && mRecordTrailingContent) {
+    eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
+    if((theTag==eHTMLTag_textarea || theTag==eHTMLTag_xmp) && mRecordTrailingContent) {
       mRecordTrailingContent=PR_FALSE;
     }
     result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    

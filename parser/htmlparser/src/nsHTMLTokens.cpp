@@ -282,16 +282,17 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
 void CStartToken::GetSource(nsString& anOutputString){
   anOutputString.AssignWithConversion("<");
   /*
-   * mTextValue used to contain the name of the tag.
-   * But for the sake of performance we now rely on the tagID
-   * rather than tag name.  This however, caused bug 15204
-   * to reincarnate. Since, mTextvalue is not being used here..
-   * I'm just going to comment it out.
-   * 
+   * Watch out for Bug 15204 
    */
-  // anOutputString+=mTextValue; 
   if(mTrailingContent.Length()>0)
-    anOutputString+=mTrailingContent;
+    anOutputString=mTrailingContent;
+  else {
+    if(mTextValue.Length()>0)
+      anOutputString=mTextValue;
+    else
+     anOutputString.AssignWithConversion(GetTagName(mTypeID));
+    anOutputString+='>';
+  }
 }
 
 /*
@@ -304,16 +305,17 @@ void CStartToken::GetSource(nsString& anOutputString){
 void CStartToken::AppendSource(nsString& anOutputString){
   anOutputString.AppendWithConversion("<");
   /*
-   * mTextValue used to contain the name of the tag.
-   * But for the sake of performance we now rely on the tagID
-   * rather than tag name.  This however, caused bug 15204
-   * to reincarnate. Since, mTextvalue is not being used here..
-   * I'm just going to comment it out.
-   * 
+   * Watch out for Bug 15204 
    */
-  // anOutputString+=mTextValue; 
   if(mTrailingContent.Length()>0)
     anOutputString+=mTrailingContent;
+  else {
+    if(mTextValue.Length()>0)
+      anOutputString+=mTextValue;
+    else
+     anOutputString.AppendWithConversion(GetTagName(mTypeID));
+    anOutputString+='>';
+  }
 }
 
 /*
@@ -655,10 +657,16 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     else disaster=PR_TRUE;
 
     if(disaster) {
-      if((!aScanner.IsIncremental()) && (theAltTermStrPos>kNotFound)) {
-        // If you're here it means..we hit the rock bottom and therefore switch to plan B.
-        theCurrOffset=theAltTermStrPos;
-        theLastIteration=PR_TRUE;
+      if(!aScanner.IsIncremental()) {
+        if(theAltTermStrPos>kNotFound) {
+          // If you're here it means..we hit the rock bottom and therefore switch to plan B.
+          theCurrOffset=theAltTermStrPos;
+          theLastIteration=PR_TRUE;
+        }
+        else {
+          aTerminalString.Cut(0,2); // Do this to fix Bug. 35456
+          done=PR_TRUE;
+        }
       }
       else
        result=kEOF;
