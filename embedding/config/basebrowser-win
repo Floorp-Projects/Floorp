@@ -263,6 +263,8 @@ res\quirk.css
 res\viewsource.css
 res\ua.css
 res\forms.css
+res\arrow.gif
+res\arrowd.gif
 res\builtin\buttonBindings.xml
 res\builtin\buttons.css
 res\builtin\checkbox.css
