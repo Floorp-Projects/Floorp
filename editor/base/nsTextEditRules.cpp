@@ -40,10 +40,11 @@
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
 #include "TypeInState.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
-
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if ((mFlags & nsIHTMLEditor::eEditorReadonlyMask) || (mFlags & nsIHTMLEditor::eEditorDisabledMask)) \
@@ -628,19 +629,40 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     if (NS_FAILED(res)) return res;
   }
 
-#ifdef REPLACE_LINEBREAK_WITH_SPACES
-  // Commented out per bug 23485
-  // if we're a single line control, pretreat the input string to remove returns
-  // this is unnecessary if we use <BR>'s for breaks in "plain text", because
-  // InsertBreak() checks the string.  But we don't currently do that, so we need this
-  // fixes bug 21032 
-  // *** there's some debate about whether we should replace CRLF with spaces, or
-  //     truncate the string at the first CRLF.  Here, we replace with spaces.
+  // People have lots of different ideas about what text fields
+  // should do with multiline pastes.  See bugs 21032, 23485, 23485, 50935.
+  // The four possible options are:
+  // 0. paste newlines intact
+  // 1. paste up to the first newline
+  // 2. replace newlines with spaces
+  // 3. strip newlines
+  // So find out what we're expected to do:
+  enum {
+    ePasteIntact = 0, ePasteFirstLine = 1,
+    eReplaceWithSpaces = 2, eStripNewlines = 3
+  };
+  PRInt32 singleLineNewlineBehavior = 1;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+    rv = prefs->GetIntPref("editor.singleLine.pasteNewlines",
+                           &singleLineNewlineBehavior);
+
   if (nsIHTMLEditor::eEditorSingleLineMask & mFlags)
   {
-    outString->ReplaceChar(CRLF, ' ');
+    if (singleLineNewlineBehavior == eReplaceWithSpaces)
+      outString->ReplaceChar(CRLF, ' ');
+    else if (singleLineNewlineBehavior == eStripNewlines)
+      outString->StripChars(CRLF);
+    else if (singleLineNewlineBehavior == ePasteFirstLine)
+    {
+      PRInt32 firstCRLF = outString->FindCharInSet(CRLF);
+      if (firstCRLF > 0)
+      outString->Truncate(firstCRLF);
+    }
+    else // even if we're pasting newlines, don't paste leading/trailing ones
+      outString->Trim(CRLF, PR_TRUE, PR_TRUE);
   }
-#endif /* REPLACE_LINEBREAK_WITH_SPACES */
 
   // get the (collapsed) selection location
   res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
@@ -712,7 +734,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         if (subStr.EqualsWithConversion("\n"))
         {
           if (nsIHTMLEditor::eEditorSingleLineMask & mFlags)
+          {
+            NS_ASSERTION((singleLineNewlineBehavior == ePasteIntact),
+                  "Newline improperly getting into single-line edit field!");
             res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
+          }
           else
             res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
