@@ -205,9 +205,6 @@ nsresult
 NS_NewTitledBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTitleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 nsresult
@@ -215,12 +212,6 @@ NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
-NS_NewSpinnerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
-NS_NewFontPickerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewScrollbarButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -5995,31 +5986,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       } 
     } //------- End Grid ------
 
-    else if (aTag == nsXULAtoms::title) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewTitleFrame(aPresShell, &newFrame);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      // Boxes can scroll.
-      if (IsScrollable(aPresContext, display)) {
-
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
-
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-
-        primaryFrameSet = PR_TRUE;
-
-        frameHasBeenInitialized = PR_TRUE;
-
-      } 
-    } // End of BOX CONSTRUCTION logic
-
     else if (aTag == nsXULAtoms::titledbox) {
 
           rv = NS_NewTitledBoxFrame(aPresShell, &newFrame);
@@ -6053,20 +6019,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           processChildren = PR_TRUE;
           isReplaced = PR_TRUE;
     } 
-    
-    else if (aTag == nsXULAtoms::spinner)
-      rv = NS_NewSpinnerFrame(aPresShell, &newFrame);
-    else if (aTag == nsXULAtoms::fontpicker)
-      rv = NS_NewFontPickerFrame(aPresShell, &newFrame);
-    else if (aTag == nsXULAtoms::iframe) {
-      isReplaced = PR_TRUE;
-      rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
-    }
-    else if (aTag == nsXULAtoms::editor) {
-      isReplaced = PR_TRUE;
-      rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
-    }
-    else if (aTag == nsXULAtoms::browser) {
+    else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
+             aTag == nsXULAtoms::browser) {
       isReplaced = PR_TRUE;
       rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
     }

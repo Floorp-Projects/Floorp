@@ -740,7 +740,7 @@
     </content>    
   </binding>
   
-  <binding id="title">
+  <binding id="title" extends="xul:box">
     <content>
       <xul:text inherits="value"/>
     </content>
