@@ -428,7 +428,9 @@ LINK_LIBS= \
 !endif
     $(DIST)\lib\unicvt32.lib \
 !ifdef JAVA_OR_OJI
+!ifdef MOZ_SMARTUPDATE
     $(DIST)\lib\softup32.lib \
+!endif
 !ifndef NO_SECURITY
     $(DIST)\lib\jsl32.lib \
 !endif
@@ -1410,6 +1412,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\winpref.c
 !ifdef MOZ_LOC_INDEP
 	$(DEPTH)\cmd\winfe\winli.cpp
+!endif
+!ifdef MOZ_SMARTUPDATE
+	$(DEPTH)\cmd\winfe\winprog.cpp
 !endif
 	$(DEPTH)\cmd\winfe\resdll\resdll.c
 !if "$(MOZ_BITS)"=="32"
@@ -2424,10 +2429,10 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\edtplug.lib +
 !endif
 !endif
+!ifdef MOZ_SMARTUPDATE
     $(DIST)\lib\softup16.lib +
+!endif
 !else
-    $(DIST)\lib\libreg16.lib +
-    $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\libsjs16.lib +
     $(DIST)\lib\libnjs16.lib +
 !endif
@@ -2799,8 +2804,8 @@ exports:
     -xcopy $(DEPTH)\lib\plugin\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_JAVA)
     -xcopy $(DEPTH)\modules\applet\include\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(DEPTH)\modules\libreg\include\*.h $(EXPORTINC) $(XCF)
 !endif
+    -xcopy $(DEPTH)\modules\libreg\include\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\modules\libutil\public\xp_obs.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\modules\libimg\public\*.h $(EXPORTINC) $(XCF)
     -xcopy $(DEPTH)\modules\libpref\public\*.h $(EXPORTINC) $(XCF)
@@ -2819,8 +2824,8 @@ exports:
     -xcopy $(XPDIST)\public\security\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_JAVA)
     -xcopy $(XPDIST)\public\applet\*.h $(EXPORTINC) $(XCF)
-    -xcopy $(XPDIST)\public\libreg\*.h $(EXPORTINC) $(XCF)
 !endif
+    -xcopy $(XPDIST)\public\libreg\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_OJI)
     -xcopy $(XPDIST)\public\oji\*.h $(EXPORTINC) $(XCF)
 !endif
@@ -2886,6 +2891,7 @@ ns.zip:
 !endif
 		brpref32.dll		\
 		lipref32.dll		\
+        libreg32.dll        \
 		unicvt32.dll		\
 		uni3200.dll		\
 		resdll.dll		\
@@ -2902,7 +2908,6 @@ ns.zip:
 		editor32.dll		\
 		xppref32.dll		\
 		sched32.dll			\
-		libreg32.dll		\
 		xpcom32.dll		\
 		netscape.cfg		\
 		moz40p3	

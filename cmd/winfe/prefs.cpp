@@ -59,6 +59,10 @@
 #include "addrprop.h"
 #endif
 #endif /* MOZ_MAIL_NEWS */
+#ifdef MOZ_SMARTUPDATE
+#include "VerReg.h"
+#include "softupdt.h"
+#endif /* MOZ_SMARTUPDATE */
 
 extern "C" {
 #include "xpgetstr.h"
@@ -1685,6 +1689,180 @@ CLIPreference::Release()
 }
 #endif /* MOZ_LOC_INDEP */
 
+#ifdef MOZ_SMARTUPDATE
+/////////////////////////////////////////////////////////////////////////////
+// CSmartUpdatePreference
+
+class CSmartUpdatePrefs : public ISmartUpdatePrefs {
+	public:
+		CSmartUpdatePrefs();
+
+		// IUnknown methods
+		STDMETHODIMP QueryInterface(REFIID riid, LPVOID FAR* ppvObj);
+		STDMETHODIMP_(ULONG) AddRef();
+		STDMETHODIMP_(ULONG) Release();
+		
+        // ISmartUpdatePrefs methods
+	    STDMETHODIMP_(LONG) RegPack();
+        STDMETHODIMP_(LONG) Uninstall(char* regPackageName);
+        STDMETHODIMP_(LONG) EnumUninstall(void** context, char* packageName,
+                                    LONG len1, char*regPackageName, LONG len2);
+
+	private:
+
+		ULONG	  m_uRef;
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CSmartUpdatePrefs
+CSmartUpdatePrefs::CSmartUpdatePrefs()
+{
+	m_uRef = 0;
+}
+
+STDMETHODIMP
+CSmartUpdatePrefs::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
+{
+	*ppvObj = NULL;
+
+	if (riid == IID_IUnknown || riid == IID_ISmartUpdatePrefs) {
+		*ppvObj = (LPVOID)this;
+		AddRef();
+		return NOERROR;
+
+	} 
+
+	return ResultFromScode(E_NOINTERFACE);
+}
+
+STDMETHODIMP_(ULONG)
+CSmartUpdatePrefs::AddRef()
+{
+	return ++m_uRef;
+}
+
+STDMETHODIMP_(ULONG)
+CSmartUpdatePrefs::Release()
+{
+	if (--m_uRef == 0) {
+		delete this;
+		return 0;
+	}
+
+	return m_uRef;
+}
+
+STDMETHODIMP_(LONG)
+CSmartUpdatePrefs::RegPack()
+{
+	return VR_PackRegistry();
+}
+
+STDMETHODIMP_(LONG)
+CSmartUpdatePrefs::Uninstall(char* regPackageName)
+{
+	return SU_Uninstall(regPackageName);
+}
+
+STDMETHODIMP_(LONG)
+CSmartUpdatePrefs::EnumUninstall(void** context, char* packageName,
+                                 LONG len1, char*regPackageName, LONG len2)
+{
+	return SU_EnumUninstall(context, packageName,len1, regPackageName,len2);
+}
+
+#endif /* MOZ_SMARTUPDATE */
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CAdvancedPrefs
+
+class CAdvancedPrefs : public IAdvancedPrefs {
+	public:
+		CAdvancedPrefs();
+
+		// IUnknown methods
+		STDMETHODIMP QueryInterface(REFIID riid, LPVOID FAR* ppvObj);
+		STDMETHODIMP_(ULONG) AddRef();
+		STDMETHODIMP_(ULONG) Release();
+		
+       	// Initialization routine to create contained and aggregated objects
+		HRESULT		 Init();
+
+	private:
+
+		ULONG	  m_uRef;
+		LPUNKNOWN m_pCategory;  // inner object supporting ISpecifyPropertyPageObjects
+#ifdef MOZ_SMARTUPDATE
+        CSmartUpdatePrefs *m_pSmartUpdatePrefs;
+#endif /* MOZ_SMARTUPDATE */
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CAdvancedPrefs
+CAdvancedPrefs::CAdvancedPrefs()
+{
+	m_uRef = 0;
+	m_pCategory = NULL;
+#ifdef MOZ_SMARTUPDATE
+    m_pSmartUpdatePrefs = new CSmartUpdatePrefs;
+    m_pSmartUpdatePrefs->AddRef();
+#endif /* MOZ_SMARTUPDATE */
+ }
+
+HRESULT
+CAdvancedPrefs::Init()
+{
+   	// Create the object as part of an aggregate
+  	return FEU_CoCreateInstance(CLSID_AdvancedPrefs, (LPUNKNOWN)this,
+		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
+}
+
+STDMETHODIMP
+CAdvancedPrefs::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
+{
+	*ppvObj = NULL;
+
+	if (riid == IID_IUnknown || riid == IID_IAdvancedPrefs) {
+		*ppvObj = (LPVOID)this;
+		AddRef();
+		return NOERROR;
+#ifdef MOZ_SMARTUPDATE
+	} else if (riid == IID_ISmartUpdatePrefs) {
+		assert(m_pSmartUpdatePrefs);
+		return m_pSmartUpdatePrefs->QueryInterface(riid, ppvObj);
+#endif /* MOZ_SMARTUPDATE */
+	} else if (riid == IID_ISpecifyPropertyPageObjects) {
+		assert(m_pCategory);
+		return m_pCategory->QueryInterface(riid, ppvObj);
+	}
+
+	return ResultFromScode(E_NOINTERFACE);
+}
+
+STDMETHODIMP_(ULONG)
+CAdvancedPrefs::AddRef()
+{
+	return ++m_uRef;
+}
+
+STDMETHODIMP_(ULONG)
+CAdvancedPrefs::Release()
+{
+	if (--m_uRef == 0) {
+		if (m_pCategory)
+			m_pCategory->Release();
+#ifdef MOZ_SMARTUPDATE
+        if (m_pSmartUpdatePrefs)
+			m_pSmartUpdatePrefs->Release();
+#endif /* MOZ_SMARTUPDATE */
+		delete this;
+		return 0;
+	}
+
+	return m_uRef;
+}
+
 
 static void
 ReloadAllWindows()
@@ -1777,6 +1955,29 @@ CreateOfflineCategory(LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 	return bResult;
 }
 #endif /* MOZ_OFFLINE */
+
+static BOOL
+CreateAdvancedCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
+{
+	CAdvancedPrefs *pAdvanced;
+	BOOL		   bResult = FALSE;
+
+	
+	pAdvanced = new CAdvancedPrefs();
+	pAdvanced->AddRef();
+	
+	// Initialize the browser pref object. This allows it to load any objects that are
+	// contained or aggregated
+	if (SUCCEEDED(pAdvanced->Init())) {
+		// Get the interface pointer for ISpecifyPropertyPageObjects
+		if (SUCCEEDED(pAdvanced->QueryInterface(IID_ISpecifyPropertyPageObjects, (LPVOID *)pCategory)))
+			bResult = TRUE;
+	} 
+	
+	// We're all done with the object
+	pAdvanced->Release();
+	return bResult;
+}
 
 
 #ifdef MOZ_LOC_INDEP
@@ -1900,13 +2101,9 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 #endif // MOZ_OFFLINE		
 
 		// Advanced category
-		if (SUCCEEDED(FEU_CoCreateInstance(CLSID_AdvancedPrefs,
-			                           NULL,
-									   CLSCTX_INPROC_SERVER,
-									   IID_ISpecifyPropertyPageObjects,
-									   (LPVOID *)&categories[nCategories]))) {
+        if (CreateAdvancedCategory(pContext, &categories[nCategories])) {
 			nCategories++;
-		}
+        }
 
         // Make sure we have at least one category
 		if (nCategories == 0) {

@@ -40,6 +40,9 @@ void SHUTDOWN_li(void);
 // XP Includes
 #include "prefapi.h"
 #include "NSReg.h"
+#ifdef MOZ_SMARTUPDATE
+#include "softupdt.h"
+#endif
 
 #ifdef XP_WIN32
 #include "postal.h"    // mapi DLL interface
@@ -667,6 +670,9 @@ BOOL CNetscapeApp::InitInstance()
 	** Registry startup has to happen before profile stuff because creating a new
 	** profile uses the registry.
 	*/
+#ifdef MOZ_SMARTUPDATE
+    SU_Startup();
+#endif
     NR_StartupRegistry();
 
     // Initialize the network.
@@ -2051,6 +2057,9 @@ int CNetscapeApp::ExitInstance()
 	PREF_SaveLIPrefFile(prefName);
 	XP_FREEIF (prefName);
     NR_ShutdownRegistry();
+#ifdef MOZ_SMARTUPDATE
+    SU_Shutdown();
+#endif
 
     //  Save certs and keys early, since if they are lost the user is screwed
     SECNAV_Shutdown();

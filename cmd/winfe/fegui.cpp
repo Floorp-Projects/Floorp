@@ -538,7 +538,7 @@ xp_TempFileName(int type, const char * request_prefix, const char * extension,
   const char * directory = NULL; 
   char * ext = NULL;           // file extension if any
   char * prefix = NULL;        // file prefix if any
-  
+  XP_Bool bDirSlash = FALSE;
   
   XP_StatStruct statinfo;
   int status;     
@@ -599,9 +599,14 @@ xp_TempFileName(int type, const char * request_prefix, const char * extension,
          {
             if ( XP_STRRCHR(request_prefix, '/') )
             {
+               const char *end;
                XP_StatStruct st;
 
                directory = (char *)request_prefix;
+               end = directory + XP_STRLEN(directory) - 1;
+               if ( *end == '/' || *end == '\\' ) {
+                 bDirSlash = TRUE;
+               }
                if (XP_Stat (directory, &st, xpURL))
                   XP_MakeDirectoryR (directory, xpURL);
                ext = (char *)extension;
@@ -706,7 +711,10 @@ xp_TempFileName(int type, const char * request_prefix, const char * extension,
     
     //  Create the fully qualified path and file name.
     //
-    sprintf(file_buf, "%s\\%s%s%s", directory, prefix, ca_time, ext);
+    if (bDirSlash)
+      sprintf(file_buf, "%s%s%s%s", directory, prefix, ca_time, ext);
+    else
+      sprintf(file_buf, "%s\\%s%s%s", directory, prefix, ca_time, ext);
 
     //  Determine if the file exists, and mark that we've tried yet
     //    another file name (mark to be used later).
