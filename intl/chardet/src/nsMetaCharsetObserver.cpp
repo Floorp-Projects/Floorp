@@ -243,8 +243,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         else if(0 == nsCRT::strcasecmp((const PRUnichar*)keys->ObjectAt(i), "content"))
               contentValue=(const PRUnichar*)values->ObjectAt(i);
       }
-      static nsAutoString contenttype = NS_ConvertToString("Content-Type");
-      static nsAutoString texthtml = NS_ConvertToString("text/html");
+      NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
+      NS_NAMED_LITERAL_STRING(texthtml, "text/html");
 
       PRInt32 lastIdx =0;
       if(nsnull != httpEquivValue)
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
       if((nsnull != httpEquivValue) && 
          (nsnull != contentValue) && 
-         ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.GetUnicode())) ||
+         ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.get())) ||
           ((((httpEquivValue[0]=='\'') &&
              (httpEquivValue[lastIdx]=='\'')) ||
             ((httpEquivValue[0]=='\"') &&
@@ -261,11 +261,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                       contenttype.GetUnicode(),
                       contenttype.Length()))
           )) &&
-         ((0==nsCRT::strcasecmp(contentValue,texthtml.GetUnicode())) ||
+         ((0==nsCRT::strcasecmp(contentValue,texthtml.get())) ||
           (((contentValue[0]=='\'') ||
             (contentValue[0]=='\"'))&&
            (0==nsCRT::strncasecmp(contentValue+1,
-                      texthtml.GetUnicode(),
+                      texthtml.get(),
                       texthtml.Length()))
           ))
         )
@@ -293,8 +293,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      res = mAlias->GetPreferred(newCharset, preferred);
                      if(NS_SUCCEEDED(res))
                      {
-                        res = NotifyWebShell(aDocumentID, NS_ConvertUCS2toUTF8(preferred.GetUnicode()), 
-                                   kCharsetFromMetaTag);
+                        res = NotifyWebShell(aDocumentID,
+                                        NS_ConvertUCS2toUTF8(preferred).get(),
+                                        kCharsetFromMetaTag);
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
