@@ -32,7 +32,7 @@
  * @param 
  * @return
  */
-inline PRBool CTagList::Contains(eHTMLTags aTag){
+PRBool CTagList::Contains(eHTMLTags aTag){
   PRBool result=PR_FALSE;
   if(mTagList) {
     result=FindTagInSet(aTag,mTagList,mCount);
