@@ -125,7 +125,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
             if (NS_SUCCEEDED(rv)) {
                 char *data = nsnull;
                 if (size != 0)
-                    rv = stream->ReadBytes(&data, size);
+                    rv = stream->ReadBytes(size, &data);
                 if (NS_SUCCEEDED(rv)) {
                     char *olddata;
                     uint32 oldsize;
