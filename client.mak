@@ -100,6 +100,19 @@ NSPR_CO_FLAGS=-r NSPRPUB_RELEASE_4_0_20000218
 
 CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
 
+#//------------------------------------------------------------------------
+#// Figure out how to pull PSM client libs.
+#// If no PSM_CO_TAG is specified, use the default static tag
+#//------------------------------------------------------------------------
+
+!if "$(PSM_CO_TAG)" != ""
+PSM_CO_FLAGS=-r $(PSM_CO_TAG)
+!else
+PSM_CO_FLAGS=-r SeaMonkey_M14_BRANCH
+!endif
+
+CVSCO_PSM = cvs -q $(CVS_FLAGS) co $(PSM_CO_FLAGS) -P
+
 ## The master target
 ############################################################
 
