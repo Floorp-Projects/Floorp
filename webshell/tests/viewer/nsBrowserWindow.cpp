@@ -78,7 +78,6 @@
 
 #include "nsCWebBrowser.h"
 
-#include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsEditorMode.h"
