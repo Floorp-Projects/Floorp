@@ -91,17 +91,13 @@ static AtkObject*          getParentCB(AtkObject *aAtkObj);
 static gint                getChildCountCB(AtkObject *aAtkObj);
 static AtkObject*          refChildCB(AtkObject *aAtkObj, gint aChildIndex);
 static gint                getIndexInParentCB(AtkObject *aAtkObj);
-
-/* implemented by MaiWidget */
-//static AtkStateSet*        refStateSetCB(AtkObject *aAtkObj);
-//static AtkRole             getRoleCB(AtkObject *aAtkObj);
-
-//static AtkRelationSet*     refRelationSetCB(AtkObject *aAtkObj);
-//static AtkLayer            getLayerCB(AtkObject *aAtkObj);
-//static gint                getMdiZorderCB(AtkObject *aAtkObj);
+static AtkStateSet*        refStateSetCB(AtkObject *aAtkObj);
 
 /* the missing atkobject virtual functions */
 /*
+  static AtkRelationSet*     refRelationSetCB(AtkObject *aAtkObj);
+  static AtkLayer            getLayerCB(AtkObject *aAtkObj);
+  static gint                getMdiZorderCB(AtkObject *aAtkObj);
   static void                SetNameCB(AtkObject *aAtkObj,
   const gchar *name);
   static void                SetDescriptionCB(AtkObject *aAtkObj,
@@ -163,6 +159,8 @@ mai_atk_object_get_type(void)
 PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
+
+PRUint32 nsAccessibleWrap::mAtkTypeNameIndex = 0;
 
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
                                    nsIWeakReference *aShell)
@@ -339,7 +337,6 @@ nsAccessibleWrap::AddMaiInterface(MaiInterface *aMaiIface)
     mInterfaceCount++;
     return NS_OK;
 }
-
 MaiInterface *
 nsAccessibleWrap::GetMaiInterface(PRInt16 aIfaceType)
 {
@@ -382,8 +379,6 @@ nsAccessibleWrap::GetMaiAtkType(void)
     return type;
 }
 
-PRUint32 nsAccessibleWrap::mAtkTypeNameIndex = 0;
-
 const char *
 nsAccessibleWrap::GetUniqueMaiAtkTypeName(void)
 {
@@ -398,6 +393,128 @@ nsAccessibleWrap::GetUniqueMaiAtkTypeName(void)
     MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
 
     return name;
+}
+
+/******************************************************************************
+The following nsIAccessible states aren't translated, just ignored.
+  STATE_MIXED:         For a three-state check box.
+  STATE_READONLY:      The object is designated read-only.
+  STATE_HOTTRACKED:    Means its appearance has changed to indicate mouse
+                       over it.
+  STATE_DEFAULT:       Represents the default button in a window.
+  STATE_FLOATING:      Not supported yet.
+  STATE_MARQUEED:      Indicate scrolling or moving text or graphics.
+  STATE_ANIMATED:
+  STATE_OFFSCREEN:     Has no on-screen representation.
+  STATE_MOVEABLE:
+  STATE_SELFVOICING:   The object has self-TTS.
+  STATE_LINKED:        The object is formatted as a hyperlink.
+  STATE_TRAVERSE:      The object is a hyperlink that has been visited.
+  STATE_EXTSELECTABLE: Indicates that an object extends its selectioin.
+  STATE_ALERT_LOW:     Not supported yet.
+  STATE_ALERT_MEDIUM:  Not supported yet.
+  STATE_ALERT_HIGH:    Not supported yet.
+  STATE_PROTECTED:     The object is a password-protected edit control.
+  STATE_HASPOPUP:      Object displays a pop-up menu or window when invoked.
+
+Returned AtkStatusSet never contain the following AtkStates.
+  ATK_STATE_ARMED:     Indicates that the object is armed.
+  ATK_STATE_DEFUNCT:   Indicates the user interface object corresponding to
+                       thus object no longer exists.
+  ATK_STATE_EDITABLE:  Indicates the user can change the contents of the object.
+  ATK_STATE_HORIZONTAL:Indicates the orientation of this object is horizontal.
+  ATK_STATE_ICONIFIED:
+  ATK_STATE_OPAQUE:     Indicates the object paints every pixel within its
+                        rectangular region
+  ATK_STATE_STALE:      The index associated with this object has changed since
+                        the user accessed the object
+******************************************************************************/
+
+void
+nsAccessibleWrap::TranslateStates(PRUint32 aAccState, void *aAtkStateSet)
+{
+    if (!aAtkStateSet)
+        return;
+    AtkStateSet *state_set = NS_STATIC_CAST(AtkStateSet *, aAtkStateSet);
+
+    if (aAccState & nsIAccessible::STATE_SELECTED)
+        atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
+
+    if (aAccState & nsIAccessible::STATE_FOCUSED)
+        atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
+
+    if (aAccState & nsIAccessible::STATE_PRESSED)
+        atk_state_set_add_state (state_set, ATK_STATE_PRESSED);
+
+    if (aAccState & nsIAccessible::STATE_CHECKED)
+        atk_state_set_add_state (state_set, ATK_STATE_CHECKED);
+
+    if (aAccState & nsIAccessible::STATE_EXPANDED)
+        atk_state_set_add_state (state_set, ATK_STATE_EXPANDED);
+
+    if (aAccState & nsIAccessible::STATE_COLLAPSED)
+        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
+                   
+    // The control can't accept input at this time
+    if (aAccState & nsIAccessible::STATE_BUSY)
+        atk_state_set_add_state (state_set, ATK_STATE_BUSY);
+
+    if (aAccState & nsIAccessible::STATE_FOCUSABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
+
+    if (!(aAccState & nsIAccessible::STATE_INVISIBLE))
+        atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+
+    if (aAccState & nsIAccessible::STATE_SELECTABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE);
+
+    if (aAccState & nsIAccessible::STATE_SIZEABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
+
+    if (aAccState & nsIAccessible::STATE_MULTISELECTABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_MULTISELECTABLE);
+
+    if (!(aAccState & nsIAccessible::STATE_UNAVAILABLE))
+        atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
+
+    // The following state is
+    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
+    // This is only the states that there isn't already a mapping for in MSAA
+    // See www.accessmozilla.org/article.php?sid=11 for information on the
+    // mappings between accessibility API state
+    if (aAccState & nsIAccessible::STATE_INVALID)
+        atk_state_set_add_state (state_set, ATK_STATE_INVALID);
+
+    if (aAccState & nsIAccessible::STATE_ACTIVE)
+        atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
+
+    if (aAccState & nsIAccessible::STATE_EXPANDABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
+
+    if (aAccState & nsIAccessible::STATE_MODAL)
+        atk_state_set_add_state (state_set, ATK_STATE_MODAL);
+
+    if (aAccState & nsIAccessible::STATE_MULTI_LINE)
+        atk_state_set_add_state (state_set, ATK_STATE_MULTI_LINE);
+
+    if (aAccState & nsIAccessible::STATE_SENSITIVE)
+        atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
+
+    if (aAccState & nsIAccessible::STATE_RESIZABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
+
+    if (aAccState & nsIAccessible::STATE_SHOWING)
+        atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
+
+    if (aAccState & nsIAccessible::STATE_SINGLE_LINE)
+        atk_state_set_add_state (state_set, ATK_STATE_SINGLE_LINE);
+
+    if (aAccState & nsIAccessible::STATE_TRANSIENT)
+        atk_state_set_add_state (state_set, ATK_STATE_TRANSIENT);
+
+    if (aAccState & nsIAccessible::STATE_VERTICAL)
+        atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
+
 }
 
 /* static functions for ATK callbacks */
@@ -415,6 +532,7 @@ classInitCB(AtkObjectClass *aClass)
     aClass->ref_child = refChildCB;
     aClass->get_index_in_parent = getIndexInParentCB;
     aClass->get_role = getRoleCB;
+    aClass->ref_state_set = refStateSetCB;
 
     aClass->initialize = initializeCB;
 
@@ -650,126 +768,28 @@ getIndexInParentCB(AtkObject *aAtkObj)
     return currentIndex;
 }
 
-/******************************************************************************
-The following nsIAccessible states aren't translated, just ignored.
-  STATE_MIXED:         For a three-state check box.
-  STATE_READONLY:      The object is designated read-only.
-  STATE_HOTTRACKED:    Means its appearance has changed to indicate mouse
-                       over it.
-  STATE_DEFAULT:       Represents the default button in a window.
-  STATE_FLOATING:      Not supported yet.
-  STATE_MARQUEED:      Indicate scrolling or moving text or graphics.
-  STATE_ANIMATED:
-  STATE_OFFSCREEN:     Has no on-screen representation.
-  STATE_MOVEABLE:
-  STATE_SELFVOICING:   The object has self-TTS.
-  STATE_LINKED:        The object is formatted as a hyperlink.
-  STATE_TRAVERSE:      The object is a hyperlink that has been visited.
-  STATE_EXTSELECTABLE: Indicates that an object extends its selectioin.
-  STATE_ALERT_LOW:     Not supported yet.
-  STATE_ALERT_MEDIUM:  Not supported yet.
-  STATE_ALERT_HIGH:    Not supported yet.
-  STATE_PROTECTED:     The object is a password-protected edit control.
-  STATE_HASPOPUP:      Object displays a pop-up menu or window when invoked.
-
-Returned AtkStatusSet never contain the following AtkStates.
-  ATK_STATE_ARMED:     Indicates that the object is armed.
-  ATK_STATE_DEFUNCT:   Indicates the user interface object corresponding to
-                       thus object no longer exists.
-  ATK_STATE_EDITABLE:  Indicates the user can change the contents of the object.
-  ATK_STATE_HORIZONTAL:Indicates the orientation of this object is horizontal.
-  ATK_STATE_ICONIFIED:
-  ATK_STATE_OPAQUE:     Indicates the object paints every pixel within its
-                        rectangular region
-  ATK_STATE_STALE:      The index associated with this object has changed since
-                        the user accessed the object
-******************************************************************************/
-
-void
-nsAccessibleWrap::TranslateStates(PRUint32 aAccState, void *aAtkStateSet)
+AtkStateSet *
+refStateSetCB(AtkObject *aAtkObj)
 {
-    if (!aAtkStateSet)
-        return;
-    AtkStateSet *state_set = NS_STATIC_CAST(AtkStateSet *, aAtkStateSet);
+    NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-    if (aAccState & nsIAccessible::STATE_SELECTED)
-        atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
+    AtkStateSet *state_set = nsnull;
+    state_set = ATK_OBJECT_CLASS(parent_class)->ref_state_set(aAtkObj);
 
-    if (aAccState & nsIAccessible::STATE_FOCUSED)
-        atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
+    PRUint32 accState = 0;
+    nsresult rv = accWrap->GetAccState(&accState);
+    NS_ENSURE_SUCCESS(rv, state_set);
 
-    if (aAccState & nsIAccessible::STATE_PRESSED)
-        atk_state_set_add_state (state_set, ATK_STATE_PRESSED);
-
-    if (aAccState & nsIAccessible::STATE_CHECKED)
-        atk_state_set_add_state (state_set, ATK_STATE_CHECKED);
-
-    if (aAccState & nsIAccessible::STATE_EXPANDED)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDED);
-
-    if (aAccState & nsIAccessible::STATE_COLLAPSED)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
-                   
-    // The control can't accept input at this time
-    if (aAccState & nsIAccessible::STATE_BUSY)
-        atk_state_set_add_state (state_set, ATK_STATE_BUSY);
-
-    if (aAccState & nsIAccessible::STATE_FOCUSABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
-
-    if (!(aAccState & nsIAccessible::STATE_INVISIBLE))
-        atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
-
-    if (aAccState & nsIAccessible::STATE_SELECTABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_SELECTABLE);
-
-    if (aAccState & nsIAccessible::STATE_SIZEABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
-
-    if (aAccState & nsIAccessible::STATE_MULTISELECTABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_MULTISELECTABLE);
-
-    if (!(aAccState & nsIAccessible::STATE_UNAVAILABLE))
-        atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
-
-    // The following state is
-    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-    // This is only the states that there isn't already a mapping for in MSAA
-    // See www.accessmozilla.org/article.php?sid=11 for information on the
-    // mappings between accessibility API state
-    if (aAccState & nsIAccessible::STATE_INVALID)
-        atk_state_set_add_state (state_set, ATK_STATE_INVALID);
-
-    if (aAccState & nsIAccessible::STATE_ACTIVE)
-        atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
-
-    if (aAccState & nsIAccessible::STATE_EXPANDABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
-
-    if (aAccState & nsIAccessible::STATE_MODAL)
-        atk_state_set_add_state (state_set, ATK_STATE_MODAL);
-
-    if (aAccState & nsIAccessible::STATE_MULTI_LINE)
-        atk_state_set_add_state (state_set, ATK_STATE_MULTI_LINE);
-
-    if (aAccState & nsIAccessible::STATE_SENSITIVE)
-        atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
-
-    if (aAccState & nsIAccessible::STATE_RESIZABLE)
-        atk_state_set_add_state (state_set, ATK_STATE_RESIZABLE);
-
-    if (aAccState & nsIAccessible::STATE_SHOWING)
-        atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
-
-    if (aAccState & nsIAccessible::STATE_SINGLE_LINE)
-        atk_state_set_add_state (state_set, ATK_STATE_SINGLE_LINE);
-
-    if (aAccState & nsIAccessible::STATE_TRANSIENT)
-        atk_state_set_add_state (state_set, ATK_STATE_TRANSIENT);
-
-    if (aAccState & nsIAccessible::STATE_VERTICAL)
-        atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
-
+    if (accState == 0) {
+        nsresult rv = accWrap->GetAccExtState(&accState);
+        NS_ENSURE_SUCCESS(rv, state_set);
+        if (accState == 0)
+            return state_set;
+    }
+    nsAccessibleWrap::TranslateStates(accState, state_set);
+    return state_set;
 }
 
 // Check if aAtkObj is a valid MaiAtkObject
