@@ -49,5 +49,8 @@ EXPORTS		= zlib.h zconf.h
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
+# need a static lib for some components (pngcom, say)
+override NO_STATIC_LIB=
+
 include $(topsrcdir)/config/rules.mk
 

@@ -85,5 +85,8 @@ DEF_FILE	= $(LIBRARY_NAME).def
 TARGETS		= $(LIBRARY)
 endif
 
+# need static lib for some of the libimg componentry to link properly
+override NO_STATIC_LIB=
+
 include $(topsrcdir)/config/rules.mk
 
