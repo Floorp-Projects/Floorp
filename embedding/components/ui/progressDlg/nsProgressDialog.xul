@@ -77,9 +77,7 @@ Contributor(s):
     <data id="string.unknownTime">&unknownTime;</data>
     <data id="string.pausedMsg">&pausedMsg;</data>
     <data id="string.savingTitle">&savingTitle;</data>
-    <data id="string.savingAlertTitle">&savingAlertTitle;</data>
     <data id="string.openingTitle">&openingTitle;</data>
-    <data id="string.openingAlertTitle">&openingAlertTitle;</data>
     <data id="string.openingSource">&openingSource;</data>
     <data id="string.openingTarget">&openingTarget;</data>
 

@@ -7,13 +7,11 @@
 
 <!-- These are used when saving -->
 <!ENTITY savingTitle      "Saving #1 (#2&#037;)"> 
-<!ENTITY savingAlertTitle "Saving #1"> 
 <!ENTITY savingSource     "Saving From:"> 
 <!ENTITY savingTarget     "To:"> 
 
 <!-- These are used when opening (with an application) -->
 <!ENTITY openingTitle      "Opening #1 (#2&#037;)">
-<!ENTITY openingAlertTitle "Opening #1">
 <!ENTITY openingSource     "Opening From:">
 <!ENTITY openingTarget     "With:">
 
