@@ -25,6 +25,7 @@
 #include "drawers.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -43,19 +44,25 @@ NNScaleImage(Display *display, XImage *img,
   PRUint32 size;
   char *data;
 
-  size = newWidth * newHeight * img->depth;
-  data = (char *) PR_Malloc(size); 
-
-  if (!data) {
-    return (XImage *) NULL;
-  }
 
   newImg = XCreateImage(display, DefaultVisual(display, 0),
                         img->depth,
                         img->format,
                         0, 0, newWidth, newHeight,
                         img->bitmap_pad, 0);
+
+  if (!newImg) {
+    return NULL;
+  }
+
+  size = newHeight * newImg->bytes_per_line;
+  data = (char *) PR_Malloc(size); 
   newImg->data = data;
+
+  if (!data) {
+    XDestroyImage(newImg);
+    return NULL;
+  }
 
   if (factorX == 1) {
     /* an obvious optimization is to bypass XPutPixel 
@@ -70,8 +77,8 @@ NNScaleImage(Display *display, XImage *img,
     for (i = 0; i < newHeight; i++) {
       ysrc = (PRInt16) (i * factorY);
       sptr = img->data + ysrc * rowsize;
-      memcpy(dptr, sptr, rowsize);
-      dptr += rowsize;
+      memcpy(dptr, sptr, PR_MIN(rowsize, newImg->bytes_per_line));
+      dptr += newImg->bytes_per_line;
     }
   } else {
     for (i = 0; i < newWidth; i++) {
