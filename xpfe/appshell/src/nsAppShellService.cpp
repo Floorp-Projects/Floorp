@@ -285,9 +285,9 @@ void nsAppShellService::CreateHiddenWindow()
   nsIURI* url = nsnull;
 
 #ifndef NECKO
-  rv = NS_NewURL(&url, "chrome://navigator/content/hiddenWindow.xul");
+  rv = NS_NewURL(&url, "chrome://global/content/hiddenWindow.xul");
 #else
-  rv = NS_NewURI(&url, "chrome://navigator/content/hiddenWindow.xul");
+  rv = NS_NewURI(&url, "chrome://global/content/hiddenWindow.xul");
 #endif
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIWebShellWindow> newWindow;
