@@ -57,7 +57,6 @@
         <spring id="verticalSmallSpacer"/>            
 
         <box align="vertical" id="treebox">  
-            <html>
                 <tree id="modulesTree">
                     <treecolgroup>
                       <treecol flex="1"/>
@@ -73,7 +72,6 @@
                     <treechildren id="theTreeBody" flex="1">
                     </treechildren>
                 </tree>
-            </html>
         </box>
     
         <spring id="verticalSmallSpacer"/>
