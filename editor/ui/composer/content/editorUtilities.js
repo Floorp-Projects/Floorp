@@ -317,8 +317,12 @@ function SetFilePickerDirectory(filePicker, fileType)
     if (location)
     {
       try {
-        var lastLocation = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
-        lastLocation.URL = location;
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+
+        var lastLocation = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsIFile);
+
+        ioService.initFileFromURLSpec(lastLocation) = location;
+
         // Save current directory so we can reset it in SaveFilePickerDirectory
         gFilePickerDirectory = filePicker.displayDirectory;
 
@@ -334,7 +338,8 @@ function SaveFilePickerDirectory(filePicker, fileType)
 {
   if (filePicker && filePicker.file && filePicker.file.parent)
   {
-    SetUnicharPref("editor.lastFileLocation."+fileType, filePicker.file.parent.URL);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    SetUnicharPref("editor.lastFileLocation."+fileType, ioService.getURLSpecFromFile(filePicker.file.parent));
   }
 
   // Restore the directory used before SetFilePickerDirectory was called;

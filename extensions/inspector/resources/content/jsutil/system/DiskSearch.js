@@ -61,6 +61,7 @@ var DiskSearch =
     for (var i = 0; i < aExtList.length; i++) {
       extHash[aExtList[i]] = true;
     }
+    this.ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 
     // recursively build the list of results
     var results = [];
@@ -80,7 +81,7 @@ var DiskSearch =
       ext = this.getExtension(entry.leafName);
       if (ext) {
         if (aExtHash[ext])
-          aResults.push(entry.URL);
+          aResults.push(this.ioService.getURLSpecFromFile(entry));
       }
     }
   },

@@ -470,8 +470,12 @@ nsHelperAppDialog.prototype = {
                             .getService( Components.interfaces.nsIProperties );
         var file        = fileLocator.get( "UMimTyp", Components.interfaces.nsIFile );
         
-        // Get the data source; load it synchronously if it must be initialized.
-        var ds = rdf.GetDataSourceBlocking( file.URL );
+        // Get the data source; load it synchronously if it must be
+        // initialized.
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+        var fileurl = ioService.getURLSpecFromFile(file);
+        
+        var ds = rdf.GetDataSourceBlocking( fileurl );
 
         // Now check if this mimetype is really in there;
         // This is done by seeing if there's a "value" arc from the mimetype resource

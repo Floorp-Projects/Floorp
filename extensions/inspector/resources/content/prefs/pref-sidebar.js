@@ -143,7 +143,11 @@ SidebarPrefs.prototype =
       var file = dirService.get(aFileId, Components.interfaces.nsIFile);
       if (!file.exists())
         return null;
-      return file.URL;
+
+      var ioService = XPCU.getService("@mozilla.org/network/io-service;1", "nsIIOService");
+
+      return ioService.getURLSpecFromFile(file);
+
     } catch (ex) {
       return null;
     }

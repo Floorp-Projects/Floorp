@@ -49,7 +49,7 @@ var inspector;
 
 const kSearchRegURL        = "resource:///res/inspector/search-registry.rdf";
 
-const kWindowMediatorIID   = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+const kWindowMediatorCID   = "@mozilla.org/rdf/datasource;1?name=window-mediator";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
 const nsIWebNavigation     = Components.interfaces.nsIWebNavigation;
 
@@ -174,7 +174,9 @@ InspectorApp.prototype =
     var path = null; // TODO: should persist last path chosen in a pref
     var file = FilePickerUtils.pickFile("Find Search File", path, ["filterXML"], "Open");
     if (file) {
-      var url = file.URL;
+      var ioService = XPCU.getService("@mozilla.org/network/io-service;1","nsIIOService");
+
+      var url = ioService.getURLSpecFromFile(file);
       // XX temporary until 56354 is fixed
       url = url.replace("file://", "file:///");      
       this.startSearchModule(url);
@@ -310,7 +312,7 @@ InspectorApp.prototype =
 
   setTargetWindowById: function(aResId)
   {
-    var windowManager = XPCU.getService(kWindowMediatorIID, "nsIWindowMediator");
+    var windowManager = XPCU.getService(kWindowMediatorCID, "nsIWindowMediator");
     var win = windowManager.getWindowForResource(aResId);
 
     if (win) {
