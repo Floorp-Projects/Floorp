@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 0 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -410,8 +410,9 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 
 		rv = entries->GetNext(getter_AddRefs(entry));
 		if (entry) {
-           literal = do_QueryInterface(entry);
-           literal->GetValueConst(&rdfValue);
+			literal = do_QueryInterface(entry);
+			if (literal)
+				literal->GetValueConst(&rdfValue);
 		}
 		if (rdfValue) {
 		    rdfAStr = (rdfValue);
