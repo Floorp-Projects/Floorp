@@ -3842,8 +3842,14 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 {
   aState = NS_EVENT_STATE_UNSPECIFIED;
 
-  if (aContent == mActiveContent) {
-    aState |= NS_EVENT_STATE_ACTIVE;
+  // Hierchical active:  Check the ancestor chain of mActiveContent to see
+  // if we are on it.
+  for (nsIContent* activeContent = mActiveContent; activeContent;
+       activeContent = activeContent->GetParent()) {
+    if (aContent == activeContent) {
+      aState |= NS_EVENT_STATE_ACTIVE;
+      break;
+    }
   }
   // Hierchical hover:  Check the ancestor chain of mHoverContent to see
   // if we are on it.
@@ -3867,10 +3873,68 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   return NS_OK;
 }
 
+static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
+{
+  // Find closest common ancestor
+  if (aNode1 && aNode2) {
+    // Find the nearest common ancestor by counting the distance to the
+    // root and then walking up again, in pairs.
+    PRInt32 offset = 0;
+    nsIContent *anc1 = aNode1;
+    for (;;) {
+      ++offset;
+      nsIContent* parent = anc1->GetParent();
+      if (!parent)
+        break;
+      anc1 = parent;
+    }
+    nsIContent *anc2 = aNode2;
+    for (;;) {
+      --offset;
+      nsIContent* parent = anc2->GetParent();
+      if (!parent)
+        break;
+      anc2 = parent;
+    }
+#ifdef DEBUG
+    if (anc1 != anc2) {
+      // This could be a performance problem.
+      
+      // The |!anc1->GetDocument()| case (that aNode1 has been removed
+      // from the document) could be a slight performance problem.  It's
+      // rare enough that it shouldn't be an issue, but common enough
+      // that we don't want to assert..
+      NS_ASSERTION(!anc1->GetDocument(),
+                   "moved hover/active between nodes in different documents");
+      // XXX Why don't we ever hit this code because we're not using
+      // |GetBindingParent|?
+    }
+#endif
+    if (anc1 == anc2) {
+      anc1 = aNode1;
+      anc2 = aNode2;
+      while (offset > 0) {
+        anc1 = anc1->GetParent();
+        --offset;
+      }
+      while (offset < 0) {
+        anc2 = anc2->GetParent();
+        ++offset;
+      }
+      while (anc1 != anc2) {
+        anc1 = anc1->GetParent();
+        anc2 = anc2->GetParent();
+      }
+      return anc1;
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
-  const PRInt32 maxNotify = 6;
+  const PRInt32 maxNotify = 5;
   // We must initialize this array with memset for the sake of the boneheaded
   // OS X compiler.  See bug 134934.
   nsIContent  *notifyContent[maxNotify];
@@ -3878,6 +3942,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 
   // check to see that this state is allowed by style. Check dragover too?
   // XXX This doesn't consider that |aState| is a bitfield.
+  // XXX Is this even what we want?
   if (mCurrentTarget && (aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER))
   {
     const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
@@ -3886,21 +3951,22 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   }
   
   if ((aState & NS_EVENT_STATE_DRAGOVER) && (aContent != mDragOverContent)) {
-    notifyContent[4] = mDragOverContent; // notify dragover first, since more common case
-    NS_IF_ADDREF(notifyContent[4]);
+    notifyContent[3] = mDragOverContent; // notify dragover first, since more common case
+    NS_IF_ADDREF(notifyContent[3]);
     mDragOverContent = aContent;
   }
 
   if ((aState & NS_EVENT_STATE_URLTARGET) && (aContent != mURLTargetContent)) {
-    notifyContent[5] = mURLTargetContent;
-    NS_IF_ADDREF(notifyContent[5]);
+    notifyContent[4] = mURLTargetContent;
+    NS_IF_ADDREF(notifyContent[4]);
     mURLTargetContent = aContent;
   }
 
+  nsCOMPtr<nsIContent> commonActiveAncestor, oldActive, newActive;
   if ((aState & NS_EVENT_STATE_ACTIVE) && (aContent != mActiveContent)) {
-    //transferring ref to notifyContent from mActiveContent
-    notifyContent[2] = mActiveContent;
-    NS_IF_ADDREF(notifyContent[2]);
+    oldActive = mActiveContent;
+    newActive = aContent;
+    commonActiveAncestor = FindCommonAncestor(mActiveContent, aContent);
     mActiveContent = aContent;
   }
 
@@ -3908,60 +3974,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   if ((aState & NS_EVENT_STATE_HOVER) && (aContent != mHoverContent)) {
     oldHover = mHoverContent;
     newHover = aContent;
-    // Find closest common ancestor (commonHoverAncestor)
-    if (mHoverContent && aContent) {
-      // Find the nearest common ancestor by counting the distance to the
-      // root and then walking up again, in pairs.
-      PRInt32 offset = 0;
-      nsCOMPtr<nsIContent> oldAncestor = mHoverContent;
-      for (;;) {
-        ++offset;
-        nsIContent* parent = oldAncestor->GetParent();
-        if (!parent)
-          break;
-        oldAncestor = parent;
-      }
-      nsCOMPtr<nsIContent> newAncestor = aContent;
-      for (;;) {
-        --offset;
-        nsIContent* parent = newAncestor->GetParent();
-        if (!parent)
-          break;
-        newAncestor = parent;
-      }
-#ifdef DEBUG
-      if (oldAncestor != newAncestor) {
-        // This could be a performance problem.
-        
-        // The |!oldAncestor->GetDocument()| case (that the old hover node has
-        // been removed from the document) could be a slight performance
-        // problem.  It's rare enough that it shouldn't be an issue, but common
-        // enough that we don't want to assert..
-        NS_ASSERTION(!oldAncestor->GetDocument(),
-                     "moved hover between nodes in different documents");
-        // XXX Why don't we ever hit this code because we're not using
-        // |GetBindingParent|?
-      }
-#endif
-      if (oldAncestor == newAncestor) {
-        oldAncestor = mHoverContent;
-        newAncestor = aContent;
-        while (offset > 0) {
-          oldAncestor = oldAncestor->GetParent();
-          --offset;
-        }
-        while (offset < 0) {
-          newAncestor = newAncestor->GetParent();
-          ++offset;
-        }
-        while (oldAncestor != newAncestor) {
-          oldAncestor = oldAncestor->GetParent();
-          newAncestor = newAncestor->GetParent();
-        }
-        commonHoverAncestor = oldAncestor;
-      }
-    }
-
+    commonHoverAncestor = FindCommonAncestor(mHoverContent, aContent);
     mHoverContent = aContent;
   }
 
@@ -3986,7 +3999,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         if (fc)
           fc->GetActive(&fcActive);
       }
-      notifyContent[3] = gLastFocusedContent;
+      notifyContent[2] = gLastFocusedContent;
       NS_IF_ADDREF(gLastFocusedContent);
       // only raise window if the the focus controller is active
       SendFocusBlur(mPresContext, aContent, fcActive); 
@@ -4003,7 +4016,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     }
   }
 
-  if (aContent && aContent != newHover) { // notify about new content too
+  PRInt32 simpleStates = aState & ~(NS_EVENT_STATE_ACTIVE|NS_EVENT_STATE_HOVER);
+
+  if (aContent && simpleStates != 0) {
+    // notify about new content too
     notifyContent[0] = aContent;
     NS_ADDREF(aContent);  // everything in notify array has a ref
   }
@@ -4056,7 +4072,8 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     }
   }
 
-  if (notifyContent[0] || newHover || oldHover) { // have at least one to notify about
+  if (notifyContent[0] || newHover || oldHover || newActive || oldActive) {
+    // have at least one to notify about
     nsCOMPtr<nsIDocument> doc1, doc2;  // this presumes content can't get/lose state if not connected to doc
     if (notifyContent[0]) {
       doc1 = notifyContent[0]->GetDocument();
@@ -4071,11 +4088,28 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     else if (newHover) {
       doc1 = newHover->GetDocument();
     }
-    else {
+    else if (oldHover) {
       doc1 = oldHover->GetDocument();
+    }
+    else if (newActive) {
+      doc1 = newActive->GetDocument();
+    }
+    else {
+      doc1 = oldActive->GetDocument();
     }
     if (doc1) {
       doc1->BeginUpdate(UPDATE_CONTENT_STATE);
+
+      // Notify all content from newActive to the commonActiveAncestor
+      while (newActive && newActive != commonActiveAncestor) {
+        doc1->ContentStatesChanged(newActive, nsnull, NS_EVENT_STATE_ACTIVE);
+        newActive = newActive->GetParent();
+      }
+      // Notify all content from oldActive to the commonActiveAncestor
+      while (oldActive && oldActive != commonActiveAncestor) {
+        doc1->ContentStatesChanged(oldActive, nsnull, NS_EVENT_STATE_ACTIVE);
+        oldActive = oldActive->GetParent();
+      }
 
       // Notify all content from newHover to the commonHoverAncestor
       while (newHover && newHover != commonHoverAncestor) {
@@ -4090,7 +4124,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 
       if (notifyContent[0]) {
         doc1->ContentStatesChanged(notifyContent[0], notifyContent[1],
-                                   aState & ~NS_EVENT_STATE_HOVER);
+                                   simpleStates);
         if (notifyContent[2]) {
           // more that two notifications are needed (should be rare)
           // XXX a further optimization here would be to group the
@@ -4098,11 +4132,11 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
           // more than two content changed (ie: if [0] and [2] are
           // parent/child, then notify (0,2) (1,3))
           doc1->ContentStatesChanged(notifyContent[2], notifyContent[3],
-                                     aState & ~NS_EVENT_STATE_HOVER);
+                                     simpleStates);
           if (notifyContent[4]) {
             // more that four notifications are needed (should be rare)
             doc1->ContentStatesChanged(notifyContent[4], nsnull,
-                                       aState & ~NS_EVENT_STATE_HOVER);
+                                       simpleStates);
           }
         }
       }
@@ -4111,10 +4145,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       if (doc2) {
         doc2->BeginUpdate(UPDATE_CONTENT_STATE);
         doc2->ContentStatesChanged(notifyContent[1], notifyContent[2],
-                                   aState & ~NS_EVENT_STATE_HOVER);
+                                   simpleStates);
         if (notifyContent[3]) {
           doc1->ContentStatesChanged(notifyContent[3], notifyContent[4],
-                                     aState & ~NS_EVENT_STATE_HOVER);
+                                     simpleStates);
         }
         doc2->EndUpdate(UPDATE_CONTENT_STATE);
       }
