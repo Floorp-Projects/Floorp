@@ -65,7 +65,8 @@ enum {
     ARGS_CALLEE     = -4,       /* reference from arguments to active funobj */
     FUN_ARITY       = -5,       /* number of formal parameters; desired argc */
     FUN_NAME        = -6,       /* function name, "" if anonymous */
-    FUN_CALL        = -7        /* function's top Call object in this context */
+    FUN_CALL        = -7,       /* function's top Call object in this context */
+    FUN_CALLER      = -8        /* Function.prototype.caller, backward compat */
 };
 
 #undef TEST_BIT
@@ -655,6 +656,7 @@ static JSPropertySpec function_props[] = {
     {js_length_str,    ARGS_LENGTH,    FUNCTION_PROP_ATTRS,0,0},
     {js_name_str,      FUN_NAME,       FUNCTION_PROP_ATTRS,0,0},
     {"__call__",       FUN_CALL,       FUNCTION_PROP_ATTRS,0,0},
+    {js_caller_str,    FUN_CALLER,     FUNCTION_PROP_ATTRS,0,0},
     {0,0,0,0,0}
 };
 
@@ -664,6 +666,7 @@ fun_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     /* Make delete f.length fail even though length is in f.__proto__. */
     if (!JSVAL_IS_INT(id)) {
         if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
+            id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
             id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
             id == ATOM_KEY(cx->runtime->atomState.nameAtom)) {
             *vp = JSVAL_FALSE;
@@ -743,6 +746,13 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         } else {
             *vp = JSVAL_NULL;
         }
+        break;
+
+      case FUN_CALLER:
+        if (fp && fp->down && fp->down->fun)
+            *vp = fp->down->argv[-2];
+        else
+            *vp = JSVAL_NULL;
         break;
 
       default:
