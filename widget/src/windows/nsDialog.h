@@ -34,22 +34,26 @@ class nsDialog :  public nsWindow,
 {
 
 public:
-  nsDialog(nsISupports *aOuter);
+  nsDialog();
   virtual ~nsDialog();
 
+  virtual void  Create(nsIWidget *aParent,
+                       const nsRect &aRect,
+                       EVENT_CALLBACK aHandleEventFunction,
+                       nsIDeviceContext *aContext,
+                       nsIAppShell *aAppShell = nsnull,
+                       nsIToolkit *aToolkit = nsnull,
+                       nsWidgetInitData *aInitData = nsnull);
 
-    // nsISupports. Forward to the nsObject base class
-  BASE_SUPPORT
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-  BASE_IWIDGET_IMPL
-
-    // nsIDialog part
-  virtual void SetLabel(const nsString& aText);
-  virtual void GetLabel(nsString& aBuffer);
-
+    // nsIButton part
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);

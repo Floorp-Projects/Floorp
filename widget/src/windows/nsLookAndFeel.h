@@ -24,11 +24,13 @@
 class nsLookAndFeel: public nsObject, 
 		     public nsILookAndFeel {
 public:
-  nsLookAndFeel(nsISupports *aOuter);
+  nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  BASE_SUPPORT
-  nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);

@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef OBJECT_H
-#define OBJECT_H
+#ifndef nsObject_h__
+#define nsObject_h__
 
 #include "nsdefs.h"
 #include "nsCList.h"
@@ -32,19 +32,11 @@ class nsObject : public nsISupports
 {
 
 public:
-                            nsObject(nsISupports *aOuter);
+                            nsObject();
     virtual                 ~nsObject();
-
-    // Implementation of those, always forward to the outer object.
-    NS_IMETHOD              QueryInterface(const nsIID& aIID, 
-                                           void** aInstancePtr);
-    NS_IMETHOD_(nsrefcnt)   AddRef(void);
-    NS_IMETHOD_(nsrefcnt)   Release(void);
-
-    //
-    // Derived classes have to implement this one
-    //
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
+    
+    NS_DECL_ISUPPORTS
+    
 
 protected:
     //
@@ -52,30 +44,7 @@ protected:
     //
     CList m_link;
 
-    nsISupports *mOuter;
-
-private:
-
-    class InnerSupport : public nsISupports {
-    public:
-        InnerSupport() {}
-
-#define INNER_OUTER \
-            ((nsObject*)((char*)this - offsetof(nsObject, mInner)))
-
-        NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr)
-                                { return INNER_OUTER->QueryObject(aIID, aInstancePtr); }
-        NS_IMETHOD_(nsrefcnt) AddRef(void)
-                                { return INNER_OUTER->AddRefObject(); }
-        NS_IMETHOD_(nsrefcnt) Release(void)
-                                { return INNER_OUTER->ReleaseObject(); }
-    } mInner;
-    friend InnerSupport;
-
-    nsrefcnt mRefCnt;
-    nsrefcnt AddRefObject(void);
-    nsrefcnt ReleaseObject(void);
-
+ 
 public:
 
     //
@@ -94,14 +63,5 @@ public:
 
 };
 
-#define BASE_SUPPORT                                                                      \
-          NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr)               \
-                                { return nsObject::QueryInterface(aIID, aInstancePtr); }  \
-          NS_IMETHOD_(nsrefcnt) AddRef(void)                                              \
-                                { return nsObject::AddRef(); }                            \
-          NS_IMETHOD_(nsrefcnt) Release(void)                                             \
-                                { return nsObject::Release(); } 
 
-
-#endif  // OBJECT_H
-
+#endif // nsObject_h__

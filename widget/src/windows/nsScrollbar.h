@@ -34,29 +34,25 @@ class nsScrollbar : public nsWindow,
 {
 
 public:
-                            nsScrollbar(nsISupports *aOuter, PRBool aIsVertical);
+                            nsScrollbar(PRBool aIsVertical);
     virtual                 ~nsScrollbar();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
-
-
-    // nsIScrollbar part
-    virtual void      SetMaxRange(PRUint32 aEndRange);
-    virtual PRUint32  GetMaxRange();
-    virtual void      SetPosition(PRUint32 aPos);
-    virtual PRUint32  GetPosition();
-    virtual void      SetThumbSize(PRUint32 aSize);
-    virtual PRUint32  GetThumbSize();
-    virtual void      SetLineIncrement(PRUint32 aSize);
-    virtual PRUint32  GetLineIncrement();
-    virtual void      SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-                                    PRUint32 aPosition, PRUint32 aLineIncrement);
+    // nsIScrollBar implementation
+    NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
+    NS_IMETHOD GetMaxRange(PRUint32& aMaxRange);
+    NS_IMETHOD SetPosition(PRUint32 aPos);
+    NS_IMETHOD GetPosition(PRUint32& aPos);
+    NS_IMETHOD SetThumbSize(PRUint32 aSize);
+    NS_IMETHOD GetThumbSize(PRUint32& aSize);
+    NS_IMETHOD SetLineIncrement(PRUint32 aSize);
+    NS_IMETHOD GetLineIncrement(PRUint32& aSize);
+    NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+                               PRUint32 aPosition, PRUint32 aLineIncrement);
 
     virtual PRBool    OnPaint();
     virtual PRBool    OnScroll(UINT scrollCode, int cPos);

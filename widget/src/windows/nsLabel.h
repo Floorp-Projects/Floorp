@@ -34,21 +34,18 @@ class nsLabel :  public nsWindow,
 {
 
 public:
-  nsLabel(nsISupports *aOuter);
+  nsLabel();
   virtual ~nsLabel();
 
-    // nsISupports. Forward to the nsObject base class
-  BASE_SUPPORT
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-  BASE_IWIDGET_IMPL
-
-    // nsILabel part
-  virtual void SetLabel(const nsString& aText);
-  virtual void GetLabel(nsString& aBuffer);
-  virtual void SetAlignment(nsLabelAlignment aAlignment);
+  // nsILabel part
+  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD GetLabel(nsString &aBuffer);
+  NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment);
 
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();

@@ -28,16 +28,18 @@
  * Native Win32 FileSelector wrapper
  */
 
-class nsFileWidget : public nsIFileWidget, public nsObject
+class nsFileWidget : public nsObject, public nsIFileWidget 
 {
   public:
-                            nsFileWidget(nsISupports *aOuter); 
+                            nsFileWidget(); 
     virtual                 ~nsFileWidget();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
     PRBool                  OnPaint();
 
     // nsIWidget interface

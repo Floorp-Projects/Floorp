@@ -32,11 +32,10 @@ MODULE=raptor
 
 DEFINES =-D_IMPL_NS_WIDGET
 
-OBJS =                                   \
-	.\$(OBJDIR)\nsWidgetFactory.obj  \
+OBJS =                             \
 	.\$(OBJDIR)\nsObject.obj         \
 	.\$(OBJDIR)\nsWindow.obj         \
-	.\$(OBJDIR)\nsToolkit.obj        \
+	.\$(OBJDIR)\nsWidgetFactory.obj  \
 	.\$(OBJDIR)\nsButton.obj         \
 	.\$(OBJDIR)\nsCheckButton.obj    \
 	.\$(OBJDIR)\nsRadioGroup.obj     \
@@ -54,6 +53,8 @@ OBJS =                                   \
 	.\$(OBJDIR)\nsLookAndFeel.obj    \
 	.\$(OBJDIR)\nsDialog.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
+	.\$(OBJDIR)\nsToolkit.obj        \
+	.\$(OBJDIR)\nsWidgetSupport.obj  \
 	$(NULL)
 
 LINCS=                                  \
@@ -79,6 +80,8 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -34,20 +34,19 @@ class nsTabWidget : public nsWindow,
 {
 
 public:
-  nsTabWidget(nsISupports *aOuter);
+  nsTabWidget();
   virtual ~nsTabWidget();
 
-    // nsISupports. Forward to the nsObject base class
-  BASE_SUPPORT
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-  BASE_IWIDGET_IMPL
-
-    // nsITabWidget part 
-  virtual void SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]);
-  virtual PRUint32 GetSelectedTab();
+  // nsITabWidget part 
+  NS_IMETHOD SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]);
+  NS_IMETHOD GetSelectedTab(PRUint32& aTabNumber);
+  
+  // nsIWidget overrides
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
   virtual void GetBounds(nsRect &aRect);

@@ -22,18 +22,23 @@
 #include <windows.h>
 #include "nsUnitConversion.h"
 
+
+NS_IMPL_ADDREF(nsScrollbar)
+NS_IMPL_RELEASE(nsScrollbar)
+
 //-------------------------------------------------------------------------
 //
 // nsScrollbar constructor
 //
 //-------------------------------------------------------------------------
-nsScrollbar::nsScrollbar(nsISupports *aOuter, PRBool aIsVertical) : nsWindow(aOuter)
+nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 {
-    mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
-    mScaleFactor   = 1.0f;
-    mLineIncrement = 0;
-    mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
-    mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
+  NS_INIT_REFCNT();
+  mPositionFlag  = (aIsVertical) ? SBS_VERT : SBS_HORZ;
+  mScaleFactor   = 1.0f;
+  mLineIncrement = 0;
+  mBackground    = ::GetSysColor(COLOR_SCROLLBAR);
+  mBrush         = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
 }
 
 
@@ -52,9 +57,9 @@ nsScrollbar::~nsScrollbar()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsScrollbar::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
@@ -72,13 +77,14 @@ nsresult nsScrollbar::QueryObject(const nsIID& aIID, void** aInstancePtr)
 // Define the range settings 
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
+NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
     if (aEndRange > 32767)
         mScaleFactor = aEndRange / 32767.0f;
     if (mWnd) {
         VERIFY(::SetScrollRange(mWnd, SB_CTL, 0, NSToIntRound(aEndRange / mScaleFactor), TRUE));
     }
+    return NS_OK;
 }
 
 
@@ -87,14 +93,14 @@ void nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 // Return the range settings 
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetMaxRange()
+PRUint32 nsScrollbar::GetMaxRange(PRUint32& aRange)
 {
-    int startRange, endRange;
-    if (mWnd) {
-        VERIFY(::GetScrollRange(mWnd, SB_CTL, &startRange, &endRange));
-    }
-
-    return (PRUint32)NSToIntRound(endRange * mScaleFactor);
+  int startRange, endRange;
+  if (mWnd) {
+      VERIFY(::GetScrollRange(mWnd, SB_CTL, &startRange, &endRange));
+  }
+  aRange = (PRUint32)NSToIntRound(endRange * mScaleFactor);
+  return NS_OK;
 }
 
 
@@ -103,9 +109,10 @@ PRUint32 nsScrollbar::GetMaxRange()
 // Set the thumb position
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetPosition(PRUint32 aPos)
+NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
-    ::SetScrollPos(mWnd, SB_CTL, NSToIntRound(aPos / mScaleFactor), TRUE);
+  ::SetScrollPos(mWnd, SB_CTL, NSToIntRound(aPos / mScaleFactor), TRUE);
+  return NS_OK;
 }
 
 
@@ -114,9 +121,10 @@ void nsScrollbar::SetPosition(PRUint32 aPos)
 // Get the current thumb position.
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetPosition()
+PRUint32 nsScrollbar::GetPosition(PRUint32& aPosition)
 {
-    return (PRUint32)NSToIntRound(::GetScrollPos(mWnd, SB_CTL) * mScaleFactor);
+  aPosition = (PRUint32)NSToIntRound(::GetScrollPos(mWnd, SB_CTL) * mScaleFactor);
+  return NS_OK;
 }
 
 
@@ -125,15 +133,16 @@ PRUint32 nsScrollbar::GetPosition()
 // Set the thumb size
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetThumbSize(PRUint32 aSize)
+NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    if (mWnd) {
-        SCROLLINFO si;
-        si.cbSize = sizeof(SCROLLINFO);
-        si.fMask = SIF_PAGE;
-        si.nPage = NSToIntRound(aSize / mScaleFactor);
-        ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
-    }
+  if (mWnd) {
+    SCROLLINFO si;
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_PAGE;
+    si.nPage = NSToIntRound(aSize / mScaleFactor);
+    ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
+  }
+  return NS_OK;
 }
 
 
@@ -142,17 +151,20 @@ void nsScrollbar::SetThumbSize(PRUint32 aSize)
 // Get the thumb size
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetThumbSize()
+NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
-    if (mWnd) {
-        SCROLLINFO si;
-        si.cbSize = sizeof(SCROLLINFO);
-        si.fMask = SIF_PAGE;
-        VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
-        return (PRUint32)NSToIntRound(si.nPage * mScaleFactor);
-    }
-
-    return 0;
+  if (mWnd) {
+    SCROLLINFO si;
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_PAGE;
+    VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
+    aSize = (PRUint32)NSToIntRound(si.nPage * mScaleFactor);
+  }
+  else
+  {
+    aSize = 0;
+  }
+  return NS_OK;
 }
 
 
@@ -161,9 +173,10 @@ PRUint32 nsScrollbar::GetThumbSize()
 // Set the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetLineIncrement(PRUint32 aSize)
+NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
-    mLineIncrement = NSToIntRound(aSize / mScaleFactor);
+  mLineIncrement = NSToIntRound(aSize / mScaleFactor);
+  return NS_OK;
 }
 
 
@@ -172,9 +185,10 @@ void nsScrollbar::SetLineIncrement(PRUint32 aSize)
 // Get the line increment for this scrollbar
 //
 //-------------------------------------------------------------------------
-PRUint32 nsScrollbar::GetLineIncrement()
+NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aSize)
 {
-    return (PRUint32)NSToIntRound(mLineIncrement * mScaleFactor);
+  aSize = (PRUint32)NSToIntRound(mLineIncrement * mScaleFactor);
+  return NS_OK;
 }
 
 
@@ -183,24 +197,25 @@ PRUint32 nsScrollbar::GetLineIncrement()
 // Set all scrolling parameters
 //
 //-------------------------------------------------------------------------
-void nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-    if (aMaxRange > 32767)
-        mScaleFactor = aMaxRange / 32767.0f;
+  if (aMaxRange > 32767)
+      mScaleFactor = aMaxRange / 32767.0f;
 
-    if (mWnd) {
-        SCROLLINFO si;
-        si.cbSize = sizeof(SCROLLINFO);
-        si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
-        si.nPage = NSToIntRound(aThumbSize / mScaleFactor);
-        si.nPos = NSToIntRound(aPosition / mScaleFactor);
-        si.nMin = 0;
-        si.nMax = NSToIntRound(aMaxRange / mScaleFactor);
-        ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
-    }
+  if (mWnd) {
+      SCROLLINFO si;
+      si.cbSize = sizeof(SCROLLINFO);
+      si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+      si.nPage = NSToIntRound(aThumbSize / mScaleFactor);
+      si.nPos = NSToIntRound(aPosition / mScaleFactor);
+      si.nMin = 0;
+      si.nMax = NSToIntRound(aMaxRange / mScaleFactor);
+      ::SetScrollInfo(mWnd, SB_CTL, &si, TRUE);
+  }
 
-    mLineIncrement = NSToIntRound(aLineIncrement / mScaleFactor);
+  mLineIncrement = NSToIntRound(aLineIncrement / mScaleFactor);
+  return NS_OK;
 }
 
 
@@ -239,7 +254,13 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
         case SB_LINEDOWN: 
         {
             newPosition = ::GetScrollPos(mWnd, SB_CTL) + mLineIncrement;
-            PRUint32 max = GetMaxRange() - GetThumbSize();
+            
+            PRUint32 range;
+            PRUint32 size;
+            GetMaxRange(range);
+            GetThumbSize(size);
+            PRUint32 max = range - size;
+
             if (newPosition > (int)max) 
                 newPosition = (int)max;
 
@@ -312,7 +333,14 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
             VERIFY(::GetScrollInfo(mWnd, SB_CTL, &si));
 
             newPosition = ::GetScrollPos(mWnd, SB_CTL)  + si.nPage;
-            PRUint32 max = GetMaxRange() - GetThumbSize();
+
+            PRUint32 range;
+            PRUint32 size;
+            GetMaxRange(range);
+            GetThumbSize(size);
+            PRUint32 max = range - size;
+            
+                     
             if (newPosition > (int)max) 
                 newPosition = (int)max;
 

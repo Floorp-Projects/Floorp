@@ -34,16 +34,13 @@ class nsTooltipWidget : public nsWindow,
 {
 
 public:
-  nsTooltipWidget(nsISupports *aOuter);
+  nsTooltipWidget();
   virtual ~nsTooltipWidget();
 
-    // nsISupports. Forward to the nsObject base class
-  BASE_SUPPORT
-
-  virtual nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-  BASE_IWIDGET_IMPL
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);

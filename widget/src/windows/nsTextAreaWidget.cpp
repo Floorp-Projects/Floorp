@@ -22,66 +22,23 @@
 #include "nsString.h"
 #include <windows.h>
 
-void nsTextAreaWidget::SelectAll() 
-{
-  nsTextHelper::SelectAll();
+NS_IMPL_ADDREF(nsTextAreaWidget)
+//NS_IMPL_RELEASE(nsTextAreaWidget)
+nsrefcnt nsTextAreaWidget::Release(void)                         
+{             
+//  NS_PRECONDITION(0 != cnt, "dup release");        
+  if (--mRefCnt == 0) {                                
+    delete this;                                       
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
 }
 
-void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars) 
-{
-  nsTextHelper::SetMaxTextLength(aChars);
-}
-
-PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
-{
-  return(nsTextHelper::GetText(aTextBuffer, aBufferSize));
-}
-
-PRUint32  nsTextAreaWidget::SetText(const nsString &aText) 
-{ 
-  return(nsTextHelper::SetText(aText));
-}
-
-PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos) 
-{ 
-  return(nsTextHelper::InsertText(aText, aStartPos, aEndPos));
-}
-
-void  nsTextAreaWidget::RemoveText() 
-{
-  nsTextHelper::RemoveText();
-}
-
-void  nsTextAreaWidget::SetPassword(PRBool aIsPassword)
-{
-  nsTextHelper::SetPassword(aIsPassword);
-}
-
-PRBool  nsTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag) 
-{
-  return(nsTextHelper::SetReadOnly(aReadOnlyFlag));
-}
-
-void  nsTextAreaWidget::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
-{
-}
-
-void  nsTextAreaWidget::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
-{
-}
-
-void  nsTextAreaWidget::SetCaretPosition(PRUint32 aPosition)
-{
-}
-
-PRUint32  nsTextAreaWidget::GetCaretPosition()
-{
-  return(0);
-}
 
 //-------------------------------------------------------------------------
 void nsTextAreaWidget::SetUpForPaint(HDC aHDC) 
 {
+  NS_INIT_REFCNT();
   ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
   ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
   //::SetBkMode (aHDC, TRANSPARENT); // don't do this
@@ -93,7 +50,7 @@ void nsTextAreaWidget::SetUpForPaint(HDC aHDC)
 // nsTextAreaWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextAreaWidget::nsTextAreaWidget(nsISupports *aOuter) : nsTextHelper(aOuter)
+nsTextAreaWidget::nsTextAreaWidget()
 {
   nsTextHelper::mBackground = NS_RGB(124, 124, 124);
 }
@@ -113,18 +70,28 @@ nsTextAreaWidget::~nsTextAreaWidget()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsTextAreaWidget::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
 
-    static NS_DEFINE_IID(kInsTextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsTextAreaWidgetIID)) {
-        *aInstancePtr = (void*) ((nsITextAreaWidget*)this);
-        AddRef();
-        result = NS_OK;
-    }
+  static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-    return result;
+
+  if (aIID.Equals(kITextAreaWidgetIID)) {
+      nsITextAreaWidget* textArea = this;
+      *aInstancePtr = (void*) (textArea);
+      AddRef();
+      return NS_OK;
+  } 
+  else if (aIID.Equals(kIWidgetIID))
+  {
+      nsIWidget* widget = this;
+      *aInstancePtr = (void*) (widget);
+      AddRef();
+      return NS_OK;
+  }
+
+  return nsWindow::QueryInterface(aIID, aInstancePtr);
 }
 
 //-------------------------------------------------------------------------

@@ -44,6 +44,11 @@ extern HINSTANCE g_hinst;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
+
+NS_IMPL_ADDREF(nsWindow)
+NS_IMPL_RELEASE(nsWindow)
+
+
 //-------------------------------------------------------------------------
 //
 // Default for height modification is to do nothing
@@ -248,7 +253,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
-    event.widgetSupports = mOuter;
 
     if (nsnull == aPoint) {     // use the point from the event
       // get the message position in client coordinates and in twips
@@ -359,8 +363,9 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
+nsWindow::nsWindow()
 {
+    NS_INIT_REFCNT();
     mWnd           = 0;
     mPrevWndProc   = NULL;
     mChildren      = NULL;
@@ -419,9 +424,9 @@ nsWindow::~nsWindow()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsObject::QueryObject(aIID, aInstancePtr);
+    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
 
     static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (result == NS_NOINTERFACE && aIID.Equals(kIWidgetIID)) {
@@ -721,7 +726,7 @@ nsIWidget* nsWindow::GetParent(void)
               if (widget->mIsDestroying) {
                 widget = NULL;
               } else {
-                NS_ADDREF(widget);
+                widget->AddRef();
               }
             }
         }
@@ -1948,8 +1953,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-//printf(" %d %d %d (%d,%d) \n", event.widget, event.widgetSupports, 
-//       event.message, event.point.x, event.point.y);
 
     result = DispatchEvent(&event);
 

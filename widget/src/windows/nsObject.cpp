@@ -19,6 +19,11 @@
 
 #include "nsObject.h"
 
+
+NS_IMPL_ADDREF(nsObject)
+NS_IMPL_RELEASE(nsObject)
+
+
 CList nsObject::s_liveChain;
 PRMonitor *nsObject::s_liveChainMutex = PR_NewMonitor();
 
@@ -29,16 +34,10 @@ int32 nsObject::s_nObjects = 0;
 /**
  * constructor
  */
-nsObject::nsObject(nsISupports *aOuter)
+nsObject::nsObject():nsISupports()
 {
     // ref count init
     mRefCnt = 1;
-    // assign outer
-    if (aOuter) 
-        mOuter = aOuter;
-    else 
-        mOuter = (nsISupports*)&mInner;
-
     //
     // Add the new object the chain of allocated nsObjects
     //
@@ -67,64 +66,26 @@ nsObject::~nsObject()
     PR_ExitMonitor(s_liveChainMutex);
 }
 
+
+
 /**
- * nsISupports methods
+ *
  */
 nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    return mOuter->QueryInterface(aIID, aInstancePtr);
-}
-
-/**
- *
- */
-nsrefcnt nsObject::AddRef(void)
-{
-  return NS_ADDREF(mOuter);
-}
-
-/**
- *
- */
-nsrefcnt nsObject::Release(void)
-{
-//  nsrefcnt rc;
-//  NS_RELEASE2(mOuter, rc);
-//  return rc;
-  return NS_RELEASE(mOuter);
-}
-
-/**
- *
- */
-inline nsrefcnt nsObject::AddRefObject(void) { 
-  return ++mRefCnt; 
-}
-
-/**
- *
- */
-inline nsrefcnt nsObject::ReleaseObject(void) { 
-  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
-}
-
-/**
- *
- */
-nsresult nsObject::QueryObject(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER;
     }
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)&mInner);
+        *aInstancePtr = (void*) ((nsISupports*)this);
         AddRef();
         return NS_OK;
     }
 
     return NS_NOINTERFACE;
 }
+
 
 
 /**

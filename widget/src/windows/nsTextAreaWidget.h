@@ -30,39 +30,25 @@
  * Native WIN32 multi-line edit control wrapper. 
  */
 
-class nsTextAreaWidget :  public nsTextHelper,
-                          public nsITextAreaWidget
+class nsTextAreaWidget :  public nsTextHelper
 {
 
 public:
-    nsTextAreaWidget(nsISupports *aOuter);
+    nsTextAreaWidget();
     virtual                 ~nsTextAreaWidget();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+      // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
+    
+    // nsIWidget Overrides
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
     virtual void            GetBounds(nsRect &aRect);
 
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
-
-    // nsITextWidget part
-    virtual void            SelectAll();
-    virtual void            SetMaxTextLength(PRUint32 aChars);
-    virtual PRUint32        SetText(const nsString &aText);
-    virtual PRUint32        GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual PRUint32        InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-    virtual void            RemoveText();
-    virtual void            SetPassword(PRBool aIsPassword);
-    virtual PRBool          SetReadOnly(PRBool aReadOnlyFlag);
-    virtual void            SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual void            GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual void            SetCaretPosition(PRUint32 aPosition);
-    virtual PRUint32        GetCaretPosition();
 
     virtual void            SetUpForPaint(HDC aHDC);
 

@@ -34,13 +34,12 @@ class nsTextWidget : public nsTextHelper
 {
 
 public:
-    nsTextWidget(nsISupports *aOuter);
+    nsTextWidget();
     virtual ~nsTextWidget();
 
     // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    NS_DECL_ISUPPORTS
 
-    virtual nsresult  QueryObject(const nsIID& aIID, void** aInstancePtr);
     virtual PRBool  OnPaint();
     virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool  OnResize(nsRect &aWindowRect);
@@ -48,8 +47,6 @@ public:
 
     virtual void SubclassWindow(BOOL bState);
 
-    // nsIWidget interface
-    BASE_IWIDGET_IMPL
 
 protected:
     virtual LPCTSTR     WindowClass();

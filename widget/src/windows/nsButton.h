@@ -34,20 +34,19 @@ class nsButton :  public nsWindow,
 {
 
 public:
-  nsButton(nsISupports *aOuter);
+  nsButton();
   virtual ~nsButton();
 
-    // nsISupports. Forward to the nsObject base class
-  BASE_SUPPORT
-
-  virtual nsresult QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIWidget interface
-  BASE_IWIDGET_IMPL
-
-    // nsIButton part
-  virtual void SetLabel(const nsString& aText);
-  virtual void GetLabel(nsString& aBuffer);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  
+  // nsIButton part
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  
+  
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);

@@ -36,22 +36,21 @@ class nsRadioGroup : public nsObject,
 {
 
 public:
-                            nsRadioGroup(nsISupports *aOuter);
+                            nsRadioGroup();
     virtual                 ~nsRadioGroup();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
-
-    // nsIRadioGroup part
-    virtual void            Add(nsIRadioButton * aChild);
-    virtual void            Remove(nsIRadioButton * aChild);
-
-    virtual void            SetName(const nsString &aName);
-
-    virtual void            Clicked(nsIRadioButton * aChild);
-    virtual nsIEnumerator*  GetChildren();
+    
+    // nsIRadioGroup Interface
+    NS_IMETHOD Add(nsIRadioButton * aRadioBtn);
+    NS_IMETHOD Remove(nsIRadioButton * aRadioBtn);
+    NS_IMETHOD SetName(const nsString &aName);
+    NS_IMETHOD Clicked(nsIRadioButton * aChild);
+    virtual nsIEnumerator* GetChildren();
 
     static nsRadioGroup *   getNamedRadioGroup(const nsString & aName);
 

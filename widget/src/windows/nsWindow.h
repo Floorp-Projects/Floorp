@@ -42,18 +42,19 @@
  */
 
 class nsWindow : public nsObject,
-                 public nsIWidget,
-                 public nsSwitchToUIThread
+                 public nsSwitchToUIThread,
+                 public nsIWidget
 {
 
 public:
-                            nsWindow(nsISupports *aOuter);
-    virtual                 ~nsWindow();
+    nsWindow();
+    virtual ~nsWindow();
 
-    // nsISupports. Forward to the nsObject base class
-    BASE_SUPPORT
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
 
     virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
@@ -243,211 +244,13 @@ protected:
 class ChildWindow : public nsWindow {
 
 public:
-                            ChildWindow(nsISupports *aOuter) : nsWindow(aOuter) {}
+                            ChildWindow(){}
     PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
 protected:
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle() { return 0; }
 };
-
-#define BASE_IWIDGET_IMPL  BASE_INITIALIZE_IMPL BASE_WINDOWS_METHODS
-
-
-#define BASE_INITIALIZE_IMPL \
-    void  Create(nsIWidget *aParent, \
-                    const nsRect &aRect, \
-                    EVENT_CALLBACK aHandleEventFunction, \
-                    nsIDeviceContext *aContext, \
-                    nsIAppShell *aAppShell = nsnull, \
-                    nsIToolkit *aToolkit = nsnull, \
-                    nsWidgetInitData *aInitData = nsnull) \
-    { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
-    } \
-
-#define BASE_WINDOWS_METHODS \
-    void Create(nsNativeWidget aParent, \
-                 const nsRect &aRect, \
-                 EVENT_CALLBACK aHandleEventFunction, \
-                 nsIDeviceContext *aContext, \
-                 nsIAppShell *aAppShell = nsnull, \
-                 nsIToolkit *aToolkit = nsnull, \
-                 nsWidgetInitData *aInitData = nsnull) \
-    { \
-        nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData); \
-    } \
-    NS_IMETHODIMP GetClientData(void*& aClientData) \
-    { \
-        return nsWindow::GetClientData(aClientData); \
-    } \
-    NS_IMETHODIMP SetClientData(void* aClientData) \
-    { \
-        return nsWindow::SetClientData(aClientData); \
-    } \
-    void Destroy(void) \
-    { \
-        nsWindow::Destroy(); \
-    } \
-    nsIWidget* GetParent(void) \
-    { \
-        return nsWindow::GetParent(); \
-    } \
-    nsIEnumerator* GetChildren(void) \
-    { \
-        return nsWindow::GetChildren(); \
-    } \
-    void AddChild(nsIWidget* aChild) \
-    { \
-        nsWindow::AddChild(aChild); \
-    } \
-    void RemoveChild(nsIWidget* aChild) \
-    { \
-        nsWindow::RemoveChild(aChild); \
-    } \
-    void Show(PRBool bState) \
-    { \
-        nsWindow::Show(bState); \
-    } \
-    void Move(PRUint32 aX, PRUint32 aY) \
-    { \
-        nsWindow::Move(aX, aY); \
-    } \
-    void Resize(PRUint32 aWidth, \
-                PRUint32 aHeight, \
-                PRBool   aRepaint) \
-    { \
-        nsWindow::Resize(aWidth, aHeight, aRepaint); \
-    } \
-    void Resize(PRUint32 aX, \
-                PRUint32 aY, \
-                PRUint32 aWidth, \
-                PRUint32 aHeight, \
-                PRBool   aRepaint) \
-    { \
-        nsWindow::Resize(aX, aY, aWidth, aHeight, aRepaint); \
-    } \
-    void Enable(PRBool bState) \
-    { \
-        nsWindow::Enable(bState); \
-    } \
-    void SetFocus(void) \
-    { \
-        nsWindow::SetFocus(); \
-    } \
-    nscolor GetForegroundColor(void) \
-    { \
-        return nsWindow::GetForegroundColor(); \
-    } \
-    void SetForegroundColor(const nscolor &aColor) \
-    { \
-        nsWindow::SetForegroundColor(aColor); \
-    } \
-    nscolor GetBackgroundColor(void) \
-    { \
-        return nsWindow::GetBackgroundColor(); \
-    } \
-    void SetBackgroundColor(const nscolor &aColor) \
-    { \
-        nsWindow::SetBackgroundColor(aColor); \
-    } \
-    nsIFontMetrics* GetFont(void) \
-    { \
-        return nsWindow::GetFont(); \
-    } \
-    void SetFont(const nsFont &aFont) \
-    { \
-        nsWindow::SetFont(aFont); \
-    } \
-    nsCursor GetCursor() \
-    { \
-        return nsWindow::GetCursor(); \
-    } \
-    void SetCursor(nsCursor aCursor) \
-    { \
-        nsWindow::SetCursor(aCursor); \
-    } \
-    void Invalidate(PRBool aIsSynchronous) \
-    { \
-        nsWindow::Invalidate(aIsSynchronous); \
-    } \
-    void* GetNativeData(PRUint32 aDataType) \
-    { \
-        return nsWindow::GetNativeData(aDataType); \
-    } \
-    nsIRenderingContext* GetRenderingContext() \
-    { \
-        return nsWindow::GetRenderingContext(); \
-    } \
-    nsIDeviceContext* GetDeviceContext() \
-    { \
-        return nsWindow::GetDeviceContext(); \
-    } \
-    nsIAppShell* GetAppShell() \
-    { \
-        return nsWindow::GetAppShell(); \
-    } \
-    void Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) \
-    { \
-        nsWindow::Scroll(aDx, aDy, aClipRect); \
-    } \
-    nsIToolkit* GetToolkit() \
-    { \
-        return nsWindow::GetToolkit(); \
-    } \
-    void SetColorMap(nsColorMap *aColorMap) \
-    { \
-        nsWindow::SetColorMap(aColorMap); \
-    } \
-    void AddMouseListener(nsIMouseListener * aListener) \
-    { \
-       nsWindow::AddMouseListener(aListener); \
-    } \
-    void AddEventListener(nsIEventListener * aListener) \
-    { \
-       nsWindow::AddEventListener(aListener); \
-    } \
-    PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode) \
-    { \
-      return nsWindow::OnKey(aEventType, aKeyCode); \
-    } \
-    void SetBorderStyle(nsBorderStyle aBorderStyle) \
-    { \
-      nsWindow::SetBorderStyle(aBorderStyle); \
-    } \
-    void SetTitle(const nsString& aTitle) \
-    { \
-      nsWindow::SetTitle(aTitle); \
-    } \
-    void SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]) \
-    { \
-      nsWindow::SetTooltips(aNumberOfTips, aTooltipAreas); \
-    } \
-    void UpdateTooltips(nsRect* aNewTips[]) \
-    { \
-      nsWindow::UpdateTooltips(aNewTips); \
-    } \
-    void RemoveTooltips() \
-    { \
-      nsWindow::RemoveTooltips(); \
-    } \
-    void WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) \
-    { \
-      nsWindow::WidgetToScreen(aOldRect, aNewRect); \
-    } \
-    void ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) \
-    { \
-      nsWindow::ScreenToWidget(aOldRect, aNewRect); \
-    } \
-    void BeginResizingChildren(void) \
-    { \
-      nsWindow::BeginResizingChildren(); \
-    } \
-    void EndResizingChildren(void) \
-    { \
-      nsWindow::EndResizingChildren(); \
-    } 
-
 
 
 #endif // Window_h__

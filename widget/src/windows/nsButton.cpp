@@ -24,13 +24,18 @@
 #include "nsStringUtil.h"
 #include <windows.h>
 
+
+NS_IMPL_ADDREF(nsButton)
+NS_IMPL_RELEASE(nsButton)
+
 //-------------------------------------------------------------------------
 //
 // nsButton constructor
 //
 //-------------------------------------------------------------------------
-nsButton::nsButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsButton::nsButton() : nsWindow() , nsIButton()
 {
+  NS_INIT_REFCNT();
 }
 
 //-------------------------------------------------------------------------
@@ -42,35 +47,42 @@ nsButton::~nsButton()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsButton::QueryObject(const nsIID& aIID, void** aInstancePtr)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @modify gpk 8/4/98
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ * 
+*/ 
+nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
 
-  static NS_DEFINE_IID(kInsButtonIID, NS_IBUTTON_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsButtonIID)) {
-      *aInstancePtr = (void*) ((nsIButton*)this);
-      AddRef();
-      result = NS_OK;
-  }
+    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
+    if (aIID.Equals(kIButton)) {
+        *aInstancePtr = (void*) ((nsIButton*)this);
+        AddRef();
+        return NS_OK;
+    }
 
-  return result;
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
+
 
 //-------------------------------------------------------------------------
 //
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsButton::SetLabel(const nsString& aText)
+NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   VERIFY(::SetWindowText(mWnd, label));
   NS_FREE_STR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -78,7 +90,7 @@ void nsButton::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsButton::GetLabel(nsString& aBuffer)
+NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
   int actualSize = ::GetWindowTextLength(mWnd)+1;
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
@@ -86,6 +98,7 @@ void nsButton::GetLabel(nsString& aBuffer)
   aBuffer.SetLength(0);
   aBuffer.Append(label);
   NS_FREE_CHAR_BUF(label);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
