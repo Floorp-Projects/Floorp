@@ -367,6 +367,7 @@ nsresult nsScanner::FillBuffer(void) {
   nsresult result=NS_OK;
 
   if(!mInputStream) {
+#if 0
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
     //If you're here, it means someone tried to load a
     //non-existent document. So as a favor, we emit a
@@ -374,8 +375,11 @@ nsresult nsScanner::FillBuffer(void) {
     if(0==mTotalRead) {
       mBuffer.Append((const char*)kBadHTMLText);
       mBuffer.Append(mFilename);
+      mTotalRead+=mBuffer.Length();
     }
-    else result=kEOF;
+    else 
+#endif
+    result=kEOF;
   }
   else {
     PRInt32 numread=0;
