@@ -194,10 +194,16 @@ the web cgi id.  Bonsai does not need to change the executable files in the
 main bonsai directory so these can be owned as root.
 
    Edit data/treeconfig.pl file as described in README file. Create
-appropriate data/XXX directory for each tree XXX you've configured
-in 'treeconfig.pl'. This file maps the names of trees to branch/module 
-combinations.  You will need to have at least one module in your CVS 
-repository to run Bonsai.  Typically users create a module called All.
+appropriate data/XXX directory for each tree XXX you've configured in
+'treeconfig.pl'. This file maps the names of trees to branch/module
+combinations.  You will need to have at least one module in your CVS
+repository to run Bonsai.  Typically users create a module called All
+which contains all the directories in the CVS repository. All
+repositories must be written as if they were local repositories (eg
+'/cvsroot') without hostnames or ':pserver:'.  The cgi-bin scripts
+will access these directories on the web machine and they must contain
+the ',v' files which match cvsroot as listed in the checkin mail from
+the real CVS machine.
 
    Go to the data directory and run 
 
@@ -218,12 +224,34 @@ fixed in near feature. And I hope they will be.
 First create database structure using maketable.sh script. You might
 want to edit it to use the user and password you want for the bonsai
 database.
+
+You must ensure that your web machine can access the CVS repositories
+raw data files (',v' files). If the CVS repository is on another
+machine then the web machine must be configured to be able to read the
+files as if they were stored with the same pathes on the Web
+machine. Uually this is accomplished via an NFS read only mount of the
+cvsroot.  You can check this configuration by looking at the file
+$CVSROOT/modules,v (perhaps this needs the prefix trimmed from this
+string to make a vaild path name).  This file should be readable on
+both the CVS machine and on the web machine.
+
 Then go to Bonsai administration page and press "Rebuild CVS history"
 button. Then you may go to the theater and watch a movie or two. It
 will take a lot of time. It takes several seconds to process one
 file. The more revisions in file the more time it will take. My SUN
 workstation with 2x200Mhz UltraSPARC processors run about an hour to
-process about 4K files with 20K+ revisions. Your mileage may vary.
+process about 4K files with 20K+ revisions. Your mileage may vary.  
+
+If you need to do this more then once you may wish to purge ethe
+legaldirs file in the data directory.  This is a cache file which
+holds the names of the directories in CVS, if a directory is not
+listed here it will not be loaded into the database.  Changes to the
+modules file shoud probably be followed by a deletion of the legaldirs
+file.  
+
+I have also found it useful to rerun maketables.sh before reloading the
+CVS information.  If I forget to do this step occasionally the load
+will fail in the middle because of duplicate data in the table.
 
 Copy "dolog.pl" to your CVSROOT directory, and check it in. Add
 "dolog.pl" to CVSROOT/checkoutlist, and check it in. Then, add a line
