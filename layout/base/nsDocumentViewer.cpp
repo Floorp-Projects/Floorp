@@ -3456,7 +3456,7 @@ DocumentViewerImpl::StartPagePrintTimer(nsIPresContext * aPresContext,
   return mPagePrintTimer->Start(this, aPresContext, aPrintOptions, aDelay);
 }
 
-inline void
+void
 DocumentViewerImpl::StopPagePrintTimer()
 {
   if (mPagePrintTimer) {
