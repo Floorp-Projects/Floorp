@@ -53,6 +53,7 @@
     { 
       background-color    : #FFFFFF;
       padding             : 0px;
+      font-family         : Geneva, Tahoma, Helvetica, Arial, sans-serif;
     }
   
   window[wait-cursor] 
