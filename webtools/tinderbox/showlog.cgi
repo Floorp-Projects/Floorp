@@ -61,8 +61,9 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
   $logfile     = $form{logfile};
   $buildname   = $form{buildname};
   $buildtime   = $form{buildtime};
-  $fulltext    = $form{fulltext};
 }
+$fulltext    = $form{fulltext};
+
 $enc_buildname = &url_encode($buildname);
 
 die "the \"tree\" parameter must be provided\n" unless $tree;
