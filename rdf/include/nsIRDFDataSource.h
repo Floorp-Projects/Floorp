@@ -53,6 +53,14 @@ public:
                         nsIRDFResourceManager* m);
 #endif
 
+  NS_IMETHOD GetResource(RDF_String id,
+                         RDF_Resource * r) = 0;
+
+  NS_IMETHOD CreateResource(RDF_String id,
+                            RDF_Resource* r) = 0;
+
+  NS_IMETHOD ReleaseResource(RDF_Resource r) = 0;
+
   /**
    * Get the name of this data source.
    *

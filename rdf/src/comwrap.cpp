@@ -44,6 +44,14 @@ public:
 
   /* nsIRDFDataSource methods:  */
 
+  NS_METHOD GetResource(RDF_String id,
+                         RDF_Resource * r);
+
+  NS_METHOD CreateResource(RDF_String id,
+                            RDF_Resource* r);
+
+  NS_METHOD ReleaseResource(RDF_Resource r);
+
   NS_METHOD GetName(const RDF_String* name /* out */ );
 
   NS_METHOD GetSource(RDF_Node target,
@@ -199,6 +207,51 @@ rdfDatabaseWrapper::rdfDatabaseWrapper(RDF r) : mRDF(r)
 rdfDatabaseWrapper::~rdfDatabaseWrapper()
 {
   PL_HashTableDestroy( mpObserverMap );
+}
+
+NS_METHOD
+rdfDatabaseWrapper::GetResource(RDF_String id,
+                         RDF_Resource * r)
+{
+  PR_ASSERT( 0 != r );
+  if( 0 == r )
+    return NS_ERROR_NULL_POINTER;
+
+  *r = 0;
+
+  *r = RDF_GetResource( mRDF, id, PR_FALSE );
+  if( 0 == *r ) { // XXX
+    PR_ASSERT( PR_FALSE );
+    return NS_ERROR_BASE;
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD
+rdfDatabaseWrapper::CreateResource(RDF_String id,
+                            RDF_Resource* r)
+{
+  PR_ASSERT( 0 != r );
+  if( 0 == r )
+    return NS_ERROR_NULL_POINTER;
+
+  *r = 0;
+
+  *r = RDF_GetResource( mRDF, id, PR_TRUE );
+  if( 0 == *r ) { // XXX
+    PR_ASSERT( PR_FALSE );
+    return NS_ERROR_BASE;
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD
+rdfDatabaseWrapper::ReleaseResource(RDF_Resource r)
+{
+  RDF_ReleaseResource( mRDF, r );
+  return NS_OK;
 }
 
 NS_METHOD
