@@ -58,25 +58,6 @@
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY translateMenu.label "Translate">
-<!ENTITY translateButton.label "Translate">
-<!ENTITY translateEngtoFrenCmd.label "English to French">
-<!ENTITY translateEngtoGermCmd.label "English to German">
-<!ENTITY translateEngtoItalianCmd.label "English to Italian">
-<!ENTITY translateEngtoJapaneseCmd.label "English to Japanese">
-<!ENTITY translateEngtoPortCmd.label "English to Portugese">
-<!ENTITY translateEngtoSpanCmd.label "English to Spanish">
-<!ENTITY translateFrentoEngCmd.label "French to English">
-<!ENTITY translateFrentoGermCmd.label "French to German">
-<!ENTITY translateFrentoSpanCmd.label "French to Spanish">
-<!ENTITY translateGermtoEngCmd.label "German to English">
-<!ENTITY translateGermtoFrenCmd.label "German to French">
-<!ENTITY translateGermtoSpanCmd.label "German to Spanish">
-<!ENTITY translateItaliantoEngCmd.label "Italian to English">
-<!ENTITY tanslateJapanesetoEngCmd.label "Japanese to English">
-<!ENTITY translatePorttoEngCmd.label "Portugese to English">
-<!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
-<!ENTITY translateSpantoFrenCmd.label "Spanish to French">
-<!ENTITY translateSpantoGermCmd.label "Spanish to German">
 <!ENTITY dcharMenu.label "Character Set  ISO">
 <!ENTITY dcharMenu1.label "Character Set  Multibyte">
 <!ENTITY dcharMenu2.label "Character Set  Cyrillic">
