@@ -30,6 +30,7 @@
 #include "nsRDFCID.h"
 #include "nsUConvDll.h"
 #include "nsCharsetMenu.h"
+#include "nsICharsetConverterManager.h"
 
 static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -38,6 +39,8 @@ static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_CID(kIRDFContainerUtilsIID, NS_IRDFCONTAINERUTILS_IID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
 
 static const char * kURINC_BSCharsetMenuRoot = "NC:BSCharsetMenuRoot";
 static const char * kURINC_BDCharsetMenuRoot = "NC:BDCharsetMenuRoot";
@@ -69,6 +72,9 @@ private:
   nsresult Done();
   nsresult CreateBrowserMenu();
   nsresult CreateBrowserMoreMenu();
+  nsresult CreateBrowserStaticMenu();
+  nsresult FillRDFContainer(nsIRDFResource * aResource, nsString ** aList, 
+      PRInt32 aCount);
 
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
       nsIRDFResource * aResource, nsIRDFContainer ** aResult);
@@ -209,6 +215,10 @@ nsresult nsCharsetMenu::Init()
       kIRDFContainerUtilsIID, (nsISupports **)&rdfUtil);
   if (NS_FAILED(res)) goto done;
 
+  res = rdfUtil->MakeSeq(mInner, kNC_BSCharsetMenuRoot, NULL);
+  if (NS_FAILED(res)) goto done;
+  res = rdfUtil->MakeSeq(mInner, kNC_BDCharsetMenuRoot, NULL);
+  if (NS_FAILED(res)) goto done;
   res = rdfUtil->MakeSeq(mInner, kNC_BMCharsetMenuRoot, NULL);
   if (NS_FAILED(res)) goto done;
 
@@ -246,53 +256,104 @@ done:
   return res;
 }
 
-nsresult nsCharsetMenu::CreateBrowserMenu() 
-{
-  return CreateBrowserMoreMenu();
-}
-
-nsresult nsCharsetMenu::CreateBrowserMoreMenu() 
+nsresult nsCharsetMenu::FillRDFContainer(nsIRDFResource * aResource, 
+                                         nsString ** aList, PRInt32 aCount) 
 {
   nsresult res = NS_OK;
   nsIRDFService * rdfServ = NULL;
-  nsCOMPtr<nsIRDFResource> charset;
+  nsCOMPtr<nsIRDFResource> node;
   nsCOMPtr<nsIRDFContainer> container;
-  int i = 0;
+  PRInt32 i;
 
   res = nsServiceManager::GetService(kRDFServiceCID, kIRDFServiceIID, 
       (nsISupports **)&rdfServ);
   if (NS_FAILED(res)) goto done;
 
-  res = NewRDFContainer(mInner, kNC_BMCharsetMenuRoot, getter_AddRefs(container));
+  res = NewRDFContainer(mInner, aResource, getter_AddRefs(container));
   if (NS_FAILED(res)) goto done;
 
-  /*** XXX temporary hack ****/
-  for (i = 0; i < 3; i++) {
-    nsString * charsetTitle = new nsString("Character Set");
+  for (i = 0; i < aCount; i++) {
+    nsString * str = aList[i];
+    if (str == NULL) continue;
 
     // Make up a unique ID and create the RDF NODE
-    nsString uniqueID = "charset";
     char cID[256];
-    uniqueID.ToCString(cID, 256);
-    res = rdfServ->GetResource(cID, getter_AddRefs(charset));
+    str->ToCString(cID, 256);
+    res = rdfServ->GetResource(cID, getter_AddRefs(node));
     if (NS_FAILED(res)) continue;
 
-    // Get the RDF literal and add it to our node 
-    nsCOMPtr<nsIRDFLiteral> charsetTitleLiteral;
-    res = rdfServ->GetLiteral(charsetTitle->GetUnicode(), getter_AddRefs(charsetTitleLiteral));
+    // Get the RDF literal and add it to our node
+    // XXX here get and use the human readable name for this charset
+    nsCOMPtr<nsIRDFLiteral> titleLiteral;
+    res = rdfServ->GetLiteral(str->GetUnicode(), getter_AddRefs(titleLiteral));
     if (NS_FAILED(res)) continue;
-
-    res = Assert(charset, kNC_Name, charsetTitleLiteral, PR_TRUE);
+    res = Assert(node, kNC_Name, titleLiteral, PR_TRUE);
     if (NS_FAILED(res)) continue;
 
     // Add the element to the container
-    res = container->AppendElement(charset);
+    res = container->AppendElement(node);
     if (NS_FAILED(res)) continue;
   }
-  /*******/
 
 done:
   if (rdfServ != NULL) nsServiceManager::ReleaseService(kRDFServiceCID, rdfServ);
+
+  return res;
+}
+
+nsresult nsCharsetMenu::CreateBrowserMenu() 
+{
+  CreateBrowserMoreMenu();
+  CreateBrowserStaticMenu();
+
+  return NS_OK;
+}
+
+nsresult nsCharsetMenu::CreateBrowserMoreMenu() 
+{
+  nsresult res = NS_OK;
+  nsICharsetConverterManager * ccMan = NULL;
+  nsString ** decs = NULL;
+  PRInt32 count;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+      kICharsetConverterManagerIID, (nsISupports **)&ccMan);
+  if (NS_FAILED(res)) goto done;
+
+  res = ccMan->GetDecoderList(&decs, &count);
+  if (NS_FAILED(res)) goto done;
+
+  // XXX put the flagged charsets on null
+
+  res = FillRDFContainer(kNC_BMCharsetMenuRoot, decs, count);
+  if (NS_FAILED(res)) goto done;
+
+done:
+  if (ccMan != NULL) nsServiceManager::ReleaseService(
+      kCharsetConverterManagerCID, ccMan);
+  if (decs != NULL) delete [] decs;
+
+  return res;
+}
+
+nsresult nsCharsetMenu::CreateBrowserStaticMenu() 
+{
+  nsresult res = NS_OK;
+  PRInt32 count = 2;
+  nsString ** decs = new nsString * [count];
+  decs[0] = new nsString("UTF-8");
+  decs[1] = new nsString("Shift-JIS");
+
+  // XXX put the flagged charsets on null
+
+  res = FillRDFContainer(kNC_BSCharsetMenuRoot, decs, count);
+  if (NS_FAILED(res)) goto done;
+
+done:
+  if (decs != NULL) {
+    for (PRInt32 i = 0; i < count; i++) if (decs[i] != NULL) delete decs[i];
+    delete [] decs;
+  }
 
   return res;
 }
