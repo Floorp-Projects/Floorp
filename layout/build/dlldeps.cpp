@@ -45,4 +45,5 @@ void XXXNeverCalled()
   NS_NewHTMLFramesetFrame(nsnull, nsnull, f);
   NS_NewHTMLFrame(nsnull, nsnull, f);
   NS_NewScrollFrame(nsnull, nsnull, f);
+  NS_NewSimplePageSequenceFrame(nsnull, nsnull, f);
 }
