@@ -213,7 +213,6 @@ public:
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
-  NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
   NS_IMETHOD  Scrolled(nsIView *aView);
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;

@@ -1354,14 +1354,6 @@ NS_IMETHODIMP nsFrame::SetNextSibling(nsIFrame* aNextSibling)
   return NS_OK;
 }
 
-// Transparency query
-NS_IMETHODIMP nsFrame::IsTransparent(PRBool& aTransparent) const
-{
-  //XXX this needs to be overridden in just about every leaf class? MMP
-  aTransparent = PR_TRUE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsFrame::Scrolled(nsIView *aView)
 {
   return NS_OK;
