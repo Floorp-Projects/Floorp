@@ -165,6 +165,10 @@
 <!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
 
 <!ENTITY debugMenu.label "Debug">
+<!ENTITY debugQA.label "QA Help">
+<!ENTITY debugQABug.label "QA Help">
+<!ENTITY debugQASmoke.label "Smoke Tests">
+<!ENTITY debugQAKnowBug.label "Known Bugs">
 <!ENTITY debugVerCmd.label "Verification">
 <!ENTITY ver1Cmd.label "Mozilla">
 <!ENTITY ver2Cmd.label "Yahoo">
@@ -545,6 +549,13 @@
 
     // Menu for testing.
     <menu name="&debugMenu.label;">
+
+<menu name="&debugMenu.label;"> // XPToolkit tests.
+        <menuitem name="&debugQA.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+        <menuitem name="&debugQABug.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/smoketests/'"/>
+        <menuitem name="&debugQAKnowBug.label;" onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+        </menu>
+
 
       <menu name="&debugVerCmd.label;"> // Build verification sites.
         <menuitem name="&ver1Cmd.label;"   onclick="window.frames[0].frames[1].location.href='http://www.mozilla.org'"/>
