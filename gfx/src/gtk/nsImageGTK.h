@@ -46,8 +46,6 @@
 #include <gdk/gdk.h>
 #include "nsRegion.h"
 
-#undef Bool
-
 class nsImageGTK : public nsIImage
 {
 public:

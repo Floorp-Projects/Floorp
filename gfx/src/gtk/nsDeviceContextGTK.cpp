@@ -75,7 +75,6 @@
 #ifdef MOZ_ENABLE_XFT
 #include "nsFontMetricsUtils.h"
 #include <X11/Xlib.h>
-#include <X11/Xdefs.h>
 #include <X11/Xft/Xft.h>
 
 static PRInt32 GetXftDPI(void);
