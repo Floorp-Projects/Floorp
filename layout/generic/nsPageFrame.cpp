@@ -54,9 +54,8 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFrames.FirstChild(), "bad reflow frame");
 
-    // Dispatch the reflow command to our content child. Allow it to be as high
-    // as it wants
-    nsSize            maxSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
+    // Dispatch the reflow command to our frame
+    nsSize            maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
                                      mFrames.FirstChild(), maxSize);
   
