@@ -769,8 +769,8 @@ nsWindow::Invalidate(const nsRect &aRect,
     rect.width = aRect.width;
     rect.height = aRect.height;
 
-    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
-             rect.x, rect.y, rect.width, rect.height));
+    LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d (sync: %d)\n", (void *)this,
+             rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
 
     gdk_window_invalidate_rect(mDrawingarea->inner_window,
                                &rect, TRUE);
@@ -791,8 +791,9 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
         GdkRectangle rect;
         gdk_region_get_clipbox(region, &rect);
 
-        LOGDRAW(("Invalidate (region) [%p]: %d %d %d %d\n", (void *)this,
-                 rect.x, rect.y, rect.width, rect.height));
+        LOGDRAW(("Invalidate (region) [%p]: %d %d %d %d (sync: %d)\n",
+                 (void *)this,
+                 rect.x, rect.y, rect.width, rect.height, aIsSynchronous));
 
         gdk_window_invalidate_region(mDrawingarea->inner_window,
                                      region, TRUE);
