@@ -36,7 +36,7 @@
 #Bugzilla Test 1#
 ###Compilation###
 
-BEGIN { use Test::More tests => 56; }
+BEGIN { use Test::More tests => 55; }
 BEGIN { use lib 't/'; }
 BEGIN { use Support::Files; }
 
@@ -67,10 +67,10 @@ foreach $file (@testitems) {
 }      
 
 # and the libs:                                                                 
-use_ok('Token'); # 53                                                 
-use_ok('Attachment'); # 54                                            
-use_ok('Bug'); # 55                                                   
-use_ok('RelationSet'); # 56                                           
+use_ok('Token'); # 52                                                 
+use_ok('Attachment'); # 53                                            
+use_ok('Bug'); # 54                                            
+use_ok('RelationSet'); # 55                                           
 
 
 

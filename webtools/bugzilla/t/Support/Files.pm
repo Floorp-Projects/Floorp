@@ -83,7 +83,6 @@ whineatnews.pl #46
 xml.cgi #47
 attachment.cgi #48
 editattachstatuses.cgi #49
-processmail #50
-globals.pl #51
-CGI.pl #52
+globals.pl #50
+CGI.pl #51
 ));
