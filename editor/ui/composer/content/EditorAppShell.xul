@@ -48,7 +48,7 @@
   
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
-  <observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
+  <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('html')"/>
   
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">

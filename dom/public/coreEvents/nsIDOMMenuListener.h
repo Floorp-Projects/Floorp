@@ -35,6 +35,8 @@ public:
   NS_IMETHOD Create(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Destroy(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Action(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif // nsIDOMMenuListener_h__

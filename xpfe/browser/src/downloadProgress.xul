@@ -21,9 +21,9 @@
     </data>
 
     <dialog>
-        <observes element="data.progress" attribute="value" onchange="onProgress()"/>
-        <observes element="data.progress" attribute="completed" onchange="onCompletion()"/>
-        <observes element="data.status"   attribute="value" onchange="onStatus()"/>
+        <observes element="data.progress" attribute="value" onbroadcast="onProgress()"/>
+        <observes element="data.progress" attribute="completed" onbroadcast="onCompletion()"/>
+        <observes element="data.status"   attribute="value" onbroadcast="onStatus()"/>
     </dialog>
 
     <html:script>

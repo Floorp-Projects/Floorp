@@ -380,12 +380,12 @@ public:
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
-    nsresult ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName);
+    nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName);
 
     PRBool ElementIsInDocument();
 
     static nsresult
-    ExecuteJSCode(nsIDOMElement* anElement);
+    ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
 
     // Used with treecol width attributes
     static PRBool ParseNumericValue(const nsString& aString,
@@ -516,9 +516,11 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onabort",       nsnull, &kIDOMLoadListenerIID        },
     { "onerror",       nsnull, &kIDOMLoadListenerIID        },
 
-    { "oncreate",      nsnull, &kIDOMMenuListenerIID        },
-    { "ondestroy",     nsnull, &kIDOMMenuListenerIID        },
-    { "oncommand",     nsnull, &kIDOMMenuListenerIID        },
+    { "oncreate",        nsnull, &kIDOMMenuListenerIID        },
+    { "ondestroy",       nsnull, &kIDOMMenuListenerIID        },
+    { "oncommand",       nsnull, &kIDOMMenuListenerIID        },
+    { "onbroadcast",     nsnull, &kIDOMMenuListenerIID        },
+    { "oncommandupdate", nsnull, &kIDOMMenuListenerIID        },
 
     { "onfocus",       nsnull, &kIDOMFocusListenerIID       },
     { "onblur",        nsnull, &kIDOMFocusListenerIID       },
@@ -527,6 +529,7 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onreset",       nsnull, &kIDOMFormListenerIID        },
     { "onchange",      nsnull, &kIDOMFormListenerIID        },
     { "onselect",      nsnull, &kIDOMFormListenerIID        },
+    { "oninput",       nsnull, &kIDOMFormListenerIID        },
 
     { "onpaint",       nsnull, &kIDOMPaintListenerIID       },
     
@@ -2415,7 +2418,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
                 // XXX Should have a function that knows which attributes are special.
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
-                ExecuteOnChangeHandler(xulListener->mListener, attribute);
+                ExecuteOnBroadcastHandler(xulListener->mListener, attribute);
             }
         }
     }
@@ -2825,8 +2828,8 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
         GetTagName(tagName);
         if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
-            aEvent->message == NS_FORM_CHANGE || aEvent->message == NS_DRAGDROP_ENTER ||
-            aEvent->message == NS_DRAGDROP_EXIT ||
+            aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
+            aEvent->message == NS_DRAGDROP_ENTER || aEvent->message == NS_DRAGDROP_EXIT ||
             tagName == "menu" || tagName == "menuitem" ||
             tagName == "menubar" || tagName == "key" || tagName == "keyset") {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -3163,7 +3166,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
 
     
 nsresult
-RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName)
+RDFElementImpl::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName)
 {
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
@@ -3193,7 +3196,10 @@ RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString&
                     if (listeningToAttribute == attrName) {
                         // This is the right observes node.
                         // Execute the onchange event handler
-                        ExecuteJSCode(domElement);
+                        nsEvent event;
+                        event.eventStructType = NS_EVENT;
+                        event.message = NS_XUL_BROADCAST; 
+                        ExecuteJSCode(domElement, &event);
                     }
                 }
             }
@@ -3237,7 +3243,7 @@ RDFElementImpl::ElementIsInDocument()
 }
 
 nsresult
-RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement)
+RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
 { 
     // This code executes in every presentation context in which this
     // document is appearing.
@@ -3266,10 +3272,7 @@ RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement)
 
         // Handle the DOM event
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
-        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        content->HandleDOMEvent(*aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, status);
     }
 
     return NS_OK;
