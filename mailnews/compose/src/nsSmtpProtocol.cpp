@@ -25,6 +25,7 @@
 #include "nsIOutputStream.h"
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
+#include "nsFileStream.h"
 
 #include "rosetta.h"
 
@@ -219,6 +220,7 @@ nsSmtpProtocol::~nsSmtpProtocol()
 	// release all of our event sinks
 
 	// free our local state
+	NS_IF_RELEASE(m_transport);
 }
 
 void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
@@ -274,6 +276,7 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_previousResponseCode = 0;
 	m_responseText = nsnull;
 	m_continuationResponse = -1; 
+	m_authMethod = SMTP_AUTH_NONE;
 
 	m_addressCopy = nsnull;
 	m_addresses = nsnull;
@@ -518,8 +521,6 @@ PRInt32 nsSmtpProtocol::LoginResponse(nsIInputStream * inputStream, PRUint32 len
 
 	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, 
 				GetUserDomainName());
-	 
-	TRACEMSG(("Tx: %s", buffer));
 
     status = SendData(buffer);
 
@@ -544,8 +545,6 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 
 	PR_snprintf(buffer, sizeof(buffer), "EHLO %.256s" CRLF, 
 				GetUserDomainName());
-
-	TRACEMSG(("Tx: %s", buffer));
 
     status = SendData(buffer);
 
@@ -632,7 +631,6 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 		PR_FREEIF (s);
 	  }
 
-	TRACEMSG(("Tx: %s", buffer));
     status = SendData(buffer);
 
     m_nextState = SMTP_RESPONSE;
@@ -658,8 +656,6 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
 	HG10349
 	PR_snprintf(buffer, sizeof(buffer), "HELO %.256s" CRLF, GetUserDomainName());
-
-	TRACEMSG(("Tx: %s", buffer));
 
     status = SendData(buffer);
 
@@ -691,7 +687,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 		   let's see does the server have the capability */
 		if (PL_strcasestr(m_responseText, " PLAIN") != 0)
 			m_authMethod =  SMTP_AUTH_PLAIN;
-		else if (strcasestr(m_responseText, "AUTH=LOGIN") != 0)
+		else if (PL_strcasestr(m_responseText, "AUTH=LOGIN") != 0)
 			m_authMethod = SMTP_AUTH_LOGIN;	/* old style */
 	}
 #ifdef UNREADY_CODE
@@ -704,6 +700,14 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 		HG92990
 	}
 #endif
+
+	if (m_authMethod)
+	{
+		m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
+		m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
+	}
+	else 
+		m_nextState = SMTP_SEND_HELO_RESPONSE;
 	return (status);
   }
 }
@@ -817,7 +821,6 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 		  PR_snprintf(buffer, sizeof(buffer), "AUTH PLAIN %.256s" CRLF, base64Str);
 	  else
 		  return (MK_COMMUNICATIONS_ERROR);
-	  TRACEMSG(("Tx: %s", buffer));
 
 	  status = SendData(buffer);
 	  m_nextState = SMTP_RESPONSE;
@@ -867,7 +870,6 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 	if (base64Str) {
 		char buffer[512];
 		PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
-		TRACEMSG(("Tx: %s", buffer));
 		
 		status = SendData(buffer);
 		m_nextState = SMTP_RESPONSE;
@@ -942,9 +944,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 	   past the terminating null.) */
 	m_addresses += PL_strlen (m_addresses) + 1;
 	m_addressesLeft--;
-
-	TRACEMSG(("Tx: %s", buffer));
-    
+  
     status = SendData(buffer);
 
     m_nextState = SMTP_RESPONSE;
@@ -975,9 +975,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
     /* else send the RCPT TO: command */
     PL_strcpy(buffer, "DATA" CRLF);
-
-	TRACEMSG(("Tx: %s", buffer));
-        
+      
     status = SendData(buffer);   
 
     m_nextState = SMTP_RESPONSE;  
@@ -1026,13 +1024,10 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 		      CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
 		      return(MK_OUT_OF_MEMORY);
 		    }
-	      
-	      TRACEMSG(("sending extra unix header: %s", command));
-	      
+	           
 	      status = (int) NET_BlockingWrite(CE_SOCK, command, PL_strlen(command));   
 	      if(status < 0)
 		{
-		  TRACEMSG(("Error sending message"));
 		}
         }
 	    }
@@ -1063,11 +1058,126 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 	else
 #endif
 	  {
-		m_runningURL->GetBodySize(&m_totalMessageSize);
+//		m_runningURL->GetBodySize(&m_totalMessageSize);
 	  }
 
 
     return(status);  
+}
+
+// mscott: after dogfood, make a note to move this type of function into a base
+// utility class....
+#define POST_DATA_BUFFER_SIZE 2048
+
+PRInt32 nsSmtpProtocol::SendMessageInFile()
+{
+	const char * fileName = nsnull;
+	m_runningURL->GetPostMessageFile(&fileName);
+	if (fileName && *fileName)
+	{
+		nsFilePath * filePath = new nsFilePath(fileName);
+		nsInputFileStream * fileStream = new nsInputFileStream(*filePath, PR_RDONLY, 00700);
+		if (fileStream)
+		{
+			PRInt32 amtToWrite = 0;
+		    PRInt32 amtWritten = 0 ;
+			PRInt32 amtInBuffer = 0; 
+			PRBool lastLineWasComplete = PR_TRUE;
+
+			PRBool quoteLines = PR_TRUE;  // it is always true but I'd like to generalize this function and then it might not be
+			char buffer[POST_DATA_BUFFER_SIZE];
+
+            if (quoteLines /* || add_crlf_to_line_endings */)
+            {
+				char *line;
+				char * b = buffer;
+                PRInt32 bsize = POST_DATA_BUFFER_SIZE;
+                amtInBuffer =  0;
+                do {
+					
+					PRInt32 L = 0;
+					if (fileStream->eof())
+					{
+						line = nsnull;
+						break;
+					}
+					if (!fileStream->readline(b, bsize-5)) // if the readline returns false, jump out...
+					{
+						line = nsnull;
+						break;
+					}
+					else
+						line = b;
+
+					L = PL_strlen(line);
+
+					/* escape periods only if quote_lines_p is set
+					*/
+					if (quoteLines && lastLineWasComplete && line[0] == '.')
+                    {
+                      /* This line begins with "." so we need to quote it
+                         by adding another "." to the beginning of the line.
+                       */
+						PRInt32 i;
+						line[L+1] = 0;
+						for (i = L; i > 0; i--)
+							line[i] = line[i-1];
+						L++;
+                    }
+
+					/* set default */
+					lastLineWasComplete = PR_TRUE;
+
+					if (L > 1 && line[L-2] == CR && line[L-1] == LF)
+                    {
+                        /* already ok */
+                    }
+					else if(L > 0 /* && (line[L-1] == LF || line[L-1] == CR) */)
+                    {
+                      /* only add the crlf if required
+                       * we still need to do all the
+                       * if comparisons here to know
+                       * if the line was complete
+                       */
+                      if(/* add_crlf_to_line_endings */ PR_TRUE)
+                      {
+                          /* Change newline to CRLF. */
+//                          L--;
+                          line[L++] = CR;
+                          line[L++] = LF;
+                          line[L] = 0;
+                      }
+					}
+					else
+                    {
+                      lastLineWasComplete = PR_FALSE;
+                    }
+
+					bsize -= L;
+					b += L;
+					amtInBuffer += L;
+				} while (line && bsize > 100);
+              }
+
+			SendData(buffer); 
+		}
+	}
+
+	SetFlag(SMTP_PAUSE_FOR_READ);
+
+	// for now, we are always done at this point..we aren't making multiple calls
+	// to post data...
+
+	// always issue a '.' and CRLF when we are done...
+    PL_strcpy(m_dataBuf, CRLF "." CRLF);
+	SendData(m_dataBuf);
+#ifdef UNREADY_CODE
+		NET_Progress(CE_WINDOW_ID,
+					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
+#endif
+        m_nextState = SMTP_RESPONSE;
+        m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
+        return(0);
 }
 
 PRInt32 nsSmtpProtocol::SendPostData()
@@ -1082,42 +1192,13 @@ PRInt32 nsSmtpProtocol::SendPostData()
 	 * positive if it needs to continue.
 	 */
 
-	// first, write out the message headers...
-	const char * headers = nsnull;
-	m_runningURL->GetHeaders(&headers);
-	if (headers)
-		SendData(headers);
-
-	// now send the body of the message....
-	const char * body = nsnull;
-	m_runningURL->GetBody(&body);
-	if (body)
-		SendData(body);
-								  
-	SetFlag(SMTP_PAUSE_FOR_READ);
-
-	// for now, we are always done at this point..we aren't making multiple calls
-	// to post data...
-
-	m_totalAmountWritten += status;
-
-//	if(status == 0)
+	// check to see if url is a file..if it is...call our file handler...
+	PRBool postMessageInFile = PR_TRUE;
+	m_runningURL->IsPostMessage(&postMessageInFile);
+	if (postMessageInFile)
 	{
-		/* normal done
-		 */
-        PL_strcpy(m_dataBuf, CRLF "." CRLF);
-        TRACEMSG(("sending %s", m_dataBuf));
-		SendData(m_dataBuf);
-#ifdef UNREADY_CODE
-		NET_Progress(CE_WINDOW_ID,
-					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
-#endif
-        m_nextState = SMTP_RESPONSE;
-        m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;
-        return(0);
+		return SendMessageInFile();
 	}
-
-	m_totalAmountWritten += status;
 
 	/* Update the thermo and the status bar.  This is done by hand, rather
 	   than using the FE_GraphProgress* functions, because there seems to be
@@ -1181,7 +1262,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 			m_runningURL = smtpUrl;
 
 			#ifdef UNREADY_CODE
-			m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
+				m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
 			#endif
 			
 			PRBool postMessage = PR_FALSE;
@@ -1192,7 +1273,8 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 				int status=0;
 				char *addrs1 = 0;
 				char *addrs2 = 0;
-    			m_nextState = SMTP_START_CONNECT;
+    			m_nextState = SMTP_RESPONSE;
+				m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 
 				/* Remove duplicates from the list, to prevent people from getting
 					more than one copy (the SMTP host may do this too, or it may not.)
@@ -1236,136 +1318,22 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 					PR_FREEIF(addresses); // free our original addresses string...
 				} // if parser
 			} // if post message
-			else
+			
+			// okay now kick us off to the next state...
+			// our first state is a process state so drive the state machine...
+			PRBool transportOpen = PR_FALSE;
+			m_transport->IsTransportOpen(&transportOpen);
+			m_urlInProgress = PR_TRUE;
+			if (transportOpen == PR_FALSE)
 			{
-				#ifdef UNREADY_CODE
-				/* parse special headers and stuff from the search data in the
-				  URL address.  This data is of the form
-
-					mailto:TO_FIELD?FIELD1=VALUE1&FIELD2=VALUE2
-
-					where TO_FIELD may be empty, VALUEn may (for now) only be
-					one of "cc", "bcc", "subject", "newsgroups", "references",
-					and "attachment".
-
-					"to" is allowed as a field/value pair as well, for consistency.
-				*/
-				HG15779
-				/*
-					Each parameter may appear only once, but the order doesn't
-					matter.  All values must be URL-encoded.
-				*/
-				
-				char *from = 0;						/* internal only */
-				char *reply_to = 0;					/* internal only */
-				char *to = 0;
-				char *cc = 0;
-				char *bcc = 0;
-				char *fcc = 0;						/* internal only */
-				char *newsgroups = 0;
-				char *followup_to = 0;
-				char *html_part = 0;				/* internal only */
-				char *organization = 0;				/* internal only */
-				char *subject = 0;
-				char *references = 0;
-				char *attachment = 0;				/* internal only */
-				char *body = 0;
-				char *priority = 0;
-				char *newshost = 0;					/* internal only */
-				HG27293
-
-				char *newspost_url = 0;
-				PRBool forcePlaintText = PR_FALSE;
-
-				// extract info from the url...
-				if(newshost)
-				{
-					char *prefix = "news://";
-					char *slash = XP_STRRCHR (newshost, '/');
-					if (slash && HG50707)
-					{
-						*slash = 0;
-						prefix = "snews://";
-					}
-					
-					newspost_url = (char *) XP_ALLOC (PL_strlen (prefix) +
-											  PL_strlen (newshost) + 10);
-					if (newspost_url)
-					{
-						XP_STRCPY (newspost_url, prefix);
-						XP_STRCAT (newspost_url, newshost);
-						XP_STRCAT (newspost_url, "/");
-					}
-				}
-
-			/* Tell the message library and front end to pop up an edit window.
-			*/
-			cpane = MSG_ComposeMessage (CE_WINDOW_ID,
-									from, reply_to, to, cc, bcc, fcc,
-									newsgroups, followup_to, organization,
-									subject, references, other_random_headers,
-									priority, attachment, newspost_url, body,
-									HG18517, HG74130, force_plain_text,
-									html_part);
-
-			if (cpane && CE_URL_S->fe_data) {
-				/* Tell libmsg what to do after deliver the message */
-				MSG_SetPostDeliveryActionInfo (cpane, CE_URL_S->fe_data);
+				m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 			}
-			else if (cpane)
-			{
-				MWContext *context = MSG_GetContext(cpane);
-				INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(context);
+			else  // the connection is already open so we should begin processing our new url...
+				status = ProcessSmtpState(m_runningURL, nsnull, 0); 
+		} // if we received an smtp url...
+	} // if we received a url!
 
-				/* Avoid a mailtourl defaults as an unicode mail. 
-				 * Set a encoding menu's charsetID of the current context for that case.
-				 */
-				if (IS_UNICODE_CSID(INTL_GetCSIDocCSID(csi)) || 
-					IS_UNICODE_CSID(INTL_GetCSIWinCSID(csi)))
-				{	
-					INTL_ResetCharSetID(context, FE_DefaultDocCharSetID((MWContext *) CE_WINDOW_ID));
-				}
-			}
-
-			FREEIF(from);
-			FREEIF(reply_to);
-			FREEIF(to);
-			FREEIF(cc);
-			FREEIF(bcc);
-			FREEIF(fcc);
-			FREEIF(newsgroups);
-			FREEIF(followup_to);
-			FREEIF(html_part);
-			FREEIF(organization);
-			FREEIF(subject);
-			FREEIF(references);
-			FREEIF(attachment);
-			FREEIF(body);
-			FREEIF(other_random_headers);
-			FREEIF(newshost);
-			FREEIF(priority);
-			FREEIF(newspost_url);
-
-			status = MK_NO_DATA;
-			PR_FREEIF(cd);	/* no one else is gonna do it! */
-			return(-1);
-			#endif
-		}
-
-
-		// okay now kick us off to the next state...
-		// our first state is a process state so drive the state machine...
-		PRBool transportOpen = PR_FALSE;
-		m_transport->IsTransportOpen(&transportOpen);
-		if (transportOpen == PR_FALSE)
-		{
-			m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
-		}
-		else  // the connection is already open so we should begin processing our new url...
-			 status = ProcessSmtpState(m_runningURL, nsnull, 0); 
-		return status;
-	}
-	}
+	return status;
 }
 	
 /*
@@ -1378,14 +1346,10 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
     PRInt32 status = 0;
 	char	*mail_relay_host;
 
-    TRACEMSG(("Entering NET_ProcessSMTP"));
-
     ClearFlag(SMTP_PAUSE_FOR_READ); /* already paused; reset */
 
     while(!TestFlag(SMTP_PAUSE_FOR_READ))
       {
-
-		TRACEMSG(("In NET_ProcessSMTP with state: %d", m_nextState));
 
         switch(m_nextState) 
 		{
@@ -1489,6 +1453,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 					status = SendMessageResponse();
 				break;
 			case SMTP_DONE:
+				m_urlInProgress = PR_FALSE;
 	            m_nextState = SMTP_FREE;
 				break;
         
@@ -1502,7 +1467,6 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 	            return(-1); /* final end */
         
 			default: /* should never happen !!! */
-				TRACEMSG(("SMTP: BAD STATE!"));
 				m_nextState = SMTP_ERROR_DONE;
 				break;
 		}
@@ -1519,6 +1483,11 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
       } /* while(!SMTP_PAUSE_FOR_READ) */
     
     return(status);
+}
+
+PRInt32	  nsSmtpProtocol::CloseConnection()
+{
+	return 0;
 }
 
 #ifdef UNREADY_CODE
