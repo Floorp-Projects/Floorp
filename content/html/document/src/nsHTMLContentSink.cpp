@@ -970,7 +970,8 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 
   nsresult rv;
   nsCOMPtr<nsIHTMLContent> htmlContent;
-  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo, PR_FALSE);
+  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo,
+                            aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
   nsCOMPtr<nsIContent> content = do_QueryInterface(htmlContent);
   *aResult = content;
   NS_IF_ADDREF(*aResult);
