@@ -22,4 +22,5 @@ TestThreads
 TestVoidBTree
 TestXPIDLString
 TestServMgr
+nsIFileEnumerator
 nsIFileTest
