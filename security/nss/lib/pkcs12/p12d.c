@@ -1480,7 +1480,7 @@ SEC_PKCS12DecoderFinish(SEC_PKCS12DecoderContext *p12dcx)
     if(p12dcx->slot) {
 	PK11_FreeSlot(p12dcx->slot);
 	p12dcx->slot = NULL;
-     }
+    }
 
     if(p12dcx->arena) {
 	PORT_FreeArena(p12dcx->arena, PR_TRUE);
