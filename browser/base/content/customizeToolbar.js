@@ -32,6 +32,26 @@ function buildDialog()
   var newToolbar = toolbar.cloneNode(true);
   cloneToolbarBox.appendChild(newToolbar);
 
+  // Make sure all buttons look enabled (and that textboxes are disabled).
+  var toolbarItem = newToolbar.firstChild;
+  while (toolbarItem) {
+    toolbarItem.removeAttribute("observes");
+    toolbarItem.removeAttribute("disabled");
+    toolbarItem.removeAttribute("type");
+
+    if (toolbarItem.localName == "toolbaritem" && 
+        toolbarItem.firstChild) {
+      toolbarItem.firstChild.removeAttribute("observes");
+      if (toolbarItem.firstChild.localName == "textbox")
+        toolbarItem.firstChild.setAttribute("disabled", "true");
+      else
+        toolbarItem.firstChild.removeAttribute("disabled");
+    }
+
+    toolbarItem = toolbarItem.nextSibling;
+  }
+
+  
   // Now build up a palette of items.
   var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "hbox");
@@ -43,6 +63,18 @@ function buildDialog()
   var node = toolbar.palette.firstChild;
   while (node) {
     var paletteItem = node.cloneNode(true);
+    paletteItem.removeAttribute("observes");
+    paletteItem.removeAttribute("disabled");
+
+    if (paletteItem.localName == "toolbaritem" && 
+        paletteItem.firstChild) {
+      paletteItem.firstChild.removeAttribute("observes");
+      if (paletteItem.firstChild.localName == "textbox")
+        paletteItem.firstChild.setAttribute("disabled", "true");
+      else
+        paletteItem.firstChild.removeAttribute("disabled");
+    }
+
     if (rowSlot == rowMax) {
       // Append the old row.
       paletteBox.appendChild(currentRow);
