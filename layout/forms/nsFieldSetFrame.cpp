@@ -619,10 +619,10 @@ nsFieldSetFrame::RemoveFrame(nsIPresContext* aPresContext,
   // XXX XXX
   // XXX temporary fix for bug 70648
   if (aOldFrame == mLegendFrame) {   
-#ifdef DEBUG
     nsIFrame* sibling;
     mContentFrame->GetNextSibling(&sibling);
     NS_ASSERTION(sibling == mLegendFrame, "legendFrame is not next sibling");
+#ifdef DEBUG
     nsIFrame* legendParent;
     mLegendFrame->GetParent(&legendParent);
     NS_ASSERTION(legendParent == this, "Legend Parent has wrong parent");
