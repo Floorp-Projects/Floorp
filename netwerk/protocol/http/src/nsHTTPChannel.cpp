@@ -1244,6 +1244,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
          ("ProcessRedirect [this=%x].\tRedirecting to: %s.\n",
           this, newURLSpec));
+  nsAllocator::Free(newURLSpec);
 #endif /* PR_LOGGING */
 
   rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mCallbacks,
@@ -1720,11 +1721,11 @@ nsHTTPChannel::ProcessStatusCode(void)
         break;
 
         //
-        // Unknown Status Code catagory...
+        // Unknown Status Code category...
         //
     default:
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-               ("ProcessStatusCode [this=%x].\tStatus - Unknown Status Code catagory: %d.\n",
+               ("ProcessStatusCode [this=%x].\tStatus - Unknown Status Code category: %d.\n",
                 this, statusCode));
         break;
     }
