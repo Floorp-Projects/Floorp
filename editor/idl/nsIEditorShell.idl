@@ -45,7 +45,7 @@ interface nsIEditorShell : nsISupports
     eDocumentStatusModified
   };
 %}
-  readonly attribute long              documentStatus;
+  readonly attribute boolean              documentModified;
   
   attribute wstring    paragraphFormat;
   attribute long       wrapColumn;
