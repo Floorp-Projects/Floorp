@@ -1749,12 +1749,12 @@ NS_IMETHODIMP nsMsgIncomingServer::GetIntAttribute(const char *aName, PRInt32 *v
 // Check if the password is available and return a boolean indicating whether 
 // it is being authenticated or not.
 NS_IMETHODIMP 
-nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
+nsMsgIncomingServer::GetPasswordPromptRequired(PRBool *aPasswordIsRequired)
 {
   nsresult rv = NS_OK;
-  NS_ENSURE_ARG_POINTER(isAuthenticated);
+  NS_ENSURE_ARG_POINTER(aPasswordIsRequired);
 
-  *isAuthenticated = PR_FALSE;
+  *aPasswordIsRequired = PR_TRUE;
   // If the password is empty, check to see if it is stored and to be retrieved
   if (m_password.IsEmpty()) {
     nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
@@ -1777,7 +1777,7 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
                                              hostFound, userNameFound, passwordFound);
       if (NS_FAILED(rv)) 
       {
-        *isAuthenticated = PR_FALSE;
+        *aPasswordIsRequired = PR_TRUE;
         return NS_OK;
       }
 
@@ -1799,7 +1799,7 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
       }
     }
   }
-  *isAuthenticated = !m_password.IsEmpty();
+  *aPasswordIsRequired = m_password.IsEmpty();
   return rv;
 }
 

@@ -73,7 +73,8 @@ nsPop3IncomingServer::nsPop3IncomingServer()
         POP3_TOP_UNDEFINED |
         POP3_XTND_XLST_UNDEFINED;
 
-	m_canHaveFilters = PR_TRUE;
+    m_canHaveFilters = PR_TRUE;
+    m_authenticated = PR_FALSE;
 }
 
 nsPop3IncomingServer::~nsPop3IncomingServer()
@@ -105,6 +106,21 @@ NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
                         NumDaysToLeaveOnServer,
                         "num_days_to_leave_on_server")
 
+
+//NS_IMPL_GETSET(nsPop3IncomingServer, Authenticated, PRBool, m_authenticated);
+
+NS_IMETHODIMP nsPop3IncomingServer::GetAuthenticated(PRBool *aAuthenticated)
+{
+  NS_ENSURE_ARG_POINTER(aAuthenticated);
+  *aAuthenticated = m_authenticated;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPop3IncomingServer::SetAuthenticated(PRBool aAuthenticated)
+{
+  m_authenticated = aAuthenticated;
+  return NS_OK;
+}
 
 nsresult 
 nsPop3IncomingServer::GetPop3CapabilityFlags(PRUint32 *flags)

@@ -52,6 +52,7 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute nsIPop3Protocol runningProtocol;
   void markMessagesDeleted([array, size_is(count)] in string aUidlStrings, in unsigned long count,
                             in boolean aDeleteMsgs);
+  attribute boolean authenticated;
 };
 
 

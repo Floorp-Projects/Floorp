@@ -277,9 +277,9 @@ nsresult nsMsgPurgeService::PerformPurge()
           
           PRBool serverBusy = PR_FALSE;
           PRBool serverRequiresPassword = PR_TRUE;
-          PRBool userAuthenticated;
+          PRBool passwordPromptRequired;
           PRBool canSearchMessages = PR_FALSE;
-          junkFolderServer->GetIsAuthenticated(&userAuthenticated);
+          junkFolderServer->GetPasswordPromptRequired(&passwordPromptRequired);
           junkFolderServer->GetServerBusy(&serverBusy);
           junkFolderServer->GetServerRequiresPasswordForBiff(&serverRequiresPassword);
           junkFolderServer->GetCanSearchMessages(&canSearchMessages);
@@ -289,8 +289,8 @@ nsresult nsMsgPurgeService::PerformPurge()
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (search in progress? %s)", serverIndex, mSearchSession ? "true" : "false")); 
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (server busy? %s)", serverIndex, serverBusy ? "true" : "false"));
           PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (serverRequiresPassword? %s)", serverIndex, serverRequiresPassword ? "true" : "false"));
-          PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (userAuthenticated? %s)", serverIndex, userAuthenticated ? "true" : "false"));
-          if (canSearchMessages && !mSearchSession && !serverBusy && (!serverRequiresPassword || userAuthenticated))
+          PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] (passwordPromptRequired? %s)", serverIndex, passwordPromptRequired ? "true" : "false"));
+          if (canSearchMessages && !mSearchSession && !serverBusy && (!serverRequiresPassword || !passwordPromptRequired))
           {
             PRInt32 purgeInterval;
             spamSettings->GetPurgeInterval(&purgeInterval);

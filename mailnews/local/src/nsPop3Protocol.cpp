@@ -643,7 +643,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
   if (server)
   {
     PRBool isAuthenticated;
-    server->GetIsAuthenticated(&isAuthenticated);
+    m_nsIPop3Sink->GetUserAuthenticated(&isAuthenticated);
 
     // clear the password if the last one failed
     if (TestFlag(POP3_PASSWORD_FAILED))
@@ -664,9 +664,9 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
     // if the last prompt got us a bad password then show a special dialog
     if (TestFlag(POP3_PASSWORD_FAILED))
     { 
-      // if the user hasn't entered a password, or remembered the password, and this is 
-      // not the first failure, forget the password from wallet.
-      if (!isAuthenticated || m_pop3ConData->logonFailureCount > 1)
+      // if we haven't successfully logged onto the server in this session,
+      // forget the password.
+      if (!isAuthenticated && m_pop3ConData->logonFailureCount > 1)
         rv = server->ForgetPassword();
       if (NS_FAILED(rv)) return rv;
       mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, getter_Copies(passwordTemplate));
@@ -1329,12 +1329,8 @@ PRInt32 nsPop3Protocol::AuthFallback()
             SetFlag(POP3_PASSWORD_FAILED);
             m_pop3ConData->logonFailureCount++;
 
-            // libmsg event sink
             if (m_nsIPop3Sink) 
-            {
-                m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
                 m_nsIPop3Sink->SetMailAccountURL(NULL);
-            }
 
             return 0;
         }

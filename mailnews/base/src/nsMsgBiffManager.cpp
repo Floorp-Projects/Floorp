@@ -327,14 +327,14 @@ nsresult nsMsgBiffManager::PerformBiff()
     {
       PRBool serverBusy = PR_FALSE;
       PRBool serverRequiresPassword = PR_TRUE;
-      PRBool userAuthenticated; 
-      current->server->GetIsAuthenticated(&userAuthenticated);
+      PRBool passwordPromptRequired; 
+      current->server->GetPasswordPromptRequired(&passwordPromptRequired);
       current->server->GetServerBusy(&serverBusy);
       current->server->GetServerRequiresPasswordForBiff(&serverRequiresPassword);
       // so if we need to be authenticated to biff, check that we are
       // (since we don't want to prompt the user for password UI)
       // and make sure the server isn't already in the middle of downloading new messages
-      if(!serverBusy && (!serverRequiresPassword || userAuthenticated))
+      if(!serverBusy && (!serverRequiresPassword || !passwordPromptRequired))
         current->server->PerformBiff(nsnull);
       mBiffArray->RemoveElementAt(i);
       i--; //Because we removed it we need to look at the one that just moved up.

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   bienvenu@nventure.com
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -87,6 +88,7 @@ nsresult
 nsPop3Sink::SetUserAuthenticated(PRBool authed)
 {
   m_authed = authed;
+  m_popServer->SetAuthenticated(authed);
   if (authed)
   {
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
@@ -100,11 +102,7 @@ nsPop3Sink::SetUserAuthenticated(PRBool authed)
 nsresult
 nsPop3Sink::GetUserAuthenticated(PRBool* authed)
 {
-    NS_ASSERTION(authed, "null getter in GetUserAuthenticated");
-    if (!authed) return NS_ERROR_NULL_POINTER;
-
-    *authed=m_authed;
-    return NS_OK;
+  return m_popServer->GetAuthenticated(authed);
 }
 
 nsresult
