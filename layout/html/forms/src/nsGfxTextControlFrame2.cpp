@@ -3104,7 +3104,7 @@ void
 nsGfxTextControlFrame2::SubmitAttempt()
 {
   // Submit the form
-  if (mFormFrame && mTextSelImpl && mFormFrame->CanSubmit(this)) {
+  if (mFormFrame && mTextSelImpl) {
     nsIContent *formContent = nsnull;
 
     nsEventStatus status = nsEventStatus_eIgnore;

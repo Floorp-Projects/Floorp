@@ -77,8 +77,6 @@ public:
   void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
   nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);
 
-  PRBool CanSubmit(nsIFormControlFrame *aFrame);
-
   NS_IMETHOD GetMethod(PRInt32* aMethod);
   NS_IMETHOD GetEnctype(PRInt32* aEnctype);
   NS_IMETHOD GetTarget(nsString* aTarget);
@@ -121,12 +119,9 @@ protected:
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
   NS_IMETHOD GetPlatformEncoder(nsIUnicodeEncoder** encoder);
   void GetSubmitCharset(nsString& oCharset);
-  void UpdateSubmitter(nsIFormControlFrame * aFrame);
 
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
-  nsIFormControlFrame* mTextSubmitter;
-  PRBool               mTextSubmitterSet;
 #ifdef IBMBIDI
 //ahmed
   nsAutoString         mCharset;            // The charset in use
