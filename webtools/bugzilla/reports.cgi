@@ -769,9 +769,14 @@ sub most_recently_doomed {
     #########################
 
     # Build up $query string
-    my $query = "select distinct assigned_to from bugs where bugs.bug_status='NEW' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
+    my $query = "SELECT DISTINCT assigned_to FROM bugs, products 
+                 WHERE bugs.bug_status = 'NEW' 
+                   AND target_milestone = '' 
+                   AND bug_severity != 'enhancement' 
+                   AND status_whiteboard = ''
+                   AND bugs.product_id = products.id";
     if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product=".SqlQuote($FORM{'product'});
+        $query .= "AND products.name =".SqlQuote($FORM{'product'});
     }
 
 # End build up $query string
