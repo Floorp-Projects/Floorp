@@ -145,6 +145,11 @@ public:
   NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) { *aResult = nsnull; return NS_OK; };
 
+  // nsScrollFrame will die soon, anyway
+  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                    nsIContent* aChild,
+                                    PRInt32 aModType) {}
+
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
