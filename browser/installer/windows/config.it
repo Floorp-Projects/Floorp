@@ -610,56 +610,56 @@ Description Short=Cross Platform COM
 ;*** LOCALIZE ME BABY ***
 Description Long=Cross Platform COM
 Archive=xpcom.xpi
-FileCount=$FileCount$
 $InstallSize$:xpcom
 $InstallSizeSystem$
 $InstallSizeArchive$:xpcom.xpi
 Attributes=SELECTED|INVISIBLE
+FileCount=$FileCount$
 
 [Component Browser]
 Description Short=$ProductName$ Browser
 ;*** LOCALIZE ME BABY ***
 Description Long=The $ProductName$ Browser
 Archive=browser.xpi
-FileCount=$FileCount$
 $InstallSize$:browser
 $InstallSizeSystem$
 $InstallSizeArchive$:browser.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE|MAIN_COMPONENT
 Force Upgrade File0=[SETUP PATH]\$MainExeFile$
+FileCount=$FileCount$
 
 [Component ABE]
 Description Short=Additional Browsing Enhancements
 ;*** LOCALIZE ME BABY ***
 Description Long=Additional tools including mouse-gesture navigation, a site navigation bar and other enhanced functionality. 
 Archive=abe.xpi
-FileCount=$FileCount$
 $InstallSize$:abe
 $InstallSizeArchive$:abe.xpi
 Attributes=SELECTED|VISIBLE
+FileCount=$FileCount$
 
 [Component ADT]
 Description Short=Developer Tools
 ;*** LOCALIZE ME BABY ***
 Description Long=Tools for web developers including an error console, the Document Inspector and a JavaScript Debugger. 
 Archive=adt.xpi
-FileCount=$FileCount$
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
 Attributes=FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 Force Upgrade File1=[SETUP PATH]\chrome\inspector.jar
+FileCount=$FileCount$
 
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
 ;*** LOCALIZE ME BABY ***
 Description Long=Uninstaller for $ProductName$
 Archive=$UninstallFileZip$
-FileCount=$FileCount$
 $InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
 $InstallSizeArchive$:$UninstallFileZip$
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+FileCount=$FileCount$
 
 ;Since the uninstaller program is going to be installed into the Windows folder,
 ;Setup.exe needs to know to calculate the disk space required for the Windows folder.
@@ -672,12 +672,12 @@ Description Short=US English Defaults
 ;*** LOCALIZE ME BABY ***
 Description Long=US English Default Profile Data
 Archive=deflenus.xpi
-FileCount=$FileCount$
 $InstallSize$:deflenus
 $InstallSizeSystem$
 $InstallSizeArchive$:deflenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
+FileCount=$FileCount$
 
 [Component En US lang pack]
 ;*** LOCALIZE ME BABY ***
@@ -685,12 +685,12 @@ Description Short=English (US) Language Pack
 ;*** LOCALIZE ME BABY ***
 Description Long=English (US) Language Pack
 Archive=langenus.xpi
-FileCount=$FileCount$
 $InstallSize$:langenus
 $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
+FileCount=$FileCount$
 
 [Component US region pack]
 ;*** LOCALIZE ME BABY ***
@@ -698,24 +698,24 @@ Description Short=US Region Pack
 ;*** LOCALIZE ME BABY ***
 Description Long=Regional content for US users
 Archive=regus.xpi
-FileCount=$FileCount$
 $InstallSize$:regus
 $InstallSizeSystem$
 $InstallSizeArchive$:regus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\US.jar
+FileCount=$FileCount$
 
 [Component QFA]
 Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
 Description Long=for reporting $ProductName$ crash information
 Archive=talkback.xpi
-FileCount=$FileCount$
 Install Size=870
 Install Size System=1
 Install Size Archive=248
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
+FileCount=$FileCount$
 
 ; This is to randomly set the default checkbox for this component.
 ; This particular value will set the checkbox checked [number]% of the time.

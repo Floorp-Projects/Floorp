@@ -46,10 +46,8 @@ static SetDllPathProc   pfnSetDllPath = NULL;
 
 static long             lFileCounter;
 static long             lBarberCounter;
-static BOOL             bBarberBar;
-static DWORD            dwBarberDirection;
-static DWORD            dwCurrentArchive;
-static DWORD            dwTotalArchives;
+static DWORD            dwCurrentFile;
+static DWORD            dwTotalFiles;
 char                    szStrProcessingFile[MAX_BUF];
 char                    szStrCopyingFile[MAX_BUF];
 char                    szStrInstalling[MAX_BUF];
@@ -147,19 +145,18 @@ HRESULT DeInitializeXPIStub()
 
 void GetTotalArchivesToInstall(void)
 {
-  DWORD     dwIndex0;
-  siC       *siCObject = NULL;
+  DWORD i = 0;
+  siC *siCObject = NULL;
 
-  dwIndex0        = 0;
-  dwTotalArchives = 0;
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
-  while(siCObject)
-  {
-    if((siCObject->dwAttributes & SIC_SELECTED) && !(siCObject->dwAttributes & SIC_LAUNCHAPP))
-      ++dwTotalArchives;
+  dwTotalFiles = 0;
+  
+  siCObject = SiCNodeGetObject(i, TRUE, AC_ALL);
+  while (siCObject) {
+    if ((siCObject->dwAttributes & SIC_SELECTED) && 
+        !(siCObject->dwAttributes & SIC_LAUNCHAPP))
+      dwTotalFiles += siCObject->iFileCount;
 
-    ++dwIndex0;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+    siCObject = SiCNodeGetObject(++i, TRUE, AC_ALL);
   }
 }
 
@@ -193,9 +190,10 @@ char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize
 
 HRESULT SmartUpdateJars(HWND aWizardPanel)
 {
-  DWORD     dwIndex0;
+  DWORD     i = 0;
   siC       *siCObject = NULL;
   HRESULT   hrResult;
+  HWND      ctrl;
   char      szBuf[MAX_BUF];
   char      szEXpiInstall[MAX_BUF];
   char      szArchive[MAX_BUF];
@@ -256,13 +254,12 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
 
     GetTotalArchivesToInstall();
 
-    dwIndex0          = 0;
-    dwCurrentArchive  = 0;
-    dwTotalArchives   = (dwTotalArchives * 2) + 1;
-    bBarberBar        = FALSE;
-    siCObject         = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
-    while(siCObject)
-    {
+    ctrl = GetDlgItem(dlgInfo.hWndDlg, IDC_PROGRESS_ARCHIVE);
+    SendMessage(ctrl, PBM_SETRANGE, 0, dwTotalFiles); 
+
+    dwCurrentFile = 0;
+    siCObject = SiCNodeGetObject(i, TRUE, AC_ALL);
+    while (siCObject) {
       if(siCObject->dwAttributes & SIC_SELECTED)
         /* Since the archive is selected, we need to process the file ops here */
          ProcessFileOps(T_PRE_ARCHIVE, siCObject->szReferenceName);
@@ -274,7 +271,6 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
       {
         lFileCounter      = 0;
         lBarberCounter    = 0;
-        dwBarberDirection = BDIR_RIGHT;
 			  dlgInfo.nFileBars = 0;
 
         // We need to send this message otherwise the progress bars will paint
@@ -306,14 +302,6 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
               return(1);
             }
           }
-        }
-
-        if(dwCurrentArchive == 0)
-        {
-          ++dwCurrentArchive;
-
-          UpdateArchiveInstallProgress((int)(((double)dwCurrentArchive/(double)dwTotalArchives)*(double)100));
-          UpdateGREInstallProgress((int)(((double)dwCurrentArchive/(double)dwTotalArchives)*(double)100));
         }
 
         wsprintf(szBuf, szStrInstalling, siCObject->szDescriptionShort);
@@ -356,11 +344,6 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
           break;
         }
 
-        ++dwCurrentArchive;
-        UpdateArchiveInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-        UpdateGREInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-
-        ProcessWindowsMessages();
         LogISXPInstallComponentResult(hrResult);
 
         if((hrResult != WIZ_OK) &&
@@ -376,18 +359,13 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
         /* Since the archive is selected, we need to do the file ops here */
          ProcessFileOps(T_POST_ARCHIVE, siCObject->szReferenceName);
 
-      ++dwIndex0;
-      siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+      siCObject = SiCNodeGetObject(++i, TRUE, AC_ALL);
     } /* while(siCObject) */
 
     //report 100% progress status for successful installs
     UpdateGREInstallProgress(100);
     LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
-  }
-  else
-  {
-    ShowMessage(szMsgSmartUpdateStart, FALSE);
   }
 
   DeInitializeXPIStub();
@@ -405,17 +383,23 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   char szFilename[MAX_BUF];
   char szStrProcessingFileBuf[MAX_BUF];
   char szStrCopyingFileBuf[MAX_BUF];
+  char szMsg[MAX_BUF];
 
   if(sgProduct.mode != SILENT)
   {
     ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
+    ParsePath((char *)msg, szMsg, sizeof(szMsg), FALSE, PP_ROOT_ONLY);
 
     dlgInfo.nFileBars = 0;
-    ++dwCurrentArchive;
-#if 0
-    UpdateArchiveInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-    UpdateGREInstallProgress((int)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-#endif
+    
+    // Holy jesus, I hate the motherfucking installer. 
+    if ((!strncmp(msg, "Installing: ", 12) ||
+         !strncmp(msg, "Replacing: ", 11)) 
+         && (max != 0 && val <= max))
+      ++dwCurrentFile;
+
+    UpdateArchiveInstallProgress((int)dwCurrentFile);
+    UpdateGREInstallProgress((int)dwCurrentFile);
   }
 
   ProcessWindowsMessages();
@@ -432,9 +416,7 @@ static void UpdateArchiveInstallProgress(int aValue)
 {
   HWND progressBar;
 
-  if (sgProduct.mode != SILENT) {
-    progressBar = GetDlgItem(dlgInfo.hWndDlg, IDC_PROGRESS_ARCHIVE);
-    SendMessage(progressBar, PBM_SETPOS, aValue, 0);
-  }
+  if (sgProduct.mode != SILENT) 
+    SendMessage(dlgInfo.hWndDlg, PBM_SETPOS, aValue, 0);
 }
 

@@ -1524,9 +1524,9 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
 
 LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  HWND ctrl; 
   LPNMHDR notifyMessage;
   static BOOL initialized = FALSE; 
+  static int count = 0;
   
   switch(msg) {
   case WM_INITDIALOG:
@@ -1536,13 +1536,10 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
     SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
 
-    ctrl = GetDlgItem(hDlg, IDC_PROGRESS_FILE);
-    SendMessage(ctrl, PBM_SETRANGE, 0, 100); 
-    SendMessage(ctrl, PBM_SETSTEP, 1, 0); 
+    break;
 
-    ctrl = GetDlgItem(hDlg, IDC_PROGRESS_ARCHIVE);
-    SendMessage(ctrl, PBM_SETRANGE, 0, 100); 
-    SendMessage(ctrl, PBM_SETSTEP, 1, 0); 
+  case PBM_SETPOS:
+    ++count;
 
     break;
 
