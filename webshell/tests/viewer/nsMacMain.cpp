@@ -219,7 +219,7 @@ static void CloseFrontWindow()
 	nsBrowserWindow		*browserWindow = (nsBrowserWindow *)GetWRefCon(wind);
 	if (!browserWindow) return;
 	
-	browserWindow->Close();
+	browserWindow->Destroy();
 }
 
 
