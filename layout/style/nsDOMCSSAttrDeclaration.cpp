@@ -186,9 +186,11 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
     return result;
   }
   
-  // look up our namespace.  If we're XHTML, we need to be case-sensitive
-  // Otherwise, we should not be
-  (*aCSSParser)->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+  // If we are not HTML, we need to be case-sensitive.  Otherwise, Look up our
+  // namespace.  If we're XHTML, we need to be case-sensitive Otherwise, we
+  // should not be
+  (*aCSSParser)->SetCaseSensitive(!mContent->IsContentOfType(nsIContent::eHTML) ||
+                                  nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
 
   return NS_OK;
 }
