@@ -135,12 +135,12 @@
     }
   }
 
-  function Translate(src, dest)
+  function Translate(src, dest, engine)
   {
 	var service = "http://levis.alis.com:8081";
 	service += "?AlisSourceLang=" + src;
 	service += "&AlisTargetLang=" + dest;
-	service += "&AlisMTEngine=SSI";
+	service += "&AlisMTEngine=" + engine;
 	service += "&AlisTargetURI=" + window.content.location.href;
 	window.content.location.href = service;
   }
