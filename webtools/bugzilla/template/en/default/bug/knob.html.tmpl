@@ -59,7 +59,8 @@
       [% END %]
 
       <input type="radio" name="knob" value="resolve">
-      Resolve [% terms.bug %], changing <a href="bug_status.html">resolution</a> to
+      Resolve [% terms.bug %], changing 
+      <a href="page.cgi?id=fields.html#resolution">resolution</a> to
       <select name="resolution"
               onchange="document.changeform.knob[[% knum %]].checked=true">
       [% FOREACH r = bug.choices.resolution %]
@@ -78,7 +79,8 @@
       [% knum = knum + 1 %]
 
       <input type="radio" name="knob" value="reassign">
-      <a href="bug_status.html#assigned_to">Reassign</a> [% terms.bug %] to
+      <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
+      [% terms.bug %] to
       <input name="assigned_to" size="32"
              onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') &&
                             (this.value != '')) {

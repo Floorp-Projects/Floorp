@@ -205,14 +205,14 @@
     <tr>
       <td align="right">
         <b>
-          <a href="bug_status.html">Status</a>:
+          <a href="page.cgi?id=fields.html#status">Status</a>:
         </b>
       </td>
       <td>[% bug.bug_status FILTER html %]</td>
       <td>&nbsp;</td>
 
       <td align="right">
-        <b><a href="bug_status.html#priority">Pr<u>i</u>ority</a>:</b>
+        <b><a href="page.cgi?id=fields.html#priority">Pr<u>i</u>ority</a>:</b>
       </td>
       [% PROCESS select selname => "priority" accesskey => "i" %]
     </tr>
@@ -220,7 +220,7 @@
     <tr>
       <td align="right">
         <b>
-          <a href="bug_status.html">Resolution</a>:
+          <a href="page.cgi?id=fields.html#resolution">Resolution</a>:
         </b>
       </td>
       <td>
@@ -232,7 +232,7 @@
       <td>&nbsp;</td>
 
       <td align="right">
-        <b><a href="bug_status.html#severity">S<u>e</u>verity</a>:</b>
+        <b><a href="page.cgi?id=fields.html#severity">S<u>e</u>verity</a>:</b>
       </td>
       [% PROCESS select selname = "bug_severity" accesskey => "e" %]
 
@@ -241,7 +241,7 @@
     <tr>
       <td align="right">
         <b>
-          <a href="bug_status.html#assigned_to">Assigned&nbsp;To</a>:
+          <a href="page.cgi?id=fields.html#assigned_to">Assigned&nbsp;To</a>:
         </b>
       </td>
       <td>[% bug.assigned_to.identity FILTER html %]</td>
@@ -428,7 +428,7 @@
   <table>
     <tr>
       <th>
-        <a href="votehelp.html">Votes</a>:
+        <a href="page.cgi?id=voting.html">Votes</a>:
       </th>
       <td>
         [% bug.votes %]&nbsp;&nbsp;&nbsp;

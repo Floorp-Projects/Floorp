@@ -70,7 +70,7 @@
 
     <th>
       <label for="rep_platform">
-        <a href="bug_status.html#rep_platform">Platform</a>:
+        <a href="page.cgi?id=fields.html#rep_platform">Platform</a>:
       </label>
     </th>
     <td>
@@ -80,7 +80,7 @@
 
     <th>
       <label for="priority">
-        <a href="bug_status.html#priority">Priority</a>:
+        <a href="page.cgi?id=fields.html#priority">Priority</a>:
       </label>
     </th>
     <td>
@@ -99,7 +99,7 @@
 
     <th>
       <label for="bug_severity">
-        <a href="bug_status.html#severity">Severity</a>:
+        <a href="page.cgi?id=fields.html#severity">Severity</a>:
       </label>
     </th>
     <td>
@@ -266,7 +266,7 @@
   [% knum = knum + 1 %]
   <input id="knob-resolve" type="radio" name="knob" value="resolve">
   <label for="knob-resolve">
-    Resolve [% terms.bugs %], changing <a href="bug_status.html">resolution</a> to
+    Resolve [% terms.bugs %], changing <a href="page.cgi?id=fields.html#resolution">resolution</a> to
   </label>
   <select name="resolution" onchange="document.forms.changeform.knob[[% knum %]].checked=true">
     [% FOREACH resolution = resolutions %]
@@ -300,7 +300,7 @@
 
 [% knum = knum + 1 %]
 <input id="knob-reassign" type="radio" name="knob" value="reassign">
-<label for="knob-reassign"><a href="bug_status.html#assigned_to">
+<label for="knob-reassign"><a href="page.cgi?id=fields.html#assigned_to">
   Reassign</a> [% terms.bugs %] to
 </label>
 <input name="assigned_to"
