@@ -47,7 +47,7 @@ extern "C" {
 #ifndef XP_WIN32
 static
 #endif
-void ATTRIBUTE_USED ATTRIBUTE_STDCALL
+void ATTRIBUTE_USED __attribute__ ((regparm(3)))
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
     for(PRUint32 i = paramCount; i >0; i--, d++, s++)
@@ -75,7 +75,7 @@ PRUint32
 xptc_invoke_copy_to_stack_keeper (void)
 {
     PRUint32 dummy1;
-    void ATTRIBUTE_USED ATTRIBUTE_STDCALL (*dummy2)
+    void ATTRIBUTE_USED __attribute__ ((regparm(3))) (*dummy2)
 	(PRUint32, nsXPTCVariant*, PRUint32*) = invoke_copy_to_stack;
 
 // dummy2 references invoke_copy_to_stack, now we have to "use" it
@@ -116,7 +116,9 @@ __asm__ (
 #ifdef __EMX__
 	".align 8\n\t"
 #else
-	".align 16\n\t"
+/* alignment here seems unimportant here; this was 16, now it's 2 which
+   is what xptcstubs uses. */
+	".align 2\n\t"
 #endif
 	".globl " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 	".type  " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex,@function\n"
@@ -135,14 +137,16 @@ __asm__ (
 #endif
 	"movl  0x10(%ebp), %eax\n\t"
 	"leal  0(,%eax,8),%edx\n\t"
-	"subl  %edx, %esp\n\t"		/* make stack space */
-	"pushl %esp\n\t"
-	"pushl 0x14(%ebp)\n\t"
-	"pushl %eax\n\t"
+	"movl  %esp, %ecx\n\t"
+	"subl  %edx, %ecx\n\t"
+/* Since there may be 64-bit data, it occurs to me that aligning this
+   space might be a performance gain. However, I don't think the rest
+   of mozilla worries about such things. In any event, do it here.
+	"andl  $0xfffffff8, %ecx\n\t"
+ */
+	"movl  %ecx, %esp\n\t"          /* make stack space */
+	"movl  0x14(%ebp), %edx\n\t"
 	"call  " SYMBOL_UNDERSCORE "invoke_copy_to_stack\n\t"
-#ifndef MOZ_USE_STDCALL
-	"addl  $0x0c, %esp\n\t"		/* done with param stuff */
-#endif
 	"movl  0x08(%ebp), %ecx\n\t"	/* 'that' */
 #ifdef CFRONT_STYLE_THIS_ADJUST
 	"movl  (%ecx), %edx\n\t"
