@@ -51,9 +51,7 @@ static const nsXREAppData kAppData = {
   APP_VERSION,
   BUILD_ID,
   "Copyright (c) 2004 mozilla.org",
-  PR_FALSE, // no profile migration
-  PR_TRUE,
-  PR_FALSE
+  NS_XRE_ENABLE_EXTENSION_MANAGER
 };
   
 

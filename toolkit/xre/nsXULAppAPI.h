@@ -41,12 +41,32 @@
 #define _nsXULAppAPI_h__
 
 #include "prtypes.h"
-class nsILocalFile;
+
+/**
+ * This API is "not even kinda frozen yet"
+ */
+
+/**
+ * Indicates whether or not to heed "general.startup.*" prefs.
+ * XXXbsmedberg this is going away
+ */
+#define NS_XRE_USE_STARTUP_PREFS (1 << 0)
+
+/**
+ * Indicates whether or not the profile migrator service may be
+ * invoked at startup when creating a profile.
+ */
+#define NS_XRE_ENABLE_PROFILE_MIGRATOR (1 << 1)
+
+/**
+ * Indicates whether or not the extension manager service should be
+ * initialized at startup.
+ */
+#define NS_XRE_ENABLE_EXTENSION_MANAGER (1 << 2)
 
 /**
  * Application-specific data needed to start the apprunner.
  */
-
 struct nsXREAppData
 {
   /**
@@ -78,18 +98,9 @@ struct nsXREAppData
   const char *copyright;
 
   /**
-   * Indicates whether or not the profile migrator service may be
-   * invoked at startup when creating a profile.
+   * Combination of NS_XRE_ prefixed flags (defined above).
    */
-  PRBool enableProfileMigrator;
-
-  /**
-   * Indicates whether or not the extension manager service should be
-   * initialized at startup.
-   */
-  PRBool enableExtensionManager;
-
-  PRBool useStartupPrefs; // XXXbsmedberg this is going away
+  PRUint32 flags;
 };
 
 /**
@@ -106,7 +117,6 @@ struct nsXREAppData
  *                 SetCurrentDirectory, and relative paths on the command line
  *                 won't be correct.
  */
-
 int xre_main(int argc, char* argv[], const nsXREAppData* aAppData);
 
 #endif // _nsXULAppAPI_h__

@@ -50,9 +50,8 @@ static const nsXREAppData kAppData = {
   APP_VERSION,
   BUILD_ID,
   "Copyright (c) 2004 mozilla.org",
-  PR_TRUE,
-  PR_TRUE,
-  PR_FALSE
+  NS_XRE_ENABLE_PROFILE_MIGRATOR |
+  NS_XRE_ENABLE_EXTENSION_MANAGER
 };
 
 int main(int argc, char* argv[])

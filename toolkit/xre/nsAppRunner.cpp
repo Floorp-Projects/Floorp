@@ -386,9 +386,7 @@ CheckArg(const char* aArg, const char **aParam = nsnull)
 static const nsXREAppData* LoadAppData(const char* appDataFile)
 {
   static char vendor[256], name[256], version[32], buildID[32], copyright[512];
-  static nsXREAppData data = {
-    vendor, name, version, buildID, copyright, PR_FALSE, PR_FALSE, PR_FALSE
-  };
+  static nsXREAppData data = { vendor, name, version, buildID, copyright, 0 };
   
   nsCOMPtr<nsILocalFile> lf;
   NS_GetFileFromPath(appDataFile, getter_AddRefs(lf));
@@ -407,7 +405,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     return nsnull;
   }
 
-  int i;
+  PRUint32 i;
 
   // Read string-valued fields
   const struct {
@@ -422,7 +420,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
     { "BuildID",   buildID,   sizeof(buildID),   PR_TRUE  },
     { "Copyright", copyright, sizeof(copyright), PR_FALSE }
   };
-  for (i=0; i<5; ++i) {
+  for (i = 0; i < NS_ARRAY_LENGTH(string_fields); ++i) {
     rv = parser.GetString("App", string_fields[i].key, string_fields[i].buf,
                           string_fields[i].bufLen);
     if (NS_FAILED(rv)) {
@@ -439,17 +437,23 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   // Read boolean-valued fields
   const struct {
     const char* key;
-    PRBool* value;
+    PRUint32 flag;
   } boolean_fields[] = {
-    { "EnableProfileMigrator",  &data.enableProfileMigrator },
-    { "EnableExtensionManager", &data.enableExtensionManager }
+    { "UseStartupPrefs",        NS_XRE_USE_STARTUP_PREFS        },
+    { "EnableProfileMigrator",  NS_XRE_ENABLE_PROFILE_MIGRATOR  },
+    { "EnableExtensionManager", NS_XRE_ENABLE_EXTENSION_MANAGER }
   };
-  char buf[2];
-  for (i=0; i<2; ++i) {
+  char buf[6]; // large enough to hold "false"
+  data.flags = 0;
+  for (i = 0; i < NS_ARRAY_LENGTH(boolean_fields); ++i) {
     rv = parser.GetString("XRE", boolean_fields[i].key, buf, sizeof(buf));
-    if (NS_SUCCEEDED(rv))
-      *(boolean_fields[i].value) =
-          buf[0] == '1' || buf[0] == 't' || buf[0] == 'T';
+    // accept a truncated result since we are only interested in the
+    // first character.  this is designed to allow the possibility of
+    // expanding these boolean attributes to express additional options.
+    if ((NS_SUCCEEDED(rv) || rv == NS_ERROR_LOSS_OF_SIGNIFICANT_DATA) &&
+        (buf[0] == '1' || buf[0] == 't' || buf[0] == 'T')) {
+      data.flags |= boolean_fields[i].flag;
+    }
   } 
 
 #ifdef DEBUG
@@ -459,8 +463,7 @@ static const nsXREAppData* LoadAppData(const char* appDataFile)
   printf("    Version %s\n", data.appVersion);
   printf("    BuildID %s\n", data.appBuildID);
   printf("  Copyright %s\n", data.copyright);
-  printf("   EnablePM %u\n", data.enableProfileMigrator);
-  printf("   EnableEM %u\n", data.enableExtensionManager);
+  printf("      Flags %08x\n", data.flags);
   printf("---------------------------------------------------------\n");
 #endif
 
@@ -1861,7 +1864,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       chromeReg->CheckForNewChrome();
 
-      if (gAppData->enableExtensionManager) {
+      if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
         nsCOMPtr<nsIExtensionManager> em
           (do_GetService("@mozilla.org/extensions/manager;1"));
         NS_ENSURE_TRUE(em, 1);
@@ -1964,7 +1967,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PRBool upgraded = PR_FALSE;
   PRBool componentsListChanged = PR_FALSE;
 
-  if (gAppData->enableExtensionManager) {
+  if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
     // Check for version compatibility with the last version of the app this 
     // profile was started with.
     char version[MAXPATHLEN];
@@ -2058,7 +2061,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       appShellService->EnterLastWindowClosingSurvivalArea();
 
       // Profile Migration
-      if (gAppData->enableProfileMigrator && gDoMigration) {
+      if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
         gDoMigration = PR_FALSE;
         nsCOMPtr<nsIProfileMigrator> pm
           (do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
@@ -2073,7 +2076,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
       NS_ENSURE_SUCCESS(rv, 1);
 
       // Extension Compatibility Checking and Startup
-      if (gAppData->enableExtensionManager) {
+      if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
         nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
         NS_ENSURE_TRUE(em, 1);
 
@@ -2130,7 +2133,9 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         // if we had no command line arguments, argc == 1.
 
         PRBool windowOpened = PR_FALSE;
-        rv = DoCommandLines(cmdLineArgs, aAppData->useStartupPrefs, &windowOpened);
+        rv = DoCommandLines(cmdLineArgs,
+                            aAppData->flags & NS_XRE_USE_STARTUP_PREFS,
+                            &windowOpened);
         NS_ENSURE_SUCCESS(rv, 1);
       
         // Make sure there exists at least 1 window.
