@@ -203,7 +203,7 @@ public:
     mNewStats.mObjsOutstandingSquared += cnt * cnt;
   }
 
-  static PRIntn DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn PR_CALLBACK DumpEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
@@ -212,7 +212,7 @@ public:
     return HT_ENUMERATE_NEXT;
   }
 
-  static PRIntn TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn PR_CALLBACK TotalEntries(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry && nsCRT::strcmp(entry->mClassName, "TOTAL") != 0) {
       entry->Total((BloatEntry*)arg);
@@ -241,7 +241,7 @@ public:
     return Dump(-1, out, nsTraceRefcnt::ALL_STATS);
   }
 
-  static PRIntn DestroyEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn PR_CALLBACK DestroyEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       delete entry;
@@ -249,7 +249,7 @@ public:
     return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
   }
 
-  static PRIntn GatherEntry(PLHashEntry *he, PRIntn i, void *arg) {
+  static PRIntn PR_CALLBACK GatherEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     GatherArgs* ga = (GatherArgs*) arg;
     if (arg && entry && ga->func) {
@@ -363,7 +363,7 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
   return entry;
 }
 
-static PRIntn DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
+static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
   fprintf((FILE*) aClosure, "%d\n", PRInt32(aHashEntry->value));
   return HT_ENUMERATE_NEXT;
@@ -556,7 +556,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
 }
 
 
-static PLHashNumber HashNumber(const void* aKey)
+static PLHashNumber PR_CALLBACK HashNumber(const void* aKey)
 {
   return PLHashNumber(aKey);
 }
