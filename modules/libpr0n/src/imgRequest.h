@@ -40,6 +40,12 @@
 
 #include "nsString.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheEntryDescriptor.h"
+#else
+class nsICacheEntryDescriptor;
+#endif
+
 #define NS_IMGREQUEST_CID \
 { /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
      0x9f733dd6,                                     \
@@ -47,7 +53,6 @@
      0x11b2,                                         \
     {0x8c, 0xdf, 0xef, 0xfb, 0x70, 0xd1, 0xea, 0x71} \
 }
-
 
 enum {
   onStartDecode = 0x1,
@@ -66,7 +71,7 @@ public:
   virtual ~imgRequest();
 
   /* additional members */
-  nsresult Init(nsIChannel *aChannel);
+  nsresult Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry);
   nsresult AddObserver(imgIDecoderObserver *observer);
   nsresult RemoveObserver(imgIDecoderObserver *observer, nsresult status);
 
@@ -97,6 +102,10 @@ private:
   PRUint32 mState;
 
   nsCString mContentType;
+
+#ifdef MOZ_NEW_CACHE
+  nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
+#endif
 };
 
 #endif

@@ -62,7 +62,7 @@ imgRequest::~imgRequest()
 }
 
 
-nsresult imgRequest::Init(nsIChannel *aChannel)
+nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry)
 {
   // XXX we should save off the thread we are getting called on here so that we can proxy all calls to mDecoder to it.
 
@@ -73,6 +73,10 @@ nsresult imgRequest::Init(nsIChannel *aChannel)
   NS_ASSERTION(aChannel, "imgRequest::Init -- No channel");
 
   mChannel = aChannel;
+
+#ifdef MOZ_NEW_CACHE
+  mCacheEntry = aCacheEntry;
+#endif
 
   // XXX do not init the image here.  this has to be done from the image decoder.
   mImage = do_CreateInstance("@mozilla.org/image/container;1");
@@ -101,12 +105,12 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
   if (mObservers.Count() == 1) {
     PRUint32 nframes;
     mImage->GetNumFrames(&nframes);
-    //if (nframes > 1) {
+  //if (nframes > 1) {
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
 
       mImage->StartAnimation();
-    //}
+  //}
   }
 
   if (mState & onStopRequest) {
@@ -152,19 +156,17 @@ PRBool imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-  if (mChannel) {
-    mChannel->GetOriginalURI(getter_AddRefs(mURI));
-  }
+#ifdef MOZ_NEW_CACHE
 
-#if defined(PR_LOGGING)
-  nsXPIDLCString spec;
-  mURI->GetSpec(getter_Copies(spec));
+  if (mCacheEntry)
+    mCacheEntry->Doom();
+  else
+    NS_WARNING("imgRequest::RemoveFromCache -- no entry!");
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::RemoveFromCache -- removing %s from cache\n", this, spec.get()));
+  mCacheEntry = nsnull;
 #endif
 
-  return ImageCache::Remove(mURI);
+  return PR_TRUE;
 }
 
 
@@ -361,6 +363,23 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
 
+#ifdef MOZ_NEW_CACHE
+  if (mCacheEntry) {
+    PRUint32 cacheSize = 0;
+
+    mCacheEntry->GetDataSize(&cacheSize);
+
+    PRUint32 imageSize = 0;
+    PRUint32 alphaSize = 0;
+
+    frame->GetImageDataLength(&imageSize);
+    frame->GetAlphaDataLength(&alphaSize);
+
+    mCacheEntry->SetDataSize(cacheSize + imageSize + alphaSize);
+    printf("%p size is %d\n", this, cacheSize + imageSize + alphaSize);
+  }
+#endif
+
   while (++i < count) {
     imgIDecoderObserver *ob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
     if (ob) ob->OnStopFrame(request, cx, frame);
@@ -463,14 +482,29 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       return NS_BINDING_ABORTED;
     }
 
-    /* get the http expires date */
-    nsCOMPtr<nsIAtom> expiresAtom(dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("Expires"))));
-    nsXPIDLCString expires;
-    httpChannel->GetResponseHeader(expiresAtom, getter_Copies(expires));
-    if (expires.get()) {
-      printf("%s\n", expires.get());
+  }
+
+  /* get the expires info */
+#if defined(MOZ_NEW_CACHE) && defined(HAVE_CACHING_CHANNEL)
+  if (mCacheEntry) {
+    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(chan));
+    if (cacheChannel) {
+      nsCOMPtr<nsISupports> cacheToken;
+      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
+      if (cacheToken) {
+        nsCOMPtr<nsICacheEntryDescriptor> entryDesc(do_QueryInterface(cacheToken));
+        if (entryDesc) {
+          PRTime expiration;
+          /* get the expiration time from the caching channel's token */
+          entryDesc->GetExpirationTime(&expiration);
+
+          /* set the expiration time on our entry */
+          mCacheEntry->SetExpirationTime(expiration);
+        }
+      }
     }
   }
+#endif
 
   return NS_OK;
 }
@@ -678,8 +712,8 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 
   /* or how about ART? */
   /* ART begins with JG (4A 47). Major version offset 2.
-   Minor version offset 3. Offset 4 must be NULL.
-  */
+   * Minor version offset 3. Offset 4 must be NULL.
+   */
   if (len >= 5 &&
    ((unsigned char) buf[0])==0x4a &&
    ((unsigned char) buf[1])==0x47 &&

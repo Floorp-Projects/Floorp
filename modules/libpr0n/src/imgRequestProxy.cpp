@@ -62,7 +62,7 @@ imgRequestProxy::~imgRequestProxy()
 
 
 
-nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, nsICacheEntryDescriptor *aCacheEntry)
+nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx)
 {
   PR_ASSERT(request);
 
@@ -88,10 +88,6 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   if (loadGroup) {
     loadGroup->AddRequest(mDummyChannel, cx);
   }
-
-#ifdef MOZ_NEW_CACHE
-  mCacheEntry = aCacheEntry;
-#endif
 
   request->AddObserver(this);
 
