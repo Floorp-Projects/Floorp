@@ -31,6 +31,8 @@ nsFontMetricsUnix :: nsFontMetricsUnix()
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontHandle = nsnull;
+  mXstring = nsnull;
+  mXstringSize = 0;
 }
   
 nsFontMetricsUnix :: ~nsFontMetricsUnix()
@@ -40,6 +42,9 @@ nsFontMetricsUnix :: ~nsFontMetricsUnix()
     delete mFont;
     mFont = nsnull;
   }
+
+  if (nsnull != mXstring)
+    PR_Free(mXstring);
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
@@ -270,27 +275,34 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
-//  XChar2b * xstring ;
-//  XChar2b * thischar ;
-//  PRUint16 aunichar;
+  XChar2b * thischar ;
+  PRUint16 aunichar;
   nscoord width ;
-//  PRUint32 i ;
+  PRUint32 i ;
+  PRUint32 desiredSize = sizeof(XChar2b) * aLength;
 
-//  xstring = (XChar2b *) PR_Malloc(sizeof(XChar2b)*aLength);
+   // Make the temporary buffer larger if needed.
+  if (nsnull == mXstring) {
+    mXstring = (XChar2b *) PR_Malloc(desiredSize);
+    mXstringSize = desiredSize;
+  }
+  else {
+    if (mXstringSize < desiredSize) {
+      mXstring = (XChar2b *) PR_Realloc(mXstring, desiredSize);
+      mXstringSize = desiredSize;
+    }
+  }
 
-//  for (i=0; i<aLength; i++) {
-//    thischar = (xstring+i);
-//    aunichar = (PRUint16)(*(aString+i));
-//    thischar->byte2 = (aunichar & 0xff);
-//    thischar->byte1 = (aunichar & 0xff00) >> 8;      
-//  }
+  for (i=0; i<aLength; i++) {
+    thischar = (mXstring+i);
+    aunichar = (PRUint16)(*(aString+i));
+    thischar->byte2 = (aunichar & 0xff);
+    thischar->byte1 = (aunichar & 0xff00) >> 8;      
+  }
   
   XFontStruct * fs = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
   
-//  width = ::XTextWidth16(fs, xstring, aLength);
-  width = ::XTextWidth16(fs, (XChar2b *)aString, aLength);
-
-//  PR_Free(xstring);
+  width = ::XTextWidth16(fs, mXstring, aLength);
 
   return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
 }
