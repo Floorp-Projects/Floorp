@@ -173,6 +173,50 @@ void nsFileSpec::Delete(PRBool inRecursive) const
 } // nsFileSpec::Delete
 
 //----------------------------------------------------------------------------------------
+void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
+//----------------------------------------------------------------------------------------
+{
+    if (IsDirectory())
+    {
+		if (!(newDir.Exists()))
+		{
+			newDir.CreateDirectory();
+		}
+
+		for (nsDirectoryIterator i(*this); i.Exists(); i++)
+		{
+			nsFileSpec& child = (nsFileSpec&)i;
+
+			if (child.IsDirectory())
+			{
+				nsFileSpec tmpDirSpec(newDir);
+
+				char *leafname = child.GetLeafName();
+				tmpDirSpec += leafname;
+				nsCRT::free(leafname);
+
+				child.RecursiveCopy(tmpDirSpec);
+			}
+			else
+			{
+   				child.RecursiveCopy(newDir);
+			}
+		}
+    }
+    else if (!mPath.IsEmpty())
+    {
+		nsFileSpec& filePath = (nsFileSpec&) *this;
+
+		if (!(newDir.Exists()))
+		{
+			newDir.CreateDirectory();
+		}
+
+        filePath.Copy(newDir);
+    }
+} // nsFileSpec::RecursiveCopy
+
+//----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Rename(const char* inNewName)
 //----------------------------------------------------------------------------------------
 {
