@@ -42,27 +42,20 @@
     <treecol id="categoryCol" label="&category.label;" flex="1" primary="true"/>
   </treecols>
   <treechildren id="panelChildren">
-    <treeitem container="true" id="appearance">
-      <treerow>   
-        <treecell url="chrome://browser/content/pref/pref-appearance.xul" label="&appear.label;"/> 
+    <treeitem>
+      <treerow>
+        <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
       </treerow>
-      <treechildren id="appearanceChildren">
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-colors.xul" label="&colors.label;"/> 
-          </treerow>
-        </treeitem>
-        <treeitem id="themes-panel">
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/> 
-          </treerow>
-        </treeitem>
-      </treechildren>
+    </treeitem>
+    <treeitem>
+      <treerow>
+        <treecell url="chrome://browser/content/pref/pref-colors.xul" label="&colors.label;"/> 
+      </treerow>
+    </treeitem>
+    <treeitem id="themes-panel">
+      <treerow>
+        <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/> 
+      </treerow>
     </treeitem>
     <!-- XXX remove this when overlays.rdf works for navigator -->
     <treeitem container="true" id="navigator">
