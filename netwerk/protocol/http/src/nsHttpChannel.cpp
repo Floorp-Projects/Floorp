@@ -479,7 +479,7 @@ nsHttpChannel::ProcessResponse()
         // these redirects can be cached (don't store the response body)
         if (mCacheEntry) {
             rv = InitCacheEntry();
-            if (NS_SUCCEEDED(rv)) {
+            if (NS_SUCCEEDED(rv) && mCacheEntry) {
                 // XXX we must open an output stream to force the cache service to
                 // select a cache device for our entry -- bad cache service!!
                 rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
