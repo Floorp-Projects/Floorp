@@ -901,6 +901,7 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         else
         {
             PORT_ArenaUnmark(arena, savpos);
+            PORT_Assert(0 == newsrc.len);
         }
     }
 
