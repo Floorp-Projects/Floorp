@@ -124,7 +124,7 @@ public:
   nsIImageGroup* mImageGroup;
   nsITimer*      mTimer;
   PRBool         mRunning;
-  PRUint32       mCompletedImages ;
+  PRUint32       mCompletedImages;
 
   PRInt32        mPreferredWidth;
   PRInt32        mPreferredHeight;
@@ -417,9 +417,15 @@ nsThrobber::Notify(nsIImageRequest *aImageRequest,
                       PRInt32 aParam1, PRInt32 aParam2,
                       void *aParam3)
 {
-  if (aNotificationType == nsImageNotification_kImageComplete)
-   mCompletedImages++;
+  if (aNotificationType == nsImageNotification_kImageComplete) {
+    mCompletedImages++;
 
+    // Remove ourselves as an observer of the image request object, because
+    // the image request objects each hold a reference to us. This avoids a
+    // circular reference problem. If we don't, our ref count will never reach
+    // 0 and we won't get destroyed and neither will the image request objects
+    aImageRequest->RemoveObserver((nsIImageRequestObserver*)this);
+  }
 }
 
 void 
@@ -491,8 +497,6 @@ nsThrobber::LoadThrobberImages(const nsString& aFileNameMask, PRInt32 aNumImages
                                                    mWidth - 2,
                                                    mHeight - 2, 0),
                                                    cnt);
-    // Note: the throbber observer was created with a ref count of 0
-    // which is why we don't have to release a reference to it
   }
 
   if (nsnull != mask)
