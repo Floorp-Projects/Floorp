@@ -2188,14 +2188,12 @@ nsBrowserWindow::DoCopy()
 #if defined(XP_WIN)
 #define USE_STRSTREAM 1
 #endif
-#ifdef DEBUG_akkana
         // Leave this commented out until we're sure it won't crash Linux
 #if defined(XP_UNIX)
-#define USE_OSTREAM 1
-#endif
+#define USE_COUT 1
 #endif
 
-#if defined(USE_STRINGSTREAM) || defined(USE_STRSTREAM) || defined(USE_OSTREAM)
+#if defined(USE_STRINGSTREAM) || defined(USE_STRSTREAM) || defined(USE_COUT)
 
 #if defined(USE_STRINGSTREAM)
         stringstream  data;
@@ -2203,8 +2201,9 @@ nsBrowserWindow::DoCopy()
 #if defined(USE_STRSTREAM)
         ostrstream  data;
 #else
-#if defined(USE_OSTREAM)
-        ostream data;
+#if defined(USE_COUT)
+#define data cout
+        data << "Copied text:" << endl << "------------" << endl;
 #endif
 #endif
 #endif
@@ -2232,6 +2231,10 @@ nsBrowserWindow::DoCopy()
 #if defined(USE_STRSTREAM)
           PRInt32 len = data.pcount();
           char* str = (char*)data.str();
+#endif
+#if defined(USE_COUT)
+#define data cout
+          data << "------------ End Copied Text" << endl;
 #endif
 #endif
 
