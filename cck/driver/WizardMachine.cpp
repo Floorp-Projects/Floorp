@@ -872,10 +872,11 @@ BOOL CWizardMachineApp::GoToNextNode()
 	if (IsNewValue)
 		CreateNewCache();
 
-	if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
+	CurrentNode = tempNode;
+
+	if (!theInterpreter->interpret(CurrentNode->navControls->onEnter, NULL))
 		return FALSE;
 			
-	CurrentNode = tempNode;
 
 	return TRUE;
 }
@@ -966,9 +967,10 @@ BOOL CWizardMachineApp::GoToPrevNode()
 
 	if (IsNewValue)
 		CreateNewCache();
-	if (!theInterpreter->interpret(tempNode->navControls->onEnter, NULL))
-		return FALSE;
 	CurrentNode = tempNode;
+
+	if (!theInterpreter->interpret(CurrentNode->navControls->onEnter, NULL))
+		return FALSE;
 
 	return TRUE;
 
