@@ -335,6 +335,11 @@ nsSocketInputStream::Read(char *buf, PRUint32 count, PRUint32 *countRead)
     {
         nsAutoLock lock(mTransport->mLock);
 
+#ifdef ENABLE_SOCKET_TRACING
+        if (n > 0)
+            mTransport->TraceInBuf(buf, n);
+#endif
+
         mTransport->ReleaseFD_Locked(fd);
 
         if (n > 0)
@@ -542,6 +547,11 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
     nsresult rv;
     {
         nsAutoLock lock(mTransport->mLock);
+
+#ifdef ENABLE_SOCKET_TRACING
+    if (n > 0)
+        mTransport->TraceOutBuf(buf, n);
+#endif
 
         mTransport->ReleaseFD_Locked(fd);
 
@@ -1730,3 +1740,76 @@ nsSocketTransport::OnLookupComplete(nsIDNSRequest *request,
 
     return NS_OK;
 }
+
+#ifdef ENABLE_SOCKET_TRACING
+
+#include <stdio.h>
+#include <ctype.h>
+#include "prenv.h"
+
+static void
+DumpBytesToFile(const char *path, const char *header, const char *buf, PRInt32 n)
+{
+    FILE *fp = fopen(path, "a");
+
+    fprintf(fp, "\n%s [%d bytes]\n", header, n);
+
+    const unsigned char *p;
+    while (n) {
+        p = (const unsigned char *) buf;
+
+        PRInt32 i, row_max = PR_MIN(16, n);
+
+        for (i = 0; i < row_max; ++i)
+            fprintf(fp, "%02x  ", *p++);
+        for (i = row_max; i < 16; ++i)
+            fprintf(fp, "    ");
+
+        p = (const unsigned char *) buf;
+        for (i = 0; i < row_max; ++i, ++p) {
+            if (isprint(*p))
+                fprintf(fp, "%c", *p);
+            else
+                fprintf(fp, ".");
+        }
+
+        fprintf(fp, "\n");
+        buf += row_max;
+        n -= row_max;
+    }
+
+    fprintf(fp, "\n");
+    fclose(fp);
+}
+
+void
+nsSocketTransport::TraceInBuf(const char *buf, PRInt32 n)
+{
+    char *val = PR_GetEnv("NECKO_SOCKET_TRACE_LOG");
+    if (!val || !*val)
+        return;
+
+    nsCAutoString header;
+    header.Assign(NS_LITERAL_CSTRING("Reading from: ") + mHost);
+    header.Append(':');
+    header.AppendInt(mPort);
+
+    DumpBytesToFile(val, header.get(), buf, n);
+}
+
+void
+nsSocketTransport::TraceOutBuf(const char *buf, PRInt32 n)
+{
+    char *val = PR_GetEnv("NECKO_SOCKET_TRACE_LOG");
+    if (!val || !*val)
+        return;
+
+    nsCAutoString header;
+    header.Assign(NS_LITERAL_CSTRING("Writing to: ") + mHost);
+    header.Append(':');
+    header.AppendInt(mPort);
+
+    DumpBytesToFile(val, header.get(), buf, n);
+}
+
+#endif

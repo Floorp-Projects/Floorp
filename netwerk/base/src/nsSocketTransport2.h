@@ -38,6 +38,10 @@
 #ifndef nsSocketTransport2_h__
 #define nsSocketTransport2_h__
 
+#ifdef DEBUG_darinf
+#define ENABLE_SOCKET_TRACING
+#endif
+
 #include "nsSocketTransportService2.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -297,6 +301,11 @@ private:
         else
             PostEvent(MSG_OUTPUT_PENDING);
     }
+
+#ifdef ENABLE_SOCKET_TRACING
+    void TraceInBuf(const char *buf, PRInt32 n);
+    void TraceOutBuf(const char *buf, PRInt32 n);
+#endif
 };
 
 #endif // !nsSocketTransport_h__
