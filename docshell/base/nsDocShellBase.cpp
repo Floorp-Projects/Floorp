@@ -158,6 +158,17 @@ NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* parent)
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType, 
+   PRBool* canHandle)
+{
+   NS_ENSURE_ARG_POINTER(canHandle);
+   
+   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
+
+   *canHandle = PR_FALSE;
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShellBase::GetPrefs(nsIPref** prefs)
 {
    NS_ENSURE_ARG_POINTER(prefs);

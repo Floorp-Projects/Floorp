@@ -94,6 +94,11 @@ interface nsIDocShell : nsISupports
 	attribute nsIDocShell parent;
 
 	/*
+	Returns true if the given docshell can handle the requested content type.
+	*/
+	boolean canHandleContentType(in wstring contentType);
+
+	/*
 	Prefs to use for the DocShell.
 	*/
 	attribute nsIPref prefs;
