@@ -337,7 +337,9 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection 
 {
 	if (mVisible)
 		StopBlinking();
-  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDomSel) );   // weak reference to pres shell
+  nsCOMPtr<nsIDOMSelection> domSel(do_QueryReferent(mDomSelectionWeak));
+  if (domSel.get() != aDomSel)
+    return NS_OK; //ignore this then.
 	if (mVisible)
 		StartBlinking();
 	
@@ -556,6 +558,8 @@ PRBool nsCaret::MustDrawCaret()
 		return PR_TRUE;
 		
 	nsCOMPtr<nsIDOMSelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  if (!domSelection)
+    return PR_FALSE;
 	PRBool isCollapsed;
 
 	if (NS_FAILED(domSelection->GetIsCollapsed(&isCollapsed)))
