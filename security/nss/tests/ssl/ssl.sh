@@ -158,15 +158,15 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  echo "selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \\"
+  echo "selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \\"
   echo "         -w nss ${sparam} -i ${R_SERVERPID} $verbose &"
   echo "selfserv started at `date`"
   if [ ${fileout} -eq 1 ]; then
-      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose \
                > ${SERVEROUTFILE} 2>&1 &
   else
-      selfserv -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
+      selfserv -D -p ${PORT} -d ${R_SERVERDIR} -n ${HOSTADDR} \
                -w nss ${sparam} -i ${R_SERVERPID} $verbose &
   fi
   wait_for_selfserv
