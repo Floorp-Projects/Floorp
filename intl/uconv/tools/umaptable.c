@@ -457,7 +457,10 @@ void getinput()
      if(buf[0]=='0' && buf[1] == 'x')
         {
           sscanf(buf,"%hx %hx",&c,&u);
-          SetMapValue(u, c);
+          if(bGenerateFromUnicodeTable)
+            SetMapValue(u, c);
+          else
+            SetMapValue(c, u);
         }
   }
 }
