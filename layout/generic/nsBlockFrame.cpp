@@ -157,7 +157,7 @@ InitDebugFlags()
 #undef NOISY_REFLOW_REASON        // gives a little info about why each reflow was requested
 #undef REFLOW_STATUS_COVERAGE     // I think this is most useful for printing, to see which frames return "incomplete"
 #undef NOISY_SPACEMANAGER         // enables debug output for space manager use, useful for analysing reflow of floaters and positioned elements
-#undef NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
+#define NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
 #undef REALLY_NOISY_REFLOW       // some extra debug info
 
 #endif
@@ -1613,7 +1613,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                            NS_BLOCK_MARGIN_ROOT & mState);
 
   if (eReflowReason_Resize != aReflowState.reason) {
-    RenumberLists(aPresContext);
+    //RenumberLists(aPresContext);
   }
 
   nsresult rv = NS_OK;
@@ -3293,6 +3293,8 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       printf("%p invalidate because %s is true (%d, %d, %d, %d)\n",
              this, aDamageDirtyArea ? "aDamageDirtyArea" : "aLine->IsForceInvalidate",
              dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+      if (aLine->IsForceInvalidate())
+        printf("  dirty line is %p\n");
 #endif
       Invalidate(aState.mPresContext, dirtyRect);
     }
@@ -5574,13 +5576,16 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     }
 
     // Advance to next flow block if the frame has more continuations
-    if (nsnull != aDeletedFrame) {
+    if (flow && aDeletedFrame) {
       flow = (nsBlockFrame*) flow->mNextInFlow;
       NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
-      prevLine = nsnull;
-      line = flow->mLines;
-      linep = &flow->mLines;
-      prevSibling = nsnull;
+      // add defensive pointer check for bug 56894
+      if(flow) {
+        prevLine = nsnull;
+        line = flow->mLines;
+        linep = &flow->mLines;
+        prevSibling = nsnull;
+      }
     }
   }
 
