@@ -447,7 +447,7 @@
 <!ENTITY formatToolbar.underlineChar "U">
 <!ENTITY bulletListIcon.url "chrome://editor/skin/images/bullets.gif">
 <!ENTITY numberListIcon.url "chrome://editor/skin/images/numbers.gif">
-<!ENTITY outdentIcon.url "chrome://editor/skin/images/outdent.dif">
+<!ENTITY outdentIcon.url "chrome://editor/skin/images/outdent.gif">
 <!ENTITY indentIcon.url "chrome://editor/skin/images/indent.gif">
 <!ENTITY alignpopupIcon.url "chrome://editor/skin/images/align.gif">
 <!ENTITY alignLeft.label "Left">
