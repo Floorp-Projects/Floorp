@@ -132,7 +132,10 @@
       
    </groupbox>
    <groupbox>
-      <caption label="&pref.categories.label;"/>
-      <textbox id="categories" prefstring="calendar.categories.names"/>
+      <vbox>
+         <caption label="&pref.categories.label;"/>
+         <textbox id="categories" prefstring="calendar.categories.names"/>
+         <description flex="1">&pref.categories.help.description;</description>
+      </vbox>
    </groupbox>
 </page>
