@@ -24,7 +24,7 @@ DEPTH=..\..\..
 DIRS= public src resources \
 !if !defined(DISABLE_TESTS)
 	test \
-	$(NULL)
 !endif
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
