@@ -466,8 +466,8 @@ ifdef SHARED_LIBRARY
 # BeOS specific section: link against dependant shared libs
 #
 BEOS_LIB_LIST = $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).dependencies)
-BEOS_LINK_LIBS = $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
-LDFLAGS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS) $(DIST)/bin/_APP_
+BEOS_LINK_LIBS = $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib))) $(shell $(topsrcdir)/config/beos/appstub.sh $(DIST)/bin)
+LDFLAGS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS) $(DIST)/bin/_APP_
 endif
 endif
