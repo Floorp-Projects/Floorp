@@ -459,9 +459,8 @@ void WebBrowserChrome::ContentFinishedLoading()
      (mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
     nsCOMPtr<nsIDOMWindow> contentWin;
     mWebBrowser->GetContentDOMWindow(getter_AddRefs(contentWin));
-    nsCOMPtr<nsIDOMWindowInternal> contentIWin(do_QueryInterface(contentWin));
-    if (contentIWin)
-      contentIWin->SizeToContent();
+    if (contentWin)
+        contentWin->SizeToContent();
     WebBrowserChromeUI::ShowWindow(this, PR_TRUE);
   }
 }

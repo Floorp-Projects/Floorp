@@ -480,12 +480,8 @@ EmbedPrivate::ContentFinishedLoading(void)
       return;
     }
     
-    // get the private DOM window
-    nsCOMPtr<nsIDOMWindowInternal> domWindowInternal = 
-      do_QueryInterface(domWindow);
-    
     // resize the content
-    domWindowInternal->SizeToContent();
+    domWindow->SizeToContent();
 
     // and since we're done loading show the window, assuming that the
     // visibility flag has been set.

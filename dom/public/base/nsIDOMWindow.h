@@ -68,6 +68,8 @@ public:
   NS_IMETHOD    ScrollByLines(PRInt32 aNumLines)=0;
 
   NS_IMETHOD    ScrollByPages(PRInt32 aNumPages)=0;
+
+  NS_IMETHOD    SizeToContent()=0;
 };
 
 
@@ -86,6 +88,7 @@ public:
   NS_IMETHOD    GetSelection(nsISelection** aReturn);  \
   NS_IMETHOD    ScrollByLines(PRInt32 aNumLines);  \
   NS_IMETHOD    ScrollByPages(PRInt32 aNumPages);  \
+  NS_IMETHOD    SizeToContent();  \
 
 
 
@@ -104,6 +107,7 @@ public:
   NS_IMETHOD    GetSelection(nsISelection** aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    ScrollByLines(PRInt32 aNumLines) { return _to ScrollByLines(aNumLines); }  \
   NS_IMETHOD    ScrollByPages(PRInt32 aNumPages) { return _to ScrollByPages(aNumPages); }  \
+  NS_IMETHOD    SizeToContent() { return _to SizeToContent(); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);

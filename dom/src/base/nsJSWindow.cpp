@@ -3112,6 +3112,41 @@ WindowScrollByPages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 
 //
+// Native method SizeToContent
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIZETOCONTENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->SizeToContent();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Dump
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -3756,46 +3791,6 @@ WindowInternalResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     }
 
     result = nativeThis->ResizeBy(b0, b1);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method SizeToContent
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowInternalSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsCOMPtr<nsIDOMWindowInternal> nativeThis;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIWindowInternalIID, getter_AddRefs(nativeThis))) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (!nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    *rval = JSVAL_NULL;
-    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
-    if (!secMan)
-        return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_SIZETOCONTENT, PR_FALSE);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, obj, result);
-    }
-
-    result = nativeThis->SizeToContent();
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -4864,6 +4859,7 @@ static JSFunctionSpec WindowMethods[] =
   {"getSelection",          WindowGetSelection,     0},
   {"scrollByLines",          WindowScrollByLines,     1},
   {"scrollByPages",          WindowScrollByPages,     1},
+  {"sizeToContent",          WindowSizeToContent,     0},
   {"dump",          WindowInternalDump,     1},
   {"alert",          WindowInternalAlert,     0},
   {"confirm",          WindowInternalConfirm,     0},
@@ -4879,7 +4875,6 @@ static JSFunctionSpec WindowMethods[] =
   {"moveBy",          WindowInternalMoveBy,     2},
   {"resizeTo",          WindowInternalResizeTo,     2},
   {"resizeBy",          WindowInternalResizeBy,     2},
-  {"sizeToContent",          WindowInternalSizeToContent,     0},
   {"GetAttention",          WindowInternalGetAttention,     0},
   {"scroll",          WindowInternalScroll,     2},
   {"clearTimeout",          WindowInternalClearTimeout,     1},
