@@ -78,9 +78,10 @@ private:
     
     static nsDirectoryService* mService;
     static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
-    nsSupportsHashtable* mHashtable;
+    nsSupportsHashtable mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
 
+public:
     static nsIAtom *sCurrentProcess;
     static nsIAtom *sComponentRegistry;
     static nsIAtom *sComponentDirectory;
