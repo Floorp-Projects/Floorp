@@ -575,48 +575,34 @@ NS_IMETHODIMP
 nsBrowserAppCore::UpdateGoMenu()
 {
 
+  // Get handle to the "main-menubar" element
+  nsCOMPtr<nsIDOMElement>   mainMenubarElement;
+  nsresult rv = FindNamedXULElement(mWebShell, "main-menubar", &mainMenubarElement);
 
-  // Get handle to the "main-toolbox" element
-  nsCOMPtr<nsIDOMElement>   mainToolboxElement;
-  nsresult rv = FindNamedXULElement(mWebShell, "main-toolbox", &mainToolboxElement);
-
-  if (!NS_SUCCEEDED(rv) ||  !mainToolboxElement)
+  if (!NS_SUCCEEDED(rv) ||  !mainMenubarElement)
   {
-	 printf("Couldn't get handle to Go menu\n");
+	 printf("Couldn't get handle to the Go menu\n");
      return NS_ERROR_FAILURE;
   }
   else {
-	  if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Got handle to the main-toolbox element\n");
-	
-  }
-  nsCOMPtr<nsIDOMNode> mainToolboxNode(do_QueryInterface(mainToolboxElement)); 
-  if (!mainToolboxNode) {
-    if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Couldn't get element out of node\n");
-    return NS_ERROR_FAILURE;
+	  if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Got handle to the main-toolbox element\n");	
   }
 
-  //get handle to the menubar item under main-toolbox
-  nsCOMPtr<nsIDOMNode>   menubar;
-  rv = mainToolboxNode->GetFirstChild(getter_AddRefs(menubar));
-  if (!NS_SUCCEEDED(rv) || !menubar) {
-     printf("nsBrowserAppCore::UpdateGoMenu Call to get menubar failed\n");
-     return NS_ERROR_FAILURE;
-  }
-  nsCOMPtr<nsIDOMElement> menubarElement(do_QueryInterface(menubar));
-  if (!menubarElement) {
-	printf("nsBrowserAppCore::UpdateGoMenu Could n't get DOMElement out of DOMNode for menubar\n");
-	return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMNode> mainMenubarNode(do_QueryInterface(mainMenubarElement)); 
+  if (!mainMenubarNode) {
+    if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Couldn't get Node out of Element\n");
+    return NS_ERROR_FAILURE;
   }
 
    nsCOMPtr<nsIDOMNode> goMenuNode;
    PRBool hasChildren=PR_FALSE;
   // Check if toolbar has children.
-  rv = menubar->HasChildNodes(&hasChildren);
+  rv = mainMenubarNode->HasChildNodes(&hasChildren);
   if (NS_SUCCEEDED(rv) && hasChildren) {	
      nsIDOMNodeList *   childList=nsnull;
 
      //Get handle to the children list
-     rv = menubar->GetChildNodes(&childList);
+     rv = mainMenubarNode->GetChildNodes(&childList);
      if (NS_SUCCEEDED(rv) && childList) {
         PRInt32 ccount=0;
         childList->GetLength((unsigned int *)&ccount);
@@ -1375,6 +1361,17 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   rv = aUrl->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
 
+  PRBool  isFrame=PR_FALSE;
+  nsCOMPtr<nsIWebShell> webshell, parent;
+  // Is this a frame ?
+  webshell = do_QueryInterface(aObserver);
+  if (webshell) {
+    webshell->GetParent(*getter_AddRefs(parent));
+  }
+  if (parent)
+	isFrame = PR_TRUE;
+
+
   if (mContentAreaDocLoader) {
     PRBool isBusy = PR_FALSE;
 
@@ -1384,19 +1381,11 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
     }
   }
 
-  if (NS_SUCCEEDED(aStatus)) {
-    nsCOMPtr<nsIWebShell> webshell, parent;
-
-    // Is this a frame ?
-    webshell = do_QueryInterface(aObserver);
-    if (webshell) {
-      webshell->GetParent(*getter_AddRefs(parent));
-    }
-
+  if (NS_SUCCEEDED(aStatus)) {    
     /* If this is a frame, don't do any of the Global History
      * & observer thingy 
      */
-    if (!parent) {
+    if (!isFrame) {
       nsAutoString urlStr(url);
       nsAutoString kEndDocumentLoad("EndDocumentLoad");
       nsAutoString kFailDocumentLoad("FailDocumentLoad");
@@ -1412,18 +1401,26 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 
       // XXX Ignore rv for now. They are using nsIEnumerator instead of
       // nsISimpleEnumerator.
+	  /*
+	   * Update the 'Go' menu. I know this adds discrepancy between the 'Go'
+	   * menu and the Back button when it comes to Session History in frame
+	   * pages. But most of these sub-frames don't have title which leads to
+	   * blank menu items in the 'go' menu. So, I'm taking sub-frames
+	   * totally off the go menu. This is how 4.x behaves.
+	   */ 
+
+	  UpdateGoMenu();
+	    /* To satisfy a request from the QA group */
+      if (aStatus == NS_OK) {
+        fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
+        fflush(stdout);
+	  }
+      else {
+        fprintf(stdout, "Error loading URL %s \n", (const char*)url);
+        fflush(stdout);
+	  }
 
     }
-  }
-
-  /* To satisfy a request from the QA group */
-  if (aStatus == NS_OK) {
-    fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
-    fflush(stdout);
-  }
-  else {
-    fprintf(stdout, "Error loading URL %s \n", (const char*)url);
-    fflush(stdout);
   }
 
 #ifdef DEBUG_warren
