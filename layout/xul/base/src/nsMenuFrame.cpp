@@ -65,6 +65,8 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIPref.h"
 #include "nsIScrollableView.h"
+#include "nsXPIDLString.h"
+#include "nsIStringBundle.h"
  
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -73,7 +75,6 @@ static PRInt32 gEatMouseMove = PR_FALSE;
 nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //
 // NS_NewMenuFrame
@@ -290,7 +291,7 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     // This allows selective overriding for subcontent.
     nsAutoString value;
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-    if (value.EqualsWithConversion("true"))
+    if (value.Equals(NS_LITERAL_STRING("true")))
       return result;
   }
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
@@ -420,12 +421,9 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
 
       PRInt32 menuDelay = 300;   // ms
 
-      nsILookAndFeel * lookAndFeel;
-      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
-                      NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
+      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_CreateInstance(kLookAndFeelCID));
+      if (lookAndFeel)
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
-       NS_RELEASE(lookAndFeel);
-      }
 
       // We're a menu, we're built, we're closed, and no timer has been kicked off.
       mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -527,7 +525,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
         nsIBox* child;
         menuPopup->GetChildBox(&child);
 
-        nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+        nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
         if (scrollframe) {
           scrollframe->ScrollTo(mPresContext, 0, 0);
         }
@@ -561,7 +559,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (aAttribute == nsXULAtoms::open) {
     aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-    if (value.EqualsWithConversion("true"))
+    if (value.Equals(NS_LITERAL_STRING("true")))
       OpenMenuInternal(PR_TRUE);
     else {
       OpenMenuInternal(PR_FALSE);
@@ -579,7 +577,7 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsMenuFrame::OpenMenu(PRBool aActivateFlag)
 {
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
   if (aActivateFlag) {
     // Now that the menu is opened, we should have a menupopup child built.
     // Mark it as generated, which ensures a frame gets built.
@@ -652,21 +650,22 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       if (onMenuBar) {
         if (popupAnchor.IsEmpty())
-          popupAnchor.AssignWithConversion("bottomleft");
+          popupAnchor = NS_LITERAL_STRING("bottomleft");
         if (popupAlign.IsEmpty())
-          popupAlign.AssignWithConversion("topleft");
+          popupAlign = NS_LITERAL_STRING("topleft");
       }
       else {
         if (popupAnchor.IsEmpty())
-          popupAnchor.AssignWithConversion("topright");
+          popupAnchor = NS_LITERAL_STRING("topright");
         if (popupAlign.IsEmpty())
-          popupAlign.AssignWithConversion("topleft");
+          popupAlign = NS_LITERAL_STRING("topleft");
       }
+
+      nsBoxLayoutState state(mPresContext);
 
       // if height never set we need to do an initial reflow.
       if (mLastPref.height == -1)
       {
-         nsBoxLayoutState state(mPresContext);
          menuPopup->MarkDirty(state);
 
          nsCOMPtr<nsIPresShell> shell;
@@ -677,7 +676,6 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       nsRect curRect;
       menuPopup->GetBounds(curRect);
 
-      nsBoxLayoutState state(mPresContext);
       menuPopup->SetBounds(state, nsRect(0,0,mLastPref.width, mLastPref.height));
 
       nsIView* view = nsnull;
@@ -690,17 +688,15 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       // if the height is different then reflow. It might need scrollbars force a reflow
       if (curRect.height != rect.height || mLastPref.height != rect.height)
       {
-         nsBoxLayoutState state(mPresContext);
          menuPopup->MarkDirty(state);
          nsCOMPtr<nsIPresShell> shell;
          mPresContext->GetShell(getter_AddRefs(shell));
          shell->FlushPendingNotifications();
-         menuPopup->GetRect(rect);
       }
 
       ActivateMenu(PR_TRUE);
 
-      nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
+      nsCOMPtr<nsIMenuParent> childPopup(do_QueryInterface(frame));
       UpdateDismissalListener(childPopup);
 
     }
@@ -825,7 +821,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     nsRect bounds(0,0,0,0);
     ibox->GetBounds(bounds);
 
-    nsCOMPtr<nsIScrollableFrame> scrollframe = do_QueryInterface(child);
+    nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
     if (scrollframe) {
       nsIScrollableFrame::nsScrollPref pref;
       scrollframe->GetScrollPreference(aState.GetPresContext(), &pref);
@@ -947,15 +943,15 @@ nsMenuFrame::RePositionPopup(nsBoxLayoutState& aState)
 
     if (onMenuBar) {
       if (popupAnchor.IsEmpty())
-          popupAnchor.AssignWithConversion("bottomleft");
+          popupAnchor = NS_LITERAL_STRING("bottomleft");
       if (popupAlign.IsEmpty())
-          popupAlign.AssignWithConversion("topleft");
+          popupAlign = NS_LITERAL_STRING("topleft");
     }
     else {
       if (popupAnchor.IsEmpty())
-        popupAnchor.AssignWithConversion("topright");
+        popupAnchor = NS_LITERAL_STRING("topright");
       if (popupAlign.IsEmpty())
-        popupAlign.AssignWithConversion("topleft");
+        popupAlign = NS_LITERAL_STRING("topleft");
     }
 
     menuPopup->SyncViewWithFrame(presContext, popupAnchor, popupAlign, this, -1, -1);
@@ -1062,7 +1058,7 @@ nsMenuFrame::Notify(nsITimer* aTimer)
     if (!mMenuOpen && mMenuParent) {
       nsAutoString active;
       mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
-      if (active.EqualsWithConversion("true")) {
+      if (active.Equals(NS_LITERAL_STRING("true"))) {
         // We're still the active menu. Make sure all submenus/timers are closed
         // before opening this one
         mMenuParent->KillPendingTimers();
@@ -1081,7 +1077,7 @@ nsMenuFrame::IsDisabled()
 {
   nsAutoString disabled;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
-  if (disabled.EqualsWithConversion("true"))
+  if (disabled.Equals(NS_LITERAL_STRING("true")))
     return PR_TRUE;
   return PR_FALSE;
 }
@@ -1091,9 +1087,9 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value.EqualsWithConversion("checkbox"))
+  if (value.Equals(NS_LITERAL_STRING("checkbox")))
     mType = eMenuType_Checkbox;
-  else if (value.EqualsWithConversion("radio")) {
+  else if (value.Equals(NS_LITERAL_STRING("radio"))) {
     mType = eMenuType_Radio;
 
     nsAutoString valueName;
@@ -1118,7 +1114,7 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                          value);
-  newChecked = (value.EqualsWithConversion("true"));
+  newChecked = (value.Equals(NS_LITERAL_STRING("true")));
 
   if (newChecked == mChecked) {
     /* checked state didn't change */
@@ -1229,19 +1225,58 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   mContent->GetDocument(*getter_AddRefs(document));
 
   // Turn the document into a XUL document so we can use getElementById
-  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+  nsCOMPtr<nsIDOMXULDocument> xulDocument(do_QueryInterface(document));
   if (!xulDocument)
     return;
 
-  nsCOMPtr<nsIDOMElement> keyElement;
-  xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
-  
+  nsCOMPtr<nsIDOMElement> keyDOMElement;
+  xulDocument->GetElementById(keyValue, getter_AddRefs(keyDOMElement));
+  if (!keyDOMElement)
+    return;
+
+  nsCOMPtr<nsIContent> keyElement(do_QueryInterface(keyDOMElement));
   if (!keyElement)
     return;
- 	  
-  static PRInt32 accelKey = 0;
 
-  PRBool prependPlus = PR_FALSE;
+  // get the string to display as accelerator text
+  // check the key element's attributes in this order:
+  // |keytext|, |key|, |keycode|
+  nsAutoString accelString;
+  keyElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::keytext, accelString);
+
+  if (accelString.IsEmpty()) {
+    keyElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::key, accelString);
+
+    if (!accelString.IsEmpty()) {
+      accelString.ToUpperCase();
+    } else {
+      nsAutoString keyCode;
+      keyElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::keycode, keyCode);
+      keyCode.ToUpperCase();
+
+      nsresult rv;
+      nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv) && bundleService) {
+        nsCOMPtr<nsIStringBundle> bundle;
+        rv = bundleService->CreateBundle("chrome://global/locale/keys.properties",
+                                         nsnull,
+                                         getter_AddRefs(bundle));
+
+        if (NS_SUCCEEDED(rv) && bundle) {
+          nsXPIDLString keyName;
+          rv = bundle->GetStringFromName(keyCode.GetUnicode(), getter_Copies(keyName));
+          if (keyName)
+            accelString = keyName;
+        }
+      }
+
+      // nothing usable found, bail
+      if (accelString.IsEmpty())
+        return;
+    }
+  }
+
+  static PRInt32 accelKey = 0;
 
   if (!accelKey)
   {
@@ -1261,66 +1296,49 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   }
 
   nsAutoString modifiers;
-  keyElement->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
+  keyElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::modifiers, modifiers);
   
-  nsAutoString keyChar;
-  keyElement->GetAttribute(NS_LITERAL_STRING("key"), keyChar);
-
-  if (keyChar.IsEmpty())
-    return;
-
   char* str = modifiers.ToNewCString();
   char* newStr;
-  char* token = nsCRT::strtok( str, ", ", &newStr );
-  while( token != NULL ) {
-    if (prependPlus)
-      aAccelString.AppendWithConversion("+");
-    prependPlus = PR_TRUE;
+  char* token = nsCRT::strtok(str, ", ", &newStr);
+  while (token) {
       
     if (PL_strcmp(token, "shift") == 0)
-      aAccelString.AppendWithConversion("Shift"); 
+      aAccelString += NS_LITERAL_STRING("Shift");
     else if (PL_strcmp(token, "alt") == 0) 
-      aAccelString.AppendWithConversion("Alt"); 
+      aAccelString += NS_LITERAL_STRING("Alt"); 
     else if (PL_strcmp(token, "meta") == 0) 
-      aAccelString.AppendWithConversion("Meta"); 
+      aAccelString += NS_LITERAL_STRING("Meta"); 
     else if (PL_strcmp(token, "control") == 0) 
-      aAccelString.AppendWithConversion("Ctrl"); 
+      aAccelString += NS_LITERAL_STRING("Ctrl"); 
     else if (PL_strcmp(token, "accel") == 0) {
       switch (accelKey)
       {
         case nsIDOMKeyEvent::DOM_VK_META:
-          prependPlus = PR_TRUE;
-          aAccelString.AppendWithConversion("Ctrl");
+          aAccelString += NS_LITERAL_STRING("Ctrl");
           break;
 
         case nsIDOMKeyEvent::DOM_VK_ALT:
-          prependPlus = PR_TRUE;
-          aAccelString.AppendWithConversion("Alt");
+          aAccelString += NS_LITERAL_STRING("Alt");
           break;
 
         case nsIDOMKeyEvent::DOM_VK_CONTROL:
         default:
-          prependPlus = PR_TRUE;
-          aAccelString.AppendWithConversion("Ctrl");
+          aAccelString += NS_LITERAL_STRING("Ctrl");
           break;
       }
     }
     
-    token = nsCRT::strtok( newStr, ", ", &newStr );
+    aAccelString += NS_LITERAL_STRING("+");
+
+    token = nsCRT::strtok(newStr, ", ", &newStr);
   }
 
   nsMemory::Free(str);
 
-  keyChar.ToUpperCase();
-  if (!keyChar.IsEmpty()) {
-    if (prependPlus)
-      aAccelString.AppendWithConversion("+");
-    prependPlus = PR_TRUE;
-    aAccelString += keyChar;
-  }
+  aAccelString += accelString;
 
-  if (!aAccelString.IsEmpty())
-    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
+  mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
 }
 
 void
@@ -1485,7 +1503,7 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
   if (menuPar) {
-    nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
+    nsCOMPtr<nsIBox> menupopup(do_QueryInterface(aFrameList));
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
@@ -1514,7 +1532,7 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
   if (menuPar) {
-    nsCOMPtr<nsIBox> menupopup = do_QueryInterface(aFrameList);
+    nsCOMPtr<nsIBox> menupopup(do_QueryInterface(aFrameList));
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
 
