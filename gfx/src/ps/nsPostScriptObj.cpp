@@ -2443,14 +2443,25 @@ nsPostScriptObj::translate(nscoord x, nscoord y)
 
 
   /** ---------------------------------------------------
-   *  Draw an image. dRect may be thought of as a hole in the document
-   *  page, through which we can see another page containing the image.
-   *  sRect is the portion of the image page which is visible through the
-   *  hole in the document. iRect is the portion of the image page which
-   *  contains the image represented by anImage. sRect and iRect may be
-   *  at arbitrary positions relative to each other.
+   *  Draw an image. This involves two coordinate systems, one for the
+   *  page and one for the image. dRect is in the page coordinate system;
+   *  it describes the rectangle which the image should occupy on the page.
+   *  sRect describes the same rectangle, only in image space; it's the
+   *  portion of the image which should appear on the page. iRect describes
+   *  the position and dimensions of the actual pixel data within image
+   *  space.
    *
-   *    @update 11/25/2003 kherron
+   *  In the simple case, sRect and iRect will be the same, and their (x,y)
+   *  values will be (0,0). But images may have a virtual size larger than
+   *  the pixel rectangle, so iRect's position may not be (0,0) and its
+   *  dimensions may be smaller than sRect's. Similarly, it's possible that
+   *  only part of the image is being printed, in which case sRect's
+   *  position may not be (0,0) and its dimensions may not span the entire
+   *  iRect rectangle. So in the general case, iRect and sRect may be
+   *  completely arbitrary relative to each other and to the image-space
+   *  origin.
+   *
+   *    @update 3/14/2004 kherron
    *    @param anImage  Image to draw
    *    @param dRect    Rectangle describing where on the page the image
    *                    should appear. Units are twips.
@@ -2475,9 +2486,9 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
   anImage->LockImagePixels(PR_FALSE);
   PRUint8 *theBits = anImage->GetBits();
 
-  /* image data might not be available (ex: spacer image) */
-  if (!theBits)
-  {
+  // Image data is unavailable, or it has no height or width.
+  // There's nothing to print, so just return.
+  if (!theBits || (0 == iRect.width) || (0 == iRect.height)) {
     anImage->UnlockImagePixels(PR_FALSE);
     return;
   }
@@ -2522,6 +2533,16 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
   // again, the output should be an inverse TM so these are inverted.
   nscoord tmSX = sRect.width;
   nscoord tmSY = sRect.height;
+
+  // If the image is being stretched and clipped, it's possible that only
+  // a fraction of a pixel is supposed to be visible, resulting in a 
+  // dimension of zero after rounding. 0 isn't a valid scaling factor.
+  // But something should appear on the page, unlike the case where dRect
+  // or iRect is zero-sized, so force the dimension to 1. See bug 236801.
+  if (0 == tmSX)
+    tmSX = 1;
+  if (0 == tmSY)
+    tmSY = 1;
 
   // If the image data is in the wrong order, invert the TM, causing
   // the image to be drawn inverted.
