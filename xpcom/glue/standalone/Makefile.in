@@ -50,7 +50,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 CPPSRCS		= \
-		$(XPCOM_GLUE_SRC_CSRCS) \
+		$(XPCOM_GLUE_SRC_LCSRCS) \
 		$(NULL)
 
 SDK_BINARY     =                        \
@@ -63,7 +63,12 @@ FORCE_STATIC_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+
 include $(topsrcdir)/config/rules.mk
+
+export:: $(XPCOM_GLUE_SRC_CSRCS)
+	$(INSTALL) $^ .
 
 DEFINES		+= -D_IMPL_NS_COM_OFF 
 
