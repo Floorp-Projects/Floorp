@@ -29,8 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgimap
 
 EXPORTS		= \
-		nsIImapUrl.h \
-		nsIImapLog.h \
 		nsIIMAPHostSessionList.h \
 		nsIImapExtensionSink.h \
 		nsIImapMiscellaneousSink.h \
@@ -38,6 +36,7 @@ EXPORTS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIImapUrl.idl	      \
 		nsIImapServerSink.idl \
 		nsIImapMessageSink.idl \
 		nsIImapIncomingServer.idl \
@@ -46,7 +45,7 @@ XPIDLSRCS	= \
 		nsIImapProtocol.idl \
 		nsIMailboxSpec.idl \
 		nsIImapMailFolderSink.idl \
-        nsIMsgImapMailFolder.idl \
+        	nsIMsgImapMailFolder.idl \
 		nsIMsgLogonRedirector.idl \
 		$(NULL)
 
