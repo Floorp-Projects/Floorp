@@ -60,7 +60,7 @@ var gSmtpServerListWindow =
     this.mDeleteButton = document.getElementById("deleteButton");
     this.mSetDefaultServerButton = document.getElementById("setDefaultButton");
 
-    this.refreshServerList();
+    this.refreshServerList("", false);
   },
 
   onSelectionChanged: function(aEvent)
@@ -90,7 +90,7 @@ var gSmtpServerListWindow =
       {
         smtpService.deleteSmtpServer(server);
         parent.replaceWithDefaultSmtpServer(server.key);
-        this.refreshServerList();
+        this.refreshServerList("", true);
       }
     } 
   },
@@ -113,7 +113,7 @@ var gSmtpServerListWindow =
       return;
 
     smtpService.defaultServer = this.getSelectedServer();
-    this.refreshServerList();
+    this.refreshServerList(smtpService.defaultServer.key, true);
   },
 
   updateButtons: function(aServer)
@@ -143,7 +143,7 @@ var gSmtpServerListWindow =
                                                                 aServer.trySSL);
   },
 
-  refreshServerList: function(aServerKeyToSelect)
+  refreshServerList: function(aServerKeyToSelect, aFocusList)
   {
     // remove all children
     while (this.mServerList.hasChildNodes())
@@ -156,8 +156,9 @@ var gSmtpServerListWindow =
       this.mServerList.selectItem(this.mServerList.getElementsByAttribute("key", aServerKeyToSelect)[0]);
     else // select the default server
       this.mServerList.selectItem(this.mServerList.getElementsByAttribute("default", "true")[0]);
-
-    this.mServerList.focus();
+    
+    if (aFocusList)
+      this.mServerList.focus();
   },
 
   fillSmtpServers: function(aListBox, aServers, aDefaultServer)
@@ -217,7 +218,7 @@ var gSmtpServerListWindow =
     
     // now re-select the server which was just added
     if (args.result)          
-      this.refreshServerList(aServer ? aServer.key : args.addSmtpServer);
+      this.refreshServerList(aServer ? aServer.key : args.addSmtpServer, true);
   
     return args.result;
   },
