@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.28 2002/08/23 10:40:27 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.29 2002/08/26 20:31:02 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -120,14 +120,6 @@ nsresult
 nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
 {
   nsresult rv;
-  SECStatus srv = SECSuccess;
-  SEC_PKCS12DecoderContext *dcx = NULL;
-  SECItem unicodePw;
-
-  PK11SlotInfo *slot=nsnull;
-  nsXPIDLString tokenName;
-  nsXPIDLCString tokenNameCString;
-  const char *tokNameRef;
 
   if (!mToken && !mTokenSet) {
     SetToken(NULL); // Ask the user to pick a slot
@@ -139,7 +131,33 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   }
   // init slot
   rv = mToken->Login(PR_TRUE);
-  if (NS_FAILED(rv)) goto finish;
+  if (NS_FAILED(rv)) return rv;
+  
+  int wantRetry;
+  
+  do {
+    rv = ImportFromFileHelper(file, wantRetry);
+  }
+  while (NS_SUCCEEDED(rv) && wantRetry);
+  
+  return rv;
+}
+
+nsresult
+nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry)
+{
+  nsresult rv;
+  SECStatus srv = SECSuccess;
+  SEC_PKCS12DecoderContext *dcx = NULL;
+  SECItem unicodePw;
+
+  PK11SlotInfo *slot=nsnull;
+  nsXPIDLString tokenName;
+  nsXPIDLCString tokenNameCString;
+  const char *tokNameRef;
+  
+  aWantRetry = PR_FALSE;
+
   // get file password (unicode)
   unicodePw.data = NULL;
   rv = getPKCS12FilePassword(&unicodePw);
@@ -172,7 +190,13 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   }
   // read input file and feed it to the decoder
   rv = inputToDecoder(dcx, file);
-  if (NS_FAILED(rv)) goto finish;
+  if (NS_FAILED(rv)) {
+    if (NS_ERROR_ABORT == rv) {
+      // inputToDecoder indicated a NSS error
+      srv = SECFailure;
+    }
+    goto finish;
+  }
   // verify the blob
   srv = SEC_PKCS12DecoderVerify(dcx);
   if (srv) goto finish;
@@ -189,6 +213,9 @@ finish:
   // We should use that error code instead of inventing a new one
   // for every error possible.
   if (srv != SECSuccess) {
+    if (SEC_ERROR_BAD_PASSWORD == PORT_GetError()) {
+      aWantRetry = PR_TRUE;
+    }
     handleError(PIP_PKCS12_NSS_ERROR);
   } else if (NS_FAILED(rv)) { 
     handleError(PIP_PKCS12_RESTORE_FAILED);
@@ -478,8 +505,11 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsILocalFile *file)
     // feed the file data into the decoder
     srv = SEC_PKCS12DecoderUpdate(dcx, buf, amount);
     if (srv) {
+      // don't allow the close call to overwrite our precious error code
+      int pr_err = PORT_GetError();
       fileStream.close();
-      return NS_ERROR_FAILURE;
+      PORT_SetError(pr_err);
+      return NS_ERROR_ABORT;
     }
     if (amount < PIP_PKCS12_BUFFER_SIZE)
       break;
