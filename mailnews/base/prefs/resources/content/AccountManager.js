@@ -59,6 +59,27 @@ function onSave() {
   }
 }
 
+function onNewAccount() {
+  var result = { refresh: false };
+  window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome,modal", result);
+  if (result.refresh) {
+    refreshAccounts();
+    
+    // propagate refresh if it's not already on
+    // i.e. we'll never turn off refresh once it's on.
+    window.arguments[0].refresh = true;
+  }
+
+}
+
+// another temporary hack until the account manager
+// can refresh the account list itself.
+function refreshAccounts()
+{
+  var tree = document.getElementById("accounttree");
+  tree.setAttribute('ref', tree.getAttribute('ref'));
+}
+
 function saveAccount(accountValues, account)
 {
   var identity = account.defaultIdentity;
