@@ -4,3 +4,4 @@
 
 nsIInterfaceInfoManager.idl
 nsIInterfaceInfo.idl
+nsIXPTLoader.idl

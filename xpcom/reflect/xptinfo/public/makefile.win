@@ -32,6 +32,7 @@ EXPORTS = \
 XPIDLSRCS = \
 	.\nsIInterfaceInfo.idl          \
 	.\nsIInterfaceInfoManager.idl   \
+	.\nsIXPTLoader.idl              \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
