@@ -63,6 +63,7 @@
 <!ENTITY min-chart-base-ver "0.99c">
 <!ENTITY min-xml-parser-ver "any">
 <!ENTITY min-mime-parser-ver "any">
+<!ENTITY min-patchreader-ver "0.9.1">
 
 ]>
 

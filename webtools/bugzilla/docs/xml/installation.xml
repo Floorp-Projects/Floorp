@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.54 2003/10/07 20:44:06 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.55 2003/10/30 18:42:21 jocuri%softhome.net Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -327,6 +327,13 @@ set-variable = max_allowed_packet=1M
             (&min-mime-parser-ver;) for the email interface
           </para>
         </listitem>
+
+        <listitem>
+          <para>
+            <link linkend="install-modules-patchreader">PatchReader</link>
+            (&min-patchreader-ver;) for pretty HTML view of patches
+          </para>
+        </listitem>
       </orderedlist>          
       </para>
 
@@ -630,6 +637,25 @@ ReadLine support enabled
         CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-tools/"/>
         PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip"/>
         Documentation: <ulink url="http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-patchreader">
+      <title>PatchReader (&min-patchreader-ver;) [Optional]</title>
+
+      <para>PatchReader is only needed if you want to use Patch Viewer, a
+      Bugzilla feature to format patches in a pretty HTML fashion.  There are a
+      number of optional parameters you can configure Patch Viewer with as well,
+      including cvsroot, cvsroot_get, lxr_root, bonsai_url, lxr_url, and
+      lxr_root.  Patch Viewer also optionally will use cvs, diff and interdiff
+      utilities if they exist on the system (interdiff can be found in the
+      patchutils package at <ulink url="http://cyberelk.net/tim/patchutils/"/>.
+      These programs' locations can be configured in localconfig.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/author/JKEISER/PatchReader/"/>
+        Documentation: <ulink url="http://www.johnkeiser.com/mozilla/Patch_Viewer.html"/>
       </literallayout>
     </section>
   </section>
