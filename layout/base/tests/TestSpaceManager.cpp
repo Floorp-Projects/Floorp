@@ -31,6 +31,7 @@ public:
   PRBool  TestRemoveRegion();
   PRBool  TestOffsetRegion();
   PRBool  TestResizeRectRegion();
+  PRBool  TestGetBandData();
 
 protected:
   struct BandInfo {
@@ -92,8 +93,8 @@ void MySpaceManager::GetBandsInfo(BandsInfo& aBandsInfo)
 // 4. adding a new band below the bottommost band
 PRBool MySpaceManager::TestAddBand()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
+  nsresult  status;
   
   // Clear any existing regions
   ClearRegions();
@@ -103,8 +104,8 @@ PRBool MySpaceManager::TestAddBand()
   // #1. Add a rect region. Verify the return status, and that a band rect is
   // added
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  if (PR_FALSE == status) {
-    printf("TestAddBand: add returned false (#1)\n");
+  if (NS_FAILED(status)) {
+    printf("TestAddBand: add failed (#1)\n");
     return PR_FALSE;
   }
   GetBandsInfo(bandsInfo);
@@ -120,7 +121,7 @@ PRBool MySpaceManager::TestAddBand()
   /////////////////////////////////////////////////////////////////////////////
   // #2. Add another band rect completely above the first band rect
   status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 10, 100, 20));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 2) {
     printf("TestAddBand: wrong number of bands (#2): %i\n", bandsInfo.numBands);
@@ -135,7 +136,7 @@ PRBool MySpaceManager::TestAddBand()
   /////////////////////////////////////////////////////////////////////////////
   // #3. Now insert a new band between the two existing bands
   status = AddRectRegion((nsIFrame*)0x03, nsRect(10, 40, 100, 30));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 3) {
     printf("TestAddBand: wrong number of bands (#3): %i\n", bandsInfo.numBands);
@@ -151,7 +152,7 @@ PRBool MySpaceManager::TestAddBand()
   /////////////////////////////////////////////////////////////////////////////
   // #4. Append a new bottommost band
   status = AddRectRegion((nsIFrame*)0x04, nsRect(10, 210, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 4) {
     printf("TestAddBand: wrong number of bands (#4): %i\n", bandsInfo.numBands);
@@ -177,8 +178,8 @@ PRBool MySpaceManager::TestAddBand()
 // 3. Adding a rect that contains an existing band
 PRBool MySpaceManager::TestAddBandOverlap()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
+  nsresult  status;
   
   // Clear any existing regions
   ClearRegions();
@@ -186,12 +187,12 @@ PRBool MySpaceManager::TestAddBandOverlap()
 
   // Add a new band
   status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   /////////////////////////////////////////////////////////////////////////////
   // #1. Add a rect region that's above and partially overlaps an existing band
   status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 50, 50, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 3) {
     printf("TestAddBandOverlap: wrong number of bands (#1): %i\n", bandsInfo.numBands);
@@ -213,7 +214,7 @@ PRBool MySpaceManager::TestAddBandOverlap()
   /////////////////////////////////////////////////////////////////////////////
   // #2. Add a rect region that's contained by the first band
   status = AddRectRegion((nsIFrame*)0x03, nsRect(200, 60, 50, 10));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 5) {
     printf("TestAddBandOverlap: wrong number of bands (#2): %i\n", bandsInfo.numBands);
@@ -239,7 +240,7 @@ PRBool MySpaceManager::TestAddBandOverlap()
   /////////////////////////////////////////////////////////////////////////////
   // #3. Add a rect that overlaps and is below an existing band
   status = AddRectRegion((nsIFrame*)0x04, nsRect(200, 175, 50, 50));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 7) {
     printf("TestAddBandOverlap: wrong number of bands (#3): %i\n", bandsInfo.numBands);
@@ -270,11 +271,11 @@ PRBool MySpaceManager::TestAddBandOverlap()
   // #4. Now test adding a rect that contains an existing band
   ClearRegions();
   status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Now add a rect that contains the existing band vertically
   status = AddRectRegion((nsIFrame*)0x02, nsRect(200, 50, 100, 200));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 3) {
@@ -308,22 +309,22 @@ PRBool MySpaceManager::TestAddBandOverlap()
 // 6. Add a new rect that completely contains an existing rect
 PRBool MySpaceManager::TestAddRectToBand()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
   BandRect* bandRect;
-  
+  nsresult  status;
+
   // Clear any existing regions
   ClearRegions();
   NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
 
   // Add a new band
   status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   /////////////////////////////////////////////////////////////////////////////
   // #1. Add a rect region that's to the left of the existing rect
   status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 100, 50, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 1) {
     printf("TestAddRectToBand: wrong number of bands (#1): %i\n", bandsInfo.numBands);
@@ -347,7 +348,7 @@ PRBool MySpaceManager::TestAddRectToBand()
   /////////////////////////////////////////////////////////////////////////////
   // #2. Add a rect region that's to the right of the rightmost rect
   status = AddRectRegion((nsIFrame*)0x03, nsRect(250, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   NS_ASSERTION(bandsInfo.numBands == 1, "wrong number of bands");
   if (bandsInfo.bands[0].numRects != 3) {
@@ -374,7 +375,7 @@ PRBool MySpaceManager::TestAddRectToBand()
   // #3. Add a rect region that's to the left of an existing rect and that
   // overlaps the rect
   status = AddRectRegion((nsIFrame*)0x04, nsRect(80, 100, 40, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   NS_ASSERTION(bandsInfo.numBands == 1, "wrong number of bands");
   if (bandsInfo.bands[0].numRects != 5) {
@@ -414,7 +415,7 @@ PRBool MySpaceManager::TestAddRectToBand()
   // #4. Add a rect region that's to the right of an existing rect and that
   // overlaps the rect
   status = AddRectRegion((nsIFrame*)0x05, nsRect(50, 100, 20, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   NS_ASSERTION(bandsInfo.numBands == 1, "wrong number of bands");
   if (bandsInfo.bands[0].numRects != 7) {
@@ -450,7 +451,7 @@ PRBool MySpaceManager::TestAddRectToBand()
   // #5. Add a new rect over top of an existing rect (existing rect contains
   // the new rect)
   status = AddRectRegion((nsIFrame*)0x06, nsRect(20, 100, 20, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   NS_ASSERTION(bandsInfo.numBands == 1, "wrong number of bands");
   if (bandsInfo.bands[0].numRects != 9) {
@@ -484,7 +485,7 @@ PRBool MySpaceManager::TestAddRectToBand()
   /////////////////////////////////////////////////////////////////////////////
   // #6. Add a new rect that completely contains an existing rect
   status = AddRectRegion((nsIFrame*)0x07, nsRect(0, 100, 30, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   NS_ASSERTION(bandsInfo.numBands == 1, "wrong number of bands");
   if (bandsInfo.bands[0].numRects != 11) {
@@ -533,10 +534,10 @@ PRBool MySpaceManager::TestAddRectToBand()
 // 3. removing a band rect and making sure adjacent bands are combined
 PRBool MySpaceManager::TestRemoveRegion()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
   BandRect* bandRect;
-  
+  nsresult  status;
+
   // Clear any existing regions
   ClearRegions();
   NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
@@ -544,9 +545,9 @@ PRBool MySpaceManager::TestRemoveRegion()
   /////////////////////////////////////////////////////////////////////////////
   // #1. A simple test of removing the one and only band rect
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   status = RemoveRegion((nsIFrame*)0x01);
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 0) {
     printf("TestRemoveRegion: wrong number of bands (#1): %i\n", bandsInfo.numBands);
@@ -557,9 +558,9 @@ PRBool MySpaceManager::TestRemoveRegion()
   // #2. Test removing a rect that's shared. Make sure adjacent rects are
   // coalesced
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   status = AddRectRegion((nsIFrame*)0x02, nsRect(40, 100, 20, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify there are three rects in the band
   GetBandsInfo(bandsInfo);
@@ -570,7 +571,7 @@ PRBool MySpaceManager::TestRemoveRegion()
 
   // Remove the region associated with the second frame
   status = RemoveRegion((nsIFrame*)0x02);
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.bands[0].numRects != 1) {
     printf("TestRemoveRegion: failed to coalesce adjacent rects (#2)\n");
@@ -585,7 +586,7 @@ PRBool MySpaceManager::TestRemoveRegion()
   /////////////////////////////////////////////////////////////////////////////
   // #3. Test removing a band rect and making sure adjacent bands are combined
   status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 140, 20, 20));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify there are three bands and that each band has three rects
   GetBandsInfo(bandsInfo);
@@ -608,7 +609,7 @@ PRBool MySpaceManager::TestRemoveRegion()
 
   // Remove the region associated with the second frame
   status = RemoveRegion((nsIFrame*)0x02);
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.bands[0].numRects != 1) {
     printf("TestRemoveRegion: failed to coalesce adjacent rects (#3)\n");
@@ -629,9 +630,9 @@ PRBool MySpaceManager::TestRemoveRegion()
 // 1. simple test of offseting the one and only band rect
 PRBool MySpaceManager::TestOffsetRegion()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
   BandRect* bandRect;
+  nsresult  status;
   
   // Clear any existing regions
   ClearRegions();
@@ -640,9 +641,9 @@ PRBool MySpaceManager::TestOffsetRegion()
   /////////////////////////////////////////////////////////////////////////////
   // #1. A simple test of offseting the one and only band rect
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   status = OffsetRegion((nsIFrame*)0x01, 50, 50);
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify there is one band with one rect
   GetBandsInfo(bandsInfo);
@@ -671,9 +672,9 @@ PRBool MySpaceManager::TestOffsetRegion()
 // 1. simple test of resizing the one and only band rect
 PRBool MySpaceManager::TestResizeRectRegion()
 {
-  PRBool    status;
   BandsInfo bandsInfo;
   BandRect* bandRect;
+  nsresult  status;
   
   // Clear any existing regions
   ClearRegions();
@@ -682,9 +683,9 @@ PRBool MySpaceManager::TestResizeRectRegion()
   /////////////////////////////////////////////////////////////////////////////
   // #1. A simple test of resizing the right edge of the one and only band rect
   status = AddRectRegion((nsIFrame*)0x01, nsRect(10, 100, 100, 100));
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   status = ResizeRectRegion((nsIFrame*)0x01, 50, 50, nsISpaceManager::RightEdge);
-  NS_ASSERTION(PR_TRUE == status, "unexpected status");
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   // Verify there is one band with one rect
   GetBandsInfo(bandsInfo);
@@ -704,6 +705,63 @@ PRBool MySpaceManager::TestResizeRectRegion()
     printf("TestResizeRectRegion: wrong rect shape (#1)\n");
     return PR_FALSE;
   }
+
+  return PR_TRUE;
+}
+
+// Test of getting the band data
+PRBool MySpaceManager::TestGetBandData()
+{
+  BandsInfo bandsInfo;
+  BandRect* bandRect;
+  nsresult  status;
+
+  // Clear any existing regions
+  ClearRegions();
+  NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
+
+  // Make a band with three rects
+  status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
+
+  status = AddRectRegion((nsIFrame*)0x02, nsRect(300, 100, 100, 100));
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
+
+  status = AddRectRegion((nsIFrame*)0x03, nsRect(500, 100, 100, 100));
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
+
+  // Get the band data using a very large clip rect and a band data struct
+  // that's large enough
+  nsBandData      bandData;
+  nsBandTrapezoid trapezoids[16];
+  bandData.size = 16;
+  bandData.trapezoids = trapezoids;
+  status = GetBandData(100, nsSize(10000,10000), bandData);
+  NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
+
+  // Verify that there are seven trapezoids
+  if (bandData.count != 7) {
+    printf("TestGetBandData: wrong trapezoid count (#1)\n");
+    return PR_FALSE;
+  }
+  
+  // Get the band data using a very large clip rect and a band data struct
+  // that's too small
+  bandData.size = 3;
+  status = GetBandData(100, nsSize(10000,10000), bandData);
+  if (NS_SUCCEEDED(status)) {
+    printf("TestGetBandData: ignored band data count (#2)\n");
+    return PR_FALSE;
+  }
+
+  // Make sure the count has been updated to reflect the number of trapezoids
+  // required
+  if (bandData.count <= bandData.size) {
+    printf("TestGetBandData: bad band data count (#2)\n");
+    return PR_FALSE;
+  }
+
+  // XXX We need lots more tests here...
 
   return PR_TRUE;
 }
@@ -751,11 +809,11 @@ int main(int argc, char** argv)
     return -1;
   }
 
-#if 0
+  // Test getting the band data
   if (!spaceMgr->TestGetBandData()) {
     return -1;
   }
-#endif
+
   NS_RELEASE(spaceMgr);
   return 0;
 }

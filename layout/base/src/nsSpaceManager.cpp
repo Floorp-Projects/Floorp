@@ -50,7 +50,8 @@ nsSpaceManager::BandList::BandList()
   numFrames = 0;
 }
 
-void nsSpaceManager::BandList::Clear()
+void
+nsSpaceManager::BandList::Clear()
 {
   if (!IsEmpty()) {
     BandRect* bandRect = Head();
@@ -66,7 +67,6 @@ void nsSpaceManager::BandList::Clear()
   }
 }
 
-
 /////////////////////////////////////////////////////////////////////////////
 // nsSpaceManager
 
@@ -78,7 +78,8 @@ nsSpaceManager::nsSpaceManager(nsIFrame* aFrame)
   mFrameInfoMap = nsnull;
 }
 
-void nsSpaceManager::ClearFrameInfo()
+void
+nsSpaceManager::ClearFrameInfo()
 {
   if (nsnull != mFrameInfoMap) {
     PL_HashTableEnumerateEntries(mFrameInfoMap, NS_RemoveFrameInfoEntries, 0);
@@ -95,36 +96,41 @@ nsSpaceManager::~nsSpaceManager()
 
 NS_IMPL_ISUPPORTS(nsSpaceManager, kISpaceManagerIID);
 
-nsIFrame* nsSpaceManager::GetFrame() const
+NS_IMETHODIMP
+nsSpaceManager::GetFrame(nsIFrame*& aFrame) const
 {
-  return mFrame;
+  aFrame = mFrame;
+  return NS_OK;
 }
 
-void nsSpaceManager::Translate(nscoord aDx, nscoord aDy)
+NS_IMETHODIMP
+nsSpaceManager::Translate(nscoord aDx, nscoord aDy)
 {
   mX += aDx;
   mY += aDy;
+  return NS_OK;
 }
 
-void nsSpaceManager::GetTranslation(nscoord& aX, nscoord& aY) const
+NS_IMETHODIMP
+nsSpaceManager::GetTranslation(nscoord& aX, nscoord& aY) const
 {
   aX = mX;
   aY = mY;
+  return NS_OK;
 }
 
-nscoord nsSpaceManager::YMost() const
+NS_IMETHODIMP
+nsSpaceManager::YMost(nscoord& aYMost) const
 {
-  nscoord yMost;
-
   if (mBandList.IsEmpty()) {
-    yMost = 0;
+    aYMost = 0;
   } else {
     BandRect* lastRect = mBandList.Tail();
 
-    yMost = lastRect->bottom;
+    aYMost = lastRect->bottom;
   }
 
-  return yMost;
+  return NS_OK;
 }
 
 /**
@@ -136,10 +142,11 @@ nscoord nsSpaceManager::YMost() const
  * @param aMaxSize the size to use to constrain the band data
  * @param aAvailableBand
  */
-PRInt32 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
-                                              nscoord         aY,
-                                              const nsSize&   aMaxSize,
-                                              nsBandData&     aBandData) const
+nsresult
+nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
+                                      nscoord         aY,
+                                      const nsSize&   aMaxSize,
+                                      nsBandData&     aBandData) const
 {
   nscoord          topOfBand = aBand->top;
   nscoord          localY = aY - mY;
@@ -171,6 +178,11 @@ PRInt32 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
     if (aBand->left > left) {
       // The rect is to the right of our current left coordinate, so we've
       // found some available space
+      if (aBandData.count >= aBandData.size) {
+        // Not enough space in the array of trapezoids
+        aBandData.count += 2 * aBand->Length() + 2;  // estimate the number needed
+        return NS_ERROR_FAILURE;
+      }
       trapezoid->state = nsBandTrapezoid::Available;
       trapezoid->frame = nsnull;
 
@@ -184,6 +196,11 @@ PRInt32 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
     }
 
     // The rect represents unavailable space, so add another trapezoid
+    if (aBandData.count >= aBandData.size) {
+      // Not enough space in the array of trapezoids
+      aBandData.count += 2 * aBand->Length() + 1;  // estimate the number needed
+      return NS_ERROR_FAILURE;
+    }
     if (1 == aBand->numFrames) {
       trapezoid->state = nsBandTrapezoid::Occupied;
       trapezoid->frame = aBand->frame;
@@ -218,6 +235,11 @@ PRInt32 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
   if (left < rightEdge) {
+    if (aBandData.count >= aBandData.size) {
+      // Not enough space in the array of trapezoids
+      aBandData.count++;
+      return NS_ERROR_FAILURE;
+    }
     trapezoid->state = nsBandTrapezoid::Available;
     trapezoid->frame = nsnull;
 
@@ -227,19 +249,25 @@ PRInt32 nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
     aBandData.count++;
   }
 
-  return aBandData.count;
+  return NS_OK;
 }
 
-PRInt32 nsSpaceManager::GetBandData(nscoord       aYOffset,
-                                    const nsSize& aMaxSize,
-                                    nsBandData&   aBandData) const
+NS_IMETHODIMP
+nsSpaceManager::GetBandData(nscoord       aYOffset,
+                            const nsSize& aMaxSize,
+                            nsBandData&   aBandData) const
 {
+  NS_PRECONDITION(aBandData.size >= 1, "bad band data");
+  nsresult  result = NS_OK;
+
   // Convert the y-offset to world coordinates
   nscoord   y = mY + aYOffset;
 
   // If there are no unavailable rects or the offset is below the bottommost
   // band, then all the space is available
-  if (y >= YMost()) {
+  nscoord yMost;
+  YMost(yMost);
+  if (y >= yMost) {
     // All the requested space is available
     aBandData.count = 1;
     aBandData.trapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
@@ -273,7 +301,7 @@ PRInt32 nsSpaceManager::GetBandData(nscoord       aYOffset,
   }
 
   NS_POSTCONDITION(aBandData.count > 0, "unexpected band data count");
-  return aBandData.count;
+  return result;
 }
 
 /**
@@ -282,7 +310,8 @@ PRInt32 nsSpaceManager::GetBandData(nscoord       aYOffset,
  * @param aBandRect A rect within the band
  * @returns The start of the next band, or nsnull of this is the last band.
  */
-nsSpaceManager::BandRect* nsSpaceManager::GetNextBand(const BandRect* aBandRect) const
+nsSpaceManager::BandRect*
+nsSpaceManager::GetNextBand(const BandRect* aBandRect) const
 {
   nscoord topOfBand = aBandRect->top;
 
@@ -308,7 +337,8 @@ nsSpaceManager::BandRect* nsSpaceManager::GetNextBand(const BandRect* aBandRect)
  * @param aBottom where to split the band. This becomes the bottom of the top
  *          part
  */
-void nsSpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
+void
+nsSpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
 {
   NS_PRECONDITION(aBottom < aBandRect->bottom, "bad height");
   nscoord   topOfBand = aBandRect->top;
@@ -330,7 +360,8 @@ void nsSpaceManager::DivideBand(BandRect* aBandRect, nscoord aBottom)
   }
 }
 
-PRBool nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
+PRBool
+nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   PRBool  result;
   nscoord topOfBand = aBand->top;
@@ -384,7 +415,8 @@ PRBool nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
  *
  * If the two bands are joined, the previous band is the the band that's deleted
  */
-PRBool nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
+PRBool
+nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
 {
   if (CanJoinBands(aBand, aPrevBand)) {
     BandRect* startOfNextBand = aBand;
@@ -415,8 +447,8 @@ PRBool nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)
  * @param aBand the first rect in the band
  * @param aBandRect the band rect to add to the band
  */
-void nsSpaceManager::AddRectToBand(BandRect*  aBand,
-                                   BandRect*  aBandRect)
+void
+nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
 {
   NS_PRECONDITION((aBand->top == aBandRect->top) &&
                   (aBand->bottom == aBandRect->bottom), "bad band");
@@ -580,11 +612,14 @@ void nsSpaceManager::AddRectToBand(BandRect*  aBand,
 // |  R  |
 // +-----+
 //
-void nsSpaceManager::InsertBandRect(BandRect* aBandRect)
+void
+nsSpaceManager::InsertBandRect(BandRect* aBandRect)
 {
   // If there are no existing bands or this rect is below the bottommost
   // band, then add a new band
-  if (aBandRect->top >= YMost()) {
+  nscoord yMost;
+  YMost(yMost);
+  if (aBandRect->top >= yMost) {
     mBandList.Append(aBandRect);
     return;
   }
@@ -673,7 +708,8 @@ void nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   }
 }
 
-PRBool nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
+NS_IMETHODIMP
+nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
 {
   NS_PRECONDITION(nsnull != aFrame, "null frame");
 
@@ -682,7 +718,7 @@ PRBool nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailabl
 
   if (nsnull != frameInfo) {
     NS_WARNING("aFrame is already associated with a region");
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
 
   // Convert the frame to world coordinates
@@ -692,39 +728,47 @@ PRBool nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailabl
   // Verify that the offset is within the defined coordinate space
   if ((rect.x < 0) || (rect.y < 0)) {
     NS_WARNING("invalid offset for rect region");
-    return PR_FALSE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   // Create a frame info structure
   frameInfo = CreateFrameInfo(aFrame, rect);
+  if (nsnull == frameInfo) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Is the rect empty?
   if (aUnavailableSpace.IsEmpty()) {
     // The rect doesn't consume any space, so don't add any band data
-    return PR_TRUE;
+    return NS_OK;
   }
 
   // Allocate a band rect
   BandRect* bandRect = new BandRect(rect.x, rect.y, rect.XMost(), rect.YMost(), aFrame);
+  if (nsnull == bandRect) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Insert the band rect
   InsertBandRect(bandRect);
-  return PR_TRUE;
+  return NS_OK;
 }
 
-PRBool nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
-                                        nscoord      aDeltaWidth,
-                                        nscoord      aDeltaHeight,
-                                        AffectedEdge aEdge)
+NS_IMETHODIMP
+nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
+                                 nscoord      aDeltaWidth,
+                                 nscoord      aDeltaHeight,
+                                 AffectedEdge aEdge)
 {
   // Get the frame info associated with with aFrame
   FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
 
   if (nsnull == frameInfo) {
     NS_WARNING("no region associated with aFrame");
-    return PR_FALSE;
+    return NS_ERROR_INVALID_ARG;
   }
 
+  // Compute new rect
   nsRect  rect(frameInfo->rect);
   rect.SizeBy(aDeltaWidth, aDeltaHeight);
   if (aEdge == LeftEdge) {
@@ -734,51 +778,55 @@ PRBool nsSpaceManager::ResizeRectRegion(nsIFrame*    aFrame,
   // Verify that the offset is within the defined coordinate space
   if ((rect.x < 0) || (rect.y < 0)) {
     NS_WARNING("invalid offset when resizing rect region");
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
 
-  // For the time being just remove it and add it back in
+  // For the time being just remove it and add it back in. Because
+  // AddRectRegion() operates relative to the local coordinate space,
+  // translate from world coordinates to the local coordinate space
+  rect.MoveBy(-mX, -mY);
   RemoveRegion(aFrame);
   return AddRectRegion(aFrame, rect);
 }
 
-PRBool nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
+NS_IMETHODIMP
+nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
 {
   // Get the frame info associated with with aFrame
   FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
 
   if (nsnull == frameInfo) {
     NS_WARNING("no region associated with aFrame");
-    return PR_FALSE;
+    return NS_ERROR_INVALID_ARG;
   }
 
-  // Compute new rect for the region; note that we have to translate
-  // from the global coordinate system (frameInfo->rect) to our
-  // current local coordinate system before adding the rect region
-  // again (since AddRectRegion operates relative to the current
-  // translation).
+  // Compute new rect
   nsRect  rect(frameInfo->rect);
-  rect.MoveBy(-mX + aDx, -mY + aDy);
+  rect.MoveBy(aDx, aDy);
 
   // Verify that the offset is within the defined coordinate space
   if ((rect.x < 0) || (rect.y < 0)) {
     NS_WARNING("invalid offset when offseting rect region");
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
   }
 
-  // For the time being just remove it and add it back in
+  // For the time being just remove it and add it back in. Because
+  // AddRectRegion() operates relative to the local coordinate space,
+  // translate from world coordinates to the local coordinate space
+  rect.MoveBy(-mX, -mY);
   RemoveRegion(aFrame);
   return AddRectRegion(aFrame, rect);
 }
 
-PRBool nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
+NS_IMETHODIMP
+nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
 {
   // Get the frame info associated with aFrame
   FrameInfo*  frameInfo = GetFrameInfoFor(aFrame);
 
   if (nsnull == frameInfo) {
     NS_WARNING("no region associated with aFrame");
-    return PR_FALSE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (!frameInfo->rect.IsEmpty()) {
@@ -871,16 +919,19 @@ PRBool nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
   }
 
   DestroyFrameInfo(frameInfo);
-  return PR_TRUE;
+  return NS_OK;
 }
 
-void nsSpaceManager::ClearRegions()
+NS_IMETHODIMP
+nsSpaceManager::ClearRegions()
 {
   ClearFrameInfo();
   mBandList.Clear();
+  return NS_OK;
 }
 
-nsSpaceManager::FrameInfo* nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
+nsSpaceManager::FrameInfo*
+nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
 {
   FrameInfo*  result = nsnull;
 
@@ -891,21 +942,26 @@ nsSpaceManager::FrameInfo* nsSpaceManager::GetFrameInfoFor(nsIFrame* aFrame)
   return result;
 }
 
-nsSpaceManager::FrameInfo* nsSpaceManager::CreateFrameInfo(nsIFrame*     aFrame,
-                                                           const nsRect& aRect)
+nsSpaceManager::FrameInfo*
+nsSpaceManager::CreateFrameInfo(nsIFrame* aFrame, const nsRect& aRect)
 {
   if (nsnull == mFrameInfoMap) {
     mFrameInfoMap = PL_NewHashTable(17, NS_HashNumber, PL_CompareValues,
                                     PL_CompareValues, nsnull, nsnull);
+    if (nsnull == mFrameInfoMap) {
+      return nsnull;
+    }
   }
 
   FrameInfo*  frameInfo = new FrameInfo(aFrame, aRect);
-
-  PL_HashTableAdd(mFrameInfoMap, (const void*)aFrame, frameInfo);
+  if (nsnull != frameInfo) {
+    PL_HashTableAdd(mFrameInfoMap, (const void*)aFrame, frameInfo);
+  }
   return frameInfo;
 }
 
-void nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
+void
+nsSpaceManager::DestroyFrameInfo(FrameInfo* aFrameInfo)
 {
   PL_HashTableRemove(mFrameInfoMap, (const void*)aFrameInfo->frame);
   delete aFrameInfo;
@@ -958,7 +1014,8 @@ nsSpaceManager::BandRect::~BandRect()
   }
 }
 
-nsSpaceManager::BandRect* nsSpaceManager::BandRect::SplitVertically(nscoord aBottom)
+nsSpaceManager::BandRect*
+nsSpaceManager::BandRect::SplitVertically(nscoord aBottom)
 {
   NS_PRECONDITION((aBottom > top) && (aBottom < bottom), "bad argument");
 
@@ -973,11 +1030,11 @@ nsSpaceManager::BandRect* nsSpaceManager::BandRect::SplitVertically(nscoord aBot
                                            
   // This band rect becomes the top part, so adjust the bottom edge
   bottom = aBottom;
-
   return bottomBandRect;
 }
 
-nsSpaceManager::BandRect* nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
+nsSpaceManager::BandRect*
+nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
 {
   NS_PRECONDITION((aRight > left) && (aRight < right), "bad argument");
   
@@ -992,11 +1049,11 @@ nsSpaceManager::BandRect* nsSpaceManager::BandRect::SplitHorizontally(nscoord aR
                                            
   // This band rect becomes the left part, so adjust the right edge
   right = aRight;
-
   return rightBandRect;
 }
 
-PRBool nsSpaceManager::BandRect::IsOccupiedBy(const nsIFrame* aFrame) const
+PRBool
+nsSpaceManager::BandRect::IsOccupiedBy(const nsIFrame* aFrame) const
 {
   PRBool  result;
 
@@ -1019,7 +1076,8 @@ PRBool nsSpaceManager::BandRect::IsOccupiedBy(const nsIFrame* aFrame) const
   return result;
 }
 
-void nsSpaceManager::BandRect::AddFrame(const nsIFrame* aFrame)
+void
+nsSpaceManager::BandRect::AddFrame(const nsIFrame* aFrame)
 {
   if (1 == numFrames) {
     nsIFrame* f = frame;
@@ -1032,7 +1090,8 @@ void nsSpaceManager::BandRect::AddFrame(const nsIFrame* aFrame)
   NS_POSTCONDITION(frames->Count() == numFrames, "bad frame count");
 }
 
-void nsSpaceManager::BandRect::RemoveFrame(const nsIFrame* aFrame)
+void
+nsSpaceManager::BandRect::RemoveFrame(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(numFrames > 1, "only one frame");
   frames->RemoveElement((void*)aFrame);
@@ -1046,7 +1105,8 @@ void nsSpaceManager::BandRect::RemoveFrame(const nsIFrame* aFrame)
   }
 }
 
-PRBool nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
+PRBool
+nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
 {
   PRBool  result;
 
@@ -1073,3 +1133,26 @@ PRBool nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) con
 
   return result;
 }
+
+/**
+ * Internal helper function that counts the number of rects in this band
+ * including the current band rect
+ */
+PRInt32
+nsSpaceManager::BandRect::Length() const
+{
+  nscoord   topOfBand = top;
+  PRInt32   len = 1;
+  BandRect* bandRect = Next();
+
+  // Because there's a header cell we know we'll either find the next band
+  // (which has a different y-offset) or the header cell which has an invalid
+  // y-offset
+  while (bandRect->top == top) {
+    len++;
+    bandRect = bandRect->Next();
+  }
+
+  return len;
+}
+
