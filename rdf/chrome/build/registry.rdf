@@ -33,6 +33,17 @@
 
   </chrome> 
 
+  <chrome about="chrome://sidebar/"> 
+
+    <skin> 
+      <RDF:Description about="chrome://sidebar/skin/">
+        <base>resource:/res/rdf/</base>
+        <main>sidebar.css</main> 
+      </RDF:Description> 
+    </skin> 
+
+  </chrome> 
+
   <chrome about="chrome://messenger/"> 
 
     <skin> 
