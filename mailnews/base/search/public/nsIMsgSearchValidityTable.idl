@@ -51,7 +51,8 @@ interface nsIMsgSearchValidityTable : nsISupports {
 
     readonly attribute long numAvailAttribs;
 
-    void getAvailableAttributes(out long length,
+    void getAvailableAttributes(out unsigned long length,
                                 [retval, array, size_is(length)]
                                 out nsMsgSearchAttribValue aResult);
+
 };

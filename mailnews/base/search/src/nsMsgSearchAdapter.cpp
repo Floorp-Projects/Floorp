@@ -846,11 +846,11 @@ nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList)
 }
 
 nsresult
-nsMsgSearchValidityTable::GetAvailableAttributes(PRInt32 *length,
+nsMsgSearchValidityTable::GetAvailableAttributes(PRUint32 *length,
                                                  nsMsgSearchAttribValue **aResult)
 {
     // count first
-    PRInt32 totalAttributes=0;
+    PRUint32 totalAttributes=0;
     PRInt32 i, j;
     for (i = 0; i< nsMsgSearchAttrib::kNumMsgSearchAttributes; i++) {
         for (j=0; j< nsMsgSearchOp::kNumMsgSearchOperators; j++) {
@@ -861,11 +861,12 @@ nsMsgSearchValidityTable::GetAvailableAttributes(PRInt32 *length,
         }
     }
 
-    nsMsgSearchAttribValue *array = new nsMsgSearchAttribValue[totalAttributes];
+    nsMsgSearchAttribValue *array = (nsMsgSearchAttribValue*)
+        nsAllocator::Alloc(sizeof(nsMsgSearchAttribValue) * totalAttributes);
+
+    PRUint32 numStored=0;
     if (!array) return NS_ERROR_OUT_OF_MEMORY;
 
-    PRInt32 numStored=0;
-    
     for (i = 0; i< nsMsgSearchAttrib::kNumMsgSearchAttributes; i++) {
         for (j=0; j< nsMsgSearchOp::kNumMsgSearchOperators; j++) {
             if (m_table[i][j].bitAvailable) {
@@ -908,6 +909,7 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 	NS_ENSURE_ARG(ppOutTable);
 
 	nsresult err = NS_OK;
+    *ppOutTable = nsnull;
 
 	// hack alert...currently FEs are setting scope to News even if it should be set to OfflineNewsgroups...
 	// i'm fixing this by checking if we are in offline mode...
@@ -964,6 +966,7 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 		err = NS_MSG_ERROR_INVALID_SEARCH_TERM;
 	}
 
+    NS_IF_ADDREF(*ppOutTable);
 	return err;
 }
 
