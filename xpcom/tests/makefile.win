@@ -99,11 +99,11 @@ $(PROG5): $(OBJDIR) TestServMgr.cpp
 
 $(PROG7): $(OBJDIR) TestAtoms.cpp
 
-$(PROG8): $(OBJDIR) FilesTest.cpp
+$(PROG10): $(OBJDIR) FilesTest.cpp
 
-$(PROG9): $(OBJDIR) CvtURL.cpp
+$(PROG8): $(OBJDIR) CvtURL.cpp
 
-$(PROG10): $(OBJDIR) TestCRT.cpp
+$(PROG9): $(OBJDIR) TestCRT.cpp
 
 $(PROG11): $(OBJDIR) PropertiesTest.cpp
 
