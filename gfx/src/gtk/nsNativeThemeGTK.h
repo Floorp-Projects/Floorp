@@ -76,7 +76,7 @@ public:
 
 protected:
   PRBool GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
-                              GtkThemeWidgetType& aWidgetType,
+                              GtkThemeWidgetType& aGtkWidgetType,
                               GtkWidgetState* aState, gint* aWidgetFlags);
 
   PRBool IsDisabled(nsIFrame* aFrame);
