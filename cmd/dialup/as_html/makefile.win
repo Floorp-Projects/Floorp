@@ -16,7 +16,6 @@
 DEPTH=..\..\..
 DIRS=metadata
 
-JAVA_DESTPATH=$(DEPTH)\dist\classes
 PACKAGE=netscape\asw
 SIGNDIR=signed
 
