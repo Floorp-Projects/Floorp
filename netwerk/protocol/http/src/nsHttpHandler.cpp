@@ -1572,7 +1572,7 @@ nsHttpHandler::Observe(nsISupports *subject,
                        const char *topic,
                        const PRUnichar *data)
 {
-    LOG(("nsHttpHandler::Observe [topic=\"%s\")]\n", topic));
+    LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 
     if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
