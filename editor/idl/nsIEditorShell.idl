@@ -134,28 +134,6 @@ interface nsIEditorShell : nsISupports
   boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindowInternal inCheckWindow); 
 
   /* Commands */
-  /** 
-   *  @param saveAs false to try to save to existing file
-   *          If document is not already saved, it is treated as true
-   *          so filename is prompted.
-   *  @param saveCopy       
-   *          true if we are saving off a copy of the document
-   *          without changing the disk file associated with the doc.
-   *          This would correspond to a 'Save Copy As' menu command
-   *  @param mimeType
-   *          Currently must be "text/html" or "text/plain"
-   *          Also, we don't turn into a "plain text editor",
-   *          after saving as a text file, where subsequent "Save" 
-   *          would also save as  text.
-   *          Thus saveCopy should always be true when using "text/plain"
-   *
-   *  return value
-   *          true if file was really saved.
-   *          false if there is some problem with saving or user
-   *          executed "Cancel" when prompted for a filename to save
-   */  
-  boolean saveDocument(in boolean saveAs, in boolean saveCopy, in wstring mimeType);
-  
   void Print();
   
   void Undo();
@@ -597,9 +575,6 @@ interface nsIEditorShell : nsISupports
 
   /* Debugging: dump content tree to stdout */
   void DumpContentTree();
-
-  /* Utility */
-  wstring GetLocalFileURL(in nsIDOMWindowInternal parent, in wstring filterType);
 
   /**
    * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
