@@ -773,11 +773,8 @@ function DropOnAddressingWidget(event)
 
 function DropRecipient(target, recipient)
 {
-  // that will automatically set the focus on a new available row, and make sure is visible
-  awClickEmptySpace(null, true);
-  var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
-  lastInput.value = recipient;
-  awAppendNewRow(true);
+  // break down and add each address
+  return parseAndAddAddresses(recipient, awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value"));
 }
 
 function _awSetAutoComplete(selectElem, inputElem)
@@ -847,6 +844,20 @@ function awRecipientErrorCommand(errItem, element)
 function awRecipientKeyPress(event, element)
 {
   switch(event.keyCode) {
+  case KeyEvent.DOM_VK_RETURN:
+  case KeyEvent.DOM_VK_TAB:
+  {
+    // if the user text contains a comma or a line return, ignore 
+    if (element.value.search(',') != -1)
+    {
+      var addresses = element.value;
+      element.value = ""; // clear out the current line so we don't try to autocomplete it..
+      parseAndAddAddresses(addresses, awGetPopupElement(awGetRowByInputElement(element)).selectedItem.getAttribute("value"));
+      return;
+    }
+    
+    break;
+  }
   case 9:
     awTabFromRecipient(element, event);
     break;
@@ -1010,4 +1021,184 @@ function awDocumentKeyPress(event)
     if (id.substr(0, 11) == 'addressCol1')
       awMenulistKeyPress(event, event.target);
   } catch (e) { }
+}
+
+function awRecipientInputCommand(event, inputElement)
+{
+  gContentChanged=true; 
+  setupAutocomplete(); 
+}
+
+// Given an arbitrary block of text like a comma delimited list of names or a names separated by spaces,
+// we will try to autocomplete each of the names and then take the FIRST match for each name, adding it the
+// addressing widget on the compose window.
+
+var gAutomatedAutoCompleteListener = null;
+
+function parseAndAddAddresses(addressText, recipientType)
+{
+  var fullNames;
+
+  fullNames = addressText.split(',');
+  numAddresses = fullNames.length;
+
+  for (index in fullNames)
+  {
+    // we want to eat leading and trailing white space... 
+    fullNames[index] = fullNames[index].replace(/^\s+|\s+$/g, "");
+  }
+
+  if (numAddresses > 0)
+  {
+    // we need to set up our own autocomplete session and search for results
+
+    setupAutocomplete(); // be safe, make sure we are setup
+    if (!gAutomatedAutoCompleteListener)
+      gAutomatedAutoCompleteListener = new AutomatedAutoCompleteHandler();
+
+    gAutomatedAutoCompleteListener.init(fullNames, numAddresses, recipientType);
+  }
+}
+
+function AutomatedAutoCompleteHandler()
+{
+}
+
+// state driven self contained object which will autocomplete a block of addresses without any UI. 
+// force picks the first match and adds it to the addressing widget, then goes on to the next 
+// name to complete.
+
+AutomatedAutoCompleteHandler.prototype =
+{
+  param: this,
+  sessionName: null,
+  namesToComplete: {},
+  numNamesToComplete: 0,
+  indexIntoNames: 0,
+
+  numSessionsToSearch: 0,
+  numSessionsSearched: 0,
+  recipientType: null,
+  searchResults: null,
+
+  init:function(namesToComplete, numNamesToComplete, recipientType)
+  {
+    this.indexIntoNames = 0;
+    this.numNamesToComplete = numNamesToComplete;
+    this.namesToComplete = namesToComplete;
+
+    this.recipientType = recipientType;
+
+    // set up the auto complete sessions to use
+    setupAutocomplete();
+    this.autoCompleteNextAddress();
+  },
+
+  autoCompleteNextAddress:function()
+  {
+    this.numSessionsToSearch = 0;
+    this.numSessionsSearched = 0;
+    this.searchResults = new Array;
+
+    if (this.indexIntoNames < this.numNamesToComplete && this.namesToComplete[this.indexIntoNames])
+    {
+      if (this.namesToComplete[this.indexIntoNames].search('@') == -1) // don't autocomplete if address has an @ sign in it
+      {
+        // make sure total session count is updated before we kick off ANY actual searches
+        if (gAutocompleteSession) 
+          this.numSessionsToSearch++;
+
+        if (gLDAPSession && gCurrentAutocompleteDirectory)
+          this.numSessionsToSearch++;
+
+        if (gAutocompleteSession)
+        {
+           gAutocompleteSession.onAutoComplete(this.namesToComplete[this.indexIntoNames], null, this);
+           // AB searches are actually synchronous. So by the time we get here we have already looked up results.
+
+           // if we WERE going to also do an LDAP lookup, then check to see if we have a valid match in the AB, if we do
+           // don't bother with the LDAP search too just return
+
+           if (gLDAPSession && gCurrentAutocompleteDirectory && this.searchResults[0] && this.searchResults[0].defaultItemIndex != -1)
+           {
+             return this.processAllResults();
+           }
+        }
+
+        if (gLDAPSession && gCurrentAutocompleteDirectory)
+          gLDAPSession.onStartLookup(this.namesToComplete[this.indexIntoNames], null, this);
+      }
+
+      if (!this.numSessionsToSearch)
+        this.processAllResults(); // ldap and ab are turned off, so leave text alone
+    }
+  },
+
+  onStatus:function(aStatus) 
+  {
+    return;
+  },
+  
+  onAutoComplete: function(aResults, aStatus) 
+  {
+    // store the results until all sessions are done and have reported in
+    if (aResults)
+      this.searchResults[this.numSessionsSearched] = aResults;
+    
+    this.numSessionsSearched++; // bump our counter
+
+    if (this.numSessionsToSearch <= this.numSessionsSearched)
+      setTimeout('gAutomatedAutoCompleteListener.processAllResults()', 0); // we are all done
+  },
+
+  processAllResults: function()
+  {
+    // Take the first result and add it to the compose window
+    var addressToAdd;
+
+    // loop through the results looking for the non default case (default case is the address book with only one match, the default domain)
+    var sessionIndex; 
+
+    for (sessionIndex in this.searchResults)
+    {
+      var searchResultsForSession = this.searchResults[sessionIndex];
+      if (searchResultsForSession && searchResultsForSession.defaultItemIndex > -1)
+      {
+        addressToAdd = searchResultsForSession.items.QueryElementAt(searchResultsForSession.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+        break;
+      }
+    }
+
+    // still no match? loop through looking for the -1 default index
+    if (!addressToAdd)
+    {
+      for (sessionIndex in this.searchResults)
+      {
+        var searchResultsForSession = this.searchResults[sessionIndex];
+        if (searchResultsForSession && searchResultsForSession.defaultItemIndex == -1)
+        {
+          addressToAdd = searchResultsForSession.items.QueryElementAt(0, Components.interfaces.nsIAutoCompleteItem).value;
+          break;
+        }
+      }
+    }
+
+    // no matches anywhere...just use what we were given
+    if (!addressToAdd)
+      addressToAdd = this.namesToComplete[this.indexIntoNames];
+
+    // that will automatically set the focus on a new available row, and make sure it is visible
+    awAddRecipient(this.recipientType ? this.recipientType : "addr_to", addressToAdd);  
+    
+    this.indexIntoNames++;
+    this.autoCompleteNextAddress();
+  },
+
+  QueryInterface : function(iid)
+  {
+      if (iid.equals(Components.interfaces.nsIAutoCompleteListener) ||
+          iid.equals(Components.interfaces.nsISupports))
+        return this;
+      throw Components.results.NS_NOINTERFACE;
+  }
 }
