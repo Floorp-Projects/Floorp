@@ -118,8 +118,6 @@ public:
                         PRUint32 argc, jsval *argv);
 
   // nsIContent
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
@@ -145,9 +143,6 @@ protected:
   nsresult GetXY(PRInt32* aX, PRInt32* aY);
   nsresult GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight);
 
-  // Only used if this is a script constructed image
-  nsIDocument* mOwnerDocument;
-
   nsCOMPtr<imgIRequest> mRequest;
 };
 
@@ -164,10 +159,34 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
    */
   nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    NS_ENSURE_TRUE(stack, NS_ERROR_NOT_AVAILABLE);
+
+    JSContext *cx = nsnull;
+
+    nsresult rv = stack->Peek(&cx);
+
+    if (NS_FAILED(rv) || !cx)
+      return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    nsContentUtils::GetStaticScriptGlobal(cx, ::JS_GetGlobalObject(cx),
+                                          getter_AddRefs(globalObject));;
+
+    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+    NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIDOMDocument> dom_doc;
+    win->GetDocument(getter_AddRefs(dom_doc));
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
     nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    nsresult rv;
-    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nodeInfoManager));
-    NS_ENSURE_SUCCESS(rv, rv);
+    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
                                       kNameSpaceID_None,
@@ -198,17 +217,10 @@ NS_NewHTMLImageElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLImageElement::nsHTMLImageElement()
 {
-  mOwnerDocument = nsnull;
 }
 
 nsHTMLImageElement::~nsHTMLImageElement()
 {
-  NS_IF_RELEASE(mOwnerDocument);
-
-#ifndef USE_IMG2
-  if (mLoader)
-    mLoader->RemoveFrame(this);
-#endif
 }
 
 
@@ -721,73 +733,33 @@ NS_IMETHODIMP
 nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
                                PRUint32 argc, jsval *argv)
 {
-  nsresult result = NS_OK;
+  if (argc <= 0) {
+    // Nothing to do here if we don't get any arguments.
 
-  // XXX This element is created unattached to any document.  Later
-  // on, it might be used to preload the image cache.  For that, we
-  // need a document (actually a pres context).  The only way to get
-  // one is to associate the image with one at creation time.
-  // This is safer than it used to be since we get the global object
-  // from the static scope chain rather than through the JSCOntext.
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  nsContentUtils::GetStaticScriptGlobal(aContext, aObj,
-                                        getter_AddRefs(globalObject));;
-
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(globalObject));
-
-  if (domWindow) {
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    result = domWindow->GetDocument(getter_AddRefs(domDocument));
-    if (NS_SUCCEEDED(result)) {
-      // Maintain the reference
-      result = CallQueryInterface(domDocument, &mOwnerDocument);
-    }
+    return NS_OK;
   }
 
-  if (NS_SUCCEEDED(result) && (argc > 0)) {
-    // The first (optional) argument is the width of the image
-    int32 width;
-    JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
+  // The first (optional) argument is the width of the image
+  int32 width;
+  JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
+  NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    if (ret) {
-      nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
+  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
 
-      result = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
+  nsresult rv = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
 
-      if (NS_SUCCEEDED(result) && (argc > 1)) {
-        // The second (optional) argument is the height of the image
-        int32 height;
-        ret = JS_ValueToInt32(aContext, argv[1], &height);
+  if (NS_SUCCEEDED(rv) && (argc > 1)) {
+    // The second (optional) argument is the height of the image
+    int32 height;
+    ret = JS_ValueToInt32(aContext, argv[1], &height);
+    NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-        if (ret) {
-          nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
+    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
 
-          result = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
-        }
-        else {
-          result = NS_ERROR_INVALID_ARG;
-        }
-      }
-    }
-    else {
-      result = NS_ERROR_INVALID_ARG;
-    }
+    rv = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
   }
 
-  return result;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::SetDocument(nsIDocument* aDocument,
-                                PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  // If we've been added to the document, we can get rid of
-  // our owner document reference so as to avoid a circular
-  // reference.
-  NS_IF_RELEASE(mOwnerDocument);
-  return nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
-                                               aCompileEventHandlers);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -917,10 +889,13 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
   nsresult result = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc,
                             PR_TRUE);
 
-  if (NS_SUCCEEDED(result) && mOwnerDocument) {
+  if (NS_SUCCEEDED(result) && !mDocument) {
+    nsCOMPtr<nsIDocument> doc;
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
+
     nsCOMPtr<nsIPresShell> shell;
 
-    mOwnerDocument->GetShellAt(0, getter_AddRefs(shell));
+    doc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIPresContext> context;
 
@@ -1014,10 +989,6 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
                       nsnull, nsnull, getter_AddRefs(mRequest));
       }
     }
-
-    // Only do this the first time since it's only there for
-    // backwards compatability
-    NS_RELEASE(mOwnerDocument);
   }
 
   return result;
@@ -1027,23 +998,22 @@ NS_IMETHODIMP
 nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
 {
   nsCOMPtr<nsIURI> baseURL;
-  nsresult result = NS_OK;
+  nsresult rv = NS_OK;
 
   (void) GetCallerSourceURL(getter_AddRefs(baseURL));
 
-  if (mDocument && !baseURL) {
-    result = mDocument->GetBaseURL(*getter_AddRefs(baseURL));
+  nsCOMPtr<nsIDocument> doc;
+  mNodeInfo->GetDocument(*getter_AddRefs(doc));
+
+  if (doc && !baseURL) {
+    rv = doc->GetBaseURL(*getter_AddRefs(baseURL));
   }
 
-  if (mOwnerDocument && !baseURL) {
-    result = mOwnerDocument->GetBaseURL(*getter_AddRefs(baseURL));
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetSrcInner(baseURL, aSrc);
   }
 
-  if (NS_SUCCEEDED(result)) {
-    result = SetSrcInner(baseURL, aSrc);
-  }
-
-  return result;
+  return rv;
 }
 
 #ifdef DEBUG
