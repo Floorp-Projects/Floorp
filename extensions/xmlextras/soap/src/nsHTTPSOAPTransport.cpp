@@ -128,7 +128,7 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
 /* readonly attribute nsISOAPResponse response; */
 NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse * *aResponse)
 {
-  *aResponse = mRequest ? nsnull : mResponse;
+  *aResponse = mRequest ? (nsCOMPtr<nsISOAPResponse>)nsnull : mResponse;
   NS_IF_ADDREF(*aResponse);
   return NS_OK;
 }
