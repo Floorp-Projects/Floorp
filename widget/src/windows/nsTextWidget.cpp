@@ -89,6 +89,7 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // -----------------------------------------------------------------------
 void nsTextWidget::SubclassWindow(BOOL bState)
 {
+  if (NULL != mWnd) {
     NS_PRECONDITION(::IsWindow(mWnd), "Invalid window handle");
     
     if (bState) {
@@ -97,12 +98,14 @@ void nsTextWidget::SubclassWindow(BOOL bState)
                                                  (LONG)nsTextWidget::TextWindowProc);
         NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
         // connect the this pointer to the nsWindow handle
-        ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)this);
+        SetNSWindowPtr(mWnd, this);
     } 
     else {
         (void) ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        SetNSWindowPtr(mWnd, NULL);
         mPrevWndProc = NULL;
     }
+  }
 }
 
 //-------------------------------------------------------------------------
