@@ -81,7 +81,7 @@ interface nsIProfile : nsISupports {
 
     void ProcessPRegCookie();
 
-    string isPregCookieSet();
+    string isPregCookieSet(in string profileName);
 
     void processPREGInfo(in string data);
 
@@ -90,7 +90,8 @@ interface nsIProfile : nsISupports {
     void migrateAllProfiles();
     void cloneProfile(in string profileName);
     void forgetCurrentProfile();
-	void loadNewProfilePrefs();
+    void loadNewProfilePrefs();
+    boolean isCurrentProfileAvailable();
 
     attribute boolean automigrate;
 };
