@@ -157,21 +157,6 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
 {
-  // this keeps the cursor flashing
-  PRUint32 w, h;
-
-  mSurface->GetSize(&w, &h);
-
-  if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
-  {
-    mClipRegion->Init();
-    mClipRegion->SetTo(0,0,w,h);
-  } else {
-    // we're going to crash shortly after if we hit this, but we will return NS_ERROR_FAILURE anyways.
-    return NS_ERROR_FAILURE;
-  }
-
-
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
@@ -344,12 +329,11 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       mTMatrix = state->mMatrix;
     }
 
-    if (state->mClipRegion) {
-      NS_IF_RELEASE(mClipRegion);
+    // state->mClipRegion might be null, but thats ok.  we want that.
+    NS_IF_RELEASE(mClipRegion);
 
-      mClipRegion = state->mClipRegion;
-      mClipIsSet = PR_FALSE;
-    }
+    mClipRegion = state->mClipRegion;
+    mClipIsSet = PR_FALSE;
 
     if (state->mFontMetrics && (mFontMetrics != state->mFontMetrics))
       SetFont(state->mFontMetrics);
@@ -383,10 +367,26 @@ NS_IMETHODIMP nsRenderingContextGTK::IsVisibleRect(const nsRect& aRect,
   return NS_OK;
 }
 
+NS_METHOD nsRenderingContextGTK::CreateClipRegion()
+{
+  PRUint32 w, h;
+  mSurface->GetSize(&w, &h);
+
+  if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) ) {
+    mClipRegion->Init();
+    mClipRegion->SetTo(0,0,w,h);
+  } else {
+    // we're going to crash shortly after if we hit this, but we will return NS_ERROR_FAILURE anyways.
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
   PRInt32 x, y, w, h;
-  if (!mClipRegion->IsEmpty())
+  
+  if (!mClipRegion || !mClipRegion->IsEmpty())
   {
     mClipRegion->GetBoundingBox(&x,&y,&w,&h);
     aRect.SetRect(x,y,w,h);
@@ -443,14 +443,17 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
+
+  if (!mClipRegion) {
+    CreateClipRegion();
+  }
+
   nsRect trect = aRect;
 
 #ifdef TRACE_SET_CLIP
   printf("nsRenderingContextGTK::SetClipRect(%s)\n",
          nsClipCombine_to_string(aCombine));
 #endif // TRACE_SET_CLIP
-
-  mClipIsSet = PR_FALSE;
 
   mClipIsSet = PR_FALSE;
 
@@ -509,8 +512,10 @@ void nsRenderingContextGTK::UpdateGC()
   valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FUNCTION);
   values.function = mFunction;
 
-  GdkRegion *rgn;
-  mClipRegion->GetNativeRegion((void*&)rgn);
+  GdkRegion *rgn = nsnull;
+  if (mClipRegion) {
+    mClipRegion->GetNativeRegion((void*&)rgn);
+  }
 
   mGC = gcCache->GetClipGC(mSurface->GetDrawable(), 
                            &values,
@@ -564,8 +569,8 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
-  if(!mClipRegion) {
-    return NS_ERROR_FAILURE;
+  if (!mClipRegion) {
+    CreateClipRegion();
   }
 
   mClipIsSet = PR_FALSE;
@@ -596,6 +601,9 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
  */
 NS_IMETHODIMP nsRenderingContextGTK::CopyClipRegion(nsIRegion &aRegion)
 {
+  if (!mClipRegion)
+    return NS_ERROR_FAILURE;
+
   aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
   return NS_OK;
 }
@@ -604,7 +612,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (!aRegion)
+  if (!aRegion || !mClipRegion)
     return NS_ERROR_NULL_POINTER;
 
   if (*aRegion) { // copy it, they should be using CopyClipRegion 
@@ -1619,10 +1627,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 {
   nscoord x, y, w, h;
 
-  if (mClipRegion->IsEmpty())
-  {
-    // this is bad!
-    //    printf("drawing image with empty clip region\n");
+  if (!mClipRegion) {
+    return NS_ERROR_FAILURE;
+  } else if (mClipRegion->IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1657,10 +1664,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 {
   nsRect	sr,dr;
 
-  if (mClipRegion->IsEmpty())
-  {
-    // this is bad!
-    //    printf("drawing image with empty clip region\n");
+  if (!mClipRegion) {
+    return NS_ERROR_FAILURE;
+  } else if (mClipRegion->IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 

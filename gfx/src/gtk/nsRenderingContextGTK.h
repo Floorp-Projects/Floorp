@@ -77,6 +77,8 @@ public:
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
+
+  NS_METHOD CreateClipRegion();
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
   NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);

@@ -59,7 +59,7 @@ void nsGCCache::Flush(unsigned long flags)
     if (gc_cache [i].flags & flags) {
       gdk_gc_unref(gc_cache [i].gc);
       if (gc_cache [i].clipRegion)
-	gdk_region_destroy(gc_cache [i].clipRegion);
+        gdk_region_destroy(gc_cache [i].clipRegion);
       memset (&gc_cache [i], 0,  sizeof (gc_cache [i]));
     }
     else
@@ -83,17 +83,17 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
        i++)
   {
     if (flags == gc_cache [i].flags && 
-	!memcmp (gcv, &gc_cache [i].gcv, sizeof (*gcv)))
+        !memcmp (gcv, &gc_cache [i].gcv, sizeof (*gcv)))
       if (clipRegion) {
-	if (gc_cache[i].clipRegion &&
-	    gdk_region_equal(clipRegion, gc_cache[i].clipRegion)) {
-	  //	  printf("found GC in cache %i\n", ++numCalls);
-	  return gc_cache [i].gc;
-	}
+        if (gc_cache[i].clipRegion &&
+            gdk_region_equal(clipRegion, gc_cache[i].clipRegion)) {
+          //          printf("found GC in cache %i\n", ++numCalls);
+          return gc_cache [i].gc;
+        }
       } else {
-	if(!gc_cache[i].clipRegion)
-	  //	  printf("found GC in cache %i\n", ++numCalls);
-	  return gc_cache [i].gc;
+        if(!gc_cache[i].clipRegion)
+          //          printf("found GC in cache (no region) %i\n", ++numCalls);
+          return gc_cache [i].gc;
       }
   }
   
@@ -111,7 +111,7 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
     if (clear_p) {
       gdk_gc_unref(gc_cache [this_slot].gc);
       if (gc_cache [this_slot].clipRegion)
-	gdk_region_destroy(gc_cache [this_slot].clipRegion);
+        gdk_region_destroy(gc_cache [this_slot].clipRegion);
       gc_cache [this_slot].gc = NULL;
       gc_cache [this_slot].clipRegion = NULL;
     }
@@ -125,7 +125,7 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
       gc_cache [this_slot].clipRegion = gdk_region_copy(clipRegion);
       
       if (gc_cache [this_slot].clipRegion) {
-	gdk_gc_set_clip_region(gc, gc_cache [this_slot].clipRegion);
+        gdk_gc_set_clip_region(gc, gc_cache [this_slot].clipRegion);
       }
     }
 

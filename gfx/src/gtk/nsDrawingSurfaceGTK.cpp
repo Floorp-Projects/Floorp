@@ -376,24 +376,6 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   return NS_OK;
 }
 
-/* below are utility functions used mostly for nsRenderingContext and nsImage
- * to plug into gdk_* functions for drawing.  You should not set a pointer
- * that might hang around with the return from these.  instead use the ones
- * above.  pav
- */
-
-GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
-{
-  return mPixmap;
-}
-
-
-void nsDrawingSurfaceGTK::GetSize(PRUint32 *aWidth, PRUint32 *aHeight)
-{
-  *aWidth = mWidth;
-  *aHeight = mHeight;
-}
-
 PRUint8 
 nsDrawingSurfaceGTK::ConvertMaskToCount(unsigned long val)
 {
