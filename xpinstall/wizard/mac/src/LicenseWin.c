@@ -487,7 +487,7 @@ ShowNavButtons(unsigned char* backTitle, unsigned char* nextTitle)
 void
 EnableNavButtons(void)
 {
-	if (gControls->backB)
+	if (gControls->backB && gCurrWin!=kWelcomeID)
 		HiliteControl(gControls->backB, kEnableControl);
 	if (gControls->nextB)
 		HiliteControl(gControls->nextB, kEnableControl);
