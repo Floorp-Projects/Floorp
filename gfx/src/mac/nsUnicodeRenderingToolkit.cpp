@@ -127,7 +127,12 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
   )
 #define BAD_TEXT_ENCODING 0xFFFFFFFF
 
-
+// all the chracter should not be drawn if there are no glyph
+#define IS_ZERO_WIDTH_CHAR(c) ( \
+  IN_RANGE(c, 0x200b, 0x200f) || \
+  IN_RANGE(c, 0x202a, 0x202e) \
+  )
+  
 
 #define IN_ARABIC_PRESENTATION_A(a) ((0xfb50 <= (a)) && ((a) <= 0xfdff))
 #define IN_ARABIC_PRESENTATION_B(a) ((0xfe70 <= (a)) && ((a) <= 0xfeff))
@@ -985,9 +990,11 @@ void nsUnicodeRenderingToolkit :: DrawScriptText(
 	::MoveTo(x, y);
 	::DrawText(buf,0,aLen);
 	
-	Point		penLoc;
-	::GetPen(&penLoc);
-	oWidth = penLoc.h - x;
+//	Point		penLoc;
+//	::GetPen(&penLoc);
+//	oWidth = penLoc.h - x;
+ 	oWidth = ::TextWidth(buf, 0, aLen);
+//  NS_ASSERTION(oWidth == oWidth2, "width are different");
 }
 //------------------------------------------------------------------------
 
@@ -1118,6 +1125,12 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       }
 
 #endif
+		  if(! fallbackDone) {
+		     if(IS_ZERO_WIDTH_CHAR(*aString))
+		     {
+		        fallbackDone = PR_TRUE;
+		     }
+		  }
 #ifndef DISABLE_LATIN_FALLBACK
       if (!fallbackDone) 
       {
@@ -1276,6 +1289,14 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		mGS->mColor );
 		  }
 #endif
+		  if(! fallbackDone) {
+		     if(IS_ZERO_WIDTH_CHAR(*aString))
+		     {
+		        thisWidth = 0;
+		        fallbackDone = PR_TRUE;
+		     }
+		  }
+      
 #ifndef DISABLE_LATIN_FALLBACK
 		  if(! fallbackDone)
 		  	fallbackDone = LatinFallbackDrawChar(aString, x, y, thisWidth);
