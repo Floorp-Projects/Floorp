@@ -92,11 +92,15 @@ EXPORTS2= \
 	nsIDOMHTMLUListElement.h \
 	nsIDOMHTMLEmbedElement.h \
 	nsIDOMImage.h \
+	$(NULL)
+
+EXPORTS3= \
 	nsIDOMNSHTMLButtonElement.h \
 	nsIDOMNSHTMLDocument.h \
 	nsIDOMOption.h \
 	nsIDOMNSHTMLAnchorElement.h \
-	nsIDOMNSHTMLAreaElement.h 
+	nsIDOMNSHTMLAreaElement.h \
+	$(NULL)
 
 
 MODULE=dom 
@@ -105,6 +109,8 @@ include <$(DEPTH)\config\rules.mak>
 
 export:: $(XPDIST)\include
     for %f in ($(EXPORTS2)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
+    for %f in ($(EXPORTS3)) do $(MAKE_INSTALL:/=\) %f $(XPDIST:/=\)\include
 
 clobber::
     -for %g in ($(EXPORTS2)) do $(RM) $(XPDIST:/=\)\include\%g
+    -for %g in ($(EXPORTS3)) do $(RM) $(XPDIST:/=\)\include\%g
