@@ -274,7 +274,6 @@ public:
 
 
 #define MAX_LIST_SIZE 100
-#define MAX_CHILD_ACCESSIBLES 1000000
 #define UNIQUE_ID_CARET -1
 
 class RootAccessible: public DocAccessible, public nsIAccessibleEventListener

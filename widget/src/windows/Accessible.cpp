@@ -1131,10 +1131,6 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
       }
     }    
   }
-  else if (varChild.lVal >= MAX_CHILD_ACCESSIBLES && varChild.lVal < MAX_CHILD_ACCESSIBLES + mListCount){
-    aAcc = mList[varChild.lVal - MAX_CHILD_ACCESSIBLES].mAccessible;
-    return;
-  }
 
   Accessible::GetNSAccessibleFor(varChild, aAcc);
 }
@@ -1178,9 +1174,6 @@ PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 
   PRInt32 uniqueID;
   aAccessible->GetAccId(&uniqueID);
-
-  if (uniqueID == 0)  // can't get an unique ID, use the mList's index + constant base number as the unique ID
-    uniqueID = mNextPos + MAX_CHILD_ACCESSIBLES;
 
   for (PRInt32 index = 0; index < mListCount; index++)
     if (uniqueID == mList[index].mId) {
