@@ -236,6 +236,10 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 // Factory methods for creating html layout objects
 
 extern nsresult
+NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                nsIFrame*& aNewFrame);
+
+extern nsresult
 NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
               nsIFrame*& aNewFrame);
 
@@ -246,6 +250,10 @@ NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 extern nsresult
 NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
               nsIFrame*& aNewFrame);
+
+extern nsresult
+NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                nsIFrame*& aNewFrame);
 
 extern nsresult
 NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -277,11 +285,6 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
 
-
-// Create an html root part
-extern nsresult
-  NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
-                 nsIDocument* aDocument);
 
 extern nsresult
   NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult);
