@@ -189,6 +189,12 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   if (mPreLevel > 0) {
     AppendToStringConvertLF(data, aStr);
   }
+  else if (mFlags & nsIDocumentEncoder::OutputRaw) {
+    PRInt32 lastNewlineOffset = data.RFindChar('\n');
+    AppendToString(data, aStr);
+    if (lastNewlineOffset != kNotFound)
+      mColPos = data.Length() - lastNewlineOffset;
+  }
   else if (!mDoFormat) {
     PRInt32 lastNewlineOffset = kNotFound;
     PRBool hasLongLines = HasLongLines(data, lastNewlineOffset);
@@ -201,12 +207,6 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
     else {
       AppendToStringConvertLF(data, aStr);
     }
-  }
-  else if (mFlags & nsIDocumentEncoder::OutputRaw) {
-    PRInt32 lastNewlineOffset = data.RFindChar('\n');
-    AppendToString(data, aStr);
-    if (lastNewlineOffset != kNotFound)
-      mColPos = data.Length() - lastNewlineOffset;
   }
   else {
     AppendToStringWrapped(data, aStr, PR_FALSE);

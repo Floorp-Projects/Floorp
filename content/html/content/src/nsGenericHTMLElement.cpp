@@ -888,7 +888,10 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 
   docEncoder->Init(doc, NS_LITERAL_STRING("text/html"),
                    nsIDocumentEncoder::OutputEncodeBasicEntities |
-                   nsIDocumentEncoder::OutputLFLineBreak);
+                   // Output DOM-standard newlines
+                   nsIDocumentEncoder::OutputLFLineBreak |
+                   // Don't do linebreaking that's not present in the source
+                   nsIDocumentEncoder::OutputRaw);
 
   nsCOMPtr<nsIDOMRange> range(new nsRange);
   NS_ENSURE_TRUE(range, NS_ERROR_OUT_OF_MEMORY);

@@ -117,23 +117,34 @@ public:
     // (Probably not well tested for HTML output.)
     OutputFormatted     = 2,
 
-    // OutputRaw is used by copying text from widgets
+    // Don't do prettyprinting of HTML.  Don't do any wrapping that's not in
+    // the existing HTML source.  This option overrides OutputFormatted if both
+    // are set.  Note that this option does not affect entity conversion.
     OutputRaw           = 4,
 
     // No html head tags
     OutputBodyOnly      = 8,
 
     // Wrap even if we're not doing formatted output (e.g. for text fields)
+    // XXXbz this doesn't seem to be used by all serializers... document?  How
+    // does this interact with
+    // OutputFormatted/OutputRaw/OutputWrap/OutputFormatFlowed?
     OutputPreformatted  = 16,
 
     // Output as though the content is preformatted
     // (e.g. maybe it's wrapped in a MOZ_PRE or MOZ_PRE_WRAP style tag)
+    // XXXbz this doesn't seem to be used by all serializers... document?  How
+    // does this interact with
+    // OutputFormatted/OutputRaw/OutputPreformatted/OutputFormatFlowed?
     OutputWrap          = 32,
 
     // Output for format flowed (RFC 2646). This is used when converting
     // to text for mail sending. This differs just slightly
     // but in an important way from normal formatted, and that is that
     // lines are space stuffed. This can't (correctly) be done later.
+    // XXXbz this doesn't seem to be used by all serializers... document?  How
+    // does this interact with
+    // OutputFormatted/OutputRaw/OutputPreformatted/OutputWrap?
     OutputFormatFlowed  = 64,
 
     // Convert links, image src, and script src to absolute URLs when possible
