@@ -157,22 +157,6 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask,
 }
 
 
-NS_IMETHODIMP WebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
-                                                  	  nsIDocShellTreeItem ** aBrowserItem)
-{
-    NS_ENSURE_ARG(aName);
-    NS_ENSURE_ARG_POINTER(aBrowserItem);
-    *aBrowserItem = nsnull;
-
-    if (!mWebBrowser)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebBrowser));
-    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-    return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
-}
-
 NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -187,7 +171,7 @@ NS_IMETHODIMP WebBrowserChrome::ShowAsModal(void)
 NS_IMETHODIMP WebBrowserChrome::IsWindowModal(PRBool *_retval)
 {
   *_retval = PR_FALSE;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)

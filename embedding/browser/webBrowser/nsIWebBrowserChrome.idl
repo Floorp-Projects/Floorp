@@ -101,17 +101,7 @@ interface nsIWebBrowserChrome : nsISupports
 	*/
 
     nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,
-                          in long aX, in long aY, in long aCX, in long aCY);
-
-
-	/*
-	Return the child DocShellTreeItem with the specified name.  To implement this
-	an embedder should call nsIDocShellTreeItem::findItemWithName on all the open
-	webBrowser objects.  If one succeeds this should be returned.  If they all fail
-	simply return null.
-	@param aName - This is the name of the item that is trying to be found.
-	*/
-	nsIDocShellTreeItem findNamedBrowserItem(in wstring aName);
+	                  in long aX, in long aY, in long aCX, in long aCY);
 
 	/*
 		Tells the chrome to size itself such that the browser will be the 
@@ -126,7 +116,7 @@ interface nsIWebBrowserChrome : nsISupports
 
 	/**
 	Is the window modal (that is, currently executing a modal loop)?
-        @return true if it's a modal window
+	@return true if it's a modal window
 	*/
 	boolean isWindowModal();
 

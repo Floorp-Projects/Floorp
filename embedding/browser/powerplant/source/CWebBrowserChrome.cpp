@@ -226,6 +226,12 @@ NS_IMETHODIMP CWebBrowserChrome::IsWindowModal(PRBool *_retval)
 }
 
 
+#if 0
+/* Just commenting out for now because it looks like somebody went to
+   a lot of work here. This method has been removed from nsIWebBrowserChrome
+   per the 5 Feb 01 API review, to be handled one level further down
+   in nsDocShellTreeOwner.
+*/
 NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
                                                   	  nsIDocShellTreeItem ** aBrowserItem)
 {
@@ -254,6 +260,7 @@ NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
 
    return NS_OK; // Return OK even if we didn't find it???
 }
+#endif
 
 NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
