@@ -350,7 +350,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_FIELDS,   fields, fields );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_PARENT,   Ph_ROOT_RID, 0 );
       PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
-      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
+      PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW|Ph_EV_BLIT, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW|Ph_EV_BLIT);
       PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_GETS_FOCUS | Pt_DELAY_REALIZE);
       mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
 
