@@ -245,7 +245,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         if (!mRow) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, BMP_GFXFORMAT);
+        rv = mFrame->Init(0, 0, mBIH.width, mBIH.height, BMP_GFXFORMAT, 24);
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mImage->AppendFrame(mFrame);
         NS_ENSURE_SUCCESS(rv, rv);

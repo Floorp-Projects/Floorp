@@ -57,7 +57,7 @@ gfxImageFrame::~gfxImageFrame()
 }
 
 /* void init (in nscoord aX, in nscoord aY, in nscoord aWidth, in nscoord aHeight, in gfx_format aFormat); */
-NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat)
+NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat,gfx_depth aDepth)
 {
   if (mInitalized)
     return NS_ERROR_FAILURE;
@@ -72,6 +72,11 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
     return NS_ERROR_FAILURE;
   }
 
+  if ( (aDepth != 8) && (aDepth != 24) ){
+    NS_ERROR("This Depth is not supported\n");
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
 
   mOffset.MoveTo(aX, aY);
@@ -83,7 +88,7 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   NS_ASSERTION(mImage, "creation of image failed");
   if (NS_FAILED(rv)) return rv;
 
-  gfx_depth depth = 24;
+  gfx_depth depth = aDepth;
   nsMaskRequirements maskReq;
 
   switch (aFormat) {

@@ -290,7 +290,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   // then initalize the frame and append it to the container
-  nsresult rv = decoder->mFrame->Init(0, 0, width, height, format);
+  nsresult rv = decoder->mFrame->Init(0, 0, width, height, format, 24);
   if (NS_FAILED(rv))
     longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
 

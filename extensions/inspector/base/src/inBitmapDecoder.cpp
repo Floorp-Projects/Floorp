@@ -110,7 +110,7 @@ NS_IMETHODIMP inBitmapDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, 
   if (mObserver)
     mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
-  mFrame->Init(0, 0, w, h, gfxIFormats::RGB);
+  mFrame->Init(0, 0, w, h, gfxIFormats::RGB, 24);
   mImage->AppendFrame(mFrame);
   if (mObserver)
     mObserver->OnStartFrame(nsnull, nsnull, mFrame);
