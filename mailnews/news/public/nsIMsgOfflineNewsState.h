@@ -7,7 +7,6 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
-#include "nsID.h" /* interface nsID */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 #ifdef XPIDL_JS_STUBS
@@ -16,7 +15,9 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
+#include "nsIID.h"
 #include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgOfflineNewsState */

@@ -48,7 +48,7 @@ interface nsINNTPHost : nsISupports {
     void AddVirtualGroup(in string responseText);
     void SetIsVirtualGroup(in string groupname, in boolean isVirtual);
     boolean GetIsVirtualGroup(in string groupname
-                           /*, msg_GroupRecord *inGroupRecord */);
+                           /*, nsIMsgGroupRecord inGroupRecord */);
 
     
     void AddSearchableHeader(in string headerName);
