@@ -84,13 +84,12 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
       nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
       if (stringBundleService)
       {
-        nsILocale* locale = nsnull;
         nsCOMPtr<nsIStringBundle> appLauncherBundle;
-        rv = stringBundleService->CreateBundle(HELPERAPPLAUNCHER_BUNDLE_URL, locale, getter_AddRefs(appLauncherBundle));
+        rv = stringBundleService->CreateBundle(HELPERAPPLAUNCHER_BUNDLE_URL, getter_AddRefs(appLauncherBundle));
         if (rv == NS_OK)
         {
           nsCOMPtr<nsIStringBundle> brandBundle;
-          rv = stringBundleService->CreateBundle(BRAND_BUNDLE_URL, locale, getter_AddRefs(brandBundle));
+          rv = stringBundleService->CreateBundle(BRAND_BUNDLE_URL, getter_AddRefs(brandBundle));
           if (rv == NS_OK)
           {
             nsXPIDLString brandName;
