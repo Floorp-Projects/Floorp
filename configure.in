@@ -3718,8 +3718,7 @@ then
     fi
     if test -n "$_LIBIDL_NOT_FOUND"; then
         AC_MSG_ERROR([libIDL not found.
-        libIDL $LIBIDL_VERSION or higher is required.
-        See http://andrewtv.org/libIDL/ for more information.])
+        libIDL $LIBIDL_VERSION or higher is required.])
     fi
 fi
 
