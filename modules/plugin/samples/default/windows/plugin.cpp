@@ -60,7 +60,6 @@ static char szPageUrlForJVM[] = JVM_SMARTUPDATE_URL;
 //static char szPluginFinderCommandFormatString[] = PLUGINFINDER_COMMAND;
 static char szPluginFinderCommandBeginning[] = PLUGINFINDER_COMMAND_BEGINNING;
 static char szPluginFinderCommandEnd[] = PLUGINFINDER_COMMAND_END;
-static char szDefaultFileExt[] = "*";
 
 BOOL RegisterNullPluginWindowClass()
 {
@@ -554,10 +553,12 @@ void CPlugin::URLNotify(const char * szURL)
   int iSize = LoadString(m_hInst, IDS_GOING2HTML, buf, sizeof(buf));
 
   NPError rc = NPN_NewStream(m_pNPInstance, "text/html", "asd_plugin_finder", &pStream);
+  if (rc != NPERR_NO_ERROR)
+    return;
 
   //char buf[] = "<html>\n<body>\n\n<h2 align=center>NPN_NewStream / NPN_Write - This seems to work.</h2>\n\n</body>\n</html>";
   
-  int32 iBytes = NPN_Write(m_pNPInstance, pStream, lstrlen(buf), buf);
+  NPN_Write(m_pNPInstance, pStream, iSize, buf);
 
   NPN_DestroyStream(m_pNPInstance, pStream, NPRES_DONE);
 }
