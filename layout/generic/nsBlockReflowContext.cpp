@@ -25,6 +25,7 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
+#include "nsIDOMHTMLParagraphElement.h"
 
 #ifdef NS_DEBUG
 #undef  NOISY_MAX_ELEMENT_SIZE
@@ -48,6 +49,26 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
 #ifdef DEBUG
   mIndent = 0;
 #endif
+}
+
+PRBool
+nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
+{
+  PRBool result = PR_FALSE;
+  nsIContent* content;
+  nsresult rv = aFrame->GetContent(&content);
+  if (NS_SUCCEEDED(rv) && (nsnull != content)) {
+    static NS_DEFINE_IID(kIDOMHTMLParagraphElementIID, NS_IDOMHTMLPARAGRAPHELEMENT_IID);
+    nsIDOMHTMLParagraphElement* p;
+    nsresult rv = content->QueryInterface(kIDOMHTMLParagraphElementIID,
+                                          (void**) &p);
+    if (NS_SUCCEEDED(rv) && p) {
+      result = PR_TRUE;
+      NS_RELEASE(p);
+    }
+    NS_RELEASE(content);
+  }
+  return result;
 }
 
 nscoord
@@ -168,6 +189,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     }
 #endif
   }
+  mTopMargin = topMargin;
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
@@ -376,11 +398,27 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   nscoord x = mX;
   nscoord y = mY;
   if (0 == mMetrics.height) {
+    // For empty blocks we revert the y coordinate back so that the
+    // top margin is no longer applied.
+    y = mSpace.y;
+    if (IsHTMLParagraph(mFrame)) {
+      // Special "feature" for HTML compatability - empty paragraphs
+      // collapse into nothingness, including their margins.
+      *aBottomMarginResult = 0;
+    }
+    else {
+      // Collapse the bottom margin with the top margin that was already
+      // applied.
+      nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
+      *aBottomMarginResult = collapsedBottomMargin;
+    }
+
     // Empty blocks do not have anything special done to them and they
     // always fit.
     nsRect r(x, y, 0, 0);
     mFrame->SetRect(r);
     aInFlowBounds = r;
+
     // Retain combined area information in case we contain a floater
     // and nothing else.
     aCombinedRect = mMetrics.mCombinedArea;
