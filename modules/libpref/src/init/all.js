@@ -64,6 +64,7 @@ pref("backups.number_of_prefs_copies", 1);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator-region/locale/region.properties");
+pref("browser.startup.homepage.count", 1);
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
 pref("browser.startup.autoload_homepage",   true);
