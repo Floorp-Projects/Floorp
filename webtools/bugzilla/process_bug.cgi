@@ -127,6 +127,33 @@ if ( Param("strictvaluechecks") ) {
 
 ConnectToDatabase();
 
+#
+# This function checks if there is a comment required for a specific
+# function and tests, if the comment was given.
+# If comments are required for functions  is defined by params.
+#
+sub CheckonComment( $ ) {
+    my ($function) = (@_);
+    
+    # Param is 1 if comment should be added !
+    my $ret = Param( "commenton" . $function );
+
+    # Allow without comment in case of undefined Params.
+    $ret = 0 unless ( defined( $ret ));
+
+    if( $ret ) {
+        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+            # No comment - sorry, action not allowed !
+            PuntTryAgain("You have to specify a <b>comment</b> on this " .
+                         "change.  Please give some words " .
+                         "on the reason for your change.");
+        } else {
+            $ret = 0;
+        }
+    }
+    return( ! $ret ); # Return val has to be inverted
+}
+
 # Figure out whether or not the user is trying to change the product
 # (either the "product" variable is not set to "don't change" or the
 # user is changing a single bug and has changed the bug's product),
@@ -136,8 +163,10 @@ if ( $::FORM{'id'} ) {
     SendSQL("SELECT product FROM bugs WHERE bug_id = $::FORM{'id'}");
     $::oldproduct = FetchSQLData();
 }
-if ( ($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
-       || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange) ) {
+if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct) 
+     || (!$::FORM{'id'} && $::FORM{'product'} ne $::dontchange))
+    && CheckonComment( "reassignbycomponent" ))
+{
     if ( Param("strictvaluechecks") ) {
         CheckFormField(\%::FORM, 'product', \@::legal_product);
     }
@@ -511,33 +540,6 @@ sub ChangeResolution {
         DoComma();
         $::query .= "resolution = '$str'";
     }
-}
-
-#
-# This function checks if there is a comment required for a specific
-# function and tests, if the comment was given.
-# If comments are required for functions  is defined by params.
-#
-sub CheckonComment( $ ) {
-    my ($function) = (@_);
-    
-    # Param is 1 if comment should be added !
-    my $ret = Param( "commenton" . $function );
-
-    # Allow without comment in case of undefined Params.
-    $ret = 0 unless ( defined( $ret ));
-
-    if( $ret ) {
-        if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-            # No comment - sorry, action not allowed !
-            PuntTryAgain("You have to specify a <b>comment</b> on this " .
-                         "change.  Please give some words " .
-                         "on the reason for your change.");
-        } else {
-            $ret = 0;
-        }
-    }
-    return( ! $ret ); # Return val has to be inverted
 }
 
 # Changing this so that it will process groups from checkboxes instead of
