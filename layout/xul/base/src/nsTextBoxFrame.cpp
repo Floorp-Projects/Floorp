@@ -199,17 +199,18 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
 {
   if (!gAccessKeyPrefInitialized) 
   {
+    gAccessKeyPrefInitialized = PR_TRUE;
+
     nsCOMPtr<nsIPrefBranch> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-    gAccessKeyPrefInitialized = PR_TRUE;
     if (prefBranch) 
     {
       nsCOMPtr<nsIPrefLocalizedString> prefValue;
       prefBranch->GetComplexValue("intl.menuitems.alwaysappendacceskeys",
                                   NS_GET_IID(nsIPrefLocalizedString),
                                   getter_AddRefs(prefValue));
-      if (prefBranch)
+      if (prefValue)
       {
         nsXPIDLString prefString;
         prefValue->ToString(getter_Copies(prefString));
