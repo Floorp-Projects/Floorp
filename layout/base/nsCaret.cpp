@@ -1016,12 +1016,24 @@ void nsCaret::DrawCaret()
     {
       if (bidiLevel != mKeyboardRTL)
       {
+        /* if the caret bidi level and the keyboard language direction are not in
+         * synch, the keyboard language must have been changed by the
+         * user, and if the caret is in a boundary condition (between left-to-right and
+         * right-to-left characters) it may have to change position to
+         * reflect the location in which the next character typed will
+         * appear. We will call |SelectionLanguageChange| and exit
+         * without drawing the caret in the old position.
+         */ 
         mKeyboardRTL = bidiLevel;
         nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
         if (domSelection)
         {
           if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
+          {
+            PRBool emptyClip;
+            mRendContext->PopState(emptyClip);
             return;
+          }
         }
       }
       // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
