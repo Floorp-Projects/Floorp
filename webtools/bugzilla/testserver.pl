@@ -19,6 +19,7 @@
 # issues as possible.
 
 use Socket;
+use Bugzilla::Config qw($datadir);
 my $envpath = $ENV{'PATH'};
 use lib ".";
 use strict;
@@ -165,8 +166,8 @@ if ($@ eq '') {
         $image->fill(50, 50, $red);
 
         if ($image->can('png')) {
-            create_file('data/testgd-local.png', $image->png);
-            check_image('data/testgd-local.png', 't/testgd.png', 'GD', 'PNG');
+            create_file("$datadir/testgd-local.png", $image->png);
+            check_image("$datadir/testgd-local.png", 't/testgd.png', 'GD', 'PNG');
         } else {
             die "GD doesn't support PNG generation\n";
         }
@@ -188,8 +189,8 @@ if ($@ eq '') {
             $chart->add_pt('bar', 16, 32);
 
             my $type = $chart->can('gif') ? 'gif' : 'png';
-            $chart->$type("data/testchart-local.$type");
-            check_image("data/testchart-local.$type", "t/testchart.$type",
+            $chart->$type("$datadir/testchart-local.$type");
+            check_image("$datadir/testchart-local.$type", "t/testchart.$type",
                 "Chart", uc($type));
         };
         if ($@ ne '') {

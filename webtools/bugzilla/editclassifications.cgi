@@ -27,7 +27,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Bugzilla::Error;
-use Bugzilla::Config;
+use Bugzilla::Config qw($datadir);
 
 require "globals.pl";
 
@@ -166,7 +166,7 @@ if ($action eq 'new') {
     $sth->execute($classification,$description);
 
     # Make versioncache flush
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     LoadTemplate($action);
 }
@@ -230,7 +230,7 @@ if ($action eq 'delete') {
 
     $dbh->bz_unlock_tables();
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
 
     LoadTemplate($action);
 }
@@ -320,7 +320,7 @@ if ($action eq 'update') {
 
     $dbh->bz_unlock_tables();
 
-    unlink "data/versioncache";
+    unlink "$datadir/versioncache";
     LoadTemplate($action);
 }
 

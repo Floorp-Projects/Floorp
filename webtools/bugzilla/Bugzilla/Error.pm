@@ -26,7 +26,7 @@ use base qw(Exporter);
 
 @Bugzilla::Error::EXPORT = qw(ThrowCodeError ThrowTemplateError ThrowUserError);
 
-use Bugzilla::Config;
+use Bugzilla::Config qw($datadir);
 use Bugzilla::Constants;
 use Bugzilla::Util;
 use Date::Format;
@@ -42,8 +42,8 @@ sub _throw_error {
     # and the transaction is rolled back (if supported)
     Bugzilla->dbh->bz_unlock_tables(UNLOCK_ABORT);
 
-    # If a writable data/errorlog exists, log error details there.
-    if (-w "data/errorlog") {
+    # If a writable $datadir/errorlog exists, log error details there.
+    if (-w "$datadir/errorlog") {
         require Data::Dumper;
         my $mesg = "";
         for (1..75) { $mesg .= "-"; };
@@ -67,7 +67,7 @@ sub _throw_error {
             $val = "*****" if $val =~ /password|http_pass/i;
             $mesg .= "[$$] " . Data::Dumper->Dump([$val],["env($var)"]);
         }
-        open(ERRORLOGFID, ">>data/errorlog");
+        open(ERRORLOGFID, ">>$datadir/errorlog");
         print ERRORLOGFID "$mesg\n";
         close ERRORLOGFID;
     }
