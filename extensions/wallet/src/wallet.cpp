@@ -1401,6 +1401,7 @@ Wallet_InitKeySet(PRBool b) {
   if (oldIsKeySet == PR_TRUE && gIsKeySet == PR_FALSE && gKeyedStreamGenerator)
   {
     (void) gKeyedStreamGenerator->Setup(0, NULL);
+    gNeedsSetup = PR_TRUE;
   }
   return oldIsKeySet;
 }
@@ -1412,7 +1413,6 @@ Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
   if (Wallet_IsKeySet() && (curTime >= keyExpiresTime)) {
     Wallet_InitKeySet(PR_FALSE);
-    gNeedsSetup = PR_TRUE;
     SI_RemoveAllSignonData();
     return PR_TRUE;
   }
