@@ -93,7 +93,14 @@ interface(TreeState *state)
 
     fprintf(state->file, "\n/* starting interface %s */\n",
             className);
+#ifndef LIBIDL_MAJOR_VERSION
+    /* pre-VERSIONing libIDLs put the attributes on the interface */
     iid = IDL_tree_property_get(iface, "uuid");
+#else
+    /* post-VERSIONing (>= 0.5.11) put the attributes on the ident */
+    iid = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "uuid");
+#endif
+       
     if (iid) {
         /* XXX use nsID parsing routines to validate? */
         if (strlen(iid) != 36)
@@ -138,11 +145,20 @@ interface(TreeState *state)
     if (state->tree && !xpidl_process_node(state))
         return FALSE;
 
-    /* XXXbe keep this statement until -m stub dies */
+    /*
+     * XXXbe keep this statement until -m stub dies
+     * shaver sez: use the #ifdef to prevent pollution of non-stubbed headers.
+     *
+     * IMPORTANT: Only _static_ things can go here (inside the
+     * #ifdef), or you lose the vtable invariance upon which so much
+     * of (XP)COM is based.
+     */
     fprintf(state->file,
             "\n"
+            "#ifdef XPIDL_JS_STUBS\n"
             "  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);\n"
-            "  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, %s *priv);\n",
+            "  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, %s *priv);\n"
+            "#endif\n",
             className);
 
     fputs("};\n", state->file);
@@ -289,7 +305,6 @@ do_typedef(TreeState *state)
         dcls = IDL_TYPE_DCL(state->tree).dcls,
         complex;
     fputs("typedef ", state->file);
-    fputs(" ", state->file);
 
     if (IDL_NODE_TYPE(type) == IDLN_TYPE_SEQUENCE) {
         fprintf(stderr, "SEQUENCE!\n");
@@ -297,6 +312,7 @@ do_typedef(TreeState *state)
         state->tree = type;
         if (!xpcom_type(state))
             return FALSE;
+        fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
             fprintf(state->file, "%s[%ld]",
                     IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str,
@@ -356,11 +372,23 @@ static gboolean
 op_dcl(TreeState *state)
 {
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
+    gboolean op_notxpcom =
+        (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
     IDL_tree iter;
 
     xpidl_write_comment(state, 2);
 
-    fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op->ident).str);
+    fputs("  ", state->file);
+    if (op_notxpcom) {
+        state->tree = op->op_type_spec;
+        fputs("NS_IMETHOD_(", state->file);
+        if (!xpcom_type(state))
+            return FALSE;
+        fputc(')', state->file);
+    } else {
+        fputs("NS_IMETHOD", state->file);
+    }    
+    fprintf(state->file, " %s(", IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
         if (!xpcom_param(state))
@@ -370,7 +398,7 @@ op_dcl(TreeState *state)
     }
 
     /* make IDL return value into trailing out argument */
-    if (op->op_type_spec) {
+    if (op->op_type_spec && !op_notxpcom) {
         IDL_tree fake_param = IDL_param_dcl_new(IDL_PARAM_OUT,
                                                 op->op_type_spec,
                                                 IDL_ident_new("_retval"));
