@@ -50,6 +50,7 @@ IS_COMPONENT	= 1
 # Do not set MODULE_NAME as we do not want the entry points
 # for this module translated in static builds
 #MODULE_NAME	= mozMySpellModule
+MOZ_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
