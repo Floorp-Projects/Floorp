@@ -1140,3 +1140,27 @@ fe_set_current_attribute_option(Widget parent, int btnPos )
    return False;
 }
 
+extern "C" Widget
+fe_get_current_attribute_option(Widget option)
+{
+   if ( XmIsRowColumn(option) )
+   {
+     unsigned char type;
+     Widget pulldownW;
+     XtVaGetValues(option,
+                   XmNrowColumnType, &type,
+                   XmNsubMenuId, &pulldownW,
+                   0);
+
+     if ( type == XmMENU_OPTION && pulldownW)
+     {
+       Widget which = 0;
+       XtVaGetValues(option,
+                     XmNmenuHistory, &which,
+                     0);
+       return which;
+     }
+   }
+   return 0;
+}
+
