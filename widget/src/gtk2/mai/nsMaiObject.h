@@ -23,7 +23,7 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
- * Contributor(s): 
+ * Contributor(s): John Sun (john.sun@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -129,10 +129,9 @@ public:
     virtual guint GetNSAccessibleUniqueID() = 0;
 
 public:
-    virtual void EmitAccessibilitySignal(PRUint32 aEvent);
     virtual AtkObject *GetAtkObject(void) = 0;
     virtual nsIAccessible *GetNSAccessible(void);
-    virtual gchar* GetAtkSignalName(PRUint32 aEvent);
+    static AtkStateSet* TranslateStates(PRUint32 aAccState);
 
     /* virtual functions called by callbacks */
     virtual void Initialize(void);
