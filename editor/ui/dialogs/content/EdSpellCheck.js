@@ -1,21 +1,19 @@
-var edAppCore;
+var editorShell;
 var misspelledWord;
 
 // dialog initialization code
 function Startup()
 {
   dump("Doing Startup...\n");
-  // NEVER create an edAppCore here - we must find parent editor's
 
-  dump("Getting parent appcore\n");
-  var editorName = window.arguments[0];
-  dump("EditorAppCore name =" + editorName + "\n");
-  edAppCore = XPAppCoresManager.Find(editorName);  
-  if(!edAppCore) {
-    dump("EditoredAppCore not found!!!\n");
+  // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsISpellCheck);
+  if(!editorShell) {
+    dump("EditoreditorShell not found!!!\n");
     window.close();
   }
-  dump("EditoredAppCore found for Spell Checker dialog\n");
+  dump("EditoreditorShell found for Spell Checker dialog\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -54,7 +52,7 @@ function Startup()
 
 function NextWord()
 {
-  misspelledWord = edAppCore.getNextMisspelledWord();
+  misspelledWord = editorShell.GetNextMisspelledWord();
   dialog.wordInput.value = misspelledWord;
   if (misspelledWord == "") {
     dump("FINISHED SPELL CHECKING\n");
@@ -70,7 +68,7 @@ function CheckWord()
   word = dialog.wordInput.value;
   if (word != "") {
     dump("CheckWord: Word in edit field="+word+"\n");
-    isMisspelled = edAppCore.checkCurrentWord(word);
+    isMisspelled = editorShell.CheckCurrentWord(word);
     if (isMisspelled) {
       dump("CheckWord says word was misspelled\n");
       misspelledWord = word;
@@ -98,7 +96,7 @@ function IgnoreAll()
 {
   dump("SpellCheck: IgnoreAll\n");
   if (misspelledWord != "") {
-    edAppCore.ignoreWordAllOccurrences(misspelledWord);
+    editorShell.IgnoreWordAllOccurrences(misspelledWord);
   }
   NextWord();
 }
@@ -108,7 +106,7 @@ function Replace()
   dump("SpellCheck: Replace\n");
   newWord = dialog.wordInput.value;
   if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = edAppCore.replaceWord(misspelledWord, newWord, false);
+    isMisspelled = editorShell.ReplaceWord(misspelledWord, newWord, false);
   }
   NextWord();
 }
@@ -118,7 +116,7 @@ function ReplaceAll()
   dump("SpellCheck: ReplaceAll\n");
   newWord = dialog.wordInput.value;
   if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = edAppCore.replaceWord(misspelledWord, newWord, true);
+    isMisspelled = editorShell.ReplaceWord(misspelledWord, newWord, true);
   }
   NextWord();
 }
@@ -127,7 +125,7 @@ function AddToDictionary()
 {
   dump("SpellCheck: AddToDictionary\n");
   if (misspelledWord != "") {
-    edAppCore.addWordToDictionary(misspelledWord);
+    editorShell.AddWordToDictionary(misspelledWord);
   }
 }
 
@@ -148,7 +146,7 @@ function Close()
 {
   dump("SpellCheck: Spell Checker Closed\n");
   // Shutdown the spell check and close the dialog
-  edAppCore.closeSpellChecking();
+  editorShell.CloseSpellChecking();
   window.close();
 }
 
@@ -167,7 +165,7 @@ function FillSuggestedList(firstWord)
 
   // Get suggested words until an empty string is returned
   do {
-    word = edAppCore.getSuggestedWord();
+    word = editorShell.GetSuggestedWord();
     dump("Suggested Word = "+word+"\n");
     if (word != "") {
       AppendStringToList(list, word);

@@ -1,4 +1,4 @@
-var appCore;
+var editorShell;
 var toolkitCore;
 var insertNew = true;
 
@@ -6,19 +6,17 @@ var insertNew = true;
 function Startup()
 {
   dump("Doing Startup...\n");
-  // New method: parameters passed via window.openDialog, which puts
-  //  arguments in the array "arguments"
-  var editorName = window.arguments[0];
-  dump("Got editorAppCore called " + editorName + "\n");
-  
-  // NEVER create an appcore here - we must find parent editor's
-  appCore = XPAppCoresManager.Find(editorName);  
-  if(!appCore) {
-    dump("EditorAppCore not found!!!\n");
+
+  // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  if(!editorShell) {
+    dump("EditoreditorShell not found!!!\n");
     window.close();
     return;
   }
-  dump("EditorAppCore found for HRule Properties dialog\n");
+
+  dump("EditoreditorShell found for HRule Properties dialog\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
