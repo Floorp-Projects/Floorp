@@ -142,11 +142,11 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
 						 PRBool aAllowNegativeAssertions,
 						 PRBool aCoalesceDuplicateArcs)
     : mCompositeDataSource(aCompositeDataSource),
-      mAllowNegativeAssertions(aAllowNegativeAssertions),
-      mCoalesceDuplicateArcs(aCoalesceDuplicateArcs), 
       mCurrent(nsnull),
       mResult(nsnull),
-	  mNext(0)
+	  mNext(0),
+      mAllowNegativeAssertions(aAllowNegativeAssertions),
+      mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
 {
 	MOZ_COUNT_CTOR(RDF_CompositeEnumeratorImpl);
 	NS_INIT_REFCNT();
