@@ -156,9 +156,13 @@ protected:
     FindBucket(size_t aSize);
 
 public:
-    nsFixedSizeAllocator() : mBuckets(nsnull) {}
+    nsFixedSizeAllocator() : mBuckets(nsnull)
+    {
+        MOZ_COUNT_CTOR(nsFixedSizeAllocator);
+    }
 
     ~nsFixedSizeAllocator() {
+        MOZ_COUNT_DTOR(nsFixedSizeAllocator);
         if (mBuckets)
             PL_FinishArenaPool(&mPool);
     }
