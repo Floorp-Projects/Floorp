@@ -41,7 +41,7 @@
  * area.
  **/
  
-function openNewTabWith(href, linkNode, event, securityCheck, postData)
+function openNewTabWith(href, linkNode, event, securityCheck, postData, sendReferrer)
 {
   if (securityCheck)
     urlSecurityCheck(href, document); 
@@ -70,8 +70,12 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData)
   }
 
   // open link in new tab
-  var browser = top.document.getElementById("content");  
-  var theTab = browser.addTab(href, getReferrer(document), originCharset, postData);
+  var browser = top.document.getElementById("content");
+
+  // If sendReferrer is not specified, default to true
+  var referrer = (sendReferrer == false) ? null : getReferrer(document);
+
+  var theTab = browser.addTab(href, referrer, originCharset, postData);
   if (!loadInBackground)
     browser.selectedTab = theTab;
   
@@ -79,7 +83,7 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData)
     markLinkVisited(href, linkNode);
 }
 
-function openNewWindowWith(href, linkNode, securityCheck, postData) 
+function openNewWindowWith(href, linkNode, securityCheck, postData, sendReferrer)
 {
   if (securityCheck)
     urlSecurityCheck(href, document);
@@ -92,7 +96,9 @@ function openNewWindowWith(href, linkNode, securityCheck, postData)
   if (wintype == "navigator:browser")
     charsetArg = "charset=" + window.content.document.characterSet;
 
-  var referrer = getReferrer(document);
+  // If sendReferrer is not specified, default to true
+  var referrer = (sendReferrer == false) ? null : getReferrer(document);
+
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer, postData);
   
   if (linkNode)
