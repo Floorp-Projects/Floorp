@@ -5041,12 +5041,12 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
   }
 
   // Make sure we have fixed-width font.  This should be done for us,
-  // but it isn't, see bug 22502, so we have to add "font: monospace;".
+  // but it isn't, see bug 22502, so we have to add "font: -moz-fixed;".
   // Only do this if we're wrapping.
   PRUint32 flags = 0;
   GetFlags(&flags);
   if ((flags & eEditorEnableWrapHackMask) && aWrapColumn >= 0)
-    styleValue.AppendWithConversion("font-family: monospace; ");
+    styleValue.AppendWithConversion("font-family: -moz-fixed; ");
 
   // and now we're ready to set the new whitespace/wrapping style.
   if (aWrapColumn > 0)        // Wrap to a fixed column
