@@ -45,6 +45,7 @@
 #include "nsMimeTypes.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsReadableUtils.h"
+#include "nsIMultiPartChannel.h"
 
 
 //
@@ -55,7 +56,8 @@
 // nsIStreamListener interface.
 //
 class nsPartChannel : public nsIChannel,
-                      public nsIByteRangeRequest
+                      public nsIByteRangeRequest,
+                      public nsIMultiPartChannel
 {
 public:
   nsPartChannel(nsIChannel *aMultipartChannel);
@@ -66,6 +68,7 @@ public:
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIBYTERANGEREQUEST
+  NS_DECL_NSIMULTIPARTCHANNEL
 
 protected:
   virtual ~nsPartChannel();
@@ -128,6 +131,7 @@ NS_INTERFACE_MAP_BEGIN(nsPartChannel)
     NS_INTERFACE_MAP_ENTRY(nsIRequest)
     NS_INTERFACE_MAP_ENTRY(nsIChannel)
     NS_INTERFACE_MAP_ENTRY(nsIByteRangeRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannel)
 NS_INTERFACE_MAP_END
 
 //
@@ -342,7 +346,14 @@ nsPartChannel::GetEndRange(PRInt32 *aEndRange)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPartChannel::GetBaseChannel(nsIChannel ** aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
 
+    *aReturn = mMultipartChannel;
+    NS_IF_ADDREF(*aReturn);
+}
 
 
 
