@@ -444,12 +444,12 @@ function BrowserForward()
 
 function BrowserBackMenu(event)
 {
-  FillHistoryMenu(event.target, "back");
+  return FillHistoryMenu(event.target, "back");
 }
 
 function BrowserForwardMenu(event)
 {
-  FillHistoryMenu(event.target, "forward");
+  return FillHistoryMenu(event.target, "forward");
 }
 
 function BrowserStop()
