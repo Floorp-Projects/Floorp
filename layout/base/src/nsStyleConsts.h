@@ -82,6 +82,7 @@
 // See nsStyleDisplay
 #define NS_STYLE_DIRECTION_LTR                  0
 #define NS_STYLE_DIRECTION_RTL                  1
+#define NS_STYLE_DIRECTION_INHERIT              2
 
 // See nsStyleDisplay
 #define NS_STYLE_DISPLAY_NONE                   0
