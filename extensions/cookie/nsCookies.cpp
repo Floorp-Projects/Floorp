@@ -950,13 +950,16 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   //          cookie_from_header, host_from_header, path_from_header));
 
   /* use common code to determine if we can set the cookie */
-  PRBool permission = Permission_Check(aPrompter, host_from_header, COOKIEPERMISSION,
+  PRBool permission = PR_TRUE;
+  if (NS_SUCCEEDED(PERMISSION_Read())) {
+    permission = Permission_Check(aPrompter, host_from_header, COOKIEPERMISSION,
 // I believe this is the right place to eventually add the logic to ask
 // about cookies that have excessive lifetimes, but it shouldn't be done
 // until generalized per-site preferences are available.
                                        //cookie_GetLifetimeAsk(timeToExpire) ||
                                        cookie_GetWarningPref(),
                                        new_string);
+  }
   PR_FREEIF(new_string);
   if (!permission) {
     PR_FREEIF(path_from_header);
@@ -1464,7 +1467,9 @@ COOKIE_Remove
           }
           CKutil_StrAllocCopy(hostname, hostnameAfterDot);
           if (hostname) {
-            Permission_AddHost(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+            if (NS_SUCCEEDED(PERMISSION_Read())) {
+              Permission_AddHost(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+            }
           }
         }
         cookie_list->RemoveElementAt(count);
