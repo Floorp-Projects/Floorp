@@ -2808,10 +2808,13 @@ public:
                               XPCWrappedNativeScope* aScope,
                               JSObject* aGlobal);
 
+    void SystemIsBeingShutDown() {ClearMembers();}
+
     virtual ~nsXPCComponents();
 
 private:
     nsXPCComponents();
+    void ClearMembers();
 
 private:
     nsXPCComponents_Interfaces*  mInterfaces;
