@@ -16,10 +16,15 @@
  * Reserved.
  */
 
-// This header file just contains prototypes for the factory methods
-// for "builtin" data sources that are included in rdf.dll. Each of
-// these data sources is exposed to the external world via its CID in
-// ../include/nsRDFCID.h.
+/*
+
+  This header file just contains prototypes for the factory methods
+  for "builtin" data sources that are included in rdf.dll.
+
+  Each of these data sources is exposed to the external world via its
+  CID in ../include/nsRDFCID.h.
+
+ */
 
 #ifndef nsBuiltinDataSources_h__
 #define nsBuiltinDataSources_h__
@@ -32,15 +37,8 @@ class nsIRDFDataBase;
 // in nsBookmarkDataSource.cpp
 nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 
-#ifdef _WIN32
 // in nsMemoryDataSource.cpp
 nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
-#else
-// in nsMemoryDataSource.cpp
-nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
-#endif
-// in nsSimpleDataBase.cpp
-nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
 
 // in nsStreamDataSource.cpp
 nsresult NS_NewRDFStreamDataSource(nsIRDFDataSource** result);
