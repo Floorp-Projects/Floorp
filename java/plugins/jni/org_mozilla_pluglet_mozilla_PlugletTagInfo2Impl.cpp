@@ -40,6 +40,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttribute
     (JNIEnv *env, jobject jthis, jstring _name) {
+    if (!_name) {
+	return NULL;
+    }
     nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
     const char * name = NULL;
     if (!(name = env->GetStringUTFChars(_name,NULL))) {
