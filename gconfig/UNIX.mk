@@ -96,3 +96,7 @@ endif
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
 endef
+
+ifdef MOZ_TRACE_XPCOM_REFCNT
+DEFINES += -DMOZ_TRACE_XPCOM_REFCNT
+endif
