@@ -48,3 +48,31 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird"
 END
+
+#ifdef MOZ_STATIC_BUILD
+#include "wdgtos2rc.h"
+
+POINTER IDC_SELECTANCHOR   "..\\..\\widget\\src\\os2\\res\\\select.ptr"
+POINTER IDC_ARROWNORTH     "..\\..\\widget\\src\\os2\\res\\arrow_north.ptr"
+POINTER IDC_ARROWNORTHPLUS "..\\..\\widget\\src\\os2\\res\\arrow_north_plus.ptr"
+POINTER IDC_ARROWSOUTH     "..\\..\\widget\\src\\os2\\res\\arrow_south.ptr"
+POINTER IDC_ARROWSOUTHPLUS "..\\..\\widget\\src\\os2\\res\\arrow_south_plus.ptr"
+POINTER IDC_ARROWWEST      "..\\..\\widget\\src\\os2\\res\\arrow_west.ptr"
+POINTER IDC_ARROWWESTPLUS  "..\\..\\widget\\src\\os2\\res\\arrow_west_plus.ptr"
+POINTER IDC_ARROWEAST      "..\\..\\widget\\src\\os2\\res\\arrow_east.ptr"
+POINTER IDC_ARROWEASTPLUS  "..\\..\\widget\\src\\os2\\res\\arrow_east_plus.ptr"
+POINTER IDC_GRAB           "..\\..\\widget\\src\\os2\\res\\grab.ptr"
+POINTER IDC_GRABBING       "..\\..\\widget\\src\\os2\\res\\grabbing.ptr"
+POINTER IDC_CELL           "..\\..\\widget\\src\\os2\\res\\cell.ptr"
+POINTER IDC_COPY           "..\\..\\widget\\src\\os2\\res\\copy.ptr"
+POINTER IDC_ALIAS          "..\\..\\widget\\src\\os2\\res\\aliasb.ptr"
+POINTER IDC_ZOOMIN         "..\\..\\widget\\src\\os2\\res\\zoom_in.ptr"
+POINTER IDC_ZOOMOUT        "..\\..\\widget\\src\\os2\\res\\zoom_out.ptr"
+
+POINTER IDC_ARROWWAIT      "..\\..\\widget\\src\\os2\\res\\arrow_wait.ptr"
+POINTER IDC_CROSS          "..\\..\\widget\\src\\os2\\res\\crosshair.ptr"
+POINTER IDC_HELP           "..\\..\\widget\\src\\os2\\res\\help.ptr"
+
+ICON    IDC_DNDURL         "..\\..\\widget\\src\\os2\\res\\dndurl.ico"
+ICON    IDC_DNDTEXT        "..\\..\\widget\\src\\os2\\res\\dndtext.ico"
+#endif

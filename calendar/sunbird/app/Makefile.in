@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 
 #Remove for sunbird DIRS		= profile
 
-PREF_FILES = $(srcdir)/profile/all.js
+PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = MozillaSunbird$(BIN_SUFFIX)
@@ -65,6 +65,10 @@ CPPSRCS = nsCalendarApp.cpp
 
 ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
 LIBS = \
@@ -120,17 +124,16 @@ endif
 ifdef BUILD_STATIC_LIBS
 RCFLAGS += -DMOZ_STATIC_BUILD
 endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 ifdef BUILD_STATIC_LIBS
 EXE_DEF_FILE = browser.def
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-OS_LIBS += libuls.lib libconv.lib
-else
-OS_LIBS += -llibuni -luconv
-endif
+RCFLAGS += -d MOZ_STATIC_BUILD -i $(DIST)/include/widget
 endif
 endif
 
@@ -147,6 +150,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
 LIBS	+= -framework QuickTime -framework IOKit
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+LIBS += -lphexlib
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -181,15 +188,16 @@ $(EXE_DEF_FILE):
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
 
-LDFLAGS += /NOE
+LDFLAGS += -Zlinker /NOE
 endif
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 MozillaSunbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+                -e "s|%MOZ_USER_DIR%|.sunbird|" \
 		-e "s|%MREDIR%|$(mredir)|" \
-		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
+		-e "s|%MOZILLA-BIN%|$(PROGRAM)|g" > $@
 	chmod +x $@
 
 libs:: MozillaSunbird
@@ -199,26 +207,20 @@ install:: MozillaSunbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += MozillaSunbird
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, sunbird.js)
 
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-libs::
-	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons
+libs:: default.xpm
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
+install:: default.xpm
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/icons
 endif
-
-export:: $(PREF_FILES)
-	@for i in $(PREF_FILES); do rm -f $(DIST)/bin/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/defaults/pref/`basename $$i`; done
 
 export:: brand.dtd.in
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
-
-install:: $(PREF_FILES)
-	@for i in $(PREF_FILES); do rm -f $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; done
 
 libs::
 	touch $(DIST)/bin/.autoreg
@@ -234,7 +236,7 @@ libs:: $(PROGRAM)
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
-	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
+	cp -RL $(srcdir)/macbuild/sunbird.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
@@ -242,3 +244,9 @@ libs:: $(PROGRAM)
 clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app
 endif
+
+README_FILE = $(topsrcdir)/README.txt
+
+libs::
+	$(INSTALL) $(README_FILE) $(DIST)/bin
+	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin

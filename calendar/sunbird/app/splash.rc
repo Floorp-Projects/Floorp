@@ -41,34 +41,18 @@
 
 1 24 "MozillaSunbird.exe.manifest"
 
-// Program icon.
-IDI_APPLICATION ICON
-	"mozilla.ico"
-
-// Splash screen dialog.
-IDD_SPLASH DIALOGEX
-	DISCARDABLE
-	0,0,0,0
-	STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP
-    EXSTYLE WS_EX_TOOLWINDOW
-	FONT 8, "MS Sans Serif"
-	BEGIN
-		CONTROL
-            		IDB_SPLASH,
-			IDB_SPLASH,
-			"Static",
-			SS_BITMAP,
-			0,0,0,0
-	END
-
-// Splash screen bitmap.
-// IDB_SPLASH BITMAP
-// 	"splash.bmp"
+IDI_APPICON ICON "sunbird.ico"
+IDI_APPLICATION ICON "sunbird.ico"
 
 STRINGTABLE DISCARDABLE
 BEGIN
+#ifdef DEBUG
+    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird Debug"
+    IDS_STARTMENU_APPNAME,              "Mozilla Sunbird Debug"
+#else
     ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird"
     IDS_STARTMENU_APPNAME,              "Mozilla Sunbird"
+#endif
 END
 
 #ifdef MOZ_STATIC_BUILD

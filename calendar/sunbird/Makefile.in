@@ -56,6 +56,7 @@ sunbirddirs::
 	mkdir -p ./MozillaSunbird/chrome/overlayinfo/messenger/content/
 	mkdir -p ./MozillaSunbird/chrome/overlayinfo/browser/content/
 	mkdir -p ./MozillaSunbird/components/
+	mkdir -p ./MozillaSunbird/greprefs
 	mkdir -p ./MozillaSunbird/defaults/pref
 	mkdir -p ./MozillaSunbird/defaults/profile/chrome
 	mkdir -p ./MozillaSunbird/defaults/profile/US/chrome
@@ -102,11 +103,9 @@ endif
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/navigator/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/navigator/content
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/browser/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/browser/content
 	cp $(topsrcdir)/dist/bin/chrome/overlayinfo/messenger/content/overlays.rdf ./MozillaSunbird/chrome/overlayinfo/messenger/content
-	cp $(topsrcdir)/dist/bin/defaults/pref/security-prefs.js ./MozillaSunbird/defaults/pref
+	cp $(topsrcdir)/dist/bin/greprefs/security-prefs.js ./MozillaSunbird/greprefs/pref
 	cp $(topsrcdir)/dist/bin/defaults/pref/all.js ./MozillaSunbird/defaults/pref
-	cp $(topsrcdir)/dist/bin/defaults/pref/mailnews.js ./MozillaSunbird/defaults/pref
-	cp $(topsrcdir)/dist/bin/defaults/pref/editor.js ./MozillaSunbird/defaults/pref
-	cp $(topsrcdir)/dist/bin/defaults/pref/xpinstall.js ./MozillaSunbird/defaults/pref
+	cp $(topsrcdir)/dist/bin/greprefs/xpinstall.js ./MozillaSunbird/greprefs
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userContent-example.css ./MozillaSunbird/defaults/profile/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/chrome/userChrome-example.css ./MozillaSunbird/defaults/profile/chrome
 	cp $(topsrcdir)/dist/bin/defaults/profile/US/chrome/userContent-example.css ./MozillaSunbird/defaults/profile/US/chrome
@@ -295,7 +294,6 @@ sunbirdunix::
 	cp $(topsrcdir)/dist/bin/components/nsFilePicker.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/mozilla-xremote-client ./MozillaSunbird/
 	cp $(topsrcdir)/dist/bin/run-mozilla.sh ./MozillaSunbird/
-	cp $(topsrcdir)/dist/bin/defaults/pref/unix.js ./MozillaSunbird/defaults/pref
 	cp $(topsrcdir)/dist/bin/res/unixcharset.properties ./MozillaSunbird/res
 	cp $(topsrcdir)/dist/bin/res/sample.unixpsfonts.properties ./MozillaSunbird/res
 
