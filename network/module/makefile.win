@@ -79,12 +79,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME)
 #//
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE  -DB1M -D_IMPL_NS_NET
-LLIBS=$(LLIBS)  $(LIBNSPR)                  \
-                $(DIST)\lib\libplc21.lib    \
-                $(DIST)\lib\js3240.lib      \
-                $(DIST)\lib\xppref32.lib    \
-                $(DIST)\lib\xpcom32.lib     \
-		$(DIST)\lib\xplib.lib       \
+
+NETLIBS=\
 		$(DIST)\lib\abouturl.lib    \
 		$(DIST)\lib\fileurl.lib     \
 		$(DIST)\lib\ftpurl.lib      \
@@ -94,7 +90,16 @@ LLIBS=$(LLIBS)  $(LIBNSPR)                  \
 		$(DIST)\lib\netcache.lib    \
 		$(DIST)\lib\netcnvts.lib    \
 		$(DIST)\lib\network.lib     \
+		$(NULL)
+
+LLIBS=$(LLIBS)  $(LIBNSPR)                  \
+                $(DIST)\lib\libplc21.lib    \
+                $(DIST)\lib\js3240.lib      \
+                $(DIST)\lib\xppref32.lib    \
+                $(DIST)\lib\xpcom32.lib     \
+		$(DIST)\lib\xplib.lib       \
                 $(DIST)\lib\raptorbase.lib  \
+		$(NETLIBS)                  \
 		$(NULL)
 
 LINCS=$(LINCS)  -I.                         \
@@ -125,6 +130,8 @@ GARBAGE = $(GARBAGE) _gen
 #//
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
+
+$(DLL): $(NETLIBS)
 
 libs:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
