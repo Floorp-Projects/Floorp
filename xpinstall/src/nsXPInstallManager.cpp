@@ -481,7 +481,7 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
             offset = URL.RFind("/");
             if (offset != -1)
             {
-                URL.Cut(offset + 1, URL.mLength - 1);
+                URL.Cut(offset + 1, URL.Length() - 1);
                 ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
             }
             paramIndex++;
@@ -498,7 +498,7 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
                 moduleName.Cut(0, offset + 1);
                 ioParamBlock->SetString(paramIndex, moduleName.ToNewUnicode());
                 paramIndex++;
-                URL.Cut(offset + 1, URL.mLength - 1); 
+                URL.Cut(offset + 1, URL.Length() - 1); 
                 ioParamBlock->SetString(paramIndex, URL.ToNewUnicode());
             }
             paramIndex++;
