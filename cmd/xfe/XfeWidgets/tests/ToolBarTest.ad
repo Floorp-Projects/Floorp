@@ -45,7 +45,7 @@ ToolBarTest*ToolBar.highlighted:			True
 !ToolBarTest*ToolBar.borderWidth:			1
 !ToolBarTest*ToolBar.borderColor:			Red
 
-ToolBarTest*ToolBar.orientation:			vertical
+!ToolBarTest*ToolBar.orientation:			vertical
 
 ToolBarTest*ToolBar.spacing:				0
 
@@ -101,6 +101,29 @@ ToolBarTest*hsep.shadowThickness:			3
 ToolBarTest*hsep.background:				Gray70
 ToolBarTest*hsep.width:						20
 
+
+ToolBarTest*Scale.leftAttachment:		        attach_form
+ToolBarTest*Scale.topAttachment:			attach_widget
+ToolBarTest*Scale.bottomAttachment:		        attach_none
+ToolBarTest*Scale.rightAttachment:		        attach_none
+ToolBarTest*Scale.leftOffset:				5
+ToolBarTest*Scale.topOffset:				50
+ToolBarTest*Scale.topWidget:			        ToolBar
+ToolBarTest*Scale.orientation:			        horizontal
+
+
+ToolBarTest*Hide.leftAttachment:		        attach_widget
+ToolBarTest*Hide.topAttachment:			        attach_widget
+ToolBarTest*Hide.bottomAttachment:		        attach_none
+ToolBarTest*Hide.rightAttachment:		        attach_none
+ToolBarTest*Hide.leftOffset:				5
+ToolBarTest*Hide.topOffset:				50
+ToolBarTest*Hide.topWidget:			        ToolBar
+ToolBarTest*Hide.leftWidget:			        Scale
+ToolBarTest*Hide.leftOffset:				50
+ToolBarTest*Hide.labelString:				Hide Indicator
+
+ToolBarTest*ToolBar*Indicator.background:		Red
 
 
 

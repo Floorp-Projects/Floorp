@@ -23,8 +23,10 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #include <Xfe/XfeTest.h>
+
+static void		scale_cb			(Widget,XtPointer,XtPointer);
+static void		hide_cb				(Widget,XtPointer,XtPointer);
 
 /*----------------------------------------------------------------------*/
 int
@@ -33,6 +35,8 @@ main(int argc,char *argv[])
 	Widget		form;
 	Widget		frame;
     Widget		tool_bar;
+    Widget		scale;
+    Widget		hide;
     
 	XfeAppCreateSimple("ToolBarTest",&argc,argv,"MainFrame",&frame,&form);
     
@@ -40,16 +44,62 @@ main(int argc,char *argv[])
 									  "ToolBar",
 									  "Tool",
 									  50,
-									  20,
+/* 									  20, */
+									  0,
 									  XfeArmCallback,
 									  XfeDisarmCallback,
 									  XfeActivateCallback,
 									  NULL);
+
+    scale = XtVaCreateManagedWidget("Scale",
+                                    xmScaleWidgetClass,
+                                    form,
+									NULL);
+
+	XtAddCallback(scale,XmNvalueChangedCallback,scale_cb,tool_bar);
+	XtAddCallback(scale,XmNdragCallback,scale_cb,tool_bar);
+
+    hide = XtVaCreateManagedWidget("Hide",
+                                    xmPushButtonWidgetClass,
+                                    form,
+									NULL);
+
+	XtAddCallback(hide,XmNactivateCallback,hide_cb,tool_bar);
 
 	XtPopup(frame,XtGrabNone);
 	
     XfeAppMainLoop();
 
 	return 0;
+}
+/*----------------------------------------------------------------------*/
+static void
+scale_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	Widget		tool_bar = (Widget) client_data;
+	int			value;
+
+	assert( XfeIsAlive(tool_bar) );
+
+	XmScaleGetValue(w,&value);
+
+	value = value % 10;
+
+	printf("%s(%s,%d)\n",__FUNCTION__,XtName(w),value);
+
+	XtVaSetValues(tool_bar,XmNindicatorPosition,value,NULL);
+}
+/*----------------------------------------------------------------------*/
+static void
+hide_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	Widget		tool_bar = (Widget) client_data;
+
+	assert( XfeIsAlive(tool_bar) );
+
+
+	printf("%s(%s)\n",__FUNCTION__,XtName(w));
+
+	XtVaSetValues(tool_bar,XmNindicatorPosition,-1,NULL);
 }
 /*----------------------------------------------------------------------*/
