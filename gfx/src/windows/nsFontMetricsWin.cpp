@@ -146,6 +146,7 @@ static nsICharsetConverterManager2* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
 static nsIPref* gPref = nsnull;
+static nsIFontPackageProxy* gFontPackageProxy = nsnull;
 
 static nsIAtom* gUsersLocale = nsnull;
 static nsIAtom* gSystemLocale = nsnull;
@@ -154,18 +155,6 @@ static nsIAtom* gJA = nsnull;
 static nsIAtom* gKO = nsnull;
 static nsIAtom* gZHTW = nsnull;
 static nsIAtom* gZHCN = nsnull;
-static BOOL gCheckJAFont = PR_FALSE;
-static BOOL gHaveJAFont = PR_FALSE;
-static BOOL gHitJACase = PR_FALSE;
-static BOOL gCheckKOFont = PR_FALSE;
-static BOOL gHaveKOFont = PR_FALSE;
-static BOOL gHitKOCase = PR_FALSE;
-static BOOL gCheckZHTWFont = PR_FALSE;
-static BOOL gHaveZHTWFont = PR_FALSE;
-static BOOL gHitZHTWCase = PR_FALSE;
-static BOOL gCheckZHCNFont = PR_FALSE;
-static BOOL gHaveZHCNFont = PR_FALSE;
-static BOOL gHitZHCNCase = PR_FALSE;
 
 static int gInitialized = 0;
 
@@ -202,6 +191,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gSystemLocale);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
+  NS_IF_RELEASE(gFontPackageProxy);
   if (gUserDefinedCCMap)
     FreeCCMap(gUserDefinedCCMap);
   NS_IF_RELEASE(gJA);
@@ -373,36 +363,28 @@ InitGlobals(void)
       rv = observerService->AddObserver(gFontCleanupObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     }    
   }
-  
   gInitialized = 1;
 
   return NS_OK;
 }
 
-static void
-CheckFontLangGroup(
-     nsIAtom* lang1, nsIAtom* lang2, const char* lang3, PRBool& hit,
-     PRBool& check, PRBool& have)
+static void CheckFontLangGroup(nsIAtom* lang1, nsIAtom* lang2, const char* lang3)
 {
-  if (!have && !hit && (lang1 == lang2)) {
-     hit = PR_TRUE; // so next time we don't bother to ask
-     if (!check) {
-       nsFontEnumeratorWin enumerator;
-       if (NS_SUCCEEDED(enumerator.HaveFontFor(lang3, &have)))
-         check = PR_TRUE; // so next time we don't bother to check.
-     }
-     if (!have) {
-       nsresult res = NS_OK;
-       nsCOMPtr<nsIFontPackageProxy> proxy = do_GetService("@mozilla.org/intl/fontpackageservice;1", &res);
-       NS_ASSERTION(NS_SUCCEEDED(res), "cannot get the font package proxy");
-       NS_ASSERTION(proxy, "cannot get the font package proxy");
-       if (proxy) {
-         char fontpackageid[256];
-         PR_snprintf(fontpackageid, sizeof(fontpackageid), "lang:%s", lang3);
-         res = proxy->NeedFontPackage(fontpackageid);
-         NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
-       }
-     }
+  if (lang1 == lang2) {
+    nsresult res = NS_OK;
+    if (!gFontPackageProxy) {
+      res = nsServiceManager::GetService("@mozilla.org/intl/fontpackageservice;1",
+                    NS_GET_IID(nsIFontPackageProxy), (nsISupports**) &gFontPackageProxy);
+      if (NS_FAILED(res)) {
+        NS_ERROR("Cannot get the font package proxy");
+        return;
+      }
+    }
+
+    char fontpackageid[256];
+    PR_snprintf(fontpackageid, sizeof(fontpackageid), "lang:%s", lang3);
+    res = gFontPackageProxy->NeedFontPackage(fontpackageid);
+    NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
   }
 }
 
@@ -473,10 +455,10 @@ nsFontMetricsWin::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   // * use fonts?
   PRInt32 useDccFonts = 0;
   if (NS_SUCCEEDED(gPref->GetIntPref("browser.display.use_document_fonts", &useDccFonts)) && (useDccFonts != 0)) {
-    CheckFontLangGroup(mLangGroup, gJA,   "ja",    gHitJACase,   gCheckJAFont,   gHaveJAFont);
-    CheckFontLangGroup(mLangGroup, gKO,   "ko",    gHitKOCase,   gCheckKOFont,   gHaveKOFont);
-    CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW", gHitZHTWCase, gCheckZHTWFont, gHaveZHTWFont);
-    CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN", gHitZHCNCase, gCheckZHCNFont, gHaveZHCNFont);
+    CheckFontLangGroup(mLangGroup, gJA,   "ja");
+    CheckFontLangGroup(mLangGroup, gKO,   "ko");
+    CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW");
+    CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN");
   }
 
   //don't addref this to avoid circular refs

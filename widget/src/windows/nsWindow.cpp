@@ -52,6 +52,7 @@
 #include "nsIAppShell.h"
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h" 
+#include "nsIFontPackageService.h"
 #include "nsIPref.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
@@ -3205,16 +3206,22 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               fontEnum->UpdateFontList(&didChange);
               //didChange is TRUE only if new font langGroup is added to the list.
               if (didChange)  {
-                // update device context font cache
-                // Dirty but easiest way: 
-                // Changing nsIPref entry which triggers callbacks
-                // and flows into calling mDeviceContext->FlushFontCache()
-                // to update the font cache in all the instance of Browsers
-                nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
-                if (NS_SUCCEEDED(rv)) { 
-                  PRBool fontInternalChange = PR_FALSE;  
-                  pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
-                  pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
+                nsCOMPtr<nsIFontPackageService> proxy = do_GetService("@mozilla.org/intl/fontpackageservice;1", &rv);
+                if (proxy) {
+                  // font in the system is changed.  Notify the font download service.
+                  proxy->FontPackageHandled(PR_FALSE, PR_FALSE, "");
+
+                  // update device context font cache
+                  // Dirty but easiest way: 
+                  // Changing nsIPref entry which triggers callbacks
+                  // and flows into calling mDeviceContext->FlushFontCache()
+                  // to update the font cache in all the instance of Browsers
+                  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+                  if (NS_SUCCEEDED(rv)) { 
+                    PRBool fontInternalChange = PR_FALSE;  
+                    pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
+                    pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
+                  }                
                 }
               }
             } //if (NS_SUCCEEDED(rv))

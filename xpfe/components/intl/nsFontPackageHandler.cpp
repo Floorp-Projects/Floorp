@@ -90,6 +90,10 @@ NS_IMETHODIMP nsFontPackageHandler::NeedFontPackage(const char *aFontPackID)
               "chrome,centerscreen,titlebar,resizable", 
               nsnull, 
               getter_AddRefs(dialog));
+
+  nsCOMPtr<nsIFontPackageService> fontService(do_GetService(NS_FONTPACKAGESERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(fontService, NS_ERROR_FAILURE);
+  fontService->FontPackageHandled(NS_SUCCEEDED(rv), PR_FALSE, aFontPackID);
   return rv;
 }
 

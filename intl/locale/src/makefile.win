@@ -28,6 +28,7 @@ DEFINES		= -D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
 MODULE		= locale
 REQUIRES	= xpcom \
+		  gfx \
 		  string \
 		  uconv \
 		  unicharutil \

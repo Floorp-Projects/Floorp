@@ -54,4 +54,5 @@ public:
 
 protected:
   nsCOMPtr<nsIFontPackageHandler> mHandler;
+  nsresult CallDownload(const char *aFontPackID, PRInt8 aInState, PRInt8 *aOutState);
 };
