@@ -486,7 +486,7 @@ nsFormHistory::OpenExistingFile(const char *aPath)
   NS_ENSURE_TRUE(!err && thumb, NS_ERROR_FAILURE);
 
   PRBool done;
-  UseThumb(thumb, &done);
+  mdb_err thumbErr = UseThumb(thumb, &done);
 
   if (err == 0 && done)
     err = gMdbFactory->ThumbToOpenStore(mEnv, thumb, &mStore);
@@ -503,6 +503,9 @@ nsFormHistory::OpenExistingFile(const char *aPath)
     return NS_ERROR_FAILURE;
   }
 
+  if (NS_FAILED(thumbErr))
+    err = thumbErr;
+
   return err ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -514,6 +517,8 @@ nsFormHistory::CreateNewFile(const char *aPath)
   mdb_err err = gMdbFactory->CreateNewFile(mEnv, dbHeap, aPath, getter_AddRefs(newFile));
   NS_ENSURE_TRUE(!err && newFile, NS_ERROR_FAILURE);
 
+  nsCOMPtr <nsIMdbTable> oldTable = mTable;;
+  nsCOMPtr <nsIMdbStore> oldStore = mStore;
   mdbOpenPolicy policy = {{0, 0}, 0, 0};
   err = gMdbFactory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
@@ -524,6 +529,11 @@ nsFormHistory::CreateNewFile(const char *aPath)
   // Create the one and only table in the database
   err = mStore->NewTable(mEnv, kToken_RowScope, kToken_Kind, PR_TRUE, nsnull, &mTable);
   NS_ENSURE_TRUE(!err && mTable, NS_ERROR_FAILURE);
+
+   // oldTable will only be set if we detected a corrupt db, and are 
+   // trying to restore data from it.
+  if (oldTable)
+    CopyRowsFromTable(oldTable);
 
   // Force a commit now to get it written out.
   nsCOMPtr<nsIMdbThumb> thumb;
@@ -614,6 +624,32 @@ nsFormHistory::UseThumb(nsIMdbThumb *aThumb, PRBool *aDone)
     *aDone = done;
   
   return err ? NS_ERROR_FAILURE : NS_OK;
+}
+
+nsresult
+nsFormHistory::CopyRowsFromTable(nsIMdbTable *sourceTable)
+{
+  nsCOMPtr<nsIMdbTableRowCursor> rowCursor;
+  mdb_err err = sourceTable->GetTableRowCursor(mEnv, -1, getter_AddRefs(rowCursor));
+  NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
+  
+  nsIMdbRow *row = nsnull;
+  mdb_pos pos;
+  do {
+    rowCursor->NextRow(mEnv, &row, &pos);
+    if (!row)
+      break;
+
+    mdbOid rowId;
+    rowId.mOid_Scope = kToken_RowScope;
+    rowId.mOid_Id = mdb_id(-1);
+
+    nsCOMPtr<nsIMdbRow> newRow;
+    mdb_err err = mTable->NewRow(mEnv, &rowId, getter_AddRefs(newRow));
+    newRow->SetRow(mEnv, row);
+    mTable->AddRow(mEnv, newRow);
+  } while (row);
+  return NS_OK;
 }
 
 nsresult

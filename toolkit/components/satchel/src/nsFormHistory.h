@@ -81,6 +81,7 @@ protected:
   nsresult CloseDatabase();
   nsresult CreateTokens();
   nsresult Flush();
+  nsresult CopyRowsFromTable(nsIMdbTable *sourceTable);
   
   mdb_err UseThumb(nsIMdbThumb *aThumb, PRBool *aDone);
   
