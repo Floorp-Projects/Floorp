@@ -136,7 +136,7 @@ create table checkins (
 	branchid mediumint not null,
 	addedlines int not null,
 	removedlines int not null,
-	descid mediumint,
+	descid mediumint not null,
 
 	unique (repositoryid,dirid,fileid,revision),
 	index(ci_when),
@@ -144,7 +144,8 @@ create table checkins (
 	index(repositoryid),
 	index(dirid),
 	index(fileid),
-	index(branchid)
+	index(branchid),
+	index(descid)
 );
 
 show columns from checkins;
