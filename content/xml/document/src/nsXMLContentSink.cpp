@@ -249,9 +249,6 @@ nsXMLContentSink::DidBuildModel()
     }
   }
 
-  // Check if we want to prettyprint
-  MaybePrettyPrint();
-
   if (mXSLTProcessor) {
     nsCOMPtr<nsIDOMDocument> currentDOMDoc(do_QueryInterface(mDocument));
     mXSLTProcessor->SetSourceContentModel(currentDOMDoc);
@@ -280,6 +277,9 @@ nsXMLContentSink::DidBuildModel()
                                mDocument->IndexOf(mDocElement));
     mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     
+    // Check if we want to prettyprint
+    MaybePrettyPrint();
+
     StartLayout();
 
 #if 0 /* Disable until this works for XML */
@@ -370,7 +370,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     NS_ASSERTION(mDocument->IndexOf(rootContent) != -1,
                  "rootContent not in doc?");
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    mDocument->ContentInserted(nsnull, mDocElement,
+    mDocument->ContentInserted(nsnull, rootContent,
                                // XXXbz is this last arg relevant if
                                // the container is null?
                                mDocument->IndexOf(rootContent));
