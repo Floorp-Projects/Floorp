@@ -117,8 +117,6 @@ ListCerts(char *key, int list_certs)
 	if (key) {
 		/* Do an analysis of the given cert */
 
-		SECStatus rv;
-
 		cert = PK11_FindCertFromNickname(key, NULL /*wincx*/);
 
 		if (cert) {
@@ -167,6 +165,9 @@ ListCerts(char *key, int list_certs)
 		PORT_FreeArena(errlog.arena, PR_FALSE);
 	}
 
+	if (rv != SECSuccess) {
+		return -1;
+	}
 	return 0;
 }
 

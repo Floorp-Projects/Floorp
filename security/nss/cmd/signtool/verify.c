@@ -49,6 +49,7 @@ VerifyJar(char *filename)
 
   int ret;
   int status;
+  int failed = 0;
   char *err;
 
   JAR *jar;
@@ -102,7 +103,8 @@ VerifyJar(char *filename)
     PR_fprintf(outputFD,
 		"archive \"%s\" has passed crypto verification.\n", filename);
 
-  verify_global (jar);
+  if (verify_global (jar))
+    failed = 1;
 
   PR_fprintf(outputFD, "\n");
   PR_fprintf(outputFD, "%16s   %s\n", "status", "path");
@@ -117,6 +119,7 @@ VerifyJar(char *filename)
 	rm_dash_r(TMP_OUTPUT);
       ret = JAR_verified_extract (jar, it->pathname, TMP_OUTPUT);
       /* if (ret < 0) printf ("error %d on %s\n", ret, it->pathname); */
+      if (ret < 0) failed = 1;
 
       if (ret == JAR_ERR_PNF)
         err = "NOT PRESENT";
@@ -144,6 +147,10 @@ VerifyJar(char *filename)
 
   JAR_destroy (jar);
 
+  if (status < 0)
+    return status;
+  if (jar->valid < 0 || failed)
+    return ERRX;
   return 0;
 }
 
@@ -167,6 +174,8 @@ verify_global (JAR *jar)
   char buf [BUFSIZ];
 
   unsigned char *md5_digest, *sha1_digest;
+
+  int retval = 0;
 
   ctx = JAR_find (jar, "*", jarTypePhy);
 
@@ -203,6 +212,7 @@ verify_global (JAR *jar)
 				PR_fprintf(errorFD, "%s: error extracting %s\n", PROGRAM_NAME,
 				  it->pathname);
 				errorCount++;
+				retval = -1;
 				continue;
 			}
 
@@ -266,14 +276,14 @@ verify_global (JAR *jar)
 
   JAR_find_end (ctx);
 
-  return 0;
+  return retval;
 }
 
 /************************************************************************
  *
  * J a r W h o
  */
-void
+int
 JarWho(char *filename)
   {
   FILE *fp;
@@ -282,6 +292,7 @@ JarWho(char *filename)
   JAR_Context *ctx;
 
   int status;
+  int retval = 0;
 
   JAR_Item *it;
   JAR_Cert *fing;
@@ -304,6 +315,7 @@ JarWho(char *filename)
     {
     PR_fprintf(outputFD,
 		"NOTE -- \"%s\" archive DID NOT PASS crypto verification.\n", filename);
+    retval = -1;
     if (jar->valid < 0 || status != -1)
       {
       char *errtext;
@@ -351,6 +363,7 @@ JarWho(char *filename)
   JAR_find_end (ctx);
 
   JAR_destroy (jar);
+  return retval;
 }
 
 /************************************************************************
