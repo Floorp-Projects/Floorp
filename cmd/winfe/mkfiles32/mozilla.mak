@@ -1294,9 +1294,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\csttlbr2.cpp
 !ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\custom.cpp
-	$(DEPTH)\cmd\winfe\cuvfm.cpp
-	$(DEPTH)\cmd\winfe\cuvfs.cpp
-	$(DEPTH)\cmd\winfe\cvffc.cpp
 !endif
 	$(DEPTH)\cmd\winfe\cxabstra.cpp   
 	$(DEPTH)\cmd\winfe\cxdc.cpp   

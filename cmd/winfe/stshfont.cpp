@@ -18,14 +18,4 @@
 
 #include "stdafx.h"
 
-#include "cvffc.h"
 
-void STARTUP_cvffc(void)
-{
-	CVirtualFontFontCache::Init();
-}
-
-void SHUTDOWN_cvffc(void)
-{
-	CVirtualFontFontCache::Reset();
-}

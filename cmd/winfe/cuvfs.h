@@ -16,26 +16,3 @@
  * Reserved.
  */
 
-#ifndef __CUVFS_H
-#define __CUVFS_H
-#include "stdafx.h"
-//------------------------------------------------------------------------------------------------
-//
-//	CIntlUnicodeVirtualFontStrategy
-//
-//------------------------------------------------------------------------------------------------
-//
-//	CIntlUnicodeVirtualFontStrategy class is a static class that handles UTF8 Virtual Font
-//	text rendering. 
-//	The implementation of CIntlUnicodeVirtualFontStrategy will switch the font and
-//  call the member of CIntlWin to do the actual drawing
-//  
-class CIntlUnicodeVirtualFontStrategy {
-public:
-	static BOOL GetTextExtentPoint(HDC hDC, LPCSTR pString, int iLength, LPSIZE lpSize);
-	static BOOL TextOut(HDC hDC, int nXStart, int nYStart, LPCSTR lpString, int iLength);
-	static BOOL GetTextExtentPointWithCyaFont(CyaFont *theNSFont, HDC hDC, LPCSTR pString, int iLength, LPSIZE lpSize);
-	static BOOL TextOutWithCyaFont(CyaFont *theNSFont, HDC hDC, int nXStart, int nYStart, LPCSTR lpString, int iLength);
-
-};
-#endif

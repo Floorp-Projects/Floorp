@@ -16,36 +16,3 @@
  * Reserved.
  */
 
-//------------------------------------------------------------------------------
-//      Author: Frank Tang ftang@netscape.com x2913
-//
-//      Virtual Font Cacahe used for Unicode rendering
-//------------------------------------------------------------------------------
-#ifndef   __CVFFC_H
-#define   __CVFFC_H
-#include "stdafx.h"
-
-class CVirtualFontFontCache {
-public:
-static void Init();
-static void Exit();
-static void Reset();
-
-static void ResetCyacache();
-static BOOL Get(	int16 encoding, int size, BOOL fixed, BOOL bold,
-			BOOL italic, BOOL underline, CyaFont*& pFont );
-static BOOL Add(	int16 encoding, int size, BOOL fixed, BOOL bold,
-			BOOL italic, BOOL underline, CyaFont*& pFont );
-
-static BOOL Get(	int16 encoding, int size, BOOL fixed, BOOL bold,
-			BOOL italic, BOOL underline, CFont*& pFont );
-static BOOL Add(	int16 encoding, int size, BOOL fixed, BOOL bold,
-			BOOL italic, BOOL underline, CFont*& pFont );
-
-
-private:
-static CMapWordToOb* m_cache;
-
-static CMapWordToOb* m_Cyacache;
-};
-#endif

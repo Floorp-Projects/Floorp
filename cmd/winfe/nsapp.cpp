@@ -25,7 +25,6 @@
 
 // XP Includes
 #include "np.h"
-#include "cvffc.h"
 
 #include "prefapi.h"
 

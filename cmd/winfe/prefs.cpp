@@ -42,7 +42,6 @@
 #include "winprefs/ibrprefs.h"
 #include "winprefs/prefuiid.h"
 #include "winprefs/prefui.h"
-#include "cvffc.h"
 #ifdef EDITOR
 #include "edt.h"
 #endif // EDITOR
@@ -847,8 +846,6 @@ CAppearancePrefs::SetEncodingFonts(DWORD dwCharsetNum, LPENCODINGINFO lpInfo)
 		CDCCX::ClearAllFontCaches();
 #ifdef MOZ_NGLAYOUT
   XP_ASSERT(0);
-#else
-		CVirtualFontFontCache::Reset();
 #endif /* MOZ_NGLAYOUT */
 		theApp.m_pIntlFont->WriteToIniFile();
 

@@ -102,7 +102,6 @@ public:
 #else
 	inline static BOOL UseUnicodeFontAPI(int16 wincsid) { return FALSE; };
 #endif
-	static BOOL UseVirtualFont(); 
 
 	static int16 GetSystemLocaleCsid();
 	static int16 CodePageToCsid(UINT cp);

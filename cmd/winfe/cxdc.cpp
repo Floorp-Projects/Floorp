@@ -761,7 +761,7 @@ int CDCCX::SelectNetscapeFont( HDC hdc, LO_TextAttr *pAttr, CyaFont *& pMyFont )
 	int		isUnicode = 0;
 #ifdef XP_WIN32
 	if ( CIntlWin::UseUnicodeFontAPI( pEncoding->iCSID ) &&
-		 ! ( pEncoding->iCSID == CS_UTF8  && CIntlWin::UseVirtualFont()) ) {
+		 ! ( pEncoding->iCSID == CS_UTF8 ) ) {
 		// set the encording to use ::TextOutW()
 		pEncordingStr	= "Unicode";
 		isUnicode		= 1;
