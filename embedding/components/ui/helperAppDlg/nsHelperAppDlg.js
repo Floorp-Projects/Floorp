@@ -48,7 +48,7 @@ function nsHelperAppDialog() {
 
 nsHelperAppDialog.prototype = {
     // Turn this on to get debugging messages.
-    debug: true,
+    debug: false,
 
     // Dump text (if debug is on).
     dump: function( text ) {
@@ -99,7 +99,6 @@ nsHelperAppDialog.prototype = {
                            .createBundle( "chrome://global/locale/helperAppLauncher.properties");
 
         var windowTitle = bundle.GetStringFromName( "saveDialogTitle" );
-
         
         var parent = aContext
                         .QueryInterface( Components.interfaces.nsIInterfaceRequestor )
@@ -284,9 +283,9 @@ nsHelperAppDialog.prototype = {
                     if ( !app.exists() ) {
                         // Show alert and try again.
                         var msg = this.replaceInsert( this.getString( "badApp" ), 1, app.unicodePath );
-                        var dlgs = Components.classes[ "@mozilla.org/appshell/commonDialogs;1" ]
-                                      .getService( Components.interfaces.nsICommonDialogs );
-                        dlgs.Alert( this.mDialog, this.getString( "badApp.title" ), msg );
+                        var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
+                                      .getService( Components.interfaces.nsIPromptService );
+                        svc.alert( this.mDialog, this.getString( "badApp.title" ), msg );
                         // Disable the OK button.
                         this.dialogElement( "ok" ).disabled = true;
                         // Leave dialog up.
