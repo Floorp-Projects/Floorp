@@ -309,8 +309,6 @@ PK11_ImportEncryptedPrivateKeyInfo;
 PK11_ImportPrivateKeyInfo;
 PK11_MapPBEMechanismToCryptoMechanism;
 PK11_PBEKeyGen;
-PK11_CreatePBEParams;
-PK11_DestroyPBEParams;
 PK11_ParamFromAlgid;
 PK11_ParamToAlgid;
 PK11_TraverseCertsForNicknameInSlot;
@@ -546,6 +544,17 @@ SECKEY_ImportDERPublicKey;
 SECKEY_NewPrivateKeyList;
 SECKEY_RemovePrivateKeyListNode;
 VFY_EndWithSignature;
+;+    local:
+;+       *;
+;+};
+;+NSS_3.3.1 { 	# NSS 3.3.1 release
+;+    global:
+;+#
+;+# The following symbols are exported only to make libsmime3.so work. 
+;+# These are still private!!!
+;+#
+PK11_CreatePBEParams;
+PK11_DestroyPBEParams;
 ;+    local:
 ;+       *;
 ;+};
