@@ -44,17 +44,17 @@ NS_DECLARE_ID(kUnicodeToISO2022JPCID,
 
 // Class ID for our UnicodeToJISx0201 charset converter
 // {BA615191-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUnicodeToJISx0201, 
+NS_DECLARE_ID(kUnicodeToJISx0201CID, 
   0xba615191, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 // Class ID for our UnicodeToJISx0208 charset converter
 // {BA615192-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUnicodeToJISx0208, 
+NS_DECLARE_ID(kUnicodeToJISx0208CID, 
   0xba615192, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 // Class ID for our UnicodeToJISx0212 charset converter
 // {BA615193-1DFA-11d3-B3BF-00805F8A6670}
-NS_DECLARE_ID(kUnicodeToJISx0212, 
+NS_DECLARE_ID(kUnicodeToJISx0212CID, 
   0xba615193, 0x1dfa, 0x11d3, 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
 
 
