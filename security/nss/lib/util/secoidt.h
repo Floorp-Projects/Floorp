@@ -40,7 +40,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.14 2003/03/29 00:18:30 nelsonb%netscape.com Exp $
+ * $Id: secoidt.h,v 1.15 2003/06/06 04:48:45 nelsonb%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -385,6 +385,19 @@ typedef enum {
     SEC_OID_SECG_EC_SECT571R1       = 259,
 
     SEC_OID_NETSCAPE_AOLSCREENNAME  = 260,
+
+    SEC_OID_AVA_SURNAME              = 261,
+    SEC_OID_AVA_SERIAL_NUMBER        = 262,
+    SEC_OID_AVA_STREET_ADDRESS       = 263,
+    SEC_OID_AVA_TITLE                = 264,
+    SEC_OID_AVA_POSTAL_ADDRESS       = 265,
+    SEC_OID_AVA_POSTAL_CODE          = 266,
+    SEC_OID_AVA_POST_OFFICE_BOX      = 267,
+    SEC_OID_AVA_GIVEN_NAME           = 268,
+    SEC_OID_AVA_INITIALS             = 269,
+    SEC_OID_AVA_GENERATION_QUALIFIER = 270,
+    SEC_OID_AVA_HOUSE_IDENTIFIER     = 271,
+    SEC_OID_AVA_PSEUDONYM            = 272,
 
     SEC_OID_TOTAL
 } SECOidTag;
