@@ -1482,7 +1482,7 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
   nsXPIDLCString mimeType; 
   aMIMEInfo->GetMIMEType(getter_Copies(mimeType));
 
-  nsCStringKey key(mimeType.get());
+  nsCStringKey key(mimeType);
   nsIMIMEInfo * oldInfo = (nsIMIMEInfo*)mMimeInfoCache->Put(&key, aMIMEInfo);
 
   // add a reference for the hash table entry....
