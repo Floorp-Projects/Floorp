@@ -55,6 +55,7 @@ public:
 // another class. Only the base class should use NS_DECL_ISUPPORTS
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags);
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
   NS_IMETHOD SetPaginatedScrolling(PRBool aResult) { mCanPaginatedScroll = aResult; return NS_OK; }
@@ -109,6 +110,13 @@ PrintPreviewContext::GetMedium(nsIAtom** aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsLayoutAtoms::print;
   NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PrintPreviewContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
+{
+  aLoadFlags = nsIRequest::LOAD_FROM_CACHE | nsIRequest::VALIDATE_NEVER | nsIRequest::LOAD_NORMAL;
   return NS_OK;
 }
 
