@@ -20,7 +20,25 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsIDocShell.idl"
 #include "nsIHTMLDocShell.idl"
+#include "nsIDocShellEdit.idl"
+#include "nsIDocShellFile.idl"
+#include "nsIGenericWindow.idl"
+#include "nsIScrollable.idl"
+#include "nsITextScroll.idl"
+
+/*
+nsCHTMLDocShell implements:
+-------------------------
+nsIDocShell
+nsIHTMLDocShell
+nsIDocShellEdit
+nsIDocShellFile
+nsIGenericWindow
+nsIScrollable
+nsITextScroll
+*/
 
 %{ C++
 //	{F1EAC762-87E9-11d3-AF80-00A024FFC08C} - 
