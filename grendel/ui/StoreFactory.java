@@ -113,7 +113,7 @@ public class StoreFactory {
       //} else if (proto.equalsIgnoreCase("pop3")) {
       //  c = Class.forName("grendel.storage.PopStore");
       } else if (proto.equalsIgnoreCase("news")) {
-        c = Class.forName("grendel.storage.NewsStore");
+        c = Class.forName("dog.mail.nntp.NNTPStore");
       }
 
       if (c != null) {
