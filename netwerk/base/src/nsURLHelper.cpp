@@ -520,6 +520,44 @@ net_IsValidScheme(const char *scheme, PRUint32 schemeLen)
     return PR_TRUE;
 }
 
+PRBool
+net_FilterURIString(const char *str, nsACString& result)
+{
+    NS_PRECONDITION(str, "Must have a non-null string!");
+    PRBool writing = PR_FALSE;
+    result.Truncate();
+    const char *p = str;
+
+    // Remove leading spaces, tabs, CR, LF if any.
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
+        writing = PR_TRUE;
+        str = p + 1;
+        p++;
+    }
+
+    while (*p) {
+        if (*p == '\t' || *p == '\r' || *p == '\n') {
+            writing = PR_TRUE;
+            // append chars up to but not including *p
+            if (p > str)
+                result.Append(str, p - str);
+            str = p + 1;
+        }
+        p++;
+    }
+
+    // Remove trailing spaces if any
+    while (((p-1) >= str) && (*(p-1) == ' ')) {
+        writing = PR_TRUE;
+        p--;
+    }
+
+    if (writing && p > str)
+        result.Append(str, p - str);
+
+    return writing;
+}
+
 //----------------------------------------------------------------------------
 // miscellaneous (i.e., stuff that should really be elsewhere)
 //----------------------------------------------------------------------------

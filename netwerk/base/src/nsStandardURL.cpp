@@ -126,43 +126,6 @@ end:
     return rv;
 }
 
-// filter out \t\r\n
-static const char *
-FilterString(const char *str, nsCString &result)
-{
-    PRBool writing = PR_FALSE;
-    result.Truncate();
-    const char *p = str;
-
-    // Remove leading spaces, tabs, CR, LF if any.
-    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') {
-        writing = PR_TRUE;
-        str = p + 1;
-        p++;
-    }
-
-    for (; *p; ++p) {
-        if (*p == '\t' || *p == '\r' || *p == '\n') {
-            writing = PR_TRUE;
-            // append chars up to but not including *p
-            if (p > str)
-                result.Append(str, p - str);
-            str = p + 1;
-        }
-    }
-
-    // Remove trailing spaces if any
-    while (((p-1) >= str) && (*(p-1) == ' ')) {
-        writing = PR_TRUE;
-        p--;
-    }
-
-    if (writing && p > str)
-        result.Append(str, p - str);
-
-    return writing ? result.get() : str;
-}
-
 //----------------------------------------------------------------------------
 // nsStandardURL::nsPrefObserver
 //----------------------------------------------------------------------------
@@ -995,7 +958,8 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsCAutoString buf1;
-    spec = FilterString(spec, buf1);
+    if (net_FilterURIString(spec, buf1))
+        spec = buf1.get();
 
     // parse the given URL...
     nsresult rv = ParseURL(spec);
@@ -1496,10 +1460,13 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsCAutoString buf;
-    relpath = FilterString(relpath, buf);
-    // Calculate the new relpath length if FilterString modified it
-    const PRInt32 relpathLen = !buf.IsEmpty() ?
-                               buf.Length() : flat.Length();
+    PRInt32 relpathLen;
+    if (net_FilterURIString(relpath, buf)) {
+        relpath = buf.get();
+        relpathLen = buf.Length();
+    } else
+        relpathLen = flat.Length();
+    
     // XXX hack hack hack
     char *p = nsnull;
     char **result = &p;

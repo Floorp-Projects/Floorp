@@ -134,15 +134,27 @@ nsSimpleURI::GetSpec(nsACString &result)
 NS_IMETHODIMP
 nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
-    nsCAutoString spec;
-    if (aSpec.IsEmpty()) {
+    const nsAFlatCString& flat = PromiseFlatCString(aSpec);
+    const char* specPtr = flat.get();
+
+    // filter out unexpected chars "\r\n\t" if necessary
+    nsCAutoString filteredSpec;
+    PRInt32 specLen;
+    if (net_FilterURIString(specPtr, filteredSpec)) {
+        specPtr = filteredSpec.get();
+        specLen = filteredSpec.Length();
+    } else
+        specLen = flat.Length();
+
+    if (specLen == 0) {
         mScheme.Truncate();
         mPath.Truncate();
         return NS_OK;
     }
 
     // nsSimpleURI currently restricts the charset to US-ASCII
-    NS_EscapeURL(PromiseFlatCString(aSpec), esc_OnlyNonASCII|esc_AlwaysCopy, spec);
+    nsCAutoString spec;
+    NS_EscapeURL(specPtr, specLen, esc_OnlyNonASCII|esc_AlwaysCopy, spec);
 
     PRInt32 pos = spec.FindChar(':');
     if (pos == -1)
