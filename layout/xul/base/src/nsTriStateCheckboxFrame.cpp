@@ -51,7 +51,7 @@ NS_NewTriStateCheckboxFrame(nsIFrame*& aResult)
 // nsTriStateCheckboxFrame cntr
 //
 nsTriStateCheckboxFrame::nsTriStateCheckboxFrame()
-  : mMouseDownOnCheckbox(PR_FALSE)
+  : mMouseDownOnCheckbox(PR_FALSE), nsLeafFrame()
 {
 }
 
@@ -62,19 +62,18 @@ nsTriStateCheckboxFrame::nsTriStateCheckboxFrame()
 // Looks in the DOM to find out what the value is. 0 is off, 1 is on, 2 is mixed.
 // This will default to "off" if no value is set in the DOM.
 //
-nsresult
-nsTriStateCheckboxFrame::GetCurrentCheckState(CheckState *outState)
+nsTriStateCheckboxFrame::CheckState
+nsTriStateCheckboxFrame::GetCurrentCheckState()
 {
   nsString value;
+  CheckState outState = eOff;
   nsresult res = mContent->GetAttribute ( kNameSpaceID_None, nsHTMLAtoms::value, value );
   if ( res == NS_CONTENT_ATTR_HAS_VALUE )
-    *outState = StringToCheckState(value);  
-  else
-    *outState = eOff;
+    outState = StringToCheckState(value);  
 
 printf("getting value, it is %s\n", value.ToNewCString());
-  return NS_OK;
-}
+  return outState;
+} // GetCurrentCheckState
 
 
 //
@@ -82,14 +81,19 @@ printf("getting value, it is %s\n", value.ToNewCString());
 //
 // Sets the value in the DOM. 0 is off, 1 is on, 2 is mixed.
 //
-nsresult 
+void 
 nsTriStateCheckboxFrame::SetCurrentCheckState(CheckState aState)
 {
   nsString valueAsString;
   CheckStateToString ( aState, valueAsString );
 printf("setting value, it is %s\n", valueAsString.ToNewCString());
-  return mContent->SetAttribute ( kNameSpaceID_None, nsHTMLAtoms::value, valueAsString, PR_TRUE );
-
+  if ( NS_SUCCEEDED(mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, valueAsString, PR_TRUE)) )
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
+  #ifdef NS_DEBUG
+  else
+    printf("nsTriStateCheckboxFrame::SetCurrentCheckState -- SetAttribute failed\n");
+  #endif
+  
 } // SetCurrentCheckState
 
 
@@ -100,11 +104,11 @@ printf("setting value, it is %s\n", valueAsString.ToNewCString());
 // If the state is mixed, then set it to off. You can't ever get back to mixed.
 //
 void 
-nsTriStateCheckboxFrame::MouseClicked(nsIPresContext* aPresContext) 
+nsTriStateCheckboxFrame::MouseClicked ( const nsIPresContext & aPresContext) 
 {
+printf("MouseClicked\n");
   mMouseDownOnCheckbox = PR_FALSE;
-  CheckState oldState;
-  GetCurrentCheckState(&oldState);
+  CheckState oldState = GetCurrentCheckState();
   CheckState newState = eOn;
   switch ( oldState ) {
     case eOn:
@@ -112,7 +116,7 @@ nsTriStateCheckboxFrame::MouseClicked(nsIPresContext* aPresContext)
       newState = eOff;
       break;
   }
-  SetCurrentCheckState(newState); 
+  SetCurrentCheckState(newState);
 }
 
 
@@ -144,13 +148,11 @@ nsTriStateCheckboxFrame::PaintCheckBox(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
 
-  CheckState checked = eOff;
-
     // Get current checked state through content model.
     // XXX: This is very inefficient, but it is necessary in the case of printing.
     // During printing the Paint is called but the actual state of the checkbox
     // is in a frame in presentation shell 0.
-  /*XXXnsresult result = */GetCurrentCheckState(&checked);
+  CheckState checked = GetCurrentCheckState();
   if ( checked == eOn ) {
       // Draw check mark
     const nsStyleColor* color = (const nsStyleColor*)
@@ -177,9 +179,8 @@ nsTriStateCheckboxFrame::Paint(nsIPresContext& aPresContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)
 {
-printf("painting checkbox\n");
     // Paint the background
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
       // Paint the checkmark 
     PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
@@ -198,51 +199,43 @@ nsTriStateCheckboxFrame::HandleEvent(nsIPresContext& aPresContext,
                                      nsGUIEvent* aEvent,
                                      nsEventStatus& aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  if (aEventStatus == nsEventStatus_eConsumeNoDefault )
     return NS_OK;
-  }
 
-  switch(aEvent->message) {
+  nsresult retVal = NS_OK;
+  switch (aEvent->message) {
     case NS_KEY_PRESS:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-          MouseClicked(&aPresContext);
+          MouseClicked(aPresContext);
         }
       }
       break;
+
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      // set "hover" state so CSS redraws us
+      mMouseDownOnCheckbox = PR_TRUE;
+      break;
+
+    case NS_MOUSE_EXIT:
+      // clear hover state so css redraws us
+      mMouseDownOnCheckbox = PR_FALSE;
+      break;
+
+    case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      if ( mMouseDownOnCheckbox )
+        MouseClicked(aPresContext);
+      break;
+      
     default:
-      break;
+      retVal = nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
-
-      // Handle GFX rendered widget Mouse Down event
-    switch (aEvent->message) {
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-        mMouseDownOnCheckbox = PR_TRUE;
-    //XXX: TODO render gray rectangle on mouse down  
-      break;
-
-      case NS_MOUSE_EXIT:
-        mMouseDownOnCheckbox = PR_FALSE;
-    //XXX: TO DO clear gray rectangle on mouse up 
-      break;
-
-    }
-
-  return(nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
-}
-
-
-//
-// RequiresWidget
-//
-// Tell callers that we are GFX rendered through and through
-//
-nsresult
-nsTriStateCheckboxFrame::RequiresWidget(PRBool& aRequiresWidget)
-{
-  aRequiresWidget = PR_FALSE;
-  return NS_OK;
+ 
+  aEventStatus = nsEventStatus_eConsumeNoDefault;  //XXX ???
+  
+  return retVal;
 }
 
 
@@ -287,3 +280,36 @@ nsTriStateCheckboxFrame :: CheckStateToString ( CheckState inState, nsString& ou
       break;
   }
 } // CheckStateToString
+
+
+void
+nsTriStateCheckboxFrame :: GetDesiredSize(nsIPresContext* aPresContext,
+                                           const nsHTMLReflowState& aReflowState,
+                                           nsHTMLReflowMetrics& aDesiredLayoutSize)
+{
+  nsSize styleSize;
+  if (aReflowState.HaveFixedContentWidth()) {
+    styleSize.width = aReflowState.computedWidth;
+  }
+  else {
+    styleSize.width = CSS_NOTSET;
+  }
+  if (aReflowState.HaveFixedContentHeight()) {
+    styleSize.height = aReflowState.computedHeight;
+  }
+  else {
+    styleSize.height = CSS_NOTSET;
+  }
+
+  // subclasses should always override this method, but if not and no css, make it small
+  aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 200;
+  aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 200;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = aDesiredLayoutSize.width;
+    aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+  }
+
+} // GetDesiredSize
+
