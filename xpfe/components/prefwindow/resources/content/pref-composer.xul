@@ -28,31 +28,11 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="StartUp('Composer'); return InitColors();"  align="vertical" title="&title.label;">
+        align="vertical" title="&title.label;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-composer' ); else parent.queuedTag = 'pref-composer'; InitColors();">
 
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+  <html:script language="JavaScript" src="chrome://pref/content/pref-composer.js"/>
 
-<html:script language="javascript">
-
-function getColorFromWellAndSetValue(menuid,otherId,setbackground)
-{
-        var menu=document.getElementById(menuid);
-        var colorWell = menu.firstChild.nextSibling;
-        var color=colorWell.style.backgroundColor;
-        setColorFromPicker(null,color,otherId,setbackground);
-}     
-
-function InitColors()
-{
-        getColorFromWellAndSetValue('normaltextmenu','normaltext',false);
-        getColorFromWellAndSetValue('linktextmenu','linktext',false);
-        getColorFromWellAndSetValue('activelinktextmenu','activelinktext',false);
-        getColorFromWellAndSetValue('followedlinktextmenu','followedlinktext',false);
-        getColorFromWellAndSetValue('colorpreviewmenu','colorpreview',true);
-
-        return true;
-}                   
-</html:script>
 
   	<box class="header" align="horizontal">  
 	      <titledbutton class="left-header-text" value="&lHeader;"/>
@@ -63,7 +43,8 @@ function InitColors()
 		<html:fieldset>
 		<html:div>
 			&authorName;
-			<html:input name="author" type="text" id="pref:string:editor.author" />
+			<html:input name="author" type="text" id="editorAuthor"
+                  pref="true" preftype="string" prefstring="editor.author"/>
 		</html:div>
 <!-- Take out Auto-Save; not supported at this time
 		<html:div>
@@ -110,98 +91,109 @@ function InitColors()
 			<html:div>&pageColorHeader;</html:div> 
 					</html:legend> 
 	<html:div>
-		<html:input name="color" type="radio" id="pref:0:int:editor.use_custom_colors" checked="true" />	
-		<html:label for="pref:0:int:editor.unknown" tabindex="0">
+		<html:input name="color" type="radio" id="editorUseCustomColors0"
+                pref="true" preftype="int" prefindex="0" prefstring="editor.use_custom_colors"/>
+		<html:label for="editorUseCustomColors" tabindex="0">
 		&UseNavigatorColor.label;			
 		</html:label>
 	</html:div>
 	<html:div>
-		<html:input name="color" type="radio" id="pref:1:int:editor.use_custom_colors" />
-		<html:label for="pref:1:int:editor.unknown" tabindex="0">
+		<html:input name="color" type="radio" id="editorUseCustomColors1"
+                pref="true" preftype="int" prefindex="1" prefstring="editor.use_custom_colors"/>
+		<html:label for="editorUseCustomColors1" tabindex="0">
 		&UseCustomColors.label;			
 		</html:label>
 	</html:div>
-	
+  
+  <spring style="height: 7px;"/>
+  
 	<box align="horizontal" style="width: 100%; height: 100%">
-	<box align="vertical" flex="1">
-		<box>
-		    <html:div>
-				<html:label for="pref:#000000:color:editor.text_color" accesskey="t" tabindex="0">			
-    			</html:label>
-			</html:div>
-
-			<menu id="normaltextmenu">
-				<titledbutton id="normalTitledButton" value="&NormalText.label;" class="popup" align="right"/>
+  <!-- need to do something BETTER here to accomodate indentation -->
+  <spring style="width: 21px"/>
+	<box align="vertical" flex="100%">
+		<box flex="100%">
+      <html:label>
+        &NormalText.label;
+      </html:label>
+      <spring flex="100%"/>
+			<menu id="normaltextmenu" allowevents="true" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.text_color" style="width:30px; background-color:white"/>
+				<titledbutton class="popup" align="right" flex="100%"/>
 				<menupopup id="normalMenuPopup">
-					<colorpicker id="normalColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'normaltext', false);"/>
+					<colorpicker allowevents="true" id="normalColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'normaltext', false);"/>
 				</menupopup>
 			</menu>
+			<html:input type="hidden" id="normalText"
+                  pref="true" preftype="string" prefstring="editor.text_color"/>
 		</box>
 
 		<box>
-     	    <html:div>
-				<html:label for="pref:#000000:color:editor.link_color" accesskey="l" tabindex="0">
-				</html:label>
-			</html:div>
-			<menu id="linktextmenu">
-				<titledbutton value="&LinkText.label;" class="popup" align="right"/>
+      <html:label>
+        &LinkText.label;
+      </html:label>
+      <spring flex="100%"/>
+			<menu id="linktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.link_color" style="width:30px; background-color:white"/>
+				<titledbutton class="popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'linktext',false);"/>
 				</menupopup>
 			</menu>
+			<html:input type="hidden" id="linkText"
+                  pref="true" preftype="string" prefstring="editor.link_color"/>
 		</box>
 
 		<box>
-     	    <html:div>
-				<html:label for="pref:#000000:color:editor.active_link_color" accesskey="c" tabindex="0">			
-				</html:label>
-			</html:div>
-			<menu id="activelinktextmenu">
-				<titledbutton value="&ActiveLinkText.label;" class="popup" align="right"/>
+      <html:label>
+        &ActiveLinkText.label;
+      </html:label>
+      <spring flex="100%"/>
+			<menu id="activelinktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.active_link_color" style="width:30px; background-color:white"/>
+				<titledbutton class="popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'activelinktext',false);"/>
 				</menupopup>
 			</menu>
-
+			<html:input type="hidden" id="activeLinkText"
+                  pref="true" preftype="string" prefstring="editor.active_link_color"/>
 		</box>
 
 		<box>
-            <html:div>
-				<html:label for="pref:#000000:color:editor.followed_link_color" accesskey="f" tabindex="0">			
-				</html:label>
-			</html:div>
-			<menu id="followedlinktextmenu">
-				<titledbutton value="&FollowedLinkText.label;" class="popup" align="right"/>
+      <html:label>
+        &FollowedLinkText.label;
+      </html:label>
+      <spring flex="100%"/>
+			<menu id="followedlinktextmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.followed_link_color" style="width:30px; background-color:white"/>
+				<titledbutton class="popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'followedlinktext',false);"/>
 				</menupopup>
 			</menu>
+			<html:input type="hidden" id="followedLinkText"
+                  pref="true" preftype="string" prefstring="editor.followed_link_color"/>
 		</box>
 
 		<box>
-            <html:div>		
-				<html:label for="pref:#000000:color:editor.background_color" accesskey="b" tabindex="0">			
-				</html:label>
-			</html:div>
-
-			&colorPick; &BackgroundColor.label;
-			<menu id="colorpreviewmenu">
-				<titledbutton value="&BackgroundColor.label;" class="popup" align="right"/>
+      <html:label>
+        &BackgroundColor.label;
+      </html:label>
+      <spring flex="100%"/>
+			<menu id="colorpreviewmenu" class="colorpicker">
 				<html:div id="pref:#000000:color:editor.background_color" style="width:30px; background-color:white"/>
+				<titledbutton class="popup" align="right" flex="100%"/>
 				<menupopup>
 					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode,'colorpreview',true);"/>
 				</menupopup>
 			</menu>
-
+			<html:input type="hidden" id="backgroundColor"
+                  pref="true" preftype="string" prefstring="editor.background_color"/>
 		</box>
 
 	</box>
-
-	<box align="vertical" flex="1" id="colorpreview" basestyle="min-width:100px; min-height:50px;" style="min-width:100px; min-height:50px;">
+  <spring style="width: 7px;"/>
+	<box align="vertical" flex="100%" id="colorpreview" basestyle="min-width:135px; min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; " style="min-width:100px; min-height:50px; width: 100%; border: 1px inset #CCCCCC; padding: 5px; ">
 	<html:div id="normaltext">  &NormalText.label;  </html:div>
 	<html:div id="linktext">  &LinkText.label;  </html:div>
 	<html:div id="activelinktext">  &ActiveLinkText.label;  </html:div>

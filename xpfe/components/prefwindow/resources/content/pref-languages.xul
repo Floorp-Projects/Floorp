@@ -26,35 +26,32 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        align="vertical"
-        onload = "return StartUp('Languages')" 
-		title="window.title"> 
+        align="vertical" title="window.title"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-languages' ); else parent.queuedTag = 'pref-languages';">
 		
-<html:script language="javascript" src="PrefsWindow.js"/>
-<box class="header" align="horizontal">
-      <titledbutton class="left-header-text" value="&lHeader;"/>
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
 	  <spring class="header-spring" flex="1"/>
 	  <titledbutton class="right-header-text" value="&rHeader;"/>
-</box>
+	</box>
 
-	<html:table> 
-	    <html:tr><html:td>&prefLangDecript;</html:td></html:tr>
-		<html:tr>
-			<html:td>
-				<html:select name="textstyle" size="5">
+  <html:fieldset style="width: 100%">
+    <html:div>&prefLangDecript;</html:div>
+    <spring style="height: 10px;"/>
+    <box align="horizontal" flex="100%" style="width: 100%">
+      <box align="vertical" flex="100%">
+				<html:select name="textstyle" size="5" id="intlAcceptLanguages"
+                     pref="true" preftype="string" prefstring="intl.accept_languages" flex="100%">
 					<html:optgroup>
-						<html:option value="0" id="pref:string:intl.accept_languages">
-							&engOption.label;
-						</html:option>
+						<html:option value="0">&engOption.label;</html:option>
 					</html:optgroup>
 				</html:select>
-			</html:td>
-		</html:tr>
-		<html:tr>
-			<html:td><html:input name="choose" type="button" value="&addButton.label;" /></html:td>
-			<html:td>
-				<html:input name="choose" type="button" value="&deleteButton.label;"/>
-			</html:td>
-		</html:tr>
-	</html:table>
+      </box>
+      <box align="vertical">
+				<titledbutton class="dialog push" value="&addButton.label;"/>
+				<titledbutton class="dialog push" value="&deleteButton.label;"/>
+      </box>
+    </box>
+    <spring style="height: 37px;"/>
+  </html:fieldset>
 </window>

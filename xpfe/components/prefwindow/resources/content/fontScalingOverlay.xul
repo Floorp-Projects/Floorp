@@ -34,8 +34,9 @@ Contributor(s): ______________________________________. -->
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
       <box align="horizontal" style="width: 100%" flex="100%">
-        <html:label for="">&resolution;</html:label>
-        <html:input type="text" id="pref:string:browser.screen_resolution" size="3" value="&defaultScaling;"/>
+        <html:label for="browserScreenResolution">&resolution;</html:label>
+        <html:input type="text" id="browserScreenResolution" pref="true" preftype="string"
+                    prefstring="browser.screen_resolution" value="&defaultScaling;" size="3"/>
         <html:label>&fontScalingExample;</html:label>
       </box>
     </html:fieldset>

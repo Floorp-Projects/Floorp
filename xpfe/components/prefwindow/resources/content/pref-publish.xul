@@ -21,49 +21,58 @@
    Contributor(s): 
   -->
 <?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-publish.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Publish');"  title="&window.title;">
+    		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-publish' ); else parent.queuedTag = 'pref-publish';">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
-<html:DIV ID="top">
-		<html:SPAN ID="lefttext">&composerHeader.label;</html:SPAN>
-</html:DIV>
+<html:div id="top">
+		<html:span id="lefttext">&composerHeader.label;</html:span>
+</html:div>
 
 
 <html:table>
-
-      <html:tr><html:td>
-				<html:input name="author" type="checkbox" id="pref:0:bool:editor.publish_keep_images" />&maintainCheckbox.label;
-				<html:br />&adjustDesc.label;       
-			</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input name="autosave" type="checkbox" id="pref:1:bool:bool:ceditor.publish_keep_links" />&keepCheck.label;
-				<html:br />&saveDesc.label;
-			</html:td></html:tr>
-					&tip.label;
+  <html:tr>
+    <html:td>
+    	<html:input name="author" type="checkbox" id="editorPublishKeepImages"
+                  pref="true" preftype="bool" prefstring="editor.publish_keep_images" />
+      <html:label for="editorPublishKeepImages">&maintainCheckbox.label;</html:label>
+			<html:br />&adjustDesc.label;       
+		</html:td>
+  </html:tr>
+	<html:tr>
+    <html:td>
+			<html:input name="autosave" type="checkbox" id="editorPublishKeepLinks"
+                  pref="true" preftype="bool" prefstring="editor.publish_keep_links"/>
+      <html:label for="editorPublishKeepLinks">&keepCheck.label;</html:label>
+			<html:br />&saveDesc.label;
+		</html:td>
+  </html:tr>
+	&tip.label;
 </html:table>
 &defaultHeader.label;
 <html:table>
- 
-      <html:tr><html:td>
-				&publishFtp.label;
-				</html:td></html:tr>
-				<html:tr><html:td>
-				<html:input name="autosave" type="text" id="pref:string:composer.publish" size="30" />
-			</html:td></html:tr>         
-			<html:tr><html:td>
-				&publishhtp.label;
-				</html:td></html:tr>
-				<html:tr><html:td>
-				<html:input name="autosave" type="text" id="pref:string:string:composer.browse" size="30" />
-			</html:td></html:tr>
-			
-			
+  <html:tr>
+    <html:td>&publishFtp.label;</html:td>
+  </html:tr>
+	<html:tr>
+    <html:td>
+      <html:input name="autosave" type="text" id="composerPublish"
+                  pref="true" preftype="string" prefstring="composer.publish" size="30"/>
+		</html:td>
+  </html:tr>         
+	<html:tr>
+    <html:td>&publishhtp.label;</html:td>
+  </html:tr>
+	<html:tr>
+    <html:td>
+		  <html:input name="autosave" type="text" id="composerBrowse"
+                  pref="true" preftype="string" prefstring="composer.browse" size="30"/>
+		</html:td>
+  </html:tr>
 </html:table>
 </html:div>
 </window>

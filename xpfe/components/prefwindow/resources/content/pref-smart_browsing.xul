@@ -26,11 +26,9 @@
 <!DOCTYPE window SYSTEM "chrome://pref/locale/pref-smart_browsing.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('smart_browsing');"  title="&title.label;"
-		align="vertical">
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&title.label;" align="vertical"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-smart_browsing' ); else parent.queuedTag = 'pref-smart_browsing';">
 
   	<box class="header" align="horizontal">  
 	      <titledbutton class="left-header-text" value="&lHeader;"/>
@@ -44,38 +42,42 @@
 			<html:legend align="left">
 			<html:div>&lHeader;</html:div> 
 			</html:legend>
-<!-- rjc: comment out Related Links preferences from 4.x that aren't used in 5.x
 						<html:div>
-				<html:input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled"/>
-				<html:label for="pref:0:bool:browser.related.enabled" accesskey="n" tabindex="0">
+				<html:input name="related" type="checkbox" id="browserRelatedEnabled"
+              pref="true" preftype="bool" prefstring="browser.related.enabled"/>
+				<html:label for="browserRelatedEnabled" accesskey="n" tabindex="0">
 				&enableRelatedRadio.label;
 				</html:label>
 			</html:div>		
 			&autoDecp.label;
 			<html:div>
-				<html:input name="related" type="radio" id="pref:0:int:browser.related.autoload" />
-				<html:label for="pref:0:int:browser.related.autoload" accesskey="n" tabindex="0">
+				<html:input name="related" type="radio" id="browserRelatedAutoLoad0"
+              pref="true" preftype="int" prefindex="0" prefstring="browser.related.autoload"/>
+				<html:label for="browserRelatedAutoLoad0" accesskey="n" tabindex="0">
 				&neverRadio;
 				</html:label>
 			</html:div>
 		    <html:div>
-				<html:input name="related" type="radio" id="pref:1:int:browser.related.autoload" />
-				<html:label for="pref:1:int:browser.related.autoload" accesskey="n" tabindex="0">
+				<html:input name="related" type="radio" id="browserRelatedAutoLoad1"
+              pref="true" preftype="int" prefindex="1" prefstring="browser.related.autoload"/>
+				<html:label for="browserRelatedAutoLoad1" accesskey="n" tabindex="0">
 				&afterAutoloadFirstRadio;
 				</html:label>
 			</html:div>
 			<html:div>
-				<html:input name="related" type="radio" id="pref:2:int:browser.related.autoload" />
-				<html:label for="pref:2:int:browser.related.autoload" accesskey="n" tabindex="0">
+				<html:input name="related" type="radio" id="browserRelatedAutoLoad2"
+              pref="true" preftype="int" prefindex="2" prefstring="browser.related.autoload"/>
+				<html:label for="browserRelatedAutoLoad2" accesskey="n" tabindex="0">
 				&afterAutoloadAlwaysRadio;
 				</html:label>
 			</html:div>
--->
            <html:div>
 			&doNotDecp.label;
 			</html:div>
 		<html:div>
-			<html:input name="textstyle" id="pref:string:browser.related.disabledForDomains" />
+         <html:textarea name="textstyle" ROWS="2" COLS="30" id="browserRelatedDisabledForDomains"
+               pref="true" preftype="string" prefstring="browser.related.disabledForDomains">
+	     </html:textarea>
 		</html:div>
 		</html:fieldset>
 	</box>
@@ -86,8 +88,9 @@
 			<html:div>&internetKeywordsHeader.label;</html:div> 
 			</html:legend>
 				<html:div>
-				<html:input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" />
-				<html:label for="pref:0:bool:browser.goBrowsing.enabled" accesskey="n" tabindex="0">
+				<html:input name="keyword" type="checkbox" id="browserGoBrowsingEnabled"
+              pref="true" preftype="bool" prefstring="browser.goBrowsing.enabled"/>
+				<html:label for="browserGoBrowsingEnabled" accesskey="n" tabindex="0">
 				&enableKeyCheck.label;
 				</html:label>
 			</html:div>

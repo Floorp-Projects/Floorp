@@ -1,0 +1,85 @@
+<?xml version="1.0"?> 
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+<?xml-stylesheet href="chrome://pref/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-wallet.dtd" >
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="dialog"
+        align="vertical" title="&window.title;"
+  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-wallet' ); else parent.queuedTag = 'pref-wallet';">
+
+  <html:script language="JavaScript">
+    function viewSignons()
+    {
+      window.openDialog("chrome://wallet/content/SignonViewer.xul","","chrome, resizable=no");
+    }
+    
+    function viewWallet()
+    {
+      window.openDialog("chrome://wallet/content/WalletEditor.xul","","chrome, resizable=no");
+    }
+  </html:script>
+        
+	<box class="header" align="horizontal">  
+    <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+	</box>
+ 
+  <html:fieldset>
+    <html:legend>
+      &walletHeader;
+    </html:legend>
+    <html:div>
+      &walletDetails;
+    </html:div>
+    <spring style="height: 10px;"/>
+		<box align="horizontal" style="width: 100%;" flex="100%">
+     	<html:label for="walletServer" accesskey="c" tabindex="0">
+	    	&server.label;
+  	  </html:label> 
+   		<html:input name="Wallet Server:" type="text"	id="walletServer" 
+                  pref="true" preftype="string" prefstring="wallet.Server" flex="100%"/> 
+	  </box> 
+    <box align="horizontal" flex="100%" style="width: 100%">
+      <spring flex="100%"/>
+      <titledbutton value="&viewWallet.label;" class="dialog push" onclick="viewWallet();"/>
+    </box>
+  </html:fieldset>
+
+  <html:fieldset>
+    <html:legend>
+      &signonHeader;
+    </html:legend>
+    <html:div>
+      &signonDetails;
+    </html:div>
+    <box align="horizontal" flex="100%" style="width: 100%">
+      <spring flex="100%"/>
+      <titledbutton value="&viewSignons.label;" class="dialog push" onclick="viewSignons();"/>
+    </box>
+    <spring style="height: 14px;"/>
+  </html:fieldset>
+  
+</window>
