@@ -33,10 +33,6 @@
 class XFE_HTMLView;
 class XFE_RDFView;
 
-typedef struct _RDFImageList {
-  XFE_RDFImage * rdfImage;
-  Widget  widget;
-} RDFImageList;
 
 
 class XFE_NavCenterView : public XFE_View
@@ -69,12 +65,6 @@ private:
   Widget         rdf_parent;
   XP_Bool        m_isStandalone; // as oppposed to embedded in a browser
 
-  static RDFImageList * selectorBarImagesCache;
-  static int     m_numRDFImagesLoaded;
-
-  static void imageCacheInitialize();
-
-  static const unsigned int MaxRdfImages;
 
 	static void notify_cb(HT_Notification	ns, 
 						  HT_Resource		n, 

@@ -38,7 +38,7 @@
 
 extern "C"
 {
-void ImageCompleteCallback(XtPointer client_data);
+void ncview_image_complete_cb(XtPointer client_data);
 
 };
 
@@ -49,27 +49,7 @@ typedef struct _SelectorCBStruct {
 } SelectorCBStruct;
 
 
-// Selector bar images list
-/* static */ RDFImageList * 
-XFE_NavCenterView::selectorBarImagesCache = NULL;
 
-/* static */ int 
-XFE_NavCenterView::m_numRDFImagesLoaded = 0;
-//////////////////////////////////////////////////////////////////////////
-
-// Max number of images in cache - to be replaced with very clerver hash table
-/* static */ const unsigned int 
-XFE_NavCenterView::MaxRdfImages = 30;
-
-// Initialize the selector bar images list. This s'd someday be a hash list
-/* static */ void 
-XFE_NavCenterView::imageCacheInitialize()
-{
-	if (selectorBarImagesCache == NULL)
-	{
-		selectorBarImagesCache= new RDFImageList[MaxRdfImages];
-	}
-}
 //////////////////////////////////////////////////////////////////////////
 XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                                      Widget parent, XFE_View *parent_view,
@@ -78,8 +58,6 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 {
   D(printf("XFE_NavCenterView Constructor\n"););
 
-  // Make sure the cache is up and running.
-  XFE_NavCenterView::imageCacheInitialize();
 
   // This may need to become a constructor argument,
   // but this is good enough for now.
@@ -218,6 +196,8 @@ XFE_NavCenterView::~XFE_NavCenterView()
         XP_UnregisterNavCenter(m_pane);
         HT_DeletePane(m_pane);
     }
+    // Remove yourself from XFE_RDFImage's listener list
+    XFE_RDFImage::removeListener(this);
 
 }
 
@@ -330,6 +310,11 @@ XFE_NavCenterView::addRDFView(HT_View view)
 //  static int counter=1;
 
   XFE_RDFImage *   rdfImage = NULL;
+  char * imageURL = "http://people.netscape.com/radha/sony/images/LocationProxy.gif";
+  Pixmap   image = (Pixmap)NULL;
+  Pixmap   mask = (Pixmap)NULL;
+  PRInt32  w,h;
+
 
   XP_ASSERT(view);
   if (!view) return;
@@ -374,18 +359,38 @@ XFE_NavCenterView::addRDFView(HT_View view)
 							  xfeButtonWidgetClass,
 							  toolbar,
 							  NULL);
+
+  /* Check if the image is already available in the
+   * RDFImage Cache. If so, use it 
+   */
+
+  rdfImage = XFE_RDFImage::isImageAvailable(imageURL);
+  if (rdfImage) {
+     image = rdfImage->getPixmap();
+     mask = rdfImage->getMask();
   
-  // Load the image  here.
+     XtVaGetValues(button, 
+                   XmNwidth, &w,
+                   XmNheight, &h,
+                   NULL);
+   
+     XtVaSetValues(button, 				   
+                   XmNpixmap, image, 
+				   XmNpixmapMask, mask,
+                   XmNwidth, (unsigned int)(w = rdfImage->getImageWidth()),
+                   XmNheight, (unsigned int)(h = rdfImage->getImageHeight()),
+				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
+                   NULL);
 
-       rdfImage = new XFE_RDFImage(m_toplevel, "file:/u/radha/icons/LocationProxy.gif", CONTEXT_DATA(m_contextData)->colormap, button);
-//    rdfImage = new XFE_RDFImage(m_toplevel, "file:/m/homepages/radha/sony/smile1.gif", CONTEXT_DATA(m_contextData)->colormap, button);
-    rdfImage->setCompleteCallback((completeCallbackPtr)ImageCompleteCallback, (void *) button);
+
+  }
+  else {
+    /*  Create  the image object and register callback */ 
+
+       rdfImage = new XFE_RDFImage(m_toplevel, (void *) this, imageURL, CONTEXT_DATA(m_contextData)->colormap, button);
+    rdfImage->setCompleteCallback((completeCallbackPtr)ncview_image_complete_cb, (void *) button);
     rdfImage->loadImage();
-
-    // Save the image handle in the cache
-    selectorBarImagesCache[m_numRDFImagesLoaded].widget = button;
-    selectorBarImagesCache[m_numRDFImagesLoaded].rdfImage = rdfImage;
-    m_numRDFImagesLoaded++;
+  }
 
 
   XfeSetXmStringPSZ(button, XmNlabelString,
@@ -442,15 +447,9 @@ XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * 
 #endif
     // Get handle to the RDFImage object from the cache
 
-    for (int i = 0; i < m_numRDFImagesLoaded; i ++)
-    {
-       if (w == selectorBarImagesCache[i].widget)
-       {
-         rdfImage = selectorBarImagesCache[i].rdfImage;
-         break;
-       }
-    }
-    rdfImage->RDFDisplayPixmap(image, mask, width, height);
+   rdfImage = XFE_RDFImage::getRDFImageObject(w);
+   if (rdfImage)
+     rdfImage->RDFDisplayPixmap(image, mask, width, height);
 }
 
 
@@ -464,15 +463,9 @@ XFE_NavCenterView::handleNewPixmap(Widget w, IL_Pixmap * image, Boolean mask)
 #endif
     // Get handle to the RDFImage object from the cache
 
-    for (int i = 0; i < m_numRDFImagesLoaded; i ++)
-    {
-       if (w == selectorBarImagesCache[i].widget)
-       {
-         rdfImage = selectorBarImagesCache[i].rdfImage;
-         break;
-       }
-    }
-    rdfImage->RDFNewPixmap(image, mask);
+   rdfImage = XFE_RDFImage::getRDFImageObject(w);
+   if (rdfImage)
+     rdfImage->RDFNewPixmap(image, mask);
 }
 
 
@@ -488,36 +481,29 @@ XFE_NavCenterView::handleImageComplete(Widget w, IL_Pixmap * image)
 #endif
     // Get handle to the RDFImage object from the cache
 
-    for (int i = 0; i < m_numRDFImagesLoaded; i ++)
-    {
-       if (w == selectorBarImagesCache[i].widget)
-       {
-         rdfImage = selectorBarImagesCache[i].rdfImage;
-         break;
-       }
-    }
+   rdfImage = XFE_RDFImage::getRDFImageObject(w);
+   if (rdfImage)
     rdfImage->RDFImageComplete(image);
 }
 
 extern "C" {
-void ImageCompleteCallback(XtPointer client_data)
+void ncview_image_complete_cb(XtPointer client_data)
 {
      callbackClientData * cb = (callbackClientData *) client_data;
      Widget button = (Widget )cb->widget;
      Dimension b_width=0, b_height=0;
 
 #ifdef DEBUG_radha
-     printf("Inside ImageCompleteCallback\n");
+     printf("Inside ncview_ImageCompleteCallback\n");
 #endif
 
      XtUnmanageChild(button);
      XtVaGetValues(button, XmNwidth, &b_width, XmNheight, &b_height, NULL);
 
-     XtVaSetValues(button, XmNheight,(cb->height + b_height),
+     XtVaSetValues(button,/*  XmNheight,(cb->height + b_height), */
 				   XmNpixmap, cb->image, 
 				   XmNpixmapMask, cb->mask,
 				   XmNbuttonLayout, XmBUTTON_PIXMAP_ONLY,
-				   XmNlabelAlignment, XmALIGNMENT_CENTER,
                    NULL);
      XtManageChild(button);
      XP_FREE(cb);
