@@ -4404,11 +4404,9 @@ class nsXULFastLoadFileIO : public nsIFastLoadFileIO
         MOZ_COUNT_DTOR(nsXULFastLoadFileIO);
     }
 
-  private:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFASTLOADFILEIO
 
-  protected:
     nsCOMPtr<nsIFile>         mFile;
     nsCOMPtr<nsIInputStream>  mInputStream;
     nsCOMPtr<nsIOutputStream> mOutputStream;
@@ -4538,7 +4536,8 @@ nsXULDocument::StartFastLoad()
 
     // Give the FastLoad service an object by which it can get or create a
     // file output stream given an input stream on the same file.
-    nsCOMPtr<nsIFastLoadFileIO> io = new nsXULFastLoadFileIO(file);
+    nsXULFastLoadFileIO* xio = new nsXULFastLoadFileIO(file);
+    nsCOMPtr<nsIFastLoadFileIO> io = NS_STATIC_CAST(nsIFastLoadFileIO*, xio);
     if (! io)
         return NS_ERROR_OUT_OF_MEMORY;
     fastLoadService->SetFileIO(io);
@@ -4611,6 +4610,7 @@ nsXULDocument::StartFastLoad()
                 objectInput->Close();
             else
                 input->Close();
+            xio->mInputStream = nsnull;
 
 #ifdef DEBUG
             file->MoveTo(nsnull, "Invalid.mfasl");
