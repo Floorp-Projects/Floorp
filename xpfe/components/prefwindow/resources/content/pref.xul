@@ -55,7 +55,7 @@
     <!-- tree sidebar -->
     <tree class="inset" id="prefsTree" flex="2"/>      
 
-    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="2"/>
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="6"/>
     <script language="JavaScript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
