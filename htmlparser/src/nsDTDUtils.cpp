@@ -135,6 +135,19 @@ eHTMLTags nsTagStack::Last() const {
   return eHTMLTag_unknown;
 }
 
+/**
+ * 
+ * @update  gess7/9/98
+ */
+PRInt32 nsTagStack::GetTopmostIndexOf(eHTMLTags aTag) const {
+  int theIndex=0;
+  for(theIndex=mCount-1;theIndex>=0;theIndex--){
+    if(mTags[theIndex]==aTag)
+      return theIndex;
+  }
+  return kNotFound;
+}
+
 
 /***************************************************************
   Now define the dtdcontext class

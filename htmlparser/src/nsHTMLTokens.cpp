@@ -625,9 +625,12 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
              //in this case, we're reading a long-form comment <-- xxx -->
           mTextValue+="-";
           PRInt32 findpos=-1;
-          while((findpos==kNotFound) && (NS_OK==result)) {
-            result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
-            findpos=mTextValue.RFind("-->");
+          while((findpos<3) && (NS_OK==result)) {
+            result=aScanner.ReadUntil(mTextValue,kMinus,PR_TRUE);
+            findpos=mTextValue.RFind("--");
+          }
+          if(NS_OK==result) {
+            result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); //now skip to '>'
           }
           return result;
         }

@@ -1,15 +1,15 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*                        
+/*                              
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- *                    
+ *                       
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
- *   
+ *    
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
@@ -82,8 +82,9 @@ static eHTMLTags gStyleTags[]={
 
 
 static eHTMLTags gTableChildTags[]={ 
-  eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
-  eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td};
+  eHTMLTag_caption, eHTMLTag_col,     eHTMLTag_colgroup,  
+  eHTMLTag_tbody,   eHTMLTag_tfoot,   eHTMLTag_tr,  
+  eHTMLTag_th,      eHTMLTag_thead,   eHTMLTag_td};
   
 static eHTMLTags gWhitespaceTags[]={
   eHTMLTag_newline, eHTMLTag_whitespace};
@@ -160,7 +161,7 @@ public:
     foundHandler = (nsITagHandler*) mTagHandlerDeque.FirstThat(mTagFinder);
     return foundHandler;
   }
-
+  
   CTagHandlerDeallocator  mDeallocator;
   nsDeque                 mTagHandlerDeque;
   CTagFinder              mTagFinder;
@@ -672,14 +673,20 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
     if(aPrevTag==aCurrentTag) {
-      return (gHTMLElements[aCurrentTag].CanSelfContain()) ? eHTMLTag_unknown: aCurrentTag;
+      return (gHTMLElements[aCurrentTag].CanContainSelf()) ? eHTMLTag_unknown: aCurrentTag;
     }
     if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
 
       CTagList* theRootTags=gHTMLElements[aCurrentTag].GetRootTags();
       if(theRootTags) {
         PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);
-        if(theRootIndex<GetTopmostIndexOf(aCurrentTag,aTagStack)) {
+        CTagList* theStartTags=gHTMLElements[aCurrentTag].GetAutoCloseStartTags();
+        PRInt32 thePeerIndex=kNotFound;
+        if(theStartTags){
+          thePeerIndex=theStartTags->GetTopmostIndexOf(aTagStack);
+        }
+        else thePeerIndex=GetTopmostIndexOf(aCurrentTag,aTagStack);
+        if(theRootIndex<thePeerIndex) {
           return aCurrentTag;
         }
       }
@@ -702,6 +709,20 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
   return eHTMLTag_unknown;
 }
 
+/** 
+ *  This method is called to determine whether or not the child
+ *  tag is happy being OPENED in the context of the current
+ *  tag stack. This is only called if the current parent thinks
+ *  it wants to contain the given childtag.
+ *    
+ *  @param   aChildTag -- tag enum of child to be opened
+ *  @param   aTagStack -- ref to current tag stack in DTD.
+ *  @return  PR_TRUE if child agrees to be opened here.
+ */  
+PRBool CanBeContained(eHTMLTags aChildTag,nsTagStack& aTagStack) {
+  PRBool result=PR_TRUE;
+  return result;
+}
     
 /** 
  *  This method gets called when a start token has been 
@@ -732,17 +753,44 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       mHasOpenBody=PR_TRUE;
       CStartToken theToken(eHTMLTag_body);  //open the body container...
       result=HandleStartToken(&theToken);
-    }
+    } 
   }//if                      
+
+  /***********************************************************************
+    Subtlety alert: 
+
+    The REAL story on when tags are opened is somewhat confusing, but it's
+    important to understand. Since this is where we deal with it, it's time
+    for a quick disseration. Here goes:
+
+    Given a stack of open tags, a new (child) tag comes along and we need 
+    to see if it can be opened in place. There are at least 2 reasons why
+    it cannot be opened: 1) the parent says so; 2) the child says so.
+
+    Parents refuse to take children they KNOW they can't contain. Consider
+    that the <HTML> tag is only *supposed* to contain certain tags -- 
+    no one would expect it to accept a rogue <LI> tag (for example). 
+
+    After the parent decides it CAN accept a child (usually based on the class
+    of the tag, the child decides it if agrees. For example, consider this stack:
+      <HTML><BODY>
+        <DL> 
+          <DT> 
+            <DD>
+              <LI>
+                <DT>
+ 
+    Technically, the <LI> *can* contain the <DT> tag, but the <DT> knows that 
+    this isn't appropriate, since another <DT> is already open on the stack.
+    Therefore the child will refuse the placement.
+
+   ***********************************************************************/
 
   eHTMLTags theParentTag=mBodyContext->Last();
   PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
+  PRBool theChildAgrees=CanBeContained(aChildTag,mBodyContext->mTags);
 
-  //  Ok Genius answer this:  
-  //  If the parent can contain the child, why would it be necessary
-  //  to find an autoclose target?          
-
-  if(!theCanContainResult) {
+  if(!(theCanContainResult && theChildAgrees)) {
     eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
     if(eHTMLTag_unknown!=theTarget){
       result=CloseContainersTo(theTarget,PR_TRUE);
@@ -858,15 +906,15 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
                   result = rv;
                 }
               }
-            } 
+            }  
           } 
-        } 
+        }  
         break;
 
       case eHTMLTag_area:
         if (mHasOpenMap) {
           result = mSink->AddLeaf(attrNode);
-        }
+        } 
         break;
 
       default:
@@ -1041,22 +1089,19 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
 nsresult CNavDTD::HandleScriptToken(nsCParserNode& aNode) {
-  nsresult result=NS_OK;
-
   PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
   PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
 
+  nsresult result=CollectSkippedContent(aNode,attrCount);
   if (kNotFound == pos) {
-    // We're in the HEAD, but don't bother to open it.
     if(NS_OK==result) {
-      CollectSkippedContent(aNode,attrCount);
-      CloseHead(aNode);
+      OpenHead(aNode);
       result=AddLeaf(aNode);
+      CloseHead(aNode);
     }//if
   }//if
   else {
     // We're in the BODY
-    CollectSkippedContent(aNode,attrCount);
     result=AddLeaf(aNode);
   }
   return result;
@@ -1223,14 +1268,14 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
     default:
       break;
   }   
-  return result; 
-}      
-       
+  return result;  
+}        
+           
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
-  
-/**
+     
+/** 
  *  This method is called to determine whether or not a tag
  *  of one type can contain a tag of another type.
  *  
@@ -1242,7 +1287,7 @@ PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
 PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   if(mHasOpenForm) {
     if(aParent==aChild)
-      return gHTMLElements[aParent].CanSelfContain();
+      return gHTMLElements[aParent].CanContainSelf();
     if(FindTagInSet(aChild,gFormElementTags,sizeof(gFormElementTags)/sizeof(eHTMLTag_unknown))) {
       return PR_TRUE;
     }//if
@@ -1284,7 +1329,29 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   return result;
 }
 
- 
+/**
+ *  Call this to see if you have a closeable peer on the stack that
+ *  is ABOVE one of its root tags.
+ *   
+ *  @update  gess 3/25/98
+ *  @param   aRootTagList -- list of root tags for aTag
+ *  @param   aTag -- tag to test for containership
+ *  @return  PR_TRUE if given tag can contain other tags
+ */
+PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag) {
+  PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
+  CTagList* theCloseTags=gHTMLElements[aTag].GetAutoCloseStartTags();
+  PRInt32 theChildIndex=-1;
+  PRBool  result=PR_FALSE;
+  if(theCloseTags) {
+    theChildIndex=theCloseTags->GetTopmostIndexOf(aTagStack);
+  }
+  else {
+    theChildIndex=aTagStack.GetTopmostIndexOf(aTag);
+  }
+  return PRBool(theRootIndex<theChildIndex);
+}
+
 /**
  *  This method gets called to determine whether a given 
  *  tag can be omitted from opening. Most cannot.
@@ -1365,8 +1432,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
           result=HasOpenContainer(eHTMLTag_frameset);
           break;
 
-        case eHTMLTag_fieldset:
-        case eHTMLTag_input:        case eHTMLTag_isindex:
+        // case eHTMLTag_input:
+        case eHTMLTag_fieldset:     case eHTMLTag_isindex:
         case eHTMLTag_label:        case eHTMLTag_legend:
         case eHTMLTag_select:       case eHTMLTag_textarea:
         case eHTMLTag_option:
@@ -1397,8 +1464,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
         case eHTMLTag_tfoot:    case eHTMLTag_tbody:    
         case eHTMLTag_td:       case eHTMLTag_th:
         case eHTMLTag_caption:
-          if(PR_FALSE==HasOpenContainer(eHTMLTag_table))
-            result=PR_TRUE;
+          result=!HasOpenContainer(eHTMLTag_table);
           break;
 
         case eHTMLTag_entity:
@@ -1411,18 +1477,33 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
               break;
           } //switch
           break;
-
-        case eHTMLTag_frame:
-          if(eHTMLTag_iframe==aParent)
-            result=PR_TRUE;
-          break;
-
+ 
         default:
 
           static eHTMLTags kNonStylizedTabletags[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr};
           if(FindTagInSet(aChild,gStyleTags,sizeof(gStyleTags)/sizeof(eHTMLTag_unknown))) {
             if(FindTagInSet(aParent,kNonStylizedTabletags,sizeof(kNonStylizedTabletags)/sizeof(eHTMLTag_unknown)))
               return PR_TRUE;
+          }
+          else {
+            //if you're here, then its time to try somthing really different.
+            //Let's go to the element table, and see who the parent tag of this child is.
+            //Make sure they're compatible.
+            CTagList* theRootTags=gHTMLElements[aChild].GetRootTags();
+            if(theRootTags && HasCloseablePeerAboveRoot(*theRootTags,mBodyContext->mTags,aChild)) {
+              return PR_FALSE;
+            }
+            CTagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
+            if(theCloseTags) {
+              if(theCloseTags->Contains(aParent)) {
+                //we can't omit this tag; it will likely close the parent...
+                return PR_FALSE;
+              }
+            }
+            CTagList* theParents=gHTMLElements[aChild].GetSpecialParents();
+            if(theParents) {
+              result=!theParents->Contains(aParent);
+            }
           }
           break;
       } //switch
@@ -1452,13 +1533,13 @@ PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
   }
   return result;
 } 
-  
+     
 /**
  *  This method is called to determine whether or not an END tag
  *  can be autoclosed. This means that based on the current
  *  context, the stack should be closed to the nearest matching
  *  tag.
- *    
+ *     
  *  @param   aTag -- tag enum of child to be tested
  *  @return  PR_TRUE if autoclosure should occur
  */ 
@@ -1469,7 +1550,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
   if(nsHTMLElement::IsContainer(aCurrentTag)){
     if(aPrevTag==aCurrentTag){
       return aCurrentTag;
-    }
+    } 
     
     if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
 
@@ -1504,8 +1585,9 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
       else if(theRootTags) {
         //since we didn't find any close tags, see if there is an instance of aCurrentTag
         //above the stack from the roottag.
-        PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);          
-        return (theRootIndex<aChildIndex) ? aCurrentTag : eHTMLTag_unknown;
+        if(HasCloseablePeerAboveRoot(*theRootTags,aTagStack,aCurrentTag))
+          return aCurrentTag;
+        else return eHTMLTag_unknown;
       }
     } //if
   } //if
@@ -1571,10 +1653,13 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     default: 
       {
         PRInt32 theTagPos=GetTopmostIndexOf(aChild);
-        eHTMLTags theTarget=FindAutoCloseTargetForEndTag(aChild,mBodyContext->mTags,theTagPos);
-        result=PRBool(eHTMLTag_unknown==theTarget);
+        if(kNotFound!=theTagPos) {
+          eHTMLTags theTarget=FindAutoCloseTargetForEndTag(aChild,mBodyContext->mTags,theTagPos);
+          result=PRBool(eHTMLTag_unknown==theTarget);
+        }
+        else result=PR_TRUE;
       }
-      break;
+      break; 
   } //switch 
   return result;
 }
@@ -1765,7 +1850,7 @@ PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
  *  @return  topmost index of tag on stack
  */
 PRInt32 CNavDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
-  return ::GetTopmostIndexOf(aTag,mBodyContext->mTags);
+  return mBodyContext->mTags.GetTopmostIndexOf(aTag);
 }
 
 /*********************************************
@@ -1894,7 +1979,6 @@ nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
   if(!mHasOpenHead++) {
     nsresult result=mSink->OpenHead(aNode); 
   }
-
   return NS_OK;
 }
 
@@ -1907,8 +1991,10 @@ nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
-  if(0==--mHasOpenHead){
-    nsresult result=mSink->CloseHead(aNode); 
+  if(mHasOpenHead) {
+    if(0==--mHasOpenHead){
+      nsresult result=mSink->CloseHead(aNode); 
+    }
   }
   //mBodyContext->Pop();
   return NS_OK;
@@ -2095,8 +2181,16 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
     case eHTMLTag_html:
       result=OpenHTML(aNode); break;
 
+    case eHTMLTag_head:
+     // result=OpenHead(aNode); //open the head...
+      result=OpenHead(aNode); 
+      break;
+
     case eHTMLTag_body:
       mHasOpenBody=PR_TRUE;
+      if(mHasOpenHead)
+        mHasOpenHead=1;
+      CloseHead(aNode); //do this just in case someone left it open...
       result=OpenBody(aNode); break;
 
     case eHTMLTag_style:
@@ -2120,6 +2214,9 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
       result=OpenForm(aNode); break;
 
     case eHTMLTag_frameset:
+      if(mHasOpenHead)
+        mHasOpenHead=1;
+      CloseHead(aNode); //do this just in case someone left it open...
       result=OpenFrameset(aNode); break;
 
     case eHTMLTag_script:
@@ -2127,10 +2224,6 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
         nsCParserNode& theCNode=*(nsCParserNode*)&aNode;
         result=HandleScriptToken(theCNode);
       }
-      break;
-
-    case eHTMLTag_head:
-     // result=OpenHead(aNode); //open the head...
       break;
 
     default:
@@ -2173,7 +2266,7 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
       break;
 
     case eHTMLTag_head:
-      //result=CloseHead(aNode); 
+      result=CloseHead(aNode); 
       break;
 
     case eHTMLTag_body:

@@ -188,7 +188,7 @@ const PRInt32   kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
 const PRInt32   kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
 const PRInt32   kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
 const PRInt32   kNotFound         = -1;
-const PRInt32   kBlock            = NS_ERROR_HTMLPARSER_BLOCK;
+const PRInt32   kBlocked          = NS_ERROR_HTMLPARSER_BLOCK;
 
 const PRUint32  kNewLine          = '\n';
 const PRUint32  kCR               = '\r';
