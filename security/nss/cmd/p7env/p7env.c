@@ -34,7 +34,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.1 2000/03/31 20:12:23 relyea%netscape.com Exp $
+ * $Id: p7env.c,v 1.2 2001/01/06 22:08:54 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -43,7 +43,6 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>
@@ -76,24 +75,6 @@ Usage(char *progName)
     fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
 	    "-o output");
     exit(-1);
-}
-
-static CERTCertDBHandle certHandleStatic;	/* avoid having to allocate */
-
-static CERTCertDBHandle *
-OpenCertDB(char *progName)
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus rv;
-
-    certHandle = &certHandleStatic;
-    rv = CERT_OpenCertDB(certHandle, PR_FALSE, SECU_CertDBNameCallback, NULL);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "could not open cert database");
-	return NULL;
-    }
-
-    return certHandle;
 }
 
 struct recipient {
@@ -258,15 +239,13 @@ main(int argc, char **argv)
 
     /* Call the libsec initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
+    NSS_Init(SECU_ConfigDirectory(NULL));
 
     /* open cert database */
-    certHandle = OpenCertDB(progName);
+    certHandle = CERT_GetDefaultCertDB();
     if (certHandle == NULL) {
 	return -1;
     }
-    CERT_SetDefaultCertDB(certHandle);
 
     /* find certs */
     for (rcpt = recipients; rcpt != NULL; rcpt = rcpt->next) {

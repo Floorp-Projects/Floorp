@@ -212,23 +212,14 @@ create_pk7 (char *dir, char *keyName, int *keyType)
   CERTCertificate *cert;
   CERTCertDBHandle *db;
 
-  SECKEYKeyDBHandle *keyHandle;
-
   FILE *in, *out;
 
   char sf_file [FNSIZE];
   char pk7_file [FNSIZE];
 
-  /* open key database */
-  keyHandle = SECU_OpenKeyDB(PR_TRUE /*readOnly*/);
-
-  if (keyHandle == NULL) 
-    return -1; 
-
-  SECKEY_SetDefaultKeyDB (keyHandle);
 
   /* open cert database */
-  db = OpenCertDB(PR_TRUE /*readOnly*/); 
+  db = CERT_GetDefaultCertDB();
 
   if (db == NULL) 
     return -1;
@@ -653,7 +644,7 @@ SignFile (FILE *outFile, FILE *inFile, CERTCertificate *cert)
 		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, password_hardcode,
 			NULL);
 	} else {
-		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, SECU_GetPassword,
+		rv = SEC_PKCS7Encode(cinfo, SignOut, outFile, NULL, NULL,
 			NULL);
 	}
 		

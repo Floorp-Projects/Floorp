@@ -69,7 +69,7 @@ ListCerts(char *key, int list_certs)
 
 	*ugly_list = 0;
 
-	db= OpenCertDB(PR_TRUE /*readOnly*/); 
+	db= CERT_GetDefaultCertDB();
 
 	if (list_certs == 2) {
 		PR_fprintf(outputFD, "\nS Certificates\n");

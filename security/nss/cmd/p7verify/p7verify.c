@@ -34,7 +34,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.2 2001/01/05 01:37:48 nelsonb%netscape.com Exp $
+ * $Id: p7verify.c,v 1.3 2001/01/06 22:08:58 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -43,7 +43,6 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 #include "secoid.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
 
@@ -59,7 +58,6 @@ extern int fread(char *, size_t, size_t, FILE*);
 extern int fprintf(FILE *, char *, ...);
 #endif
 
-extern void SEC_Init(void);		/* XXX */
 
 static HASH_HashType
 AlgorithmToHashType(SECAlgorithmID *digestAlgorithms)
@@ -154,24 +152,6 @@ Usage(char *progName)
     exit(-1);
 }
 
-static CERTCertDBHandle certHandleStatic;	/* avoid having to allocate */
-
-static CERTCertDBHandle *
-OpenCertDB(char *progName)
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus rv;
-
-    certHandle = &certHandleStatic;
-    rv = CERT_OpenCertDB(certHandle, PR_FALSE, SECU_CertDBNameCallback, NULL);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "could not open cert database");
-	return NULL;
-    }
-
-    return certHandle;
-}
-
 static int
 HashDecodeAndVerify(FILE *out, FILE *content, PRFileDesc *signature,
 		    SECCertUsage usage, char *progName)
@@ -188,7 +168,7 @@ HashDecodeAndVerify(FILE *out, FILE *content, PRFileDesc *signature,
 	return -1;
     }
 
-    cinfo = SEC_PKCS7DecodeItem(&derdata, NULL, NULL, SECU_GetPassword, NULL,
+    cinfo = SEC_PKCS7DecodeItem(&derdata, NULL, NULL, NULL, NULL,
 				NULL, NULL, NULL);
     if (cinfo == NULL)
 	return -1;
@@ -232,9 +212,7 @@ main(int argc, char **argv)
     char *progName;
     FILE *contentFile, *outFile;
     PRFileDesc *signatureFile;
-    SECKEYKeyDBHandle *keyHandle;
     SECCertUsage certUsage = certUsageEmailSigner;
-    CERTCertDBHandle *certHandle;
     PLOptState *optstate;
     PLOptStatus status;
 
@@ -305,15 +283,7 @@ main(int argc, char **argv)
 
     /* Call the libsec initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    SEC_Init();
-
-    /* open cert database */
-    certHandle = OpenCertDB(progName);
-    if (certHandle == NULL) {
-	return -1;
-    }
-    CERT_SetDefaultCertDB(certHandle);
+    NSS_Init(SECU_ConfigDirectory(NULL));
 
     if (HashDecodeAndVerify(outFile, contentFile, signatureFile,
 			    certUsage, progName)) {
