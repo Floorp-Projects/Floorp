@@ -126,6 +126,11 @@ FeedItem.prototype =
     this.mURL = uri.spec;
   },
 
+  get date()
+  {
+    return this.mDate;
+  },
+
   set date (aVal)
   {
     this.mDate = aVal;
