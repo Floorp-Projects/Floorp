@@ -327,7 +327,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nscoord y, nscoord height)
 { 
   //printf("Y is: %d\n", y);
   //printf("Height is: %d\n", height); 
-  if (height <= 0) {
+  if (height <= 0 && IsLazy()) {
     mIsFull = PR_TRUE;
     return PR_FALSE;
   }
