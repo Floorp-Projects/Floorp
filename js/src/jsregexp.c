@@ -3100,7 +3100,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
         /*
          * JS1.2 emulated Perl4.0.1.8 (patch level 36) for global regexps used
          * in scalar contexts, and unintentionally for the string.match "list"
-         * psuedo-context.  On "hi there bye", the following would result:
+         * pseudo-context.  On "hi there bye", the following would result:
          *
          * Language     while(/ /g){print("$`");}   s/ /$`/g
          * perl4.036    "hi", "there"               "hihitherehi therebye"

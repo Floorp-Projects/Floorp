@@ -2073,7 +2073,7 @@ nsFastLoadFileWriter::Close()
     return mOutputStream->Close();
 }
 
-// Psuedo-tag used as flag between WriteSingleRefObject and WriteObjectCommon.
+// Pseudo-tag used as flag between WriteSingleRefObject and WriteObjectCommon.
 #define MFL_SINGLE_REF_PSEUDO_TAG       PR_BIT(MFL_OBJECT_TAG_BITS)
 
 nsresult

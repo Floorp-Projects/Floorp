@@ -3634,7 +3634,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
     {
 
       // if <form>'s parent is <tr>/<table>/<tbody>/<thead>/<tfoot> in html,
-      // NOT create psuedoframe for it.
+      // NOT create pseudoframe for it.
       // see bug 159359
       nsINodeInfo *childNodeInfo = aChildContent->GetNodeInfo();
       // Sometimes aChildContent is a #text node.  In those cases it
@@ -4596,7 +4596,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
          // Notify combobox that it should use the listbox as it's popup
       comboBox->SetDropDown(listFrame);
 
-        // Resolve psuedo element style for the dropdown list 
+        // Resolve pseudo element style for the dropdown list 
       nsRefPtr<nsStyleContext> listStyle;
       listStyle = aPresShell->StyleSet()->ResolvePseudoStyleFor(aContent, 
                                                                 nsCSSAnonBoxes::dropDownList, 

@@ -139,14 +139,14 @@ protected:
     /**
      * Parses all XML Stylesheet PIs associated with the
      * given XML document. If any stylesheet PIs are found with
-     * type="text/xsl" the href psuedo attribute value will be
+     * type="text/xsl" the href pseudo attribute value will be
      * added to the given href argument. If multiple text/xsl stylesheet PIs
      * are found, the one closest to the end of the document is used.
      */
     static void getHrefFromStylesheetPI(Document& xmlDocument, nsAString& href);
 
     /**
-     * Parses the contents of data, returns the type and href psuedo attributes
+     * Parses the contents of data, returns the type and href pseudo attributes
      */
     static void parseStylesheetPI(const nsAFlatString& data,
                                   nsAString& type,

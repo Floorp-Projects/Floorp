@@ -69,7 +69,7 @@ protected:
 /**
  * main frame for an nsTable content object, 
  * the nsTableOuterFrame contains 0 or one caption frame, and a nsTableFrame
- * psuedo-frame (referred to as the "inner frame').
+ * pseudo-frame (referred to as the "inner frame').
  */
 class nsTableOuterFrame : public nsHTMLContainerFrame, public nsITableLayout
 {

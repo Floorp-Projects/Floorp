@@ -3210,7 +3210,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
       downloadLineDontDelete->uidOfMessage);
     }
   }
-  // ***** We need to handle the psuedo interrupt here *****
+  // ***** We need to handle the pseudo interrupt here *****
 }
 
 // well, this is what the old code used to look like to handle a line seen by the parser.

@@ -236,7 +236,7 @@ txStandaloneXSLTProcessor::transform(txXPathNode& aSource,
 /**
  * Parses the XML Stylesheet PIs associated with the
  * given XML document. If a stylesheet PIs is found with type="text/xsl"
- * or type="text/xml" the href psuedo attribute value will be appended to
+ * or type="text/xml" the href pseudo attribute value will be appended to
  * the given href argument. If multiple text/xsl stylesheet PIs
  * are found, the first one is used.
  */
