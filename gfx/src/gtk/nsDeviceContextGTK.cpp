@@ -37,6 +37,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
+#include "nsIScreenManager.h"
+
+
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -80,12 +83,27 @@ nsDeviceContextGTK::~nsDeviceContextGTK()
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
-  GdkVisual *vis;
   GtkRequisition req;
   GtkWidget *sb;
 
-  mWidget = aNativeWidget;
-
+  // get the screen object and its width/height
+  // XXXRight now this will only get the primary monitor.
+  nsresult ignore;
+  nsCOMPtr<nsIScreenManager> sm ( do_GetService("component://netscape/gfx/screenmanager", &ignore) );
+  if ( sm ) {
+    nsCOMPtr<nsIScreen> screen;
+    sm->GetPrimaryScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 width, height, depth;
+      screen->GetAvailWidth ( &width );
+      screen->GetAvailHeight ( &height );
+      screen->GetPixelDepth ( &depth );
+      mWidthFloat = float(width);
+      mHeightFloat = float(height);
+      mDepth = NS_STATIC_CAST ( PRUint32, depth );
+    }
+  }
+    
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
@@ -109,9 +127,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     }
 
     // Set OSVal to what the operating system thinks the logical resolution is.
-    float screenWidth = float(::gdk_screen_width());
     float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-    PRInt32 OSVal = nscoord(screenWidth / screenWidthIn);
+    PRInt32 OSVal = nscoord(mWidthFloat / screenWidthIn);
 
     if (prefVal > 0) {
       // If there's a valid pref value for the logical resolution,
@@ -130,9 +147,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   SetDPI(mDpi);
   
-  vis = gdk_rgb_get_visual();
-  mDepth = vis->depth;
-
   sb = gtk_vscrollbar_new(NULL);
   gtk_widget_ref(sb);
   gtk_object_sink(GTK_OBJECT(sb));
@@ -148,9 +162,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mScrollbarHeight = req.height;
   gtk_widget_destroy(sb);
   gtk_widget_unref(sb);
-
-  mWidthFloat = (float) gdk_screen_width();
-  mHeightFloat = (float) gdk_screen_height();
 
 #ifdef DEBUG
   static PRBool once = PR_TRUE;
@@ -461,12 +472,7 @@ NS_IMETHODIMP nsDeviceContextGTK::EndPage(void)
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDepth(PRUint32& aDepth)
 {
-  GdkVisual * rgb_visual = gdk_rgb_get_visual();
-
-  gint rgb_depth = rgb_visual->depth;
-
-  aDepth = (PRUint32) rgb_depth;
-
+  aDepth = mDepth;
   return NS_OK;
 }
 

@@ -30,7 +30,6 @@
 class nsScreenGtk : public nsIScreen
 {
 public:
-  //nsScreenGtk ( GDHandle inScreen );
   nsScreenGtk ( );
   virtual ~nsScreenGtk();
 
@@ -39,11 +38,6 @@ public:
 
 private:
 
-    // are we the primary screen? Needed so we can sub out the menubar if
-    // asked.
-  //PRBool IsPrimaryScreen ( ) const { return (mScreen == ::GetMainDevice()); }
-  
-  // GDHandle mScreen;   // the device that represents this screen
 };
 
 #endif  // nsScreenGtk_h___ 

@@ -67,39 +67,10 @@ nsScreenManagerGtk :: CreateNewScreenObject (  )
 // The coordinates are in pixels (not twips) and in screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerGtk :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inWidth, PRInt32 inHeight,
-                                        nsIScreen **outScreen )
+nsScreenManagerGtk :: ScreenForRect ( PRInt32 /*inTop*/, PRInt32 /*inLeft*/, PRInt32 /*inWidth*/,
+                                       PRInt32 /*inHeight*/, nsIScreen **outScreen )
 {
-#if 0
-  if ( !(inTop || inLeft || inWidth || inHeight) ) {
-    NS_WARNING ( "trying to find screen for sizeless window" );
-    *outScreen = CreateNewScreenObject ( ::GetMainDevice() );    // addrefs
-    return NS_OK;
-  }
-
-  Rect globalWindowBounds = { inTop, inLeft, inTop + inHeight, inLeft + inWidth };
-
-  GDHandle currDevice = ::GetDeviceList();
-  GDHandle deviceWindowIsOn = ::GetMainDevice();
-  PRInt32 greatestArea = 0;
-  while ( currDevice ) {
-    if ( ::TestDeviceAttribute(currDevice, screenDevice) && ::TestDeviceAttribute(currDevice, screenActive) ) {
-      // calc the intersection.
-      Rect intersection;
-      Rect devRect = (**currDevice).gdRect;
-      ::SectRect ( &globalWindowBounds, &devRect, &intersection );
-      PRInt32 intersectArea = (intersection.right - intersection.left) * 
-                                  (intersection.bottom - intersection.top);
-      if ( intersectArea > greatestArea ) {
-        greatestArea = intersectArea;
-        deviceWindowIsOn = currDevice;
-     }      
-    } // if device is a screen and visible
-    currDevice = ::GetNextDevice(currDevice);
-  } // foreach device in list
-
-  *outScreen = CreateNewScreenObject ( deviceWindowIsOn );    // addrefs
-#endif
+  GetPrimaryScreen ( outScreen );
   return NS_OK;
     
 } // ScreenForRect
@@ -114,7 +85,7 @@ nsScreenManagerGtk :: ScreenForRect ( PRInt32 inTop, PRInt32 inLeft, PRInt32 inW
 NS_IMETHODIMP 
 nsScreenManagerGtk :: GetPrimaryScreen(nsIScreen * *aPrimaryScreen) 
 {
-//  *aPrimaryScreen = CreateNewScreenObject ( ::GetMainDevice() );    // addrefs  
+  *aPrimaryScreen = CreateNewScreenObject();    // addrefs  
   return NS_OK;
   
 } // GetPrimaryScreen
