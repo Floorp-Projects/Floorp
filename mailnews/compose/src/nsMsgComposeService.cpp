@@ -181,14 +181,13 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
          format = nsIMsgCompFormat::PlainText;
 
        //ugghh more conversion work!!!!
-       // and all our arguments must be escaped!
-       nsAutoString uniToPart = nsEscape(aToPart, url_Path);
-       nsAutoString uniCcPart = nsEscape(aCcPart, url_Path);
-       nsAutoString unicBccPart = nsEscape(aBccPart, url_Path);
-       nsAutoString uniNewsgroup = nsEscape(aNewsgroup, url_Path);
-       nsAutoString uniSubjectPart = nsEscape(aSubjectPart, url_Path);
-       nsAutoString uniBodyPart = nsEscape(aBodyPart, url_Path);
-       nsAutoString uniAttachmentPart = nsEscape(aAttachmentPart, url_Path);
+       nsAutoString uniToPart = aToPart;
+       nsAutoString uniCcPart = aCcPart;
+       nsAutoString unicBccPart = aBccPart;
+       nsAutoString uniNewsgroup = aNewsgroup;
+       nsAutoString uniSubjectPart = aSubjectPart;
+       nsAutoString uniBodyPart = aBodyPart;
+       nsAutoString uniAttachmentPart = aAttachmentPart;
        
        rv = OpenComposeWindowWithValues(aMsgComposeWindowURL, format, uniToPart.GetUnicode(), 
                                         uniCcPart.GetUnicode(),
