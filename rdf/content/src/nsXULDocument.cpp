@@ -3757,12 +3757,15 @@ XULDocumentImpl::Init(void)
     rv = nsServiceManager::GetService(kLocalStoreCID,
                                       NS_GET_IID(nsIRDFDataSource),
                                       (nsISupports**) &localstore);
-    mLocalStore = localstore;
-    NS_IF_RELEASE(localstore);
 
     // this _could_ fail; e.g., if we've tried to grab the local store
     // before profiles have initialized. If so, no big deal; nothing
     // will persist.
+
+    if (NS_SUCCEEDED(rv)) {
+        mLocalStore = localstore;
+        NS_IF_RELEASE(localstore);
+    }
 
 #if 0
     // construct a selection object
