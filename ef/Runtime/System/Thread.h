@@ -85,7 +85,7 @@ public:
 		// dummy constructor, never used (only used for casting)
 		JavaThread(const Type& type) : JavaObject(type) { }
 	};
-	Thread(JavaObject* o) : state(DEFAULT), peer(o), id(NULL), handle(NULL), prio(PR_PRIORITY_NORMAL) {
+	Thread(JavaObject* o) : state(DEFAULT), peer(o), handle(NULL), prio(PR_PRIORITY_NORMAL), id(NULL) {
 	    _lock = PR_NewLock();
 	}
 	~Thread() {
