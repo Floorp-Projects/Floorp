@@ -1402,7 +1402,7 @@ class nsEPSObjectXp {
         mBBurx(0.0),
         mBBury(0.0)
       {
-        mData       = aData;
+        mData       = NS_REINTERPRET_CAST(const char*, aData);
         mDataLength = aDataLength;
 
         NS_PRECONDITION(aData != nsnull,   "aData == nsnull");
@@ -1418,7 +1418,7 @@ class nsEPSObjectXp {
         /* First line (assuming a single line of PostScript line is not longer
          * than 256 chars) should usually look like "%!PS-Adobe-3.0 EPSF-3.0"
          * (version numbers may be different) */
-        return (PL_strnstr(aData, " EPSF-", PR_MIN(aDataLength, 256)) != nsnull);
+        return (PL_strnstr(NS_REINTERPRET_CAST(const char*, aData), " EPSF-", PR_MIN(aDataLength, 256)) != nsnull);
       }
       
 
@@ -1472,7 +1472,7 @@ class nsEPSObjectXp {
       }
   private:
       nsresult             mStatus;
-      const unsigned char *mData;
+      const char          *mData;
       unsigned long        mDataLength;
       const char          *mCurrPos;
       PRFloat64            mBBllx,
@@ -1624,7 +1624,7 @@ NS_IMETHODIMP nsXPrintContext::RenderEPS(const nsRect& aRect, const unsigned cha
                    "countdictstack dict_count sub { end } repeat\n"
                    "b4_Inc_state restore\n"
                    "%%EndDocument\n");
-    embedData       = aBuffer.get();
+    embedData       = NS_REINTERPRET_CAST(const unsigned char*, aBuffer.get());
     embedDataLength = aBuffer.Length();
   }
   else
