@@ -28,7 +28,7 @@
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
-#include "nsCExternalHelperApp.h" // contains progids for the helper app service
+#include "nsCExternalHandlerService.h" // contains progids for the helper app service
 
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
 NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
@@ -37,6 +37,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsIExternalHelperAppService)
    NS_INTERFACE_MAP_ENTRY(nsPIExternalAppLauncher)
+   NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolService)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalHelperAppService::nsExternalHelperAppService()
@@ -76,6 +77,23 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIS
 
   handler->Init(aAppCookie, aTempFileExtension);
   return handler;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// begin external protocol service default implementation...
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme,
+                                                                        PRBool * aHandlerExists)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  *aHandlerExists = PR_FALSE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////

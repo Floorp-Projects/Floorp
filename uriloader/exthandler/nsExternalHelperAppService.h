@@ -24,6 +24,8 @@
 #define nsExternalHelperAppService_h__
 
 #include "nsIExternalHelperAppService.h"
+#include "nsIExternalProtocolService.h"
+
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -33,12 +35,13 @@
 
 class nsExternalAppHandler;
 
-class nsExternalHelperAppService : public nsIExternalHelperAppService, nsPIExternalAppLauncher
+class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, public nsIExternalProtocolService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXTERNALHELPERAPPSERVICE
   NS_DECL_NSPIEXTERNALAPPLAUNCHER
+  NS_DECL_NSIEXTERNALPROTOCOLSERVICE
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
