@@ -65,6 +65,8 @@
 
 #include "nsIMessageView.h"
 
+#include "nsMsgUtils.h"
+
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
@@ -559,39 +561,15 @@ void nsMsgAppCore::InitializeFolderRoot()
 NS_IMETHODIMP
 nsMsgAppCore::OpenURL(const char * url)
 {
-	// mscott, okay this is all temporary hack code to support the Demo menu item which allows us to load
-	// some hard coded news and mailbox urls.....it will ALL eventually go away.......
-
 	if (url)
 	{
-		nsIMsgMessageService * mailboxService = nsnull;
+		nsIMsgMessageService * messageService = nsnull;
+		nsresult rv = GetMessageServiceFromURI(url, &messageService);
 
-		// turn off news for now...
-		if (PL_strncmp(url, "news:", 5) == 0) // is it a news url?
+		if (NS_SUCCEEDED(rv) && messageService)
 		{
-			nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=nntp", 
-														nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
-			if (NS_SUCCEEDED(rv) && mailboxService)
-			{
-				mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
-				nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=nntp", mailboxService);
-			}
-		}
-
-		// mscott - eventually we will call a function which takes a URI and returns a nsIMsgMessageService 
-		// then we won't even have to look at the protocol prototype and use a hard coded progid to get the
-		// right instance of the message service.
-		if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMailboxMessageRootURI, PL_strlen(kMailboxMessageRootURI)) == 0)
-		{
-		
-			nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=mailbox", 
-														nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
-
-			if (NS_SUCCEEDED(rv) && mailboxService)
-			{
-				mailboxService->DisplayMessage(url, mWebShell, nsnull, nsnull);
-				nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=mailbox", mailboxService);
-			}
+			messageService->DisplayMessage(url, mWebShell, nsnull, nsnull);
+			ReleaseMessageServiceFromURI(url, messageService);
 		}
 
 	}
@@ -685,15 +663,16 @@ nsMsgAppCore::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement 
 		firstMessage->GetValue(&uri);
 		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
 
-		nsIMsgMessageService * mailboxService = nsnull;
-		nsresult rv = nsServiceManager::GetService("component://netscape/messenger/messageservice;type=mailbox", nsIMsgMessageService::GetIID(), (nsISupports **) &mailboxService);
-		if (NS_SUCCEEDED(rv) && mailboxService)
+		nsIMsgMessageService * messageService = nsnull;
+		nsresult rv = GetMessageServiceFromURI(uri, &messageService);
+
+		if (NS_SUCCEEDED(rv) && messageService)
 		{
 			nsIURL * url = nsnull;
-			mailboxService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
-
-			nsServiceManager::ReleaseService("component://netscape/messenger/messageservice;type=mailbox", mailboxService);
+			messageService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
+			ReleaseMessageServiceFromURI(uri, messageService);
 		}
+
 	}
 
 	NS_RELEASE(srcResource);
