@@ -606,6 +606,9 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
       // Align the middle of the child frame with the middle of the content area, 
       kidYTop = (height - childHeight - bottomInset + topInset) / 2;
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(&p2t);
+      kidYTop = nsTableFrame::RoundToPixel(kidYTop, p2t, eAlwaysRoundDown);
   }
   firstKid->MoveTo(aPresContext, kidRect.x, kidYTop);
   if (kidYTop != kidRect.y) {
