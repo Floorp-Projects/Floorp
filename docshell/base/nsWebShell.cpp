@@ -143,8 +143,10 @@ public:
                                nsIWebShell*& aResult);
   NS_IMETHOD Back(void);
   NS_IMETHOD Forward(void);
+  NS_IMETHOD Reload();
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIPostData* aPostData=nsnull);
+                     nsIPostData* aPostData=nsnull,
+                     PRBool aModifyHistory=PR_TRUE);
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult);
@@ -867,7 +869,8 @@ nsWebShell::Forward(void)
 
 NS_IMETHODIMP
 nsWebShell::LoadURL(const nsString& aURLSpec,
-                    nsIPostData* aPostData)
+                    nsIPostData* aPostData,
+                    PRBool aModifyHistory)
 {
   nsresult rv;
   PRInt32 colon, fSlash;
@@ -894,19 +897,29 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
     }
   }
 
-  // Discard part of history that is no longer reachable
-  PRInt32 i, n = mHistory.Count();
-  i = mHistoryIndex + 1;
-  while (--n >= i) {
-    nsString* u = (nsString*) mHistory.ElementAt(n);
-    delete u;
-    mHistory.RemoveElementAt(n);
-  }
-
-  // Tack on new url
   nsString* url = new nsString(urlSpec);
-  mHistory.AppendElement(url);
-  mHistoryIndex++;
+  if (aModifyHistory) {
+    // Discard part of history that is no longer reachable
+    PRInt32 i, n = mHistory.Count();
+    i = mHistoryIndex + 1;
+    while (--n >= i) {
+      nsString* u = (nsString*) mHistory.ElementAt(n);
+      delete u;
+      mHistory.RemoveElementAt(n);
+    }
+
+    // Tack on new url
+    mHistory.AppendElement(url);
+    mHistoryIndex++;
+  }
+  else {
+    // Replace the current history index with this URL
+    nsString* u = (nsString*) mHistory.ElementAt(mHistoryIndex);
+    if (nsnull != u) {
+      delete u;
+    }
+    mHistory.ReplaceElementAt(url, mHistoryIndex);
+  }
   ShowHistory();
 
   // Tell web-shell-container we are loading a new url
@@ -927,6 +940,12 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
                            nsnull,         // Extra Info...
                            mObserver);     // Observer
   return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::Reload()
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
