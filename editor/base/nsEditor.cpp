@@ -3495,34 +3495,6 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
 
   if (IsMozEditorBogusNode(aNode)) return PR_FALSE;
   
-/*  THIS DOESN'T WORK!
-  // it's not the bogus node, so see if it is an irrelevant text node
-  if (PR_TRUE==IsTextNode(aNode))
-  {
-    nsCOMPtr<nsIDOMCharacterData> text = do_QueryInterface(aNode);    
-    // nsCOMPtr<nsIDOMComment> commentNode = do_QueryInterface(aNode);
-    if (text)
-    {
-      nsAutoString data;
-      text->GetData(data);
-      PRUint32 length = data.Length();
-      if (0==length) {
-        return PR_FALSE;
-      }
-      // if the node contains only newlines, it's not editable
-      // you could use nsITextContent::IsOnlyWhitespace here
-      PRUint32 i;
-      for (i=0; i<length; i++)
-      {
-        PRUnichar character = data.CharAt(i);
-        if ('\n'!=character) {
-          return PR_TRUE;
-        }
-      }
-      return PR_FALSE;
-    }
-  }
-*/  
   // we got this far, so see if it has a frame.  If so, we'll edit it.
   nsIFrame *resultFrame;
   nsCOMPtr<nsIContent>content;
@@ -3530,15 +3502,9 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   if (content)
   {
     nsresult result = shell->GetPrimaryFrameFor(content, &resultFrame);
-    if (NS_FAILED(result) || !resultFrame) {  // if it has no frame, it is not editable
+    if (NS_FAILED(result) || !resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
-    }
-    else {                                    
-      // it has a frame, so it might editable
-      // but not if it's a formatting whitespace node
-      if (IsEmptyTextContent(content)) return PR_FALSE;          
-      return PR_TRUE;
-    }
+    return PR_TRUE;
   }
   return PR_FALSE;  // it's not a content object (???) so it's not editable
 }
