@@ -1325,21 +1325,24 @@ mime_parse_stream_complete (nsMIMESession *stream)
         // Ok, if we are here, then we should look at the charset and convert
         // to UTF-8...
         //
-        char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
-        if (bodyCharset)
+        if (!forward_inline)
         {
-          // Now do conversion to UTF-8 for output
-          char  *convertedString = nsnull;
-          PRInt32 convertedStringLen;
-          PRInt32 res = MIME_ConvertCharset(PR_FALSE, bodyCharset, "UTF-8", body, nsCRT::strlen(body), 
-                                            &convertedString, &convertedStringLen, NULL);
-          if (res == 0)
+          char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
+          if (bodyCharset)
           {
-            PR_FREEIF(body);
-            body = convertedString;
-          }  
+            // Now do conversion to UTF-8 for output
+            char  *convertedString = nsnull;
+            PRInt32 convertedStringLen;
+            PRInt32 res = MIME_ConvertCharset(PR_FALSE, bodyCharset, "UTF-8", body, nsCRT::strlen(body), 
+                                              &convertedString, &convertedStringLen, NULL);
+            if (res == 0)
+            {
+              PR_FREEIF(body);
+              body = convertedString;
+            }  
 
-          PR_FREEIF(bodyCharset);
+            PR_FREEIF(bodyCharset);
+          }
         }
 
         // convert from UTF-8 to UCS2
