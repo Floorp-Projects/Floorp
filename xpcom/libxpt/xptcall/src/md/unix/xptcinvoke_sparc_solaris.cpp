@@ -26,7 +26,7 @@
 
 typedef unsigned nsXPCVariant;
 
-PRUint32
+extern "C" PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
     PRUint32 result = 0;
@@ -75,7 +75,7 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
     return result;
 }
 
-void
+extern "C" void
 invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
 {
 /*
