@@ -113,10 +113,10 @@ function initPrefs()
          ["log",                false,                                  ".log"],
          ["logFileName",        makeLogNameClient,                      ".log"],
          ["logFile.client",     "client.$y-$m-$d.log",                  ".log"],
-         ["logFile.network",    "$(network)/$network).$y-$m-$d.log",     ".log"],
+         ["logFile.network",    "$(network)/$(network).$y-$m-$d.log",   ".log"],
          ["logFile.channel",    "$(network)/channels/$(channel).$y-$m-$d.log",
                                                                         ".log"],
-         ["logFile.user",       "$(network)/users/$(user).$y-$m-$d.log",  ".log"],
+         ["logFile.user",       "$(network)/users/$(user).$y-$m-$d.log",".log"],
          ["logFolder",          getURLSpecFromFile(logPath.path), ".log"],
          ["messages.click",     "goto-url",          "global.links"],
          ["messages.ctrlClick", "goto-url-newwin",   "global.links"],
@@ -214,9 +214,9 @@ function makeLogName(obj, type)
         return rv;
     };
 
-    /*  /\$\(([^)])\)|\$(\w)/g   *
-     *       <---->     <-->     *
-     *      longName  shortName  *
+    /*  /\$\(([^)]+)\)|\$(\w)/g   *
+     *       <----->     <-->     *
+     *      longName   shortName  *
      */
     function replaceParam(match, longName, shortName)
     {
@@ -272,7 +272,7 @@ function makeLogName(obj, type)
                      };
 
     // Replace all $-variables in one go.
-    file = file.replace(/\$\(([^)])\)|\$(\w)/g, replaceParam);
+    file = file.replace(/\$\(([^)]+)\)|\$(\w)/g, replaceParam);
 
     // Convert from file: URL to local OS format.
     try
