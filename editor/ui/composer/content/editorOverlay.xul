@@ -182,38 +182,38 @@
           events="create, style, mode_switch"
           oncommandupdate="goUpdateComposerMenuItems(this)"
   >
-    <command id="cmd_bold"          state="false"     oncommand="goDoCommand('cmd_bold')"/>
-    <command id="cmd_italic"        state="false"     oncommand="goDoCommand('cmd_italic')"/>
-    <command id="cmd_underline"     state="false"     oncommand="goDoCommand('cmd_underline')"/>
-    <command id="cmd_tt"            state="false"     oncommand="goDoCommand('cmd_tt')"/>
+    <command id="cmd_bold"          state="false"     oncommand="doStyleUICommand('cmd_bold')"/>
+    <command id="cmd_italic"        state="false"     oncommand="doStyleUICommand('cmd_italic')"/>
+    <command id="cmd_underline"     state="false"     oncommand="doStyleUICommand('cmd_underline')"/>
+    <command id="cmd_tt"            state="false"     oncommand="doStyleUICommand('cmd_tt')"/>
     <command id="cmd_smiley"        state=""  />
 
-    <command id="cmd_strikethrough" state="false"     oncommand="goDoCommand('cmd_strikethrough')"/>
-    <command id="cmd_superscript"   state="false"     oncommand="goDoCommand('cmd_superscript')"/>
-    <command id="cmd_subscript"     state="false"     oncommand="goDoCommand('cmd_subscript')"/>
-    <command id="cmd_nobreak"       state="false"     oncommand="goDoCommand('cmd_nobreak')"/>
+    <command id="cmd_strikethrough" state="false"     oncommand="doStyleUICommand('cmd_strikethrough');"/>
+    <command id="cmd_superscript"   state="false"     oncommand="doStyleUICommand('cmd_superscript');"/>
+    <command id="cmd_subscript"     state="false"     oncommand="doStyleUICommand('cmd_subscript');"/>
+    <command id="cmd_nobreak"       state="false"     oncommand="doStyleUICommand('cmd_nobreak');"/>
 
-    <command id="cmd_em"            state="false"     oncommand="goDoCommand('cmd_em')"/>
-    <command id="cmd_strong"        state="false"     oncommand="goDoCommand('cmd_strong')"/>
-    <command id="cmd_cite"          state="false"     oncommand="goDoCommand('cmd_cite')"/>
-    <command id="cmd_abbr"          state="false"     oncommand="goDoCommand('cmd_abbr')"/>
-    <command id="cmd_acronym"       state="false"     oncommand="goDoCommand('cmd_acronym')"/>
-    <command id="cmd_code"          state="false"     oncommand="goDoCommand('cmd_code')"/>
-    <command id="cmd_samp"          state="false"     oncommand="goDoCommand('cmd_samp')"/>
-    <command id="cmd_var"           state="false"     oncommand="goDoCommand('cmd_var')"/>
+    <command id="cmd_em"            state="false"     oncommand="doStyleUICommand('cmd_em')"/>
+    <command id="cmd_strong"        state="false"     oncommand="doStyleUICommand('cmd_strong')"/>
+    <command id="cmd_cite"          state="false"     oncommand="doStyleUICommand('cmd_cite')"/>
+    <command id="cmd_abbr"          state="false"     oncommand="doStyleUICommand('cmd_abbr')"/>
+    <command id="cmd_acronym"       state="false"     oncommand="doStyleUICommand('cmd_acronym')"/>
+    <command id="cmd_code"          state="false"     oncommand="doStyleUICommand('cmd_code')"/>
+    <command id="cmd_samp"          state="false"     oncommand="doStyleUICommand('cmd_samp')"/>
+    <command id="cmd_var"           state="false"     oncommand="doStyleUICommand('cmd_var')"/>
 
-    <command id="cmd_ul"            state="false"     oncommand="goDoCommand('cmd_ul')"/>
-    <command id="cmd_ol"            state="false"     oncommand="goDoCommand('cmd_ol')"/>
+    <command id="cmd_ul"            state="false"     oncommand="doStyleUICommand('cmd_ul')"/>
+    <command id="cmd_ol"            state="false"     oncommand="doStyleUICommand('cmd_ol')"/>
 
     <command id="cmd_indent"                          oncommand="goDoCommand('cmd_indent')"/>
     <command id="cmd_outdent"                         oncommand="goDoCommand('cmd_outdent')"/>
 
     <!-- the state attribute gets filled with the paragraph format before the command is exectued -->
-    <command id="cmd_paragraphState"  state=""         oncommand="goDoCommand('cmd_paragraphState')"/>
-    <command id="cmd_fontFace"        state=""         oncommand="goDoCommand('cmd_fontFace')"/>
+    <command id="cmd_paragraphState"  state=""         oncommand="doStatefulCommand('cmd_paragraphState', event.target.value)"/>
+    <command id="cmd_fontFace"        state=""         oncommand="doStatefulCommand('cmd_fontFace', event.target.value)"/>
 
     <!-- No "oncommand", use EditorSelectColor() to bring up color dialog -->
-    <command id="cmd_fontColor"       state=""/>
+    <command id="cmd_fontColor"       state="x"/>
     <command id="cmd_backgroundColor" state=""/>
     <command id="cmd_highlight"       state="transparent"  oncommand="EditorSelectColor('Highlight', event);"/>
 
@@ -236,8 +236,8 @@
           events="create, mode_switch"
           oncommandupdate="goUpdateComposerMenuItems(this)">
     <!-- List menu  -->
-    <command id="cmd_dt"                  oncommand="goDoCommand('cmd_dt')"/>
-    <command id="cmd_dd"                  oncommand="goDoCommand('cmd_dd')"/>
+    <command id="cmd_dt"                  oncommand="doStyleUICommand('cmd_dt')"/>
+    <command id="cmd_dd"                  oncommand="doStyleUICommand('cmd_dd')"/>
     <command id="cmd_removeList"          oncommand="goDoCommand('cmd_removeList')"/>
     <!-- cmd_ul and cmd_ol are shared with toolbar and are in composerStyleMenuItems commandset -->
   </commandset>
