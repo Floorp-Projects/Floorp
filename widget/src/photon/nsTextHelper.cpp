@@ -85,9 +85,9 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 
   if (mWidget)
   {
-    NS_ALLOC_STR_BUF(buf, aText, 512);
+    NS_ALLOC_STR_BUF(buf, aText, aText.Length());
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetText to <%s>\n", buf));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetText to <%s> for <%p>\n", buf, mWidget));
 
     PtSetArg(&arg[0], Pt_ARG_TEXT_STRING, buf, 0);
     PtSetResources(mWidget, 1, arg);
@@ -109,7 +109,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
  PRUint32  currentTextLength;
   if (mWidget)
   {
-    NS_ALLOC_STR_BUF(buf, aText, 512);
+    NS_ALLOC_STR_BUF(buf, aText, aText.Length());
 	ret=PtTextModifyText(mWidget,0,0,aStartPos,buf,aText.Length());
 	if (!ret)
  	{
@@ -286,5 +286,5 @@ nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
 //-------------------------------------------------------------------------
 nsTextHelper::~nsTextHelper()
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::~nsTextHelper Destructor called\n"));
+ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::~nsTextHelper Destructor called for <%p>\n", mWidget));
 }

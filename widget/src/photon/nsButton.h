@@ -34,10 +34,8 @@ public:
   nsButton();
   virtual ~nsButton();
 
-   //nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
-  NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
-  NS_IMETHOD_(nsrefcnt) Release(void);                                      
+  //nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
   
   // nsIButton part
   NS_IMETHOD SetLabel(const nsString& aText);
@@ -52,12 +50,9 @@ public:
   virtual PRBool OnResize(nsRect &aWindowRect);
 
 protected:
-
   NS_IMETHOD CreateNative( PtWidget_t* aParent );
-  static int handle_activate_event (PtWidget_t *aWidget, void *aData, PtCallbackInfo_t *aCbinfo );
   
   nsString    mLabel;
-
 };
 
 #endif // nsButton_h__
