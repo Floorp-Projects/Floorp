@@ -81,7 +81,7 @@ protected:
   static PRIntn MakeSide(nsPoint aPoints[],
                          nsIRenderingContext& aContext,
                          PRIntn whichSide,
-                         const nsRect& inside, const nsRect& outside,
+                         const nsRect& outside, const nsRect& inside,
                          PRIntn borderPart, float borderFrac,
                          nscoord twipsPerPixel);
 
