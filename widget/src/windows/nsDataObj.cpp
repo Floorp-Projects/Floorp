@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Sean Echevarria <Sean@Beatnik.com>
  */
 
 #include "nsDataObj.h"
@@ -32,6 +33,7 @@
 #include "nsXPIDLString.h"
 #include "nsIImage.h"
 #include "nsImageClipboard.h"
+#include "prprf.h"
 
 #include "OLE2.h"
 #include "URLMON.h"
@@ -500,12 +502,13 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   fmetc.cfFormat = RegisterClipboardFormat ( CFSTR_FILECONTENTS );
 
   // create a global memory area and build up the file contents w/in it
-  static const char* shortcutPrefix = "[InternetShortcut]\nURL=";
-  static int prefixLen = strlen(shortcutPrefix);
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, prefixLen + strlen(urlStr) + 1);
+  static const char* shortcutFormatStr = "[InternetShortcut]\nURL=%s\n";
+  static const int formatLen = strlen(shortcutFormatStr) - 2; // don't include %s in the len
+  const int totalLen = formatLen + strlen(urlStr) + 1;
+  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, totalLen);
   if ( hGlobalMemory ) {
     char* contents = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
-    sprintf( contents, "%s%s", shortcutPrefix, urlStr );
+    PR_snprintf( contents, totalLen, shortcutFormatStr, urlStr );
     ::GlobalUnlock(hGlobalMemory);
     aSTG.hGlobal = hGlobalMemory;
     aSTG.tymed = TYMED_HGLOBAL;
@@ -753,7 +756,7 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 // a url and pulls out the url portion of the data. Used mostly for creating
 // internet shortcuts on the desktop. The url flavor is of the format:
 //
-//   <url> <space> <page title>
+//   <url> <linefeed> <page title>
 //
 nsresult
 nsDataObj :: ExtractShortcutURL ( nsString & outURL )
@@ -770,12 +773,12 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
       urlObject->GetData ( getter_Copies(url) );
       outURL = url;
 
-      // find the first space in the data, that's where the url ends. trunc the 
+      // find the first linefeed in the data, that's where the url ends. trunc the 
       // result string at that point.
-      PRInt32 spaceIndex = outURL.FindChar ( ' ' );
-      NS_ASSERTION ( spaceIndex > 0, "Format for url flavor is <url> <space> <page title>" );
-      if ( spaceIndex > 0 ) {
-        outURL.Truncate ( spaceIndex );
+      PRInt32 lineIndex = outURL.FindChar ( '\n' );
+      NS_ASSERTION ( lineIndex > 0, "Format for url flavor is <url> <linefeed> <page title>" );
+      if ( lineIndex > 0 ) {
+        outURL.Truncate ( lineIndex );
         rv = NS_OK;    
       }
     }
@@ -793,7 +796,7 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
 // a url and pulls out the title portion of the data. Used mostly for creating
 // internet shortcuts on the desktop. The url flavor is of the format:
 //
-//   <url> <space> <page title>
+//   <url> <linefeed> <page title>
 //
 nsresult
 nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
@@ -811,12 +814,12 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
       urlObject->GetData ( getter_Copies(url) );
       holder = url;
 
-      // find the first space in the data, that's where the url ends. we want
-      // everything after that space. FindChar() returns -1 if we can't find
-      PRInt32 spaceIndex = holder.FindChar ( ' ' );
-      NS_ASSERTION ( spaceIndex != -1, "Format for url flavor is <url> <space> <page title>" );
-      if ( spaceIndex != -1 ) {
-        holder.Mid ( outTitle, spaceIndex + 1, (len/2) - (spaceIndex + 1) );
+      // find the first linefeed in the data, that's where the url ends. we want
+      // everything after that linefeed. FindChar() returns -1 if we can't find
+      PRInt32 lineIndex = holder.FindChar ( '\n' );
+      NS_ASSERTION ( lineIndex != -1, "Format for url flavor is <url> <linefeed> <page title>" );
+      if ( lineIndex != -1 ) {
+        holder.Mid ( outTitle, lineIndex + 1, (len/2) - (lineIndex + 1) );
         rv = NS_OK;    
       }
     }
