@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
 		nsIMsgHost.idl \
+		nsIMsgGroupRecord.idl \
 		$(NULL)
 
 EXPORTS = \
