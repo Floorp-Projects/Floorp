@@ -1,0 +1,42 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIRDFCompositeDataSource.idl"
+#include "nsIRDFResource.idl"
+
+
+[ptr] native nsIRDFResourceArray( nsIRDFResource *);
+
+interface nsIContent;
+interface nsIDOMNode;
+
+
+[scriptable, uuid(BFD05261-834C-11d2-8EAC-00805F29F371)]
+interface nsIXULSortService : nsISupports
+{
+		void	Sort(in nsIDOMNode node, in string sortResource, in string sortDirection);
+[noscript]	void	OpenContainer(in nsIRDFCompositeDataSource db, in nsIContent container,
+				in nsIRDFResourceArray flatArray, in long numElements, in long elementSize);
+[noscript]	void	InsertContainerNode(in nsIContent container, in nsIContent node, in boolean aNotify);
+};
+
+%{C++
+extern nsresult
+NS_NewXULSortService(nsIXULSortService **result);
+%}
