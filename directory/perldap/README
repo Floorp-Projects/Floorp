@@ -32,8 +32,8 @@ is available from the DevEdge page at:
     http://developer.netscape.com/tech/directory/
 
 You will also need Perl v5.005, available at http://www.perl.com/.  Earlier
-versions will NOT work with the binaries.  If you wish to use v5.004, you
-will need to compile PerLDAP from source.
+versions of Perl will NOT work with the binaries.  If you wish to use v5.004,
+you will need to compile PerLDAP from source.
 
 On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
   1. Be sure that the libraries from the C SDK are installed in locations
@@ -43,12 +43,10 @@ On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
       gunzip <filename>.tar.gz
   4. Untar the resulting tar file by entering the command:
       tar xvof <filename>.tar
-  5. Locate the site install directory for Perl v5.005.  If you are unsure,
-     this is likely the directory ending in 'site_perl' when executing the
-     following command:
-      perl -e 'print join("\n",@INC);'
-  6. Execute the following command as the super-user (root):
-      ./install-bin <site_lib_directory>
+  5. Change to the extract directory:
+      cd PerLDAP-1.0
+  6. Execute the following command in as the super-user (root):
+      perl install-bin
 
 On Windows NT:
   1. Be sure that the DLL from the C SDK is installed in your system32
@@ -56,12 +54,10 @@ On Windows NT:
   2. Save the file in a temporary location
   3. Unzip the file by entering the command:
       I don't have a tool for creating self-extracting archives...
-  4. Locate the site install directory for Perl v5.005.  If you are unsure,
-     this is likely the directory ending in 'site' when executing the
-     following command:
-      perl -e 'print join("\n",@INC);' 
+  4. Change to the extract directory:
+      cd PerLDAP-1.0
   5. Execute the following command:
-      install-bin <site_lib_directory>
+      perl install-bin
 
 
 Compiling the PerLDAP Sources
