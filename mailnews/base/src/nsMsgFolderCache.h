@@ -27,6 +27,8 @@
 #include "nsIMsgMailSession.h"
 #include "mdb.h"
 
+class FolderCachePool;
+
 class nsMsgFolderCache : public nsIMsgFolderCache, public nsIShutdownListener
 {
 
@@ -60,7 +62,7 @@ protected:
 	nsFileSpec		m_dbFileSpec;
 	nsISupportsArray	*m_cacheElements;
 	nsCOMPtr <nsIMsgMailSession>	m_mailSession;
-
+	FolderCachePool		*m_morkEnvMemPool;
 	// mdb stuff
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;

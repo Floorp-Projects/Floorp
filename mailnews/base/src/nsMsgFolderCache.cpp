@@ -26,12 +26,33 @@
 
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"
+#include "nsIArena.h"
 
-static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
+  static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 const char *kFoldersScope = "ns:msg:db:row:scope:folders:all";	// scope for all folders table
 const char *kFoldersTableKind = "ns:msg:db:table:kind:folders";
+
+class FolderCachePool : public nsIMdbHeap { // caller-supplied memory management interface
+public:
+// { ===== begin nsIMdbHeap methods =====
+  virtual mdb_err Alloc(nsIMdbEnv* ev, // allocate a piece of memory
+    mdb_size inSize,        // requested byte size of new memory block 
+    void** outBlock);   // memory block of inSize bytes, or nil
+    
+  virtual mdb_err Free(nsIMdbEnv* ev, // free block from Alloc or Resize()
+    void* ioBlock);     // block to be destroyed/deallocated
+    
+  virtual mdb_err HeapAddStrongRef(nsIMdbEnv* ev);
+  virtual mdb_err HeapCutStrongRef(nsIMdbEnv* ev);
+    
+// } ===== end nsIMdbHeap methods =====
+  nsresult Init();
+protected:
+	nsCOMPtr <nsIArena> m_arena;
+};
+
 
 nsMsgFolderCache::nsMsgFolderCache()
 {
@@ -44,6 +65,9 @@ nsMsgFolderCache::nsMsgFolderCache()
                                       (nsISupports**)&m_mailSession,
                                       this);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "have to get mail session service");
+	m_morkEnvMemPool = new FolderCachePool;
+	if (m_morkEnvMemPool)
+		m_morkEnvMemPool->Init();
 }
 
 // should this, could this be an nsCOMPtr ?
@@ -55,10 +79,17 @@ nsMsgFolderCache::~nsMsgFolderCache()
 	if (m_mdbStore)
 		m_mdbStore->Release();
 	if (gMDBFactory)
+	{
+//		gMDBFactory->CloseMdbObject(m_mdbEnv);
 		gMDBFactory->CutStrongRef(GetEnv());
+	}
 	gMDBFactory = nsnull;
 	if (m_mdbEnv)
-		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
+	{
+		m_mdbEnv->CloseMdbObject(m_mdbEnv);
+//		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
+	}
+	delete m_morkEnvMemPool;
 }
 
 
@@ -121,7 +152,13 @@ nsMsgFolderCache::OnShutdown(const nsCID& aClass, nsISupports *service)
 	if (!gMDBFactory)
 	{
 		nsresult rv;
-        rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
+		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory;
+		rv = nsComponentManager::CreateInstance(kMorkCID,
+												  nsnull,
+												  NS_GET_IID(nsIMdbFactoryFactory),
+												  (void **) getter_AddRefs(factoryfactory));
+		if (NS_SUCCEEDED(rv) && factoryfactory)
+		  rv = factoryfactory->GetMdbFactory(&gMDBFactory);
 	}
 	return gMDBFactory;
 }
@@ -204,13 +241,42 @@ nsresult nsMsgFolderCache::InitExistingDB()
 	return err;
 }
 
+mdb_err FolderCachePool::Alloc(nsIMdbEnv* ev, // allocate a piece of memory
+    mdb_size inSize,        // requested byte size of new memory block 
+    void** outBlock)
+{
+	*outBlock = m_arena->Alloc(inSize);
+	return (*outBlock) ? 0 : (mdb_err) -1;
+}
+
+mdb_err FolderCachePool::Free(nsIMdbEnv* ev, // free block from Alloc or Resize()
+    void* ioBlock)     // block to be destroyed/deallocated
+{
+	return 0;
+}
+    
+mdb_err FolderCachePool::HeapAddStrongRef(nsIMdbEnv* ev)
+{
+	return 0;
+}
+
+mdb_err FolderCachePool::HeapCutStrongRef(nsIMdbEnv* ev)
+{
+	return 0;
+}
+
+nsresult FolderCachePool::Init()
+{
+	return NS_NewHeapArena(getter_AddRefs(m_arena), 1024);
+}
+
 nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 {
 	nsresult ret=NS_OK;
 	nsIMdbFactory *myMDBFactory = GetMDBFactory();
 	if (myMDBFactory)
 	{
-		ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
+		ret = myMDBFactory->MakeEnv(m_morkEnvMemPool, &m_mdbEnv);
 		if (NS_SUCCEEDED(ret))
 		{
 			nsIMdbThumb *thumb = nsnull;
