@@ -908,7 +908,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         // Calculate the available width for the table cell using the known
         // column widths
         nscoord availWidth;
-        if (aDirtyOnly && (frameState & NS_FRAME_FIRST_REFLOW)) {
+        if (frameState & NS_FRAME_FIRST_REFLOW) {
           // This is the initial reflow for the cell and so we do an unconstrained
           // reflow.
           // Note: don't assume that we have known column widths. If we don't, then
@@ -943,19 +943,17 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 
           // If it's a dirty frame, then check whether it's the initial reflow
           nsReflowReason  reason = eReflowReason_Resize;
-          if (aDirtyOnly) {
-            if (frameState & NS_FRAME_FIRST_REFLOW) {
-              // Newly inserted frame
-              reason = eReflowReason_Initial;
+          if (frameState & NS_FRAME_FIRST_REFLOW) {
+            // Newly inserted frame
+            reason = eReflowReason_Initial;
 
-              // Use an unconstrained width so we can get the child's maximum width
-              // XXX What about fixed layout tables?
-              kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-              // request to get the max element size if not already so
-              if (!kidMaxElementSize) {
-                kidMaxElementSize = &localKidMaxElementSize;
-                desiredSize.maxElementSize = kidMaxElementSize;
-              }
+            // Use an unconstrained width so we can get the child's maximum width
+            // XXX What about fixed layout tables?
+            kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+            // request to get the max element size if not already so
+            if (!kidMaxElementSize) {
+              kidMaxElementSize = &localKidMaxElementSize;
+              desiredSize.maxElementSize = kidMaxElementSize;
             }
           }
   
