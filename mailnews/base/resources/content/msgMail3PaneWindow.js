@@ -21,20 +21,31 @@
 /* This is where functions related to the 3 pane window are kept */
 
 /* globals for a particular window */
-var messenger = Components.classes['component://netscape/messenger'].createInstance();
+var messengerProgID        = "component://netscape/messenger";
+var statusFeedbackProgID   = "component://netscape/messenger/statusfeedback";
+var messageViewProgID      = "component://netscape/messenger/messageview";
+var mailSessionProgID      = "component://netscape/messenger/services/session";
+var prefProgID             = "component://netscape/preferences";
+
+var datasourceProgIDPrefix = "component://netscape/rdf/datasource?name=";
+var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
+var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
+var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
+
+var messenger = Components.classes[messengerProgID].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
 //Create datasources
-var accountManagerDataSource = Components.classes["component://netscape/rdf/datasource?name=msgaccountmanager"].createInstance();
-var folderDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsfolders"].createInstance();
-var messageDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsmessages"].createInstance();
+var accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
+var folderDataSource         = Components.classes[folderDSProgID].createInstance();
+var messageDataSource        = Components.classes[messageDSProgID].createInstance();
 
 //Create windows status feedback
-var statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
+var statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
 statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
 //Create message view object
-var messageView = Components.classes["component://netscape/messenger/messageview"].createInstance();
+var messageView = Components.classes[messageViewProgID].createInstance();
 messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 
 // the folderListener object
@@ -70,7 +81,7 @@ function OnLoadMessenger()
 function OnUnloadMessenger()
 {
 	dump("\nOnUnload from XUL\nClean up ...\n");
-	var mailSession = Components.classes['component://netscape/messenger/services/session'].getService();
+	var mailSession = Components.classes[mailSessionProgID].getService();
 	if(mailSession)
 	{
 		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
@@ -82,7 +93,7 @@ function OnUnloadMessenger()
 
 function verifyAccounts() {
     try {
-        var mail = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
+        var mail = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
 
         var am = mail.accountManager;
         var accounts = am.accounts;
@@ -111,13 +122,12 @@ function verifyAccounts() {
 
 function loadStartPage() {
 
-	var pref = Components.classes['component://netscape/preferences'];
 	var startpage = "about:blank";
 
     if (!pref) return;
 
     try {
-        pref = pref.getService(Components.interfaces.nsIPref);
+        var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
 
 		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
         
@@ -137,7 +147,7 @@ function loadStartFolder()
 {
 	//Load StartFolder
     try {
-        var pref = Components.classes['component://netscape/preferences'].getService(Components.interfaces.nsIPref);
+        var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
         
         var startFolder = pref.CopyCharPref("mailnews.start_folder");
         ChangeFolderByURI(startFolder);
@@ -152,7 +162,7 @@ function loadStartFolder()
 function getFolderListener()
 {
     try {
-        var mailSession = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
+        var mailSession = Components.classes[mailSessionProgID].getService(Components.interfaces.nsIMsgMailSession);
         
         mailSession.AddFolderListener(folderListener);
 	} catch (ex) {
