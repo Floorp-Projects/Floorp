@@ -596,7 +596,7 @@ BOOL nsAbWinHelper::SetPropertiesUString(const nsMapiEntry& aObject, const ULONG
         }
         else if (PROP_TYPE(aPropertiesTag [i]) == PT_STRING8) {
             alternativeValue.AssignWithConversion(aValues [i].get()) ;
-            PRUnichar *av = nsCRT::strdup(alternativeValue.get()) ;
+            char *av = nsCRT::strdup(alternativeValue.get()) ;
             if (!av) {
                 retCode = FALSE ;
                 break ;
