@@ -28,5 +28,7 @@ include <$(DEPTH)\config\rules.mak>
 chrome::
         $(REGCHROME) content navigator comm.jar
         $(REGCHROME) content navigator-region comm.jar
+        $(REGCHROME) content navigator-platform comm.jar
         $(REGCHROME) locale en-US/navigator en-US.jar
+        $(REGCHROME) locale en-US/navigator-platform en-win.jar
         $(REGCHROME) locale US/navigator-region US.jar

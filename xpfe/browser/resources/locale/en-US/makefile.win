@@ -32,7 +32,7 @@ CHROME_L10N = \
 	.\askViewZoom.dtd \
 	$(NULL)
 
-DIRS= unix
+DIRS= mac unix win
 
 include <$(DEPTH)\config\rules.mak>
 
