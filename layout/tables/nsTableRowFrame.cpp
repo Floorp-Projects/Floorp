@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsTableRowFrame.h"
+#include "nsTableRowGroupFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -114,11 +115,12 @@ nsTableRowFrame::SetFixedHeight(nscoord aValue)
 }
 
 void 
-nsTableRowFrame::SetPctHeight(float aPctValue)
+nsTableRowFrame::SetPctHeight(float  aPctValue,
+                              PRBool aForce)
 {
   nscoord height = PR_MAX(0, NSToCoordRound(aPctValue * 100.0f));
   if (HasPctHeight()) {
-    if (height > mStyleHeight) {
+    if ((height > mStyleHeight) || aForce) {
       mStyleHeight = height;
     }
   }
@@ -519,6 +521,15 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
   nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)
                             ? 0 : aReflowState.mComputedHeight;
   ResetHeight(computedHeight);
+
+  const nsStylePosition* position;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  if (eStyleUnit_Coord == position->mHeight.GetUnit()) {
+    SetFixedHeight(position->mHeight.GetCoordValue());
+  }
+  else if (eStyleUnit_Percent == position->mHeight.GetUnit()) {
+    SetPctHeight(position->mHeight.GetPercentValue());
+  }
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     nsCOMPtr<nsIAtom> frameType;
@@ -1336,12 +1347,22 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
   if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) &&  !mPrevInFlow) {
-      // see if an extra reflow will be necessary when there is a pct height but no height on the parent 
+      // see if an extra reflow will be necessary when there is a pct height but no height basis 
     if ( ((NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)  || 
-          (0                        == aReflowState.mComputedHeight)) && 
+          (0                    == aReflowState.mComputedHeight)) && 
          nsTableFrame::IsPctHeight(mStyleContext)) {
-      nsTableFrame::NotifyAncestorsOfSpecialReflow(aReflowState);
-      SetNeedSpecialReflow(PR_TRUE);
+      const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+      if (parentRS && parentRS->frame) {
+        nsCOMPtr<nsIAtom> fType;
+        parentRS->frame->GetFrameType(getter_AddRefs(fType));
+        if (nsLayoutAtoms::tableRowGroupFrame == fType.get()) {
+          nscoord pctBasis = ((nsTableRowGroupFrame*)parentRS->frame)->GetHeightBasis(*parentRS);
+          if (0 == pctBasis) {
+            nsTableFrame::NotifyAncestorsOfSpecialReflow(aReflowState);
+            SetNeedSpecialReflow(PR_TRUE);
+          }
+        }
+      }
     }
   }
 

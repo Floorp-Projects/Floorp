@@ -560,6 +560,20 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
 
+  // make sure that pct height rows do not exceed 100%
+  nscoord pctTotal = 0;
+  nsTableRowFrame* rowFrame;
+  for (rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
+    if (rowFrame->HasPctHeight()) {
+      nscoord pctHeight = NSToCoordRound(rowFrame->GetPctHeight() * 100.0f);
+      if ((pctHeight + pctTotal) > 100) {
+        pctHeight = PR_MAX(0, NSToCoordRound(100.0f - (float)pctTotal));
+        rowFrame->SetPctHeight((float)pctHeight / 100.0f, PR_TRUE);
+      }
+      pctTotal += pctHeight;
+    }
+  }
+    
   // find the nearest row at or before aStartRowFrameIn that isn't spanned into. 
   // If we have a computed height, then we can't compute the heights
   // incrementally from aStartRowFrameIn, and we must start at the first row.
@@ -605,7 +619,6 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   // the largest desired height of each cell, the largest style height of each cell, 
   // the style height of the row.
   nscoord pctHeightBasis = GetHeightBasis(aReflowState);
-  nsTableRowFrame* rowFrame;
   PRInt32 rowIndex; // the index in rowInfo, not among the rows in the row group
   for (rowFrame = startRowFrame, rowIndex = 0; rowFrame; rowFrame = rowFrame->GetNextRow(), rowIndex++) {
     UpdateHeights(rowInfo[rowIndex], nsTableFrame::RoundToPixel(rowFrame->GetHeight(pctHeightBasis), p2t), 
@@ -1326,14 +1339,26 @@ nscoord
 nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
 {
   nscoord result = 0;
-  if ((aReflowState.mComputedHeight > 0) && (aReflowState.mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
-    nsTableFrame* tableFrame = nsnull;
-    nsTableFrame::GetTableFrame((nsIFrame*)this, tableFrame);
-    if (tableFrame) {
+  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame::GetTableFrame((nsIFrame*)this, tableFrame);
+  if (tableFrame) {
+    if ((aReflowState.mComputedHeight > 0) && (aReflowState.mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
       nscoord cellSpacing = PR_MAX(0, GetRowCount() - 1) * tableFrame->GetCellSpacingY();
-      result -= cellSpacing;
+      result = aReflowState.mComputedHeight - cellSpacing;
+    }
+    else {
+      const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+      if (parentRS && (tableFrame != parentRS->frame)) {
+        parentRS = parentRS->parentReflowState;
+      }
+      if (parentRS && (tableFrame == parentRS->frame) && 
+          (parentRS->mComputedHeight > 0) && (parentRS->mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
+        nscoord cellSpacing = PR_MAX(0, tableFrame->GetRowCount() - 1) * tableFrame->GetCellSpacingY();
+        result = parentRS->mComputedHeight - cellSpacing;
+      }
     }
   }
+
   return result;
 }
 

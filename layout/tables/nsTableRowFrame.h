@@ -236,7 +236,8 @@ public:
   void    SetFixedHeight(nscoord aValue);
 
   float   GetPctHeight() const;
-  void    SetPctHeight(float aPctValue);
+  void    SetPctHeight(float  aPctValue,
+                       PRBool aForce = PR_FALSE);
 
   nscoord GetHeight(nscoord aBasis = 0) const;
 
