@@ -18,6 +18,7 @@
 #ifndef __nsStreamXferOp_h
 #define __nsStreamXferOp_h
 
+#include "nsString.h"
 #include "nsIStreamTransferOperation.h"
 #include "nsIStreamListener.h"
 #ifdef NECKO
@@ -25,6 +26,7 @@
 #endif
 
 class nsIDOMWindow;
+class nsOutputFileStream;
 
 // Implementation of the stream transfer operation interface.
 //
@@ -69,10 +71,14 @@ public:
 #endif
 
 private:
-    nsString            mSource;
-    nsString            mTarget;
+    nsCString           mSource;
+    nsCString           mTarget;
     nsIObserver        *mObserver; // Not owned; owner should call SetObserver(0) prior
                                    // to this object getting destroyed.
+    PRUint32            mBufLen;
+    char               *mBuffer;   // Owned; deleted in dtor.
+    PRBool              mStopped;
+    nsOutputFileStream *mOutput;   // Owned; deleted in dtor.
 }; // nsStreamXferOp
 
 
