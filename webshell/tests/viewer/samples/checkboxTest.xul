@@ -26,9 +26,9 @@ normal two-state checkbox. The last one should behave like a tri-state.
 
 <html:hr/>
 
-<tristatecheckbox></tristatecheckbox>Dual state<html:br/>
+<checkbox/>Dual state<html:br/>
 
-<tristatecheckbox id="tristate"></tristatecheckbox>Tri state baby!<html:br/>
+<checkbox id="tristate"/>Tri state baby!<html:br/>
 
 <html:button onclick="setTri()">Click Me To Set TriState</html:button>
 
