@@ -4,3 +4,5 @@ en-US.jar:
 
 toolkit.jar:
     content/global/nsHelperAppDlg.xul (helperAppDlg/nsHelperAppDlg.xul)
+    content/global/nsProgressDlg.xul  (progressDlg/nsProgressDlg.xul)
+    content/global/nsProgressDlg.js   (progressDlg/nsProgressDlg.js)
