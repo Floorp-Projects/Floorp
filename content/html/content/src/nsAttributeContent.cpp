@@ -146,6 +146,7 @@ public:
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const { aResult = 0; return NS_OK; }
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {  return NS_OK;  }
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,

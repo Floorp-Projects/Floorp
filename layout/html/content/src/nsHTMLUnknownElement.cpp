@@ -151,6 +151,9 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
     return mInner.List(out, aIndent);
   }
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
+    return mInner.DumpContent(out, aIndent,aDumpAll);
+  }
   NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.BeginConvertToXIF(aConverter);
   }
