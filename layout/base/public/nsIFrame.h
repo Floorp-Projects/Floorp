@@ -89,13 +89,6 @@ struct nsRect;
 struct nsSize;
 struct nsMargin;
 
-// Calback function used to destroy the value associated with a property.
-typedef void 
-(*NSFramePropertyDtorFunc)(nsPresContext* aPresContext,
-                           nsIFrame*       aFrame,
-                           nsIAtom*        aPropertyName,
-                           void*           aPropertyValue);
-
 // IID for the nsIFrame interface 
 // a6cf9050-15b3-11d2-932e-00805f8add32
 #define NS_IFRAME_IID \
@@ -1215,13 +1208,17 @@ public:
   }
 
 
-  void* GetProperty(nsIAtom* aPropertyName, nsresult* aStatus = nsnull) const;
-  virtual void* GetPropertyExternal(nsIAtom*  aPropertyName,
-                                    nsresult* aStatus) const;
-  void* RemoveProperty(nsIAtom* aPropertyName, nsresult* aStatus = nsnull) const;
-  nsresult SetProperty(nsIAtom*                aPropertyName,
-                       void*                   aValue,
-                       NSFramePropertyDtorFunc aDestructor = nsnull);
+  NS_HIDDEN_(void*) GetProperty(nsIAtom* aPropertyName,
+                                nsresult* aStatus = nsnull) const;
+  virtual NS_HIDDEN_(void*) GetPropertyExternal(nsIAtom*  aPropertyName,
+                                                nsresult* aStatus) const;
+  NS_HIDDEN_(nsresult) SetProperty(nsIAtom*           aPropertyName,
+                                   void*              aValue,
+                                   NSPropertyDtorFunc aDestructor = nsnull,
+                                   void*              aDtorData = nsnull);
+  NS_HIDDEN_(nsresult) DeleteProperty(nsIAtom* aPropertyName) const;
+  NS_HIDDEN_(void*) UnsetProperty(nsIAtom* aPropertyName,
+                                  nsresult* aStatus = nsnull) const;
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::baseLevel))

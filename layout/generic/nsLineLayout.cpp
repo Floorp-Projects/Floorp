@@ -1049,8 +1049,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
               PRUnichar ch = /*(isVisual) ?
                               *(frag->Get2b() + frag->GetLength() - 1) :*/ *frag->Get2b();
               if (IS_BIDI_DIACRITIC(ch)) {
-                aFrame->SetProperty(nsLayoutAtoms::endsInDiacritic,
-                                    NS_INT32_TO_PTR(ch));
+                mPresContext->PropertyTable()->SetProperty(aFrame,
+                           nsLayoutAtoms::endsInDiacritic, NS_INT32_TO_PTR(ch),
+                                                           nsnull, nsnull);
               }
             }
           }

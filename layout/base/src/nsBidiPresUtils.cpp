@@ -256,6 +256,8 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   const nsTextFragment*    fragment;
   nsIAtom*                 frameType = nsnull;
 
+  nsPropertyTable *propTable = aPresContext->PropertyTable();
+
   for (; ;) {
     if (fragmentLength <= 0) {
       if (++frameIndex >= frameCount) {
@@ -308,17 +310,17 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       ++lineOffset;
     }
     else {
-      frame->SetProperty(nsLayoutAtoms::embeddingLevel,
-                         NS_INT32_TO_PTR(embeddingLevel));
-      frame->SetProperty(nsLayoutAtoms::baseLevel,
-                         NS_INT32_TO_PTR(paraLevel));
+      propTable->SetProperty(frame, nsLayoutAtoms::embeddingLevel,
+                             NS_INT32_TO_PTR(embeddingLevel), nsnull, nsnull);
+      propTable->SetProperty(frame, nsLayoutAtoms::baseLevel,
+                             NS_INT32_TO_PTR(paraLevel), nsnull, nsnull);
       if (isTextFrame) {
         PRInt32 typeLimit = PR_MIN(logicalLimit, lineOffset + fragmentLength);
         CalculateCharType(lineOffset, typeLimit, logicalLimit, runLength,
                            runCount, charType, prevType);
         // IBMBIDI - Egypt - Start
-        frame->SetProperty(nsLayoutAtoms::charType,
-                           NS_INT32_TO_PTR(charType));
+        propTable->SetProperty(frame, nsLayoutAtoms::charType,
+                               NS_INT32_TO_PTR(charType), nsnull, nsnull);
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
@@ -599,13 +601,15 @@ nsBidiPresUtils::RepositionInlineFrames(nsPresContext*      aPresContext,
     frame->SetPosition(nsPoint(rect.x, rect.y));
   }
 
+  nsPropertyTable *propTable = aPresContext->PropertyTable();
+
   for (i = 1; i < count; i++) {
 
     ch = 0;
-    charType = NS_PTR_TO_INT32(((nsIFrame*)mVisualFrames[i])->
-                               GetProperty(nsLayoutAtoms::charType));
+    charType = NS_PTR_TO_INT32(propTable->GetProperty((nsIFrame*)mVisualFrames[i], nsLayoutAtoms::charType));
     if (CHARTYPE_IS_RTL(charType) ) {
-      ch = NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::endsInDiacritic));
+      ch = NS_PTR_TO_INT32(propTable->GetProperty(frame,
+                                             nsLayoutAtoms::endsInDiacritic));
       if (ch) {
         if (!alefWidth) {
           aRendContext->GetWidth(buf, 1, alefWidth, nsnull);
@@ -746,7 +750,9 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
       return PR_FALSE;
     }
   }
-  aFrame->SetProperty(nsLayoutAtoms::nextBidi, (void*) *aNewFrame);
+  aPresContext->PropertyTable()->SetProperty(aFrame, nsLayoutAtoms::nextBidi,
+                                             (void*) *aNewFrame,
+                                             nsnull, nsnull);
   return PR_TRUE;
 }
 
@@ -787,22 +793,23 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   nsIFrame* thisFramesNextBidiFrame;
   nsIFrame* previousFramesNextBidiFrame;
 
-  nsFrameManager* frameManager = presShell->FrameManager();
+  nsPropertyTable *propTable = aPresContext->PropertyTable();
   thisFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
-    frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::nextBidi, 0));
+                      propTable->GetProperty(aFrame, nsLayoutAtoms::nextBidi));
 
   if (thisFramesNextBidiFrame) {
     // Remove nextBidi property, associated with the current frame
     // and with all of its prev-in-flow.
     frame = aFrame;
     do {
-      frameManager->RemoveFrameProperty(frame, nsLayoutAtoms::nextBidi);
+      propTable->DeleteProperty(frame, nsLayoutAtoms::nextBidi);
       frame->GetPrevInFlow(&frame);
       if (!frame) {
         break;
       }
-      previousFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
-        frameManager->GetFrameProperty(frame, nsLayoutAtoms::nextBidi, 0));
+      previousFramesNextBidiFrame =
+        NS_STATIC_CAST(nsIFrame*, propTable->GetProperty(frame,
+                                                    nsLayoutAtoms::nextBidi));
     } while (thisFramesNextBidiFrame == previousFramesNextBidiFrame);
   } // if (thisFramesNextBidiFrame)
 }
