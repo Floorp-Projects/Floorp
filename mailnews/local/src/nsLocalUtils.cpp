@@ -55,11 +55,9 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
   if (NS_FAILED(rv)) return rv;
 
   // use enumeration function to find the first Pop server
-  nsISupports *serverSupports = hosts->ElementAt(0);
+  nsCOMPtr<nsISupports> serverSupports = getter_AddRefs(hosts->ElementAt(0));
 
 #ifdef DEBUG_alecf
-  if (hosts->Count() <= 0)
-    fprintf(stderr, "Augh, no pop server named %s?\n", hostname);
   if (!serverSupports)
     fprintf(stderr, "Huh, serverSupports returned nsnull\n");
 #endif
