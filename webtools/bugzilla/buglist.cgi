@@ -338,7 +338,8 @@ Click the <B>Back</B> button and try again.";
     }
 }
 
-foreach my $f ("short_desc", "long_desc", "bug_file_loc") {
+foreach my $f ("short_desc", "long_desc", "bug_file_loc",
+               "status_whiteboard") {
     if (defined $::FORM{$f}) {
         my $s = trim($::FORM{$f});
         if ($s ne "") {
