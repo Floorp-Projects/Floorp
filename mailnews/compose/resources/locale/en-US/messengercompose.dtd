@@ -73,7 +73,7 @@
 <!ENTITY lowPriorityCmd.label "Low">
 <!ENTITY normalPriorityCmd.label "Normal">
 <!ENTITY highPriorityCmd.label "High">
-<!ENTITY highestPriorityCmd.label "highest">
+<!ENTITY highestPriorityCmd.label "Highest">
 
 <!ENTITY returnReceiptCmd.label "Return receipt">
 <!ENTITY uuEncodeCmd.label "Use uuencode instead of MIME for attachments">
