@@ -277,9 +277,12 @@ static PRBool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
     nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
     if (NS_FAILED(rv))
       return PR_FALSE;
-    nsAutoString dispToken;
+
+    nsCAutoString fallbackCharset;
+    uri->GetOriginCharset(fallbackCharset);
     // Get the disposition type
-    rv = mimehdrpar->GetParameter(disp, "", EmptyCString(), PR_FALSE, 
+    nsAutoString dispToken;
+    rv = mimehdrpar->GetParameter(disp, "", fallbackCharset, PR_TRUE, 
                                   nsnull, dispToken);
     // RFC 2183, section 2.8 says that an unknown disposition
     // value should be treated as "attachment"

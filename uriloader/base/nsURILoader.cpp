@@ -394,10 +394,12 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   PRBool forceExternalHandling = PR_FALSE;
   nsCAutoString disposition;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  nsCOMPtr<nsIURI> uri;
   if (httpChannel)
   {
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-disposition"),
                                         disposition);
+    httpChannel->GetURI(getter_AddRefs(uri));
   }
   else
   {
@@ -415,10 +417,13 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
+      nsCAutoString fallbackCharset;
+      if (uri)
+        uri->GetOriginCharset(fallbackCharset);
       nsAutoString dispToken;
       // Get the disposition type
-      rv = mimehdrpar->GetParameter(disposition, "", EmptyCString(), 
-                                    PR_FALSE, nsnull, dispToken);
+      rv = mimehdrpar->GetParameter(disposition, "", fallbackCharset,
+                                    PR_TRUE, nsnull, dispToken);
       // RFC 2183, section 2.8 says that an unknown disposition
       // value should be treated as "attachment"
       if (NS_FAILED(rv) || 
