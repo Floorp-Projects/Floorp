@@ -43,8 +43,8 @@
 #include "nsMenuItem.h"
 #include <imm.h>
 
-//#define DRAG_DROP
-#ifdef DRAG_DROP
+//#define NEW_DRAG_AND_DROP
+#ifdef NEW_DRAG_AND_DROP
 #include "nsNativeDragTarget.h"
 //#include "nsDropTarget.h"
 //#include "DragDrop.h"
@@ -117,7 +117,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompositionStringSize = 0;
 	mIMECompositionUniString = NULL;
 
-#ifdef DRAG_DROP
+#ifdef NEW_DRAG_AND_DROP
     mNativeDragTarget = nsnull;
     //mDragSource         = nsnull;
 #endif
@@ -150,7 +150,7 @@ nsWindow::~nsWindow()
 
   NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
 
-#ifdef DRAG_DROP
+#ifdef NEW_DRAG_AND_DROP
   //NS_IF_RELEASE(mDragTarget); 
   //NS_IF_RELEASE(mDragSource); 
 #endif
@@ -601,7 +601,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
      gOLEInited = TRUE;
    }
-#ifdef DRAG_DROP
+#ifdef NEW_DRAG_AND_DROP
    mNativeDragTarget = new nsNativeDragTarget(this);
    if (NULL != mNativeDragTarget) {
      mNativeDragTarget->AddRef();
@@ -689,7 +689,7 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
   }
 
-#ifdef DRAG_DROP
+#ifdef NEW_DRAG_AND_DROP
   if (NULL != mNativeDragTarget) {
     if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
     }
@@ -1688,7 +1688,17 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 //---------------------------------------------------------
 NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 {
-  ::DragAcceptFiles(mWnd, (aEnable?TRUE:FALSE));
+  //::DragAcceptFiles(mWnd, (aEnable?TRUE:FALSE));
+#ifdef NEW_DRAG_AND_DROP
+   mNativeDragTarget = new nsNativeDragTarget(this);
+   if (NULL != mNativeDragTarget) {
+     mNativeDragTarget->AddRef();
+     if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
+       if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
+       }
+     }
+   }
+#endif
   return NS_OK;
 }
 
@@ -1789,16 +1799,17 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = OnPaint();
             break;
 
-        /*case WM_CHAR:
+        case WM_CHAR:
+          printf("Doing WM_CHAR\n");
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
             
 			      if (!mIMEIsComposing)
-				      result = OnKey(NS_KEY_UP, FALSE, wParam, vkKeyCached, LOWORD(lParam), HIWORD(lParam));
+				      result = OnKey(NS_KEY_DOWN, FALSE, wParam, vkKeyCached, LOWORD(lParam), HIWORD(lParam));
 			      else
 				      result = PR_FALSE;
-          break;*/
+          break;
 
         case WM_KEYUP: 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
@@ -1813,20 +1824,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_KEYDOWN: 
             {
-            //vkKeyCached = (UINT)wParam;
-            //if (vkKeyCached < 32 || vkKeyCached > 126) {
+            // Cache the key code when it is regular chars
+            vkKeyCached = (UINT)wParam;
+
+            // Tab and return keys do not generate WM_CHAR events
+            if (vkKeyCached == 9 || 
+                vkKeyCached == 13) {
               mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
               mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
               mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-			  
 			        if (!mIMEIsComposing)
 				        result = OnKey(NS_KEY_DOWN, TRUE, 0, wParam, LOWORD(lParam), HIWORD(lParam));
 			        else
 				        result = PR_FALSE;
-            //} else {
-              // thse are handled by WM_CHAR
-  				    //result = PR_FALSE;
-            //}
+            } else {
+               //these are handled by WM_CHAR
+  				    result = PR_FALSE;
+            }
             }
             break;
 
