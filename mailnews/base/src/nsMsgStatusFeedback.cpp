@@ -42,6 +42,9 @@ nsMsgStatusFeedback::nsMsgStatusFeedback()
 {
 	NS_INIT_REFCNT();
 	m_meteorsSpinning = PR_FALSE;
+	m_lastPercent = 0;
+	LL_I2L(m_lastProgressTime, 0);
+
 }
 
 nsMsgStatusFeedback::~nsMsgStatusFeedback()
@@ -173,7 +176,28 @@ NS_IMETHODIMP
 nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
 	nsString strPercentage;
-	
+
+	if (percentage == m_lastPercent)
+		return NS_OK;
+	m_lastPercent = percentage;
+
+	PRInt64 nowMS;
+	LL_I2L(nowMS, 0);
+	if (percentage < 100)	// always need to do 100%
+	{
+		int64 minIntervalBetweenProgress;
+
+		LL_I2L(minIntervalBetweenProgress, 250);
+		int64 diffSinceLastProgress;
+		LL_I2L(nowMS, PR_IntervalToMilliseconds(PR_IntervalNow()));
+		LL_SUB(diffSinceLastProgress, nowMS, m_lastProgressTime); // r = a - b
+		LL_SUB(diffSinceLastProgress, diffSinceLastProgress, minIntervalBetweenProgress); // r = a - b
+		if (!LL_GE_ZERO(diffSinceLastProgress))
+			return NS_OK;
+	}
+
+	m_lastProgressTime = nowMS;
+
 	if (percentage >= 0)
 		setAttribute(mWebShell, "Messenger:LoadingProgress", "mode","normal");
 

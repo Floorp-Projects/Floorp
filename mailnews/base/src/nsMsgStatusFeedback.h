@@ -52,6 +52,9 @@ protected:
 	nsCOMPtr <nsIWebShell>  mWebShell;
 	nsCOMPtr <nsIDOMWindow> mWindow;
 	PRBool					m_meteorsSpinning;
+	PRInt32					m_lastPercent;
+	PRInt64					m_lastProgressTime;				
+
 };
 
 NS_BEGIN_EXTERN_C
