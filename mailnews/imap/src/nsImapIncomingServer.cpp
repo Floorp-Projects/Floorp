@@ -2383,6 +2383,11 @@ NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_re
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::ForgetPassword()
+{
+  return nsMsgIncomingServer::ForgetPassword();
+}
+
 
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
                                                       nsIMsgWindow * aMsgWindow)

@@ -6883,8 +6883,8 @@ PRBool nsImapProtocol::TryToLogon()
       {
               // login failed!
               // if we failed because of an interrupt, then do not bother the user
-              if (server)
-                  rv = server->ForgetPassword();
+              if (m_imapServerSink)
+                rv = m_imapServerSink->ForgetPassword();
 
               if (!DeathSignalReceived())
               {
