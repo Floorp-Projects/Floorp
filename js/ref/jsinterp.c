@@ -1855,11 +1855,9 @@ js_Interpret(JSContext *cx, jsval *result)
 	    rval = JSVAL_TRUE;
 	    if (prop) {
 		OBJ_DROP_PROPERTY(cx, obj2, prop);
-		if (obj2 == obj) {
-		    ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval);
-		    if (!ok)
-			goto out;
-		}
+		ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval);
+		if (!ok)
+		    goto out;
 	    }
 	    PUSH_OPND(rval);
 	    break;
