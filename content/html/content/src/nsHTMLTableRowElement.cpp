@@ -529,13 +529,16 @@ NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableRowElement, VAlign, valign, "middle
 
 NS_IMETHODIMP
 nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
-                                  const nsAString& aValue,
-                                  nsHTMLValue& aResult)
+                                         const nsAString& aValue,
+                                         nsHTMLValue& aResult)
 {
-  /* ignore these attributes, stored simply as strings
-     ch
+  /*
+   * ignore these attributes, stored simply as strings
+   *
+   * ch
    */
-  /* attributes that resolve to integers with default=0*/
+
+  /* attributes that resolve to integers with default = 0 */
   if (aAttribute == nsHTMLAtoms::charoff) {
     if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
