@@ -19,8 +19,13 @@
 #ifndef nsTransactionManager_h__
 #define nsTransactionManager_h__
 
-#include "nsITransactionManager.h"
-#include "nsTransactionStack.h"
+class nsITransaction;
+class nsITransactionManager;
+class nsITransactionListener;
+class nsTransactionItem;
+class nsTransactionStack;
+class nsTransactionRedoStack;
+class nsVoidArray;
 
 /** implementation of a transaction manager object.
  *
@@ -33,6 +38,7 @@ private:
   nsTransactionStack     mDoStack;
   nsTransactionStack     mUndoStack;
   nsTransactionRedoStack mRedoStack;
+  nsVoidArray            *mListeners;
 
 public:
 
@@ -66,6 +72,23 @@ public:
   /* nsTransactionManager specific methods. */
   virtual nsresult ClearUndoStack(void);
   virtual nsresult ClearRedoStack(void);
+
+  virtual nsresult WillDoNotify(nsITransaction *aTransaction);
+  virtual nsresult DidDoNotify(nsITransaction *aTransaction, nsresult aDoResult);
+  virtual nsresult WillUndoNotify(nsITransaction *aTransaction);
+  virtual nsresult DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult);
+  virtual nsresult WillRedoNotify(nsITransaction *aTransaction);
+  virtual nsresult DidRedoNotify(nsITransaction *aTransaction, nsresult aRedoResult);
+  virtual nsresult WillBeginBatchNotify();
+  virtual nsresult DidBeginBatchNotify(nsresult aResult);
+  virtual nsresult WillEndBatchNotify();
+  virtual nsresult DidEndBatchNotify(nsresult aResult);
+  virtual nsresult WillMergeNotify(nsITransaction *aTop,
+                                   nsITransaction *aTransaction);
+  virtual nsresult DidMergeNotify(nsITransaction *aTop,
+                                  nsITransaction *aTransaction,
+                                  PRBool aDidMerge,
+                                  nsresult aMergeResult);
 
 private:
 

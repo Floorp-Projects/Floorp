@@ -19,7 +19,6 @@
 #ifndef nsTransactionStack_h__
 #define nsTransactionStack_h__
 
-#include "nsTransactionItem.h"
 #include "nsDeque.h"
 
 class nsTransactionItem;

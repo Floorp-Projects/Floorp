@@ -20,9 +20,8 @@
 #define nsITransactionListener_h__
 
 #include "nsISupports.h"
-#include "nsITransaction.h"
-#include "nsITransactionManager.h"
 
+class nsITransaction;
 class nsITransactionManager;
 
 /*
@@ -45,37 +44,154 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ITRANSACTIONLISTENER_IID; return iid; }
 
   /**
-   * Called when a transaction manager is doing a transaction.
-   * @param aContinue if true, transaction manager continues normal processing.
-   *                  if false, transaction manager discontinues processing.
+   * Called before a transaction manager calls a transaction's
+   * Do() method.
    * @param aManager the transaction manager doing the transaction.
    * @param aTransaction the transaction being done.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
    */
-  virtual nsresult Do(PRBool *aContinue,
-                      nsITransactionManager *aManager,
+  NS_IMETHOD WillDo(nsITransactionManager *aManager,
+                    nsITransaction *aTransaction) = 0;
+
+  /**
+   * Called after a transaction manager calls the Do() method of
+   * a transaction.
+   * @param aManager the transaction manager that did the transaction.
+   * @param aTransaction the transaction that was done.
+   * @param aDoResult the nsresult returned after doing the transaction.
+   * @result error status returned by the listener.
+   */
+  NS_IMETHOD DidDo(nsITransactionManager *aManager,
+                   nsITransaction *aTransaction,
+                   nsresult aDoResult) = 0;
+
+  /**
+   * Called before a transaction manager calls the Undo() method of
+   * a transaction.
+   * @param aManager the transaction manager undoing the transaction.
+   * @param aTransaction the transaction being undone.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
+   */
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager,
                       nsITransaction *aTransaction) = 0;
 
   /**
-   * Called when a transaction manager is undoing a transaction.
-   * @param aContinue if true, transaction manager continues normal processing.
-   *                  if false, transaction manager discontinues processing.
+   * Called after a transaction manager calls the Undo() method of
+   * a transaction.
    * @param aManager the transaction manager undoing the transaction.
    * @param aTransaction the transaction being undone.
+   * @param aUndoResult the nsresult returned after undoing the transaction.
+   * @result error status returned by the listener.
    */
-  virtual nsresult Undo(PRBool *aContinue,
-                        nsITransactionManager *aManager,
-                        nsITransaction *aTransaction) = 0;
+  NS_IMETHOD DidUndo(nsITransactionManager *aManager,
+                     nsITransaction *aTransaction,
+                     nsresult aUndoResult) = 0;
 
   /**
-   * Called when a transaction manager is redoing a transaction.
-   * @param aContinue if true, transaction manager continues normal processing.
-   *                  if false, transaction manager discontinues processing.
+   * Called before a transaction manager calls the Redo() method of
+   * a transaction.
    * @param aManager the transaction manager redoing the transaction.
    * @param aTransaction the transaction being redone.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
    */
-  virtual nsresult Redo(PRBool *aContinue,
-                        nsITransactionManager *aManager,
-                        nsITransaction *aTransaction) = 0;
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager,
+                      nsITransaction *aTransaction) = 0;
+
+  /**
+   * Called after a transaction manager calls the Redo() method of
+   * a transaction.
+   * @param aManager the transaction manager redoing the transaction.
+   * @param aTransaction the transaction being redone.
+   * @param aRedoResult the nsresult returned after redoing the transaction.
+   * @result error status returned by the listener.
+   */
+  NS_IMETHOD DidRedo(nsITransactionManager *aManager,
+                     nsITransaction *aTransaction,
+                     nsresult aRedoResult) = 0;
+
+  /**
+   * Called before a transaction manager begins a batch.
+   * @param aManager the transaction manager beginning a batch.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
+   */
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager) = 0;
+
+  /**
+   * Called after a transaction manager begins a batch.
+   * @param aManager the transaction manager that began a batch.
+   * @param aResult the nsresult returned after beginning a batch.
+   * @result error status returned by the listener.
+   */
+  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager,
+                           nsresult aResult) = 0;
+
+  /**
+   * Called before a transaction manager ends a batch.
+   * @param aManager the transaction manager ending a batch.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
+   */
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager) = 0;
+
+  /**
+   * Called after a transaction manager ends a batch.
+   * @param aManager the transaction manager ending a batch.
+   * @param aResult the nsresult returned after ending a batch.
+   * @result error status returned by the listener.
+   */
+  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager,
+                         nsresult aResult) = 0;
+
+  /**
+   * Called before a transaction manager tries to merge
+   * a transaction, that was just executed, with the
+   * transaction at the top of the undo stack.
+   * @param aManager the transaction manager ending a batch.
+   * @param aTopTransaction the transaction at the top of the undo stack.
+   * @param aTransactionToMerge the transaction to merge.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
+   */
+  NS_IMETHOD WillMerge(nsITransactionManager *aManager,
+                       nsITransaction *aTopTransaction,
+                       nsITransaction *aTransactionToMerge) = 0;
+
+  /**
+   * Called after a transaction manager tries to merge
+   * a transaction, that was just executed, with the
+   * transaction at the top of the undo stack.
+   * @param aManager the transaction manager ending a batch.
+   * @param aTopTransaction the transaction at the top of the undo stack.
+   * @param aTransactionToMerge the transaction to merge.
+   * @param aDidMerge true if transaction was merged, else false.
+   * @param aMergeResult the nsresult returned after the merge attempt.
+   * @result error status returned by the listener. NS_OK
+   * should be used to indicate no error, proceed with normal control
+   * flow. NS_COMFALSE can be returned by the listener to
+   * indicate no error, interrupt normal control flow.
+   */
+  NS_IMETHOD DidMerge(nsITransactionManager *aManager,
+                      nsITransaction *aTopTransaction,
+                      nsITransaction *aTransactionToMerge,
+                      PRBool aDidMerge,
+                      nsresult aMergeResult) = 0;
+
 
   /* XXX: We should probably add pruning notification methods. */
 };

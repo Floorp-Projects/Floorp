@@ -23,7 +23,12 @@
 #include "nsIServiceManager.h"
 
 #include "nsTransactionManagerCID.h"
+
+#include "nsITransactionManager.h"
+#include "nsTransactionItem.h"
+#include "nsTransactionStack.h"
 #include "nsTransactionManager.h"
+
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
