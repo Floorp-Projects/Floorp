@@ -75,6 +75,13 @@ public:
   virtual nsresult Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements) = 0;
 
   /**
+   * Get the number of bytes/pixel for this image
+   * @update - dwc 2/3/99
+   * @return - the number of bytes per pixel
+   */
+  virtual PRInt32 GetBytesPix() = 0;
+
+  /**
    * Get the width for the pixelmap
    @return The width in pixels for the pixelmap
    */
@@ -187,14 +194,12 @@ public:
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
-
   /**
    * Build an alpha mask using this image
    * @param aTheMaskImage The image to build the mask from
    * @return true if the mask was set up.
    */
   virtual PRBool  SetAlphaMask(nsIImage *aTheMask) = 0;
-
 
   /**
    * Set the alpha level for the image

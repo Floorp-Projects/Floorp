@@ -32,6 +32,7 @@ public:
   /**
   @see nsIImage.h
   */
+  virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }

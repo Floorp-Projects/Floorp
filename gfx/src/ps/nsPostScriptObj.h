@@ -28,6 +28,10 @@
 #include "nscolor.h"
 #include "nscoord.h"
 
+
+class nsIImage;
+
+
 #define NS_LETTER_SIZE    0
 #define NS_LEGAL_SIZE     1
 #define NS_EXECUTIVE_SIZE 2
@@ -177,7 +181,7 @@ struct PrintSetup_ {
   				/* font info parsed from "other" afm file */
   int16 otherFontCharSetID;	   /* charset ID of "other" font */
 
-  MWContext *cx;                   /* original context, if available */
+  //MWContext *cx;                   /* original context, if available */
 };
 
 typedef struct PrintSetup_ PrintSetup;
@@ -216,7 +220,7 @@ public:
   void fill();
   void graphics_save();
   void graphics_restore();
-  void colorimage(PRUint8 aTheBits,int x, int y, int w, int h);
+  void colorimage(nsIImage *aImage,int x, int y, int w, int h);
   void begin_squished_text( float);
   void end_squished_text();
   void finalize_translation();

@@ -22,6 +22,7 @@
 #include "libi18n.h"
 #include "isotab.c"
 #include "nsFont.h"
+#include "nsIImage.h"
 
  
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
@@ -40,6 +41,10 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
 
 
+/** ---------------------------------------------------
+ *  Default Constructor
+ *	@update 2/1/99 dwc
+ */
 nsPostScriptObj::nsPostScriptObj()
 {
 PrintInfo* pi = new PrintInfo();
@@ -95,7 +100,7 @@ PrintSetup* ps = new PrintSetup();
   ps->otherFontInfo[0] = NULL;	   
   				/* font info parsed from "other" afm file */
   ps->otherFontCharSetID = 0;	   /* charset ID of "other" font */
-  ps->cx = NULL;                   /* original context, if available */
+  //ps->cx = NULL;                   /* original context, if available */
 
   pi->page_height = PAGE_HEIGHT * 10;	/* Size of printable area on page */
   pi->page_width = PAGE_WIDTH * 10;	/* Size of printable area on page */
@@ -131,6 +136,10 @@ PrintSetup* ps = new PrintSetup();
 }
 
 
+/** ---------------------------------------------------
+ *  Destructor
+ *	@update 2/1/99 dwc
+ */
 nsPostScriptObj::~nsPostScriptObj()
 {
 
@@ -155,6 +164,10 @@ nsPostScriptObj::~nsPostScriptObj()
 
 }
 
+/** ---------------------------------------------------
+ *  Get rid of data structures for the postscript
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::finalize_translation()
 {
@@ -162,12 +175,10 @@ nsPostScriptObj::finalize_translation()
     mPrintContext->prSetup = NULL;
 }
 
-
-/*
-** These two functions swap values around in order to deal with page
-** rotation.
-*/
-
+/** ---------------------------------------------------
+ *  Set up the postscript
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::initialize_translation(PrintSetup* pi)
 {
@@ -188,6 +199,10 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
   }	
 }
 
+/** ---------------------------------------------------
+ *  Open a document
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::begin_document()
 {
@@ -332,8 +347,10 @@ nsPostScriptObj::begin_document()
    XP_FilePrintf(f, "%%%%EndProlog\n");
 }
 
-
-
+/** ---------------------------------------------------
+ *  Open a page
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::begin_page()
 {
@@ -358,6 +375,10 @@ nsPostScriptObj::begin_page()
   XP_FilePrintf(f, " closepath clip newpath\n");
 }
 
+/** ---------------------------------------------------
+ *  Close a page
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::end_page()
 {
@@ -377,6 +398,10 @@ nsPostScriptObj::end_page()
   mPageNumber++;
 }
 
+/** ---------------------------------------------------
+ *  End a document
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::end_document()
 {
@@ -384,11 +409,19 @@ nsPostScriptObj::end_document()
 }
 
 
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
 {
 }
 
+/** ---------------------------------------------------
+ *  Issue a PS show command, which causes image to be rastered
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::show(char* txt, int len, char *align)
 {
@@ -415,6 +448,10 @@ nsPostScriptObj::show(char* txt, int len, char *align)
     XP_FilePrintf(f, ") %sshow\n", align);
 }
 
+/** ---------------------------------------------------
+ *  Output a PS moveto command
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::moveto(int x, int y)
 {
@@ -430,6 +467,10 @@ nsPostScriptObj::moveto(int x, int y)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
+/** ---------------------------------------------------
+ *  Move the PS cursor to a location, see documentation in nsPostScript.h
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::moveto_loc(int x, int y)
 {
@@ -447,6 +488,11 @@ nsPostScriptObj::moveto_loc(int x, int y)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
+
+/** ---------------------------------------------------
+ *  Draw a PS line,see documentation in nsPostScript.h
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::lineto( int x1, int y1)
 {
@@ -461,6 +507,10 @@ nsPostScriptObj::lineto( int x1, int y1)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
+/** ---------------------------------------------------
+ *  Draw a PS circle,see documentation in nsPostScript.h
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::circle( int aW, int aH)
 {
@@ -469,6 +519,10 @@ nsPostScriptObj::circle( int aW, int aH)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
+/** ---------------------------------------------------
+ *  Draw a PS rectangle,see documentation in nsPostScript.h
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::box( int aW, int aH)
 {
@@ -522,7 +576,6 @@ nsPostScriptObj::closepath()
   XP_FilePrintf(mPrintContext->prSetup->out, " closepath \n");
 }
 
-
 /** ---------------------------------------------------
  *  Reset the cliping path
  *	@update 2/1/99 dwc
@@ -533,7 +586,10 @@ nsPostScriptObj::initclip()
   XP_FilePrintf(mPrintContext->prSetup->out, " initclip \n");
 }
 
-
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::line( int x1, int y1, int x2, int y2, int thick)
 {
@@ -555,40 +611,124 @@ nsPostScriptObj::line( int x1, int y1, int x2, int y2, int thick)
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::stroke()
 {
-    XP_FilePrintf(mPrintContext->prSetup->out, " stroke \n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " stroke \n");
 }
 
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::fill()
 {
-    XP_FilePrintf(mPrintContext->prSetup->out, " fill \n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " fill \n");
 }
 
-
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::graphics_save()
 {
-    XP_FilePrintf(mPrintContext->prSetup->out, " gsave \n");
+   XP_FilePrintf(mPrintContext->prSetup->out, " gsave \n");
 }
 
-
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::graphics_restore()
 {
-    XP_FilePrintf(mPrintContext->prSetup->out, " grestore \n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " grestore \n");
 }
 
-
+/** ---------------------------------------------------
+ *  translate in PS space
+ *	@update 2/1/99 dwc
+ */
 void 
-nsPostScriptObj::colorimage(PRUint8 aTheBits,int aX,int aY, int aWidth,int aHeight)
+nsPostScriptObj::translate(int x, int y)
 {
+    XL_SET_NUMERIC_LOCALE();
+    y -= mPrintContext->prInfo->page_topy;
+    /*
+    ** Agh! Y inversion again !!
+    */
+    y = (mPrintContext->prInfo->page_height - y - 1) + mPrintContext->prSetup->bottom;
+
+    XP_FilePrintf(mPrintContext->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
+    XL_RESTORE_NUMERIC_LOCALE();
+}
+
+/** ---------------------------------------------------
+ *  output an image in 24 
+ *	@update 2/1/99 dwc
+ */
+void 
+nsPostScriptObj::colorimage(nsIImage *aImage,int aX,int aY, int aWidth,int aHeight)
+{
+PRInt32 rowData,bytes_Per_Pix,x,y;
+PRInt32 width,height,bytewidth,cbits,n;
+PRUint8 *theBits,*curline;
+
+  XL_SET_NUMERIC_LOCALE();
+  bytes_Per_Pix = aImage->GetBytesPix();
+
+  if(bytes_Per_Pix == 1)
+    return ;
+
+  rowData = aImage->GetLineStride();
+  height = aImage->GetHeight();
+  width = aImage->GetWidth();
+  bytewidth = 3*width;
+  cbits = 8;
+
+
+  XP_FilePrintf(mPrintContext->prSetup->out, "gsave\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, "/rowdata %d string def\n",bytewidth);
+  translate(aX, aY + aHeight);
+  XP_FilePrintf(mPrintContext->prSetup->out, "%g %g scale\n", PAGE_TO_POINT_F(aWidth), PAGE_TO_POINT_F(aHeight));
+  XP_FilePrintf(mPrintContext->prSetup->out, "%d %d ", width, height);
+  XP_FilePrintf(mPrintContext->prSetup->out, "%d ", cbits);
+  //XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 %d]\n", width,-height, height);
+  XP_FilePrintf(mPrintContext->prSetup->out, "[%d 0 0 %d 0 0]\n", width,height);
+  XP_FilePrintf(mPrintContext->prSetup->out, " { currentfile rowdata readhexstring pop }\n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " false 3 colorimage\n");
+
+
+  theBits = aImage->GetBits();
+  n = 0;
+  for(y=0;y<height;y++){
+    curline = theBits + (y*rowData);
+    for(x=0;x<bytewidth;x++){
+      if (n > 71) {
+          XP_FilePrintf(mPrintContext->prSetup->out,"\n");
+          n = 0;
+      }
+      XP_FilePrintf(mPrintContext->prSetup->out, "%02x", (int) (0xff & *curline++));
+      n += 2;
+    }
+  }
+
+
+  XP_FilePrintf(mPrintContext->prSetup->out, "\ngrestore\n");
+  XL_RESTORE_NUMERIC_LOCALE();
 
 }
 
-
+/** ---------------------------------------------------
+ *  Reset the cliping path
+ *	@update 2/1/99 dwc
+ */
 void
 nsPostScriptObj::setcolor(nscolor aColor)
 {
@@ -599,7 +739,7 @@ nsPostScriptObj::setcolor(nscolor aColor)
 
 /** ---------------------------------------------------
  *  See documentation
- *	@update 12/21/98 dwc
+ *	@update 2/1/98 dwc
  */
 void 
 nsPostScriptObj::setscriptfont(nscoord aHeight, PRUint8 aStyle, 
