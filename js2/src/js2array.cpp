@@ -121,6 +121,8 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
             setLength(meta, arrInst, i);
         }
     }
+    else
+        setLength(meta, arrInst, 0);
     return thatValue;
 }
 

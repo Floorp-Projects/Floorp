@@ -71,8 +71,10 @@
             pc += sizeof(short);
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->write(meta, b, limit, mn, &lookup, true, a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            if (!limit->write(meta, b, limit, mn, &lookup, true, a)) {
+                if (!meta->cxt.E3compatibility)
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            }
             push(a);
         }
         break;
@@ -190,8 +192,10 @@
             astr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*astr], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, &mn, a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, b, limit, &mn, a)) {
+                if (!meta->cxt.E3compatibility)
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            }
             push(a);
             indexVal = JS2VAL_VOID;
             astr = NULL;
@@ -243,8 +247,10 @@
             b = pop();
             Multiname mn(&meta->world.identifiers[*JS2VAL_TO_STRING(indexVal)], meta->publicNamespace);
             JS2Class *limit = meta->objectType(b);
-            if (!limit->bracketWrite(meta, b, limit, &mn, a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            if (!limit->bracketWrite(meta, b, limit, &mn, a)) {
+                if (!meta->cxt.E3compatibility)
+                    meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            }
             push(a);
             indexVal = JS2VAL_VOID;
         }

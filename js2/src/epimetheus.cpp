@@ -233,11 +233,11 @@ js2val trace(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ 
     return JS2VAL_UNDEFINED;
 }
 
-void printFrameBindings(NonWithFrame *f)
+void printLocalBindings(LocalBindingMap *lMap)
 {
     stdOut << " Local Bindings:\n";   
 
-    for (LocalBindingIterator bi = f->localBindings.begin(), bend = f->localBindings.end(); (bi != bend); bi++) {
+    for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
         LocalBindingEntry *lbe = *bi;
         for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
             LocalBindingEntry::NamespaceBinding ns = *i;
@@ -261,14 +261,25 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
         else
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
-            if (((fObj->kind == SimpleInstanceKind)
-                        && (meta->objectType(argv[0]) == meta->functionClass))) {
-                FunctionWrapper *fWrap;
-                fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
-                if (fWrap->code)
-                    stdOut << "<native code>\n";
+            if (fObj->kind == SimpleInstanceKind) {
+                
+                SimpleInstance *s = checked_cast<SimpleInstance *>(fObj);
+                stdOut << "SimpleInstance\n";
+                if (JS2VAL_IS_OBJECT(s->super))
+                    printFormat(stdOut, "super = 0x%08X\n", s->super);
                 else
-                    dumpBytecode(fWrap->bCon);
+                    stdOut << "super = " << *metadata->toString(s->super) << '\n';
+                stdOut << ((s->sealed) ? "sealed " : "not-sealed ") << '\n';
+                stdOut << "type = " << *s->type->getName() << '\n';
+                printLocalBindings(&s->localBindings);
+                if (meta->objectType(argv[0]) == meta->functionClass) {
+                    FunctionWrapper *fWrap;
+                    fWrap = (checked_cast<SimpleInstance *>(fObj))->fWrap;
+                    if (fWrap->code)
+                        stdOut << "<native code>\n";
+                    else
+                        dumpBytecode(fWrap->bCon);
+                }
             }
             else {
                 if (fObj->kind == ClassKind) {
@@ -280,7 +291,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                     stdOut << ((c->dynamic) ? " dynamic, " : " non-dynamic, ") << ((c->final) ? "final" : "non-final") << "\n";
                     stdOut << " slotCount = " << c->slotCount << "\n";
 
-                    printFrameBindings(c);
+                    printLocalBindings(&c->localBindings);
 
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceBindings.begin(), riend = c->instanceBindings.end(); (rib != riend); rib++) {

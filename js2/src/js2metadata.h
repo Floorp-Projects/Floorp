@@ -647,7 +647,7 @@ public:
     void addFrame(Frame *f)                 { frameList.push_front(f); }
     void removeTopFrame()                   { frameList.pop_front(); }
 
-    js2val findThis(bool allowPrototypeThis);
+    js2val findThis(JS2Metadata *meta, bool allowPrototypeThis);
     void lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing);
     void lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue);
@@ -867,7 +867,7 @@ class ForIteratorObject : public JS2Object {
 public:
     ForIteratorObject(JS2Object *obj) : JS2Object(ForIteratorKind), obj(obj), nameList(NULL) { }
 
-    bool first();
+    bool first(JS2Engine *engine);
     bool next(JS2Engine *engine);
 
     js2val value(JS2Engine *engine);
@@ -880,7 +880,7 @@ public:
 
 private:
 
-    bool buildNameList();
+    bool buildNameList(JS2Metadata *meta);
 
     const String **nameList;
     uint32 it;
@@ -1101,9 +1101,10 @@ typedef NamespaceList::iterator NamespaceListIterator;
 // A CONTEXT carries static information about a particular point in the source program.
 class Context {
 public:
-    Context() : strict(false) { }
+    Context() : strict(false), E3compatibility(true) { }
     Context(Context *cxt);
     bool strict;                    // true if strict mode is in effect
+    bool E3compatibility;
     NamespaceList openNamespaces;   // The set of namespaces that are open at this point. 
                                     // The public namespace is always a member of this set.
 };

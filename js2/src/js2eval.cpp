@@ -362,6 +362,10 @@ namespace MetaData {
         // if not available or result is not primitive then try property 'valueOf'
         // if that's not available or returns a non primitive, throw a TypeError
 
+        JS2Object *obj = JS2VAL_TO_OBJECT(x);
+        if (obj->kind != SimpleInstanceKind)    // therefore, not an E3 object, so just return
+            return engine->typeofString(x);     // the 'typeof' string
+
         if (hint == StringHint) {
             js2val result;
             if (invokeFunctionOnObject(x, engine->toString_StringAtom, result)) {

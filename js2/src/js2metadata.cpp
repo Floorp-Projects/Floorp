@@ -1544,7 +1544,7 @@ namespace MetaData {
             break;
         case ExprNode::This:
             {
-                if (env->findThis(true) == JS2VAL_VOID)
+                if (env->findThis(this, true) == JS2VAL_VOID)
                     reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
             break;
@@ -2402,7 +2402,7 @@ doUnary:
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
     // by either an instance member of a class or a prototype function. If allowPrototypeThis is 
     // false, allow this to be defined only by an instance member of a class.
-    js2val Environment::findThis(bool allowPrototypeThis)
+    js2val Environment::findThis(JS2Metadata *meta, bool allowPrototypeThis)
     {
         FrameListIterator fi = getBegin();
         while (fi != getEnd()) {
@@ -2412,8 +2412,7 @@ doUnary:
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
             // XXX for ECMA3, when we hit a package (read GlobalObject) return that as the 'this'
-            // XXX should have 'ECMA3' compatibility flag in Environment?
-            if (pf->kind == PackageKind)    
+            if ((pf->kind == PackageKind) && meta->cxt.E3compatibility)
                 return OBJECT_TO_JS2VAL(pf);
             fi++;
         }
@@ -2427,7 +2426,7 @@ doUnary:
     // an error.
     void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval)
     {
-        LookupKind lookup(true, findThis(false));
+        LookupKind lookup(true, findThis(meta, false));
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2470,7 +2469,7 @@ doUnary:
     // exists, then fine. Otherwise create the property there.
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing)
     {
-        LookupKind lookup(true, findThis(false));
+        LookupKind lookup(true, findThis(meta, false));
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2513,7 +2512,8 @@ doUnary:
             if (result)
                 return;
         }
-        meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
+        if (!meta->cxt.E3compatibility)
+            meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
 
 
@@ -2521,7 +2521,7 @@ doUnary:
     // but it had darn well better be in the environment somewhere.
     void Environment::lexicalInit(JS2Metadata *meta, Multiname *multiname, js2val newValue)
     {
-        LookupKind lookup(true, findThis(false));
+        LookupKind lookup(true, findThis(meta, false));
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2570,7 +2570,7 @@ doUnary:
     // can't be found, or the result of the deleteProperty call if it was found.
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
-        LookupKind lookup(true, findThis(false));
+        LookupKind lookup(true, findThis(meta, false));
         FrameListIterator fi = getBegin();
         bool result = false;
         while (fi != getEnd()) {
@@ -2643,7 +2643,7 @@ doUnary:
  ************************************************************************************/
 
     // clone a context
-    Context::Context(Context *cxt) : strict(cxt->strict), openNamespaces(cxt->openNamespaces)
+    Context::Context(Context *cxt) : strict(cxt->strict), E3compatibility(cxt->E3compatibility), openNamespaces(cxt->openNamespaces)
     {
         ASSERT(false);  // ?? used ??
     }
@@ -3218,7 +3218,7 @@ static const uint8 urlCharType[256] =
     {
         ASSERT(JS2VAL_IS_OBJECT(thisValue));
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
-        if (obj->kind == PackageKind) {
+        if ((obj->kind == PackageKind) && meta->cxt.E3compatibility) {
             // special case this for now, ECMA3 test sanity...
             return GlobalObject_toString(meta, thisValue, NULL, 0);
         }
@@ -3570,7 +3570,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     Member *JS2Metadata::findCommonMember(js2val *base, Multiname *multiname, Access access, bool flat)
     {
         Member *m = NULL;
-        if (JS2VAL_IS_PRIMITIVE(*base))  {
+        if (JS2VAL_IS_PRIMITIVE(*base) && cxt.E3compatibility) {
             *base = toObject(*base);      // XXX E3 compatibility...
         }
         JS2Object *baseObj = JS2VAL_TO_OBJECT(*base);

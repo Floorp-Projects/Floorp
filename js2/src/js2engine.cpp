@@ -211,7 +211,11 @@ namespace MetaData {
 
     String *JS2Engine::allocStringPtr(const char *s)
     { 
-        return allocStringPtr(&meta->world.identifiers[widenCString(s)]); 
+        String *p = (String *)(JS2Object::alloc(sizeof(String), false));
+        size_t len = strlen(s);
+        String *result = new (p) String(len, uni::null);
+        std::transform(s, s+len, result->begin(), widen);
+        return result; 
     }
 
     String *JS2Engine::allocStringPtr(const String *s)
@@ -274,7 +278,7 @@ namespace MetaData {
     {
         char buf[dtosStandardBufferSize];
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
-        return allocStringPtr(&meta->world.identifiers[chrp]);
+        return allocStringPtr(chrp);
     }
 
     // Convert a double to a string
@@ -282,7 +286,7 @@ namespace MetaData {
     {
         char buf[dtosStandardBufferSize];
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, *number, dtosStandard, 0);
-        return allocStringPtr(&meta->world.identifiers[chrp]);
+        return allocStringPtr(chrp);
     }
 
     // x is a Number, validate that it has no fractional component
@@ -1012,47 +1016,40 @@ namespace MetaData {
     //
     // Initialize and build a list of names of properties in the object.
     //
-    bool ForIteratorObject::first()
+    bool ForIteratorObject::first(JS2Engine *engine)
     {
         if (obj == NULL)
             return false;
         originalObj = obj;
-        return buildNameList();
+        return buildNameList(engine->meta);
     }
 
     // Iterate over LocalBindings
-    bool ForIteratorObject::buildNameList()
+    bool ForIteratorObject::buildNameList(JS2Metadata *meta)
     {
-        if (obj->kind == ClassKind) {
-            JS2Class *c = checked_cast<JS2Class *>(obj);
-            nameList = new const String *[c->localBindings.size()];
-            length = 0;
-            for (LocalBindingIterator bi = c->localBindings.begin(), bend = c->localBindings.end(); (bi != bend); bi++) {
-                LocalBindingEntry *lbe = *bi;
-                nameList[length++] = &lbe->name;
-            }
-        }
-        else {
-            LocalBindingMap *lMap = NULL;
-            if (obj->kind == SimpleInstanceKind)
-                lMap = &(checked_cast<SimpleInstance *>(obj))->localBindings;
-            else
-            if (obj->kind == PackageKind)
-                lMap = &(checked_cast<Package *>(obj))->localBindings;
-            else
-            if (obj->kind == ClassKind)
-                lMap = &(checked_cast<JS2Class *>(obj))->localBindings;
+        LocalBindingMap *lMap = NULL;
+        if (obj->kind == SimpleInstanceKind)
+            lMap = &(checked_cast<SimpleInstance *>(obj))->localBindings;
+        else
+        if (obj->kind == PackageKind)
+            lMap = &(checked_cast<Package *>(obj))->localBindings;
+        else
+        if (obj->kind == ClassKind)
+            lMap = &(checked_cast<JS2Class *>(obj))->localBindings;
 
-            if (lMap) {
-                nameList = new const String *[lMap->size()];
-                length = 0;
-                for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
-                    LocalBindingEntry *lbe = *bi;
-                    nameList[length++] = &lbe->name;
+        if (lMap) {
+            nameList = new const String *[lMap->size()];
+            length = 0;
+            for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
+                LocalBindingEntry *lbe = *bi;
+                for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                    LocalBindingEntry::NamespaceBinding ns = *i;
+                    if ((ns.first == meta->publicNamespace) && ns.second->enumerable)
+                        nameList[length++] = &lbe->name;
                 }
-                it = 0;
-                return (length != 0);
             }
+            it = 0;
+            return (length != 0);
         }
         return false;
     }
@@ -1086,7 +1083,7 @@ namespace MetaData {
                         if (!JS2VAL_IS_NULL(protoval)) {
                             if (JS2VAL_IS_OBJECT(protoval)) {
                                 obj = JS2VAL_TO_OBJECT(protoval);
-                                return buildNameList();
+                                return buildNameList(engine->meta);
                             }
                         }
                     }

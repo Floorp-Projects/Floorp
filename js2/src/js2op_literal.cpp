@@ -104,7 +104,7 @@
 
     case eThis: // XXX literal?
         {
-            a = meta->env->findThis(true);
+            a = meta->env->findThis(meta, true);
             if (JS2VAL_IS_INACCESSIBLE(a))
                 meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
             push(a);
