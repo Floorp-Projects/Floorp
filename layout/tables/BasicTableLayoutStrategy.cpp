@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
+#include "plarena.h"
+
 #include "BasicTableLayoutStrategy.h"
 #include "nsIPresContext.h"
 #include "nsTableFrame.h"
@@ -45,11 +48,14 @@
 #include "nsQuickSort.h"
 
 
+#define ARENA_ALLOCATE(var, pool, num, type) \
+    {void *_tmp_; PL_ARENA_ALLOCATE(_tmp_, pool, (num*sizeof(type))); \
+    var = NS_REINTERPRET_CAST(type*, _tmp_); }
+
 // Local class used to hold information about table cells so we do not
 // have to look it up multiple times
 struct CellInfo {
   nsTableCellFrame *cellFrame;
-  PRBool originates;
   PRInt32 colSpan;
 };
 
@@ -564,11 +570,12 @@ GetSortedFrames(nsTableFrame *TableFrame,
   PRInt32 rowX, index = 0;
   for (rowX = 0; rowX < numRows; rowX++) {
     CellInfo *inf = &cellInfo[index];
+    PRBool orig;
     inf->cellFrame =
-      TableFrame->GetCellInfoAt(rowX, colX, &inf->originates, &inf->colSpan);
+      TableFrame->GetCellInfoAt(rowX, colX, &orig, &inf->colSpan);
 
     // If the cell is good we keep it.
-    if(inf->cellFrame && inf->originates && 1 != inf->colSpan) {
+    if(inf->cellFrame && orig && 1 != inf->colSpan) {
       index++;
     }
   }
@@ -1385,10 +1392,21 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   basis -= borderPadding.left + borderPadding.right + mCellSpacingTotal;
 
   nscoord colPctTotal = 0;
+
+  struct nsSpannedEle {
+    nsSpannedEle *next, *prev;
+    PRInt32 col, colSpan;
+    nsTableCellFrame *cellFrame;
+  };
+
+  nsSpannedEle *spanList = 0;
+  nsSpannedEle *spanTail = 0;
+  PLArenaPool   spanArena;
   
+  PL_INIT_ARENA_POOL(&spanArena, "AssignPctColumnWidths", 512);
   // Determine the percentage contribution for cols and for cells with colspan = 1
   // Iterate backwards, similarly to the reasoning in AssignNonPctColumnWidths
-  for (colX = numCols - 1; colX >= 0; colX--) { 
+  for (colX = numCols - 1; colX >= 0; colX--) {
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord maxColPctWidth = WIDTH_NOT_SET;
@@ -1400,9 +1418,29 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
       PRBool originates;
       PRInt32 colSpan;
       nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      // skip cells that don't originate at (rowX, colX); colspans are handled in the
-      // next pass, row spans don't need to be handled
-      if (!cellFrame || !originates || (colSpan > 1)) { 
+      // skip cells that don't originate at (rowX, colX)
+      if (!cellFrame || !originates) { 
+        continue;
+      }
+
+      // colspans are handled in the next pass, but we record them here so we dont have to
+      // search for the again.  row spans do not need to be handled.
+      if(colSpan>1) {
+        nsSpannedEle *spanned;
+        ARENA_ALLOCATE(spanned, &spanArena, 1, nsSpannedEle);
+        if(spanned) {
+          spanned->col = colX;
+          spanned->colSpan = colSpan;
+          spanned->cellFrame = cellFrame;
+          spanned->next = spanList;
+          spanned->prev = nsnull;
+          if(spanList) {
+            spanList->prev = spanned;
+          } else {
+            spanTail = spanned;
+          }
+          spanList = spanned;
+        }
         continue;
       }
       // see if the cell has a style percent width specified
@@ -1448,25 +1486,21 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   // check to see if a cell spans a percentage col. This will cause the MIN_ADJ,
   // FIX_ADJ, and DES_ADJ values to be recomputed 
   PRBool done = PR_FALSE;
-  for (colX = 0; (colX < numCols) && !done; colX++) { 
-    for (rowX = 0; (rowX < numRows) && !done; rowX++) {
-      PRBool originates;
-      PRInt32 colSpan;
-      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      if (!originates || 1 == colSpan) {
-        continue;
-      }
-      // determine if the cell spans cols which have a pct value
-      for (PRInt32 spanX = 0; (spanX < colSpan) && !done; spanX++) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); 
-        if (!colFrame) continue;
-        if (colFrame->GetWidth(PCT) > 0) {
-          mTableFrame->SetHasCellSpanningPctCol(PR_TRUE);
-          // recompute the MIN_ADJ, FIX_ADJ, and DES_ADJ values
-          ComputeNonPctColspanWidths(aReflowState, PR_TRUE, aPixelToTwips, nsnull);
-          done = PR_TRUE;
-          break;
-        }
+  nsSpannedEle *spannedCell;
+  for(spannedCell=spanList; !done && spannedCell; spannedCell=spannedCell->next)
+  {
+    colX = spannedCell->col;
+    PRInt32 colSpan = spannedCell->colSpan;
+    // determine if the cell spans cols which have a pct value
+    for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); 
+      if (!colFrame) continue;
+      if (colFrame->GetWidth(PCT) > 0) {
+        mTableFrame->SetHasCellSpanningPctCol(PR_TRUE);
+        // recompute the MIN_ADJ, FIX_ADJ, and DES_ADJ values
+        ComputeNonPctColspanWidths(aReflowState, PR_TRUE, aPixelToTwips, nsnull);
+        done = PR_TRUE;
+        break;
       }
     }
   }
@@ -1476,14 +1510,23 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
   // if more than one  colspan originate in one column, resort the access to 
   // the rows so that the inner colspans are handled first
 
-  CellInfo* cellInfo = new CellInfo[numRows];
+  CellInfo* cellInfo = nsnull;
 
-  if(!cellInfo) {
-    return basis;
-  }
+  if(spanTail)
+    ARENA_ALLOCATE(cellInfo, &spanArena, numRows, CellInfo);
 
-  for (colX = numEffCols - 1; colX >= 0; colX--) { // loop only over effective columns
-    PRInt32 spannedRows = GetSortedFrames(mTableFrame, colX, numRows, cellInfo);
+  if(cellInfo) for(spannedCell=spanTail; spannedCell;) {
+    PRInt32 spannedRows = 0;
+    PRInt32 colX = spannedCell->col;
+    do {
+      cellInfo[spannedRows].cellFrame = spannedCell->cellFrame;
+      cellInfo[spannedRows].colSpan   = spannedCell->colSpan;
+      ++spannedRows;
+    } while((spannedCell=spannedCell->prev) && (spannedCell->col==colX));
+    if(spannedRows>1) {
+      NS_QuickSort(cellInfo, spannedRows, sizeof(cellInfo[0]), RowSortCB, 0);
+    }
+
     for (PRInt32 i = 0; i < spannedRows; i++) {
       const CellInfo *inf = &cellInfo[i];
       const nsTableCellFrame* cellFrame = inf->cellFrame;
@@ -1589,7 +1632,10 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
       }
     } // end for (index ..
   } // end for (colX ..
-  delete [] cellInfo;
+
+  // We are done with our spanlist, get rid of it now
+  PL_FinishArenaPool(&spanArena);
+
   // if the percent total went over 100%, adjustments need to be made to right most cols
   if (colPctTotal > 100) {
     ReduceOverSpecifiedPctCols(nsTableFrame::RoundToPixel(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis), aPixelToTwips));
