@@ -1891,21 +1891,29 @@ NET_GetURL (URL_Struct *URL_s,
 		StrAllocCopy(XP_NEW_DOC_NAME, XP_GetString(XP_EDIT_NEW_DOC_NAME));
     }
 
-    /* Test for "Untitled" URL */
-    if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_NAME) ) {
-    	/* Change request to load "file:///Untitled" into "about:editfilenew"  */
-	    PR_Free(URL_s->address);
-	    URL_s->address = PL_strdup(XP_NEW_DOC_URL);
-	    /* Set flag so FE can quickly detect new doc */
-	    window_id->is_new_document = TRUE;
+    if( !window_id->is_new_document ) {
+        /* Test for "Untitled" URL */
+        if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_NAME) ) {
+    	    /* Change request to load "file:///Untitled" into "about:editfilenew"  */
+	        PR_Free(URL_s->address);
+	        URL_s->address = PL_strdup(XP_NEW_DOC_URL);
+	        /* Set flag so FE can quickly detect new doc */
+	        window_id->is_new_document = TRUE;
+        }
+        else if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_URL) ) {
+		    window_id->is_new_document = TRUE;
+        }
+#if 0
+        /* This is bad! We run through here when loading images,
+           which shares the context, 
+           so we shouldn't clear the new document flag */
+        else {
+            /* Be sure this is FALSE if not a new document */
+            window_id->is_new_document = FALSE;
+        }
+#endif
     }
-    else if( 0 == PL_strcmp(URL_s->address, XP_NEW_DOC_URL) ) {
-		window_id->is_new_document = TRUE;
-    }
-    else {
-        /* Be sure this is FALSE if not a new document */
-        window_id->is_new_document = FALSE;
-    }
+
     /* Hack to allow special URL for new Editor doc 
      *   and still allow filtering of non-editable doc types
      * All editor GetUrl calls should use FO_CACHE_AND_EDIT
