@@ -332,7 +332,6 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:themes:classic:communicator:sidebar:mac:jar.mn", $chrome_dir, \%jars);
@@ -842,6 +841,8 @@ sub BuildClientDist()
     if ($main::options{inspector})
     {
         InstallFromManifest(":mozilla:extensions:inspector:base:public:MANIFEST_IDL", "$distdirectory:idl:");
+        InstallFromManifest(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$distdirectory:defaults:pref");
+        InstallFromManifest(":mozilla:extensions:inspector:resources:content:res:MANIFEST", "$distdirectory:res:inspector");
     }
 
     print("--- Client Dist export complete ----\n");
