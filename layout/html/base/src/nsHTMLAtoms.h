@@ -36,6 +36,7 @@ public:
   static void ReleaseAtoms();
 
   static nsIAtom* mozAnonymousBlock;
+  static nsIAtom* mozListBulletPseudo;
 
   // Special attribute atoms
   static nsIAtom* _baseHref;
@@ -66,7 +67,6 @@ public:
   static nsIAtom* bordercolor;
   static nsIAtom* bottompadding;
   static nsIAtom* br;
-  static nsIAtom* bulletPseudo;
   static nsIAtom* button;
   static nsIAtom* buttonContentPseudo;
 
