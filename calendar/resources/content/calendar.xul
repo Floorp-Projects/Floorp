@@ -376,6 +376,7 @@
                              <menuitem id="event-filter-2weeks" label="Events Next 2 Weeks" value="2weeks" persist="selected"/>
                              <menuitem id="event-filter-month" label="Events In The Next Month" value="month" persist="selected"/>
                              <menuitem id="event-filter-future" label="All Future Events" value="future" persist="selected"/>
+                             <menuitem id="event-filter-current" label="Currently Selected Day" value="current" persist="selected"/>
                          </menupopup>
                      </menulist>
                   </box>

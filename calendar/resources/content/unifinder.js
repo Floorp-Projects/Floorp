@@ -529,6 +529,11 @@ function getEventTable( )
          gEventSource.onlyFutureEvents = true;
          eventTable = gEventSource.getCurrentEvents();
          break;
+      case "current":
+         var SelectedDate = gCalendarWindow.getSelectedDate();
+         var EndDate = new Date( SelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) );
+         eventTable = gEventSource.getEventsForRange( SelectedDate, EndDate );
+         break;
       default: 
          eventTable = new Array();
          dump( "there's no case for "+document.getElementById( "event-filter-menulist" ).selectedItem.value );
