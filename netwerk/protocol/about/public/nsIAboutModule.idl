@@ -31,14 +31,17 @@ interface nsIEventQueue;
 [scriptable, uuid(692303c0-2f83-11d3-8cd0-0060b0fc14a3)]
 interface nsIAboutModule : nsISupports 
 {
-    nsIChannel newChannel(in string verb,
-                          in nsIURI aURI,
-                          in nsILoadGroup aLoadGroup,
-                          in nsIInterfaceRequestor notificationCallbacks,
-                          in nsLoadFlags loadAttributes,
-                          in nsIURI originalURI,
-                          in unsigned long bufferSegmentSize,
-                          in unsigned long bufferMaxSize);
+    /**
+     * Constructs a new channel for the about protocol module. 
+     *
+     * @param originalURI - Specifies the original URI which caused the creation
+     * of this channel. This can occur when the construction of one channel
+     * (e.g. for resource:) causes another channel to be created on its behalf
+     * (e.g. a file: channel), or if a redirect occurs, causing the current
+     * URL to become different from the original URL. If NULL, the aURI parameter
+     * will be used as the originalURI instead.
+     */
+    nsIChannel newChannel(in nsIURI aURI);
 };
 
 %{C++

@@ -695,7 +695,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     }
     nsIURI* docURL = aDocument->GetDocumentURL();
     nsresult rv;
-    rv = NS_MakeAbsoluteURI(src, docURL, absURLSpec);
+    rv = NS_MakeAbsoluteURI(absURLSpec, src, docURL);
     if (NS_OK == rv) {
       nsCOMPtr<nsIAtom> urlAtom = getter_AddRefs(NS_NewAtom(absURLSpec));
       if (0 == mVisited->Get(urlAtom)) {

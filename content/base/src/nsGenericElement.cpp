@@ -1449,7 +1449,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
   // Resolve url to an absolute url
   nsAutoString absURLSpec;
   if (nsnull != aBaseURL) {
-    rv = NS_MakeAbsoluteURI(aURLSpec, aBaseURL, absURLSpec);
+    rv = NS_MakeAbsoluteURI(absURLSpec, aURLSpec, aBaseURL);
     if (NS_FAILED(rv)) return rv;
   }
   else {

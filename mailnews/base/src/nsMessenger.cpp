@@ -588,16 +588,11 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   }
   {
     aListener->m_channel = null_nsCOMPtr();
-    rv = NS_NewInputStreamChannel(aURL,
-                                  nsnull,      // contentType
-                                  -1,          // contentLength
+    rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
+                                  aURL,
                                   nsnull,      // inputStream
-                                  nsnull,      // loadGroup
-                                  nsnull,      // notificationCallbacks
-                                  nsIChannel::LOAD_NORMAL,
-                                  nsnull,      // originalURI
-                                  0, 0, 
-                                  getter_AddRefs(aListener->m_channel));
+                                  nsnull,      // contentType
+                                  -1);
     if (NS_FAILED(rv)) goto done;
 
     from = MESSAGE_RFC822;
@@ -816,16 +811,11 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             if (NS_FAILED(rv)) goto done;
 
             aListener->m_channel = null_nsCOMPtr();
-            rv = NS_NewInputStreamChannel(aURL, 
-                                          nsnull,      // contentType
-                                          -1,          // contentLength
+            rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
+                                          aURL, 
                                           nsnull,      // inputStream
-                                          nsnull,      // loadGroup
-                                          nsnull,      // notificationCallbacks
-                                          nsIChannel::LOAD_NORMAL,
-                                          nsnull,      // originalURI
-                                          0, 0, 
-                                          getter_AddRefs(aListener->m_channel));
+                                          nsnull,      // contentType
+                                          -1);         // contentLength
             if (NS_FAILED(rv)) goto done;
 
             aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
@@ -1611,6 +1601,11 @@ nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
   {
     m_fileSpec->Flush();
     m_fileSpec->CloseStream();
+    if (NS_FAILED(rv)) goto done;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsIRDFResource> res;
+    rv = rdf->GetResource(m_templateUri, getter_AddRefs(res));
     if (NS_FAILED(rv)) goto done;
     if (m_templateUri) { // ** save as template goes here
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);

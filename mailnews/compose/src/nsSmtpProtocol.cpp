@@ -254,7 +254,7 @@ NS_INTERFACE_MAP_BEGIN(nsSmtpProtocol)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
 
 nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
-    : nsMsgProtocol(aURL, aURL)
+    : nsMsgProtocol(aURL)
 {
     Initialize(aURL);
 }

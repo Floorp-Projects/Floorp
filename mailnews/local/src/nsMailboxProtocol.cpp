@@ -59,8 +59,8 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURI, nsIURI* originalURI)
-    : nsMsgProtocol(aURI, originalURI)
+nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURI)
+    : nsMsgProtocol(aURI)
 {
 	Initialize(aURI);
 
@@ -180,13 +180,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
 /////////////////////////////////////////////////////////////////////////////////////////////
 // End of nsIStreamListenerSupport
 //////////////////////////////////////////////////////////////////////////////////////////////
-
-NS_IMETHODIMP nsMailboxProtocol::Cancel()  // handle stop button
-{
-	return nsMsgProtocol::Cancel();
-}
-
-
 
 PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {

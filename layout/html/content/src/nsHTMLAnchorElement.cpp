@@ -375,7 +375,7 @@ nsHTMLAnchorElement::GetHref(nsString& aValue)
 
   if (nsnull != baseURL) {
     // Get absolute URL.
-    rv = NS_MakeAbsoluteURI(relURLSpec, baseURL, aValue);
+    rv = NS_MakeAbsoluteURI(aValue, relURLSpec, baseURL);
   }
   else {
     // Absolute URL is same as relative URL.

@@ -133,14 +133,7 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
-                                  nsILoadGroup* aLoadGroup,
-                                  nsIInterfaceRequestor* notificationCallbacks,
-                                  nsLoadFlags loadAttributes,
-                                  nsIURI* originalURI,
-                                  PRUint32 bufferSegmentSize,
-                                  PRUint32 bufferMaxSize,
-                                  nsIChannel* *result)
+nsFileProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
     nsresult rv;
     
@@ -148,8 +141,9 @@ nsFileProtocolHandler::NewChannel(const char* command, nsIURI* url,
     rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(command, url, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
+    rv = channel->Init(-1,      // ioFlags unspecified
+                       -1,      // permissions unspecified
+                       url);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -441,6 +441,9 @@ public:
 
   nsINameSpace*         mNameSpace;
   PRInt32               mDefaultNameSpaceID;
+
+  static nsIIOService*  gIOService;
+  static nsrefcnt       gRefcnt;
 };
 
 
@@ -872,6 +875,9 @@ static PRBool SetStyleSheetReference(nsISupports* aElement, void* aSheet)
   return PR_TRUE;
 }
 
+nsIIOService* CSSStyleSheetInner::gIOService = nsnull;
+nsrefcnt CSSStyleSheetInner::gRefcnt = 0;
+
 CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(nsnull),
@@ -880,6 +886,13 @@ CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
     mDefaultNameSpaceID(kNameSpaceID_None)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
+  if (gRefcnt++ == 0) {
+    nsresult rv;
+    rv = nsServiceManager::GetService(kIOServiceCID,
+                                      NS_GET_IID(nsIIOService),
+                                      (nsISupports**)&gIOService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
+  }
   mSheets.AppendElement(aParentSheet);
 }
 
@@ -905,6 +918,13 @@ CSSStyleSheetInner::CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
     mDefaultNameSpaceID(aCopy.mDefaultNameSpaceID)
 {
   MOZ_COUNT_CTOR(CSSStyleSheetInner);
+  if (gRefcnt++ == 0) {
+    nsresult rv;
+    rv = nsServiceManager::GetService(kIOServiceCID,
+                                      NS_GET_IID(nsIIOService),
+                                      (nsISupports**)&gIOService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "can't get nsIOService");
+  }
   mSheets.AppendElement(aParentSheet);
   NS_IF_ADDREF(mURL);
   if (aCopy.mOrderedRules) {
@@ -929,6 +949,12 @@ CSSStyleSheetInner::~CSSStyleSheetInner(void)
     NS_RELEASE(mOrderedRules);
   }
   NS_IF_RELEASE(mNameSpace);
+  if (--gRefcnt == 0) {
+    nsresult rv;
+    rv = nsServiceManager::ReleaseService(kIOServiceCID, gIOService);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "can't release nsIOService");
+    gIOService = nsnull;
+  }
 }
 
 CSSStyleSheetInner* 
@@ -2523,7 +2549,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
                     if (NS_FAILED(rv)) return PR_FALSE;
 
-                    NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
+                    (void)NS_MakeAbsoluteURI(absURLSpec, href, baseUri, CSSStyleSheetInner::gIOService);
+                    // XXX what about failure of NS_MakeAbsoluteURI here?
                     NS_RELEASE(baseUri);
                     NS_IF_RELEASE(docURL);
 

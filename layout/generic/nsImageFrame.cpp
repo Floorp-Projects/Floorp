@@ -768,7 +768,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
           // element to provide the basis for the destination url.
           nsAutoString src;
           if (GetAnchorHREF(src)) {
-            NS_MakeAbsoluteURI(src, baseURL, absURL);
+            NS_MakeAbsoluteURI(absURL, src, baseURL);
             NS_IF_RELEASE(baseURL);
             
             // XXX if the mouse is over/clicked in the border/padding area

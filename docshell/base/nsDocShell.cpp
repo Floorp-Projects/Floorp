@@ -2245,8 +2245,9 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI)
 
    // open a channel for the url
    nsCOMPtr<nsIChannel> channel;
-   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURI, loadGroup, 
-      NS_STATIC_CAST(nsIInterfaceRequestor*, this)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup, 
+                                NS_STATIC_CAST(nsIInterfaceRequestor*, this)),
+                     NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, nsIURILoader::viewNormal,
       nsnull, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);

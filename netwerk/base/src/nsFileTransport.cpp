@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #if defined(PR_LOGGING)
 //
-// Log module for SocketTransport logging...
+// Log module for nsFileTransport logging...
 //
 // To enable logging (see prlog.h for full details):
 //
@@ -171,7 +171,7 @@ public:
         }
 
         nsCOMPtr<nsIInputStream> fileIn;
-        rv = NS_NewFileInputStream(mFile, getter_AddRefs(fileIn));
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileIn), mFile, mIOFlags, mPerm);
         if (NS_FAILED(rv))
         {
 #if DEBUG
@@ -190,8 +190,8 @@ public:
         *aInputStream = fileIn;
         NS_ADDREF(*aInputStream);
 #else
-        rv = NS_NewBufferedInputStream(fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE,
-                                       aInputStream);
+        rv = NS_NewBufferedInputStream(aInputStream,
+                                       fileIn, NS_OUTPUT_STREAM_BUFFER_SIZE);
 #endif
 
         // printf("opening %s for reading\n", (const char*)mSpec);
@@ -210,18 +210,16 @@ public:
         }
 
         nsCOMPtr<nsIOutputStream> fileOut;
-        rv = NS_NewFileOutputStream(mFile, 
-                                    PR_CREATE_FILE | PR_WRONLY,
-                                    0664,
-                                    getter_AddRefs(fileOut));
+        rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOut),
+                                         mFile, mIOFlags, mPerm);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIOutputStream> bufStr;
 #ifdef NO_BUFFERING
         bufStr = fileOut;
 #else
-        rv = NS_NewBufferedOutputStream(fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE,
-                                        getter_AddRefs(bufStr));
+        rv = NS_NewBufferedOutputStream(getter_AddRefs(bufStr),
+                                        fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
         if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -235,7 +233,8 @@ public:
         return rv;
     }
 
-    nsLocalFileSystem(nsIFile* file) : mFile(file) {
+    nsLocalFileSystem(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+        : mFile(file), mIOFlags(ioFlags), mPerm(perm) {
         NS_INIT_REFCNT();
 //#ifdef PR_LOGGING
         (void)mFile->GetPath(&mSpec);
@@ -248,8 +247,9 @@ public:
 //#endif
     }
 
-    static nsresult Create(nsIFile* file, nsIFileSystem* *result) {
-        nsLocalFileSystem* fs = new nsLocalFileSystem(file);
+    static nsresult Create(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
+                           nsIFileSystem* *result) {
+        nsLocalFileSystem* fs = new nsLocalFileSystem(file, ioFlags, perm);
         if (fs == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(fs);
@@ -259,6 +259,8 @@ public:
 
 protected:
     nsCOMPtr<nsIFile>   mFile;
+    PRInt32             mIOFlags;
+    PRInt32             mPerm;
 //#ifdef PR_LOGGING
     char*               mSpec;
 //#endif
@@ -341,6 +343,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsInputStreamFileSystem, nsIFileSystem);
 
 nsFileTransport::nsFileTransport()
     : mContentType(nsnull),
+      mBufferSegmentSize(NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE),
+      mBufferMaxSize(NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE),
+      mIOFlags(-1),
+      mPerm(-1),
       mState(CLOSED),
       mCommand(NONE),
       mSuspended(PR_FALSE),
@@ -348,7 +354,7 @@ nsFileTransport::nsFileTransport()
       mStatus(NS_OK),
       mOffset(0),
       mTotalAmount(-1),
-      mTransferAmount(0),
+      mTransferAmount(-1),
       mBuffer(nsnull)
 {
     NS_INIT_REFCNT();
@@ -367,50 +373,50 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsIFile* file, PRInt32 mode, const char* command,
-                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
+nsFileTransport::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
     nsresult rv;
     mFile = file;
+    mIOFlags = ioFlags;
+    mPerm = perm;
 #if 0
     nsCOMPtr<nsIFileChannel> channel;
-    rv = NS_NewFileChannel(file,
-                           mode, 
-                           nsnull,      // contentType -- infer
-                           0,           // contentLength -- infer
-                           nsnull,      // loadGroup
-                           nsnull,      // notificationCallbacks
-                           nsIChannel::LOAD_NORMAL,
-                           nsnull,      // originalURI
-                           bufferSegmentSize, 
-                           bufferMaxSize,
-                           getter_AddRefs(channel));
+    rv = NS_NewLocalFileChannel(file,
+                                ioFlags, 
+                                perm,
+                                nsnull,      // contentType -- infer
+                                0,           // contentLength -- infer
+                                nsnull,      // loadGroup
+                                nsnull,      // notificationCallbacks
+                                nsIChannel::LOAD_NORMAL,
+                                nsnull,      // originalURI
+                                bufferSegmentSize, 
+                                bufferMaxSize,
+                                getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIFileSystem> fsObj = do_QueryInterface(channel, &rv);
 #else
     nsCOMPtr<nsIFileSystem> fsObj;
-    rv = nsLocalFileSystem::Create(file, getter_AddRefs(fsObj));
+    rv = nsLocalFileSystem::Create(file, ioFlags, perm, getter_AddRefs(fsObj));
 #endif
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
+    return Init(fsObj);
 }
 
 nsresult
 nsFileTransport::Init(nsIInputStream* fromStream, const char* contentType,
-                      PRInt32 contentLength, const char* command,
-                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
+                      PRInt32 contentLength)
 {
     nsresult rv;
     nsCOMPtr<nsIFileSystem> fsObj;
     rv = nsInputStreamFileSystem::Create(fromStream, contentType, contentLength,
                                          getter_AddRefs(fsObj));
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
+    return Init(fsObj);
 }
 
 nsresult
-nsFileTransport::Init(nsIFileSystem* fsObj, const char* command,
-                      PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
+nsFileTransport::Init(nsIFileSystem* fsObj)
 {
     nsresult rv = NS_OK;
     if (mMonitor == nsnull) {
@@ -419,10 +425,6 @@ nsFileTransport::Init(nsIFileSystem* fsObj, const char* command,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     mFileObject = fsObj;
-    mBufferSegmentSize = bufferSegmentSize != 0
-        ? bufferSegmentSize : NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE;
-    mBufferMaxSize = bufferMaxSize != 0
-        ? bufferMaxSize : NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE;
 #ifdef PR_LOGGING
     if (mFile)
         (void)mFile->GetPath(&mSpec);
@@ -482,7 +484,14 @@ nsFileTransport::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsFileTransport::Cancel()
+nsFileTransport::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::Cancel(nsresult status)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -492,7 +501,7 @@ nsFileTransport::Cancel()
     }
     if (NS_SUCCEEDED(rv)) {
         // if there's no other error pending, say that we aborted
-        mStatus = NS_BINDING_ABORTED;
+        mStatus = status;
     }
     if (mState == READING)
         mState = END_READ;
@@ -547,8 +556,7 @@ nsFileTransport::Resume()
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                                 nsIInputStream **result)
+nsFileTransport::OpenInputStream(nsIInputStream **result)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -562,7 +570,7 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     if (!exists)
-        return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_FILE_NOT_FOUND or something
+        return NS_ERROR_FILE_NOT_FOUND;
 
     rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
                     getter_AddRefs(mBufferOutputStream),
@@ -575,15 +583,13 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     mState = OPENING;
     mCommand = INITIATE_READ;
-    mOffset = startPosition;
-    mTransferAmount = readCount;
     mListener = null_nsCOMPtr();
 
     *result = mBufferInputStream.get();
     NS_ADDREF(*result);
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-           ("nsFileTransport: OpenInputStream [this=%x %s] startPosition=%d readCount=%d",
-            this, (const char*)mSpec, startPosition, readCount));
+           ("nsFileTransport: OpenInputStream [this=%x %s] mOffset=%d mTransferAmount=%d",
+            this, (const char*)mSpec, mOffset, mTransferAmount));
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -594,7 +600,7 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 }
 
 NS_IMETHODIMP
-nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result)
+nsFileTransport::OpenOutputStream(nsIOutputStream **result)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -604,25 +610,22 @@ nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **resu
         return NS_ERROR_IN_PROGRESS;
 
     nsCOMPtr<nsIOutputStream> fileOut;
-    rv = NS_NewFileOutputStream(mFile, 
-                                PR_CREATE_FILE | PR_WRONLY,
-                                0664,
-                                getter_AddRefs(fileOut));
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOut),
+                                     mFile, mIOFlags, mPerm);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIOutputStream> bufStr;
 #ifdef NO_BUFFERING
     bufStr = fileOut;
 #else
-    rv = NS_NewBufferedOutputStream(fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE,
-                                    getter_AddRefs(bufStr));
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(bufStr),
+                                    fileOut, NS_OUTPUT_STREAM_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 #endif
 
     *result = bufStr;
     NS_ADDREF(*result);
 
-    mOffset = startPosition;
     if (mOffset > 0) {
         // if we need to set a starting offset, QI for nsISeekableStream
         nsCOMPtr<nsISeekableStream> ras =
@@ -654,7 +657,8 @@ nsFileTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
         return NS_ERROR_IN_PROGRESS;
 
     NS_ASSERTION(observer, "need to supply an nsIStreamObserver");
-    rv = NS_NewAsyncStreamObserver(observer, NS_CURRENT_EVENTQ, getter_AddRefs(mOpenObserver));
+    rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
+                                   observer, NS_CURRENT_EVENTQ);
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(mOpenContext == nsnull, "context not released");
@@ -676,9 +680,7 @@ nsFileTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                           nsISupports *ctxt,
-                           nsIStreamListener *listener)
+nsFileTransport::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -689,7 +691,8 @@ nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         return NS_ERROR_IN_PROGRESS;
 
     NS_ASSERTION(listener, "need to supply an nsIStreamListener");
-    rv = NS_NewAsyncStreamListener(listener, nsnull, getter_AddRefs(mListener));
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), 
+                                   listener, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
@@ -709,12 +712,10 @@ nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (mState == CLOSED)
         mState = OPENING;
     mCommand = INITIATE_READ;
-    mOffset = startPosition;
-    mTransferAmount = readCount;
 
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
-           ("nsFileTransport: AsyncRead [this=%x %s] startPosition=%d readCount=%d",
-            this, (const char*)mSpec, startPosition, readCount));
+           ("nsFileTransport: AsyncRead [this=%x %s] mOffset=%d mTransferAmount=%d",
+            this, (const char*)mSpec, mOffset, mTransferAmount));
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -726,9 +727,8 @@ nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsFileTransport::AsyncWrite(nsIInputStream *fromStream,
-                            PRUint32 startPosition, PRInt32 writeCount,
-                            nsISupports *ctxt,
-                            nsIStreamObserver *observer)
+                            nsIStreamObserver *observer,
+                            nsISupports *ctxt)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -739,7 +739,8 @@ nsFileTransport::AsyncWrite(nsIInputStream *fromStream,
         return NS_ERROR_IN_PROGRESS;
 
     if (observer) {
-        rv = NS_NewAsyncStreamObserver(observer, NS_CURRENT_EVENTQ, getter_AddRefs(mObserver));
+        rv = NS_NewAsyncStreamObserver(getter_AddRefs(mObserver),
+                                       observer, NS_CURRENT_EVENTQ);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -749,8 +750,6 @@ nsFileTransport::AsyncWrite(nsIInputStream *fromStream,
     if (mState == CLOSED)
         mState = OPENING;
     mCommand = INITIATE_WRITE;
-    mOffset = startPosition;
-    mTransferAmount = writeCount;
     mSource = fromStream;
 
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
@@ -1170,27 +1169,44 @@ nsFileTransport::OnClose(nsIPipe* pipe)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileTransport::GetOriginalURI(nsIURI * *aURI)
+nsFileTransport::GetOriginalURI(nsIURI* *aURI)
 {
+    NS_NOTREACHED("GetOriginalURI");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFileTransport::GetURI(nsIURI * *aURI)
+nsFileTransport::SetOriginalURI(nsIURI* aURI)
 {
+    NS_NOTREACHED("SetOriginalURI");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetURI(nsIURI* *aURI)
+{
+//    NS_NOTREACHED("GetURI");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetURI(nsIURI* aURI)
+{
+    NS_NOTREACHED("SetURI");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileTransport::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aLoadAttributes = LOAD_NORMAL;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFileTransport::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;	// ignored for now
 }
 
 NS_IMETHODIMP
@@ -1222,26 +1238,114 @@ nsFileTransport::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
+nsFileTransport::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    *aTransferOffset = mOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    mOffset = aTransferOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mTransferAmount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetTransferCount(PRInt32 aTransferCount)
+{
+    mTransferAmount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsFileTransport::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFileTransport::GetOwner(nsISupports * *aOwner)
 {
+    NS_NOTREACHED("GetOwner");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileTransport::SetOwner(nsISupports * aOwner)
 {
+    NS_NOTREACHED("SetOwner");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
+    NS_NOTREACHED("GetLoadGroup");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFileTransport::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
+    NS_NOTREACHED("SetLoadGroup");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -578,7 +578,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
     nsIInputStream* in;
     PRUint32 sourceOffset = 0;
-    rv = channel->OpenInputStream(0, -1, &in);
+    rv = channel->OpenInputStream(&in);
 
     // If we couldn't open the channel, then just return.
     if (NS_FAILED(rv)) return NS_OK;

@@ -91,22 +91,26 @@ nsFTPAsyncReadEvent::nsFTPAsyncReadEvent(nsIStreamListener* listener,
 NS_IMETHODIMP
 nsFTPAsyncReadEvent::HandleEvent()
 {
-    return mChannel->AsyncRead(0, -1, mContext, mListener);
+    return mChannel->AsyncRead(mListener, mContext);
 }
 
 
 nsFTPAsyncWriteEvent::nsFTPAsyncWriteEvent(nsIInputStream* inStream,
-                                          PRUint32 writeCount,
-                                          nsIStreamObserver* observer,
-                                          nsIChannel* channel,
-                                          nsISupports* context)
-                    : nsAsyncEvent(channel, context), mObserver(observer),
-                      mInStream(inStream), mWriteCount(writeCount)
-{ }
+                                           PRUint32 writeCount,
+                                           nsIStreamObserver* observer,
+                                           nsIChannel* channel,
+                                           nsISupports* context)
+    : nsAsyncEvent(channel, context), mObserver(observer),
+      mInStream(inStream), mWriteCount(writeCount)
+{
+}
 
 NS_IMETHODIMP
 nsFTPAsyncWriteEvent::HandleEvent()
 {
-    return mChannel->AsyncWrite(mInStream, 0, mWriteCount, mContext, mObserver);
+    nsresult rv;
+    rv = mChannel->SetTransferCount(mWriteCount);
+    if (NS_FAILED(rv)) return rv;
+    return mChannel->AsyncWrite(mInStream, mObserver, mContext);
 }
 

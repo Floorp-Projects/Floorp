@@ -831,7 +831,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       }
     }
     nsAutoString absURLSpec;
-    result = NS_MakeAbsoluteURI(href, docURL, absURLSpec);
+    result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
@@ -841,7 +841,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       char* postBuffer = data.ToNewCString();
 
       if (isURLEncoded) {
-        rv = NS_NewPostDataStream(!isURLEncoded, postBuffer, 0, &postDataStream);
+        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer, 0);
       } else {
 // Cut-and-paste of NS_NewPostDataStream
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);

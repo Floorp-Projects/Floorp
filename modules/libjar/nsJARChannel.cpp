@@ -35,7 +35,6 @@
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
-static NS_DEFINE_CID(kFileChannelCID, NS_FILECHANNEL_CID);
 static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,17 +62,20 @@ public:
             // after successfully downloading the jar file to the cache,
             // start the extraction process:
             nsCOMPtr<nsIFileChannel> jarCacheFile;
-            rv = NS_NewFileChannel(mJarCacheFile, 
-                                   PR_RDONLY,
-                                   nsnull,      // XXX content type
-                                   0,           // XXX content length
-                                   mJARChannel->mLoadGroup,
-                                   mJARChannel->mCallbacks,
-                                   mJARChannel->mLoadAttributes,
-                                   nsnull,
-                                   mJARChannel->mBufferSegmentSize,
-                                   mJARChannel->mBufferMaxSize,
-                                   getter_AddRefs(jarCacheFile));
+            rv = NS_NewLocalFileChannel(getter_AddRefs(jarCacheFile),
+                                        mJarCacheFile, 
+                                        PR_RDONLY,
+                                        0);
+            if (NS_FAILED(rv)) return rv;
+            rv = jarCacheFile->SetLoadGroup(mJARChannel->mLoadGroup);
+            if (NS_FAILED(rv)) return rv;
+            rv = jarCacheFile->SetBufferSegmentSize(mJARChannel->mBufferSegmentSize);
+            if (NS_FAILED(rv)) return rv;
+            rv = jarCacheFile->SetBufferMaxSize(mJARChannel->mBufferMaxSize);
+            if (NS_FAILED(rv)) return rv;
+            rv = jarCacheFile->SetLoadAttributes(mJARChannel->mLoadAttributes);
+            if (NS_FAILED(rv)) return rv;
+            rv = jarCacheFile->SetNotificationCallbacks(mJARChannel->mCallbacks);
             if (NS_FAILED(rv)) return rv;
 
             rv = mJARChannel->ExtractJARElement(jarCacheFile);
@@ -103,18 +105,16 @@ NS_IMPL_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsJARChannel::nsJARChannel()
-    : mCommand(nsnull),
-      mContentType(nsnull),
+    : mContentType(nsnull),
       mJAREntry(nsnull),
-      mMonitor(nsnull)
+      mMonitor(nsnull),
+      mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 }
 
 nsJARChannel::~nsJARChannel()
 {
-    if (mCommand)
-        nsCRT::free(mCommand);
     if (mContentType)
         nsCRT::free(mContentType);
     if (mJAREntry)
@@ -150,33 +150,10 @@ nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
  
 nsresult 
-nsJARChannel::Init(nsIJARProtocolHandler* aHandler, 
-                   const char* command, 
-                   nsIURI* uri,
-                   nsILoadGroup* aLoadGroup, 
-                   nsIInterfaceRequestor* notificationCallbacks,
-                   nsLoadFlags loadAttributes,
-                   nsIURI* originalURI,
-                   PRUint32 bufferSegmentSize,
-                   PRUint32 bufferMaxSize)
+nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
 {
     nsresult rv;
 	mURI = do_QueryInterface(uri, &rv);
-    if (NS_FAILED(rv)) return rv;
-	mCommand = nsCRT::strdup(command);
-    if (mCommand == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY; 
-    mOriginalURI = originalURI ? originalURI : uri;
-    mBufferSegmentSize = bufferSegmentSize;
-    mBufferMaxSize = bufferMaxSize;
-
-    rv = SetLoadAttributes(loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetLoadGroup(aLoadGroup);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     mMonitor = PR_NewMonitor();
@@ -192,27 +169,35 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
 NS_IMETHODIMP
 nsJARChannel::IsPending(PRBool* result)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::IsPending");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsJARChannel::Cancel()
+nsJARChannel::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::Cancel(nsresult status)
 {
     nsresult rv;
     nsAutoMonitor monitor(mMonitor);
 
     if (mJarCacheTransport) {
-        rv = mJarCacheTransport->Cancel();
+        rv = mJarCacheTransport->Cancel(status);
         if (NS_FAILED(rv)) return rv;
         mJarCacheTransport = nsnull;
     }
     if (mJarExtractionTransport) {
-        rv = mJarExtractionTransport->Cancel();
+        rv = mJarExtractionTransport->Cancel(status);
         if (NS_FAILED(rv)) return rv;
         mJarExtractionTransport = nsnull;
     }
-
-	return NS_OK;
+    mStatus = status;
+	return rv;
 }
 
 NS_IMETHODIMP
@@ -257,8 +242,15 @@ nsJARChannel::Resume()
 NS_IMETHODIMP
 nsJARChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
-    *aOriginalURI = mOriginalURI;
+    *aOriginalURI = mOriginalURI ? mOriginalURI : (nsIURI*)mURI;
     NS_ADDREF(*aOriginalURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetOriginalURI(nsIURI* aOriginalURI)
+{
+    mOriginalURI = aOriginalURI;
     return NS_OK;
 }
 
@@ -271,28 +263,36 @@ nsJARChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsJARChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, 
-							  nsIInputStream* *result)
+nsJARChannel::SetURI(nsIURI* aURI)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    mURI = do_QueryInterface(aURI, &rv);
+    return rv;
 }
 
 NS_IMETHODIMP
-nsJARChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *result)
+nsJARChannel::OpenInputStream(nsIInputStream* *result)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::OpenInputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::OpenOutputStream(nsIOutputStream* *result)
+{
+	NS_NOTREACHED("nsJARChannel::OpenOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsJARChannel::AsyncOpen(nsIStreamObserver* observer, nsISupports* ctxt)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::AsyncOpen");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, 
-						nsISupports* ctxt, 
-						nsIStreamListener* listener)
+nsJARChannel::AsyncRead(nsIStreamListener* listener, nsISupports* ctxt)
 {
     nsresult rv;
     rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
@@ -303,15 +303,19 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     nsCOMPtr<nsIChannel> jarBaseChannel;
     rv = NS_OpenURI(getter_AddRefs(jarBaseChannel),
-                    mJARBaseURI, mLoadGroup, mCallbacks, mLoadAttributes);
+                    mJARBaseURI, nsnull);
     if (NS_FAILED(rv)) return rv;
-    
+    rv = jarBaseChannel->SetLoadGroup(mLoadGroup);
+    if (NS_FAILED(rv)) return rv;
+    rv = jarBaseChannel->SetLoadAttributes(mLoadAttributes);
+    if (NS_FAILED(rv)) return rv;
+    rv = jarBaseChannel->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
+
     if (mLoadGroup)
         (void)mLoadGroup->AddChannel(this, nsnull);
 
     // XXX need to set a state variable here to say we're reading
-    mStartPosition = startPosition;
-    mReadCount = readCount;
     mUserContext = ctxt;
     mUserListener = listener;
 
@@ -335,22 +339,14 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         {
 	        // then we've already got the file in the local cache -- no need to download it
             nsCOMPtr<nsIFileChannel> fileChannel;
-            rv = nsComponentManager::CreateInstance(kFileChannelCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsIFileChannel),
-                                                    getter_AddRefs(fileChannel));
+            rv = NS_NewLocalFileChannel(getter_AddRefs(fileChannel),
+                                        jarCacheFile, 
+                                        PR_RDONLY,
+                                        0);
             if (NS_FAILED(rv)) return rv;
-
-            rv = fileChannel->Init(jarCacheFile, 
-                                   PR_RDONLY,
-                                   nsnull,       // contentType
-                                   -1,           // contentLength
-                                   nsnull,       // loadGroup
-                                   nsnull,       // notificationCallbacks
-                                   nsIChannel::LOAD_NORMAL,
-                                   nsnull,       // originalURI
-                                   mBufferSegmentSize,
-                                   mBufferMaxSize);
+            rv = fileChannel->SetBufferSegmentSize(mBufferSegmentSize);
+            if (NS_FAILED(rv)) return rv;
+            rv = fileChannel->SetBufferMaxSize(mBufferMaxSize);
             if (NS_FAILED(rv)) return rv;
 
 		    rv = ExtractJARElement(fileChannel);
@@ -365,9 +361,12 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         // use a file transport to serve as a data pump for the download (done
         // on some other thread)
         nsCOMPtr<nsIChannel> jarCacheTransport;
-        rv = fts->CreateTransport(jarCacheFile, PR_RDONLY, mCommand,
-                                  mBufferSegmentSize, mBufferMaxSize,
+        rv = fts->CreateTransport(jarCacheFile, PR_RDONLY, 0, 
                                   getter_AddRefs(mJarCacheTransport));
+        if (NS_FAILED(rv)) return rv;
+        rv = mJarCacheTransport->SetBufferSegmentSize(mBufferSegmentSize);
+        if (NS_FAILED(rv)) return rv;
+        rv = mJarCacheTransport->SetBufferMaxSize(mBufferMaxSize);
         if (NS_FAILED(rv)) return rv;
 
         rv = mJarCacheTransport->SetNotificationCallbacks(mCallbacks);
@@ -378,10 +377,10 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
             return NS_ERROR_OUT_OF_MEMORY;
 
         nsCOMPtr<nsIInputStream> jarBaseIn;
-        rv = jarBaseChannel->OpenInputStream(0, -1, getter_AddRefs(jarBaseIn));
+        rv = jarBaseChannel->OpenInputStream(getter_AddRefs(jarBaseIn));
         if (NS_FAILED(rv)) return rv;
 
-        rv = mJarCacheTransport->AsyncWrite(jarBaseIn, 0, -1, nsnull, downloadObserver);
+        rv = mJarCacheTransport->AsyncWrite(jarBaseIn, nsnull, downloadObserver);
     }
     return rv;
 }
@@ -434,25 +433,28 @@ nsJARChannel::ExtractJARElement(nsIFileChannel* jarBaseFile)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransportFromFileSystem(this, mCommand,
-                                            mBufferSegmentSize, mBufferMaxSize,
+    rv = fts->CreateTransportFromFileSystem(this, 
                                             getter_AddRefs(mJarExtractionTransport));
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetBufferSegmentSize(mBufferSegmentSize);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetBufferMaxSize(mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     rv = mJarExtractionTransport->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mJarExtractionTransport->AsyncRead(mStartPosition, mReadCount, nsnull, this);
+    rv = mJarExtractionTransport->AsyncRead(this, nsnull);
     return rv;
 }
 
 NS_IMETHODIMP
-nsJARChannel::AsyncWrite(nsIInputStream* fromStream, PRUint32 startPosition, 
-						 PRInt32 writeCount, 
-						 nsISupports* ctxt, 
-						 nsIStreamObserver* observer)
+nsJARChannel::AsyncWrite(nsIInputStream* fromStream, 
+						 nsIStreamObserver* observer, 
+						 nsISupports* ctxt)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -538,6 +540,90 @@ nsJARChannel::GetContentLength(PRInt32* aContentLength)
         return NS_ERROR_FAILURE;
     *aContentLength = mContentLength;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsJARChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    *aTransferOffset = mStartPosition;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    mStartPosition = aTransferOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mReadCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    mReadCount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    NS_NOTREACHED("GetShouldCache");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJARChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -711,7 +797,8 @@ nsJARChannel::GetInputStream(nsIInputStream* *aInputStream)
 NS_IMETHODIMP
 nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream) 
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::GetOutputStream");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,7 +807,8 @@ nsJARChannel::GetOutputStream(nsIOutputStream* *aOutputStream)
 NS_IMETHODIMP
 nsJARChannel::EnumerateEntries(const char *aRoot, nsISimpleEnumerator **_retval)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsJARChannel::EnumerateEntries");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

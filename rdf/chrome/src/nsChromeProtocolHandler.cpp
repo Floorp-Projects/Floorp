@@ -81,7 +81,7 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 class nsCachedChromeChannel : public nsIChannel
 {
 protected:
-    nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup);
+    nsCachedChromeChannel(nsIURI* aURI);
     virtual ~nsCachedChromeChannel();
 
     nsCOMPtr<nsIURI>            mURI;
@@ -90,7 +90,7 @@ protected:
     nsCOMPtr<nsISupports>       mContext;
     nsLoadFlags                 mLoadAttributes;
     nsCOMPtr<nsISupports>       mOwner;
-    PRBool                      mCancelled;
+    nsresult                    mStatus;
 
     struct LoadEvent {
         PLEvent                mEvent;
@@ -110,13 +110,14 @@ protected:
 
 public:
     static nsresult
-    Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel** aResult);
+    Create(nsIURI* aURI, nsIChannel** aResult);
 	
     NS_DECL_ISUPPORTS
 
     // nsIRequest
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-    NS_IMETHOD Cancel(void)  { mCancelled = PR_TRUE; return NS_OK; }
+    NS_IMETHOD GetStatus(nsresult *status) { *status = mStatus; return NS_OK; }
+    NS_IMETHOD Cancel(nsresult status)  { mStatus = status; return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
 
@@ -133,13 +134,13 @@ NS_IMPL_RELEASE(nsCachedChromeChannel);
 NS_IMPL_QUERY_INTERFACE2(nsCachedChromeChannel, nsIRequest, nsIChannel);
 
 nsresult
-nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel** aResult)
+nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 {
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aURI, aLoadGroup);
+    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aURI);
     if (! channel)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -149,8 +150,8 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel
 }
 
 
-nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup)
-    : mURI(aURI), mLoadGroup(aLoadGroup), mLoadAttributes (nsIChannel::LOAD_NORMAL), mCancelled(PR_FALSE)
+nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
+    : mURI(aURI), mLoadGroup(nsnull), mLoadAttributes (nsIChannel::LOAD_NORMAL), mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 
@@ -172,7 +173,7 @@ nsCachedChromeChannel::~nsCachedChromeChannel()
 
 
 NS_IMETHODIMP
-nsCachedChromeChannel::GetOriginalURI(nsIURI * *aOriginalURI)
+nsCachedChromeChannel::GetOriginalURI(nsIURI* *aOriginalURI)
 {
     *aOriginalURI = mURI;
     NS_ADDREF(*aOriginalURI);
@@ -180,7 +181,14 @@ nsCachedChromeChannel::GetOriginalURI(nsIURI * *aOriginalURI)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::GetURI(nsIURI * *aURI)
+nsCachedChromeChannel::SetOriginalURI(nsIURI* aOriginalURI)
+{
+    mURI = aOriginalURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = mURI;
     NS_ADDREF(*aURI);
@@ -188,15 +196,22 @@ nsCachedChromeChannel::GetURI(nsIURI * *aURI)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)
+nsCachedChromeChannel::SetURI(nsIURI* aURI)
 {
-    NS_NOTREACHED("don't do that");
+    mURI = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::OpenInputStream(nsIInputStream **_retval)
+{
+//    NS_NOTREACHED("don't do that");
     *_retval = nsnull;
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+nsCachedChromeChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
     NS_NOTREACHED("don't do that");
     *_retval = nsnull;
@@ -211,7 +226,7 @@ nsCachedChromeChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
+nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     if (listener) {
         nsresult rv;
@@ -255,7 +270,7 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
+nsCachedChromeChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt)
 {
     NS_NOTREACHED("don't do that");
     return NS_ERROR_FAILURE;
@@ -286,6 +301,7 @@ NS_IMETHODIMP
 nsCachedChromeChannel::SetContentType(const char *aContentType)
 {
     // Do not allow the content-type to be changed.
+    NS_NOTREACHED("don't do that");
     return NS_ERROR_FAILURE;
 }
 
@@ -295,6 +311,90 @@ nsCachedChromeChannel::GetContentLength(PRInt32 *aContentLength)
     NS_NOTREACHED("don't do that");
     *aContentLength = 0;
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    NS_NOTREACHED("nsCachedChromeChannel::SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    NS_NOTREACHED("GetShouldCache");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsCachedChromeChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -338,8 +438,7 @@ nsCachedChromeChannel::GetNotificationCallbacks(nsIInterfaceRequestor * *aNotifi
 NS_IMETHODIMP
 nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks)
 {
-    NS_NOTREACHED("don't do that");
-    return NS_ERROR_FAILURE;
+    return NS_OK;	// ignored
 }
 
 
@@ -404,7 +503,7 @@ nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
 
     // If the load has been cancelled, then just bail now. We won't
     // send On[Start|Stop]Request().
-    if (channel->mCancelled)
+    if (NS_FAILED(channel->mStatus))
       return nsnull;
     
     PR_LOG(gLog, PR_LOG_DEBUG,
@@ -430,7 +529,7 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
             channel, channel->mListener.get()));
 
     (void) channel->mListener->OnStopRequest(channel, channel->mContext, 
-      (channel->mCancelled ? NS_BINDING_ABORTED : NS_OK), nsnull);
+                                             channel->mStatus, nsnull);
 
     if (channel->mLoadGroup) {
         PR_LOG(gLog, PR_LOG_DEBUG,
@@ -543,13 +642,7 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
-                                    nsILoadGroup* aLoadGroup,
-                                    nsIInterfaceRequestor* aNotificationCallbacks,
-                                    nsLoadFlags aLoadAttributes,
-                                    nsIURI* aOriginalURI,
-                                    PRUint32 bufferSegmentSize,
-                                    PRUint32 bufferMaxSize,
+nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
                                     nsIChannel* *aResult)
 {
     nsresult rv;
@@ -576,7 +669,7 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
     if (proto) {
         // ...in which case, we'll create a dummy stream that'll just
         // load the thing.
-        rv = nsCachedChromeChannel::Create(aURI, aLoadGroup, getter_AddRefs(result));
+        rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -593,14 +686,7 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = serv->NewChannelFromURI(aVerb, chromeURI,
-                                     aLoadGroup,
-                                     aNotificationCallbacks,
-                                     aLoadAttributes,
-                                     aOriginalURI ? aOriginalURI : aURI,
-                                     bufferSegmentSize, bufferMaxSize,
-                                     getter_AddRefs(result));
-
+        rv = serv->NewChannelFromURI(chromeURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         // Get a system principal for chrome and set the owner

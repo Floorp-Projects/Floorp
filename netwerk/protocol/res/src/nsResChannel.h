@@ -32,6 +32,9 @@
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
+#ifdef DEBUG
+#include "prthread.h"
+#endif
 
 class nsResChannel : public nsIResChannel,
                      public nsIStreamListener
@@ -51,15 +54,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIResProtocolHandler* handler,
-                  const char* command, 
-                  nsIURI* uri,
-                  nsILoadGroup* aLoadGroup, 
-                  nsIInterfaceRequestor* notificationCallbacks, 
-                  nsLoadFlags loadAttributes,
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
+    nsresult Init(nsIResProtocolHandler* handler, nsIURI* uri);
 
 protected:
     class Substitutions {
@@ -99,17 +94,18 @@ protected:
         return listener;
     }
 
+    nsresult EnsureNextResolvedChannel();
+    nsresult EndRequest(nsresult status, const PRUnichar* msg);
+
 protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mResourceURI;
     nsCOMPtr<nsIURI>                    mResolvedURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    char*                               mCommand;
     PRUint32                            mLoadAttributes;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
 
-    PRLock*                             mLock;
     nsCOMPtr<nsIResProtocolHandler>     mHandler;
     nsCOMPtr<nsIChannel>                mResolvedChannel;
     State                               mState;
@@ -121,6 +117,10 @@ protected:
     PRInt32                             mCount;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    nsresult                            mStatus;
+#ifdef DEBUG
+    PRThread*                           mInitiator;
+#endif
 };
 
 #endif // nsResChannel_h__

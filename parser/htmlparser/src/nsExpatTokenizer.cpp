@@ -234,9 +234,9 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
 {
   /* Figure out the line inside aSourceBuffer that contains character specified by aOffset.
      Copy it into aLine. */
-  PR_ASSERT(aOffset > 0 && aOffset < aLength);
+  NS_ASSERTION(aOffset > 0 && aOffset < aLength, "?");
   /* Assert that the byteIndex and the length of the buffer is even */
-  PR_ASSERT(aOffset % 2 == 0 && aLength % 2 == 0);  
+  NS_ASSERTION(aOffset % 2 == 0 && aLength % 2 == 0, "?");  
   PRUnichar* start = (PRUnichar* ) &aSourceBuffer[aOffset];  /* Will try to find the start of the line */
   PRUnichar* end = (PRUnichar* ) &aSourceBuffer[aOffset];    /* Will try to find the end of the line */
   PRUint32 startIndex = aOffset / sizeof(PRUnichar);          /* Track the position of the 'start' pointer into the buffer */
@@ -269,7 +269,7 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
     aLine.Append("");
   }
   else {
-    PR_ASSERT(endIndex - startIndex >= sizeof(PRUnichar));
+    NS_ASSERTION(endIndex - startIndex >= sizeof(PRUnichar), "?");
     /* At this point, there are two cases.  Either the error is on the first line or
        on subsequent lines.  If the error is on the first line, startIndex will decrement
        all the way to zero.  If not, startIndex will decrement to the position of the
@@ -320,7 +320,7 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, 
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal)
 {
   nsresult result=NS_OK;
-  PR_ASSERT((aBuffer && aLength) || (aBuffer == nsnull && aLength == 0));
+  NS_ASSERTION((aBuffer && aLength) || (aBuffer == nsnull && aLength == 0), "?");
   if (mExpatParser) {
 
     nsCOMPtr<nsExpatTokenizer> me=this;

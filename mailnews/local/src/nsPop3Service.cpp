@@ -264,23 +264,17 @@ NS_IMETHODIMP nsPop3Service::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	// i just haven't implemented this yet...I will be though....
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsPop3Service::NewURI");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, 
-                                        nsIURI *aURI, 
-                                        nsILoadGroup* aLoadGroup,
-                                        nsIInterfaceRequestor* notificationCallbacks,
-                                        nsLoadFlags loadAttributes,
-                                        nsIURI* originalURI,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel **_retval)
+NS_IMETHODIMP nsPop3Service::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
 	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
 	// the necko team in more detail later on.
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsPop3Service::NewChannel");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

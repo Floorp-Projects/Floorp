@@ -284,15 +284,11 @@ main(int argc, char* argv[])
     nsCOMPtr<nsIURI> dummyURI;
     rv = serv->NewURI("http://neverneverland.com", nsnull, getter_AddRefs(dummyURI));
     if (NS_FAILED(rv)) return rv;
-    rv = NS_NewInputStreamChannel(dummyURI, "multipart/x-mixed-replacE;boundary=thisrandomstring",
-                                  -1,        // XXX fix contentLength
-                                  nsnull,    // inStr
-                                  nsnull,    // loadGroup
-                                  nsnull,    // notificationCallbacks
-                                  nsIChannel::LOAD_NORMAL,
-                                  nsnull,    // originalURI
-                                  0, 0,
-                                  getter_AddRefs(dummyChannel));
+    rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel),
+                                  dummyURI,
+                                  nsnull,   // inStr
+                                  "multipart/x-mixed-replacE;boundary=thisrandomstring",
+                                  -1);      // XXX fix contentLength
     if (NS_FAILED(rv)) return rv;
 
 

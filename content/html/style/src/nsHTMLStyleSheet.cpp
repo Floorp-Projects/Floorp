@@ -737,7 +737,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   rv = docURL->QueryInterface(NS_GET_IID(nsIURI), (void**)&baseUri);
                   if (NS_FAILED(rv)) return 0;
 
-                  rv = NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
+                  rv = NS_MakeAbsoluteURI(absURLSpec, href, baseUri);
 
                   NS_RELEASE(baseUri);
                   NS_IF_RELEASE(docURL);

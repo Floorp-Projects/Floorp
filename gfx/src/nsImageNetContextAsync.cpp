@@ -701,7 +701,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
     nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
 
-    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
+    rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group);
     if (NS_FAILED(rv)) goto error;
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
@@ -767,7 +767,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
                                window);
     }
-    // rv = channel->AsyncRead(0, -1, nsnull, ic);
+    // rv = channel->AsyncRead(ic, nsnull);
     if (NS_FAILED(rv)) goto error;
   }
   return mRequests->AppendElement((void *)ic) ? 0 : -1;

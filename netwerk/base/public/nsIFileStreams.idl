@@ -27,13 +27,13 @@
 [scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileInputStream : nsIInputStream
 {
-    void init(in nsILocalFile file);
+    void init(in nsIFile file, in long ioFlags, in long perm);
 };
 
 [scriptable, uuid(e6f68040-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileOutputStream : nsIOutputStream
 {
-    void init(in nsILocalFile file, in long flags, in long mode);
+    void init(in nsIFile file, in long ioFlags, in long perm);
 };
 
 [scriptable, uuid(e9de5df0-c7ec-11d3-8cda-0060b0fc14a3)]
@@ -66,10 +66,10 @@ interface nsIBufferedOutputStream : nsIOutputStream
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define NS_FILEINPUTSTREAM_CLASSNAME "File Input Stream"
-#define NS_FILEINPUTSTREAM_PROGID "component://netscape/network/file-input-stream"
+#define NS_LOCALFILEINPUTSTREAM_CLASSNAME "Local File Input Stream"
+#define NS_LOCALFILEINPUTSTREAM_PROGID "component://netscape/network/file-input-stream"
 
-#define NS_FILEINPUTSTREAM_CID                       \
+#define NS_LOCALFILEINPUTSTREAM_CID                  \
 { /* be9a53ae-c7e9-11d3-8cda-0060b0fc14a3 */         \
     0xbe9a53ae,                                      \
     0xc7e9,                                          \
@@ -77,10 +77,10 @@ interface nsIBufferedOutputStream : nsIOutputStream
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-#define NS_FILEOUTPUTSTREAM_CLASSNAME "File Output Stream"
-#define NS_FILEOUTPUTSTREAM_PROGID "component://netscape/network/file-output-stream"
+#define NS_LOCALFILEOUTPUTSTREAM_CLASSNAME "Local File Output Stream"
+#define NS_LOCALFILEOUTPUTSTREAM_PROGID "component://netscape/network/file-output-stream"
 
-#define NS_FILEOUTPUTSTREAM_CID                      \
+#define NS_LOCALFILEOUTPUTSTREAM_CID                 \
 { /* c272fee0-c7e9-11d3-8cda-0060b0fc14a3 */         \
     0xc272fee0,                                      \
     0xc7e9,                                          \
@@ -123,32 +123,24 @@ interface nsIBufferedOutputStream : nsIOutputStream
 #include "nsILocalFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "prio.h"       // for read/write modes, etc.
+#include "prio.h"       // for read/write flags, permissions, etc.
 
+// This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewFileChannel(nsIFile* file,
-                  PRInt32 mode,
-                  const char* contentType, 
-                  PRUint32 contentLength,
-                  nsILoadGroup* group,
-                  nsIInterfaceRequestor* notificationCallbacks,
-                  nsLoadFlags loadAttributes,
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize,
-                  nsIFileChannel **result)
+NS_NewLocalFileChannel(nsIFileChannel **result,
+                       nsIFile* file,
+                       PRInt32 ioFlags = -1,
+                       PRInt32 perm = -1)
 {
     nsresult rv;
     nsCOMPtr<nsIFileChannel> channel;
-    static NS_DEFINE_CID(kFileChannelCID, NS_FILECHANNEL_CID);
-    rv = nsComponentManager::CreateInstance(kFileChannelCID,
+    static NS_DEFINE_CID(kLocalFileChannelCID, NS_LOCALFILECHANNEL_CID);
+    rv = nsComponentManager::CreateInstance(kLocalFileChannelCID,
                                             nsnull, 
                                             NS_GET_IID(nsIFileChannel),
                                             getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(file, mode, contentType, contentLength, group, 
-                       notificationCallbacks, loadAttributes, originalURI,
-                       bufferSegmentSize, bufferMaxSize);
+    rv = channel->Init(file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -156,20 +148,22 @@ NS_NewFileChannel(nsIFile* file,
     return NS_OK;
 }
 
+// This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewFileInputStream(nsIFile* file, nsIInputStream* *result)
+NS_NewLocalFileInputStream(nsIInputStream* *result,
+                           nsIFile* file, 
+                           PRInt32 ioFlags = -1,
+                           PRInt32 perm = -1)
 {
     nsresult rv;
     nsCOMPtr<nsIFileInputStream> in;
-    static NS_DEFINE_CID(kFileInputStreamCID, NS_FILEINPUTSTREAM_CID);
-    rv = nsComponentManager::CreateInstance(kFileInputStreamCID,
+    static NS_DEFINE_CID(kLocalFileInputStreamCID, NS_LOCALFILEINPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kLocalFileInputStreamCID,
                                             nsnull, 
                                             NS_GET_IID(nsIFileInputStream),
                                             getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = in->Init(localFile);
+    rv = in->Init(file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
 
     *result = in;
@@ -177,21 +171,22 @@ NS_NewFileInputStream(nsIFile* file, nsIInputStream* *result)
     return NS_OK;
 }
 
+// This will QI the file argument to an nsILocalFile in the Init method.
 inline nsresult
-NS_NewFileOutputStream(nsIFile* file, PRInt32 flags, PRInt32 mode,
-                       nsIOutputStream* *result)
+NS_NewLocalFileOutputStream(nsIOutputStream* *result,
+                            nsIFile* file,
+                            PRInt32 ioFlags = -1,
+                            PRInt32 perm = -1)
 {
     nsresult rv;
     nsCOMPtr<nsIFileOutputStream> out;
-    static NS_DEFINE_CID(kFileOutputStreamCID, NS_FILEOUTPUTSTREAM_CID);
-    rv = nsComponentManager::CreateInstance(kFileOutputStreamCID,
+    static NS_DEFINE_CID(kLocalFileOutputStreamCID, NS_LOCALFILEOUTPUTSTREAM_CID);
+    rv = nsComponentManager::CreateInstance(kLocalFileOutputStreamCID,
                                             nsnull, 
                                             NS_GET_IID(nsIFileOutputStream),
                                             getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = out->Init(localFile, flags, mode);
+    rv = out->Init(file, ioFlags, perm);
     if (NS_FAILED(rv)) return rv;
 
     *result = out;
@@ -202,8 +197,9 @@ NS_NewFileOutputStream(nsIFile* file, PRInt32 flags, PRInt32 mode,
 ////////////////////////////////////////////////////////////////////////////////
 
 inline nsresult
-NS_NewBufferedInputStream(nsIInputStream* str, PRUint32 bufferSize, 
-                          nsIInputStream* *result)
+NS_NewBufferedInputStream(nsIInputStream* *result,
+                          nsIInputStream* str,
+                          PRUint32 bufferSize)
 {
     nsresult rv;
     nsCOMPtr<nsIBufferedInputStream> in;
@@ -222,8 +218,9 @@ NS_NewBufferedInputStream(nsIInputStream* str, PRUint32 bufferSize,
 }
 
 inline nsresult
-NS_NewBufferedOutputStream(nsIOutputStream* str, PRUint32 bufferSize,
-                           nsIOutputStream* *result)
+NS_NewBufferedOutputStream(nsIOutputStream* *result,
+                           nsIOutputStream* str,
+                           PRUint32 bufferSize)
 {
     nsresult rv;
     nsCOMPtr<nsIBufferedOutputStream> out;

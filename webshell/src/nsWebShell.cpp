@@ -1080,7 +1080,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
             // so move the creation down into each of the if clauses...
             if (nsnull != (const char *) ref)
                {
-               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, nsnull,
+                               interfaceRequestor);
                if (NS_FAILED(rv)) return rv;
                if (!mProcessedEndDocumentLoad)
                   rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
@@ -1101,7 +1102,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                }
             else if (aType == nsISessionHistory::LOAD_HISTORY)
                {
-               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, interfaceRequestor);
+               rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull, nsnull,
+                               interfaceRequestor);
                if (NS_FAILED(rv)) return rv;
                rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
                // Go to the top of the current document
@@ -1196,16 +1198,18 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
         Recycle(referrerStr);
       }
 
-      rv = pNetService->NewChannelFromURI(aCommand, aUri, loadGroup, requestor,
-                                          aType, referrer /* referring uri */, 
-                                          0, 0,
-                                          getter_AddRefs(pChannel));
+      rv = NS_OpenURI(getter_AddRefs(pChannel), aUri, pNetService, loadGroup, requestor, aType);
+      if (NS_SUCCEEDED(rv)) {
+        // XXX wrong, but needed for now:
+        rv = pChannel->SetOriginalURI(referrer ? referrer : aUri);  
+      }
       if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
-        return NS_OK;                        // dom and there is nothing else to do
-      else
+        if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
+          return NS_OK;                        // dom and there is nothing else to do
+        else
           return rv; // uhoh we were unable to get a channel to handle the url!!!
-    }
+      }
+
       // Mark the channel as being a document URI...
       nsLoadFlags loadAttribs = 0;
       pChannel->GetLoadAttributes(&loadAttribs);

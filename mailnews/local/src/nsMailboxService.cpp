@@ -230,7 +230,7 @@ nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDi
 {
 	// create a protocol instance to run the url..
 	nsresult rv = NS_OK;
-	nsMailboxProtocol * protocol = new nsMailboxProtocol(aMailboxUrl, aMailboxUrl);
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aMailboxUrl);
 
 	if (protocol)
 	{
@@ -336,26 +336,12 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 	return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, 
-                                           nsIURI *aURI, 
-                                           nsILoadGroup* aLoadGroup,
-                                           nsIInterfaceRequestor* notificationCallbacks,
-                                           nsLoadFlags loadAttributes,
-                                           nsIURI* originalURI,
-                                           PRUint32 bufferSegmentSize,
-                                           PRUint32 bufferMaxSize,
-                                           nsIChannel **_retval)
+NS_IMETHODIMP nsMailboxService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
-	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI, originalURI);
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
 	if (protocol)
 	{
-        rv = protocol->SetLoadAttributes(loadAttributes);
-        if (NS_FAILED(rv)) return rv;
-        rv = protocol->SetLoadGroup(aLoadGroup);
-        if (NS_FAILED(rv)) return rv;
-        rv = protocol->SetNotificationCallbacks(notificationCallbacks);
-        if (NS_FAILED(rv)) return rv;
 		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 	}
 	else

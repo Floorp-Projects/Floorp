@@ -69,23 +69,13 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
-    nsresult Init(nsIJARProtocolHandler* aHandler, 
-                  const char* command, 
-                  nsIURI* uri,
-                  nsILoadGroup* aLoadGroup, 
-                  nsIInterfaceRequestor* notificationCallbacks,
-                  nsLoadFlags loadAttributes,
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
-
+    nsresult Init(nsIJARProtocolHandler* aHandler, nsIURI* uri);
     nsresult ExtractJARElement(nsIFileChannel* jarFileChannel);
     nsresult GetCacheFile(nsIFile* *cacheFile);
 
     friend class nsJARDownloadObserver;
 
 protected:
-	char*                               mCommand;
 	nsCOMPtr<nsIJARURI>                 mURI;
 	nsCOMPtr<nsILoadGroup>              mLoadGroup;
 	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
@@ -106,6 +96,7 @@ protected:
     nsCOMPtr<nsIZipReader>              mJAR;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    nsresult                            mStatus;
 
     PRMonitor*                          mMonitor;
     nsCOMPtr<nsIChannel>                mJarCacheTransport;

@@ -183,16 +183,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   nsCOMPtr<nsISupports> quoteSupport = do_QueryInterface(this);
 
   mQuoteChannel = null_nsCOMPtr();
-  rv = NS_NewInputStreamChannel(aURL, 
-                                nsnull, // contentType
-                                -1,     // contentLength
-                                nsnull, // inputStream
-                                nsnull, // loadGroup
-                                nsnull, // notificationCallbacks
-                                nsIChannel::LOAD_NORMAL,
-                                nsnull, // originalURI
-                                0, 0,
-                                getter_AddRefs(mQuoteChannel));
+  rv = NS_NewInputStreamChannel(getter_AddRefs(mQuoteChannel), aURL, nsnull, nsnull, -1);
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
@@ -213,17 +204,11 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
 
   // now we want to create a necko channel for this url and we want to open it
   nsCOMPtr<nsIChannel> aChannel;
-  rv = netService->NewChannelFromURI(nsnull, aURL, 
-                                     nsnull, // loadGroup
-                                     nsnull, // notificationCallbacks
-                                     nsIChannel::LOAD_NORMAL,
-                                     nsnull, // originalURI
-                                     0, 0,
-                                     getter_AddRefs(aChannel));
+  rv = netService->NewChannelFromURI(aURL, getter_AddRefs(aChannel));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aURL);
   //  now try to open the channel passing in our display consumer as the listener 
-  rv = aChannel->AsyncRead(0, -1, aCtxt, convertedListener);
+  rv = aChannel->AsyncRead(convertedListener, aCtxt);
 
   ReleaseMessageServiceFromURI(aMsgUri, msgService);
   return rv;

@@ -96,7 +96,7 @@ nsDocLoaderImpl::Init()
 {
     nsresult rv;
 
-    rv = NS_NewLoadGroup(this, getter_AddRefs(mLoadGroup));
+    rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -215,7 +215,7 @@ nsDocLoaderImpl::Stop(void)
     }
   }
 
-  rv = mLoadGroup->Cancel();
+  rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
 
   return rv;
 }       

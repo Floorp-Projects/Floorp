@@ -802,7 +802,7 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
         {
           // Create an absolute URL
           char* absURIStr;
-          rv = NS_MakeAbsoluteURI(aURL, uri, &absURIStr);
+          rv = NS_MakeAbsoluteURI(&absURIStr, aURL, uri);
           nsAutoString fullurl(absURIStr);
           nsCRT::free(absURIStr);
 

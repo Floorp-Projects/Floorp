@@ -33,10 +33,18 @@ interface nsIRequest : nsISupports
     boolean isPending();
 
     /**
-     * Cancels the current request. This will close any open input or
-     * output streams and terminate any async requests. 
+     * Returns any error status associated with the request.
      */
-    void cancel();
+    readonly attribute nsresult status;
+
+    /**
+     * Cancels the current request. This will close any open input or
+     * output streams and terminate any async requests. Users should 
+     * normally pass NS_BINDING_ABORTED, although other errors may also
+     * be passed. The error passed in will become the value of the 
+     * status attribute.
+     */
+    void cancel(in nsresult status);
 
     /**
      * Suspends the current requests. This may have the effect of closing

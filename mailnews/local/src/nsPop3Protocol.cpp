@@ -374,7 +374,7 @@ net_pop3_free_state(Pop3UidlHost* host)
 // nsPop3Protocol class implementation
 
 nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
-    : nsMsgProtocol(aURL, aURL),
+    : nsMsgProtocol(aURL),
 	nsMsgLineBuffer(NULL, PR_FALSE),
 	m_bytesInMsgReceived(0), 
 	m_totalFolderSize(0),    
@@ -598,12 +598,6 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 	}
 	return rv;
 }
-
-NS_IMETHODIMP nsPop3Protocol::Cancel()  // handle stop button
-{
-	return nsMsgProtocol::Cancel();
-}
-
 
 nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 {

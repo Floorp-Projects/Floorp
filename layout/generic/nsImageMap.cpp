@@ -916,7 +916,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
         
         nsAutoString href;
         area->GetHREF(href);
-        NS_MakeAbsoluteURI(href, baseUri, aAbsURL);
+        NS_MakeAbsoluteURI(aAbsURL, href, baseUri);
 
         NS_RELEASE(baseUri);
       }

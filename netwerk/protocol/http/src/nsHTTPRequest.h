@@ -144,7 +144,7 @@ protected:
 
     HTTPMethod                  mMethod;
     nsCOMPtr<nsIURL>            mURI;
-    PRUint32					mVersion;
+    PRUint32                    mVersion;
     PRUint32                    mKeepAliveTimeout;
     PRUint32                    mAttempts;
     PRBool                      mDoKeepAlive;
@@ -161,6 +161,7 @@ protected:
 
     PRUint32                    mBufferSegmentSize;
     PRUint32                    mBufferMaxSize;
+    nsresult                    mAbortStatus;
 
     nsresult formHeaders ();
 };

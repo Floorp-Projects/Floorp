@@ -45,12 +45,12 @@ class WriteStreamWrapper : public nsIOutputStream
 {
   public:
   WriteStreamWrapper(nsDiskCacheRecordChannel* aChannel,
-                     nsIOutputStream *aBaseStream) ;
+                     nsIOutputStream *aBaseStream);
 
-  virtual ~WriteStreamWrapper() ;
+  virtual ~WriteStreamWrapper();
 
   static nsresult
-  Create(nsDiskCacheRecordChannel* aChannel, nsIOutputStream *aBaseStream, nsIOutputStream* *aWrapper) ;
+  Create(nsDiskCacheRecordChannel* aChannel, nsIOutputStream *aBaseStream, nsIOutputStream* *aWrapper);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBASESTREAM
@@ -59,7 +59,7 @@ class WriteStreamWrapper : public nsIOutputStream
   private:
   nsDiskCacheRecordChannel*         mChannel;
   nsCOMPtr<nsIOutputStream>         mBaseStream;
-} ;
+};
 
 // implement nsISupports
 NS_IMPL_ISUPPORTS(WriteStreamWrapper, NS_GET_IID(nsIOutputStream))
@@ -110,17 +110,18 @@ WriteStreamWrapper::Close()
 
 nsDiskCacheRecordChannel::nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord, 
                                                    nsILoadGroup *aLoadGroup)
-  : mRecord(aRecord) ,
-    mLoadGroup(aLoadGroup) 
+  : mRecord(aRecord),
+    mLoadGroup(aLoadGroup),
+    mStatus(NS_OK) 
 {
-  NS_INIT_REFCNT() ;
+  NS_INIT_REFCNT();
   NS_ADDREF(mRecord);
-  mRecord->mNumChannels++ ;
+  mRecord->mNumChannels++;
 }
 
 nsDiskCacheRecordChannel::~nsDiskCacheRecordChannel()
 {
-  mRecord->mNumChannels-- ;
+  mRecord->mNumChannels--;
   NS_RELEASE(mRecord);
 }
 
@@ -161,13 +162,12 @@ nsDiskCacheRecordChannel::Init(void)
 #endif
  #endif 
   return rv ;
-
 }
 
 nsresult 
 nsDiskCacheRecordChannel::NotifyStorageInUse(PRInt32 aBytesUsed)
 {
-  return mRecord->mDiskCache->mStorageInUse += aBytesUsed ;
+  return mRecord->mDiskCache->mStorageInUse += aBytesUsed;
 }
 
 // implement nsISupports
@@ -181,38 +181,46 @@ NS_IMPL_ISUPPORTS4(nsDiskCacheRecordChannel,
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::IsPending(PRBool *aIsPending) 
 {
-  *aIsPending = PR_FALSE ;
+  *aIsPending = PR_FALSE;
   if(!mFileTransport)
-    return NS_OK ;
+    return NS_OK;
 
-  return mFileTransport->IsPending(aIsPending) ;
+  return mFileTransport->IsPending(aIsPending);
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::Cancel(void)
+nsDiskCacheRecordChannel::GetStatus(nsresult *status)
 {
-  if(!mFileTransport)
-    return NS_ERROR_FAILURE ;
+    *status = mStatus;
+    return NS_OK;
+}
 
-  return mFileTransport->Cancel() ;
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::Cancel(nsresult status)
+{
+  mStatus = status;
+  if(!mFileTransport)
+    return NS_ERROR_FAILURE;
+
+  return mFileTransport->Cancel(status);
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::Suspend(void)
 {
   if(!mFileTransport)
-    return NS_ERROR_FAILURE ;
+    return NS_ERROR_FAILURE;
 
-  return mFileTransport->Suspend() ;
+  return mFileTransport->Suspend();
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::Resume(void)
 {
   if(!mFileTransport)
-    return NS_ERROR_FAILURE ;
+    return NS_ERROR_FAILURE;
 
-  return mFileTransport->Resume() ;
+  return mFileTransport->Resume();
 }
 
 // implement nsIChannel
@@ -221,92 +229,107 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetOriginalURI(nsIURI* *aURI)
 {
   // FUR - might need to implement this - not sure
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetOriginalURI");
   return NS_ERROR_NOT_IMPLEMENTED ;
 }
   
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetURI(nsIURI * *aURI)
+nsDiskCacheRecordChannel::SetOriginalURI(nsIURI* aURI)
+{
+  // FUR - might need to implement this - not sure
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetOriginalURI");
+  return NS_ERROR_NOT_IMPLEMENTED ;
+}
+  
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetURI(nsIURI* *aURI)
 {
   if(!mFileTransport)
-    return NS_ERROR_FAILURE ;
+    return NS_ERROR_FAILURE;
 
-  return mFileTransport->GetURI(aURI) ;
+  return mFileTransport->GetURI(aURI);
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OpenInputStream(PRUint32 aStartPosition, 
-                                          PRInt32 aReadCount,
-                                          nsIInputStream* *aResult)
+nsDiskCacheRecordChannel::SetURI(nsIURI* aURI)
 {
-  nsresult rv ;
+  if(!mFileTransport)
+    return NS_ERROR_FAILURE;
+
+  return mFileTransport->SetURI(aURI);
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::OpenInputStream(nsIInputStream* *aResult)
+{
+  nsresult rv;
 
   if(mFileTransport)
-    return NS_ERROR_IN_PROGRESS ;
+    return NS_ERROR_IN_PROGRESS;
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
-  if(NS_FAILED(rv)) return rv ;
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  if(NS_FAILED(rv)) return rv;
   // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec,0, "load", 0, 0, getter_AddRefs(mFileTransport)) ;
+  rv = fts->CreateTransport(mSpec, PR_RDONLY, 0,
+                            getter_AddRefs(mFileTransport));
   if(NS_FAILED(rv))
-    return rv ;
+    return rv;
   
   // we don't need to worry about notification callbacks
   
-  rv = mFileTransport->OpenInputStream(aStartPosition, aReadCount, aResult) ;
+  rv = mFileTransport->OpenInputStream(aResult);
   if(NS_FAILED(rv)) 
-    mFileTransport = nsnull ;
+    mFileTransport = nsnull;
 
-  return rv ;
+  return rv;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::OpenOutputStream(PRUint32 startPosition, 
-                                           nsIOutputStream* *aResult)
+nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
 {
-  nsresult rv ;
-  NS_ENSURE_ARG(aResult) ;
+  nsresult rv;
+  NS_ENSURE_ARG(aResult);
   
   if(mFileTransport)
-    return NS_ERROR_IN_PROGRESS ;
+    return NS_ERROR_IN_PROGRESS;
 
-  nsCOMPtr<nsIOutputStream> outputStream ;
+  nsCOMPtr<nsIOutputStream> outputStream;
 
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
-  if(NS_FAILED(rv)) return rv ;
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+  if(NS_FAILED(rv)) return rv;
    // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec,0, "load", 0, 0, getter_AddRefs(mFileTransport)) ;
+  rv = fts->CreateTransport(mSpec, PR_WRONLY, 0,
+                            getter_AddRefs(mFileTransport));
   if(NS_FAILED(rv))
-    return rv ;
+    return rv;
  
   // we don't need to worry about notification callbacks
   
-  rv = mFileTransport->OpenOutputStream(startPosition, getter_AddRefs(outputStream)) ;
+  rv = mFileTransport->OpenOutputStream(getter_AddRefs(outputStream));
   if(NS_FAILED(rv)) {
-    mFileTransport = nsnull ;
-    return rv ;
+    mFileTransport = nsnull;
+    return rv;
   }
  
-  return WriteStreamWrapper::Create(this, outputStream, aResult) ;
-
+  return WriteStreamWrapper::Create(this, outputStream, aResult);
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::AsyncOpen(nsIStreamObserver *observer, 
                                     nsISupports *ctxt)
 {
-  return NS_ERROR_NOT_IMPLEMENTED ;
+  NS_NOTREACHED("nsDiskCacheRecordChannel::AsyncOpen");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::AsyncRead(PRUint32 aStartPosition, 
-                                    PRInt32 aReadCount,
-                                    nsISupports *aContext, 
-                                    nsIStreamListener *aListener)
+nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
+                                    nsISupports *aContext)
 {
-  nsresult rv ;
+  nsresult rv;
 
   if(mFileTransport)
-    return NS_ERROR_IN_PROGRESS ;
+    return NS_ERROR_IN_PROGRESS;
   
   mRealListener = aListener;
   nsCOMPtr<nsIStreamListener> tempListener = this;
@@ -334,15 +357,13 @@ nsDiskCacheRecordChannel::AsyncRead(PRUint32 aStartPosition,
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
  // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec,0, "load", 0, 0, getter_AddRefs(mFileTransport));
+  rv = fts->CreateTransport(mSpec, PR_RDONLY, 0,
+                            getter_AddRefs(mFileTransport));
   if (NS_FAILED(rv)) return rv;
 
   // no callbacks
 
-  rv = mFileTransport->AsyncRead(aStartPosition, 
-                                 aReadCount, 
-                                 aContext, 
-                                 tempListener);
+  rv = mFileTransport->AsyncRead(tempListener, aContext);
 
   if (NS_FAILED(rv)) {
     // release the transport so that we don't think we're in progress
@@ -353,25 +374,24 @@ nsDiskCacheRecordChannel::AsyncRead(PRUint32 aStartPosition,
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::AsyncWrite(nsIInputStream *fromStream, 
-                                     PRUint32 startPosition,
-                                     PRInt32 writeCount, 
-                                     nsISupports *ctxt,
-                                     nsIStreamObserver *observer)
+                                     nsIStreamObserver *observer, 
+                                     nsISupports *ctxt)
 
 {
   /*
   if(!mFileTransport)
-    return NS_ERROR_FAILURE ;
+    return NS_ERROR_FAILURE;
 
   return mFileTransport->AsyncWrite(fromStream, 
                                     startPosition,
                                     writeCount,
                                     ctxt,
-                                    observer) ;
+                                    observer);
   */
 
   // I can't do this since the write is not monitored, and I won't be
   // able to updata the storage. 
+  NS_NOTREACHED("nsDiskCacheRecordChannel::AsyncWrite");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -379,7 +399,7 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
   // Not required to be implemented, since it is implemented by cache manager
-  NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetLoadAttributes");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -387,7 +407,7 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
   // Not required to be implemented, since it is implemented by cache manager
-  NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetLoadAttributes");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -396,14 +416,13 @@ nsDiskCacheRecordChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
 {
-
 // Not required to be implemented, since it is implemented by cache manager
-    NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
+    NS_NOTREACHED("nsDiskCacheRecordChannel::GetContentType");
     return NS_ERROR_NOT_IMPLEMENTED;
 // This was the pre nsIFile stuff. Not sure if I have to implement this routines since
 // the memory cache doesn't
 #if 0
-  nsresult rv ; 
+  nsresult rv; 
   PRBool isDirectory;
   if ( NS_SUCCEEDED(mSpec->IsDirectory(&isDirectory)) && isDirectory) {
     *aContentType = nsCRT::strdup("application/http-index-format");
@@ -413,8 +432,8 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
     // I wish I can make this simplier
 
 
-    char* urlStr ;
-    mRecord->mFile->GetURLString(&urlStr) ;
+    char* urlStr;
+    mRecord->mFile->GetURLString(&urlStr);
 
     // file: URLs (currently) have no additional structure beyond that provided by standard
     // URLs, so there is no "outer" given to CreateInstance 
@@ -423,7 +442,7 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
     rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
                                             NS_GET_IID(nsIURI),
                                             //(void**)&url);
-                                            getter_AddRefs(url)) ;
+                                            getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
     rv = url->SetSpec((char*)urlStr);
@@ -446,12 +465,13 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
   } else {
     return NS_OK;
   }
-  #endif
+#endif
 }
 
 NS_IMETHODIMP nsDiskCacheRecordChannel::SetContentType(const char * aContentType) 
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTREACHED("nsDiskCacheRecordChannel::SetContentType");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -461,7 +481,7 @@ nsDiskCacheRecordChannel::GetContentLength(PRInt32 *aContentLength)
   PRUint32 length;
 
   PRInt64 fileSize; 
-  rv = mRecord->mFile->GetFileSize( &fileSize) ;
+  rv = mRecord->mFile->GetFileSize( &fileSize);
   LL_L2UI( length, fileSize );	
   
   
@@ -474,18 +494,102 @@ nsDiskCacheRecordChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetContentLength(PRInt32 aContentLength)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetContentLength");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetTransferOffset");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetTransferOffset");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetTransferCount");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetTransferCount");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetBufferSegmentSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetBufferSegmentSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetBufferMaxSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::SetBufferMaxSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetOwner(nsISupports* *aOwner)
 {
-  *aOwner = mOwner.get() ;
-  NS_IF_ADDREF(*aOwner) ;
-  return NS_OK ;
+  *aOwner = mOwner.get();
+  NS_IF_ADDREF(*aOwner);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetOwner(nsISupports* aOwner) 
 {
-  mOwner = aOwner ;
-  return NS_OK ;
+  mOwner = aOwner;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -493,7 +597,7 @@ nsDiskCacheRecordChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
   // Not required to be implemented, since it is implemented by cache manager
   NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
-  return NS_OK ;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -508,7 +612,7 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
   // Not required to be implemented, since it is implemented by cache manager
-  NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetNotificationCallbacks");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -516,8 +620,8 @@ NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
     // Not required to be implemented, since it is implemented by cache manager
-    NS_ASSERTION(0, "nsDiskCacheRecordChannel method unexpectedly called");
-      return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("nsDiskCacheRecordChannel::SetNotificationCallbacks");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -574,7 +678,7 @@ nsDiskCacheRecordChannel::OnDataAvailable(nsIChannel* transportChannel, nsISuppo
   // for the consumer to empty the pipe...
   //
   if (NS_FAILED(rv)) {
-    mFileTransport->Cancel();
+    mFileTransport->Cancel(rv);
   }
   return rv;
 }

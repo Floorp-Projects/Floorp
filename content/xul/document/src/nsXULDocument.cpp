@@ -292,30 +292,45 @@ public:
 
 	// nsIRequest
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
-    NS_IMETHOD Cancel(void)  { return NS_OK; }
+    NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
+    NS_IMETHOD Cancel(nsresult status)  { return NS_OK; }
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
 
 	// nsIChannel    
-    NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
-    NS_IMETHOD GetURI(nsIURI * *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
-    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
-	NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval) { *_retval = nsnull; return NS_OK; }
+    NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
+    NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
+    NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
+    NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
+    NS_IMETHOD OpenInputStream(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
+	NS_IMETHOD OpenOutputStream(nsIOutputStream **_retval) { *_retval = nsnull; return NS_OK; }
 	NS_IMETHOD AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt) { return NS_OK; }
-	NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener) { return NS_OK; }
-	NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer) { return NS_OK; }
+	NS_IMETHOD AsyncRead(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
+	NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt) { return NS_OK; }
 	NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
   	NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
 	NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; }
     NS_IMETHOD SetContentType(const char *aContentType) { return NS_OK; }
 	NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { *aContentLength = 0; return NS_OK; }
+    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { NS_NOTREACHED("SetContentLength"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetTransferOffset(PRUint32 *aTransferOffset) { NS_NOTREACHED("GetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetTransferOffset(PRUint32 aTransferOffset) { NS_NOTREACHED("SetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetTransferCount(PRInt32 *aTransferCount) { NS_NOTREACHED("GetTransferCount"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetTransferCount(PRInt32 aTransferCount) { NS_NOTREACHED("SetTransferCount"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetBufferSegmentSize(PRUint32 *aBufferSegmentSize) { NS_NOTREACHED("GetBufferSegmentSize"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetBufferSegmentSize(PRUint32 aBufferSegmentSize) { NS_NOTREACHED("SetBufferSegmentSize"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetBufferMaxSize(PRUint32 *aBufferMaxSize) { NS_NOTREACHED("GetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD SetBufferMaxSize(PRUint32 aBufferMaxSize) { NS_NOTREACHED("SetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetShouldCache(PRBool *aShouldCache) { NS_NOTREACHED("GetShouldCache"); return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetPipeliningAllowed(PRBool *aPipeliningAllowed) { *aPipeliningAllowed = PR_FALSE; return NS_OK; }
+    NS_IMETHOD SetPipeliningAllowed(PRBool aPipeliningAllowed) { NS_NOTREACHED("SetPipeliningAllowed"); return NS_ERROR_NOT_IMPLEMENTED; }
 	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
 	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
 	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
 	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
 	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
 	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
-        NS_IMETHOD GetSecurityInfo(nsISupports **info) {*info = nsnull; return NS_OK;}
+    NS_IMETHOD GetSecurityInfo(nsISupports **info) {*info = nsnull; return NS_OK;}
 };
 
 PRInt32 PlaceholderChannel::gRefCnt;
@@ -1005,35 +1020,35 @@ nsXULDocument::SetRootContent(nsIContent* aRoot)
 NS_IMETHODIMP
 nsXULDocument::AppendToProlog(nsIContent* aContent)
 {
-    NS_ASSERTION(0, "not implemented");
+    NS_NOTREACHED("nsXULDocument::AppendToProlog");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::AppendToEpilog(nsIContent* aContent)
 {
-    NS_ASSERTION(0, "not implemented");
+    NS_NOTREACHED("nsXULDocument::AppendToEpilog");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-    NS_ASSERTION(0, "not implemented");
+    NS_NOTREACHED("nsXULDocument::ChildAt");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 {
-    NS_ASSERTION(0, "not implemented");
+    NS_NOTREACHED("nsXULDocument::IndexOf");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::GetChildCount(PRInt32& aCount)
 {
-    NS_ASSERTION(0, "not implemented");
+    NS_NOTREACHED("nsXULDocument::GetChildCount");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1980,6 +1995,7 @@ NS_IMETHODIMP
 nsXULDocument::GetContentById(const nsString& aName, nsIContent** aContent)
 {
     NS_ASSERTION(0,"not implemented");
+    NS_NOTREACHED("nsXULDocument::GetContentById");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1988,6 +2004,7 @@ NS_IMETHODIMP
 nsXULDocument::SetTransformMediator(nsITransformMediator* aMediator)
 {
     NS_ASSERTION(0,"not implemented");
+    NS_NOTREACHED("nsXULDocument::SetTransformMediator");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
@@ -2227,7 +2244,7 @@ nsXULDocument::LoadFromStream(nsIInputStream& xulStream,
 NS_IMETHODIMP
 nsXULDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::GetDoctype");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2235,7 +2252,7 @@ nsXULDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 NS_IMETHODIMP
 nsXULDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::GetImplementation");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2311,7 +2328,7 @@ nsXULDocument::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn)
 NS_IMETHODIMP
 nsXULDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateDocumentFragment");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2343,7 +2360,7 @@ nsXULDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 NS_IMETHODIMP
 nsXULDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateComment");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2351,7 +2368,7 @@ nsXULDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
 NS_IMETHODIMP
 nsXULDocument::CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateCDATASection");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2359,7 +2376,7 @@ nsXULDocument::CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aR
 NS_IMETHODIMP
 nsXULDocument::CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateProcessingInstruction");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2367,7 +2384,7 @@ nsXULDocument::CreateProcessingInstruction(const nsString& aTarget, const nsStri
 NS_IMETHODIMP
 nsXULDocument::CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateAttribute");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2375,7 +2392,7 @@ nsXULDocument::CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn)
 NS_IMETHODIMP
 nsXULDocument::CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateEntityReference");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2573,7 +2590,7 @@ nsXULDocument::DestroyForwardReferences()
 NS_IMETHODIMP
 nsXULDocument::GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::GetStyleSheets");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2632,21 +2649,21 @@ nsXULDocument::CreateElementWithNameSpace(const nsString& aTagName,
 NS_IMETHODIMP
 nsXULDocument::CreateRange(nsIDOMRange** aRange)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::CreateRange");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::GetWidth(PRInt32* aWidth)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::GetWidth");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::GetHeight(PRInt32* aHeight)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::GetHeight");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -3072,7 +3089,7 @@ nsXULDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::InsertBefore");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -3080,7 +3097,7 @@ nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOM
 NS_IMETHODIMP
 nsXULDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::ReplaceChild");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -3088,7 +3105,7 @@ nsXULDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOM
 NS_IMETHODIMP
 nsXULDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::RemoveChild");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -3096,7 +3113,7 @@ nsXULDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXULDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
+    NS_NOTREACHED("nsXULDocument::AppendChild");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -4782,7 +4799,7 @@ nsXULDocument::ResumeWalk()
               if (NS_FAILED(rv)) return rv;
               nsCOMPtr<nsIInputStream> in;
               PRUint32 sourceOffset = 0;
-              rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+              rv = channel->OpenInputStream(getter_AddRefs(in));
 
               // If we couldn't open the channel, then just return.
               if (NS_FAILED(rv)) return NS_OK;
@@ -4822,7 +4839,7 @@ nsXULDocument::ResumeWalk()
             }
             else {
               nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-              rv = NS_OpenURI(listener, nsnull, uri, group);
+              rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
               if (NS_FAILED(rv)) return rv;
             }
 

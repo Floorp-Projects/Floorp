@@ -62,20 +62,12 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsIFile* file,
-                  PRInt32 mode,
-                  const char* command,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
+                  PRInt32 ioFlags,
+                  PRInt32 perm);
     nsresult Init(nsIInputStream* fromStream, 
                   const char* contentType,
-                  PRInt32 contentLength,
-                  const char* command,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
-    nsresult Init(nsIFileSystem* fsObj,
-                  const char* command,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
+                  PRInt32 contentLength);
+    nsresult Init(nsIFileSystem* fsObj);
 
     void Process(void);
     void DoClose(void);
@@ -107,6 +99,8 @@ protected:
     char*                               mContentType;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    PRInt32                             mIOFlags;
+    PRInt32                             mPerm;
 
     nsCOMPtr<nsIStreamObserver>         mOpenObserver;
     nsCOMPtr<nsISupports>               mOpenContext;

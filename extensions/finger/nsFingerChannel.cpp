@@ -37,10 +37,11 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 #define BUFFER_MAX_SIZE (64*1024)
 
 // nsFingerChannel methods
-nsFingerChannel::nsFingerChannel():
- mContentLength(-1),
- mActAsObserver(PR_TRUE),
- mPort(-1)
+nsFingerChannel::nsFingerChannel()
+    : mContentLength(-1),
+      mActAsObserver(PR_TRUE),
+      mPort(-1),
+      mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 }
@@ -52,21 +53,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsFingerChannel, nsIChannel, nsIRequest,
                               nsIStreamListener, nsIStreamObserver)
 
 nsresult
-nsFingerChannel::Init(const char* verb, 
-                    nsIURI* uri, 
-                    nsILoadGroup* aLoadGroup,
-                    nsIInterfaceRequestor* notificationCallbacks, 
-                    nsLoadFlags loadAttributes,
-                    nsIURI* originalURI,
-                    PRUint32 bufferSegmentSize,
-                    PRUint32 bufferMaxSize)
+nsFingerChannel::Init(nsIURI* uri)
 {
     nsresult rv;
     nsXPIDLCString autoBuffer;
 
     NS_ASSERTION(uri, "no uri");
 
-    mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
 
 //  For security reasons, we do not allow the user to specify a
@@ -101,16 +94,10 @@ nsFingerChannel::Init(const char* verb,
 
 #ifdef DEBUG_bryner
     printf("Status:mUser = %s, mHost = %s\n", (const char*)mUser,
-            (const char*)mHost);
+           (const char*)mHost);
 #endif
     if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
 
-    rv = SetLoadAttributes(loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-    rv = SetLoadGroup(aLoadGroup);
-    if (NS_FAILED(rv)) return rv;
-    rv = SetNotificationCallbacks(notificationCallbacks);
-    if (NS_FAILED(rv)) return rv;
     return NS_OK;
 }
 
@@ -132,16 +119,25 @@ nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsFingerChannel::IsPending(PRBool *result)
 {
+    NS_NOTREACHED("nsFingerChannel::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::Cancel(void)
+nsFingerChannel::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::Cancel(nsresult status)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
+    mStatus = status;
     if (mTransport) {
-      rv = mTransport->Cancel();
+      rv = mTransport->Cancel(status);
     }
     return rv;
 }
@@ -149,12 +145,14 @@ nsFingerChannel::Cancel(void)
 NS_IMETHODIMP
 nsFingerChannel::Suspend(void)
 {
+    NS_NOTREACHED("nsFingerChannel::Suspend");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFingerChannel::Resume(void)
 {
+    NS_NOTREACHED("nsFingerChannel::Resume");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -162,15 +160,22 @@ nsFingerChannel::Resume(void)
 // nsIChannel methods:
 
 NS_IMETHODIMP
-nsFingerChannel::GetOriginalURI(nsIURI * *aURI)
+nsFingerChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI;
+    *aURI = mOriginalURI ? mOriginalURI : mUrl;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFingerChannel::GetURI(nsIURI * *aURI)
+nsFingerChannel::SetOriginalURI(nsIURI* aURI)
+{
+    mOriginalURI = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = mUrl;
     NS_IF_ADDREF(*aURI);
@@ -178,8 +183,14 @@ nsFingerChannel::GetURI(nsIURI * *aURI)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                              nsIInputStream **_retval)
+nsFingerChannel::SetURI(nsIURI* aURI)
+{
+    mUrl = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::OpenInputStream(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
 
@@ -194,12 +205,13 @@ nsFingerChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     rv = channel->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
-    return channel->OpenInputStream(startPosition, readCount, _retval);
+    return channel->OpenInputStream(_retval);
 }
 
 NS_IMETHODIMP
-nsFingerChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+nsFingerChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
+    NS_NOTREACHED("nsFingerChannel::OpenOutputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -210,9 +222,7 @@ nsFingerChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                        nsISupports *ctxt,
-                        nsIStreamListener *aListener)
+nsFingerChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
 
@@ -236,11 +246,10 @@ nsFingerChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsFingerChannel::AsyncWrite(nsIInputStream *fromStream,
-                         PRUint32 startPosition,
-                         PRInt32 writeCount,
-                         nsISupports *ctxt,
-                         nsIStreamObserver *observer)
+                            nsIStreamObserver *observer,
+                            nsISupports *ctxt)
 {
+    NS_NOTREACHED("nsFingerChannel::AsyncWrite");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -282,6 +291,90 @@ nsFingerChannel::GetContentLength(PRInt32 *aContentLength)
 {
     *aContentLength = mContentLength;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsFingerChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsFingerChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("nsFingerChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("nsFingerChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("nsFingerChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsFingerChannel::GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsFingerChannel::SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    NS_NOTREACHED("nsFingerChannel::GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    NS_NOTREACHED("nsFingerChannel::SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFingerChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsFingerChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -373,7 +466,7 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
         // we're no longer acting as an observer.
  
         mActAsObserver = PR_FALSE;
-        return aChannel->AsyncRead(0, -1, mResponseContext, this);
+        return aChannel->AsyncRead(this, mResponseContext);
     }
 
 }
@@ -415,8 +508,9 @@ nsFingerChannel::SendRequest(nsIChannel* aChannel) {
   printf("Sending: %s\n", requestBuffer.GetBuffer());
 #endif
 
-  rv = aChannel->AsyncWrite(charstream, 0, requestBuffer.Length(), 0,
-                            this);
+  rv = aChannel->SetTransferCount(requestBuffer.Length());
+  if (NS_FAILED(rv)) return rv;
+  rv = aChannel->AsyncWrite(charstream, this, 0);
   return rv;
 }
 

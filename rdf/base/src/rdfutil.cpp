@@ -98,7 +98,7 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
     rv = NS_NewURI(getter_AddRefs(base), aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_MakeAbsoluteURI(aURI, base, result);
+    rv = NS_MakeAbsoluteURI(result, aURI, base);
     if (NS_FAILED(rv)) return rv;
 
     if (NS_SUCCEEDED(rv)) {
@@ -120,7 +120,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
     nsresult rv;
     nsAutoString result;
 
-    rv = NS_MakeAbsoluteURI(aURI, aURL, result);
+    rv = NS_MakeAbsoluteURI(result, aURI, aURL);
 
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
@@ -140,7 +140,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsCString& aURI)
     nsresult rv;
     nsXPIDLCString result;
 
-    rv = NS_MakeAbsoluteURI(aURI.GetBuffer(), aURL, getter_Copies(result));
+    rv = NS_MakeAbsoluteURI(getter_Copies(result), aURI.GetBuffer(), aURL);
 
     if (NS_SUCCEEDED(rv)) {
         aURI.Assign(result);

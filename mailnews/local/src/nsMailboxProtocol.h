@@ -69,7 +69,7 @@ class nsMailboxProtocol : public nsMsgProtocol
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
-	nsMailboxProtocol(nsIURI * aURL, nsIURI* originalURI);
+	nsMailboxProtocol(nsIURI * aURL);
 	virtual ~nsMailboxProtocol();
 
 	// the consumer of the url might be something like an nsIWebShell....
@@ -81,11 +81,6 @@ public:
 
 	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End of nsIStreamListenerSupport
-	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD Cancel();  // handle stop button
 
 private:
 	nsCOMPtr<nsIMailboxUrl>	m_runningUrl; // the nsIMailboxURL that is currently running

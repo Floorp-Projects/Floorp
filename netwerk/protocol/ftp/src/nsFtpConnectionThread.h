@@ -31,7 +31,7 @@
 #include "nsIURI.h"
 #include "prtime.h"
 #include "nsString.h"
-#include "nsPIFTPChannel.h"
+#include "nsIChannel.h"
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
@@ -200,7 +200,7 @@ private:
     PRBool                 mConnected;  // are we connected.
     PRBool                 mSentStart;  // have we sent an OnStartRequest() notification
     PRUint8                mSuspendCount;// number of times we've been suspended.
-    nsCOMPtr<nsPIFTPChannel> mFTPChannel;// used to synchronize w/ our owning channel.
+    nsCOMPtr<nsIChannel>   mFTPChannel;// used to synchronize w/ our owning channel.
     PRUint32               mBufferSegmentSize;
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;

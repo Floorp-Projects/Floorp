@@ -121,14 +121,7 @@ nsAboutProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                   nsILoadGroup* aLoadGroup,
-                                   nsIInterfaceRequestor* notificationCallbacks,
-                                   nsLoadFlags loadAttributes,
-                                   nsIURI* originalURI,
-                                   PRUint32 bufferSegmentSize,
-                                   PRUint32 bufferMaxSize,
-                                   nsIChannel* *result)
+nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     // about:what you ask?
     nsresult rv;
@@ -152,9 +145,7 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsCRT::free(progIDStr);
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
-        return aboutMod->NewChannel(verb, uri, aLoadGroup, notificationCallbacks,
-                                    loadAttributes, originalURI, bufferSegmentSize,
-                                    bufferMaxSize, result);
+        return aboutMod->NewChannel(uri, result);
     }
 
     // mumble...

@@ -207,14 +207,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
-                          nsILoadGroup* aLoadGroup,
-                          nsIInterfaceRequestor* notificationCallbacks,
-                          nsLoadFlags loadAttributes,
-                          nsIURI* originalURI,
-                          PRUint32 bufferSegmentSize,
-                          PRUint32 bufferMaxSize,
-                          nsIChannel **o_Instance)
+nsHTTPHandler::NewChannel(nsIURI* i_URL, nsIChannel **o_Instance)
 {
     nsresult rv;
     nsHTTPChannel* pChannel = nsnull;
@@ -255,20 +248,11 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         }
 
         // Create one
-        pChannel = new nsHTTPChannel(i_URL, 
-                                     verb,
-                                     originalURI,
-                                     this,
-                                     bufferSegmentSize,
-                                     bufferMaxSize);
+        pChannel = new nsHTTPChannel(i_URL, this);
         if (pChannel) {
             PRBool checkForProxy = PR_FALSE;
             NS_ADDREF(pChannel);
-            rv = pChannel->Init(aLoadGroup);
-            if (NS_FAILED(rv)) goto done;
-            rv = pChannel->SetLoadAttributes(loadAttributes);
-            if (NS_FAILED(rv)) goto done;
-            rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
+            rv = pChannel->Init();
             if (NS_FAILED(rv)) goto done;
 
             rv = mProxySvc->GetProxyEnabled(&checkForProxy);
@@ -325,7 +309,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIInputStream> in;
-        rv = NS_NewFileInputStream(file, getter_AddRefs(in));
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(in), file);
 
         if (NS_FAILED(rv)) return rv;
 
@@ -836,6 +820,25 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     nsresult rv;
     *o_pTrans = nsnull;
     PRUint32 count = 0;
+
+    count = 0;
+    mTransportList->Count(&count);
+    if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
+
+        // XXX this method incorrectly returns a bool
+        rv = mPendingChannelList->AppendElement(
+                (nsISupports*)(nsIRequest*)i_Channel) 
+            ? NS_OK : NS_ERROR_FAILURE;  
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
+
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+               ("nsHTTPHandler::RequestTransport."
+                "\tAll socket transports are busy."
+                "\tAdding nsHTTPChannel [%x] to pending list.\n",
+                i_Channel));
+
+        return NS_ERROR_BUSY;
+    }
 
     PRInt32 port;
     nsXPIDLCString host;

@@ -669,7 +669,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
       char* result = nsnull;
       rv = ioServ->Escape(value.mStr, nsIIOService::url_FileBaseName +
                           nsIIOService::url_Forced, &result);
-      rv = NS_MakeAbsoluteURI(result, realbase, entryuri);
+      rv = NS_MakeAbsoluteURI(entryuri, result, realbase);
       CRTFREEIF(result);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
       if (NS_FAILED(rv)) break;
@@ -984,7 +984,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), uri, aLoadGroup);
+  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, aLoadGroup);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> listener;
@@ -993,7 +993,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                aDocViewerResult);
   if (NS_FAILED(rv)) return rv;
 
-  rv = channel->AsyncRead(0, -1, nsnull, listener);
+  rv = channel->AsyncRead(listener, nsnull);
   if (NS_FAILED(rv)) return rv;
 
   // Create an HTTPIndex object so that we can stuff it into the script context

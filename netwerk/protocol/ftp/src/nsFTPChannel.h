@@ -25,7 +25,6 @@
 #ifndef nsFTPChannel_h___
 #define nsFTPChannel_h___
 
-#include "nsPIFTPChannel.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsILoadGroup.h"
@@ -40,7 +39,7 @@
 #include "nsIStreamListener.h"
 #include "nsAutoLock.h"
 
-class nsFTPChannel : public nsPIFTPChannel,
+class nsFTPChannel : public nsIChannel,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
                      public nsIStreamListener {
@@ -48,7 +47,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSPIFTPCHANNEL
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSISTREAMLISTENER
@@ -65,14 +63,7 @@ public:
     // initializes the channel. creates the FTP connection thread
     // and returns it so the protocol handler can cache it and
     // join() it on shutdown.
-    nsresult Init(const char* verb, 
-                  nsIURI* uri, 
-                  nsILoadGroup* aLoadGroup,
-                  nsIInterfaceRequestor* notificationCallbacks, 
-                  nsLoadFlags loadAttributes, 
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize,
+    nsresult Init(nsIURI* uri, 
                   nsIProtocolHandler* aHandler, 
                   nsIThreadPool* aPool);
 
@@ -106,6 +97,7 @@ protected:
     nsXPIDLCString                  mHost;
     PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
+    nsresult                        mStatus;
 };
 
 #endif /* nsFTPChannel_h___ */

@@ -455,17 +455,9 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   }
   
   
-  // the following output channel stream is used to fake the content type for people who later
-  // call into us..
-  rv = NS_NewInputStreamChannel(aURI, mOutputFormat,
-    -1,     // XXX fix contentLength
-    nsnull, // inputStream
-    nsnull, // loadGroup
-    nsnull, // notificationCallbacks
-    nsIChannel::LOAD_NORMAL,
-    nsnull, // originalURI
-    0, 0,
-    getter_AddRefs(mOutgoingChannel));
+	// the following output channel stream is used to fake the content type for people who later
+	// call into us..
+  rv = NS_NewInputStreamChannel(getter_AddRefs(mOutgoingChannel), aURI, nsnull, mOutputFormat, -1);
   if (NS_FAILED(rv)) 
     return rv;
   

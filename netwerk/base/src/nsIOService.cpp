@@ -217,14 +217,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
-                               nsILoadGroup *aGroup,
-                               nsIInterfaceRequestor* notificationCallbacks,
-                               nsLoadFlags loadAttributes,
-                               nsIURI* originalURI,
-                               PRUint32 bufferSegmentSize,
-                               PRUint32 bufferMaxSize,
-                               nsIChannel **result)
+nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
 
@@ -236,22 +229,12 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewChannel(verb, aURI, aGroup, notificationCallbacks,
-                             loadAttributes, originalURI, 
-                             bufferSegmentSize, bufferMaxSize, result);
+    rv = handler->NewChannel(aURI, result);
     return rv;
 }
 
 NS_IMETHODIMP
-nsIOService::NewChannel(const char* verb, const char *aSpec,
-                        nsIURI *aBaseURI,
-                        nsILoadGroup *aGroup,
-                        nsIInterfaceRequestor* notificationCallbacks,
-                        nsLoadFlags loadAttributes,
-                        nsIURI* originalURI,
-                        PRUint32 bufferSegmentSize,
-                        PRUint32 bufferMaxSize,
-                        nsIChannel **result)
+nsIOService::NewChannel(const char *aSpec, nsIURI *aBaseURI, nsIChannel **result)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -259,9 +242,7 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri), getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewChannel(verb, uri, aGroup, notificationCallbacks,
-                             loadAttributes, originalURI, 
-                             bufferSegmentSize, bufferMaxSize, result);
+    rv = handler->NewChannel(uri, result);
     return rv;
 }
 

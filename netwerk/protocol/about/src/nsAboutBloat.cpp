@@ -42,15 +42,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 NS_IMPL_ISUPPORTS(nsAboutBloat, NS_GET_IID(nsIAboutModule));
 
 NS_IMETHODIMP
-nsAboutBloat::NewChannel(const char *verb,
-                         nsIURI *aURI,
-                         nsILoadGroup* aLoadGroup,
-                         nsIInterfaceRequestor* notificationCallbacks,
-                         nsLoadFlags loadAttributes,
-                         nsIURI* originalURI,
-                         PRUint32 bufferSegmentSize,
-                         PRUint32 bufferMaxSize,
-                         nsIChannel **result)
+nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     nsXPIDLCString path;
@@ -150,15 +142,12 @@ nsAboutBloat::NewChannel(const char *verb,
         rv = file->GetFileSize(&bigSize);
         if (NS_FAILED(rv)) return rv;
 
-        rv = NS_NewFileInputStream(file, getter_AddRefs(inStr));
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), file);
         if (NS_FAILED(rv)) return rv;
     }
 
     nsIChannel* channel;
-    rv = NS_NewInputStreamChannel(aURI, "text/plain", 
-                                  size, inStr, aLoadGroup, notificationCallbacks,
-                                  loadAttributes, originalURI, 
-                                  bufferSegmentSize, bufferMaxSize, &channel);
+    rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/plain", size);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

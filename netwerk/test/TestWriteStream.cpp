@@ -115,10 +115,13 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     if (NS_FAILED(rv)) return rv ;
 
     nsCOMPtr<nsIChannel> transport;
-    rv = fts->CreateTransport(fs, PR_RDWR, "load", 0, 0, getter_AddRefs(transport)) ;
+    rv = fts->CreateTransport(fs, PR_RDWR | PR_CREATE_FILE, 0664,
+                              getter_AddRefs(transport)) ;
     if (NS_FAILED(rv)) return rv ;
  
-    rv = transport->OpenOutputStream(startPosition, getter_AddRefs(outStream)) ;
+    rv = transport->SetTransferOffset(startPosition);
+    if (NS_FAILED(rv)) return rv;
+    rv = transport->OpenOutputStream(getter_AddRefs(outStream)) ;
     if (NS_FAILED(rv)) return rv;
     
     PRIntervalTime startTime = PR_IntervalNow();

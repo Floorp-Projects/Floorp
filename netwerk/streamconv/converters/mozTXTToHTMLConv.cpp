@@ -1058,7 +1058,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
         i = lengthOfInString;
   
       nsString tempString;     
-      tempString.SetCapacity((PRUint32(i) - start) * growthRate);
+      tempString.SetCapacity(PRUint32((PRUint32(i) - start) * growthRate));
       UnescapeStr(aInString.GetUnicode(), start, PRUint32(i) - start, tempString);
       ScanTXT(tempString.GetUnicode(), tempString.Length(), whattodo, aOutString);
 
@@ -1144,7 +1144,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, PRUint32 whattodo,
     return NS_OK;
   }
 
-  outString.SetCapacity(inLength * growthRate);
+  outString.SetCapacity(PRUint32(inLength * growthRate));
   ScanTXT(text, inLength, whattodo, outString);
 
   *_retval = outString.ToNewUnicode();
@@ -1160,7 +1160,7 @@ mozTXTToHTMLConv::ScanHTML(const PRUnichar *text, PRUint32 whattodo,
   // FIX ME!!!
   nsString outString;
   nsString inString (text); // look at this nasty extra copy of the entire input buffer!
-  outString.SetCapacity(inString.Length() * growthRate);
+  outString.SetCapacity(PRUint32(inString.Length() * growthRate));
 
   ScanHTML(inString, whattodo, outString);
   *_retval = outString.ToNewUnicode();

@@ -40,7 +40,7 @@
 class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
 {
 public:
-	nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI);
+	nsMsgProtocol(nsIURI * aURL);
 	virtual ~nsMsgProtocol();
 
 	NS_DECL_ISUPPORTS

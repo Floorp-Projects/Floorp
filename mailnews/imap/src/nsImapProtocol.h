@@ -592,7 +592,7 @@ protected:
   // non owning ref of the context in order to fix a circular ref count
   // because the context is already the uri...
   nsISupports * m_channelContext;
-	PRBool	m_cancelled;
+  nsresult m_cancelStatus;
   nsLoadFlags mLoadAttributes;
 };
 

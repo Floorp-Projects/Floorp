@@ -250,11 +250,12 @@ public:
 
 protected:
   nsCOMPtr<nsIURI> m_url;
+  nsresult mStatus;
 };
 
 nsMailtoChannel::nsMailtoChannel(nsIURI * aURI)
+    : m_url(aURI), mStatus(NS_OK)
 {
-  m_url = aURI;
   NS_INIT_ISUPPORTS();
 }
 
@@ -276,6 +277,7 @@ NS_IMETHODIMP nsMailtoChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 
 NS_IMETHODIMP nsMailtoChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
+    NS_NOTREACHED("GetNotificationCallbacks");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -291,26 +293,40 @@ nsMailtoChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI * *aURI)
+NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI* *aURI)
 {
     *aURI = nsnull;
     return NS_OK; 
 }
  
-NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI * *aURI)
+NS_IMETHODIMP nsMailtoChannel::SetOriginalURI(nsIURI* aURI)
+{
+    NS_NOTREACHED("SetOriginalURI");
+    return NS_ERROR_NOT_IMPLEMENTED; 
+}
+ 
+NS_IMETHODIMP nsMailtoChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = m_url;
     NS_IF_ADDREF(*aURI);
     return NS_OK; 
 }
  
-NS_IMETHODIMP nsMailtoChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)
+NS_IMETHODIMP nsMailtoChannel::SetURI(nsIURI* aURI)
 {
+    m_url = aURI;
+    return NS_OK; 
+}
+ 
+NS_IMETHODIMP nsMailtoChannel::OpenInputStream(nsIInputStream **_retval)
+{
+    NS_NOTREACHED("OpenInputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
+    NS_NOTREACHED("OpenOutputStream");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -321,23 +337,26 @@ NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamObserver *observer, nsISupport
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener)
+NS_IMETHODIMP nsMailtoChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
   return listener->OnStartRequest(this, ctxt);
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
+NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt)
 {
+    NS_NOTREACHED("AsyncWrite");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
+    NS_NOTREACHED("GetLoadAttributes");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
+    NS_NOTREACHED("SetLoadAttributes");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -359,13 +378,99 @@ NS_IMETHODIMP nsMailtoChannel::GetContentLength(PRInt32 * aContentLength)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMailtoChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    NS_NOTREACHED("GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    NS_NOTREACHED("SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    NS_NOTREACHED("GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    NS_NOTREACHED("SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    NS_NOTREACHED("GetShouldCache");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMailtoChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsMailtoChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMailtoChannel::GetOwner(nsISupports * *aPrincipal)
 {
+    NS_NOTREACHED("GetOwner");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetOwner(nsISupports * aPrincipal)
 {
+    NS_NOTREACHED("SetOwner");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -379,18 +484,27 @@ NS_IMETHODIMP nsMailtoChannel::IsPending(PRBool *result)
     return NS_OK; 
 }
 
-NS_IMETHODIMP nsMailtoChannel::Cancel()
+NS_IMETHODIMP nsMailtoChannel::GetStatus(nsresult *status)
 {
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMailtoChannel::Cancel(nsresult status)
+{
+    mStatus = status;
     return NS_OK;
 }
 
 NS_IMETHODIMP nsMailtoChannel::Suspend()
 {
+    NS_NOTREACHED("Suspend");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::Resume()
 {
+    NS_NOTREACHED("Resume");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -414,15 +528,7 @@ NS_IMETHODIMP nsSmtpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
   return rv;
 }
 
-NS_IMETHODIMP nsSmtpService::NewChannel(const char *verb, 
-                                        nsIURI *aURI, 
-                                        nsILoadGroup* aLoadGroup,
-                                        nsIInterfaceRequestor* notificationCallbacks,
-                                        nsLoadFlags loadAttributes,
-                                        nsIURI* originalURI,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel **_retval)
+NS_IMETHODIMP nsSmtpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   nsresult rv = NS_OK;
   nsMailtoChannel * aMailtoChannel = new nsMailtoChannel(aURI);

@@ -193,7 +193,7 @@ private:
 
 protected:
 
-  PRBool                            mCancelOperation;
+  nsresult                          mCancelStatus;
   PRBool                            mCloseConnectionOnceDone;
   nsSocketState                     mCurrentState;
   nsCOMPtr<nsIRequest>              mDNSRequest;

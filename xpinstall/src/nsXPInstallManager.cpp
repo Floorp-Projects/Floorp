@@ -343,11 +343,11 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 {
                     nsCOMPtr<nsIChannel> channel;
                 
-                    rv = NS_OpenURI(getter_AddRefs(channel), pURL, nsnull, this);
+                    rv = NS_OpenURI(getter_AddRefs(channel), pURL, nsnull, nsnull, this);
                 
                     if (NS_SUCCEEDED(rv))
                     {
-                        rv = channel->AsyncRead(0, -1, nsnull, this);
+                        rv = channel->AsyncRead(this, nsnull);
                     }
                 }
             }

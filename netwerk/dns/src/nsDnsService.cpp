@@ -97,10 +97,9 @@ public:
     NS_DECL_NSIREQUEST
 
     nsDNSRequest()
-        : mLookup(nsnull), 
-          mSuspendCount(0)
+        : mLookup(nsnull), mSuspendCount(0), mStatus(NS_OK)
 #ifdef DNS_TIMING
-          ,mStartTime(PR_IntervalNow())
+        , mStartTime(PR_IntervalNow())
 #endif
     { NS_INIT_REFCNT(); }
     virtual ~nsDNSRequest() {}
@@ -116,6 +115,7 @@ protected:
     nsCOMPtr<nsISupports>       mUserContext;
     nsDNSLookup*                mLookup;        // weak ref
     PRUint32                    mSuspendCount;
+    nsresult                    mStatus;
 #ifdef DNS_TIMING
     PRIntervalTime              mStartTime;
 #endif
@@ -259,6 +259,7 @@ nsDNSRequest::FireStop(nsresult status)
     if (mUserListener == nsnull)
         return NS_ERROR_FAILURE;
 
+    mStatus = status;
     if (NS_SUCCEEDED(status)) {
         rv = mUserListener->OnFound(mUserContext,
                                     mLookup->HostName(),
@@ -295,8 +296,16 @@ nsDNSRequest::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsDNSRequest::Cancel(void)
+nsDNSRequest::GetStatus(nsresult *status)
 {
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDNSRequest::Cancel(nsresult status)
+{
+    mStatus = status;
     if (mUserListener) {
         // Hold onto a reference to ourself because if we decide to remove
         // this request from the mRequests list, it could be the last 
@@ -305,7 +314,7 @@ nsDNSRequest::Cancel(void)
         nsCOMPtr<nsIRequest> req = this;
 
         (void)mLookup->Suspend(this);
-        return FireStop(NS_BINDING_ABORTED);
+        return FireStop(status);
     }
     return NS_OK;
 }
@@ -827,8 +836,7 @@ nsDNSService::nsDNSService()
 #endif
 }
 
-
-nsresult
+NS_IMETHODIMP
 nsDNSService::Init()
 {
     nsresult rv = NS_OK;
@@ -1066,7 +1074,7 @@ nsDNSService::Lookup(const char*     hostName,
         return NS_ERROR_OFFLINE;
 #endif
 
-	nsDNSLookup * lookup;
+    nsDNSLookup * lookup;
     rv = GetLookupEntry(hostName, &lookup);
     if (NS_FAILED(rv)) return rv;
 

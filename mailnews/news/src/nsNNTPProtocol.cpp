@@ -444,7 +444,7 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
 }
 
 nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
-    : nsMsgProtocol(aURL, nsnull)
+    : nsMsgProtocol(aURL)
 {
     m_ProxyServer = nsnull;
     m_lineStreamBuffer = nsnull;
@@ -947,7 +947,7 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 NS_IMETHODIMP nsNNTPProtocol::Cancel()  // handle stop button
 {
 	m_nextState = NNTP_ERROR;
-	return nsMsgProtocol::Cancel();
+	return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
 }
 
 

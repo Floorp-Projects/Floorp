@@ -47,9 +47,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties.h"
 #include "nsIServiceManager.h"
-#include "nsIURL.h"
-#include "nsIIOService.h"
-#include "nsIChannel.h"
+#include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
@@ -353,10 +351,12 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   if (NS_FAILED(ret)) return ret;
 
 
+  nsCOMPtr<nsIURI> uri;
+  ret = NS_NewURI(getter_AddRefs(uri), Trial, nsnull, service);
+  if (NS_FAILED(ret)) return ret;
+
   nsIChannel *channel = nsnull;
-  // XXX NECKO verb? loadgroup? getter?
-  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull,
-                            nsIChannel::LOAD_NORMAL, nsnull, 0, 0, &channel);
+  ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
 
 
@@ -365,10 +365,10 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
   if (NS_FAILED(ret)) return ret;
 
 
-  ret = channel->OpenInputStream(0, -1, &in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
-	nsIPersistentProperties* props = nsnull;
+  nsIPersistentProperties* props = nsnull;
 
   ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
     kIPersistentPropertiesIID, (void**) &props);
@@ -424,7 +424,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 //    ind++;
 //  }
 
-return 1;
+    return 1;
 }
 
 int nsAccount::GetConfigValues(nsString fileName)
@@ -443,10 +443,12 @@ int nsAccount::GetConfigValues(nsString fileName)
   if (NS_FAILED(ret)) return ret;
 
 
+  nsCOMPtr<nsIURI> uri;
+  ret = NS_NewURI(getter_AddRefs(uri), Trial, nsnull, service);
+  if (NS_FAILED(ret)) return ret;
+
   nsIChannel *channel = nsnull;
-  // XXX NECKO verb? loadgroup? getter?
-  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull,
-                            nsIChannel::LOAD_NORMAL, nsnull, 0, 0, &channel);
+  ret = NS_OpenURI(&channel, uri, service);
   if (NS_FAILED(ret)) return ret;
 
 
@@ -455,7 +457,7 @@ int nsAccount::GetConfigValues(nsString fileName)
   if (NS_FAILED(ret)) return ret;
 
 
-  ret = channel->OpenInputStream(0, -1, &in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
 	nsIPersistentProperties* props = nsnull;

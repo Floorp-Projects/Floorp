@@ -36,24 +36,16 @@ interface nsIFile;
 interface nsIFileTransportService : nsISupports
 {
     nsIChannel createTransport(in nsIFile file,
-                               in long mode,
-                               in string command,
-                               in unsigned long bufferSegmentSize,
-                               in unsigned long bufferMaxSize);
+                               in long ioFlags,
+                               in long perm);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
     nsIChannel createTransportFromStream(in nsIInputStream fromStream,
                                          in string contentType,
-                                         in long contentLength,
-                                         in string command,
-                                         in unsigned long bufferSegmentSize,
-                                         in unsigned long bufferMaxSize);
+                                         in long contentLength);
 
-    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj,
-                                             in string command,
-                                             in unsigned long bufferSegmentSize,
-                                             in unsigned long bufferMaxSize);
+    nsIChannel createTransportFromFileSystem(in nsIFileSystem fsObj);
 
     void dispatchRequest(in nsIRunnable runnable);
     void suspend(in nsIRunnable trans);

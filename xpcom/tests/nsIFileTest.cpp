@@ -292,4 +292,5 @@ int main(void)
 
 #endif /* XP_UNIX */
 #endif /* XP_PC */
+    return 0;
 }

@@ -483,13 +483,12 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
 		      if (NS_SUCCEEDED(rv) && mailnewsUrl)
 			      mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
 
-          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsIChannel::LOAD_NORMAL,
-                          nsnull, 0, 0, getter_AddRefs(aChannel));
+          rv = NewChannel(url, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
           //  now try to open the channel passing in our display consumer as the listener 
-          rv = aChannel->AsyncRead(0, -1, aCtxt, aStreamListener);
+          rv = aChannel->AsyncRead(aStreamListener, aCtxt);
         }
         else // do what we used to do before
         {
@@ -780,18 +779,19 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         if (NS_SUCCEEDED(rv) && aStreamListener)
         {
           nsCOMPtr<nsIChannel> aChannel;
-		      nsCOMPtr<nsILoadGroup> aLoadGroup;
-		      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
-		      if (NS_SUCCEEDED(rv) && mailnewsUrl)
-			      mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+          nsCOMPtr<nsILoadGroup> aLoadGroup;
+          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+          if (NS_SUCCEEDED(rv) && mailnewsUrl)
+              mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+          rv = NewChannel(url, getter_AddRefs(aChannel));
+          if (NS_FAILED(rv)) return rv;
 
-          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsIChannel::LOAD_NORMAL,
-                          nsnull, 0, 0, getter_AddRefs(aChannel));
+          rv = aChannel->SetLoadGroup(aLoadGroup);
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
           //  now try to open the channel passing in our display consumer as the listener 
-          rv = aChannel->AsyncRead(0, -1, aCtxt, aStreamListener);
+          rv = aChannel->AsyncRead(aStreamListener, aCtxt);
         }
         else // do what we used to do before
         {
@@ -2604,15 +2604,7 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
   return rv;
 }
 
-NS_IMETHODIMP nsImapService::NewChannel(const char *verb, 
-                                        nsIURI *aURI, 
-                                        nsILoadGroup* aLoadGroup,
-                                        nsIInterfaceRequestor* notificationCallbacks,
-                                        nsLoadFlags loadAttributes,
-                                        nsIURI* originalURI,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel **_retval)
+NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
     // imap can't open and return a channel right away...the url needs to go in the imap url queue 
     // until we find a connection which can run the url..in order to satisfy necko, we're going to return
@@ -2627,15 +2619,6 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb,
     // and the originalURL, not the other way around
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
     if (NS_FAILED(rv) || !mockChannel) return NS_ERROR_FAILURE;
-
-    // XXX this seems wrong to do to this shared mock channel too, 
-    // but oh well...
-    rv = mockChannel->SetLoadAttributes(loadAttributes);
-	if (NS_FAILED(rv)) return rv;
-    rv = mockChannel->SetLoadGroup(aLoadGroup);
-	if (NS_FAILED(rv)) return rv;
-    rv = mockChannel->SetNotificationCallbacks(notificationCallbacks);
-	if (NS_FAILED(rv)) return rv;
 
     *_retval = mockChannel;
     NS_IF_ADDREF(*_retval);

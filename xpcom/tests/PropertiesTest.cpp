@@ -109,16 +109,14 @@ main(int argc, char* argv[])
   if (NS_FAILED(ret)) return ret;
 
   nsIChannel *channel = nsnull;
-  // XXX NECKO verb? loadgroup? getter?
-  ret = service->NewChannel("load", TEST_URL, nsnull, nsnull, nsnull,
-                            nsIChannel::LOAD_NORMAL, nsnull, 0, 0, &channel);
+  ret = service->NewChannel(TEST_URL, nsnull, &channel);
   if (NS_FAILED(ret)) return ret;
 
   nsIEventQueue *eventQ = nsnull;
   ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
-  ret = channel->OpenInputStream(0, -1, &in);
+  ret = channel->OpenInputStream(&in);
   if (NS_FAILED(ret)) return ret;
 
   nsIPersistentProperties* props = nsnull;

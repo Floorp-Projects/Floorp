@@ -96,10 +96,10 @@ public:
         spec.SetLeafName(str);
         nsCOMPtr<nsILocalFile> file;
         rv = NS_NewLocalFile(spec, getter_AddRefs(file));
-        rv = NS_NewFileOutputStream(file, 
-                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
-                                    0664,
-                                    getter_AddRefs(mOut));
+        rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
+                                         file, 
+                                         PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                         0664);
         return rv;
     }
 
@@ -131,7 +131,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewLocalFile(fs, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
-    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &fileTrans);
+    rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -142,7 +142,11 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
-    rv = fileTrans->AsyncRead(offset, length, nsnull, listener);
+    rv = fileTrans->SetTransferOffset(offset);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->SetTransferCount(length);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->AsyncRead(nsnull, listener);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {
@@ -177,7 +181,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
-                              "load", 0, 0, &fileTrans);
+                              0664, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -192,11 +196,15 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     rv = NS_NewLocalFile(spec, getter_AddRefs(f));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> inStr;
-    rv = NS_NewFileInputStream(f, getter_AddRefs(inStr));
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), f);
     if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
-    rv = fileTrans->AsyncWrite(inStr, offset, length, nsnull, listener);
+    rv = fileTrans->SetTransferOffset(offset);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->SetTransferCount(length);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->AsyncWrite(inStr, nsnull, listener);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {
@@ -258,7 +266,7 @@ TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
     nsCOMPtr<nsILocalFile> file;
     rv = NS_NewLocalFile(fs, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
-    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &fileTrans);
+    rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener(1);
@@ -277,7 +285,11 @@ TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
     rv = fileTrans->AsyncOpen(openObserver, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fileTrans->AsyncRead(offset + 10, length, nsnull, listener);
+    rv = fileTrans->SetTransferOffset(offset + 10);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->SetTransferCount(length);
+    if (NS_FAILED(rv)) return rv;
+    rv = fileTrans->AsyncRead(nsnull, listener);
     if (NS_FAILED(rv)) return rv;
 #if 0
     rv = fileTrans->AsyncRead(offset, length, nsnull, listener);

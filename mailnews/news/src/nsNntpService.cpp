@@ -1060,15 +1060,7 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	return rv;
 }
 
-NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, 
-                                        nsIURI *aURI, 
-                                        nsILoadGroup* aLoadGroup,
-                                        nsIInterfaceRequestor* notificationCallbacks,
-                                        nsLoadFlags loadAttributes,
-                                        nsIURI* originalURI,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel **_retval)
+NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
 	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol(aURI, nsnull);
@@ -1076,13 +1068,6 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb,
   
 	rv = nntpProtocol->Initialize();
     if (NS_FAILED(rv)) return rv;
-
-    rv = nntpProtocol->SetLoadAttributes(loadAttributes);
-	if (NS_FAILED(rv)) return rv;
-    rv = nntpProtocol->SetLoadGroup(aLoadGroup);
-	if (NS_FAILED(rv)) return rv;
-    rv = nntpProtocol->SetNotificationCallbacks(notificationCallbacks);
-	if (NS_FAILED(rv)) return rv;
 
     return nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 }

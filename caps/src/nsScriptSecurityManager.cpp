@@ -286,26 +286,9 @@ nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 // Methods implementing ISupports //
 ////////////////////////////////////
 
-NS_IMETHODIMP
-nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) 
-      return NS_ERROR_NULL_POINTER;
-  if (aIID.Equals(NS_GET_IID(nsIScriptSecurityManager))) {
-      *aInstancePtr = (void*)(nsIScriptSecurityManager *)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIXPCSecurityManager))) {
-      *aInstancePtr = (void*)(nsIXPCSecurityManager *)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsScriptSecurityManager);
-NS_IMPL_RELEASE(nsScriptSecurityManager);
+NS_IMPL_ISUPPORTS2(nsScriptSecurityManager,
+                   nsIScriptSecurityManager,
+                   nsIXPCSecurityManager)
 
 inline PRBool
 GetBit(unsigned char *bitVector, PRInt32 index) 

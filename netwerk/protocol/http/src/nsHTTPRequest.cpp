@@ -62,7 +62,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize),
     mAttempts (0),
-    mHandler (i_Handler)
+    mHandler (i_Handler),
+    mAbortStatus(NS_OK)
 {   
     NS_INIT_REFCNT();
 
@@ -96,10 +97,7 @@ nsHTTPRequest::~nsHTTPRequest()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_THREADSAFE_ADDREF(nsHTTPRequest);
-NS_IMPL_THREADSAFE_RELEASE(nsHTTPRequest);
-
-NS_IMPL_QUERY_INTERFACE2(nsHTTPRequest, nsIStreamObserver, nsIRequest);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPRequest, nsIStreamObserver, nsIRequest)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -119,12 +117,20 @@ nsHTTPRequest::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::Cancel(void)
+nsHTTPRequest::GetStatus(nsresult *status)
+{
+    *status = mAbortStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::Cancel(nsresult status)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
+  mAbortStatus = status;
   if (mTransport) {
-    rv = mTransport->Cancel();
+    rv = mTransport->Cancel(status);
   }
   return rv;
 }
@@ -167,7 +173,9 @@ nsresult nsHTTPRequest::WriteRequest ()
 
     if (!mTransport)
     {
-        rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, getter_AddRefs (mTransport), mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
+        rv = mHandler -> RequestTransport (mURI, mConnection, mBufferSegmentSize, mBufferMaxSize, 
+                                           getter_AddRefs (mTransport), 
+                                           mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
 
         if (NS_FAILED (rv))
             return rv;
@@ -308,8 +316,9 @@ nsresult nsHTTPRequest::WriteRequest ()
     //
     // Write the request to the server.  
     //
-    rv = mTransport->AsyncWrite(stream, 0, mRequestBuffer.Length(), 
-                                (nsISupports*)(nsIRequest*)mConnection, this);
+    rv = mTransport->SetTransferCount(mRequestBuffer.Length());
+    if (NS_FAILED(rv)) return rv;
+    rv = mTransport->AsyncWrite(stream, this, (nsISupports*)(nsIRequest*)mConnection);
     return rv;
 }
 
@@ -425,7 +434,7 @@ nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                     ("nsHTTPRequest [this=%x]. Writing POST data to the server.\n", this));
 
-                rv = mTransport -> AsyncWrite (mPostDataStream, 0, -1, (nsISupports*)(nsIRequest*)mConnection, this);
+                rv = mTransport -> AsyncWrite (mPostDataStream, this, (nsISupports*)(nsIRequest*)mConnection);
 
                 /* the mPostDataStream is released below... */
             }
@@ -441,7 +450,7 @@ nsHTTPRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Context,
                 if (pListener)
                 {
                     NS_ADDREF  (pListener);
-                    rv = mTransport -> AsyncRead (0, -1, i_Context, pListener);
+                    rv = mTransport -> AsyncRead (pListener, i_Context);
                     NS_RELEASE (pListener);
                 }
                 else

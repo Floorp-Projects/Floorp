@@ -53,6 +53,8 @@ protected:
     nsCOMPtr<nsIInputStream>     mInputStream;
     nsCOMPtr<nsISupports>        mOwner;
     AsyncReadStreamAdaptor*      mAsyncReadStream; // non-owning pointer
+    PRUint32                     mStartOffset;
+    nsresult                     mStatus;
 
     friend class MemCacheWriteStreamWrapper;
     friend class AsyncReadStreamAdaptor;

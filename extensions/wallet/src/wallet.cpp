@@ -26,9 +26,7 @@
 
 #define AutoCapture
 #include "wallet.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIChannel.h"
+#include "nsNetUtil.h"
 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -248,9 +246,7 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     nsCOMPtr<nsIChannel> pChannel;
 
     // Async reading thru the calls of the event sink interface
-    rv = serv->NewChannelFromURI("load", pURL, nsnull, nsnull, 
-                                 nsIChannel::LOAD_NORMAL, nsnull, 0, 0, 
-                                 getter_AddRefs(pChannel));
+    rv = NS_OpenURI(getter_AddRefs(pChannel), pURL, serv);
     if (NS_FAILED(rv)) {
         printf("ERROR: NewChannelFromURI failed for %s\n", in);
         return rv;
@@ -270,10 +266,8 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
         return rv;
     }
 
-    rv = pChannel->AsyncRead(0,         // starting position
-                             -1,        // number of bytes to read
-                             nsnull,    // ISupports context
-                             listener); // IStreamListener consumer
+    rv = pChannel->AsyncRead(listener,  // IStreamListener consumer
+                             nsnull);   // ISupports context
 
     if (NS_SUCCEEDED(rv)) {
          gKeepRunning = 1;

@@ -306,7 +306,7 @@ TestReadStream(nsINetDataCacheRecord *record, nsITestDataStream *testDataStream,
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     
-    rv = channel->AsyncRead(0, -1, 0, reader);
+    rv = channel->AsyncRead(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
 
@@ -548,8 +548,10 @@ TestOffsetWrites(nsINetDataCache *cache)
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
         startingOffset = streamLength ? streamLength - (randomStream->Next() % sizeof buf): 0;
-        rv = channel->OpenOutputStream(startingOffset, getter_AddRefs(outStream));
-        NS_ASSERTION(NS_SUCCEEDED(rv), " ");
+        rv = channel->SetTransferOffset(startingOffset);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetTransferOffset failed");
+        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "OpenOutputStream failed");
         
         counterStream = new CounterStream(startingOffset);
         counterStream->Read(buf, sizeof buf);
@@ -630,7 +632,7 @@ FillCache(nsINetDataCache *cache)
         rv = record->NewChannel(0, getter_AddRefs(channel));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
-        rv = channel->OpenOutputStream(0, getter_AddRefs(outStream));
+        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         
         PRUint32 beforeOccupancy;

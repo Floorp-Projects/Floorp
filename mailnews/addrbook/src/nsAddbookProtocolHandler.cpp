@@ -155,14 +155,7 @@ NS_IMETHODIMP
 nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
                                                      PRInt32  aHtmlOutputSize,
                                                      nsIAddbookUrl *addbookUrl,
-                                                     const char *verb, 
                                                      nsIURI *aURI, 
-                                                     nsILoadGroup* aLoadGroup,
-                                                     nsIInterfaceRequestor* notificationCallbacks,
-                                                     nsLoadFlags loadAttributes,
-                                                     nsIURI* originalURI,
-                                                     PRUint32 bufferSegmentSize,
-                                                     PRUint32 bufferMaxSize,
                                                      nsIChannel **_retval)
 {
   nsresult                  rv = NS_OK;
@@ -180,10 +173,7 @@ nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
   inStr = do_QueryInterface(s, &rv);
   if (NS_FAILED(rv)) 
     return rv;
-  rv = NS_NewInputStreamChannel(aURI, "text/html", 
-                                aHtmlOutputSize, inStr, aLoadGroup, notificationCallbacks,
-                                loadAttributes, originalURI, 
-                                bufferSegmentSize, bufferMaxSize, &channel);
+  rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/html", aHtmlOutputSize);
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -192,15 +182,7 @@ nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
 }
 
 NS_IMETHODIMP 
-nsAddbookProtocolHandler::NewChannel( const char *verb, 
-                                      nsIURI *aURI, 
-                                      nsILoadGroup* aLoadGroup,
-                                      nsIInterfaceRequestor* notificationCallbacks,
-                                      nsLoadFlags loadAttributes,
-                                      nsIURI* originalURI,
-                                      PRUint32 bufferSegmentSize,
-                                      PRUint32 bufferMaxSize,
-                                      nsIChannel **_retval)
+nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   nsresult      rv = NS_OK;
   char          *outBuf = nsnull;
@@ -229,16 +211,12 @@ nsAddbookProtocolHandler::NewChannel( const char *verb,
       {
         char          *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
         PRInt32       eSize = nsCRT::strlen(eMsg);
-        rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, verb, aURI, aLoadGroup, 
-                                       notificationCallbacks, loadAttributes, originalURI, 
-                                       bufferSegmentSize, bufferMaxSize, _retval);
+        rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, aURI, _retval);
         break;
       }
       else
       {
-        rv = GenerateHTMLOutputChannel(outBuf, nsCRT::strlen(outBuf), addbookUrl, verb, aURI, aLoadGroup, 
-                                       notificationCallbacks, loadAttributes, originalURI, 
-                                       bufferSegmentSize, bufferMaxSize, _retval);
+        rv = GenerateHTMLOutputChannel(outBuf, nsCRT::strlen(outBuf), addbookUrl, aURI, _retval);
         PR_FREEIF(outBuf);
       }
       break;
@@ -254,9 +232,7 @@ nsAddbookProtocolHandler::NewChannel( const char *verb,
       char          *eMsg = "Unsupported format/operation requested for \"addbook:\" URL.";
       PRInt32       eSize = nsCRT::strlen(eMsg);
 
-      rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, verb, aURI, aLoadGroup, 
-                                      notificationCallbacks, loadAttributes, originalURI, 
-                                      bufferSegmentSize, bufferMaxSize, _retval);
+      rv = GenerateHTMLOutputChannel(eMsg, eSize, addbookUrl, aURI, _retval);
       break;
   }
 

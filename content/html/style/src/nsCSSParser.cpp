@@ -2531,7 +2531,7 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
         nsCOMPtr<nsIURI> base;
         rv = mURL->Clone(getter_AddRefs(base));
         if (NS_SUCCEEDED(rv)) {
-          rv = NS_MakeAbsoluteURI(tk->mIdent, base, absURL);
+          rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, base);
         }
         if (NS_FAILED(rv)) {
           absURL = tk->mIdent;

@@ -228,14 +228,11 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     rv = aCtxt->QueryInterface(NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewInputStreamChannel(uri, "application/http-index-format", -1,  // XXX fix contentLength
-                                  nsnull,    // inStr
-                                  nsnull,    // loadGroup
-                                  nsnull,    // notificationCallbacks
-                                  nsIChannel::LOAD_NORMAL,
-                                  nsnull,    // originalURI
-                                  0, 0,
-                                  &mPartChannel);
+    rv = NS_NewInputStreamChannel(&mPartChannel,
+                                  uri,
+                                  nsnull,
+                                  "application/http-index-format",
+                                  -1);          // XXX fix contentLength
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 

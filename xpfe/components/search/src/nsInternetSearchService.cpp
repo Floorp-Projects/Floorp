@@ -414,7 +414,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		rv = NS_NewLoadGroup(nsnull, getter_AddRefs(mLoadGroup));
+		rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
 		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
@@ -2153,10 +2153,10 @@ InternetSearchDataSource::Stop()
 					break;
 				nsCOMPtr<nsIChannel>	channel = do_QueryInterface(isupports);
 				if (!channel)	continue;
-				channel->Cancel();
+				channel->Cancel(NS_BINDING_ABORTED);
 			}
 		}
-		mLoadGroup->Cancel();
+		mLoadGroup->Cancel(NS_BINDING_ABORTED);
 	}
 
 	// remove any loading icons
@@ -2539,7 +2539,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), action)))
 	{
 		nsCOMPtr<nsIChannel>	channel;
-		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, mLoadGroup)))
+		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, mLoadGroup)))
 		{
 
 			// send a "MultiSearch" header
@@ -2567,15 +2567,15 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			        	postStr += input;
 			        	
 					nsCOMPtr<nsIInputStream>	postDataStream;
-					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(PR_FALSE, nsCAutoString(postStr),
-						0, getter_AddRefs(postDataStream))))
+					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
+										   PR_FALSE, nsCAutoString(postStr), 0)))
 					{
 						httpChannel->SetPostDataStream(postDataStream);
 					}
 				}
 			}
 
-			if (NS_SUCCEEDED(rv = channel->AsyncRead(0, -1, context, this)))
+			if (NS_SUCCEEDED(rv = channel->AsyncRead(this, context)))
 			{
 			}
 		}
@@ -3599,8 +3599,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (hrefStr.Length() < 1)	continue;
 
 			char		*absURIStr = nsnull;
-			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(nsCAutoString(hrefStr),
-				aURL, &absURIStr)) && (absURIStr))
+			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, nsCAutoString(hrefStr), aURL))
+			    && (absURIStr))
 			{
 				hrefStr = absURIStr;
 

@@ -194,16 +194,7 @@ nsresult  rv;
   rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
 
   nsCOMPtr<nsIChannel> dummyChannel;
-  rv = NS_NewInputStreamChannel(aURL, 
-                                nsnull, // contentType
-                                -1,     // contentLength
-                                nsnull, // inputStream
-                                nsnull, // loadGroup
-                                nsnull, // notificationCallbacks
-                                nsIChannel::LOAD_NORMAL,
-                                nsnull, // originalURI
-                                0, 0, 
-                                getter_AddRefs(dummyChannel));
+  rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel), aURL, nsnull, nsnull, -1);
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
     Release();

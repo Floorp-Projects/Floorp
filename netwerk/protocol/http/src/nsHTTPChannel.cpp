@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -75,17 +75,11 @@ extern PRLogModuleInfo* gHTTPLog;
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
-                             const char *i_Verb,
-                             nsIURI* originalURI,
-                             nsHTTPHandler* i_Handler,
-                             PRUint32 bufferSegmentSize,
-                             PRUint32 bufferMaxSize): 
+nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
     mHTTPServerListener(nsnull),
     mResponseContext(nsnull),
-    mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mState(HS_IDLE),
@@ -99,21 +93,20 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mAuthTriedWithPrehost(PR_FALSE),
     mProxy(0),
     mProxyPort(-1),
-    mBufferSegmentSize(bufferSegmentSize),
-    mBufferMaxSize(bufferMaxSize)
+    mBufferSegmentSize(0),
+    mBufferMaxSize(0),
+    mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
 
 #if defined(PR_LOGGING)
-  nsXPIDLCString urlCString; 
-  mURI->GetSpec(getter_Copies(urlCString));
+    nsXPIDLCString urlCString; 
+    mURI->GetSpec(getter_Copies(urlCString));
   
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-         ("Creating nsHTTPChannel [this=%x] for URI: %s.\n", 
-           this, (const char *)urlCString));
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Creating nsHTTPChannel [this=%x] for URI: %s.\n", 
+            this, (const char *)urlCString));
 #endif
-
-    mVerb = i_Verb;
 }
 
 nsHTTPChannel::~nsHTTPChannel()
@@ -137,15 +130,13 @@ nsHTTPChannel::~nsHTTPChannel()
     CRTFREEIF(mProxy);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsHTTPChannel)
-NS_IMPL_THREADSAFE_RELEASE(nsHTTPChannel)
-
-NS_IMPL_QUERY_INTERFACE5(nsHTTPChannel,
-                         nsIHTTPChannel,
-                         nsIChannel,
-                         nsIInterfaceRequestor,
-                         nsIProgressEventSink,
-                         nsIProxy);
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsHTTPChannel,
+                              nsIHTTPChannel,
+                              nsIChannel,
+                              nsIInterfaceRequestor,
+                              nsIProgressEventSink,
+                              nsIProxy,
+                              nsIRequest);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -157,7 +148,14 @@ nsHTTPChannel::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::Cancel (void)
+nsHTTPChannel::GetStatus(nsresult *status)
+{
+  *status = mStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::Cancel(nsresult status)
 {
   nsresult rv;
 
@@ -168,8 +166,8 @@ nsHTTPChannel::Cancel (void)
   if (!mConnected && (HS_WAITING_FOR_OPEN == mState)) {
     rv = mHandler->CancelPendingChannel(this);
   }
-
-  return mRequest->Cancel();
+  mStatus = status;
+  return mRequest->Cancel(status);
 }
 
 NS_IMETHODIMP
@@ -190,8 +188,15 @@ nsHTTPChannel::Resume(void)
 NS_IMETHODIMP
 nsHTTPChannel::GetOriginalURI(nsIURI* *o_URL)
 {
-    *o_URL = mOriginalURI;
+    *o_URL = mOriginalURI ? mOriginalURI : mURI;
     NS_IF_ADDREF(*o_URL);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetOriginalURI(nsIURI* o_URL)
+{
+    mOriginalURI = o_URL;
     return NS_OK;
 }
 
@@ -204,8 +209,14 @@ nsHTTPChannel::GetURI(nsIURI* *o_URL)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                               nsIInputStream **o_Stream)
+nsHTTPChannel::SetURI(nsIURI* o_URL)
+{
+    mURI = o_URL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 {
     nsresult rv;
     if (mConnected) return NS_ERROR_ALREADY_CONNECTED;
@@ -222,15 +233,15 @@ nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     // If the cached data hasn't expired, it's unnecessary to contact
     // the server.  Just hand out the data in the cache.
     if (mCachedContentIsValid)
-        rv = ReadFromCache(startPosition, readCount);
+        rv = ReadFromCache();
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, 
-        nsIOutputStream **_retval)
+nsHTTPChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
+    NS_NOTREACHED("nsHTTPChannel::OpenOutputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -253,9 +264,7 @@ nsHTTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                         nsISupports *aContext,
-                         nsIStreamListener *listener)
+nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
 {
     nsresult rv = NS_OK;
 
@@ -277,7 +286,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     // with the server.  Create a stream from the cache, synthesizing all the
     // various channel-related events.
     if (mCachedContentIsValid) {
-        ReadFromCache(startPosition, readCount);
+        ReadFromCache();
     } else if (mOpenObserver) {
         // we were AsyncOpen()'d
         NS_ASSERTION(mHTTPServerListener, "ResponseListener was not set!.");
@@ -293,11 +302,10 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
-                          PRUint32 startPosition,
-                          PRInt32 writeCount,
-                          nsISupports *ctxt,
-                          nsIStreamObserver *observer)
+                          nsIStreamObserver *observer,
+                          nsISupports *ctxt)
 {
+    NS_NOTREACHED("nsHTTPChannel::AsyncWrite");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -384,6 +392,90 @@ nsHTTPChannel::GetContentLength(PRInt32 *aContentLength)
   return mResponse->GetContentLength(aContentLength);
 }
 
+
+NS_IMETHODIMP
+nsHTTPChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsHTTPChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("nsHTTPChannel::GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("nsHTTPChannel::SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("nsHTTPChannel::GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("nsHTTPChannel::SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsHTTPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
@@ -658,10 +750,8 @@ nsHTTPChannel::OnProgress(nsIChannel* aChannel, nsISupports* aContext,
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
 
-nsresult nsHTTPChannel::Init(nsILoadGroup *aLoadGroup) 
+nsresult nsHTTPChannel::Init() 
 {
-  nsresult rv;
-
   /* 
     Set up a request object - later set to a clone of a default 
     request from the handler. TODO
@@ -673,9 +763,7 @@ nsresult nsHTTPChannel::Init(nsILoadGroup *aLoadGroup)
   NS_ADDREF(mRequest);
   (void) mRequest->SetConnection(this);
   
-  rv = SetLoadGroup(aLoadGroup);
-
-  return rv;
+  return NS_OK;
 }
 
 
@@ -897,7 +985,7 @@ nsHTTPChannel::CheckCache()
 // method creates a stream from the cache, synthesizing all the various
 // channel-related events.
 nsresult
-nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
+nsHTTPChannel::ReadFromCache()
 {
     nsresult rv;
 
@@ -912,19 +1000,19 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
         return NS_ERROR_FAILURE;
 
 #if defined(PR_LOGGING)
-  nsresult log_rv;
-  char *URLSpec;
+    nsresult log_rv;
+    char *URLSpec;
 
-  log_rv = mURI->GetSpec(&URLSpec);
-  if (NS_FAILED(log_rv)) {
-  	URLSpec = nsCRT::strdup("?");
-  }
+    log_rv = mURI->GetSpec(&URLSpec);
+    if (NS_FAILED(log_rv)) {
+        URLSpec = nsCRT::strdup("?");
+    }
 
-  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPChannel::ReadFromCache [this=%x].\t"
-          "Using cache copy for: %s\n",
-          this, URLSpec));
-  nsAllocator::Free(URLSpec);
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("nsHTTPChannel::ReadFromCache [this=%x].\t"
+            "Using cache copy for: %s\n",
+            this, URLSpec));
+    nsAllocator::Free(URLSpec);
 #endif /* PR_LOGGING */
 
     // Create a cache transport to read the cached response...
@@ -952,8 +1040,7 @@ nsHTTPChannel::ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount)
     FinishedResponseHeaders();
 
     // Pump the cache data downstream
-    rv = cacheTransport->AsyncRead(aStartPosition, aReadCount,
-                                 mResponseContext, listener);
+    rv = cacheTransport->AsyncRead(listener, mResponseContext);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
         ResponseCompleted(nsnull, rv, 0);
@@ -1133,7 +1220,7 @@ nsHTTPChannel::Open(void)
             // and the cache data is usable, so start pumping the data from
             // the cache...
             if (!mOpenObserver) {
-                rv = ReadFromCache(0, -1);
+                rv = ReadFromCache();
             }
             return NS_OK;
         }
@@ -1299,12 +1386,14 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
-  rv = securityManager->CheckLoadURI(mOriginalURI, newURI, PR_TRUE);
+  rv = securityManager->CheckLoadURI(mOriginalURI ? mOriginalURI : mURI, newURI, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, 
-           mCallbacks, mLoadAttributes, mOriginalURI, 
-           mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
+  rv = NS_OpenURI(getter_AddRefs(channel), newURI, serv, mLoadGroup,
+                  mCallbacks, mLoadAttributes, 
+                  mBufferSegmentSize, mBufferMaxSize);
+  if (NS_FAILED(rv)) return rv;
+  rv = channel->SetOriginalURI(mOriginalURI);
   if (NS_FAILED(rv)) return rv;
 
   // Convey the referrer if one was used for this channel to the next one-
@@ -1318,7 +1407,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   }
 
   // Start the redirect...
-  rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
+  rv = channel->AsyncRead(mResponseDataListener, mResponseContext);
 
   //
   // Fire the OnRedirect(...) notification.
@@ -1564,14 +1653,12 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
 
     // This smells like a clone function... maybe there is a 
     // benefit in doing that, think. TODO.
-    rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, 
-                                mCallbacks, 
-                                mLoadAttributes, mOriginalURI, 
-                                mBufferSegmentSize, mBufferMaxSize, 
-                                &channel);// delibrately...
+    rv = NS_OpenURI(&channel, // delibrately...
+                    mURI, serv, mLoadGroup, mCallbacks, 
+                    mLoadAttributes, mBufferSegmentSize, mBufferMaxSize);
     if (NS_FAILED(rv)) return rv; 
-    if (!channel)
-        return NS_ERROR_OUT_OF_MEMORY;
+    rv = channel->SetOriginalURI(mOriginalURI);
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
     NS_ASSERTION(httpChannel, "Something terrible happened..!");
@@ -1587,7 +1674,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     httpChannel->SetAuthTriedWithPrehost(PR_TRUE);
 
     // Fire the new request...
-    rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
+    rv = channel->AsyncRead(mResponseDataListener, mResponseContext);
 
     // Abort the current response...  This will disconnect the consumer from
     // the response listener...  Thus allowing the entity that follows to
@@ -1847,7 +1934,7 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
     cacheListener->SetListener(aListener);
     mResponseDataListener = aListener;
 
-    rv = cacheTransport->AsyncRead(0, -1, mResponseContext, cacheListener);
+    rv = cacheTransport->AsyncRead(cacheListener, mResponseContext);
     if (NS_FAILED(rv)) {
       ResponseCompleted(cacheListener, rv, nsnull);
     }

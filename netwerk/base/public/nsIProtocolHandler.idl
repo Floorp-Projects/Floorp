@@ -52,14 +52,7 @@ interface nsIProtocolHandler : nsISupports
      * URL to become different from the original URL. If NULL, the aURI parameter
      * will be used as the originalURI instead.
      */
-    nsIChannel newChannel(in string verb,
-                          in nsIURI aURI,
-                          in nsILoadGroup aLoadGroup,
-                          in nsIInterfaceRequestor notificationCallbacks,
-                          in nsLoadFlags loadAttributes,
-                          in nsIURI originalURI,
-                          in unsigned long bufferSegmentSize,
-                          in unsigned long bufferMaxSize);
+    nsIChannel newChannel(in nsIURI aURI);
 };
 
 %{C++

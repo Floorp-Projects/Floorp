@@ -159,14 +159,7 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
-                                 nsILoadGroup* aLoadGroup,
-                                 nsIInterfaceRequestor* notificationCallbacks,
-                                 nsLoadFlags loadAttributes,
-                                 nsIURI* originalURI,
-                                 PRUint32 bufferSegmentSize,
-                                 PRUint32 bufferMaxSize,
-                                 nsIChannel* *result)
+nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
     nsresult rv = NS_OK;
 
@@ -179,11 +172,10 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     }
 
     nsFTPChannel* channel;
-    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsPIFTPChannel), (void**)&channel);
+    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks, loadAttributes,
-                       originalURI, bufferSegmentSize, bufferMaxSize, this, mPool);
+    rv = channel->Init(url, this, mPool);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
@@ -202,13 +194,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
         rv = NS_NewURI(getter_AddRefs(uri), "http://");
         if (NS_FAILED(rv)) return rv;
 
-        rv = httpHandler->NewChannel(verb, uri, aLoadGroup,
-                                     NS_STATIC_CAST(nsIInterfaceRequestor*, channel),
-                                     loadAttributes,
-                                     url,
-                                     bufferSegmentSize,
-                                     bufferMaxSize,
-                                     getter_AddRefs(proxyChannel));
+        rv = httpHandler->NewChannel(uri, getter_AddRefs(proxyChannel));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(proxyChannel, &rv);

@@ -1091,7 +1091,10 @@ public:
         rv = mCacheEntry->NewChannel(0, getter_AddRefs(mChannel));
         if (NS_FAILED(rv)) return rv;
 
-        return mChannel->OpenOutputStream(aStartingOffset, getter_AddRefs(mCacheStream));
+        rv = mChannel->SetTransferOffset(aStartingOffset);
+        if (NS_FAILED(rv)) return rv;
+
+        return mChannel->OpenOutputStream(getter_AddRefs(mCacheStream));
     }
 
     NS_DECL_ISUPPORTS

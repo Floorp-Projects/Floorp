@@ -1731,7 +1731,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
-    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, group);
+    result = NS_OpenURI(getter_AddRefs(channel), aSourceURL, nsnull, group);
     if (NS_FAILED(result)) return result;
     result = Reset(channel, group);
     if (NS_FAILED(result)) return result;

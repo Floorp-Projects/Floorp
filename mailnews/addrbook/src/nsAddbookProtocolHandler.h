@@ -56,14 +56,7 @@ private:
   NS_METHOD    GenerateHTMLOutputChannel(char *aHtmlOutput,
                                          PRInt32  aHtmlOutputSize,
                                          nsIAddbookUrl *addbookUrl,
-                                         const char *verb, 
                                          nsIURI *aURI, 
-                                         nsILoadGroup* aLoadGroup,
-                                         nsIInterfaceRequestor* notificationCallbacks,
-                                         nsLoadFlags loadAttributes,
-                                         nsIURI* originalURI,
-                                         PRUint32 bufferSegmentSize,
-                                         PRUint32 bufferMaxSize,
                                          nsIChannel **_retval);
 
   NS_METHOD    GeneratePrintOutput(nsIAddbookUrl *addbookUrl, 

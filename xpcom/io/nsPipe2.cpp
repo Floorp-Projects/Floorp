@@ -605,7 +605,8 @@ nsPipe::nsPipeOutputStream::Close(void)
 {
     nsPipe* pipe = GET_OUTPUTSTREAM_PIPE(this);
     nsAutoCMonitor mon(pipe);
-    pipe->mCondition = NS_BASE_STREAM_CLOSED;
+    if (pipe->mCondition == NS_OK)
+        pipe->mCondition = NS_BASE_STREAM_CLOSED;
     nsresult rv = mon.Notify();   // wake up the writer
     if (NS_FAILED(rv))
         return rv;

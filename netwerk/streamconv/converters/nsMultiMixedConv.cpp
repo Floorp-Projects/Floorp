@@ -265,27 +265,25 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 
                     if (mContentType.Length() < 1)
                         mContentType = "text/html"; // default to text/html, that's all we'll ever see anyway
-                    rv = NS_NewInputStreamChannel(partURI, mContentType.GetBuffer(), mContentLength,
-                                                  nsnull,    // inStr
-                                                  loadGroup, // loadGroup
-                                                  nsnull,    // notificationCallbacks
-                                                  nsIChannel::LOAD_NORMAL,
-                                                  nsnull,    // originalURI
-                                                  0, 0,
-                                                  getter_AddRefs(mPartChannel));
-                    if (NS_FAILED(rv)) {
-                        nsAllocator::Free(buffer);
-                        return rv;
-                    }
+                    rv = NS_NewInputStreamChannel(getter_AddRefs(mPartChannel), 
+                                                  partURI, 
+                                                  nsnull,       // inStr
+                                                  mContentType.GetBuffer(), 
+                                                  mContentLength);
+                    if (NS_FAILED(rv)) goto error;
 
                     // Add the new channel to the load group (if any)
                     if (loadGroup) {
-                      loadGroup->AddChannel(mPartChannel, nsnull);
+                        rv = mPartChannel->SetLoadGroup(loadGroup);
+                        if (NS_FAILED(rv)) goto error;
+                        rv = loadGroup->AddChannel(mPartChannel, nsnull);
+                        if (NS_FAILED(rv)) goto error;
                     }
 
                     // Let's start off the load. NOTE: we don't forward on the channel passed
                     // into our OnDataAvailable() as it's the root channel for the raw stream.
                     rv = mFinalListener->OnStartRequest(mPartChannel, context);
+                  error:
                     if (NS_FAILED(rv)) {
                         nsAllocator::Free(buffer);
                         return rv;

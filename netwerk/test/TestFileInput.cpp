@@ -214,7 +214,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = NS_NewLocalFile(path, getter_AddRefs(file));
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewFileInputStream(file, getter_AddRefs(fileStr));
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStr), file);
     if (NS_FAILED(rv)) goto done;
 
     rv = NS_NewPipe(&bufStr, getter_AddRefs(out), nsnull,
@@ -350,10 +350,10 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsIChannel* trans;
-        rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &trans);
+        rv = fts->CreateTransport(file, PR_RDONLY, 0, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
 
-        rv = trans->AsyncRead(0, -1, nsnull, listener);
+        rv = trans->AsyncRead(nsnull, listener);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
 
         // the reader thread will hang on to these objects until it quits

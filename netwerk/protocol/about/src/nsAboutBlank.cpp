@@ -33,15 +33,7 @@ NS_IMPL_ISUPPORTS(nsAboutBlank, NS_GET_IID(nsIAboutModule));
 static const char kBlankPage[] = "";
 
 NS_IMETHODIMP
-nsAboutBlank::NewChannel(const char *verb,
-                         nsIURI *aURI,
-                         nsILoadGroup* aLoadGroup,
-                         nsIInterfaceRequestor* notificationCallbacks,
-                         nsLoadFlags loadAttributes,
-                         nsIURI* originalURI,
-                         PRUint32 bufferSegmentSize,
-                         PRUint32 bufferMaxSize,
-                         nsIChannel **result)
+nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     nsIChannel* channel;
@@ -54,11 +46,8 @@ nsAboutBlank::NewChannel(const char *verb,
     NS_RELEASE(s);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewInputStreamChannel(aURI, "text/html", 
-                                  nsCRT::strlen(kBlankPage),
-                                  in, aLoadGroup, notificationCallbacks,
-                                  loadAttributes, originalURI,
-                                  bufferSegmentSize, bufferMaxSize, &channel);
+    rv = NS_NewInputStreamChannel(&channel, aURI, in, "text/html", 
+                                  nsCRT::strlen(kBlankPage));
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

@@ -69,12 +69,13 @@ TestOpenInputStream(const char* url)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = serv->NewChannel("load", url, nsnull, nsnull, nsnull, 0, nsnull,
-                          0, 0, getter_AddRefs(channel));
+    rv = serv->NewChannel(url,
+                          nsnull, // base uri
+                          getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> in;
-    rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+    rv = channel->OpenInputStream(getter_AddRefs(in));
     if (NS_FAILED(rv)) {
         fprintf(stdout, "failed to OpenInputStream for %s\n", url);
         return NS_OK;
@@ -195,15 +196,16 @@ TestAsyncRead(const char* url)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = serv->NewChannel("load", url, nsnull, nsnull, nsnull, 0, nsnull,
-                          0, 0, getter_AddRefs(channel));
+    rv = serv->NewChannel(url,
+                          nsnull, // base uri
+                          getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIStreamListener> listener = new Listener();
     if (listener == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = channel->AsyncRead(0, -1, nsnull, listener);
+    rv = channel->AsyncRead(nsnull, listener);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {

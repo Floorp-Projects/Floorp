@@ -55,9 +55,10 @@ interface nsISocketTransportService : nsISupports
      * Connection: close header (for HTTP) and timeouts! 
      */
     boolean reuseTransport(in nsIChannel i_Transport);
-    void init     ();
-    void shutdown ();
-	void wakeup   (in nsIChannel i_Transport);
+
+    void init();
+    void shutdown();
+    void wakeup(in nsIChannel i_Transport);
 };
 
 %{C++

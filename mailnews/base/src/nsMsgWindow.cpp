@@ -246,7 +246,7 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 		{
 			docLoader->GetLoadGroup(getter_AddRefs(loadGroup));
 			if (loadGroup)
-				loadGroup->Cancel();
+				loadGroup->Cancel(NS_BINDING_ABORTED);
 		}
 		return NS_OK;
 	}
