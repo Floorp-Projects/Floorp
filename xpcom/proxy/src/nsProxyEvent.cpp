@@ -202,7 +202,9 @@ nsProxyObjectCallInfo::SetCallersQueue(nsIEventQueue* queue)
 }   
 
 
-NS_IMPL_ISUPPORTS0(nsProxyObject)
+NS_IMPL_THREADSAFE_ADDREF(nsProxyObject)
+NS_IMPL_THREADSAFE_RELEASE(nsProxyObject)
+NS_IMPL_QUERY_INTERFACE0(nsProxyObject)
 
 nsProxyObject::nsProxyObject()
 {
