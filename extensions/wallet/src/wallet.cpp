@@ -49,6 +49,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIStringBundle.h"
+#include "nsILocale.h"
 #include "nsIFileSpec.h"
 #include "prmem.h"
 #include "prprf.h"  
@@ -462,8 +463,9 @@ Wallet_Localize(char* genericString) {
 #endif
     return v.ToNewUnicode();
   }
+  nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsIStringBundle> bundle;
-  ret = pStringService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
+  ret = pStringService->CreateBundle(PROPERTIES_URL, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
 #ifdef DEBUG
     printf("cannot create instance\n");

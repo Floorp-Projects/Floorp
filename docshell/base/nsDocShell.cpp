@@ -55,6 +55,7 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadInfo.h"
 #include "nsCDefaultURIFixup.h"
+#include "nsDocShellEnumerator.h"
 
 // Helper Classes
 #include "nsDOMError.h"
@@ -67,6 +68,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
+#include "nsILocaleService.h"
 #include "nsITimer.h"
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
@@ -292,6 +294,15 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
         return NS_OK;
       }
       return NS_NOINTERFACE;
+   }
+   else if (aIID.Equals(NS_GET_IID(nsIWebBrowserFind)))
+   {
+        nsresult rv = EnsureFind();
+        if (NS_FAILED(rv)) return rv;
+        
+        *aSink = mFind;
+        NS_ADDREF((nsISupports*)*aSink);
+        return NS_OK;
    }
    else
    {
@@ -772,6 +783,35 @@ nsDocShell::SetAllowSubframes(PRBool aAllowSubframes)
 {
    mAllowSubframes = aAllowSubframes;
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetDocShellEnumerator(PRInt32 aItemType, PRInt32 aDirection, nsISimpleEnumerator **outEnum)
+{
+    NS_ENSURE_ARG_POINTER(outEnum);
+    *outEnum = nsnull;
+    
+    nsDocShellEnumerator*   docShellEnum;
+    if (aDirection == ENUMERATE_FORWARDS)
+        docShellEnum = new nsDocShellForwardsEnumerator;
+    else
+        docShellEnum = new nsDocShellBackwardsEnumerator;
+    
+    if (!docShellEnum) return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsresult rv = docShellEnum->SetEnumDocShellType(aItemType);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = docShellEnum->SetEnumerationRootItem((nsIDocShellTreeItem *)this);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = docShellEnum->First();
+    if (NS_FAILED(rv)) return rv;
+    
+    docShellEnum->AddRef();     // ensure we don't lose the last ref inside the QueryInterface
+    rv = docShellEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)outEnum);
+    docShellEnum->Release();
+    return rv;
 }
 
 NS_IMETHODIMP nsDocShell::GetAppType(PRUint32* aAppType)
@@ -4288,6 +4328,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadTyp
    NS_ENSURE_SUCCESS(hEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetReferrerURI(getter_AddRefs(referrerURI)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)), NS_ERROR_FAILURE);
+
    NS_ENSURE_SUCCESS(InternalLoad(uri, referrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
@@ -4519,10 +4560,17 @@ NS_IMETHODIMP nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
 {
    NS_ENSURE_SUCCESS(GetInterface(NS_GET_IID(nsIPrompt), (void**)aPrompt), NS_ERROR_FAILURE);
 
+   nsCOMPtr<nsILocaleService> localeService(do_GetService(NS_LOCALESERVICE_CONTRACTID));
+   NS_ENSURE_TRUE(localeService, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsILocale> locale;
+   localeService->GetSystemLocale(getter_AddRefs(locale));
+   NS_ENSURE_TRUE(locale, NS_ERROR_FAILURE);
+
    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
    NS_ENSURE_TRUE(stringBundleService, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, 
+   NS_ENSURE_SUCCESS(stringBundleService->CreateBundle(DIALOG_STRING_URI, locale, 
       getter_AddRefs(aStringBundle)), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -4613,6 +4661,53 @@ NS_IMETHODIMP nsDocShell::EnsureScriptEnvironment()
    NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
 
    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::EnsureFind()
+{
+    nsresult rv;
+    if (!mFind)
+    {
+        mFind = do_CreateInstance("@mozilla.org/embedcomp/find;1", &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    // we promise that the nsIWebBrowserFind that we return has been set
+    // up to point to the focussed, or content window, so we have to
+    // set that up each time.
+    nsCOMPtr<nsIScriptGlobalObject> scriptGO;
+    rv = GetScriptGlobalObject(getter_AddRefs(scriptGO));
+    if (NS_FAILED(rv)) return rv;
+
+    // default to our window
+    nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(scriptGO);
+    nsCOMPtr<nsIDOMWindow> windowToSearch = rootWindow;
+
+    // if we can, search the focussed window
+    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(scriptGO);
+    nsCOMPtr<nsIFocusController> focusController;
+    if (ourWindow)
+        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController)
+    {
+        nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
+        focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
+        if (focussedWindow)
+        {
+            rootWindow = focussedWindow;            // constrain to the focussed window.
+            windowToSearch = focussedWindow;
+        }
+    }
+
+    nsCOMPtr<nsIWebBrowserFindInFrames> findInFrames = do_QueryInterface(mFind);
+    if (!findInFrames) return NS_ERROR_NO_INTERFACE;
+    
+    rv = findInFrames->SetRootSearchFrame(rootWindow);
+    if (NS_FAILED(rv)) return rv;
+    rv = findInFrames->SetCurrentSearchFrame(windowToSearch);
+    if (NS_FAILED(rv)) return rv;
+    
+    return NS_OK;
 }
 
 PRBool nsDocShell::IsFrame()

@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsILocale.h"
 #include "nsIServiceManager.h"
 #include "nsIWalletService.h"
 #include "nsPrompt.h"

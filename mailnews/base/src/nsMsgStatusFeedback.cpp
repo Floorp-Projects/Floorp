@@ -58,6 +58,7 @@ nsMsgStatusFeedback::nsMsgStatusFeedback() :
 
       if (NS_SUCCEEDED(rv))
         bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                    nsnull,
                                     getter_AddRefs(mBundle));
     }
 }

@@ -1159,8 +1159,9 @@ Localize(char *genericString, nsString &result)
         nsCRT::free(spec);
         return ret;
     }
+    nsILocale *locale = nsnull;
     nsIStringBundle *bundle = nsnull;
-    ret = pStringService->CreateBundle(spec, &bundle);
+    ret = pStringService->CreateBundle(spec, locale, &bundle);
     nsCRT::free(spec);
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     if (NS_FAILED(ret)) {

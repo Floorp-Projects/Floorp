@@ -45,7 +45,8 @@ nsIStringBundle *nsEudoraStringBundle::GetStringBundle( void)
 
 	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) {
-		rv = sBundleService->CreateBundle(propertyURL, &sBundle);
+		nsILocale   *		locale = nsnull;
+		rv = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
 	}
 	
 	m_pBundle = sBundle;

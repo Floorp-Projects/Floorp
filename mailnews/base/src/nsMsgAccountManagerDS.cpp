@@ -898,6 +898,7 @@ nsMsgAccountManagerDataSource::getStringBundle()
     if (NS_FAILED(rv)) return rv;
 
     rv = strBundleService->CreateBundle("chrome://messenger/locale/prefs.properties",
+                                        nsnull, // default locale
                                         getter_AddRefs(mStringBundle));
     return rv;
 }

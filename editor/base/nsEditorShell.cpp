@@ -296,7 +296,8 @@ nsEditorShell::Init()
     NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
     return res;
   }
-  res = stringBundleService->CreateBundle(EDITOR_BUNDLE_URL, getter_AddRefs(mStringBundle));
+  nsILocale* aLocale = nsnull;
+  res = stringBundleService->CreateBundle(EDITOR_BUNDLE_URL, aLocale, getter_AddRefs(mStringBundle));
 
   // XXX: why are we returning NS_OK here rather than res?
   // is it ok to fail to get a string bundle?  if so, it should be documented.
