@@ -543,7 +543,6 @@ protected:
         CREATE_HACK
     };
 
-    static PRBool sSkipWMCHARProcessing;
     static BOOL sIsRegistered;
     static BOOL sIsPopupClassRegistered;
 
