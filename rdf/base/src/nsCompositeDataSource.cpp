@@ -18,14 +18,15 @@
 
 /*
 
-  A simple "database" implementation. An RDF database is just a
-  strategy for combining individual data sources into a collective
-  graph.
+  A simple composite data source implementation. A composit data
+  source is just a strategy for combining individual data sources into
+  a collective graph.
 
 
-  1) A database is a sequence of data sources. The set of data sources
-     can be specified during creation of the database. Data sources
-     can also be added/deleted from a database later.
+  1) A composite data source holds a sequence of data sources. The set
+     of data sources can be specified during creation of the
+     database. Data sources can also be added/deleted from a database
+     later.
 
   2) The aggregation mechanism is based on simple super-positioning of
      the graphs from the datasources. If there is a conflict (i.e., 
@@ -40,7 +41,7 @@
 
 #include "nsIRDFCursor.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFDataBase.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsRepository.h"
 #include "nsVoidArray.h"
@@ -50,25 +51,25 @@ static NS_DEFINE_IID(kIRDFArcsInCursorIID,    NS_IRDFARCSINCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,   NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kIRDFAssertionCursorIID, NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFCursorIID,          NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFObserverIID,        NS_IRDFOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////
-// DataBase
+// CompositeDataSourceImpl
 
-class DataBase : public nsIRDFDataBase,
+class CompositeDataSourceImpl : public nsIRDFCompositeDataSource,
                  public nsIRDFObserver
 {
 protected:
     nsVoidArray*  mObservers;
         
-    virtual ~DataBase(void);
+    virtual ~CompositeDataSourceImpl(void);
 
 public:
-    DataBase(void);
-    DataBase(char** dataSources);
+    CompositeDataSourceImpl(void);
+    CompositeDataSourceImpl(char** dataSources);
 
     nsVoidArray mDataSources;
 
@@ -135,7 +136,7 @@ public:
                          nsIRDFResource* aCommandTarget);
 
 
-    // nsIRDFDataBase interface
+    // nsIRDFCompositeDataSource interface
     NS_IMETHOD AddDataSource(nsIRDFDataSource* source);
     NS_IMETHOD RemoveDataSource(nsIRDFDataSource* source);
 
@@ -160,7 +161,7 @@ public:
 class DBArcsInOutCursor : public nsIRDFArcsOutCursor,
                           public nsIRDFArcsInCursor
 {
-    DataBase*            mDataBase;
+    CompositeDataSourceImpl* mCompositeDataSourceImpl;
     nsIRDFResource*      mSource;
     nsIRDFNode*          mTarget;
     PRInt32              mCount;
@@ -169,7 +170,7 @@ class DBArcsInOutCursor : public nsIRDFArcsOutCursor,
     nsVoidArray          mResults;
 
 public:
-    DBArcsInOutCursor(DataBase* db, nsIRDFNode* node, PRBool arcsOutp);
+    DBArcsInOutCursor(CompositeDataSourceImpl* db, nsIRDFNode* node, PRBool arcsOutp);
 
     virtual ~DBArcsInOutCursor();
     
@@ -204,8 +205,10 @@ public:
 };
 
         
-DBArcsInOutCursor::DBArcsInOutCursor (DataBase* db, nsIRDFNode* node, PRBool arcsOutp)
-    : mDataBase(db), 
+DBArcsInOutCursor::DBArcsInOutCursor(CompositeDataSourceImpl* db,
+                                     nsIRDFNode* node,
+                                     PRBool arcsOutp)
+    : mCompositeDataSourceImpl(db), 
 	  mTarget(0),
 	  mSource(0),
 	  mCount(0),
@@ -220,7 +223,7 @@ DBArcsInOutCursor::DBArcsInOutCursor (DataBase* db, nsIRDFNode* node, PRBool arc
     NS_IF_ADDREF(node); 
 
     // XXX there better be at least _one_ datasource in this here
-    // database, else this'll be a real short ride...
+    // CompositeDataSourceImpl, else this'll be a real short ride...
     PR_ASSERT(db->mDataSources.Count() > 0);
     nsIRDFDataSource* ds = (nsIRDFDataSource*) db->mDataSources[mCount++];
 
@@ -285,10 +288,10 @@ DBArcsInOutCursor::Advance(void)
         NS_IF_RELEASE(mInCursor);
         NS_IF_RELEASE(mOutCursor);
 
-        if (mCount >= mDataBase->mDataSources.Count())
+        if (mCount >= mCompositeDataSourceImpl->mDataSources.Count())
             break;
 
-        ds = (nsIRDFDataSource*) mDataBase->mDataSources[mCount];
+        ds = (nsIRDFDataSource*) mCompositeDataSourceImpl->mDataSources[mCount];
         ++mCount;
 
         if (mTarget) {
@@ -308,7 +311,7 @@ DBArcsInOutCursor::Advance(void)
 class DBGetSTCursor : public nsIRDFAssertionCursor
 {
 private:
-    DataBase*       mDataBase;
+    CompositeDataSourceImpl* mCompositeDataSourceImpl;
     nsIRDFResource* mSource;
     nsIRDFResource* mLabel;    
     nsIRDFNode*     mTarget;
@@ -317,7 +320,7 @@ private:
     nsIRDFAssertionCursor* mCurrentCursor;
 
 public:
-    DBGetSTCursor(DataBase* db, nsIRDFNode* u,  
+    DBGetSTCursor(CompositeDataSourceImpl* db, nsIRDFNode* u,  
                        nsIRDFResource* property, PRBool inversep, PRBool tv);
 
     virtual ~DBGetSTCursor();
@@ -356,10 +359,12 @@ public:
 
 //NS_IMPL_ISUPPORTS(DBGetSTCursor, kIRDFAssertionCursorIID);        
 
-DBGetSTCursor::DBGetSTCursor (DataBase* db, nsIRDFNode* u,
-                              nsIRDFResource* property, PRBool inversep, 
-                              PRBool tv)
-    : mDataBase(db),
+DBGetSTCursor::DBGetSTCursor(CompositeDataSourceImpl* db,
+                             nsIRDFNode* u,
+                             nsIRDFResource* property,
+                             PRBool inversep, 
+                             PRBool tv)
+    : mCompositeDataSourceImpl(db),
       mSource(nsnull),
       mLabel(property),
       mTarget(nsnull),
@@ -376,7 +381,7 @@ DBGetSTCursor::DBGetSTCursor (DataBase* db, nsIRDFNode* u,
     NS_IF_ADDREF(mTarget);
     NS_IF_ADDREF(mLabel);
 
-    // XXX assume that at least one data source exists in the database.
+    // XXX assume that at least one data source exists in the CompositeDataSourceImpl.
     nsIRDFDataSource* ds = (nsIRDFDataSource*) db->mDataSources[mCount++];
     if (mSource)
         ds->GetTargets(mSource, mLabel, mTruthValue, &mCurrentCursor);
@@ -397,7 +402,8 @@ NS_IMPL_ADDREF(DBGetSTCursor);
 NS_IMPL_RELEASE(DBGetSTCursor);
 
 NS_IMETHODIMP_(nsresult)
-DBGetSTCursor::QueryInterface(REFNSIID iid, void** result) {
+DBGetSTCursor::QueryInterface(REFNSIID iid, void** result)
+{
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
@@ -422,17 +428,17 @@ DBGetSTCursor::Advance(void)
             nsIRDFNode*     trg;            
             mCurrentCursor->GetSubject(&src);
             mCurrentCursor->GetObject(&trg);
-            if (!mDataBase->HasAssertionN(mCount-1, src, mLabel, trg, !mTruthValue)) {
+            if (!mCompositeDataSourceImpl->HasAssertionN(mCount-1, src, mLabel, trg, !mTruthValue)) {
                 return NS_OK;
             } else {
                 result = mCurrentCursor->Advance();
             }            
         }
 
-        if (mCount >= mDataBase->mDataSources.Count())
+        if (mCount >= mCompositeDataSourceImpl->mDataSources.Count())
             break;
 
-        ds = (nsIRDFDataSource*) mDataBase->mDataSources[mCount];
+        ds = (nsIRDFDataSource*) mCompositeDataSourceImpl->mDataSources[mCount];
         ++mCount;
 
         if (mSource)
@@ -446,15 +452,27 @@ DBGetSTCursor::Advance(void)
 
 ////////////////////////////////////////////////////////////////////////
 
+nsresult
+NS_NewRDFCompositeDataSource(nsIRDFCompositeDataSource** result)
+{
+    CompositeDataSourceImpl* db = new CompositeDataSourceImpl();
+    if (! db)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-DataBase::DataBase(void)
+    *result = db;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+
+CompositeDataSourceImpl::CompositeDataSourceImpl(void)
     : mObservers(nsnull)
 {
     NS_INIT_REFCNT();
 }
 
 
-DataBase::~DataBase(void)
+CompositeDataSourceImpl::~CompositeDataSourceImpl(void)
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
@@ -467,19 +485,19 @@ DataBase::~DataBase(void)
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ADDREF(DataBase);
-NS_IMPL_RELEASE(DataBase);
+NS_IMPL_ADDREF(CompositeDataSourceImpl);
+NS_IMPL_RELEASE(CompositeDataSourceImpl);
 
 NS_IMETHODIMP
-DataBase::QueryInterface(REFNSIID iid, void** result)
+CompositeDataSourceImpl::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    if (iid.Equals(kIRDFDataBaseIID) ||
+    if (iid.Equals(kIRDFCompositeDataSourceIID) ||
         iid.Equals(kIRDFDataSourceIID) ||
         iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIRDFDataBase*, this);
+        *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
 		NS_ADDREF(this);
         return NS_OK;
     }
@@ -500,24 +518,24 @@ DataBase::QueryInterface(REFNSIID iid, void** result)
 // nsIRDFDataSource interface
 
 NS_IMETHODIMP
-DataBase::Init(const char* uri)
+CompositeDataSourceImpl::Init(const char* uri)
 {
     PR_ASSERT(0);
-    return NS_ERROR_UNEXPECTED; // XXX database doesn't have a URI?
+    return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
 NS_IMETHODIMP
-DataBase::GetURI(const char* *uri) const
+CompositeDataSourceImpl::GetURI(const char* *uri) const
 {
     PR_ASSERT(0);
-    return NS_ERROR_UNEXPECTED; // XXX database doesn't have a URI?
+    return NS_ERROR_UNEXPECTED; // XXX CompositeDataSourceImpl doesn't have a URI?
 }
 
 NS_IMETHODIMP
-DataBase::GetSource(nsIRDFResource* property,
-                            nsIRDFNode* target,
-                            PRBool tv,
-                            nsIRDFResource** source)
+CompositeDataSourceImpl::GetSource(nsIRDFResource* property,
+                                   nsIRDFNode* target,
+                                   PRBool tv,
+                                   nsIRDFResource** source)
 {
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
@@ -538,10 +556,10 @@ DataBase::GetSource(nsIRDFResource* property,
 }
 
 NS_IMETHODIMP
-DataBase::GetSources(nsIRDFResource* property,
-                             nsIRDFNode* target,
-                             PRBool tv,
-                             nsIRDFAssertionCursor** result)
+CompositeDataSourceImpl::GetSources(nsIRDFResource* property,
+                                    nsIRDFNode* target,
+                                    PRBool tv,
+                                    nsIRDFAssertionCursor** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
@@ -555,10 +573,10 @@ DataBase::GetSources(nsIRDFResource* property,
 }
 
 NS_IMETHODIMP
-DataBase::GetTarget(nsIRDFResource* source,
-                    nsIRDFResource* property,
-                    PRBool tv,
-                    nsIRDFNode** target)
+CompositeDataSourceImpl::GetTarget(nsIRDFResource* source,
+                                   nsIRDFResource* property,
+                                   PRBool tv,
+                                   nsIRDFNode** target)
 {
     PRInt32 count = mDataSources.Count();
     for (PRInt32 i = 0; i < count; ++i) {
@@ -581,8 +599,12 @@ DataBase::GetTarget(nsIRDFResource* source,
 }
 
 PRBool
-DataBase::HasAssertionN (int n, nsIRDFResource* source,
-                      nsIRDFResource* property,  nsIRDFNode* target, PRBool tv) {
+CompositeDataSourceImpl::HasAssertionN(int n,
+                                       nsIRDFResource* source,
+                                       nsIRDFResource* property,
+                                       nsIRDFNode* target,
+                                       PRBool tv)
+{
     int m = 0;
     PRBool result = 0;
     while (m < n) {
@@ -597,10 +619,10 @@ DataBase::HasAssertionN (int n, nsIRDFResource* source,
 
 
 NS_IMETHODIMP
-DataBase::GetTargets(nsIRDFResource* source,
-                               nsIRDFResource* property,
-                               PRBool tv,
-                               nsIRDFAssertionCursor** targets)
+CompositeDataSourceImpl::GetTargets(nsIRDFResource* source,
+                                    nsIRDFResource* property,
+                                    PRBool tv,
+                                    nsIRDFAssertionCursor** targets)
 {
     if (! targets)
         return NS_ERROR_NULL_POINTER;
@@ -616,10 +638,10 @@ DataBase::GetTargets(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::Assert(nsIRDFResource* source, 
-                           nsIRDFResource* property, 
-                           nsIRDFNode* target,
-                           PRBool tv)
+CompositeDataSourceImpl::Assert(nsIRDFResource* source, 
+                                nsIRDFResource* property, 
+                                nsIRDFNode* target,
+                                PRBool tv)
 {
     // Need to add back the stuff for unblocking ...
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
@@ -632,9 +654,9 @@ DataBase::Assert(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::Unassert(nsIRDFResource* source,
-                           nsIRDFResource* property,
-                           nsIRDFNode* target)
+CompositeDataSourceImpl::Unassert(nsIRDFResource* source,
+                                  nsIRDFResource* property,
+                                  nsIRDFNode* target)
 {
     nsresult rv;
     PRInt32 count = mDataSources.Count();
@@ -653,11 +675,11 @@ DataBase::Unassert(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::HasAssertion(nsIRDFResource* source,
-                                 nsIRDFResource* property,
-                                 nsIRDFNode* target,
-                                 PRBool tv,
-                                 PRBool* hasAssertion)
+CompositeDataSourceImpl::HasAssertion(nsIRDFResource* source,
+                                      nsIRDFResource* property,
+                                      nsIRDFNode* target,
+                                      PRBool tv,
+                                      PRBool* hasAssertion)
 {
     nsresult rv;
 
@@ -688,7 +710,7 @@ DataBase::HasAssertion(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::AddObserver(nsIRDFObserver* obs)
+CompositeDataSourceImpl::AddObserver(nsIRDFObserver* obs)
 {
     if (!mObservers) {
         if ((mObservers = new nsVoidArray()) == nsnull)
@@ -702,7 +724,7 @@ DataBase::AddObserver(nsIRDFObserver* obs)
 }
 
 NS_IMETHODIMP
-DataBase::RemoveObserver(nsIRDFObserver* obs)
+CompositeDataSourceImpl::RemoveObserver(nsIRDFObserver* obs)
 {
     if (!mObservers)
         return NS_OK;
@@ -712,8 +734,8 @@ DataBase::RemoveObserver(nsIRDFObserver* obs)
 }
 
 NS_IMETHODIMP
-DataBase::ArcLabelsIn(nsIRDFNode* node,
-                      nsIRDFArcsInCursor** labels)
+CompositeDataSourceImpl::ArcLabelsIn(nsIRDFNode* node,
+                                     nsIRDFArcsInCursor** labels)
 {
     if (! labels)
         return NS_ERROR_NULL_POINTER;
@@ -728,8 +750,8 @@ DataBase::ArcLabelsIn(nsIRDFNode* node,
 }
 
 NS_IMETHODIMP
-DataBase::ArcLabelsOut(nsIRDFResource* source,
-                                 nsIRDFArcsOutCursor** labels)
+CompositeDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
+                                      nsIRDFArcsOutCursor** labels)
 {
     if (! labels)
         return NS_ERROR_NULL_POINTER;
@@ -744,7 +766,7 @@ DataBase::ArcLabelsOut(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-DataBase::Flush()
+CompositeDataSourceImpl::Flush()
 {
     for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
         nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
@@ -754,31 +776,31 @@ DataBase::Flush()
 }
 
 NS_IMETHODIMP
-DataBase::IsCommandEnabled(const char* aCommand,
-                           nsIRDFResource* aCommandTarget,
-                           PRBool* aResult)
+CompositeDataSourceImpl::IsCommandEnabled(const char* aCommand,
+                                          nsIRDFResource* aCommandTarget,
+                                          PRBool* aResult)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-DataBase::DoCommand(const char* aCommand,
-                    nsIRDFResource* aCommandTarget)
+CompositeDataSourceImpl::DoCommand(const char* aCommand,
+                                   nsIRDFResource* aCommandTarget)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////
-// nsIRDFDataBase methods
+// nsIRDFCompositeDataSource methods
 // XXX rvg We should make this take an additional argument specifying where
 // in the sequence of data sources (of the db), the new data source should
 // fit in. Right now, the new datasource gets stuck at the end.
-// need to add the observers of the database to the new data source.
+// need to add the observers of the CompositeDataSourceImpl to the new data source.
 
 NS_IMETHODIMP
-DataBase::AddDataSource(nsIRDFDataSource* source)
+CompositeDataSourceImpl::AddDataSource(nsIRDFDataSource* source)
 {
     if (! source)
         return NS_ERROR_NULL_POINTER;
@@ -792,7 +814,7 @@ DataBase::AddDataSource(nsIRDFDataSource* source)
 
 
 NS_IMETHODIMP
-DataBase::RemoveDataSource(nsIRDFDataSource* source)
+CompositeDataSourceImpl::RemoveDataSource(nsIRDFDataSource* source)
 {
     if (! source)
         return NS_ERROR_NULL_POINTER;
@@ -807,9 +829,9 @@ DataBase::RemoveDataSource(nsIRDFDataSource* source)
 }
 
 NS_IMETHODIMP
-DataBase::OnAssert(nsIRDFResource* subject,
-                   nsIRDFResource* predicate,
-                   nsIRDFNode* object)
+CompositeDataSourceImpl::OnAssert(nsIRDFResource* subject,
+                                  nsIRDFResource* predicate,
+                                  nsIRDFNode* object)
 {
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
@@ -822,9 +844,9 @@ DataBase::OnAssert(nsIRDFResource* subject,
 }
 
 NS_IMETHODIMP
-DataBase::OnUnassert(nsIRDFResource* subject,
-                     nsIRDFResource* predicate,
-                     nsIRDFNode* object)
+CompositeDataSourceImpl::OnUnassert(nsIRDFResource* subject,
+                                    nsIRDFResource* predicate,
+                                    nsIRDFNode* object)
 {
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
@@ -838,16 +860,3 @@ DataBase::OnUnassert(nsIRDFResource* subject,
 
 
 
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewRDFDataBase(nsIRDFDataBase** result)
-{
-    DataBase* db = new DataBase();
-    if (! db)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *result = db;
-    NS_ADDREF(*result);
-    return NS_OK;
-}

@@ -33,9 +33,9 @@ class nsIContent; // XXX nsIXMLDocument.h is bad and doesn't declare this class.
 #include "nsIXMLDocument.h"
 
 class nsIAtom;
+class nsIRDFCompositeDataSource;
 class nsIRDFContent;
 class nsIRDFContentModelBuilder;
-class nsIRDFDataBase;
 class nsISupportsArray;
 class nsIRDFResource;
 
@@ -63,7 +63,7 @@ public:
   /**
    * Retrieve the document's RDF data base.
    */
-  NS_IMETHOD GetDataBase(nsIRDFDataBase*& rDataBase) = 0;
+  NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource*& rDataBase) = 0;
 
   /**
    * Given an nsIRDFContent element in the document, create its

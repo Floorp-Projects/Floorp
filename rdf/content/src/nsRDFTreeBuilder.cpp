@@ -29,7 +29,7 @@
 #include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
-#include "nsIRDFDataBase.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -69,7 +69,7 @@ class RDFTreeBuilderImpl : public nsIRDFContentModelBuilder
 private:
     nsIRDFDocument* mDocument;
     nsIRDFService*  mRDFService;
-    nsIRDFDataBase* mDB;
+    nsIRDFCompositeDataSource* mDB;
 
 public:
     RDFTreeBuilderImpl();

@@ -27,14 +27,14 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfbase_s
 
 CPPSRCS =				\
+	nsCompositeDataSource.cpp       \
 	nsContainerCursor.cpp		\
-	nsDataBase.cpp                  \
 	nsDefaultResourceFactory.cpp	\
 	nsEmptyCursor.cpp               \
 	nsInMemoryDataSource.cpp        \
 	nsRDFContentSink.cpp		\
 	nsRDFService.cpp                \
-	nsStreamDataSource.cpp		\
+	nsRDFXMLDataSource.cpp		\
 	rdfutil.cpp			\
 	$(NULL)
 

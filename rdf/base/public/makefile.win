@@ -22,17 +22,17 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS=\
-        rdf.h                   \
-        nsIRDFContentSink.h     \
-	nsIRDFCursor.h          \
-	nsIRDFDataBase.h        \
-	nsIRDFDataSource.h      \
-        nsIRDFNode.h            \
-	nsIRDFObserver.h        \
-        nsIRDFResourceFactory.h \
-        nsIRDFService.h         \
-        nsIRDFXMLDocument.h     \
-        nsIRDFXMLSource.h       \
+        rdf.h                           \
+	nsIRDFCompositeDataSource.h     \
+        nsIRDFContentSink.h             \
+	nsIRDFCursor.h                  \
+	nsIRDFDataSource.h              \
+        nsIRDFNode.h                    \
+	nsIRDFObserver.h                \
+        nsIRDFResourceFactory.h         \
+        nsIRDFService.h                 \
+        nsIRDFXMLDataSource.h           \
+        nsIRDFXMLSource.h               \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

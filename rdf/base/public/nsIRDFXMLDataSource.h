@@ -90,6 +90,20 @@ class nsIRDFXMLDataSource : public nsIRDFDataSource
 {
 public:
     /**
+     * Sets the RDF/XML stream to load either synchronously or
+     * asynchronously when nsIRDFDataSource::Init() is called.
+     * By default, the stream will load <em>asynchronously</em>.
+     */
+    NS_IMETHOD SetSynchronous(PRBool aIsSynchronous) = 0;
+
+    /**
+     * Sets the RDF/XML stream's read-only status. By default,
+     * the stream will be read/write if the URL on which
+     * nsIRDFDataSource::Init() is called is writable.
+     */
+    NS_IMETHOD SetReadOnly(PRBool aIsReadOnly) = 0;
+
+    /**
      * Notify the document that the load is beginning.
      */
     NS_IMETHOD BeginLoad(void) = 0;
@@ -163,6 +177,9 @@ public:
 
 };
 
+
+extern nsresult
+NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result);
 
 #endif // nsIRDFXMLDataSource_h__
 

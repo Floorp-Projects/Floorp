@@ -43,16 +43,16 @@
 #include "nsIParser.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
-#include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFService.h"
-#include "nsIRDFXMLDocument.h"
+#include "nsIRDFXMLDataSource.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
@@ -81,13 +81,13 @@ static NS_DEFINE_IID(kIHTMLStyleSheetIID,     NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,   NS_INAMESPACEMANAGER_IID);
 static NS_DEFINE_IID(kIParserIID,             NS_IPARSER_IID);
 static NS_DEFINE_IID(kIPresShellIID,          NS_IPRESSHELL_IID);
-static NS_DEFINE_IID(kIRDFDataBaseIID,        NS_IRDFDATABASE_IID);
+static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIRDFXMLDocumentIID,     NS_IRDFXMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -101,8 +101,8 @@ static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFStreamDataSourceCID,   NS_RDFSTREAMDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
@@ -120,7 +120,7 @@ rdf_HashPointer(const void* key)
 class RDFDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
                         public nsIRDFObserver,
-                        public nsIRDFXMLDocumentObserver
+                        public nsIRDFXMLDataSourceObserver
 {
 public:
     RDFDocumentImpl();
@@ -279,7 +279,7 @@ public:
     // nsIRDFDocument interface
     NS_IMETHOD Init(nsIRDFContentModelBuilder* aBuilder);
     NS_IMETHOD SetRootResource(nsIRDFResource* resource);
-    NS_IMETHOD GetDataBase(nsIRDFDataBase*& result);
+    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource*& result);
     NS_IMETHOD CreateChildren(nsIRDFContent* element);
     NS_IMETHOD AddTreeProperty(nsIRDFResource* resource);
     NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource);
@@ -297,15 +297,15 @@ public:
                           nsIRDFResource* predicate,
                           nsIRDFNode* object);
 
-    // nsIRDFXMLDocumentObserver interface
-    NS_IMETHOD OnBeginLoad(void);
-    NS_IMETHOD OnInterrupt(void);
-    NS_IMETHOD OnResume(void);
-    NS_IMETHOD OnEndLoad(void);
+    // nsIRDFXMLDataSourceObserver interface
+    NS_IMETHOD OnBeginLoad(nsIRDFXMLDataSource* aDataSource);
+    NS_IMETHOD OnInterrupt(nsIRDFXMLDataSource* aDataSource);
+    NS_IMETHOD OnResume(nsIRDFXMLDataSource* aDataSource);
+    NS_IMETHOD OnEndLoad(nsIRDFXMLDataSource* aDataSource);
 
-    NS_IMETHOD OnRootResourceFound(nsIRDFResource* aResource);
-    NS_IMETHOD OnCSSStyleSheetAdded(nsIURL* aStyleSheetURI);
-    NS_IMETHOD OnNamedDataSourceAdded(const char* aNamedDataSourceURI);
+    NS_IMETHOD OnRootResourceFound(nsIRDFXMLDataSource* aDataSource, nsIRDFResource* aResource);
+    NS_IMETHOD OnCSSStyleSheetAdded(nsIRDFXMLDataSource* aDataSource, nsIURL* aStyleSheetURI);
+    NS_IMETHOD OnNamedDataSourceAdded(nsIRDFXMLDataSource* aDataSource, const char* aNamedDataSourceURI);
 
     // Implementation methods
     nsresult StartLayout(void);
@@ -338,13 +338,13 @@ protected:
     nsVoidArray            mPresShells;
     nsINameSpaceManager*   mNameSpaceManager;
     nsIStyleSheet*         mAttrStyleSheet;
-    nsIRDFDataBase*        mDB;
+    nsIRDFCompositeDataSource*        mDB;
     nsIRDFService*         mRDFService;
     nsISupportsArray*      mTreeProperties;
     nsIRDFContentModelBuilder* mBuilder;
     PLHashTable*           mResources;
     nsIRDFDataSource*      mLocalDataSource;
-    nsIRDFDataSource*      mDocumentDataSource;
+    nsIRDFXMLDataSource*   mDocumentDataSource;
 };
 
 
@@ -480,11 +480,7 @@ RDFDocumentImpl::RDFDocumentImpl(void)
 RDFDocumentImpl::~RDFDocumentImpl()
 {
     if (mDocumentDataSource) {
-        nsIRDFXMLDocument* doc;
-        if (NS_SUCCEEDED(mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
-            doc->RemoveDocumentObserver(this);
-            NS_RELEASE(doc);
-        }
+        mDocumentDataSource->RemoveXMLStreamObserver(this);
         NS_RELEASE(mDocumentDataSource);
     }
     NS_IF_RELEASE(mLocalDataSource);
@@ -613,42 +609,46 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         return rv;
 
     // Now load the actual XML/RDF document data source.
-    if (NS_SUCCEEDED(rv = mRDFService->GetDataSource(uri, &mDocumentDataSource))) {
+    nsIRDFDataSource* ds;
+    if (NS_SUCCEEDED(rv = mRDFService->GetDataSource(uri, &ds))) {
+        if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLDataSourceIID, (void**) &mDocumentDataSource))) {
+            NS_RELEASE(ds);
+            return rv;
+        }
+
+        NS_RELEASE(ds);
+
         if (NS_FAILED(rv = mDB->AddDataSource(mDocumentDataSource)))
             return rv;
 
         // we found the data source already loaded locally. Load it's
         // style sheets and attempt to include any named data sources
         // that it references into this document.
-        nsIRDFXMLDocument* doc;
-        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
-            nsIURL** styleSheetURLs;
-            PRInt32 count;
-            if (NS_SUCCEEDED(rv = doc->GetCSSStyleSheetURLs(&styleSheetURLs, &count))) {
-                for (PRInt32 i = 0; i < count; ++i) {
-                    if (NS_FAILED(rv = LoadCSSStyleSheet(styleSheetURLs[i]))) {
-                        NS_ASSERTION(PR_FALSE, "couldn't load style sheet");
-                    }
+        nsIURL** styleSheetURLs;
+        PRInt32 count;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->GetCSSStyleSheetURLs(&styleSheetURLs, &count))) {
+            for (PRInt32 i = 0; i < count; ++i) {
+                if (NS_FAILED(rv = LoadCSSStyleSheet(styleSheetURLs[i]))) {
+                    NS_ASSERTION(PR_FALSE, "couldn't load style sheet");
                 }
             }
+        }
 
-            const char* const* namedDataSourceURIs;
-            if (NS_SUCCEEDED(rv = doc->GetNamedDataSourceURIs(&namedDataSourceURIs, &count))) {
-                for (PRInt32 i = 0; i < count; ++i) {
-                    if (NS_FAILED(rv = AddNamedDataSource(namedDataSourceURIs[i]))) {
+        const char* const* namedDataSourceURIs;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->GetNamedDataSourceURIs(&namedDataSourceURIs, &count))) {
+            for (PRInt32 i = 0; i < count; ++i) {
+                if (NS_FAILED(rv = AddNamedDataSource(namedDataSourceURIs[i]))) {
 #ifdef DEBUG
-                        printf("error adding named data source %s\n", namedDataSourceURIs[i]);
+                    printf("error adding named data source %s\n", namedDataSourceURIs[i]);
 #endif
-                    }
                 }
             }
+        }
 
-            nsIRDFResource* root;
-            if (NS_SUCCEEDED(rv = doc->GetRootResource(&root))) {
-                SetRootResource(root);
-                StartLayout();
-            }
-            NS_RELEASE(doc);
+        nsIRDFResource* root;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->GetRootResource(&root))) {
+            SetRootResource(root);
+            StartLayout();
         }
 
         // XXX Allright, this is an atrocious hack. Basically, we
@@ -684,9 +684,9 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
                 return rv;
         }
     }
-    else if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
+    else if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kRDFXMLDataSourceCID,
                                                             nsnull,
-                                                            kIRDFDataSourceIID,
+                                                            kIRDFXMLDataSourceIID,
                                                             (void**) &mDocumentDataSource))) {
         if (NS_FAILED(rv = mDB->AddDataSource(mDocumentDataSource)))
             return rv;
@@ -695,12 +695,12 @@ RDFDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         // will automagically register itself as a named data source,
         // so if subsequent docs ask for it, they'll get the real
         // deal. In the meantime, add us as an
-        // nsIRDFXMLDocumentObserver so that we'll be notified when we
+        // nsIRDFXMLDataSourceObserver so that we'll be notified when we
         // need to load style sheets, etc.
 
-        nsIRDFXMLDocument* doc;
-        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDocumentIID, (void**) &doc))) {
-            doc->AddDocumentObserver(this);
+        nsIRDFXMLDataSource* doc;
+        if (NS_SUCCEEDED(rv = mDocumentDataSource->QueryInterface(kIRDFXMLDataSourceIID, (void**) &doc))) {
+            doc->AddXMLStreamObserver(this);
             NS_RELEASE(doc);
         }
 
@@ -1484,9 +1484,9 @@ RDFDocumentImpl::Init(nsIRDFContentModelBuilder* aBuilder)
                                       nsnull)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFDataBaseCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFCompositeDataSourceCID,
                                                     nsnull,
-                                                    kIRDFDataBaseIID,
+                                                    kIRDFCompositeDataSourceIID,
                                                     (void**) &mDB)))
         return rv;
 
@@ -1517,7 +1517,7 @@ RDFDocumentImpl::SetRootResource(nsIRDFResource* aResource)
 }
 
 NS_IMETHODIMP
-RDFDocumentImpl::GetDataBase(nsIRDFDataBase*& result)
+RDFDocumentImpl::GetDataBase(nsIRDFCompositeDataSource*& result)
 {
     NS_PRECONDITION(mDB != nsnull, "not initialized");
     if (! mDB)
@@ -1796,17 +1796,17 @@ RDFDocumentImpl::OnUnassert(nsIRDFResource* subject,
 
 
 ////////////////////////////////////////////////////////////////////////
-// nsIRDFXMLDocumentObserver interface
+// nsIRDFXMLDataSourceObserver interface
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnBeginLoad(void)
+RDFDocumentImpl::OnBeginLoad(nsIRDFXMLDataSource* aDataSource)
 {
     return BeginLoad();
 }
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnInterrupt(void)
+RDFDocumentImpl::OnInterrupt(nsIRDFXMLDataSource* aDataSource)
 {
     // flow any content that we have up until now.
     return NS_OK;
@@ -1814,14 +1814,14 @@ RDFDocumentImpl::OnInterrupt(void)
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnResume(void)
+RDFDocumentImpl::OnResume(nsIRDFXMLDataSource* aDataSource)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnEndLoad(void)
+RDFDocumentImpl::OnEndLoad(nsIRDFXMLDataSource* aDataSource)
 {
     return EndLoad();
 }
@@ -1829,7 +1829,7 @@ RDFDocumentImpl::OnEndLoad(void)
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnRootResourceFound(nsIRDFResource* aResource)
+RDFDocumentImpl::OnRootResourceFound(nsIRDFXMLDataSource* aDataSource, nsIRDFResource* aResource)
 {
     nsresult rv;
     if (NS_SUCCEEDED(rv = SetRootResource(aResource))) {
@@ -1840,13 +1840,13 @@ RDFDocumentImpl::OnRootResourceFound(nsIRDFResource* aResource)
 
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnCSSStyleSheetAdded(nsIURL* aStyleSheetURL)
+RDFDocumentImpl::OnCSSStyleSheetAdded(nsIRDFXMLDataSource* aDataSource, nsIURL* aStyleSheetURL)
 {
     return LoadCSSStyleSheet(aStyleSheetURL);
 }
 
 NS_IMETHODIMP
-RDFDocumentImpl::OnNamedDataSourceAdded(const char* aNamedDataSourceURI)
+RDFDocumentImpl::OnNamedDataSourceAdded(nsIRDFXMLDataSource* aDataSource, const char* aNamedDataSourceURI)
 {
     return AddNamedDataSource(aNamedDataSourceURI);
 }
