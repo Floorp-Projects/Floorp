@@ -1252,10 +1252,13 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
     nsCOMPtr<nsIDocument> document;
     aContent->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(document));
-    nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-    container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
-    nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
-    (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
+    if (container) {
+      nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+      container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
+      nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
+      if (inlineCSS)
+        (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
+    }
   }
 
   // Null out our mCurrentStyleRoot.

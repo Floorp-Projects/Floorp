@@ -1043,6 +1043,9 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     rv = shell->GetDocument(getter_AddRefs(document));
     if (NS_FAILED(rv)) return rv;
 
+    if (! document)
+      return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsIScriptGlobalObject> globalScript;
     rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
     if (NS_FAILED(rv)) return rv;
@@ -1222,12 +1225,10 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
   }
   else 
   {
-    nsIDocument* doc = nsnull;
-    if (NS_SUCCEEDED(mContent->GetDocument(doc))) 
-    {
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    if (doc)
       doc->GetBaseURL(aURL);
-      NS_RELEASE(doc);
-    }
     else
       return NS_ERROR_FAILURE;
   }

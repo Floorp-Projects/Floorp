@@ -633,6 +633,11 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
 
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
+
+  // XXX document may be null if we're in the midst of paint suppression
+  if (!document)
+    return NS_OK;
+
   nsCOMPtr<nsIBindingManager> bindingManager;
   document->GetBindingManager(getter_AddRefs(bindingManager));
   
@@ -730,6 +735,11 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
+
+  // XXX doc will be null if we're in the midst of paint suppression.
+  if (! document)
+    return NS_OK;
+
   nsCOMPtr<nsIBindingManager> bindingManager;
   document->GetBindingManager(getter_AddRefs(bindingManager));
   
@@ -791,9 +801,11 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
     // The second line of defense is the binding manager's document table.
     nsCOMPtr<nsIDocument> boundDocument;
     aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    bindingManager->GetXBLDocumentInfo(aURLStr, aResult);
+    if (boundDocument) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->GetXBLDocumentInfo(aURLStr, aResult);
+    }
   }
   return NS_OK;
 }

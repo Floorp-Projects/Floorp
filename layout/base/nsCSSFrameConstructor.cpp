@@ -838,12 +838,21 @@ struct ChildIterator
   PRUint32 mLength;
   nsCOMPtr<nsIDOMNodeList> mNodes;
 
-  ChildIterator(nsIContent* aContent)
+  ChildIterator(nsIContent* aContent, nsIDocument* aDocument)
     :mContent(aContent), mIndex(0), mLength(0), mNodes(nsnull)
   {
+    NS_PRECONDITION(aContent != nsnull, "no content");
+    NS_PRECONDITION(aDocument != nsnull, "no document");
+
+    aDocument->GetBindingManager(getter_AddRefs(mBindingManager));
+
+#ifdef DEBUG
+    // Verify that the frame ctor's document is the same as the
+    // content element's document.
     nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(*getter_AddRefs(doc));
-    doc->GetBindingManager(getter_AddRefs(mBindingManager));
+    mContent->GetDocument(*getter_AddRefs(doc));
+    NS_ASSERTION(doc.get() == aDocument, "content doc != frame ctor doc");
+#endif
 
     // Retrieve the anonymous content that we should build.
     mBindingManager->GetXBLChildNodesFor(mContent, getter_AddRefs(mNodes));
@@ -1557,9 +1566,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         nsIFrame*     containerFrame;
         nsFrameItems  childFrames;
 
-        nsCOMPtr<nsIDocument>  document;
-        aContent->GetDocument(*getter_AddRefs(document));
-
         if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
           NS_NewBlockFrame(aPresShell, &containerFrame);
         } else {
@@ -1589,7 +1595,7 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
 
           // Create a frame
           nsresult result;
-          result = CreateGeneratedFrameFor(aPresContext, document, containerFrame,
+          result = CreateGeneratedFrameFor(aPresContext, mDocument, containerFrame,
                                            aContent, textStyleContext,
                                            styleContent, contentIndex, &frame);
           if (NS_SUCCEEDED(result) && frame) {
@@ -3112,7 +3118,7 @@ nsCSSFrameConstructor::TableProcessChildren(nsIPresShell*            aPresShell,
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
 
-  ChildIterator iterator(aContent);
+  ChildIterator iterator(aContent, mDocument);
   while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
     iterator.NextChild(getter_AddRefs(childContent));
@@ -3435,8 +3441,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   // build a scrollframe
   if (!isPaginated && isScrollable) {
     nsIFrame* newScrollFrame = nsnull;
-    nsCOMPtr<nsIDocument> document;
-    aDocElement->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIStyleContext> newContext;
 
     BeginBuildingScrollFrame( aPresShell, aPresContext,
@@ -3445,7 +3449,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                               styleContext,
                               aParentFrame,
                               nsLayoutAtoms::scrolledContentPseudo,
-                              document,
+                              mDocument,
                               PR_FALSE,
                               scrollFrame,
                               newContext,
@@ -3666,17 +3670,13 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 */    
 
   // Set up our style rule observer.
-  nsCOMPtr<nsIDocument> doc;
-  aDocElement->GetDocument(*getter_AddRefs(doc));
-  if (doc) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
-    if (bindingManager) {
-      nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier(do_QueryInterface(bindingManager));
-      nsCOMPtr<nsIStyleSet> set;
-      aPresShell->GetStyleSet(getter_AddRefs(set));
-      set->SetStyleRuleSupplier(ruleSupplier);
-    }
+  nsCOMPtr<nsIBindingManager> bindingManager;
+  mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+  if (bindingManager) {
+    nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier(do_QueryInterface(bindingManager));
+    nsCOMPtr<nsIStyleSet> set;
+    aPresShell->GetStyleSet(getter_AddRefs(set));
+    set->SetStyleRuleSupplier(ruleSupplier);
   }
   
   // --------- BUILD VIEWPORT -----------
@@ -3839,8 +3839,6 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
 
       nsIFrame* newScrollableFrame = nsnull;
-      nsCOMPtr<nsIDocument> document;
-      aDocElement->GetDocument(*getter_AddRefs(document));
 
       BeginBuildingScrollFrame( aPresShell,
                                 aPresContext,
@@ -3849,7 +3847,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                 styleContext,
                                 viewportFrame,
                                 rootPseudo,
-                                document,
+                                mDocument,
                                 PR_TRUE,
                                 newFrame,
                                 rootPseudoStyle,
@@ -5232,13 +5230,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
   }
 #endif
-  // get the document
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = aParent->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc)
-    return rv;
 
-  return CreateAnonymousFrames(aPresShell, aPresContext, aState, aParent, doc, aNewFrame, aChildItems);
+  return CreateAnonymousFrames(aPresShell, aPresContext, aState, aParent, mDocument, aNewFrame, aChildItems);
 }
 
 // after the node has been constructed and initialized create any
@@ -5886,10 +5879,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // Process the child content if requested
     nsFrameItems childItems;
     if (processChildren || processAnonymousChildren) {
-      nsCOMPtr<nsIDocument> doc;
-      aContent->GetDocument(*getter_AddRefs(doc));
       nsCOMPtr<nsIBindingManager> bindingManager;
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       if (processChildren) {
         bindingManager->ShouldBuildChildFrames(aContent, &processChildren);
         if (processChildren)
@@ -6108,8 +6099,7 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                                                nsIFrame*                aScrollPortFrame)                                                                                                                                          
 {
     nsIFrame *scrollFrame;
-    nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
+
     nsCOMPtr<nsIStyleContext> scrolledContentStyle;
 
     
@@ -6119,7 +6109,7 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                      aContentStyle,
                      aParentFrame,
                      nsLayoutAtoms::scrolledContentPseudo,
-                     document,
+                     mDocument,
                      PR_FALSE,
                      aNewFrame,
                      scrolledContentStyle,
@@ -7700,23 +7690,20 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
 
 static nsIFrame*
 FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
-                             nsIContent* aContainer,
-                             nsIContent* aChild)
+                             nsIDocument*  aDocument,
+                             nsIContent*   aContainer,
+                             nsIContent*   aChild)
 {
+  NS_PRECONDITION(aDocument, "null document from content element in FindPreviousAnonymousSibling");
   nsIFrame* prevSibling = nsnull;
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
   
-  nsCOMPtr<nsIDocument> doc;
-  aContainer->GetDocument(*getter_AddRefs(doc));
-  NS_ASSERTION(doc, "null document from content element in FindPreviousAnonymousSibling");
-  if (doc) {
-    nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(doc));
-    NS_ASSERTION(xblDoc, "null xblDoc for content element in FindPreviousAnonymousSibling");
-    if (xblDoc) {
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
-      xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
-    }
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(aDocument));
+  NS_ASSERTION(xblDoc, "null xblDoc for content element in FindPreviousAnonymousSibling");
+  if (xblDoc) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
+    xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
   }
   if (nodeList) {
     PRUint32 ctr,listLength;
@@ -7769,23 +7756,21 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
 
 static nsIFrame*
 FindNextAnonymousSibling(nsIPresShell* aPresShell,
-                         nsIContent* aContainer,
-                         nsIContent* aChild)
+                         nsIDocument*  aDocument,
+                         nsIContent*   aContainer,
+                         nsIContent*   aChild)
 {
+  NS_PRECONDITION(aDocument, "null document from content element in FindNextAnonymousSibling");
+
   nsIFrame* nextSibling = nsnull;
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
   
-  nsCOMPtr<nsIDocument> doc;
-  aContainer->GetDocument(*getter_AddRefs(doc));
-  NS_ASSERTION(doc, "null document from content element in FindNextAnonymousSibling");
-  if (doc) {
-    nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(doc));
-    NS_ASSERTION(xblDoc, "null xblDoc for content element in FindNextAnonymousSibling");
-    if (xblDoc) {
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
-      xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
-    }
+  nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(aDocument));
+  NS_ASSERTION(xblDoc, "null xblDoc for content element in FindNextAnonymousSibling");
+  if (xblDoc) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContainer));
+    xblDoc->GetAnonymousNodes(elt, getter_AddRefs(nodeList));
   }
   if (nodeList) {
     PRUint32 ctr,listLength;
@@ -7945,17 +7930,12 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (aContainer) {
-    nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+
+    nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
-    aContainer->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
-    }
-    else
-      aContainer->GetTag(*getter_AddRefs(tag));
+    bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
@@ -8403,17 +8383,12 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (aContainer) {
-    nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+
+    nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
-    aContainer->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
-    }
-    else
-      aContainer->GetTag(*getter_AddRefs(tag));
+    bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
@@ -8570,7 +8545,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
       // Find the frame that precedes the insertion point.
       nsIFrame* prevSibling = (aIndexInContainer == -1) ? 
-                               FindPreviousAnonymousSibling(shell, aContainer, aChild) :
+                               FindPreviousAnonymousSibling(shell, mDocument, aContainer, aChild) :
                                FindPreviousSibling(shell, aContainer, aIndexInContainer);
 
       nsIFrame* nextSibling = nsnull;
@@ -8579,7 +8554,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       // If there is no previous sibling, then find the frame that follows
       if (nsnull == prevSibling) {
         nextSibling = (aIndexInContainer == -1) ? 
-                      FindNextAnonymousSibling(shell, aContainer, aChild) :
+                      FindNextAnonymousSibling(shell, mDocument, aContainer, aChild) :
                       FindNextSibling(shell, aContainer, aIndexInContainer);
       }
 
@@ -9127,17 +9102,12 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (aContainer) {
-    nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+
+    nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
-    aContainer->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
-    }
-    else
-      aContainer->GetTag(*getter_AddRefs(tag));
+    bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
@@ -9975,18 +9945,12 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // content from being removed and re-inserted (which is what would
   // happen otherwise).
   if (!primaryFrame && !reframe) {
-    nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(*getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      doc->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
 
-      PRInt32 namespaceID;
-      bindingManager->ResolveTag(aContent, &namespaceID, getter_AddRefs(tag));
-    }
-    else
-      aContent->GetTag(*getter_AddRefs(tag));
+    PRInt32 namespaceID;
+    nsCOMPtr<nsIAtom> tag;
+    bindingManager->ResolveTag(aContent, &namespaceID, getter_AddRefs(tag));
 
     if (tag && (tag.get() == nsXULAtoms::treechildren ||
       (tag.get() == nsXULAtoms::treeitem && aAttribute != nsXULAtoms::open) ||
@@ -10303,10 +10267,8 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   NS_RELEASE(domData);
   
   // Set aContent as the parent content and set the document object
-  nsCOMPtr<nsIDocument> document;
-  aContent->GetDocument(*getter_AddRefs(document));
   altTextContent->SetParent(aContent);
-  altTextContent->SetDocument(document, PR_TRUE, PR_TRUE);
+  altTextContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
   // Create either an inline frame, block frame, or area frame
   nsIFrame* containerFrame;
@@ -11520,7 +11482,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     nsPseudoFrames priorPseudoFrames; 
     aState.mPseudoFrames.Reset(&priorPseudoFrames);
 
-    ChildIterator iterator(aContent);
+    ChildIterator iterator(aContent, mDocument);
     while (iterator.HasMoreChildren()) {
       nsCOMPtr<nsIContent> childContent;
       iterator.NextChild(getter_AddRefs(childContent));
@@ -12677,7 +12639,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
   }
 
   // Iterate the child content objects and construct frames
-  ChildIterator iterator(aContent);
+  ChildIterator iterator(aContent, mDocument);
   while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
     iterator.NextChild(getter_AddRefs(childContent));
@@ -12974,7 +12936,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
 
   // Iterate the child content objects and construct frames
   PRBool allKidsInline = PR_TRUE;
-  ChildIterator iterator(aContent);
+  ChildIterator iterator(aContent, mDocument);
   while (iterator.HasMoreChildren()) {
     nsCOMPtr<nsIContent> childContent;
     iterator.NextChild(getter_AddRefs(childContent));
