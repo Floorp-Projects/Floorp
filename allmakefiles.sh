@@ -107,11 +107,13 @@ editor/ui/Makefile
 editor/ui/composer/Makefile
 editor/ui/composer/content/Makefile
 editor/ui/composer/skin/Makefile
+editor/ui/composer/skin/images/Makefile
 editor/ui/composer/locale/Makefile
 editor/ui/composer/locale/en-US/Makefile
 editor/ui/dialogs/Makefile
 editor/ui/dialogs/content/Makefile
 editor/ui/dialogs/skin/Makefile
+editor/ui/dialogs/skin/images/Makefile
 editor/ui/dialogs/locale/Makefile
 editor/ui/dialogs/locale/en-US/Makefile
 expat/Makefile
