@@ -91,6 +91,12 @@ class NS_COM nsSharedBufferList
                 mutable_this->set_refcount( get_refcount()-1 );
               }
 
+            PRBool
+            IsSingleAllocationWithBuffer() const
+              {
+                return (mFlags & kIsSingleAllocationWithBuffer);
+              }
+
             Buffer* mPrev;
             Buffer* mNext;
 

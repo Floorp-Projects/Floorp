@@ -33,6 +33,11 @@
 #include "nsSharedBufferList.h"
 #endif
 
+/*
+ * nsFreeProc : A pointer to the free function used by nsSlidingString
+ */
+typedef void nsFreeProc(void *ptr, void *clientdata);
+
 
   /**
    * Maintains the sequence from the prev-most referenced buffer to the last buffer.
@@ -54,7 +59,10 @@ class NS_COM nsSlidingSharedBufferList
     : public nsSharedBufferList
   {
     public:
-      nsSlidingSharedBufferList( Buffer* aBuffer ) : nsSharedBufferList(aBuffer), mRefCount(0) { }
+      nsSlidingSharedBufferList( Buffer* aBuffer )
+          : nsSharedBufferList(aBuffer), mRefCount(0), mFreeProc(nsnull), mClientData(nsnull) { }
+      nsSlidingSharedBufferList( Buffer* aBuffer, nsFreeProc *aFreeproc, void *aClientData = NULL )
+          : nsSharedBufferList(aBuffer), mRefCount(0), mFreeProc(aFreeproc), mClientData(aClientData) { }
 
       void  AcquireReference()    { ++mRefCount; }
       void  ReleaseReference()    { if ( !--mRefCount ) delete this; }
@@ -63,6 +71,8 @@ class NS_COM nsSlidingSharedBufferList
 
     private:
       PRUint32 mRefCount;
+      nsFreeProc *mFreeProc;
+      void *mClientData;
   };
 
 
@@ -168,7 +178,12 @@ class NS_COM nsSlidingString
     public:
       nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
         // ...created by consuming ownership of a buffer ... |aStorageStart| must point to something
-        //  that it will be OK for the slidking string to call |nsMemory::Free| on
+        //  that it will be OK for the sliding string to call |nsMemory::Free| on
+
+      nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd,
+                       nsFreeProc *aFreeProc, void *aClientData = NULL);
+        // ...created by consuming ownership of a buffer ... |aStorageStart| must point to something
+        //  that it will be OK for the sliding string to call (*aFreeProc)(ptr, aClientData) on
 
       virtual PRUint32 Length() const { return mLength; }
 
