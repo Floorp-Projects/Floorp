@@ -21,7 +21,7 @@
 
 #include "ntypes.h"
 
-typedef enum gh_SortColumn 
+typedef enum _gh_SortColumn 
 {
    eGH_NoSort = -1,
    eGH_NameSort,
@@ -50,7 +50,7 @@ typedef struct _gh_HistEntryData
     char *  pszName;
 }gh_HistEntryData;
 
-typedef enum gh_FilterOp 
+typedef enum _gh_FilterOp 
 {
    eGH_FOEquals,
    eGH_FOEqualsNot,
@@ -64,7 +64,7 @@ typedef enum gh_FilterOp
    eGH_FOHasNot
 }gh_FilterOp;
 
-typedef enum gh_FilterLogOp
+typedef enum _gh_FilterLogOp
 {
    eGH_FLOAnd,
    eGH_FLOOr
@@ -72,8 +72,8 @@ typedef enum gh_FilterLogOp
 
 typedef struct _gh_FilterCondition
 {
-   enum gh_SortColumn enCol;
-   enum gh_FilterOp   enOp;
+   gh_SortColumn enCol;
+   gh_FilterOp   enOp;
    
    union
    {
@@ -157,7 +157,7 @@ extern int NET_DisplayGlobalHistoryInfoAsHTML( MWContext *context, URL_Struct *U
 // Context/Handle based functions to retrieve a pseudo cursor on the
 // Global History list (using a specified sort/index).
 */
-extern GHHANDLE        GH_GetContext( enum gh_SortColumn   enGHSort, 
+extern GHHANDLE        GH_GetContext( gh_SortColumn        enGHSort, 
                                       gh_Filter *          pFilter, 
                                       GHISTORY_NOTIFYPROC  pfNotifyProc,
                                       GHURHANDLE           hUR,                            
