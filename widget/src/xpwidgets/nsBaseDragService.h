@@ -20,6 +20,7 @@
 #define nsBaseDragService_h__
 
 #include "nsIDragService.h"
+#include "nsIDragSession.h"
 #include "nsITransferable.h"
 #include "nsSize.h"
 #include "nsCOMPtr.h"
@@ -28,7 +29,7 @@
  * XP DragService wrapper base class
  */
 
-class nsBaseDragService : public nsIDragService
+class nsBaseDragService : public nsIDragService, public nsIDragSession
 {
 
 public:
@@ -39,6 +40,13 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsIDragService
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
+  NS_IMETHOD StartDragSession ();
+  NS_IMETHOD EndDragSession ();
+
+  // nsIDragSession
   NS_IMETHOD SetCanDrop (PRBool aCanDrop); 
   NS_IMETHOD GetCanDrop (PRBool * aCanDrop); 
 
@@ -48,15 +56,16 @@ public:
   NS_IMETHOD SetTargetSize (nsSize aDragTargetSize); 
   NS_IMETHOD GetTargetSize (nsSize * aDragTargetSize); 
 
-  NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType);
   NS_IMETHOD GetData (nsITransferable * aTransferable);
+  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
 
 protected:
 
-  nsCOMPtr<nsITransferable> mTransferable;
-  PRBool            mCanDrop;
-  nsSize            mTargetSize;
-  PRUint32          mDragAction;
+  nsCOMPtr<nsISupportsArray> mTransArray;
+  PRBool             mCanDrop;
+  PRBool             mDoingDrag;
+  nsSize             mTargetSize;
+  PRUint32           mDragAction;
 };
 
 #endif // nsBaseDragService_h__

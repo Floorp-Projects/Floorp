@@ -22,10 +22,10 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsITransferable.h"
+#include "nsISupportsArray.h"
 #include "nsSize.h"
+#include "nsIRegion.h"
 
-
-static NS_DEFINE_IID(kIDragServiceIID,   NS_IDRAGSERVICE_IID);
 
 NS_IMPL_ADDREF(nsBaseDragService)
 NS_IMPL_RELEASE(nsBaseDragService)
@@ -36,11 +36,15 @@ NS_IMPL_RELEASE(nsBaseDragService)
 //
 //-------------------------------------------------------------------------
 nsBaseDragService::nsBaseDragService() :
-  mTargetSize(0,0)
+  mTargetSize(0,0), mCanDrop(PR_FALSE), mDragAction(DRAGDROP_ACTION_NONE),
+  mDoingDrag(PR_FALSE)
 {
   NS_INIT_REFCNT();
-  mCanDrop    = PR_FALSE;
-  mDragAction = DRAGDROP_ACTION_NONE;
+  nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
+  if ( !NS_SUCCEEDED(result) ) {
+    //what do we do? we can't throw!
+    ;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -60,15 +64,18 @@ nsBaseDragService::~nsBaseDragService()
 */ 
 nsresult nsBaseDragService::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-
-  if (NULL == aInstancePtr) {
+  if (NULL == aInstancePtr)
     return NS_ERROR_NULL_POINTER;
-  }
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(kIDragServiceIID)) {
-    *aInstancePtr = (void*) ((nsIDragService*)this);
+  if ( aIID.Equals(nsIDragService::GetIID()) ) {
+    *aInstancePtr = NS_STATIC_CAST(nsIDragService*,this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(nsIDragSession::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIDragSession*,this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -120,14 +127,63 @@ NS_IMETHODIMP nsBaseDragService::GetTargetSize (nsSize * aDragTargetSize)
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType)
-
+NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable)
 {
   return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::GetData (nsITransferable * aTransferable)
+NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
 {
   return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType)
+{
+  return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType)
+{
+  return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::GetCurrentSession (nsIDragSession ** aSession)
+{
+  if ( !aSession )
+    return NS_ERROR_INVALID_ARG;
+  
+  // "this" also implements a drag session, so say we are one but only if there
+  // is currently a drag going on. 
+  if ( mDoingDrag ) {
+    NS_ADDREF_THIS();      // addRef because we're a "getter"
+    *aSession = this;
+  }
+  else
+    *aSession = nsnull;
+    
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::StartDragSession ()
+{
+  if (mDoingDrag) {
+    return NS_ERROR_FAILURE;
+  }
+  mDoingDrag = PR_TRUE;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::EndDragSession ()
+{
+  if (!mDoingDrag) {
+    return NS_ERROR_FAILURE;
+  }
+  mDoingDrag = PR_FALSE;
+  return NS_OK;
 }
