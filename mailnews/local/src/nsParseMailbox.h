@@ -31,6 +31,7 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsTime.h"
 
 
 #include "nsIMsgFilterList.h"
@@ -203,6 +204,7 @@ protected:
 	PRBool			m_parsingDone;
 	PRBool			m_ignoreNonMailFolder;
 	PRBool			m_isRealMailFolder;
+	nsTime			m_startTime;
 private:
 		// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url

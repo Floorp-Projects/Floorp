@@ -42,8 +42,12 @@
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
 
+#include "nsIPref.h"
+
+
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -68,11 +72,18 @@ NS_IMETHODIMP nsMsgMailboxParser::OnDataAvailable(nsIChannel * /* aChannel */, n
 
 NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, nsISupports *ctxt)
 {
+	nsTime currentTime;
+	m_startTime = currentTime;
+
+
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
 	nsresult rv = NS_OK;
+
+
 	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
+
 	nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(ctxt);
 
 	if (NS_SUCCEEDED(rv) && runningUrl)
@@ -157,10 +168,31 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 	}
 #endif
 
+
 	// be sure to clear any status text and progress info..
 	m_graph_progress_received = 0;
 	UpdateProgressPercent();
 	UpdateStatusText(LOCAL_STATUS_DOCUMENT_DONE);
+
+
+	//For timing
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if(NS_SUCCEEDED(rv))
+	{
+		PRBool showPerf;
+		rv = prefs->GetBoolPref("mail.showMessengerPerformance", &showPerf);
+		if(NS_SUCCEEDED(rv) && showPerf)
+		{
+			nsTime currentTime;
+			nsInt64 difference = currentTime - m_startTime;
+			nsInt64 seconds(1000000);
+			nsInt64 timeInSeconds = difference / seconds;
+			PRUint32 timeInSecondsUint32 = (PRUint32)timeInSeconds;
+
+			printf("Time to parse %s= %d seconds\n", m_mailboxName, timeInSecondsUint32);
+		}
+	}
 	return NS_OK;
 
 }
