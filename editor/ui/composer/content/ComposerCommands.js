@@ -299,6 +299,7 @@ function goUpdateCommandState(command)
       case "cmd_increaseFont":
       case "cmd_decreaseFont":
       case "cmd_removeStyles":
+      case "cmd_smiley":
         break;
 
       default: dump("no update for command: " +command+"\n");
