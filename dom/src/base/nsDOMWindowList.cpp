@@ -146,7 +146,7 @@ nsDOMWindowList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aRetur
       }
     }
 
-    mDocShellNode->FindChildWithName(nsPromiseFlatString(aName),
+    mDocShellNode->FindChildWithName(nsPromiseFlatString(aName).get(),
                                      PR_FALSE, PR_FALSE,
                                      nsnull, getter_AddRefs(item));
 
