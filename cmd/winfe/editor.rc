@@ -564,8 +564,8 @@ BEGIN
     IDS_POPUP_MAKE_IMAGE_BACKGROUND "&Use Image as Page Background"
     ID_MAKE_IMAGE_BACKGROUND 
                             "Use the selected image as the background image of the page"
-    IDS_EDIT_CUT            "Cu&t"
-    IDS_EDIT_COPY           "&Copy"
+    IDS_EDIT_CUT            "Cu&t\tCtrl+X"
+    IDS_EDIT_COPY           "&Copy\tCtrl+C"
     IDS_EDIT_PASTE          "&Paste\tCtrl+V"
     IDS_EDIT_PASTE_LINK     "&Paste Link"
     IDS_EDIT_PASTE_TEXT     "Paste Te&xt"

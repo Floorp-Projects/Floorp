@@ -1392,6 +1392,13 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     BOOL bNoLinks = FALSE;
     BOOL bMayHaveManyLinks = FALSE;
     BOOL bLinkProps = FALSE;
+    
+    // In Embeded Editor (Ender), first item is Undo/Redo
+    if( GetEmbedded() )
+    {
+        cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_UNDO, szLoadString(IDS_UNDO));
+	    cmPopup.AppendMenu(MF_SEPARATOR);
+    }
 
     if( !bSelectTableOrCell )
     {
