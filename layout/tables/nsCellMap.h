@@ -19,7 +19,7 @@
 #define nsCellMap_h__
 
 #include "nscore.h"
-#include "CellData.h"
+#include "celldata.h"
 
 class nsVoidArray;
 class nsTableColFrame;
