@@ -123,6 +123,16 @@ pref("browser.PICS.reenable_for_this_session", false);
 pref("browser.PICS.service.http___home_netscape_com_default_rating.service_enabled", true);
 pref("browser.PICS.service.http___home_netscape_com_default_rating.s", 0);
 
+
+// Smart Browsing prefs
+pref("browser.related.enabled", true);
+pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
+pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
+pref("browser.related.detailsProvider", "http://cgi.netscape.com/cgi-bin/rlcgi.cgi?URL=");
+pref("browser.related.disabledForDomains", "");
+pref("browser.goBrowsing.enabled", true);
+
+
 // The NavCenter preferences
 localDefPref("browser.navcenter.dockstyle", 1); // 1 = left, 2 = right, 3 = top, 4 = bottom
 localDefPref("browser.navcenter.docked.tree.visible", false);
