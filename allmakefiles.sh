@@ -305,6 +305,9 @@ layout/xul/Makefile
 layout/xul/base/Makefile
 layout/xul/base/public/Makefile
 layout/xul/base/src/Makefile
+layout/xul/base/src/outliner/Makefile
+layout/xul/base/src/outliner/src/Makefile
+layout/xul/base/src/outliner/public/Makefile
 layout/xul/content/Makefile
 layout/xul/content/src/Makefile
 "
