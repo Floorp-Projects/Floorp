@@ -32,4 +32,4 @@ SRCS=				\
 	SearchDirectoryDialog.java	\
 	$(NULL)
 
-include ../../..rules.mk
+include ../../../rules.mk
