@@ -46,33 +46,6 @@
           element.setAttribute( "value", element.getAttribute( "valueWithImages" ) );
         }      
 
-      if (top.window.navigator.platform == "Macintosh") {
-        var advancedChildren = document.getElementById("advancedChildren");
-        var mousewheelItem = document.getElementById("mousewheelItem");
-        advancedChildren.removeChild(mousewheelItem);
-      }
-
-      // Test for presence of "winhooks" component.
-      var showWinhooks = false;
-      try {
-          var winhooks = Components.classes["component://mozilla/winhooks"].getService();
-          if ( winhooks ) {
-              showWinhooks = true;
-          }
-      }
-      catch(e) {
-      }
-      if ( !showWinhooks ) {
-          // Hide this tree element.
-          try {
-            var cell = document.getElementById( "winhooks" );
-            if ( cell ) {
-                cell.parentNode.removeChild( cell );
-            }
-          }
-          catch(e) {
-          }
-      }
     }
   
   ]]>
