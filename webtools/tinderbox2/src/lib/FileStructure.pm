@@ -6,8 +6,8 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.4 $ 
-# $Date: 2000/09/06 01:22:47 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/18 19:26:22 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -41,16 +41,6 @@
 package FileStructure;
 
 $VERSION = '#tinder_version#';
-
-
-
-# here is an idea for future use.  Currently EACH database has an
-# atomic update and EACH html file is also updated the same way.  If
-# we were careful with the choice of directories we could write our
-# databases and HTML files into directories which were below a common
-# root then update the root atomically.  Only one atomic update per
-# run of tinderbox.  This would save a bunch of disk operations but
-# reduce flexibility.
 
 
 
@@ -104,6 +94,9 @@ $TINDERBOX_DIR = ($TinderConfig::TINDERBOX_DIR ||
 
 $GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
 		      "index.html");
+
+# the default page for a tree
+$DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
 
 # The lookup for where different file/directories are stored on the
 # filesystem.  Local system administrator may need to put different
@@ -162,8 +155,16 @@ sub get_filename {
      'index'=> "$tree_dir/index.html",
      
      # access to the administration page
+
+     # this version lets you have each tree have a different set of
+     # administrators.
      
      'passwd' => "$tree_dir/h/passwd.DBdat",
+     
+     # this version lets you have one set of adminstrators for all
+     # trees.
+     
+     #'passwd' => "$TINDERBOX_DIR/passwd.DBdat",
 
      # there are automated bots who need the header data, they extract
      # it from this file.
@@ -177,7 +178,12 @@ sub get_filename {
   ($out) ||
     die("error in function FileStructure::all_files: ".
         "file: $file does not exist\n");    
-  
+
+  # Restrict the characters allowed in a file name to a known safe
+  # set.
+
+  $out = main::extract_filename_chars($out);
+
   return $out;
 }
 
