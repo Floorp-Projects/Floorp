@@ -267,7 +267,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -4930,7 +4930,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -7350,38 +7350,38 @@
 		F5EA337902EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsAppShellCocoa.mm;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsAppShellCocoa.mm;
-			refType = 0;
+			path = ../widget/src/cocoa/nsAppShellCocoa.mm;
+			refType = 2;
 		};
 		F5EA337A02EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsChildView.mm;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsChildView.mm;
-			refType = 0;
+			path = ../widget/src/cocoa/nsChildView.mm;
+			refType = 2;
 		};
 		F5EA337B02EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsCocoaWindow.mm;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsCocoaWindow.mm;
-			refType = 0;
+			path = ../widget/src/cocoa/nsCocoaWindow.mm;
+			refType = 2;
 		};
 		F5EA337C02EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsDragHelperService.cpp;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsDragHelperService.cpp;
-			refType = 0;
+			path = ../widget/src/cocoa/nsDragHelperService.cpp;
+			refType = 2;
 		};
 		F5EA337D02EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsDragService.cpp;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsDragService.cpp;
-			refType = 0;
+			path = ../widget/src/cocoa/nsDragService.cpp;
+			refType = 2;
 		};
 		F5EA337E02EF889001A96654 = {
 			isa = PBXFileReference;
 			name = nsToolkit.mm;
-			path = /Volumes/Development/Trees/Chimera/mozilla/widget/src/cocoa/nsToolkit.mm;
-			refType = 0;
+			path = ../widget/src/cocoa/nsToolkit.mm;
+			refType = 2;
 		};
 		F5F14E9602A5A43A01A967F3 = {
 			isa = PBXFileReference;

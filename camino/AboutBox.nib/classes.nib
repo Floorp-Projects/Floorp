@@ -4,7 +4,11 @@
             ACTIONS = {showPanel = id; }; 
             CLASS = AboutBox; 
             LANGUAGE = ObjC; 
-            OUTLETS = {creditsField = id; window = id; }; 
+            OUTLETS = {
+                buildNumberField = NSTextField; 
+                creditsField = NSTextView; 
+                window = NSWindow; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
