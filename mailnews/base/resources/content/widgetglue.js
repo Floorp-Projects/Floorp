@@ -216,41 +216,6 @@ function MsgToggleSplitter(id)
         splitter.setAttribute("state", "collapsed")
 }
 
-function NotifyQuitApplication()
-{
-	var ObserverService = Components.classes["@mozilla.org/observer-service;1"].getService();
-	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
-	if (ObserverService)
-	{
-		try 
-		{
-			ObserverService.notifyObservers(null, "quit-application", null);
-		} 
-		catch (ex) 
-		{
-			// dump("no observer found \n");
-		}
-	}
-}
-
-function LastToClose()
-{
-	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-	var enumerator = windowManagerInterface.getEnumerator( null );
-    var count = 0;
-
-	while ( enumerator.hasMoreElements() && count < 2 )
-	{
-		var  windowToClose = enumerator.getNext();
-        count++;
-    }
-    if (count == 1)
-        return true;
-    else
-        return false;
-}
-
 function MsgSetFolderCharset() 
 {
   MsgFolderProperties() 

@@ -6,7 +6,9 @@ function goQuitApplication()
   {
     try
     {
-      ObserverService.notifyObservers(null, "quit-application", null);
+      // XXX FIX! we should have a way to cancel a requested quit; see
+      // bugzilla bug 149764
+      ObserverService.notifyObservers(null, "quit-application-requested", null);
     }
     catch (ex)
     {

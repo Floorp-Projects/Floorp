@@ -2140,8 +2140,6 @@ function ComposeCanClose()
       switch (result)
       {
         case 0: //Save
-          if (LastToClose())
-          NotifyQuitApplication();
           gCloseWindowAfterSave = true;
           SaveAsDraft();
           return false;
