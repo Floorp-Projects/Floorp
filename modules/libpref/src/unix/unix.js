@@ -144,13 +144,13 @@ pref("font.name.monospace.zh-CN", "isas-song ti-gb2312.1980-0");
 
 pref("font.default", "serif");
 pref("font.size.variable.ar", 16);
-pref("font.size.fixed.ar", 13);
+pref("font.size.fixed.ar", 12);
 
 pref("font.size.variable.el", 16);
-pref("font.size.fixed.el", 13);
+pref("font.size.fixed.el", 12);
 
 pref("font.size.variable.he", 16);
-pref("font.size.fixed.he", 13);
+pref("font.size.fixed.he", 12);
 
 pref("font.size.variable.ja", 16);
 pref("font.size.fixed.ja", 16);
@@ -159,25 +159,25 @@ pref("font.size.variable.ko", 16);
 pref("font.size.fixed.ko", 16);
 
 pref("font.size.variable.th", 16);
-pref("font.size.fixed.th", 13);
+pref("font.size.fixed.th", 12);
 
 pref("font.size.variable.tr", 16);
-pref("font.size.fixed.tr", 13);
+pref("font.size.fixed.tr", 12);
 
 pref("font.size.variable.x-baltic", 16);
-pref("font.size.fixed.x-baltic", 13);
+pref("font.size.fixed.x-baltic", 12);
 
 pref("font.size.variable.x-central-euro", 16);
-pref("font.size.fixed.x-central-euro", 13);
+pref("font.size.fixed.x-central-euro", 12);
 
 pref("font.size.variable.x-cyrillic", 16);
-pref("font.size.fixed.x-cyrillic", 13);
+pref("font.size.fixed.x-cyrillic", 12);
 
 pref("font.size.variable.x-unicode", 16);
-pref("font.size.fixed.x-unicode", 13);
+pref("font.size.fixed.x-unicode", 12);
 
 pref("font.size.variable.x-western", 16);
-pref("font.size.fixed.x-western", 13);
+pref("font.size.fixed.x-western", 12);
 
 pref("font.size.variable.zh-CN", 16);
 pref("font.size.fixed.zh-CN", 16);
