@@ -41,13 +41,17 @@ CHROME_CONTENT	= \
 CHROME_SKIN	= \
 		bm-panel.css \
 		bookmark-folder-closed.gif \
+		bookmark-folder-closed-selected.gif \
 		bookmark-folder-open.gif \
+		bookmark-folder-open-selected.gif \
 		bookmark-item.gif \
 		bookmarks.css \
 		iefavorite.gif \
 		manage-bookmarks.css \
 		personal-folder-closed.gif \
+		personal-folder-closed-selected.gif \
 		personal-folder-open.gif \
+		personal-folder-open-selected.gif \
 		$(NULL)
 
 CHROME_L10N	= \
