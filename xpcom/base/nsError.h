@@ -145,7 +145,7 @@
 /* Standard "it worked" return value */
 #define NS_OK                              0
 
-/* The backwards COM false */
+/* The backwards COM false. This is deprecated, please do not use */
 #define NS_COMFALSE                        1
 
 #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)

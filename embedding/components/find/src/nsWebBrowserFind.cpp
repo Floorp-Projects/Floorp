@@ -45,6 +45,8 @@
 #include "nsIEnumerator.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIFocusController.h"
@@ -571,6 +573,31 @@ NS_IMETHODIMP nsWebBrowserFind::SetSearchParentFrames(PRBool aSearchParentFrames
     return NS_OK;
 }
 
+void nsWebBrowserFind::MoveFocusToCaret(nsIDOMWindow *aWindow)
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
+  if (!docShell)
+    return;
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell) 
+    return;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext) 
+    return;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+
+  if (esm) {
+    PRBool isSelectionWithFocus;
+    esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+  }
+}
+
 /*
     This method handles finding in a single window (aka frame).
 
@@ -730,6 +757,10 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
            (gUseTextServices ? "txtsvc" : "new find"), sec);
 #endif /* XP_UNIX && DEBUG */
 #endif /* TEXT_SVCS_TEST */
+
+    if (*aDidFind) 
+      MoveFocusToCaret(aWindow);
+
     return rv;
 }
 

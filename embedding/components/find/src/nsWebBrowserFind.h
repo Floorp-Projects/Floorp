@@ -83,6 +83,8 @@ protected:
     PRBool      CanFindNext()
                 { return mSearchString.Length() != 0; }
 
+    void        MoveFocusToCaret(nsIDOMWindow *aWindow);
+
     nsresult    SearchInFrame(nsIDOMWindow* aWindow, PRBool* didFind);
 
     nsresult    OnStartSearchFrame(nsIDOMWindow *aWindow);

@@ -5386,6 +5386,8 @@ const char * const sSelectPageNextString = "cmd_selectPageNext";
 const char * const sSelectMoveTopString = "cmd_selectMoveTop";
 const char * const sSelectMoveBottomString = "cmd_selectMoveBottom";
 
+const char * const sToggleBrowseWithCaretString = "cmd_toggleBrowseWithCaret";
+
 NS_IMPL_ADDREF(nsDOMWindowController)
 NS_IMPL_RELEASE(nsDOMWindowController)
 
@@ -5400,11 +5402,50 @@ nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
   NS_INIT_REFCNT();
   mWindow = aWindow;
 
-  // Set browse with caret flag so we don't need to every time
+  // Set mBrowseWithCaret so we don't need to check pref every time
   mBrowseWithCaret = PR_FALSE;
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm))))
+    esm->ResetBrowseWithCaret(&mBrowseWithCaret);
+}
+
+nsresult
+nsDOMWindowController::GetEventStateManager(nsIEventStateManager **aEventStateManager)
+{
+  *aEventStateManager = nsnull;
+  // Set browse with caret flag so we don't need to every time
+  nsCOMPtr<nsIPresShell> presShell;
+  GetPresShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIPresContext> presContext;
+    presShell->GetPresContext(getter_AddRefs(presContext));
+    if (presContext) {
+      nsCOMPtr<nsIEventStateManager> esm;
+      presContext->GetEventStateManager(getter_AddRefs(esm));
+      *aEventStateManager = esm;
+      if (esm) {
+        NS_ADDREF(*aEventStateManager);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+void
+nsDOMWindowController::ToggleBrowseWithCaret()
+{
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs)
-    prefs->GetBoolPref("accessibility.browsewithcaret", &mBrowseWithCaret);
+  if (prefs) {
+    PRBool prefBrowseWithCaret = PR_FALSE;
+    prefs->GetBoolPref("accessibility.browsewithcaret", &prefBrowseWithCaret);
+    prefs->SetBoolPref("accessibility.browsewithcaret", !prefBrowseWithCaret);
+  }
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm))))
+    esm->ResetBrowseWithCaret(&mBrowseWithCaret);
 }
 
 nsresult
@@ -5549,7 +5590,8 @@ nsDOMWindowController::SupportsCommand(const nsAReadableString& aCommand,
       commandName.Equals(sSelectPagePreviousString) ||
       commandName.Equals(sSelectPageNextString) ||
       commandName.Equals(sSelectMoveTopString) ||
-      commandName.Equals(sSelectMoveBottomString)
+      commandName.Equals(sSelectMoveBottomString) ||
+      commandName.Equals(sToggleBrowseWithCaretString)
       )
     *outSupported = PR_TRUE;
 
@@ -5596,7 +5638,18 @@ nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
            commandName.Equals(sSelectMoveTopString) ||
            commandName.Equals(sSelectMoveBottomString)) {
     rv = DoCommandWithSelectionController(commandName);
+    // If the user moves the caret in browse with caret mode
+    // Focus whatever they move onto, if it's focusable
+    if (mBrowseWithCaret) {
+      nsCOMPtr<nsIEventStateManager> esm;
+      if (NS_SUCCEEDED(GetEventStateManager(getter_AddRefs(esm)))) {
+        PRBool isSelectionWithFocus;
+        esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
+      }
+    }
   }
+  else if (commandName.Equals(sToggleBrowseWithCaretString)) 
+    ToggleBrowseWithCaret();
 
   return rv;
 }
@@ -5604,7 +5657,6 @@ nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
 nsresult
 nsDOMWindowController::DoCommandWithEditInterface(const nsCString& aCommandName)
 {
-
   // get edit interface...
   nsCOMPtr<nsIContentViewerEdit> editInterface;
   nsresult rv = GetEditInterface(getter_AddRefs(editInterface));

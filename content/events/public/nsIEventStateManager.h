@@ -93,8 +93,16 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContent) = 0;
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK) = 0;
 
+  // This is called when browse with caret changes on the fly
+  NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret) = 0;
+
+  // This is called after find text or when a cursor movement key is pressed
+  // If aCanFocusDoc == PR_TRUE, the current document will be focused if caret is not on a focusable element
+  NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus) = 0;
+  NS_IMETHOD MoveCaretToFocus() = 0;
+
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
-                                    PRBool forward, nsIContent** aResult) = 0;
+                                    PRBool forward, PRBool aIgnoreTabIndex, nsIContent** aResult) = 0;
 
   // This is an experiment and may be temporary
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
