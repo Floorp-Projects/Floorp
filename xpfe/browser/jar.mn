@@ -1,8 +1,6 @@
 comm.jar:
         content/navigator/contents.rdf                 (resources/content/contents.rdf)
         content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
-        content/navigator/openLocation.js              (resources/content/openLocation.js)
-        content/navigator/openLocation.xul             (resources/content/openLocation.xul)
         content/navigator/viewsource.js                (resources/content/viewsource.js)
         content/navigator/viewSource.xul               (resources/content/viewSource.xul)
         content/navigator/pageInfo.js                  (resources/content/pageInfo.js)
