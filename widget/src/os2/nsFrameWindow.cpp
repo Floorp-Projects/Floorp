@@ -44,6 +44,7 @@ extern nsIWidget         * gRollupWidget;
 extern PRBool              gRollupConsumeRollupEvent;
 
 extern PRBool gJustGotDeactivate;
+extern HWND   gHwndBeingDestroyed;
 
 
 nsFrameWindow::nsFrameWindow() : nsCanvas()
@@ -393,7 +394,18 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 
       case WM_ACTIVATE:
          if( !mp1)
-            gJustGotDeactivate = PR_TRUE;
+         {
+            /* we don't want to go through all of this deactivation stuff if
+             * the window is just going away anyhow.  Causes problems to process
+             * the deactivation event if we've hit some destructors or done
+             * some destroy work.  Especially w.r.t the focus controller
+             */
+            if( (hwndFrame != gHwndBeingDestroyed) || 
+                (!WinIsChild( hwndFrame, gHwndBeingDestroyed )) )
+            {
+               gJustGotDeactivate = PR_TRUE;
+            }
+         }
          break;
    }
 
