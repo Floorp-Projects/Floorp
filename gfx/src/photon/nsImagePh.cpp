@@ -441,56 +441,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 }
 
 /* New Tile code *********************************************************************/
-NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, nsRect &aSrcRect, nsRect &aTileRect ) {
-	PhPoint_t pos, space, rep;
-	PhDrawContext_t *dc;
-	PhGC_t *gc;
-
-	/* is this a 1x1 transparent image used for spacing? */
-	if( mWidth == 1 && mHeight == 1 && mAlphaDepth == 1 && mAlphaBits[0] == 0x0 ) return NS_OK;
-
-	dc = PhDCGetCurrent();
-	gc = PgGetGCCx( dc );
-
-	pos.x = aTileRect.x;
-	pos.y = aTileRect.y;
-
-	space.x = aSrcRect.width;
-	space.y = aSrcRect.height;
-	rep.x = ( aTileRect.width + space.x - 1 ) / space.x;
-	rep.y = ( aTileRect.height + space.y - 1 ) / space.y;
-	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height} };
-	PgSetMultiClipCx( gc, 1, &clip );
-
-	if ((mAlphaDepth == 1) || (mAlphaDepth == 0)) {
-		if( mImageFlags & IMAGE_SHMEM )
- 	  	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
- 	  else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
-		}
- 	else
- 		{
-    PgMap_t map;
-    map.dim.w = mAlphaWidth;
-    map.dim.h = mAlphaHeight;
-    map.bpl = mAlphaRowBytes;
-    map.bpp = mAlphaDepth;
-    map.map = (unsigned char *)mAlphaBits;
-    PgSetAlphaBlendCx( gc, &map, 0 );
-
-    PgAlphaOnCx( gc );
-		if( mImageFlags & IMAGE_SHMEM )
-    	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
-    else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
-    PgAlphaOffCx( gc );
-
-		PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
-   	}
-
-	PgSetMultiClipCx( gc, 0, NULL );
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect ) 
+NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+		PRInt32 aSXOffset, PRInt32 aSYOffset, PRInt32 aPadX, PRInt32 aPadY, const nsRect &aTileRect ) 
 {
 	PhPoint_t pos, space, rep;
 	PhDrawContext_t *dc ;
@@ -507,8 +459,8 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 	pos.x = aTileRect.x - aSXOffset;
 	pos.y = aTileRect.y - aSYOffset;
 
-	space.x = mPhImage.size.w;
-	space.y = mPhImage.size.h;
+	space.x = mPhImage.size.w + aPadX;
+	space.y = mPhImage.size.h + aPadY;
 	rep.x = ( aTileRect.width + aSXOffset + space.x - 1 ) / space.x;
 	rep.y = ( aTileRect.height + aSYOffset + space.y - 1 ) / space.y;
 

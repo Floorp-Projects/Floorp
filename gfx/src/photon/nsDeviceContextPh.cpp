@@ -242,8 +242,9 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 
 	  surf = new nsDrawingSurfacePh();
 	  if( nsnull != surf ) {
+			PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
 			mGC = PgCreateGC( 0 );
-			rv = surf->Init( mGC );
+			rv = surf->Init( (PhDrawContext_t*)pc, mGC );
 			if( NS_OK == rv ) rv = pContext->Init(this, surf);
 			else rv = NS_ERROR_OUT_OF_MEMORY;
 			}
@@ -253,7 +254,6 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext( nsIRenderingContext *
 	if( NS_OK != rv ) NS_IF_RELEASE( pContext );
 
 	aContext = pContext;
-	NS_ADDREF( pContext ); // otherwise it's crashing after printing
 	return rv;
 	}
 
