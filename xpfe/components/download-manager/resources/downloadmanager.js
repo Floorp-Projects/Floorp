@@ -130,6 +130,13 @@ function onSelect(aEvent) {
   window.updateCommands("tree-select");
 }
   
+function onDoubleClick() {
+  if (downloadViewController.isCommandEnabled('cmd_properties'))
+    goDoCommand('cmd_properties');
+  else if (downloadViewController.isCommandEnabled('cmd_openfile'))
+    goDoCommand('cmd_openfile');
+}
+
 var downloadViewController = {
   supportsCommand: function dVC_supportsCommand (aCommand)
   {
