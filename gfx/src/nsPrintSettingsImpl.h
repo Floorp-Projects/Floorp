@@ -30,7 +30,7 @@
 //*****************************************************************************
 //***    nsPrintSettings
 //*****************************************************************************
-class nsPrintSettings : public nsIPrintSettings
+class NS_GFX nsPrintSettings : public nsIPrintSettings
 {
 public:
   NS_DECL_ISUPPORTS
