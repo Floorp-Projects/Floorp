@@ -596,10 +596,6 @@ void
 nsHttpHandler::InitUserAgentComponents()
 {
 
-    // Gather Application name and Version.
-    mAppName.Adopt(nsCRT::strdup(UA_APPNAME));
-    mAppVersion.Adopt(nsCRT::strdup(UA_APPVERSION));
-
       // Gather platform.
     mPlatform.Adopt(nsCRT::strdup(
 #if defined(MOZ_WIDGET_PHOTON)
@@ -710,11 +706,15 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(UA_PREF("appName"))) {
         prefs->GetCharPref(UA_PREF("appName"),
             getter_Copies(mAppName));
+        if (mAppName.IsEmpty())
+            mAppName.Adopt(nsCRT::strdup(UA_APPNAME));
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("appVersion"))) {
         prefs->GetCharPref(UA_PREF("appVersion"),
             getter_Copies(mAppVersion));
+        if (mAppVersion.IsEmpty())
+            mAppVersion.Adopt(nsCRT::strdup(UA_APPVERSION));
         mUserAgentIsDirty = PR_TRUE;
     }
 
