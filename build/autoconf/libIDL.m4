@@ -38,6 +38,10 @@ AC_ARG_ENABLE(libIDLtest, [  --disable-libIDLtest       Do not try to compile an
   else
     LIBIDL_CFLAGS=`$LIBIDL_CONFIG $libIDL_config_args --cflags`
     LIBIDL_LIBS=`$LIBIDL_CONFIG $libIDL_config_args --libs`
+    # hack to allow us to keep using libIDL 0.6.3-0.6.7. Anyone may remove
+    # this after we start requiring libIDL 0.6.8 or anything higher
+    LIBIDL_CFLAGS='$GLIB_CFLAGS $LIBIDL_CFLAGS'
+    LIBIDL_LIBS='$GLIB_LIBS $LIBIDL_LIBS'
     libIDL_config_major_version=`$LIBIDL_CONFIG $libIDL_config_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
     libIDL_config_minor_version=`$LIBIDL_CONFIG $libIDL_config_args --version | \
