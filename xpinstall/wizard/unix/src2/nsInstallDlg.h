@@ -59,6 +59,10 @@ public:
     static void     ClearRateLabel();
     static int      CancelOrPause();
 
+    void            ReInitUI();
+    void            ShowCRCDlg();
+    void            DestroyCRCDlg();
+
     enum
     {
         ACT_DOWNLOAD,
@@ -80,7 +84,7 @@ public:
     char            *GetMsg0();
 
 private:
-    static int      WorkDammitWork(void); // install start
+    static int      PerformInstall(void); // install start
     static void     SaveModulesToggled(GtkWidget *aWidget, gpointer aData);
     static void     ShowProxySettings(GtkWidget *aWidget, gpointer aData);
     static void     PSDlgOK    (GtkWidget *aWidget, gpointer aData);
@@ -93,14 +97,17 @@ private:
     static void     DLPause(GtkWidget *aWidget, gpointer aData);
     static void     DLResume(GtkWidget *aWidget, gpointer aData);
     static void     DLCancel(GtkWidget *aWidget, gpointer aData);
+    static int      ShowCRCFailedDlg();
     static int      ShowCxnDroppedDlg();
+    static void     CRCFailedOK(GtkWidget *aWidget, gpointer aData);
     static void     CxnDroppedOK(GtkWidget *aWidget, gpointer aData);
+    static void     CRCOKCb(GtkWidget *aWidget, gpointer aData);
     static void     HideNavButtons();
-    static void     InitDLProgress();
     static void     InitInstallProgress();
     static int      TotalDLSize();
     static void     CompressToFit(char *aOrigStr, char *aOutStr, 
                         int aOutStrLen);
+    static void     InitDLProgress(int IsFirst);
 
     char            *mMsg0;
 };
