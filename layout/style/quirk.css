@@ -159,7 +159,6 @@ hr:after {
   content: "\A";
 }
 
-
 /* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
 
 dd {
@@ -187,3 +186,10 @@ dl dl {
 dt dl, dd dl {
   margin: 0 0 0 0;
 }
+
+/* Quirk: MAP acts like an inline, not a block */
+map {
+  display: inline;
+}
+
+
