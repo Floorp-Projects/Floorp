@@ -68,6 +68,13 @@
 #include "prmem.h"
 #include "nsXPIDLString.h"
 
+#ifndef XP_MAC
+#include "nsMultiMixedConv.h" // for 
+#include "nsIRegistry.h"
+static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
+#endif // XP_MAC
+
+
 #ifdef XP_PC
 #include <windows.h>
 #endif
@@ -1171,6 +1178,39 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     widgetInit.clipChildren = PR_FALSE;
     widgetInit.mWindowType = eWindowType_child; 
   }
+
+  // STREAM CONVERTER REGISTRATION
+  // multipart mixed converter registration
+#ifndef XP_MAC
+  nsIFactory *multiMixedFactSup;
+  rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
+  if (SUCCEEDED(rv)) {
+      rv = nsComponentManager::RegisterFactory(kMultiMixedConverterCID,
+                                             "MultiMixedConverter",
+                                             NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html",
+                                             multiMixedFactSup,
+                                             PR_TRUE);
+      if (NS_FAILED(rv)) goto done;
+
+      nsIRegistry *registry;
+      rv = nsServiceManager::GetService(kRegistryCID, NS_GET_IID(nsIRegistry), (nsISupports**) &registry);
+      if (NS_FAILED(rv)) goto done;
+
+      // open the registry
+      rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+      if (NS_FAILED(rv)) goto done;
+
+      // set the key
+      nsIRegistry::Key key, key1;
+
+      rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
+      if (NS_FAILED(rv)) goto done;
+
+      rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
+      if (NS_FAILED(rv)) goto done;
+  }
+#endif // XP_MAC
+  // END STREAM CONVERTER REGISTRATION
 
 done:
   return rv;

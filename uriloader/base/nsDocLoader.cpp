@@ -57,6 +57,12 @@
 #include "prlog.h"
 #include "prprf.h"
 
+#ifndef XP_MAC
+#include "nsIStreamConverterService.h"
+#include "nsIStreamConverter.h"
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+#endif // XP_MAC
+
 #include <iostream.h>
 
 // XXX ick ick ick
@@ -2055,6 +2061,7 @@ nsDocumentBindInfo::OnStartRequest(nsIURI* aURL, const char *aContentType)
          * (and viewer) of the appropriate type...
          */
         if (m_DocLoader) {
+
             rv = m_DocLoader->CreateContentViewer(m_Command, 
 #ifdef NECKO
                                                   channel,
@@ -2382,8 +2389,46 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
   nsCOMPtr<nsIContentViewerContainer> container;
   nsCOMPtr<nsIContentViewer> viewer;
 
+  ///////////////////////////////
+  // STREAM CONVERTERS
+  ///////////////////////////////
+#ifndef XP_MAC
+  char *contentType = nsnull;
+  rv = aChannel->GetContentType(&contentType);
+  if (NS_FAILED(rv)) return rv;
+
+  // Let's shanghai this channelListener's mNextListener if we want to convert the stream.
+  if (!PL_strcmp(contentType, "multipart/x-mixed-replace")) {
+    // we want to pass off multipart/x-mixed-replace to the a stream converter
+    // that knows what to do with it.
+    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+    if (NS_FAILED(rv)) {
+        nsAllocator::Free(contentType);
+        return rv;
+    }
+    nsString2 from("multipart/x-mixed-replace"), to("text/html");
+
+    // The following call binds this channelListener's mNextListener (typically
+    // the nsDocumentBindInfo) to the underlying stream converter, and returns
+    // the underlying stream converter which we then set to be this channelListener's
+    // mNextListener. This effectively nestles the stream converter down right
+    // in between the raw stream and the final listener.
+    nsIStreamListener *converterListener = nsnull;
+    rv = StreamConvService->AsyncConvertData(from.GetUnicode(), 
+                                             to.GetUnicode(), mNextListener,
+                                             &converterListener);
+    mNextListener = converterListener;
+  }
+  nsAllocator::Free(contentType);
+#endif // XP_MAC
+
+  //////////////////////////////
+  // END STREAM CONVERTERS
+  //////////////////////////////
+  
   // Pass the notification to the next listener...
   rv = mNextListener->OnStartRequest(aChannel, aContext);
+
 
   //
   // Notify the document loader...
