@@ -198,6 +198,9 @@ function ImportDialogOKButton()
           else
           {
             ShowImportResults(false, 'Mail');
+            // enable back and next buttons so that users can retry or pick other import options.
+            nextButton.removeAttribute("disabled");
+            backButton.removeAttribute("disabled");
             return( false);
           }
           break;
@@ -243,6 +246,8 @@ function ImportDialogOKButton()
             // because the user cancelled when picking an addressbook file to import.
             // enable next, so they can try again
             nextButton.removeAttribute("disabled");
+            // also enable back button so that users can pick other import options.
+            backButton.removeAttribute("disabled");
             return( false);
           }
           break;
@@ -674,6 +679,11 @@ function ImportMail( module, success, error) {
                                                length.value, profileList, selected);
                 if (clickedOk) {
                   errorValue = false;
+                }
+                else {
+                  // users cancel the pick list dialog so just return and
+                  // don't set error string so that current dialog can stay.
+                  return( false);
                 }
               } // promptService
             }
