@@ -20,6 +20,7 @@
 
 #include "nsFileStream.h"
 #include "nsDebug.h"
+#include "nsEscape.h"
 
 #include "prtypes.h"
 #include "plstr.h"
@@ -345,17 +346,19 @@ nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
-:    mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther))
+:    mURL(nsnull)
 {
+    *this = inOther;
 } // nsFileURL::nsFileURL
 #endif
 
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileSpec& inOther)
-:    mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther)))
+:    mURL(nsnull)
 //----------------------------------------------------------------------------------------
 {
+    *this = inOther;
 } // nsFileURL::nsFileURL
 #endif
 
@@ -392,7 +395,20 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
     delete [] mURL;
-    mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther);
+	char* original = (char*)(const char*)inOther; // we shall modify, but restore.
+#ifdef XP_PC
+	// because we don't want to escape the '|' character, change it to a letter.
+    NS_ASSERTION(original[2] == '|', "No drive letter part!");
+    original[2] = 'x';
+    char* escapedPath = nsEscape(original, url_Path);
+    original[2] = '|'; // restore it
+    escapedPath[2] = '|';
+#else
+    char* escapedPath = nsEscape(original, url_Path);
+#endif
+    if (escapedPath)
+	    mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, escapedPath);
+    delete [] escapedPath;
 } // nsFileURL::operator =
 #endif
 
@@ -401,8 +417,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-    delete [] mURL;
-    mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther));
+    *this = nsFilePath(inOther);
 } // nsFileURL::operator =
 #endif
 

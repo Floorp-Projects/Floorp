@@ -22,7 +22,6 @@
 #include "FullPath.h"
 #include "FileCopy.h"
 #include "MoreFilesExtras.h"
-#include "nsEscape.h"
 
 #include <Aliases.h>
 #include <Folders.h>
@@ -917,7 +916,7 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 ,    mFileSpec(inString, inCreateDirs)
 {
     // Make canonical and absolute.
-	char * path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, TRUE );
+	char * path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, true );
 	mPath = MacFileHelpers::EncodeMacPath(path, true, false);
 }
 
@@ -928,7 +927,7 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 ,    mFileSpec(nsAutoCString(inString), inCreateDirs)
 {
     // Make canonical and absolute.
-	char * path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, TRUE );
+	char * path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, true );
 	mPath = MacFileHelpers::EncodeMacPath(path, true, false);
 }
 
@@ -952,7 +951,7 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
 void nsFilePath::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	char * path = MacFileHelpers::PathNameFromFSSpec( inSpec.mSpec, TRUE );
+	char * path = MacFileHelpers::PathNameFromFSSpec( inSpec.mSpec, true );
 	delete [] mPath;
 	mPath = MacFileHelpers::EncodeMacPath(path, true, false);
 	mFileSpec = inSpec;
@@ -1032,8 +1031,17 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 {
     mFileSpec  = inOther;
     delete [] mURL;
-	char* path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, TRUE );
-	mURL = MacFileHelpers::EncodeMacPath(path, true, true);
+	char* path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, true );
+	char* encodedPath = MacFileHelpers::EncodeMacPath(path, true, true);
+	char* encodedURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, encodedPath);
+	delete [] encodedPath;
+	if (encodedURL[strlen(encodedURL) - 1] != '/' && inOther.IsDirectory())
+	{
+	    mURL = nsFileSpecHelpers::AllocCat(encodedURL, "/");
+	    delete [] encodedURL;
+	}
+	else
+	    mURL = encodedURL;
 } // nsFileURL::operator =
 
 //----------------------------------------------------------------------------------------
