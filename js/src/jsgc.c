@@ -787,6 +787,7 @@ js_GC(JSContext *cx)
     JSBool a_all_clear, f_all_clear;
 #ifdef JS_THREADSAFE
     jsword currentThread;
+    uint32 requestDebit;
 #endif
 
     rt = cx->runtime;
@@ -826,10 +827,40 @@ js_GC(JSContext *cx)
         return;
     }
 
-    /* If we're in a request, indicate, temporarily, that we're inactive. */
-    if (cx->requestDepth) {
-	rt->requestCount--;
-	JS_NOTIFY_REQUEST_DONE(rt);
+    /*
+     * If we're in one or more requests (possibly on more than one context)
+     * running on the current thread, indicate, temporarily, that all these
+     * requests are inactive.  NB: if cx->thread is 0, then cx is not using
+     * the request model, and does not contribute to rt->requestCount.
+     */
+    requestDebit = 0;
+    if (cx->thread) {
+        /*
+         * Check all contexts for any with the same thread-id.  XXX should we
+         * keep a sub-list of contexts having the same id?
+         */
+        iter = NULL;
+        while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
+            if (acx->thread == cx->thread && acx->requestDepth)
+                requestDebit++;
+        }
+    } else {
+        /*
+         * We assert, but check anyway, in case someone is misusing the API.
+         * Avoiding the loop over all of rt's contexts is a win in the event
+         * that the GC runs only on request-less contexts with 0 thread-ids,
+         * in a special thread such as the UI/DOM/Layout "mozilla" or "main"
+         * thread in Mozilla-the-browser.
+         */
+        JS_ASSERT(cx->requestDepth == 0);
+        if (cx->requestDepth)
+            requestDebit = 1;
+    }
+    if (requestDebit) {
+        JS_ASSERT(requestDebit >= rt->requestCount);
+        rt->requestCount -= requestDebit;
+        if (rt->requestCount == 0)
+            JS_NOTIFY_REQUEST_DONE(rt);
     }
 
     /* If another thread is already in GC, don't attempt GC; wait instead. */
@@ -1085,9 +1116,9 @@ out:
     rt->gcLastBytes = rt->gcBytes;
 
 #ifdef JS_THREADSAFE
-    /* If we were invoked during a request, undo the temporary decrement. */
-    if (cx->requestDepth)
-	rt->requestCount++;
+    /* If we were invoked during a request, pay back the temporary debit. */
+    if (requestDebit)
+	rt->requestCount += requestDebit;
     rt->gcThread = 0;
     JS_NOTIFY_GC_DONE(rt);
     JS_UNLOCK_GC(rt);
