@@ -635,7 +635,11 @@ nsMsgAccountManager::FindServersByHostname(const char* hostname,
   rv = NS_NewISupportsArray(matchingServers);
   if (NS_FAILED(rv)) return rv;
   
-  findServerEntry serverInfo = { hostname, &iid, *matchingServers};
+  findServerEntry serverInfo;
+  serverInfo.hostname = hostname;
+  serverInfo.iid = &iid;
+  serverInfo.servers = *matchingServers;
+  
   servers->EnumerateForwards(findServerByName, (void *)&serverInfo);
 
   // as long as we have an nsISupportsArray, we are successful
