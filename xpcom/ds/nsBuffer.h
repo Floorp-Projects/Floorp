@@ -35,11 +35,15 @@ public:
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
                     nsIAllocator* allocator);
     NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount);
-    NS_IMETHOD GetReadBuffer(PRUint32 *readBufferLength, char* *result);
+    NS_IMETHOD GetReadBuffer(PRUint32 startPosition, 
+                             char* *result,
+                             PRUint32 *readBufferLength);
 
     NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount);
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *writeCount);
-    NS_IMETHOD GetWriteBuffer(PRUint32 *writeBufferLength, char* *result);
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount);
+    NS_IMETHOD GetWriteBuffer(PRUint32 startPosition,
+                              char* *result,
+                              PRUint32 *writeBufferLength);
     NS_IMETHOD SetEOF();
 
     // nsBuffer methods:

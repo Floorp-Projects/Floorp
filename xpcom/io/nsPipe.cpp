@@ -17,7 +17,7 @@
  */
 
 #include "nsIBuffer.h"
-#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
 
@@ -25,7 +25,7 @@ class nsBufferInputStream;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsBufferInputStream : public nsIInputStream
+class nsBufferInputStream : public nsIBufferInputStream
 {
 public:
     NS_DECL_ISUPPORTS
@@ -37,6 +37,11 @@ public:
     NS_IMETHOD GetLength(PRUint32 *aLength);
     NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
 
+    // nsIBufferInputStream methods:
+    NS_IMETHOD GetBuffer(PRUint32 startPosition, char * *bufferSegment,
+                         PRUint32 *bufferSegmentSize);
+    NS_IMETHOD Find(char * aString, PRInt32 *_retval);
+
     // nsBufferInputStream methods:
     nsBufferInputStream(nsIBuffer* buf, PRBool blocking);
     virtual ~nsBufferInputStream();
@@ -45,7 +50,7 @@ public:
         nsresult rv;
         PRUint32 amt;
         char* buf;
-        rv = mBuffer->GetReadBuffer(&amt, &buf); // should never fail
+        rv = mBuffer->GetReadBuffer(0, &buf, &amt); // should never fail
         NS_ASSERTION(NS_SUCCEEDED(rv), "GetInputBuffer failed");
         return amt;
     }
@@ -70,7 +75,8 @@ public:
 
     // nsIOutputStream methods:
     NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount);
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                         PRUint32 *aWriteCount);
     NS_IMETHOD Flush(void);
 
     // nsBufferOutputStream methods:
@@ -143,7 +149,7 @@ nsBufferInputStream::GetLength(PRUint32 *aLength)
         return NS_BASE_STREAM_CLOSED;
 
     char* buf;
-    return mBuffer->GetReadBuffer(aLength, &buf);
+    return mBuffer->GetReadBuffer(0, &buf, aLength);
 }
 
 NS_IMETHODIMP
@@ -172,6 +178,19 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         }
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsBufferInputStream::GetBuffer(PRUint32 startPosition, char * *bufferSegment,
+                               PRUint32 *bufferSegmentSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+ 
+NS_IMETHODIMP
+nsBufferInputStream::Find(char * aString, PRInt32 *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -206,7 +225,7 @@ nsBufferInputStream::Fill()
             // check read buffer again while in the monitor
             PRUint32 amt;
             char* buf;
-            rv = mBuffer->GetReadBuffer(&amt, &buf);
+            rv = mBuffer->GetReadBuffer(0, &buf, &amt);
             if (rv == NS_BASE_STREAM_EOF) return rv;
             if (NS_SUCCEEDED(rv) && amt > 0) return NS_OK;
 
@@ -320,7 +339,8 @@ nsBufferOutputStream::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
 }
 
 NS_IMETHODIMP
-nsBufferOutputStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
+nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
+                                PRUint32 *aWriteCount)
 {
     if (mBuffer == nsnull)
         return NS_BASE_STREAM_CLOSED;
@@ -328,9 +348,9 @@ nsBufferOutputStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
     nsresult rv = NS_OK;
     *aWriteCount = 0;
 
-    while (PR_TRUE) {   // write until fromStream gets EOF
+    while (aCount > 0) {
         PRUint32 amt;
-        rv = mBuffer->Write(fromStream, &amt);
+        rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF)
             return *aWriteCount > 0 ? NS_OK : rv;
         if (NS_FAILED(rv)) return rv;
@@ -339,6 +359,7 @@ nsBufferOutputStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
             if (NS_FAILED(rv)) return rv;
         }
         else {
+            aCount -= amt;
             *aWriteCount += amt;
         }
     }
@@ -358,7 +379,7 @@ nsBufferOutputStream::Flush(void)
         // check write buffer again while in the monitor
         PRUint32 amt;
         char* buf;
-        rv = mBuffer->GetWriteBuffer(&amt, &buf);
+        rv = mBuffer->GetWriteBuffer(0, &buf, &amt);
         if (rv == NS_BASE_STREAM_EOF) return rv;
         if (NS_SUCCEEDED(rv) && amt > 0) return NS_OK;
 

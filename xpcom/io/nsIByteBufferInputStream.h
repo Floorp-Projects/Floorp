@@ -42,7 +42,7 @@ class nsIByteBufferInputStream : public nsIInputStream {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFERINPUTSTREAM_IID);
 
-    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 *aWriteCount) = 0;
+    NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 aCount, PRUint32 *aWriteCount) = 0;
 
     NS_IMETHOD Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) = 0;
 

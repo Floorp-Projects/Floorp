@@ -54,11 +54,15 @@ public:
                     nsIAllocator* allocator) = 0;
 
     NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount) = 0;
-    NS_IMETHOD GetReadBuffer(PRUint32 *readBufferLength, char* *result) = 0;
+    NS_IMETHOD GetReadBuffer(PRUint32 startPosition, 
+                             char* *result,
+                             PRUint32 *readBufferLength) = 0;
 
     NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount) = 0;
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *writeCount) = 0;
-    NS_IMETHOD GetWriteBuffer(PRUint32 *writeBufferLength, char* *result) = 0;
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount) = 0;
+    NS_IMETHOD GetWriteBuffer(PRUint32 startPosition,
+                              char* *result,
+                              PRUint32 *writeBufferLength) = 0;
     NS_IMETHOD SetEOF() = 0;
 };
 
