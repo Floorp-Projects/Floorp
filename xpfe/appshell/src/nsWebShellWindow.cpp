@@ -362,23 +362,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
-#ifdef USE_NATIVE_MENUS
-  // unregister as document listener
-  // this is needed for menus
-   nsCOMPtr<nsIContentViewer> cv;
-   if(mDocShell)
- 	   mDocShell->GetContentViewer(getter_AddRefs(cv));
-   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-   if(docv)
-      {
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
-      if(doc)
-         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
-      }
-#endif
-   
-   return nsXULWindow::Destroy();
+   return Destroy();
 }
 
 
@@ -577,40 +561,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
   }
   return result;
 }
-
-
-NS_IMETHODIMP 
-nsWebShellWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                              nsLoadType aReason)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShellWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  // If loading a new root .xul document, then redo chrome.
-  if (aShell == mWebShell) {
-      mChromeLoaded = PR_FALSE;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
-                                  PRInt32 aProgress, PRInt32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsWebShellWindow::EndLoadURL(nsIWebShell* aWebShell, const PRUnichar* aURL,
-                             nsresult aStatus)
-{
-  return NS_OK;
-}
-
-
 
 //----------------------------------------
 NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar, 
@@ -1754,6 +1704,28 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
     } else {
     }
     return rv;
+}
+
+// nsIBaseWindow
+NS_IMETHODIMP nsWebShellWindow::Destroy()
+{
+#ifdef USE_NATIVE_MENUS
+  // unregister as document listener
+  // this is needed for menus
+   nsCOMPtr<nsIContentViewer> cv;
+   if(mDocShell)
+ 	   mDocShell->GetContentViewer(getter_AddRefs(cv));
+   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+   if(docv)
+      {
+      nsCOMPtr<nsIDocument> doc;
+      docv->GetDocument(*getter_AddRefs(doc));
+      if(doc)
+         doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
+      }
+#endif
+   
+   return nsXULWindow::Destroy();
 }
  
 // nsIPrompt

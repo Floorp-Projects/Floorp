@@ -73,24 +73,6 @@ public:
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-
-  // nsIWebShellContainer interface...
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         nsLoadType aReason);
-
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL);
-
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                             const PRUnichar* aURL,
-                             PRInt32 aProgress,
-                             PRInt32 aProgressMax);
-
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                        const PRUnichar* aURL,
-                        nsresult aStatus);
-
   NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
@@ -182,6 +164,8 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // nsINetSupport
+  // nsIBaseWindow
+  NS_IMETHOD Destroy();
 
   // nsIPrompt
   NS_DECL_NSIPROMPT
