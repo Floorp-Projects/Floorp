@@ -726,7 +726,7 @@ nsHTMLSelectElement::DoneAddingContent()
       result = selectFrame->DoneAddingContent();
     }
   }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
