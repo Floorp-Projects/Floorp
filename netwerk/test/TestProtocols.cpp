@@ -211,11 +211,13 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 {
   char buf[1025];
   PRUint32 amt;
-  do {
+  while (PR_TRUE) {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
+	if (rv == NS_BASE_STREAM_EOF) break;
+	if (NS_FAILED(rv)) return rv;
     buf[amt] = '\0';
     puts(buf);
-  } while (amt != 0);
+  };
 
   return NS_OK;
 }
@@ -250,13 +252,11 @@ public:
                 TestHTTPEventSink *sink;
 
                 sink = new TestHTTPEventSink();
-                if (sink) {
-                    NS_ADDREF(sink);
-                    rv = sink->QueryInterface(eventSinkIID, (void**)result);
-                    NS_RELEASE(sink);
-                } else {
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                }
+                if (sink == nsnull)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                NS_ADDREF(sink);
+                rv = sink->QueryInterface(eventSinkIID, (void**)result);
+                NS_RELEASE(sink);
             }
         }
         return rv;
@@ -321,6 +321,7 @@ main(int argc, char* argv[])
                     NS_ERROR("Failed to create a new consumer!");
                     return -1;
                 }
+				NS_ADDREF(pMyConsumer);
                 // Async reading thru the calls of the event sink interface
                 if (NS_OK == pService->NewChannelFromURI("load", pURL, pMyConsumer, 
                                                          getter_AddRefs(pChannel)))
