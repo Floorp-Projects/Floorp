@@ -834,13 +834,9 @@ public class Interpreter {
                 Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
                 Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
                 int tryStart = iCodeTop;
-                if (catchTarget == null) {
-                    iCodeTop = addByte(TokenStream.TRY, iCodeTop);
-                    iCodeTop = addShort(0, iCodeTop);
-                } else {
-                    iCodeTop = addGoto(catchTarget, TokenStream.TRY, iCodeTop);
-                }
-                iCodeTop = addShort(0, iCodeTop);
+                iCodeTop = addByte(TokenStream.TRY, iCodeTop);
+                iCodeTop = addShort(0, iCodeTop); // placeholder for catch pc
+                iCodeTop = addShort(0, iCodeTop); // placeholder for finally pc
 
                 Node lastChild = null;
                 /*
@@ -867,13 +863,17 @@ public class Interpreter {
                         (nextSibling == catchTarget ||
                          nextSibling == finallyTarget))
                     {
-                        iCodeTop = addByte(TokenStream.ENDTRY,
-                                           iCodeTop);
+                        iCodeTop = addByte(TokenStream.ENDTRY, iCodeTop);
                         insertedEndTry = true;
+                    }
+                    if (child == catchTarget) {
+                        int catchOffset = iCodeTop - tryStart;
+                        recordJumpOffset(tryStart + 1, catchOffset);
+                        iCodeTop = addByte(TokenStream.CATCH, iCodeTop);
                     }
                     iCodeTop = generateICode(child, iCodeTop);
                     lastChild = child;
-                    child = child.getNext();
+                    child = nextSibling;
                 }
                 itsStackDepth = 0;
                 if (finallyTarget != null) {
@@ -1362,6 +1362,7 @@ public class Interpreter {
             case TokenStream.LEAVEWITH :
             case TokenStream.RETURN :
             case TokenStream.ENDTRY :
+            case TokenStream.CATCH:
             case TokenStream.THROW :
             case TokenStream.JTHROW :
             case TokenStream.GETTHIS :
@@ -1688,6 +1689,30 @@ public class Interpreter {
         // Skip starting pc of catch/finally blocks
         pc += 4;
         break;
+    case TokenStream.CATCH: {
+        Throwable ex = (Throwable)stack[stackTop];
+        Object catchObj;
+        for (;;) {
+            if (ex instanceof JavaScriptException) {
+                catchObj = ScriptRuntime.unwrapJavaScriptException(
+                               (JavaScriptException)ex);
+            } else if (ex instanceof EcmaError) {
+                // an offical ECMA error object,
+                catchObj = ((EcmaError)ex).getErrorObject();
+            } else if (ex instanceof WrappedException) {
+                WrappedException wex = (WrappedException)ex;
+                ex = wex.getWrappedException();
+                continue;
+            } else {
+                // catch can not be called with any other exceptions
+                Context.codeBug();
+                catchObj = null;
+            }
+            break;
+        }
+        stack[stackTop] = catchObj;
+        break;
+    }
     case TokenStream.GE : {
         --stackTop;
         Object rhs = stack[stackTop + 1];
@@ -2381,13 +2406,11 @@ public class Interpreter {
         throw new JavaScriptException(exception);
     }
     case TokenStream.JTHROW : {
-        Object exception = stack[stackTop];
-        // No need to check for DBL_MRK: exception must be Exception
+        // No need to check for DBL_MRK: stack[stackTop] must be Throwable
+        Throwable ex = (Throwable)stack[stackTop];
         --stackTop;
-        if (exception instanceof JavaScriptException)
-            throw (JavaScriptException)exception;
-        else
-            throw (RuntimeException)exception;
+        throwJavaOrJSException(ex);
+        break; // unreachable
     }
     case TokenStream.ENTERWITH : {
         Object lhs = stack[stackTop];
@@ -2503,32 +2526,22 @@ public class Interpreter {
                     }
                 }
 
-                final int SCRIPT_THROW = 0, ECMA = 1, RUNTIME = 2, OTHER = 3;
+                final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
                 int exType;
-                Object catchObj = ex; // Object seen by script catch
-
                 for (;;) {
-                    if (catchObj instanceof JavaScriptException) {
-                        catchObj = ScriptRuntime.unwrapJavaScriptException
-                                    ((JavaScriptException)catchObj);
-                        exType = SCRIPT_THROW;
-                    } else if (catchObj instanceof EcmaError) {
+                    if (ex instanceof JavaScriptException) {
+                        exType = SCRIPT_CAN_CATCH;
+                    } else if (ex instanceof EcmaError) {
                         // an offical ECMA error object,
-                        catchObj = ((EcmaError)catchObj).getErrorObject();
-                        exType = ECMA;
-                    } else if (catchObj instanceof RuntimeException) {
-                        if (catchObj instanceof WrappedException) {
-                            Object w = ((WrappedException) catchObj).unwrap();
-                            if (w instanceof Throwable) {
-                                catchObj = ex = (Throwable) w;
-                                continue;
-                            }
-                        }
-                        catchObj = null; // script can not catch this
-                        exType = RUNTIME;
+                        exType = SCRIPT_CAN_CATCH;
+                    } else if (ex instanceof WrappedException) {
+                        WrappedException wex = (WrappedException)ex;
+                        ex = wex.getWrappedException();
+                        continue;
+                    } else if (ex instanceof RuntimeException) {
+                        exType = ONLY_FINALLY;
                     } else {
                         // Error instance
-                        catchObj = null; // script can not catch this
                         exType = OTHER;
                     }
                     break;
@@ -2545,7 +2558,7 @@ public class Interpreter {
                     // long running script
                     --tryStackTop;
                     int try_pc = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
-                    if (exType == SCRIPT_THROW || exType == ECMA) {
+                    if (exType == SCRIPT_CAN_CATCH) {
                         // Allow JS to catch only JavaScriptException and
                         // EcmaError
                         int catch_offset = getShort(iCode, try_pc + 1);
@@ -2554,7 +2567,7 @@ public class Interpreter {
                             rethrow = false;
                             pc = try_pc + catch_offset;
                             stackTop = STACK_SHFT;
-                            stack[stackTop] = catchObj;
+                            stack[stackTop] = ex;
                         }
                     }
                     if (rethrow) {
@@ -2577,11 +2590,7 @@ public class Interpreter {
                         ScriptRuntime.popActivation(cx);
                     }
 
-                    if (exType == SCRIPT_THROW)
-                        throw (JavaScriptException)ex;
-                    if (exType == ECMA || exType == RUNTIME)
-                        throw (RuntimeException)ex;
-                    throw (Error)ex;
+                    throwJavaOrJSException(ex);
                 }
 
                 // We caught an exception,
@@ -2904,6 +2913,19 @@ public class Interpreter {
                     execWithDomain(cx, scope, code, idata.securityDomain);
         }finally {
             cx.interpreterSecurityDomain = savedDomain;
+        }
+    }
+
+    private static void throwJavaOrJSException(Throwable ex)
+        throws JavaScriptException
+    {
+        if (ex instanceof JavaScriptException) {
+            throw (JavaScriptException)ex;
+        } else if (ex instanceof RuntimeException) {
+            throw (RuntimeException)ex;
+        } else {
+            // Must be instance of Error or code bug
+            throw (Error)ex;
         }
     }
 
