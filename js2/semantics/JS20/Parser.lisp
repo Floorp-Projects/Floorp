@@ -537,7 +537,8 @@
     (production :field-name (:identifier) field-name-identifier)
     (production :field-name ($string) field-name-string)
     (production :field-name ($number) field-name-number)
-    (production :field-name (:parenthesized-expression) field-name-parenthesized-expression)
+    (? js2
+      (production :field-name (:parenthesized-expression) field-name-parenthesized-expression))
     
     
     (%subsection "Array Literals")
@@ -635,9 +636,11 @@
     (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed)
     (production :brackets ([ :named-argument-list ]) brackets-named)
     
-    (production :arguments (\( \)) arguments-none)
-    (production :arguments (:parenthesized-list-expression) arguments-unnamed)
+    (production :arguments (:parenthesized-expressions) arguments-parenthesized-expressions)
     (production :arguments (\( :named-argument-list \)) arguments-named)
+    
+    (production :parenthesized-expressions (\( \)) parenthesized-expressions-none)
+    (production :parenthesized-expressions (:parenthesized-list-expression) parenthesized-expressions-some)
     
     (production :named-argument-list (:literal-field) named-argument-list-one)
     (production :named-argument-list ((:list-expression allow-in) \, :literal-field) named-argument-list-unnamed)
@@ -1209,9 +1212,6 @@
     (production (:semicolon abbrev) () semicolon-abbrev)
     (production (:semicolon abbrev-no-short-if) () semicolon-abbrev-no-short-if)
     
-    (production (:noninsertable-semicolon :omega_2) (\;) noninsertable-semicolon-semicolon)
-    (production (:noninsertable-semicolon abbrev) () noninsertable-semicolon-abbrev)
-    
     
     (%subsection "Empty Statement")
     (production :empty-statement (\;) empty-statement-semicolon)
@@ -1431,7 +1431,7 @@
         (production (:directive :omega_2) (:include-directive (:semicolon :omega_2)) directive-include-directive
           ((verify (s :unused)) (todo))
           ((eval (e :unused) (d :unused)) (todo))))
-      (production (:directive :omega_2) (:language-directive (:noninsertable-semicolon :omega_2)) directive-language-directive
+      (production (:directive :omega_2) (:pragma (:semicolon :omega_2)) directive-pragma
         ((verify (s :unused)) (todo))
         ((eval (e :unused) (d :unused)) (todo))))
     
@@ -1463,17 +1463,15 @@
     
     
     (%subsection "Use Directive")
-    (production :use-directive (use :no-line-break namespace :nonassignment-expression-list :use-includes-excludes) use-directive-normal)
-    
-    (production :nonassignment-expression-list ((:non-assignment-expression allow-in)) nonassignment-expression-list-one)
-    (production :nonassignment-expression-list (:nonassignment-expression-list \, (:non-assignment-expression allow-in)) nonassignment-expression-list-more)
+    (production :use-directive (use :no-line-break namespace :parenthesized-expressions :use-includes-excludes) use-directive-normal)
     
     (production :use-includes-excludes () use-includes-excludes-none)
-    (production :use-includes-excludes (exclude :use-name-patterns) use-includes-excludes-exclude-list)
-    (production :use-includes-excludes (include :use-name-patterns) use-includes-excludes-include-list)
+    (production :use-includes-excludes (\, exclude \( :use-name-patterns \)) use-includes-excludes-exclude-list)
+    (production :use-includes-excludes (\, include \( :use-name-patterns \)) use-includes-excludes-include-list)
     
-    (production :use-name-patterns (*) use-name-patterns-wildcard)
+    (production :use-name-patterns () use-name-patterns-empty)
     (production :use-name-patterns (:use-name-pattern-list) use-name-patterns-use-name-pattern-list)
+    (production :use-name-patterns (*) use-name-patterns-wildcard)
     
     (production :use-name-pattern-list (:identifier) use-name-pattern-list-one)
     (production :use-name-pattern-list (:use-name-pattern-list \, :identifier) use-name-pattern-list-more)
@@ -1501,17 +1499,17 @@
       (production :include-directive (include :no-line-break $string) include-directive-include))
     
     
-    (%section "Language Directive")
-    (production :language-directive (use :language-alternatives) language-directive-language-alternatives)
+    (%section "Pragma")
+    (production :pragma (use :no-line-break :pragma-items) pragma-pragma-items)
     
-    (production :language-alternatives (:language-ids) language-alternatives-one)
-    (production :language-alternatives (:language-alternatives \| :language-ids) language-alternatives-more)
+    (production :pragma-items (:pragma-item) pragma-items-one)
+    (production :pragma-items (:pragma-items \, :pragma-item) pragma-items-more)
     
-    (production :language-ids () language-ids-none)
-    (production :language-ids (:language-id :language-ids) language-ids-more)
+    (production :pragma-item (:pragma-expr) pragma-item-pragma-expr)
+    (production :pragma-item (:pragma-expr \?) pragma-item-optional-pragma-expr)
     
-    (production :language-id (:identifier) language-id-identifier)
-    (production :language-id ($number) language-id-number)
+    (production :pragma-expr (:identifier) pragma-expr-identifier)
+    (production :pragma-expr (:identifier :parenthesized-expressions) pragma-expr-identifier-and-arguments)
     
     
     (%section "Definitions")
@@ -1550,7 +1548,7 @@
     (production :import-item (:package-name) import-item-package-name)
     
     (production :import-uses () import-uses-none)
-    (production :import-uses (\: :nonassignment-expression-list) import-uses-nonassignment-expression-list)
+    (production :import-uses (:parenthesized-expressions) import-uses-parenthesized-expressions)
     
     
     (%subsection "Export Definition")
