@@ -81,7 +81,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   
   switch (aEvent->message) {
   case NS_MOUSE_MOVE:
-    UpdateCursor(aPresContext, aEvent->point, aTargetFrame);
+    UpdateCursor(aPresContext, aEvent->point, aTargetFrame, aStatus);
     GenerateMouseEnterExit(aPresContext, aEvent);
     break;
   case NS_MOUSE_EXIT:
@@ -162,7 +162,8 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 }
 
 void
-nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame)
+nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, 
+                                  nsEventStatus& aStatus)
 {
   PRInt32 cursor;
   nsCursor c;
@@ -202,6 +203,11 @@ nsEventStateManager::UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint,
     c = eCursor_select;
     break;
   }
+
+  if (NS_STYLE_CURSOR_AUTO != cursor) {
+    aStatus = nsEventStatus_eConsumeDoDefault;
+  }
+
   nsIWidget* window;
   aTargetFrame->GetWindow(window);
   window->SetCursor(c);
