@@ -268,16 +268,26 @@ str_uneval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
-static JSFunctionSpec string_functions[] = {
-    {"escape",              str_escape,                 1,0,0},
-    {"unescape",            str_unescape,               1,0,0},
+const char js_escape_str[] = "escape";
+const char js_unescape_str[] = "unescape";
 #if JS_HAS_UNEVAL
-    {"uneval",              str_uneval,                 1,0,0},
+const char js_uneval_str[] = "uneval";
 #endif
-    {"decodeURI",           str_decodeURI,              1,0,0},
-    {"encodeURI",           str_encodeURI,              1,0,0},
-    {"decodeURIComponent",  str_decodeURI_Component,    1,0,0},
-    {"encodeURIComponent",  str_encodeURI_Component,    1,0,0},
+const char js_decodeURI_str[] = "decodeURI";
+const char js_encodeURI_str[] = "encodeURI";
+const char js_decodeURIComponent_str[] = "decodeURIComponent";
+const char js_encodeURIComponent_str[] = "encodeURIComponent";
+
+static JSFunctionSpec string_functions[] = {
+    {js_escape_str,             str_escape,                 1,0,0},
+    {js_unescape_str,           str_unescape,               1,0,0},
+#if JS_HAS_UNEVAL
+    {js_uneval_str,             str_uneval,                 1,0,0},
+#endif
+    {js_decodeURI_str,          str_decodeURI,              1,0,0},
+    {js_encodeURI_str,          str_encodeURI,              1,0,0},
+    {js_decodeURIComponent_str, str_decodeURI_Component,    1,0,0},
+    {js_encodeURIComponent_str, str_encodeURI_Component,    1,0,0},
 
     {0,0,0,0,0}
 };
@@ -373,7 +383,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
 }
 
 static JSClass string_class = {
-    "String",
+    js_String_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  str_delProperty,  str_getProperty,  JS_PropertyStub,
     str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub,
@@ -911,9 +921,9 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	reobj = JSVAL_TO_OBJECT(argv[0]);
 	re = (JSRegExp *) JS_GetPrivate(cx, reobj);
     } else {
-        if (JSVAL_IS_VOID(argv[0]))
+        if (JSVAL_IS_VOID(argv[0])) {
             re = js_NewRegExp(cx, NULL, cx->runtime->emptyString, 0, JS_FALSE);
-        else {
+        } else {
 	    src = js_ValueToString(cx, argv[0]);
 	    if (!src)
 	        return JS_FALSE;
@@ -2213,22 +2223,36 @@ js_FreeStringGlobals()
 #endif
 }
 
-JSObject *
-js_InitStringClass(JSContext *cx, JSObject *obj)
+JSBool
+js_InitRuntimeStringState(JSContext *cx)
 {
     JSRuntime *rt;
     JSString *empty;
-    JSObject *proto;
 
     rt = cx->runtime;
-    empty = rt->emptyString;
-    if (!empty) {
-	/* Make a permanently locked empty string. */
-	empty = js_NewStringCopyN(cx, js_empty_ucstr, 0, GCF_LOCK);
-	if (!empty)
-	    return NULL;
-	rt->emptyString = empty;
-    }
+    JS_ASSERT(!rt->emptyString);
+
+    /* Make a permanently locked empty string. */
+    empty = js_NewStringCopyN(cx, js_empty_ucstr, 0, GCF_LOCK);
+    if (!empty)
+        return JS_FALSE;
+    rt->emptyString = empty;
+    return JS_TRUE;
+}
+
+void
+js_FinishRuntimeStringState(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+
+    js_UnlockGCThing(cx, rt->emptyString);
+    rt->emptyString = NULL;
+}
+
+JSObject *
+js_InitStringClass(JSContext *cx, JSObject *obj)
+{
+    JSObject *proto;
 
     /* Define the escape, unescape functions in the global object. */
     if (!JS_DefineFunctions(cx, obj, string_functions))
@@ -2239,7 +2263,8 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 			 NULL, string_static_methods);
     if (!proto)
 	return NULL;
-    OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE, STRING_TO_JSVAL(empty));
+    OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE,
+                 STRING_TO_JSVAL(cx->runtime->emptyString));
     return proto;
 }
 

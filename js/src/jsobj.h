@@ -196,6 +196,15 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
+/* Select Object.prototype method names shared between jsapi.c and jsobj.c. */
+extern const char js_watch_str[];
+extern const char js_unwatch_str[];
+extern const char js_hasOwnProperty_str[];
+extern const char js_isPrototypeOf_str[];
+extern const char js_propertyIsEnumerable_str[];
+extern const char js_defineGetter_str[];
+extern const char js_defineSetter_str[];
+
 extern void
 js_InitObjectMap(JSObjectMap *map, jsrefcount nrefs, JSObjectOps *ops,
 		 JSClass *clasp);

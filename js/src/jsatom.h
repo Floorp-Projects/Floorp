@@ -141,10 +141,19 @@ struct JSAtomState {
     JSAtom              *nullAtom;
 
     /* Various built-in or commonly-used atoms. */
+    JSAtom              *ArgumentsAtom;
     JSAtom              *ArrayAtom;
+    JSAtom              *BooleanAtom;
+    JSAtom              *CallAtom;
+    JSAtom              *DateAtom;
+    JSAtom              *ErrorAtom;
+    JSAtom              *FunctionAtom;
     JSAtom              *MathAtom;
-    JSAtom              *NaNAtom;
+    JSAtom              *NumberAtom;
     JSAtom              *ObjectAtom;
+    JSAtom              *RegExpAtom;
+    JSAtom              *ScriptAtom;
+    JSAtom              *StringAtom;
     JSAtom              *anonymousAtom;
     JSAtom              *argumentsAtom;
     JSAtom              *arityAtom;
@@ -153,21 +162,21 @@ struct JSAtomState {
     JSAtom              *classPrototypeAtom;
     JSAtom              *constructorAtom;
     JSAtom              *countAtom;
-    JSAtom              *getterAtom;
+    JSAtom              *evalAtom;
     JSAtom              *getAtom;
+    JSAtom              *getterAtom;
     JSAtom              *indexAtom;
     JSAtom              *inputAtom;
     JSAtom              *lengthAtom;
     JSAtom              *nameAtom;
     JSAtom              *parentAtom;
     JSAtom              *protoAtom;
-    JSAtom              *setterAtom;
     JSAtom              *setAtom;
+    JSAtom              *setterAtom;
+    JSAtom              *toLocaleStringAtom;
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
-    JSAtom              *toLocaleStringAtom;
     JSAtom              *valueOfAtom;
-    JSAtom              *evalAtom;
 
 #ifdef JS_THREADSAFE
     JSThinLock          lock;
@@ -176,36 +185,44 @@ struct JSAtomState {
 };
 
 /* Well-known predefined strings and their atoms. */
-extern char   *js_type_str[];
-extern char   *js_boolean_str[];
+extern const char   *js_type_str[];
+extern const char   *js_boolean_str[];
 
-extern char   js_Array_str[];
-extern char   js_Math_str[];
-extern char   js_NaN_str[];
-extern char   js_Object_str[];
-extern char   js_anonymous_str[];
-extern char   js_arguments_str[];
-extern char   js_arity_str[];
-extern char   js_callee_str[];
-extern char   js_caller_str[];
-extern char   js_class_prototype_str[];
-extern char   js_constructor_str[];
-extern char   js_count_str[];
-extern char   js_eval_str[];
-extern char   js_getter_str[];
-extern char   js_get_str[];
-extern char   js_index_str[];
-extern char   js_input_str[];
-extern char   js_length_str[];
-extern char   js_name_str[];
-extern char   js_parent_str[];
-extern char   js_proto_str[];
-extern char   js_setter_str[];
-extern char   js_set_str[];
-extern char   js_toSource_str[];
-extern char   js_toString_str[];
-extern char   js_toLocaleString_str[];
-extern char   js_valueOf_str[];
+extern const char   js_Arguments_str[];
+extern const char   js_Array_str[];
+extern const char   js_Boolean_str[];
+extern const char   js_Call_str[];
+extern const char   js_Date_str[];
+extern const char   js_Function_str[];
+extern const char   js_Math_str[];
+extern const char   js_Number_str[];
+extern const char   js_Object_str[];
+extern const char   js_RegExp_str[];
+extern const char   js_Script_str[];
+extern const char   js_String_str[];
+extern const char   js_anonymous_str[];
+extern const char   js_arguments_str[];
+extern const char   js_arity_str[];
+extern const char   js_callee_str[];
+extern const char   js_caller_str[];
+extern const char   js_class_prototype_str[];
+extern const char   js_constructor_str[];
+extern const char   js_count_str[];
+extern const char   js_eval_str[];
+extern const char   js_getter_str[];
+extern const char   js_get_str[];
+extern const char   js_index_str[];
+extern const char   js_input_str[];
+extern const char   js_length_str[];
+extern const char   js_name_str[];
+extern const char   js_parent_str[];
+extern const char   js_proto_str[];
+extern const char   js_setter_str[];
+extern const char   js_set_str[];
+extern const char   js_toSource_str[];
+extern const char   js_toString_str[];
+extern const char   js_toLocaleString_str[];
+extern const char   js_valueOf_str[];
 
 /*
  * Initialize atom state.  Return true on success, false with an out of

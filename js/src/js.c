@@ -1781,10 +1781,32 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
+#define LAZY_STANDARD_CLASSES
+
+static JSBool
+global_enumerate(JSContext *cx, JSObject *obj)
+{
+#ifdef LAZY_STANDARD_CLASSES
+    return JS_EnumerateStandardClasses(cx, obj);
+#else
+    return JS_TRUE;
+#endif
+}
+
 static JSBool
 global_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
+#ifdef LAZY_STANDARD_CLASSES
+    JSBool resolved;
+
+    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+        return JS_FALSE;
+    if (resolved)
+        return JS_TRUE;
+#endif
+
 #if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
+  {
     /*
      * Do this expensive hack only for unoptimized Unix builds, which are not
      * used for benchmarking.
@@ -1826,6 +1848,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
     }
     JS_free(cx, path);
     return ok;
+  }
 #else
     return JS_TRUE;
 #endif
@@ -1834,7 +1857,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
 static JSClass global_class = {
     "global", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, global_resolve,   JS_ConvertStub,   JS_FinalizeStub
+    global_enumerate, global_resolve,   JS_ConvertStub,   JS_FinalizeStub
 };
 
 int
@@ -1917,8 +1940,10 @@ main(int argc, char **argv)
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
     if (!glob)
 	return 1;
+#ifndef LAZY_STANDARD_CLASSES
     if (!JS_InitStandardClasses(cx, glob))
 	return 1;
+#endif
     if (!JS_DefineFunctions(cx, glob, shell_functions))
 	return 1;
 

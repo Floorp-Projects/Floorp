@@ -42,6 +42,7 @@
 #include "jslong.h"
 #include "jsatom.h"
 #include "jsconfig.h"
+#include "jsdhash.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jsobj.h"
@@ -247,6 +248,8 @@ struct JSContext {
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
+    /* Non-null if init'ing standard classes lazily, to stop recursion. */
+    JSDHashTable        *resolving;
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */

@@ -428,7 +428,7 @@ MakeDay(jsdouble year, jsdouble month, jsdouble date)
 
 #define TIMECLIP(d) ((JSDOUBLE_IS_FINITE(d) \
 		      && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-		     ? js_DoubleToInteger(d + (+0.)) : *(cx->runtime->jsNaN))
+		     ? js_DoubleToInteger(d + (+0.)) : *cx->runtime->jsNaN)
 
 /**
  * end of ECMA 'support' functions
@@ -439,7 +439,7 @@ MakeDay(jsdouble year, jsdouble month, jsdouble date)
  */
 
 static JSClass date_class = {
-    "Date",
+    js_Date_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
@@ -1142,7 +1142,7 @@ date_makeTime(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	if (!js_ValueToNumber(cx, argv[i], &args[i]))
 	    return JS_FALSE;
 	if (!JSDOUBLE_IS_FINITE(args[i])) {
-	    *date = *(cx->runtime->jsNaN);
+	    *date = *cx->runtime->jsNaN;
 	    return js_NewNumberValue(cx, *date, rval);
 	}
 	args[i] = js_DoubleToInteger(args[i]);
@@ -1271,7 +1271,7 @@ date_makeDate(JSContext *cx, JSObject *obj, uintN argc,
 	if (!js_ValueToNumber(cx, argv[i], &args[i]))
 	    return JS_FALSE;
 	if (!JSDOUBLE_IS_FINITE(args[i])) {
-	    *date = *(cx->runtime->jsNaN);
+	    *date = *cx->runtime->jsNaN;
 	    return js_NewNumberValue(cx, *date, rval);
 	}
 	args[i] = js_DoubleToInteger(args[i]);
@@ -1378,7 +1378,7 @@ date_setYear(JSContext *cx, JSObject *obj, uintN argc,
     if (!js_ValueToNumber(cx, argv[0], &year))
 	return JS_FALSE;
     if (!JSDOUBLE_IS_FINITE(year)) {
-	*date = *(cx->runtime->jsNaN);
+	*date = *cx->runtime->jsNaN;
 	return js_NewNumberValue(cx, *date, rval);
     }
 
@@ -1857,7 +1857,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		return JS_FALSE;
 
 	    if (!date_parseString(str->chars, date))
-		*date = *(cx->runtime->jsNaN);
+		*date = *cx->runtime->jsNaN;
 	    *date = TIMECLIP(*date);
 	}
     } else {
@@ -1877,7 +1877,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		    date = date_constructor(cx, obj);
 		    if (!date)
 			return JS_FALSE;
-		    *date = *(cx->runtime->jsNaN);
+		    *date = *cx->runtime->jsNaN;
 		    return JS_TRUE;
 		}
 		array[loop] = js_DoubleToInteger(double_arg);
@@ -1924,7 +1924,7 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     proto_date = date_constructor(cx, proto);
     if (!proto_date)
 	return NULL;
-    *proto_date = *(cx->runtime->jsNaN);
+    *proto_date = *cx->runtime->jsNaN;
 
     return proto;
 }

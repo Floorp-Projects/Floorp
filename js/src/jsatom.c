@@ -51,11 +51,13 @@
 #include "jsopcode.h"
 #include "jsstr.h"
 
+extern const char js_Error_str[];       /* trivial, from jsexn.h */
+
 /*
  * Keep this in sync with jspubtd.h -- an assertion below will insist that
  * its length match the JSType enum's JSTYPE_LIMIT limit value.
  */
-char *js_type_str[] = {
+const char *js_type_str[] = {
     "undefined",
     "object",
     "function",
@@ -64,38 +66,46 @@ char *js_type_str[] = {
     "boolean",
 };
 
-char *js_boolean_str[] = {
+const char *js_boolean_str[] = {
     js_false_str,
     js_true_str
 };
 
-char   js_Array_str[]             = "Array";
-char   js_Math_str[]              = "Math";
-char   js_NaN_str[]               = "NaN";
-char   js_Object_str[]            = "Object";
-char   js_anonymous_str[]         = "anonymous";
-char   js_arguments_str[]         = "arguments";
-char   js_arity_str[]             = "arity";
-char   js_callee_str[]            = "callee";
-char   js_caller_str[]            = "caller";
-char   js_class_prototype_str[]   = "prototype";
-char   js_constructor_str[]       = "constructor";
-char   js_count_str[]             = "__count__";
-char   js_eval_str[]              = "eval";
-char   js_getter_str[]            = "getter";
-char   js_get_str[]               = "get";
-char   js_index_str[]             = "index";
-char   js_input_str[]             = "input";
-char   js_length_str[]            = "length";
-char   js_name_str[]              = "name";
-char   js_parent_str[]            = "__parent__";
-char   js_proto_str[]             = "__proto__";
-char   js_setter_str[]            = "setter";
-char   js_set_str[]               = "set";
-char   js_toSource_str[]          = "toSource";
-char   js_toString_str[]          = "toString";
-char   js_toLocaleString_str[]    = "toLocaleString";
-char   js_valueOf_str[]           = "valueOf";
+const char js_Arguments_str[]       = "Arguments";
+const char js_Array_str[]           = "Array";
+const char js_Boolean_str[]         = "Boolean";
+const char js_Call_str[]            = "Call";
+const char js_Date_str[]            = "Date";
+const char js_Function_str[]        = "Function";
+const char js_Math_str[]            = "Math";
+const char js_Number_str[]          = "Number";
+const char js_Object_str[]          = "Object";
+const char js_RegExp_str[]          = "RegExp";
+const char js_Script_str[]          = "Script";
+const char js_String_str[]          = "String";
+const char js_anonymous_str[]       = "anonymous";
+const char js_arguments_str[]       = "arguments";
+const char js_arity_str[]           = "arity";
+const char js_callee_str[]          = "callee";
+const char js_caller_str[]          = "caller";
+const char js_class_prototype_str[] = "prototype";
+const char js_constructor_str[]     = "constructor";
+const char js_count_str[]           = "__count__";
+const char js_eval_str[]            = "eval";
+const char js_getter_str[]          = "getter";
+const char js_get_str[]             = "get";
+const char js_index_str[]           = "index";
+const char js_input_str[]           = "input";
+const char js_length_str[]          = "length";
+const char js_name_str[]            = "name";
+const char js_parent_str[]          = "__parent__";
+const char js_proto_str[]           = "__proto__";
+const char js_setter_str[]          = "setter";
+const char js_set_str[]             = "set";
+const char js_toSource_str[]        = "toSource";
+const char js_toString_str[]        = "toString";
+const char js_toLocaleString_str[]  = "toLocaleString";
+const char js_valueOf_str[]         = "valueOf";
 
 #define HASH_OBJECT(o)  ((JSHashNumber)(o) >> JSVAL_TAGBITS)
 #define HASH_INT(i)     ((JSHashNumber)(i))
@@ -237,10 +247,19 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     FROB(booleanAtoms[1],         js_true_str);
     FROB(nullAtom,                js_null_str);
 
+    FROB(ArgumentsAtom,           js_Arguments_str);
     FROB(ArrayAtom,               js_Array_str);
+    FROB(BooleanAtom,             js_Boolean_str);
+    FROB(CallAtom,                js_Call_str);
+    FROB(DateAtom,                js_Date_str);
+    FROB(ErrorAtom,               js_Error_str);
+    FROB(FunctionAtom,            js_Function_str);
     FROB(MathAtom,                js_Math_str);
-    FROB(NaNAtom,                 js_NaN_str);
+    FROB(NumberAtom,              js_Number_str);
     FROB(ObjectAtom,              js_Object_str);
+    FROB(RegExpAtom,              js_RegExp_str);
+    FROB(ScriptAtom,              js_Script_str);
+    FROB(StringAtom,              js_String_str);
     FROB(anonymousAtom,           js_anonymous_str);
     FROB(argumentsAtom,           js_arguments_str);
     FROB(arityAtom,               js_arity_str);
@@ -249,21 +268,21 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     FROB(classPrototypeAtom,      js_class_prototype_str);
     FROB(constructorAtom,         js_constructor_str);
     FROB(countAtom,               js_count_str);
-    FROB(getterAtom,              js_getter_str);
+    FROB(evalAtom,                js_eval_str);
     FROB(getAtom,                 js_get_str);
+    FROB(getterAtom,              js_getter_str);
     FROB(indexAtom,               js_index_str);
     FROB(inputAtom,               js_input_str);
     FROB(lengthAtom,              js_length_str);
     FROB(nameAtom,                js_name_str);
     FROB(parentAtom,              js_parent_str);
     FROB(protoAtom,               js_proto_str);
-    FROB(setterAtom,              js_setter_str);
     FROB(setAtom,                 js_set_str);
+    FROB(setterAtom,              js_setter_str);
     FROB(toSourceAtom,            js_toSource_str);
     FROB(toStringAtom,            js_toString_str);
     FROB(toLocaleStringAtom,      js_toLocaleString_str);
     FROB(valueOfAtom,             js_valueOf_str);
-    FROB(evalAtom,                js_eval_str);
 
 #undef FROB
 

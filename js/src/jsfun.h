@@ -75,8 +75,11 @@ js_IsIdentifier(JSString *str);
 extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
-extern JSBool
-js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj);
+extern JSObject *
+js_InitArgumentsClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
+js_InitCallClass(JSContext *cx, JSObject *obj);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
