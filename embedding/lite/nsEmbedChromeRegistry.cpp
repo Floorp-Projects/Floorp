@@ -44,6 +44,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIProperties.h"
 #include "nsILocalFile.h"
+#include "nsIURI.h"
 
 #define CHROME_TYPE_CONTENT 0
 #define CHROME_TYPE_LOCALE 1
