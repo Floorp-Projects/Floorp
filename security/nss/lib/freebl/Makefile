@@ -146,7 +146,7 @@ endif
 ifeq ($(OS_TARGET),SunOS)
 ifeq ($(CPU_ARCH),sparc)
 ifndef NS_USE_GCC
-ifndef USE_PURE_32
+ifdef USE_HYBRID
     OS_CFLAGS += -xchip=ultra2
 endif
 endif
