@@ -8,8 +8,8 @@
 # VCDisplay module for CVSWeb.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/12/10 19:35:50 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/01/19 17:24:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay.pm,v $ 
 # $Name:  $ 
@@ -72,6 +72,49 @@ main::require_modules($IMPLS);
 $VCDisplay = VCDisplay->new();
 
 $DEBUG = 1;
+
+
+
+# The function query creates HTTP links for SQL queries to the Version
+# Control (VC) system.  The protype system that this works for is
+# BONSAI the netscape database which is fed data from CVS.  The
+# arguments to query are:
+
+#    %args = (
+#	     'tree' => Which VC tree this query applies to 
+#	     'mindate' => The oldest time which should be considered
+#	     'maxdate' => The most recent time which should be considered
+#	     'who' => The VC name of the individual who checked in the change
+#	     'linktxt' => The text to display on the link to the query
+#	     'alt_linktxt' => Alternative text to display if there is no web 
+#				 access to the VC system
+#	     );
+    
+
+# The function guess creates HTTP links to the current version of a
+# particular file at a specified line number.  This function is used
+# when only the basename of the file is provided and some additional
+# work must be done to figure out the file which was meant.  Most
+# compilers only give the basename in their error messages and leave
+# the determination of the directory to the user who is looking at the
+# error log.
+
+# arguments to guess are:
+
+#    %args = (
+#	     'tree' => Which VC tree this query applies to 
+#	     'file' => The basename of the file to be displayed
+#	     'line' => The line number of the file which is of interest, 
+#                      some context above and below this line will be shown.
+#	     'linktxt' => The text to display on the link to the query
+#	     'alt_linktxt' => Alternative text to display if there is no web 
+#				access to the VC system
+#	     );
+    
+
+# The function source is used instead of guess when the full filename
+# is know.  The arguments to guess and source are identical.  There is
+# no code in tinderbox which uses this function.
 
 sub new {
 
