@@ -75,21 +75,16 @@ function clearConsole()
 
 function changeSortOrder(aOrder)
 {
-  var order = aOrder == -1 ? -1 : 1; // default to 1
-  gConsole.sortOrder = order;
-  document.persist("ConsoleBox", "sortOrder");
-  updateSortCommand(order);
+  updateSortCommand(gConsole.sortOrder = aOrder);
 }
 
 function updateSortCommand(aOrder)
 {
-  var order = aOrder == -1 ? -1 : 1; // default to 1
-  var orderString = order == 1 ? "Ascend" : "Descend";
+  var orderString = aOrder == 'reverse' ? "Descend" : "Ascend";
   var bc = document.getElementById("Console:sort"+orderString);
   bc.setAttribute("checked", true);  
 
-  order *= -1;
-  orderString = order == 1 ? "Ascend" : "Descend";
+  orderString = aOrder == 'reverse' ? "Ascend" : "Descend";
   bc = document.getElementById("Console:sort"+orderString);
   bc.setAttribute("checked", false);
 }

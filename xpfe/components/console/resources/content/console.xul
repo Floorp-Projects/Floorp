@@ -56,10 +56,10 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   
   <broadcaster id="Console:sortAscend" label="&sortFirst.label;" 
                accesskey="&sortFirst.accesskey;"
-               oncommand="changeSortOrder(1);"/>
+               oncommand="changeSortOrder('forward');"/>
   <broadcaster id="Console:sortDescend" label="&sortLast.label;"
                accesskey="&sortLast.accesskey;"
-               oncommand="changeSortOrder(-1);"/>
+               oncommand="changeSortOrder('reverse');"/>
 
   <broadcaster id="Console:toggleToolbarMode" label="&toolbarMode.label;" 
                oncommand="toggleToolbar(this);" checked="true" 
@@ -144,7 +144,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   </toolbar>
 </toolbox>
   
-<hbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext"/>
+<vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
 
 <iframe id="Evaluator" collapsed="true"/>
 

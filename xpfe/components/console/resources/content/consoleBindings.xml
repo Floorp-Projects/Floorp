@@ -9,9 +9,9 @@
   <binding id="console-box" extends="xul:box">
     <content>  
       <xul:stringbundle src="chrome://global/locale/console.properties" role="string-bundle"/>
-      <xul:box class="console-box-internal" flex="1">
-        <xul:vbox class="console-rows" flex="1" role="console-rows"/>
-      </xul:box>
+      <xul:vbox class="console-box-internal">
+        <xul:vbox class="console-rows" role="console-rows" inherits="dir=sortOrder"/>
+      </xul:vbox>
     </content>
   
     <implementation>
@@ -28,14 +28,8 @@
       </property>
     
       <property name="sortOrder">
-        <getter>return this.mSort</getter>
-        <setter><![CDATA[
-          if (this.mSort != val) {
-            this.mSort = val == -1 ? -1 : 1;
-            this.setAttribute("sortOrder", this.mSort);
-            this.reverseRows();
-          }
-        ]]></setter>
+        <getter>return this.getAttribute("sortOrder");</getter>
+        <setter>this.setAttribute("sortOrder", val); return val;</setter>
       </property>
       <field name="mSelectedItem">null</field>
       <property name="selectedItem">
@@ -72,9 +66,6 @@
             return;
           }          
                     
-          // initialize properties from attributes
-          this.mSort = this.getAttribute("sortOrder") == -1 ? -1 : 1;
-          
           if (this.hasAttribute("mode"))
             this.mMode = this.getAttribute("mode");
           else
@@ -190,7 +181,7 @@
           this.mCService.logStringMessage("__CLEAR__");
           this.mCount = 0;
           
-          var newRows = this.createConsoleRowBox();
+          var newRows = this.mConsoleRowBox.cloneNode(false);
           this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
           this.mConsoleRowBox = newRows;
         ]]></body>
@@ -200,16 +191,6 @@
         <body><![CDATA[
           if (this.mSelectedItem)
             this.copyString(this.mSelectedItem.toString());
-        ]]></body>
-      </method>
-
-      <method name="createConsoleRowBox">
-        <body><![CDATA[
-          var box = document.createElement("box");
-          box.setAttribute("class", "console-rows");
-          box.setAttribute("orient", "vertical");
-          box.setAttribute("flex", "1");
-          return box;
         ]]></body>
       </method>
                   
@@ -226,17 +207,8 @@
       <method name="appendConsoleRow">
         <parameter name="aRow"/>
         <body><![CDATA[
-          if (this.mSort == 1) {
-            this.mConsoleRowBox.appendChild(aRow);
-          } else if (this.mSort == -1) {
-            if (this.mConsoleRowBox.childNodes.length == 0)
-              this.mConsoleRowBox.appendChild(aRow);
-            else
-              this.mConsoleRowBox.insertBefore(aRow, this.mConsoleRowBox.firstChild);
-          }
-                    
-          ++this.mCount;
-          if (this.mCount > 250) this.deleteFirst();
+          this.mConsoleRowBox.appendChild(aRow);
+          if (++this.mCount > 250) this.deleteFirst();
         ]]></body>
       </method>
             
@@ -248,21 +220,6 @@
         ]]></body>
       </method>
             
-      <method name="reverseRows">
-        <body><![CDATA[
-          var box = this.mConsoleRowBox;
-          var row;
-          for (var i = 0; i < box.childNodes.length; ++i) {
-            row = box.firstChild;
-            box.removeChild(row);
-            if (i == 0)
-              box.appendChild(row);
-            else
-              box.insertBefore(row, box.childNodes[box.childNodes.length - i]);
-          }
-        ]]></body>
-      </method>
-      
       <!-- UTILITY FUNCTIONS -->
       
       <!-- We need this method only because document.getAnonymousElementByAttribute 
