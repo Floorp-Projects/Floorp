@@ -878,6 +878,10 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.mOverflowArea = *overflowArea;
   }
 
+  if(aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    aDesiredSize.mMaximumWidth = prefSize.width;
+  }
+
   // max sure the max element size reflects
   // our min width
   nscoord* maxElementWidth = state.GetMaxElementWidth();
