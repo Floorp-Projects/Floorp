@@ -52,7 +52,7 @@
   <binding id="progressmeter-undetermined"
            extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
     <content>
-      <xul:stack class="progress-remainder" flex="1" anonid="stack">
+      <xul:stack style="overflow: -moz-hidden-unscrollable;" class="progress-remainder" flex="1" anonid="stack">
         <xul:spacer class="progress-bar" anonid="spacer" top="0" style="margin-right: -1000px;"/>
       </xul:stack>
     </content>
