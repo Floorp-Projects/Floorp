@@ -25,6 +25,7 @@
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMWindowInternal.h"
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
@@ -108,8 +109,10 @@ nsDSURIContentListener::DoContent(const char* aContentType,
         return NS_OK;
     }
 
-    if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
-        mDocShell->SetFocus();
+    if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
+        nsCOMPtr<nsIDOMWindowInternal> domWindow = do_GetInterface(NS_STATIC_CAST(nsIDocShell*, mDocShell));
+        domWindow->Focus();
+    }
 
     return NS_OK;
 }
