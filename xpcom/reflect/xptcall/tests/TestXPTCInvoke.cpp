@@ -166,7 +166,7 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->AddManyFloats(1,2,3,4,5,6,7,8,9,10,&outF)))
-        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n", outF);
+        printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n", (double)outF);
     else
         printf("\tFAILED");
 
@@ -345,7 +345,7 @@ int main()
 
     if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 8, 11, var)))
         printf("\t1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = %ff\n",
-                var[10].val.f);
+                (double) var[10].val.f);
 
     DoMultipleInheritenceTest();
     DoMultipleInheritenceTest2();
