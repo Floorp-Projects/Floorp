@@ -389,69 +389,65 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 
   mFilename=aParserContext.mScanner->GetFilename();
   mFlags = NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE; // residual style is always on. This will also reset the flags
-  mLineNumber=1;
-  mDTDMode=aParserContext.mDTDMode;
-  mParserCommand=aParserContext.mParserCommand;
-  mMimeType=aParserContext.mMimeType;
+  mLineNumber = 1;
+  mDTDMode = aParserContext.mDTDMode;
+  mParserCommand = aParserContext.mParserCommand;
+  mMimeType = aParserContext.mMimeType;
+  mDocType = aParserContext.mDocType;
+  mSkipTarget = eHTMLTag_unknown;
   mTokenizer = aTokenizer;
   mBodyContext->SetNodeAllocator(&mNodeAllocator);
 
-  if((!aParserContext.mPrevContext) && (aSink)) {
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+  if(!aParserContext.mPrevContext && aSink) {
 
 #ifdef DEBUG
     mBodyContext->ResetCounters();
 #endif
 
-    mDocType=aParserContext.mDocType;
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+    
+    result = aSink->WillBuildModel();
+    
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+    START_TIMER();
 
-    if(aSink && (!mSink)) {
-      result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
-    }
-
-    if(result==NS_OK) {
-
-        //let's see if the environment is set up for us to write output to
-        //a logging sink. If so, then we'll create one, and make it the
-        //proxy for the real sink we're given from the parser.
-
-#ifdef NS_DEBUG
-      nsLoggingSink *theLogSink=GetLoggingSink();
-      if(theLogSink) {   
-        theLogSink->SetProxySink(mSink);
-        mSink=theLogSink;
+    if (NS_SUCCEEDED(result) && !mSink) {
+      result = CallQueryInterface(aSink, &mSink);
+      if (NS_FAILED(result)) {
+        mFlags |= NS_DTD_FLAG_STOP_PARSING;
+        return result;
       }
+    }
+    
+    //let's see if the environment is set up for us to write output to
+    //a logging sink. If so, then we'll create one, and make it the
+    //proxy for the real sink we're given from the parser.
+#ifdef NS_DEBUG
+    nsLoggingSink *theLogSink=GetLoggingSink();
+    if(theLogSink) {   
+      theLogSink->SetProxySink(mSink);
+      mSink=theLogSink;
+    }
 #endif    
 
-      result = aSink->WillBuildModel();
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
-      START_TIMER();
-      
-      
-      if(mSink) {
-        PRBool enabled;
-        mSink->GetPref(eHTMLTag_frameset,enabled);
-        if(enabled) {
-          mFlags |= NS_DTD_FLAG_FRAMES_ENABLED;
-        }
-        
-        mSink->GetPref(eHTMLTag_script,enabled);
-        if(enabled) {
-          mFlags |= NS_DTD_FLAG_SCRIPT_ENABLED;
-        }
+   if(mSink) {
+      PRBool enabled;
+      mSink->GetPref(eHTMLTag_frameset,enabled);
+      if(enabled) {
+        mFlags |= NS_DTD_FLAG_FRAMES_ENABLED;
       }
       
-      mSkipTarget=eHTMLTag_unknown;
-
-#ifdef ENABLE_CRC
-      mComputedCRC32=0;
-      mExpectedCRC32=0;
-#endif
-
+      mSink->GetPref(eHTMLTag_script,enabled);
+      if(enabled) {
+        mFlags |= NS_DTD_FLAG_SCRIPT_ENABLED;
+      }
     }
+    
+#ifdef ENABLE_CRC
+    mComputedCRC32=0;
+    mExpectedCRC32=0;
+#endif
   }
 
   return result;
@@ -537,6 +533,9 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
       }//while
       mTokenizer = oldTokenizer;
     }
+    else {
+      result = mFlags & NS_DTD_FLAG_STOP_PARSING ? NS_ERROR_HTMLPARSER_STOPPARSING : result;
+    }
   }
 
   return result;
@@ -557,26 +556,30 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
-      CStartToken *theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
-      mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
-      result=BuildModel(aParser,mTokenizer,0,aSink);
+      if (mTokenAllocator) {
+        CStartToken *theToken = NS_STATIC_CAST(CStartToken*, mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
+        mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
+        result = BuildModel(aParser,mTokenizer, 0, aSink);
+      }
     } 
 
     if(aParser && (NS_OK==result)){ 
       if(aNotifySink){ 
         if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
-          if(mSkipTarget) {
-            CHTMLToken* theEndToken=nsnull;
-            theEndToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,mSkipTarget));
-            if(theEndToken) {
-              result=HandleToken(theEndToken,mParser);
+          if (mTokenAllocator) {
+            if(mSkipTarget) {
+              CHTMLToken* theEndToken=nsnull;
+              theEndToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,mSkipTarget));
+              if(theEndToken) {
+                result=HandleToken(theEndToken,mParser);
+              }
             }
-          }
-          if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
-            // Create an end table token to flush tokens off the misplaced list...
-            CHTMLToken* theTableToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_table));
-            if(theTableToken) {
-              result=HandleToken(theTableToken,mParser);
+            if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
+              // Create an end table token to flush tokens off the misplaced list...
+              CHTMLToken* theTableToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_table));
+              if(theTableToken) {
+                result=HandleToken(theTableToken,mParser);
+              }
             }
           }
           if(NS_SUCCEEDED(result)) {
