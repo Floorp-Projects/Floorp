@@ -185,7 +185,8 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrCacheSize(PRUint32 *aSize)
 
 NS_IMETHODIMP nsMsgDatabase::ClearCachedHdrs()
 {
-  return ClearHdrCache(PR_FALSE); // don't re-init, hope db gets closed.
+  ClearCachedObjects();
+  return NS_OK;
 }
 
 void nsMsgDatabase::ClearCachedObjects()
