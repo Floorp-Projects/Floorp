@@ -363,7 +363,7 @@ void nsBlockFrame::PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
 
     // XXX Don't forget the floater's margins...
     mCurrentState->spaceManager->Translate(mCurrentState->borderPadding.left, 0);
-    mCurrentState->spaceManager->AddRectRegion(region);
+    mCurrentState->spaceManager->AddRectRegion(region, floater);
 
     // Set the origin of the floater in world coordinates
     nscoord worldX, worldY;
@@ -1976,7 +1976,7 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
 
     // XXX Don't forget the floater's margins...
     mCurrentState->spaceManager->Translate(mCurrentState->borderPadding.left, 0);
-    mCurrentState->spaceManager->AddRectRegion(region);
+    mCurrentState->spaceManager->AddRectRegion(region, aFloater);
 
     // Set the origin of the floater in world coordinates
     nscoord worldX, worldY;

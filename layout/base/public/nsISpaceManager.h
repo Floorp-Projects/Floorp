@@ -43,10 +43,10 @@ struct nsSize;
 struct nsBandTrapezoid {
   enum State {smAvailable, smOccupied, smOccupiedMultiple};
 
-  nscoord   yTop, yBottom;  // horizontal top and bottom coordinates
-  nscoord   xTopLeft, xBottomLeft;
-  nscoord   xTopRight, xBottomRight;
-  State     state;  // state of the space
+  nscoord   yTop, yBottom;            // top and bottom y-coordinates
+  nscoord   xTopLeft, xBottomLeft;    // left edge x-coordinates
+  nscoord   xTopRight, xBottomRight;  // right edge x-coordinates
+  State     state;                    // state of the space
   union {
     nsIFrame*          frame;  // frame occupying the space
     const nsVoidArray* frames; // list of frames occupying the space
@@ -128,7 +128,7 @@ public:
    * Add a rectangular region of unavailable space. The space is relative to
    * the local coordinate system.
    */
-  virtual void AddRectRegion(const nsRect& aUnavailableSpace) = 0;
+  virtual void AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame) = 0;
 
   /**
    * Clears the list of regions representing the unavailable space.

@@ -39,7 +39,7 @@ public:
   virtual PRInt32 GetBandData(nscoord       aYOffset,
                               const nsSize& aMaxSize,
                               nsBandData&   aAvailableSpace) const;
-  virtual void AddRectRegion(const nsRect& aUnavailableSpace);
+  virtual void AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame);
   virtual void ClearRegions();
 
 protected:
