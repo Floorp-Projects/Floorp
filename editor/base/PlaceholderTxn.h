@@ -75,7 +75,7 @@ public:
 
 // ------------ nsIAbsorbingTransaction -----------------------
 
-  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsSelectionState *aSelState);
+  NS_IMETHOD Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor);
   
   NS_IMETHOD GetTxnName(nsIAtom **aName);
   
@@ -96,7 +96,6 @@ public:
 protected:
 
   /** the presentation shell, which we'll need to get the selection */
-  nsWeakPtr   mPresShellWeak;   // weak reference to the nsIPresShell
   PRBool      mAbsorb;          // do we auto absorb any and all transaction?
   nsWeakPtr   mForwarding;
   IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
@@ -105,8 +104,9 @@ protected:
   // these next two members store the state of the selection in a safe way. 
   // selection at the start of the txn is stored, as is the selection at the end.
   // This is so that Undo() and Redo() can restore the selection properly.
-  nsSelectionState  *mStartSel; // use a pointer because this is constructed before we exist
+  nsSelectionState *mStartSel; // use a pointer because this is constructed before we exist
   nsSelectionState  mEndSel;
+  nsIEditor*        mEditor;   /** the editor for this transaction */
 };
 
 

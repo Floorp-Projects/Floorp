@@ -35,12 +35,10 @@ Transaction interface to outside world
     0x15b3, \
     0x11d2, \
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
-#include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
-#include "nsIAtom.h"
-#include "nsIDOMNode.h"
 
 class nsSelectionState;
+class nsIEditor;
+class nsIAtom;
 
 /**
  * A transaction interface mixin - for transactions that can support. 
@@ -51,7 +49,7 @@ public:
 
   static const nsIID& GetIID() { static nsIID iid = NS_IABSORBINGTRANSACTION_IID; return iid; }
 
-  NS_IMETHOD Init(nsWeakPtr aPresShellWeak, nsIAtom *aName, nsSelectionState *aSelState)=0;
+  NS_IMETHOD Init(nsIAtom *aName, nsSelectionState *aSelState, nsIEditor *aEditor)=0;
   
   NS_IMETHOD EndPlaceHolderBatch()=0;
   
