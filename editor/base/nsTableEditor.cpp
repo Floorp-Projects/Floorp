@@ -156,6 +156,7 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpa
   return InsertNode(newCell, cellParent, cellOffset);
 }
 
+static
 PRBool IsRowNode(nsCOMPtr<nsIDOMNode> &aNode)
 {
   nsCOMPtr<nsIAtom> atom;
