@@ -54,6 +54,8 @@ public:
 
   static NS_COM void LoadLibrarySymbols(const char* aLibraryName,
                                         void* aLibrayHandle);
+
+  static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
 };
 
 #endif /* nsTraceRefcnt_h___ */

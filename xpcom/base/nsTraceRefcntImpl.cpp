@@ -95,8 +95,8 @@ EnumModulesCB(LPSTR aModuleName,
  * the rebasing and accordingly I've made a tool to use it to rebase the
  * DLL's in one fell swoop (see xpcom/tools/windows/rebasedlls.cpp).
  */
-static void
-WalkTheStack(char* aBuffer, int aBufLen)
+void
+nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 {
   CONTEXT context;
   STACKFRAME frame;
@@ -191,8 +191,8 @@ WalkTheStack(char* aBuffer, int aBufLen)
 }
 
 #else /* _WIN32 */
-static void
-WalkTheStack(char* aBuffer, int aBufLen)
+void
+nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 {
   aBuffer[0] = '\0';
 }
