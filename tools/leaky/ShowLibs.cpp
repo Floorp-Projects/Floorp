@@ -24,7 +24,7 @@
 int main(int argc, char** argv)
 {
 #ifdef linux
-  link_map* map = _dl_loaded;
+  link_map* map = _r_debug.r_map;
   while (NULL != map) {
     printf("addr=%08x name=%s\n", map->l_addr, map->l_name);
     map = map->l_next;

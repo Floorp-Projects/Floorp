@@ -70,8 +70,9 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
       const char* nm = bfd_asymbol_name(sym);
       if (nm) {
-	char* dnm = cplus_demangle(nm, 1);
-	sp->name = dnm ? dnm : strdup(nm);
+//	char* dnm = cplus_demangle(nm, 1);
+//	sp->name = dnm ? dnm : strdup(nm);
+	sp->name = strdup(nm);
 	sp->address = syminfo.value + aBaseAddress;
 	sp++;
 	if (sp >= last) {

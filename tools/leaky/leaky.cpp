@@ -47,6 +47,10 @@ int main(int argc, char** argv)
 
 leaky::leaky()
 {
+    applicationName = NULL;
+    logFile = NULL;
+    progFile = NULL;
+
     treeOutput = FALSE;
     sortByFrequency = FALSE;
     dumpAll = FALSE;
@@ -56,7 +60,7 @@ leaky::leaky()
     stackDepth = 100000;
 
     fd = -1;
-    last = base = 0;
+    base = last = 0;
     buckets = DefaultBuckets;
     dict = 0;
 
@@ -64,11 +68,15 @@ leaky::leaky()
     reallocs = 0;
     frees = 0;
     totalMalloced = 0;
-    totalLeaked = 0;
     errors = 0;
+    totalLeaked = 0;
 
     sfd = -1;
     externalSymbols = 0;
+    usefulSymbols = 0;
+    numExternalSymbols = 0;
+    lowestSymbolAddr = 0;
+    highestSymbolAddr = 0;
 
     loadMap = NULL;
 }
