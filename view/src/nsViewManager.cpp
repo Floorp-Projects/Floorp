@@ -1154,9 +1154,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
 
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mOffScreenCX))
-                mOffScreenCX->Init(mContext, gOffScreen);
-
               if (nsnull != gRed)
               {
                 aRC.DestroyDrawingSurface(gRed);
@@ -1164,9 +1161,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
               }
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
-
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mRedCX))
-                mRedCX->Init(mContext, gRed);
 
               if (nsnull != gBlue)
               {
@@ -1176,12 +1170,24 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
               aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlue);
 
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mBlueCX))
-                mBlueCX->Init(mContext, gBlue);
-
               gBlendWidth = localrect.width;
               gBlendHeight = localrect.height;
 //printf("offscr: %d, %d (%d, %d)\n", w, h, accumrect.width, accumrect.height);
+            }
+
+            // bug 5062:  recreate the local blending contexts if necessary, since global drawing surfaces may have
+            // been created while viewing another page, have to make sure local contexts exist.
+            if (mOffScreenCX == NULL) {
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mOffScreenCX))
+                mOffScreenCX->Init(mContext, gOffScreen);
+            }
+            if (mRedCX == NULL) {
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mRedCX))
+                mRedCX->Init(mContext, gRed);
+            }
+            if (mBlueCX == NULL) {
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mBlueCX))
+                mBlueCX->Init(mContext, gBlue);
             }
 
             if ((nsnull == gOffScreen) || (nsnull == gRed))
