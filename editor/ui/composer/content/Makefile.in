@@ -30,6 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/editor.xul \
 		$(srcdir)/EditorCommands.js \
+		$(srcdir)/ComposerCommands.js \
 		$(srcdir)/EditorCommandsDebug.js \
 		$(srcdir)/TextEditorAppShell.xul \
 		$(srcdir)/EditorInitPage.html \
