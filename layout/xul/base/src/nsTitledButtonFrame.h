@@ -66,6 +66,7 @@ public:
 
 
   virtual void UpdateAttributes(nsIPresContext&  aPresContext);
+  virtual void UpdateImage(nsIPresContext&  aPresContext);
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
