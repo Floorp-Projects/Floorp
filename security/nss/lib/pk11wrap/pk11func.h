@@ -138,6 +138,12 @@ SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
  ******************************************************************/
 PK11SlotInfo *PK11_FindSlotByName(char *name);
 PK11SlotInfo *PK11_FindSlotBySerial(char *serial);
+/******************************************************************
+ * PK11_FindSlotsByAliases searches for a PK11SlotInfo using one or
+ * more criteria : dllName, slotName and tokenName . In addition, if
+ * presentOnly is set , only slots with a token inserted will be
+ * returned.
+ ******************************************************************/
 PK11SlotList *PK11_FindSlotsByAliases(const char *dllName,
         const char* slotName, const char* tokenName, PRBool presentOnly);
 PRBool PK11_IsReadOnly(PK11SlotInfo *slot);
