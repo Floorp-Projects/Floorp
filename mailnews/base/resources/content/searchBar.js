@@ -23,12 +23,14 @@
  */
 
 var gSearchSession;
-var gSearchTimer=null;
+var gSearchTimer = null;
 var gViewSearchListener;
-var gNumOfSearchHits=0;
+var gNumOfSearchHits = 0;
 var gSearchBundle;
 var gStatusBar = null;
-var gSearchInProgress=false;
+var gSearchInProgress = false;
+var gSearchCriteria = null;
+var gSearchInput = null;
 
 // nsIMsgSearchNotify object
 var gSearchNotificationListener =
