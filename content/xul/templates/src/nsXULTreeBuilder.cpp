@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
  *   Ben Goodger <ben@netscape.com>
- *   Jan Varga <varga@utcru.sk>
+ *   Jan Varga <varga@nixcorp.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of

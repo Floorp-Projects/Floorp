@@ -22,7 +22,7 @@
  * Contributor(s):
  *   disttsc@bart.nl
  *   jarrod.k.gray@rose-hulman.edu
- *   Jan Varga <varga@utcru.sk>
+ *   Jan Varga <varga@nixcorp.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 

@@ -23,7 +23,7 @@
  * Contributor(s):
  *  Ben Goodger <ben@netscape.com>
  *  Joe Hewitt <hewitt@netscape.com>
- *  Jan Varga <varga@utcru.sk>
+ *  Jan Varga <varga@nixcorp.com>
  *  Dean Tessman <dean_tessman@hotmail.com>
  *  Brian Ryner <bryner@brianryner.com>
  *  Blake Ross <blaker@netscape.com>

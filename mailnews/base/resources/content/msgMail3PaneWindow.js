@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Jan Varga (varga@utcru.sk)
+ *   Jan Varga (varga@nixcorp.com)
  *   Håkan Waara (hwaara@chello.se)
  *   Neil Rashbrook (neil@parkwaycc.co.uk)
  *   Seth Spitzer <sspitzer@netscape.com>

@@ -20,7 +20,7 @@
  * Contributors: timeless
  *               slucy@objectivesw.co.uk
  *               Håkan Waara <hwaara@chello.se>
- *               Jan Varga <varga@utcru.sk>
+ *               Jan Varga <varga@nixcorp.com>
  *               Seth Spitzer <sspitzer@netscape.com>
  *               David Bienvenu <bienvenu@netscape.com>
  */

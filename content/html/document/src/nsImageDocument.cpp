@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Morten Nilsen <morten@nilsen.com>
  *   Christian Biesinger <cbiesinger@web.de>
- *   Jan Varga <varga@netscape.com>
+ *   Jan Varga <varga@nixcorp.com>
  *    
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributors(s):
- *   Jan Varga <varga@utcru.sk>
+ *   Jan Varga <varga@nixcorp.com>
  *   Hakan Waara <hwaara@chello.se>
  */
 
