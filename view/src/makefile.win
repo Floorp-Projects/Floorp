@@ -25,7 +25,7 @@ MISCDEP = $(LLIBS)
 
 MODULE=raptor 
 
-DEFINES =-D_IMPL_NS_VIEW
+DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN
 
 OBJS =                              \
     .\$(OBJDIR)\nsView.obj          \

@@ -22,7 +22,7 @@ LIBRARY_NAME=raptorhtmldoc_s
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-DEFINES=-D_IMPL_NS_HTML
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=nsHTMLContentSink.cpp nsHTMLDocument.cpp 
 

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=raptorhtmlbase_s 
 MODULE=raptor 
 REQUIRES=xpcom raptor 
-DEFINES=-D_IMPL_NS_HTML
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=			\
  nsAbsoluteFrame.cpp \
@@ -43,6 +43,7 @@ CPPSRCS=			\
  nsImageMap.cpp			\
  nsInlineFrame.cpp		\
  nsLeafFrame.cpp		\
+ nsLineLayout.cpp		\
  nsListItemFrame.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
@@ -75,6 +76,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsInlineFrame.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
  .\$(OBJDIR)\nsListItemFrame.obj	\
+ .\$(OBJDIR)\nsLineLayout.obj		\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
  .\$(OBJDIR)\nsRootPart.obj		\
