@@ -19,7 +19,7 @@
    <template>
       <!-- Rules for content hanging _directly_ off the toolbar -->
       <rule parent="box" iscontainer="true">
-        <menubutton class="button-toolbar-4 plain" 
+        <menubutton class="button-toolbar-4" 
                     uri="..." tooltip="aTooltip"
                     tooltiptext="rdf:http://home.netscape.com/NC-rdf#tooltip"
                     value="rdf:http://home.netscape.com/NC-rdf#title">
@@ -29,7 +29,7 @@
       </rule>
       
       <rule parent="box">
-        <button class="button-toolbar-4 plain" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#title"
+        <button class="button-toolbar-4" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#title"
                 crop="right"/>
      </rule>
 
@@ -68,7 +68,7 @@
     <menubutton oncommand="ShowWindowFromResource(event.target)"
                 datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
                 tooltip="aTooltip" tooltiptext="&taskWindowList.tooltip;"
-                value="&openWinButton.label;" class="button-toolbar-4 plain">
+                value="&openWinButton.label;" class="button-toolbar-4">
       <template>
         <menupopup>
           <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
