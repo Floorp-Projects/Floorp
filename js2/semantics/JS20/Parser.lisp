@@ -520,10 +520,7 @@
     (%section :semantics "Unary Operators")
     (deftuple unary-method 
       (operand-type class)
-      (op (-> (object object argument-list) object)))
-    
-    (defrecord unary-table
-      (methods (list-set unary-method) :var))
+      (f (-> (object object argument-list) object)))
     
     (%text :comment "Return " (:tag true) " if " (:local o) " is a member of class " (:local c) " and, if "
            (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
@@ -535,17 +532,17 @@
         (return false)))
     
     (%text :comment "Dispatch the unary operator described by " (:local table) " applied to the " (:character-literal "this")
-           " value " (:local this) ", the first argument " (:local op)
+           " value " (:local this) ", the first argument " (:local operand)
            ", and optionally other arguments " (:local args)
            ". If " (:local limit) " is non-" (:tag null)
            ", restrict the lookup to operators defined on the proper ancestors of " (:local limit) ".")
-    (define (unary-dispatch (table unary-table) (limit class-opt) (this object) (op object) (args argument-list)) object
+    (define (unary-dispatch (table (list-set unary-method)) (limit class-opt) (this object) (operand object) (args argument-list)) object
       (const applicable-ops (list-set unary-method)
-        (map (& methods table) m m (limited-has-type op (& operand-type m) limit)))
+        (map table m m (limited-has-type operand (& operand-type m) limit)))
       (reserve best)
       (if (some applicable-ops best
                 (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
-        (return ((& op best) this op args))
+        (return ((& f best) this operand args))
         (throw property-not-found-error)))
     
     
@@ -601,16 +598,16 @@
       (return (delete-qualified-property a name public-namespace true)))
     
     
-    (define plus-table unary-table (new unary-table (list-set (new unary-method object-class plus-object))))
-    (define minus-table unary-table (new unary-table (list-set (new unary-method object-class minus-object))))
-    (define bitwise-not-table unary-table (new unary-table (list-set (new unary-method object-class bitwise-not-object))))
-    (define increment-table unary-table (new unary-table (list-set (new unary-method object-class increment-object))))
-    (define decrement-table unary-table (new unary-table (list-set (new unary-method object-class decrement-object))))
-    (define call-table unary-table (new unary-table (list-set (new unary-method object-class call-object))))
-    (define construct-table unary-table (new unary-table (list-set (new unary-method object-class construct-object))))
-    (define bracket-read-table unary-table (new unary-table (list-set (new unary-method object-class bracket-read-object))))
-    (define bracket-write-table unary-table (new unary-table (list-set (new unary-method object-class bracket-write-object))))
-    (define bracket-delete-table unary-table (new unary-table (list-set (new unary-method object-class bracket-delete-object))))
+    (defvar plus-table (list-set unary-method) (list-set (new unary-method object-class plus-object)))
+    (defvar minus-table (list-set unary-method) (list-set (new unary-method object-class minus-object)))
+    (defvar bitwise-not-table (list-set unary-method) (list-set (new unary-method object-class bitwise-not-object)))
+    (defvar increment-table (list-set unary-method) (list-set (new unary-method object-class increment-object)))
+    (defvar decrement-table (list-set unary-method) (list-set (new unary-method object-class decrement-object)))
+    (defvar call-table (list-set unary-method) (list-set (new unary-method object-class call-object)))
+    (defvar construct-table (list-set unary-method) (list-set (new unary-method object-class construct-object)))
+    (defvar bracket-read-table (list-set unary-method) (list-set (new unary-method object-class bracket-read-object)))
+    (defvar bracket-write-table (list-set unary-method) (list-set (new unary-method object-class bracket-write-object)))
+    (defvar bracket-delete-table (list-set unary-method) (list-set (new unary-method object-class bracket-delete-object)))
     
     
     (define (unary-plus (a object)) object
@@ -624,10 +621,7 @@
     (deftuple binary-method
       (left-type class)
       (right-type class)
-      (op (-> (object object) object)))
-    
-    (defrecord binary-table
-      (methods (list-set binary-method) :var))
+      (f (-> (object object) object)))
     
     
     (%text :comment "Return " (:tag true) " if " (:local m1) " is at least as specific as " (:local m2) ".")
@@ -640,14 +634,14 @@
            ", restrict the lookup to operator definitions with an ancestor of " (:local left-limit)
            " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
            ", restrict the lookup to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
-    (define (binary-dispatch (table binary-table) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
+    (define (binary-dispatch (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
       (const applicable-ops (list-set binary-method)
-        (map (& methods table) m m (and (limited-has-type left (& left-type m) left-limit)
-                                        (limited-has-type right (& right-type m) right-limit))))
+        (map table m m (and (limited-has-type left (& left-type m) left-limit)
+                            (limited-has-type right (& right-type m) right-limit))))
       (reserve best)
       (if (some applicable-ops best
                 (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
-        (return ((& op best) left right))
+        (return ((& f best) left right))
         (throw property-not-found-error)))
     
     
@@ -753,21 +747,21 @@
       (return (real-to-float64 (bitwise-or i j))))
     
     
-    (define add-table binary-table (new binary-table (list-set (new binary-method object-class object-class add-objects))))
-    (define subtract-table binary-table (new binary-table (list-set (new binary-method object-class object-class subtract-objects))))
-    (define multiply-table binary-table (new binary-table (list-set (new binary-method object-class object-class multiply-objects))))
-    (define divide-table binary-table (new binary-table (list-set (new binary-method object-class object-class divide-objects))))
-    (define remainder-table binary-table (new binary-table (list-set (new binary-method object-class object-class remainder-objects))))
-    (define less-table binary-table (new binary-table (list-set (new binary-method object-class object-class less-objects))))
-    (define less-or-equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class less-or-equal-objects))))
-    (define equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class equal-objects))))
-    (define strict-equal-table binary-table (new binary-table (list-set (new binary-method object-class object-class strict-equal-objects))))
-    (define shift-left-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-left-objects))))
-    (define shift-right-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-right-objects))))
-    (define shift-right-unsigned-table binary-table (new binary-table (list-set (new binary-method object-class object-class shift-right-unsigned-objects))))
-    (define bitwise-and-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-and-objects))))
-    (define bitwise-xor-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-xor-objects))))
-    (define bitwise-or-table binary-table (new binary-table (list-set (new binary-method object-class object-class bitwise-or-objects))))
+    (defvar add-table (list-set binary-method) (list-set (new binary-method object-class object-class add-objects)))
+    (defvar subtract-table (list-set binary-method) (list-set (new binary-method object-class object-class subtract-objects)))
+    (defvar multiply-table (list-set binary-method) (list-set (new binary-method object-class object-class multiply-objects)))
+    (defvar divide-table (list-set binary-method) (list-set (new binary-method object-class object-class divide-objects)))
+    (defvar remainder-table (list-set binary-method) (list-set (new binary-method object-class object-class remainder-objects)))
+    (defvar less-table (list-set binary-method) (list-set (new binary-method object-class object-class less-objects)))
+    (defvar less-or-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class less-or-equal-objects)))
+    (defvar equal-table (list-set binary-method) (list-set (new binary-method object-class object-class equal-objects)))
+    (defvar strict-equal-table (list-set binary-method) (list-set (new binary-method object-class object-class strict-equal-objects)))
+    (defvar shift-left-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-left-objects)))
+    (defvar shift-right-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-objects)))
+    (defvar shift-right-unsigned-table (list-set binary-method) (list-set (new binary-method object-class object-class shift-right-unsigned-objects)))
+    (defvar bitwise-and-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-and-objects)))
+    (defvar bitwise-xor-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-xor-objects)))
+    (defvar bitwise-or-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-or-objects)))
     
     
     (%section "Terminal Actions")
@@ -924,7 +918,7 @@
          ((validate :assignment-expression) v))
         ((eval e)
          (exec (read-reference ((eval :list-expression) e)))
-         (return ((eval :assignment-expression) e)))
+         (return (read-reference ((eval :assignment-expression) e))))
         ((eval-as-list e)
          (const elts (vector object) ((eval-as-list :list-expression) e))
          (const elt object (read-reference ((eval :assignment-expression) e)))
@@ -1084,7 +1078,7 @@
          ((validate :super-expression) v)
          ((validate :dot-operator) v))
         ((eval e)
-         (const a object (read-reference ((eval :super-expression) e)))
+         (const a object ((eval :super-expression) e))
          (const sa class ((super :super-expression) e))
          (return ((eval :dot-operator) e a sa))))
       (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
@@ -1102,12 +1096,10 @@
          ((validate :full-super-expression) v)
          ((validate :arguments) v))
         ((eval e)
-         (const r obj-or-ref ((eval :full-super-expression) e))
-         (const f object (read-reference r))
-         (const base object (reference-base r))
+         (const f object ((eval :full-super-expression) e))
          (const sf class ((super :full-super-expression) e))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch call-table sf base f args))))
+         (return (unary-dispatch call-table sf null f args))))
       (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment
         ((validate v) ((validate :postfix-expression-or-super) v))
         ((eval e)
@@ -1141,7 +1133,7 @@
          ((validate :full-super-expression) v)
          ((validate :arguments) v))
         ((eval e)
-         (const f object (read-reference ((eval :full-super-expression) e)))
+         (const f object ((eval :full-super-expression) e))
          (const sf class ((super :full-super-expression) e))
          (const args argument-list ((eval :arguments) e))
          (return (unary-dispatch construct-table sf null f args)))))
@@ -1168,7 +1160,7 @@
          ((validate :super-expression) v)
          ((validate :dot-operator) v))
         ((eval e)
-         (const a object (read-reference ((eval :super-expression) e)))
+         (const a object ((eval :super-expression) e))
          (const sa class ((super :super-expression) e))
          (return ((eval :dot-operator) e a sa)))))
     
@@ -1181,7 +1173,7 @@
       (production :short-new-expression (new :super-expression) short-new-expression-super-new
         ((validate v) ((validate :super-expression) v))
         ((eval e)
-         (const f object (read-reference ((eval :super-expression) e)))
+         (const f object ((eval :super-expression) e))
          (const sf class ((super :super-expression) e))
          (return (unary-dispatch construct-table sf null f (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
@@ -1807,16 +1799,7 @@
          ((validate :assignment-expression) v))
         ((eval (e :unused)) (todo))))
     
-    (define (eval-assignment-op (table binary-table) (left-limit class-opt) (right-limit class-opt)
-                                (left-eval (-> (dynamic-env) obj-or-ref)) (right-eval (-> (dynamic-env) obj-or-ref)) (e dynamic-env)) obj-or-ref
-      (const r-left obj-or-ref (left-eval e))
-      (const o-left object (read-reference r-left))
-      (const o-right object (read-reference (right-eval e)))
-      (const result object (binary-dispatch table left-limit right-limit o-left o-right))
-      (write-reference r-left result)
-      (return result))
-    
-    (rule :compound-assignment ((table binary-table))
+    (rule :compound-assignment ((table (list-set binary-method)))
       (production :compound-assignment (*=) compound-assignment-multiply (table multiply-table))
       (production :compound-assignment (/=) compound-assignment-divide (table divide-table))
       (production :compound-assignment (%=) compound-assignment-remainder (table remainder-table))
@@ -1834,6 +1817,15 @@
     (production :logical-assignment (\|\|=) logical-assignment-logical-or)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
+    (define (eval-assignment-op (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt)
+                                (left-eval (-> (dynamic-env) obj-or-ref)) (right-eval (-> (dynamic-env) obj-or-ref)) (e dynamic-env)) obj-or-ref
+      (const r-left obj-or-ref (left-eval e))
+      (const o-left object (read-reference r-left))
+      (const o-right object (read-reference (right-eval e)))
+      (const result object (binary-dispatch table left-limit right-limit o-left o-right))
+      (write-reference r-left result)
+      (return result))
+    
     
     (%subsection "Comma Expressions")
     (rule (:list-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (eval-as-list (-> (dynamic-env) (vector object))))
@@ -1849,7 +1841,7 @@
          ((validate :assignment-expression) v))
         ((eval e)
          (exec (read-reference ((eval :list-expression) e)))
-         (return ((eval :assignment-expression) e)))
+         (return (read-reference ((eval :assignment-expression) e))))
         ((eval-as-list e)
          (const elts (vector object) ((eval-as-list :list-expression) e))
          (const elt object (read-reference ((eval :assignment-expression) e)))
