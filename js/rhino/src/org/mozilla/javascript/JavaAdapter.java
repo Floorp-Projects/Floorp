@@ -46,11 +46,12 @@ import java.lang.reflect.*;
 import java.io.IOException;
 import java.util.*;
 
-public class JavaAdapter extends ScriptableObject
+public final class JavaAdapter
 {
-    public String getClassName()
+    public static void init(Context cx, Scriptable scope, boolean sealed)
     {
-        return "JavaAdapter";
+        JavaAdapterConstructor x = new JavaAdapterConstructor();
+        x.defineAsProperty(scope);
     }
 
     public static Object convertResult(Object result, Class c)
@@ -86,8 +87,7 @@ public class JavaAdapter extends ScriptableObject
         return self.get(adapter);
     }
 
-    public static Object jsConstructor(Context cx, Object[] args,
-                                       Function ctorObj, boolean inNewExpr)
+    static Object js_createAdpter(Context cx, Scriptable scope, Object[] args)
     {
         Class superClass = null;
         Class[] intfs = new Class[args.length-1];
@@ -95,7 +95,7 @@ public class JavaAdapter extends ScriptableObject
         for (int i=0; i < args.length-1; i++) {
             if (!(args[i] instanceof NativeJavaClass)) {
                 throw NativeGlobal.constructError(cx, "TypeError",
-                        "expected java class object", ctorObj);
+                        "expected java class object", scope);
             }
             Class c = ((NativeJavaClass) args[i]).getClassObject();
             if (!c.isInterface()) {
@@ -104,7 +104,7 @@ public class JavaAdapter extends ScriptableObject
                                  "JavaAdapter. Had " + superClass.getName() +
                                  " and " + c.getName();
                     throw NativeGlobal.constructError(cx, "TypeError", msg,
-                                                      ctorObj);
+                                                      scope);
                 }
                 superClass = c;
             } else {
@@ -877,6 +877,25 @@ public class JavaAdapter extends ScriptableObject
 
     private static int serial;
     private static Hashtable generatedClasses = new Hashtable(7);
+}
+
+final class JavaAdapterConstructor extends JIFunction
+{
+    JavaAdapterConstructor()
+    {
+        super("JavaAdapter", 1);
+    }
+
+    protected Scriptable createObject(Context cx, Scriptable scope)
+    {
+        return null;
+    }
+
+    public Object call(Context cx, Scriptable scope,
+                       Scriptable thisObj, Object[] args)
+    {
+        return JavaAdapter.js_createAdpter(cx, scope, args);
+    }
 }
 
 /**
