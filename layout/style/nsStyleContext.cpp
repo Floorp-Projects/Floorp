@@ -548,7 +548,38 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
 NS_IMETHODIMP
 nsStyleContext::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
 {
-  // XXXdwh This function can probably be eliminated.
+  // First we need to clear out all of our style data.
+  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
+    mCachedStyleData.Destroy(mBits, aPresContext);
+
+  mBits &= ~NS_STYLE_INHERIT_MASK;  // Clear out all data that indicates we should look for
+                                    // style data in our parent.
+
+  // Now we need to ensure that any cached data along the path from our
+  // rule node back to the root is cleared out.
+  mRuleNode->ClearPath();
+
+  // Now do the same for all of our children, but only if the recurse boolean
+  // is set.
+  if (!aRecurse)
+    return NS_OK;
+
+  if (mChild) {
+    nsStyleContext* child = mChild;
+    do {
+      child->RemapStyle(aPresContext);
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  
+  if (mEmptyChild) {
+    nsStyleContext* child = mEmptyChild;
+    do {
+      child->RemapStyle(aPresContext);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
+
   return NS_OK;
 }
 
