@@ -1631,6 +1631,7 @@ sub GetFormat {
     my ($template, $format, $ctype) = @_;
     
     $ctype ||= "html";
+    $format ||= "";
     
     # Security - allow letters and a hyphen only
     $ctype =~ s/[^a-zA-Z\-]//g;

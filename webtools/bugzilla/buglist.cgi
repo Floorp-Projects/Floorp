@@ -83,7 +83,7 @@ else {
 }
 
 # Hack to support legacy applications that think the RDF ctype is at format=rdf.
-if ($::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) { 
+if ($::FORM{'format'} && $::FORM{'format'} eq "rdf" && !$::FORM{'ctype'}) { 
     $::FORM{'ctype'} = "rdf";
     delete($::FORM{'format'});
 }
