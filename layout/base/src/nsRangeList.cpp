@@ -1519,10 +1519,25 @@ nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
   {
     if (aOffset >= 0)
     {
-      if (mHint == HINTLEFT && aOffset >0)//we should back up a little
+      if (mHint == HINTLEFT && aOffset > 0)//we should back up a little
         result = aNode->ChildAt(aOffset-1, aNode);
-      else
-        result = aNode->ChildAt(aOffset, aNode);
+      else {
+        PRInt32 childCount = 0;
+        PRInt32 offset = aOffset;
+
+        result = aNode->ChildCount(childCount);
+
+        if (NS_FAILED(result))
+          return result;
+
+        if (childCount <= 0)
+          return NS_ERROR_FAILURE;
+
+        if (aOffset >= childCount)
+          offset = childCount - 1;
+
+        result = aNode->ChildAt(offset, aNode);
+      }
       if (NS_FAILED(result))
         return result;
       if (!aNode) //out of bounds?
