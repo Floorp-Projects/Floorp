@@ -24,8 +24,7 @@ DEPTH=..\..\..\..
 EXPORTS =				\
 	nsIXMLContentSink.h		\
 	nsIXMLDocument.h		\
-        nsIXMLElementFactory.h          \
-        $(NULL)
+    $(NULL)
 
 MODULE=raptor 
 
