@@ -484,14 +484,14 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 		}
 		else
           mRealContentType = typeField + strlen("&type=");
-        if (mRealContentType.Equals("message/rfc822"))
+        if (mRealContentType.EqualsIgnoreCase("message/rfc822"))
         {
           mRealContentType = "x-message-display";
           CRTFREEIF(mOutputFormat);
           mOutputFormat = nsCRT::strdup("text/html");
           *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
         }
-        else if (mRealContentType.Equals("x-message-display"))
+        else if (mRealContentType.EqualsIgnoreCase("x-message-display"))
         {
           mRealContentType = "";
           CRTFREEIF(mOutputFormat);
