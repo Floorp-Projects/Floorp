@@ -23,7 +23,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "javaDOMGlobals.h"
-#include "org_mozilla_dom_DocumentImpl.h"
+#include "org_mozilla_dom_DocumentTypeImpl.h"
 
 
 /*
