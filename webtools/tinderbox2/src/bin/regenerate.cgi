@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2004/07/17 00:04:19 $ 
+# $Revision: 1.17 $ 
+# $Date: 2004/07/18 18:37:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -103,7 +103,7 @@ EOF
 
 ;
 
-    } else {
+    } elsif ( $ENV{"REQUEST_METHOD"} ) {
         # called via HTTPPost
         # Tell the webserver that everythings fine.
 
@@ -112,11 +112,13 @@ Content-type: text/html
 
 <HTML></HTML>
 EOF
-
 ;
+    } else {
+        # called from a log processing program.
 
+        $out = '';
     }
-        
+
     print $out;
 
     HTMLPopUp::regenerate_HTML_pages();

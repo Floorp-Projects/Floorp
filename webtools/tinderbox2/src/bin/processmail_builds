@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.35 $ 
-# $Date: 2004/07/10 14:48:27 $ 
+# $Revision: 1.36 $ 
+# $Date: 2004/07/18 18:37:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -62,6 +62,9 @@ use Utils;
 use Persistence;
 use TinderDB::Build;
 use MailProcess;
+
+# name of the version control system
+$REGENERATE_AFTER_MAIL = $TinderConfig::REGENERATE_AFTER_MAIL || "0";
 
 
 
@@ -1257,6 +1260,10 @@ sub assemble_files {
       unlink($tmpfile) ||
         die("Could not unlink: '$tmpfile'. $!\n");    
 
+  }
+
+  if ($REGENERATE_AFTER_MAIL) {
+      HTMLPopUp::regenerate_HTML_pages();
   }
 
   print $OUT;
