@@ -44,34 +44,53 @@ function OnLoadImportDialog()
 	doSetOKCancel(ImportDialogOKButton, 0);
 
 	// look in arguments[0] for parameters
-	if (window.arguments && window.arguments[0])
+	if (window.arguments && window.arguments[0] && window.arguments.importType)
 	{
 		// keep parameters in global for later
-		if ( window.arguments[0].importType )
-			top.importType = window.arguments[0].importType;
+		top.importType = window.arguments[0].importType;
 		top.progressInfo.importType = top.importType;
-	
-		// set dialog title
-		switch ( top.importType )
-		{
-			case "mail":
-				top.window.title = top.bundle.GetStringFromName('ImportMailDialogTitle');
-				SetDivText('listLabel', top.bundle.GetStringFromName('ImportMailListLabel'));
-				break;
-			case "addressbook":
-				top.window.title = top.bundle.GetStringFromName('ImportAddressBooksDialogTitle');
-				SetDivText('listLabel', top.bundle.GetStringFromName('ImportAddressBooksListLabel'));
-				break;
-			case "settings":
-				top.window.title = top.bundle.GetStringFromName('ImportSettingsDialogTitle');
-				SetDivText('listLabel', top.bundle.GetStringFromName('ImportSettingsListLabel'));
-				break;
-		}
-		ListModules();
-		
-		// add module names to tree
 	}
+	else
+	{
+		top.importType = "addressbook";
+		top.progressInfo.importType = "addressbook";
+	}
+	
+	SetUpImportType();	
 }
+
+
+function SetUpImportType()
+{
+	// set dialog title
+	switch ( top.importType )
+	{
+		case "mail":
+			// top.window.title = top.bundle.GetStringFromName('ImportMailDialogTitle');
+			SetDivText('listLabel', top.bundle.GetStringFromName('ImportMailListLabel'));
+			document.getElementById( "mailRadio").checked = true;
+			document.getElementById( "addressbookRadio").checked = false;
+			document.getElementById( "settingsRadio").checked = false;
+			break;
+		case "addressbook":
+			// top.window.title = top.bundle.GetStringFromName('ImportAddressBooksDialogTitle');
+			SetDivText('listLabel', top.bundle.GetStringFromName('ImportAddressBooksListLabel'));
+			document.getElementById( "addressbookRadio").checked = true;
+			document.getElementById( "mailRadio").checked = false;
+			document.getElementById( "settingsRadio").checked = false;
+			break;
+		case "settings":
+			// top.window.title = top.bundle.GetStringFromName('ImportSettingsDialogTitle');
+			SetDivText('listLabel', top.bundle.GetStringFromName('ImportSettingsListLabel'));
+			document.getElementById( "settingsRadio").checked = true;
+			document.getElementById( "addressbookRadio").checked = false;
+			document.getElementById( "mailRadio").checked = false;
+			break;
+	}
+	
+	ListModules();
+}
+
 
 function SetDivText(id, text)
 {
@@ -227,8 +246,16 @@ function ImportSelectionChanged()
 function ListModules() {
 	if (top.importService == null)
 		return;
-	var count = top.importService.GetModuleCount( top.importType);
-	for (i = 0; i < count; i++) {
+	
+	var body = document.getElementById( "bucketBody");
+	var max = body.childNodes.length - 1;
+	while (max >= 0) {
+		body.removeChild( body.childNodes[max]);
+		max--;
+	}
+		
+	var count = top.importService.GetModuleCount( top.importType);	
+	for (var i = 0; i < count; i++) {
 		AddModuleToList( top.importService.GetModuleName( top.importType, i), i);
 	}
 }
@@ -595,3 +622,29 @@ function ImportAddress( module, success, error) {
 		}
 	}
 }
+
+function SwitchType( newType)
+{
+	top.importType = newType;
+	top.progressInfo.importType = newType;
+	
+	SetUpImportType();	
+	
+	SetDivText('description', "");
+}
+
+function OnMailType()
+{
+	SwitchType( "mail");
+}
+
+function OnSettingsType()
+{
+	SwitchType( "settings");
+}
+
+function OnAddressType()
+{
+	SwitchType( "addressbook");
+}
+
