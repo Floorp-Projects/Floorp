@@ -462,7 +462,7 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext*   aPresContext,
         nsRect rect(x, y, width, height); 
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                          aDirtyRect, rect, *myColor, *myBorder, 0, 0);
+                                          aDirtyRect, rect, *myBorder, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *myBorder, mCheckButtonFaceStyle, 0);
         doDefaultPainting = PR_FALSE;

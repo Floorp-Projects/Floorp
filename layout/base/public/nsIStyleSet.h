@@ -124,8 +124,6 @@ public:
   virtual nsresult BeginRuleTreeReconstruct()=0;
   virtual nsresult EndRuleTreeReconstruct()=0;
 
-  virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument) = 0;
-
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) = 0;
 
   // ClearCachedStyleData is used to invalidate portions of both the style context tree

@@ -5440,19 +5440,11 @@ PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                           nsIStyleSheet* aStyleSheet,
                                           PRBool aDisabled)
 {
-  nsresult rv = NS_OK;
-
   // first notify the style set that a sheet's state has changed
   if (mStyleSet) {
-    rv = mStyleSet->NotifyStyleSheetStateChanged(aDisabled ? PR_FALSE : PR_TRUE);
-  }
-  if (NS_FAILED(rv)) return rv;
-
-  if (aDisabled) {
-    // If the stylesheet is disabled, remove existing BodyFixupRule for
-    // bug 88681
-    rv = mStyleSet->RemoveBodyFixupRule(aDocument);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = mStyleSet->NotifyStyleSheetStateChanged(!aDisabled);
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   // We don't need to rebuild the

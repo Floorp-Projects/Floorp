@@ -3109,30 +3109,9 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
 
   // background-color: color, string, enum (flags), inherit
   if (eCSSUnit_Inherit == colorData.mBackColor.GetUnit()) { // do inherit first, so SetColor doesn't do it
-    const nsStyleBackground* inheritBG = parentBG;
-    if (inheritBG->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) {
-      // walk up the contexts until we get to a context that does not have its
-      // background propagated to its parent (or a context that has had its background
-      // propagated from its child)
-      if (nsnull != parentContext) {
-        nsCOMPtr<nsIStyleContext> higherContext = getter_AddRefs(parentContext->GetParent());
-        do {
-          if (higherContext) {
-            inheritBG = (const nsStyleBackground*)higherContext->GetStyleData(eStyleStruct_Background);
-            if (inheritBG && 
-                (!(inheritBG->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT)) ||
-                (inheritBG->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD)) {
-              // done walking up the higher contexts
-              break;
-            }
-            higherContext = getter_AddRefs(higherContext->GetParent());
-          }
-        } while (higherContext);
-      }
-    }
-    bg->mBackgroundColor = inheritBG->mBackgroundColor;
+    bg->mBackgroundColor = parentBG->mBackgroundColor;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    bg->mBackgroundFlags |= (inheritBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+    bg->mBackgroundFlags |= (parentBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
     inherited = PR_TRUE;
   }
   else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 

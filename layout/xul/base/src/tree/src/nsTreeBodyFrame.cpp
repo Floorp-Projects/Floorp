@@ -2511,14 +2511,16 @@ nsOutlinerBodyFrame::PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPre
   const nsStyleOutline* myOutline = (const nsStyleOutline*)
       aStyleContext->GetStyleData(eStyleStruct_Outline);
   
-  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, aRect, *myColor, *myBorder, 0, 0);
+  nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext,
+                                        this, aDirtyRect, aRect,
+                                        *myColor, *myBorder, 0, 0);
 
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, aRect, *myBorder, mStyleContext, 0);
 
   nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                              aDirtyRect, aRect, *myBorder, *myOutline, aStyleContext, 0);
+                               aDirtyRect, aRect, *myBorder, *myOutline,
+                               aStyleContext, 0);
 
   return NS_OK;
 }

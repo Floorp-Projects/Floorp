@@ -2949,41 +2949,6 @@ IsCanvasFrame(nsIFrame* aFrame)
   return parentType.get() == nsLayoutAtoms::canvasFrame;
 }
 
-static PRBool
-IsRootFrame(nsIFrame* aFrame)
-{
-  nsCOMPtr<nsIAtom>  parentType;
-
-  aFrame->GetFrameType(getter_AddRefs(parentType));
-  return parentType.get() == nsLayoutAtoms::rootFrame;
-}
-
-static void
-PropagateBackgroundToParent(nsIPresContext* aPresContext,
-                            nsIStyleContext*    aStyleContext,
-                            const nsStyleBackground* aColor,
-                            nsIStyleContext*    aParentStyleContext)
-{
-  nsStyleBackground* mutableColor = 
-    (nsStyleBackground*)aParentStyleContext->GetUniqueStyleData(aPresContext, eStyleStruct_Background);
-
-  mutableColor->mBackgroundAttachment = aColor->mBackgroundAttachment;
-  mutableColor->mBackgroundFlags = aColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
-  mutableColor->mBackgroundRepeat = aColor->mBackgroundRepeat;
-  mutableColor->mBackgroundColor = aColor->mBackgroundColor;
-  mutableColor->mBackgroundXPosition = aColor->mBackgroundXPosition;
-  mutableColor->mBackgroundYPosition = aColor->mBackgroundYPosition;
-  mutableColor->mBackgroundImage = aColor->mBackgroundImage;
-
-  // Reset the BODY's background to transparent
-  mutableColor = (nsStyleBackground*)aStyleContext->GetUniqueStyleData(aPresContext, eStyleStruct_Background);
-  mutableColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                   NS_STYLE_BG_IMAGE_NONE |
-                                   NS_STYLE_BG_PROPAGATED_TO_PARENT;
-  mutableColor->mBackgroundImage.SetLength(0);
-  mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-}
-
 /**
  * New one
  */
@@ -3092,9 +3057,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         return rv;
     }
   }
-
-  const nsStyleBackground* bg = 
-    (const nsStyleBackground*)styleContext->GetStyleData(eStyleStruct_Background);
 
   PRBool docElemIsTable = IsTableRelated(display->mDisplay, PR_FALSE);
  
@@ -3227,38 +3189,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     ProcessChildren(aPresShell, aPresContext, aState, aDocElement, contentFrame,
                     PR_TRUE, childItems, isBlockFrame);
 
-    // See if the document element has a fixed background attachment.
-    // Note: the reason we wait until after processing the document element's
-    // children is because of special treatment of the background for the HTML
-    // element. See BodyFixupRule::MapStyleInto() for details
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment) {
-      // Fixed background attachments are handled by setting the
-      // NS_VIEW_PUBLIC_FLAG_DONT_BITBLT flag bit on the view.
-      //
-      // If the document element's frame is scrollable, then set the bit on its
-      // view; otherwise, set it on the root frame's view. This avoids
-      // unnecessarily creating another view and should be faster
-      nsIView*  view;
-
-      if (IsScrollable(aPresContext, display)) {
-        contentFrame->GetView(aPresContext, &view);
-      } else {
-        nsIFrame* parentFrame;
-
-        contentFrame->GetParent(&parentFrame);
-        parentFrame->GetView(aPresContext, &view);
-      }
-
-      // Not all shells have scroll frames, even in scrollable presContext (bug 30317)
-      if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        if (vm) {
-          vm->SetViewBitBltEnabled(view, PR_FALSE);
-        }
-      }
-    }
-
     // Set the initial child lists
     contentFrame->SetInitialChildList(aPresContext, nsnull,
                                       childItems.childList);
@@ -3277,22 +3207,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                          nsLayoutAtoms::floaterList,
                                          aState.mFloatedItems.childList);
         }
-    }
-
-    // this is not sufficient: if the background gets changed via DOM after
-    // frame construction we need to do this again...
-
-    // Section 14.2 of the CSS2 spec says that the background of the root element
-    // covers the entire canvas. See if a background was specified for the root
-    // element
-    if (!bg->BackgroundIsTransparent() && (IsCanvasFrame(aParentFrame) || IsRootFrame(aParentFrame))) {
-      nsIStyleContext*  parentContext;
-      
-      // Propagate the document element's background to the canvas so that it
-      // renders the background over the entire canvas
-      aParentFrame->GetStyleContext(&parentContext);
-      PropagateBackgroundToParent(aPresContext, styleContext, bg, parentContext);
-      NS_RELEASE(parentContext);
     }
   }
 

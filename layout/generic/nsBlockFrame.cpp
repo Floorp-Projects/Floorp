@@ -5331,8 +5331,6 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
   if (isVisible && (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) &&
       (0 != mRect.width) && (0 != mRect.height)) {
     PRIntn skipSides = GetSkipSides();
-    const nsStyleBackground* color = (const nsStyleBackground*)
-      mStyleContext->GetStyleData(eStyleStruct_Background);
     const nsStyleBorder* border = (const nsStyleBorder*)
       mStyleContext->GetStyleData(eStyleStruct_Border);
     const nsStyleOutline* outline = (const nsStyleOutline*)
@@ -5341,12 +5339,13 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
     // Paint background, border and outline
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *color, *border, 0, 0);
+                                    aDirtyRect, rect, *border, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *border, mStyleContext,
                                 skipSides);
     nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                 aDirtyRect, rect, *border, *outline, mStyleContext, 0);
+                                 aDirtyRect, rect, *border, *outline,
+                                 mStyleContext, 0);
   }
 
   PRBool paintingSuppressed = PR_FALSE;  

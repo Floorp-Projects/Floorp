@@ -1032,8 +1032,7 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color, aFrame);
 
   if(color) {
-    if ((color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
-        !(color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT)) {
+    if (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
       const nsAFlatCString& backgroundColor =
         nsCSSProps::SearchKeywordTable(NS_STYLE_BG_COLOR_TRANSPARENT,
                                        nsCSSProps::kBackgroundColorKTable);

@@ -199,22 +199,13 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
   nsCOMPtr<nsIStyleContext> context;
   mFrame->GetStyleContext(getter_AddRefs(context));
 
-
-  // get the styles
   const nsStyleBorder* border =
     (const nsStyleBorder*)context->GetStyleData(eStyleStruct_Border);
-  const nsStyleBackground* color =
-    (const nsStyleBackground*)context->GetStyleData(eStyleStruct_Background);
-      
-
-  // paint the border and background
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
-                                  aDirtyRect, buttonRect,  *color, *border, 0, 0);
-
+                                  aDirtyRect, buttonRect, *border, 0, 0);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
                               aDirtyRect, buttonRect, *border, context, 0);
-
 }
 
 

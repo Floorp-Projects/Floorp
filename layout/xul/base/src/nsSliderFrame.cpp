@@ -320,7 +320,7 @@ nsSliderFrame::Paint(nsIPresContext*      aPresContext,
         mStyleContext->GetStyleData(eStyleStruct_Border);
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor, *myBorder, 0, 0);
+                                    aDirtyRect, rect, *myBorder, 0, 0);
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *myBorder, mStyleContext, 0);
         }

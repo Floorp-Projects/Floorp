@@ -86,8 +86,6 @@ nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
     if (vis->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
-      const nsStyleBackground* color = (const nsStyleBackground*)
-        mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* border = (const nsStyleBorder*)
         mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleOutline* outline = (const nsStyleOutline*)
@@ -95,11 +93,13 @@ nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *border, 0, 0);
+                                      aDirtyRect, rect, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, mStyleContext, skipSides);
+                                  aDirtyRect, rect, *border, mStyleContext,
+                                  skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *border, *outline, mStyleContext, 0);
+                                   aDirtyRect, rect, *border, *outline,
+                                   mStyleContext, 0);
       
       // The sole purpose of this is to trigger display
       //  of the selection window for Named Anchors,
@@ -457,8 +457,6 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     PRBool  fixedBackgroundAttachment = PR_FALSE;
 
     // Get nsStyleColor and nsStyleDisplay
-    const nsStyleBackground* color = (const nsStyleBackground*)
-      aStyleContext->GetStyleData(eStyleStruct_Background);
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       aStyleContext->GetStyleData(eStyleStruct_Display);
     const nsStylePosition* position = (const nsStylePosition*)
@@ -474,7 +472,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
     }
 
     // See if the frame has a fixed background attachment
-    if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+    const nsStyleBackground *color;
+    PRBool isCanvas;
+    PRBool hasBackground = 
+      nsCSSRendering::FindBackground(aPresContext, aFrame, &color, &isCanvas);
+    if (hasBackground &&
+        NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
       aForce = PR_TRUE;
       fixedBackgroundAttachment = PR_TRUE;
     }
@@ -613,8 +616,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
         // See if the view should be hidden
         PRBool  viewIsVisible = PR_TRUE;
-        PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
-                  NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+        PRBool  viewHasTransparentContent =
+            !isCanvas &&
+            (!hasBackground ||
+             (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
+              
 
         if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
           viewIsVisible = PR_FALSE;

@@ -179,8 +179,6 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
                      isVisible && mRect.width && mRect.height) {
       PRIntn skipSides = GetSkipSides();
-      const nsStyleBackground* color =
-        (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
       const nsStyleBorder* borderStyle = 
         (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
        
@@ -199,8 +197,7 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
         nsRect rect(0, yoff, mRect.width, mRect.height - yoff);
 
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *borderStyle, 0, 0);
-
+                                        aDirtyRect, rect, *borderStyle, 0, 0);
 
         if (mLegendFrame) {
 
@@ -249,9 +246,10 @@ nsFieldSetFrame::Paint(nsIPresContext*      aPresContext,
           aRenderingContext.PopState(clipState);
         } else {
 
-          
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, nsRect(0,0,mRect.width, mRect.height), *borderStyle, mStyleContext, skipSides);
+                                      aDirtyRect,
+                                      nsRect(0,0,mRect.width, mRect.height),
+                                      *borderStyle, mStyleContext, skipSides);
         }
     }
   }

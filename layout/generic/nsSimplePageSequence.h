@@ -63,9 +63,6 @@ public:
   nsMargin    mExtraMargin;      // Extra Margin between the printable area and the edge of the page
   nscoord     mHeadFooterGap;    // In twips, gap between H/F from edge of page
 
-
-  nsStyleBackground* mBackground; //weak reference...
-
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
 };

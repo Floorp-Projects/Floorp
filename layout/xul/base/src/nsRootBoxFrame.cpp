@@ -109,12 +109,6 @@ public:
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect,
-                    nsFramePaintLayer    aWhichLayer,
-                    PRUint32             aFlags);
-
   /**
    * Get the "type" of the frame
    *
@@ -284,17 +278,6 @@ nsRootBoxFrame::GetFrameType(nsIAtom** aType) const
   *aType = nsLayoutAtoms::rootFrame; 
   NS_ADDREF(*aType);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRootBoxFrame::Paint(nsIPresContext*      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect,
-                      nsFramePaintLayer    aWhichLayer,
-                      PRUint32             aFlags)
-{
-  SetDefaultBackgroundColor(aPresContext);
-  return nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP

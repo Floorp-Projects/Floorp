@@ -56,7 +56,6 @@
 #include "nsIStyleRuleSupplier.h"
 #include "nsRuleNode.h"
 #include "nsRuleWalker.h"
-#include "nsIBodySuper.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
 
@@ -172,8 +171,6 @@ public:
     NS_IF_ADDREF(*aResult);
     return NS_OK;
   }
-
-  virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument);
 
   NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
                                   nsIStyleContext* aStyleContext, 
@@ -1323,24 +1320,6 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
 
   return NS_OK;
 }
-
-nsresult
-StyleSetImpl::RemoveBodyFixupRule(nsIDocument *aDocument)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
-  if (htmlDoc) {
-    nsCOMPtr<nsIDOMHTMLBodyElement> node;
-    htmlDoc->GetBodyElement(getter_AddRefs(node));
-    if (node) {
-      nsCOMPtr<nsIBodySuper> bodyElement = do_QueryInterface(node);
-      bodyElement->RemoveBodyFixupRule();
-      return NS_OK;
-    }
-  }
-  return rv;
-}
-
 
 NS_IMETHODIMP
 StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
