@@ -42,9 +42,11 @@ static void _MD_unix_map_default_error(int err)
         case EAGAIN:
             prError = PR_WOULD_BLOCK_ERROR;
             break;
+#ifndef QNX
         case EALREADY:
             prError = PR_ALREADY_INITIATED_ERROR;
             break;
+#endif
         case EBADF:
             prError = PR_BAD_DESCRIPTOR_ERROR;
             break;

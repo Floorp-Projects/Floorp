@@ -53,6 +53,8 @@
 #define _PRSTR_BP m_psb
 #define _PRSTR_DELBUF(x) /* as nothing */
 #define _PRSTR_DELBUF_C(c, x)	/* as nothing */
+#elif defined(QNX)
+#define PRFSTREAMS_BROKEN
 #else
 #define _PRSTR_BP bp
 // Unix compilers don't believe in encapsulation
