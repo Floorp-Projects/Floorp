@@ -106,14 +106,14 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       //JS can't handle this event yet or can't handle it at all
       return NS_OK;
     }
-    if (mReturnResult == nsReturnResult_eNotSet) {
+    //if (mReturnResult == nsReturnResult_eNotSet) {
       if (eventString.EqualsWithConversion("error") || eventString.EqualsWithConversion("mouseover")) {
         mReturnResult = nsReturnResult_eReverseReturnResult;
       }
       else {
         mReturnResult = nsReturnResult_eDoNotReverseReturnResult;
       }
-    }
+    //}
     eventString.InsertWithConversion("on", 0, 2);
   }
   else {
