@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.65 $ $Date: 2002/08/01 05:17:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.66 $ $Date: 2002/09/23 21:32:32 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -88,8 +88,7 @@ STAN_GetDefaultCryptoContext()
 }
 
 NSS_IMPLEMENT PRStatus
-STAN_LoadDefaultNSS3TrustDomain
-(
+STAN_LoadDefaultNSS3TrustDomain (
   void
 )
 {
@@ -120,8 +119,7 @@ STAN_LoadDefaultNSS3TrustDomain
 }
 
 NSS_IMPLEMENT SECStatus
-STAN_AddModuleToDefaultTrustDomain
-(
+STAN_AddModuleToDefaultTrustDomain (
   SECMODModule *module
 )
 {
@@ -140,8 +138,7 @@ STAN_AddModuleToDefaultTrustDomain
 }
 
 NSS_IMPLEMENT SECStatus
-STAN_RemoveModuleFromDefaultTrustDomain
-(
+STAN_RemoveModuleFromDefaultTrustDomain (
   SECMODModule *module
 )
 {
@@ -380,8 +377,7 @@ nss3certificate_getDERSerialNumber(nssDecodedCert *dc,
 }
 
 NSS_IMPLEMENT nssDecodedCert *
-nssDecodedPKIXCertificate_Create
-(
+nssDecodedPKIXCertificate_Create (
   NSSArena *arenaOpt,
   NSSDER *encoding
 )
@@ -405,8 +401,7 @@ nssDecodedPKIXCertificate_Create
 }
 
 static nssDecodedCert *
-create_decoded_pkix_cert_from_nss3cert
-(
+create_decoded_pkix_cert_from_nss3cert (
   NSSArena *arenaOpt,
   CERTCertificate *cc
 )
@@ -427,8 +422,7 @@ create_decoded_pkix_cert_from_nss3cert
 }
 
 NSS_IMPLEMENT PRStatus
-nssDecodedPKIXCertificate_Destroy
-(
+nssDecodedPKIXCertificate_Destroy (
   nssDecodedCert *dc
 )
 {
@@ -805,8 +799,7 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 }
 
 static NSSToken*
-stan_GetTrustToken
-(
+stan_GetTrustToken (
   NSSCertificate *c
 )
 {
@@ -964,8 +957,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 
 /* CERT_TraversePermCertsForSubject */
 NSS_IMPLEMENT PRStatus
-nssTrustDomain_TraverseCertificatesBySubject
-(
+nssTrustDomain_TraverseCertificatesBySubject (
   NSSTrustDomain *td,
   NSSDER *subject,
   PRStatus (*callback)(NSSCertificate *c, void *arg),
@@ -992,8 +984,7 @@ nssTrustDomain_TraverseCertificatesBySubject
 
 /* CERT_TraversePermCertsForNickname */
 NSS_IMPLEMENT PRStatus
-nssTrustDomain_TraverseCertificatesByNickname
-(
+nssTrustDomain_TraverseCertificatesByNickname (
   NSSTrustDomain *td,
   NSSUTF8 *nickname,
   PRStatus (*callback)(NSSCertificate *c, void *arg),

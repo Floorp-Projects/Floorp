@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.18 $ $Date: 2002/09/07 01:23:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.19 $ $Date: 2002/09/23 21:32:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -104,8 +104,7 @@ static PRIntn subject_list_sort(void *v1, void *v2)
 }
 
 NSS_IMPLEMENT nssCertificateStore *
-nssCertificateStore_Create
-(
+nssCertificateStore_Create (
   NSSArena *arenaOpt
 )
 {
@@ -162,8 +161,7 @@ loser:
 }
 
 NSS_IMPLEMENT void
-nssCertificateStore_Destroy
-(
+nssCertificateStore_Destroy (
   nssCertificateStore *store
 )
 {
@@ -178,8 +176,7 @@ nssCertificateStore_Destroy
 }
 
 static PRStatus
-add_certificate_entry
-(
+add_certificate_entry (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -199,8 +196,7 @@ add_certificate_entry
 }
 
 static PRStatus
-add_subject_entry
-(
+add_subject_entry (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -231,15 +227,13 @@ add_subject_entry
 
 /* declared below */
 static void
-remove_certificate_entry
-(
+remove_certificate_entry (
   nssCertificateStore *store,
   NSSCertificate *cert
 );
 
 NSS_IMPLEMENT PRStatus
-nssCertificateStore_Add
-(
+nssCertificateStore_Add (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -264,8 +258,7 @@ nssCertificateStore_Add
 }
 
 static void
-remove_certificate_entry
-(
+remove_certificate_entry (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -286,8 +279,7 @@ remove_certificate_entry
 }
 
 static void
-remove_subject_entry
-(
+remove_subject_entry (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -314,8 +306,7 @@ remove_subject_entry
 }
 
 NSS_IMPLEMENT void
-nssCertificateStore_Remove
-(
+nssCertificateStore_Remove (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -359,8 +350,7 @@ nssCertificateStore_Remove
 }
 
 static NSSCertificate **
-get_array_from_list
-(
+get_array_from_list (
   nssList *certList,
   NSSCertificate *rvOpt[],
   PRUint32 maximumOpt,
@@ -388,8 +378,7 @@ get_array_from_list
 }
 
 NSS_IMPLEMENT NSSCertificate **
-nssCertificateStore_FindCertificatesBySubject
-(
+nssCertificateStore_FindCertificatesBySubject (
   nssCertificateStore *store,
   NSSDER *subject,
   NSSCertificate *rvOpt[],
@@ -447,8 +436,7 @@ static void match_nickname(const void *k, void *v, void *a)
  * Find all cached certs with this label.
  */
 NSS_IMPLEMENT NSSCertificate **
-nssCertificateStore_FindCertificatesByNickname
-(
+nssCertificateStore_FindCertificatesByNickname (
   nssCertificateStore *store,
   NSSUTF8 *nickname,
   NSSCertificate *rvOpt[],
@@ -505,8 +493,7 @@ static void match_email(const void *k, void *v, void *a)
  * Find all cached certs with this email address.
  */
 NSS_IMPLEMENT NSSCertificate **
-nssCertificateStore_FindCertificatesByEmail
-(
+nssCertificateStore_FindCertificatesByEmail (
   nssCertificateStore *store,
   NSSASCII7 *email,
   NSSCertificate *rvOpt[],
@@ -537,8 +524,7 @@ nssCertificateStore_FindCertificatesByEmail
 }
 
 NSS_IMPLEMENT NSSCertificate *
-nssCertificateStore_FindCertificateByIssuerAndSerialNumber
-(
+nssCertificateStore_FindCertificateByIssuerAndSerialNumber (
   nssCertificateStore *store,
   NSSDER *issuer,
   NSSDER *serial
@@ -561,8 +547,7 @@ nssCertificateStore_FindCertificateByIssuerAndSerialNumber
 
 #ifdef NSS_3_4_CODE
 static PRStatus
-issuer_and_serial_from_encoding
-(
+issuer_and_serial_from_encoding (
   NSSBER *encoding, 
   NSSDER *issuer, 
   NSSDER *serial
@@ -590,8 +575,7 @@ issuer_and_serial_from_encoding
 #endif
 
 NSS_IMPLEMENT NSSCertificate *
-nssCertificateStore_FindCertificateByEncodedCertificate
-(
+nssCertificateStore_FindCertificateByEncodedCertificate (
   nssCertificateStore *store,
   NSSDER *encoding
 )
@@ -616,8 +600,7 @@ nssCertificateStore_FindCertificateByEncodedCertificate
 }
 
 NSS_EXTERN PRStatus
-nssCertificateStore_AddTrust
-(
+nssCertificateStore_AddTrust (
   nssCertificateStore *store,
   NSSTrust *trust
 )
@@ -636,8 +619,7 @@ nssCertificateStore_AddTrust
 }
 
 NSS_IMPLEMENT NSSTrust *
-nssCertificateStore_FindTrustForCertificate
-(
+nssCertificateStore_FindTrustForCertificate (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -655,8 +637,7 @@ nssCertificateStore_FindTrustForCertificate
 }
 
 NSS_EXTERN PRStatus
-nssCertificateStore_AddSMIMEProfile
-(
+nssCertificateStore_AddSMIMEProfile (
   nssCertificateStore *store,
   nssSMIMEProfile *profile
 )
@@ -675,8 +656,7 @@ nssCertificateStore_AddSMIMEProfile
 }
 
 NSS_IMPLEMENT nssSMIMEProfile *
-nssCertificateStore_FindSMIMEProfileForCertificate
-(
+nssCertificateStore_FindSMIMEProfileForCertificate (
   nssCertificateStore *store,
   NSSCertificate *cert
 )
@@ -696,8 +676,7 @@ nssCertificateStore_FindSMIMEProfileForCertificate
 /* XXX this is also used by cache and should be somewhere else */
 
 static PLHashNumber
-nss_certificate_hash
-(
+nss_certificate_hash (
   const void *key
 )
 {
@@ -723,8 +702,7 @@ nss_compare_certs(const void *v1, const void *v2)
 }
 
 NSS_IMPLEMENT nssHash *
-nssHash_CreateCertificate
-(
+nssHash_CreateCertificate (
   NSSArena *arenaOpt,
   PRUint32 numBuckets
 )
@@ -737,8 +715,7 @@ nssHash_CreateCertificate
 }
 
 NSS_IMPLEMENT void
-nssCertificateStore_DumpStoreInfo
-(
+nssCertificateStore_DumpStoreInfo (
   nssCertificateStore *store,
   void (* cert_dump_iter)(const void *, void *, void *),
   void *arg

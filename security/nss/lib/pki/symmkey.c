@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: symmkey.c,v $ $Revision: 1.3 $ $Date: 2001/10/11 18:41:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: symmkey.c,v $ $Revision: 1.4 $ $Date: 2002/09/23 21:32:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -42,8 +42,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: symmkey.c,v $ $Revision: 1.3 $ $Dat
 extern const NSSError NSS_ERROR_NOT_FOUND;
 
 NSS_IMPLEMENT PRStatus
-NSSSymmetricKey_Destroy
-(
+NSSSymmetricKey_Destroy (
   NSSSymmetricKey *mk
 )
 {
@@ -52,8 +51,7 @@ NSSSymmetricKey_Destroy
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSymmetricKey_DeleteStoredObject
-(
+NSSSymmetricKey_DeleteStoredObject (
   NSSSymmetricKey *mk,
   NSSCallback *uhh
 )
@@ -63,8 +61,7 @@ NSSSymmetricKey_DeleteStoredObject
 }
 
 NSS_IMPLEMENT PRUint32
-NSSSymmetricKey_GetKeyLength
-(
+NSSSymmetricKey_GetKeyLength (
   NSSSymmetricKey *mk
 )
 {
@@ -73,8 +70,7 @@ NSSSymmetricKey_GetKeyLength
 }
 
 NSS_IMPLEMENT PRUint32
-NSSSymmetricKey_GetKeyStrength
-(
+NSSSymmetricKey_GetKeyStrength (
   NSSSymmetricKey *mk
 )
 {
@@ -83,8 +79,7 @@ NSSSymmetricKey_GetKeyStrength
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSymmetricKey_IsStillPresent
-(
+NSSSymmetricKey_IsStillPresent (
   NSSSymmetricKey *mk
 )
 {
@@ -93,8 +88,7 @@ NSSSymmetricKey_IsStillPresent
 }
 
 NSS_IMPLEMENT NSSTrustDomain *
-NSSSymmetricKey_GetTrustDomain
-(
+NSSSymmetricKey_GetTrustDomain (
   NSSSymmetricKey *mk,
   PRStatus *statusOpt
 )
@@ -104,8 +98,7 @@ NSSSymmetricKey_GetTrustDomain
 }
 
 NSS_IMPLEMENT NSSToken *
-NSSSymmetricKey_GetToken
-(
+NSSSymmetricKey_GetToken (
   NSSSymmetricKey *mk,
   PRStatus *statusOpt
 )
@@ -115,8 +108,7 @@ NSSSymmetricKey_GetToken
 }
 
 NSS_IMPLEMENT NSSSlot *
-NSSSymmetricKey_GetSlot
-(
+NSSSymmetricKey_GetSlot (
   NSSSymmetricKey *mk,
   PRStatus *statusOpt
 )
@@ -126,8 +118,7 @@ NSSSymmetricKey_GetSlot
 }
 
 NSS_IMPLEMENT NSSModule *
-NSSSymmetricKey_GetModule
-(
+NSSSymmetricKey_GetModule (
   NSSSymmetricKey *mk,
   PRStatus *statusOpt
 )
@@ -137,8 +128,7 @@ NSSSymmetricKey_GetModule
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_Encrypt
-(
+NSSSymmetricKey_Encrypt (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *data,
@@ -152,8 +142,7 @@ NSSSymmetricKey_Encrypt
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_Decrypt
-(
+NSSSymmetricKey_Decrypt (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *encryptedData,
@@ -167,8 +156,7 @@ NSSSymmetricKey_Decrypt
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_Sign
-(
+NSSSymmetricKey_Sign (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *data,
@@ -182,8 +170,7 @@ NSSSymmetricKey_Sign
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_SignRecover
-(
+NSSSymmetricKey_SignRecover (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *data,
@@ -197,8 +184,7 @@ NSSSymmetricKey_SignRecover
 }
 
 NSS_IMPLEMENT PRStatus
-NSSSymmetricKey_Verify
-(
+NSSSymmetricKey_Verify (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *data,
@@ -211,8 +197,7 @@ NSSSymmetricKey_Verify
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_VerifyRecover
-(
+NSSSymmetricKey_VerifyRecover (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *signature,
@@ -226,8 +211,7 @@ NSSSymmetricKey_VerifyRecover
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_WrapSymmetricKey
-(
+NSSSymmetricKey_WrapSymmetricKey (
   NSSSymmetricKey *wrappingKey,
   NSSAlgorithmAndParameters *apOpt,
   NSSSymmetricKey *keyToWrap,
@@ -241,8 +225,7 @@ NSSSymmetricKey_WrapSymmetricKey
 }
 
 NSS_IMPLEMENT NSSItem *
-NSSSymmetricKey_WrapPrivateKey
-(
+NSSSymmetricKey_WrapPrivateKey (
   NSSSymmetricKey *wrappingKey,
   NSSAlgorithmAndParameters *apOpt,
   NSSPrivateKey *keyToWrap,
@@ -256,8 +239,7 @@ NSSSymmetricKey_WrapPrivateKey
 }
 
 NSS_IMPLEMENT NSSSymmetricKey *
-NSSSymmetricKey_UnwrapSymmetricKey
-(
+NSSSymmetricKey_UnwrapSymmetricKey (
   NSSSymmetricKey *wrappingKey,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *wrappedKey,
@@ -272,8 +254,7 @@ NSSSymmetricKey_UnwrapSymmetricKey
 }
 
 NSS_IMPLEMENT NSSPrivateKey *
-NSSSymmetricKey_UnwrapPrivateKey
-(
+NSSSymmetricKey_UnwrapPrivateKey (
   NSSSymmetricKey *wrappingKey,
   NSSAlgorithmAndParameters *apOpt,
   NSSItem *wrappedKey,
@@ -290,8 +271,7 @@ NSSSymmetricKey_UnwrapPrivateKey
 }
 
 NSS_IMPLEMENT NSSSymmetricKey *
-NSSSymmetricKey_DeriveSymmetricKey
-(
+NSSSymmetricKey_DeriveSymmetricKey (
   NSSSymmetricKey *originalKey,
   NSSAlgorithmAndParameters *apOpt,
   NSSOID *target,
@@ -305,8 +285,7 @@ NSSSymmetricKey_DeriveSymmetricKey
 }
 
 NSS_IMPLEMENT NSSCryptoContext *
-NSSSymmetricKey_CreateCryptoContext
-(
+NSSSymmetricKey_CreateCryptoContext (
   NSSSymmetricKey *mk,
   NSSAlgorithmAndParameters *apOpt,
   NSSCallback *uhh

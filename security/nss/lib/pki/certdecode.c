@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.12 $ $Date: 2002/04/15 15:22:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.13 $ $Date: 2002/09/23 21:32:31 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -46,22 +46,19 @@ static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.12 $ 
 #ifdef NSS_3_4_CODE
 /* This is defined in nss3hack.c */
 NSS_EXTERN nssDecodedCert *
-nssDecodedPKIXCertificate_Create
-(
+nssDecodedPKIXCertificate_Create (
   NSSArena *arenaOpt,
   NSSDER *encoding
 );
 
 NSS_IMPLEMENT PRStatus
-nssDecodedPKIXCertificate_Destroy
-(
+nssDecodedPKIXCertificate_Destroy (
   nssDecodedCert *dc
 );
 #else /* NSS_4_0_CODE */
 /* This is where 4.0 PKIX code will handle the decoding */
 static nssDecodedCert *
-nssDecodedPKIXCertificate_Create
-(
+nssDecodedPKIXCertificate_Create (
   NSSArena *arenaOpt,
   NSSDER *encoding
 )
@@ -70,8 +67,7 @@ nssDecodedPKIXCertificate_Create
 }
 
 static PRStatus
-nssDecodedPKIXCertificate_Destroy
-(
+nssDecodedPKIXCertificate_Destroy (
   nssDecodedCert *dc
 )
 {
@@ -80,8 +76,7 @@ nssDecodedPKIXCertificate_Destroy
 #endif /* not NSS_3_4_CODE */
 
 NSS_IMPLEMENT nssDecodedCert *
-nssDecodedCert_Create
-(
+nssDecodedCert_Create (
   NSSArena *arenaOpt,
   NSSDER *encoding,
   NSSCertificateType type
@@ -102,8 +97,7 @@ nssDecodedCert_Create
 }
 
 NSS_IMPLEMENT PRStatus
-nssDecodedCert_Destroy
-(
+nssDecodedCert_Destroy (
   nssDecodedCert *dc
 )
 {
