@@ -51,6 +51,7 @@ static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
+static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
 //----------------------------------------------------------------------
 
@@ -185,6 +186,20 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 }
 
 nsresult    
+nsGenericDOMDataNode::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  // XXX Since we believe this won't be done very often, we won't
+  // burn another slot in the data node and just create a new
+  // (empty) childNodes list every time we're asked.
+  nsChildContentList* list = new nsChildContentList(nsnull);
+  if (nsnull == list) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return list->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+}
+
+nsresult    
 nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   // XXX Actually the owner document is the document in whose context
@@ -238,13 +253,20 @@ nsGenericDOMDataNode::SetData(const nsString& aData)
   // text replacement we should just collapse all the ranges.
   if (mRangeList) nsRange::TextOwnerChanged(mContent, 0, mText.GetLength(), 0);
 
-  mText = aData;
-  
-  // Notify the document that the text changed
-  if (nsnull != mDocument) {
-    mDocument->ContentChanged(mContent, nsnull);
+  nsresult result;
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+
+  // If possible, let the container content object have a go at it.
+  if (NS_SUCCEEDED(result)) {
+    result = textContent->SetText(aData.GetUnicode(), 
+                                  aData.Length(), 
+                                  PR_TRUE); 
   }
-  return NS_OK;
+  else {
+    result = SetText(aData.GetUnicode(), aData.Length(), PR_TRUE); 
+  }
+
+  return result;
 }
 
 nsresult    
@@ -308,6 +330,8 @@ nsresult
 nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
                                   const nsString& aData)
 {
+  nsresult result = NS_OK;
+
   // sanitize arguments
   PRUint32 textLength = mText.GetLength();
   if (aOffset > textLength) {
@@ -343,15 +367,18 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   }
 
   // Switch to new buffer
-  mText.SetTo(to, newLength);
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
+
+  // If possible, let the container content object have a go at it.
+  if (NS_SUCCEEDED(result)) {
+    result = textContent->SetText(to, newLength, PR_TRUE);
+  }
+  else {
+    result = SetText(to, newLength, PR_TRUE);
+  }
   delete [] to;
 
-  // Notify the document that the text changed
-  if (nsnull != mDocument) {
-    mDocument->ContentChanged(mContent, nsnull);
-  }
-
-  return NS_OK;
+  return result;
 }
 
 //----------------------------------------------------------------------

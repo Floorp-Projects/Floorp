@@ -62,10 +62,7 @@ struct nsGenericDOMDataNode {
   }
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
-  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes) {
-    *aChildNodes = nsnull;
-    return NS_OK;
-  }
+  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
   nsresult    HasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
