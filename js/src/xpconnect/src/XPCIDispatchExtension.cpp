@@ -44,7 +44,7 @@ static JSBool
 CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
                   jsval *argv, jsval *rval, PRBool enforceSecurity)
 {
-    XPCCallContext ccx(JS_CALLER, cx, obj);
+    XPCCallContext ccx(JS_CALLER, cx, JS_GetGlobalObject(cx));
     XPCJSRuntime *rt = ccx.GetRuntime();
     if (!rt)
     {
@@ -96,8 +96,8 @@ CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
     // Get a wrapper for our object
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     nsresult nsrv = ccx.GetXPConnect()->WrapNative(
-        ccx, obj, NS_REINTERPRET_CAST(nsISupports*, pDispatch.p), NSID_IDISPATCH,
-        getter_AddRefs(holder));
+        ccx, ccx.GetOperandJSObject(), NS_REINTERPRET_CAST(nsISupports*, pDispatch.p),
+        NSID_IDISPATCH, getter_AddRefs(holder));
     if(NS_FAILED(nsrv))
     {
         XPCThrower::Throw(nsrv, ccx);
