@@ -22,38 +22,20 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+PROGRAM = xpviewer
+
 
 TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetgtk.so\" \
-	-DGFXWIN_DLL=\"libgfxgtk.so\" \
-	$(TK_GTK_CFLAGS)
+# Hardcoding dlopen()'s?  This needs to get fixed.
+#
+TOOLKIT_CFLAGS := \
+	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	$(TK_CFLAGS)
 
-TOOLKIT_CPPSRCS = \
-	nsGTKMain.cpp \
-	nsGTKMenu.cpp
-
-TOOLKIT_LIBS = $(TK_GTK_LIBS)
-else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetmotif.so\" \
-	-DGFXWIN_DLL=\"libgfxmotif.so\" \
-	$(TK_MOTIF_CFLAGS)
-
-TOOLKIT_CPPSRCS = \
-	nsMotifMenu.cpp \
-	nsUnixMain.cpp
-
-TOOLKIT_LIBS = $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS)
-
-endif
-endif
 
 CPPSRCS = \
 	nsFindDialog.cpp \
@@ -65,26 +47,11 @@ CPPSRCS = \
 	nsXPBaseWindow.cpp \
 	$(NULL)
 
-CFLAGS += $(TOOLKIT_CFLAGS)
-
-INCLUDES += \
-			-I$(PUBLIC)/raptor \
-			-I$(PUBLIC)/xpcom \
-			-I$(PUBLIC)/dom \
-			-I$(PUBLIC)/netlib \
-			-I$(PUBLIC)/js \
-			-I$(PUBLIC)/pref \
-			-I$(PUBLIC)/network \
-			-I$(PUBLIC)/xp \
-			-I$(PUBLIC)/editor
-
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
 
-OBJS	= $(CPPSRCS:.cpp=.o)
-
-EX_LIBS = \
+LIBS := \
 	-L$(DIST)/bin \
 	-lraptorbase    \
 	-lpref \
@@ -136,28 +103,13 @@ EX_LIBS = \
 	-lmozdbm \
 	$(NULL)
 
-PROGS = $(OBJDIR)/xpviewer
+include $(topsrcdir)/config/config.mk
 
-TARGETS = $(PROGS)
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS) # $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
-endif
-endif
-
-export::
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+install::
 	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test0.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test1.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test2.html $(DIST)/bin/res/samples
@@ -277,42 +229,3 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/resources/toolbar/TB_WhatsRelated_mo.gif $(DIST)/bin/res/toolbar
 	$(INSTALL) $(srcdir)/resources/toolbar/StatusBar-insecure.gif $(DIST)/bin/res/toolbar
 	$(INSTALL) $(srcdir)/resources/toolbar/StatusBar-secure.gif $(DIST)/bin/res/toolbar
-
-clobber::
-	rm -f $(DIST)/bin/viewer.exe
-	rm -f $(DIST)/bin/res/samples/test0.html
-	rm -f $(DIST)/bin/res/samples/test1.html
-	rm -f $(DIST)/bin/res/samples/test2.html
-	rm -f $(DIST)/bin/res/samples/test3.html
-	rm -f $(DIST)/bin/res/samples/test4.html
-	rm -f $(DIST)/bin/res/samples/test5.html
-	rm -f $(DIST)/bin/res/samples/test6.html
-	rm -f $(DIST)/bin/res/samples/test7.html
-	rm -f $(DIST)/bin/res/samples/test8.html
-	rm -f $(DIST)/bin/res/samples/test8siz.html
-	rm -f $(DIST)/bin/res/samples/test8sca.html
-	rm -f $(DIST)/bin/res/samples/test8tab.html
-	rm -f $(DIST)/bin/res/samples/test9.html
-	rm -f $(DIST)/bin/res/samples/test9a.html
-	rm -f $(DIST)/bin/res/samples/test9b.html
-	rm -f $(DIST)/bin/res/samples/raptor.jpg
-	rm -f $(DIST)/bin/res/samples/Anieyes.gif
-	rm -f $(DIST)/bin/res/samples/gear1.gif
-	rm -f $(DIST)/bin/res/samples/rock_gra.gif
-	rm -f $(DIST)/bin/res/samples/bg.jpg
-	rm -f $(DIST)/bin/res/throbber/anims00.gif
-	rm -f $(DIST)/bin/res/throbber/anims01.gif
-	rm -f $(DIST)/bin/res/throbber/anims02.gif
-	rm -f $(DIST)/bin/res/throbber/anims03.gif
-	rm -f $(DIST)/bin/res/throbber/anims04.gif
-	rm -f $(DIST)/bin/res/throbber/anims05.gif
-	rm -f $(DIST)/bin/res/throbber/anims06.gif
-	rm -f $(DIST)/bin/res/throbber/anims07.gif
-	rm -f $(DIST)/bin/res/throbber/anims08.gif
-	rm -f $(DIST)/bin/res/throbber/anims09.gif
-	rm -f $(DIST)/bin/res/throbber/anims10.gif
-	rm -f $(DIST)/bin/res/throbber/anims11.gif
-	rm -f $(DIST)/bin/res/throbber/anims12.gif
-	rm -f $(DIST)/bin/res/throbber/anims13.gif
-
-

@@ -22,40 +22,36 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+LIBRARY_NAME := widget$(MOZ_TOOLKIT)
 
-LIBRARY_NAME = $(addsuffix $(MOZ_TOOLKIT), widget)
+TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_TOOLKIT)
 
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
-TOOLKIT_LIBS += $(TK_GTK_LIBS)
-TOOLKIT_INCLUDES += -I$(srcdir)/../gtk
+#REQUIRES=util img xpcom raptor netlib
 
-else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
-TOOLKIT_LIBS += $(TK_MOTIF_LIBS)
-TOOLKIT_INCLUDES += -I$(srcdir)/../motif
-endif
-endif
+LOCAL_INCLUDES := \
+	-I$(srcdir)/../xpwidgets \
+	$(TOOLKIT_INCLUDES) \
+	 -I$(srcdir)/. \
+	$(NULL)
 
-MODULE=raptor
-
-REQUIRES=util img xpcom raptor netlib
-
-INCLUDES+= -I$(srcdir)/../xpwidgets $(TOOLKIT_INCLUDES) -I$(srcdir)/.
-
-CFLAGS += $(TOOLKIT_CFLAGS)
+CPPSRCS_gtk	:= \
+	GTKdlldeps.cpp \
+	nsGTKWidgetFactory.cpp
 
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 
-ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-CPPSRCS=GTKdlldeps.cpp nsWidgetSupport.cpp nsGTKWidgetFactory.cpp
-else
-ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
-CPPSRCS=Motifdlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
-endif
-endif
+CPPSRCS_motif	:= \
+	Motifdlldeps.cpp \
+	nsMotifWidgetFactory.cpp
+
+CPPSRCS := \
+	$(CPPSRCS_$(MOZ_TOOLKIT)) \
+	nsWidgetSupport.cpp \
+	$(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+CFLAGS += $(TK_CFLAGS)
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
