@@ -102,7 +102,6 @@ function onLoad() {
     dialog.fileName    = document.getElementById("dialog.fileName");
     dialog.status      = document.getElementById("dialog.status");
     dialog.progress    = document.getElementById("dialog.progress");
-    dialog.progressPercent = document.getElementById("dialog.progressPercent");
     dialog.timeLeft    = document.getElementById("dialog.timeLeft");
     dialog.timeElapsed = document.getElementById("dialog.timeElapsed");
     dialog.cancel      = document.getElementById("dialog.cancel");
@@ -194,7 +193,7 @@ function onProgress( bytes, max ) {
     }
 
     // Update elapsed time display.
-    dialog.timeElapsed.childNodes[0].nodeValue = formatSeconds( elapsed / 1000 );
+    dialog.timeElapsed.setAttribute("value", formatSeconds( elapsed / 1000 ));
 
     // Calculate percentage.
     var percent;
@@ -260,20 +259,20 @@ function onProgress( bytes, max ) {
     // Update percentage label on progress meter.
     var percentMsg = getString( "percentMsg" );
     percentMsg = replaceInsert( percentMsg, 1, percent );
-    dialog.progressPercent.childNodes[0].nodeValue = percentMsg;
+    dialog.progress.progresstext = percentMsg;
     
     if ( !completed ) {
         // Update time remaining.
         if ( rate && max != "-1" ) {
             var rem = ( max - bytes ) / rate;
             rem = parseInt( rem + .5 );
-            dialog.timeLeft.childNodes[0].nodeValue = formatSeconds( rem );
+            dialog.timeLeft.setAttribute("value", formatSeconds( rem ));
         } else {
-            dialog.timeLeft.childNodes[0].nodeValue = getString( "unknownTime" );
+            dialog.timeLeft.setAttribute("value", getString( "unknownTime" ));
         }
     } else {
         // Clear time remaining field.
-        dialog.timeLeft.childNodes[0].nodeValue = "";
+        dialog.timeLeft.setAttribute("value", "");
     }
 }
 
@@ -335,7 +334,7 @@ function onStatus( status ) {
    // Ignore if status text is less than 10 characters (we're getting some
    // bogus onStatus notifications.
    if ( status.length > 9 ) {
-      dialog.status.childNodes[0].nodeValue = status;
+      dialog.status.setAttribute("value", status);
    }
 }
 
