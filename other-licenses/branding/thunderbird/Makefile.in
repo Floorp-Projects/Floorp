@@ -1,0 +1,52 @@
+# Branding Makefile
+#  - jars chrome artwork
+#  - copies artwork to appropriate places in objdir for bundling into app 
+#    resources
+
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+MAIL_APP_FILES = \
+	thunderbird.ico \
+	default.xpm \
+	mozicon16.xpm \
+	mozicon50.xpm \
+	$(NULL)
+
+MAIL_CONTENT_FILES = \
+	about-credits.png \
+	about-thunderbird.png \
+	$(NULL)
+
+export::
+	$(NSINSTALL) -D $(DIST)/branding
+	cp $(addprefix $(srcdir)/, $(MAIL_APP_FILES)) $(DIST)/branding/
+	if [ ! -d $(DEPTH)/mail/base/content ] ; then \
+		mkdir $(DEPTH)/mail/base/content; \
+	fi
+	cp $(addprefix $(srcdir)/, $(MAIL_CONTENT_FILES)) $(DEPTH)/mail/base/content
+	if [ ! -d $(DEPTH)/mail/base/locale ] ; then \
+		mkdir $(DEPTH)/mail/base/locale; \
+	fi
+	cp $(addprefix $(srcdir)/, thunderbird-watermark.png) $(DEPTH)/mail/base/locale
+	if [ ! -d $(DEPTH)/mail/app/icons/windows ] ; then \
+		mkdir $(DEPTH)/mail/app/icons/windows; \
+	fi
+	cp $(srcdir)/thunderbird.ico  $(DEPTH)/mail/app/icons/windows/messengerWindow.ico
+	if [ ! -d $(DEPTH)/mail/app/icons/gtk ] ; then \
+		mkdir $(DEPTH)/mail/app/icons/gtk; \
+	fi
+	cp $(srcdir)/mozicon50.xpm  $(DEPTH)/mail/app/icons/gtk/messengerWindow.xpm
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	cp $(srcdir)/thunderbird.icns  $(DIST)/branding/thunderbird.icns
+endif
+	cp $(srcdir)/thunderbird.ico  $(DIST)/branding/app.ico
+	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
+	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
+
