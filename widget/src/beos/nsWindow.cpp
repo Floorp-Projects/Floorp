@@ -1748,25 +1748,10 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		if (!mEnabled)
 			return false;
 		DispatchFocus(NS_GOTFOCUS);
-		
-		//Old hack borrowed from MS Windows code. Will test how good it works without hack.
-		//Same for all further occurencies of mJustGot variables
-		
-		//if(mJustGotActivate) 
-		//if(mJustGotActivate) 
-		//{
-		//	mJustGotActivate = PR_FALSE;
-		//	DispatchFocus(NS_ACTIVATE);
-		//}
 		break;
 
 	case nsWindow::KILL_FOCUS:
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		//This was old hack borrowed from MS Windows code. 
-		//if(mJustGotDeactivate) 
-		//{
-		//	DispatchFocus(NS_DEACTIVATE);
-		//}
 		DispatchFocus(NS_LOSTFOCUS);
 		break;
 
@@ -1918,18 +1903,18 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				if (eWindowType_dialog == mWindowType || 
 				    eWindowType_toplevel == mWindowType)
 					DealWithPopups(ONACTIVATE,nsPoint(0,0));
-				DispatchFocus(NS_DEACTIVATE);
-				//mJustGotDeactivate = PR_TRUE;
+
+				//Testing if BWindow is really deactivated.
+				if(!mView->Window()->IsActive())
+					DispatchFocus(NS_DEACTIVATE);
 			} 
 			else 
 			{
-				DispatchFocus(NS_ACTIVATE);
-				//mJustGotActivate = PR_TRUE;
+				if(mView->Window()->IsActive())
+					DispatchFocus(NS_ACTIVATE);
+					
 				if (mView && mView->Window())
 					gLastActiveWindow = mView->Window();
-				//Old hack. It seems no need for this at moment, but who knows.
-				//if(mWindowType == eWindowType_dialog) 
-				//	SetFocus(PR_TRUE);
 			}
 		}
 		break;
