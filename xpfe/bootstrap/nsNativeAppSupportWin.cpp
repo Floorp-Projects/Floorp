@@ -35,6 +35,7 @@
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsISupportsPrimitives.h"
+#include "nsISupportsArray.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIScriptGlobalObject.h"
