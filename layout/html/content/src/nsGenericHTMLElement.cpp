@@ -1352,9 +1352,13 @@ static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },   // non-standard but necessary for Nav4 compatibility
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+
+  // The following are non-standard but necessary for Nav4 compatibility
+  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
+
   { 0 }
 };
 
