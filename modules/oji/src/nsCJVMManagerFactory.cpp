@@ -38,6 +38,7 @@
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsJVMAuthTools.h"
 #include "nsJVMManager.h"
 
 /*
@@ -53,6 +54,12 @@ static const nsModuleComponentInfo components[] =
       NS_JVMMANAGER_CID,  
       "@mozilla.org/oji/jvm-mgr;1", 
       nsJVMManager::Create
+    },
+
+    { "JVM Authentication Service", 
+      NS_JVMAUTHTOOLS_CID,  
+      "@mozilla.org/oji/jvm-auth-tools;1", 
+      nsJVMAuthTools::Create
     },
 };
 

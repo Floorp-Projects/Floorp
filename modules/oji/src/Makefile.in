@@ -72,6 +72,7 @@ CPPSRCS		= \
 		nsCSecurityContext.cpp \
 		nsCJVMManagerFactory.cpp \
 		lcglue.cpp \
+		nsJVMAuthTools.cpp \
 		$(NULL)
 
 EXPORTS		= \
