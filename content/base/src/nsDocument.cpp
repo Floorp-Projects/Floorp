@@ -3852,7 +3852,6 @@ nsDocument::GetDTD(nsIDTD** aDTD) const
     if (NS_FAILED(rv)) return rv;
     if (!dtd) return NS_ERROR_FAILURE;
 
-    NS_ADDREF(dtd);
     // Wish again for mutable:
     NS_CONST_CAST(nsDocument* , this)->mDTD = dtd;
   }
