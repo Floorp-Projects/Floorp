@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.24 2004/02/19 06:53:22 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.25 2004/04/27 06:10:09 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -154,8 +154,9 @@ sub htmlquote {
 
 
 sub freetextmarkup {
-    $_[0] =~ s#((ftp|http)://\S*[^\s.])#<a href=\"$1\">$1</a>#g;
-    $_[0] =~ s/(&lt;(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
+    $_[0] =~ s#((ftp|http)://\S*[^\s."')>])#<a href=\"$1\">$1</a>#g;
+    $_[0] =~ s/(\0<(?:mailto:|)(.*@.*)\0>)/<a href=\"mailto:$2\">$1<\/a>/g;
+    $_[0] =~ s/(&lt;(?:mailto:|)(.*@.*)&gt;)/<a href=\"mailto:$2\">$1<\/a>/g;
 }
 
 
