@@ -52,6 +52,16 @@
 char               *progName;
 
 
+const SEC_ASN1Template seckey_PQGParamsTemplate[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(SECKEYPQGParams) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,prime) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,subPrime) },
+    { SEC_ASN1_INTEGER, offsetof(SECKEYPQGParams,base) },
+    { 0, }
+};
+
+
+
 void
 Usage(void)
 {
@@ -83,15 +93,15 @@ outputPQGParams(PQGParams * pqgParams, PRBool output_binary, PRBool output_raw,
     if (output_raw) {
     	SECItem item;
 
-	PQG_GetPrimeFromParams(pqgParams, &item);
+	PK11_PQG_GetPrimeFromParams(pqgParams, &item);
 	SECU_PrintInteger(outFile, &item,    "Prime",    1);
 	SECITEM_FreeItem(&item, PR_FALSE);
 
-	PQG_GetSubPrimeFromParams(pqgParams, &item);
+	PK11_PQG_GetSubPrimeFromParams(pqgParams, &item);
 	SECU_PrintInteger(outFile, &item, "Subprime", 1);
 	SECITEM_FreeItem(&item, PR_FALSE);
 
-	PQG_GetBaseFromParams(pqgParams, &item);
+	PK11_PQG_GetBaseFromParams(pqgParams, &item);
 	SECU_PrintInteger(outFile, &item,     "Base",     1);
 	SECITEM_FreeItem(&item, PR_FALSE);
 
@@ -103,7 +113,7 @@ outputPQGParams(PQGParams * pqgParams, PRBool output_binary, PRBool output_raw,
     encodedParams.len  = 0;
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     SEC_ASN1EncodeItem(arena, &encodedParams, pqgParams,
-		       SECKEY_PQGParamsTemplate);
+		       seckey_PQGParamsTemplate);
     if (output_binary) {
 	fwrite(encodedParams.data, encodedParams.len, sizeof(char), outFile);
 	printf("\n");
@@ -126,16 +136,16 @@ outputPQGVerify(PQGVerify * pqgVerify, PRBool output_binary, PRBool output_raw,
     	SECItem item;
 	unsigned int counter;
 
-	PQG_GetHFromVerify(pqgVerify, &item);
+	PK11_PQG_GetHFromVerify(pqgVerify, &item);
 	SECU_PrintInteger(outFile, &item,        "h",        1);
 	SECITEM_FreeItem(&item, PR_FALSE);
 
-	PQG_GetSeedFromVerify(pqgVerify, &item);
+	PK11_PQG_GetSeedFromVerify(pqgVerify, &item);
 	SECU_PrintInteger(outFile, &item,     "SEED",     1);
 	fprintf(outFile, "    g:       %d\n", item.len * BPB);
 	SECITEM_FreeItem(&item, PR_FALSE);
 
-	counter = PQG_GetCounterFromVerify(pqgVerify);
+	counter = PK11_PQG_GetCounterFromVerify(pqgVerify);
 	fprintf(outFile, "    counter: %d\n", counter);
 	fprintf(outFile, "\n");
 	return 0;
@@ -238,13 +248,14 @@ main(int argc, char **argv)
 	outFile = stdout;
     }
 
-    RNG_RNGInit();
-    RNG_SystemInfoForRNG();
+
+    NSS_NoDB_Init(NULL);
+
     if (g) 
-	rv = PQG_ParamGenSeedLen((unsigned)j, (unsigned)(g/8), 
+	rv = PK11_PQG_ParamGenSeedLen((unsigned)j, (unsigned)(g/8), 
 	                         &pqgParams, &pqgVerify);
     else 
-	rv = PQG_ParamGen((unsigned)j, &pqgParams, &pqgVerify);
+	rv = PK11_PQG_ParamGen((unsigned)j, &pqgParams, &pqgVerify);
 
     if (rv != SECSuccess || pqgParams == NULL) {
 	fprintf(stderr, "%s: PQG parameter generation failed.\n", progName);
@@ -255,7 +266,7 @@ main(int argc, char **argv)
     o = outputPQGParams(pqgParams, output_binary, output_raw, outFile);
     o = outputPQGVerify(pqgVerify, output_binary, output_raw, outFile);
 
-    rv = PQG_VerifyParams(pqgParams, pqgVerify, &passed);
+    rv = PK11_PQG_VerifyParams(pqgParams, pqgVerify, &passed);
     if (rv != SECSuccess) {
 	fprintf(stderr, "%s: PQG parameter verification aborted.\n", progName);
 	goto loser;
@@ -266,12 +277,12 @@ main(int argc, char **argv)
     } 
     fprintf(stderr, "%s: PQG parameters passed verification.\n", progName);
 
-    PQG_DestroyParams(pqgParams);
-    PQG_DestroyVerify(pqgVerify);
+    PK11_PQG_DestroyParams(pqgParams);
+    PK11_PQG_DestroyVerify(pqgVerify);
     return 0;
 
 loser:
-    PQG_DestroyParams(pqgParams);
-    PQG_DestroyVerify(pqgVerify);
+    PK11_PQG_DestroyParams(pqgParams);
+    PK11_PQG_DestroyVerify(pqgVerify);
     return 1;
 }
