@@ -307,7 +307,7 @@ nsresult nsCharsetConverterManager::RegisterConverterPresenceData(
   if (NS_FAILED(res)) goto done;
   res = registry -> SetInt(key, "x-fake-2000", 1);
   if (NS_FAILED(res)) goto done;
-  res = registry -> SetInt(key, "X-EUC-TW", 1);
+  res = registry -> SetInt(key, "x-euc-tw", 1);
   if (NS_FAILED(res)) goto done;
 
 done:
