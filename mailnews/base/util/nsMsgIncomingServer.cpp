@@ -809,9 +809,8 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
       nsAutoString passwordFound;
 
       // Get password entry corresponding to the host URI we are passing in.
-      rv = passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
-                                             hostFound, userNameFound, passwordFound);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+                                             hostFound, userNameFound, passwordFound)))
         CopyUCS2toASCII(passwordFound, m_password);
     }
   }
@@ -839,7 +838,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
       if (!dialog) return NS_ERROR_FAILURE;
     }
-    if (NS_SUCCEEDED(rv) && dialog)
+    if (dialog)
     {
       nsXPIDLString uniPassword;
       nsXPIDLCString serverUri;
@@ -869,8 +868,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
     } // if we got a prompt dialog
   } // if the password is empty
   
-  rv = GetPassword(aPassword);
-  return rv;
+  return GetPassword(aPassword);
 }
 
 NS_IMETHODIMP
