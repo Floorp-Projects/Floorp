@@ -870,6 +870,12 @@ nsHttpHandler::ProcessTransactionQ_Locked()
         caps = pipelineState.TransactionCaps();
         NS_ASSERTION(trans, "no transaction");
     }
+#if defined(PR_LOGGING)
+    else
+        LOG(("no pipelining [because-of-server=%d because-of-caps=%d]\n",
+            conn->SupportsPipelining() == PR_FALSE, 
+            caps & NS_HTTP_ALLOW_PIPELINING == PR_FALSE));
+#endif
 
     // 
     // step 4: dispatch this transaction

@@ -55,11 +55,11 @@ nsHttpConnection::nsHttpConnection()
     , mReadStartTime(0)
     , mLastActiveTime(0)
     , mIdleTimeout(0)
-    , mServerVersion(NS_HTTP_VERSION_1_0) // assume low-grade server
     , mKeepAlive(1) // assume to keep-alive by default
     , mKeepAliveMask(1)
     , mWriteDone(0)
     , mReadDone(0)
+    , mSupportsPipelining(PR_FALSE) // assume low-grade server
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -165,6 +165,43 @@ nsHttpConnection::IsAlive()
     return isAlive;
 }
 
+PRBool
+nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
+{
+    // XXX there should be a strict mode available that disables this
+    // blacklisting.
+
+    // assuming connection is HTTP/1.1 with keep-alive enabled
+    if (mConnectionInfo->UsingHttpProxy() && !mConnectionInfo->UsingSSL()) {
+        // XXX check for bad proxy servers...
+        return PR_TRUE;
+    }
+
+    // XXX what about checking for a Via header? (transparent proxies)
+
+    // check for bad origin servers
+    const char *val = responseHead->PeekHeader(nsHttp::Server);
+    if (!val)
+        return PR_FALSE; // no header, no love
+
+    // the list of servers known to do bad things with pipelined requests
+    static const char *bad_servers[] = {
+        "Microsoft-IIS/4.",
+        "Netscape-Enterprise/3.",
+        nsnull
+    };
+
+    for (const char **server = bad_servers; *server; ++server) {
+        if (PL_strcasestr(val, *server) != nsnull) {
+            LOG(("looks like this server does not support pipelining"));
+            return PR_FALSE;
+        }
+    }
+
+    // ok, let's allow pipelining to this server
+    return PR_TRUE;
+}
+
 //----------------------------------------------------------------------------
 // nsHttpConnection::nsAHttpConnection
 //----------------------------------------------------------------------------
@@ -195,7 +232,8 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     if (!val)
         val = responseHead->PeekHeader(nsHttp::Proxy_Connection);
 
-    mServerVersion = responseHead->Version();
+    // reset to default (the server may have changed since we last checked)
+    mSupportsPipelining = PR_FALSE;
 
     if ((responseHead->Version() < NS_HTTP_VERSION_1_1) ||
         (requestHead->Version() < NS_HTTP_VERSION_1_1)) {
@@ -209,8 +247,10 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         // HTTP/1.1 connections are by default persistent
         if (val && !PL_strcasecmp(val, "close")) 
             mKeepAlive = PR_FALSE;
-        else
+        else {
             mKeepAlive = PR_TRUE;
+            mSupportsPipelining = SupportsPipelining(responseHead);
+        }
     }
     mKeepAliveMask = mKeepAlive;
 
