@@ -434,6 +434,7 @@ public:
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
@@ -4361,6 +4362,14 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
          aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
          aStatus);
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  // We can continue a text run through a text frame
+  aContinueTextRun = PR_TRUE;
   return NS_OK;
 }
 

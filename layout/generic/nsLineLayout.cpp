@@ -2824,6 +2824,12 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
       continue;
     }
 
+    // If this is a frame that'll break a word, then bail.
+    PRBool canContinue;
+    next->CanContinueTextRun(canContinue);
+    if (! canContinue)
+      break;
+
     // We know top's parent is good, but next's might not be. So let's
     // set it to be sure.
     nsIFrame* parent;

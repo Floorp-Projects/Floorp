@@ -1666,6 +1666,15 @@ nsFrame::DidReflow(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  // By default, a frame will *not* allow a text run to be continued
+  // through it.
+  aContinueTextRun = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrame::Reflow(nsIPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
                 const nsHTMLReflowState& aReflowState,

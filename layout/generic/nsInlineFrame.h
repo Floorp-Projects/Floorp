@@ -79,6 +79,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+
   static nsIID kInlineFrameCID;
 
   // Take all of the frames away from this frame. The caller is

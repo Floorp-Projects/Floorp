@@ -329,6 +329,14 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
+nsInlineFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  // We can continue a text run through an inline frame
+  aContinueTextRun = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInlineFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
   // The inline container frame does not handle the reflow
