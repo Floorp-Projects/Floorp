@@ -393,7 +393,7 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
   for (; i < count; i++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[i]);
 
-    if (TIMER_LESS_THAN(now, timer->mTimeout) &&
+    if (TIMER_LESS_THAN(now, timer->mTimeout + mTimeoutAdjustment) &&
         TIMER_LESS_THAN(aTimer->mTimeout, timer->mTimeout)) {
       break;
     }
