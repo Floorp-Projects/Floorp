@@ -431,6 +431,8 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
         Pushback(nextChar);
       }
     }
+  } else {
+    return ParseIdent(aErrorCode, ch, aToken);
   }
   aToken.mType = eCSSToken_Symbol;
   aToken.mSymbol = ch;
@@ -626,7 +628,7 @@ PRBool nsCSSScanner::GatherIdent(PRInt32& aErrorCode, PRInt32 aChar,
       if (0 < aChar) {
         aIdent.Append(PRUnichar(aChar));
       }
-    } else if ((aChar <= 255) && ((gLexTable[aChar] & IS_IDENT) != 0)) {
+    } else if ((aChar > 255) || ((gLexTable[aChar] & IS_IDENT) != 0)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
       Unread();
