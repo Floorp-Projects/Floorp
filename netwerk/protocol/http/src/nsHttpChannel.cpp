@@ -1706,37 +1706,44 @@ nsHttpChannel::GetCredentials(const char *challenges,
     //
     nsHttpAuthEntry *entry = nsnull;
     authCache->GetAuthEntryForDomain(host, port, realm.get(), &entry);
-    if (entry) {
-        if (user->Equals(entry->User()) && pass->Equals(entry->Pass())) {
-            LOG(("clearing bad credentials from the auth cache\n"));
-            // ok, we've already tried this user:pass combo, so clear the
-            // corresponding entry from the auth cache.
-            ClearPasswordManagerEntry(host, port, realm.get(), entry->User());
-            authCache->SetAuthEntry(host, port, nsnull, realm.get(),
-                                    nsnull, nsnull, nsnull, nsnull, nsnull);
-            entry = nsnull;
-            user->Adopt(0);
-            pass->Adopt(0);
-        }
-        else {
-            LOG(("taking user:pass from auth cache\n"));
-            user->Adopt(nsCRT::strdup(entry->User()));
-            pass->Adopt(nsCRT::strdup(entry->Pass()));
-            if (entry->Creds()) {
-                LOG(("using cached credentials!\n"));
-                creds.Assign(entry->Creds());
-                return NS_OK;
+
+    PRBool requireUserPass = PR_FALSE;
+    rv = auth->ChallengeRequiresUserPass(challenge.get(), &requireUserPass);
+    if (NS_FAILED(rv)) return rv;
+
+    if (requireUserPass) {
+        if (entry) {
+            if (user->Equals(entry->User()) && pass->Equals(entry->Pass())) {
+                LOG(("clearing bad credentials from the auth cache\n"));
+                // ok, we've already tried this user:pass combo, so clear the
+                // corresponding entry from the auth cache.
+                ClearPasswordManagerEntry(host, port, realm.get(), entry->User());
+                authCache->SetAuthEntry(host, port, nsnull, realm.get(),
+                                        nsnull, nsnull, nsnull, nsnull, nsnull);
+                entry = nsnull;
+                user->Adopt(0);
+                pass->Adopt(0);
+            }
+            else {
+                LOG(("taking user:pass from auth cache\n"));
+                user->Adopt(nsCRT::strdup(entry->User()));
+                pass->Adopt(nsCRT::strdup(entry->Pass()));
+                if (entry->Creds()) {
+                    LOG(("using cached credentials!\n"));
+                    creds.Assign(entry->Creds());
+                    return NS_OK;
+                }
             }
         }
-    }
 
-    if (!entry && user->IsEmpty()) {
-        // at this point we are forced to interact with the user to get their
-        // username and password for this domain.
-        rv = PromptForUserPass(host, port, proxyAuth, realm.get(),
-                               getter_Copies(*user),
-                               getter_Copies(*pass));
-        if (NS_FAILED(rv)) return rv;
+        if (!entry && user->IsEmpty()) {
+            // at this point we are forced to interact with the user to get their
+            // username and password for this domain.
+            rv = PromptForUserPass(host, port, proxyAuth, realm.get(),
+                                   getter_Copies(*user),
+                                   getter_Copies(*pass));
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
     // ask the auth cache for a container for any meta data it might want to
