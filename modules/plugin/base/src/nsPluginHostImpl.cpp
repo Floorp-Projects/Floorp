@@ -3284,14 +3284,14 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   nsCOMPtr<nsIDocument> doc;
   nsPluginInstancePeerImpl *peer;
   rv = aInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && peer)
   {
     nsCOMPtr<nsIPluginInstanceOwner> owner;
     rv = peer->GetOwner(*getter_AddRefs(owner));
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && owner)
     {
       rv = owner->GetDocument(getter_AddRefs(doc));
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv) && doc)
       {
         nsCOMPtr<nsIURI> docURL( getter_AddRefs(doc->GetDocumentURL()) );
  
