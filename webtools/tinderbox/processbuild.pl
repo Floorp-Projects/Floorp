@@ -73,7 +73,7 @@ system "./buildwho.pl $tinderbox{tree}";
 require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
-    and $tinderbox{status} eq 'success') {
+    and $tinderbox{status} ne 'failed') {
   system "./warnings.pl $tinderbox{tree}/$tinderbox{logfile}";
 }
 
