@@ -66,41 +66,40 @@ int main(int argc, char** argv)
   index = eColorName_UNKNOWN;
   while (PRInt32(index) < (PRInt32 (eColorName_COUNT) - 1)) {
     // Lookup color by name and make sure it has the right id
-    char tagName[512];
     index = nsColorName(PRInt32(index) + 1);
-    nsColorNames::GetStringValue(index).ToCString(tagName, sizeof(tagName));
+    nsCString tagName(nsColorNames::GetStringValue(index));
 
     id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tagName));
     if (id == eColorName_UNKNOWN) {
-      printf("bug: can't find '%s'\n", tagName);
+      printf("bug: can't find '%s'\n", tagName.get());
       rv = -1;
     }
     if (id != index) {
-      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
+      printf("bug: name='%s' id=%d index=%d\n", tagName.get(), id, index);
       rv = -1;
     }
 
     // fiddle with the case to make sure we can still find it
-    tagName[0] = tagName[0] - 32;
+    tagName.SetCharAt(tagName.CharAt(0) - 32, 0);
     id = nsColorNames::LookupName(NS_ConvertASCIItoUCS2(tagName));
     if (id == eColorName_UNKNOWN) {
-      printf("bug: can't find '%s'\n", tagName);
+      printf("bug: can't find '%s'\n", tagName.get());
       rv = -1;
     }
     if (id != index) {
-      printf("bug: name='%s' id=%d index=%d\n", tagName, id, index);
+      printf("bug: name='%s' id=%d index=%d\n", tagName.get(), id, index);
       rv = -1;
     }
 
     // Check that color lookup by name gets the right rgb value
     nscolor rgb;
     if (!NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(tagName), &rgb)) {
-      printf("bug: name='%s' didn't NS_ColorNameToRGB\n", tagName);
+      printf("bug: name='%s' didn't NS_ColorNameToRGB\n", tagName.get());
       rv = -1;
     }
     if (nsColorNames::kColors[index] != rgb) {
       printf("bug: name='%s' ColorNameToRGB=%x kColors[%d]=%x\n",
-             tagName, rgb, nsColorNames::kColors[index],
+             tagName.get(), rgb, nsColorNames::kColors[index],
              nsColorNames::kColors[index]);
       rv = -1;
     }

@@ -60,7 +60,7 @@ DumpAtomLeaks(PLHashEntry *he, PRIntn index, void *arg)
   if (atom) {
     nsAutoString tmp;
     atom->ToString(tmp);
-    fputs(tmp, stdout);
+    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
     fputs("\n", stdout);
   }
   return HT_ENUMERATE_NEXT;

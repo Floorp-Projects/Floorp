@@ -1183,30 +1183,19 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         nsAutoString dataSourceName;
         rdfName.Right(dataSourceName, rdfName.Length() - (pos + sizeof(kRDFPrefix) - 1));
 
-        nsAutoString contractIDStr; contractIDStr.AssignWithConversion(NS_RDF_DATASOURCE_CONTRACTID_PREFIX);
-        contractIDStr.Append(dataSourceName);
-
         // Safely convert it to a C-string for the XPCOM APIs
-        char buf[64];
-        char* contractID = buf, *p;
-        if (contractIDStr.Length() >= PRInt32(sizeof buf))
-            contractID = (char *)nsMemory::Alloc(contractIDStr.Length() + 1);
-
-        if (contractID == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        contractIDStr.ToCString(contractID, contractIDStr.Length() + 1);
+        nsCAutoString contractID(
+                NS_LITERAL_CSTRING(NS_RDF_DATASOURCE_CONTRACTID_PREFIX) +
+                NS_LossyConvertUCS2toASCII(dataSourceName));
 
         /* strip params to get ``base'' contractID for data source */
-        p = PL_strchr(contractID, '&');
-        if (p)
-            *p = '\0';
+        PRInt32 p = contractID.FindChar(PRUnichar('&'));
+        if (p != kNotFound)
+            contractID.Truncate(p);
 
         nsCOMPtr<nsISupports> isupports;
-        rv = nsServiceManager::GetService(contractID, kISupportsIID, getter_AddRefs(isupports), nsnull);
-
-        if (contractID != buf)
-            nsCRT::free(contractID);
+        rv = nsServiceManager::GetService(contractID.get(), kISupportsIID,
+                                          getter_AddRefs(isupports), nsnull);
 
         if (NS_FAILED(rv)) return rv;
 

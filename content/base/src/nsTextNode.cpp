@@ -219,7 +219,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-  fputs(tmp, out);
+  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs(">\n", out);
   return NS_OK;
@@ -238,7 +238,7 @@ nsTextNode::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
     mInner.ToCString(tmp, 0, mInner.mText.GetLength());
     
     if(!tmp.EqualsWithConversion("\\n")) {
-      fputs(tmp, out);
+      fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
       if(aIndent) fputs("\n", out);
     }
   }

@@ -117,7 +117,7 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
   mSize.AppendToString(buffer, eCSSProperty_font_size);
   mSizeAdjust.AppendToString(buffer, eCSSProperty_font_size_adjust);
   mStretch.AppendToString(buffer, eCSSProperty_font_stretch);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- support -----------------
@@ -188,7 +188,7 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackAttachment.AppendToString(buffer, eCSSProperty_background_attachment);
   mBackPositionX.AppendToString(buffer, eCSSProperty_background_x_position);
   mBackPositionY.AppendToString(buffer, eCSSProperty_background_y_position);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSText support -----------------
@@ -282,7 +282,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
   mUnicodeBidi.AppendToString(buffer, eCSSProperty_unicode_bidi);
   mLineHeight.AppendToString(buffer, eCSSProperty_line_height);
   mWhiteSpace.AppendToString(buffer, eCSSProperty_white_space);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSRect -----------------
@@ -322,7 +322,7 @@ void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
   mRight.AppendToString(buffer);
   mBottom.AppendToString(buffer); 
   mLeft.AppendToString(buffer);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const
@@ -352,7 +352,7 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
     mLeft.AppendToString(buffer);
   }
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSDisplay -----------------
@@ -405,13 +405,13 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
   mVisibility.AppendToString(buffer, eCSSProperty_visibility);
   mOpacity.AppendToString(buffer, eCSSProperty_opacity);
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   if (nsnull != mClip) {
     mClip->List(out, eCSSProperty_clip);
   }
   buffer.SetLength(0);
   mOverflow.AppendToString(buffer, eCSSProperty_overflow);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSMargin -----------------
@@ -520,7 +520,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
     mOutlineRadius->List(out, aIndent, trbl);
   }
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSPosition -----------------
@@ -571,7 +571,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
   mMaxHeight.AppendToString(buffer, eCSSProperty_max_height);
   mBoxSizing.AppendToString(buffer, eCSSProperty_box_sizing);
   mZIndex.AppendToString(buffer, eCSSProperty_z_index);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 
   if (nsnull != mOffset) {
     static const nsCSSProperty trbl[] = {
@@ -618,7 +618,7 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
   mType.AppendToString(buffer, eCSSProperty_list_style_type);
   mImage.AppendToString(buffer, eCSSProperty_list_style_image);
   mPosition.AppendToString(buffer, eCSSProperty_list_style_position);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSTable -----------------
@@ -662,7 +662,7 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
   mEmptyCells.AppendToString(buffer, eCSSProperty_empty_cells);
   mLayout.AppendToString(buffer, eCSSProperty_table_layout);
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSBreaks -----------------
@@ -706,7 +706,7 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
   mPageBreakBefore.AppendToString(buffer, eCSSProperty_page_break_before);
   mPageBreakInside.AppendToString(buffer, eCSSProperty_page_break_inside);
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSPage -----------------
@@ -744,7 +744,7 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
   mSizeWidth.AppendToString(buffer, eCSSProperty_size_width);
   mSizeHeight.AppendToString(buffer, eCSSProperty_size_height);
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSContent support -----------------
@@ -861,7 +861,7 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
     quotes = quotes->mNext;
   }
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSUserInterface -----------------
@@ -921,7 +921,7 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
     cursor = cursor->mNext;
   }
   
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 // --- nsCSSAural -----------------
@@ -991,7 +991,7 @@ void nsCSSAural::List(FILE* out, PRInt32 aIndent) const
   mVoiceFamily.AppendToString(buffer, eCSSProperty_voice_family);
   mVolume.AppendToString(buffer, eCSSProperty_volume);
 
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 #ifdef INCLUDE_XUL
@@ -1032,7 +1032,7 @@ void nsCSSXUL::List(FILE* out, PRInt32 aIndent) const
   mBoxOrient.AppendToString(buffer, eCSSProperty_box_orient);
   mBoxPack.AppendToString(buffer, eCSSProperty_box_pack);
   mBoxOrdinal.AppendToString(buffer, eCSSProperty_box_ordinal_group);
-  fputs(buffer, out);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
 }
 
 #endif // INCLUDE_XUL

@@ -717,7 +717,7 @@ FontEnumCallback(const nsString &aFamily,PRBool aGeneric,void *aData)
 #ifdef REALLY_NOISY_FONTS
 #ifdef DEBUG
   printf("font = '");
-  fputs(aFamily, stdout);
+  fputs(NS_LossyConvertUCS2toASCII(aFamily).get(), stdout);
   printf("'\n");
 #endif
 #endif

@@ -191,9 +191,8 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   // convert to CSS units
   if (!ParseNumericValue(value, aCSSValue)) {
 #ifdef NS_DEBUG
-    char str[50];
-    aString.ToCString(str, 50);
-    printf("mpadded: attribute with bad numeric value: %s\n", str);
+    printf("mpadded: attribute with bad numeric value: %s\n",
+            NS_LossyConvertUCS2toASCII(aString).get());
 #endif
     aSign = NS_MATHML_SIGN_INVALID;
     return PR_FALSE;
@@ -218,9 +217,8 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
       // it allows keeping the code simpler...)
 
 #ifdef NS_DEBUG
-      char str[50];
-      aString.ToCString(str, 50);
-      printf("mpadded: attribute with bad numeric value: %s\n", str);
+      printf("mpadded: attribute with bad numeric value: %s\n",
+              NS_LossyConvertUCS2toASCII(aString).get());
 #endif
       aCSSValue.Reset();
       aSign = NS_MATHML_SIGN_INVALID;
@@ -273,9 +271,8 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     // if we enter here, it means we have both a CSS unit *and* a pseudo-unit,
     // e.g., width="100em height", this an error/ambiguity that the author should fix
 #ifdef NS_DEBUG
-    char str[50];
-    aString.ToCString(str, 50);
-    printf("mpadded: attribute with bad numeric value: %s\n", str);
+    printf("mpadded: attribute with bad numeric value: %s\n",
+            NS_LossyConvertUCS2toASCII(aString).get());
 #endif
     aCSSValue.Reset();
     aSign = NS_MATHML_SIGN_INVALID;

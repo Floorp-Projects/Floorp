@@ -44,7 +44,6 @@
 
 #define LOCK_LOG(doc)
 #define UNLOCK_LOG(doc)
-#define MAX_BUF_LENGTH 256
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -111,11 +110,9 @@ nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransacti
 {
   LOCK_LOG(this);
 
-  char buf[MAX_BUF_LENGTH];
-
   PrintIndent(mIndentLevel++);
   Write("WillDo:   ");
-  Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTransaction);
   Write("\n");
   Flush();
 
@@ -129,11 +126,9 @@ nsEditorTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransactio
 {
   LOCK_LOG(this);
 
-  char buf[MAX_BUF_LENGTH];
-
   PrintIndent(--mIndentLevel);
   Write("DidDo:    ");
-  Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTransaction);
   Write("(");
   WriteInt("%d", aDoResult);
   Write(")\n");
@@ -153,10 +148,8 @@ nsEditorTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransac
 
   if (aTransaction)
   {
-    char buf[MAX_BUF_LENGTH];
-
     Write("WillUndo:   ");
-    Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+    WriteTransaction(aTransaction);
     Write("\n");
   }
   else
@@ -178,10 +171,8 @@ nsEditorTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 
   if (aTransaction)
   {
-    char buf[MAX_BUF_LENGTH];
-
     Write("DidUndo:  ");
-    Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+    WriteTransaction(aTransaction);
     Write("(");
     WriteInt("%d", aUndoResult);
     Write(")\n");
@@ -209,10 +200,8 @@ nsEditorTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransac
 
   if (aTransaction)
   {
-    char buf[MAX_BUF_LENGTH];
-
     Write("WillRedo: ");
-    Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+    WriteTransaction(aTransaction);
     Write("\n");
   }
   else
@@ -234,10 +223,8 @@ nsEditorTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 
   if (aTransaction)
   {
-    char buf[MAX_BUF_LENGTH];
-
     Write("DidRedo:  ");
-    Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+    WriteTransaction(aTransaction);
     Write(" (");
     WriteInt("%d", aRedoResult);
     Write(")\n");
@@ -329,13 +316,11 @@ nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTra
 {
   LOCK_LOG(this);
 
-  char buf[MAX_BUF_LENGTH];
-
   PrintIndent(mIndentLevel);
   Write("WillMerge:   ");
-  Write(GetString(aTopTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTopTransaction);
   Write(" <-- ");
-  Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTransaction);
   Write("\n");
   Flush();
 
@@ -349,13 +334,11 @@ nsEditorTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTran
 {
   LOCK_LOG(this);
 
-  char buf[MAX_BUF_LENGTH];
-
   PrintIndent(mIndentLevel);
   Write("DidMerge:    ");
-  Write(GetString(aTopTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTopTransaction);
   Write(" <-- ");
-  Write(GetString(aTransaction, buf, MAX_BUF_LENGTH));
+  WriteTransaction(aTransaction);
   Write(" (");
   Write(aDidMerge ? "TRUE" : "FALSE");
   Write(", ");
@@ -368,30 +351,19 @@ nsEditorTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTran
   return NS_OK;
 }
 
-const char *
-nsEditorTxnLog::GetString(nsITransaction *aTransaction, char *aBuffer, PRInt32 aBufferLength)
+nsresult
+nsEditorTxnLog::WriteTransaction(nsITransaction *aTransaction)
 {
-  if (!aBuffer || aBufferLength < 1)
-    return 0;
-
-  aBuffer[0] = '\0';
-
   nsString str;
 
   nsCOMPtr<nsPIEditorTransaction> txn = do_QueryInterface(aTransaction);
+  if (txn) {
+    txn->GetTxnDescription(str);
+    if (str.IsEmpty())
+      str.Assign(NS_LITERAL_STRING("<NULL>"));
+  }
 
-  if (!txn)
-    return aBuffer;
-
-  txn->GetTxnDescription(str);
-
-  if (str.Length() == 0)
-    str.AssignWithConversion("<NULL>");
-
-  str.ToCString(aBuffer, aBufferLength);
-  aBuffer[aBufferLength - 1] = '\0';
-
-  return aBuffer;
+  return Write(NS_LossyConvertUCS2toASCII(str).get());
 }
 
 nsresult

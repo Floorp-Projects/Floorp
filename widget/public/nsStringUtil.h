@@ -41,13 +41,12 @@
 #ifndef NS_STR_UTIL_H
 #define NS_STR_UTIL_H
 
-// nsString to temporary char[] macro
+// temporary char[] macro
 
-// Convience MACROS to convert an nsString to a char * which use a 
-// static char array if possible to reduce memory fragmentation, 
-// otherwise they allocate a char[] which must be freed.
-// REMEMBER to always use the NS_FREE_STR_BUF after using the 
-// NS_ALLOC_STR_BUF. You can not nest NS_ALLOC_STR_BUF's. 
+// Convience MACROS which use a static char array if possible to reduce
+// memory fragmentation, otherwise they allocate a char[] which must be
+// freed.  REMEMBER to always use the NS_FREE_CHAR_BUF after using the
+// NS_ALLOC_CHAR_BUF. You can not nest NS_ALLOC_CHAR_BUF's. 
 
 #define NS_ALLOC_CHAR_BUF(aBuf, aSize, aActualSize) \
   int _ns_tmpActualSize = aActualSize;              \
@@ -58,12 +57,4 @@
   if (aBuf != _ns_smallBuffer) \
    delete[] aBuf;
 
-#define NS_ALLOC_STR_BUF(aBuf, aStrName, aTempSize) \
-  NS_ALLOC_CHAR_BUF(aBuf, aTempSize, aStrName.Length()+1); \
-  aStrName.ToCString(aBuf, aStrName.Length()+1);
-
-#define NS_FREE_STR_BUF(aBuf)  \
-  NS_FREE_CHAR_BUF(aBuf)
-
-
-#endif  // NSStringUtil
+#endif // !defined(NS_STR_UTIL_H)

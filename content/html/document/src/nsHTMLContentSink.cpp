@@ -1420,17 +1420,15 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 
 #ifdef NS_DEBUG
     // Tracing code
-    char cbuf[40];
-    const char* cp;
     nsAutoString str;
     nsCOMPtr<nsIDTD> dtd;
     mSink->mParser->GetDTD(getter_AddRefs(dtd));
     dtd->IntTagToStringTag(nsHTMLTag(mStack[mStackPos-1].mType), str);
-    cp = str.ToCString(cbuf, sizeof(cbuf));
       
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("SinkContext::DidAddContent: Insertion notification for parent=%s at position=%d and stackPos=%d", 
-                cp, mStack[mStackPos-1].mInsertionPoint-1, mStackPos-1));
+                NS_LossyConvertUCS2toASCII(str).get(),
+                mStack[mStackPos-1].mInsertionPoint-1, mStackPos-1));
 #endif
 
     mSink->NotifyInsert(parent, 
@@ -1603,16 +1601,15 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     if (mStack[mStackPos].mNumFlushed < childCount) {
 #ifdef NS_DEBUG
       // Tracing code
-      char cbuf[40];
-      const char* cp;
       nsAutoString str;
       nsCOMPtr<nsIDTD> dtd;
       mSink->mParser->GetDTD(getter_AddRefs(dtd));
       dtd->IntTagToStringTag(nsHTMLTag(nodeType), str);
-      cp = str.ToCString(cbuf, sizeof(cbuf));
 
       SINK_TRACE(SINK_TRACE_REFLOW,
-                 ("SinkContext::CloseContainer: reflow on notifyImmediate tag=%s newIndex=%d stackPos=%d", cp, mStack[mStackPos].mNumFlushed, mStackPos));
+                 ("SinkContext::CloseContainer: reflow on notifyImmediate tag=%s newIndex=%d stackPos=%d",
+                  NS_LossyConvertUCS2toASCII(str).get(),
+                  mStack[mStackPos].mNumFlushed, mStackPos));
 #endif 
       mSink->NotifyAppend(content, mStack[mStackPos].mNumFlushed);
     }
@@ -2175,17 +2172,15 @@ SinkContext::FlushTags(PRBool aNotify)
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
 #ifdef NS_DEBUG
         // Tracing code
-        char cbuf[40];
-        const char* cp;
         nsAutoString str;
         nsCOMPtr<nsIDTD> dtd;
         mSink->mParser->GetDTD(getter_AddRefs(dtd));
         dtd->IntTagToStringTag(nsHTMLTag(mStack[stackPos].mType), str);
-        cp = str.ToCString(cbuf, sizeof(cbuf));
         
         SINK_TRACE(SINK_TRACE_REFLOW,
                    ("SinkContext::FlushTags: tag=%s from newindex=%d at stackPos=%d", 
-                    cp, mStack[stackPos].mNumFlushed, stackPos));
+                    NS_LossyConvertUCS2toASCII(str).get(),
+                    mStack[stackPos].mNumFlushed, stackPos));
 #endif
         if ((mStack[stackPos].mInsertionPoint != -1) &&
             (mStackPos > (stackPos+1))) {

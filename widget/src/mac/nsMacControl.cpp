@@ -405,7 +405,6 @@ void nsMacControl::SetupMacControlFont()
 
 void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 {
-	char buffer[256];
 	nsresult rv = NS_OK;
 	
 	// get file system charset and create a unicode encoder
@@ -434,9 +433,9 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 
 	if (NS_FAILED(rv)) {
 //		NS_ASSERTION(0, "error: charset covnersion");
-		aText.ToCString(buffer, 255);
-		PRInt32 len = nsCRT::strlen(buffer);
-		memcpy(&aStr255[1], buffer, len);
+		NS_LossyConvertUCS2toASCII buffer(Substring(aText,0,254));
+		PRInt32 len = buffer.Length();
+		memcpy(&aStr255[1], buffer.get(), len);
 		aStr255[0] = len;
 	}
 }

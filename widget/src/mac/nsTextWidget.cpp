@@ -304,7 +304,9 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 										// now |selection| holds the current selection in unicode.
 										// We need to convert it to a c-string for MacOS.
 										auto_ptr<char> cRepOfSelection(new char[selectionLen + 1]);
-										selection.ToCString(cRepOfSelection.get(), selectionLen + 1);
+										PL_strncpyz(cRepOfSelection.get(),
+										            NS_LossyConvertUCS2toASCII(selection).get(),
+										            selectionLen + 1);
 										
 										// copy it to the scrapMgr
 #if TARGET_CARBON
@@ -573,22 +575,14 @@ NS_METHOD  nsTextWidget::GetText(nsString& aTextBuffer, PRUint32 /*aBufferSize*/
 NS_METHOD  nsTextWidget::SetText(const nsString& aText, PRUint32& outSize)
 {
 	outSize = aText.Length();
-	const unsigned int bufferSize = outSize + 1;	// add 1 for null
 	
 	if (!mControl)
 		return NS_ERROR_NOT_INITIALIZED;
 
-		
-	auto_ptr<char> str ( new char[bufferSize] );
-	if ( str.get() )
-	{
-		ResType	textTag = (mIsPassword ? kControlEditTextPasswordTag : kControlEditTextTextTag);
-		aText.ToCString(str.get(), bufferSize);
-		::SetControlData(mControl, kControlNoPart, textTag, outSize, (Ptr)str.get());
-		Invalidate(PR_FALSE);
-	}
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+	ResType	textTag = (mIsPassword ? kControlEditTextPasswordTag : kControlEditTextTextTag);
+	::SetControlData(mControl, kControlNoPart, textTag, outSize,
+	                 (Ptr)NS_LossyConvertUCS2toASCII(aText).get());
+	Invalidate(PR_FALSE);
 
 	return NS_OK;
 }

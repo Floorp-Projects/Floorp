@@ -208,7 +208,7 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
     tmp.AppendWithConversion("\"");
   }
 
-  fputs(tmp, out);
+  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs(">\n", out);
   return NS_OK;

@@ -49,7 +49,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 #include <windows.h>
 
 #include "nsIAppShell.h"

@@ -45,7 +45,6 @@
 // Global functions and data [declaration]
 
 #define ARRAY_SIZE(_array)  (sizeof(_array) / sizeof(_array[0]))
-#define BUFFER_SIZE         256
 #define SMALL_BUFFER_SIZE   512
 #define MED_BUFFER_SIZE     1024
 #define BIG_BUFFER_SIZE     2048
@@ -318,8 +317,6 @@ nsresult nsTestUConv::DisplayDetectors()
   for (PRUint32 i = 0; i < count; i++) {
     nsCOMPtr<nsIAtom> cs;
     nsAutoString str;
-    char buff[BUFFER_SIZE];
-    char buff2[BUFFER_SIZE];
 
     res = array->GetElementAt(i, getter_AddRefs(cs));
     if (NS_FAILED(res)) {
@@ -335,15 +332,13 @@ nsresult nsTestUConv::DisplayDetectors()
     }
 
     str.Assign(name);
-    str.ToCString(buff, BUFFER_SIZE);
+    NS_LossyConvertUCS2toASCII buff(str);
+    printf("%s", buff.get());
+    PrintSpaces(36 - buff.Length());  // align to hard coded column number
 
     res = ccMan->GetCharsetTitle2(cs, &str);
     if (NS_FAILED(res)) str.SetLength(0);
-    str.ToCString(buff2, BUFFER_SIZE);
-
-    printf("%s", buff);
-    PrintSpaces(36 - PL_strlen(buff));  // align to hard coded column number
-    printf("\"%s\"\n", buff2);
+    printf("\"%s\"\n", NS_LossyConvertUCS2toASCII(str).get());
   }
   
   mLog.DelTrace(trace);
@@ -394,8 +389,6 @@ nsresult nsTestUConv::DisplayCharsets()
     nsCOMPtr<nsIAtom> cs;
     nsAutoString str;
     nsAutoString prop;
-    char buff[BUFFER_SIZE];
-    char buff2[BUFFER_SIZE];
 
     res = array->GetElementAt(i, getter_AddRefs(cs));
     if (NS_FAILED(res)) {
@@ -411,14 +404,13 @@ nsresult nsTestUConv::DisplayCharsets()
     }
 
     str.Assign(name);
-    str.ToCString(buff, BUFFER_SIZE);
+    NS_LossyConvertUCS2toASCII buff(str);
+    printf("%s", buff.get());
+    PrintSpaces(24 - buff.Length());  // align to hard coded column number
 
     res = ccMan->GetCharsetTitle2(cs, &str);
     if (NS_FAILED(res)) str.SetLength(0);
-    str.ToCString(buff2, BUFFER_SIZE);
-
-    printf("%s", buff);
-    PrintSpaces(24 - PL_strlen(buff));  // align to hard coded column number
+    NS_LossyConvertUCS2toASCII buff2(str);
 
     nsCOMPtr<nsIUnicodeDecoder> dec = NULL;
     res = ccMan->GetUnicodeDecoder(cs, getter_AddRefs(dec));

@@ -3431,7 +3431,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 
     nsAutoString as;
     NodeInfo()->GetQualifiedName(as);
-    fputs(NS_ConvertUCS2toUTF8(as).get(), out);
+    fputs(NS_LossyConvertUCS2toASCII(as).get(), out);
 
     fprintf(out, "@%p", this);
 
@@ -3454,15 +3454,15 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
         if (prefix) {
             prefix->ToString(s);
 
-            fputs(NS_ConvertUCS2toUTF8(s).get(), out);
+            fputs(NS_LossyConvertUCS2toASCII(s).get(), out);
             fputs(":", out);
         }
 
         attr->ToString(s);
 
-        fputs(NS_ConvertUCS2toUTF8(s).get(), out);
+        fputs(NS_LossyConvertUCS2toASCII(s).get(), out);
         fputs("=", out);
-        fputs(NS_ConvertUCS2toUTF8(v).get(), out);
+        fputs(NS_LossyConvertUCS2toASCII(v).get(), out);
     }
 
     PRInt32 nchildren;

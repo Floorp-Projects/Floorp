@@ -706,13 +706,13 @@ RDFContentSinkImpl::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
 {
-    nsAutoString text(aNode.GetText());
+    nsAutoString text;
 
     if (aNode.GetTokenType() == eToken_entity) {
-        char buf[12];
-        text.ToCString(buf, sizeof(buf));
-        text.Truncate();
-        text.Append(rdf_EntityToUnicode(buf));
+        text = rdf_EntityToUnicode(
+                            NS_LossyConvertUCS2toASCII(aNode.GetText()).get());
+    } else {
+        text = aNode.GetText();
     }
 
     PRInt32 addLen = text.Length();

@@ -55,16 +55,16 @@ inline void nsCollationUnix::DoSetLocale()
   char *locale = setlocale(LC_COLLATE, NULL);
   mSavedLocale.AssignWithConversion(locale ? locale : "");
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) {
-    char newLocale[MAX_LOCALE_LEN+1];
-    (void) setlocale(LC_COLLATE, mLocale.ToCString(newLocale, sizeof(newLocale)));
+    (void) setlocale(LC_COLLATE,
+        NS_LossyConvertUCS2toASCII(Substring(mLocale,0,MAX_LOCALE_LEN)).get());
   }
 }
 
 inline void nsCollationUnix::DoRestoreLocale()
 {
   if (!mSavedLocale.EqualsIgnoreCase(mLocale)) { 
-    char oldLocale[MAX_LOCALE_LEN+1];
-    (void) setlocale(LC_COLLATE, mSavedLocale.ToCString(oldLocale, sizeof(oldLocale)));
+    (void) setlocale(LC_COLLATE,
+        NS_LossyConvertUCS2toASCII(Substring(mSavedLocale,0,MAX_LOCALE_LEN)).get());
   }
 }
 

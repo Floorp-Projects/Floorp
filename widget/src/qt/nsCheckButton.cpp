@@ -39,7 +39,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 //=============================================================================
 //
@@ -126,11 +125,7 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::SetLabel()\n"));
-    NS_ALLOC_STR_BUF(label, aText, 256);
-
-    ((QButton *)mWidget)->setText(label);
-
-    NS_FREE_STR_BUF(label);
+    ((QButton *)mWidget)->setText(NS_LossyConvertUCS2toASCII(aText).get());
     return (NS_OK);    
 }
 

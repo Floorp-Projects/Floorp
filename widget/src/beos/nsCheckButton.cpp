@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
@@ -136,12 +135,10 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
-	char label[256];
-	aText.ToCString(label, 256);
-	label[255] = '\0';
 	if(mCheckBox && mCheckBox->LockLooper())
 	{
-		mCheckBox->SetLabel(label);
+		mCheckBox->SetLabel(
+                NS_LossyConvertUCS2toASCII(Substring(aText,0,255)).get());
 		mCheckBox->UnlockLooper();
 	}
 	return NS_OK;

@@ -239,7 +239,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext)
 #ifdef NOISY_IMAGE_LOADING
   nsFrame::ListTag(stdout, mFrame);
   printf(": loading image '");
-  fputs(mURL, stdout);
+  fputs(NS_LossyConvertUCS2toASCII(mURL).get(), stdout);
   printf("' @ ");
   if (mFlags.mNeedIntrinsicImageSize) {
     printf("intrinsic size ");

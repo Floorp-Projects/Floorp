@@ -131,9 +131,7 @@ nsBox::DumpBox(FILE* aFile)
 {
   nsAutoString s;
   ListBox(s);
-  char ch[1000];
-  s.ToCString(ch,1000);
-  fprintf(aFile, "%s", ch);
+  fprintf(aFile, "%s", NS_LossyConvertUCS2toASCII(s).get());
   return NS_OK;
 }
 

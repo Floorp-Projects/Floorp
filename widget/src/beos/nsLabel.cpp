@@ -41,7 +41,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 
@@ -118,12 +117,10 @@ NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 //-------------------------------------------------------------------------
 NS_METHOD nsLabel::SetLabel(const nsString& aText)
 {
-	char label[256];
-	aText.ToCString(label, 256);
-	label[255] = '\0';
 	if(mStringView && mStringView->LockLooper())
 	{
-		mStringView->SetText(label);
+		mStringView->SetText(
+                NS_LossyConvertUCS2toASCII(Substring(aText,0,255)).get());
 		mStringView->UnlockLooper();
 	}
 	return NS_OK;

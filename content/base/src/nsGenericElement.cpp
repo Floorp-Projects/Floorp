@@ -3410,7 +3410,7 @@ nsGenericContainerElement::ListAttributes(FILE* out) const
     buffer.Append(attr->mValue);
 
     fputs(" ", out);
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   }
 }
 
@@ -3424,7 +3424,7 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buf;
   mNodeInfo->GetQualifiedName(buf);
-  fputs(buf, out);
+  fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
 
   fprintf(out, "@%p", this);
 

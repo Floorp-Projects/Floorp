@@ -1789,9 +1789,9 @@ DumpFamily(nsFontFamilyXlib* aFamily)
 static PRIntn
 DumpFamilyEnum(PLHashEntry* he, PRIntn i, void* arg)
 {
-  char buf[256];
-  ((nsString*) he->key)->ToCString(buf, sizeof(buf));
-  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("family: %s\n", buf));
+  PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG,
+         ("family: %s\n",
+          NS_LossyConvertUCS2toASCII(*NS_STATIC_CAST(nsString*,he->key))));
   nsFontFamilyXlib* family = (nsFontFamilyXlib*) he->value;
   DumpFamily(family);
 

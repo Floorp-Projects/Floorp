@@ -55,8 +55,6 @@
 
 #include "nsGUIEvent.h"
 
-#include "nsStringUtil.h"
-
 
 #if DEBUG
 nsInstanceCounter   gMenuItemCounterX("nsMenuItemX");

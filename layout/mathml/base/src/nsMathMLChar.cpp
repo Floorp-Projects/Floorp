@@ -319,13 +319,14 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     }
     nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
 #ifdef NS_DEBUG
-    nsAutoString uriStr;
-    uriStr.Assign(NS_LITERAL_STRING("resource:/res/fonts/mathfont"));
-    uriStr.Append(*mFontName[0]);
+    nsCAutoString uriStr;
+    uriStr.Assign(NS_LITERAL_CSTRING("resource:/res/fonts/mathfont"));
+    uriStr.Append(NS_LossyConvertUCS2toASCII(*mFontName[0]));
     uriStr.StripWhitespace(); // that may come from mFontName
-    uriStr.Append(NS_LITERAL_STRING(".properties"));
-    char str[200]; uriStr.ToCString(str, sizeof(str));
-    printf("Loading %s ... %s\n", str, (NS_FAILED(rv)) ? "Failed" : "Done");
+    uriStr.Append(NS_LITERAL_CSTRING(".properties"));
+    printf("Loading %s ... %s\n",
+            uriStr.get(),
+            (NS_FAILED(rv)) ? "Failed" : "Done");
 #endif
     if (NS_FAILED(rv)) {
       mState = NS_TABLE_STATE_ERROR; // never waste time with this table again

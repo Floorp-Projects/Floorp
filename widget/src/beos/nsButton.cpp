@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
@@ -111,18 +110,16 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
   if(NULL == mView) {
     return NS_ERROR_FAILURE;
   }
-  NS_ALLOC_STR_BUF(label, aText, 256);
   if(mButton)
   {
     if(mButton->Looper())
     	mButton->LockLooper();
 
-    mButton->SetLabel(label);
+    mButton->SetLabel(NS_LossyConvertUCS2toASCII(aText).get());
     
     if(mButton->Looper())
     	mButton->UnlockLooper();
   }
-  NS_FREE_STR_BUF(label);
   return NS_OK;
 }
 

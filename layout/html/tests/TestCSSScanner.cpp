@@ -117,7 +117,7 @@ int main(int argc, char** argv)
     case eCSSToken_InvalidURL:
     case eCSSToken_ID:
     case eCSSToken_HTMLComment:
-      fputs(tok.mIdent, stdout);
+      fputs(NS_LossyConvertUCS2toASCII(tok.mIdent).get(), stdout);
       fputs("\n", stdout);
       break;
 

@@ -501,16 +501,13 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   *aResult= nsnull;
   nsresult res = NS_OK;
 
-  static const char kUnicodeEncoderContractIDBase[] = NS_UNICODEENCODER_CONTRACTID_BASE;
-  static PRInt32 baselen = sizeof(kUnicodeEncoderContractIDBase) - 1;
-
-  char contractid[256];
-  PL_strncpy(contractid, kUnicodeEncoderContractIDBase, 256);
-  aDest->ToCString(contractid + baselen, 256 - baselen);
+  nsCAutoString contractid(
+                    NS_LITERAL_CSTRING(NS_UNICODEENCODER_CONTRACTID_BASE) +
+                    NS_LossyConvertUCS2toASCII(*aDest));
 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
   // Always create an instance since encoders hold state.
-  encoder = do_CreateInstance(contractid, &res);
+  encoder = do_CreateInstance(contractid.get(), &res);
 
   if (NS_FAILED(res))
     res = NS_ERROR_UCONV_NOCONV;
@@ -529,15 +526,16 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
   *aResult= nsnull;
   nsresult res = NS_OK;;
 
-  static const char kUnicodeDecoderContractIDBase[] = NS_UNICODEDECODER_CONTRACTID_BASE;
-  static PRInt32 baselen = sizeof(kUnicodeDecoderContractIDBase) - 1;
+  NS_NAMED_LITERAL_CSTRING(kUnicodeDecoderContractIDBase,
+                           NS_UNICODEDECODER_CONTRACTID_BASE);
 
-  char contractid[256];
-  PL_strncpy(contractid, kUnicodeDecoderContractIDBase, 256);
-  aSrc->ToCString(contractid + baselen, 256 - baselen);
+  nsCAutoString contractid(kUnicodeDecoderContractIDBase +
+                           NS_LossyConvertUCS2toASCII(*aSrc));
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  if (!strncmp(contractid+baselen, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
+  if (!strncmp(contractid+kUnicodeDecoderContractIDBase.Length(),
+               NS_1BYTE_CODER_PATTERN,
+               NS_1BYTE_CODER_PATTERN_LEN))
   {
     // Single byte decoders dont hold state. Optimize by using a service.
     decoder = do_GetService(contractid, &res);

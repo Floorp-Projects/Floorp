@@ -2464,7 +2464,7 @@ static PRBool ListCascade(nsHashKey* aKey, void* aValue, void* aClosure)
   fputs("\nRules in cascade order for medium: \"", data->mOut);
   nsAutoString  buffer;
   key->mAtom->ToString(buffer);
-  fputs(buffer, data->mOut);
+  fputs(NS_LossyConvertUCS2toASCII(buffer).get(), data->mOut);
   fputs("\"\n", data->mOut);
 
   ListRules(cascade->mWeightedRules, data->mOut, data->mIndent);
@@ -2503,7 +2503,7 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     while (index < PRInt32(count)) {
       nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
       medium->ToString(buffer);
-      fputs(buffer, out);
+      fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
       if (index < PRInt32(count)) {
         fputs(", ", out);
       }

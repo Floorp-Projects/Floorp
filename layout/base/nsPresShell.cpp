@@ -6311,7 +6311,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.Assign(NS_LITERAL_STRING("(null)"));
   }
-  fputs(name, stdout);
+  fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
 
   printf(" != ");
 
@@ -6326,7 +6326,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
   else {
     name.Assign(NS_LITERAL_STRING("(null)"));
   }
-  fputs(name, stdout);
+  fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
 
   printf(" %s", aMsg);
 }
@@ -6343,7 +6343,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    fputs(name, stdout);
+    fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
     fprintf(stdout, " %p ", (void*)k1);
   }
   printf("{%d, %d, %d, %d}", r1.x, r1.y, r1.width, r1.height);
@@ -6354,7 +6354,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
                                       (void**)&frameDebug))) {
     fprintf(stdout, "  ");
     frameDebug->GetFrameName(name);
-    fputs(name, stdout);
+    fputs(NS_LossyConvertUCS2toASCII(name).get(), stdout);
     fprintf(stdout, " %p ", (void*)k2);
   }
   printf("{%d, %d, %d, %d}\n", r2.x, r2.y, r2.width, r2.height);
@@ -6585,14 +6585,14 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       nsAutoString tmp;
       if (nsnull != listName1) {
         listName1->ToString(tmp);
-        fputs(tmp, stdout);
+        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
       }
       else
         fputs("(null)", stdout);
       printf(" != ");
       if (nsnull != listName2) {
         listName2->ToString(tmp);
-        fputs(tmp, stdout);
+        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
       }
       else
         fputs("(null)", stdout);

@@ -249,7 +249,7 @@ CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs("@charset \"", out);
-  fputs(mEncoding, out);
+  fputs(NS_LossyConvertUCS2toASCII(mEncoding).get(), out);
   fputs("\"\n", out);
 
   return NS_OK;
@@ -477,12 +477,12 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
   fputs("@import \"", out);
-  fputs(mURLSpec, out);
+  fputs(NS_LossyConvertUCS2toASCII(mURLSpec).get(), out);
   fputs("\" ", out);
 
   nsAutoString mediaText;
   mMedia->GetText(mediaText);
-  fputs(mediaText, out);
+  fputs(NS_LossyConvertUCS2toASCII(mediaText).get(), out);
   fputs("\n", out);
 
   return NS_OK;
@@ -876,7 +876,7 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
     while (index < count) {
       nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
       medium->ToString(buffer);
-      fputs(buffer, out);
+      fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
       if (index < count) {
         fputs(", ", out);
       }
@@ -1326,12 +1326,12 @@ CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
 
   if (mPrefix) {
     mPrefix->ToString(buffer);
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
     fputs(" ", out);
   }
 
   fputs("url(", out);
-  fputs(mURLSpec, out);
+  fputs(NS_LossyConvertUCS2toASCII(mURLSpec).get(), out);
   fputs(")\n", out);
   return NS_OK;
 }

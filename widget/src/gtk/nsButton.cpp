@@ -120,11 +120,8 @@ void nsButton::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsButton::SetLabel(const nsString& aText)
 {
-  NS_ALLOC_STR_BUF(label, aText, 256);
-
-  gtk_label_set(GTK_LABEL(GTK_BIN (mWidget)->child), label);
-
-  NS_FREE_STR_BUF(label);
+  gtk_label_set(GTK_LABEL(GTK_BIN (mWidget)->child),
+                NS_LossyConvertUCS2toASCII(aText).get());
   return (NS_OK);
 }
 

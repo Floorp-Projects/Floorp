@@ -48,7 +48,6 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
 
 #include "nsIAppShell.h"
 #include "nsGUIEvent.h"

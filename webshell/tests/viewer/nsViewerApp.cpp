@@ -394,17 +394,16 @@ PrintHelpInfo(char **argv)
 static void
 AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
 {
-  char cfn[1000];
-  aFileName.ToCString(cfn, sizeof(cfn));
+  NS_LossyConvertUCS2toASCII cfn(aFileName);
 #ifdef XP_PC
-  FILE* fp = fopen(cfn, "rb");
+  FILE* fp = fopen(cfn.get(), "rb");
 #else
-  FILE* fp = fopen(cfn, "r");
+  FILE* fp = fopen(cfn.get(), "r");
 #endif
 
   if (nsnull==fp)
   {
-    fprintf(stderr, "Input file not found: %s\n", cfn);
+    fprintf(stderr, "Input file not found: %s\n", cfn.get());
     exit (-1);
   }
   nsAutoString line;
