@@ -48,9 +48,10 @@ function onLoadJSConsole()
         // Couldn't get the console service for some reason...
         // pretend it never happened.
 
-        // XXX instead should write some message to the console re:
-        // unable to get console service.
-
+        appendMessage({ message:
+                        "Unable to display errors - " +
+                        "couldn't get Console Service component. " +
+                        "(Missing mozilla.consoleservice.1)" });
         return;
     }
 
