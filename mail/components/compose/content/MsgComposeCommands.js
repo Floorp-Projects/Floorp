@@ -1958,6 +1958,8 @@ function FillIdentityListPopup(popup)
 
   for (var i in accounts) {
     var server = accounts[i].incomingServer;
+    if (!server)
+       continue;
     var identites = queryISupportsArray(accounts[i].identities, Components.interfaces.nsIMsgIdentity);
     for (var j in identites) {
       var identity = identites[j];
