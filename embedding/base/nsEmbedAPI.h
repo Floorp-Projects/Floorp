@@ -65,7 +65,7 @@
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
+extern "C" nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
                                  nsIDirectoryServiceProvider *aAppFileLocProvider);
 
 
@@ -83,7 +83,7 @@ extern nsresult NS_InitEmbedding(nsILocalFile *aMozBinDirectory,
  *
  * @return NS_OK
  */
-extern nsresult NS_TermEmbedding();
+extern "C" nsresult NS_TermEmbedding();
 
 /*---------------------------------------------------------------------------*/
 /* Event processing APIs. The native OS dependencies mean you must be        */
@@ -129,7 +129,7 @@ typedef MSG nsEmbedNativeEvent;
  *
  * @return NS_OK
  */
-extern nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
+extern "C" nsresult NS_HandleEmbeddingEvent(nsEmbedNativeEvent &aEvent, PRBool &aWasHandled);
 
 #endif /* MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING */
 
