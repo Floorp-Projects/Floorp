@@ -396,6 +396,15 @@ nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
   return eContentAttr_NotThere;
 }
 
+// XXX temporary stub until this class is nuked
+nsContentAttr
+nsHTMLTagContent::StringToAttribute(nsIAtom* aAttribute,
+                                    const nsString& aValue,
+                                    nsHTMLValue& aResult)
+{
+  return eContentAttr_NotThere;
+}
+
 nsresult
 nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID)
 {
