@@ -23,7 +23,7 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
-#include "prlog.h"
+#include "prlog.h" 
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
