@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2000-2001 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
@@ -24,16 +24,14 @@
 #include "nsISupports.idl"
 #include "gfxtypes.idl"
 
-interface nsIDrawable;
 interface nsIImageFrame;
 interface nsIEnumerator;
 
 /**
- * nsIImage interface
+ * nsIImageContainer interface
  *
- * @author Tim Rowley <tor@cs.brown.edu>
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 1.2
+ * @version 0.1
  * @see "gfx2"
  */
 [scriptable, uuid(5e8405a4-1dd2-11b2-8385-bc8e3446cad3)]
@@ -49,12 +47,12 @@ interface nsIImageContainer : nsISupports
             in gfx_dimension aHeight);
 
   /**
-   * The width of the image.
+   * The width of the container rectangle.
    */
   readonly attribute gfx_dimension width;
 
   /**
-   * The height of the image.
+   * The height of the container rectangle.
    */
   readonly attribute gfx_dimension height;
 
@@ -65,11 +63,16 @@ interface nsIImageContainer : nsISupports
   readonly attribute nsIImageFrame currentFrame;
 
 
-
   readonly attribute unsigned long numFrames;
+
   nsIImageFrame getFrameAt(in unsigned long index);
 
+  /**
+   * Adds \a item to the end of the list of frames.
+   * @param item frame to add.
+   */
   void appendFrame(in nsIImageFrame item);
+
   void removeFrame(in nsIImageFrame item);
 
   nsIEnumerator enumerate();
