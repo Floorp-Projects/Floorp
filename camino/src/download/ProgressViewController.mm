@@ -46,6 +46,10 @@
 #import "PreferenceManager.h"
 #import "ProgressView.h"
 
+// we should really get this from "CHBrowserService.h",
+// but that requires linkage and extra search paths.
+static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
+
 enum {
   kLabelTagFilename = 1000,
   kLabelTagStatus,
@@ -151,6 +155,8 @@ enum {
 
 -(void)dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  
   // if we get here because we're quitting, the listener will still be alive
   // yet we're going away. As a result, we need to tell the d/l listener to
   // forget it ever met us and necko will clean it up on its own.
@@ -171,6 +177,17 @@ enum {
   [super dealloc];
 }
 
+- (void)xpcomShutdown:(NSNotification*)notification
+{
+  // if we get here because we're quitting, the listener will still be alive
+  // yet we're going away. As a result, we need to tell the d/l listener to
+  // forget it ever met us and necko will clean it up on its own.
+  if (mDownloader) {
+    mDownloader->DetachDownloadDisplay();
+  }
+  NS_IF_RELEASE(mDownloader);
+}
+
 -(void)viewDidLoad
 {
   [mProgressBar retain]; // make sure it survives being moved between views
@@ -179,6 +196,14 @@ enum {
   // give the views this controller as their controller
   [mCompletedView setController:self];
   [mProgressView setController:self];
+  
+  // we need to register for xpcom shutdown so that we can clear the
+  // services before XPCOM is shut down. We can't rely on dealloc,
+  // because we don't know when it will get called (we might be autoreleased).
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(xpcomShutdown:)
+                                               name:XPCOMShutDownNotificationName
+                                              object:nil];
 }
 
 -(ProgressView*)view
