@@ -38,7 +38,7 @@ REQUIRES=util img xpcom raptor netlib dom js
 
 DEFINES += -D_IMPL_NS_GFX 
 
-CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
+CPPSRCS=nsColor.cpp nsColorNames.cpp nsFont.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
     nsImageURL.cpp nsRect.cpp nsTransform2D.cpp \
