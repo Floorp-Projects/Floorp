@@ -599,7 +599,7 @@ protected:
 #endif // IBMBIDI
 
   // disk file members
-  nsCOMPtr<nsIFile>   mFileSpec;
+  nsCOMPtr<nsIURI>    mDocumentURI;
   PRInt32             mModCount;
 
   nsIDTD* mDTD;
