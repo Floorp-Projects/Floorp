@@ -2,11 +2,6 @@
 <html>
   <head>
     <title>jsDriver.pl</title>
-    <style>
-      dt {
-        font-family: Courier;
-      }
-    </style>
   </head>
 
   <body bgcolor="white">
@@ -22,15 +17,26 @@
 
       <dt><b>SYNOPSIS</b></dt>
       <dd>
-        <code>
-          <b>jsDriver.pl</b> [-hkt] [-b BUGURL] [-c CLASSPATH] [-f OUTFILE]
-          [-j JAVAPATH] [-l TESTLIST ...] [-L NEGLIST ...] [-p TESTPATH]
-          [-s SHELLPATH] [-u LXRURL] [--help] [--confail] [--trace]
-          [--classpath=CLASSPATH] [--file=OUTFILE] [--javapath=JAVAPATH]
-          [--list=TESTLIST] [--neglist=TESTLIST] [--testpath=TESTPATH]
-          [--shellpath=SHELLPATH] [--lxrurl=LXRURL] {-e ENGINETYPE |
-          --engine=ENGINETYPE}
-        </code>
+        <table>
+          <tr>
+            <td align="right" valign="top">
+              <code>
+                <b>jsDriver.pl</b>
+              </code>
+            </td>
+            <td>
+              <code>
+                [-hkt] [-b BUGURL] [-c CLASSPATH] [-f OUTFILE]
+                [-j JAVAPATH] [-l TESTLIST ...] [-L NEGLIST ...] [-p TESTPATH]
+                [-s SHELLPATH] [-u LXRURL] [--help] [--confail] [--trace]
+                [--classpath=CLASSPATH] [--file=OUTFILE] [--javapath=JAVAPATH]
+                [--list=TESTLIST] [--neglist=TESTLIST] [--testpath=TESTPATH]
+                [--shellpath=SHELLPATH] [--lxrurl=LXRURL] {-e ENGINETYPE |
+                --engine=ENGINETYPE}
+              </code>
+            </td>
+          </tr>
+        </table>
         <br>
         <br>
 
@@ -127,7 +133,7 @@
             <b>jsDriver.pl</b> interprets <code><i>n</i></code> as a bugnumber
             in the <a href="http://bugzilla.mozilla.org">BugZilla</a> bug
             tracking system.  In the event that a testcase which has specified
-            a bugnumber in the manner fails, a hyperlink to the BugZilla database
+            a bugnumber fails, a hyperlink to the BugZilla database
             will be included in the output by prefixing the bugnumber with the
             URL specified here.  By default, URL is assumed to be
             &quot;http://bugzilla.mozilla.org/show_bug.cgi?id=&quot;.
@@ -216,8 +222,7 @@
             Specify a list of tests to execute.  FILE can be a plain text file
             containing a list of testcases to execute, a subdirectory 
             in which to
-            <a href="http://www.instantweb.com/~foldoc/foldoc.cgi?query=grovel">
-              grovel (2)</a>
+            <a href="http://www.instantweb.com/~foldoc/foldoc.cgi?query=grovel">grovel</a>
             for tests, or a single testcase to execute.  Any number of FILE 
             specifiers may follow this option.  The driver uses the fact that a
             valid testcase should be a file ending in .js to make the distinction
@@ -275,32 +280,50 @@
             <br>
 
         </dl>
-
-      <dt><b>BUGS</b></dt>
-      <dd>
-        This script needs to be modified to work with MacPerl<br>
-        At the time of this writing (12/02/99), the LiveConnect shell does not
-        return proper exit codes.  This is expected to be changed soon.<br>
-
       <dt><b>SEE ALSO</b></dt>
       <dd>
-        mklistpage.pl,
-        <a href="http://www.mozilla.org/js/">http://www.mozilla.org/js/</a>
+        <a href="http://lxr.mozilla.org/mozilla/source/js/tests/jsDriver.pl">jsDriver.pl</a>,
+        <a href="http://lxr.mozilla.org/mozilla/source/js/tests/mklistpage.pl">mklistpage.pl</a>,
+        <a href="http://www.mozilla.org/js/">http://www.mozilla.org/js/</a>,
+        <a href="http://www.mozilla.org/js/tests/library.html">http://www.mozilla.org/js/tests/library.html</a>
         <br>
         <br>
 
-      <dt><b>BUGS</b></dt>
+      <dt><b>REQUIREMENTS</b></dt>
       <dd>
-        This script needs to be modified to work with MacPerl<br>
-        At the time of this writing (12/02/99), the LiveConnect shell does not
-        return proper exit codes.  This is expected to be changed soon.<br>
-        
+        <b>jsDriver.pl</b> requires the
+        <a href="http://search.cpan.org/search?module=Getopt::Mixed">Getopt::Mixed</a>
+        perl package, available from <a href="http://www.cpan.org">cpan.org</a>.
+        <br>
+        <br>
+      <dt><b>EXAMPLES</b></dt>
+      <dd>
+          <code>perl jsDriver.pl -e smdebug -L lc*</code><br>
+          Executes all tests EXCEPT the liveconnect tests against the
+          SpiderMonkey debug shell, writing the results
+          to the default result file.  (NOTE: Unix shells take care of wildcard
+          expansion, turning <code>lc*</code> into <code>lc2 lc3</code>.  Under
+          a DOS shell, you must explicitly list the directories.)
+        <p>
+          <code>perl jsDriver.pl -e rhino -L rhino-n.tests</code><br>
+          Executes all tests EXCEPT those listed in the
+          <code>rhino-n.tests</code> file.
+        <p>
+          <code>perl -I/home/rginda/perl/lib/ jsDriver.pl -e lcopt -l lc2
+            lc3 -f lcresults.html -k</code><br>
+          Executes ONLY the tests under the <code>lc2</code> and <code>lc3</code>
+          directories against the LiveConnect shell.  Results will be written to
+          the file <code>lcresults.html</code> <b>AND</b> the console.  The 
+          <code>-I</code> option tells perl to look for modules in the
+          <code>/home/rginda/perl/lib</code> direcotry (in addition to the
+          usual places), useful if you do not have root access to install new
+          modules on the system.
     </dl>
     <hr>
     <address><a href="mailto:rginda@netscape.com">Robert Ginda</a></address>
 <!-- Created: Thu Dec  2 19:08:05 PST 1999 -->
 <!-- hhmts start -->
-Last modified: Tue Dec  7 11:46:36 PST 1999
+Last modified: Wed Dec 15 16:58:26 PST 1999
 <!-- hhmts end -->
   </body>
 </html>
