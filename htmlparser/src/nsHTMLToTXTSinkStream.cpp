@@ -446,17 +446,41 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       mCacheLine = PR_TRUE;
     }
     
-    // Would be cool to figure out here whether we have a
-    // preformatted style attribute.  It's hard, though.
+    // Try to figure out here whether we have a
+    // preformatted style attribute.
     //
     // Trigger on the presence of a "-moz-pre-wrap" in the
     // style attribute. That's a very simplistic way to do
     // it, but better than nothing.
+    // Also set mWrapColumn to the value given there
+    // (which arguably we should only do if told to do so).
     nsString value;
     if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", value)) &&
-       (-1 != value.Find("-moz-pre-wrap"))) {
+       (-1 != value.Find("-moz-pre-wrap")))
+    {
       mPreFormatted = PR_TRUE;
       mCacheLine = PR_TRUE;
+      PRInt32 widthOffset = value.Find("width:");
+      if (widthOffset >= 0)
+      {
+        // We have to search for the ch before the semicolon,
+        // not for the semicolon itself, because nsString::ToInteger()
+        // considers 'c' to be a valid numeric char (even if radix=10)
+        // but then gets confused if it sees it next to the number
+        // when the radix specified was 10, and returns an error code.
+        PRInt32 semiOffset = value.Find("ch", widthOffset+6);
+        PRInt32 length = (semiOffset > 0 ? semiOffset - widthOffset - 6
+                          : value.Length() - widthOffset);
+        nsString widthstr;
+        value.Mid(widthstr, widthOffset+6, length);
+        PRInt32 err;
+        PRInt32 col = widthstr.ToInteger(&err);
+        if (NS_SUCCEEDED(err))
+        {
+          SetWrapColumn((PRUint32)col);
+          printf("Set wrap column to %d based on style\n", mWrapColumn);
+        }
+      }
     } else {
       mPreFormatted = PR_FALSE;
       mCacheLine = PR_TRUE; // Cache lines unless something else tells us not to
@@ -920,7 +944,9 @@ nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
   //  Wrap?
   if(mWrapColumn &&
      ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-                     (mFlags & nsIDocumentEncoder::OutputWrap)))
+      (mFlags & nsIDocumentEncoder::OutputWrap)) &&
+     (mCurrentLine[0] != '>'
+      || (mFlags & nsIDocumentEncoder::OutputFormatFlowed)))
   {
     // Yes, wrap!
     // The "+4" is to avoid wrap lines that only should be a couple
