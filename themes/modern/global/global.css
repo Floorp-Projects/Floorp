@@ -32,20 +32,6 @@
 /**
  * XXX-DEBUG: HTML namespace/titledbutton striping. 
  **/ 
-  html|* 
-    {
-      border              : 1px solid green !important;
-    }
-  
-  html|form 
-    {
-      border              : none !important;
-    }
-  
-  titledbutton 
-    {
-      border              : 1px solid purple !important;
-    }
 
 /**  
  * XUL <window> element
