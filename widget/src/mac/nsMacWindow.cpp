@@ -53,7 +53,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // Windows and Mac.
 #define WINDOW_SIZE_TWEAKING
 
-// these should come from the system, not be hard-coded. What if I'm running
+// еее TODO: these should come from the system, not be hard-coded. What if I'm running
 // an elaborate theme with wide window borders?
 const short kWindowTitleBarHeight = 22;
 const short kWindowMarginWidth = 6;
@@ -574,6 +574,9 @@ NS_METHOD nsWindow::Restore(void)
 // Move this window
 //
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+// Move
+//-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 
@@ -611,10 +614,21 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		else if (((PRInt32)aX) > screenRect.right)
 			aX = screenRect.right;
 
-		if (((PRInt32)aY) < screenRect.top)
-			aY = screenRect.top;
-		else if (((PRInt32)aY) > screenRect.bottom)
+		if (((PRInt32)aY) > screenRect.bottom-screenRect.top)
 			aY = screenRect.bottom;
+
+		if (mIsDialog)
+		{
+			aX += kDialogMarginWidth;
+			aY += kDialogTitleBarHeight;
+		}
+		else
+		{
+			aX += kWindowMarginWidth;
+			aY += kWindowTitleBarHeight;
+		}
+		aX += screenRect.left;
+		aY += screenRect.top;
 
 		// move the window if it has not been moved yet
 		// (ie. if this function isn't called in response to a DragWindow event)
@@ -625,35 +639,8 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		macPoint = topLeft(mWindowPtr->portRect);
 #endif
 		::LocalToGlobal(&macPoint);
-		if ((macPoint.h != aX) || (macPoint.v != aY))
-		{
-			// in that case, the window borders should be visible too
-			PRUint32 minX, minY;
-			if (mIsDialog)
-			{
-				minX = kDialogMarginWidth;
-#if TARGET_CARBON
-				minY = kDialogTitleBarHeight + ::GetMBarHeight();
-#else
-				minY = kDialogTitleBarHeight + ::LMGetMBarHeight();
-#endif
-			}
-			else
-			{
-				minX = kWindowMarginWidth;
-#if TARGET_CARBON
-				minY = kWindowTitleBarHeight + ::GetMBarHeight();
-#else
-				minY = kWindowTitleBarHeight + ::LMGetMBarHeight();
-#endif
-			}
-			if (aX < minX)
-				aX = minX;
-			if (aY < minY)
-				aY = minY;
-
+		if (macPoint.h != aX || macPoint.v != aY)
 			::MoveWindow(mWindowPtr, aX, aY, false);
-		}
 
 		// propagate the event in global coordinates
 		Inherited::Move(aX, aY);
@@ -696,6 +683,26 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 	}
 	Inherited::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
+
+#if TARGET_CARBON
+		Rect screenRect;
+		::GetRegionBounds(::GetGrayRgn(), &screenRect);
+#else
+		Rect screenRect = (**::GetGrayRgn()).rgnBBox;
+#endif
+
+   nsRect localBounds;
+
+   GetBounds(localBounds);
+   WidgetToScreen(localBounds, aRect);
+   if (mIsDialog)
+     aRect.MoveBy(-kDialogMarginWidth-screenRect.left, -kDialogTitleBarHeight-screenRect.top);
+   else
+     aRect.MoveBy(-kWindowMarginWidth-screenRect.left, -kWindowTitleBarHeight-screenRect.top);
+   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
