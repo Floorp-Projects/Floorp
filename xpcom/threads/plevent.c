@@ -21,6 +21,8 @@
 #endif
 
 #if defined(XP_OS2)
+#define INCL_DOS
+#define INCL_DOSERRORS
 #define INCL_WIN
 #include <os2.h>
 #define DefWindowProc WinDefWindowProc
