@@ -28,13 +28,15 @@ Rights Reserved.
 		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+		<!-- onclick="ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)" -->
+
 		<tree id="dirTree" 
 			  class="abDirectory" 
 			  flex="100%"
 			  ref="abdirectory://"
 			  open="true"
 			  datasources="rdf:addressdirectory"
-			  onclick="ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
+			  onselect="DirPaneSelectionChange()">
 			
 			<template>
 				<rule>

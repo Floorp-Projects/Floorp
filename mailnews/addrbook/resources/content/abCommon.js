@@ -81,9 +81,22 @@ function SelectFirstAddressBook()
 	}
 }
 
+function DirPaneSelectionChange()
+{
+	var tree = document.getElementById('dirTree');
+	if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+		ChangeDirectoryByDOMNode(tree.selectedItems[0]);
+	else	
+	{
+		var tree = document.getElementById('resultsTree');
+		if ( tree )
+			tree.setAttribute('ref', null);
+	}
+}
+
 function ChangeDirectoryByDOMNode(dirNode)
 {
-	// FIX ME - deselect the items in the resutls pane to work around tree bug
+	// FIX ME - deselect the items in the results pane to work around tree bug
 	var resultsTree = document.getElementById('resultsTree');
 	if ( resultsTree )
 		resultsTree.clearItemSelection();

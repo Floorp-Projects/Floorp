@@ -23,7 +23,7 @@ Rights Reserved.
 
 <!-- Menus:  the . means that the menu item isn't implemented yet -->
 
-<!ENTITY fileMenu.label					"File"> 
+<!-- File Menu -->
 <!ENTITY newMenu.label						"New"> 
 <!ENTITY newNavCmd.label						".Navigator">  
 <!ENTITY newMessageCmd.label					"Message">  
@@ -36,16 +36,15 @@ Rights Reserved.
 <!ENTITY printPreviewCmd.label				".Print Preview">  
 <!ENTITY printCardViewCmd.label				".Print Card View...">  
 <!ENTITY printAddressBook.label				".Print Address Book...">  
-<!ENTITY closeCmd.label						"Close">  
 
-<!ENTITY editMenu.label					"Edit"> 
+<!-- Edit Menu -->
 <!ENTITY deleteAbCmd.label					"Delete Address Book">  
 <!ENTITY searchCmd.label					".Search..."> 
 <!ENTITY htmlDomainCmd.label				".HTML Domains...">  
 <!ENTITY abPropsCmd.label					"Properties">  
 <!ENTITY prefsCmd.label						".Preferences">
 
-<!ENTITY viewMenu.label					"View"> 
+<!-- View Menu -->
 <!ENTITY showMenu.label						".Show"> 
 <!ENTITY showAbToolbarCmd.label					".Address Book Toolbar">  
 <!ENTITY showCardPane.label						".Card Pane">  

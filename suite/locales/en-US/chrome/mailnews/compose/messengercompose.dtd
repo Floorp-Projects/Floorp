@@ -7,7 +7,6 @@
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
-<!ENTITY fileMenu.label "File">
 <!ENTITY newCmd.label ".New">
 <!ENTITY saveCmd.label ".Save">
 <!ENTITY saveAsCmd.label "Save As (Draft)">
@@ -26,7 +25,6 @@
 <!ENTITY closeCmd.label "Close">
 
 <!-- Edit menu items -->
-<!ENTITY editMenu.label ".Edit">
 <!ENTITY undoCmd.label ".Undo">
 <!ENTITY cutCmd.label ".Cut">
 <!ENTITY copyCmd.label ".Copy">
@@ -41,7 +39,6 @@
 <!ENTITY prefsCmd.label ".Preferences...">
 
 <!-- View menu items -->
-<!ENTITY viewMenu.label "View">
 <!ENTITY showCmd.label ".Show">
 <!ENTITY addressCmd.label ".Address">
 <!ENTITY attachmentsCmd.label ".Attachments">

@@ -46,13 +46,41 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 <html:script src="chrome://navigator/content/contentframe.js" />
 
+<broadcasterset id="broadcasterset">
+	<!-- File Menu -->
+	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
+ 	<broadcaster id="cmd_quit"/>
+	<!-- Edit Menu -->
+	<broadcaster id="cmd_undo" oncommand="MsgEditUndo()"/>
+	<broadcaster id="cmd_redo" oncommand="MsgEditRedo()"/>
+	<broadcaster id="cmd_cut" oncommand="MsgEditCut()"/>
+	<broadcaster id="cmd_copy" oncommand="MsgEditCopy()"/>
+	<broadcaster id="cmd_paste" oncommand="MsgEditPaste()"/>
+	<broadcaster id="cmd_delete" oncommand="Delete_FixMe()"/>
+	<broadcaster id="cmd_selectAll" oncommand="MsgSelectAll()"/>
+</broadcasterset>
+
+<keyset id="keyset">
+	<!-- File Menu -->
+	<key id="key_close"/>
+	<key id="key_quit"/>
+	<!-- Edit Menu -->
+	<key id="key_undo"/>
+	<key id="key_redo"/>
+	<key id="key_cut"/>
+	<key id="key_copy"/>
+	<key id="key_paste"/>
+	<key id="key_delete"/>
+	<key id="key_selectAll"/>
+</keyset>
+
   <broadcaster id="Messenger:Throbber" busy="false"/>
   <broadcaster id="Messenger:Status"/>
   <broadcaster id="Messenger:LoadingProgress"/>
   <toolbox>
      <menubar>
-    <menu value="&fileMenu.label;">
-	  <menupopup id="fileMenuPopup">
+    <menu id="menu_File">
+	  <menupopup id="menu_FilePopup">
       <menu value="&newMenu.label;">
         <menupopup>
 		<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
@@ -92,41 +120,42 @@ Rights Reserved.
 		</menupopup>
       </menu>
       <menuseparator/>
-      <menuitem id="pageSetup"/>
+      <menuitem id="menu_pageSetup"/>
       <menuitem value="&printPreviewCmd.label;" oncommand="PrintPreview();"/>
       <menuitem value="&printCmd.label;" oncommand="Print();"/>
       <menuseparator/>
-      <menuitem value="&closeCmd.label;" oncommand="CloseMessenger();"/>
+      <menuitem id="menu_close"/>
 	  </menupopup>
     </menu>
-    <menu value="&editMenu.label;">
-      <menupopup>
-	  <menuitem value="&undoCmd.label;" oncommand="MsgEditUndo();"/>
-      <menuitem value="&redoCmd.label;" oncommand="MsgEditRedo();"/>
-      <menuseparator/>
-      <menuitem value="&cutCmd.label;" oncommand="MsgEditCut();"/>
-      <menuitem value="&copyCmd.label;" oncommand="MsgEditCopy();"/>
-      <menuitem value="&pasteCmd.label;" oncommand="MsgEditPaste();"/>
-      <menuitem value="&deleteMsgCmd.label;" oncommand="MsgDeleteMessage(false);"/>
-      <menuitem value="&deleteFolderCmd.label;" oncommand="MsgDeleteFolder();"/>
-      <menu value="&selectMenu.label;">
-        <menupopup>
-		<menuitem value="&selectAllCmd.label;" oncommand="MsgSelectAll();"/>
-        <menuitem value="&selectThreadCmd.label;" oncommand="MsgSelectThread();"/>
-        <menuitem value="&selectFlaggedCmd.label;" oncommand="MsgSelectFlaggedMsg();"/>
+	
+	<menu id="menu_Edit">
+		<menupopup>
+			<menuitem id="menu_undo"/>
+			<menuitem id="menu_redo"/>
+			 <menuseparator/>
+			<menuitem id="menu_cut"/>
+			<menuitem id="menu_copy"/>
+			<menuitem id="menu_paste"/>
+			 <menuseparator/>
+			<menuitem id="menu_delete"/>
+			<menuitem value="&deleteMsgCmd.label;" oncommand="MsgDeleteMessage(false);"/>
+			<menuitem value="&deleteFolderCmd.label;" oncommand="MsgDeleteFolder();"/>
+			 <menuseparator/>
+			<menuitem id="menu_selectAll"/>
+	        <menuitem value="&selectThreadCmd.label;" oncommand="MsgSelectThread();"/>
+	        <menuitem value="&selectFlaggedCmd.label;" oncommand="MsgSelectFlaggedMsg();"/>
+      		 <menuseparator/>
+			<menuitem value="&spamFiltersCmd.label;"/>
+			<menuitem value="&filtersCmd.label;" oncommand="MsgFilters();"/>
+			<menuitem value="&folderPropsCmd.label;" oncommand="MsgFolderProperties();"/>
+			 <menuseparator/>
+			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
+			<menuitem value="&prefsCmd.label;" oncommand="MsgPreferences();"/>
+			<menuitem value="&accountWizardCmd.label;" oncommand="MsgAccountWizard();"/>
 		</menupopup>
-      </menu>
-      <menuseparator/>
-      <menuitem value="&spamFiltersCmd.label;"/>
-      <menuitem value="&filtersCmd.label;" oncommand="MsgFilters();"/>
-      <menuitem value="&folderPropsCmd.label;" oncommand="MsgFolderProperties();"/>
-      <menuseparator/>
-      <menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
-      <menuitem value="&prefsCmd.label;" oncommand="MsgPreferences();"/>
-      <menuitem value="&accountWizardCmd.label;" oncommand="MsgAccountWizard();"/>
-	  </menupopup>
-    </menu>
-    <menu value="&viewMenu.label;">
+	</menu>
+    
+    <menu id="menu_View">
 	  <menupopup>
       <menu value="&showToolbarMenu.label;">
         <menupopup>
@@ -385,7 +414,7 @@ Rights Reserved.
     </menu>
     
 	<menu id="tasksMenu"/>
-	<menu id="helpMenu"/>
+	<menu id="menu_Help"/>
 	<spring flex="100%"/>
   </menubar>
 

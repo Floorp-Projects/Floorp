@@ -41,14 +41,14 @@ Rights Reserved.
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 <html:script language="JavaScript" src="chrome://addressbook/content/abCommon.js"/>
-<!--
-<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
--->
+<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
+
 <broadcasterset id="broadcasterset">
 	//<broadcaster id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
+	<!-- File Menu -->
 	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
-	<broadcaster id="cmd_Close" oncommand="AbClose()"/>
-	
+ 	<broadcaster id="cmd_close" oncommand="AbClose()"/>
+ 	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
 	<broadcaster id="cmd_undo" oncommand="AbEditUndo()"/>
 	<broadcaster id="cmd_redo" oncommand="AbEditRedo()"/>
@@ -60,12 +60,10 @@ Rights Reserved.
 </broadcasterset>
 
 <keyset id="keyset">
+	<!-- File Menu -->
 	<key id="key_PrintCard" disabled="true" command="true" key="P" observes="cmd_PrintCard" />
-	
-	<!-- temporary -->
-	<key id="key_Close" command="true" key="w" observes="cmd_Close" />
-	<!--key id="key_Quit" command="true" key="Q" observes="cmd_Quit" /-->
-
+	<key id="key_close"/>
+	<key id="key_quit"/>
 	<!-- Edit Menu -->
 	<key id="key_undo"/>
 	<key id="key_redo"/>
@@ -79,8 +77,8 @@ Rights Reserved.
 
   <toolbox>
   <menubar>
-		<menu value="&fileMenu.label;">
-		  <menupopup id="fileMenuPopup">
+		<menu id="menu_File">
+		  <menupopup id="menu_FilePopup">
 			<menu value="&newMenu.label;">
 				<menupopup>
 				<menuitem value="&newNavCmd.label;" oncommand="NewBrowserWindow();"/>
@@ -95,18 +93,16 @@ Rights Reserved.
 			<menuitem value="&importCmd.label;" oncommand="AbImport()"/>
 			<menuitem value="&exportCmd.label;" oncommand="AbExport()"/>
 			<menuseparator/>
-			<menuitem id="pageSetup"/>
+			<menuitem id="menu_pageSetup"/>
 			<menuitem value="&printPreviewCmd.label;" oncommand="AbPrintPreview()"/>
 			<menuitem value="&printCardViewCmd.label;" key="key_PrintCard" observes="cmd_PrintCard"/>
 			<menuitem value="&printAddressBook.label;" oncommand="AbPrintAddressBook()"/>
 			<menuseparator/>
-			<menuitem value="&closeCmd.label;"
-					  key="key_Close"
-					  observes="cmd_Close"/>
+			<menuitem id="menu_close"/>
 			</menupopup>
 		</menu>
 		
-		<menu value="&editMenu.label;">
+		<menu id="menu_Edit">
 		  <menupopup>
 			<menuitem id="menu_undo"/>
 			<menuitem id="menu_redo"/>
@@ -114,8 +110,10 @@ Rights Reserved.
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>
 			<menuitem id="menu_paste"/>
+			<menuseparator/>
 			<menuitem id="menu_delete"/>
 			<menuitem value="&deleteAbCmd.label;" oncommand="AbDeleteDirectory();"/>
+			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
 			<menuitem value="&searchCmd.label;" oncommand="AbSearch();"/>
@@ -127,7 +125,7 @@ Rights Reserved.
 		  </menupopup>
 		</menu>
 	    
-		<menu value="&viewMenu.label;">
+		<menu id="menu_View">
 		    <menupopup>
 			<menu value="&showMenu.label;">
 				<menupopup>
@@ -162,7 +160,7 @@ Rights Reserved.
 		</menu>
 	    
 		<menu id="tasksMenu"/>
-		<menu id="helpMenu"/>
+		<menu id="menu_Help"/>
 		<spring flex="100%"/>
 	</menubar>
 		<toolbar>

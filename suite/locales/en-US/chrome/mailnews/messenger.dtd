@@ -23,7 +23,6 @@ Rights Reserved.
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
 
 <!-- File menu items -->
-<!ENTITY fileMenu.label "File"> 
 <!ENTITY newMenu.label "New"> 
 <!ENTITY newNavCmd.label ".Navigator Window">  
 <!ENTITY newMessageCmd.label "Message">  
@@ -50,19 +49,10 @@ Rights Reserved.
 <!ENTITY getFlaggedCmd.label ".Get Flagged Messages">  
 <!ENTITY printPreviewCmd.label ".Print Preview">  
 <!ENTITY printCmd.label "Print">  
-<!ENTITY closeCmd.label "Close">  
 
 <!-- Edit Menu -->
-<!ENTITY editMenu.label "Edit"> 
-<!ENTITY undoCmd.label "Undo">  
-<!ENTITY redoCmd.label "Redo">  
-<!ENTITY cutCmd.label ".Cut">  
-<!ENTITY copyCmd.label ".Copy">  
-<!ENTITY pasteCmd.label ".Paste">  
 <!ENTITY deleteMsgCmd.label "Delete Message">  
 <!ENTITY deleteFolderCmd.label "Delete Folder">  
-<!ENTITY selectMenu.label ".Select"> 
-<!ENTITY selectAllCmd.label ".All">  
 <!ENTITY selectThreadCmd.label ".Thread">  
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
@@ -73,7 +63,6 @@ Rights Reserved.
 <!ENTITY accountWizardCmd.label "New Account Wizard...">
 
 <!-- View Menu -->
-<!ENTITY viewMenu.label "View"> 
 <!ENTITY showToolbarMenu.label ".Toolbars">
 <!ENTITY showSidebarMenu.label ".SideBar">
 <!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">  

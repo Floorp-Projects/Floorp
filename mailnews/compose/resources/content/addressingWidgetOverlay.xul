@@ -40,6 +40,7 @@ Rights Reserved.
 			<!-- for fixed height:  style="height:5em"  -->
 			<tree id="addressingWidgetTree"		
 				  class="addressingWidget"
+				  style="height:5em"
 				  onclick="awClickRow()">
 				  
 				<treecol style="width:15%"/>
@@ -48,7 +49,7 @@ Rights Reserved.
 
 				<treechildren id="addressWidgetBody">
 					<treeitem>
-						<treerow style="border-bottom:solid black 1px">
+						<treerow>
 							<treecell treeallowevents="true">
 								<html:select id="msgRecipientType#1">
 									<html:option value="addr_to">&toAddr.label;</html:option>
