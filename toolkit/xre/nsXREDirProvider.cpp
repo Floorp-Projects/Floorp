@@ -446,13 +446,13 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
       nsCOMPtr<nsIFile> file;
       mXULAppDir->Clone(getter_AddRefs(file));
       file->AppendNative(NS_LITERAL_CSTRING("defaults"));
-      file->AppendNative(NS_LITERAL_CSTRING("pref"));
+      file->AppendNative(NS_LITERAL_CSTRING("preferences"));
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
     }
 
-    static const char *const kAppendPrefDir[] = { "defaults", "pref", nsnull };
+    static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
 
     nsCOMPtr<nsIFile> appFile;
     mAppDir->Clone(getter_AddRefs(appFile));
