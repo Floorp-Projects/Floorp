@@ -489,17 +489,15 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
 {
   if (aTwipsDelta.x != 0 || aTwipsDelta.y != 0)
   {
-    // Since we keep track of the dirty region as absolute coordinates,
-    // we need to offset it by the amount we scrolled.
-    if (HasNonEmptyDirtyRegion()) {
-      nsRegion* rgn = GetDirtyRegion();
-      if (rgn) {
-        rgn->MoveBy(aTwipsDelta);
-      }
-    }
-
     nsIWidget *scrollWidget = GetWidget();
- 
+    PRBool canBitBlit = scrollWidget && !CannotBitBlt(aScrolledView);
+
+    if (canBitBlit) {
+      // We're going to bit-blit.  Let the viewmanager know so it can
+      // adjust dirty regions appropriately.
+      mViewManager->WillBitBlit(this, aTwipsDelta);
+    }
+    
     if (!scrollWidget)
     {
       nsPoint offsetToWidget;
@@ -514,7 +512,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
       // We should call this after fixing up the widget positions to be
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, 0);
-    } else if (CannotBitBlt(aScrolledView)) {
+    } else if (!canBitBlit) {
       // We can't blit for some reason.
       // Just update the view and adjust widgets
       // Recall that our widget's origin is at our bounds' top-left

@@ -452,6 +452,13 @@ public: // NOT in nsIViewManager, so private to the view module
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
   /**
+   * Called to inform the view manager that a view is about to bit-blit.
+   * @param aView the view that will bit-blit
+   * @param aScrollAmount how much aView will scroll by
+   */
+  void WillBitBlit(nsView* aView, nsPoint aScrollAmount);
+  
+  /**
    * Called to inform the view manager that a view has scrolled.
    * The view manager will invalidate any widgets which may need
    * to be rerendered.
