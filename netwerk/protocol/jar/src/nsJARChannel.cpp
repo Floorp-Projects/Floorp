@@ -28,13 +28,15 @@
 #include "nsIMIMEService.h"
 #include "nsAutoLock.h"
 #include "nsIFileStreams.h"
-#include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
+#include "nsScriptSecurityManager.h"
+#include "nsIAggregatePrincipal.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static NS_DEFINE_CID(kFileChannelCID, NS_FILECHANNEL_CID);
+static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -303,8 +305,9 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = NS_OpenURI(getter_AddRefs(jarBaseChannel),
                     mJARBaseURI, mLoadGroup, mCallbacks, mLoadAttributes);
     if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIFileChannel> jarBaseFile = do_QueryInterface(jarBaseChannel, &rv);
+    
+    if (mLoadGroup)
+        (void)mLoadGroup->AddChannel(this, nsnull);
 
     // XXX need to set a state variable here to say we're reading
     mStartPosition = startPosition;
@@ -312,6 +315,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mUserContext = ctxt;
     mUserListener = listener;
 
+    nsCOMPtr<nsIFileChannel> jarBaseFile = do_QueryInterface(jarBaseChannel, &rv);
     if (NS_SUCCEEDED(rv)) {
         // then we've already got a local jar file -- no need to download it
         rv = ExtractJARElement(jarBaseFile);
@@ -554,21 +558,45 @@ nsJARChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
-    nsCOMPtr<nsIPrincipal> principal;
-    nsresult rv = mJAR->GetPrincipal(mJAREntry, getter_AddRefs(principal));
-    if (NS_SUCCEEDED(rv) && principal)
-        rv = principal->QueryInterface(NS_GET_IID(nsISupports), (void **)aOwner);
-    else
-        *aOwner = nsnull;
-
+    if (!mOwner)
+    {
+        nsCOMPtr<nsIPrincipal> certificate;
+        PRInt16 result;
+        nsresult rv = mJAR->GetCertificatePrincipal(mJAREntry, 
+                                                    getter_AddRefs(certificate),
+                                                    &result);
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        if (certificate)
+        {   // Get the codebase principal
+            NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, 
+                            kScriptSecurityManagerCID, &rv);
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+            nsCOMPtr<nsIPrincipal> codebase;
+            rv = secMan->GetCodebasePrincipal(mJARBaseURI, 
+                                              getter_AddRefs(codebase));
+            if (NS_FAILED(rv)) return rv;
+            
+            // Join the certificate and the codebase
+            nsCOMPtr<nsIAggregatePrincipal> agg;
+            agg = do_QueryInterface(certificate, &rv);
+            NS_ASSERTION(NS_SUCCEEDED(rv), 
+                         "Certificate principal is not an aggregate");
+            rv = agg->SetCodebase(codebase);
+            if (NS_FAILED(rv)) return rv;
+            mOwner = do_QueryInterface(agg, &rv);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+    *aOwner = mOwner;
+    NS_IF_ADDREF(*aOwner);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJARChannel::SetOwner(nsISupports* aOwner)
 {
-    //XXX: is this OK?
-    return NS_ERROR_FAILURE;
+    mOwner = aOwner;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -611,6 +639,8 @@ nsJARChannel::OnStopRequest(nsIChannel* jarExtractionTransport,
     nsresult rv;
     rv = mUserListener->OnStopRequest(this, mUserContext, status, aMsg);
     mJarExtractionTransport = nsnull;
+    if (mLoadGroup)
+        mLoadGroup->RemoveChannel(this, nsnull, rv, nsnull);
     return rv;
 }
 
