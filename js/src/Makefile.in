@@ -334,19 +334,6 @@ jsdtoa.o: jsdtoa.c Makefile.in
 	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
-# MSVC '-Gy' optimization flag causes JS_GetArgument and JS_GetLocalVariable
-# to be folded to the same address by the linker, leading to a crash on
-# startup. bug 151066 So, make sure '-Gy' is not used, and for optimization
-# levels "O[12]?", use the flags for '-O1' except for '-Gy'.
-#
-# N.B.: 'identical COMDAT folding' that folds functions whose addresses
-# are taken violates the ISO C and C++ standards.
-ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-jsinterp.obj: jsinterp.c
-	$(CC) -o $@ -c $(shell echo '$(COMPILE_CFLAGS)' | sed 's/-Gy//g' \
-	      | sed 's/-O\([12]\)\?/-Og -Os -Oy -Ob1 -Gs -Gf/g') $(srcdir)/$*.c
-endif
-
 $(FDLIBM_LIBRARY):
 	$(MAKE) -C $(@D) $(@F)
 
