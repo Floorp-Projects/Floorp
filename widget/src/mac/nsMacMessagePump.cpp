@@ -37,8 +37,9 @@
 #include "nsToolkit.h"
 #include "nscore.h"
 
+#include "nsRepeater.h"
+
 #include <MacWindows.h>
-#include <LPeriodical.h>
 #include <ToolUtils.h>
 #include <LowMem.h>
 
@@ -168,11 +169,11 @@ nsMacMessagePump::DoMessagePump()
 		{
 			DoIdle(theEvent);
 			if (mRunning)
-				LPeriodical::DevoteTimeToIdlers(theEvent);
+				Repeater::DoIdlers(theEvent);
 		}
 
 		if (mRunning)
-			LPeriodical::DevoteTimeToRepeaters(theEvent);
+			Repeater::DoRepeaters(theEvent);
 	}
 
   return NS_OK;		// a PR_BOOL? Should be PR_TRUE or PR_FALSE. Which is unclear
@@ -257,7 +258,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				Point oldPt = anEvent.where;
 				while (::WaitMouseUp())
 				{
-					LPeriodical::DevoteTimeToRepeaters(anEvent);
+			        Repeater::DoRepeaters(anEvent);
 
 					Point origin = {0,0};
 					::LocalToGlobal(&origin);
