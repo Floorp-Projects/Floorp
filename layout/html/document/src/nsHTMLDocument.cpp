@@ -599,17 +599,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));  
-  PRBool override = PR_FALSE;
-
-  nsCOMPtr<nsIPref> prf(do_GetService(NS_PREF_PROGID));
-  if (prf) {
-    char * toOverride = nsnull;
-    if(NS_SUCCEEDED(prf->CopyCharPref("intl.charset.override", &toOverride)))
-    {
-      if (toOverride[0] != 0) override = PR_TRUE;
-      PR_FREEIF(toOverride);
-    }
-  }
 
   //
   // The following logic is mirrored in nsWebShell::Embed!
@@ -699,12 +688,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         Recycle(forceCharsetFromWebShell);
 				//TODO: we should define appropriate constant for force charset
 				charsetSource = kCharsetFromPreviousLoading;  
-          } else if ((dcInfo.get() != NULL) && (override)) {
+          } else if (dcInfo) {
             nsCOMPtr<nsIAtom> csAtom;
             dcInfo->GetForcedCharset(getter_AddRefs(csAtom));
             if (csAtom.get() != NULL) {
               csAtom->ToString(charset);
               charsetSource = kCharsetFromPreviousLoading;  
+              dcInfo->SetForcedCharset(NULL);
             }
           }
     }
