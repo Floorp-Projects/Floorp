@@ -38,6 +38,8 @@ class nsIFrame;
 
 class nsIStyleSet : public nsISupports {
 public:
+  // Style sheets are ordered, most significant first
+  // NOTE: this is the reverse of the way documents store the sheets
   virtual void AppendOverrideStyleSheet(nsIStyleSheet* aSheet) = 0;
   virtual void InsertOverrideStyleSheetAfter(nsIStyleSheet* aSheet,
                                              nsIStyleSheet* aAfterSheet) = 0;
