@@ -459,7 +459,7 @@ nsScrollFrame::GetSkipSides() const
 NS_IMETHODIMP
 nsScrollFrame::ListTag(FILE* out) const
 {
-  fputs("*scrollframe<", out);
+  fputs("*ScrollFrame<", out);
   nsIAtom* atom;
   mContent->GetTag(atom);
   if (nsnull != atom) {

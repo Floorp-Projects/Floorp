@@ -1042,7 +1042,6 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
                                        nsIStyleContext* aStyleContext,
                                        nsIFrame*&       aNewFrame)
 {
-    // This should only be the case for the root content object.
 #ifdef NS_DEBUG
     nsIDocument*  doc;
     nsIContent*   rootContent;
@@ -1072,11 +1071,42 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
     // Set the style context
     aNewFrame->SetStyleContext(aPresContext, aStyleContext);
   
-    // Process the child content, and initialize the frame
-    nsIFrame* childList;
+    // See if we're paginated
+    if (aPresContext->IsPaginated()) {
+      nsIFrame* pageSequenceFrame;
+
+      // Create a simple page sequence frame
+      rv = NS_NewSimplePageSequenceFrame(aContent, aNewFrame, pageSequenceFrame);
+      if (NS_SUCCEEDED(rv)) {
+        nsIFrame* childList;
+
+        // Set the page sequence frame's style context
+        // XXX This isn't the correct style context to use...
+        nsIStyleContext*  pseudoStyle;
+        pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                                 nsHTMLAtoms::columnPseudo,
+                                                                 aStyleContext);
+        pageSequenceFrame->SetStyleContext(aPresContext, pseudoStyle);
+        NS_RELEASE(pseudoStyle);
+
+        // Process the child content, and initialize the page sequence frame
+        rv = ProcessChildren(aPresContext, pageSequenceFrame, aContent, childList);
+        if (NS_SUCCEEDED(rv)) {
+          pageSequenceFrame->Init(*aPresContext, childList);
   
-    rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
-    aNewFrame->Init(*aPresContext, childList);
+          // Set the root frame's initial child list
+          aNewFrame->Init(*aPresContext, pageSequenceFrame);
+        }
+      }
+    } else {
+      nsIFrame* childList;
+
+      // Process the child content, and initialize the frame
+      rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
+      if (NS_SUCCEEDED(rv)) {
+        aNewFrame->Init(*aPresContext, childList);
+      }
+    }
   }
 
   return rv;
@@ -1431,28 +1461,32 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX Applies to replaced elements, too, but how to tell if the element
         // is replaced?
         if (nsnull != aFrameSubTree) {
-          if (display->IsBlockLevel() && IsScrollable(aFrameSubTree, display)) {
-            nsIFrame* scrollFrame;
+          // If we're paginated then don't ever make the BODY scrollable
+          // XXX Use a special BODY rule for paged media
+          if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
+            if (display->IsBlockLevel() && IsScrollable(aFrameSubTree, display)) {
+              nsIFrame* scrollFrame;
+    
+              if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+                // The scroll frame gets the original style context, and the scrolled
+                // frame gets a SCROLLED-CONTENT pseudo element style context.
+                scrollFrame->SetStyleContext(aPresContext, styleContext);
   
-            if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
-              // The scroll frame gets the original style context, and the scrolled
-              // frame gets a SCROLLED-CONTENT pseudo element style context.
-              scrollFrame->SetStyleContext(aPresContext, styleContext);
-
-              nsIStyleContext*  pseudoStyle;
-              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                                       nsHTMLAtoms::scrolledContentPseudo,
-                                                                       styleContext);
-              aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
-              NS_RELEASE(pseudoStyle);
-
-              // Reset the scrolled frame's geometric and content parent
-              aFrameSubTree->SetGeometricParent(scrollFrame);
-              aFrameSubTree->SetContentParent(scrollFrame);
-
-              // Initialize the scroll frame
-              scrollFrame->Init(*aPresContext, aFrameSubTree);
-              aFrameSubTree = scrollFrame;
+                nsIStyleContext*  pseudoStyle;
+                pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                                         nsHTMLAtoms::scrolledContentPseudo,
+                                                                         styleContext);
+                aFrameSubTree->SetStyleContext(aPresContext, pseudoStyle);
+                NS_RELEASE(pseudoStyle);
+  
+                // Reset the scrolled frame's geometric and content parent
+                aFrameSubTree->SetGeometricParent(scrollFrame);
+                aFrameSubTree->SetContentParent(scrollFrame);
+  
+                // Initialize the scroll frame
+                scrollFrame->Init(*aPresContext, aFrameSubTree);
+                aFrameSubTree = scrollFrame;
+              }
             }
           }
         }

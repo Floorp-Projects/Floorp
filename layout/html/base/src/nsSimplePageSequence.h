@@ -32,6 +32,10 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
+  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect);
+
   // Debugging
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 };
