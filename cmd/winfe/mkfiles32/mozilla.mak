@@ -171,12 +171,7 @@ _MSC_VER=1020
 #       This is so 16 bits can compile only portions desired
 #               as debug (and still link).
 #
-!if "$(MOZ_BITS)"=="32"
-#CFLAGS_RELEASE=/DNDEBUG \
-CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon \
-!else
 CFLAGS_RELEASE=/DNDEBUG \
-!endif
 !IF "$(MOZ_BITS)"=="32"
     /MD /O1
 !ELSE
@@ -208,12 +203,7 @@ MOZ_STACK=33679
 
 !if defined(MOZ_DEBUG)
 VERSTR=Dbg
-!if "$(MOZ_BITS)"=="32"
-#CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
-CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon\
-!else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
-!endif
 !IF "$(MOZ_BITS)"=="32"
 	/Gm /Gi \
 !IF 0 #defined(MOZ_BATCH)
