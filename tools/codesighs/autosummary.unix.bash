@@ -35,6 +35,17 @@
 #
 
 #
+# Check for optional objdir
+# 
+if [ "$1" = "-o" ]; then 
+OBJROOT="$2"
+shift
+shift
+else
+OBJROOT="./mozilla"
+fi
+
+#
 #   A little help for my friends.
 #
 if [ "-h" == "$1" ];then 
@@ -80,7 +91,6 @@ if [ $SHOWHELP ]; then
     exit
 fi
 
-
 #
 #   Stash our arguments away.
 #
@@ -118,9 +128,9 @@ fi
 ALLFILES="$MYTMPDIR/allfiles.list"
 
 if [ $OSTYPE == "Darwin" ]; then
-find ./mozilla/dist/bin ! -type d > $ALLFILES
+find $OBJROOT/dist/bin ! -type d > $ALLFILES
 else
-find ./mozilla/dist/bin -not -type d > $ALLFILES
+find $OBJROOT/dist/bin -not -type d > $ALLFILES
 fi
 
 #
@@ -143,7 +153,7 @@ fi
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-./mozilla/dist/bin/nm2tsv --input $NMRESULTS > $RAWTSVFILE
+$OBJROOT/dist/bin/nm2tsv --input $NMRESULTS > $RAWTSVFILE
 
 
 #
@@ -163,9 +173,9 @@ rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --input $DIFFFILE >> $SUMMARYFILE
+  $OBJROOT/dist/bin/maptsvdifftool $ZERODRIFT --input $DIFFFILE >> $SUMMARYFILE
 else
-  ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
+  $OBJROOT/dist/bin/codesighs --modules --input $COPYSORTTSV >> $SUMMARYFILE
 fi
 
 
@@ -180,13 +190,13 @@ fi
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesize:"
 fi
-./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV
+$OBJROOT/dist/bin/codesighs --totalonly --input $COPYSORTTSV
 
 if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesizeDiff:"
 fi
-    ./mozilla/dist/bin/maptsvdifftool $ZERODRIFT --summary --input $DIFFFILE
+    $OBJROOT/dist/bin/maptsvdifftool $ZERODRIFT --summary --input $DIFFFILE
 fi
 
 #
