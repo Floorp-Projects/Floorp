@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: LDIF.pm,v 1.4 1998/08/13 11:02:40 leif Exp $
+# $Id: LDIF.pm,v 1.5 1998/08/13 21:32:50 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -251,11 +251,6 @@ This package can be retrieved from a number of places, including:
 
     http://www.mozilla.org/directory/
     Your local CPAN server
-
-=head1 AUTHOR INFORMATION
-
-Address bug reports and comments to the Netscape DevEdge newsgroups at:
-nntps://secnews.netscape.com/netscape.dev.directory.
 
 =head1 CREDITS
 
