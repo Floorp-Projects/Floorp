@@ -779,4 +779,15 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord
 
 
 
+NS_IMETHODIMP 
+nsHTMLButtonControlFrame::AppendFrames(nsIPresContext* aPresContext,
+                                       nsIPresShell&   aPresShell,
+                                       nsIAtom*        aListName,
+                                       nsIFrame*       aFrameList)
+{
+  return mFrames.FirstChild()->AppendFrames(aPresContext,
+                                     aPresShell,
+                                     aListName,
+                                     aFrameList);
+}
 

@@ -98,6 +98,10 @@ public:
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
  
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ButtonControl", aResult);
