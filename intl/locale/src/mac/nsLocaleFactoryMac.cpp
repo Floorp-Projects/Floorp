@@ -21,6 +21,7 @@
 #include "nsIFactory.h"
 #include "nsCollationMac.h"
 #include "nsDateTimeFormatMac.h"
+#include "nsLocaleFactoryMac.h"
 
 
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -29,30 +30,6 @@ NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
-
-class nsLocaleMacFactory : public nsIFactory
-{   
-  public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
-
-    nsLocaleMacFactory(const nsCID &aClass);   
-    ~nsLocaleMacFactory();   
-
-  private:   
-    nsrefcnt  mRefCnt;   
-    nsCID     mClassID;
-};
 
 nsLocaleMacFactory::nsLocaleMacFactory(const nsCID &aClass)   
 {   
@@ -147,27 +124,3 @@ nsresult nsLocaleMacFactory::LockFactory(PRBool aLock)
   // Not implemented in simplest case.  
   return NS_OK;
 }  
-
-// return the proper factory to the caller
-//
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsIFactory **aFactory)
-{
-  if (NULL == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIFactory *inst = NULL;
-
-  inst = new nsLocaleMacFactory(aCID);
-  if(NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }
-
-  nsresult res = inst->QueryInterface(kIFactoryIID, (void**)aFactory);
-  if (NS_FAILED(res)) {
-    *aFactory = NULL;
-    delete inst;
-  }
-
-  return res;
-}
