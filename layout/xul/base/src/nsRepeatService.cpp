@@ -29,8 +29,13 @@
 
 #include "nsRepeatService.h"
 
+#if XP_MAC
+#define INITAL_REPEAT_DELAY 250
+#define REPEAT_DELAY        10
+#else
 #define INITAL_REPEAT_DELAY 250
 #define REPEAT_DELAY        50
+#endif
 
 nsCOMPtr<nsITimerCallback> nsRepeatService::gInstance = new nsRepeatService();
 
