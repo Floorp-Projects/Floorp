@@ -1,6 +1,6 @@
 
-.outliner-scrollbar[hidescrollbar="true"] {
-  visibility: collapse;
+.autocomplete-result-popupset {
+  width: 0 !important;
 }
 
 .autocomplete-result-popup {
@@ -17,3 +17,6 @@ popupset {
   width: 0px;
 }
 
+outlinercolpicker {
+  display: none;
+}
