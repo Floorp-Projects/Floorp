@@ -81,6 +81,8 @@ public:
 protected:
     virtual ~nsDocumentOpenInfo();
 
+    nsDocumentOpenInfo* Clone();
+
 protected:
     nsCOMPtr<nsIURIContentListener> m_contentListener;
     nsCOMPtr<nsIStreamListener> m_targetStreamListener;
@@ -112,6 +114,20 @@ nsresult nsDocumentOpenInfo::Init(nsISupports * aWindowContext)
   nsresult rv = NS_OK;
   m_contentListener = do_GetInterface(aWindowContext, &rv);
   return rv;
+}
+
+nsDocumentOpenInfo* nsDocumentOpenInfo::Clone()
+{
+  nsDocumentOpenInfo* newObject;
+
+  newObject = new nsDocumentOpenInfo();
+  if (newObject) {
+    newObject->m_contentListener = m_contentListener;
+    newObject->mCommand          = mCommand;
+    newObject->m_windowTarget    = m_windowTarget;
+  }
+
+  return newObject;
 }
 
 nsresult nsDocumentOpenInfo::Open(nsIURI *aURI, 
@@ -223,6 +239,8 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIChannel * aChannel, nsISuppor
   if (m_targetStreamListener)
     m_targetStreamListener->OnStopRequest(aChannel, aCtxt, aStatus, errorMsg);
 
+  m_targetStreamListener = 0;
+
   return NS_OK;
 }
 
@@ -281,13 +299,32 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
       nsAutoString aUnicSrc (aSrcContentType);
       nsAutoString aUniTo (aOutContentType);
 
+      nsDocumentOpenInfo* nextLink;
+
+      // When applying stream converters, it is necessary to "insert" an 
+      // intermediate nsDocumentOpenInfo instance to handle the targeting of
+      // the "final" stream or streams.
+      //
+      // For certain content types (ie. multi-part/x-mixed-replace) the input
+      // stream is split up into multiple destination streams.  This
+      // intermediate instance is used to target these "converted" streams...
+      //
+      nextLink = Clone();
+      if (!nextLink) return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(nextLink);
+
+      // Set up the final destination listener.
+      nextLink->m_targetStreamListener = aStreamListener;
+
       // The following call binds this channelListener's mNextListener (typically
       // the nsDocumentBindInfo) to the underlying stream converter, and returns
       // the underlying stream converter which we then set to be this channelListener's
       // mNextListener. This effectively nestles the stream converter down right
       // in between the raw stream and the final listener.
-      rv = StreamConvService->AsyncConvertData(aUnicSrc.GetUnicode(), aUniTo.GetUnicode(), aStreamListener, aChannel,
+      rv = StreamConvService->AsyncConvertData(aUnicSrc.GetUnicode(), aUniTo.GetUnicode(), nextLink, aChannel,
                                              getter_AddRefs(m_targetStreamListener));
+
+      NS_RELEASE(nextLink);
   }
   else
     m_targetStreamListener = aStreamListener; // no converter necessary so use a direct pipe
