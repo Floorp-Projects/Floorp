@@ -263,8 +263,8 @@ Rights Reserved.
 
   <toolbox>
      <menubar>
-    <menu id="fileMenu" value="&fileMenu.label;">
-	  <menupopup>
+    <menu value="&fileMenu.label;">
+	  <menupopup id="fileMenu">
       <menu value="&newMenu.label;">
         <menupopup>
 		<menuitem value="&newNavCmd.label;" onaction="NewBrowserWindow();"/>
