@@ -97,6 +97,9 @@ RAPTOR_LAYOUT_DIR       = $(MOZ_TOP)/layout
 TREX_GCONFIG_BRANCH     = 
 TREX_GCONFIG_DIR        = $(MOZ_TOP)/gconfig
 
+TREX_MSGSDK_BRANCH      = 
+TREX_MSGSDK_DIR         = mozilla/msgsdk
+
 TREX_XPFC_BRANCH        = 
 TREX_XPFC_DIR           = mozilla/xpfc
 
@@ -213,6 +216,7 @@ pull_trex::
     @echo +++ trex.mak: checking out trex with "$(CVTREX)"
     cd $(MOZ_SRC)\.
     -$(CVS)  $(TREX_GCONFIG_BRANCH)  $(TREX_GCONFIG_DIR)
+    -$(CVS)  $(TREX_MSGSDK_BRANCH)   $(TREX_MSGSDK_DIR)
     -$(CVS)  $(TREX_XPFC_BRANCH)     $(TREX_XPFC_DIR)
     -$(CVS)  $(TREX_TREX_BRANCH)     $(TREX_TREX_DIR)
     cd $(MOZ_SRC)\.
@@ -241,6 +245,8 @@ build_julian::
     cd $(MOZ_SRC)\.
 
 build_trex:: 
+    cd $(MOZ_SRC)\$(MOZ_TOP)\msgsdk
+    gmake buildC
     cd $(MOZ_SRC)\$(MOZ_TOP)\xpfc
     nmake -f makefile.win
     cd $(MOZ_SRC)\$(MOZ_TOP)\calendar
@@ -281,6 +287,8 @@ clobber_julian::
     cd $(MOZ_SRC)\.
 
 clobber_trex::
+    cd $(MOZ_SRC)\$(MOZ_TOP)\msgsdk
+    gmake FRESH
     cd $(MOZ_SRC)\$(MOZ_TOP)\xpfc
     nmake -f makefile.win clobber_all
     cd $(MOZ_SRC)\$(MOZ_TOP)\calendar
