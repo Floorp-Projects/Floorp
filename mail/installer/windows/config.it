@@ -185,7 +185,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup
 ;*** LOCALIZE ME BABY ***
-MessageWelcome=Welcome to %s.
+MessageWelcome=Welcome to %s!
 ;*** LOCALIZE ME BABY ***
 Message0=You are about to install %s $Version$.
 ;*** LOCALIZE ME BABY ***
