@@ -213,6 +213,10 @@ struct nsHTMLReflowState : nsReflowState {
  */
 class nsIHTMLReflow : public nsIFrameReflow<nsHTMLReflowState, nsHTMLReflowMetrics>
 {
+public:
+  // Helper method used by block reflow to identify runs of text so that
+  // proper word-breaking can be done.
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout) = 0;
 };
 
 //----------------------------------------------------------------------

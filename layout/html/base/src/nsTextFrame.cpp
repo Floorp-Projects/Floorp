@@ -145,10 +145,7 @@ public:
                          PRInt32&        aOffset);
 
   // nsIHTMLReflow
-#if 0
-  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
-                          nsIReflowCommand* aReflowCommand);
-#endif
+  NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -1192,17 +1189,14 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   NS_RELEASE(doc);
 }
 
-#if 0
 NS_IMETHODIMP
-TextFrame::FindTextRuns(nsLineLayout&  aLineLayout,
-                        nsIReflowCommand* aReflowCommand)
+TextFrame::FindTextRuns(nsLineLayout& aLineLayout)
 {
   if (nsnull == mPrevInFlow) {
     aLineLayout.AddText(this);
   }
   return NS_OK;
 }
-#endif
 
 //---------------------------------------------------
 // Uses a binary search for find where the cursor falls in the line of text
