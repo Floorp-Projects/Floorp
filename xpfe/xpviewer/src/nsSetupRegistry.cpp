@@ -34,7 +34,7 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
-#include "nsIEditor.h"
+#include "nsEditorCID.h"
 
 #ifdef XP_PC
 
@@ -128,6 +128,7 @@ static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CI
 static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
+static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
@@ -140,7 +141,7 @@ static NS_DEFINE_IID(kCMenuButtonCID, NS_MENUBUTTON_CID);
 static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
-static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kCEditorCID, NS_EDITOR_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -184,6 +185,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCRangeListCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
@@ -196,8 +198,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
-
 #ifndef XP_MAC		// temporary
-  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCEditorCID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif // XP_MAC
 }

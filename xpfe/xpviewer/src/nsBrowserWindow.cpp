@@ -97,6 +97,7 @@
 #endif
 
 #include "nsIEditor.h"
+#include "nsEditorCID.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -179,6 +180,7 @@ static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
+static NS_DEFINE_IID(kIEditorCID, NS_EDITOR_CID);
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -2845,7 +2847,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
           if (NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID, (void **)&domDoc)))
           { //returns an addreffed domdocument
             nsIEditor *editor;
-            if (NS_SUCCEEDED(nsRepository::CreateInstance(kIEditFactoryIID, nsnull, kIEditorIID, (void **)&editor)))
+            if (NS_SUCCEEDED(nsRepository::CreateInstance(kIEditorCID, nsnull, kIEditorIID, (void **)&editor)))
             {
               editor->Init(domDoc);
               AddEditor(editor); //new call to set the editor interface this will addref
