@@ -35,6 +35,7 @@ use vars qw($unconfirmedstate $legal_keywords @legal_platform
 
 use CGI::Carp qw(fatalsToBrowser);
 
+use Bugzilla;
 use Bugzilla::Attachment;
 use Bugzilla::Config;
 use Bugzilla::Constants;
@@ -109,6 +110,7 @@ sub new {
 sub initBug  {
   my $self = shift();
   my ($bug_id, $user_id) = (@_);
+  my $dbh = Bugzilla->dbh;
 
   $bug_id = trim($bug_id);
 
@@ -150,16 +152,18 @@ sub initBug  {
       estimated_time, remaining_time, DATE_FORMAT(deadline,'%Y-%m-%d')
     from bugs left join votes using(bug_id),
       classifications, products, components
-    where bugs.bug_id = $bug_id
+    WHERE bugs.bug_id = ?
       AND classifications.id = products.classification_id
       AND products.id = bugs.product_id
       AND components.id = bugs.component_id
     group by bugs.bug_id";
 
-  &::SendSQL($query);
-  my @row = ();
+  my $bug_sth = $dbh->prepare($query);
+  $bug_sth->execute($bug_id);
+  my @row;
 
-  if ((@row = &::FetchSQLData()) && $self->{'who'}->can_see_bug($bug_id)) {
+  if ((@row = $bug_sth->fetchrow_array()) 
+      && $self->{'who'}->can_see_bug($bug_id)) {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "alias", "classification_id", "classification",
@@ -205,17 +209,16 @@ sub initBug  {
   }
 
   if (@::legal_keywords) {
-    &::SendSQL("SELECT keyworddefs.name 
+    # Get all entries and make them an array.
+    my $list_ref = $dbh->selectcol_arrayref(
+           "SELECT keyworddefs.name
               FROM keyworddefs, keywords
-             WHERE keywords.bug_id = $bug_id 
+             WHERE keywords.bug_id = ?
                AND keyworddefs.id = keywords.keywordid
-          ORDER BY keyworddefs.name");
-    my @list;
-    while (&::MoreSQLData()) {
-        push(@list, &::FetchOneColumn());
-    }
-    if (@list) {
-      $self->{'keywords'} = join(', ', @list);
+          ORDER BY keyworddefs.name",
+        undef, ($bug_id));
+    if ($list_ref) {
+      $self->{'keywords'} = join(', ', @$list_ref);
     }
   }
 
@@ -329,6 +332,7 @@ sub groups {
 
     return $self->{'groups'} if exists $self->{'groups'};
 
+    my $dbh = Bugzilla->dbh;
     my @groups;
 
     # Some of this stuff needs to go into Bugzilla::User
@@ -338,26 +342,28 @@ sub groups {
     # user_group_map record putting the user in that group.
     # The LEFT JOINs are checking for record existence.
     #
-    &::SendSQL("SELECT DISTINCT groups.id, name, description," .
+    my $sth = $dbh->prepare(
+             "SELECT DISTINCT groups.id, name, description," .
              " bug_group_map.group_id IS NOT NULL," .
              " user_group_map.group_id IS NOT NULL," .
              " isactive, membercontrol, othercontrol" .
              " FROM groups" . 
              " LEFT JOIN bug_group_map" .
              " ON bug_group_map.group_id = groups.id" .
-             " AND bug_id = $self->{'bug_id'}" .
+             " AND bug_id = ?" .
              " LEFT JOIN user_group_map" .
              " ON user_group_map.group_id = groups.id" .
-             " AND user_id = $::userid" .
+             " AND user_id = ?" .
              " AND isbless = 0" .
              " LEFT JOIN group_control_map" .
              " ON group_control_map.group_id = groups.id" .
-             " AND group_control_map.product_id = " . $self->{'product_id'} .
+             " AND group_control_map.product_id = ? " .
              " WHERE isbuggroup = 1");
+    $sth->execute($self->{'bug_id'}, Bugzilla->user->id,
+                  $self->{'product_id'});
 
-    while (&::MoreSQLData()) {
-        my ($groupid, $name, $description, $ison, $ingroup, $isactive,
-            $membercontrol, $othercontrol) = &::FetchSQLData();
+    while (my ($groupid, $name, $description, $ison, $ingroup, $isactive,
+            $membercontrol, $othercontrol) = $sth->fetchrow_array()) {
 
         $membercontrol ||= 0;
 
@@ -391,8 +397,6 @@ sub groups {
 sub user {
     my $self = shift;
     return $self->{'user'} if exists $self->{'user'};
-
-    use Bugzilla;
 
     my @movers = map { trim $_ } split(",", Param("movers"));
     my $canmove = Param("move-enabled") && Bugzilla->user->id && 
@@ -483,18 +487,17 @@ sub choices {
 }
 
 sub EmitDependList {
-  my ($myfield, $targetfield, $bug_id) = (@_);
-  my @list;
-  &::SendSQL("select dependencies.$targetfield, bugs.bug_status
-           from dependencies, bugs
-           where dependencies.$myfield = $bug_id
-             and bugs.bug_id = dependencies.$targetfield
-           order by dependencies.$targetfield");
-  while (&::MoreSQLData()) {
-    my ($i, $stat) = (&::FetchSQLData());
-    push @list, $i;
-  }
-  return @list;
+    my ($myfield, $targetfield, $bug_id) = (@_);
+    my $dbh = Bugzilla->dbh;
+    my $list_ref =
+        $dbh->selectcol_arrayref(
+          "SELECT dependencies.$targetfield
+             FROM dependencies, bugs
+            WHERE dependencies.$myfield = ?
+              AND bugs.bug_id = dependencies.$targetfield
+         ORDER BY dependencies.$targetfield",
+         undef, ($bug_id));
+    return @$list_ref;
 }
 
 sub ValidateTime {
