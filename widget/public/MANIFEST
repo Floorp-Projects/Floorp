@@ -3,7 +3,6 @@
 #
 
 nsIDragSessionMac.h
-nsui.h
 nsIWidget.h
 nsIButton.h
 nsICheckButton.h

@@ -35,7 +35,6 @@ EXPORTS		= \
 		nsIPopUpMenu.h \
 		nsIFileWidget.h \
 		nsStringUtil.h \
-		nsui.h \
 		nsIWidget.h \
 		nsIButton.h \
 		nsICheckButton.h \
