@@ -53,16 +53,16 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
   if (aIID.Equals(kIMenuListenerIID)) {                                      
     *aInstancePtr = (void*)(nsIMenuListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                     
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
   return NS_NOINTERFACE;                                                 
 }
 
@@ -81,7 +81,8 @@ nsMenu::nsMenu() : nsIMenu()
   mMenuBarParent = nsnull;
   mMenuParent    = nsnull;
   mListener      = nsnull;
-  mItems         = new nsVoidArray;
+  nsresult result = NS_NewISupportsArray(&mItems);
+  //NS_ASSERT(result == NS_OK);
 }
 
 //-------------------------------------------------------------------------
@@ -94,6 +95,9 @@ nsMenu::~nsMenu()
   NS_IF_RELEASE(mMenuBarParent);
   NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mListener);
+
+  // Remove all references to the items
+  mItems->Clear();
 }
 
 
@@ -161,6 +165,8 @@ NS_METHOD nsMenu::AddItem(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+// This does not return a ref counted object
+// This is NOT an nsIMenu method
 nsIMenuBar * nsMenu::GetMenuBar(nsIMenu * aMenu)
 {
   if (!aMenu) {
@@ -181,6 +187,8 @@ nsIMenuBar * nsMenu::GetMenuBar(nsIMenu * aMenu)
 }
 
 //-------------------------------------------------------------------------
+// This does not return a ref counted object
+// This is NOT an nsIMenu method
 nsIWidget *  nsMenu::GetParentWidget()
 {
   nsIWidget  * parent  = nsnull;
@@ -196,41 +204,13 @@ nsIWidget *  nsMenu::GetParentWidget()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 {
-  /*PRUint32 command;
-  nsString name;
-
-  aMenuItem->GetCommand(command);
-  aMenuItem->GetLabel(name);
-  mItems->AppendElement((nsISupports *)aMenuItem);
-  nsIWidget * win = GetParentWidget();
-  PRInt32 id = ((nsWindow *)win)->GetNewCmdMenuId();
-  ((nsMenuItem *)aMenuItem)->SetCmdId(id);
-
-  char * nameStr = name.ToNewCString();
-
-  MENUITEMINFO menuInfo;
-  menuInfo.cbSize     = sizeof(menuInfo);
-  menuInfo.fMask      = MIIM_TYPE | MIIM_ID;
-  menuInfo.fType      = MFT_STRING;
-  menuInfo.dwTypeData = nameStr;
-  menuInfo.wID        = (DWORD)id;
-  menuInfo.cch        = strlen(nameStr);
-
-  BOOL status = ::InsertMenuItem(mMenu, mItems->Count(), TRUE, &menuInfo);
-
-  delete[] nameStr;
-*/
-  InsertItemAt(mItems->Count(), (nsISupports *)aMenuItem);
-  return NS_OK;
+  return InsertItemAt(mItems->Count(), (nsISupports *)aMenuItem);
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
-
-  InsertItemAt(mItems->Count(), (nsISupports *)aMenu);
-  return NS_OK;
-
+  return InsertItemAt(mItems->Count(), (nsISupports *)aMenu);
 }
 
 //-------------------------------------------------------------------------
@@ -252,7 +232,6 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem)
 {
   aMenuItem = (nsISupports *)mItems->ElementAt(aCount);
-
   return NS_OK;
 }
 
@@ -261,8 +240,6 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
 {
   nsString name;
   BOOL status = FALSE;
-
-  NS_ADDREF(aMenuItem);
 
   mItems->InsertElementAt(aMenuItem, (PRInt32)aCount);
 
@@ -291,7 +268,7 @@ NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenuItem)
     if (menu) {
       nsString name;
       menu->GetLabel(name);
-      mItems->AppendElement((nsISupports *)(nsIMenu *)menu);
+      //mItems->AppendElement((nsISupports *)(nsIMenu *)menu);
 
       char * nameStr = name.ToNewCString();
 
@@ -324,7 +301,6 @@ NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
   nsMenuItem * item = new nsMenuItem();
   item->Create(this);
   mItems->InsertElementAt((nsISupports *)(nsIMenuItem *)item, (PRInt32)aCount);
-  NS_ADDREF((nsIMenuItem *)item);
 
   MENUITEMINFO menuInfo;
 
@@ -341,8 +317,7 @@ NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
 NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 {
 
-  nsISupports * supports = (nsISupports *)mItems->ElementAt(aCount);
-  NS_RELEASE(supports);
+  //nsISupports * supports = (nsISupports *)mItems->ElementAt(aCount);
   mItems->RemoveElementAt(aCount);
 
   return (::RemoveMenu(mMenu, aCount, MF_BYPOSITION) ? NS_OK:NS_ERROR_FAILURE);
@@ -352,10 +327,7 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
 NS_METHOD nsMenu::RemoveAll()
 {
   while (mItems->Count()) {
-    nsISupports * supports = (nsISupports *)mItems->ElementAt(0);
-    NS_RELEASE(supports);
     mItems->RemoveElementAt(0);
-
     ::RemoveMenu(mMenu, 0, MF_BYPOSITION);
   }
   return NS_OK;
