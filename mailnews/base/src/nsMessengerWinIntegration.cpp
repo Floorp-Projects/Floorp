@@ -57,6 +57,11 @@
 
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsIBaseWindow.h"
+#include "nsIWidget.h"
+
 #include "nsIMessengerWindowService.h"
 #include "prprf.h"
 #include "nsIWeakReference.h"
@@ -78,6 +83,40 @@
 #undef GetUserName
 #endif
 
+// begin shameless copying from nsNativeAppSupportWin
+HWND hwndForDOMWindow( nsISupports *window ) 
+{
+  nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
+  if ( !ppScriptGlobalObj )
+      return 0;
+  nsCOMPtr<nsIDocShell> ppDocShell;
+  ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
+  if ( !ppDocShell ) return 0;
+  
+  nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+  if (!ppBaseWindow) return 0;
+
+  nsCOMPtr<nsIWidget> ppWidget;
+  ppBaseWindow->GetMainWidget( getter_AddRefs( ppWidget ) );
+
+  return (HWND)( ppWidget->GetNativeData( NS_NATIVE_WIDGET ) );
+}
+
+static void activateWindow( nsIDOMWindowInternal *win ) 
+{
+  // Try to get native window handle.
+  HWND hwnd = hwndForDOMWindow( win );
+  if ( hwnd ) 
+  {
+    // Restore the window if it is minimized.
+    if ( ::IsIconic( hwnd ) ) 
+      ::ShowWindow( hwnd, SW_RESTORE );
+    // Use the OS call, if possible.
+    ::SetForegroundWindow( hwnd );
+  } else // Use internal method.  
+    win->Focus();
+}
+// end shameless copying from nsNativeAppWinSupport.cpp
 
 // Message window encapsulation.
 struct MessageWindow 
@@ -86,12 +125,31 @@ struct MessageWindow
     MessageWindow() 
     {
       Create();
+      // dummy code to force creation of our string
+      const char * fakeName = mailWinName();
     }
 
     // Act like an HWND.
     operator HWND() 
     {
         return mHandle;
+    }
+
+    // for some reason WindowProc can't access the string literal "mail:3pane", we need to copy that string
+    // into a static buffer outside of the WindowProc call. 
+    static const char * mailWinName()
+    {
+      static char mailNameBuffer[128];
+      static char *mMailWinName = 0;
+      if ( !mMailWinName ) 
+      {
+        ::_snprintf( mailNameBuffer,
+                     sizeof mailNameBuffer,
+                     "%s",
+                     "mail:3pane" );
+        mMailWinName = mailNameBuffer;
+      }
+      return mMailWinName;
     }
 
     // Class name: appName + "MessageWindow"
@@ -156,9 +214,12 @@ struct MessageWindow
            if (mediator)
            {
              nsCOMPtr<nsIDOMWindowInternal> domWindow;
-             mediator->GetMostRecentWindow( NS_LITERAL_STRING("mail:3pane").get(), getter_AddRefs(domWindow));
+             nsAutoString mailName;
+             mailName.AssignWithConversion(mailWinName());
+
+             mediator->GetMostRecentWindow( mailName.get(), getter_AddRefs(domWindow));
              if (domWindow)
-               domWindow->Focus();
+               activateWindow(domWindow);
              else
              {
                // the user doesn't have a mail window open already so open one for them...
