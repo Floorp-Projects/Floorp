@@ -64,14 +64,17 @@ gboolean enable_debug             = FALSE;
 gboolean enable_warnings          = FALSE;
 gboolean verbose_mode             = FALSE;
 gboolean emit_typelib_annotations = FALSE;
+gboolean explicit_output_filename = FALSE;
 
 static char xpidl_usage_str[] =
-"Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
+"Usage: %s [-m mode] [-w] [-v]\n"
+"          [-I path] [-o basename | -e filename.ext] filename.idl\n"
 "       -a emit annotations to typelib\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
 "       -o use basename (e.g. ``/tmp/nsIThing'') for output\n"
+"       -e use explicit output filename\n"
 "       -m specify output mode:\n";
 
 static void
@@ -154,8 +157,17 @@ int main(int argc, char *argv[])
                 xpidl_usage(argc, argv);
                 return 1;
             }
-            file_basename = argv[i + 1];
-            i++;
+            file_basename = argv[++i];
+            explicit_output_filename = FALSE;
+            break;
+          case 'e':
+            if (i == argc) {
+                fprintf(stderr, "ERROR: missing basename after -e\n");
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+            file_basename = argv[++i];
+            explicit_output_filename = TRUE;
             break;
           case 'm':
             if (i == argc) {
