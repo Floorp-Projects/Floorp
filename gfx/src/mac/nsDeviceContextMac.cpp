@@ -592,4 +592,10 @@ NS_IMETHODIMP nsDeviceContextMac::GetLocalFontName(const nsString& aFaceName, ns
   return result;
 }
 
+NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  nsresult result = NS_OK;
 
+
+  return result;
+}
