@@ -1718,13 +1718,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
 
     // See if the containing block height is based on the size of its
     // content
+    nsCOMPtr<nsIAtom>  fType;
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
       // See if the containing block is (1) a scrolled frame, i.e. its
       // parent is a scroll frame. The presence of the intervening
       // frame (that the scroll frame scrolls) needs to be hidden from
       // the containingBlockHeight calcuation, or (2) a cell frame which needs
       // to use the mComputedHeight of the cell instead of what the cell block passed in.
-      nsCOMPtr<nsIAtom>  fType;
       if (cbrs->parentReflowState) {
         nsIFrame* f = cbrs->parentReflowState->frame;
         f->GetFrameType(getter_AddRefs(fType));
@@ -1800,7 +1800,12 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           aPresContext->GetCompatibilityMode(&mode);
           // in quirks mode, get the cb height using the special quirk method
           if (eCompatibility_NavQuirks == mode) {
-            aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs, PR_FALSE);
+            if (!IS_TABLE_CELL(fType)) {
+              aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs, PR_FALSE);
+            }
+            else {
+              heightUnit = eStyleUnit_Auto;
+            }
             // NOTE: since here we really do NEED the computed height of the containing block,
             //       we pass PR_FALSE for the aRestrictToFirstLevel argument, allowing the method
             //       to walk up the frame tree arbitrarily far to find a real height. This is NOT
