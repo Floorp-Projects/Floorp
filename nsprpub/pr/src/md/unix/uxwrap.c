@@ -285,10 +285,10 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 }
 
 /*
- * Linux, BSDI, FreeBSD, and Rhapsody don't have poll().
+ * Redefine poll, when supported on platforms, for local threads
  */
 
-#if !defined(LINUX) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
+#if defined(_PR_POLL_AVAILABLE)
 
 /*
  *-----------------------------------------------------------------------
@@ -317,6 +317,8 @@ int poll(struct pollfd filedes[], int nfds, int timeout)
 int poll(struct pollfd *filedes, nfds_t nfds, int timeout)
 #elif defined(OPENBSD)
 int poll(struct pollfd *filedes, int nfds, int timeout)
+#elif defined(FREEBSD)
+int poll(struct pollfd *filedes, unsigned nfds, int timeout)
 #else
 int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
 #endif
