@@ -74,8 +74,48 @@ nsXPFCObserverManager :: nsXPFCObserverManager()
 
 nsXPFCObserverManager :: ~nsXPFCObserverManager()  
 {
-  NS_IF_RELEASE(mList);
-  NS_IF_RELEASE(mState);
+  if (nsnull != mList)
+  {
+	  nsIIterator * iterator;
+
+	  mList->CreateIterator(&iterator);
+	  iterator->Init();
+
+    ListEntry * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (ListEntry *) iterator->CurrentItem();
+		  delete item;
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
+    mList->RemoveAll();
+    NS_IF_RELEASE(mList);
+  }
+
+  if (nsnull != mState)
+  {
+	  nsIIterator * iterator;
+
+	  mState->CreateIterator(&iterator);
+	  iterator->Init();
+
+    StateEntry * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (StateEntry *) iterator->CurrentItem();
+		  delete item;
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
+    mState->RemoveAll();
+    NS_IF_RELEASE(mState);
+  }
+  
   PR_DestroyMonitor(monitor);
 }
 
