@@ -342,12 +342,17 @@ function delayedStartup(aElt)
 {
   // Perform default browser checking (after window opens).
   checkForDefaultBrowser();
-  
+
   // now load bookmarks after a delay
   var bt = document.getElementById("bookmarks-toolbar");
   bt.loadBookmarksCallback();
 
   WindowFocusTimerCallback(aElt);
+
+  // Get the preferences service
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  pref = prefService.getBranch(null);
 
   // set home button tooltip text
   var homeButton = document.getElementById("home-button");
