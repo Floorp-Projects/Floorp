@@ -157,7 +157,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
 
     nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
-    RegisterNotifier(logger); // XXX [MLK] memory leak
+    RegisterNotifier(logger);
 }
 
 
