@@ -1204,6 +1204,12 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
 {
   if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl en", this, &aReflowState, nsnull);
 
+  // this is a temporary fix to prevent a recent crash due to incremental content 
+  // sink changes. this will go away when the col cache and cell map are synchronized
+  if (!IsColumnCacheValid()) {
+    CacheColFrames(aPresContext, PR_TRUE);
+  }
+
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = 0;
