@@ -114,7 +114,7 @@ NS_IMETHODIMP PluginArrayImpl::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 			return rv;
 	}
 	
-	if (aIndex >= 0 && aIndex < mPluginCount) {
+	if (aIndex < mPluginCount) {
 		*aReturn = mPluginArray[aIndex];
 		NS_IF_ADDREF(*aReturn);
 		return NS_OK;
@@ -274,7 +274,7 @@ NS_IMETHODIMP PluginElementImpl::Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)
 		if (rv != NS_OK)
 			return rv;
 	}
-	if (aIndex >= 0 && aIndex < mMimeTypeCount) {
+	if (aIndex < mMimeTypeCount) {
 		nsIDOMMimeType* mimeType = mMimeTypeArray[aIndex];
 		NS_IF_ADDREF(mimeType);
 		*aReturn = mimeType;
