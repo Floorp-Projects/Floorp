@@ -101,8 +101,8 @@ pref("mail.cc_self",                        false);
 pref("mail.limit_message_size",             false);
 pref("mail.max_size",                       50); // download message size limit
 pref("mail.deliver_immediately",            true);
-pref("mail.strictly_mime",                  true);
-pref("mail.strictly_mime_headers",  true);
+pref("mail.strictly_mime",                  false);
+pref("mail.strictly_mime_headers",          true);
 pref("mail.file_attach_binary",             false);
 pref("mail.use_signature_file",             false);
 pref("mail.show_headers",                   1); // some
