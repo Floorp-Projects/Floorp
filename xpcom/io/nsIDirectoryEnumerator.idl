@@ -29,7 +29,7 @@ interface nsIFile;
 [scriptable, uuid(D7BEA930-59D7-11d3-8C46-00609792278C)]
 interface nsIDirectoryEnumerator : nsISimpleEnumerator
 {
-    void Init(in nsIFile parent, in boolean resolveSymlinks);
+    void init(in nsIFile parent, in boolean resolveSymlinks);
 };
 
 %{C++

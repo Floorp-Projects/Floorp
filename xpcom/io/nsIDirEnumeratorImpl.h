@@ -34,7 +34,11 @@
 #ifdef XP_PC
 #include "nsIDirEnumeratorImplWin.h"
 #else
+#ifdef XP_UNIX
+#include "nsIDirEnumeratorImplUnix.h"
+#else
 #error NOT_IMPLEMENTED
-#endif
+#endif /* XP_UNIX */
+#endif /* XP_PC */
 
 #endif
