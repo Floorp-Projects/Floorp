@@ -51,7 +51,6 @@
 #import "BookmarkToolbar.h"
 #import "RunLoopMessenger.h"
 #import "CHBrowserService.h"
-#import "AboutBox.h"
 #import "UserDefaults.h"
 #import "KeychainService.h"
 #import "RemoteDataProvider.h"
