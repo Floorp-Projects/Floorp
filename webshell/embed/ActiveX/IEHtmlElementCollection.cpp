@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "stdafx.h"
+#include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"
 
 CIEHtmlElementCollection::CIEHtmlElementCollection()
@@ -25,6 +26,75 @@ CIEHtmlElementCollection::CIEHtmlElementCollection()
 CIEHtmlElementCollection::~CIEHtmlElementCollection()
 {
 }
+
+
+HRESULT CIEHtmlElementCollection::CreateFromParentNode(nsIDOMNode *pParentNode, CIEHtmlElementCollection **pInstance)
+{
+	if (pInstance == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
+	if (pParentNode == nsnull)
+	{
+		return E_INVALIDARG;
+	}
+
+	*pInstance = NULL;
+
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
+
+	// Get elements
+	nsIDOMNodeList *pIDOMNodeList = nsnull;
+	pParentNode->GetChildNodes(&pIDOMNodeList);
+	if (pIDOMNodeList)
+	{
+		PRUint32 aLength = 0;
+		pIDOMNodeList->GetLength(&aLength);
+		for (PRUint32 i = 0; i < aLength; i++)
+		{
+			nsIDOMNode *pChildNode = nsnull;
+			pIDOMNodeList->Item(i, &pChildNode);
+
+			// Create an equivalent IE element
+			CIEHtmlElementInstance *pElement = NULL;
+			CIEHtmlElementInstance::CreateInstance(&pElement);
+			if (pElement)
+			{
+				pElement->SetDOMNode(pChildNode);
+				pCollection->AddNode(pElement);
+			}
+
+			if (pChildNode)
+			{
+				pChildNode->Release();
+			}
+		}
+		pIDOMNodeList->Release();
+	}
+
+	*pInstance = pCollection;
+
+	return S_OK;
+}
+
+
+HRESULT CIEHtmlElementCollection::AddNode(IDispatch *pNode)
+{
+	if (pNode == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	m_cNodeList.push_back(pNode);
+
+	return S_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IHTMLElementCollection methods
+
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::toString(BSTR __RPC_FAR *String)
 {
@@ -36,10 +106,12 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::toString(BSTR __RPC_FAR *Str
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::put_length(long v)
 {
 	return E_NOTIMPL;
 }
+
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get_length(long __RPC_FAR *p)
 {
@@ -47,9 +119,10 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get_length(long __RPC_FAR *p
 	{
 		return E_INVALIDARG;
 	}
-	*p = m_cElementList.size();
+	*p = m_cNodeList.size();
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_FAR *__RPC_FAR *p)
 {
@@ -57,10 +130,33 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
 	return E_NOTIMPL;
 }
 
+
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::item(VARIANT name, VARIANT index, IDispatch __RPC_FAR *__RPC_FAR *pdisp)
 {
+	CComVariant vIndex;
+	if (FAILED(vIndex.ChangeType(VT_I4, &index)))
+	{
+		return E_INVALIDARG;
+	}
+
+	int nIndex = vIndex.lVal;
+	if (nIndex < 0 || nIndex >= m_cNodeList.size())
+	{
+		return E_INVALIDARG;
+	}
+
 	*pdisp = NULL;
-	return E_NOTIMPL;
+
+	IDispatch *pNode = m_cNodeList[nIndex];
+	if (pNode == NULL)
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
+	pNode->QueryInterface(IID_IDispatch, (void **) pdisp);
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::tags(VARIANT tagName, IDispatch __RPC_FAR *__RPC_FAR *pdisp)

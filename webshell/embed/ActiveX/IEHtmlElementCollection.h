@@ -15,26 +15,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef IEHTMLELEMENTCOLLECTION_H
-#define IEHTMLELEMENTCOLLECTION_H
+#ifndef IEHTMLNODECOLLECTION_H
+#define IEHTMLNODECOLLECTION_H
 
-#include "IEHtmlElement.h"
+#include "IEHtmlNode.h"
 
 class CIEHtmlElementCollection : public CComObjectRootEx<CComSingleThreadModel>,
-								 public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
+							  public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
-	std::list< CIEHtmlElement * > m_cElementList;
+	std::vector< CComQIPtr<IDispatch, &IID_IDispatch> > m_cNodeList;
 
 public:
 	CIEHtmlElementCollection();
 protected:
 	virtual ~CIEHtmlElementCollection();
 
+public:
+	// Adds a node to the collection
+	virtual HRESULT AddNode(IDispatch *pNode);
+
+	// Helper method creates a collection from a parent node
+	static HRESULT CreateFromParentNode(nsIDOMNode *pParentNode, CIEHtmlElementCollection **pInstance);
+
 BEGIN_COM_MAP(CIEHtmlElementCollection)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)
 	COM_INTERFACE_ENTRY_IID(IID_IHTMLElementCollection, IHTMLElementCollection)
 END_COM_MAP()
-
 
 	// IHTMLElementCollection methods
 	virtual HRESULT STDMETHODCALLTYPE toString(BSTR __RPC_FAR *String);
@@ -46,6 +52,5 @@ END_COM_MAP()
 };
 
 typedef CComObject<CIEHtmlElementCollection> CIEHtmlElementCollectionInstance;
-
 
 #endif

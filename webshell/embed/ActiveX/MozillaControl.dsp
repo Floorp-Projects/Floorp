@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="MozillaControl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 5.00
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) External Target" 0x0106
@@ -17,13 +17,12 @@ CFG=MozillaControl - Win32 Debug
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "MozillaControl - Win32 Release" (based on\
- "Win32 (x86) External Target")
-!MESSAGE "MozillaControl - Win32 Debug" (based on\
- "Win32 (x86) External Target")
+!MESSAGE "MozillaControl - Win32 Release" (based on "Win32 (x86) External Target")
+!MESSAGE "MozillaControl - Win32 Debug" (based on "Win32 (x86) External Target")
 !MESSAGE 
 
 # Begin Project
+# PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 
@@ -108,6 +107,10 @@ SOURCE=.\IEHtmlElement.cpp
 # Begin Source File
 
 SOURCE=.\IEHtmlElementCollection.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlNode.cpp
 # End Source File
 # Begin Source File
 
@@ -196,6 +199,10 @@ SOURCE=.\IEHtmlElement.h
 # Begin Source File
 
 SOURCE=.\IEHtmlElementCollection.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\IEHtmlNode.h
 # End Source File
 # Begin Source File
 

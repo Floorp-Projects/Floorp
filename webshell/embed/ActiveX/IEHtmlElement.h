@@ -18,12 +18,22 @@
 #ifndef IEHTMLELEMENT_H
 #define IEHTMLELEMENT_H
 
-class CIEHtmlElement :	public CComObjectRootEx<CComSingleThreadModel>,
+#include "IEHtmlNode.h"
+
+class CIEHtmlElement :	public CIEHtmlNode,
 						public IDispatchImpl<IHTMLElement, &IID_IHTMLElement, &LIBID_MSHTML>
 {
 public:
 	CIEHtmlElement();
+protected:
 	virtual ~CIEHtmlElement();
+
+public:
+
+BEGIN_COM_MAP(CIEHtmlElement)
+	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElement)
+	COM_INTERFACE_ENTRY_IID(IID_IHTMLElement, IHTMLElement)
+END_COM_MAP()
 
 	// Implementation of IHTMLElement
 	virtual HRESULT STDMETHODCALLTYPE setAttribute(BSTR strAttributeName, VARIANT AttributeValue, LONG lFlags);
@@ -118,7 +128,6 @@ public:
 #define CIEHTMLELEMENT_INTERFACES \
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElement) \
 	COM_INTERFACE_ENTRY_IID(IID_IHTMLElement, IHTMLElement)
-
 
 typedef CComObject<CIEHtmlElement> CIEHtmlElementInstance;
 
