@@ -1,0 +1,81 @@
+implementation
+--------------
+* make AsyncRead actually be asynchronous (and probably cause ldapSearch.cpp 
+  to be split and moved) by factoring out the lowlevel stuff into another
+  thread (in progress: dmose)
+
+housecleaning
+------------- 
+* are we using the right constructs for -lldap40 and -llber40 in 
+  Makefile.in?
+
+* get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
+  from nsLDAP{Connection,Operation,Message}.[ch]
+
+* why is there a JS assert after loading an LDAP URL bookmark?
+
+* switch all old-style casts to use either QI or NS_CAST_* macros
+
+* use NS_ENSURE_* on incoming args to interface methods
+
+* some (many?) destructors don't clean up completely or correctly.  
+  audit for this and fix.
+
+* many of the instance vars in the various class are probably not 
+  initialized correctly.  audit for this and fix.
+
+* implement nsIPipeObserver in case pipe fills up?
+
+* audit for and implement all NOT_IMPLEMENTED functions
+
+* grep for XXXs and fix the issues 
+
+* audit for and fix leaks
+
+* use bloat tools to ensure code is not doing anything dumb
+
+* re-read (esp nsIChannel) idl and make sure all interfaces are 
+  implemented correctly
+
+* go through the various options that can be used with the SDK function 
+  ldap_set_options() and decide if and where the various functions should 
+  be used.  This will include memory allocator settings, and possibly 
+  threadsafety callbacks (if necessary).
+
+* figure out our strategy for LDAPv2 vs. LDAPv3
+
+* the output from nsILDAPChannel is probably cachable.  make sure this works.
+
+* the LDAP SDK returns UTF8, but I think nsILDAPChannel is handing it
+  off to callers as ASCII.
+
+* get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
+
+* fix directory SDK makefile to put files in the right places and
+  work with OBJDIR scheme
+
+features
+--------
+* i18n / l10n
+
+* use a rebind_proc?
+
+* HTMLize nsLDAPChannel output for linkification
+
+* RDF datasource
+  * finish XPCOMifying nsLDAP{Message,Connection,Operation}
+  * expose directory entries & attrs via interfaces (cachable?) 
+  * nsILDAPURI (see nsIIOService.idl: extractScheme())
+  * non-anonymous binding
+
+
+later features
+--------------
+* referrals
+* failover
+* ldap_memcache
+* addressbook/mail UI glue
+* PSM certs from directory glue(?)
+* secure (& proxied/socksified?) ldap
+* ldap_io_functions for portability? (wait for new mcs code?)
+* implement progress info interfaces, if possible (% done)
