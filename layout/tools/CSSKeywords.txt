@@ -1,3 +1,5 @@
+-moz-bg-inset
+-moz-bg-outset
 above
 absolute
 always
