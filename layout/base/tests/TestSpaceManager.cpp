@@ -128,14 +128,14 @@ PRBool MySpaceManager::TestAddBand()
 
   /////////////////////////////////////////////////////////////////////////////
   // #2. Add another band rect completely above the first band rect
-  status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 10, 100, 20));
+  status = AddRectRegion((nsIFrame*)0x02, nsRect(10, -10, 100, 20));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 2) {
     printf("TestAddBand: wrong number of bands (#2): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 10) || (bandsInfo.bands[0].height != 20) ||
+  if ((bandsInfo.bands[0].yOffset != -10) || (bandsInfo.bands[0].height != 20) ||
       (bandsInfo.bands[1].yOffset != 100) || (bandsInfo.bands[1].height != 100)) {
     printf("TestAddBand: wrong band sizes (#2)\n");
     return PR_FALSE;
@@ -150,7 +150,7 @@ PRBool MySpaceManager::TestAddBand()
     printf("TestAddBand: wrong number of bands (#3): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 10) || (bandsInfo.bands[0].height != 20) ||
+  if ((bandsInfo.bands[0].yOffset != -10) || (bandsInfo.bands[0].height != 20) ||
       (bandsInfo.bands[1].yOffset != 40) || (bandsInfo.bands[1].height != 30) ||
       (bandsInfo.bands[2].yOffset != 100) || (bandsInfo.bands[2].height != 100)) {
     printf("TestAddBand: wrong band sizes (#3)\n");
@@ -166,7 +166,7 @@ PRBool MySpaceManager::TestAddBand()
     printf("TestAddBand: wrong number of bands (#4): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 10) || (bandsInfo.bands[0].height != 20) ||
+  if ((bandsInfo.bands[0].yOffset != -10) || (bandsInfo.bands[0].height != 20) ||
       (bandsInfo.bands[1].yOffset != 40) || (bandsInfo.bands[1].height != 30) ||
       (bandsInfo.bands[2].yOffset != 100) || (bandsInfo.bands[2].height != 100) ||
       (bandsInfo.bands[3].yOffset != 210) || (bandsInfo.bands[3].height != 100)) {
@@ -180,7 +180,7 @@ PRBool MySpaceManager::TestAddBand()
 // Test of adding a rect region that overlaps an existing band
 //
 // This tests the following:
-// 1. Adding a rect that's above and pertially overlaps an existing band
+// 1. Adding a rect that's above and partially overlaps an existing band
 // 2. Adding a rect that's completely contained by an existing band
 // 3. Adding a rect that overlaps and is below an existing band
 // 3. Adding a rect that contains an existing band
@@ -194,21 +194,21 @@ PRBool MySpaceManager::TestAddBandOverlap()
   NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
 
   // Add a new band
-  status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
+  status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 25, 100, 100));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
 
   /////////////////////////////////////////////////////////////////////////////
   // #1. Add a rect region that's above and partially overlaps an existing band
-  status = AddRectRegion((nsIFrame*)0x02, nsRect(10, 50, 50, 100));
+  status = AddRectRegion((nsIFrame*)0x02, nsRect(10, -25, 50, 100));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 3) {
     printf("TestAddBandOverlap: wrong number of bands (#1): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 50) || (bandsInfo.bands[0].height != 50) ||
-      (bandsInfo.bands[1].yOffset != 100) || (bandsInfo.bands[1].height != 50) ||
-      (bandsInfo.bands[2].yOffset != 150) || (bandsInfo.bands[2].height != 50)) {
+  if ((bandsInfo.bands[0].yOffset != -25) || (bandsInfo.bands[0].height != 50) ||
+      (bandsInfo.bands[1].yOffset != 25) || (bandsInfo.bands[1].height != 50) ||
+      (bandsInfo.bands[2].yOffset != 75) || (bandsInfo.bands[2].height != 50)) {
     printf("TestAddBandOverlap: wrong band sizes (#1)\n");
     return PR_FALSE;
   }
@@ -221,18 +221,18 @@ PRBool MySpaceManager::TestAddBandOverlap()
 
   /////////////////////////////////////////////////////////////////////////////
   // #2. Add a rect region that's contained by the first band
-  status = AddRectRegion((nsIFrame*)0x03, nsRect(200, 60, 50, 10));
+  status = AddRectRegion((nsIFrame*)0x03, nsRect(200, -15, 50, 10));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 5) {
     printf("TestAddBandOverlap: wrong number of bands (#2): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 50) || (bandsInfo.bands[0].height != 10) ||
-      (bandsInfo.bands[1].yOffset != 60) || (bandsInfo.bands[1].height != 10) ||
-      (bandsInfo.bands[2].yOffset != 70) || (bandsInfo.bands[2].height != 30) ||
-      (bandsInfo.bands[3].yOffset != 100) || (bandsInfo.bands[3].height != 50) ||
-      (bandsInfo.bands[4].yOffset != 150) || (bandsInfo.bands[4].height != 50)) {
+  if ((bandsInfo.bands[0].yOffset != -25) || (bandsInfo.bands[0].height != 10) ||
+      (bandsInfo.bands[1].yOffset != -15) || (bandsInfo.bands[1].height != 10) ||
+      (bandsInfo.bands[2].yOffset != -5) || (bandsInfo.bands[2].height != 30) ||
+      (bandsInfo.bands[3].yOffset != 25) || (bandsInfo.bands[3].height != 50) ||
+      (bandsInfo.bands[4].yOffset != 75) || (bandsInfo.bands[4].height != 50)) {
     printf("TestAddBandOverlap: wrong band sizes (#2)\n");
     return PR_FALSE;
   }
@@ -247,20 +247,20 @@ PRBool MySpaceManager::TestAddBandOverlap()
 
   /////////////////////////////////////////////////////////////////////////////
   // #3. Add a rect that overlaps and is below an existing band
-  status = AddRectRegion((nsIFrame*)0x04, nsRect(200, 175, 50, 50));
+  status = AddRectRegion((nsIFrame*)0x04, nsRect(200, 100, 50, 50));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
   GetBandsInfo(bandsInfo);
   if (bandsInfo.numBands != 7) {
     printf("TestAddBandOverlap: wrong number of bands (#3): %i\n", bandsInfo.numBands);
     return PR_FALSE;
   }
-  if ((bandsInfo.bands[0].yOffset != 50) || (bandsInfo.bands[0].height != 10) ||
-      (bandsInfo.bands[1].yOffset != 60) || (bandsInfo.bands[1].height != 10) ||
-      (bandsInfo.bands[2].yOffset != 70) || (bandsInfo.bands[2].height != 30) ||
-      (bandsInfo.bands[3].yOffset != 100) || (bandsInfo.bands[3].height != 50) ||
-      (bandsInfo.bands[4].yOffset != 150) || (bandsInfo.bands[4].height != 25) ||
-      (bandsInfo.bands[5].yOffset != 175) || (bandsInfo.bands[5].height != 25) ||
-      (bandsInfo.bands[6].yOffset != 200) || (bandsInfo.bands[6].height != 25)) {
+  if ((bandsInfo.bands[0].yOffset != -25) || (bandsInfo.bands[0].height != 10) ||
+      (bandsInfo.bands[1].yOffset != -15) || (bandsInfo.bands[1].height != 10) ||
+      (bandsInfo.bands[2].yOffset != -5) || (bandsInfo.bands[2].height != 30) ||
+      (bandsInfo.bands[3].yOffset != 25) || (bandsInfo.bands[3].height != 50) ||
+      (bandsInfo.bands[4].yOffset != 75) || (bandsInfo.bands[4].height != 25) ||
+      (bandsInfo.bands[5].yOffset != 100) || (bandsInfo.bands[5].height != 25) ||
+      (bandsInfo.bands[6].yOffset != 125) || (bandsInfo.bands[6].height != 25)) {
     printf("TestAddBandOverlap: wrong band sizes (#3)\n");
     return PR_FALSE;
   }
@@ -721,10 +721,17 @@ PRBool MySpaceManager::TestResizeRectRegion()
 PRBool MySpaceManager::TestGetBandData()
 {
   nsresult  status;
+  nscoord   yMost;
 
   // Clear any existing regions
   ClearRegions();
   NS_ASSERTION(mBandList.IsEmpty(), "clear regions failed");
+
+  // Make sure YMost() returns the correct result
+  if (YMost(yMost) != NS_COMFALSE) {
+    printf("TestGetBandData: YMost() returned wrong result (#1)\n");
+    return PR_FALSE;
+  }
 
   // Make a band with three rects
   status = AddRectRegion((nsIFrame*)0x01, nsRect(100, 100, 100, 100));
@@ -735,6 +742,12 @@ PRBool MySpaceManager::TestGetBandData()
 
   status = AddRectRegion((nsIFrame*)0x03, nsRect(500, 100, 100, 100));
   NS_ASSERTION(NS_SUCCEEDED(status), "unexpected status");
+
+  // Verify that YMost() is correct
+  if ((YMost(yMost) != NS_OK) || (yMost != 200)) {
+    printf("TestGetBandData: YMost() returned wrong value (#2)\n");
+    return PR_FALSE;
+  }
 
   // Get the band data using a very large clip rect and a band data struct
   // that's large enough
@@ -747,7 +760,7 @@ PRBool MySpaceManager::TestGetBandData()
 
   // Verify that there are seven trapezoids
   if (bandData.count != 7) {
-    printf("TestGetBandData: wrong trapezoid count (#1)\n");
+    printf("TestGetBandData: wrong trapezoid count (#3)\n");
     return PR_FALSE;
   }
   
@@ -756,14 +769,14 @@ PRBool MySpaceManager::TestGetBandData()
   bandData.size = 3;
   status = GetBandData(100, nsSize(10000,10000), bandData);
   if (NS_SUCCEEDED(status)) {
-    printf("TestGetBandData: ignored band data count (#2)\n");
+    printf("TestGetBandData: ignored band data count (#4)\n");
     return PR_FALSE;
   }
 
   // Make sure the count has been updated to reflect the number of trapezoids
   // required
   if (bandData.count <= bandData.size) {
-    printf("TestGetBandData: bad band data count (#2)\n");
+    printf("TestGetBandData: bad band data count (#5)\n");
     return PR_FALSE;
   }
 
