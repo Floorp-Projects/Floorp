@@ -34,6 +34,8 @@ class nsIStreamObserver;
 class nsIXULWindowCallbacks;
 class nsICmdLineService;
 
+#define NS_SIZETOCONTENT -1
+
 // e5e5af70-8a38-11d2-9938-0080c7cb1080
 #define NS_IAPPSHELL_SERVICE_IID \
 { 0xe5e5af70, 0x8a38, 0x11d2, \
