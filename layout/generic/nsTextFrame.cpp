@@ -4394,7 +4394,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRBool  endsInNewline = PR_FALSE;
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
-#ifdef _WIN32
+#if defined(_WIN32) || defined(XP_OS2)
   PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
                             !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing &&
                             aTextData.mWrapping;
@@ -4681,7 +4681,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     continue;
 
   MeasureTextRun:
-#ifdef _WIN32
+#if defined(_WIN32) || defined(XP_OS2)
     PRInt32 numCharsFit;
     // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
     if (aTx.TransformedTextIsAscii()) {

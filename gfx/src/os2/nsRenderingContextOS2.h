@@ -73,9 +73,6 @@ public:
 
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
-  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
-
   NS_IMETHOD GetHints(PRUint32& aResult);
 
   NS_IMETHOD PushState(void);
@@ -108,6 +105,7 @@ public:
   NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
 
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1); 
   NS_IMETHOD DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawRect(const nsRect& aRect);
@@ -121,6 +119,8 @@ public:
 
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+
+  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -180,12 +180,14 @@ public:
                         PRInt32 aFontID,
                         const nscoord* aSpacing);
 
-   NS_IMETHOD DrawImage( nsIImage *aImage, nscoord aX, nscoord aY);
-   NS_IMETHOD DrawImage( nsIImage *aImage, nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight); 
-   NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aRect);
-   NS_IMETHOD DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
+  NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+                       nscoord aWidth, nscoord aHeight); 
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
+  NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
+  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
@@ -220,11 +222,11 @@ private:
   // Colour/font setting; call before drawing things.
   void SetupLineColorAndStyle (void);
   void SetupFillColor (void);
-  void SetupFontAndTextColor (void);
+  void SetupFontAndColor (void);
 
   // Primitive draw-ers
   void PMDrawRect( nsRect &rect, BOOL fill);
-  void PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled);
+  void PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled, PRBool bDoTransform = PR_TRUE);
   void PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull, float start=0, float end=0);
 
 protected:
@@ -239,26 +241,31 @@ protected:
   virtual PRBool CanTile(nscoord aWidth,nscoord aHeight);
 #endif
 
-   nsIDeviceContext    *mContext;         // device context
-   nsDrawingSurfaceOS2 *mSurface;         // draw things here
-   nsDrawingSurfaceOS2 *mMainSurface;     // if offscreen selected, this is original one that was set on init time
-   nscolor              mColor;           // current colour
-   nsLineStyle          mLineStyle;       // current line style
-   nsTransform2D        mTMatrix;         // current xform matrix
-   float                mP2T;             // cache pix-2-app factor from DC
-   GraphicsState       *mStates;
-   nsVoidArray       *mStateCache;
-   nsIFontMetrics      *mFontMetrics;     // current font
-   nsIFontMetrics      *mCurrFontMetrics; // currently selected font
-   nscolor              mCurrTextColor;   // currently selected text color
-   nscolor              mCurrLineColor;   // currently selected line color
-   nsLineStyle          mCurrLineStyle;   // currently selected line style
-   nscolor              mCurrFillColor;   // currently selected fill color
-   PRBool               mPreservedInitialClipRegion;
-   PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
-   PRUint8             *mGammaTable;
-   HPS                  mPS;              // GPI presentation space of current drawing surface
-   nsIWidget           *mDCOwner;         // Parent widget
+  nsIDeviceContext    *mContext;         // device context
+  nsDrawingSurfaceOS2 *mSurface;         // draw things here
+  nsDrawingSurfaceOS2 *mMainSurface;     // if offscreen selected, this is original one that was set on init time
+  nscolor              mColor;           // current colour
+  nsLineStyle          mLineStyle;       // current line style
+  nsTransform2D        mTMatrix;         // current xform matrix
+  float                mP2T;             // cache pix-2-app factor from DC
+  GraphicsState       *mStates;
+  nsVoidArray         *mStateCache;
+  nsIFontMetrics      *mFontMetrics;     // current font
+  nsIFontMetrics      *mCurrFontMetrics; // currently selected font
+  nscolor              mCurrTextColor;   // currently selected text color
+  nscolor              mCurrLineColor;   // currently selected line color
+  nsLineStyle          mCurrLineStyle;   // currently selected line style
+  nscolor              mCurrFillColor;   // currently selected fill color
+  PRBool               mPreservedInitialClipRegion;
+  PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
+  PRUint8             *mGammaTable;
+  HPS                  mPS;              // GPI presentation space of current drawing surface
+  nsIWidget           *mDCOwner;         // Parent widget
+  FATTRS               mCurrFont;
+
+#ifdef IBMBIDI
+  PRBool            mRightToLeftText;
+#endif // IBMBIDI
 };
 
 
