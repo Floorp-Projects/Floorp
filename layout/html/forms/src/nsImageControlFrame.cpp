@@ -360,7 +360,14 @@ nsImageControlFrame::GetCursor(nsIPresContext& aPresContext,
                                nsPoint&        aPoint,
                                PRInt32&        aCursor)
 {
-  aCursor = NS_STYLE_CURSOR_POINTER;
+  // Use style defined cursor if one is provided, otherwise when
+  // the cursor style is "auto" we use the pointer cursor.
+  const nsStyleColor* styleColor;
+  GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+  aCursor = styleColor->mCursor;
+  if (NS_STYLE_CURSOR_AUTO == aCursor) {
+    aCursor = NS_STYLE_CURSOR_POINTER;
+  }
   return NS_OK;
 }
 
