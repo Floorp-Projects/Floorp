@@ -13,6 +13,19 @@
 // so don't edit it!
 #include "CPMozillaControl.h"
 
+// Named property
+struct Property
+{
+  CComBSTR szName;
+  CComVariant vValue;
+};
+// These operators are not implemented anywhere.  They only need to be
+// defined in order for the compiler to accept the vector<Property>
+// template...
+int operator <(const Property&, const Property&);
+int operator ==(const Property&, const Property&); 
+typedef std::vector<Property> PropertyList;
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 class ATL_NO_VTABLE CMozillaBrowser : 
@@ -116,19 +129,17 @@ protected:
 	
 	// Indicates the browser is busy doing something
 	BOOL					m_bBusy;
-
+#if 0 /* XXX: this breaks the build :-( */
 	// Named property
 	struct Property
 	{
 		CComBSTR szName;
 		CComVariant vValue;
   };
-#if 0 /* XXX: this breaks the build :-( */
   typedef std::vector<Property> PropertyList;
-
+#endif
 	// Property list
 	PropertyList m_PropertyList;
-#endif /* 0 */
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
 
