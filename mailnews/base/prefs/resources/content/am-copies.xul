@@ -14,20 +14,21 @@
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
 <html:div>&copyAndFolderTitle.label;</html:div>
-<box align="vertical" class="cleanborder" flex="100%">
+<box align="vertical" flex="100%">
 <html:div>&sendingPrefix.label;</html:div>
 
   <box align="horizontal">
     <html:input name="identity.doFcc" type="checkbox"/>
     <html:div>&fccMailFolder.label;</html:div>
-        <html:select name="identity.fccFolder"
+    <html:select flex="100%"
          onchange="dump('value=' + event.target.value + '\n')"
          rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         name="identity.fccFolder" 
          ref="msgaccounts:/">
 <!--
     <html:input type="text" name="identity.fccFolder"/>
--->
     <html:optgroup/>
+-->
     <template>
       <rule iscontainer="true" isempty="false">
           <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
@@ -35,14 +36,11 @@
           </html:optgroup>
       </rule>
       <rule>
-        <html:optgroup>
           <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-        </html:optgroup>
       </rule>
     </template>
     </html:select>
-    <spring flex="100%"/>
-    <titledbutton value="&chooseFolderButton.label;"/>
+<!--    <titledbutton value="&chooseFolderButton.label;"/> -->
   </box>
   <box align="horizontal">
     <html:input name="identity.bccSelf" type="checkbox"/>
@@ -57,24 +55,63 @@
 </box>
 
 <html:div>&specialFolderTitle.label;</html:div>
-<box align="vertical" class="cleanborder" flex="100%">
+<box align="vertical" flex="100%">
   <box align="horizontal">
-    <html:div>&draftMailFolder.label;</html:div>
-    <html:input type="text" name="identity.draftFolder"/> 
-    <spring flex="100%"/>
-    <titledbutton value="&chooseFolderButton.label;"/>
+    <html:div flex="34%">&draftMailFolder.label;</html:div>
+    <html:select flex="66%"
+         onchange="dump('value=' + event.target.value + '\n')"
+         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         name="identity.draftFolder"
+         ref="msgaccounts:/">
+    <template>
+      <rule iscontainer="true" isempty="false">
+          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </html:optgroup>
+      </rule>
+      <rule>
+          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      </rule>
+    </template>
+    </html:select>
   </box>
   <box align="horizontal">
-    <html:div>&templateMailFolder.label;</html:div>
-    <html:input type="text" name="identity.stationaryFolder"/> 
-    <spring flex="100%"/>
-    <titledbutton value="&chooseFolderButton.label;"/>
+    <html:div flex="34%">&templateMailFolder.label;</html:div>
+    <html:select flex="66%"
+         onchange="dump('value=' + event.target.value + '\n')"
+         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         name="identity.stationaryFolder"
+         ref="msgaccounts:/">
+    <template>
+      <rule iscontainer="true" isempty="false">
+          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </html:optgroup>
+      </rule>
+      <rule>
+          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      </rule>
+    </template>
+    </html:select>
   </box>
   <box align="horizontal">
     <html:div>&junkMailFolder.label;</html:div>
-    <html:input type="text" name="identity.junkMailFolder"/> 
-    <spring flex="100%"/>
-    <titledbutton value="&chooseFolderButton.label;"/>
+    <html:select flex="100%"
+         onchange="dump('value=' + event.target.value + '\n')"
+         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         name="identity.junkMailFolder"
+         ref="msgaccounts:/">
+    <template>
+      <rule iscontainer="true" isempty="false">
+          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </html:optgroup>
+      </rule>
+      <rule>
+          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+      </rule>
+    </template>
+    </html:select>
   </box>
 </box>
 

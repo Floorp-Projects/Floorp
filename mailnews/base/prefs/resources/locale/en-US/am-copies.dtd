@@ -10,5 +10,5 @@
 <!ENTITY bccAddress.label "Bcc these addresses:">
 <!ENTITY specialFolderTitle.label "Special Folders">
 <!ENTITY junkMailFolder.label "Keep junk mail in:">
-<!ENTITY draftMailFolder.label "Keep message drafts in Drafts in:">
+<!ENTITY draftMailFolder.label "Keep message drafts in:">
 <!ENTITY templateMailFolder.label "Keep message stationary in:">
