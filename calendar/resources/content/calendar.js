@@ -1363,7 +1363,8 @@ function publishEntireCalendarDialogResponse( CalendarPublishObject )
    
    node.setAttribute( "http://home.netscape.com/NC-rdf#remotePath", CalendarPublishObject.remotePath );
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", "false");
+    if( node.getAttribute("http://home.netscape.com/NC-rdf#publishAutomatically") != "true" )
+        node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", "false");
 
    gCalendarWindow.calendarManager.rdf.flush();
       
