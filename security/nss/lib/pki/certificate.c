@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.4 $ $Date: 2001/09/20 20:40:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -76,11 +76,15 @@ NSSCertificate_GetID
 static NSSCertificate *
 NSSCertificate_Create
 (
- /* blah blah blah */
+  NSSArena *arenaOpt
 )
 {
     NSSArena *arena;
     NSSCertificate *rvCert;
+    arena = (arenaOpt) ? arenaOpt : nssArena_Create();
+    if (!arena) {
+	goto loser;
+    }
     arena = NSSArena_Create();
     if(!arena) {
 	return (NSSCertificate *)NULL;
@@ -90,10 +94,12 @@ NSSCertificate_Create
 	goto loser;
     }
     rvCert->refCount = 1;
-    rvCert->arena = arena;
+    if (!arenaOpt) {
+	rvCert->arena = arena;
+    }
     return rvCert;
 loser:
-    if (arena) {
+    if (!arenaOpt && arena) {
 	nssArena_Destroy(arena);
     }
     return (NSSCertificate *)NULL;
@@ -103,12 +109,14 @@ loser:
 NSS_IMPLEMENT NSSCertificate *
 NSSCertificate_CreateFromHandle
 (
+  NSSArena *arenaOpt,
   CK_OBJECT_HANDLE object,
   nssSession *session,
   NSSSlot *slot
 )
 {
     NSSCertificate *rvCert;
+    NSSArena *arena;
     PRStatus nssrv;
     CK_ULONG template_size;
     CK_ATTRIBUTE cert_template[] = {
@@ -117,13 +125,13 @@ NSSCertificate_CreateFromHandle
 	{ CKA_LABEL, NULL, 0 },
     };
     template_size = sizeof(cert_template) / sizeof(cert_template[0]);
-    rvCert = NSSCertificate_Create();
+    rvCert = NSSCertificate_Create(arenaOpt);
     if (!rvCert) {
 	return (NSSCertificate *)NULL;
     }
     rvCert->handle = object;
     rvCert->slot = slot;
-    nssrv = NSSCKObject_GetAttributes(object, cert_template, template_size,
+    nssrv = nssCKObject_GetAttributes(object, cert_template, template_size,
                                       rvCert->arena, session, rvCert->slot);
     if (nssrv) {
 	/* okay, but if failed because one of the attributes could not be

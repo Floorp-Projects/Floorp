@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.4 $ $Date: 2001/09/19 21:49:52 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.5 $ $Date: 2001/09/20 20:40:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -68,12 +68,34 @@ NSSTrustDomain_Create
     }
     rvTD = nss_ZNEW(arena, NSSTrustDomain);
     if (!rvTD) {
-	nssArena_Destroy(arena);
-	return (NSSTrustDomain *)NULL;
+	goto loser;
+    }
+    rvTD->moduleList = nssList_Create(arena, PR_TRUE);
+    if (!rvTD->moduleList) {
+	goto loser;
+    }
+    rvTD->modules = nssList_CreateIterator(rvTD->moduleList);
+    if (!rvTD->modules) {
+	goto loser;
     }
     rvTD->arena = arena;
     rvTD->refCount = 1;
     return rvTD;
+loser:
+    nssArena_Destroy(arena);
+    return (NSSTrustDomain *)NULL;
+}
+
+static void
+token_destructor(void *tok)
+{
+    (void)nssToken_Destroy((NSSToken *)tok);
+}
+
+static void
+module_destructor(void *mod)
+{
+    (void)nssModule_Destroy((NSSModule *)mod);
 }
 
 NSS_IMPLEMENT PRStatus
@@ -83,7 +105,11 @@ NSSTrustDomain_Destroy
 )
 {
     if (--td->refCount == 0) {
-	nssModule_Destroy(td->module);
+	/* Destroy each module in the list of modules */
+	if (td->moduleList) {
+	    nssList_DestroyElements(td->moduleList, module_destructor);
+	}
+	/* Destroy the trust domain */
 	nssArena_Destroy(td->arena);
     }
     return PR_SUCCESS;
@@ -129,9 +155,9 @@ NSSTrustDomain_LoadModule
     if (moduleOpt) {
 	module = nssModule_Create(moduleOpt, uriOpt, opaqueOpt, reserved);
 	nssModule_Load(module);
-	td->module = module;
+	nssList_AddElement(td->moduleList, (void *)module);
 #ifdef DEBUG
-	nssModule_Debug(td->module);
+	nssModule_Debug(module);
 #endif
     }
     return PR_SUCCESS;
@@ -348,8 +374,11 @@ NSSTrustDomain_FindCertificatesByNickname
 )
 {
     PRStatus nssrv;
+    PRUint32 i, count;
     NSSCertificate **certs;
-    NSSToken *tok = td->module->slots[0]->token;
+    NSSToken *tok;
+    NSSModule *mod;
+    nssList *foundCerts;
     CK_ATTRIBUTE cert_template[] =
     {
 	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size },
@@ -359,13 +388,41 @@ NSSTrustDomain_FindCertificatesByNickname
     ctsize = (CK_ULONG)(sizeof(cert_template) / sizeof(cert_template[0]));
     cert_template[1].pValue = (CK_VOID_PTR)name;
     cert_template[1].ulValueLen = (CK_ULONG)nssUTF8_Length(name, &nssrv);
-    certs = nssToken_FindCertificatesByTemplate(tok, NULL, NULL, 0, NULL,
-                                                cert_template, ctsize);
-    if (!certs) {
-	cert_template[1].ulValueLen++;
-	certs = nssToken_FindCertificatesByTemplate(tok, NULL, NULL, 0, NULL,
-                                                    cert_template, ctsize);
+    foundCerts = nssList_Create(NULL, PR_FALSE);
+    /* This will really be done through the search order, probably a
+     * token array
+     */
+    for (mod  = (NSSModule *)nssListIterator_Start(td->modules);
+         mod != (NSSModule *)NULL;
+         mod  = (NSSModule *)nssListIterator_Next(td->modules))
+    {
+	for (i=0; i<mod->numSlots; i++) {
+	    /* XXX not right at all */
+	    tok = mod->slots[i]->token;
+	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, 
+	                                                foundCerts, maximumOpt, 
+	                                                arenaOpt,
+	                                                cert_template, ctsize);
+	    /* This is to workaround the fact that PKCS#11 doesn't specify
+	     * whether the '\0' should be included.  XXX Is that still true?
+	     */
+	    cert_template[1].ulValueLen++;
+	    nssrv = nssToken_FindCertificatesByTemplate(tok, NULL, 
+	                                                foundCerts, maximumOpt, 
+	                                                arenaOpt,
+	                                                cert_template, ctsize);
+	    cert_template[1].ulValueLen--;
+	}
     }
+    nssListIterator_Finish(td->modules);
+    if (rvOpt) {
+	certs = rvOpt;
+    } else {
+	count = nssList_Count(foundCerts);
+	certs = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
+    }
+    nssrv = nssList_GetArray(foundCerts, (void **)certs, count);
+    nssList_Destroy(foundCerts);
     return certs;
 }
 
@@ -590,8 +647,16 @@ NSSTrustDomain_TraverseCertificates
   void *arg
 )
 {
+    NSSModule *mod;
     /* Do module->slot->token, or just slotarray->tokens? */
-    return nssModule_TraverseCertificates(td->module, callback, arg);
+    for (mod  = (NSSModule *)nssListIterator_Start(td->modules);
+         mod != (NSSModule *)NULL;
+         mod  = (NSSModule *)nssListIterator_Next(td->modules))
+    {
+	nssModule_TraverseCertificates(mod, callback, arg);
+    }
+    nssListIterator_Finish(td->modules);
+    return PR_SUCCESS;
 }
 
 NSS_IMPLEMENT PRStatus
