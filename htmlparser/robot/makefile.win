@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\.. 
+DEPTH=..\.. 
 IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE   = EXE
@@ -34,6 +34,7 @@ MYLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(LIBNSPR)			\
  $(DIST)\lib\libplc21.lib	\
+ $(DIST)\lib\netlib.lib \
  $(NULL)
 
 LLIBS= $(MYLIBS)                \
@@ -51,7 +52,7 @@ CPP_OBJS=			\
  .\$(OBJDIR)\nsRobotSink.obj	\
  .\$(OBJDIR)\RobotMain.obj
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I..\src
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\netlib -I..\src
 
 include <$(DEPTH)\config\rules.mak>
 
