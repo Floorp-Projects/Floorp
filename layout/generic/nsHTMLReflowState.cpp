@@ -86,7 +86,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   : mReflowDepth(0)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
-
+  mFlags.mSpecialTableReflow = mFlags.mUnused = 0;
   parentReflowState = nsnull;
   frame = aFrame;
   reason = aReason;
@@ -114,6 +114,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");  
 
+  mFlags.mSpecialTableReflow = mFlags.mUnused = 0;
   reason = eReflowReason_Incremental;
   parentReflowState = nsnull;
   frame = aFrame;
@@ -138,7 +139,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
                                      nsReflowReason           aReason)
-  : mReflowDepth(aParentReflowState.mReflowDepth + 1)
+  : mReflowDepth(aParentReflowState.mReflowDepth + 1),
+    mFlags(aParentReflowState.mFlags)
 {
   parentReflowState = &aParentReflowState;
   frame = aFrame;
@@ -167,7 +169,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace)
-  : mReflowDepth(aParentReflowState.mReflowDepth + 1)
+  : mReflowDepth(aParentReflowState.mReflowDepth + 1),
+    mFlags(aParentReflowState.mFlags)
 {
   parentReflowState = &aParentReflowState;
   frame = aFrame;
@@ -195,7 +198,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsSize&            aAvailableSpace,
                                      nscoord                  aContainingBlockWidth,
                                      nscoord                  aContainingBlockHeight)
-  : mReflowDepth(aParentReflowState.mReflowDepth + 1)
+  : mReflowDepth(aParentReflowState.mReflowDepth + 1),
+    mFlags(aParentReflowState.mFlags)
 {
   parentReflowState = &aParentReflowState;
   frame = aFrame;

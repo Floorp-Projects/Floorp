@@ -239,7 +239,14 @@ struct nsHTMLReflowState {
 
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
-  PRInt32 mReflowDepth;
+  PRInt16 mReflowDepth;
+
+  struct ReflowStateFlags {
+    //unsigned mUseAlignCharOffset:1; // ditto
+    //unsigned isTopOfPage:1;         // ditto
+    PRUint16 mSpecialTableReflow:1;   // used by tables to communicate special reflow in process
+    PRUint16 mUnused:15;              
+  } mFlags;
 
 #ifdef IBMBIDI
   nscoord mRightEdge;

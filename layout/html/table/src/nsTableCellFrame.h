@@ -49,7 +49,8 @@ class nsHTMLValue;
 /**
  * Additional frame-state bits
  */
-#define NS_TABLE_CELL_FRAME_CONTENT_EMPTY 0x80000000
+#define NS_TABLE_CELL_CONTENT_EMPTY       0x80000000
+#define NS_TABLE_CELL_NEED_SPECIAL_REFLOW 0x40000000
 
 /**
  * nsTableCellFrame
@@ -239,10 +240,15 @@ public:
   PRBool GetContentEmpty();
   void SetContentEmpty(PRBool aContentEmpty);
 
+  PRBool NeedSpecialReflow();
+  void SetNeedSpecialReflow(PRBool aContentEmpty);
+
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
   void    SetCollapseOffsetX(nsIPresContext* aPresContext, nscoord aXOffset);
   void    SetCollapseOffsetY(nsIPresContext* aPresContext, nscoord aYOffset);
   void    GetCollapseOffset(nsIPresContext* aPresContext, nsPoint& aOffset);
+
+  nsTableCellFrame* GetNextCell() const;
 
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
@@ -332,19 +338,33 @@ inline nsSize nsTableCellFrame::GetPass1MaxElementSize() const
 
 inline PRBool nsTableCellFrame::GetContentEmpty()
 {
-  return (mState & NS_TABLE_CELL_FRAME_CONTENT_EMPTY) ==
-         NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
+  return (mState & NS_TABLE_CELL_CONTENT_EMPTY) ==
+         NS_TABLE_CELL_CONTENT_EMPTY;
 }
 
 inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
 {
   if (aContentEmpty) {
-    mState |= NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
+    mState |= NS_TABLE_CELL_CONTENT_EMPTY;
   } else {
-    mState &= ~NS_TABLE_CELL_FRAME_CONTENT_EMPTY;
+    mState &= ~NS_TABLE_CELL_CONTENT_EMPTY;
   }
 }
 
+inline PRBool nsTableCellFrame::NeedSpecialReflow()
+{
+  return (mState & NS_TABLE_CELL_NEED_SPECIAL_REFLOW) ==
+         NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
+}
+
+inline void nsTableCellFrame::SetNeedSpecialReflow(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
+  } else {
+    mState &= ~NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
+  }
+}
 #endif
 
 
