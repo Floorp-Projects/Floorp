@@ -18,30 +18,48 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-LIBRARY_NAME=domcore_s 
+LIBRARY_NAME=jsdomcore_s 
 MODULE=raptor 
 REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS =			\
-	nsJSNode.cpp		\
-	nsJSData.cpp		\
-	nsJSDocument.cpp	\
-	nsJSDocumentFragment.cpp\
-	nsJSElement.cpp		\
-	nsJSNamedNodeMap.cpp	\
-	nsJSNodeList.cpp	\
-	nsJSText.cpp		\
-	nsJSAttribute.cpp	\
+CPPSRCS =				\
+	nsJSAttribute.cpp		\
+	nsJSCDATASection.cpp		\
+	nsJSComment.cpp			\
+	nsJSDOM.cpp			\
+	nsJSData.cpp			\
+	nsJSDocument.cpp		\
+	nsJSDocumentFragment.cpp	\
+	nsJSDocumentType.cpp		\
+	nsJSElement.cpp			\
+	nsJSNamedNodeMap.cpp		\
+	nsJSNode.cpp			\
+	nsJSNodeList.cpp		\
+	nsJSProcessingInstruction.cpp	\
+	nsJSText.cpp			\
 	$(NULL)
 
-CPP_OBJS=	.\$(OBJDIR)\nsJSNode.obj .\$(OBJDIR)\nsJSDocument.obj \
-    .\$(OBJDIR)\nsJSElement.obj .\$(OBJDIR)\nsJSText.obj \
-    .\$(OBJDIR)\nsJSNodeList.obj .\$(OBJDIR)\nsJSAttribute.obj \
-    .\$(OBJDIR)\nsJSNamedNodeMap.obj .\$(OBJDIR)\nsJSDocumentFragment.obj \
-     .\$(OBJDIR)\nsJSData.obj
+CPP_OBJS=						\
+	.\$(OBJDIR)\nsJSAttribute.obj			\
+	.\$(OBJDIR)\nsJSCDATASection.obj		\
+	.\$(OBJDIR)\nsJSComment.obj			\
+	.\$(OBJDIR)\nsJSDOM.obj				\
+	.\$(OBJDIR)\nsJSData.obj			\
+	.\$(OBJDIR)\nsJSDocument.obj			\
+	.\$(OBJDIR)\nsJSDocumentFragment.obj		\
+	.\$(OBJDIR)\nsJSDocumentType.obj		\
+	.\$(OBJDIR)\nsJSElement.obj			\
+	.\$(OBJDIR)\nsJSNamedNodeMap.obj		\
+	.\$(OBJDIR)\nsJSNode.obj			\
+	.\$(OBJDIR)\nsJSNodeList.obj			\
+	.\$(OBJDIR)\nsJSProcessingInstruction.obj	\
+	.\$(OBJDIR)\nsJSText.obj			\
+	$(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
+
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+	-I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
 
 LCFLAGS = \
         $(LCFLAGS) \
