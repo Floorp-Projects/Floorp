@@ -53,6 +53,8 @@ interface nsILDAPConnection : nsISupports
 
     /**
      * DN to bind as.  use the init() method to set this.
+     *
+     * @exception NS_ERROR_OUT_OF_MEMORY
      */
     readonly attribute string bindName;
 
@@ -62,14 +64,21 @@ interface nsILDAPConnection : nsISupports
      * @param aHost	 	server name for ldap_init()
      * @param aPort 		server port number for ldap_init()
      * @param aBindName 	DN to bind as
+     *
+     * @exception NS_ERROR_OUT_OF_MEMORY
+     * @exception NS_ERROR_FAILURE
+     * @exception NS_ERROR_NOT_AVAILABLE	Couldn't create thread.
      */
     void init(in string aHost, in short aPort, in string aBindName);
 
     // wrapper for ldap_get_lderrno()
     long getLdErrno(out string matched, out string s);
 
-    // really only for the internal use of nsLDAPOperation and friends
-    //
+    /**
+     * really only for the internal use of nsLDAPOperation and friends
+     * 
+     * @exception NS_ERROR_INVALID_POINTER pointer passed in was NULL
+     */
     [noscript] readonly attribute ldapConnectionHandle connectionHandle;
 
     /** 

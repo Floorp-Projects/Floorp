@@ -70,6 +70,9 @@ interface nsILDAPOperation : nsISupports
      *
      * @param aConnection       connection this operation should use
      * @param aMessageListener  interface used to call back the results.
+     *
+     * @exception NS_ERROR_INVALID_POINTER
+     * @exception NS_ERROR_FAILURE		failed to get connection handle
      */
     void init(in nsILDAPConnection aConnection, 
               in nsILDAPMessageListener aMessageListener);

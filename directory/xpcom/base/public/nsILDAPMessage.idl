@@ -50,6 +50,9 @@ interface nsILDAPMessage : nsISupports
      *
      * @param aConnection 	The connection this message lives on.
      * @param aMsgHandle	The native LDAPMessage to be wrapped.
+     * 
+     * @exception NS_ERROR_INVALID_POINTER
+     * @exception NS_ERROR_FAILURE	    	Err getting connection handle.
      */
     [noscript] void init(in nsILDAPConnection aConnection,
 			 in ldapMsgHandle aMsgHandle);
