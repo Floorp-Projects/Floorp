@@ -1488,16 +1488,6 @@ pref("applications.rlogin_with_user", "pterm rlogin %h -l %u");
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-// instruct firefox to use thunderbird for mail/news
-pref("network.protocol-handler.app.mailto", "/opt/Mozilla/firefox/spawn_helper");
-pref("network.protocol-handler.app.imap", "/opt/Mozilla/firefox/spawn_helper");
-pref("network.protocol-handler.app.news", "/opt/Mozilla/firefox/spawn_helper");
-pref("network.protocol-handler.app.snews", "/opt/Mozilla/firefox/spawn_helper");
-pref("network.protocol-handler.app.nntp", "/opt/Mozilla/firefox/spawn_helper");
-
-// instruct thunderbird to use firefox for web browsing
-pref("network.protocol-handler.app.http", "/opt/Mozilla/thunderbird/spawn_helper");
-
 # photon
 #endif
 
