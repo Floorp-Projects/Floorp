@@ -150,12 +150,15 @@ PR_ThreadScanStackPointers(PRThread* t,
     if (status != PR_SUCCESS)
         return status;
 
+#ifndef GC_LEAK_DETECTOR
+    /* if thread is not allocated on stack, this is redundant. */
     ptd = t->privateData;
     for (index = 0; index < t->tpdLength; index++, ptd++) {
         status = scanFun(t, (void**)ptd, 1, scanClosure);
         if (status != PR_SUCCESS)
             return status;
     }
+#endif
     
     return PR_SUCCESS;
 }
