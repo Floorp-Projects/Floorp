@@ -57,6 +57,7 @@ class nsIPrompt;
 
 extern nsresult PERMISSION_Read();
 extern void PERMISSION_Add(const char * objectURL, PRBool permission, PRInt32 type, nsIIOService* ioService);
+extern void PERMISSION_TestForBlocking(const char * objectURL, PRBool* blocked, PRInt32 type, nsIIOService* ioService);
 extern void PERMISSION_RemoveAll();
 extern void PERMISSION_DeletePersistentUserData(void);
 
