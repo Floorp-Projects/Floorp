@@ -46,6 +46,7 @@ LINCS=  \
   -I$(PUBLIC)\netlib \
   -I$(PUBLIC)\java \
   -I$(PUBLIC)\plugin \
+  -I$(PUBLIC)\editor \
   -I$(PUBLIC)\pref
 
 MYLIBS=                         \
