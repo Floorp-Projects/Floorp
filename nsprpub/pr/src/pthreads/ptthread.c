@@ -751,7 +751,7 @@ void _PR_InitThreads(
      * conflict with the use of these two signals in our GC support.
      * So we don't know how to support GC on Linux pthreads.
      */
-#if !defined(LINUX2_0) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(FREEBSD)
 	init_pthread_gc_support();
 #endif
 
