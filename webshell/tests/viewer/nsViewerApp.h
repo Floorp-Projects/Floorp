@@ -96,3 +96,4 @@ public:
 };
 
 #endif /* nsViewerApp_h___ */
+

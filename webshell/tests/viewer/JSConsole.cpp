@@ -872,48 +872,40 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 LPSTR res = result;
                 int bDelete = 0;
 
+                JSContext *cx = (JSContext *)mContext->GetNativeContext();
+                JSString *jsstring = JS_ValueToString(cx, returnValue);
+                char *str = JS_GetStringBytes(jsstring);
+
                 ::printf("The return value is ");
                 if (JSVAL_IS_OBJECT(returnValue)) {
                     ::printf("an object\n");
-                    ::sprintf(result, " anObject [0x%X] ", JSVAL_TO_OBJECT(returnValue));
                 }
                 else if (JSVAL_IS_INT(returnValue)) {
                     ::printf("an int [%d]\n", JSVAL_TO_INT(returnValue));
-                    ::sprintf(result, " %d ", JSVAL_TO_INT(returnValue));
                 }
                 else if (JSVAL_IS_DOUBLE(returnValue)) {
                     ::printf("a double [%f]\n", *JSVAL_TO_DOUBLE(returnValue));
-                    ::sprintf(result, " %f ", *JSVAL_TO_DOUBLE(returnValue));
                 }
                 else if (JSVAL_IS_STRING(returnValue)) {
                     ::printf("a string [%s]\n", JS_GetStringBytes(JSVAL_TO_STRING(returnValue)));
-                    char *jsRes = JS_GetStringBytes(JSVAL_TO_STRING(returnValue));
-                    // make a string with 0xA changed to 0xD0xA
-                    res = PrepareForTextArea(jsRes, JS_GetStringLength(JSVAL_TO_STRING(returnValue)));
-                    if (res != jsRes) {
-                      bDelete = 1; // if the buffer was new'ed
-                    }
                 }
                 else if (JSVAL_IS_BOOLEAN(returnValue)) {
                     ::printf("a boolean [%d]\n", JSVAL_TO_BOOLEAN(returnValue));
-                    if (JSVAL_TO_BOOLEAN(returnValue)) {
-                        ::strcpy(result, " true ");
-                    }
-                    else {
-                        ::strcpy(result, " false ");
-                    }
                 }
                 else if (JSVAL_IS_NULL(returnValue)) {
                     printf("null\n");
-                    ::strcpy(result, " null ");
                 }
                 else if (JSVAL_IS_VOID(returnValue)) {
                     printf("void\n");
-                    ::strcpy(result, " void ");
                 }
                 else {
                     printf("error: unknow return type!\n");
-                    ::strcpy(result, " error: unknow return type! ");
+                }
+
+                // make a string with 0xA changed to 0xD0xA
+                res = PrepareForTextArea(str, JS_GetStringLength(jsstring));
+                if (res != str) {
+                  bDelete = 1; // if the buffer was new'ed
                 }
 
                 // set the position at the end of the selection
