@@ -394,7 +394,7 @@ titledbutton:active:-moz-outline {
 
 }
  
-titledbutton[disabled] {
+titledbutton[disabled="true"] {
 	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
@@ -402,7 +402,7 @@ titledbutton[disabled] {
 	text-decoration: none;
 }
 
-titledbutton[disabled]:hover {
+titledbutton[disabled="true"]:hover {
   	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
@@ -410,7 +410,7 @@ titledbutton[disabled]:hover {
 	text-decoration: none;
 }
 
-titledbutton[disabled]:active {
+titledbutton[disabled="true"]:active {
   	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
@@ -524,15 +524,15 @@ toolbar titledbutton:active:-moz-outline {
    border : 1px solid black;
 }
  
-toolbar titledbutton[disabled] {
+toolbar titledbutton[disabled="true"] {
 	border: 1px solid transparent;
 }
 
-toolbar titledbutton[disabled]:hover {
+toolbar titledbutton[disabled="true"]:hover {
 	border: 1px solid transparent;
 }
 
-toolbar titledbutton[disabled]:active {
+toolbar titledbutton[disabled="true"]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
