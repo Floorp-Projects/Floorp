@@ -475,7 +475,6 @@ Returned AtkStatusSet never contain the following AtkStates.
   ATK_STATE_ARMED:     Indicates that the object is armed.
   ATK_STATE_DEFUNCT:   Indicates the user interface object corresponding to
                        thus object no longer exists.
-  ATK_STATE_EDITABLE:  Indicates the user can change the contents of the object.
   ATK_STATE_HORIZONTAL:Indicates the orientation of this object is horizontal.
   ATK_STATE_ICONIFIED:
   ATK_STATE_OPAQUE:     Indicates the object paints every pixel within its
@@ -564,6 +563,9 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
 
     if (aExtState & nsIAccessible::EXT_STATE_VERTICAL)
         atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
+
+    if (aState & nsIAccessible::EXT_STATE_EDITABLE)
+        atk_state_set_add_state (state_set, ATK_STATE_EDITABLE);
 }
 
 PRBool nsAccessibleWrap::IsValidObject()

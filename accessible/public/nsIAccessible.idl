@@ -285,6 +285,7 @@ interface nsIAccessible : nsISupports
  * Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
  * "Extended state flags" has seperate value space from "MSAA State flags".
  */
+  const unsigned long  EXT_STATE_EDITABLE       = 0x00100000;  // Used for XUL/HTML input (type = text,password) element
   const unsigned long  EXT_STATE_INVALID        = 0x00200000;  // No explanation given    
   const unsigned long  EXT_STATE_ACTIVE         = 0x00400000;  // This window is currently the active window    
   const unsigned long  EXT_STATE_EXPANDABLE     = 0x00800000;  // An item that can be expanded, such as a tree item with children    

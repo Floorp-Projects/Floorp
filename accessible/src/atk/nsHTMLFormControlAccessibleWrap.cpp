@@ -84,6 +84,11 @@ NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetExtState(PRUint32 *aState)
     if (typeString.LowerCaseEqualsLiteral("text"))
       *aState |= EXT_STATE_SINGLE_LINE;
   }
+
+  PRUint32 state;
+  nsHTMLTextFieldAccessible::GetState(&state);
+  if (!(state & STATE_READONLY))
+    *aState |= EXT_STATE_EDITABLE;
   return NS_OK;
 }
 
