@@ -49,7 +49,6 @@
 #include "nsIXMLContent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURI.h"
-#include "nsIRefreshURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -59,7 +58,6 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"
 #include "nsDOMDocumentType.h"
@@ -143,24 +141,17 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXMLContentSink::nsXMLContentSink()
+  : mDocElement(nsnull),
+    mText(nsnull),
+    mTextLength(0),
+    mTextSize(0),
+    mConstrainSize(PR_TRUE),
+    mInTitle(PR_FALSE),
+    mPrettyPrintXML(PR_TRUE),
+    mPrettyPrintHasSpecialRoot(PR_FALSE),
+    mPrettyPrintHasFactoredElements(PR_FALSE),
+    mHasProcessedBase(PR_FALSE)
 {
-
-  mDocument = nsnull;
-  mDocumentURI = nsnull;
-  mDocumentBaseURI = nsnull;
-  mParser = nsnull;
-  mDocElement = nsnull;
-  mText = nsnull;
-  mTextLength = 0;
-  mTextSize = 0;
-  mConstrainSize = PR_TRUE;
-  mInTitle = PR_FALSE;
-  mCSSLoader       = nsnull;
-  mNeedToBlockParser = PR_FALSE;
-  mPrettyPrintXML = PR_TRUE;
-  mPrettyPrintHasSpecialRoot = PR_FALSE;
-  mPrettyPrintHasFactoredElements = PR_FALSE;
-  mHasProcessedBase = PR_FALSE;
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -289,13 +280,6 @@ nsXMLContentSink::DidBuildModel()
 
     mDocument->EndLoad();
   }
-
-  // Ref. Bug 49115
-  // Do this hack to make sure that the parser
-  // doesn't get destroyed, accidently, before 
-  // the circularity, between sink & parser, is
-  // actually broken. 
-  nsCOMPtr<nsIParser> kungFuDeathGrip(mParser);
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
@@ -709,28 +693,6 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
   return rv;
 }
 
-nsresult
-nsXMLContentSink::ProcessMETATag(nsIContent* aContent)
-{
-  NS_ASSERTION(aContent, "missing base-element");
-
-  nsresult rv = NS_OK;
-
-  // set any HTTP-EQUIV data into document's header data as well as url
-  nsAutoString header;
-  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
-  if (!header.IsEmpty()) {
-    nsAutoString result;
-    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
-    if (!result.IsEmpty()) {
-      ToLowerCase(header);
-      nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
-      rv = ProcessHeaderData(fieldAtom, result, aContent); 
-    }//if (!result.IsEmpty()) 
-  }//if (!header.IsEmpty()) 
-
-  return rv;
-}
 
 NS_IMETHODIMP 
 nsXMLContentSink::SetDocumentCharset(nsACString& aCharset)
@@ -853,82 +815,18 @@ nsXMLContentSink::StartLayout()
   if (scrollableContainer) {
     scrollableContainer->ResetScrollbarPreferences();
   }
-
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
-
-    // Make shell an observer for next time
-    shell->BeginObservingDocument();
-
-    // Resize-reflow this time
-    nsCOMPtr<nsIPresContext> cx;
-    shell->GetPresContext(getter_AddRefs(cx));
-    nsRect r;
-    cx->GetVisibleArea(r);
-    shell->InitialReflow(r.width, r.height);
-
-    // Now trigger a refresh
-    RefreshIfEnabled(shell->GetViewManager());
-  }
-
-  if (mDocumentURI) {
-    nsCAutoString ref;
-
-    // Since all URI's that pass through here aren't URL's we can't
-    // rely on the nsIURI implementation for providing a way for
-    // finding the 'ref' part of the URI, we'll haveto revert to
-    // string routines for finding the data past '#'
-
-    mDocumentURI->GetSpec(ref);
-
-    nsReadingIterator<char> start, end;
-
-    ref.BeginReading(start);
-    ref.EndReading(end);
-
-    if (FindCharInReadable('#', start, end)) {
-      ++start; // Skip over the '#'
-
-      mRef = Substring(start, end);
-    }
-  }
-
-  // If the document we are loading has a reference or it is a top level
-  // frameset document, disable the scroll bars on the views.
   PRBool topLevelFrameset = PR_FALSE;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   if (docShellAsItem) {
     nsCOMPtr<nsIDocShellTreeItem> root;
     docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-    if(docShellAsItem.get() == root.get()) {
+    if(docShellAsItem == root) {
       topLevelFrameset = PR_TRUE;
     }
   }
+  
+  nsContentSink::StartLayout(topLevelFrameset);
 
-  if (!mRef.IsEmpty() || topLevelFrameset) {
-    // XXX support more than one presentation-shell here
-
-    // Get initial scroll preference and save it away; disable the
-    // scroll bars.
-    ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-      nsIPresShell *shell = mDocument->GetShellAt(i);
-
-      nsIViewManager* vm = shell->GetViewManager();
-      if (vm) {
-        nsIView* rootView = nsnull;
-        vm->GetRootView(rootView);
-        if (rootView) {
-          nsIScrollableView* sview = nsnull;
-          CallQueryInterface(rootView, &sview);
-          if (sview) {
-            sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-          }
-        }
-      }
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////

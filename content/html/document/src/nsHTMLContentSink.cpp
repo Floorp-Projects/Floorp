@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsXPIDLString.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -54,7 +53,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsIContentViewer.h"
@@ -85,21 +83,17 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIDocShell.h"
-#include "nsIWebNavigation.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLDocument.h"
-#include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsIRefreshURI.h"
 #include "nsICookieService.h"
 #include "nsVoidArray.h"
 #include "nsIScriptSecurityManager.h"
@@ -128,7 +122,6 @@
 #include "nsWeakReference.h" // nsHTMLElementFactory supports weak references
 #include "nsIPrompt.h"
 #include "nsLayoutCID.h"
-#include "nsIFrameManager.h"
 #include "nsIDocShellTreeItem.h"
 #include "plevent.h"
 
@@ -344,7 +337,6 @@ protected:
   nsIHTMLContent* mFrameset;
   nsIHTMLContent* mHead;
   nsString mTitle;
-  nsString mUnicodeXferBuf;
 
   nsString mSkippedContent;
 
@@ -414,16 +406,13 @@ protected:
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
-  nsresult ProcessMAPTag(const nsIParserNode& aNode, nsIHTMLContent* aContent);
+  nsresult ProcessMAPTag(nsIHTMLContent* aContent);
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
   nsresult OpenHeadContext();
   nsresult CloseHeadContext();
-
-  // Script processing related routines
-  nsresult ResumeParsing();
 
   // nsContentSink overrides
   virtual void PreEvaluateScript();
@@ -1360,8 +1349,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_map:
-      mSink->ProcessMAPTag(aNode, content);
-
+      mSink->ProcessMAPTag(content);
       break;
     case eHTMLTag_iframe:
       mSink->mNumOpenIFRAMES++;
@@ -3765,91 +3753,7 @@ HTMLContentSink::StartLayout()
     }
   }
 
-  PRUint32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell *shell = mDocument->GetShellAt(i);
-
-    if (shell) {
-      // Make sure we don't call InitialReflow() for a shell that has
-      // already called it. This can happen when the layout frame for
-      // an iframe is constructed *between* the Embed() call for the
-      // docshell in the iframe, and the content sink's call to OpenBody().
-      // (Bug 153815)
-
-      PRBool didInitialReflow = PR_FALSE;
-      shell->GetDidInitialReflow(&didInitialReflow);
-      if (didInitialReflow) {
-        // XXX: The assumption here is that if something already
-        // called InitialReflow() on this shell, it also did some of
-        // the setup below, so we do nothing and just move on to the
-        // next shell in the list.
-
-        continue;
-      }
-
-      // Make shell an observer for next time
-      shell->BeginObservingDocument();
-
-      // Resize-reflow this time
-      nsCOMPtr<nsIPresContext> cx;
-      shell->GetPresContext(getter_AddRefs(cx));
-      nsRect r;
-      cx->GetVisibleArea(r);
-      shell->InitialReflow(r.width, r.height);
-
-      // Now trigger a refresh
-      RefreshIfEnabled(shell->GetViewManager());
-    }
-  }
-
-  // If the document we are loading has a reference or it is a
-  // frameset document, disable the scroll bars on the views.
-
-  if (mDocumentURI) {
-    nsCAutoString ref;
-
-    // Since all URI's that pass through here aren't URL's we can't
-    // rely on the nsIURI implementation for providing a way for
-    // finding the 'ref' part of the URI, we'll haveto revert to
-    // string routines for finding the data past '#'
-
-    rv = mDocumentURI->GetSpec(ref);
-
-    nsReadingIterator<char> start, end;
-
-    ref.BeginReading(start);
-    ref.EndReading(end);
-
-    if (FindCharInReadable('#', start, end)) {
-      ++start; // Skip over the '#'
-
-      mRef = Substring(start, end);
-    }
-  }
-
-  if (!mRef.IsEmpty() || mFrameset) {
-    // XXX support more than one presentation-shell here
-
-    // Get initial scroll preference and save it away; disable the
-    // scroll bars.
-    ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-      nsIPresShell *shell = mDocument->GetShellAt(i);
-
-      nsIViewManager* vm = shell->GetViewManager();
-      if (vm) {
-        nsIView* rootView = nsnull;
-        vm->GetRootView(rootView);
-        if (rootView) {
-          nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
-
-          if (sview) {
-            sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
-          }
-        }
-      }
-    }
-  }
+  nsContentSink::StartLayout(!!mFrameset);
 }
 
 void
@@ -4135,8 +4039,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 }
 
 nsresult
-HTMLContentSink::ProcessMAPTag(const nsIParserNode& aNode,
-                               nsIHTMLContent* aContent)
+HTMLContentSink::ProcessMAPTag(nsIHTMLContent* aContent)
 {
   mCurrentMap = nsnull;
 
@@ -4195,25 +4098,9 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   // XXX It's just not sufficient to check if the parent is head. Also
   // check for the preference.
-  if (!mInsideNoXXXTag) {
-    // Bug 40072: Don't evaluate METAs after FRAMESET.
-
-    if (!mFrameset) {
-      // set any HTTP-EQUIV data into document's header data as well as url
-      nsAutoString header;
-      it->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
-
-      if (!header.IsEmpty()) {
-        nsAutoString result;
-        it->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
-
-        if (!result.IsEmpty()) {
-          ToLowerCase(header);
-          nsCOMPtr<nsIAtom> fieldAtom = do_GetAtom(header);
-          rv = ProcessHeaderData(fieldAtom, result, it);
-        }
-      }
-    }
+  // Bug 40072: Don't evaluate METAs after FRAMESET.
+  if (!mInsideNoXXXTag && !mFrameset) {
+    rv = nsContentSink::ProcessMETATag(it);
   }
 
   return rv;
@@ -4352,17 +4239,6 @@ HTMLContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 void
 HTMLContentSink::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
-}
-
-nsresult
-HTMLContentSink::ResumeParsing()
-{
-  nsresult result = NS_OK;
-  if (mParser) {
-    result = mParser->ContinueParsing();
-  }
-
-  return result;
 }
 
 void

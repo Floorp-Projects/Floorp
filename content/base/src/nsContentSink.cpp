@@ -39,6 +39,7 @@
 #include "nsIScriptLoader.h"
 #include "nsIDocument.h"
 #include "nsICSSLoader.h"
+#include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"
 #include "nsIDocShell.h"
@@ -49,11 +50,14 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsIContent.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIParser.h"
 #include "nsContentErrors.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIViewManager.h"
+#include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsIAtom.h"
 #include "nsHTMLAtoms.h"
@@ -140,6 +144,7 @@ NS_IMPL_ISUPPORTS3(nsContentSink,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
+  : mNeedToBlockParser(PR_FALSE)
 {
 }
 
@@ -714,6 +719,31 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   return rv;
 }
 
+
+nsresult
+nsContentSink::ProcessMETATag(nsIContent* aContent)
+{
+  NS_ASSERTION(aContent, "missing base-element");
+
+  nsresult rv = NS_OK;
+
+  // set any HTTP-EQUIV data into document's header data as well as url
+  nsAutoString header;
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::httpEquiv, header);
+  if (!header.IsEmpty()) {
+    nsAutoString result;
+    aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::content, result);
+    if (!result.IsEmpty()) {
+      ToLowerCase(header);
+      nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
+      rv = ProcessHeaderData(fieldAtom, result, aContent); 
+    }
+  }
+
+  return rv;
+}
+
+
 void
 nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 {
@@ -891,4 +921,88 @@ nsContentSink::RefreshIfEnabled(nsIViewManager* vm)
   }
 
   return NS_OK;
+}
+
+void
+nsContentSink::StartLayout(PRBool aIsFrameset)
+{
+  PRUint32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell *shell = mDocument->GetShellAt(i);
+
+    if (shell) {
+      // Make sure we don't call InitialReflow() for a shell that has
+      // already called it. This can happen when the layout frame for
+      // an iframe is constructed *between* the Embed() call for the
+      // docshell in the iframe, and the content sink's call to OpenBody().
+      // (Bug 153815)
+
+      PRBool didInitialReflow = PR_FALSE;
+      shell->GetDidInitialReflow(&didInitialReflow);
+      if (didInitialReflow) {
+        // XXX: The assumption here is that if something already
+        // called InitialReflow() on this shell, it also did some of
+        // the setup below, so we do nothing and just move on to the
+        // next shell in the list.
+
+        continue;
+      }
+
+      // Make shell an observer for next time
+      shell->BeginObservingDocument();
+
+      // Resize-reflow this time
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
+      nsRect r;
+      cx->GetVisibleArea(r);
+      shell->InitialReflow(r.width, r.height);
+
+      // Now trigger a refresh
+      RefreshIfEnabled(shell->GetViewManager());
+    }
+  }
+
+  // If the document we are loading has a reference or it is a
+  // frameset document, disable the scroll bars on the views.
+
+  if (mDocumentURI) {
+    nsCAutoString ref;
+
+    // Since all URI's that pass through here aren't URL's we can't
+    // rely on the nsIURI implementation for providing a way for
+    // finding the 'ref' part of the URI, we'll haveto revert to
+    // string routines for finding the data past '#'
+
+    mDocumentURI->GetSpec(ref);
+
+    nsReadingIterator<char> start, end;
+
+    ref.BeginReading(start);
+    ref.EndReading(end);
+
+    if (FindCharInReadable('#', start, end)) {
+      ++start; // Skip over the '#'
+
+      mRef = Substring(start, end);
+    }
+  }
+
+  if (!mRef.IsEmpty() || aIsFrameset) {
+    // Disable the scroll bars.
+    for (i = 0; i < ns; i++) {
+      nsIPresShell *shell = mDocument->GetShellAt(i);
+
+      nsIViewManager* vm = shell->GetViewManager();
+      if (vm) {
+        nsIView* rootView = nsnull;
+        vm->GetRootView(rootView);
+        nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
+
+        if (sview) {
+          sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
+        }
+      }
+    }
+  }
 }

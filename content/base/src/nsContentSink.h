@@ -92,10 +92,13 @@ protected:
                                     const nsAString& aType,
                                     const nsAString& aMedia);
 
+  nsresult ProcessMETATag(nsIContent* aContent);
+
   void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
 
   PRBool ScrollToRef(PRBool aReallyScroll);
   nsresult RefreshIfEnabled(nsIViewManager* vm);
+  void StartLayout(PRBool aIsFrameset);
 
   // Overridable hooks into script evaluation
   virtual void PreEvaluateScript()  {return;}
