@@ -309,7 +309,7 @@ FeedItem.prototype.writeToFolder = function() {
 
   // Convert the title to UTF-16 before performing our HTML entity replacement
   // reg expressions.
-  var title = this.title + "&gt;"; 
+  var title = this.title; 
 
   // the subject may contain HTML entities.
   // Convert these to their unencoded state. i.e. &amp; becomes '&'
