@@ -1520,7 +1520,7 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 			{
 				outMark = 0;
 				better = EDT_GetCharacterData( *GetContext() );
-				if ( better && better->pFontFace 
+				if ( better /*&& better->pFontFace*/
 				&& mFontToolbarPopup && mFontToolbarPopup->IsEnabled() )
 				{
 					outMark = checkMark;
@@ -1540,9 +1540,12 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 						fontItemString[ 0 ] = 0;
 						::GetMenuItemText ( menuh, menuItemNum, fontItemString );
 						p2cstr( fontItemString );
-						if ( XP_STRLEN((char *)fontItemString) > 0 
-						&& XP_STRSTR( better->pFontFace, (char *)fontItemString ) != NULL )
-							break;
+						if ( XP_STRLEN((char *)fontItemString) > 0
+						&& ( XP_STRSTR( better->pFontFace, (char *)fontItemString ) != NULL    // we found a matching font
+						   || ( ( better->values & TF_FIXED ) != 0 && XP_STRSTR( XP_GetString(XP_NSFONT_FIXED), (char *)fontItemString ) ) // or we want "Fixed Width"
+						   || ( ( !( better->values & TF_FIXED ) && !( better->values & TF_FONT_FACE ) ) 
+						       && XP_STRSTR( XP_GetString(XP_NSFONT_DEFAULT), (char*)fontItemString ) ) ) ) // or we want "Variable Width"
+						   break;
 					}
 
 					mFontToolbarPopup->SetValue( menuItemNum );
@@ -1748,6 +1751,20 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 			outEnabled = ( EDT_GetMergeTableCellsType (*GetContext() ) != ED_MERGE_NONE );
 				break;
 		
+		case cmd_Convert_Table_To_Text:
+			if (!IsDoneLoading() )
+				return;
+			
+			outEnabled = EDT_IsInsertPointInTableCell( *GetContext() );
+				break;
+		
+		case cmd_Convert_Text_To_Table:
+			if (!IsDoneLoading() )
+				return;
+			
+			outEnabled = EDT_CanConvertTextToTable( *GetContext() );
+				break;
+
 #if 0
 		case cmd_DisplayTableBoundaries:
 			outEnabled = true;
@@ -4879,8 +4896,17 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 			FLUSH_JAPANESE_TEXT
 			EDT_SplitTableCell( *GetContext() );
 			break;
-
-					
+		
+		case cmd_Convert_Table_To_Text:
+		    FLUSH_JAPANESE_TEXT
+		    EDT_ConvertTableToText( *GetContext() );
+		    break;
+		
+		case cmd_Convert_Text_To_Table:
+		    FLUSH_JAPANESE_TEXT
+		    EDT_ConvertTextToTable( *GetContext(), 1 /*passing in 1 for now, we haven't decided on how we want to do this*/ );
+		    break;
+	
 #if 0
 		case cmd_DisplayTableBoundaries:
 			Boolean doDisplayTableBorders;
