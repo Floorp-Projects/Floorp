@@ -74,8 +74,9 @@ var progressHooks =
             // nsXPInstallManager is done with us, but we'll let users
             // dismiss the dialog themselves so they can see the status
             // (unless we're closing because the user cancelled)
-            document.getElementById("ok").disabled = false;
-            document.getElementById("cancel").disabled = true;
+            document.documentElement.getButton("accept").disabled = false;
+            document.documentElement.getButton("cancel").disabled = true;
+            document.documentElement.getButton("accept").focus();
             gCanClose = true;
 
             if (gCancelled)
@@ -105,9 +106,8 @@ var progressHooks =
 
 function onLoad() 
 {
-    doSetOKCancel(dlgOK, dlgCancel);
-    document.getElementById("ok").disabled = true;
-    document.getElementById("cancel").focus();
+    document.documentElement.getButton("accept").disabled = true;
+    document.documentElement.getButton("cancel").focus();
     gBundle = document.getElementById("xpinstallBundle");
 
     var param = window.arguments[0].QueryInterface(
@@ -161,9 +161,7 @@ function addTreeItem(aRow, aName, aUrl)
     document.getElementById("xpirows").appendChild(row);
 }
 
-function dlgOK() { return true; }
-
-function dlgCancel()
+function onCancel()
 {
     gCancelled = true;
     if (gManager)
