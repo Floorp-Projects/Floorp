@@ -140,7 +140,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -173,7 +172,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreOpen3PaneWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -206,7 +204,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
@@ -248,7 +245,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreOpenURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -399,7 +395,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
       const nsString typeName;
 
   *rval = JSVAL_NULL;
@@ -663,7 +658,6 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreAccountManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMWindowPtr b0;
 
   *rval = JSVAL_NULL;
