@@ -50,6 +50,25 @@ NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult)
   return NS_OK;
 }
 
+// XXX FIX ME...
+// Returns true if this frame is being used a pseudo frame
+PRBool nsBodyFrame::IsPseudoFrame() const
+{
+  PRBool  result = PR_FALSE;
+
+  if (nsnull != mGeometricParent) {
+    nsIContent* parentContent;
+     
+    mGeometricParent->GetContent(parentContent);
+    if (parentContent == mContent) {
+      result = PR_TRUE;
+    }
+    NS_RELEASE(parentContent);
+  }
+
+  return result;
+}
+
 nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsHTMLContainerFrame(aContent, aParentFrame)
 {

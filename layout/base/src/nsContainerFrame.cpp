@@ -279,27 +279,6 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Pseudo frame related
-
-// Returns true if this frame is being used a pseudo frame
-PRBool nsContainerFrame::IsPseudoFrame() const
-{
-  PRBool  result = PR_FALSE;
-
-  if (nsnull != mGeometricParent) {
-    nsIContent* parentContent;
-     
-    mGeometricParent->GetContent(parentContent);
-    if (parentContent == mContent) {
-      result = PR_TRUE;
-    }
-    NS_RELEASE(parentContent);
-  }
-
-  return result;
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
 /**
@@ -598,7 +577,7 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
   mContent->GetTag(tag);
   if (tag != nsnull) 
     tag->ToString(tagString);
-  PRBool outputMe = (PRBool)((nsnull==aFilter) || ((PR_TRUE==aFilter->OutputTag(&tagString)) && (!IsPseudoFrame())));
+  PRBool outputMe = (PRBool)((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)));
   if (PR_TRUE==outputMe)
   {
     // Indent
@@ -650,15 +629,6 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
     }
   }
 
-  return NS_OK;
-}
-
-NS_METHOD nsContainerFrame::ListTag(FILE* out) const
-{
-  if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
-    fputs("*", out);
-  }
-  nsFrame::ListTag(out);
   return NS_OK;
 }
 

@@ -147,8 +147,6 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
                                      nsIContent*     aChild,
                                      PRInt32         aIndexInParent)
 {
-  NS_ASSERTION(!IsPseudoFrame(), "pseudos not supported here");
-
   // Find the frame that precedes the deletion point
   nsHTMLContainerFrame* flow;
   nsIFrame* deadFrame;
