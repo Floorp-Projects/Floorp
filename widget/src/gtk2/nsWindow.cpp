@@ -38,6 +38,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 
 #include "nsGtkKeyUtils.h"
 
@@ -46,9 +47,15 @@
 #include <gdk/gdkkeysyms.h>
 
 /* utility functions */
-static nsWindow *get_window_for_gtk_widget(GtkWidget *widget);
-static nsWindow *get_window_for_gdk_window(GdkWindow *window);
-static nsWindow *get_owning_window_for_gdk_window(GdkWindow *window);
+static PRBool     check_for_rollup(GdkWindow *aWindow,
+				   gdouble aMouseX, gdouble aMouseY,
+				   PRBool aIsWheel);
+static PRBool     is_mouse_in_window(GdkWindow* aWindow,
+				     gdouble aMouseX, gdouble aMouseY);
+static nsWindow  *get_window_for_gtk_widget(GtkWidget *widget);
+static nsWindow  *get_window_for_gdk_window(GdkWindow *window);
+static nsWindow  *get_owning_window_for_gdk_window(GdkWindow *window);
+static GtkWidget *get_gtk_widget_for_gdk_window(GdkWindow *window);
 
 /* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
@@ -295,12 +302,12 @@ nsWindow::SetFocus(PRBool aRaise)
   // grab it.  Note that we don't set our focus flag in this case.
   
   LOG(("SetFocus [%p]\n", (void *)this));
-  gpointer user_data = NULL;
-  gdk_window_get_user_data(mDrawingarea->inner_window, &user_data);
-  if (!user_data)
+
+  GtkWidget *owningWidget =
+    get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+  if (!owningWidget)
     return NS_ERROR_FAILURE;
 
-  GtkWidget *owningWidget = GTK_WIDGET(user_data);
   nsWindow  *owningWindow = get_window_for_gtk_widget(owningWidget);
   if (!owningWindow)
     return NS_ERROR_FAILURE;
@@ -657,6 +664,7 @@ nsWindow::PreCreateWidget(nsWidgetInitData *aWidgetInitData)
 NS_IMETHODIMP
 nsWindow::CaptureMouse(PRBool aCapture)
 {
+  printf("nsWindow::CaptureMouse called!\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -665,14 +673,19 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 			      PRBool             aDoCapture,
 			      PRBool             aConsumeRollupEvent)
 {
+  GtkWidget *widget = 
+    get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+
   if (aDoCapture) {
     gRollupListener = aListener;
     gRollupWindow =
       getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWidget*,this)));
+    gtk_grab_add(widget);
     NativeGrab(PR_TRUE);
   }
   else {
     NativeGrab(PR_FALSE);
+    gtk_grab_remove(widget);
     gRollupListener = nsnull;
     gRollupWindow = nsnull;
   }
@@ -880,6 +893,11 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
   PRUint32      eventType;
   nsEventStatus status;
 
+  // check to see if we should rollup
+  if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
+		     PR_FALSE))
+    return;
+
   switch (aEvent->button) {
   case 2:
     eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
@@ -1041,6 +1059,13 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
 {
   nsMouseScrollEvent event;
   InitMouseScrollEvent(event, aEvent, NS_MOUSE_SCROLL);
+
+  // check to see if we should rollup
+  if (check_for_rollup(aEvent->window, aEvent->x_root, aEvent->y_root,
+		     PR_TRUE)) {
+    printf("ignoring event\n");
+    return;
+  }
 
   nsEventStatus status;
   DispatchEvent(&event, status);
@@ -1369,7 +1394,7 @@ nsWindow::NativeGrab(PRBool aGrab)
     GdkCursor *cursor = gdk_cursor_new(GDK_ARROW);
     
     gint retval;
-    retval = gdk_pointer_grab(mDrawingarea->inner_window, PR_TRUE,
+    retval = gdk_pointer_grab(mDrawingarea->inner_window, TRUE,
 			      (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
 					     GDK_BUTTON_RELEASE_MASK |
 					     GDK_ENTER_NOTIFY_MASK |
@@ -1396,7 +1421,7 @@ nsWindow::NativeGrab(PRBool aGrab)
     else
       grabWindow = mDrawingarea->inner_window;
 
-    retval = gdk_keyboard_grab(grabWindow, PR_TRUE, GDK_CURRENT_TIME);
+    retval = gdk_keyboard_grab(grabWindow, TRUE, GDK_CURRENT_TIME);
 
     if (retval != GDK_GRAB_SUCCESS) {
       LOG(("keyboard grab failed %d\n", retval));
@@ -1421,14 +1446,116 @@ nsWindow::GetToplevelWidget(GtkWidget **aWidget)
     return;
   }
 
-  gpointer user_data = nsnull;
-  gdk_window_get_user_data(mDrawingarea->inner_window, &user_data);
-  NS_ASSERTION(user_data, "no user data for parentArea\n");
-  
-  if (!user_data)
+  GtkWidget *widget =
+    get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+  if (!widget)
     return;
   
-  *aWidget = gtk_widget_get_toplevel(GTK_WIDGET(user_data));
+  *aWidget = gtk_widget_get_toplevel(widget);
+}
+
+PRBool
+check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
+		 PRBool aIsWheel)
+{
+  PRBool retVal = PR_FALSE;
+  nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
+
+  if (rollupWidget && gRollupListener) {
+    GdkWindow *currentPopup =
+      (GdkWindow *)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (!is_mouse_in_window(currentPopup, aMouseX, aMouseY)) {
+      PRBool rollup = PR_TRUE;
+      if (aIsWheel) {
+	gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+	retVal = PR_TRUE;
+      }
+      // if we're dealing with menus, we probably have submenus and
+      // we don't want to rollup if the clickis in a parent menu of
+      // the current submenu
+      nsCOMPtr<nsIMenuRollup> menuRollup;
+      menuRollup = (do_QueryInterface(gRollupListener));
+      if (menuRollup) {
+	nsCOMPtr<nsISupportsArray> widgetChain;
+	menuRollup->GetSubmenuWidgetChain(getter_AddRefs(widgetChain));
+	if (widgetChain) {
+	  PRUint32 count = 0;
+	  widgetChain->Count(&count);
+	  for (PRUint32 i=0; i<count; ++i) {
+	    nsCOMPtr<nsISupports> genericWidget;
+	    widgetChain->GetElementAt(i, getter_AddRefs(genericWidget));
+	    nsCOMPtr<nsIWidget> widget(do_QueryInterface(genericWidget));
+	    if (widget) {
+              GdkWindow* currWindow =
+		(GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
+              if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
+                rollup = PR_FALSE;
+                break;
+              }
+            }
+          } // foreach parent menu widget
+        }
+      } // if rollup listener knows about menus
+      
+      // if we've determined that we should still rollup, do it.
+      if (rollup) {
+        gRollupListener->Rollup();
+        retVal = PR_TRUE;
+      }
+    }
+  } else {
+    gRollupWindow = nsnull;
+    gRollupListener = nsnull;
+  }
+  
+  return retVal;
+}
+
+/* static */
+PRBool
+is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
+{
+  gint x, y;
+  gint w, h;
+
+  gint offsetX = 0;
+  gint offsetY = 0;
+  
+  // XXX this causes a round trip to the ever lovely X server.  fix me.
+  //  gdk_window_get_origin(aWindow, &x, &y);
+  // use get_position
+  GtkWidget *widget;
+  GdkWindow *window;
+
+  window = aWindow;
+
+  while (window) {
+    gint tmpX = 0;
+    gint tmpY = 0;
+
+    gdk_window_get_position(window, &tmpX, &tmpY);
+    widget = get_gtk_widget_for_gdk_window(window);
+
+    // if this is a window, compute x and y given its origin and our
+    // offset
+    if (GTK_IS_WINDOW(widget)) {
+      x = tmpX + offsetX;
+      y = tmpY + offsetY;
+      break;
+    }
+
+    offsetX += tmpX;
+    offsetY += tmpY;
+    window = gdk_window_get_parent(window);
+  }
+
+  gdk_window_get_size(aWindow, &w, &h);
+  
+  if ( aMouseX > x && aMouseX < x + w &&
+       aMouseY > y && aMouseY < y + h )
+    return PR_TRUE;
+  
+  return PR_FALSE;
 }
 
 /* static */
@@ -1461,24 +1588,29 @@ get_window_for_gdk_window(GdkWindow *window)
 nsWindow *
 get_owning_window_for_gdk_window(GdkWindow *window)
 {
-  gpointer user_data;
-  gdk_window_get_user_data(window, &user_data);
-
-  if (!user_data)
-    return nsnull;
-
-  GtkWidget *owningWidget = GTK_WIDGET(user_data);
-  
+  GtkWidget *owningWidget = get_gtk_widget_for_gdk_window(window);
   if (!owningWidget)
     return nsnull;
 
-  user_data = NULL;
+  gpointer user_data;
   user_data = g_object_get_data(G_OBJECT(owningWidget), "nsWindow");
   
   if (!user_data)
     return nsnull;
 
   return (nsWindow *)user_data;
+}
+
+/* static */
+GtkWidget *
+get_gtk_widget_for_gdk_window(GdkWindow *window)
+{
+  gpointer user_data = NULL;
+  gdk_window_get_user_data(window, &user_data);
+  if (!user_data)
+    return NULL;
+
+  return GTK_WIDGET(user_data);
 }
 
 // gtk callbacks
