@@ -30,33 +30,35 @@ MODULE		= xpcom
 INTERNAL_TOOLS	= 1
 
 SIMPLE_PROGRAMS	= xpt_dump xpt_link
-
 CSRCS		= xpt_dump.c xpt_link.c
 
-# Compile directly against the static lib, so we can use the tools
-# during the build without the shared library path being set.
 ifdef CROSS_COMPILE
-LIBS		= $(DIST)/lib/libhostxpt.a
-else
-LIBS		= $(DIST)/lib/libxpt.a
-endif
-
-# Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
-# when libxpt changes.
-ifdef CROSS_COMPILE
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/libhostxpt.*)
-else
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
+HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS))
+HOST_CSRCS		= $(CSRCS)
 endif
 
 include $(topsrcdir)/config/rules.mk
 
+# Compile directly against the static lib, so we can use the tools
+# during the build without the shared library path being set.
+LIBS		= $(DIST)/lib/libxpt.a
+
+# Tell the $(SIMPLE_PROGRAMS) target that we need to be recompiled
+# when libxpt changes.
+EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
+
+
 ifdef CROSS_COMPILE
+HOST_LIBS		= $(DIST)/host/lib/libhostxpt.a
+HOST_EXTRA_DEPS		= $(wildcard $(DIST)/host/lib/libhostxpt.*)
+
 ifdef HOST_NSPR_MDCPUCFG
-CFLAGS		+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
 
 # Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
 export:: install
+
+
 

@@ -26,14 +26,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-INTERNAL_TOOLS	= 1
-
 PROGRAM		= nsinstall
+ifdef CROSS_COMPILE
+HOST_PROGRAM	= host_nsinstall
+endif
 
 CSRCS		= nsinstall.c pathsub.c
 PLSRCS		= nfspwd.pl revdepth.pl
+ifdef CROSS_COMPILE
+HOST_CSRCS	= $(CSRCS)
+endif
 
-TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
+TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
 ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)

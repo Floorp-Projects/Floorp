@@ -39,29 +39,31 @@ CSRCS		= \
 		xpidl_java.c \
 		$(NULL)
 
-# Compile directly against the static lib, so we can use xpidl during the build
-# without the shared library path being set.
+
 ifdef CROSS_COMPILE
-LIBS		= $(DIST)/lib/libhostxpt.a $(LIBIDL_LIBS)
-else
-LIBS		= $(DIST)/lib/libxpt.a $(LIBIDL_LIBS)
+HOST_PROGRAM	= host_xpidl
+HOST_CSRCS	= $(CSRCS)
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= $(LIBIDL_CFLAGS)
 
-ifdef CROSS_COMPILE
-ifdef HOST_NSPR_MDCPUCFG
-CFLAGS		+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
-endif
-endif
+# Compile directly against the static lib, so we can use xpidl during the build
+# without the shared library path being set.
+LIBS		= $(DIST)/lib/libxpt.$(LIB_SUFFIX) $(LIBIDL_LIBS)
 
 # Tell the $(PROGRAM) target that we need to be recompiled when libxpt changes.
-ifdef CROSS_COMPILE
-EXTRA_DEPS	= $(wildcard $(DIST)/lib/libhostxpt.*)
-else
 EXTRA_DEPS	= $(wildcard $(DIST)/lib/libxpt.*)
+
+ifdef CROSS_COMPILE
+HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
+HOST_LIBS	= $(DIST)/host/lib/libhostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
+HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/libhostxpt.*)
+
+ifdef HOST_NSPR_MDCPUCFG
+HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
+endif
 endif
 
 export:: install
