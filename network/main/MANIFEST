@@ -15,3 +15,4 @@ mkautocf.h
 mkutils.h
 mktrace.h
 mkhelp.h
+net_xp_file.h

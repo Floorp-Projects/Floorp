@@ -55,7 +55,7 @@ endif
 
 EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 	netstream.h mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
-        mkutils.h mktrace.h
+        mkutils.h mktrace.h net_xp_file.h
 
 ifdef MOZ_MAIL_NEWS
 EXPORTS += mkldap.h
