@@ -73,6 +73,13 @@ nsMapiRegistry::GetIsDefaultMailClient(PRBool * retval) {
 }
 
 NS_IMETHODIMP
+nsMapiRegistry::GetIsDefaultNewsClient(PRBool * retval) {
+  // XXX this needs merged from aviary branch
+  *retval = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMapiRegistry::GetShowDialog(PRBool * retval) {
     *retval = m_ShowDialog;
     return NS_OK;
@@ -102,6 +109,13 @@ nsMapiRegistry::SetIsDefaultMailClient(PRBool aIsDefaultMailClient)
     }
 
     return rv ;
+}
+
+NS_IMETHODIMP
+nsMapiRegistry::SetIsDefaultNewsClient(PRBool aIsDefaultNewsClient)
+{
+  // XXX this needs merged from aviary branch
+  return NS_OK;
 }
 
 /** This will bring up the dialog box only once per session and 

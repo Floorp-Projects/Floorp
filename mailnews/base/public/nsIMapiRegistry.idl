@@ -48,9 +48,12 @@ interface nsIDOMWindow;
 [scriptable, uuid(c5be14ba-4e0a-4eec-a1b8-04363761d63c)]
 interface nsIMapiRegistry: nsISupports {
 
-   /** This is set to TRUE if Mozilla is the default Application
+   /** This is set to TRUE if Mozilla is the default mail application
     */
    attribute boolean isDefaultMailClient;
+
+  /* Set to TRUE if Mozilla is the default news application */
+   attribute boolean isDefaultNewsClient;
 
    /** This is set TRUE only once per session.
     */
