@@ -39,6 +39,11 @@ NS_IMETHODIMP nsXPIDLServiceManager::UnregisterService(const nsCID & aClass) {
 NS_IMETHODIMP nsXPIDLServiceManager::GetService(const nsCID & aClass, const nsIID & aIID, nsISupports **_retval) {
     return nsServiceManager::GetService(aClass,aIID,_retval);
 }
+
+NS_IMETHODIMP nsXPIDLServiceManager::GetServiceByContractID(const char *contractID, const nsIID & aIID, nsISupports **_retval) {
+   return nsServiceManager::GetService(contractID,aIID,_retval);
+}
+
 NS_IMETHODIMP nsXPIDLServiceManager::ReleaseService(const nsCID & aClass, nsISupports *service) {
     return nsServiceManager::ReleaseService(aClass,service);
 }

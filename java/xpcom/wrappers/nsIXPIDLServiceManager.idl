@@ -29,5 +29,6 @@ interface nsIXPIDLServiceManager : nsISupports
     void registerService(in nsCIDRef aClass, in nsISupports aService);
     void unregisterService(in nsCIDRef aClass);
     nsISupports getService(in nsCIDRef aClass, in nsIIDRef aIID);
+    nsISupports getServiceByContractID(in string contractID, in nsIIDRef aIID);
     void ReleaseService(in nsCIDRef aClass, in nsISupports service);
 };
