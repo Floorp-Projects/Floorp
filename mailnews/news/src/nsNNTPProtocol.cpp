@@ -701,7 +701,11 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   if (m_fromCache)
   {
 	  if (m_channelListener)
+	  {
+          if (!m_channelContext)
+	          m_channelContext = do_QueryInterface(aURL);
 		  rv = m_channelListener->OnStartRequest(this, m_channelContext);
+	  }
   }
 
   m_articleNumber = -1;
