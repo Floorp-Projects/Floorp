@@ -6585,10 +6585,17 @@ nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
   if (NS_FAILED(res)) return res;
   for (j = 0; j < nodeCount; j++)
   {
+    // need to put br at END of node.  It may have
+    // empty containers in it and still pass the "IsEmptynode" test,
+    // and we want the br's to be after them.  Also, we want the br
+    // to be after the selection if the selection is in this node.
+    PRUint32 len;
     isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> brNode, theNode( do_QueryInterface(isupports ) );
     arrayOfNodes->RemoveElementAt(0);
-    res = CreateMozBR(theNode, 0, address_of(brNode));
+    res = nsEditor::GetLengthOfDOMNode(theNode, len);
+    if (NS_FAILED(res)) return res;
+    res = CreateMozBR(theNode, (PRInt32)len, address_of(brNode));
     if (NS_FAILED(res)) return res;
   }
   
