@@ -33,7 +33,11 @@ $lxr_data_root = '/export2/lxr-data';
   '__cmsg_data',
   'location of the previous definition',
   '\' was hidden',
-  'declaration of \`index\'',
+  'declaration of \`index\' shadows global',
+  'declaration of \`ws\' shadows global', # from istream
+  'declaration of \`y0\' shadows global', # from mathcalls.h
+  'declaration of \`y1\' shadows global', # from mathcalls.h
+  'by \`nsHTMLAnchor::SetAttribute', # kipp says this is bogus
 );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
@@ -131,9 +135,16 @@ sub gcc_parser {
     #
     if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
       ($build_dir = $1) =~ s|.*/mozilla/||;
+
+      # Skip the network directory until necko lands
+      if ($build_dir eq 'network') {
+        while (<$fh>) {
+          last if /^gmake\[\d\]: Leaving directory \`.*\/mozilla\/network\'$/;
+        }
+      }
       next;
     }
-
+    
     # Now only match lines with "warning:"
     next unless /warning:/;
     next if /$ignore_pat/o;
