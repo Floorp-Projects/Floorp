@@ -47,6 +47,6 @@ PRIVATE_EXPORTS = \
 	$(NULL)
 
 CSRCS = \
-	algsha.c \
+	sha_fast.c \
 	$(NULL)
 
