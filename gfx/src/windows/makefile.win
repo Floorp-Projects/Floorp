@@ -27,6 +27,9 @@ MODULE=raptor
 
 DEFINES=-D_IMPL_NS_GFX -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN
 
+MISCDEP=                        \
+ $(DIST)\lib\raptorgfx_s.lib
+ 
 OBJS =                                  \
 	.\$(OBJDIR)\nsDeviceContextWin.obj   \
 	.\$(OBJDIR)\nsRenderingContextWin.obj         \
