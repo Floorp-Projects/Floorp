@@ -997,6 +997,128 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 }
 
 
+//
+// ScrollBits
+//
+// ::ScrollRect() unfortunately paints the invalidated area with the 
+// background pattern. This causes lots of ugly flashing and makes us look 
+// pretty bad. Instead, we roll our own ::ScrollRect() by using ::CopyBits() 
+// to scroll the image in the view and then set the update
+// rgn appropriately so that the compositor can blit it to the screen.
+//
+// This will also work with system floating windows over the area that is
+// scrolling.
+//
+// ¥¥¥¥ This routine really needs to be Carbonated!!!! It is nowhere close,
+// ¥¥¥¥ even though there are a couple of carbon ifdefs here already.
+//
+void
+nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTopDelta )
+{	
+	// these come in backwards to how we're used to thinking about them.
+	inLeftDelta *= -1;
+	inTopDelta *= -1;
+	
+	// Get Frame in local coords from clip rect (there might be a border around view)
+	RgnHandle clipRgn = ::NewRgn();	
+	::GetClip(clipRgn);
+#if TARGET_CARBON
+	Rect frame;
+	::GetRegionBounds(clipRgn, &frame);
+#else
+	Rect frame = (**clipRgn).rgnBBox;
+#endif
+	RgnHandle totalView = ::NewRgn();
+	::RectRgn(totalView, &frame);
+	
+	Rect source = inRectToScroll;
+	if ( inTopDelta > 0 )
+		source.top += inTopDelta;
+	else if ( inTopDelta < 0 )
+		source.bottom -= inTopDelta;
+	if ( inLeftDelta > 0 )
+		source.left += inLeftDelta;
+	else if ( inLeftDelta < 0 )
+		source.right -= inLeftDelta;	
+	
+	// compute the destination of copybits (post-scroll)
+	Rect dest = source;
+	if ( inTopDelta ) {
+		dest.top -= inTopDelta;
+		dest.bottom -= inTopDelta;
+	}
+	if ( inLeftDelta ) {
+		dest.left -= inLeftDelta;
+		dest.right -= inLeftDelta;
+	}
+	
+	// compute the area that is to be updated by subtracting the dest from the visible area
+	RgnHandle updateRgn = ::NewRgn();
+	::RectRgn(updateRgn, &frame);
+	RgnHandle destRgn = ::NewRgn();
+	::RectRgn(destRgn, &dest);		
+	::DiffRgn ( updateRgn, destRgn, updateRgn );
+		
+	if(::EmptyRgn(mWindowPtr->visRgn))		
+	{
+		::CopyBits ( 
+			&mWindowPtr->portBits, 
+			&mWindowPtr->portBits, 
+			&source, 
+			&dest, 
+			srcCopy, 
+			nil);
+	}
+	else
+	{
+		// compute the non-visable region
+		RgnHandle nonVisableRgn = ::NewRgn();
+		::DiffRgn ( totalView, mWindowPtr->visRgn, nonVisableRgn );
+		
+		// compute the extra area that may need to be updated
+		// scoll the non-visable region to determine what needs updating
+		::OffsetRgn ( nonVisableRgn, -inLeftDelta, -inTopDelta );
+		
+		// calculate a mask region to not copy the non-visble portions of the window from the port
+		RgnHandle copyMaskRgn = ::NewRgn();
+		::DiffRgn(totalView, nonVisableRgn, copyMaskRgn);
+		
+		// use copybits to simulate a ScrollRect()
+		RGBColor black = { 0, 0, 0 };
+		RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF } ;
+		::RGBForeColor(&black);
+		::RGBBackColor(&white);
+		::PenNormal();	
+
+		::CopyBits ( 
+			&mWindowPtr->portBits, 
+			&mWindowPtr->portBits, 
+			&source, 
+			&dest, 
+			srcCopy, 
+			copyMaskRgn);
+			
+		// union the update regions together and invalidate them
+		::UnionRgn(nonVisableRgn, updateRgn, updateRgn);
+		
+		::DisposeRgn ( nonVisableRgn );
+		::DisposeRgn ( copyMaskRgn );
+	}
+	
+#if TARGET_CARBON
+	::InvalWindowRgn(mWindowPtr, updateRgn);
+#else
+	::InvalRgn(updateRgn);
+#endif
+
+	::DisposeRgn ( clipRgn );
+	::DisposeRgn ( totalView );
+	::DisposeRgn ( updateRgn );
+	::DisposeRgn ( destRgn );
+	
+} // ScrollBits
+
+
 //-------------------------------------------------------------------------
 //
 // Scroll the bits of a window
@@ -1021,10 +1143,6 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	Rect macRect;
 	nsRectToMacRect(scrollRect, macRect);
 
-	RgnHandle updateRgn = ::NewRgn();
-	if (updateRgn == nil)
-		return NS_ERROR_OUT_OF_MEMORY;
-
 	StartDraw();
 
 		// Clip to the windowRegion instead of the visRegion (note: the visRegion
@@ -1032,14 +1150,9 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		// ScrollRect() scrolls the visible bits of this widget as well as its children.
 		::SetClip(mWindowRegion);
 
-		// Scroll the bits now
-		::ScrollRect(&macRect, aDx, aDy, updateRgn);
-#if TARGET_CARBON
-		::InvalWindowRgn(mWindowPtr, updateRgn);
-#else
-		::InvalRgn(updateRgn);
-#endif
-		::DisposeRgn(updateRgn);
+		// Scroll the bits now. We've rolled our own because ::ScrollRect looks ugly
+		ScrollBits(macRect,aDx,aDy);
+
 	EndDraw();
 
 	//--------
