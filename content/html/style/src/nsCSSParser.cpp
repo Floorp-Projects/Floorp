@@ -1130,7 +1130,10 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
       UngetToken();
     }
   }
-  // XXX do something with isImportant flag
+
+  if (PR_TRUE == isImportant) {
+    aDeclaration->SetValueImportant(propertyName);
+  }
 
   // Make sure valid property declaration is terminated with either a
   // semicolon or a right-curly-brace (when aCheckForBraces is true).
