@@ -124,6 +124,10 @@ nsDeviceContextXp::SetSpec(nsIDeviceContextSpec* aSpec)
   xpSpec = do_QueryInterface(mSpec, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = mPrintContext->Init(this, xpSpec);
+
+    if (NS_FAILED(rv)) {
+      DestroyXPContext();
+    }
   }
  
   return rv;
@@ -186,6 +190,8 @@ NS_IMETHODIMP nsDeviceContextXp :: CreateRenderingContext(nsIRenderingContext *&
   nsresult rv;
    
   aContext = nsnull;
+
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsRenderingContextXp> renderingContext = new nsRenderingContextXp();
   if (!renderingContext)
@@ -274,6 +280,8 @@ NS_IMETHODIMP nsDeviceContextXp :: GetSystemFont(nsSystemFontID aID,
 NS_IMETHODIMP nsDeviceContextXp::GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
                                                         PRInt32 &aHeight)
 {
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
   float width, height;
   width  = (float) mPrintContext->GetWidth();
   height = (float) mPrintContext->GetHeight();
@@ -286,6 +294,8 @@ NS_IMETHODIMP nsDeviceContextXp::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
 
 NS_IMETHODIMP nsDeviceContextXp::GetRect(nsRect &aRect)
 {
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
   PRInt32 width, height;
   nsresult rv;
   rv = GetDeviceSurfaceDimensions(width, height);
@@ -309,6 +319,7 @@ NS_IMETHODIMP nsDeviceContextXp::GetClientRect(nsRect &aRect)
  */
 NS_IMETHODIMP nsDeviceContextXp::GetDeviceContextFor(nsIDeviceContextSpec *aDevice, nsIDeviceContext *&aContext)
 {
+  aContext = nsnull;
   return NS_OK;
 }
 
@@ -318,29 +329,30 @@ NS_IMETHODIMP nsDeviceContextXp::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
 NS_IMETHODIMP nsDeviceContextXp::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {  
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::BeginDocument()\n"));
-  nsresult  rv = NS_OK;
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
-  } 
-  return rv;
+
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
+  return mPrintContext->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
 }
 
 
 void nsDeviceContextXp::DestroyXPContext()
 {
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::DestroyXPContext()\n"));
-  if (mPrintContext != nsnull) {   
-    /* gisburn: mPrintContext cannot be reused between to print 
-     * tasks as the destination print server may be a different one 
-     * or the printer used on the same print server has other 
-     * properties (build-in fonts for example ) than the printer 
-     * previously used. */
-    FlushFontCache();           
-    nsRenderingContextXlib::Shutdown();
-    nsFontMetricsXlib::FreeGlobals();
-    
-    mPrintContext = nsnull; // nsCOMPtr will call |delete mPrintContext;|
-  } 
+
+  if (!mPrintContext)
+    return;
+
+  /* gisburn: mPrintContext cannot be reused between to print
+   * tasks as the destination print server may be a different one
+   * or the printer used on the same print server has other
+   * properties (build-in fonts for example ) than the printer
+   * previously used. */
+  FlushFontCache();
+  nsRenderingContextXlib::Shutdown();
+  nsFontMetricsXlib::FreeGlobals();
+
+  mPrintContext = nsnull; // nsCOMPtr will call |delete mPrintContext;|
 }
 
 /** ---------------------------------------------------
@@ -349,13 +361,11 @@ void nsDeviceContextXp::DestroyXPContext()
 NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
 {
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::EndDocument()\n"));
-  nsresult rv = NS_OK;
 
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->EndDocument();
-    DestroyXPContext();
-  }
-  
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
+  nsresult rv = mPrintContext->EndDocument();
+  DestroyXPContext();
   return rv;
 }
 
@@ -365,13 +375,11 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
 NS_IMETHODIMP nsDeviceContextXp::AbortDocument(void)
 {
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::AbortDocument()\n"));
-  nsresult rv = NS_OK;
 
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->AbortDocument();
-    DestroyXPContext();
-  }
-  
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
+  nsresult rv = mPrintContext->AbortDocument();
+  DestroyXPContext();
   return rv;
 }
 
@@ -380,11 +388,9 @@ NS_IMETHODIMP nsDeviceContextXp::AbortDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextXp::BeginPage(void)
 {
-  nsresult  rv = NS_OK;
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->BeginPage();
-  }
-  return rv;
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
+  return mPrintContext->BeginPage();
 }
 
 /** ---------------------------------------------------
@@ -393,11 +399,9 @@ NS_IMETHODIMP nsDeviceContextXp::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextXp::EndPage(void)
 {
-  nsresult  rv = NS_OK;
-  if (mPrintContext != nsnull) {
-    rv = mPrintContext->EndPage();
-  }
-  return rv;
+  NS_ENSURE_TRUE(mPrintContext != nsnull, NS_ERROR_NULL_POINTER);
+
+  return mPrintContext->EndPage();
 }
 
 /** ---------------------------------------------------
@@ -448,8 +452,7 @@ NS_IMETHODIMP nsDeviceContextXp::CreateFontCache()
   if (nsnull == mFontCache) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mFontCache->Init(this);
-  return NS_OK;
+  return mFontCache->Init(this);
 }
 
 
