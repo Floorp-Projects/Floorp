@@ -54,7 +54,7 @@ treehead treeitem treecell {
  padding-left: 4px;
 }
 
-treeitem[selected="true"] > treecell {
+treecell[selectedcell] {
  background-color: yellow;
 }
 

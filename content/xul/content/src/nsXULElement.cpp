@@ -2589,25 +2589,11 @@ RDFElementImpl::GetInlineStyleRule(nsIStyleRule*& aResult)
 NS_IMETHODIMP
 RDFElementImpl::GetStyleHintForAttributeChange(const nsIAtom* aAttribute, PRInt32 *aHint) const
 {
-  *aHint = NS_STYLE_HINT_REFLOW;
+  *aHint = NS_STYLE_HINT_UNKNOWN;
   if (mNameSpaceID == kNameSpaceID_XUL)
   {
       // We are a XUL tag and need to specify a style hint.
-      if (!mTag)
-        return NS_OK;
-
-      nsString tagName;
-      mTag->ToString(tagName);
-      
-      nsString attributeName;
-      aAttribute->ToString(attributeName);
-
-      if (tagName == "progressmeter")
-      {
-          // Give hints for the values that should only involve a content change
-          if (attributeName == "value" || attributeName == "mode")
-            *aHint = NS_STYLE_HINT_CONTENT;
-      }
+      *aHint = NS_STYLE_HINT_CONTENT;
   }
 
   return NS_OK;
