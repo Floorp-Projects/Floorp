@@ -20,23 +20,25 @@
  *   Axel Hecht <axel@pike.org> (Original Author)
  */
 
-var name_array,__docSet;
+var name_array,index_array,__docSet;
 
-function do_transforms(new_name_array,verbose){
+function do_transforms(new_name_array,new_number_array,verbose){
   if (new_name_array) {
     name_array=new_name_array;
+    index_array=new_number_array;
     dump("\n==============================\n");
     dump("TransforMiiX regression buster\n");
     dump("==============================\n");
   }
   if (name_array.length){
     current=name_array.shift();
-    __docSet=new txDocSet(current);
+    __docSet=new txDocSet(current,index_array.shift());
   }
 }
 
-function txDocSet(name,verbose){
+function txDocSet(name,index,verbose){
   this.mName = name;
+  this.mIndex = index;
   this.mBase = document.getElementById('xalan_base').getAttribute('value');
   if (verbose) this.mVerbose=verbose;
   this.mSource = document.implementation.createDocument("","",null);
@@ -48,7 +50,12 @@ function txDocSet(name,verbose){
   this.mReference.addEventListener("load",this.refLoaded,false);
   this.mSource.load(this.mBase+"conf/"+name+".xml");
   this.mStyle.load(this.mBase+"conf/"+name+".xsl");
-  this.mReference.load(this.mBase+"conf-gold/"+name+".out");
+  this.mIsError = name.match(/\/err\//);
+  if (this.mIsError){
+    this.mLoaded = 2;
+  } else {
+    this.mReference.load(this.mBase+"conf-gold/"+name+".out");
+  }
 }
 
 txDocSet.prototype = {
@@ -59,7 +66,9 @@ txDocSet.prototype = {
   mResult    : null,
   mReference : null,
   mVerbose   : false,
+  mIsError   : false,
   mLoaded    : 0,
+  mIndex     : 0,
 
   styleLoaded  : function(e){
     __docSet.stuffLoaded(1);
@@ -74,25 +83,31 @@ txDocSet.prototype = {
     __docSet.mLoaded+=mask;
     if (this.mLoaded==7){
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      var txProc = new XSLTProcessor(),isGood;
+      var txProc = new XSLTProcessor(),isGood=false;
       dump("\nTrying "+this.mName+" ");
       txProc.transformDocument(this.mSource,this.mStyle,this.mResult,null);
-      try{
-        isGood = DiffDOM(this.mResult.documentElement,this.mReference.documentElement);
-      } catch (e) {isGood = false;};
-      if (!isGood){
-        dump(" and failed\n\n");
-        this.mVerbose=true;
-        handle_result(this.mName,false);
-      } else {
-        dump(" and succeeded\n\n");
-        handle_result(this.mName,true);
-      }
-      if (this.mVerbose){
-        dump("Result:\n");
+      if (this.mIsError) {
+        dump("for error test\nResult:\n");
         DumpDOM(this.mResult);
-        dump("Reference:\n");
-        DumpDOM(this.mReference);
+        handle_result(this.mIndex,true);
+      } else {
+        try{
+          isGood = DiffDOM(this.mResult.documentElement,this.mReference.documentElement);
+        } catch (e) {isGood = false;};
+        if (!isGood){
+          dump(" and failed\n\n");
+          this.mVerbose=true;
+          handle_result(this.mIndex,false);
+        } else {
+          dump(" and succeeded\n\n");
+          handle_result(this.mIndex,true);
+        }
+        if (this.mVerbose){
+          dump("Result:\n");
+          DumpDOM(this.mResult);
+          dump("Reference:\n");
+          DumpDOM(this.mReference);
+        }
       }
       do_transforms();
     }

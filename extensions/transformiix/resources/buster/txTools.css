@@ -26,30 +26,23 @@ text.head {
   font-weight: bold;
 }
 
-column {
-  margin-left: 2px;
-  margin-right: 2px;
-}
-
-#tests{
-  overflow: auto;
-}
-
-.succeeded {
-  background-color: green;
-}
-
-.failed {
-  background-color: red;
-}
-
 :-moz-outliner-row(success)
 {
-  background-color: green;
+  background-color: green ! important;
 }
 
 :-moz-outliner-row(fail)
 {
-  background-color: red;
+  background-color: red ! important;
 }
 
+:-moz-outliner-row(selected)
+{
+  border: 1px solid blue ! important;
+  background-color: white ;
+}
+
+:-moz-outliner-cell-text(selected)
+{
+  color: black ! important;  
+}
