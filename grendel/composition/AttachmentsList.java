@@ -273,16 +273,16 @@ public class AttachmentsList extends JScrollPane implements Serializable {
             Frame parentFrame = getTopLevelFrame(this);
 
             if (null != parentFrame) {
-                FileDialog file = new FileDialog (parentFrame, "Attach File", FileDialog.LOAD);
-
-                file.setFile ("*.*");   //all files.
-                file.show();            //show the dialog. This blocks.
+                JFileChooser file = new JFileChooser ();
+                
+                file.setDialogTitle ("Attach File");
+                file.showDialog(parentFrame, "Attach");   //show the dialog. This blocks.
 
                 //didi they select a file?
-                if (null != file.getFile()) {
+                if (null != file.getSelectedFile()) {
 
                     //assemble the full path.
-                    String fullPath = file.getDirectory() + file.getFile();
+                    String fullPath = file.getSelectedFile().getAbsolutePath();
                     addAttachment (fullPath);
                 }
             }
