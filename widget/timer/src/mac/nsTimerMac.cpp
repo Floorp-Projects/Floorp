@@ -50,6 +50,7 @@ nsTimerImpl::nsTimerImpl()
 ,  mPrev(nsnull)
 ,  mNext(nsnull)
 ,  mTimerSpent(PR_FALSE)
+,  mCanceledInCallback(PR_FALSE)
 #if DEBUG
 ,  mSignature(eGoodTimerSignature)
 #endif
