@@ -305,9 +305,9 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 #define CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
 
 #ifdef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
-    ipng_p->rgbrow = (uint8 *)PR_MALLOC(4*width);
+    ipng_p->rgbrow = (PRUint8 *)PR_MALLOC(4*width);
 #else
-    ipng_p->rgbrow = (uint8 *)PR_MALLOC(3*width);
+    ipng_p->rgbrow = (PRUint8 *)PR_MALLOC(3*width);
 #endif
     if (!ipng_p->rgbrow) {
         ILTRACE(0, ("il:png: MEM row"));
@@ -317,7 +317,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
     if (channels > 3) {
 #ifndef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
-        ipng_p->alpharow = (uint8 *)PR_MALLOC(width);
+        ipng_p->alpharow = (PRUint8 *)PR_MALLOC(width);
         if (!ipng_p->alpharow) {
             ILTRACE(0, ("il:png: MEM row"));
             PR_FREEIF(ipng_p->rgbrow);
@@ -388,9 +388,9 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 #ifdef CRUDE_SHORTTERM_SCALE_CPP_WORKAROUND
             memcpy(ipng_p->rgbrow, new_row, 4*ipng_p->width);
 #else
-            uint32 i = ipng_p->width;
-            uint8 *rgb = ipng_p->rgbrow;
-            uint8 *a = ipng_p->alpharow;
+            PRUint32 i = ipng_p->width;
+            PRUint8 *rgb = ipng_p->rgbrow;
+            PRUint8 *a = ipng_p->alpharow;
             png_byte *src = new_row;
 
             while (i--) {

@@ -69,7 +69,7 @@ extern void XP_QSORT(void *, size_t, size_t,
 #endif /* XP_MAC */
 
 
-NS_EXPORT void* IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
+NS_EXPORT void* IL_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUint32 msecs);
 
 NS_EXPORT void IL_ClearTimeout(void *timer_id);
 

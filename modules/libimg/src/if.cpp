@@ -126,10 +126,10 @@ ImgDCallbk::ImgDCBDestroyTransparentPixel()
 }
 
 NS_IMETHODIMP 
-ImgDCallbk :: ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow, 
+ImgDCallbk :: ImgDCBHaveRow(PRUint8 *rowbuf, PRUint8* rgbrow, 
                             int x_offset, int len,
                             int row, int dup_rowcnt, 
-                            uint8 draw_mode, 
+                            PRUint8 draw_mode, 
                             int pass )
 {
   PRBool ret=PR_FALSE;
@@ -199,7 +199,7 @@ ImgDCallbk :: ImgDCBError()
 }   
 
 void*
-ImgDCallbk :: ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, uint32 msecs)
+ImgDCallbk :: ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, PRUint32 msecs)
 {
   return( IL_SetTimeout(func, closure, msecs ));
 
@@ -258,7 +258,7 @@ il_dimensions_notify(il_container *ic, int dest_width, int dest_height)
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
         message_data.width = dest_width;   /* Note: these are stored as */
-        message_data.height = dest_height; /* uint16s. */
+        message_data.height = dest_height; /* PRUint16s. */
         XP_NotifyObservers(image_req->obs_list, IL_DIMENSIONS, &message_data);
     }
 }
@@ -291,9 +291,9 @@ il_pixmap_update_notify(il_container *ic)
     nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
     update_rect->x_origin = 0;
-    update_rect->y_origin = (uint16)ic->update_start_row;
-    update_rect->width = (uint16)ic->image->header.width;
-    update_rect->height = (uint16)(ic->update_end_row-ic->update_start_row+1);
+    update_rect->y_origin = (PRUint16)ic->update_start_row;
+    update_rect->width = (PRUint16)ic->image->header.width;
+    update_rect->height = (PRUint16)(ic->update_end_row-ic->update_start_row+1);
 
     PR_ASSERT(ic->clients);
     for(image_req = ic->clients; image_req; image_req = image_req->next) {
@@ -344,10 +344,10 @@ il_frame_complete_notify(il_container *ic)
 int
 il_compute_percentage_complete(int row, il_container *ic)
 {
-    uint percent_height;
+    PRUintn percent_height;
     int percent_done = 0;
     
-    percent_height = (uint)(row * (uint32)100 / ic->image->header.height);
+    percent_height = (PRUintn)(row * (PRUint32)100 / ic->image->header.height);
     switch(ic->pass) {
     case 0: percent_done = percent_height; /* non-interlaced GIF */
         break;
@@ -371,8 +371,8 @@ il_compute_percentage_complete(int row, il_container *ic)
 void
 il_progress_notify(il_container *ic)
 {
-    uint percent_done;
-    static uint last_percent_done = 0;
+    PRUintn percent_done;
+    static PRUintn last_percent_done = 0;
     int row = ic->update_end_row;
     IL_MessageData message_data;
     IL_ImageReq *image_req;
@@ -387,7 +387,7 @@ il_progress_notify(il_container *ic)
     /* Calculate the percentage of image decoded (not displayed) */
     if(ic->content_length) {
         percent_done =
-            (uint32)100 * ic->bytes_consumed / ((uint32)ic->content_length);
+            (PRUint32)100 * ic->bytes_consumed / ((PRUint32)ic->content_length);
 
     /* Some protocols, e.g. gopher, don't support content-length, so
      * show the percentage of the image displayed instead
@@ -408,7 +408,7 @@ il_progress_notify(il_container *ic)
              * of scans in a progressive JPEG isn't known until the
              * whole file has been read.
              */
-            percent_done = (uint)(row * (uint32)100 / img_header->height);
+            percent_done = (PRUintn)(row * (PRUint32)100 / img_header->height);
 
         }
     }
@@ -445,7 +445,7 @@ il_cache_return_notify(IL_ImageReq *image_req)
 
     /* First notify observers of the image dimensions. */
     message_data.width = (unsigned short) ic->dest_width;   /* Note: these are stored as */
-    message_data.height = (unsigned short) ic->dest_height; /* uint16s. */
+    message_data.height = (unsigned short) ic->dest_height; /* PRUint16s. */
     XP_NotifyObservers(image_req->obs_list, IL_DIMENSIONS, &message_data);
     message_data.width = message_data.height = 0;
 
@@ -611,14 +611,14 @@ il_size(il_container *ic)
 {
     float aspect;
     int status;
-    uint8 img_depth;
-    uint32 src_width, src_height;
+    PRUint8 img_depth;
+    PRUint32 src_width, src_height;
     int32 image_bytes, old_image_bytes;
     IL_GroupContext *img_cx = ic->img_cx;
     NI_PixmapHeader *src_header = ic->src_header; /* Source image header. */
     NI_PixmapHeader *img_header = &ic->image->header; /* Destination image
                                                          header. */
-    uint32 req_w=0, req_h=0;  /* store requested values for printing.*/
+    PRUint32 req_w=0, req_h=0;  /* store requested values for printing.*/
 
     
     /* Get the dimensions of the source image. */
@@ -799,7 +799,7 @@ il_size(il_container *ic)
     /* If we have a mask, initialize its bits. */
     if (ic->mask) {
         NI_PixmapHeader *mask_header = &ic->mask->header;
-        uint32 mask_size = mask_header->widthBytes * mask_header->height;
+        PRUint32 mask_size = mask_header->widthBytes * mask_header->height;
 
         img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, ic->mask,
                                           IL_LOCK_BITS);
@@ -1658,11 +1658,11 @@ IL_StreamCreated(il_container *ic,
 
 
 /*	Phong's linear congruential hash  */
-uint32
+PRUint32
 il_hash(const char *ubuf)
 {
     unsigned char * buf = (unsigned char*) ubuf;
-    uint32 h=1;
+    PRUint32 h=1;
     while(*buf)
     {
         h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
@@ -1674,7 +1674,7 @@ il_hash(const char *ubuf)
 #define IL_LAST_ICON 62
 /* Extra factor of 7 is to account for duplications between
    mc-icons and ns-icons */
-static uint32 il_icon_table[(IL_LAST_ICON + 7) * 2];
+static PRUint32 il_icon_table[(IL_LAST_ICON + 7) * 2];
 
 static void
 il_setup_icon_table(void)
@@ -1841,11 +1841,11 @@ il_setup_icon_table(void)
 }
 
 
-static uint32
+static PRUint32
 il_internal_image(const char *image_url)
 {
     int i;
-    uint32 hash = il_hash(image_url);
+    PRUint32 hash = il_hash(image_url);
     if (il_icon_table[0]==0)
         il_setup_icon_table();
 
@@ -1866,8 +1866,8 @@ IL_GetImage(const char* image_url,
             IL_GroupContext *img_cx,
             XP_ObserverList obs_list,
             NI_IRGB *background_color,
-            uint32 req_width, uint32 req_height,
-            uint32 flags,
+            PRUint32 req_width, PRUint32 req_height,
+            PRUint32 flags,
             void *opaque_cx)
 {
     ilINetContext *net_cx = (ilINetContext *)opaque_cx;
@@ -1918,7 +1918,7 @@ IL_GetImage(const char* image_url,
         !PL_strncmp(image_url, "/mc-", 4)  ||
         !PL_strncmp(image_url, "/ns-", 4))
     {
-            uint32 icon;
+            PRUint32 icon;
 
         /* A built-in icon ? */
         icon = il_internal_image(image_url);
@@ -2081,7 +2081,7 @@ IL_ReloadImages(IL_GroupContext *img_cx, void *net_cx)
 
 
 IL_IMPLEMENT(void)
-IL_SetDisplayMode(IL_GroupContext *img_cx, uint32 display_flags,
+IL_SetDisplayMode(IL_GroupContext *img_cx, PRUint32 display_flags,
                   IL_DisplayData *display_data)
 {
     if (display_flags & IL_DISPLAY_CONTEXT)

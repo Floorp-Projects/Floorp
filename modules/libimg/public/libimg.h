@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.5 1999/11/06 03:31:21 dmose%mozilla.org Exp $
+ *  $Id: libimg.h,v 3.6 1999/11/13 22:37:35 cls%seawood.org Exp $
  */
 
 
@@ -145,8 +145,8 @@ IL_GetImage(const char* url,
             IL_GroupContext *image_context,
             XP_ObserverList observer_list,
             IL_IRGB *background_color,
-            uint32 width, uint32 height,
-            uint32 flags,
+            PRUint32 width, PRUint32 height,
+            PRUint32 flags,
             void *net_context);
 
 /* Release a reference to an image lib request.  If there are no other
@@ -246,7 +246,7 @@ IL_GetNaturalDimensions(IL_ImageReq *image_req, int *width, int *height);
    - progressive_display - Toggle for progressive image display.
    - dither_mode         - IL_ClosestColor, IL_Dither or IL_Auto. */
 IL_EXTERN(void)
-IL_SetDisplayMode(IL_GroupContext *image_context, uint32 display_flags,
+IL_SetDisplayMode(IL_GroupContext *image_context, PRUint32 display_flags,
                   IL_DisplayData *display_data);
 
 
@@ -262,7 +262,7 @@ IL_Type(const char *buf, int32 len);
 /* Set limit on approximate size, in bytes, of all pixmap storage used by the
    Image Library. */
 IL_EXTERN(void)
-IL_SetCacheSize(uint32 new_size);
+IL_SetCacheSize(PRUint32 new_size);
 
 
 /************************ Memory management **********************************/
@@ -270,7 +270,7 @@ IL_SetCacheSize(uint32 new_size);
 /* Free num_bytes of memory by flushing the Least Recently Used (LRU) images
    from the image cache. */
 IL_EXTERN(void)
-IL_FreeMemory(IL_GroupContext *image_context, uint32 num_bytes);
+IL_FreeMemory(IL_GroupContext *image_context, PRUint32 num_bytes);
 
 
 /********************** Mac-specific memory-management ***********************/
@@ -286,7 +286,7 @@ IL_UnCache(IL_Pixmap *pixmap);
    cache.  This may not always be possible either because all images
    in the cache are in use or because the cache is empty.  Returns the
    new approximate size of the imagelib cache. */
-IL_EXTERN(uint32)
+IL_EXTERN(PRUint32)
 IL_ShrinkCache(void);
 
 /* Remove as many images as possible from the image cache. The only
@@ -295,7 +295,7 @@ IL_EXTERN(void)
 IL_FlushCache(void);
 
 /* Return the approximate storage consumed by the imagelib cache, in bytes */
-IL_EXTERN(uint32)
+IL_EXTERN(PRUint32)
 IL_GetCacheSize(void);
 
 

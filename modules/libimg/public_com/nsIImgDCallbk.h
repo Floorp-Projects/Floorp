@@ -43,13 +43,13 @@ public:
   NS_IMETHOD ImgDCBSetupColorspaceConverter()=0; 
   NS_IMETHOD ImgDCBCreateGreyScaleColorSpace()=0;
 
-  NS_IMETHOD_(void*) ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, uint32 msecs)=0;
+  NS_IMETHOD_(void*) ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, PRUint32 msecs)=0;
   NS_IMETHOD ImgDCBClearTimeout(void *timer_id)=0;
 
   NS_IMETHOD ImgDCBHaveHdr(int destwidth, int destheight )=0;
 
-  NS_IMETHOD ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow, int x_offset, int len,
-                            int row, int dup_rowcnt, uint8 draw_mode, 
+  NS_IMETHOD ImgDCBHaveRow(PRUint8 *rowbuf, PRUint8* rgbrow, int x_offset, int len,
+                            int row, int dup_rowcnt, PRUint8 draw_mode, 
                             int pass )=0;
 
 

@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.h Colormap and colorspace utilities.
  *             
- *   $Id: il_util.h,v 3.4 1999/11/06 03:31:21 dmose%mozilla.org Exp $
+ *   $Id: il_util.h,v 3.5 1999/11/13 22:37:34 cls%seawood.org Exp $
  */
 
 
@@ -47,15 +47,15 @@ XP_BEGIN_PROTOS
    be replaced when the Image Library has the capability to dither to an
    arbitrary palette. */
 IL_EXTERN(IL_ColorMap *)
-IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
-                   uint16 num_colors);
+IL_NewCubeColorMap(IL_RGB *reserved_colors, PRUint16 num_reserved_colors,
+                   PRUint16 num_colors);
 
 /* Create an optimal fixed palette of the specified size, starting with
    the given set of reserved colors.
    XXX - This will not be implemented initially. */
 IL_EXTERN(IL_ColorMap *)
-IL_NewOptimalColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
-                      uint16 num_colors);
+IL_NewOptimalColorMap(IL_RGB *reserved_colors, PRUint16 num_reserved_colors,
+                      PRUint16 num_colors);
 
 /* Create an empty colormap.  The caller is responsible for filling in the
    colormap entries. */
@@ -87,7 +87,7 @@ IL_DestroyColorMap (IL_ColorMap *cmap);
    indices to the new indices.
    XXX Is this really necessary? */
 IL_EXTERN(void)
-IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order);
+IL_ReorderColorMap(IL_ColorMap *cmap, PRUint16 *new_order);
 
 
 /************************** Colorspace utilities *****************************/
@@ -99,7 +99,7 @@ IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order);
    contents of the IL_RGBBits structure will be copied, so they need not be
    preserved after the call to IL_CreateTrueColorSpace. */
 IL_EXTERN(IL_ColorSpace *)
-IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth);
+IL_CreateTrueColorSpace(IL_RGBBits *rgb, PRUint8 pixmap_depth);
 
 /* Create a new Pseudo-colorspace using the given colormap and set the
    reference count to 1.  The index_depth is the bit-depth of the colormap
@@ -113,15 +113,15 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth);
    IL_ColorSpace.  Memory associated with the colormap will be freed by
    IL_ReleaseColorSpace when the reference count reaches zero. */
 IL_EXTERN(IL_ColorSpace *)
-IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
-                          uint8 pixmap_depth);
+IL_CreatePseudoColorSpace(IL_ColorMap *cmap, PRUint8 index_depth,
+                          PRUint8 pixmap_depth);
 
 /* Create a new Greyscale-colorspace of depth specified by index_depth and
    set the reference count to 1.  The pixmap_depth is the index_depth plus
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
 IL_EXTERN(PRBool)
-IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth, IL_ColorSpace **color_space);
+IL_CreateGreyScaleColorSpace(PRUint8 index_depth, PRUint8 pixmap_depth, IL_ColorSpace **color_space);
 
 /* Decrements the reference count for an IL_ColorSpace.  If the reference
    count reaches zero, all memory associated with the colorspace (including

@@ -50,15 +50,15 @@ public:
   NS_IMETHOD ImgDCBCreateGreyScaleColorSpace();
 
   NS_IMETHOD_(void*) ImgDCBSetTimeout(TimeoutCallbackFunction func,
-                                      void* closure, uint32 msecs);
+                                      void* closure, PRUint32 msecs);
   NS_IMETHOD ImgDCBClearTimeout(void *timer_id);
 
 
   /* callbacks from the decoder */
   NS_IMETHOD ImgDCBHaveHdr(int destwidth, int destheight);
-  NS_IMETHOD ImgDCBHaveRow(uint8*, uint8*,
+  NS_IMETHOD ImgDCBHaveRow(PRUint8*, PRUint8*,
                            int, int, int, int,
-                           uint8 , int);
+                           PRUint8 , int);
 
   NS_IMETHOD ImgDCBHaveImageFrame();
   NS_IMETHOD ImgDCBHaveImageAll();

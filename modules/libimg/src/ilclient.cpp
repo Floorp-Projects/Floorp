@@ -35,7 +35,7 @@
 #include "nsCRT.h"
 #include "xpcompat.h" //temporary, for timers
 
-static uint32 image_cache_size;
+static PRUint32 image_cache_size;
 
 PRLogModuleInfo *il_log_module = NULL;
 ilISystemServices *il_ss = NULL;
@@ -287,13 +287,13 @@ il_image_match(il_container *ic,          /* Candidate for match. */
        requested size. */
     if (!(
         /* Both dimensions match (either zero is a match.) */
-        (((uint32)req_width == ic->dest_width) &&
-         ((uint32)req_height == ic->dest_height)) ||
+        (((PRUint32)req_width == ic->dest_width) &&
+         ((PRUint32)req_height == ic->dest_height)) ||
         /* Width matches, request height zero, aspect ratio same. */
-        (ic_sized && ((uint32)req_width == ic->dest_width) && !req_height &&
+        (ic_sized && ((PRUint32)req_width == ic->dest_width) && !req_height &&
          !ic->aspect_distorted) ||
         /* Height matches, request width zero, aspect ratio same. */
-        (ic_sized && ((uint32)req_height == ic->dest_height) && !req_width &&
+        (ic_sized && ((PRUint32)req_height == ic->dest_height) && !req_width &&
          !ic->aspect_distorted) ||
         /* Request dimensions zero, cache entry has natural dimensions. */
         (!req_width && !req_height && ic->natural_size)
@@ -376,7 +376,7 @@ il_images_match(il_container *ic1, il_container *ic2)
 
 static il_container *
 il_find_in_cache(IL_DisplayType display_type,
-                 uint32 hash,
+                 PRUint32 hash,
                  const char *image_url,
                  IL_IRGB* background_color,
                  int req_depth,
@@ -414,7 +414,7 @@ il_get_container(IL_GroupContext *img_cx,
                  int req_width,  /* Target width requested by client. */
                  int req_height) /* Target height requested by client. */
 {
-    uint32 urlhash, hash;
+    PRUint32 urlhash, hash;
     il_container *ic;
     
     urlhash = hash = il_hash(image_url);
@@ -759,7 +759,7 @@ il_addtocache(il_container *ic)
 
     /* Image storage is added in when image is sized */
     if (ic->sized)
-        il_cache.bytes += (uint32)img_header->widthBytes * img_header->height;
+        il_cache.bytes += (PRUint32)img_header->widthBytes * img_header->height;
     il_cache.items++;
 }
 
@@ -767,7 +767,7 @@ il_addtocache(il_container *ic)
 /* Set limit on approximate size, in bytes, of all pixmap storage used
    by the imagelib.  */
 IL_IMPLEMENT(void)
-IL_SetCacheSize(uint32 new_size)
+IL_SetCacheSize(PRUint32 new_size)
 {
     image_cache_size = new_size;
     il_reduce_image_cache_size_to(new_size);
@@ -775,7 +775,7 @@ IL_SetCacheSize(uint32 new_size)
 
 
 void
-il_reduce_image_cache_size_to(uint32 new_size)
+il_reduce_image_cache_size_to(PRUint32 new_size)
 {
     int32 last_size = 0;
     
@@ -785,7 +785,7 @@ il_reduce_image_cache_size_to(uint32 new_size)
     }
 }
 
-IL_IMPLEMENT(uint32)
+IL_IMPLEMENT(PRUint32)
 IL_ShrinkCache(void)
 {
     il_container *ic;
@@ -828,7 +828,7 @@ IL_FlushCache(void)
     }
 }
 
-IL_IMPLEMENT(uint32)
+IL_IMPLEMENT(PRUint32)
 IL_GetCacheSize()
 {   
     return il_cache.bytes;
@@ -864,7 +864,7 @@ IL_UnCache(IL_Pixmap *pixmap)
 /* Free num_bytes of memory by flushing the Least Recently Used (LRU) images
    from the image cache. */
 IL_IMPLEMENT(void)
-IL_FreeMemory(IL_GroupContext *image_context, uint32 num_bytes)
+IL_FreeMemory(IL_GroupContext *image_context, PRUint32 num_bytes)
 {
     /* XXXM12N Implement me. */
 }

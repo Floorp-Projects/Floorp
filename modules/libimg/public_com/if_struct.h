@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.6 1999/11/06 03:31:22 dmose%mozilla.org Exp $
+ * $Id: if_struct.h,v 1.7 1999/11/13 22:37:36 cls%seawood.org Exp $
  */
 
 #ifndef _if_h
@@ -131,8 +131,8 @@ typedef enum _IL_ConversionType {
     IL_GreyToGrey     = 0x24
 } IL_ConversionType;
 
-typedef void (*il_converter)(il_container *ic, const uint8 *mask, 
-                             const uint8 *sp, int x_offset,
+typedef void (*il_converter)(il_container *ic, const PRUint8 *mask, 
+                             const PRUint8 *sp, int x_offset,
                              int num, void XP_HUGE *out);
 
 enum icstate {
@@ -179,8 +179,8 @@ struct il_container_struct {
     ilIURL *url;
     char *url_address;          /* Same as url->address if there is no redirection*/
 
-    uint32 hash;
-    uint32 urlhash;
+    PRUint32 hash;
+    PRUint32 urlhash;
     
     enum icstate state;
     int sized;
@@ -200,7 +200,7 @@ struct il_container_struct {
     int update_start_row;       /* Scanline range to send to FE */
     int update_end_row;
 
-    uint32 bytes_consumed;      /* Bytes read from the stream so far */
+    PRUint32 bytes_consumed;      /* Bytes read from the stream so far */
 
     NI_PixmapHeader *src_header; /* Source image header information. */
     IL_Pixmap *image;           /* Destination image pixmap structure. */
@@ -216,12 +216,12 @@ struct il_container_struct {
     class nsIImgDCallbk *imgdcb;
 
     void *row_output_timeout;
-    uint8 *scalerow;
+    PRUint8 *scalerow;
     int pass;                   /* pass (scan #) of a multi-pass image.
                                    Used for interlaced GIFs & p-JPEGs */
 
     int forced;
-    uint32 content_length;
+    PRUint32 content_length;
 
     int dest_width, dest_height; /* Target dimensions of the image */
     PRPackedBool natural_size;  /* True if the image is decoded to its natural

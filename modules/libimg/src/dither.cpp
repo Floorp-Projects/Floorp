@@ -195,9 +195,9 @@ il_free_quantize(il_container *ic)
 #endif
 
 void
-il_quantize_fs_dither(il_container *ic, const uint8 *mask,
-                      const uint8 *input_buf, int x_offset,
-                      uint8 XP_HUGE *output_buf, int width)
+il_quantize_fs_dither(il_container *ic, const PRUint8 *mask,
+                      const PRUint8 *input_buf, int x_offset,
+                      PRUint8 XP_HUGE *output_buf, int width)
 {
     my_cquantize_ptr cquantize;
     register LOCFSERROR r_cur, g_cur, b_cur;       /* current error or pixel
@@ -216,9 +216,9 @@ il_quantize_fs_dither(il_container *ic, const uint8 *mask,
     IL_ColorMap *cmap = &ic->image->header.color_space->cmap;
     IL_RGB *map = cmap->map;              /* The colormap array. */
     IL_RGB *map_entry;                    /* Current entry in the colormap. */
-    uint8 *lookup_table = (uint8 *)cmap->table;  /* Lookup table for the colormap. */
-    const uint8 *maskp;
-    uint8 map_index;
+    PRUint8 *lookup_table = (PRUint8 *)cmap->table;  /* Lookup table for the colormap. */
+    const PRUint8 *maskp;
+    PRUint8 map_index;
     int dir;                   /* 1 for left-to-right, -1 for right-to-left */
     JDIMENSION col;
     JSAMPLE *range_limit = the_sample_range_limit;

@@ -21,7 +21,7 @@
  */
 /* 
  *  ni_pixmp.h --- Cross platform pixmap data structure.
- *  $Id: ni_pixmp.h,v 3.4 1999/11/06 03:31:21 dmose%mozilla.org Exp $
+ *  $Id: ni_pixmp.h,v 3.5 1999/11/13 22:37:35 cls%seawood.org Exp $
  */
 
 
@@ -68,19 +68,19 @@ typedef enum _NI_ColorSpaceType
 
 /* RGB bit allocation and offsets. */
 typedef struct _NI_RGBBits {
-    uint8 red_bits;             /* Number of bits assigned to red channel. */
-    uint8 red_shift;            /* Offset for red channel bits. */
-    uint8 green_bits;           /* Number of bits assigned to green channel. */
-    uint8 green_shift;          /* Offset for green channel bits. */
-    uint8 blue_bits;            /* Number of bits assigned to blue channel. */
-    uint8 blue_shift;           /* Offset for blue channel bits. */
+    PRUint8 red_bits;             /* Number of bits assigned to red channel. */
+    PRUint8 red_shift;            /* Offset for red channel bits. */
+    PRUint8 green_bits;           /* Number of bits assigned to green channel. */
+    PRUint8 green_shift;          /* Offset for green channel bits. */
+    PRUint8 blue_bits;            /* Number of bits assigned to blue channel. */
+    PRUint8 blue_shift;           /* Offset for blue channel bits. */
 } NI_RGBBits;
 
 
 /* An indexed RGB triplet. */
 typedef struct _NI_IRGB {
-    uint8 index;
-    uint8 red, green, blue;
+    PRUint8 index;
+    PRUint8 red, green, blue;
 } NI_IRGB;
 
 
@@ -88,9 +88,9 @@ typedef struct _NI_IRGB {
    (if present.) */
 typedef struct _NI_RGB
 {
-    uint8 red, green, blue, pad; /* Windows requires the fourth byte &
+    PRUint8 red, green, blue, pad; /* Windows requires the fourth byte &
                                     many compilers pad it anyway. */
-    uint16 hist_count;           /* Histogram frequency count. */
+    PRUint16 hist_count;           /* Histogram frequency count. */
 } NI_RGB;
 
 
@@ -100,7 +100,7 @@ typedef struct _NI_ColorMap {
                                    A negative value can be used to denote a
                                    possibly non-unique set. */
     NI_RGB *map;                /* Colormap colors. */
-    uint8 *index;               /* NULL, if map is in index order.  Otherwise
+    PRUint8 *index;               /* NULL, if map is in index order.  Otherwise
                                    specifies the indices of the map entries. */
     void *table;                /* Lookup table for this colormap.  Private to
                                    the Image Library. */
@@ -121,9 +121,9 @@ typedef struct _NI_ColorSpace {
     /* The dimensions of the colorspace. */
     union {
         NI_RGBBits rgb;         /* For TrueColor. */
-        uint8 index_depth;      /* For PseudoColor and GreyScale. */
+        PRUint8 index_depth;      /* For PseudoColor and GreyScale. */
     } bit_alloc;                /* Allocation of bits. */
-    uint8 pixmap_depth;         /* Total bit depth (including alpha or pad.) */
+    PRUint8 pixmap_depth;         /* Total bit depth (including alpha or pad.) */
 
     /* Colormap information.  This may be used for one of three purposes:
        - If the colorspace belongs to a PseudoColor source image, then the
@@ -142,10 +142,10 @@ typedef struct _NI_ColorSpace {
     void *private_data;
 
     /* Special purpose flags for OS-specific problems. */
-    uint8 os_flags;             /* Flags are of type NI_OSFlags. */
+    PRUint8 os_flags;             /* Flags are of type NI_OSFlags. */
 
     /* Reference counter. */
-    uint32 ref_count;
+    PRUint32 ref_count;
 } NI_ColorSpace;
 
 
@@ -153,9 +153,9 @@ typedef struct _NI_ColorSpace {
 typedef struct _NI_PixmapHeader
 {
     /* Size. */
-    uint32 width;               /* Width. */
-    uint32 height;              /* Height. */
-    uint32 widthBytes;          /* width * depth / 8.  May be aligned for
+    PRUint32 width;               /* Width. */
+    PRUint32 height;              /* Height. */
+    PRUint32 widthBytes;          /* width * depth / 8.  May be aligned for
                                    optimizations. */
     
     /* Colorspace. */
@@ -164,8 +164,8 @@ typedef struct _NI_PixmapHeader
     /* Transparency. */
     NI_IRGB *transparent_pixel; /* The image's transparent pixel
                                    (if present.) */
-    uint8 alpha_bits;           /* Number of bits assigned to alpha channel. */
-    uint8 alpha_shift;          /* Offset for alpha channel bits. */
+    PRUint8 alpha_bits;           /* Number of bits assigned to alpha channel. */
+    PRUint8 alpha_shift;          /* Offset for alpha channel bits. */
     int32 is_interleaved_alpha; /* Is alpha channel interleaved with
                                    image data? */
     PRPackedBool is_mask;       /* Is this image a mask? (Boolean) */
