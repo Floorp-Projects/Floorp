@@ -116,6 +116,8 @@ JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& a
 				registers[op2(i)].i32 = !registers[op1(i)].i32;
 			}
 			break;
+        default:
+            break;
     	}
     }
 
