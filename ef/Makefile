@@ -19,7 +19,7 @@ DEPTH = .
 
 include $(DEPTH)/config/config.mk
 
-EF_DIRS = Compiler Debugger Runtime Utilities Exports 
+EF_DIRS = config Compiler Debugger Runtime Utilities Exports 
 
 # Do not mess with the order of directories
 DIRS = $(EF_DIRS) VM Tools Packages Driver
