@@ -1,0 +1,2 @@
+TEST_CLASS=org.mozilla.webclient.test.basic.api.CurrentPage_getSourceBytes
+PAGES_TO_LOAD=

@@ -1,0 +1,3 @@
+TEST_CLASS=org.mozilla.webclient.test.basic.api.History_back
+TEST_ID=basic/api/History_back_2
+PAGES_TO_LOAD=

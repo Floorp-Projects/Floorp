@@ -1,0 +1,3 @@
+TEST_CLASS=org.mozilla.webclient.test.basic.api.History_getHistoryLength
+TEST_ID=basic/api/History_getHistoryLength_2
+PAGES_TO_LOAD=
