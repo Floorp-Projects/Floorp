@@ -31,13 +31,12 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsTransform2D.h"
-#include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsImageGTK.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-
+#include "nsGfxCIID.h"
 #include "nsDrawingSurfaceGTK.h"
 #include "nsRegionGTK.h"
 
@@ -77,8 +76,6 @@ public:
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
-
-  NS_METHOD CreateClipRegion();
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
   NS_IMETHOD SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty);
@@ -163,8 +160,6 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  GdkGC *GetGC() { return mGC; }
-
 #ifdef MOZ_MATHML
   /**
    * Returns metrics (in app units) of an 8-bit character string
@@ -185,7 +180,22 @@ public:
   //locals
   NS_IMETHOD CommonInit();
 
-protected:
+  void CreateClipRegion() {
+    static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+    if (!mClipRegion) {
+      PRUint32 w, h;
+      mSurface->GetSize(&w, &h);
+    
+      if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) ) {
+        mClipRegion->Init();
+        mClipRegion->SetTo(0,0,w,h);
+      }
+    }
+  }
+
+  GdkGC *GetGC() { return mGC; }
+
+private:
   nsDrawingSurfaceGTK   *mOffscreenSurface;  
   nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
@@ -211,7 +221,6 @@ protected:
   GdkFont               *mCurrentFont;
   nsLineStyle            mCurrentLineStyle;
 
-private:
   void UpdateGC();
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates

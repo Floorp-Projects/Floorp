@@ -156,7 +156,7 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
 #endif
 
   // create the memory for the image
-  ComputMetrics();
+  ComputeMetrics();
 
   mImageBits = (PRUint8*) new PRUint8[mSizeImage];
 
@@ -197,24 +197,6 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
 }
 
 //------------------------------------------------------------
-
-PRInt32 nsImageGTK::CalcBytesSpan(PRUint32  aWidth)
-{
-  PRInt32 spanbytes;
-
-  spanbytes = (aWidth * mDepth) >> 5;
-
-  if (((PRUint32)aWidth * mDepth) & 0x1F)
-    spanbytes++;
-  spanbytes <<= 2;
-  return(spanbytes);
-}
-
-void nsImageGTK::ComputMetrics()
-{
-  mRowBytes = CalcBytesSpan(mWidth);
-  mSizeImage = mRowBytes * mHeight;
-}
 
 PRInt32 nsImageGTK::GetHeight()
 {
@@ -517,8 +499,19 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   if (mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
-    gdk_gc_set_clip_mask(copyGC, mAlphaPixmap);
-    gdk_gc_set_clip_origin(copyGC, aX, aY);
+    XGCValues xvalues;
+    unsigned long xvalues_mask = 0;
+    xvalues.clip_x_origin = aX;
+    xvalues.clip_y_origin = aY;
+    xvalues.clip_mask = GDK_WINDOW_XWINDOW(mAlphaPixmap);
+    xvalues_mask = GCClipXOrigin | GCClipYOrigin | GCClipMask;
+
+    XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(copyGC), xvalues_mask, &xvalues);
+
+    /* this causes 2 ChangeGC's to happen.
+      gdk_gc_set_clip_mask(copyGC, mAlphaPixmap);
+      gdk_gc_set_clip_origin(copyGC, aX, aY);
+    */
   }
 
 #ifdef TRACE_IMAGE_ALLOCATION

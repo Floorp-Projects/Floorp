@@ -248,6 +248,16 @@ public:
    * @return error status
    **/
   NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const = 0;
+
+  /**
+   * get the number of rects which make up this region.
+   *
+   * @param  aRects out parameter containing the number of rects
+   *                comprising the region
+   * @return error status
+   *
+   **/
+  NS_IMETHOD GetNumRects(PRUint32 *aRects) const = 0;
 };
 
 #endif  // nsIRegion_h___ 

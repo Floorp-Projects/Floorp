@@ -311,3 +311,13 @@ GdkRegion *nsRegionGTK::CreateRectRegion(PRInt32 aX,
   
   return (rRegion);
 }
+
+NS_IMETHODIMP nsRegionGTK::GetNumRects(PRUint32 *aRects) const
+{
+  GdkRegionPrivate  *priv = (GdkRegionPrivate *)mRegion;
+  Region pRegion = priv->xregion;
+
+  *aRects = pRegion->numRects;
+
+  return NS_OK;
+}
