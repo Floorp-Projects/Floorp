@@ -65,12 +65,18 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 
+#include "nsIComponentManager.h"
+#include "nsTransactionManagerCID.h"
+#include "nsITransactionManager.h"
+
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
+static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -109,6 +115,8 @@ public:
 
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
+  NS_IMETHOD Undo();
+  NS_IMETHOD Redo();
 
 protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
@@ -118,6 +126,7 @@ private:
   
   nsString mId;
   void *mScriptObject;
+  nsCOMPtr<nsITransactionManager> mTxnMgr;
 
   /* rhp - need this to drive message display */
   nsIDOMWindow       *mWindow;
@@ -387,6 +396,16 @@ void nsMessenger::InitializeFolderRoot()
         m_folderPath += "Inbox";
     } // if we have a folder root for the current server
     
+    // create Undo/Redo Transaction Manager
+    NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = compMgr->CreateInstance(kTransactionManagerCID, nsnull, 
+                                   nsITransactionManager::GetIID(),
+                                   getter_AddRefs(mTxnMgr));
+      if (NS_SUCCEEDED(rv))
+        mTxnMgr->SetMaxTransactionCount(-1);
+    }
 }
 
 NS_IMETHODIMP
@@ -628,11 +647,11 @@ NS_IMETHODIMP
 nsMessenger::OnUnload()
 {
     // ** clean up
-    // *** jt - We seems have one extra ref count. I have no idea where it
+    // *** jt - We seem to have one extra ref count. I have no idea where it
     // came from. This could be the global object we created in commandglue.js
     // which causes us to have one more ref count. Call Release() here
     // seems the right thing to do. This gurantees the nsMessenger instance
-    // gets delete after we close down the messenger window.
+    // gets deleted after we close down the messenger window.
     Release();
     return NS_OK;
 }
@@ -780,3 +799,30 @@ nsMessenger::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *pa
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMessenger::Undo()
+{
+  nsresult rv = NS_OK;
+  if (mTxnMgr)
+  {
+    PRInt32 numTxn = 0;
+    rv = mTxnMgr->GetNumberOfUndoItems(&numTxn);
+    if (NS_SUCCEEDED(rv) && numTxn > 0)
+      mTxnMgr->Undo();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::Redo()
+{
+  nsresult rv = NS_OK;
+  if (mTxnMgr)
+  {
+    PRInt32 numTxn = 0;
+    rv = mTxnMgr->GetNumberOfRedoItems(&numTxn);
+    if (NS_SUCCEEDED(rv) && numTxn > 0)
+      mTxnMgr->Redo();
+  }
+  return rv;
+}
