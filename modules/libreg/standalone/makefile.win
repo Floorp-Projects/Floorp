@@ -38,7 +38,7 @@ DEPTH= ..\..\..
 #//
 #//------------------------------------------------------------------------
 
-USE_STATIC_LIBS=1
+USE_NON_MT_LIBS=1
 
 !ifndef MAKE_OBJ_TYPE
 MAKE_OBJ_TYPE=DLL
