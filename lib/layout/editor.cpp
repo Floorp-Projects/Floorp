@@ -1474,7 +1474,12 @@ void EDT_SetParagraphAlign( MWContext *pContext, ED_Alignment eAlign ){
 
 ED_Alignment EDT_GetParagraphAlign( MWContext *pContext){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) ED_ALIGN_LEFT;
-    return pEditBuffer->GetParagraphAlign();
+    ED_Alignment align = pEditBuffer->GetParagraphAlign();
+    // Translate old NS values for FE only,
+    //  so they won't be changed unless explicitly edited
+    if( align == ED_ALIGN_CENTER )
+        align = ED_ALIGN_ABSCENTER;
+    return align;
 }
 
 void EDT_SetTableAlign( MWContext *pContext, ED_Alignment eAlign ){
@@ -2150,9 +2155,20 @@ void EDT_FreeMetaData( EDT_MetaData *pMetaData ){
 
 // Image
 
-EDT_ImageData *EDT_GetImageData( MWContext *pContext ){
+EDT_ImageData *EDT_GetImageData( MWContext *pContext )
+{
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) NULL;
-    return pEditBuffer->GetImageData();
+    EDT_ImageData *pData =pEditBuffer->GetImageData();
+    if( pData )
+    {
+        // Translate old NS values for FE only,
+        //  so they won't be changed unless explicitly edited
+        if( pData->align == ED_ALIGN_ABSBOTTOM || pData->align == ED_ALIGN_BOTTOM )
+            pData->align =  ED_ALIGN_BASELINE; // This is default (no param written)
+        else if( pData->align == ED_ALIGN_CENTER )
+            pData->align = ED_ALIGN_ABSCENTER;
+    }
+    return pData;
 }
 
 int32 EDT_GetDefaultBorderWidth( MWContext *pContext ){
@@ -2336,7 +2352,7 @@ XP_Bool EDT_IsInsertPointInNestedTable(MWContext *pContext ){
 
 EDT_TableData* EDT_GetTableData( MWContext *pContext ){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) NULL;
-    return pEditBuffer->GetTableData();
+    return pEditBuffer->GetTableData();;
 }
 
 void EDT_GetTableParentSize( MWContext *pContext, XP_Bool bCell, int32 *pWidth, int32 *pHeight )
@@ -2515,7 +2531,12 @@ XP_Bool EDT_IsInsertPointInTableCell(MWContext *pContext ){
 
 EDT_TableCellData* EDT_GetTableCellData( MWContext *pContext ){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) NULL;
-    return pEditBuffer->GetTableCellData();
+    EDT_TableCellData *pData = pEditBuffer->GetTableCellData();
+    // Translate old NS values for FE only,
+    //  so they won't be changed unless explicitly edited
+    if( pData->valign == ED_ALIGN_BASELINE || pData->valign == ED_ALIGN_BOTTOM )
+        pData->valign =  ED_ALIGN_ABSBOTTOM;
+    return pData;
 }
 
 void EDT_ChangeTableSelection(MWContext *pContext, ED_HitType iHitType, ED_MoveSelType iMoveType, 

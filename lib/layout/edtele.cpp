@@ -2824,6 +2824,30 @@ void CEditTableElement::InsertColumns(int32 X, int32 iNewX, intn number, CEditTa
     }
 }
 
+// Code moved from CDeleteTableCommand::CDeleteTableCommand,
+// Note: This version breaks the older, now unused Undo system
+void CEditTableElement::Delete(XP_Bool bMoveInsertPoint)
+{
+    CEditBuffer *pBuffer = GetEditBuffer();
+    if( !pBuffer )
+        return;
+	CEditElement* pRefreshStart = GetFirstMostChild()->PreviousLeaf();
+	CEditInsertPoint replacePoint(GetLastMostChild()->NextLeaf(), 0);
+    // Move only if requested to
+    // (This is used when pasting a table,
+    //  which inserts and moves insert point BEFORE deleting table)
+	if( bMoveInsertPoint )
+        pBuffer->SetInsertPoint(replacePoint);
+	
+    Unlink();
+	
+    // Left over from older Undo system
+    //m_replacePoint = pBuffer()->EphemeralToPersistent(replacePoint);
+	pBuffer->Relayout(pRefreshStart, 0, replacePoint.m_pElement);
+    // Delete ourselves
+    delete this;
+}
+
 // Note: no saving to pUndoContainer any more
 void CEditTableElement::DeleteRows(int32 Y, intn number)
 {
@@ -4557,7 +4581,8 @@ CEditTableCellElement::CEditTableCellElement()
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE)
+      m_bDeleted(FALSE),
+      m_bDeleteSingleSpace(FALSE)
 {
 }
 
@@ -4584,7 +4609,8 @@ CEditTableCellElement::CEditTableCellElement(XP_Bool bIsHeader)
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE)
+      m_bDeleted(FALSE),
+      m_bDeleteSingleSpace(FALSE)
 {
 }
 
@@ -4611,7 +4637,8 @@ CEditTableCellElement::CEditTableCellElement(CEditElement *pParent, PA_Tag *pTag
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE)
+      m_bDeleted(FALSE),
+      m_bDeleteSingleSpace(FALSE)
 {
     if( pTag ){
         char *locked_buff;
@@ -4647,7 +4674,8 @@ CEditTableCellElement::CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE)
+      m_bDeleted(FALSE),
+      m_bDeleteSingleSpace(FALSE)
 {
     // We need this so we can accurately determine number
     //  of columns in stream
@@ -6460,6 +6488,8 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
                 // We have a single space, so don't do special trimming below
                 bIsTableCellWithOneSpace = TRUE;
             }
+            // This triggers automatically deleting the space if user edits the cell
+            pParent->TableCell()->m_bDeleteSingleSpace = TRUE;
         }
         if( ! bIsTableCellWithOneSpace )
         {
@@ -8707,6 +8737,16 @@ void CEditTextElement::PrintFormat( CPrintState *ps,
     }
 }
 
+XP_Bool CEditTextElement::SameFormat(CEditTextElement *pCompare)
+{
+    XP_Bool bSame = SameAttributes(pCompare);
+    if( bSame )
+    {
+        bSame = (m_tf == pCompare->m_tf) ? TRUE : FALSE;
+    }
+    return bSame;
+}
+
 XP_Bool CEditTextElement::SameAttributes(CEditTextElement *pCompare){
     ED_TextFormat bitsCommon;
     ED_TextFormat bitsDifferent;
@@ -9094,23 +9134,30 @@ CEditElement* CEditTextElement::SplitText( int iOffset ){
     return  pNew;
 }
 
-CEditTextElement* CEditTextElement::CopyEmptyText( CEditElement *pParent ){
-    CEditTextElement* pNew = new CEditTextElement(pParent, 0);
+// Copy 
+void CEditTextElement::CopyTextFormat( CEditTextElement *pTextElement )
+{
+    if( pTextElement )
+    {
+        pTextElement->m_tf = m_tf;
+        pTextElement->m_iFontSize = m_iFontSize;
+        pTextElement->m_color = m_color;
+        pTextElement->SetHREF(m_href);
 
-    pNew->m_tf = m_tf;
-    pNew->m_iFontSize = m_iFontSize;
-    pNew->m_color = m_color;
-    if( (m_tf & TF_HREF) && m_href != ED_LINK_ID_NONE){
-        pNew->SetHREF(m_href);
+        if ( m_pFace )
+            pTextElement->SetFontFace(m_pFace);
+
+        pTextElement->m_iWeight = m_iWeight;
+        pTextElement->m_iPointSize = m_iPointSize;
+        if ( m_pScriptExtra )
+            pTextElement->SetScriptExtra(m_pScriptExtra);
     }
-    if ( m_pFace ) {
-        pNew->SetFontFace(m_pFace);
-    }
-    pNew->m_iWeight = m_iWeight;
-    pNew->m_iPointSize = m_iPointSize;
-    if ( m_pScriptExtra ) {
-        pNew->SetScriptExtra(m_pScriptExtra);
-    }
+}
+
+CEditTextElement* CEditTextElement::CopyEmptyText( CEditElement *pParent )
+{
+    CEditTextElement* pNew = new CEditTextElement(pParent, 0);
+    CopyTextFormat(pNew);
     return pNew;
 }
 
@@ -9555,7 +9602,18 @@ EDT_ImageData* CEditImageElement::ParseParams( PA_Tag *pTag, int16 csid ){
     pData->pLowSrc = edt_FetchParamString( pTag, PARAM_LOWSRC, csid );
     pData->pName = edt_FetchParamString( pTag, PARAM_NAME, csid );
     pData->pAlt = edt_FetchParamString( pTag, PARAM_ALT, csid );
-    
+
+    if( pData->pSrc && !pData->pAlt )
+    {
+        // Copy string so we can mangle it
+        char *pName = EDT_GetFilename(pData->pSrc, FALSE);
+        if( pName )
+        {
+            pData->pAlt = XP_STRDUP(pName);
+            XP_FREE(pName);
+        }
+    }
+
     // Get width dimension from string and parse for "%" Default = 100%
     edt_FetchDimension( pTag, PARAM_WIDTH, 
                         &pData->iWidth, &pData->bWidthPercent,

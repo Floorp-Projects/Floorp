@@ -1539,11 +1539,13 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_status(ED_ERROR_NONE),
         m_pCommandLog(0),
         m_bTyping(FALSE),
+        m_bDeleteTableAfterPasting(FALSE),
         m_pStartSelectionAnchor(0),
         m_pEndSelectionAnchor(0),
         m_bStartSelectionStickyAfter(0),
         m_bEndSelectionStickyAfter(0),
         m_bLayoutBackpointersDirty(TRUE),
+        m_bUseCurrentTextFormat(FALSE),
         m_iFileWriteTime(0),
 #ifdef DEBUG
         m_pTestManager(0),
@@ -2672,16 +2674,53 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
     int iChangeOffset = m_iCurrentOffset;
     StartTyping(bTyping);
 
-    if( IsSelected() ){
+    if( IsSelected() )
+    {
         result = DeleteSelection();
         if ( result != EDT_COP_OK ) return result;
+    } 
+    else
+    {
+        CEditTableCellElement* pTableCell = m_pCurrent->GetTableCellIgnoreSubdoc();
+        CEditElement *pParent = m_pCurrent->GetParent();
+        CEditElement* pPrev = m_pCurrent->GetPreviousSibling();
+        CEditElement* pNew = m_pCurrent->GetNextSibling();
+        if( pParent && m_pCurrent->IsText() && pTableCell && 
+            m_pCurrent == pParent->GetChild() &&     //We are the first child
+            m_pCurrent->GetNextSibling() == NULL &&  //No other siblings after
+            pParent->GetNextSibling() == NULL  &&
+            m_pCurrent->Text()->GetLen() == 1 )
+        {
+            char* pText = m_pCurrent->Text()->GetText();
+            if( pText[0] == ' ' )
+            {
+                // We are in a table cell with just one space in it
+                // (probably there only to show cell borders)
+                // Delete this space before inserting new text
+                CEditLeafElement *pEle;
+                ElementOffset iOffset;
+                XP_Bool bStickyAfter;
+                GetInsertPoint( &pEle, &iOffset, &bStickyAfter );
+                // Delete forward if to the left of the space,
+                //  or delete back if to the right.
+                DeleteChar(iOffset == 0, bTyping);
+            }
+            pTableCell->m_bDeleteSingleSpace = FALSE;
+        }
     }
     //ClearSelection();
 
     ClearMove(FALSE);
-    if(!IsPhantomInsertPoint() ){
+    // This will move the insert point that is at the beginning of 
+    //   one element to the end of the previous.
+    // Don't do this if we are at an empty element or we set the flag
+    //  to use the current element's text formatting 
+    if( !IsPhantomInsertPoint() && !m_bUseCurrentTextFormat ){
         FixupInsertPoint();
     }
+    // This is good for only one key action
+    m_bUseCurrentTextFormat = FALSE;
+
     if( m_pCurrent->IsA( P_TEXT )){
         // If this assert ever fails, it means that we've
         // got to uncomment this and make it work.
@@ -3007,6 +3046,7 @@ XP_Bool CEditBuffer::PreviousChar( XP_Bool bSelect ){
 //
 void CEditBuffer::UpDown( XP_Bool bSelect, XP_Bool bForward ){
     VALIDATE_TREE(this);
+    m_bUseCurrentTextFormat = FALSE;
     CEditLeafElement *pEle;
     ElementOffset iOffset;
     XP_Bool bStickyAfter;
@@ -3133,11 +3173,16 @@ void CEditBuffer::NavigateChunk( XP_Bool bSelect, intn chunkType, XP_Bool bForwa
     else {
         VALIDATE_TREE(this);
         ClearPhantomInsertPoint();
+        m_bUseCurrentTextFormat = FALSE;
         ClearMove();    /* Arrow keys clear the up/down target position */
         BeginSelection();
         LO_NavigateChunk( m_pContext, chunkType, bSelect, bForward );
         EndSelection();
         DoneTyping();
+        if( !bForward && m_pCurrent && m_pCurrent->IsText() && m_iCurrentOffset == 0 )
+        {
+            m_bUseCurrentTextFormat = TRUE;
+        }
     }
 }
 
@@ -3174,31 +3219,41 @@ void CEditBuffer::ClearMailQuote(){
 EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
     ClearTableAndCellSelection();
     EDT_ClipboardResult result = EDT_COP_OK;
-    if ( bTyping ) {
+    XP_Bool bEndBatch = FALSE;
+
+    if ( bTyping )
+    {
         VALIDATE_TREE(this);
 #ifdef DEBUG
         if ( m_pTestManager->ReturnKey() )
             return result;
 #endif
-        if( IsSelected() ){
+        if( IsSelected() )
+        {
+            BeginBatchChanges(kGroupOfChangesCommandID);
+            bEndBatch = TRUE;
             result = DeleteSelection();
-            if ( result != EDT_COP_OK ) return result;
+            if ( result != EDT_COP_OK )
+                goto END_RETURN;
         }
         // Check if we are in a mail quote
         CEditInsertPoint ip;
         GetInsertPoint(ip);
-        if ( ip.m_pElement->InMungableMailQuote() ) {
+        if ( ip.m_pElement->InMungableMailQuote() )
+        {
             // Are we at the end of the mail quote? If so, move beyond
             XP_Bool bAtEndOfMailQuote = FALSE;
-            if ( ip.IsEndOfContainer() ) {
+            if ( ip.IsEndOfContainer() )
+            {
                 ip = ip.NextPosition();
-                if ( ! ip.m_pElement->InMailQuote() ) {
+                if ( ! ip.m_pElement->InMailQuote() )
                     bAtEndOfMailQuote = TRUE;
-                }
             }
             result = InternalReturnKey(TRUE);
-            if ( result == EDT_COP_OK ) {
-                if ( ! bAtEndOfMailQuote ) {
+            if ( result == EDT_COP_OK )
+            {
+                if ( ! bAtEndOfMailQuote )
+                {
                     StartTyping(TRUE);
                     InternalReturnKey(TRUE);
                     UpDown(FALSE, FALSE); // go back up one line.
@@ -3206,7 +3261,8 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
                 ClearMailQuote();
             }
         }
-        else {
+        else 
+        {
             if( m_pCurrent && m_iCurrentOffset == 0 &&
                 m_pCurrent->IsText() && m_pCurrent->GetLen() == 0 &&
                 m_pCurrent->GetNextSibling() == 0 &&
@@ -3225,11 +3281,14 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
                         // Outdent to next higher list level
                         Outdent();
 
-                    return EDT_COP_OK;
+                    result = EDT_COP_OK;
+                    goto END_RETURN;
                 }
             }
-            // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed
-            StartTyping(TRUE);
+            // Fix for bug 80092 - force dirty flag on after Enter key alone is pressed,
+            // but not if doing a replacement of selected text (we do batch UNDO for that)
+            if( !bEndBatch )
+                StartTyping(TRUE);
             result = InternalReturnKey(TRUE);
 //          Include this to set the end of current UNDO at the end of a paragraph (return key)
 //            so Undo will only remove the last paragraph typed.
@@ -3247,6 +3306,11 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
         result = InternalReturnKey(TRUE);
 //        DoneTyping();     // Set note above
     }
+
+END_RETURN:
+    if( bEndBatch )
+        EndBatchChanges();
+
     return result;
 }
 
@@ -3254,7 +3318,13 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
 CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAtBeginning, CEditElement*& pRelayoutStart)
 {
     // ClearSelection();
+    // Make a text element now before we loose formatting styles
+    //  because ClearPhantomInsertPoint() will delete m_pCurrent 
+    //  if its an empty element
+    //XP_Bool bFormatChanged;
     ClearPhantomInsertPoint();
+    // Move the insert point from beginning of current 
+    //  to the end of previous leaf element
     FixupInsertPoint();
 
     pRelayoutStart = m_pCurrent;
@@ -3264,6 +3334,7 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
     pSplitAfter = m_pCurrent;
     pCopyFormat = m_pCurrent;
 
+    pRelayoutStart = m_pCurrent->FindContainer();
     if( m_iCurrentOffset == 0 )
     {
         // We are at the beginning of the element
@@ -3278,13 +3349,13 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
                 CEditTextElement *pNew;
                 pNew = m_pCurrent->CopyEmptyText();
                 pNew->InsertBefore( m_pCurrent );
-                pRelayoutStart = pNew->FindContainer();
+//                pRelayoutStart = pNew->FindContainer();
                 pSplitAfter = pNew;
             }
             else
             {
                 // Don't split - don't create anything
-                pRelayoutStart = m_pCurrent->FindContainer();
+//                pRelayoutStart = m_pCurrent->FindContainer();
                 return pRelayoutStart;
             }
         }
@@ -3292,6 +3363,7 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
     else 
     {
         pNew = m_pCurrent->Divide( m_iCurrentOffset )->Leaf();
+
         /* Get rid of space at start of new line if user typed. */
         if( bUserTyped && !pNew->InFormattedText()
                 && pNew->IsA(P_TEXT)
@@ -3315,6 +3387,7 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
     m_pCurrent->GetParent()->Split( pSplitAfter, 0,
                 &CEditElement::SplitContainerTest, 0 );
 
+    //pRelayoutStart = m_pCurrent->FindContainer();
 
     CEditContainerElement* pContainer = m_pCurrent->FindContainer();
     if ( bUserTyped && m_pCurrent->GetLen() == 0 && m_pCurrent->TextInContainerAfter() == 0 )
@@ -3348,6 +3421,9 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
         if ( result != EDT_COP_OK )
             return result;
     }
+    CEditTextElement *pEmptyFormatElement = NULL;
+    if( bUserTyped /*&& IsPhantomInsertPoint()*/ )
+        pEmptyFormatElement = m_pCurrent->CopyEmptyText();
 
     CEditElement *pChangedElement;
     // Split at current element to create a new container (TRUE = split at beginning of element as well
@@ -3358,26 +3434,42 @@ EDT_ClipboardResult CEditBuffer::InternalReturnKey(XP_Bool bUserTyped)
     {
         if ( bUserTyped )
             Reduce(m_pRoot); // Or maybe just the two containers?
-	    
+
 	    // We currently cannot do a reflow here as the new text elements have not been
 	    // created to be reflowed...
         Relayout(pChangedElement, iChangedOffset,
             (pChangedElement != m_pCurrent ? m_pCurrent : 0 ));
 
-#if 0
-        // There's a bug that after a return is pressed, the formatting is wrong
-        //  for the new paragrah.  Presents a problem.  If we insert an empty
-        //  text element here, we get messed up because we may not be able to
-        //  position the caret.  We end up reducing and loosing a pointer to
-        //  the layout element.  It is a hard problem.
-
-        CEditTextElement *pNewText = pCopyFormat->CopyEmptyText();
-        pNewText->InsertBefore(m_pCurrent);
-        m_pCurrent = pNewText;
-        m_iCurrentOffset = 0;
-#endif
+        // Check if we were originally at an empty text element
+        //   with different formating than current element --
+        //   it was deleted during ClearPhantomInsertPoint() in SplitAtContainer()
+        if( pEmptyFormatElement && m_pCurrent && m_pCurrent->IsText() &&
+            !m_pCurrent->Text()->SameFormat(pEmptyFormatElement) )
+	    {
+            if( m_pCurrent->GetLen() > 0 )
+		    {
+                // We have some text, so we must insert the empty element
+                //  that has the correct formatting
+			    pEmptyFormatElement->InsertBefore(m_pCurrent);
+			    // and make it the current element
+                m_pCurrent = pEmptyFormatElement;
+                m_iCurrentOffset = 0;
+			    // Prevent deletion below
+			    pEmptyFormatElement = NULL;
+		    }
+		    else
+		    {
+			    // Copy the previous attributes to the existing empty text elemet
+			    pEmptyFormatElement->CopyTextFormat(m_pCurrent->Text());
+                // Must relayout for this to display correctly
+                Relayout(m_pCurrent, 0, m_pCurrent);
+		    }
+        }
         result = EDT_COP_OK;
     }
+
+    if( pEmptyFormatElement )
+        delete pEmptyFormatElement;
 
     return result;
 }
@@ -10905,10 +10997,17 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
 
 void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
 {
-    XP_Bool bTableSelected = IsTableOrCellSelected();
-    if( bTableSelected && !IsSelected() )
+    // Table elements are too hard! Set flag to delete AFTER
+    //   inserting the table instead. (Down side is double Relayout)
+    if( IsTableOrCellSelected() )
     {
-    // Nothing selected - nothing to delete
+        m_bDeleteTableAfterPasting = TRUE;
+        PositionCaret(x,y);    
+        return;
+    }
+    if( !IsSelected() )
+    {
+        // Nothing selected - nothing to delete
         PositionCaret(x,y);    
         return;
     }
@@ -10932,46 +11031,8 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
 
         // Check if new insert point will be after the selection
         //  we will delete and adjust the index by the amount deleted
-        // (Table elements are handled below)
-        if( !bTableSelected && Insert.m_index > PSel.m_start.m_index )
+        if( Insert.m_index > PSel.m_start.m_index )
 		    Insert.m_index -= PSel.m_end.m_index - PSel.m_start.m_index;
-#if 0
-//TODO: This needs more work
-        if( bTableSelected )
-        {
-            CEditTableElement *pTable = NULL;
-            if( m_pSelectedEdTable )
-                pTable = m_pSelectedEdTable;
-            else
-                pTable = m_SelectedEdCells[0]->GetParentTable();
-
-            if( pTable )
-            {
-                if( m_pSelectedEdTable )
-                {
-            	    SetInsertPoint(Insert);
-                    CEditElement *pStart = m_pRoot;
-                    CEditElement *pPrev = pTable->GetPreviousSibling();
-                    if( pPrev )
-                        pStart = pPrev->FindNextElement(&CEditElement::FindLeafAll,0 );
-                    CEditElement *pEnd = pTable->GetLastMostChild()->NextLeaf();
-                    // First unselect the table
-                    ClearTableAndCellSelection();
-                    // Delete the entire table
-                    // Assumes current insert point is NOT inside the selected table
-    	            pTable->Unlink();
-                    delete pTable;
-                    //Relayout(pStart, 0,  pEnd);
-                } else
-                {
-                    // Delete all selected cells (this will call Relayout())
-                    DeleteSelectedCells();
-            	    SetInsertPoint(Insert);
-                }
-            }
-        }
-        else
-#endif
         {
     	    // Delete the selection and set new insert position
     	    DeleteSelection();
@@ -10980,10 +11041,10 @@ void CEditBuffer::DeleteSelectionAndPositionCaret( int32 x, int32 y )
     }
 }
  
- // this routine is called when the mouse goes down.
-//
+// this routine is called when the mouse goes down.
 void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
     VALIDATE_TREE(this);
+    m_bUseCurrentTextFormat = FALSE;
     ClearPhantomInsertPoint();
     {
         // This is a hack to avoid auto-scrolling to the old selection.
@@ -11160,6 +11221,7 @@ void CEditBuffer::SelectObject( int32 x, int32 y ){
 #else
     LO_SelectObject(m_pContext, x, y);
 #endif
+    m_bUseCurrentTextFormat = FALSE;
 }
 
 //
@@ -12771,7 +12833,23 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
         m_bNoRelayout = FALSE;
     }
 
-   return result;
+    // Delete table or cells in original location if moving within the doc
+    if( m_bDeleteTableAfterPasting )
+    {
+        if( m_pSelectedEdTable )
+        {
+            // Delete the entire table.
+            // FALSE = don't reposition insert point
+            m_pSelectedEdTable->Delete(FALSE);
+        } 
+        else if( m_SelectedEdCells.Size() )
+        {
+            DeleteSelectedCells();
+        }
+        m_bDeleteTableAfterPasting = FALSE;
+    }
+   
+    return result;
 }
 
 EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCopyType iCopyType )
@@ -12944,6 +13022,21 @@ EDT_ClipboardResult CEditBuffer::PasteCellsIntoTable( IStreamIn& stream, EEditCo
 #ifdef DEBUG
         m_pRoot->ValidateTree();
 #endif
+    }
+
+    // Delete table or cells in original location if moving within the doc
+    if( m_bDeleteTableAfterPasting )
+    {
+        if( m_pSelectedEdTable )
+        {
+            // Delete the entire table.
+            // FALSE = don't reposition insert point
+            m_pSelectedEdTable->Delete(FALSE);
+        } else if( m_SelectedEdCells.Size() )
+        {
+            DeleteSelectedCells();
+        }
+        m_bDeleteTableAfterPasting = FALSE;
     }
 
     //TODO: FINISH PASTECELLSINTOTABLE
@@ -15964,7 +16057,7 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
 
     if ( bReplaceAll )
     {
-        origEditElement = this->m_pCurrent;
+        origEditElement = m_pCurrent;
 
         NavigateDocument( FALSE, FALSE );
         LO_GetSelectionEndpoints( m_pContext,
@@ -16036,7 +16129,9 @@ CEditBuffer::ReplaceLoop(char *pReplaceText, XP_Bool bReplaceAll,
         SetInsertPoint(origEditElement, original_start_pos, FALSE);
         Reduce(this->m_pRoot->GetFirstMostChild());//we must finish what we have begun...
         // relayout the stream
-	    Relayout(this->m_pRoot->GetFirstMostChild(), 0);
+	    //Relayout(this->m_pRoot->GetFirstMostChild(), 0);
+        // More stable???
+	    Relayout(m_pRoot->GetFirstMostChild(), 0, m_pRoot->GetLastMostChild());
     }
 }
 

@@ -895,19 +895,14 @@ CDeleteTableCommand::CDeleteTableCommand(CEditBuffer* buffer, intn id)
     GetEditBuffer()->GetTableInsertPoint(ip);
     GetEditBuffer()->ClearTableAndCellSelection();
     m_pTable = ip.m_pElement->GetTableIgnoreSubdoc();
-	if ( m_pTable ) {
-		CEditElement* pRefreshStart = m_pTable->GetFirstMostChild()->PreviousLeaf();
-		CEditInsertPoint replacePoint(m_pTable->GetLastMostChild()->NextLeaf(), 0);
-		GetEditBuffer()->SetInsertPoint(replacePoint);
-		m_pTable->Unlink();
-		m_replacePoint = GetEditBuffer()->EphemeralToPersistent(replacePoint);
-		GetEditBuffer()->Relayout(pRefreshStart, 0, replacePoint.m_pElement);
-	}
+	if ( m_pTable )
+        m_pTable->Delete();
 }
 
 CDeleteTableCommand::~CDeleteTableCommand()
 {
-    delete m_pTable;
+// Now done in CEditTableElement::Delete()
+//    delete m_pTable;
 }
 
 void CDeleteTableCommand::Do() {

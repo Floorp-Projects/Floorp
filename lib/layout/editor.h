@@ -877,6 +877,10 @@ public:
 
     void InsertRows(int32 Y, int32 newY, intn number, CEditTableElement* pSource = NULL);
     void InsertColumns(int32 X, int32 newX, intn number, CEditTableElement* pSource = NULL);
+    // Delete a table and relayout
+    // Use bMoveInsertPoint = TRUE when you have already moved insert point
+    //   outside of the table, else it is moved to just before the table
+    void Delete(XP_Bool bMoveInsertPoint = TRUE);
 //cmanske: I doubt we will ever revive the old undo system, so skip it here
 //    void DeleteRows(int32 Y, intn number, CEditTableElement* pUndoContainer = NULL);
     void DeleteRows(int32 Y, intn number);
@@ -1385,7 +1389,9 @@ private:
     XP_Bool      m_bDeleted;
 
 public:
-    intn m_iBackgroundSaveIndex;
+    intn    m_iBackgroundSaveIndex;
+    // For quickest access by edit buffer
+    XP_Bool m_bDeleteSingleSpace;
 };
 
 class CEditLayerElement: public CEditElement {
@@ -1768,6 +1774,8 @@ public:
                         && m_pText[iLen-1] == ' ')
                 );
     }
+    // Copy current element's attributes to the supplied element
+    void CopyTextFormat(CEditTextElement *pTextElement);
     CEditTextElement* CopyEmptyText( CEditElement *pParent = 0);
     void FormatOpenTags(PA_Tag*& pStartList, PA_Tag*& pEndList);
     void FormatTransitionTags(CEditTextElement *pNext,
@@ -1783,6 +1791,8 @@ public:
     ED_TextFormat PrintFormatClose( CPrintState *ps );
 
     XP_Bool SameAttributes(CEditTextElement *pCompare);
+    // Stronger than SameAtributes - must match all text styles
+    XP_Bool SameFormat(CEditTextElement *pCompare);
     void ComputeDifference(CEditTextElement *pFirst,
         ED_TextFormat mask, ED_TextFormat& bitsCommon, ED_TextFormat& bitsDifferent);
 
@@ -3053,7 +3063,6 @@ public:
     TagType m_iLastTagType; // The previous tag's type, comments are ignored.
     XP_Bool m_bLastTagIsEnd; // The previous tag's open vs. close state, comments are ignored.
 
-
     CPrintState printState;
     CEditLinkManager linkManager;
     TXP_GrowableArray_EDT_MetaData m_metaData;
@@ -3083,10 +3092,20 @@ private:
     CEditCommandLog* GetCommandLog(){ XP_ASSERT(m_pCommandLog); return m_pCommandLog; };
     CEditCommandLog* m_pCommandLog;
     XP_Bool m_bTyping;
+
+    // Trying to figure out new new insert point is too complicated
+    //   when moving a table, so we set this and delete AFTER inserting
+    XP_Bool m_bDeleteTableAfterPasting;
+
     CEditInternalAnchorElement* m_pStartSelectionAnchor;
     CEditInternalAnchorElement* m_pEndSelectionAnchor;
     XP_Bool m_bStartSelectionStickyAfter;
     XP_Bool m_bEndSelectionStickyAfter;
+
+    // Set TRUE only when user uses left arrow key to move to beginning
+    // of a text element, so we use that formating and not the previous element's
+    // Thus a quick press of right, left arrows works to keep styles to right of caret
+    XP_Bool m_bUseCurrentTextFormat;
 
     XP_Bool m_bLayoutBackpointersDirty;
     //CLM: Save the current file time to

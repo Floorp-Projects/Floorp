@@ -5383,7 +5383,7 @@ char * EDT_GetFilename(char * pURL, XP_Bool bMustHaveExtension)
         }
 
         // Check if we must have a period to be considered a filename
-        // This allow text without "." to be considered a subdirectory, not filename
+        // This allows text without "." to be considered a subdirectory, not filename
         if( *pFilename ){
             if( !bMustHaveExtension || 
                  (bMustHaveExtension && XP_STRCHR(pFilename, '.')) ){
