@@ -1843,7 +1843,7 @@ int nsMsgComposeAndSend::SetMimeHeader(MSG_HEADER_SET header, const char *value)
 
 	if (dupHeader) 
   {
-		ret = mCompFields->SetHeader(header, dupHeader);
+		ret = mCompFields->SetAsciiHeader(header, dupHeader);
 		PR_Free(dupHeader);
 	}
 	return ret;
