@@ -355,11 +355,6 @@ class NS_COM nsFileSpec
         ConstFSSpecPtr          GetFSSpecPtr() const { return &mSpec; }
         FSSpecPtr               GetFSSpecPtr() { return &mSpec; }
         void                    MakeAliasSafe();
-                                    // Called for the spec of an alias.  Copies the alias to
-                                    // a secret temp directory and modifies the spec to point
-                                    // to it.  Sets mError.
-        void                    ResolveAlias(PRBool& wasAliased);
-                                    // ** do not use this function, instead us ResolveSymlink()
         void                    MakeUnique(ConstStr255Param inSuggestedLeafName);
         StringPtr               GetLeafPName() { return mSpec.name; }
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
