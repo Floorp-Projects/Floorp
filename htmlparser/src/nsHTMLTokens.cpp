@@ -614,20 +614,22 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       }
       //theTermStrPos=theBuffer.Find(aTerminalString,PR_TRUE,theCurrOffset);
       if(theTermStrPos>kNotFound) {
-        if(aMode!=eParseMode_noquirks && !theLastIteration && !aIgnoreComments) {
-          theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
-          if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
-            theStartCommentPos=theCurrOffset;
-          }
-          if(theStartCommentPos>kNotFound) {
-            // Search for --> between <!-- and </TERMINALSTRING>.
-            theCurrOffset=theBuffer.RFind("-->",PR_TRUE,theTermStrPos,theTermStrPos-theStartCommentPos);
-            if(theCurrOffset==kNotFound) {
-              // If you're here it means that we have a bogus terminal string.
-              theAltTermStrPos=(theAltTermStrPos>-1)? theAltTermStrPos:theTermStrPos; // This could be helpful in case we hit the rock bottom.
-              theCurrOffset=theTermStrPos+termStrLen; // We did not find '-->' so keep searching for terminal string.
-              continue;
-            }        
+        if(aMode!=eParseMode_noquirks && !theLastIteration) {
+          if(!aIgnoreComments) {
+            theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
+            if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
+              theStartCommentPos=theCurrOffset;
+            }
+            if(theStartCommentPos>kNotFound) {
+              // Search for --> between <!-- and </TERMINALSTRING>.
+              theCurrOffset=theBuffer.RFind("-->",PR_TRUE,theTermStrPos,theTermStrPos-theStartCommentPos);
+              if(theCurrOffset==kNotFound) {
+                // If you're here it means that we have a bogus terminal string.
+                theAltTermStrPos=(theAltTermStrPos>-1)? theAltTermStrPos:theTermStrPos; // This could be helpful in case we hit the rock bottom.
+                theCurrOffset=theTermStrPos+termStrLen; // We did not find '-->' so keep searching for terminal string.
+                continue;
+              }        
+            }
           }
             
           PRInt32 thePos=theBuffer.FindChar(kGreaterThan,PR_TRUE,theTermStrPos,20);          
@@ -1248,6 +1250,8 @@ void CAttributeToken::AppendSource(nsString& anOutputString){
  */
 nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner){
   nsresult result=NS_OK;
+  PRInt32 theOffset=aScanner.GetOffset();
+
   switch(aChar) {
     case kQuote:
       result=aScanner.ReadUntil(aString,kQuote,PR_TRUE);
@@ -1262,9 +1266,21 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
     default:
       break;
   }
+
+  // Ref: Bug 35806
+  // A back up measure when disaster strikes...
+  // Ex <table> <tr d="><td>hello</td></tr></table>
   PRUnichar ch=aString.Last();
-  if(ch!=aChar)
-    aString+=aChar;
+  if(ch!=aChar) {
+    if(!aScanner.IsIncremental() && result==kEOF) {
+      aScanner.Mark(theOffset);
+      aString=aChar;
+      result=kBadStringLiteral; 
+    }
+    else {
+        aString+=aChar;
+    }
+  }
   return result;
 }
 
@@ -1359,6 +1375,9 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     if((kQuote==aChar) || (kApostrophe==aChar)) {
                       mTextValue.Append(aChar);
                       result=ConsumeQuotedString(aChar,mTextValue,aScanner);
+                      if(result==kBadStringLiteral) {
+                        result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
+                      }
                       if(!aRetainWhitespace)
                         mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
                     }

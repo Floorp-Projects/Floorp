@@ -898,6 +898,8 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
       if(pc && theScanner) { 
         PushContext(*pc); 
 
+        if(theDTD) theDTD->WillBuildModel(*pc,nsnull); // Fixing UMR - Bug 33570
+
         pc->mMultipart=!aLastCall; //by default 
         if (pc->mPrevContext) { 
           pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available 

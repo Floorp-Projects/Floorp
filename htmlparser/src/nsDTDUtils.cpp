@@ -1180,7 +1180,7 @@ void CObserverService::RegisterObservers(const nsString& aTopic) {
     nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, theObserverService);
 
     if(result == NS_OK) {
-      nsIElementObserver *theElementObserver = nsnull;
+      nsCOMPtr<nsIElementObserver> theElementObserver;
       nsISupports *inst = nsnull;
 
       nsObserverTopic *theTopic=0;
@@ -1188,7 +1188,7 @@ void CObserverService::RegisterObservers(const nsString& aTopic) {
       for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
         result = theEnum->CurrentItem(&inst);
         if (NS_SUCCEEDED(result)) {
-          result = inst->QueryInterface(NS_GET_IID(nsIElementObserver), (void**)&theElementObserver);
+          theElementObserver = do_QueryInterface(inst, &result);
           NS_RELEASE(inst);
         }
         if (result == NS_OK) {
