@@ -179,6 +179,7 @@ bin/components/nsDownloadProgressListener.js
 bin/components/filepicker.xpt
 bin/components/mozldap.xpt
 bin/components/typeaheadfind.xpt
+bin/components/nsCloseAllWindows.js
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
