@@ -56,8 +56,8 @@
 #include "nsUniversalDetector.h"
 
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMStringDetector);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMDetector)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUniversalXPCOMStringDetector)
 
 //----------------------------------------
 static NS_METHOD nsUniversalCharDetectorRegistrationProc(nsIComponentManager *aCompMgr,

@@ -787,7 +787,7 @@ Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT   inCommand,
 //  CBrowserApp : nsISupports
 // ---------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS2(CBrowserApp, nsIObserver, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS2(CBrowserApp, nsIObserver, nsISupportsWeakReference)
 
 // ---------------------------------------------------------------------------
 //  CBrowserApp : nsIObserver

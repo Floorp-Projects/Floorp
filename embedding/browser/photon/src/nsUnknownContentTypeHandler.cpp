@@ -150,7 +150,7 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
 
 
 //###########################################################################
-NS_IMPL_ISUPPORTS2(nsWebProgressListener, nsIWebProgressListener, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS2(nsWebProgressListener, nsIWebProgressListener, nsISupportsWeakReference)
 
 nsWebProgressListener::nsWebProgressListener() {
   NS_INIT_ISUPPORTS();
@@ -190,7 +190,7 @@ NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgre
 /* Component's implementation of Initialize. */
 /* nsISupports Implementation for the class */
 NS_IMPL_ADDREF( className );  
-NS_IMPL_RELEASE( className );
+NS_IMPL_RELEASE( className )
 
 
 /* QueryInterface implementation for this class. */

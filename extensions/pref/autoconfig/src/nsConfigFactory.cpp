@@ -117,4 +117,4 @@ static const nsModuleComponentInfo components[] =
 #endif
 };
 
-NS_IMPL_NSGETMODULE(nsAutoConfigModule, components);
+NS_IMPL_NSGETMODULE(nsAutoConfigModule, components)

@@ -43,7 +43,7 @@
 
 // nsPassword Implementation
 
-NS_IMPL_ISUPPORTS2(nsPassword, nsIPassword, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS2(nsPassword, nsIPassword, nsISupportsWeakReference)
 
 nsPassword::nsPassword() {
 }

@@ -161,8 +161,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMSOFactory)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsDOMSOFactory);
-NS_IMPL_RELEASE(nsDOMSOFactory);
+NS_IMPL_ADDREF(nsDOMSOFactory)
+NS_IMPL_RELEASE(nsDOMSOFactory)
 
 
 NS_IMETHODIMP
@@ -345,8 +345,8 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 
 //////////////////////////////////////////////////////////////////////
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException)
 
 static const nsModuleComponentInfo gDOMModuleInfo[] = {
   { "Script Object Factory",

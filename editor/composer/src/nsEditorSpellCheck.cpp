@@ -57,7 +57,7 @@
 #include "nsReadableUtils.h"
 #include "nsITextServicesFilter.h"
 
-NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck);
+NS_IMPL_ISUPPORTS1(nsEditorSpellCheck, nsIEditorSpellCheck)
 
 nsEditorSpellCheck::nsEditorSpellCheck()
   : mSuggestedWordIndex(0)

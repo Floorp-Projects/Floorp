@@ -57,7 +57,7 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mMapAtom         = do_GetAtom("map");
 }
 
-NS_IMPL_ISUPPORTS1(nsComposeTxtSrvFilter, nsITextServicesFilter);
+NS_IMPL_ISUPPORTS1(nsComposeTxtSrvFilter, nsITextServicesFilter)
 
 NS_IMETHODIMP 
 nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)

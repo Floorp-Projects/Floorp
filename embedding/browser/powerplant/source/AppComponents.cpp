@@ -46,9 +46,9 @@
 #define NS_HELPERAPPLAUNCHERDIALOG_CID \
       {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(CPromptService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(CDownload);
-NS_GENERIC_FACTORY_CONSTRUCTOR(CHelperAppLauncherDialog);
+NS_GENERIC_FACTORY_CONSTRUCTOR(CPromptService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CDownload)
+NS_GENERIC_FACTORY_CONSTRUCTOR(CHelperAppLauncherDialog)
 
 static const nsModuleComponentInfo components[] = {
   {

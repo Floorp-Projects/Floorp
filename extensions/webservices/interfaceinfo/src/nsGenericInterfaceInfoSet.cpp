@@ -48,7 +48,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsGenericInterfaceInfoSet,
                               nsIInterfaceInfoManager,
                               nsIGenericInterfaceInfoSet,
-                              nsISupportsWeakReference);
+                              nsISupportsWeakReference)
 
 nsGenericInterfaceInfoSet::nsGenericInterfaceInfoSet()
 {
@@ -317,7 +317,7 @@ nsGenericInterfaceInfoSet::EnumerateInterfacesWhoseNamesStartWith(const char *pr
 
 NS_IMPL_QUERY_INTERFACE2(nsGenericInterfaceInfo,
                          nsIInterfaceInfo,
-                         nsIGenericInterfaceInfo);
+                         nsIGenericInterfaceInfo)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsGenericInterfaceInfo::AddRef()

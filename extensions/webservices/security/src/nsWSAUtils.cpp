@@ -280,7 +280,7 @@ DestroyHandler(PLEvent *aEvent)
 }
  
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSListener,
-                              nsIDNSListener);
+                              nsIDNSListener)
 
 nsDNSListener::nsDNSListener()
   : mLookupFinished(PR_FALSE)

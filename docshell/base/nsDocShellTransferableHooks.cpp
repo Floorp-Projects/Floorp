@@ -56,7 +56,7 @@ nsTransferableHookData::~nsTransferableHookData()
 // nsIClipboardDragDropHookList
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS1(nsTransferableHookData, nsIClipboardDragDropHookList);
+NS_IMPL_ISUPPORTS1(nsTransferableHookData, nsIClipboardDragDropHookList)
 
 NS_IMETHODIMP
 nsTransferableHookData::AddClipboardDragDropHooks(

@@ -66,7 +66,7 @@ CHDownloader::~CHDownloader()
   [mControllerFactory release];
 }
 
-NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports);
+NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports)
 
 void
 CHDownloader::CreateDownloadDisplay()

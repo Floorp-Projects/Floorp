@@ -72,7 +72,7 @@ NS_IMPL_ISUPPORTS4(nsPolicyReference,
                    nsIPolicyReference,
                    nsIPolicyTarget,
                    nsIDOMEventListener,
-                   nsISupportsWeakReference);
+                   nsISupportsWeakReference)
 
 nsPolicyReference::nsPolicyReference() 
   : mFlags (0),

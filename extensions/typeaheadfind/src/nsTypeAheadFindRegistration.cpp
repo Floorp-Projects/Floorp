@@ -83,7 +83,7 @@ nsTypeAheadFindRegistrationProc(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsTypeAheadFind,
-                                         nsTypeAheadFind::GetInstance);
+                                         nsTypeAheadFind::GetInstance)
 
 static void PR_CALLBACK
 TypeAheadFindModuleDtor(nsIModule* self)

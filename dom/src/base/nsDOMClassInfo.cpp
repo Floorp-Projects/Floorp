@@ -1074,8 +1074,8 @@ nsDOMClassInfo::~nsDOMClassInfo()
   }
 }
 
-NS_IMPL_ADDREF(nsDOMClassInfo);
-NS_IMPL_RELEASE(nsDOMClassInfo);
+NS_IMPL_ADDREF(nsDOMClassInfo)
+NS_IMPL_RELEASE(nsDOMClassInfo)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMClassInfo)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)

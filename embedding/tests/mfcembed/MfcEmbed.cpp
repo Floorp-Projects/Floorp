@@ -786,7 +786,7 @@ nsresult CMfcEmbedApp::InitializeWindowCreator()
 //  CMfcEmbedApp : nsISupports
 // ---------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(CMfcEmbedApp, nsIObserver, nsIWindowCreator, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS3(CMfcEmbedApp, nsIObserver, nsIWindowCreator, nsISupportsWeakReference)
 
 // ---------------------------------------------------------------------------
 //  CMfcEmbedApp : nsIObserver

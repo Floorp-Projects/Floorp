@@ -47,8 +47,8 @@
 #include "nsIServiceManager.h"
 
 #if 0
-NS_IMPL_THREADSAFE_ADDREF(nsPrintProgress);
-NS_IMPL_THREADSAFE_RELEASE(nsPrintProgress);
+NS_IMPL_THREADSAFE_ADDREF(nsPrintProgress)
+NS_IMPL_THREADSAFE_RELEASE(nsPrintProgress)
 #else
 NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::AddRef(void)
 {

@@ -59,7 +59,7 @@ public:
     AutoConfigSecMan();
 };
 
-NS_IMPL_ISUPPORTS1(AutoConfigSecMan, nsIXPCSecurityManager);
+NS_IMPL_ISUPPORTS1(AutoConfigSecMan, nsIXPCSecurityManager)
 
 AutoConfigSecMan::AutoConfigSecMan()
 {

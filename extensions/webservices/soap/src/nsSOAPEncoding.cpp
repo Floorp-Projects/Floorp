@@ -67,7 +67,7 @@ DeleteEncodingEntry(nsHashKey *aKey, void *aData, void *aClosure)
 //    but is never seen by xpconnect.
 //
 
-NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncodingRegistry);
+NS_IMPL_ISUPPORTS1(nsSOAPEncodingRegistry, nsISOAPEncodingRegistry)
 
 nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding *aEncoding)
 : mEncodings(nsnull, nsnull, DeleteEncodingEntry, nsnull, 4)

@@ -81,7 +81,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(mozXMLTerminal,
                               mozIXMLTerminal,
                               nsIWebProgressListener,
                               nsIObserver,
-                              nsISupportsWeakReference);
+                              nsISupportsWeakReference)
 
 mozXMLTerminal::mozXMLTerminal() :
   mInitialized(PR_FALSE),

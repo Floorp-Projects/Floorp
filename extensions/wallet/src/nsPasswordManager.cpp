@@ -94,7 +94,7 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
     PRInt32 mUserCount;
 };
 
-NS_IMPL_ISUPPORTS1(nsPasswordManagerEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsPasswordManagerEnumerator, nsISimpleEnumerator)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,12 +140,12 @@ class nsPasswordManagerRejectEnumerator : public nsISimpleEnumerator
     PRInt32 mRejectCount;
 };
 
-NS_IMPL_ISUPPORTS1(nsPasswordManagerRejectEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsPasswordManagerRejectEnumerator, nsISimpleEnumerator)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsPasswordManager Implementation
 
-NS_IMPL_ISUPPORTS3(nsPasswordManager, nsIPasswordManager, nsIPasswordManagerInternal, nsISupportsWeakReference);
+NS_IMPL_ISUPPORTS3(nsPasswordManager, nsIPasswordManager, nsIPasswordManagerInternal, nsISupportsWeakReference)
  
 nsPasswordManager::nsPasswordManager()
 {

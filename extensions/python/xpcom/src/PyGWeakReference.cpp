@@ -74,7 +74,7 @@ PyXPCOM_GatewayWeakReference::Release(void)
 	return cnt;
 }
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE1(PyXPCOM_GatewayWeakReference, nsIWeakReference);
+NS_IMPL_THREADSAFE_QUERY_INTERFACE1(PyXPCOM_GatewayWeakReference, nsIWeakReference)
 
 NS_IMETHODIMP
 PyXPCOM_GatewayWeakReference::QueryReferent(REFNSIID iid, void * *ret)

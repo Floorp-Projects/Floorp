@@ -189,9 +189,9 @@ private:
   nsWatcherWindowEntry *mCurrentPosition;
 };
 
-NS_IMPL_ADDREF(nsWatcherWindowEnumerator);
-NS_IMPL_RELEASE(nsWatcherWindowEnumerator);
-NS_IMPL_QUERY_INTERFACE1(nsWatcherWindowEnumerator, nsISimpleEnumerator);
+NS_IMPL_ADDREF(nsWatcherWindowEnumerator)
+NS_IMPL_RELEASE(nsWatcherWindowEnumerator)
+NS_IMPL_QUERY_INTERFACE1(nsWatcherWindowEnumerator, nsISimpleEnumerator)
 
 nsWatcherWindowEnumerator::nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher)
   : mWindowWatcher(inWatcher),
@@ -406,8 +406,8 @@ private:
  *********************** nsWindowWatcher ************************
  ****************************************************************/
 
-NS_IMPL_ADDREF(nsWindowWatcher);
-NS_IMPL_RELEASE(nsWindowWatcher);
+NS_IMPL_ADDREF(nsWindowWatcher)
+NS_IMPL_RELEASE(nsWindowWatcher)
 NS_IMPL_QUERY_INTERFACE2(nsWindowWatcher, nsIWindowWatcher, nsPIWindowWatcher)
 
 nsWindowWatcher::nsWindowWatcher() :

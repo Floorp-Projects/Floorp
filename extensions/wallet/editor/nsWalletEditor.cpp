@@ -61,7 +61,7 @@ WalletEditorImpl::~WalletEditorImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS1(WalletEditorImpl, nsIWalletEditor);
+NS_IMPL_ISUPPORTS1(WalletEditorImpl, nsIWalletEditor)
 
 NS_IMETHODIMP
 WalletEditorImpl::GetValue(PRUnichar** aValue)
