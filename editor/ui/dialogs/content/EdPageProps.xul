@@ -37,9 +37,9 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdPageProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdPageProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
@@ -47,34 +47,34 @@
     <text value="&location.label;" flex ="1" align="left"/>
     <spring class="spacer"/>
     <spring flex="1"/>
-    <text class="MinWidth200" value="&locationNewPage.label;" id="PageLocation" align="left"/>
+    <text class="MinWidth20em" value="&locationNewPage.label;" id="PageLocation" align="left"/>
   </box>  
   <spring class="spacer"/>
   <box>
     <text value="&lastModified.label;" flex ="1" align="left"/>
     <spring class="spacer"/>
     <spring flex="1"/>
-    <text class="MinWidth200" value="[fill this in!]" id="PageModDate" align="left"/>
+    <text class="MinWidth20em" value="[fill this in!]" id="PageModDate" align="left"/>
   </box>  
   <spring class="spacer"/>
   <box>
     <text value="&titleInput.label;" flex ="1" align="left"/>
     <spring class="spacer"/>
     <spring flex="1"/>
-    <html:input class="MinWidth200" type="text" id="TitleInput"/>
+    <html:input class="MinWidth20em" type="text" id="TitleInput"/>
   </box>  
   <spring class="spacer"/>
   <box>
     <text value="&authorInput.label;" flex ="1" align="left"/>
     <spring class="spacer"/>
     <spring flex="1"/>
-    <html:input class="MinWidth200" type="text" id="AuthorInput"/>
+    <html:input class="MinWidth20em" type="text" id="AuthorInput"/>
   </box>  
   <spring class="spacer"/>
   <box>
     <text value="&descriptionInput.label;" flex ="1" align="left"/>
     <spring flex="1"/>
-    <html:input class="MinWidth200" type="text" id="DescriptionInput"/>
+    <html:input class="MinWidth20em" type="text" id="DescriptionInput"/>
   </box>  
   <spring class="bigspacer"/>
   <box align="horizontal">
@@ -91,6 +91,6 @@
     <html:div> [Meta Tags editing widgets will go here] </html:div>
     <spring class="bigspacer"/>
   </box>
-  <html:div class="separator" align="horizontal"/>
+  <separator class="groove"/>
   <box id="okCancelButtons"/> 
 </window>

@@ -45,5 +45,6 @@
 <!ENTITY extraMarkup.accesskey "e">
 <!ENTITY hideExtraMarkup.label "Hide Extra Markup">
 <!ENTITY viewModeButton.label "View Mode:">
+<!ENTITY showAllTags.label "Show All Tags">
 <!ENTITY htmlModeButton.label "HTML Source">
 <!ENTITY treeModeButton.label "Tag Tree">

@@ -27,28 +27,17 @@
  *  place in EditorOverride.css, instead of here.
 */
 
-a[name] {
-  margin-left: 2px;
-  /* TEMPORARY TO COMPENSATE FOR BUG */
+a[name]:before {
+  content: url(chrome://editor/skin/images/anchor-in-doc.gif);
+  /* display: inline; */
+
+/*  margin-left: 2px; */
+
+  /*
   padding-left: 13px; 
   background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
   background-position: center left;
-}
-
-div {
-  margin-left: 2px;
-  /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
-  background-position: center left;
-}
-
-span {
-  margin-left: 2px;
-  /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-  background-position: center left;
+*/
 }
 
 /* Force border display for empty cells 
@@ -65,8 +54,9 @@ table[empty-cells], table[border="0"] {
 /* Also force border for cell children 
    Problem: what if children have a border?
 */
-table[border="0"] > td, table[border="0"] > th {
+table[border="0"] * td, table[border="0"] * th {
   border: 1px dotted red;
+  background-color: blue;
 }
 
 /* For ease in caret placement, 

@@ -36,6 +36,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EditorInitPagePlain.html \
 		$(srcdir)/EditorStyles1.css \
 		$(srcdir)/EditorContent.css \
+		$(srcdir)/EditorAllTags.css \
 		$(srcdir)/EditorOverride.css \
 		$(srcdir)/EditorParagraphMarks.css \
 		$(srcdir)/sidebar-editor.rdf \

@@ -56,14 +56,15 @@ var customActiveColor;
 var customBackgroundColor;
 
 // Strings we use often
-var styleStr =      "style";
-var textStr =       "text";
-var linkStr =       "link";
-var vlinkStr =      "vlink";
-var alinkStr =      "alink";
-var bgcolorStr =    "bgcolor";
-var backgroundStr = "background";
-var colorStyle =    "color:"
+var styleStr =       "style";
+var textStr =        "text";
+var linkStr =        "link";
+var vlinkStr =       "vlink";
+var alinkStr =       "alink";
+var bgcolorStr =     "bgcolor";
+var backgroundStr =  "background";
+var colorStyle =     "color:";
+var backImageStyle = " background-image:";
 
 // dialog initialization code
 function Startup()
@@ -186,6 +187,7 @@ function InitDialog()
   }
 }
 
+
 function SetColor(ColorWellID, color)
 {
   switch( ColorWellID )
@@ -213,7 +215,13 @@ function SetColor(ColorWellID, color)
     case "backgroundCW":
       if (!color) color = defaultBackgroundColor;
       dialog.backgroundColor = color;
-      dialog.ColorPreview.setAttribute(bgcolorStr,color);
+      // Must combine background color and image style values
+      styleValue = colorStyle+color;
+      if (dialog.backgroundImage > 0)
+      {
+        styleValue += ";"+backImageStyle+backImageStyle+";";
+      }
+      dialog.ColorPreview.setAttribute(styleStr,styleValue);
       break;
   }
   setColorWell(ColorWellID, color); 
@@ -264,15 +272,16 @@ function UseDefaultColors()
 
 function onBackgroundImageCheckbox()
 {
-  if (dialog.BackgroundImageCheckbox.checked)
+  // First make a string with just background color
+  var styleValue = colorStyle+dialog.backgroundColor+";";
+  if (dialog.BackgroundImageCheckbox.checked && ValidateImage())
   {
-    if (ValidateImage())
-    {
-      dialog.ColorPreview.setAttribute(backgroundStr, dialog.BackgroundImage);
-    }
-  } else {
-    dialog.ColorPreview.removeAttribute(backgroundStr);
+    // Append image style
+    styleValue += backImageStyle+dialog.BackgroundImage+";";
   }
+dump(styleValue+"=style value when setting image\n")
+  // Set style on preview (removes image if not checked or not valid)
+  dialog.ColorPreview.setAttribute(styleStr, styleValue);
 }
 
 function chooseFile()

@@ -31,6 +31,7 @@ install::
 	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EditorAllTags.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorOverride.css         $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorParagraphMarks.css   $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) sidebar-editor.rdf         $(DIST)\bin\chrome\editor\content\default
@@ -52,6 +53,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPage.html 
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPagePlain.html	
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorContent.css
+  rm -f $(DIST)\bin\chrome\editor\content\default\EditorAllTags.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorOverride.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorParagraphMarks.css
   rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.rdf

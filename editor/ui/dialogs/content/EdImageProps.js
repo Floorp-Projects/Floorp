@@ -51,8 +51,8 @@ function Startup()
   dialog.constrainCheckbox = document.getElementById( "constrainCheckbox" );
   dialog.widthInput        = document.getElementById( "widthInput" );
   dialog.heightInput       = document.getElementById( "heightInput" );
-  dialog.widthUnitsSelect  = document.getElementById( "widthUnitsSelect" );
-  dialog.heightUnitsSelect = document.getElementById( "heightUnitsSelect" );
+  dialog.widthUnitsMenulist   = document.getElementById( "widthUnitsMenulist" );
+  dialog.heightUnitsMenulist  = document.getElementById( "heightUnitsMenulist" );
   dialog.imagelrInput      = document.getElementById( "imageleftrightInput" );
   dialog.imagetbInput      = document.getElementById( "imagetopbottomInput" );
   dialog.border            = document.getElementById( "border" );
@@ -123,8 +123,8 @@ function InitDialog()
   if ( SeeMore )
   {
 	  // setup the height and width widgets
-	  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement, "width", "widthUnitsSelect");
-	  dialog.heightInput.value = InitPixelOrPercentCombobox(globalElement, "height", "heightUnitsSelect");
+	  dialog.widthInput.value = InitPixelOrPercentPopup(globalElement, imageElement, "width", "widthUnitsMenulist");
+	  dialog.heightInput.value = InitPixelOrPercentPopup(globalElement, imageElement, "height", "heightUnitsMenulist");
 	  
 	  // TODO: We need to get the actual image dimensions.
 	  //       If different from attribute dimensions, then "custom" is checked.
@@ -179,7 +179,7 @@ function InitDialog()
   doOverallEnabling();
 }
 
-function chooseImageFile()
+function chooseFile()
 {
   // Get a local file, converted into URL format
   fileName = GetLocalFileURL("img");
@@ -248,13 +248,13 @@ dump("alignment ="+alignment+"\n");
   
   // width
   str = dialog.widthInput.value;
-  if (dialog.widthUnitsSelect.selectedIndex == 1)
+  if (dialog.widthUnitsMenulist.selectedIndex == 1)
     str = str + "%";
   globalElement.setAttribute("width", str);
 
   // height
   str = dialog.heightInput.value;
-  if (dialog.heightUnitsSelect.selectedIndex == 1)
+  if (dialog.heightUnitsMenulist.selectedIndex == 1)
     str = str + "%";
   globalElement.setAttribute("height", str);
 }
@@ -311,15 +311,15 @@ function doDimensionEnabling( doEnable )
 
   SetElementEnabledByID( "widthInput", enable );
   SetElementEnabledByID( "widthLabel", enable);
-  SetElementEnabledByID( "widthUnitsSelect", enable );
+  SetElementEnabledByID( "widthUnitsMenulist", enable );
 
   SetElementEnabledByID( "heightInput", enable );
   SetElementEnabledByID( "heightLabel", enable );
-  SetElementEnabledByID( "heightUnitsSelect", enable );
+  SetElementEnabledByID( "heightUnitsMenulist", enable );
 
   var constrainEnable = enable 
-         && ( dialog.widthUnitsSelect.selectedIndex == 0 )
-         && ( dialog.heightUnitsSelect.selectedIndex == 0 );
+         && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
+         && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
   SetElementEnabledByID( "constrainCheckbox", constrainEnable );
 }
 
@@ -446,8 +446,8 @@ function ValidateData()
   if ( SeeMore )
   {
     dialog.isCustomSize = dialog.customsizeRadio.checked;
-		isPercentWidth = (dialog.widthUnitsSelect.selectedIndex == 1);
-		isPercentHeight = (dialog.heightUnitsSelect.selectedIndex == 1);
+		isPercentWidth = (dialog.widthUnitsMenulist.selectedIndex == 1);
+		isPercentHeight = (dialog.heightUnitsMenulist.selectedIndex == 1);
 		width = dialog.widthInput.value;
 		height = dialog.heightInput.value;
   }

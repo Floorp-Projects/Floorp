@@ -40,11 +40,12 @@
 
 <box align="vertical">
   <box align="horizontal">
-    <html:label for="MisspelledWord"> &misspelledWord.label; </html:label>
+    <!-- value is set in JS -->
+    <text id="MisspelledWordLabel"/>
     <spring class="bigspacer"/>
-    <titledbutton id="MisspelledWord"/>
+    <text id="MisspelledWord"/>
   </box>
-  <html:label for="ReplaceWord"> &wordEditField.label; </html:label>
+  <text id="ReplaceWordLabel" value="&wordEditField.label;"/>
   <box align="horizontal">
     <html:input type="text" class="SpellCheckWord" id="ReplaceWord" size="24" onkeyup="ChangeReplaceWord()"/>
     <spring class="bigspacer"/>
@@ -52,7 +53,7 @@
     <spring flex="100%"/>
   </box>
   <spring class="spacer"/>
-  <html:label> &suggestions.label; </html:label>
+  <text id="SuggestedListLabel" value="&suggestions.label;"/>
   <box align="horizontal">
     <html:select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()"/>
     <box align="vertical">
@@ -87,7 +88,9 @@
     <html:select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
       <option> &englishLanguagePopup.value; </option>
     </html:select>
-    <spring flex="100%"/>
+    <spring class="bigspacer"/>
+    <titledbutton class="push SizeToParent"  id="Recheck" onclick="Recheck()" value="&recheckButton.label;"/>
+    <spring class="bigspacer"/>
     <titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
     <spring class="bigspacer"/>
   </box> 

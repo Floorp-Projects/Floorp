@@ -49,7 +49,7 @@ function Startup()
   dump("Rows editbox:"+document.getElementById("rows")+"\n");
   dump("Columns editbox:"+document.getElementById("columns")+"\n");
   dump("width editbox:"+document.getElementById("width")+"\n");
-  dump("pixelOrPercentSelect:"+document.getElementById("pixelOrPercentSelect")+"\n");
+  dump("pixelOrPercentMenulist:"+document.getElementById("pixelOrPercentMenulist")+"\n");
   dump("borderInput editbox:"+document.getElementById("borderInput")+"\n");
 
   // Create dialog object to store controls for easy access
@@ -58,7 +58,7 @@ function Startup()
   dialog.columnsInput = document.getElementById("columns");
   dialog.widthInput = document.getElementById("width");
   dialog.borderInput = document.getElementById("borderInput");
-  dialog.pixelOrPercentSelect = document.getElementById("pixelOrPercentSelect");
+  dialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
@@ -88,7 +88,7 @@ function InitDialog()
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of select combobox list
-  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
+  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width","pixelOrPercentMenulist");
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
 
@@ -118,7 +118,7 @@ function ValidateData()
       globalElement.setAttribute("border", borderText);
   }
 
-  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
+  var isPercent = (dialog.pixelOrPercentMenulist.selectedIndex == 1);
   widthText = TrimString(dialog.widthInput.value);
   if (widthText) {
     var maxLimit;

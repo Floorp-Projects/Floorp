@@ -30,9 +30,9 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertSource.dtd">
 
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical" flex="100%">
 
@@ -41,14 +41,15 @@
   <script language="JavaScript" src="chrome://editor/content/EdInsSrc.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:broadcaster id="args" value=""/>
-  <xul:keyset id="keyset"/>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
 
-  <label id="srcMessage" for="srcInput">&sourceEditField.label;</label>
+  <text id="srcMessage" value="&sourceEditField.label;"/>
   <textarea rows="16" cols="80" id="srcInput" flex="1"/>
-  <div>&example.label;</div>
-  <xul:spring class="spacer"/>
-  <div class="separator" align="horizontal"/>
+  <!-- Will this accept the embedded HTML tags? -->
+  <text value="&example.label;"/>
+  <spring class="spacer"/>
+  <separator class="groove"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
-</xul:window>
+	<box id="okCancelButtons"/> 
+</window>

@@ -29,7 +29,7 @@
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
+<script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
 
   <keyset id="platformOverlayKeyset" />
 
@@ -423,7 +423,7 @@
           position="4">
     	<menupopup>
         <colorpicker id="menuTextCP" palettename="standard"
-          onclick="EditorSelectTextColor('menuTextCP',null);"/>
+          oncommand="EditorSelectTextColor('menuTextCP',null);"/>
         <menuitem value="&colorPicker.default.label;" 
           accesskey="&colorPicker.default.accesskey;" 
           oncommand="EditorRemoveTextColor(null)"/>
@@ -435,7 +435,7 @@
           position="5">
     	<menupopup>
         <colorpicker id="menuBackCP" palettename="standard"
-          onclick="EditorSelectBackColor('menuBackCP',null);"/>
+          oncommand="EditorSelectBackColor('menuBackCP',null);"/>
         <menuitem value="&colorPicker.default.label;"
           accesskey="&colorPicker.default.accesskey;" 
           oncommand="EditorRemoveBackColor(null)"/>
@@ -593,18 +593,18 @@ function EditorApplyStyleSheet(styleSheetURL)
   </menu>
 
     <popup id="TextColorPopup"  popupanchor="bottomleft">
-      <titledbutton id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
+      <text id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
         <!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
-      <titledbutton class="push" value="&colorPicker.default.label;" onclick="EditorRemoveTextColor('TextColorPopupButton');"/>
+<!--      <colorpicker id="TextColorPicker" palettename="standard" oncommand="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/> -->
+      <titledbutton class="push" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
     </popup>
 
     <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()">
       <!-- Text is filled in at runtime according to what background element will be set -->
-      <titledbutton id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
+      <text id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
         <!-- TODO: Add "Last color picked" button and text -->
-        <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
-      <titledbutton class="push" value="&colorPicker.default.label;" onclick="EditorRemoveBackColor('BackColorPopupButton');"/>
+<!--        <colorpicker id="BackColorPicker" palettename="standard" oncommand="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/> -->
+      <titledbutton class="push" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
     </popup>
 
     <menupopup id="AlignmentPopup">
@@ -649,13 +649,13 @@ function EditorApplyStyleSheet(styleSheetURL)
     <button class="key-toolbar left" orient="vertical" id="previewButton" observes="Editor:Preview" value="&previewToolbarCmd.label;"/>
     <button class="toolbar left" orient="vertical" id="printButton" observes="Editor:Print" value="&printToolbarCmd.label;"/>
     <button class="toolbar left" orient="vertical" id="findButton" observes="cmd_find" value="&findToolbarCmd.label;"/>
-    <button class="toolbar left" orient="vertical" id="spellingButton" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+    <button class="toolbar left" orient="vertical" id="spellingButton" value="&spellToolbarCmd.label;" oncommand="CheckSpelling()"/>
 
-    <button class="toolbar left" orient="vertical" id="imageButton" value="&imageToolbarCmd.label;" onclick="EditorInsertOrEditImage()"/>
-    <button class="toolbar left" orient="vertical" id="hlineButton" value="&hruleToolbarCmd.label;" onclick="EditorInsertOrEditHLine()"/>
-    <button class="toolbar left" orient="vertical" id="tableButton" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
-    <button class="toolbar left" orient="vertical" id="linkButton" value="&linkToolbarCmd.label;" onclick="EditorInsertOrEditLink()"/>
-    <button class="toolbar left" orient="vertical" id="namedAnchorButton" value="&anchorToolbarCmd.label;" onclick="EditorInsertOrEditNamedAnchor()"/>
+    <button class="toolbar left" orient="vertical" id="imageButton" value="&imageToolbarCmd.label;" oncommand="EditorInsertOrEditImage()"/>
+    <button class="toolbar left" orient="vertical" id="hlineButton" value="&hruleToolbarCmd.label;" oncommand="EditorInsertOrEditHLine()"/>
+    <button class="toolbar left" orient="vertical" id="tableButton" value="&tableToolbarCmd.label;" oncommand="EditorInsertOrEditTable(true)"/>
+    <button class="toolbar left" orient="vertical" id="linkButton" value="&linkToolbarCmd.label;" oncommand="EditorInsertOrEditLink()"/>
+    <button class="toolbar left" orient="vertical" id="namedAnchorButton" value="&anchorToolbarCmd.label;" oncommand="EditorInsertOrEditNamedAnchor()"/>
 
     <!-- Formatting toolbar items -->
     <html:select class="toolbar" id="ParagraphSelect" size="1" onchange="EditorSelectParagraphFormat()">
@@ -696,37 +696,50 @@ function EditorApplyStyleSheet(styleSheetURL)
       <html:option>&size-xx-largeCmd.label;</html:option>
     </html:select>
 
-    <!-- The new Color Picker UI -->
+    <!-- The new Color Picker UI
     <html:div id="ColorButtons">
       <titledbutton id="BackColorPopupButton" popup="BackColorPopup"
        tooltiptext="Set text color"/>
       <titledbutton id="TextColorPopupButton" popup="TextColorPopup"
        tooltiptext="Set page, table, or cell background color"/>
     </html:div>
+-->
+    <stack style="width: 20px; height: 20px;">
+      <box autostretch="never">
+        <spring style="margin-left: 5px;"/>
+        <box orient="vertical">
+          <spring style="margin-top: 5px;"/>
+          <titledbutton value="T" style="width: 14px; height: 14px;" id="BackColorPopupButton" popup="BackColorPopup"/>
+        </box>
+      </box>
+      <box autostretch="never">
+        <titledbutton value="B" style="width: 14px; height: 14px;" id="TextColorPopupButton" popup="BackColorPopup"/>
+      </box>
+    </stack>
 
-    <titledbutton id="DecreaseFontSizeButton" onclick="EditorDecreaseFontSize()"/>
-    <titledbutton id="IncreaseFontSizeButton" onclick="EditorIncreaseFontSize()"/>
+    <titledbutton id="DecreaseFontSizeButton" oncommand="EditorDecreaseFontSize()"/>
+    <titledbutton id="IncreaseFontSizeButton" oncommand="EditorIncreaseFontSize()"/>
 
-    <titledbutton id="boldButton" class="format" align="center" onclick="EditorToggleStyle('bold')">
+    <titledbutton id="boldButton" class="format" align="center" oncommand="EditorToggleStyle('bold')">
       <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
     </titledbutton>
-    <titledbutton id="italicButton" class="format" align="center" onclick="EditorToggleStyle('italic')">
+    <titledbutton id="italicButton" class="format" align="center" oncommand="EditorToggleStyle('italic')">
       <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
     </titledbutton>
-    <titledbutton id="underlineButton" class="format" align="center" onclick="EditorToggleStyle('underline')">
+    <titledbutton id="underlineButton" class="format" align="center" oncommand="EditorToggleStyle('underline')">
       <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
-    <titledbutton id="ulButton" class="format" onclick="EditorMakeOrChangeList('ul')">
+    <titledbutton id="ulButton" class="format" oncommand="EditorMakeOrChangeList('ul')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
     </titledbutton>
 
-    <titledbutton id="olButton" class="format" onclick="EditorMakeOrChangeList('ol')">
+    <titledbutton id="olButton" class="format" oncommand="EditorMakeOrChangeList('ol')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
     </titledbutton>
 
-    <titledbutton id="outdentButton"    class="format"        onclick="EditorIndent('outdent')"/>
-    <titledbutton id="indentButton"     class="format"        onclick="EditorIndent('indent')"/>
+    <titledbutton id="outdentButton"    class="format"        oncommand="EditorIndent('outdent')"/>
+    <titledbutton id="indentButton"     class="format"        oncommand="EditorIndent('indent')"/>
     <titledbutton id="AlignPopupButton" class="format popup"/>
     
     <!-- InsertPopupButton is used by messengercompose.xul -->

@@ -31,9 +31,9 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <html:script src="chrome://global/content/tasksOverlay.js"/>
-  <html:script src="chrome://editor/content/sb-file-panel.js"/>
-  <html:script src="chrome://editor/content/sb-FileWidgetFileHandler.js"/>
+  <script src="chrome://global/content/tasksOverlay.js"/>
+  <script src="chrome://editor/content/sb-file-panel.js"/>
+  <script src="chrome://editor/content/sb-FileWidgetFileHandler.js"/>
 
 <popup id="contextual" oncreate="return fillContextMenu('contextual',event.target.parentNode.parentNode);" >
 	<menu />

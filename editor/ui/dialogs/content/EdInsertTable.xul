@@ -37,51 +37,51 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   
-  <box valign="middle" autostretch="never">
-    <text class="right" align="right" value="&numRowsEditField.label;"/>
-    <html:input type="text" id="rows" maxlength="4" size="4"
-        onkeyup="forceInteger('rows')" />
-  </box>
-  <spring class="spacer"/>
-  <box valign="middle" autostretch="never">
-    <text class="right" align="right" value="&numColumnsEditField.label;"/>
-    <html:input type="text" id="columns" maxlength="4" size="4"
-          onkeyup="forceInteger('columns')" />
-  </box>
-  <spring class="spacer"/>
-  <box valign="middle" autostretch="never">
-    <text class="right" align="right" value="&widthEditField.label;"/>
-    <html:div><html:input type="text" id="width" size="4" maxlength="4" 
-          onkeyup="forceInteger('width')" /></html:div>
-    <spring class="spacer"/>
-    <html:select id="pixelOrPercentSelect" size="1"/>
-    <!-- option elements are appended by JS -->
-  </box>
-  <spring class="spacer"/>
-  <box valign="middle" autostretch="never">
-    <text class="right" align="right" value="&borderEditField.label;"/>
-    <html:input type="text" id="borderInput" size="4" maxlength="4"
-            onkeyup="forceInteger('borderInput')" />
-    <spring class="spacer"/>
-    <text align="left" value="&pixelsPopup.value;"/>  
-  </box>
+  <grid>
+    <columns><column/><column/><column/></columns>
+    <rows>
+      <row vertical-align="baseline"  autostretch="never">
+        <text class="align-right" flex="1" value="&numRowsEditField.label;"/>
+        <textfield id="rows" onkeyup="forceInteger(this.id)" />
+        <spring/>
+      </row>
+      <spring class="spacer"/>
+      <row vertical-align="baseline"  autostretch="never">
+        <text class="align-right" flex="1" value="&numColumnsEditField.label;"/>
+        <textfield id="columns" onkeyup="forceInteger(this.id)" />
+        <spring/>
+      </row>
+      <spring class="spacer"/>
+      <row vertical-align="baseline"  autostretch="never">
+        <text class="align-right" flex="1" value="&widthEditField.label;"/>
+        <textfield id="width" onkeyup="forceInteger(this.id)" />
+        <spring/>
+      </row>
+      <spring class="spacer"/>
+      <row vertical-align="baseline"  autostretch="never">
+        <text class="align-right" flex="1" value="&widthEditField.label;"/>
+        <textfield id="width" onkeyup="forceInteger(this.id)" />
+        <menulist id="pixelOrPercentMenulist"><menupopup/></menulist>
+          <!-- child elements are appended by JS -->
+      </row>
+      <spring class="spacer"/>
+      <row vertical-align="baseline" autostretch="never">
+        <text class="align-right" flex="1" value="&borderEditField.label;"/>
+        <textfield id="borderInput" onkeyup="forceInteger(this.id)" />
+        <text value="&pixelsPopup.value;"/>  
+      </row>
+    </rows>
+  </grid>
   <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
-
-<popup id="PixelOrPercentMenu">
-  <menu>
-    <menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
-    <menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
-  </menu>
-</popup>
 </window>

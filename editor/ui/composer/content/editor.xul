@@ -48,9 +48,9 @@
         persist="screenX screenY width height"
         >
 
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
-  <html:script language="javascript" src="chrome://global/content/strres.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+  <script language="javascript" src="chrome://global/content/strres.js"/>
 
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>
@@ -89,8 +89,8 @@
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
       <menuseparator/>
-      <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(0)" hidden="true"/>
-      <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(1)"/>
+      <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayMode(1)" hidden="true"/>
+      <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayMode(0)"/>
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
       <menuseparator />
@@ -148,7 +148,7 @@
     <spring flex="100%"/>
 
 		<box id="toolbar_throbber_box" align="vertical">
-			<titledbutton id="Throbber" onclick='goClickThrobber("editor.throbber.url")'>
+			<titledbutton id="Throbber" oncommand='goClickThrobber("editor.throbber.url")'>
 				<observes element="Editor:Throbber" attribute="busy"/>
 			</titledbutton>
 		</box>
@@ -198,14 +198,14 @@
         <html:div>&displayMode.label;</html:div>
       </box>
       <spring class="spacer3"/>
-      <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" onclick="EditorSetDisplayStyle(1)"/>
-      <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;"    onclick="EditorSetDisplayStyle(0)"/>
+      <titledbutton id="WYSIWYGModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" oncommand="EditorSetDisplayMode(0)"/>
+      <titledbutton id="NormalModeButton"  class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;" oncommand="EditorSetDisplayMode(1)"/>
+      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="&showAllTags.label;"     oncommand="EditorSetDisplayMode(2)"/>
 <!--
 Use this when implemented...
-      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="Show All Tags" onclick="EditorSetDisplayStyle(1)"/>
-      <titledbutton id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"   onclick="EditorSetDisplayStyle(1)"/>
+      <button id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"   oncommand="EditorSetDisplayMode(1)"/>
       <spring flex="100%"/>
-      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview"  onclick="EditorSetDisplayStyle(0)"/>
+      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview"  oncommand="EditorSetDisplayMode(0)"/>
 -->
     </box>
 

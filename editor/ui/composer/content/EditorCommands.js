@@ -28,7 +28,7 @@
 var editorShell;
 var documentModified;
 var prefAuthorString = "";
-var EditorDisplayMode = 0;  // Normal Editor mode
+var EditorDisplayMode = 1;  // Normal Editor mode
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 
 // These must be kept in synch with the XUL <options> lists
@@ -281,8 +281,12 @@ function EditorOpen()
     dump("filePicker.chooseInputFile threw an exception\n");
   }
 
-  /* check for already open window and activate it... */
-  if (fp.file) {
+  /* check for already open window and activate it... 
+   * note that we have to test the native path length
+   *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
+  */
+  if (fp.file && fp.file.path.length > 0) {
+
     var found = FindAndSelectEditorWindowWithURL(fp.fileURL.spec);
     if (!found) {
       /* open new window */
@@ -793,7 +797,7 @@ function EditorToggleStyle(styleName)
 
 function EditorRemoveLinks()
 {
-  editorShell.RemoveTextProperty("a", "");
+  editorShell.RemoveTextProperty("href", "");
   contentWindow.focus();
 }
 
@@ -1014,31 +1018,33 @@ function EditorAlign(align)
   contentWindow.focus();
 }
 
-function EditorSetDisplayStyle(mode)
+function EditorSetDisplayMode(mode)
 {
   EditorDisplayMode = mode;
+  
+  // Editor does the style sheet loading/unloading
   editorShell.SetDisplayMode(mode);
-  var editButton = document.getElementById("EditModeButton");
-  var browserButton = document.getElementById("BrowserModeButton");
+
+  // Set the UI states
+
+  // TODO: Should we NOT have the menu items and eliminate this?
   var showMenu = document.getElementById("ShowExtraMarkup");
   var hideMenu = document.getElementById("HideExtraMarkup");
+  switch (mode ) {
+    case 0:
+      showMenu.setAttribute("hidden","true");
+      hideMenu.removeAttribute("hidden");
+      break;
 
-  var editSelected = 0;
-  var browserSelected = 0;
-  if (mode == 0) 
-  {
-    editSelected = 1;
-    showMenu.setAttribute("hidden","true");
-    hideMenu.removeAttribute("hidden");
+    default: // = 1
+      showMenu.removeAttribute("hidden");
+      hideMenu.setAttribute("hidden","true");
+      break;
   }
-  if (mode == 1) 
-  {
-    browserSelected = 1;
-    showMenu.removeAttribute("hidden");
-    hideMenu.setAttribute("hidden","true");
-  }
-  editButton.setAttribute("selected",Number(editSelected));
-  browserButton.setAttribute("selected",Number(browserSelected));
+
+  document.getElementById("WYSIWYGModeButton").setAttribute("selected",Number(mode == 0));
+  document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == 1));
+  document.getElementById("TagModeButton").setAttribute("selected",Number(mode == 2));
   contentWindow.focus();
 }
 
@@ -1135,8 +1141,6 @@ function CheckSpelling()
         dump("*** Exception error: SpellChecker Dialog Closing\n");
         return;
       }
-// We might want to use this:
-//      editorShell.AlertWithTitle(editorShell.GetString("CheckSpelling"), editorShell.GetString("CheckSpellingDone")); 
     }
   }
   contentWindow.focus();

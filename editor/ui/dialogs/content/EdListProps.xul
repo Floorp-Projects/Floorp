@@ -35,9 +35,9 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdListProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>

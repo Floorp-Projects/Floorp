@@ -1,0 +1,687 @@
+o/* 
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ */
+
+/* Styles to alter look of things in the Editor content window 
+ *  for the "All Tags Edit Mode" Every HTML tag shows up as an icon.
+*/
+
+
+a[href] {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+a[name] {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+  background-position: top left;
+}
+
+abbr {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+
+acronym {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+address {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+applet {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+area {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+b {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+base {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+basefont {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+bdo {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+big {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+blockquote {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+body {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+  background-position: top left;
+}
+
+br {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+button {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+caption {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+top {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+cite {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+code {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+col {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+colgroup {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+dd {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+del {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+dfn {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+dir {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+div {
+  margin-left: 2px; margin-top: 2px;
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/div.gif) no-repeat; 
+  background-position: top left;
+}
+
+dl {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+dt {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+em {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+fieldset {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+font {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+form {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+frame {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+frameset {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h1 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h2 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h3 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h4 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h5 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+h6 {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+head {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+hr {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+html {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+i {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+iframe {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+img {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+input {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+ins {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+isindex {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+kbd {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+label {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+legend {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+li {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+link {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+map {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+menu {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+meta {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+noframes {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+noscript {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+object {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+ol {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+optgroup {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+option {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+p {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+param {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+pre {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+q {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+s {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+samp {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+script {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+select {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+small {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+span {
+  margin-left: 2px; margin-top: 2px;
+  /* TEMPORARY TO COMPENSATE FOR BUG */
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+strike {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+strong {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+style {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+sub {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+sup {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+table:before {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  background-position: top left;
+}
+
+tbody:before {
+  margin-left: 2px; margin-top: 1px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  background-position: top left;
+}
+
+td {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background-image: url(chrome://editor/skin/images/div.gif);
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+
+textarea {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+tfoot {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+th {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+thead {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+/*
+title {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+*/
+
+tr {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  background-position: top left;
+}
+
+tt {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+u {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+ul {
+  margin-left: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+
+var {
+  margin-left: 2px; margin-top: 2px;
+  padding-left: 13px; 
+  background: url(chrome://editor/skin/images/span.gif) no-repeat; 
+  background-position: top left;
+}
+

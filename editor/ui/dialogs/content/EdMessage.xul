@@ -33,10 +33,8 @@
     align="vertical">
                                   
   <!-- Methods common to all editor dialogs -->
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </html:script>
-  <html:script language="JavaScript" src="chrome://editor/content/EdMessage.js">
-  </html:script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdMessage.js"/>
 
   <broadcaster id="args" value=""/>
   <box align="horizontal" style="margin: 10px">

@@ -68,6 +68,7 @@ public:
   static nsIAtom *acronym;   
   static nsIAtom *font;      
   static nsIAtom *a;         
+  static nsIAtom *href;         
   static nsIAtom *img;       
   static nsIAtom *object;    
   static nsIAtom *br;        

@@ -2411,6 +2411,8 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
   if (!sourceAttributes || !destAttributes)
     return NS_ERROR_FAILURE;
 
+  nsAutoEditBatch beginBatching(this);
+
   PRUint32 sourceCount;
   sourceAttributes->GetLength(&sourceCount);
   PRUint32 i, destCount;
@@ -2426,8 +2428,9 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
       nsCOMPtr<nsIDOMAttr> destAttribute = do_QueryInterface(attrNode);
       if (destAttribute)
       {
-        nsCOMPtr<nsIDOMAttr> resultAttribute;
-        destElement->RemoveAttributeNode(destAttribute, getter_AddRefs(resultAttribute));
+        nsAutoString str;
+        if (NS_SUCCEEDED(destAttribute->GetName(str)))
+          RemoveAttribute(destElement, str);
       }
     }
   }
@@ -2446,10 +2449,9 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           if (NS_SUCCEEDED(sourceAttribute->GetValue(sourceAttrValue)) &&
               !sourceAttrValue.IsEmpty())
           {
-            destElement->SetAttribute(sourceAttrName, sourceAttrValue);
+            SetAttribute(destElement, sourceAttrName, sourceAttrValue);
           } else {
             // Do we ever get here?
-            destElement->RemoveAttribute(sourceAttrName);
 #if DEBUG_cmanske
             printf("Attribute in sourceAttribute has empty value in nsEditor::CloneAttributes()\n");
 #endif

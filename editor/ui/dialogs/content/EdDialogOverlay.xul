@@ -32,31 +32,31 @@
   <box flex="1" style="margin-top: 0.2em" autostretch="never">
     <!-- This will right-align the button -->
     <spring flex="1"/>
-    <titledbutton id="AdvancedEditButton" class="push dialog" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
+    <button id="AdvancedEditButton" class="dialog" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
   </box>
-  <html:div class="separator" align="horizontal"/>
+  <separator class="groove"/>
 </box>
 
 <!-- Extra buttons to use when just button is needed
      E.g. Image Properties Dialog switches position between 2 locations
      Placed here to use same attributes as AdvancedEditButton button
 -->
-<titledbutton
-  id      = "AdvancedEditButton2"
-  class   = "push dialog"
-  onclick = "onAdvancedEdit()"
-  value   = "&AdvancedEditButton.label;"/>
+<button
+  id        = "AdvancedEditButton2"
+  class     = "dialog"
+  oncommand = "onAdvancedEdit()"
+  value     = "&AdvancedEditButton.label;"/>
 
-<titledbutton 
-  id      = "AdvancedEditButton3" 
-  class   = "push dialog" 
-  onclick = "onAdvancedEdit()" 
-  value   = "&AdvancedEditButton.label;"/>
+<button 
+  id        = "AdvancedEditButton3" 
+  class     = "dialog" 
+  oncommand = "onAdvancedEdit()" 
+  value     = "&AdvancedEditButton.label;"/>
 
-<titledbutton 
-  id      = "ChooseFile" 
-  class   = "push dialog" 
-  onclick = "chooseFile()"
-  value   = "&chooseButton.label;"/>
+<button 
+  id        = "ChooseFile" 
+  class     = "dialog" 
+  oncommand = "chooseFile()"
+  value     = "&chooseButton.label;"/>
 
 </overlay>		

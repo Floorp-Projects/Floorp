@@ -36,44 +36,28 @@
     onload="Startup()"
     align="vertical">
 
-  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <html:script language="JavaScript" src="chrome://editor/content/EdColorProps.js"/>
-  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdColorProps.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
 
-  <html:label>&pageColors.label;</html:label>
-  <box class="margin-left-right">
-    <!-- must use div else box stretches radio button size -->
-    <html:div><html:input type="radio" name="ColorMode" id="DefaultColorsRadio" onclick="UseDefaultColors()"/></html:div>
-    <html:label for="DefaultColorsRadio">&defaultColorsRadio.label;</html:label>
-  </box>
-  <box class="margin-left-right">
-    <html:div><html:input type="radio" name="ColorMode" id="CustomColorsRadio" onclick="UseCustomColors()"/></html:div>
-    <html:label for="CustomColorsRadio">&customColorsRadio.label;</html:label>
+  <text value="&pageColors.label;"/>
+  <spring class="bigspacer"/>
+  <box orient="vertical">
+    <radiogroup orient="vertical">
+      <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"/>
+      <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"/>
+    </radiogroup>
   </box>
   <spring class="bigspacer"/>
 
-<!-- DON'T SHOW COLOR SCHEMES UNTIL REDESIGNED
-  <html:div>
-    <box flex="1">
-      <html:label for="ColorScheme"> &colorScheme.label;</html:label> 
-      <spring class="bigspacer"/>
-      <html:select id="ColorScheme" size="1" flex="1">
-        <html:option> Black on White </html:option>
-        <html:option> Blue on White  </html:option>
-        <html:option> White on Black </html:option>
-      </html:select>
-    </box>
-  </html:div>
-  <spring class="bigspacer"/>
--->
-
+<!-- DON'T SHOW COLOR SCHEMES UNTIL REDESIGNED -->
   <box>
     <spring class="bigspacer"/>
     <box align="vertical" flex="1">
       <box>
-        <html:label class="margin-left-right"> &normalText.label; </html:label>
+        <text value="&normalText.label;"/>
         <spring flex="1"/>
         <menu class="colorpicker">
     	    <box>
@@ -81,12 +65,12 @@
             <image class="popup-trigger"/>
           </box>
     	    <menupopup id="normalMenuPopup">
-            <colorpicker id="textCP" palettename="standard" onclick="GetColorAndUpdate('textCP','textCW',this);"/>
+            <colorpicker id="textCP" palettename="standard" oncommand="GetColorAndUpdate('textCP','textCW',this);"/>
     	    </menupopup>
         </menu>
       </box>
       <box>
-        <html:label class="margin-left-right"> &linkText.label; </html:label>
+        <text value="&linkText.label;"/>
         <spring flex="1"/>
         <menu class="colorpicker">
     	    <box>
@@ -94,12 +78,12 @@
             <image class="popup-trigger"/>
           </box>
     	    <menupopup>
-            <colorpicker id="linkCP" palettename="standard" onclick="GetColorAndUpdate('linkCP','linkCW',this);"/>
+            <colorpicker id="linkCP" palettename="standard" oncommand="GetColorAndUpdate('linkCP','linkCW',this);"/>
     	    </menupopup>
         </menu>
       </box>
       <box>
-        <html:label class="margin-left-right"> &activeLinkText.label; </html:label>
+        <text value="&activeLinkText.label;"/>
         <spring flex="1"/>
         <menu class="colorpicker">
     	    <box>
@@ -107,12 +91,12 @@
             <image class="popup-trigger"/>
           </box>
     	    <menupopup>
-            <colorpicker id="activeCP" palettename="standard" onclick="GetColorAndUpdate('activeCP','activeCW',this);"/>
+            <colorpicker id="activeCP" palettename="standard" oncommand="GetColorAndUpdate('activeCP','activeCW',this);"/>
     	    </menupopup>
         </menu>
       </box>
       <box>
-        <html:label class="margin-left-right"> &visitedLinkText.label; </html:label>
+        <text value ="&visitedLinkText.label;"/>
         <spring flex="1"/>
         <menu class="colorpicker">
     	    <box>
@@ -120,12 +104,12 @@
             <image class="popup-trigger"/>
           </box>
     	    <menupopup>
-            <colorpicker id="visitedCP" palettename="standard" onclick="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
+            <colorpicker id="visitedCP" palettename="standard" oncommand="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
     	    </menupopup>
         </menu>
       </box>
       <box>
-        <html:label class="margin-left-right"> &background.label; </html:label>
+        <text value="&background.label;"/>
         <spring flex="1"/>
         <menu class="colorpicker">
     	    <box>
@@ -133,41 +117,35 @@
             <image class="popup-trigger"/>
           </box>
     	    <menupopup>
-            <colorpicker id="backgroundCP" palettename="standard" onclick="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
+            <colorpicker id="backgroundCP" palettename="standard" oncommand="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
     	    </menupopup>
         </menu>
       </box>
     </box>
     <spring class="bigspacer"/>
-    <!-- Use table cell for preview so we can use BGCOLOR and BACKGROUND attributes -->
-    <html:table><html:tr>
-      <html:td id="ColorPreview" valign="top">
-        <html:div id="NormalText">&normalText.label;</html:div>
-        <html:div id="LinkText">&linkText.label;</html:div>
-        <html:div id="ActiveLinkText">&activeLinkText.label;</html:div>
-        <html:div id="VisitedLinkText">&visitedLinkText.label;</html:div>
-      </html:td>
-    </html:tr></html:table>
+    <box orient="vertical" id="ColorPreview">
+      <text id="NormalText" value="&normalText.label;"/>
+      <text id="LinkText" value="&linkText.label;"/>
+      <text id="ActiveLinkText" value="&activeLinkText.label;"/>
+      <text id="VisitedLinkText" value="&visitedLinkText.label;"/>
+    </box>
   </box>
-  <html:div class="separator" align="horizontal"/>
+  <separator class="groove"/>
+  <checkbox id="BackgroundImageCheckbox" value="&backgroundImage.label;" oncommand="onBackgroundImageCheckbox()"/>
   <box>
-    <html:div><html:input type="checkbox" id="BackgroundImageCheckbox" onclick="onBackgroundImageCheckbox()"/></html:div>
-    <html:label for="BackgroundImageCheckbox"> &backgroundImage.label; </html:label>
-  </box>
-  <box>
-    <html:input type="text" class="SizeToParent" id="BackgroundImageInput" flex="1"/>
+    <textfield id="BackgroundImageInput" flex="1"/>
     <spring class="spacer"/>
-    <titledbutton id="ChooseFile"/>
+    <button class="dialog" id="ChooseFile"/>
   </box>
   <box>
-    <html:div id="SaveImageMsg">&saveImageMsg.label;</html:div>
+    <html id="SaveImageMsg" value="&saveImageMsg.label;"/>
     <spring class="bigspacer"/>
     <spring flex="1"/>
     <box align="vertical">
       <spring class="bigspacer"/>
-      <titledbutton id="AdvancedEditButton2"/>
+      <button class="dialog" id="AdvancedEditButton2"/>
     </box>
   </box>
-  <html:div class="separator" align="horizontal"/>
+  <separator class="groove"/>
   <box id="okCancelButtons"/> 
 </window>

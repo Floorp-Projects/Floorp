@@ -537,12 +537,40 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
    return NS_OK;   // did not process the event
 }
 
-
-
-
 nsresult
 nsTextEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+  if (!mouseEvent) {
+    //non-ui event passed in.  bad things.
+    return NS_OK;
+  }
+  // Detect double click message:
+  PRUint16 clickCount;
+  nsresult res = mouseEvent->GetClickCount(&clickCount);
+  if (NS_FAILED(res)) return res;
+
+  if (clickCount == 2)
+  {
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+    if (htmlEditor)
+    {
+      nsCOMPtr<nsIDOMElement> selectedElement;
+      if (NS_SUCCEEDED(htmlEditor->GetSelectedElement("", getter_AddRefs(selectedElement)))
+           && selectedElement)
+      {
+        nsAutoString TagName;
+        selectedElement->GetTagName(TagName);
+        TagName.ToLowerCase();
+
+  #if DEBUG_cmanske
+        char szTagName[64];
+        TagName.ToCString(szTagName, 64);
+        printf("Single Selected element found: %s\n", szTagName);
+  #endif
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -559,25 +587,6 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-   // TODO: MOVE THIS TO ::MouseUp and test for click count to detect double click
-   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    nsCOMPtr<nsIDOMElement> selectedElement;
-    if (NS_SUCCEEDED(htmlEditor->GetSelectedElement("", getter_AddRefs(selectedElement)))
-         && selectedElement)
-    {
-      nsAutoString TagName;
-      selectedElement->GetTagName(TagName);
-      TagName.ToLowerCase();
-
-#if DEBUG_cmanske
-      char szTagName[64];
-      TagName.ToCString(szTagName, 64);
-      printf("Single Selected element found: %s\n", szTagName);
-#endif
-    }
-  }
   return NS_OK;
 }
 

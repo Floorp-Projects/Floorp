@@ -132,9 +132,12 @@ public:
    * RemoveInlineProperty() deletes the properties from all text in the current selection.
    * If aProperty is not set on the selection, nothing is done.
    *
-   * @param aProperty   the property to reomve from the selection 
+   * @param aProperty   the property to remove from the selection 
+   *                    All atoms are for normal HTML tags (e.g.: nsIEditorProptery::font)
+   *                      except when you want to remove just links and not named anchors
+   *                      For that, use nsIEditorProperty::href
    * @param aAttribute  the attribute of the property, if applicable.  May be null.
-   *                    Example: aProperty="font", aAttribute="color"
+   *                    Example: aProperty=nsIEditorProptery::font, aAttribute="color"
    *                    nsIEditProperty::allAttributes is special.  It indicates that
    *                    all content-based text properties are to be removed from the selection.
    */

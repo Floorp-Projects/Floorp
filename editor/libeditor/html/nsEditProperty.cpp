@@ -55,6 +55,7 @@ nsIAtom * nsIEditProperty::abbr;
 nsIAtom * nsIEditProperty::acronym;    
 nsIAtom * nsIEditProperty::font;       
 nsIAtom * nsIEditProperty::a;          
+nsIAtom * nsIEditProperty::href;
 nsIAtom * nsIEditProperty::img;        
 nsIAtom * nsIEditProperty::object;     
 nsIAtom * nsIEditProperty::br;         
@@ -154,6 +155,7 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::acronym    = NS_NewAtom("acronym");
   nsIEditProperty::font       = NS_NewAtom("font");  
   nsIEditProperty::a          = NS_NewAtom("a");     
+  nsIEditProperty::href       = NS_NewAtom("href");     // Use to differentiate between "a" for link, "a" for named anchor
   nsIEditProperty::img        = NS_NewAtom("img");   
   nsIEditProperty::object     = NS_NewAtom("object");
   nsIEditProperty::br         = NS_NewAtom("br");    
@@ -237,6 +239,7 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::acronym);    
   NS_IF_RELEASE(nsIEditProperty::font);       
   NS_IF_RELEASE(nsIEditProperty::a);          
+  NS_IF_RELEASE(nsIEditProperty::href);          
   NS_IF_RELEASE(nsIEditProperty::img);        
   NS_IF_RELEASE(nsIEditProperty::object);     
   NS_IF_RELEASE(nsIEditProperty::br);         
