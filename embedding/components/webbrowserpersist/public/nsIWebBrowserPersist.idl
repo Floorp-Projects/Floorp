@@ -48,6 +48,8 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_IGNORE_REDIRECTED_DATA = 4;
   /** Ignore IFRAME content (usually adverts). */
   const unsigned long PERSIST_FLAGS_IGNORE_IFRAMES = 8;
+  /** Do not run the incoming data through a content converter e.g. to decompress it */
+  const unsigned long PERSIST_FLAGS_NO_CONVERSION = 16;
 
   /** Flags governing how data is fetched from the network. */
   attribute unsigned long persistFlags;

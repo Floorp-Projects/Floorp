@@ -477,6 +477,16 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         return NS_ERROR_FAILURE;
     }
     
+    // Disable content conversion
+    if (mPersistFlags & PERSIST_FLAGS_NO_CONVERSION)
+    {
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
+        if (httpChannel)
+        {
+            httpChannel->SetApplyConversion(PR_FALSE);
+        }
+    }
+
     // Post data
     if (aPostData)
     {
