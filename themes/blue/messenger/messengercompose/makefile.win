@@ -37,3 +37,6 @@ install::
 	$(MAKE_INSTALL) send.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) spelling.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendConvAltering.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendConvNo.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose
+	$(MAKE_INSTALL) sendConvYes.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin\messengercompose

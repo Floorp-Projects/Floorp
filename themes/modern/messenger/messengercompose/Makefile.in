@@ -39,6 +39,9 @@ EXPORT_RESOURCE_SAMPLES = \
 		spelling.gif \
 		save.gif \
 		stop.gif \
+		sendConvAltering.gif \
+		sendConvNo.gif \
+		sendConvYes.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

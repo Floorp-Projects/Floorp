@@ -67,6 +67,9 @@ EXPORT_RESOURCE_SAMPLES = \
 		spelling-hover.gif \
 		spelling.gif \
 		stop.gif \
+		sendConvAltering.gif \
+		sendConvNo.gif \
+		sendConvYes.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -254,3 +254,25 @@ tree#attachmentBucket {
   color: gray;
   font-style: italic;
 }
+
+/* askSendFormat dialog */
+
+#askSendFormat {
+	width: 40em;
+}
+
+#convertYes, #convertAltering, #convertNo {
+	border: 1px solid black;
+}
+
+#convertYes {
+	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvYes.gif");
+}
+
+#convertAltering {
+	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvAltering.gif");
+}
+
+#convertNo {
+	list-style-image:url("chrome://messenger/skin/messengercompose/sendConvNo.gif");
+}
