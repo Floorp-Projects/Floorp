@@ -91,13 +91,8 @@ nsSound::Init()
 
     EsdOpenSoundType EsdOpenSound;
 
-    // first try libesd.so.0 and then libesd.so
     elib = PR_LoadLibrary("libesd.so.0");
-    if (!elib) {
-        elib = PR_LoadLibrary("libesd.so");
-        if (!elib) 
-            return NS_ERROR_FAILURE;
-    }
+    if (!elib) return NS_ERROR_FAILURE;
 
     EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(elib, "esd_open_sound");
 
