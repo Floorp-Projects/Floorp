@@ -77,7 +77,7 @@ nsMsgServiceProviderService::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   // test if there is a locale provider
-  PRBool isexists = false;
+  PRBool isexists = PR_FALSE;
   rv = dataFilesDir->Exists(&isexists);
   NS_ENSURE_SUCCESS(rv,rv);
   if (isexists) {
