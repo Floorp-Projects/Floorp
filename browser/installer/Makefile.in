@@ -69,6 +69,8 @@ NO_PKG_FILES = \
 	xpt_link* \
 	$(NULL)
 
+include $(DEPTH)/config/autoconf.mk
+
 ifeq ($(OS_ARCH), Darwin)
 MOZ_PKG_APPNAME = Firefox
 endif
