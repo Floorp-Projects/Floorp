@@ -76,6 +76,7 @@ void XXXNeverCalled()
     dummyComparitor dummy;
     nsVoidArray();
     nsAVLTree(dummy, nsnull);
+    nsSupportsArray();
     NS_GetNumberOfAtoms();
     nsFileURL(NULL);
 //    NS_NewPipe(NULL, NULL, 0, 0, 0, NULL);
