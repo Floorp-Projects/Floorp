@@ -43,6 +43,10 @@ EXPORTS =				\
   nsTextFragment.h \
   nsXULAtomList.h \
   nsXULAtoms.h \
+!ifdef MOZ_SVG
+  nsSVGAtomList.h \
+  nsSVGAtoms.h \
+!endif
   nsXBLAtomList.h \
   nsXBLAtoms.h \
 	$(NULL)

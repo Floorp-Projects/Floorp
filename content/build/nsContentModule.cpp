@@ -126,6 +126,10 @@ class nsIDocumentLoaderFactory;
 #include "nsXULElement.h"
 #endif
 
+#ifdef MOZ_SVG
+#include "nsSVGAtoms.h"
+#endif
+
 // jst says, ``we need this to avoid holding on to XPConnect past its
 // destruction. By being an XPCOM shutdown observer we can make sure
 // we release the content global reference to XPConnect before
@@ -181,6 +185,10 @@ Initialize(nsIModule* aSelf)
   nsXULContentUtils::Init();
 #endif
 
+#ifdef MOZ_SVG
+  nsSVGAtoms::AddRefAtoms();
+#endif
+
   nsContentUtils::Init();
 
   // Add our shutdown observer.
@@ -226,6 +234,10 @@ Shutdown(nsIModule* aSelf)
   nsXULElement::ReleaseGlobals();
 #endif
 
+#ifdef MOZ_SVG
+  nsSVGAtoms::ReleaseAtoms();
+#endif
+
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);
   nsContentUtils::Shutdown();
@@ -257,6 +269,10 @@ extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 extern NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
+#ifdef MOZ_SVG
+extern nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
+#endif
+
 #define MAKE_CTOR(ctor_, iface_, func_)                   \
 static NS_IMETHODIMP                                      \
 ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
@@ -284,6 +300,9 @@ MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTM
 MAKE_CTOR(CreateHTMLCSSStyleSheet,        nsIHTMLCSSStyleSheet,        NS_NewHTMLCSSStyleSheet)
 MAKE_CTOR(CreateDOMImplementation,        nsIDOMDOMImplementation,     NS_NewDOMImplementation)
 MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
+#ifdef MOZ_SVG
+MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
+#endif
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
@@ -323,6 +342,9 @@ MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXUL
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
 MAKE_CTOR(CreateXULElementFactory,        nsIElementFactory,           NS_NewXULElementFactory)
+#endif
+#ifdef MOZ_SVG
+MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
 #endif
 MAKE_CTOR(CreateControllerCommandManager, nsIControllerCommandManager, NS_NewControllerCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
@@ -477,6 +499,13 @@ static nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateXMLDocument },
 
+#ifdef MOZ_SVG
+  { "SVG document",
+    NS_SVGDOCUMENT_CID,
+    nsnull,
+    CreateSVGDocument },
+#endif
+
   { "Image document",
     NS_IMAGEDOCUMENT_CID,
     nsnull,
@@ -601,6 +630,13 @@ static nsModuleComponentInfo gComponents[] = {
     NS_DOC_ENCODER_CONTRACTID_BASE "application/xhtml+xml",
     CreateTextEncoder },
 
+#ifdef MOZ_SVG
+  { "SVG document encoder",
+    NS_TEXT_ENCODER_CID,
+    NS_DOC_ENCODER_CONTRACTID_BASE "image/svg+xml",
+    CreateTextEncoder },
+#endif
+
   { "HTML document encoder",
     NS_TEXT_ENCODER_CID,
     NS_DOC_ENCODER_CONTRACTID_BASE "text/html",
@@ -630,6 +666,13 @@ static nsModuleComponentInfo gComponents[] = {
     NS_XMLCONTENTSERIALIZER_CID,
     NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "application/xhtml+xml",
     CreateXMLContentSerializer },
+
+#ifdef MOZ_SVG
+  { "SVG content serializer",
+    NS_XMLCONTENTSERIALIZER_CID,
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "image/svg+xml",
+    CreateXMLContentSerializer },
+#endif
 
   { "HTML content serializer",
     NS_HTMLCONTENTSERIALIZER_CID,
@@ -726,6 +769,18 @@ static nsModuleComponentInfo gComponents[] = {
     NS_XULELEMENTFACTORY_CID,
     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
     CreateXULElementFactory },
+#endif
+
+#ifdef MOZ_SVG
+  { "SVG element factory (deprecated namespace)",
+    NS_SVGELEMENTFACTORY_CID,
+    NS_SVG_DEPRECATED_ELEMENT_FACTORY_CONTRACTID,
+    CreateSVGElementFactory },
+
+  { "SVG element factory",
+    NS_SVGELEMENTFACTORY_CID,
+    NS_SVG_ELEMENT_FACTORY_CONTRACTID,
+    CreateSVGElementFactory },
 #endif
 
   { "Controller Command Manager",

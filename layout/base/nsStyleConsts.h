@@ -611,4 +611,22 @@
 #define NS_STYLE_PAGE_BREAK_LEFT                3
 #define NS_STYLE_PAGE_BREAK_RIGHT               4
 
+#ifdef MOZ_SVG
+
+// fill-rule
+#define NS_STYLE_FILL_RULE_NONZERO              0
+#define NS_STYLE_FILL_RULE_EVENODD              1
+
+// stroke-linecap
+#define NS_STYLE_STROKE_LINECAP_BUTT            0
+#define NS_STYLE_STROKE_LINECAP_ROUND           1
+#define NS_STYLE_STROKE_LINECAP_SQUARE          2
+
+// stroke-linejoin
+#define NS_STYLE_STROKE_LINEJOIN_MITER          0
+#define NS_STYLE_STROKE_LINEJOIN_ROUND          1
+#define NS_STYLE_STROKE_LINEJOIN_BEVEL          2
+
+#endif // MOZ_SVG
+
 #endif /* nsStyleConsts_h___ */

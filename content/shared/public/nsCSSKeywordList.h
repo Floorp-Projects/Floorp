@@ -408,3 +408,12 @@ CSS_KEY(x-small, x_small)
 CSS_KEY(x-soft, x_soft)
 CSS_KEY(xx-large, xx_large)
 CSS_KEY(xx-small, xx_small)
+#ifdef MOZ_SVG
+CSS_KEY(bevel, bevel)
+CSS_KEY(butt, butt)
+CSS_KEY(evenodd, evenodd)
+CSS_KEY(miter, miter)
+CSS_KEY(nonzero, nonzero)
+CSS_KEY(round, round)
+//CSS_KEY(square, square)
+#endif

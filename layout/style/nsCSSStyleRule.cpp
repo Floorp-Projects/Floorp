@@ -95,6 +95,9 @@ static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 #ifdef INCLUDE_XUL
 static NS_DEFINE_IID(kCSSXULSID, NS_CSS_XUL_SID);
 #endif
+#ifdef MOZ_SVG
+static NS_DEFINE_IID(kCSSSVGSID, NS_CSS_SVG_SID);
+#endif
 
 // -- nsCSSSelector -------------------------------
 
@@ -875,6 +878,10 @@ static nsresult MapUIForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStruc
 static nsresult MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL);
 #endif
 
+#ifdef MOZ_SVG
+static nsresult MapSVGForDeclaration(nsICSSDeclaration* aDecl, nsCSSSVG& aSVG);
+#endif
+
 class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
@@ -985,6 +992,10 @@ CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 #ifdef INCLUDE_XUL
   else if (aRuleData->mXULData)
     return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
+#endif
+#ifdef MOZ_SVG
+  else if (aRuleData->mSVGData)
+    return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
 #endif
 
   return NS_OK;
@@ -1722,6 +1733,10 @@ CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
   else if (aRuleData->mXULData)
     return MapXULForDeclaration(mDeclaration, *aRuleData->mXULData);
 #endif
+#ifdef MOZ_SVG
+  else if (aRuleData->mSVGData)
+    return MapSVGForDeclaration(mDeclaration, *aRuleData->mSVGData);
+#endif
 
   return NS_OK;
 }
@@ -1797,6 +1812,57 @@ MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL)
   return NS_OK;
 }
 #endif
+
+#ifdef MOZ_SVG
+static nsresult 
+MapSVGForDeclaration(nsICSSDeclaration* aDecl, nsCSSSVG& aSVG)
+{
+  if (!aDecl)
+    return NS_OK; // The rule must have a declaration.
+
+  nsCSSSVG* ourSVG;
+  aDecl->GetData(kCSSSVGSID, (nsCSSStruct**)&ourSVG);
+  if (!ourSVG)
+    return NS_OK; // We don't have any rules for SVG.
+
+  // fill:
+  if (aSVG.mFill.GetUnit() == eCSSUnit_Null && ourSVG->mFill.GetUnit() != eCSSUnit_Null)
+    aSVG.mFill = ourSVG->mFill;
+  // fill-opacity:
+  if (aSVG.mFillOpacity.GetUnit() == eCSSUnit_Null && ourSVG->mFillOpacity.GetUnit() != eCSSUnit_Null)
+    aSVG.mFillOpacity = ourSVG->mFillOpacity;
+  // fill-rule:
+  if (aSVG.mFillRule.GetUnit() == eCSSUnit_Null && ourSVG->mFillRule.GetUnit() != eCSSUnit_Null)
+    aSVG.mFillRule = ourSVG->mFillRule;
+  // stroke:
+  if (aSVG.mStroke.GetUnit() == eCSSUnit_Null && ourSVG->mStroke.GetUnit() != eCSSUnit_Null)
+    aSVG.mStroke = ourSVG->mStroke;
+  // stroke-dasharray:
+  if (aSVG.mStrokeDasharray.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeDasharray.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeDasharray = ourSVG->mStrokeDasharray;
+  // stroke-dashoffset:
+  if (aSVG.mStrokeDashoffset.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeDashoffset.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeDashoffset = ourSVG->mStrokeDashoffset;
+  // stroke-linecap: enum, inherit
+  if (aSVG.mStrokeLinecap.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeLinecap.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeLinecap = ourSVG->mStrokeLinecap;
+  // stroke-linejoin
+  if (aSVG.mStrokeLinejoin.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeLinejoin.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeLinejoin = ourSVG->mStrokeLinejoin;
+  // stroke-miterlimit:
+  if (aSVG.mStrokeMiterlimit.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeMiterlimit.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeMiterlimit = ourSVG->mStrokeMiterlimit;
+  // stroke-opacity:
+  if (aSVG.mStrokeOpacity.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeOpacity.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeOpacity = ourSVG->mStrokeOpacity;
+  // stroke-width:
+  if (aSVG.mStrokeWidth.GetUnit() == eCSSUnit_Null && ourSVG->mStrokeWidth.GetUnit() != eCSSUnit_Null)
+    aSVG.mStrokeWidth = ourSVG->mStrokeWidth;
+  
+  return NS_OK;
+}
+#endif
+
 
 static nsresult 
 MapPositionForDeclaration(nsICSSDeclaration* aDecl, nsCSSPosition& aPosition)

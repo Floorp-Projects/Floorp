@@ -58,6 +58,9 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsXULAtoms.obj \
   .\$(OBJDIR)\nsXBLAtoms.obj \
   .\$(OBJDIR)\nsStyleCoord.obj \
+!ifdef MOZ_SVG
+  .\$(OBJDIR)\nsSVGAtoms.obj \
+!endif
   $(NULL)
 
 LCFLAGS = \

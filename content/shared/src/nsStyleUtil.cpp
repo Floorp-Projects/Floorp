@@ -169,6 +169,14 @@ nsCachedStyleData::gInfo[] = {
   },
 #endif
 
+#ifdef MOZ_SVG
+  /* eStyleStruct_SVG */
+  { offsetof(nsCachedStyleData, mInheritedData),
+    offsetof(nsInheritedStyleData, mSVGData),
+    PR_FALSE
+  },
+#endif
+
   { 0, 0, 0 }
 };
 

@@ -928,15 +928,27 @@ if [ "$MOZ_MATHML" ]; then
 "
 fi
 
-# layout/svg
+#libart
+if [ "$MOZ_INTERNAL_LIBART_LGPL" ]; then
+    MAKEFILES_libart="other-licenses/libart_lgpl/Makefile"
+fi
+
+# svg
 if [ "$MOZ_SVG" ]; then
+    MAKEFILES_content="$MAKEFILES_content
+	content/svg/Makefile
+	content/svg/document/Makefile
+	content/svg/document/src/Makefile
+	content/svg/content/Makefile
+	content/svg/content/src/Makefile
+"
+    MAKEFILES_dom="$MAKEFILES_dom
+	dom/public/idl/svg/Makefile
+"
     MAKEFILES_layout="$MAKEFILES_layout
 	layout/svg/Makefile
 	layout/svg/base/Makefile
-	layout/svg/base/public/Makefile
 	layout/svg/base/src/Makefile
-	layout/svg/content/Makefile
-	layout/svg/content/src/Makefile
 "
 fi
 
@@ -1107,6 +1119,7 @@ $MAKEFILES_l10n_lang
 $MAKEFILES_langpacks
 $MAKEFILES_content
 $MAKEFILES_layout
+$MAKEFILES_libart
 $MAKEFILES_libreg
 $MAKEFILES_libimg
 $MAKEFILES_libpr0n

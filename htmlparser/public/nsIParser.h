@@ -373,7 +373,7 @@ const PRUnichar kNullCh           = '\0';
 #define kApplicationJSContentType   "application/x-javascript"
 #define kTextJSContentType    "text/javascript"
 #define kSGMLTextContentType   "text/sgml"
-
+#define kSVGTextContentType   "image/svg+xml"
 
 #define NS_IPARSER_FLAG_UNKNOWN_MODE         0x00000000
 #define NS_IPARSER_FLAG_QUIRKS_MODE          0x00000002

@@ -112,6 +112,12 @@ struct nsCSSStruct {
 { 0xfc075d62, 0xb1cf, 0x47a1, { 0xaf, 0x4e, 0xcb, 0x40, 0xe1, 0x1a, 0x43, 0x14 } }
 #endif
 
+#ifdef MOZ_SVG
+// {9A41A036-027B-45ef-89C9-6E32797839E7}
+#define NS_CSS_SVG_SID \
+{ 0x9a41a036, 0x27b, 0x45ef, { 0x89, 0xc9, 0x6e, 0x32, 0x79, 0x78, 0x39, 0xe7 } }
+#endif
+
 // IID for the nsICSSDeclaration interface {7b36b9ac-b48d-11d1-9ca5-0060088f9ff7}
 #define NS_ICSS_DECLARATION_IID   \
 {0x7b36b9ac, 0xb48d, 0x11d1, {0x9c, 0xa5, 0x00, 0x60, 0x08, 0x8f, 0x9f, 0xf7}}
@@ -433,6 +439,29 @@ struct nsCSSXUL : public nsCSSStruct  {
   nsCSSValue  mBoxOrient;
   nsCSSValue  mBoxPack;
   nsCSSValue  mBoxOrdinal;
+};
+#endif
+
+#ifdef MOZ_SVG
+struct nsCSSSVG : public nsCSSStruct {
+  nsCSSSVG(void);
+  nsCSSSVG(const nsCSSSVG& aCopy);
+  virtual ~nsCSSSVG(void);
+
+  const nsID& GetID(void);
+  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  nsCSSValue mFill;
+  nsCSSValue mFillOpacity;
+  nsCSSValue mFillRule;
+  nsCSSValue mStroke;
+  nsCSSValue mStrokeDasharray;
+  nsCSSValue mStrokeDashoffset;
+  nsCSSValue mStrokeLinecap;
+  nsCSSValue mStrokeLinejoin;
+  nsCSSValue mStrokeMiterlimit;
+  nsCSSValue mStrokeOpacity;
+  nsCSSValue mStrokeWidth;
 };
 #endif
 

@@ -33,6 +33,7 @@ SHORT_LIBNAME	= gkhtml
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 EXTRA_DSO_LIBS	= gkgfx
+
 REQUIRES	= xpcom \
 		  string \
 		  content \
@@ -81,7 +82,6 @@ endif
 
 ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/libgksvgcon_s.$(LIB_SUFFIX) \
                 $(DIST)/lib/libgksvgbase_s.$(LIB_SUFFIX) \
                 $(NSNULL)
 endif
@@ -93,6 +93,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+
+ifdef MOZ_SVG
+EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORT_OBJS	= 1
@@ -111,9 +115,5 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 
 ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
-endif
-
-ifdef MOZ_SVG
-INCLUDES += -I$(srcdir)/../svg/content/src
 endif
 

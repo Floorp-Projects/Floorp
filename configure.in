@@ -90,6 +90,7 @@ LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
 QT_VERSION=2.2.0
 QT_VERSION_NUM=220
+LIBART_VERSION=2.3.4
 GTK2_VERSION=1.3.7
 
 dnl Set various checks
@@ -4050,6 +4051,35 @@ AC_SUBST(GLIB_LIBS)
 AC_SUBST(HOST_LIBIDL_CONFIG)
 AC_SUBST(HOST_LIBIDL_CFLAGS)
 AC_SUBST(HOST_LIBIDL_LIBS)
+
+dnl ========================================================
+dnl Check for libart
+dnl ========================================================
+MOZ_LIBART_CFLAGS=
+MOZ_LIBART_LIBS=
+
+if test "$MOZ_SVG"; then
+  if test "$MOZ_INTERNAL_LIBART_LGPL"; then
+    dnl libart's configure hasn't been run yet, but we know what the
+    dnl answer should be anyway
+    MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
+    MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
+  else
+dnl Disable system libart until the pixel format changes are merged upstream
+    AC_MSG_ERROR([SVG requires a modified version of libart. To pull and build
+this LGPL library, set MOZ_INTERNAL_LIBART_LGPL, and then rerun the
+checkout stage])
+dnl    AM_PATH_LIBART($LIBART_VERSION,
+dnl      AC_MSG_ERROR(SVG requires at least version $LIBART_VERSION of libart))
+dnl
+dnl    MOZ_LIBART_CFLAGS=$LIBART_CFLAGS
+dnl    MOZ_LIBART_LIBS=$LIBART_LIBS
+  fi
+fi
+
+AC_SUBST(MOZ_LIBART_CFLAGS)
+AC_SUBST(MOZ_LIBART_LIBS)
+AC_SUBST(MOZ_INTERNAL_LIBART_LGPL)
 
 dnl ========================================================
 dnl disable xul
