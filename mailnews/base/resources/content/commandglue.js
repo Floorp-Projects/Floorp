@@ -120,12 +120,13 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 	if (type == msgComposeType.New) //new message
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
-		msgComposeService.OpenComposeWindow(null, null, 0, format, identity);
+		msgComposeService.OpenComposeWindow(null, null, type, format, identity);
 		return;
 	}
         else if (type == msgComposeType.NewsPost) 
 	{
-		msgComposeService.OpenComposeWindow(null, newsgroup, 5, format, identity);
+		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
+		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity);
 		return;
 	}
 		
