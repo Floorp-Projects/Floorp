@@ -1528,6 +1528,12 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
   if(rv == NS_OK)
 	  rv = aOwner->GetInstance(instance);
+  else if (aMimeType)
+    // We were unable to find a plug-in yet we 
+    // really do have mime type. Return the error
+    // so that the nsObjectFrame can render any 
+    // alternate content.
+    return rv;
 
   // if we have a failure error, it means we found a plugin for the mimetype,
   // but we had a problem with the entry point
