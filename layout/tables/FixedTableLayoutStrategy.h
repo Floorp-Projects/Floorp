@@ -76,12 +76,10 @@ public:
     * Calculate the basis for percent width calculations of the table elements
     * @param aReflowState   - the reflow state of the table
     * @param aAvailWidth    - the available width for the table
-    * @param aPixelToTwips  - the number of twips in a pixel.
     * @return               - the basis for percent calculations
     */
   virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
-                                       nscoord                  aAvailWidth,
-                                       float                    aPixelToTwips) {return 0;};
+                                       nscoord                  aAvailWidth) {return 0;};
 
 protected:
    /* assign the width of all columns
@@ -97,10 +95,8 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
-                                          nscoord                  aComputedWidth,
-                                          const nsHTMLReflowState& aReflowState,
-                                          float                    aPixelToTwips);
+  virtual PRBool AssignNonPctColumnWidths(nscoord                  aComputedWidth,
+                                          const nsHTMLReflowState& aReflowState);
 
 
 };
