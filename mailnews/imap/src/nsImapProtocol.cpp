@@ -5669,10 +5669,10 @@ void nsImapProtocol::FindMailboxesIfNecessary()
   // server and perhaps we should do that for RTM
   if (GetServerStateParser().ServerIsAOLServer() && GetImapHostName() && !nsCRT::strcmp(GetImapHostName(), "imap.mail.aol.com"))
   {
-    PRBool suppressPsuedoView = PR_FALSE;
+    PRBool suppressPseudoView = PR_FALSE;
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryReferent(m_server);
-    server->GetBoolAttribute("suppresspsuedoview", &suppressPsuedoView); 
-    if (!suppressPsuedoView)
+    server->GetBoolAttribute("suppresspseudoview", &suppressPseudoView); 
+    if (!suppressPseudoView)
       XAOL_Option("+READMBOX");
   }
 #endif

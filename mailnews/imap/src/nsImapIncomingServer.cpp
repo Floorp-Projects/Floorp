@@ -365,9 +365,9 @@ nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
 
   if (isAOLServer && ((const char *) hostName) && !nsCRT::strcmp(hostName, "imap.mail.aol.com"))
   {
-    PRBool suppressPsuedoView = PR_FALSE;
-    GetBoolAttribute("suppresspsuedoview", &suppressPsuedoView);
-    if (!suppressPsuedoView)
+    PRBool suppressPseudoView = PR_FALSE;
+    GetBoolAttribute("suppresspseudoview", &suppressPseudoView);
+    if (!suppressPseudoView)
       *retval = nsMsgImapDeleteModels::DeleteNoTrash;
     else
       *retval = nsMsgImapDeleteModels::IMAPDelete;
