@@ -76,9 +76,6 @@ function Startup()
     dialog.widthPixelOrPercentMenulist.selectedIndex = 1;
   }
 
-  // Resize window
-  window.sizeToContent();
-
   SetTextboxFocusById("rowsInput");
 
   SetWindowLocation();
