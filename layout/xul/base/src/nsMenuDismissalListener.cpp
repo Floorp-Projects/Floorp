@@ -123,8 +123,7 @@ nsMenuDismissalListener::Unregister()
 {
   if (mWidget)
     mWidget->CaptureRollupEvents(this, PR_FALSE);    
-  else 
-    printf("This is very very bad.\n");
+  
   NS_RELEASE(nsMenuFrame::mDismissalListener);
   return NS_OK;
 }
