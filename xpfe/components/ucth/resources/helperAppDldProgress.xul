@@ -37,7 +37,6 @@ Contributor(s):
         orient="vertical"
         title="&downloadWindow.title;"
         onload="onLoad()"
-        style="width: 36em;"
         onunload="onUnload()">
 
     <script type="application/x-javascript" src="chrome://global/content/helperAppDldProgress.js"/>
@@ -58,8 +57,6 @@ Contributor(s):
     <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
     <data id="dialog.strings.unknownTime">&unknownTime;</data>
     <data id="dialog.strings.pausedMsg">&pausedMsg;</data>
-    <data id="dialog.strings.pause">&pauseButtonText;</data>
-    <data id="dialog.strings.resume">&resumeButtonText;</data>
 
     <grid flex="1">
       <columns>
@@ -124,7 +121,11 @@ Contributor(s):
     
     <hbox id="CancelButton">
       <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
-      <button class="dialog" id="pause"  hidden="true" oncommand="doPauseButton()"/>
+      <deck id="pauseResumeDeck">
+        <spacer/>
+        <button class="dialog" id="pause"  label="&pauseButtonText;"  oncommand="doPauseButton()"/>
+        <button class="dialog" id="resume" label="&resumeButtonText;" oncommand="doPauseButton()"/>
+      </deck>
       <spring flex="1"/>
       <button class="dialog" id="open" label="&open.label;" disabled="true" oncommand="doOpen()"/>
       <button class="dialog" id="openFolder" label="&openFolder.label;" disabled="true" oncommand="doOpenFolder()"/>      
