@@ -38,6 +38,8 @@
 #define NS_EVENTQUEUESERVICE_PROGID "component://netscape/event-queue-service"
 #define NS_EVENTQUEUESERVICE_CLASSNAME "Event Queue Service"
 
+class nsIThread;
+
 class nsIEventQueueService : public nsISupports
 {
 public:
@@ -46,6 +48,7 @@ public:
   NS_IMETHOD CreateThreadEventQueue(void) = 0;
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 
+  NS_IMETHOD CreateFromIThread(nsIThread *aThread, nsIEventQueue **aResult) = 0;
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
 
   // Add a new event queue for the current thread, making it the "current"

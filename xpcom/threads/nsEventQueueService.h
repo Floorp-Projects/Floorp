@@ -63,6 +63,7 @@ public:
   NS_IMETHOD DestroyThreadEventQueue(void);
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult);
 
+  NS_IMETHOD CreateFromIThread(nsIThread *aThread, nsIEventQueue **aResult);
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult);
 
   NS_IMETHOD PushThreadEventQueue(nsIEventQueue **aNewQueue);
@@ -73,6 +74,8 @@ public:
 #endif // XP_MAC
 
 private:
+  NS_IMETHOD CreateEventQueue(PRThread *aThread);
+
   nsHashtable* mEventQTable;
   PRMonitor*   mEventQMonitor;
 };

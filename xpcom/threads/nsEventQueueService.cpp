@@ -21,6 +21,7 @@
 #include "prmon.h"
 #include "nsComponentManager.h"
 #include "nsIEventQueue.h"
+#include "nsIThread.h"
 #include "nsPIEventQueueChain.h"
 
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -209,8 +210,30 @@ NS_IMPL_ISUPPORTS1(nsEventQueueServiceImpl,nsIEventQueueService)
 NS_IMETHODIMP
 nsEventQueueServiceImpl::CreateThreadEventQueue(void)
 {
+  return CreateEventQueue(PR_GetCurrentThread());
+}
+
+NS_IMETHODIMP
+nsEventQueueServiceImpl::CreateFromIThread(
+    nsIThread *aThread, nsIEventQueue **aResult)
+{
+  nsresult rv;
+  PRThread *prThread;
+
+  rv = aThread->GetPRThread(&prThread);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CreateEventQueue(prThread); // addrefs
+    if (NS_SUCCEEDED(rv))
+      rv = GetThreadEventQueue(prThread, aResult); // doesn't addref
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread)
+{
   nsresult rv = NS_OK;
-  ThreadKey  key(PR_GetCurrentThread());
+  ThreadKey  key(aThread);
   EventQueueEntry* evQueueEntry;
 
   /* Enter the lock which protects the EventQ hashtable... */
