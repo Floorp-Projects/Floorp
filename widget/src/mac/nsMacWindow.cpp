@@ -828,7 +828,16 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     if ( mIsSheet && parentWindowRef ) {
         WindowPtr top = GetWindowTop(parentWindowRef);
         if (piParentWidget)
+        {
           piParentWidget->SetIgnoreDeactivate(PR_TRUE);
+          PRBool sheetFlag = PR_FALSE;
+          if (parentWindowRef &&
+            NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
+          {
+            ::GetSheetWindowParent(parentWindowRef, &top);
+            ::HideSheetWindow(parentWindowRef);
+          }
+        }
         ::ShowSheetWindow(mWindowPtr, top);
         UpdateWindowMenubar(parentWindowRef, PR_FALSE);
         gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
@@ -862,28 +871,45 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 #if TARGET_CARBON
     // Mac OS X sheet support
     if (mIsSheet) {
+      if (piParentWidget)
+        piParentWidget->SetIgnoreDeactivate(PR_FALSE);
+
+      // get sheet's parent *before* hiding the sheet (which breaks the linkage)
+      WindowPtr sheetParent = nsnull;
+      ::GetSheetWindowParent(mWindowPtr, &sheetParent);
+
+      ::HideSheetWindow(mWindowPtr);
+
+      gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
+
+      // if we had several sheets open, when the last one goes away
+      // we need to ensure that the top app window is active
+      WindowPtr top = GetWindowTop(parentWindowRef);
+      piParentWidget = do_QueryInterface(parentWidget);
+
+      PRBool sheetFlag = PR_FALSE;
+      if (parentWindowRef && piParentWidget &&
+        NS_SUCCEEDED(piParentWidget->GetIsSheet(&sheetFlag)) && (sheetFlag))
+      {
+        nsCOMPtr<nsIWidget> parentWidget;
+        nsToolkit::GetTopWidget(sheetParent, getter_AddRefs(parentWidget));
+        piParentWidget = do_QueryInterface(parentWidget);
         if (piParentWidget)
-          piParentWidget->SetIgnoreDeactivate(PR_FALSE);
-        ::HideSheetWindow(mWindowPtr);
+          piParentWidget->SetIgnoreDeactivate(PR_TRUE);
+        ::ShowSheetWindow(parentWindowRef, sheetParent);
+      }
+      else if ( mAcceptsActivation ) {
+        ::ShowWindow(top);
+      }
+      else {
+        ::ShowHide(top, true);
+        ::BringToFront(top); // competes with ComeToFront, but makes popups work
+      }
+      ComeToFront();
 
-        gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
-
-        // if we had several sheets open, when the last one goes away
-        // we need to ensure that the top app window is active
-        WindowPtr top = GetWindowTop(parentWindowRef);
-
-        if ( mAcceptsActivation ) {
-            ::ShowWindow(top);
-        }
-        else {
-            ::ShowHide(top, true);
-            ::BringToFront(top); // competes with ComeToFront, but makes popups work
-        }
-        ComeToFront();
-
-        if (top == parentWindowRef) {
-            UpdateWindowMenubar(parentWindowRef, PR_TRUE);
-        }
+      if (top == parentWindowRef) {
+        UpdateWindowMenubar(parentWindowRef, PR_TRUE);
+      }
     }
     else
 #endif
@@ -1368,6 +1394,13 @@ NS_IMETHODIMP
 nsMacWindow::SetIgnoreDeactivate(PRBool ignoreDeactivate)
 {
   mIgnoreDeactivate = ignoreDeactivate;
+  return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsMacWindow::GetIsSheet(PRBool *_retval)
+{
+  *_retval = mIsSheet;
   return(NS_OK);
 }
 

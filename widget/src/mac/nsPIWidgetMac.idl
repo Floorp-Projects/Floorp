@@ -46,5 +46,8 @@ interface nsPIWidgetMac : nsISupports
     // True if window should ignore the next deactivate event it receives
   attribute boolean ignoreDeactivate;
   
+    // True if window is a sheet
+  readonly attribute boolean isSheet;
+  
 }; // nsPIWidgetMac
 
