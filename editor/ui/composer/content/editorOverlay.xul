@@ -339,7 +339,7 @@
       <menuitem id="previewInBrowser" label="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
            where "position" is assumed to be just after 'previewInBrowser'  -->
-      <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
+      <menuitem id="printSetupMenuItem" accesskey="&fileprintsetup.accesskey;" label="&printSetupCmd.label;" command="cmd_printSetup"/>
       <menuitem id="printMenuItem" accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" label="&printCmd.label;"/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
     </menupopup>
