@@ -145,6 +145,7 @@ CPPSRCS		= \
 		  View.cpp \
 		  context_funcs.cpp \
 		  pref.cpp \
+		  utf8xfe.cpp \
 		  $(NULL)
 
 
