@@ -64,11 +64,5 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(NSPR_INCLUDE_DIR),)
-INCLUDES	+= -I$(DIST)/include/private
-else
-INCLUDES	+= -I$(NSPR_INCLUDE_DIR)/private
-endif
-
 CFLAGS		+= -DJSJDLL=\"$(JSJDLL)\"
 
