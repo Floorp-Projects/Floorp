@@ -41,7 +41,7 @@
 
 
 config_script='./config.out'
-tinder_version='0.08'
+tinder_version='0.09'
 perl_flags='-T'
 
 
