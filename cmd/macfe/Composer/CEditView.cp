@@ -1099,7 +1099,7 @@ int CEditView::FindQueuedKeys(char *keys_in_q)
 		else if ( currEvent.what != keyUp ) // its _not_ a keyup; bail
 			break; 							// keyups don't stop us, everything else does
 		
-		foundAndClearedEvent = ::GetNextEvent( keyDownMask | keyUpMask, &eventToRemove );
+		foundAndClearedEvent = ::GetNextEvent( keyDownMask | keyUpMask | autoKeyMask, &eventToRemove );
 		XP_ASSERT( foundAndClearedEvent );
 		if ( !foundAndClearedEvent )		// something bad must have happened; bail!
 			break;
@@ -1202,10 +1202,10 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 						&& !((cmdKey | optionKey | controlKey) & currEvent.modifiers) // with no modKeys except maybe shift
 						&& ( (static_cast<Uchar>(currEvent.message & charCodeMask)) == char_Backspace ) ) )
 							++count;
-						else if ( currEvent.what != keyUp ) // it's _not_ a keyup; bail
-							break; 							// keyups don't stop us, everything else does
-						
-						foundAndClearedEvent = ::GetNextEvent( keyDownMask | keyUpMask, &eventToRemove );
+						else if ( currEvent.what != keyUp )// it's _not_ a keyup; bail
+							break;					// keyups don't stop us, everything else does
+							
+						foundAndClearedEvent = ::GetNextEvent( keyDownMask | keyUpMask | autoKeyMask, &eventToRemove );
 						XP_ASSERT( foundAndClearedEvent );
 						if ( !foundAndClearedEvent )		// something bad must have happened; bail!
 							break;
@@ -1365,8 +1365,6 @@ Boolean CEditView::HandleKeyPress( const EventRecord& inKeyEvent )
 	// update toolbar on navigation moves and when there is a selection
 	if ( handled && !isNormalKeyPress )
 	{
-		StUseCharFormattingCache stCharFormat( *this );
-		
 		// force menu items to update (checkMarks and text (Undo/Redo) could change)
 		LCommander::SetUpdateCommandStatus( true );
 //		CPaneEnabler::UpdatePanes();
@@ -1543,7 +1541,7 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 						if ( XP_STRLEN((char *)fontItemString) > 0
 						&& ( XP_STRSTR( better->pFontFace, (char *)fontItemString ) != NULL    // we found a matching font
 						   || ( ( better->values & TF_FIXED ) != 0 && XP_STRSTR( XP_GetString(XP_NSFONT_FIXED), (char *)fontItemString ) ) // or we want "Fixed Width"
-						   || ( ( !( better->values & TF_FIXED ) && !( better->values & TF_FONT_FACE ) ) 
+						   || ( !( better->values & TF_FIXED ) && !( better->values & TF_FONT_FACE )
 						       && XP_STRSTR( XP_GetString(XP_NSFONT_DEFAULT), (char*)fontItemString ) ) ) ) // or we want "Variable Width"
 						   break;
 					}
@@ -2304,10 +2302,7 @@ void CEditView::FindCommandStatus( CommandT inCommand, Boolean& outEnabled,
 	}
 	
 	// force menu items to update (checkMarks and text (Undo/Redo) could change)
-	{
-	StUseCharFormattingCache stCharFormat( *this );
 	LCommander::SetUpdateCommandStatus( true );
-	}
 }
 
 
@@ -4147,6 +4142,11 @@ Boolean CEditView::ObeyCommand( CommandT inCommand, void *ioParam )
 		}
 		
 	}
+	else if (inCommand >= ENCODING_BASE && inCommand < ENCODING_CEILING)	// FindCommandStatus for encoding is handled in the parent class - CHTMLView
+	{
+		int16 csid = CPrefs::CmdNumToDocCsid( inCommand );
+		EDT_SetEncoding ( *GetContext(), csid );
+	} 
 
 	switch ( inCommand )
 	{		
