@@ -33,7 +33,8 @@
   <RDF:Description about="urn:mozilla:package:pippki"
         chrome:displayName="pippki"
         chrome:author="PSM Team"
-        chrome:name="pippki">
+        chrome:name="pippki"
+ 	chrome:localeVersion="0.9.3>
   </RDF:Description>
 
   <!-- Declare overlay points used in this package -->
