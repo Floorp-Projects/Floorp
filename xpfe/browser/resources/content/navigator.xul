@@ -257,7 +257,7 @@ Contributor(s): ______________________________________. -->
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                      oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
-                     ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event, folderObserver);"
                      template="bookmarksMenuTemplate">
         <menupopup onpopuphiding="gDidOpen = false;"
                    onpopupshowing="checkBookmarksMenuTemplateBuilder();"
@@ -309,8 +309,12 @@ Contributor(s): ______________________________________. -->
                            validate="never"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
-                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
-              <menupopup>
+                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
+                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
+              <menupopup
+                         ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
                 <menuitem label="&emptyItem.label;" disabled="true"/>
               </menupopup>
             </toolbarbutton>
@@ -320,9 +324,13 @@ Contributor(s): ______________________________________. -->
             <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
                            rdf:type="http://home.netscape.com/NC-rdf#Folder"
                            label="rdf:http://home.netscape.com/NC-rdf#Name"
+                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
                            validate="never"
-                          ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
-              <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
+                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
+                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
+              <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();"/>
             </toolbarbutton>
           </rule>
 
@@ -338,8 +346,12 @@ Contributor(s): ______________________________________. -->
 
           <rule iscontainer="true" isempty="true"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menupopup>
+            <menupopup
+                       ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                   validate="never"
                   label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
@@ -353,8 +365,11 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule iscontainer="true">
-            <menupopup>
+            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
               <menu class="menu-iconic bookmark-item" uri="rdf:*"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     validate="never"
                     label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
@@ -369,7 +384,9 @@ Contributor(s): ______________________________________. -->
             </menupopup>
           </rule>
           <rule>
-            <menupopup>
+            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         validate="never"

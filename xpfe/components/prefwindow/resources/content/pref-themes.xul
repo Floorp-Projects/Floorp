@@ -44,7 +44,7 @@
                 src="chrome://navigator/locale/navigator.properties"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
-        
+
   <description>&skinIntro.label;</description>
   
   <description>&installedThemes.label;</description>
