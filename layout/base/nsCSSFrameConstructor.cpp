@@ -8948,7 +8948,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 
     nsCOMPtr<nsIAtom> frameType;
     frame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::textFrame == frameType) {
+    if (nsLayoutAtoms::textFrame == frameType.get()) {
       // Wrap up first-letter content in a letter frame
       nsCOMPtr<nsIContent> textContent;
       frame->GetContent(getter_AddRefs(textContent));
@@ -8968,8 +8968,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
         return NS_OK;
       }
     }
-    else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType)) {
+    else if ((nsLayoutAtoms::inlineFrame == frameType.get()) ||
+             (nsLayoutAtoms::lineFrame == frameType.get())) {
       nsIFrame* kids;
       frame->FirstChild(nsnull, &kids);
       WrapFramesInFirstLetterFrame(aPresContext, aState, frame, kids,
@@ -9135,7 +9135,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
   while (kid) {
     nsCOMPtr<nsIAtom> frameType;
     kid->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::letterFrame == frameType) {
+    if (nsLayoutAtoms::letterFrame == frameType.get()) {
       // Bingo. Found it. First steal away the text frame.
       nsIFrame* textFrame;
       kid->FirstChild(nsnull, &textFrame);
@@ -9177,8 +9177,8 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
       *aStopLooking = PR_TRUE;
       break;
     }
-    else if ((nsLayoutAtoms::inlineFrame == frameType) ||
-             (nsLayoutAtoms::lineFrame == frameType)) {
+    else if ((nsLayoutAtoms::inlineFrame == frameType.get()) ||
+             (nsLayoutAtoms::lineFrame == frameType.get())) {
       // Look inside child inline frame for the letter frame
       RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager, kid,
                               aStopLooking);
