@@ -16,7 +16,7 @@
                          "wrapLength", "mailWarnOnSendAccelKey", 
                          // auto complete prefs 
                          "addressingAutocomplete", "autocompleteLDAP",
-                         "localDirectoriesList", "directoriesList"];
+                         "directoriesList"];
 
       function onLoad()
       {

@@ -19,7 +19,14 @@
 <!ENTITY  viewSignons.label           "Manage Stored Passwords">
 <!ENTITY  viewSignons.accesskey       "e">
 
+<!-- Return Receipts -->
+
 <!ENTITY returnReceiptsDescription.label "Configure Return Receipts.">
+
+<!-- Address book collection -->
+<!ENTITY emailCollectiontitle.label	"Email Address Collection">
+<!ENTITY emailCollectionPicker.label    "Add email addresses to my:">
+<!ENTITY emailCollectiontext.label	"Email addresses from outgoing messages can be automatically added to a local address book.">
 
 <!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
 <!ENTITY  lHeader.label                 "Connection">
