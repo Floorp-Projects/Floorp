@@ -55,7 +55,7 @@ public:
                           const nsHTMLValue& aValue,
                           PRBool aNotify) = 0;
 
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) = 0;
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) = 0;
 
   NS_IMETHOD GetAttribute(const nsString& aName,
                           nsString& aResult) const = 0;
