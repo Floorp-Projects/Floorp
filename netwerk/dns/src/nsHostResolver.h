@@ -43,83 +43,101 @@
 #include "prclist.h"
 #include "prnetdb.h"
 #include "pldhash.h"
+#include "nsISupportsImpl.h"
 
 class nsHostResolver;
 class nsHostRecord;
-class nsResolveHostCB;
-class nsAddrInfo;
+class nsResolveHostCallback;
 
 /* XXX move this someplace more generic */
-#define NET_DECL_REFCOUNTED_THREADSAFE                 \
-    PRInt32 AddRef() {                                 \
-        return PR_AtomicIncrement(&mRefCount);         \
-    }                                                  \
-    PRInt32 Release() {                                \
-        PRInt32 n = PR_AtomicDecrement(&mRefCount);    \
-        if (n == 0)                                    \
-            delete this;                               \
-        return n;                                      \
+#define NS_DECL_REFCOUNTED_THREADSAFE                     \
+  private:                                                \
+    nsAutoRefCnt _refc;                                   \
+  public:                                                 \
+    PRInt32 AddRef() {                                    \
+        return PR_AtomicIncrement((PRInt32*)&_refc);      \
+    }                                                     \
+    PRInt32 Release() {                                   \
+        PRInt32 n = PR_AtomicDecrement((PRInt32*)&_refc); \
+        if (n == 0)                                       \
+            delete this;                                  \
+        return n;                                         \
     }
 
 /**
- * reference counted wrapper around PRAddrInfo.  these are stored in
- * the DNS cache.
+ * nsHostRecord - ref counted object type stored in host resolver cache.
  */
-class nsAddrInfo
+class nsHostRecord : public PRCList
 {
 public:
-    NET_DECL_REFCOUNTED_THREADSAFE
+    NS_DECL_REFCOUNTED_THREADSAFE
 
-    nsAddrInfo(PRAddrInfo *data)
-        : mRefCount(0)
-        , mData(data) {}
+    /* instantiates a new host record */
+    static nsresult Create(const char *host, nsHostRecord **record);
 
-    const PRAddrInfo *get() const { return mData; }
+    /* a fully resolved host record has either a non-null |addrinfo| or |addr|
+     * field.  if |addrinfo| is null, it implies that the |host| is an IP
+     * address literal.  in which case, |addr| contains the parsed address.
+     * otherwise, if |addrinfo| is non-null, then it contains one or many
+     * IP addresses corresponding to the given host name.  if both |addrinfo|
+     * and |addr| are null, then the given host has not yet been fully resolved.
+     */
+    char       *host;
+    PRAddrInfo *addrinfo;
+    PRNetAddr  *addr;
+
+    PRBool HasResult() const { return (addrinfo || addr) != nsnull; }
 
 private:
-    nsAddrInfo(); // never called
-   ~nsAddrInfo() { if (mData) PR_FreeAddrInfo(mData); }
+    friend class nsHostResolver;
 
-    PRInt32     mRefCount;
-    PRAddrInfo *mData;    
+    /* these fields are used internally by the host resolver */
+    PRUint32    expiration; /* measured in minutes since epoch */
+    PRCList     callbacks;
+
+   ~nsHostRecord();
 };
 
 /**
  * ResolveHost callback object.  It's PRCList members are used by
  * the nsHostResolver and should not be used by anything else.
  */
-class nsResolveHostCB : public PRCList
+class NS_NO_VTABLE nsResolveHostCallback : public PRCList
 {
 public:
     /**
-     * LookupComplete
+     * OnLookupComplete
      * 
-     * Runs on an unspecified background thread.
+     * this function is called to complete a host lookup initiated by
+     * nsHostResolver::ResolveHost.  it may be invoked recursively from
+     * ResolveHost or on an unspecified background thread.
+     * 
+     * NOTE: it is the responsibility of the implementor of this method
+     * to handle the callback in a thread safe manner.
      *
      * @param resolver
      *        nsHostResolver object associated with this result
-     * @param host
-     *        hostname that was resolved
+     * @param record
+     *        the host record containing the results of the lookup
      * @param status
-     *        if successful, |result| will be non-null
-     * @param result
-     *        resulting nsAddrInfo object
+     *        if successful, |record| contains non-null results
      */
     virtual void OnLookupComplete(nsHostResolver *resolver,
-                                  const char     *host,
-                                  nsresult        status,
-                                  nsAddrInfo     *result) = 0;
-
-protected:
-    virtual ~nsResolveHostCB() {}
+                                  nsHostRecord   *record,
+                                  nsresult        status) = 0;
 };
 
 /**
- * nsHostResolver: an asynchronous hostname resolver.
+ * nsHostResolver - an asynchronous host name resolver.
  */
 class nsHostResolver
 {
 public:
+    /**
+     * host resolver instances are reference counted.
+     */
+    NS_DECL_REFCOUNTED_THREADSAFE
+
     /**
      * creates an addref'd instance of a nsHostResolver object.
      */
@@ -134,28 +152,23 @@ public:
     void Shutdown();
 
     /**
-     * host resolver instances are reference counted.
-     */
-    NET_DECL_REFCOUNTED_THREADSAFE
-
-    /**
      * resolve the given hostname asynchronously.  the caller can synthesize
      * a synchronous host lookup using a lock and a cvar.  as noted above
      * the callback will occur re-entrantly from an unspecified thread.  the
      * host lookup cannot be canceled (cancelation can be layered above this
      * by having the callback implementation return without doing anything).
      */
-    nsresult ResolveHost(const char      *hostname,
-                         PRBool           bypassCache,
-                         nsResolveHostCB *callback);
+    nsresult ResolveHost(const char            *hostname,
+                         PRBool                 bypassCache,
+                         nsResolveHostCallback *callback);
 
     /**
      * removes the specified callback from the nsHostRecord for the given
      * hostname.  this function executes the callback if the callback is
      * still pending with the status failure code NS_ERROR_ABORT.
      */
-    void DetachCallback(const char      *hostname,
-                        nsResolveHostCB *callback);
+    void DetachCallback(const char            *hostname,
+                        nsResolveHostCallback *callback);
 
 private:
     nsHostResolver(PRUint32 maxCacheEntries=50, PRUint32 maxCacheLifetime=1);
@@ -166,9 +179,8 @@ private:
     PRBool   GetHostToLookup(nsHostRecord **);
     void     OnLookupComplete(nsHostRecord *, nsresult, PRAddrInfo *);
 
-    static void PR_CALLBACK ThreadFunc(void *);
+    PR_STATIC_CALLBACK(void) ThreadFunc(void *);
 
-    PRInt32       mRefCount;
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
     PRLock       *mLock;

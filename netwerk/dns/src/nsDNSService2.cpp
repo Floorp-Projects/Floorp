@@ -63,17 +63,17 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDNSRECORD
 
-    nsDNSRecord(nsAddrInfo *ai)
-        : mAddrInfo(ai)
+    nsDNSRecord(nsHostRecord *hostRecord)
+        : mHostRecord(hostRecord)
         , mIter(nsnull)
         , mDone(PR_FALSE) {}
 
 private:
     virtual ~nsDNSRecord() {}
 
-    nsRefPtr<nsAddrInfo>  mAddrInfo;
-    void                 *mIter;
-    PRBool                mDone;
+    nsRefPtr<nsHostRecord>  mHostRecord;
+    void                   *mIter;
+    PRBool                  mDone;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
@@ -81,23 +81,43 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDNSRecord, nsIDNSRecord)
 NS_IMETHODIMP
 nsDNSRecord::GetCanonicalName(nsACString &result)
 {
-    NS_ENSURE_TRUE(mAddrInfo, NS_ERROR_NOT_AVAILABLE);
-    result.Assign(PR_GetCanonNameFromAddrInfo(mAddrInfo->get()));
+    // if the record is for an IP address literal, then the canonical
+    // host name is the IP address literal.
+    const char *cname;
+    if (mHostRecord->addrinfo)
+        cname = PR_GetCanonNameFromAddrInfo(mHostRecord->addrinfo);
+    else
+        cname = mHostRecord->host;
+    result.Assign(cname);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
 {
-    NS_ENSURE_TRUE(mAddrInfo, NS_ERROR_NOT_AVAILABLE);
-
-    // not a programming error to poke the DNS record when it has
-    // no more entries.  just silently fail.  this enables consumers
+    // not a programming error to poke the DNS record when it has no more
+    // entries.  just fail without any debug warnings.  this enables consumers
     // to enumerate the DNS record without calling HasMore.
     if (mDone)
         return NS_ERROR_NOT_AVAILABLE;
 
-    mIter = PR_EnumerateAddrInfo(mIter, mAddrInfo->get(), port, addr);
+    if (mHostRecord->addrinfo) {
+        mIter = PR_EnumerateAddrInfo(mIter, mHostRecord->addrinfo, port, addr);
+        if (!mIter)
+            return NS_ERROR_NOT_AVAILABLE;
+    }
+    else {
+        mIter = nsnull; // no iterations
+        NS_ASSERTION(mHostRecord->addr, "no addr");
+        memcpy(addr, mHostRecord->addr, sizeof(PRNetAddr));
+        // set given port
+        port = PR_htons(port);
+        if (addr->raw.family == PR_AF_INET)
+            addr->inet.port = port;
+        else
+            addr->ipv6.port = port;
+    }
+        
     mDone = !mIter;
     return NS_OK; 
 }
@@ -121,7 +141,17 @@ nsDNSRecord::GetNextAddrAsString(nsACString &result)
 NS_IMETHODIMP
 nsDNSRecord::HasMore(PRBool *result)
 {
-    *result = !mDone;
+    if (mDone)
+        *result = PR_FALSE;
+    else {
+        // unfortunately, NSPR does not provide a way for us to determine if
+        // there is another address other than to simply get the next address.
+        void *iterCopy = mIter;
+        PRNetAddr addr;
+        *result = NS_SUCCEEDED(GetNextAddr(0, &addr));
+        mIter = iterCopy; // backup iterator
+        mDone = PR_FALSE;
+    }
     return NS_OK;
 }
 
@@ -135,7 +165,7 @@ nsDNSRecord::Rewind()
 
 //-----------------------------------------------------------------------------
 
-class nsDNSAsyncRequest : public nsResolveHostCB
+class nsDNSAsyncRequest : public nsResolveHostCallback
                         , public nsIDNSRequest
 {
 public:
@@ -150,7 +180,7 @@ public:
         , mListener(listener) {}
     virtual ~nsDNSAsyncRequest() {}
 
-    void OnLookupComplete(nsHostResolver *, const char *, nsresult, nsAddrInfo *);
+    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
 
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
@@ -159,15 +189,16 @@ public:
 
 void
 nsDNSAsyncRequest::OnLookupComplete(nsHostResolver *resolver,
-                                    const char     *host,
-                                    nsresult        status,
-                                    nsAddrInfo     *ai)
+                                    nsHostRecord   *hostRecord,
+                                    nsresult        status)
 {
-    nsDNSRecord *rec;
-    if (!ai)
-        rec = nsnull;
-    else {
-        rec = new nsDNSRecord(ai);
+    // need to have an owning ref when we issue the callback to enable
+    // the caller to be able to addref/release multiple times without
+    // destroying the record prematurely.
+    nsCOMPtr<nsIDNSRecord> rec;
+    if (NS_SUCCEEDED(status)) {
+        NS_ASSERTION(hostRecord, "no host record");
+        rec = new nsDNSRecord(hostRecord);
         if (!rec)
             status = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -191,7 +222,7 @@ nsDNSAsyncRequest::Cancel()
 
 //-----------------------------------------------------------------------------
 
-class nsDNSSyncRequest : public nsResolveHostCB
+class nsDNSSyncRequest : public nsResolveHostCallback
 {
 public:
     nsDNSSyncRequest(PRMonitor *mon)
@@ -200,27 +231,26 @@ public:
         , mMonitor(mon) {}
     virtual ~nsDNSSyncRequest() {}
 
-    void OnLookupComplete(nsHostResolver *, const char *, nsresult, nsAddrInfo *);
+    void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
 
-    PRBool                mDone;
-    nsresult              mStatus;
-    nsRefPtr<nsAddrInfo>  mAddrInfo;
+    PRBool                 mDone;
+    nsresult               mStatus;
+    nsRefPtr<nsHostRecord> mHostRecord;
 
 private:
-    PRMonitor            *mMonitor;
+    PRMonitor             *mMonitor;
 };
 
 void
 nsDNSSyncRequest::OnLookupComplete(nsHostResolver *resolver,
-                                   const char     *host,
-                                   nsresult        status,
-                                   nsAddrInfo     *ai)
+                                   nsHostRecord   *hostRecord,
+                                   nsresult        status)
 {
     // store results, and wake up nsDNSService::Resolve to process results.
     PR_EnterMonitor(mMonitor);
     mDone = PR_TRUE;
     mStatus = status;
-    mAddrInfo = ai;
+    mHostRecord = hostRecord;
     PR_Notify(mMonitor);
     PR_ExitMonitor(mMonitor);
 }
@@ -325,11 +355,10 @@ nsDNSService::AsyncResolve(const nsACString &hostname,
     const nsACString *hostPtr = &hostname;
 
     nsresult rv;
-    nsCAutoString hostBuf;
+    nsCAutoString hostACE;
     if (idn && !IsASCII(hostname)) {
-        rv = idn->ConvertUTF8toACE(hostname, hostBuf);
-        if (NS_SUCCEEDED(rv))
-            hostPtr = &hostBuf;
+        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(hostname, hostACE)))
+            hostPtr = &hostACE;
     }
 
     nsCOMPtr<nsIDNSListener> listenerProxy;
@@ -377,11 +406,10 @@ nsDNSService::Resolve(const nsACString &hostname,
     const nsACString *hostPtr = &hostname;
 
     nsresult rv;
-    nsCAutoString hostBuf;
+    nsCAutoString hostACE;
     if (idn && !IsASCII(hostname)) {
-        rv = idn->ConvertUTF8toACE(hostname, hostBuf);
-        if (NS_SUCCEEDED(rv))
-            hostPtr = &hostBuf;
+        if (NS_SUCCEEDED(idn->ConvertUTF8toACE(hostname, hostACE)))
+            hostPtr = &hostACE;
     }
 
     //
@@ -408,7 +436,8 @@ nsDNSService::Resolve(const nsACString &hostname,
         if (NS_FAILED(syncReq.mStatus))
             rv = syncReq.mStatus;
         else {
-            nsDNSRecord *rec = new nsDNSRecord(syncReq.mAddrInfo);
+            NS_ASSERTION(syncReq.mHostRecord, "no host record");
+            nsDNSRecord *rec = new nsDNSRecord(syncReq.mHostRecord);
             if (!rec)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else

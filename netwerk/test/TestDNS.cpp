@@ -60,7 +60,7 @@ public:
                                 nsIDNSRecord  *rec,
                                 nsresult       status)
     {
-        printf("%d: OnLookupComplete called [host=%s status=%x ai=%p]\n",
+        printf("%d: OnLookupComplete called [host=%s status=%x rec=%p]\n",
             mIndex, mHost.get(), status, (void*)rec);
 
         if (NS_SUCCEEDED(status)) {
@@ -69,8 +69,11 @@ public:
             rec->GetCanonicalName(buf);
             printf("%d: canonname=%s\n", mIndex, buf.get());
 
-            while (NS_SUCCEEDED(rec->GetNextAddrAsString(buf)))
+            PRBool hasMore;
+            while (NS_SUCCEEDED(rec->HasMore(&hasMore)) && hasMore) {
+                rec->GetNextAddrAsString(buf);
                 printf("%d: => %s\n", mIndex, buf.get());
+            }
         }
 
         return NS_OK;
@@ -113,7 +116,10 @@ int main(int argc, char **argv)
 
             nsCOMPtr<nsIDNSListener> listener = new myDNSListener(argv[i], i);
             nsCOMPtr<nsIDNSRequest> req;
-            dns->AsyncResolve(hostBuf, PR_FALSE, listener, nsnull, getter_AddRefs(req));
+            nsresult rv = dns->AsyncResolve(hostBuf, PR_FALSE, listener, nsnull,
+                                            getter_AddRefs(req));
+            if (NS_FAILED(rv))
+                printf("### AsyncResolve failed [rv=%x]\n", rv);
         }
 
         printf("main thread sleeping for %d seconds...\n", sleepLen);

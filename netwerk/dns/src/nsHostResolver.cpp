@@ -144,32 +144,36 @@ private:
 
 //----------------------------------------------------------------------------
 
-class nsHostRecord : public PRCList
+nsresult
+nsHostRecord::Create(const char *host, nsHostRecord **result)
 {
-public:
-    NET_DECL_REFCOUNTED_THREADSAFE
+    size_t hostLen = strlen(host) + 1;
+    size_t size = hostLen + sizeof(nsHostRecord);
 
-    nsHostRecord(const char *h)
-        : host(PL_strdup(h))
-        , expireTime(NowInMinutes())
-        , mRefCount(0)
-    {
-        PR_INIT_CLIST(this);
-        PR_INIT_CLIST(&callbacks);
-    }
-   ~nsHostRecord()
-    {
-        PL_strfree(host);
-    }
+    nsHostRecord *rec = (nsHostRecord*) ::operator new(size);
+    if (!rec)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    char                 *host;
-    nsRefPtr<nsAddrInfo>  addr;
-    PRUint32              expireTime; // minutes since epoch
-    PRCList               callbacks;
+    rec->_refc = 1; // addref
+    rec->host = ((char *) rec) + sizeof(nsHostRecord);
+    rec->addrinfo = nsnull;
+    rec->addr = nsnull;
+    rec->expiration = NowInMinutes();
+    PR_INIT_CLIST(rec);
+    PR_INIT_CLIST(&rec->callbacks);
+    memcpy(rec->host, host, hostLen);
 
-private:
-    PRInt32               mRefCount;
-};
+    *result = rec;
+    return NS_OK;
+}
+
+nsHostRecord::~nsHostRecord()
+{
+    if (addrinfo)
+        PR_FreeAddrInfo(addrinfo);
+    if (addr)
+        free(addr);
+}
 
 //----------------------------------------------------------------------------
 
@@ -178,14 +182,14 @@ struct nsHostDBEnt : PLDHashEntryHdr
     nsHostRecord *rec;
 };
 
-static const void * PR_CALLBACK
+PR_STATIC_CALLBACK(const void *)
 HostDB_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
     return he->rec->host;
 }
 
-static PRBool PR_CALLBACK
+PR_STATIC_CALLBACK(PRBool)
 HostDB_MatchEntry(PLDHashTable *table,
                   const PLDHashEntryHdr *entry,
                   const void *key)
@@ -194,7 +198,7 @@ HostDB_MatchEntry(PLDHashTable *table,
     return !strcmp(he->rec->host, (const char *) key);
 }
 
-static void PR_CALLBACK
+PR_STATIC_CALLBACK(void)
 HostDB_MoveEntry(PLDHashTable *table,
                  const PLDHashEntryHdr *from,
                  PLDHashEntryHdr *to)
@@ -203,25 +207,25 @@ HostDB_MoveEntry(PLDHashTable *table,
             NS_STATIC_CAST(const nsHostDBEnt *, from)->rec;
 }
 
-static void PR_CALLBACK
+PR_STATIC_CALLBACK(void)
 HostDB_ClearEntry(PLDHashTable *table,
                   PLDHashEntryHdr *entry)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
 #ifdef DEBUG_HOST_RESOLVER
-    if (!he->rec->addr)
-        LOG(("%s: => null\n", he->rec->host));
+    if (!he->rec->addrinfo)
+        LOG(("%s: => no addrinfo\n", he->rec->host));
     else {
         PRInt32 now = (PRInt32) NowInMinutes();
-        PRInt32 diff = (PRInt32) he->rec->expireTime - now;
+        PRInt32 diff = (PRInt32) he->rec->expiration - now;
         LOG(("%s: exp=%d => %s\n",
             he->rec->host, diff,
-            PR_GetCanonNameFromAddrInfo(he->rec->addr->get())));
+            PR_GetCanonNameFromAddrInfo(he->rec->addrinfo)));
         void *iter = nsnull;
         PRNetAddr addr;
         char buf[64];
         do {
-            iter = PR_EnumerateAddrInfo(iter, he->rec->addr->get(), 0, &addr);
+            iter = PR_EnumerateAddrInfo(iter, he->rec->addrinfo, 0, &addr);
             PR_NetAddrToString(&addr, buf, sizeof(buf));
             LOG(("  %s\n", buf));
         } while (iter);
@@ -230,23 +234,13 @@ HostDB_ClearEntry(PLDHashTable *table,
     NS_RELEASE(he->rec);
 }
 
-static PRBool PR_CALLBACK
+PR_STATIC_CALLBACK(PRBool)
 HostDB_InitEntry(PLDHashTable *table,
                  PLDHashEntryHdr *entry,
                  const void *key)
 {
     nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, entry);
-    he->rec = new nsHostRecord(NS_REINTERPRET_CAST(const char *, key));
-    // addref result if initialized correctly; otherwise, leave record
-    // null so caller can detect and propagate error.
-    if (he->rec) {
-        if (he->rec->host)
-            NS_ADDREF(he->rec);
-        else {
-            delete he->rec;
-            he->rec = nsnull;
-        }
-    }
+    nsHostRecord::Create(NS_REINTERPRET_CAST(const char *, key), &he->rec);
     return PR_TRUE;
 }
 
@@ -263,7 +257,7 @@ static PLDHashTableOps gHostDB_ops =
     HostDB_InitEntry,
 };
 
-static PLDHashOperator PR_CALLBACK
+PR_STATIC_CALLBACK(PLDHashOperator)
 HostDB_RemoveEntry(PLDHashTable *table,
                    PLDHashEntryHdr *hdr,
                    PRUint32 number,
@@ -276,8 +270,7 @@ HostDB_RemoveEntry(PLDHashTable *table,
 
 nsHostResolver::nsHostResolver(PRUint32 maxCacheEntries,
                                PRUint32 maxCacheLifetime)
-    : mRefCount(0)
-    , mMaxCacheEntries(maxCacheEntries)
+    : mMaxCacheEntries(maxCacheEntries)
     , mMaxCacheLifetime(maxCacheLifetime)
     , mLock(nsnull)
     , mIdleThreadCV(nsnull)
@@ -352,65 +345,88 @@ nsHostResolver::Shutdown()
 }
 
 nsresult
-nsHostResolver::ResolveHost(const char      *host,
-                            PRBool           bypassCache,
-                            nsResolveHostCB *callback)
+nsHostResolver::ResolveHost(const char            *host,
+                            PRBool                 bypassCache,
+                            nsResolveHostCallback *callback)
 {
     NS_ENSURE_TRUE(host && *host, NS_ERROR_UNEXPECTED);
 
-    nsAutoLock lock(mLock);
+    // if result is set inside the lock, then we need to issue the
+    // callback before returning.
+    nsRefPtr<nsHostRecord> result;
+    nsresult status = NS_OK, rv = NS_OK;
+    {
+        nsAutoLock lock(mLock);
 
-    if (mShutdown)
-        return NS_ERROR_NOT_INITIALIZED;
-    
-    // check to see if there is already an entry for this |host|
-    // in the hash table.  if so, then check to see if we can't
-    // just reuse the lookup result.  otherwise, if there are
-    // any pending callbacks, then add to pending callbacks queue,
-    // and return.  otherwise, add ourselves as first pending
-    // callback, and proceed to do the lookup.
+        if (mShutdown)
+            rv = NS_ERROR_NOT_INITIALIZED;
+        else {
+            PRNetAddr tempAddr;
+            
+            // check to see if there is already an entry for this |host|
+            // in the hash table.  if so, then check to see if we can't
+            // just reuse the lookup result.  otherwise, if there are
+            // any pending callbacks, then add to pending callbacks queue,
+            // and return.  otherwise, add ourselves as first pending
+            // callback, and proceed to do the lookup.
 
-    PLDHashEntryHdr *hdr;
+            nsHostDBEnt *he =
+                NS_STATIC_CAST(nsHostDBEnt *,
+                               PL_DHashTableOperate(&mDB, host, PL_DHASH_ADD));
 
-    hdr = PL_DHashTableOperate(&mDB, host, PL_DHASH_ADD);
-    if (!hdr)
-        return NS_ERROR_OUT_OF_MEMORY;
+            // if the record is null, then HostDB_InitEntry failed.
+            if (!he || !he->rec)
+                rv = NS_ERROR_OUT_OF_MEMORY;
 
-    nsHostDBEnt *he = NS_STATIC_CAST(nsHostDBEnt *, hdr);
-    if (!he->rec)
-        return NS_ERROR_OUT_OF_MEMORY;
-    else if (!bypassCache &&
-             he->rec->addr && NowInMinutes() <= he->rec->expireTime) {
-        // ok, we can reuse this result.  but, since we are
-        // making a callback, we must only do so outside the
-        // lock, and that requires holding an owning reference
-        // to the addrinfo structure.
-        nsRefPtr<nsAddrInfo> ai = he->rec->addr;
-        lock.unlock();
-        callback->OnLookupComplete(this, host, NS_OK, ai);
-        lock.lock();
-        return NS_OK;
+            // do we have a cached result that we can reuse?
+            else if (!bypassCache &&
+                     he->rec->HasResult() &&
+                     NowInMinutes() <= he->rec->expiration) {
+                // put reference to host record on stack...
+                result = he->rec;
+            }
+
+            // try parsing the host name as an IP address literal to short
+            // circuit full host resolution.  (this is necessary on some
+            // platforms like Win9x.  see bug 219376 for more details.)
+            else if (PR_StringToNetAddr(host, &tempAddr) == PR_SUCCESS) {
+                // ok, just copy the result into the host record, and be done
+                // with it! ;-)
+                he->rec->addr = (PRNetAddr *) malloc(sizeof(PRNetAddr));
+                if (!he->rec->addr)
+                    status = NS_ERROR_OUT_OF_MEMORY;
+                else
+                    memcpy(he->rec->addr, &tempAddr, sizeof(PRNetAddr));
+                // put reference to host record on stack...
+                result = he->rec;
+            }
+
+            // otherwise, hit the resolver...
+            else {
+                PRBool doLookup = PR_CLIST_IS_EMPTY(&he->rec->callbacks);
+
+                // add callback to the list of pending callbacks
+                PR_APPEND_LINK(callback, &he->rec->callbacks);
+
+                nsresult rv = NS_OK;
+                if (doLookup) {
+                    rv = IssueLookup(he->rec);
+                    if (NS_FAILED(rv))
+                        PR_REMOVE_AND_INIT_LINK(callback);
+                }
+            }
+        }
     }
-
-    PRBool doLookup = PR_CLIST_IS_EMPTY(&he->rec->callbacks);
-
-    // add callback to the list of pending callbacks
-    PR_APPEND_LINK(callback, &he->rec->callbacks);
-
-    nsresult rv = NS_OK;
-    if (doLookup) {
-        rv = IssueLookup(he->rec);
-        if (NS_FAILED(rv))
-            PR_REMOVE_AND_INIT_LINK(callback);
-    }
+    if (result)
+        callback->OnLookupComplete(this, result, status);
     return rv;
 }
 
 void
-nsHostResolver::DetachCallback(const char      *host,
-                               nsResolveHostCB *callback)
+nsHostResolver::DetachCallback(const char            *host,
+                               nsResolveHostCallback *callback)
 {
-    PRBool doCallback = PR_FALSE;
+    nsRefPtr<nsHostRecord> rec;
     {
         nsAutoLock lock(mLock);
 
@@ -421,9 +437,9 @@ nsHostResolver::DetachCallback(const char      *host,
             // that it will be there!
             PRCList *node = he->rec->callbacks.next;
             while (node != &he->rec->callbacks) {
-                if (NS_STATIC_CAST(nsResolveHostCB *, node) == callback) {
+                if (NS_STATIC_CAST(nsResolveHostCallback *, node) == callback) {
                     PR_REMOVE_LINK(callback);
-                    doCallback = PR_TRUE;
+                    rec = he->rec;
                     break;
                 }
                 node = node->next;
@@ -431,8 +447,10 @@ nsHostResolver::DetachCallback(const char      *host,
         }
     }
 
-    if (doCallback)
-        callback->OnLookupComplete(this, host, NS_ERROR_ABORT, nsnull);
+    // complete callback with an error code; this would only be done
+    // if the record was in the process of being resolved.
+    if (rec)
+        callback->OnLookupComplete(this, rec, NS_ERROR_ABORT);
 }
 
 nsresult
@@ -501,17 +519,6 @@ nsHostResolver::GetHostToLookup(nsHostRecord **result)
 void
 nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo *result)
 {
-    nsAddrInfo *ai;
-    if (!result)
-        ai = nsnull;
-    else {
-        ai = new nsAddrInfo(result);
-        if (!ai) {
-            status = NS_ERROR_OUT_OF_MEMORY;
-            PR_FreeAddrInfo(result);
-        }
-    }
-
     // get the list of pending callbacks for this lookup, and notify
     // them that the lookup is complete.
     PRCList cbs;
@@ -519,11 +526,14 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
     {
         nsAutoLock lock(mLock);
 
+        // grab list of callbacks to notify
         MoveCList(rec->callbacks, cbs);
-        rec->addr = ai;
-        rec->expireTime = NowInMinutes() + mMaxCacheLifetime;
+
+        // update record fields
+        rec->addrinfo = result;
+        rec->expiration = NowInMinutes() + mMaxCacheLifetime;
         
-        if (rec->addr) {
+        if (rec->addrinfo) {
             // add to mEvictionQ
             PR_APPEND_LINK(rec, &mEvictionQ);
             NS_ADDREF(rec);
@@ -544,9 +554,10 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
     if (!PR_CLIST_IS_EMPTY(&cbs)) {
         PRCList *node = cbs.next;
         while (node != &cbs) {
-            nsResolveHostCB *callback = NS_STATIC_CAST(nsResolveHostCB *, node);
+            nsResolveHostCallback *callback =
+                    NS_STATIC_CAST(nsResolveHostCallback *, node);
             node = node->next;
-            callback->OnLookupComplete(this, rec->host, status, ai);
+            callback->OnLookupComplete(this, rec, status);
             // NOTE: callback must not be dereferenced after this point!!
         }
     }

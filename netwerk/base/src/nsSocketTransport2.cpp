@@ -661,6 +661,7 @@ nsSocketTransport::nsSocketTransport()
     , mAttached(PR_FALSE)
     , mInputClosed(PR_TRUE)
     , mOutputClosed(PR_TRUE)
+    , mResolving(PR_FALSE)
     , mLock(PR_NewLock())
     , mFD(nsnull)
     , mFDref(0)
@@ -802,25 +803,20 @@ nsSocketTransport::ResolveHost()
     LOG(("nsSocketTransport::ResolveHost [this=%x]\n", this));
 
     nsresult rv;
-    // if this is a numeric ip address, then we can simply circumvent the
-    // DNS resolver.
-    if (PR_StringToNetAddr(SocketHost().get(), &mNetAddr) == PR_SUCCESS) {
-        mNetAddr.inet.port = PR_htons(SocketPort());
-        mState = STATE_RESOLVING;
-        // not sending a DNS record...
-        rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nsnull);
-    }
-    else {
-        nsCOMPtr<nsIDNSService> dns = do_GetService(kDNSServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
 
-        rv = dns->AsyncResolve(SocketHost(), PR_FALSE, this, nsnull,
-                               getter_AddRefs(mDNSRequest));
-        if (NS_SUCCEEDED(rv)) {
-            LOG(("  advancing to STATE_RESOLVING\n"));
-            mState = STATE_RESOLVING;
+    nsCOMPtr<nsIDNSService> dns = do_GetService(kDNSServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    mResolving = PR_TRUE;
+
+    rv = dns->AsyncResolve(SocketHost(), PR_FALSE, this, nsnull,
+                           getter_AddRefs(mDNSRequest));
+    if (NS_SUCCEEDED(rv)) {
+        LOG(("  advancing to STATE_RESOLVING\n"));
+        mState = STATE_RESOLVING;
+        // only report that we are resolving if we are still resolving...
+        if (mResolving)
             SendStatus(STATUS_RESOLVING);
-        }
     }
     return rv;
 }
@@ -1631,6 +1627,9 @@ nsSocketTransport::OnLookupComplete(nsIDNSRequest *request,
                                     nsIDNSRecord  *rec,
                                     nsresult       status)
 {
+    // flag host lookup complete for the benefit of the ResolveHost method.
+    mResolving = PR_FALSE;
+
     nsresult rv = PostEvent(MSG_DNS_LOOKUP_COMPLETE, status, rec);
 
     // if posting a message fails, then we should assume that the socket
