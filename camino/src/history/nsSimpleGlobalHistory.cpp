@@ -66,8 +66,6 @@
 
 #include "nsSimpleGlobalHistory.h"
 
-#define DEBUG_HISTORY 1 // for bug 280342
-
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
@@ -1676,25 +1674,19 @@ nsSimpleGlobalHistory::OpenDB()
   PRBool exists = PR_TRUE;
 
   historyFile->Exists(&exists);
-#ifdef DEBUG_HISTORY
-  fprintf(stderr, "HISTORY DEBUG: historyFile exists: %d\n", exists);
-#endif
 
   if (!exists || NS_FAILED(rv = OpenExistingFile(gMdbFactory, filePath.get())))
   {
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: removing old history file, making new one\n");
-#endif
     // we couldn't open the file, so it's either corrupt or doesn't exist.
     // attempt to delete the file, but ignore the error
-#ifdef DEBUG_HISTORY
+    NS_ASSERTION(0, "Failed to open history.dat file");
+#if DEBUG
     nsCOMPtr<nsIFile> fileCopy;
     historyFile->Clone(getter_AddRefs(fileCopy));
     fileCopy->SetLeafName(NS_LITERAL_STRING("history_BAD.dat"));
     fileCopy->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
     nsString uniqueFileName;
     fileCopy->GetLeafName(uniqueFileName);
-    
     historyFile->MoveTo(nsnull, uniqueFileName);
 #else
     historyFile->Remove(PR_FALSE);
@@ -1719,10 +1711,6 @@ nsSimpleGlobalHistory::OpenDB()
 nsresult
 nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
 {
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: OpenExistingFile(%s)\n", filePath);
-#endif
-
   mdb_err err;
   nsresult rv;
   mdb_bool canopen = 0;
@@ -1734,19 +1722,11 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   err = factory->OpenOldFile(mEnv, dbHeap, filePath,
                              dbFrozen, getter_AddRefs(oldFile));
 
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: OpenOldFile returned err 0x%08x (file %p)\n", err, oldFile.get());
-#endif
-
   // don't assert, the file might just not be there
   if ((err !=0) || !oldFile) return NS_ERROR_FAILURE;
 
   err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
                                  &canopen, &outfmt);
-
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: CanOpenFilePort returned err 0x%08x (canopen %hu)\n", err, canopen);
-#endif
 
   // XXX possible that format out of date, in which case we should
   // just re-write the file.
@@ -1756,11 +1736,6 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
 
   err = factory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, &thumb);
-
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: OpenFileStore returned err 0x%08x (thumb %p)\n", err, thumb);
-#endif
-
   if ((err !=0) || !thumb) return NS_ERROR_FAILURE;
 
   mdb_count total;
@@ -1778,17 +1753,9 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
 
   NS_IF_RELEASE(thumb);
 
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: DoMore or ThumbToOpenStore returned err 0x%08x\n", err);
-#endif
-
   if (err != 0) return NS_ERROR_FAILURE;
 
   rv = CreateTokens();
-
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: CreateTokens returned err 0x%08x\n", rv);
-#endif
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1797,21 +1764,12 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
   NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
   if (!mTable) {
     NS_WARNING("Your history file is somehow corrupt.. deleting it.");
-
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: GetTable failed\n");
-#endif
-
     return NS_ERROR_FAILURE;
   }
 
   err = mTable->GetMetaRow(mEnv, &oid, nsnull, getter_AddRefs(mMetaRow));
   if (err != 0)
     NS_WARNING("Could not get meta row\n");
-
-#ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: GetMetaRow return err 0x%08x\n", err);
-#endif
 
   CheckHostnameEntries();
 
@@ -2099,11 +2057,6 @@ nsSimpleGlobalHistory::Commit(eCommitType commitType)
     } while ((err == 0) && !broken && !done);
   }
 
-#ifdef DEBUG_HISTORY
-  if (err != 0)
-    fprintf(stderr, "HISTORY DEBUG: Commit() encountered error 0x08%x\n", err);
-#endif
-
   if (err != 0) // mork doesn't return NS error codes. Yet.
     return NS_ERROR_FAILURE;
 
@@ -2188,9 +2141,6 @@ nsSimpleGlobalHistory::CloseDB()
 
   ExpireEntries(PR_FALSE /* don't notify */);
   err = Commit(kSessionCommit);
-#ifdef DEBUG_HISTORY
-  fprintf(stderr, "HISTORY DEBUG: Commit() in CloseDB() returned err 0x%08x\n", err);
-#endif
 
   // order is important here - logically smallest objects first
   mMetaRow = nsnull;
