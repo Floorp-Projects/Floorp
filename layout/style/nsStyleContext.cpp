@@ -1475,8 +1475,8 @@ nsrefcnt StyleContextImpl::AddRef(void)
 
 nsrefcnt StyleContextImpl::Release(void)
 {
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
   NS_PRECONDITION(0 != mRefCnt, "dup release");
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
   if (--mRefCnt == 0) {
     NS_DELETEXPCOM(this);
     return 0;
