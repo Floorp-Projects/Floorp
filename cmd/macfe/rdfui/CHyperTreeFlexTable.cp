@@ -159,7 +159,7 @@ CHyperTreeFlexTable :: GetMainRowText( TableIndexT inRow, char* outText, UInt16 
 	Assert_(header != NULL);
 	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(FindTitleColumnID()-1);	// GCI() is 0-based
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inRow) );
-	if ( node && HT_GetNodeData(node, info.token, info.tokenType, &data) ) {
+	if ( node && HT_GetTemplateData(node, info.token, info.tokenType, &data) ) {
 		char* title = static_cast<char*>(data);
 		strcpy ( outText, title );
 	}
@@ -198,7 +198,7 @@ Boolean
 CHyperTreeFlexTable :: CellInitiatesDrag ( const STableCell& inCell ) const
 {
 	return inCell.col == FindTitleColumnID() &&	
-			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection) == false
+			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true
 		? true : false;
 	
 } // CellInitiatesDrag
@@ -215,7 +215,7 @@ Boolean
 CHyperTreeFlexTable :: CellSelects ( const STableCell& inCell ) const
 {
 	return inCell.col == FindTitleColumnID() &&
-			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection) == false
+			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true
 		? true : false;
 	
 } // CellSelects
@@ -226,14 +226,18 @@ CHyperTreeFlexTable :: CellSelects ( const STableCell& inCell ) const
 //
 // This is used in the flex table to allow the cell a chance at the click even if it is not
 // supposed to select anything. This is the case when the tree is in single-click mode because
-// we still want to respond to clicks even though the cell does not select. Since this will only
-// be called when the title column is clicked on and we're in single click mode, just always
-// return true.
+// we still want to respond to clicks even though the cell does not select.
+//
+// Instead of just saying we want the click, handle it, and then return that we don't want it.
 //
 Boolean
 CHyperTreeFlexTable :: CellWantsClick( const STableCell & inCell ) const
 {
-	return true;
+	if ( inCell.col == FindTitleColumnID() ) {	
+		CHyperTreeFlexTable* me = const_cast<CHyperTreeFlexTable*>(this);	// hack around const
+		me->OpenRow(inCell.row);
+	}
+	return false;
 
 } // CellWantsClick
 
@@ -314,15 +318,14 @@ CHyperTreeFlexTable :: SyncSelectionWithHT ( )
 
 
 //
-// ListenToMessage
+// ImageIsReady
 //
-// Listen for the update of the background image so we can redraw.
+// Called when the bg image is done loading. Just refresh and we'll pick it up.
 //
 void
-CHyperTreeFlexTable :: ListenToMessage ( const MessageT inMessage, void* ioData )
+CHyperTreeFlexTable :: ImageIsReady ( )
 {
-	if ( inMessage == CIconContext::msg_ImageReadyToDraw )
-		Refresh();
+	Refresh();
 
 } // ListenToMessage
 
@@ -374,7 +377,7 @@ CHyperTreeFlexTable :: DrawSelf ( )
 	size_t viewHeight = max(mImageSize.height, static_cast<Int32>(mFrameSize.height));
 	if ( topNode ) {
 		char* url = NULL;
-		PRBool success = HT_GetNodeData ( topNode, gNavCenter->viewBGURL, HT_COLUMN_STRING, &url );
+		PRBool success = HT_GetTemplateData ( topNode, gNavCenter->viewBGURL, HT_COLUMN_STRING, &url );
 		if ( success && url ) {
 			// draw the background image tiled to fill the whole pane
 			mHasBackgroundImage = true;
@@ -422,7 +425,7 @@ CHyperTreeFlexTable :: EraseCellBackground ( const STableCell& inCell, const Rec
 	} // if no bg image
 
 	// draw the separator line if HT says to. This will draw it even if there is a bg image.
-	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->showDivider) ) { 
+	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->showDivider, true) ) { 
 		URDFUtilities::SetupBackgroundColor ( TopNode(), gNavCenter->dividerColor,
 												kThemeListViewSeparatorBrush );
 		Rect divider = { inLocalRect.bottom - 1, inLocalRect.left, inLocalRect.bottom, inLocalRect.right };
@@ -489,7 +492,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 			void* data;
 			char* str;
 			Rect localRect = inLocalRect;
-			if (HT_GetNodeData(node, info.token, info.tokenType, &data) && data)
+			if (HT_GetTemplateData(node, info.token, info.tokenType, &data) && data)
 			{
 				switch (info.tokenType) {
 					case HT_COLUMN_STRING:
@@ -521,7 +524,7 @@ Boolean	CHyperTreeFlexTable::CellHasDropFlag(const STableCell& inCell, Boolean& 
 {
 	// bail quickly if this cell isn't a title column or tree connections are turned off
 	if ( FindTitleColumnID() != inCell.col ||
-			URDFUtilities::PropertyValueBool( TopNode(), gNavCenter->showTreeConnections) == false )
+			URDFUtilities::PropertyValueBool( TopNode(), gNavCenter->showTreeConnections, true) == false )
 		return false;
 		
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
@@ -789,12 +792,12 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 			// click is not in a container. If HT doesn't want it (and it's not
 			// a separator), launch the url
 			if ( !HT_IsSeparator(node) && !URDFUtilities::LaunchNode(node) )
-				CFrontApp::DoGetURL( HT_GetNodeURL(node) );
+				CFrontApp::DoGetURL( HT_GetNodeURL(node), GetTargetFrame() );
 		}
 		else {
 			// we are a container. If tree connections hidden, open up the folder otherwise
 			// ignore.
-			if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->showTreeConnections) == false ) {
+			if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->showTreeConnections, true) == false ) {
 				PRBool openState = false;
 				HT_GetOpenState(node, &openState);
 				SetCellExpansion(STableCell(inRow, 1), !openState);
@@ -1220,7 +1223,7 @@ CHyperTreeFlexTable :: HandleDropOfText ( const char* /*inTextData*/ )
 Uint16
 CHyperTreeFlexTable :: ClickCountToOpen ( ) const
 {
-	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick) )
+	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSingleClick, false) )
 		return 1;
 	else
 		return mClickCountToOpen;
@@ -1257,7 +1260,7 @@ CHyperTreeFlexTable :: InlineEditorDone ( )
 Boolean
 CHyperTreeFlexTable :: CanDoInlineEditing ( ) const
 {
-	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useInlineEditing) ) {
+	if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useInlineEditing, true) ) {
 		CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
 		Assert_(header);
 		CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo ( FindTitleColumnID() - 1 );
@@ -1279,7 +1282,7 @@ CHyperTreeFlexTable :: CanDoInlineEditing ( ) const
 Boolean
 CHyperTreeFlexTable :: TableDesiresSelectionTracking( ) const
 {
-	return URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection) == false;
+	return URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true;
 		
 } // TableDesiresSelectionTracking
 
@@ -1369,7 +1372,7 @@ CHyperTreeFlexTable :: FindTooltipForMouseLocation ( const EventRecord& inMacEve
 		
 		HT_Resource node = HT_GetNthItem( GetHTView(), URDFUtilities::PPRowToHTRow(hitCell.row) );
 		void* data;
-		if ( HT_GetNodeData(node, info.token, info.tokenType, &data) && data ) {
+		if ( HT_GetTemplateData(node, info.token, info.tokenType, &data) && data ) {
 			switch (info.tokenType) {
 				case HT_COLUMN_STRING:
 					if ( ! HT_IsSeparator(node) ) {
@@ -1427,6 +1430,29 @@ CHyperTreeFlexTable :: TableSupportsNaturalOrderSort ( ) const
 	return HT_ContainerSupportsNaturalOrderSort(TopNode());
 
 } // TableSupportsNaturalOrderSort
+
+
+//
+// SetTargetFrame
+//
+// Set the new target to where url's are dispatched when clicked on
+//
+void
+CHyperTreeFlexTable :: SetTargetFrame ( const char* inFrame )
+{
+	mTargetFrame = inFrame;
+
+} // SetTargetFrame
+
+
+const char*
+CHyperTreeFlexTable :: GetTargetFrame ( ) const
+{
+	if ( mTargetFrame.length() )
+		return mTargetFrame.c_str();
+	else
+		return NULL;
+}
 
 
 #pragma mark -- class CHyperTreeSelector --

@@ -67,13 +67,18 @@ public:
 	
 	bool			IsViewSameAsBeforeDrag() const { return mViewBeforeDrag == mHTView; }
 
+		// get/set the frame to which urls are dispatched. It's ok not to set
+		// this as the default will be the top-most HTML view.
+	virtual void		SetTargetFrame ( const char* inFrame ) ;
+	virtual const char*	GetTargetFrame ( ) const ;
+
 protected:
 		
 		// Background image tiling stuff
 	virtual void DrawStandby ( const Point & inTopLeft, 
 								const IconTransformType inTransform ) const;
 	virtual void DrawSelf ( ) ;
-	virtual void ListenToMessage ( const MessageT inMessage, void* ioData ) ;
+	virtual void ImageIsReady ( ) ;
 	virtual void EraseTableBackground ( ) const;
 	
 		// CStandardFlexTable Overrides
@@ -152,6 +157,8 @@ protected:
 	STableCell				mTooltipCell;		// tracks where mouse is for tooltips
 
 	bool					mHasBackgroundImage;	// is there a background image to be drawn?
+
+	string					mTargetFrame;		// which frame are urls dispatched to?
 
 }; // class CHyperTreeFlexTable
 
