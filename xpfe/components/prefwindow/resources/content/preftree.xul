@@ -186,7 +186,7 @@
       <treerow>
         <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-advanced.xul" value="&advance.label;"/> 
       </treerow>
-      <treechildren>
+      <treechildren id="advancedChildren">
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul"
@@ -209,7 +209,7 @@
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-proxies.xul" value="&proxies.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem>
+        <treeitem id="mousewheelItem">
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-mousewheel.xul" value="&mousewheel.label;"/>
           </treerow>
