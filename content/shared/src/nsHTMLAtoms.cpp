@@ -43,7 +43,6 @@ nsIAtom* nsHTMLAtoms::axis;
 nsIAtom* nsHTMLAtoms::background;
 nsIAtom* nsHTMLAtoms::below;
 nsIAtom* nsHTMLAtoms::bgcolor;
-nsIAtom* nsHTMLAtoms::blockFrame;
 nsIAtom* nsHTMLAtoms::body;
 nsIAtom* nsHTMLAtoms::border;
 nsIAtom* nsHTMLAtoms::bordercolor;
@@ -142,7 +141,6 @@ nsIAtom* nsHTMLAtoms::id;
 nsIAtom* nsHTMLAtoms::iframe;
 nsIAtom* nsHTMLAtoms::img;
 nsIAtom* nsHTMLAtoms::index;
-nsIAtom* nsHTMLAtoms::inlineFrame;
 nsIAtom* nsHTMLAtoms::input;
 nsIAtom* nsHTMLAtoms::ismap;
 nsIAtom* nsHTMLAtoms::label;
@@ -305,7 +303,6 @@ void nsHTMLAtoms::AddrefAtoms()
     background = NS_NewAtom("background");
     below = NS_NewAtom("below");
     bgcolor = NS_NewAtom("bgcolor");
-    blockFrame = NS_NewAtom("BlockFrame");
     body = NS_NewAtom("body");
     border = NS_NewAtom("border");
     bordercolor = NS_NewAtom("bordercolor");
@@ -405,7 +402,6 @@ void nsHTMLAtoms::AddrefAtoms()
     iframe = NS_NewAtom("iframe");
     img = NS_NewAtom("img");
     index = NS_NewAtom("index");
-    inlineFrame = NS_NewAtom("InlineFrame");
     input = NS_NewAtom("input");
     ismap = NS_NewAtom("ismap");
     label = NS_NewAtom("label");
@@ -565,7 +561,6 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(background);
     NS_RELEASE(below);
     NS_RELEASE(bgcolor);
-    NS_RELEASE(blockFrame);
     NS_RELEASE(body);
     NS_RELEASE(border);
     NS_RELEASE(bordercolor);
@@ -659,7 +654,6 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(iframe);
     NS_RELEASE(img);
     NS_RELEASE(index);
-    NS_RELEASE(inlineFrame);
     NS_RELEASE(input);
     NS_RELEASE(ismap);
     NS_RELEASE(label);
