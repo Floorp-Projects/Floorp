@@ -64,6 +64,8 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
+  NS_IMETHOD GetDepth(PRUint32& aDepth);
+
 private:
   PRUint32      mDepth;
   PRBool        mWriteable;
