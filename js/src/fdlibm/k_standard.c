@@ -127,8 +127,11 @@ static double zero = 0.0;	/* used as const */
 #ifndef HUGE_VAL	/* this is the only routine that uses HUGE_VAL */ 
 #define HUGE_VAL inf
 	double inf = 0.0;
+        fd_twoints u;
 
-	__HI(inf) = 0x7ff00000;	/* set inf to infinite */
+        u.d = inf;
+	__HI(u) = 0x7ff00000;	/* set inf to infinite */
+        inf = u.d;
 #endif
 
 #ifdef _USE_WRITE

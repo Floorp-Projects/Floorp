@@ -110,13 +110,16 @@ T[] =  {
 	double x,y; int iy;
 #endif
 {
+        fd_twoints u;
 	double z,r,v,w,s;
 	int ix,hx;
-	hx = __HI(x);	/* high word of x */
+        u.d = x;
+	hx = __HI(u);	/* high word of x */
 	ix = hx&0x7fffffff;	/* high word of |x| */
 	if(ix<0x3e300000)			/* x < 2**-28 */
 	    {if((int)x==0) {			/* generate inexact */
-		if(((ix|__LO(x))|(iy+1))==0) return one/fd_fabs(x);
+                u.d =x;
+		if(((ix|__LO(u))|(iy+1))==0) return one/fd_fabs(x);
 		else return (iy==1)? x: -one/x;
 	    }
 	    }
@@ -148,10 +151,14 @@ T[] =  {
      /*  compute -1.0/(x+r) accurately */
 	    double a,t;
 	    z  = w;
-	    __LO(z) = 0;
+            u.d = z;
+	    __LO(u) = 0;
+            z = u.d;
 	    v  = r-(z - x); 	/* z+v = r+x */
 	    t = a  = -1.0/w;	/* a = -1.0/w */
-	    __LO(t) = 0;
+            u.d = t;
+	    __LO(u) = 0;
+            t = u.d;
 	    s  = 1.0+t*z;
 	    return t+a*(s+t*v);
 	}

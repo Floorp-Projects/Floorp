@@ -45,12 +45,14 @@
  */
 
 /* Modified defines start here.. */
+#undef __LITTLE_ENDIAN
+
 #ifdef _WIN32
 #define huge myhuge
 #define __LITTLE_ENDIAN
 #endif
 
-#ifdef X86_LINUX
+#if defined(linux) && defined(__i386__)
 #define __LITTLE_ENDIAN
 #endif
 
@@ -63,19 +65,19 @@
 #endif
 #endif
 
-
+typedef union {
 #ifdef __LITTLE_ENDIAN
-#define __HI(x) *(1+(int*)&x)
-#define __LO(x) *(int*)&x
-#define __HIp(x) *(1+(int*)x)
-#define __LOp(x) *(int*)x
+    struct { int lo, hi; } ints;
 #else
-#define __HI(x) *(int*)&x
-#define __LO(x) *(1+(int*)&x)
-#define __HIp(x) *(int*)x
-#define __LOp(x) *(1+(int*)x)
+    struct { int hi, lo; } ints;
 #endif
+    double d;
+} fd_twoints;
 
+#define __HI(x) x.ints.hi
+#define __LO(x) x.ints.lo
+
+#undef __P
 #ifdef __STDC__
 #define	__P(p)	p
 #else

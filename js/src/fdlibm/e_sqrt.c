@@ -128,13 +128,15 @@ static	double	one	= 1.0, tiny=1.0e-300;
 	double x;
 #endif
 {
+        fd_twoints u;
 	double z;
 	int 	sign = (int)0x80000000; 
 	unsigned r,t1,s1,ix1,q1;
 	int ix0,s0,q,m,t,i;
 
-	ix0 = __HI(x);			/* high word of x */
-	ix1 = __LO(x);		/* low word of x */
+        u.d = x;
+	ix0 = __HI(u);			/* high word of x */
+	ix1 = __LO(u);		/* low word of x */
 
     /* take care of Inf and NaN */
 	if((ix0&0x7ff00000)==0x7ff00000) {			
@@ -219,8 +221,10 @@ static	double	one	= 1.0, tiny=1.0e-300;
 	ix1 =  q1>>1;
 	if ((q&1)==1) ix1 |= sign;
 	ix0 += (m <<20);
-	__HI(z) = ix0;
-	__LO(z) = ix1;
+        u.d = z;
+	__HI(u) = ix0;
+	__LO(u) = ix1;
+        z = u.d;
 	return z;
 }
 

@@ -69,14 +69,17 @@ static double zero = 0.0;
 	double x,p;
 #endif
 {
+        fd_twoints u;
 	int hx,hp;
 	unsigned sx,lx,lp;
 	double p_half;
 
-	hx = __HI(x);		/* high word of x */
-	lx = __LO(x);		/* low  word of x */
-	hp = __HI(p);		/* high word of p */
-	lp = __LO(p);		/* low  word of p */
+        u.d = x;
+	hx = __HI(u);		/* high word of x */
+	lx = __LO(u);		/* low  word of x */
+        u.d = p;
+	hp = __HI(u);		/* high word of p */
+	lp = __LO(u);		/* low  word of p */
 	sx = hx&0x80000000;
 	hp &= 0x7fffffff;
 	hx &= 0x7fffffff;
@@ -105,6 +108,8 @@ static double zero = 0.0;
 		if(x>=p_half) x -= p;
 	    }
 	}
-	__HI(x) ^= sx;
+        u.d = x;
+	__HI(u) ^= sx;
+        x = u.d;
 	return x;
 }

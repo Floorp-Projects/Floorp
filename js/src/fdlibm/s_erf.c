@@ -227,9 +227,11 @@ sb7  = -2.24409524465858183362e+01; /* 0xC03670E2, 0x42712D62 */
 	double x;
 #endif
 {
+        fd_twoints u;
 	int hx,ix,i;
 	double R,S,P,Q,s,y,z,r;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	ix = hx&0x7fffffff;
 	if(ix>=0x7ff00000) {		/* erf(nan)=nan */
 	    i = ((unsigned)hx>>31)<<1;
@@ -271,7 +273,9 @@ sb7  = -2.24409524465858183362e+01; /* 0xC03670E2, 0x42712D62 */
 				sb5+s*(sb6+s*sb7))))));
 	}
 	z  = x;  
-	__LO(z) = 0;
+        u.d = z;
+	__LO(u) = 0;
+        z = u.d;
 	r  =  __ieee754_exp(-z*z-0.5625)*__ieee754_exp((z-x)*(z+x)+R/S);
 	if(hx>=0) return one-r/x; else return  r/x-one;
 }
@@ -283,9 +287,11 @@ sb7  = -2.24409524465858183362e+01; /* 0xC03670E2, 0x42712D62 */
 	double x;
 #endif
 {
+        fd_twoints u;
 	int hx,ix;
 	double R,S,P,Q,s,y,z,r;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	ix = hx&0x7fffffff;
 	if(ix>=0x7ff00000) {			/* erfc(nan)=nan */
 						/* erfc(+-inf)=0,2 */
@@ -333,7 +339,9 @@ sb7  = -2.24409524465858183362e+01; /* 0xC03670E2, 0x42712D62 */
 				sb5+s*(sb6+s*sb7))))));
 	    }
 	    z  = x;
-	    __LO(z)  = 0;
+            u.d = z;
+	    __LO(u)  = 0;
+            z = u.d;
 	    r  =  __ieee754_exp(-z*z-0.5625)*
 			__ieee754_exp((z-x)*(z+x)+R/S);
 	    if(hx>0) return r/x; else return two-r/x;

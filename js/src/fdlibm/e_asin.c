@@ -106,17 +106,15 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	double x;
 #endif
 {
-#ifdef GCC_OPT_BUG
-        volatile double w;
-#else
-        double w;
-#endif
-	double t,p,q,c,r,s;
+        fd_twoints u;
+	double w,t,p,q,c,r,s;
 	int hx,ix;
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
+        x = u.d;
 	ix = hx&0x7fffffff;
 	if(ix>= 0x3ff00000) {		/* |x|>= 1 */
-	    if(((ix-0x3ff00000)|__LO(x))==0)
+	    if(((ix-0x3ff00000)|__LO(u))==0)
 		    /* asin(1)=+-pi/2 with inexact */
 		return x*pio2_hi+x*pio2_lo;	
 	    return (x-x)/(x-x);		/* asin(|x|>1) is NaN */   
@@ -140,8 +138,9 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	    w = p/q;
 	    t = pio2_hi-(2.0*(s+s*w)-pio2_lo);
 	} else {
-	    w  = s;
-	    __LO(w) = 0;
+	    u.d  = s;
+	    __LO(u) = 0;
+            w = u.d;
 	    c  = (t-w*w)/(s+w);
 	    r  = p/q;
 	    p  = 2.0*s*r-(pio2_lo-2.0*c);

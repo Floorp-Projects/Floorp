@@ -83,11 +83,13 @@
 	double x;
 #endif
 {
+        fd_twoints u;
 	double y[2],z=0.0;
 	int n, ix;
 
     /* High word of x. */
-	ix = __HI(x);
+        u.d = x;
+	ix = __HI(u);
 
     /* |x| ~< pi/4 */
 	ix &= 0x7fffffff;

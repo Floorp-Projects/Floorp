@@ -76,26 +76,31 @@ G =  3.57142857142857150787e-01; /* 5/14      = 0x3FD6DB6D, 0xB6DB6DB7 */
 	double x;
 #endif
 {
+        fd_twoints u;
 	int	hx;
 	double r,s,t=0.0,w;
 	unsigned sign;
 
-
-	hx = __HI(x);		/* high word of x */
+        u.d = x;
+	hx = __HI(u);		/* high word of x */
 	sign=hx&0x80000000; 		/* sign= sign(x) */
 	hx  ^=sign;
 	if(hx>=0x7ff00000) return(x+x); /* cbrt(NaN,INF) is itself */
-	if((hx|__LO(x))==0) 
+	if((hx|__LO(u))==0) {
+            x = u.d;
 	    return(x);		/* cbrt(0) is itself */
-
-	__HI(x) = hx;	/* x <- |x| */
+        }
+        u.d = x;
+	__HI(u) = hx;	/* x <- |x| */
+        x = u.d;
     /* rough cbrt to 5 bits */
 	if(hx<0x00100000) 		/* subnormal number */
-	  {__HI(t)=0x43500000; 		/* set t= 2**54 */
-	   t*=x; __HI(t)=__HI(t)/3+B2;
+	  {u.d = t; __HI(u)=0x43500000; t=u.d;		/* set t= 2**54 */
+	   t*=x; __HI(u)=__HI(u)/3+B2;
 	  }
-	else
-	  __HI(t)=hx/3+B1;	
+	else {
+	  u.d = t; __HI(u)=hx/3+B1; t = u.d;
+        }
 
 
     /* new cbrt to 23 bits, may be implemented in single precision */
@@ -104,8 +109,9 @@ G =  3.57142857142857150787e-01; /* 5/14      = 0x3FD6DB6D, 0xB6DB6DB7 */
 	t*=G+F/(s+E+D/s);	
 
     /* chopped to 20 bits and make it larger than cbrt(x) */ 
-	__LO(t)=0; __HI(t)+=0x00000001;
-
+        u.d = t;
+	__LO(u)=0; __HI(u)+=0x00000001;
+        t = u.d;
 
     /* one step newton iteration to 53 bits with error less than 0.667 ulps */
 	s=t*t;		/* t*t is exact */
@@ -115,6 +121,8 @@ G =  3.57142857142857150787e-01; /* 5/14      = 0x3FD6DB6D, 0xB6DB6DB7 */
 	t=t+t*r;
 
     /* retore the sign bit */
-	__HI(t) |= sign;
+        u.d = t;
+	__HI(u) |= sign;
+        t = u.d;
 	return(t);
 }

@@ -126,10 +126,12 @@ static double zero    = 0.0;
 	double x;
 #endif
 {
+        fd_twoints un;
 	double z, s,c,ss,cc,r,u,v,y;
 	int hx,ix;
 
-	hx = __HI(x);
+        un.d = x;
+	hx = __HI(un);
 	ix = hx&0x7fffffff;
 	if(ix>=0x7ff00000) return one/x;
 	y = fd_fabs(x);
@@ -195,12 +197,14 @@ static double V0[5] = {
 	double x;
 #endif
 {
+        fd_twoints un;
 	double z, s,c,ss,cc,u,v;
 	int hx,ix,lx;
 
-        hx = __HI(x);
+        un.d = x;
+        hx = __HI(un);
         ix = 0x7fffffff&hx;
-        lx = __LO(x);
+        lx = __LO(un);
     /* if Y1(NaN) is NaN, Y1(-inf) is NaN, Y1(inf) is 0 */
 	if(ix>=0x7ff00000) return  one/(x+x*x); 
         if((ix|lx)==0) return -one/zero;
@@ -360,9 +364,11 @@ static double ps2[5] = {
 #else
 	double *p,*q;
 #endif
+        fd_twoints un;
 	double z,r,s;
         int ix;
-        ix = 0x7fffffff&__HI(x);
+        un.d = x;
+        ix = 0x7fffffff&__HI(un);
         if(ix>=0x40200000)     {p = pr8; q= ps8;}
         else if(ix>=0x40122E8B){p = pr5; q= ps5;}
         else if(ix>=0x4006DB6D){p = pr3; q= ps3;}
@@ -496,9 +502,11 @@ static double qs2[6] = {
 #else
 	double *p,*q;
 #endif
+        fd_twoints un;
 	double  s,r,z;
 	int ix;
-	ix = 0x7fffffff&__HI(x);
+        un.d = x;
+	ix = 0x7fffffff&__HI(un);
 	if(ix>=0x40200000)     {p = qr8; q= qs8;}
 	else if(ix>=0x40122E8B){p = qr5; q= qs5;}
 	else if(ix>=0x4006DB6D){p = qr3; q= qs3;}

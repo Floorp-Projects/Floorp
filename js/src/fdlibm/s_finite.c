@@ -58,7 +58,9 @@
 	double x;
 #endif
 {
+        fd_twoints u;
 	int hx; 
-	hx = __HI(x);
+        u.d = x;
+	hx = __HI(u);
 	return  (unsigned)((hx&0x7fffffff)-0x7ff00000)>>31;
 }

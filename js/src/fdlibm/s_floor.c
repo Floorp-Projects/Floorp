@@ -68,10 +68,12 @@ static double really_big = 1.0e300;
 	double x;
 #endif
 {
+        fd_twoints u;
 	int i0,i1,j0;
 	unsigned i,j;
-	i0 =  __HI(x);
-	i1 =  __LO(x);
+        u.d = x;
+	i0 =  __HI(u);
+	i1 =  __LO(u);
 	j0 = ((i0>>20)&0x7ff)-0x3ff;
 	if(j0<20) {
 	    if(j0<0) { 	/* raise inexact if x != 0 */
@@ -106,7 +108,9 @@ static double really_big = 1.0e300;
 		i1 &= (~i);
 	    }
 	}
-	__HI(x) = i0;
-	__LO(x) = i1;
+        u.d = x;
+	__HI(u) = i0;
+	__LO(u) = i1;
+        x = u.d;
 	return x;
 }

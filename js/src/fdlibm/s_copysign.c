@@ -59,6 +59,9 @@
 	double x,y;
 #endif
 {
-	__HI(x) = (__HI(x)&0x7fffffff)|(__HI(y)&0x80000000);
+        fd_twoints ux, uy;
+        ux.d = x; uy.d = y;
+	__HI(ux) = (__HI(ux)&0x7fffffff)|(__HI(uy)&0x80000000);
+        x = ux.d;
         return x;
 }

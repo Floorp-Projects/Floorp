@@ -84,12 +84,14 @@ static double one = 1.0, half=0.5, really_big = 1.0e300;
 	double x;
 #endif
 {	
+        fd_twoints u;
 	double t,w;
 	int ix;
 	unsigned lx;
-
+        
     /* High word of |x|. */
-	ix = __HI(x);
+        u.d = x;
+	ix = __HI(u);
 	ix &= 0x7fffffff;
 
     /* x is INF or NaN */

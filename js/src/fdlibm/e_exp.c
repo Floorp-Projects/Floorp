@@ -139,23 +139,21 @@ P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
 	double x;
 #endif
 {
-#ifdef GCC_OPT_BUG
-        volatile int xsb;
-#else
-        int xsb;
-#endif
+        fd_twoints u;
 	double y,hi,lo,c,t;
-	int k;
+	int k, xsb;
 	unsigned hx;
 
-	hx  = __HI(x);	/* high word of x */
+        u.d = x;
+	hx  = __HI(u);	/* high word of x */
 	xsb = (hx>>31)&1;		/* sign bit of x */
 	hx &= 0x7fffffff;		/* high word of |x| */
 
     /* filter out non-finite argument */
 	if(hx >= 0x40862E42) {			/* if |x|>=709.78... */
             if(hx>=0x7ff00000) {
-		if(((hx&0xfffff)|__LO(x))!=0) 
+                u.d = x;
+		if(((hx&0xfffff)|__LO(u))!=0)
 		     return x+x; 		/* NaN */
 		else return (xsb==0)? x:0.0;	/* exp(+-inf)={inf,0} */
 	    }
@@ -186,10 +184,14 @@ P5   =  4.13813679705723846039e-08; /* 0x3E663769, 0x72BEA4D0 */
 	if(k==0) 	return one-((x*c)/(c-2.0)-x); 
 	else 		y = one-((lo-(x*c)/(2.0-c))-hi);
 	if(k >= -1021) {
-	    __HI(y) += (k<<20);	/* add k to y's exponent */
+            u.d = y;
+	    __HI(u) += (k<<20);	/* add k to y's exponent */
+            y = u.d;
 	    return y;
 	} else {
-	    __HI(y) += ((k+1000)<<20);/* add k to y's exponent */
+            u.d = y;
+	    __HI(u) += ((k+1000)<<20);/* add k to y's exponent */
+            y = u.d;
 	    return y*twom1000;
 	}
 }

@@ -89,7 +89,7 @@ include $(topsrcdir)/config/rules.mk
 #
 # Default IEEE libm
 #
-CFLAGS		+= -D_IEEE_LIBM -DGCC_OPT_BUG
+CFLAGS		+= -D_IEEE_LIBM
 
 ifeq ($(OS_ARCH),Linux)
 LDFLAGS		+= -ldl

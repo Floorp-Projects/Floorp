@@ -70,14 +70,17 @@ tiny   = 1.0e-300;
 	double x; int n;
 #endif
 {
+        fd_twoints u;
 	int  k,hx,lx;
-	hx = __HI(x);
-	lx = __LO(x);
+        u.d = x;
+	hx = __HI(u);
+	lx = __LO(u);
         k = (hx&0x7ff00000)>>20;		/* extract exponent */
         if (k==0) {				/* 0 or subnormal x */
             if ((lx|(hx&0x7fffffff))==0) return x; /* +-0 */
-	    x *= two54; 
-	    hx = __HI(x);
+	    x *= two54;
+            u.d = x;
+	    hx = __HI(u);
 	    k = ((hx&0x7ff00000)>>20) - 54; 
             if (n< -50000) return tiny*x; 	/*underflow*/
 	    }
@@ -85,13 +88,15 @@ tiny   = 1.0e-300;
         k = k+n; 
         if (k >  0x7fe) return really_big*fd_copysign(really_big,x); /* overflow  */
         if (k > 0) 				/* normal result */
-	    {__HI(x) = (hx&0x800fffff)|(k<<20); return x;}
+	    {u.d = x; __HI(u) = (hx&0x800fffff)|(k<<20); x = u.d; return x;}
         if (k <= -54) {
             if (n > 50000) 	/* in case integer overflow in n+k */
 		return really_big*fd_copysign(really_big,x);	/*overflow*/
 	    else return tiny*fd_copysign(tiny,x); 	/*underflow*/
         }
         k += 54;				/* subnormal result */
-        __HI(x) = (hx&0x800fffff)|(k<<20);
+        u.d = x;
+        __HI(u) = (hx&0x800fffff)|(k<<20);
+        x = u.d;
         return x*twom54;
 }

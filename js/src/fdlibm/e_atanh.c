@@ -83,15 +83,19 @@ static double zero = 0.0;
 	double t;
 	int hx,ix;
 	unsigned lx;
-	hx = __HI(x);		/* high word */
-	lx = __LO(x);		/* low word */
+        fd_twoints u;
+        u.d = x;
+	hx = __HI(u);		/* high word */
+	lx = __LO(u);		/* low word */
 	ix = hx&0x7fffffff;
 	if ((ix|((lx|(-(int)lx))>>31))>0x3ff00000) /* |x|>1 */
 	    return (x-x)/(x-x);
 	if(ix==0x3ff00000) 
 	    return x/zero;
 	if(ix<0x3e300000&&(really_big+x)>zero) return x;	/* x<2**-28 */
-	__HI(x) = ix;		/* x <- |x| */
+        u.d = x;
+	__HI(u) = ix;		/* x <- |x| */
+        x = u.d;
 	if(ix<0x3fe00000) {		/* x < 0.5 */
 	    t = x+x;
 	    t = 0.5*fd_log1p(t+t*x/(one-x));

@@ -120,11 +120,13 @@ pio2_3t =  8.47842766036889956997e-32; /* 0x397B839A, 0x252049C1 */
 	double x,y[];
 #endif
 {
+        fd_twoints u, ux, uz;
 	double z,w,t,r,fn;
 	double tx[3];
 	int e0,i,j,nx,n,ix,hx;
 
-	hx = __HI(x);		/* high word of x */
+        u.d = x;
+	hx = __HI(u);		/* high word of x */
 	ix = hx&0x7fffffff;
 	if(ix<=0x3fe921fb)   /* |x| ~<= pi/4 , no need for reduction */
 	    {y[0] = x; y[1] = 0; return 0;}
@@ -163,15 +165,17 @@ pio2_3t =  8.47842766036889956997e-32; /* 0x397B839A, 0x252049C1 */
 		y[0] = r-w;	/* quick check no cancellation */
 	    } else {
 	        j  = ix>>20;
-	        y[0] = r-w; 
-	        i = j-(((__HI(y[0]))>>20)&0x7ff);
+	        y[0] = r-w;
+                u.d = y[0];
+	        i = j-(((__HI(u))>>20)&0x7ff);
 	        if(i>16) {  /* 2nd iteration needed, good to 118 */
 		    t  = r;
 		    w  = fn*pio2_2;	
 		    r  = t-w;
 		    w  = fn*pio2_2t-((t-r)-w);	
 		    y[0] = r-w;
-		    i = j-(((__HI(y[0]))>>20)&0x7ff);
+                    u.d = y[0];
+		    i = j-(((__HI(u))>>20)&0x7ff);
 		    if(i>49)  {	/* 3rd iteration need, 151 bits acc */
 		    	t  = r;	/* will cover all possible cases */
 		    	w  = fn*pio2_3;	
@@ -192,9 +196,13 @@ pio2_3t =  8.47842766036889956997e-32; /* 0x397B839A, 0x252049C1 */
 	    y[0]=y[1]=x-x; return 0;
 	}
     /* set z = scalbn(|x|,ilogb(x)-23) */
-	__LO(z) = __LO(x);
+        ux.d = x; uz.d = z;
+	__LO(uz) = __LO(ux);
+        z = uz.d;
 	e0 	= (ix>>20)-1046;	/* e0 = ilogb(z)-23; */
-	__HI(z) = ix - (e0<<20);
+        uz.d = z;
+	__HI(uz) = ix - (e0<<20);
+        z = uz.d;
 	for(i=0;i<2;i++) {
 		tx[i] = (double)((int)(z));
 		z     = (z-tx[i])*two24;

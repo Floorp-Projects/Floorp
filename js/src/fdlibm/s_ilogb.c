@@ -60,10 +60,11 @@
 #endif
 {
 	int hx,lx,ix;
-
-	hx  = (__HI(x))&0x7fffffff;	/* high word of x */
+        fd_twoints u;
+        u.d = x;
+	hx  = (__HI(u))&0x7fffffff;	/* high word of x */
 	if(hx<0x00100000) {
-	    lx = __LO(x);
+	    lx = __LO(u);
 	    if((hx|lx)==0) 
 		return 0x80000001;	/* ilogb(0) = 0x80000001 */
 	    else			/* subnormal x */
