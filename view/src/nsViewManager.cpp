@@ -46,7 +46,15 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
   vm->mFrameRate = 0;
   vm->SetFrameRate(fr);
 //printf("timer composite...\n");
+#ifndef XP_MAC
+	//XXX temporary: The Mac doesn't need the timer to repaint but
+	// obviously this is not the good method to disable the thing.
+	// It's that way for now because the proper solutions
+	// (set UPDATE_QUANTUM to 0, or simply not create the timer)
+	// don't work for now. We'll fix that and then disable the
+	// Mac timers as we should.
   vm->Composite();
+#endif
 }
 
 PRUint32 nsViewManager::mVMCount = 0;
