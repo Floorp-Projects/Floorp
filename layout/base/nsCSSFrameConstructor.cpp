@@ -9839,10 +9839,16 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   return rv;
 }
 
+#ifdef DEBUG
+  // To ensure that the functions below are only called within
+  // |ApplyRenderingChangeToTree|.
+static PRBool gInApplyRenderingChangeToTree = PR_FALSE;
+#endif
+
 static void
-ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
-                           nsIFrame* aFrame,
-                           nsIViewManager* aViewManager);
+DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
+                             nsIFrame* aFrame,
+                             nsIViewManager* aViewManager);
 
 static void
 SyncAndInvalidateView(nsIPresContext* aPresContext,
@@ -9850,6 +9856,9 @@ SyncAndInvalidateView(nsIPresContext* aPresContext,
                       nsIFrame*       aFrame, 
                       nsIViewManager* aViewManager)
 {
+  NS_PRECONDITION(gInApplyRenderingChangeToTree,
+                  "should only be called within ApplyRenderingChangeToTree");
+
   const nsStyleBackground* bg;
   const nsStyleDisplay* disp; 
   const nsStyleVisibility* vis;
@@ -9935,6 +9944,9 @@ static void
 UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame, 
                    nsIViewManager* aViewManager, nsRect& aBoundsRect)
 {
+  NS_PRECONDITION(gInApplyRenderingChangeToTree,
+                  "should only be called within ApplyRenderingChangeToTree");
+
   nsIView* view;
   aFrame->GetView(aPresContext, &view);
 
@@ -9959,7 +9971,7 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
     while (child) {
       nsFrameState  childState;
       child->GetFrameState(&childState);
-      if (NS_FRAME_OUT_OF_FLOW != (childState & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(childState & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         child->GetFrameType(&frameType);
         if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
@@ -9967,7 +9979,7 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
           nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-          ApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager);
+          DoApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager);
         }
         else {  // regular frame
           nsRect  childBounds;
@@ -9987,29 +9999,14 @@ UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame,
 }
 
 static void
-ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
-                           nsIFrame* aFrame,
-                           nsIViewManager* aViewManager)
+DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
+                             nsIFrame* aFrame,
+                             nsIViewManager* aViewManager)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  PRBool isPaintingSuppressed = PR_FALSE;
-  shell->IsPaintingSuppressed(&isPaintingSuppressed);
-  if (isPaintingSuppressed)
-    return; // Don't allow synchronous rendering changes when painting is turned off.
+  NS_PRECONDITION(gInApplyRenderingChangeToTree,
+                  "should only be called within ApplyRenderingChangeToTree");
 
-  nsIViewManager* viewManager = aViewManager;
-
-  // Trigger rendering updates by damaging this frame and any
-  // continuations of this frame.
-
-  // XXX this needs to detect the need for a view due to an opacity change and deal with it...
-
-  if (viewManager) {
-    NS_ADDREF(viewManager); // add local ref
-    viewManager->BeginUpdateViewBatch();
-  }
-  while (nsnull != aFrame) {
+  for ( ; aFrame; aFrame->GetNextInFlow(&aFrame)) {
     // Get the frame's bounding rect
     nsRect invalidRect;
     nsPoint viewOffset;
@@ -10024,18 +10021,8 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     if (! view) { // XXX can view have children outside it?
       aFrame->GetOffsetFromView(aPresContext, viewOffset, &parentView);
       NS_ASSERTION(nsnull != parentView, "no view");
-      if (! viewManager) {
-        parentView->GetViewManager(viewManager);
-        viewManager->BeginUpdateViewBatch();
-      }
     }
-    else {
-      if (! viewManager) {
-        view->GetViewManager(viewManager);
-        viewManager->BeginUpdateViewBatch();
-      }
-    }
-    UpdateViewsForTree(aPresContext, aFrame, viewManager, invalidRect);
+    UpdateViewsForTree(aPresContext, aFrame, aViewManager, invalidRect);
 
     if (! view) { // if frame has view, will already be invalidated
       // XXX Instead of calling this we should really be calling
@@ -10051,16 +10038,61 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
       aFrame->GetOrigin(frameOrigin);
       invalidRect -= frameOrigin;
       invalidRect += viewOffset;
-      viewManager->UpdateView(parentView, invalidRect, NS_VMREFRESH_NO_SYNC);
+      aViewManager->UpdateView(parentView, invalidRect, NS_VMREFRESH_NO_SYNC);
     }
+  }
+}
 
-    aFrame->GetNextInFlow(&aFrame);
+static void
+ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
+                           nsIFrame* aFrame,
+                           nsIViewManager* aViewManager)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  PRBool isPaintingSuppressed = PR_FALSE;
+  shell->IsPaintingSuppressed(&isPaintingSuppressed);
+  if (isPaintingSuppressed)
+    return; // Don't allow synchronous rendering changes when painting is turned off.
+
+  // If the frame's background is propagated to an ancestor, walk up to
+  // that ancestor.
+  const nsStyleBackground *bg;
+  PRBool isCanvas;
+  while (!nsCSSRendering::FindBackground(aPresContext, aFrame,
+                                         &bg, &isCanvas)) {
+    aFrame->GetParent(&aFrame);
+    NS_ASSERTION(aFrame, "root frame must paint");
   }
 
-  if (viewManager) {
-      viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-    NS_RELEASE(viewManager);
+  nsCOMPtr<nsIViewManager> viewManager(aViewManager);
+  if (!viewManager) {
+    nsIView* view = nsnull;
+    aFrame->GetView(aPresContext, &view);
+    if (! view) {
+      nsPoint offset;
+      aFrame->GetOffsetFromView(aPresContext, offset, &view);
+    }
+    NS_ASSERTION(view, "no view");
+    view->GetViewManager(*getter_AddRefs(viewManager));
   }
+
+  // Trigger rendering updates by damaging this frame and any
+  // continuations of this frame.
+
+  // XXX this needs to detect the need for a view due to an opacity change and deal with it...
+
+  viewManager->BeginUpdateViewBatch();
+
+#ifdef DEBUG
+  gInApplyRenderingChangeToTree = PR_TRUE;
+#endif
+  DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager);
+#ifdef DEBUG
+  gInApplyRenderingChangeToTree = PR_FALSE;
+#endif
+
+  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
 nsresult
@@ -10111,6 +10143,21 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv))
       shell->AppendReflowCommand(reflowCmd);
   }
+
+  // If the background of the frame is painted on one of its ancestors,
+  // the reflow might not invalidate correctly.
+  nsIFrame *ancestor = aFrame;
+  const nsStyleBackground *bg;
+  PRBool isCanvas;
+  while (!nsCSSRendering::FindBackground(aPresContext, ancestor,
+                                         &bg, &isCanvas)) {
+    ancestor->GetParent(&ancestor);
+    NS_ASSERTION(ancestor, "canvas must paint");
+  }
+  // This isn't the most efficient way to do it, but it saves code
+  // size and doesn't add much cost compared to the reflow..
+  if (ancestor != aFrame)
+    ApplyRenderingChangeToTree(aPresContext, ancestor, nsnull);
 
   return NS_OK;
 }
@@ -10720,36 +10767,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         case NS_STYLE_HINT_REFLOW:
         case NS_STYLE_HINT_VISUAL:
         case NS_STYLE_HINT_CONTENT:
-          // first check if it is a background change: 
-          // - if it is then we may need to notify the canvas frame
-          //   so it can take care of invalidating the whole canvas
-          if (aAttribute == nsHTMLAtoms::bgcolor ||
-              aAttribute == nsHTMLAtoms::background ||
-              aAttribute == nsHTMLAtoms::style) {
-            // see if the content element is the root (HTML) or BODY element
-            // NOTE: the assumption here is that the background color or image on
-            //       the BODY or HTML element need to have the canvas frame invalidate
-            //       so the entire visible regions gets painted
-            nsCOMPtr<nsIContent> rootContent;
-            nsCOMPtr<nsIContent> parentContent;
-            mDocument->GetRootContent(getter_AddRefs(rootContent));
-            aContent->GetParent(*getter_AddRefs(parentContent));
-            if (aContent == rootContent.get() ||    // content is the root (HTML)
-                parentContent == rootContent ) {    // content's parent is root (BODY)
-              // Walk the frame tree up and find the canvas frame
-              nsIFrame *pCanvasFrameCandidate = nsnull;
-              primaryFrame->GetParent(&pCanvasFrameCandidate);
-              while (pCanvasFrameCandidate) {
-                if (IsCanvasFrame(pCanvasFrameCandidate)) {
-                  pCanvasFrameCandidate->AttributeChanged(aPresContext,aContent,aNameSpaceID,aAttribute,aModType,maxHint);
-                  break;
-                } else {
-                  pCanvasFrameCandidate->GetParent(&pCanvasFrameCandidate);
-                }
-              }
-            }
-          }
-
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, maxHint);
 
