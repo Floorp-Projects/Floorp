@@ -54,10 +54,6 @@ titledbutton#allEngines {
   margin-right: 12px;
 }
 
-treecol[sortActive="true"] {
- background-color: lightgray;
-}
-
 titledbutton.engine[loading="true"] {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
