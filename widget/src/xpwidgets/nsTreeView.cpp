@@ -227,7 +227,7 @@ nsEventStatus nsTreeView::HandleEvent(nsGUIEvent *aEvent)
 	  mMouseDown = PR_TRUE; // We could potentially initiate a drag. Don't kick it off until
 							// we know for sure.
   }
-  else if (aEvent->message = NS_MOUSE_LEFT_BUTTON_UP)
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
   {
 	  if (mMouseDown)
 	  {
@@ -437,7 +437,7 @@ void nsTreeView::PaintColumnBar(nsIRenderingContext* drawCtx,
 		// The very first step is to find out exactly how tall the column
 		// bar needs to be given the font being used.
 		
-		BOOL needToResizeColumns = FALSE;
+		PRBool needToResizeColumns = FALSE;
 		if (mDataModel->ShowColumnHeaders() && mColumnBarRect == nsRect(0,0,0,0))
 		{
 			// Column sizes haven't been properly computed yet. Let's make
