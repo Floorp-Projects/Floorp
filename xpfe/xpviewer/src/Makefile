@@ -139,12 +139,6 @@ EX_LIBS += \
 	$(NULL)
 endif
 
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
-EX_LIBS += \
-	-lpwcac \
-	$(NULL)
-endif
-
 PROGS = $(OBJDIR)/xpviewer
 
 TARGETS = $(PROGS)
