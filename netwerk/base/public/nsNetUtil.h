@@ -182,7 +182,7 @@ NS_NewChannel(nsIChannel           **result,
 
 // Use this function with CAUTION. It creates a stream that blocks when you
 // Read() from it and blocking the UI thread is a bad idea. If you don't want
-// to implement a full blown asyncrhonous consumer (via nsIStreamListener) look
+// to implement a full blown asynchronous consumer (via nsIStreamListener) look
 // at nsIStreamLoader instead.
 inline nsresult
 NS_OpenURI(nsIInputStream       **result,
