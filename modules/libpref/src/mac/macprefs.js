@@ -53,9 +53,9 @@ pref("mail.server_type_on_restart",         -1);
 
 // default font name (in UTF8)
 
-pref("font.name.serif.ar", "???? ?????");
-pref("font.name.sans-serif.ar", "??????");
-pref("font.name.monospace.ar", "????");
+pref("font.name.serif.ar", "ثلث‮ ‬أبيض");
+pref("font.name.sans-serif.ar", "البيان");
+pref("font.name.monospace.ar", "جيزة");
 pref("font.name.cursive.ar", "XXX.cursive");
 pref("font.name.fantasy.ar", "XXX.fantasy");
 
@@ -65,15 +65,15 @@ pref("font.name.monospace.el", "Courier GR");
 pref("font.name.cursive.el", "XXX.cursive");
 pref("font.name.fantasy.el", "XXX.fantasy");
 
-pref("font.name.serif.he", "??????? ????");
-pref("font.name.sans-serif.he", "?????");
-pref("font.name.monospace.he", "?????");
+pref("font.name.serif.he", "פנינים‮ ‬חדש");
+pref("font.name.sans-serif.he", "אריאל");
+pref("font.name.monospace.he", "אריאל");
 pref("font.name.cursive.he", "XXX.cursive");
 pref("font.name.fantasy.he", "XXX.fantasy");
 
-pref("font.name.serif.ja", "????"); 
-pref("font.name.sans-serif.ja", "???????"); 
-pref("font.name.monospace.ja", "Osaka???"); 
+pref("font.name.serif.ja", "平成明朝"); 
+pref("font.name.sans-serif.ja", "平成角ゴシック"); 
+pref("font.name.monospace.ja", "Osaka−等幅"); 
 pref("font.name.cursive.ja", "XXX.cursive");
 pref("font.name.fantasy.ja", "XXX.fantasy");
 
@@ -191,4 +191,3 @@ pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 // This indicates whether it should use the native dialog or the XP Dialog
 pref("print.use_native_print_dialog", true);
 
-pref("browser.downloadmanager.behavior", 1);
