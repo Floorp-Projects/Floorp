@@ -797,7 +797,8 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Local handling stage
-  if (mListenerManager &&
+  if ((aEvent->message != NS_BLUR_CONTENT || !GetBlurSuppression()) &&
+      mListenerManager &&
       !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags && NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags))) {
     aEvent->flags |= aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this,
@@ -3345,6 +3346,17 @@ GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
   (*aDest)[destLen + destLen2] = '\0';
 
   return result;
+}
+
+PRBool
+GlobalWindowImpl::GetBlurSuppression()
+{
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+  PRBool suppress = PR_FALSE;
+  if (treeOwnerAsWin)
+    treeOwnerAsWin->GetBlurSuppression(&suppress);
+  return suppress;
 }
 
 NS_IMETHODIMP

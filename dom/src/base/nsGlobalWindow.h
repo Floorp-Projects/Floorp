@@ -260,6 +260,8 @@ protected:
 
   nsresult ConvertCharset(const nsAString& aStr, char** aDest);
 
+  PRBool   GetBlurSuppression();
+
 protected:
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
