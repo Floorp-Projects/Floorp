@@ -44,7 +44,7 @@ my %clustered;        # strongly connected components.
 my %deps;
 my %toplevel_modules; # visited components.
 
-my $debug = 10;
+my $debug = 0;
 
 my $makecommand;
 
