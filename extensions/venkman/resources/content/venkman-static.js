@@ -578,7 +578,8 @@ function init()
                  MT_WARN);
     }
 
-    console.initialized = true;
+    // Delay being "done" until the window is up.
+    setTimeout(initPost, 100);
 
     if (console.prefs["saveSettingsOnExit"])
     {
@@ -589,6 +590,11 @@ function init()
     dispatch ("hook-venkman-started");
 
     dd ("}");
+}
+
+function initPost()
+{
+    console.initialized = true;
 }
 
 function destroy ()
