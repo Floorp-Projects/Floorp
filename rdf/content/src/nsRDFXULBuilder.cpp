@@ -2013,6 +2013,7 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
         case kNameSpaceID_HTML:
         case kNameSpaceID_None:
         case kNameSpaceID_Unknown:
+				case kNameSpaceID_XMLNS:
             break;
 
         default:
