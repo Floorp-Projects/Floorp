@@ -81,6 +81,8 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
   if (NS_SUCCEEDED(rv)) 
     result = localPath;
 
+  if (localPath) PL_strfree(localPath);
+  
   return rv;
 }
 

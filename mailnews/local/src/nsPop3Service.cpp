@@ -143,6 +143,9 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 			protocol->LoadUrl(pop3Url);
 		} // if pop server 
 	}
+    if (popPassword) PL_strfree(popPassword);
+    if (userName) PL_strfree(userName);
+    if (popHost) PL_strfree(popHost);
 
 	if (aURL && pop3Url) // we already have a ref count on pop3url...
 	{
