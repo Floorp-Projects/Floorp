@@ -287,8 +287,8 @@
     </popup>
 
     <popup id="contentAreaContextMenu"
-           onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
-           onpopuphiding="gContextMenu = null;">
+           onpopupshowing="if (event.target != this) return true; gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
+           onpopuphiding="if (event.target == this) gContextMenu = null;">
       <menuitem id="context-openlink"
                 label="&openLinkCmd.label;"
                 accesskey="&openLinkCmd.accesskey;"
