@@ -350,7 +350,7 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_SAVE_DOC_PROMPT     "Do you want to save changes to\n%1"
+    IDS_SAVE_DOC_PROMPT     "Do you want to save changes to\n%1?"
     IDS_SAVE_HTTP_PROMPT    "Local version of\n%1\nhas been changed.\nDo you want to save to a local file?"
 END
 
