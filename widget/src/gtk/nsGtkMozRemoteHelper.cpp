@@ -219,7 +219,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   origString = nsCRT::strdup(aCommand);
   
   // check to make sure that was allocated properly
-  if (!origString)
+  if ((char *)origString)
   {
     // hey, this might fail to.  but that's ok, the caller will handle
     // it if it is null anyway.
@@ -417,7 +417,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
       PRUint32 indexRet = 0;
       nsCString lastCommand;
       FindLastInList(commandString, lastCommand, &indexRet);
-      if (lastCommand)
+      if ((char *)lastCommand)
       {
 	nsCAutoString title = lastCommand;
 	commandString.Truncate(indexRet);
