@@ -60,9 +60,10 @@ public:
   NS_DECL_NSIACCESSIBLETREECACHE
 
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
-  virtual ~nsXULTreeAccessible();
+  virtual ~nsXULTreeAccessible() {};
 
   /* ----- nsIAccessible ----- */
+  NS_IMETHOD Shutdown();
   NS_IMETHOD GetRole(PRUint32 *_retval);
   NS_IMETHOD GetState(PRUint32 *_retval);
   NS_IMETHOD GetValue(nsAString& _retval);
