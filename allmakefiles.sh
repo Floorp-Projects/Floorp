@@ -475,6 +475,7 @@ xpfe/browser/resources/skin/Makefile
 xpfe/global/Makefile
 xpfe/global/resources/Makefile
 xpfe/global/resources/skin/Makefile
+xpfe/global/resources/content/Makefile
 
 # xpfe/browser/public/Makefile
 END_NGMAKEFILES
