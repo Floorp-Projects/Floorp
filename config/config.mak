@@ -301,7 +301,9 @@ SPLITSYM = $(MOZ_TOOLS)\bin\splitsym
 !endif
 
 # use find
-FIND = $(MOZ_TOOLS)\bin\find.exe
+!ifndef FIND
+FIND = find.exe
+!endif
 
 MASM = $(MOZ_TOOLS)\bin\ml.exe
 
