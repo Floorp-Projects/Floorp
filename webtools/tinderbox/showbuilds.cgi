@@ -512,7 +512,7 @@ if( parseInt(navigator.appVersion) < 4 ){
 }
 
 function js_who_menu(tree,n,d,mindate,maxdate) {
-    who_link = "../registry/who.cgi?email=" + escape(n)
+    var who_link = "../registry/who.cgi?email=" + escape(n)
         + "&t0=" + escape("Last check-in")
         + "&u0=" + escape(js_qr(tree,mindate,maxdate,n))
         + "&t1=" + escape("Check-ins within 24 hours")
@@ -523,7 +523,7 @@ function js_who_menu(tree,n,d,mindate,maxdate) {
        return false;
     }
 
-    l = document.layers['popup'];
+    var l = document.layers['popup'];
     l.src = who_link;
 ENDJS
     #l.document.write(
@@ -553,7 +553,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
         return true;
     }
 
-    l = document.layers['popup'];
+    var l = document.layers['popup'];
     l.document.write(
         "<table border=1 cellspacing=1><tr><td>" + 
         note[noteid] + 
@@ -561,7 +561,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
     l.document.close();
 
     l.top = d.y-10;
-    zz = d.x;
+    var zz = d.x;
     if( zz + l.clip.right > window.innerWidth ){
         zz = (window.innerWidth-30) - l.clip.right;
         if( zz < 0 ){
@@ -574,7 +574,7 @@ function js_what_menu(d,noteid,logfile,errorparser,buildname,buildtime) {
 }
 
 note = new Array();
-tree = new Array();
+trees = new Array();
 build = new Array();
 error = new Array();
 
@@ -589,27 +589,27 @@ error = new Array();
 <SCRIPT>
 function log_popup(e,buildindex,logfile,buildtime)
 {
-    tree = tree[buildindex];
-    buildname = build[buildindex];
-    errorparser = error[buildindex];
+    var tree = trees[buildindex];
+    var buildname = build[buildindex];
+    var errorparser = error[buildindex];
 
-    urlparams = "tree=" + tree
+    var urlparams = "tree=" + tree
            + "&errorparser=" + errorparser
 	   + "&buildname=" + escape(buildname)
            + "&buildtime=" + buildtime
            + "&logfile=" + logfile;
-    logurl = "showlog.cgi?" + urlparams;
-    commenturl = "addnote.cgi?" + urlparams;
+    var logurl = "showlog.cgi?" + urlparams;
+    var commenturl = "addnote.cgi?" + urlparams;
 
     if( parseInt(navigator.appVersion) < 4 ){
       document.location = logurl;
       return false;
     }
 
-    q = document.layers["logpopup"];
+    var q = document.layers["logpopup"];
     q.top = e.target.y - 6;
 
-    yy = e.target.x;
+    var yy = e.target.x;
     if( yy + q.clip.right > window.innerWidth ){
         yy = (window.innerWidth-30) - q.clip.right;
         if( yy < 0 ){
@@ -675,7 +675,7 @@ while ($ii <= $name_count) {
   if (defined($br = $build_table->[1][$ii])) {
     if ($br != -1) {
       $bn = $build_name_names->[$ii];
-      $script_str .= " tree[$ii]='$br->{td}{name}';\n";
+      $script_str .= "trees[$ii]='$br->{td}{name}';\n";
       $script_str .= "build[$ii]='$bn';\n";
       $script_str .= "error[$ii]='$br->{errorparser}';\n";
     }
