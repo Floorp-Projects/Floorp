@@ -618,6 +618,8 @@
           // We want to autocomplete only if the user is editing at the end of the text
           if (this.mInputElt.selectionEnd >= this.mInputElt.value.length)
             this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
+          else
+            this.noMatch = true;
         ]]></body>
       </method>
 
