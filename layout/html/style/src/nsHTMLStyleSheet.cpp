@@ -605,6 +605,7 @@ public:
                            nsIContent* aParentContent,
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
+                           nsICSSPseudoComparator* aComparator,
                            nsISupportsArray* aResults);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
@@ -958,6 +959,7 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                   nsIContent* aParentContent,
                                   nsIAtom* aPseudoTag,
                                   nsIStyleContext* aParentContext,
+                                  nsICSSPseudoComparator* aComparator,
                                   nsISupportsArray* aResults)
 {
   // no pseudo frame style
