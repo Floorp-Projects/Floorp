@@ -623,7 +623,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
   return NS_OK; 
 }
 
-NS_IMETHODIMP
+nsresult
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
   nsCOMPtr<nsIDocument> document;
@@ -676,7 +676,7 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult)
 {
   *aResult = nsnull;
@@ -803,7 +803,7 @@ nsXBLService::FlushMemory()
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsXBLService::GetBinding(nsIContent* aBoundElement, 
+nsresult nsXBLService::GetBinding(nsIContent* aBoundElement, 
                                        const nsCString& aURLStr, 
                                        nsIXBLBinding** aResult)
 {
@@ -1086,34 +1086,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
   return NS_OK;
 }
 
-// Helper method for loading an XML doc.
-NS_IMETHODIMP
-nsXBLService::FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult)
-{
-  *aResult = nsnull;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsISyncLoadDOMService> loader =
-    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(domDoc));
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
-      return NS_OK;
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The document is parsed. We now have a prototype document.
-  // Everything worked, so we can just hand this back now.
-
-  return CallQueryInterface(domDoc, aResult);
-}
-  
-NS_IMETHODIMP
+nsresult
 nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
                                    nsIURI* aURI, const nsCString& aRef, 
                                    PRBool aForceSyncLoad, nsIDocument** aResult)

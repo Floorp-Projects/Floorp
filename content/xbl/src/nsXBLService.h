@@ -60,7 +60,9 @@ class nsSupportsHashtable;
 class nsHashtable;
 class nsIXULPrototypeCache;
 
-class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupportsWeakReference
+class nsXBLService : public nsIXBLService,
+                     public nsIObserver,
+                     public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
 
@@ -69,19 +71,11 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
   NS_IMETHOD LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool aAugmentFlag,
                           nsIXBLBinding** aBinding, PRBool* aResolveStyle);
 
-  // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
-
   // Indicates whether or not a binding is fully loaded.
   NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady);
 
-  // This function clears out the bindings on a given content node.
-  NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
-
   // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
-
-  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
   NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
@@ -92,22 +86,27 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
   NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement);
   NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement);
 
-  // Helper method for loading an XML doc.
-  NS_IMETHOD FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult);
-  
   NS_DECL_NSIOBSERVER
 
 public:
   nsXBLService();
   virtual ~nsXBLService();
 
+  // This function clears out the bindings on a given content node.
+  nsresult FlushStyleBindings(nsIContent* aContent);
+
+  // This method loads a binding doc and then builds the specific binding required.
+  nsresult GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
+
   // Release any memory that we can
   nsresult FlushMemory();
   
   // This method synchronously loads and parses an XBL file.
-  NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                  nsIURI* aURI, const nsCString& aRef, 
-                                  PRBool aForceSyncLoad, nsIDocument** aResult);
+  nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
+                                nsIURI* aURI, const nsCString& aRef, 
+                                PRBool aForceSyncLoad, nsIDocument** aResult);
+
+  nsresult GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
 
   // This method loads a binding doc and then builds the specific binding required.  It
   // can also peek without building.
