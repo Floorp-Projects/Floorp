@@ -3431,7 +3431,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             jsdouble d;
             int32 i;
 
-            /* Operate on one numeric constants. */
+            /* Operate on one numeric constant. */
             d = pn1->pn_dval;
             switch (pn->pn_op) {
               case JSOP_BITNOT:
