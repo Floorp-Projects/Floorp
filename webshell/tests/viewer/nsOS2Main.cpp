@@ -16,6 +16,17 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 04/05/2000  IBM Corp.       Fixed undefined identifier.
+ *                              
  *
  */
 
@@ -27,6 +38,9 @@
 #include "nsBrowserWindow.h"
 #include "nsIAppShell.h"
 #include "resources.h"
+
+   // OS2TODO
+#define IDM_VIEWERBAR  40990
 
 nsNativeBrowserWindow::nsNativeBrowserWindow() {}
 nsNativeBrowserWindow::~nsNativeBrowserWindow() {}
