@@ -56,6 +56,9 @@
 #include "nsIXULPrototypeCache.h"
 #endif
 
+#include "nsIDOMMediaList.h"
+#include "nsIDOMStyleSheet.h"
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class CSSLoaderImpl;
@@ -137,7 +140,8 @@ public:
                 nsICSSLoaderObserver* aObserver);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, const nsString& aMedia,
                 PRInt32 aDefaultNameSpaceID,
-                nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
+                nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex,
+                nsICSSImportRule* aParentRule);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                 nsICSSLoaderObserver* aObserver);
 
@@ -156,6 +160,7 @@ public:
   PRBool          mDidBlockParser;
 
   nsICSSStyleSheet* mParentSheet;
+  nsICSSImportRule* mParentRule;
 
   SheetLoadData*  mNext;
   SheetLoadData*  mParentData;
@@ -245,7 +250,8 @@ public:
                             nsIURI* aURL, 
                             const nsString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
-                            PRInt32 aIndex);
+                            PRInt32 aIndex,
+                            nsICSSImportRule* aRule);
 
   NS_IMETHOD LoadAgentSheet(nsIURI* aURL, 
                             nsICSSStyleSheet*& aSheet,
@@ -345,6 +351,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mParserToUnblock(aParserToUnblock),
     mDidBlockParser(PR_FALSE),
     mParentSheet(nsnull),
+    mParentRule(nsnull),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
@@ -364,7 +371,9 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              const nsString& aMedia, 
                              PRInt32 aDefaultNameSpaceID,
-                             nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex)
+                             nsICSSStyleSheet* aParentSheet,
+                             PRInt32 aSheetIndex,
+                             nsICSSImportRule* aParentRule)
   : mLoader(aLoader),
     mURL(aURL),
     mTitle(),
@@ -375,6 +384,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mParserToUnblock(nsnull),
     mDidBlockParser(PR_FALSE),
     mParentSheet(aParentSheet),
+    mParentRule(aParentRule),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
@@ -387,6 +397,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_ADDREF(mParentSheet);
+  NS_ADDREF(mParentRule);
 }
 
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
@@ -401,6 +412,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mParserToUnblock(nsnull),
     mDidBlockParser(PR_FALSE),
     mParentSheet(nsnull),
+    mParentRule(nsnull),
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
@@ -423,6 +435,7 @@ SheetLoadData::~SheetLoadData(void)
   NS_IF_RELEASE(mOwningElement);
   NS_IF_RELEASE(mParserToUnblock);
   NS_IF_RELEASE(mParentSheet);
+  NS_IF_RELEASE(mParentRule);
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mNext);
 }
@@ -797,6 +810,9 @@ CSSLoaderImpl::SheetComplete(nsICSSStyleSheet* aSheet, SheetLoadData* aLoadData)
     PrepareSheet(aSheet, data->mTitle, data->mMedia);
     if (data->mParentSheet) { // is child sheet
       InsertChildSheet(aSheet, data->mParentSheet, data->mSheetIndex);
+      if (data->mParentRule) { // we have the @import rule that loaded this sheet
+        data->mParentRule->SetSheet(aSheet);        
+      }
     }
     else if (data->mIsAgent) {  // is agent sheet
       if (data->mObserver) {
@@ -1409,7 +1425,8 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
                               nsIURI* aURL, 
                               const nsString& aMedia,
                               PRInt32 aDefaultNameSpaceID,
-                              PRInt32 aIndex)
+                              PRInt32 aIndex,
+                              nsICSSImportRule* aParentRule)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
 
@@ -1445,13 +1462,16 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
         result = SetMedia(clone, aMedia);
         if (NS_SUCCEEDED(result)) {
           result = InsertChildSheet(clone, aParentSheet, aIndex);
+          if (NS_SUCCEEDED(result) && aParentRule) {
+            aParentRule->SetSheet(clone);
+          }
         }
         NS_RELEASE(clone);
       }
     }
     else {
       SheetLoadData* data = new SheetLoadData(this, aURL, aMedia, aDefaultNameSpaceID,
-                                              aParentSheet, aIndex);
+                                              aParentSheet, aIndex, aParentRule);
       if (data == nsnull) {
         result = NS_ERROR_OUT_OF_MEMORY;
       }

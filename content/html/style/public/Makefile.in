@@ -37,6 +37,7 @@ EXPORTS		= \
 		nsIComputedDOMStyle.h \
     nsIRuleNode.h \
     nsIRuleWalker.h \
+		nsIMediaList.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

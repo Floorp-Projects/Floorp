@@ -25,6 +25,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsAReadableString.h"
+#include "nsICSSImportRule.h"
 
 class nsIAtom;
 class nsString;
@@ -95,7 +96,8 @@ public:
                             nsIURI* aURL, 
                             const nsString& aMedia,
                             PRInt32 aDefaultNameSpaceID,
-                            PRInt32 aSheetIndex) = 0;
+                            PRInt32 aSheetIndex,
+                            nsICSSImportRule* aRule) = 0;
 
   // Load a user agent or user sheet immediately
   // (note that @imports mayl come in asynchronously)

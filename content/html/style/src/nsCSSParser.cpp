@@ -959,21 +959,18 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 
 PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia)
 {
-  PRBool result = PR_FALSE;
-
-  nsICSSImportRule* rule = nsnull;
-  NS_NewCSSImportRule(&rule, aURLSpec, aMedia);
+  nsCOMPtr<nsICSSImportRule> rule;
+  NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
   if (rule) {
     AppendRule(rule);
-    NS_RELEASE(rule);
   }
 
   if (mChildLoader) {
     // XXX probably need a way to encode unicode junk for the part of
     // the url that follows a "?"
-    nsIURI* url;
+    nsCOMPtr<nsIURI> url;
     // XXX need to have nsILoadGroup passed in here
-    aErrorCode = NS_NewURI(&url, aURLSpec, mURL/*, group*/);
+    aErrorCode = NS_NewURI(getter_AddRefs(url), aURLSpec, mURL/*, group*/);
 
     if (NS_FAILED(aErrorCode)) {
       // import url is bad
@@ -984,12 +981,11 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     PRBool bContains = PR_FALSE;
     if (NS_SUCCEEDED(mSheet->ContainsStyleSheet(url,bContains)) && 
         bContains != PR_TRUE ) { // don't allow circular references
-      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, mChildSheetCount++);
+      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, mChildSheetCount++, rule);
     }
-    NS_RELEASE(url);
   }
   
-  return result;
+  return PR_TRUE;
 }
 
 // Parse a CSS2 media rule: "@media medium [, medium] { ... }"

@@ -24,7 +24,7 @@
 
 #include "nslayout.h"
 #include "nsICSSRule.h"
-//#include "nsString.h"
+#include "nsString.h"
 
 class nsIAtom;
 class nsIURI;
@@ -42,6 +42,8 @@ public:
 
   NS_IMETHOD SetMedia(const nsString& aMedia) = 0;
   NS_IMETHOD GetMedia(nsString& aMedia) const = 0;
+
+  NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
 };
 
 extern NS_HTML nsresult

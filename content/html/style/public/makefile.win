@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\.. 
 
-EXPORTS=nsICSSLoader.h nsICSSParser.h nsICSSPseudoComparator.h nsICSSStyleSheet.h nsICSSLoaderObserver.h nsIComputedDOMStyle.h nsIRuleNode.h nsIRuleWalker.h
+EXPORTS=nsICSSLoader.h nsICSSParser.h nsICSSPseudoComparator.h nsICSSStyleSheet.h nsICSSLoaderObserver.h nsIComputedDOMStyle.h nsIRuleNode.h nsIRuleWalker.h nsIMediaList.h
 MODULE=raptor 
 
 include <$(DEPTH)\config\rules.mak>

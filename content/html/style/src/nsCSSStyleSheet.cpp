@@ -36,6 +36,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsICSSMediaRule.h"
+#include "nsIMediaList.h"
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -903,7 +904,7 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 }
 
 class DOMMediaListImpl : public nsIDOMMediaList,
-                         public nsISupportsArray
+                         public nsIMediaList
 {
   NS_DECL_ISUPPORTS
 
@@ -931,10 +932,10 @@ private:
   CSSStyleSheetImpl*         mStyleSheet;
 };
 
-
-// QueryInterface implementation for CSSStyleRuleImpl
+// QueryInterface implementation for DOMMediaListImpl
 NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
+  NS_INTERFACE_MAP_ENTRY(nsIMediaList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MediaList)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
@@ -956,6 +957,29 @@ DOMMediaListImpl::DOMMediaListImpl(nsISupportsArray *aArray,
 
 DOMMediaListImpl::~DOMMediaListImpl()
 {
+}
+
+nsresult
+NS_NewMediaList(nsIMediaList** aInstancePtrResult) {
+  return NS_NewMediaList(aInstancePtrResult, NS_LITERAL_STRING(""));
+}
+
+nsresult
+NS_NewMediaList(nsIMediaList** aInstancePtrResult, const nsAReadableString& aMediaText) {
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  nsCOMPtr<nsISupportsArray> array;
+  rv = NS_NewISupportsArray(getter_AddRefs(array));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  DOMMediaListImpl* medialist = new DOMMediaListImpl(array, nsnull);
+  NS_ENSURE_TRUE(medialist, NS_ERROR_OUT_OF_MEMORY);
+  rv = medialist->SetMediaText(aMediaText);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aInstancePtrResult = medialist;
+  NS_ADDREF(*aInstancePtrResult);
 }
 
 NS_IMETHODIMP
@@ -1728,6 +1752,11 @@ CSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
       return NS_OK;
     }
     if (-1 != mMedia->IndexOf(nsLayoutAtoms::all)) {
+      return NS_OK;
+    }
+    PRUint32 count;
+    mMedia->Count(&count);
+    if (count == 0) { // equivalent to having a medium of "all"
       return NS_OK;
     }
     return NS_COMFALSE;
