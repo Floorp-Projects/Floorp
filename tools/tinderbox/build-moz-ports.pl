@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.28 $';
+$Version = '$Revision: 1.29 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -65,7 +65,6 @@ sub SetupEnv {
     umask(0);
     $ENV{"CVSROOT"} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
     $ENV{"DISPLAY"} = $DisplayServer;
-    $ENV{"LD_LIBRARY_PATH"} = $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
     $ENV{"TMPDIR"} = '.';
 
     if ( $OS eq 'AIX' ) {
@@ -123,7 +122,7 @@ sub SetupEnv {
 	$Compiler = 'cc/CC';
 	$NSPRArgs .= 'NS_USE_NATIVE=1';
 	if ( $OSVerMajor eq '6' ) {
-	    $NSPRArgs .= ' USE_PTHREADS=1';
+	    $NSPRArgs .= ' USE_PTHREADS=1 USE_N32=1';
 	    $ConfigureEnvArgs .= ' CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
 	}
     }
@@ -142,8 +141,6 @@ sub SetupEnv {
 
     if ( $OS eq 'OpenServer' ) {
 	$ENV{'PATH'} = $BaseDir . '/' . $DirName . '/mozilla/build:/usr/local/bin:' . $ENV{'PATH'};
-	$ConfigureEnvArgs = 'CC="cc -belf" CXX="hcpp CC -belf +w" LIBS="-lPW"';
-	$Compiler = 'cc/CC (wrapped)';
 	$NSPRArgs .= 'NS_USE_NATIVE=1';
     }
 
@@ -209,7 +206,7 @@ sub SetupEnv {
 }
 
 sub FinalizeLDLibPath {
-    $ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $ENV{'LD_LIBRARY_PATH'};
+    $ENV{"LD_LIBRARY_PATH"} = $BaseDir . '/' . $DirName . '/mozilla/' . $BuildObjName . '/dist/bin:' . $NSPRDir . '/lib:/usr/lib/png:/usr/local/lib';
 
     if ( $OS eq 'HP-UX' ) {
 	$ENV{'LPATH'} = '/usr/lib:' . $ENV{'LD_LIBRARY_PATH'} . ':/builds/local/lib';
