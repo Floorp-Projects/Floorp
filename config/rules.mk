@@ -287,19 +287,22 @@ TARGETS			+= tweak_nspr
 # Using these rules insures that 'make' will have only one process
 # create the directories.
 #
+MAKE_DIRS =
+
 ifdef MDDEPDIR
 $(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; fi
+
+ifdef OBJS
+MAKE_DIRS += $(MDDEPDIR)
+endif
 endif
 
-ifeq "$(OBJDIR)" "."
-# No need to make the current directory, "."
-MAKE_DIRS := $(MDDEPDIR)
-else
+ifneq "$(OBJDIR)" "."
 $(OBJDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; fi
 
-MAKE_DIRS := $(OBJDIR) $(MDDEPDIR)
+MAKE_DIRS += $(OBJDIR)
 endif
 
 
@@ -332,11 +335,12 @@ $(NFSPWD):
 	cd $(@D); $(MAKE) $(@F)
 endif
 
-export::
+
+export:: $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 ifndef LIBS_NEQ_INSTALL
-libs install:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+libs install:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
@@ -362,7 +366,7 @@ ifdef SIMPLE_PROGRAMS
 endif
 	+$(LOOP_OVER_DIRS)
 else
-libs:: $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
+libs:: $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
@@ -432,7 +436,7 @@ endif
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS) $(MAKE_DIRS)
+$(PROGRAM): $(PROGOBJS)
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
@@ -456,7 +460,7 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 #
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(MAKE_DIRS)
+$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
@@ -496,7 +500,7 @@ AR_EXTRACT	:= ar x
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
 endif
 
-$(LIBRARY): $(OBJS) $(LOBJS) $(MAKE_DIRS)
+$(LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
@@ -507,12 +511,12 @@ endif
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 else
 ifdef OS2_IMPLIB
-$(LIBRARY): $(OBJS) $(DEF_FILE) $(MAKE_DIRS)
+$(LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 else
-$(LIBRARY): $(OBJS) $(MAKE_DIRS)
+$(LIBRARY): $(OBJS)
 	rm -f $@
 	$(AR) $(LIBOBJS),,
 	$(RANLIB) $@
@@ -520,19 +524,19 @@ endif
 endif
 
 ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(MAKE_DIRS)
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 	chmod +x $@
 else
-$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) $(MAKE_DIRS)
+$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
 endif
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-$(DLL): $(OBJS) $(EXTRA_LIBS) $(MAKE_DIRS)
+$(DLL): $(OBJS) $(EXTRA_LIBS)
 	rm -f $@
 ifeq ($(OS_ARCH),OS2)
 	$(LINK_DLL) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
@@ -541,14 +545,14 @@ else
 endif
 endif
 
-$(OBJDIR)/%: %.c $(MAKE_DIRS)
+$(OBJDIR)/%: %.c
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-$(OBJDIR)/%.o: %.c $(MAKE_DIRS)
+$(OBJDIR)/%.o: %.c
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -557,23 +561,22 @@ endif
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-$(OBJDIR)/%.o: %.s $(MAKE_DIRS)
+$(OBJDIR)/%.o: %.s
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 
-$(OBJDIR)/%.o: %.S $(MAKE_DIRS)
+$(OBJDIR)/%.o: %.S
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-$(OBJDIR)/%: %.cpp $(MAKE_DIRS)
+$(OBJDIR)/%: %.cpp
 	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
-$(OBJDIR)/%.o: %.cc $(MAKE_DIRS)
-	@$(MAKE_OBJDIR)
+$(OBJDIR)/%.o: %.cc
 	$(CCC) -o $@ -c $(CXXFLAGS) $<
 
-$(OBJDIR)/%.o: %.cpp $(MAKE_DIRS)
+$(OBJDIR)/%.o: %.cpp
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
 	$(CCC) -o $@ -c $(CXXFLAGS) $(OBJDIR)/t_$*.cc
@@ -863,7 +866,7 @@ $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-$(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c $(MAKE_DIRS)
+$(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
 ifeq ($(OS_ARCH),OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
 else
@@ -1005,8 +1008,6 @@ ifdef PERL
 # The script has an advantage over including the *.pp files directly
 # because it handles missing header files. 'make' would complain that
 # there is no way to build missing headers.
-#foo := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
-#        >$(MDDEPDIR)/.all.pp)
 $(MDDEPDIR)/.all.pp: $(MDDEPEND_FILES)
 	@$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) >$@
 -include $(MDDEPDIR)/.all.pp
