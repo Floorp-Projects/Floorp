@@ -478,7 +478,6 @@ nsDNSService::Lookup(nsISupports*    clientContext,
                      nsIRequest*     *DNSRequest)
 {
     nsresult	rv, result = NS_OK;
-    nsISupports* ctxt = nsnull;
 
     //    initateLookupNeeded = false;
     //    lock dns service
@@ -530,7 +529,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     if (!hostentry)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = listener->OnStartLookup(ctxt, hostName);
+    rv = listener->OnStartLookup(clientContext, hostName);
 	
     PRBool numeric = PR_TRUE;
     for (const char *hostCheck = hostName; *hostCheck; hostCheck++) {
@@ -593,7 +592,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     }
     
     if (PR_SUCCESS == status) {
-        rv = listener->OnFound(ctxt, hostName, hostentry);
+        rv = listener->OnFound(clientContext, hostName, hostentry);
         result = NS_OK;
     }
     else {
@@ -603,7 +602,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     //      listener does not need to copy it...
     delete hostentry;
 	
-    rv = listener->OnStopLookup(ctxt, hostName, result);
+    rv = listener->OnStopLookup(clientContext, hostName, result);
 	
     return result;
 #endif
