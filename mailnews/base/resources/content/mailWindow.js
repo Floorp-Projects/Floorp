@@ -215,8 +215,8 @@ nsMsgStatusFeedback.prototype =
         gStatusText = document.getElementById("statusText");
        if ( statusText == "" )
           statusText = defaultStatus;
-       gStatusText.value = statusText;
-            // .setAttribute( "value", statusText );
+       //gStatusText.value = statusText;
+        gStatusText.setAttribute( "value", statusText );
 		},
 	StartMeteors : function()
 		{

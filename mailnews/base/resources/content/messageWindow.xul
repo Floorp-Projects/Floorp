@@ -75,7 +75,7 @@ Rights Reserved.
 			<spring flex="100%"/>
 		</box>
 
-		<titledbutton id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>       
+		<text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>       
 	</box>
 	<toolbar id="taskbar"/>
 
