@@ -123,6 +123,12 @@ public:
    */
   nsresult  InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame);
 
+  
+  /**
+   * Get the total height of all the row rects
+   */
+  NS_METHOD GetHeightOfRows(nscoord& aResult);
+  
 protected:
 
   /** implement abstract method on nsHTMLContainerFrame */

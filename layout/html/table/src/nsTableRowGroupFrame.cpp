@@ -1294,6 +1294,31 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
   return result;
 }
 
+NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)
+{
+  // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
+  // and the rowgroup itself needs to be expanded by SUM(row height deltas)
+  nsIFrame * rowFrame=nsnull;
+  nsresult rv = FirstChild(nsnull, &rowFrame);
+  while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
+    { 
+      nsRect rowRect;
+      rowFrame->GetRect(rowRect);
+      aResult += rowRect.height;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay)
+    {
+      ((nsTableRowGroupFrame*)rowFrame)->GetHeightOfRows(aResult);
+    }
+    rowFrame->GetNextSibling(&rowFrame);
+  }
+  return NS_OK;
+}
+
 // since we know we're doing an append here, we can optimize
 NS_METHOD nsTableRowGroupFrame::IR_RowAppended(nsIPresContext&      aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
