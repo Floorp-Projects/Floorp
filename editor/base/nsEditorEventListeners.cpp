@@ -28,6 +28,12 @@
 #include "nsString.h"
 #include "nsIStringStream.h"
 
+#ifdef NS_DEBUG
+#ifdef EDITOR_SELFTEST
+#include "TextEditorTest.h"
+#endif
+#endif
+
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
@@ -338,12 +344,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool any = PR_FALSE;
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
-            mEditor->GetTextProperty(nsIEditProperty::i, first, any, all);
+            mEditor->GetTextProperty(nsIEditProperty::i, nsnull, nsnull, first, any, all);
             if (PR_FALSE==first) {
-              mEditor->SetTextProperty(nsIEditProperty::i);
+              mEditor->SetTextProperty(nsIEditProperty::i, nsnull, nsnull);
             }
             else {
-              mEditor->RemoveTextProperty(nsIEditProperty::i);
+              mEditor->RemoveTextProperty(nsIEditProperty::i, nsnull);
             }
           }
         }
@@ -375,12 +381,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool any = PR_FALSE;
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
-            mEditor->GetTextProperty(nsIEditProperty::b, first, any, all);
+            mEditor->GetTextProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
             if (PR_FALSE==first) {
-              mEditor->SetTextProperty(nsIEditProperty::b);
+              mEditor->SetTextProperty(nsIEditProperty::b, nsnull, nsnull);
             }
             else {
-              mEditor->RemoveTextProperty(nsIEditProperty::b);
+              mEditor->RemoveTextProperty(nsIEditProperty::b, nsnull);
             }
           }
         }
@@ -398,17 +404,76 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             PRBool any = PR_FALSE;
             PRBool all = PR_FALSE;
             PRBool first = PR_FALSE;
-            mEditor->GetTextProperty(nsIEditProperty::u, first, any, all);
+            mEditor->GetTextProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
             if (PR_FALSE==first) {
-              mEditor->SetTextProperty(nsIEditProperty::u);
+              mEditor->SetTextProperty(nsIEditProperty::u, nsnull, nsnull);
             }
             else {
-              mEditor->RemoveTextProperty(nsIEditProperty::u);
+              mEditor->RemoveTextProperty(nsIEditProperty::u, nsnull);
             }
 
           }
         }
         break;
+
+      // hard-coded ChangeTextAttributes test -- font color red
+      case nsIDOMEvent::VK_1:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString color = "color";
+            nsAutoString value = "red";
+            mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
+          }
+        }
+        break;
+
+      // hard-coded ChangeTextAttributes test -- font color green
+      case nsIDOMEvent::VK_2:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            // XXX: move this logic down into texteditor rules delegate
+            //      should just call mEditor->ChangeTextProperty(prop)
+            PRBool any = PR_FALSE;
+            PRBool all = PR_FALSE;
+            PRBool first = PR_FALSE;
+            nsAutoString color = "color";
+            nsAutoString value = "green";
+            mEditor->SetTextProperty(nsIEditProperty::font, &color, &value);
+          }
+        }
+        break;
+
+#ifdef NS_DEBUG
+#ifdef EDITOR_SELFTEST
+      // hard-coded Text Editor Unit Test
+      case nsIDOMEvent::VK_T:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            TextEditorTest *tester = new TextEditorTest();
+            if (tester)
+            {
+              tester->Run(mEditor);
+            }
+          }
+        }
+        break;
+#endif
+#endif
+
     }
   }
   return NS_OK;

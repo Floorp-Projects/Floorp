@@ -51,9 +51,14 @@ public:
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
 // Editing Operations
-  NS_IMETHOD SetTextProperty(nsIAtom *aProperty);
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll);
-  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty);
+  NS_IMETHOD SetTextProperty(nsIAtom        *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue);
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAny, PRBool &aAll);
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak();
@@ -100,11 +105,14 @@ protected:
 
   virtual void IsTextPropertySetByContent(nsIDOMNode  *aNode,
                                           nsIAtom     *aProperty, 
+                                          const nsString *aAttribute,
+                                          const nsString *aValue,
                                           PRBool      &aIsSet,
                                           nsIDOMNode **aStyleNode) const;
 
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
                               nsIAtom         *aProperty, 
+                              const nsString  *aAttributes, 
                               PRBool          &aIsSet) const;
 
   NS_IMETHOD IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const;
@@ -117,18 +125,22 @@ protected:
                                         nsIDOMNode   *aParent,
                                         PRBool       &aResult) const;
 
-  NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode *aNode, 
-                                      nsIDOMNode *aParent,
-                                      PRInt32     aStartOffset,
-                                      PRInt32     aEndOffset,
-                                      nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode  *aNode, 
+                                      nsIDOMNode  *aParent,
+                                      PRInt32      aStartOffset,
+                                      PRInt32      aEndOffset,
+                                      nsIAtom     *aPropName,
+                                      const nsString *aAttribute,
+                                      const nsString *aValue);
 
-  NS_IMETHOD SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
-                                                     PRInt32     aStartOffset,
-                                                     nsIDOMNode *aEndNode,
-                                                     PRInt32     aEndOffset,
-                                                     nsIDOMNode *aParent,
-                                                     nsIAtom    *aPropName);
+  NS_IMETHOD SetTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
+                                                     PRInt32      aStartOffset,
+                                                     nsIDOMNode  *aEndNode,
+                                                     PRInt32      aEndOffset,
+                                                     nsIDOMNode  *aParent,
+                                                     nsIAtom     *aPropName,
+                                                     const nsString *aAttribute,
+                                                     const nsString *aValue);
 
   NS_IMETHOD SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
                                                           nsIDOMNode  *aStartNode,
@@ -136,20 +148,24 @@ protected:
                                                           nsIDOMNode  *aEndNode,
                                                           PRInt32      aEndOffset,
                                                           nsIDOMNode  *aParent,
-                                                          nsIAtom     *aPropName);
+                                                          nsIAtom     *aPropName,
+                                                          const nsString *aAttribute,
+                                                          const nsString *aValue);
 
-  NS_IMETHOD RemoveTextPropertiesForNode(nsIDOMNode *aNode, 
-                                         nsIDOMNode *aParent,
-                                         PRInt32     aStartOffset,
-                                         PRInt32     aEndOffset,
-                                         nsIAtom    *aPropName);
+  NS_IMETHOD RemoveTextPropertiesForNode(nsIDOMNode  *aNode, 
+                                         nsIDOMNode  *aParent,
+                                         PRInt32      aStartOffset,
+                                         PRInt32      aEndOffset,
+                                         nsIAtom     *aPropName,
+                                         const nsString *aAttribute);
 
-  NS_IMETHOD RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
-                                                        PRInt32     aStartOffset,
-                                                        nsIDOMNode *aEndNode,
-                                                        PRInt32     aEndOffset,
-                                                        nsIDOMNode *aParent,
-                                                        nsIAtom    *aPropName);
+  NS_IMETHOD RemoveTextPropertiesForNodesWithSameParent(nsIDOMNode  *aStartNode,
+                                                        PRInt32      aStartOffset,
+                                                        nsIDOMNode  *aEndNode,
+                                                        PRInt32      aEndOffset,
+                                                        nsIDOMNode  *aParent,
+                                                        nsIAtom     *aPropName, 
+                                                        const nsString *aAttribute);
 
   NS_IMETHOD RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
                                                              nsIDOMNode  *aStartNode,
@@ -157,11 +173,14 @@ protected:
                                                              nsIDOMNode  *aEndNode,
                                                              PRInt32      aEndOffset,
                                                              nsIDOMNode  *aParent,
-                                                             nsIAtom     *aPropName);
+                                                             nsIAtom     *aPropName,
+                                                             const nsString *aAttribute);
 
 
 
-  NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPropName);
+  NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, 
+                                       nsIAtom     *aPropName, 
+                                       const nsString *aAttribute);
   
   TypeInState GetTypeInState() { return mTypeInState;}
 

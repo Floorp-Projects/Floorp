@@ -25,6 +25,12 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
 {
@@ -229,6 +235,7 @@ nsTransactionManager::Clear()
 nsresult
 nsTransactionManager::BeginBatch()
 {
+  if (gNoisy) { printf("Begin Batch\n"); }
   nsresult result;
 
   // We can batch independent transactions together by simply pushing
@@ -248,6 +255,7 @@ nsTransactionManager::BeginBatch()
 nsresult
 nsTransactionManager::EndBatch()
 {
+  if (gNoisy) { printf("End Batch\n"); }
   nsTransactionItem *tx = 0;
   nsITransaction *ti    = 0;
   nsresult result;

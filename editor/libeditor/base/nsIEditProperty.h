@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 
 class nsIAtom;
+class nsString;
 
 #define NS_IEDITPROPERTY_IID \
 {/* 9875cd40-ca81-11d2-8f4d-006008159b0c*/ \
@@ -69,6 +70,9 @@ SMALL places text in a small font
 SUB places text in subscript style 
 SUP places text in superscript style 
 */
+
+  /** special strings */
+  static nsString *allProperties;   // this magic string represents the union of all inline style tags
 
   // XXX: end temp code
 };

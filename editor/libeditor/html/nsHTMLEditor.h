@@ -50,9 +50,13 @@ public:
 // Methods that are duplicates of nsTextEditor -- exposed here for convenience
 
 // Editing Operations
-  NS_IMETHOD SetTextProperty(nsIAtom *aProperty);
-  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aFirst, PRBool &aAny, PRBool &aAll);
-  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty);
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue);
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, 
+                             const nsString *aAttribute, const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAny, PRBool &aAll);
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak();
