@@ -71,6 +71,7 @@ nsInput::~nsInput()
 void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
                                 nsIPresContext* aPresContext)
 {
+#if 0
   if (ATTR_NOTSET != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetData(kStyleDisplaySID);
@@ -88,6 +89,7 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
       break;
     }
   }
+#endif
 }
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
