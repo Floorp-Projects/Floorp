@@ -2553,7 +2553,11 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             PN_APPEND(listNode, argNode);
         } while (js_MatchToken(cx, ts, TOK_COMMA));
 
-        MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_ARGS);
+        if (js_GetToken(cx, ts) != TOK_RP) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_PAREN_AFTER_ARGS);
+            return JS_FALSE;
+        }
     }
     return JS_TRUE;
 }

@@ -1783,7 +1783,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
              * SRC_SETLINE.                                                   \
              */                                                               \
             (cg)->currentLine = line_;                                        \
-            if (delta_ >= (int32)(2 + ((line_ > SN_3BYTE_OFFSET_MASK)<<1))) { \
+            if (delta_ >= (uintN)(2 + ((line_ > SN_3BYTE_OFFSET_MASK)<<1))) { \
                 if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)line_) < 0)\
                     return JS_FALSE;                                          \
             } else {                                                          \
