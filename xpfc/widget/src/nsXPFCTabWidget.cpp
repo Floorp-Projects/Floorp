@@ -89,10 +89,10 @@ nsresult nsXPFCTabWidget :: GetClassPreferredSize(nsSize& aSize)
   return (NS_OK);
 }
 
-nsresult nsXPFCTabWidget :: CreateWidget()
+nsresult nsXPFCTabWidget :: CreateView()
 {
-  nsresult res;
-
+  nsresult res = NS_OK;
+#if 0
   nsIWidget * parent = GetWidget();
 
   res = LoadWidget(kCTabWidgetCID);
@@ -131,6 +131,6 @@ nsresult nsXPFCTabWidget :: CreateWidget()
   }
   
   SetVisibility(PR_FALSE);      
-
+#endif
   return res;
 }

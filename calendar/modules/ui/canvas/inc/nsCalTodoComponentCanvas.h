@@ -36,6 +36,7 @@ public:
   NS_IMETHOD_(void)    SetBackgroundColor(const nscolor &aColor) ;
   NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
 protected:
   ~nsCalTodoComponentCanvas();

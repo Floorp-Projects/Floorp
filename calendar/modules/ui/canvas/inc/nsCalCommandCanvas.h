@@ -21,6 +21,7 @@
 
 #include "nsXPFCCanvas.h"
 
+#include "nsIView.h"
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
 #include "nsIXPFCSubject.h"
@@ -57,8 +58,8 @@ public:
 
 
 private:
-    nsITextWidget * mTextField;
-    nsITextWidget * mStaticTextField;
+    nsIView * mTextField;
+    nsIView * mStaticTextField;
 
 
 };

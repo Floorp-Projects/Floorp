@@ -93,11 +93,9 @@ nsCalendarContainer::~nsCalendarContainer()
 }
 
 nsresult nsCalendarContainer::Init(nsIWidget * aParent,
-                                const nsRect& aBounds,
-                                nsICalendarShell * aCalendarShell)
+                                   const nsRect& aBounds,
+                                   nsICalendarShell * aCalendarShell)
 {
-
-  nsIWidget * widget_parent = nsnull;
 
   RegisterFactories();
 
@@ -176,14 +174,17 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
                                        (void **)&mRootCanvas);
 
     mRootCanvas->Init();
+
     gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
 
-    mRootCanvas->Init(aParent, 
-                      aBounds,
-                      (((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
-    widget_parent = mRootCanvas->GetWidget();
+    nsNativeWidget native = aParent->GetNativeData(NS_NATIVE_WIDGET);
 
-    mRootCanvas->SetVisibility(PR_FALSE);
+    mRootCanvas->Init(native, 
+                      aBounds);    
+
+    gXPFCToolkit->GetViewManager()->SetRootView(mRootCanvas->GetView());
+
+    //mRootCanvas->SetVisibility(PR_FALSE);
     ((nsBoxLayout *)(mRootCanvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
 
 
@@ -208,7 +209,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
    * Widget itself should implement the nsIXPFCCanvas interface?
    */
 
-  res = mCalendarWidget->Init(widget_parent, aBounds, aCalendarShell);
+  res = mCalendarWidget->Init(mRootCanvas->GetView(), aBounds, aCalendarShell);
 
   mRootCanvas->Layout();  
 
@@ -279,44 +280,10 @@ nsresult nsCalendarContainer::AddToolbar(nsIXPFCToolbar * aToolbar)
      */
     static NS_DEFINE_IID(kCWidgetCID, NS_CHILD_CID);
 
-    nsIWidget * parent = canvas->GetWidget();
+    nsIView * parent = canvas->GetView();
 
-    res = canvas->LoadWidget(kCWidgetCID);
+    res = canvas->LoadView(kViewCID);
 
-    /*
-     * Now, get the aggregated widget interface, and show this puppy
-     */
-
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-    nsIWidget * widget = nsnull;
-
-    res = aToolbar->QueryInterface(kIWidgetIID,(void**)&widget);
-
-    if (NS_OK == res)
-    {
-
-      nsRect rect(400,0,400,600);
-
-      nsSize size;
-
-      nsWidgetInitData initData ;
-
-      initData.clipChildren = PR_FALSE;
-
-      canvas->GetClassPreferredSize(size);
-
-      canvas->SetPreferredSize(size);
-
-      widget->Create(parent, 
-                     rect, 
-                     (((nsCalendarShell *)mCalendarShell)->mShellInstance->GetShellEventCallback()),
-                     nsnull, nsnull, nsnull, &initData);
-
-      widget->Show(PR_TRUE);
-      NS_RELEASE(widget);
-    }
-  
     NS_RELEASE(canvas);
   }  
 
@@ -341,6 +308,7 @@ nsresult nsCalendarContainer::UpdateToolbars()
     return NS_OK;
 
   mRootCanvas->Layout();
+
   w->Invalidate(PR_FALSE);
 
   return NS_OK;  
@@ -354,58 +322,26 @@ nsresult nsCalendarContainer::ShowDialog(nsIXPFCDialog * aDialog)
 
   if (NS_OK == res)
   {
-    //mRootCanvas->AddChildCanvas(canvas,0);
-
-  /*
-   * Let's add a native widget here.  This code should be in XPFC
-   */
-
-    /*
-     * We want to instantiate a window widget which the canvas 
-     * aggregates.  
-     */
     static NS_DEFINE_IID(kCWidgetCID, NS_WINDOW_CID);
 
-    nsIWidget * parent = mRootCanvas->GetWidget();
+    nsIView * parent = canvas->GetView();
 
-    res = canvas->LoadWidget(kCWidgetCID);
+    res = canvas->LoadView(kViewCID, &kCWidgetCID, nsnull);
 
-    /*
-     * Now, get the aggregated widget interface, and show this puppy
-     */
+    nsIWidget * widget ;
+    
+    canvas->GetView()->GetWidget(widget);
 
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-    nsIWidget * widget = nsnull;
+    widget->SetBorderStyle(eBorderStyle_dialog);
 
-    res = aDialog->QueryInterface(kIWidgetIID,(void**)&widget);
+    NS_RELEASE(widget);
 
-    if (NS_OK == res)
-    {
-
-      nsRect rect(400,0,400,600);
-
-      nsWidgetInitData initData ;
-
-      initData.clipChildren = PR_FALSE;
-
-      canvas->SetBounds(rect);
-
-      widget->SetBorderStyle(eBorderStyle_dialog);
-
-      widget->Create(parent, 
-                     rect, 
-                     (((nsCalendarShell *)mCalendarShell)->mShellInstance->GetShellEventCallback()),
-                     nsnull, nsnull, nsnull, &initData);
-
-      widget->Resize(400,601,PR_FALSE);
-      widget->Show(PR_TRUE);
-      NS_RELEASE(widget);
-    }
+    nsRect rect(400,0,400,600);
+    canvas->SetBounds(rect);
   
     NS_RELEASE(canvas);
   }  
-
   return NS_OK;
 }
 

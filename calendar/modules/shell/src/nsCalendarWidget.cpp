@@ -75,6 +75,7 @@ class nsICalendarShell;
 
 #include "nsICalendarShell.h"
 #include "nsCalendarShell.h"
+#include "nsIView.h"
 
 #include "plstr.h"
 #include "prprf.h"  /* PR_snprintf(...) */
@@ -126,7 +127,7 @@ nsresult nsCalendarWidget::Init(nsNativeWidget aNativeParent,
   return NS_OK;
 }
 
-nsresult nsCalendarWidget::Init(nsIWidget * aParent,
+nsresult nsCalendarWidget::Init(nsIView * aParent,
                                 const nsRect& aBounds,
                                 nsICalendarShell * aCalendarShell)
 {
@@ -134,6 +135,7 @@ nsresult nsCalendarWidget::Init(nsIWidget * aParent,
   nsresult res ;
 
   mCalendarShell = aCalendarShell;
+
   nsIXPFCCanvas * root;
 
   NS_ADDREF(((nsIApplicationShell *)mCalendarShell));
@@ -154,11 +156,8 @@ nsresult nsCalendarWidget::Init(nsIWidget * aParent,
 
   if (NS_OK != res)
     return res ;
-
-  //gXPFCToolkit->GetCanvasManager()->SetRootCanvas(root);
+  
   root->Init();
-
-  //root->Init(aParent, aBounds,(((nsCalendarShell *)mCalendarShell)->mShellInstance->GetShellEventCallback()));
 
   nsIXPFCCanvas * root_canvas ;
 

@@ -81,10 +81,12 @@ nsresult nsXPFCHTMLCanvas :: Init()
   if (res != NS_OK)
     return res;
 
-  mWebShell->Init(GetWidget()->GetNativeData(NS_NATIVE_WIDGET), 0,0,DEFAULT_WIDTH, DEFAULT_HEIGHT);
-//  mWebShell->SetContainer((nsIWebShellContainer*) this);
-//  mWebShell->SetObserver((nsIStreamObserver*)this);
-//  mWebShell->SetPrefs(aPrefs);
+  mWebShell->Init(GetWidget()->GetNativeData(NS_NATIVE_WIDGET), 
+                  0,
+                  0,
+                  DEFAULT_WIDTH, 
+                  DEFAULT_HEIGHT);
+
   mWebShell->Show();
 
   nsString url("about:blank");

@@ -56,8 +56,8 @@ public:
 
   NS_IMETHOD  Init();
 
-  NS_IMETHOD  Init(nsNativeWidget aNativeParent, const nsRect& aBounds, EVENT_CALLBACK   aHandleEventFunction);
-  NS_IMETHOD  Init(nsIWidget * aParent, const nsRect& aBounds, EVENT_CALLBACK   aHandleEventFunction);
+  NS_IMETHOD  Init(nsNativeWidget aNativeParent, const nsRect& aBounds);
+  NS_IMETHOD  Init(nsIView * aParent, const nsRect& aBounds);
 
   NS_IMETHOD  CreateIterator(nsIIterator ** aIterator) ;
   NS_IMETHOD  Layout() ;
@@ -135,6 +135,7 @@ public:
   NS_IMETHOD_(PRUint32) GetTabGroup();
 
   NS_IMETHOD_(nsIWidget *) GetWidget();
+  NS_IMETHOD_(nsIView *) GetView();
   NS_IMETHOD_(nsIXPFCCanvas *) GetParent();
   NS_IMETHOD_(void) SetParent(nsIXPFCCanvas * aCanvas);
 
@@ -193,7 +194,7 @@ public:
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
   NS_IMETHOD_(nsIXPFCCanvas *) CanvasFromName(nsString& aName);
-  NS_IMETHOD CreateWidget() ;
+  NS_IMETHOD CreateView() ;
 
   /**
    * Get the font for this canvas
@@ -256,7 +257,11 @@ public:
   NS_IMETHOD  DumpCanvas(FILE * f, PRUint32 indent) ;
 #endif
 
-  NS_IMETHOD LoadWidget(const nsCID &aClassIID);
+  NS_IMETHOD LoadView(const nsCID &aViewClassIID, 
+                      const nsCID * aWidgetClassIID = nsnull,
+                      nsIView * aParent = nsnull,
+                      nsWidgetInitData * aInitData = nsnull,
+                      nsNativeWidget aNativeWidget = nsnull);
 
 protected:
   ~nsXPFCCanvas();
@@ -266,13 +271,13 @@ protected:
 
 
 public:
-	PRBool Create(char * lpszWindowName, const nsRect& rect, EVENT_CALLBACK   aHandleEventFunction, nsIWidget * pParent);
+	PRBool Create(const nsRect& rect, 
+                  nsIView * aParent);
 
 private:
   
   nsILayout *     mLayout;
   nsIVector *     mChildWidgets ;
-  nsRect          mBounds;
   nscolor         mBackgroundColor;
   nscolor         mForegroundColor;
   nscolor         mBorderColor;
@@ -293,12 +298,11 @@ private:
 
 protected:
 
-  nsISupports		  *mWidgetSupports;
-  nsIWidget           *mWidget;
   nsIRenderingContext *mRenderingContext;
   nsIXPFCCanvas       *mParent;
   nsIImageRequest     *mImageRequest;
   nsIImageGroup       *mImageGroup;
+  nsRect          mBounds;
 
 public:
   nsIView           *mView;

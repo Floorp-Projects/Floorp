@@ -7,7 +7,7 @@
 		toolbar (type of container, generally a widget subclass)
 		button (type of widget)
 
-	Tags
+	Tags    
 
 		toolbar (all container properties apply)
 			

@@ -226,6 +226,8 @@ nsresult nsXPFCCanvasManager::RegisterView(nsIXPFCCanvas * aCanvas, nsIView * aV
 
   PR_ExitMonitor(monitor);
 
+  aView->SetClientData((nsIViewObserver*)this);
+
   return NS_OK;
 }
 
@@ -417,6 +419,7 @@ nsIWebViewerContainer * nsXPFCCanvasManager::GetWebViewerContainer()
 nsresult nsXPFCCanvasManager::SetViewManager(nsIViewManager * aViewManager)
 {
   mViewManager = aViewManager;
+  mViewManager->SetViewObserver((nsIViewObserver*)this);
   return NS_OK;
 }
 

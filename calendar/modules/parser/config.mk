@@ -17,6 +17,7 @@ CFLAGS         +=-D_IMPL_NS_CALENDAR
 
 LD_LIBS += \
 	raptorbase \
+	$(NATIVE_RAPTOR_GFX) \
 	raptorhtmlpars \
 	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \

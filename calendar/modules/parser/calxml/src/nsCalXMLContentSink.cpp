@@ -224,9 +224,9 @@ NS_IMETHODIMP nsCalXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   if (NS_OK != res)
     return res ;
 
-  object->Init();        
-
   AddToHierarchy(*object, PR_TRUE);
+
+  object->Init();        
 
   /*
    * ConsumeAttributes
@@ -457,9 +457,9 @@ NS_IMETHODIMP nsCalXMLContentSink::AddLeaf(const nsIParserNode& aNode)
   if (NS_OK != res)
     return res ;
 
-  object->Init();        
-
   AddToHierarchy(*object, PR_FALSE);
+
+  object->Init();        
 
   ConsumeAttributes(aNode,*object);
 
@@ -923,8 +923,13 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   root->Layout();
 
-  if (root->GetWidget())
-    root->GetWidget()->Invalidate(PR_FALSE);
+  if (root->GetView())
+  {
+    nsRect bounds;
+    root->GetView()->GetBounds(bounds);
+    gXPFCToolkit->GetViewManager()->UpdateView(root->GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+  }
+
 
   NS_RELEASE(root);
 

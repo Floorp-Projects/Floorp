@@ -50,7 +50,7 @@ public:
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
 
 
-  NS_IMETHOD Init(nsIWidget * aParent,
+  NS_IMETHOD Init(nsIView * aParent,
                   const nsRect& aBounds,
                   nsICalendarShell * aCalendarShell);
 

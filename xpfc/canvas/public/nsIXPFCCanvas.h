@@ -33,6 +33,7 @@
 
 class nsIModel;
 class nsIXPFCCommand;
+class nsIView;
 
 // IID for the nsIXPFCCanvas interface
 #define NS_IXPFC_CANVAS_IID   \
@@ -76,19 +77,17 @@ public:
    * @result The result of the initialization, NS_Ok if no errors
    */
   NS_IMETHOD  Init(nsNativeWidget aNativeParent, 
-                   const nsRect& aBounds, 
-                   EVENT_CALLBACK aHandleEventFunction) = 0;
+                   const nsRect& aBounds) = 0;
 
   /**
    * Initialize the XPFCCanvas
-   * @param aParent a nsIWidget pointer to the parent.
+   * @param aParent a nsIView pointer to the parent.
    * @param aBounds the bounds for thw canvas, relative to it's parent
    * @param aHandleEventFunction The event procedure for handling GUIEvents
    * @result The result of the initialization, NS_Ok if no errors
    */
-  NS_IMETHOD  Init(nsIWidget * aParent, 
-                   const nsRect& aBounds, 
-                   EVENT_CALLBACK aHandleEventFunction) = 0;
+  NS_IMETHOD  Init(nsIView * aParent, 
+                   const nsRect& aBounds) = 0;
 
   /**
    * Create an Iterator for this canvas's children
@@ -283,16 +282,22 @@ public:
   NS_IMETHOD_(nsEventStatus) OnKeyDown(nsGUIEvent *aEvent) = 0;
 
   /**
-   * Create an nsIWidget for this canvas
+   * Create an nsIView for this canvas
    * @result nsresult, NS_OK if successful
    */
-  NS_IMETHOD CreateWidget() = 0;
+  NS_IMETHOD CreateView() = 0;
+
+  /**
+   * Get the nsIWidget associated with the nsIView with this canvas
+   * @result nsIWidget pointer, nsnull if no widget aggregated, else the nsIWidget interface
+   */
+  NS_IMETHOD_(nsIWidget *) GetWidget() = 0;
 
   /**
    * Get the nsIWidget aggregated by this canvas
    * @result nsIWidget pointer, nsnull if no widget aggregated, else the nsIWidget interface
    */
-  NS_IMETHOD_(nsIWidget *) GetWidget() = 0;
+  NS_IMETHOD_(nsIView *) GetView() = 0;
 
   /**
    * Get the parent canvas
@@ -653,7 +658,11 @@ public:
    * @param aClassIID, The class of the nsIWidget implementation
    * @result nsresult, NS_OK if successful
    */
-  NS_IMETHOD LoadWidget(const nsCID &aClassIID) = 0;
+  NS_IMETHOD LoadView(const nsCID &aViewClassIID, 
+                      const nsCID * aWidgetClassIID = nsnull,
+                      nsIView * aParent = nsnull,
+                      nsWidgetInitData * aInitData = nsnull,
+                      nsNativeWidget aNativeWidget = nsnull) = 0;
 
 };
 

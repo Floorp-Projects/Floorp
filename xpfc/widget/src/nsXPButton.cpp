@@ -33,12 +33,14 @@
 #include "nsIThrobber.h"
 #include "nsXPItem.h"
 #include "nsIWebViewerContainer.h"
+#include "nsViewsCID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPButtonCID, NS_XP_BUTTON_CID);
 static NS_DEFINE_IID(kCIXPButtonIID, NS_IXP_BUTTON_IID);
 static NS_DEFINE_IID(kCButtonCID,    NS_BUTTON_CID);
 static NS_DEFINE_IID(kInsButtonIID, NS_IBUTTON_IID);
+static NS_DEFINE_IID(kViewCID,                    NS_VIEW_CID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
@@ -92,7 +94,9 @@ NS_IMPL_RELEASE(nsXPButton)
 nsresult nsXPButton :: Init()
 {
 
-  nsresult res = nsXPItem::Init();    
+  nsresult res = nsXPItem::Init();
+
+  LoadView(kViewCID);
 
   return res;
 }
@@ -145,7 +149,7 @@ nsresult nsXPButton :: GetClassPreferredSize(nsSize& aSize)
   return (NS_OK);
 }
 
-nsresult nsXPButton :: CreateWidget()
+nsresult nsXPButton :: CreateView()
 {
   nsresult res = NS_OK;
   return res;
@@ -314,7 +318,21 @@ nsEventStatus nsXPButton::OnMouseEnter(nsGUIEvent *aEvent)
   if (gXPFCToolkit->GetCanvasManager()->GetPressedCanvas() == ((nsIXPFCCanvas *)this))
     mState |= eButtonState_pressed;
 
-  GetWidget()->Invalidate(PR_FALSE);
+  nsRect bounds;
+
+  GetView()->GetBounds(bounds);
+
+  // XXX: Need to convert coordinates to local views space.
+  //      this means that GetBounds needs to look 'up' the
+  //      view tree to figure out what view this canvas belongs
+  //      to and convert thusly.
+  //
+  //      Alternatively, we could just give every canvas a view...
+  //
+  bounds.x = 0;
+  bounds.y = 0;
+
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
   return (nsXPItem::OnMouseEnter(aEvent));
 }
 
@@ -322,22 +340,38 @@ nsEventStatus nsXPButton::OnMouseExit(nsGUIEvent *aEvent)
 {  
   mState &= ~eButtonState_hover;
   mState &= ~eButtonState_pressed;
-  GetWidget()->Invalidate(PR_FALSE);
+  nsRect bounds;
+
+  GetView()->GetBounds(bounds);
+  bounds.x = 0;
+  bounds.y = 0;
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
   return (nsXPItem::OnMouseExit(aEvent));
 }
 
 nsEventStatus nsXPButton :: OnLeftButtonDown(nsGUIEvent *aEvent)
 {
   mState |= eButtonState_pressed;
-  GetWidget()->Invalidate(PR_FALSE);
+  nsRect bounds;
+
+  GetView()->GetBounds(bounds);
+  bounds.x = 0;
+  bounds.y = 0;
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
   return (nsXPItem::OnLeftButtonDown(aEvent));
 }
 
 nsEventStatus nsXPButton :: OnLeftButtonUp(nsGUIEvent *aEvent)
 {
   mState &= ~eButtonState_pressed;
-  GetWidget()->Invalidate(PR_FALSE);
+  nsRect bounds;
 
+  GetView()->GetBounds(bounds);
+  bounds.x = 0;
+  bounds.y = 0;
+  gXPFCToolkit->GetViewManager()->UpdateView(GetView(), bounds, NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+
+#if 0
   if (gCommandString.Length() > 0)
   {
     nsIWebViewerContainer * webViewerContainer = nsnull;
@@ -349,6 +383,7 @@ nsEventStatus nsXPButton :: OnLeftButtonUp(nsGUIEvent *aEvent)
       NS_RELEASE(webViewerContainer);
     }
   }
+#endif
 
   return (nsXPItem::OnLeftButtonUp(aEvent));
 }
