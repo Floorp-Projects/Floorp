@@ -763,32 +763,47 @@ HRESULT LaunchApps()
 
 void DetermineOSVersion()
 {
-  OSVERSIONINFO osvi;
+  DWORD         dwVersion;
+  DWORD         dwWindowsMajorVersion;
+  DWORD         dwWindowsMinorVersion;
+  DWORD         dwWindowsVersion;
   BOOL          bIsWin95Debute;
+  char          szESetupRequirement[MAX_BUF];
 
-  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  GetVersionEx(&osvi);
-  bIsWin95Debute = IsWin95Debute();
+  dwVersion       = GetVersion();
+  bIsWin95Debute  = IsWin95Debute();
 
-  switch(osvi.dwPlatformId)
+  // Get major and minor version numbers of Windows
+  dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
+  dwWindowsMinorVersion =  (DWORD)(HIBYTE(LOWORD(dwVersion)));
+  dwWindowsVersion      =  (DWORD)(HIWORD(dwVersion));
+
+  // Get build numbers for Windows NT or Win95/Win98
+  if(dwVersion < 0x80000000) // Windows NT
   {
-    case VER_PLATFORM_WIN32_WINDOWS:
-      if((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0))
-      {
-        dwOSType |= OS_WIN95;
-        if(bIsWin95Debute)
-          dwOSType |= OS_WIN95_DEBUTE;
-      }
-      else if((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0))
-        dwOSType = OS_WIN98;
-      break;
+    if(dwWindowsMajorVersion == 3)
+      dwOSType = OS_NT3;
+    else
+      dwOSType = OS_NT4;
+  }
+  else if(dwWindowsMajorVersion == 4)
+  {
+    if(dwWindowsMinorVersion == 0)
+    {
+      dwOSType |= OS_WIN95;
 
-    case VER_PLATFORM_WIN32_NT:
-      if(osvi.dwMajorVersion == 3)
-        dwOSType = OS_NT3;
-      else if(osvi.dwMajorVersion > 3)
-        dwOSType = OS_NT4;
-      break;
+      if(bIsWin95Debute)
+        dwOSType |= OS_WIN95_DEBUTE;
+    }
+    else
+      dwOSType = OS_WIN98;
+  }
+  else
+  {
+    if(NS_LoadString(hSetupRscInst, IDS_ERROR_SETUP_REQUIREMENT, szESetupRequirement, MAX_BUF) == WIZ_OK)
+      PrintError(szESetupRequirement, ERROR_CODE_HIDE);
+
+    exit(1);
   }
 }
 
@@ -1505,19 +1520,16 @@ BOOL IsWin95Debute()
 {
   HINSTANCE hLib;
   BOOL      bIsWin95Debute;
-  DWORD dwErr;
 
   bIsWin95Debute = FALSE;
   if((hLib = LoadLibraryEx("kernel32.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
   {
     if(((FARPROC)NS_GetDiskFreeSpaceEx = GetProcAddress(hLib, "GetDiskFreeSpaceExA")) == NULL)
     {
-      if((dwErr = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
-      {
-        (FARPROC)NS_GetDiskFreeSpace = GetProcAddress(hLib, "GetDiskFreeSpaceA");
-        bIsWin95Debute = TRUE;
-      }
+      (FARPROC)NS_GetDiskFreeSpace = GetProcAddress(hLib, "GetDiskFreeSpaceA");
+      bIsWin95Debute = TRUE;
     }
+
     FreeLibrary(hLib);
   }
   return(bIsWin95Debute);
