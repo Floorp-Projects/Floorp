@@ -36,6 +36,7 @@ EXPORT_RESOURCE_SAMPLES = \
         $(srcdir)/navigator.css \
 	$(srcdir)/navigator.xul \
 	$(srcdir)/saveToDisk.xul \
+	$(srcdir)/viewSource.xul \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
         $(srcdir)/navigator-shiny.css \
