@@ -906,11 +906,11 @@ function RevealSearchPanel()
     newWin.saveFileAndPos = true;
   }
   
-  const nsIFilePicker = Components.interfaces.nsIFilePicker;
   function BrowserOpenFileWindow()
   {
     // Get filepicker component.
     try {
+      var nsIFilePicker = Components.interfaces.nsIFilePicker;
       var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
       fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
@@ -1585,5 +1585,65 @@ function postURLToNativeWidget() {
             dump( " SetURLToHiddenControl failed: " + exception + "\n" );
         }
     }
+}
+
+/**
+ * Content area tooltip. 
+ * XXX - this must move into XBL binding/equiv! Do not want to pollute 
+ *       navigator.js with functionality that can be encapsulated into
+ *       browser widget. TEMPORARY!
+ **/
+function FillInHTMLTooltip ( tipElement )
+{
+  var HTMLNS = "http://www.w3.org/1999/xhtml";
+  var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+  var XLinkNS = "http://www.w3.org/1999/xlink";
+  
+  var retVal = false;
+  var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
+  if ( tipNode ) {
+    try {
+      while ( tipNode.hasChildNodes() ) {
+        tipNode.removeChild( tipNode.firstChild );
+      }
+        
+      var titleText = "";
+      var XLinkTitleText = "";
+      var summaryText = "";
+      
+      while ( titleText == "" && summaryText == "" && XLinkTitleText == "" && tipElement ) {
+        if ( tipElement.nodeType == 1 ) {
+          titleText = tipElement.getAttributeNS(HTMLNS, "title");
+          XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+          if ( (tipElement.namespaceURI == "" || tipElement.namespaceURI == HTMLNS)
+              && tipElement.tagName.toLowerCase() == "table" ) {
+            summaryText = tipElement.getAttributeNS(HTMLNS, "summary");
+          }
+        }
+        tipElement = tipElement.parentNode;
+      }
+      
+      var texts = [ titleText, summaryText, XLinkTitleText ];
+      
+      for (var i = 0; i < texts.length; i++) {
+        var t = texts[i];
+        if ( t.search(/\S/) >= 0 ) {
+          if ( tipNode.hasChildNodes() ) {
+            var blankLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
+            tipNode.appendChild(blankLineElem);
+          }
+          
+          var tipLineElem = tipNode.ownerDocument.createElementNS(XULNS, "text");
+          tipLineElem.setAttribute("value", t);
+          tipNode.appendChild(tipLineElem);
+          
+          retVal = true;
+        }
+      }
+    }
+    catch (e) { retVal = false; }
+  }
+  
+  return retVal;
 }
 

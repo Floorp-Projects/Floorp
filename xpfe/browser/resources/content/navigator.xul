@@ -61,6 +61,7 @@ Contributor(s): ______________________________________. -->
 <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
 <script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
 <script language="javascript" src="chrome://global/content/strres.js"></script>
+<script language="javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
 <script language="javascript" src="chrome://navigator/content/navigator.js"></script>
 <script language="javascript" src="nsContextMenu.js"></script>
 <script language="javascript" src="tooltip.js"></script>
@@ -86,9 +87,14 @@ Contributor(s): ______________________________________. -->
 <!-- keys are appended from the overlay -->
 <keyset id="keyset"/>
   
-
-<!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
+<!-- tooltips -->
 <popupset id="aTooltipSet"/>
+<!-- XXX-TEMP this needs to move into an XBL binding for browser!!! -->
+<popupset id="aHTMLTooltipSet">
+  <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
+    <box id="HTML_TOOLTIP_tooltipBox" orient="vertical"/>
+  </popup>
+</popupset>
 
 <!-- Context menu -->
 <script language="javascript">
@@ -225,6 +231,13 @@ Contributor(s): ______________________________________. -->
     </popup>
 </popupset>
 
+<popupset>
+  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
+	  <menu />
+  </popup>
+</popupset>
+
+
 <script language="javascript">
   var gBookmarkPopup = null;
 </script>
@@ -232,7 +245,7 @@ Contributor(s): ______________________________________. -->
   <toolbox class="toolbox-top">
     <!-- Menu -->
     <menubar id="main-menubar"/>
-  
+
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;">
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
         <menubutton class="menubutton-dual top toolbar" id="back-button" value="&backButton.label;" 
@@ -321,7 +334,7 @@ Contributor(s): ______________________________________. -->
       </menubutton>
 
       <!-- Personal toolbar items -->
-      <box id="innermostBox" flex="1" style="min-width: 1px;"
+      <box id="innermostBox" flex="1" style="min-width: 1px;" context="contextual"
         datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
     
         <template>
@@ -391,7 +404,7 @@ Contributor(s): ______________________________________. -->
         <!-- type attribute is used by frame construction to locate iframes
              intended to hold (html) content -->
         <browser context="context" type="content-primary" id="content"
-          src="about:blank" flex="1"/>
+          src="about:blank" flex="1" tooltip="aHTMLTooltip"/>
       </box>
       
       <statusbar id="status-bar" class="chromeclass-status"/>
