@@ -2534,7 +2534,8 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
       aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     }
     if (aIsPseudoParent) {
-      aState.mPseudoFrames.mTableInner.mChildList.AddChild(aNewFrame);
+      nsIFrame* child = (scrollFrame) ? scrollFrame : aNewFrame;
+      aState.mPseudoFrames.mTableInner.mChildList.AddChild(child);
     }
   } 
 
@@ -2823,7 +2824,7 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext* aPresContext,
   }
 #endif
 
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 // this is called when a non table related element is a child of a table, row group, 
