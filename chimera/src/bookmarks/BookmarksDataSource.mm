@@ -587,10 +587,28 @@
   if (count > 0) {
     // Create Pasteboard Data
     NSMutableArray *draggedID = [NSMutableArray arrayWithCapacity: count];
+    
     for (int i = 0; i < count; i++)
       [draggedID addObject: [[toDrag objectAtIndex: i] contentID]];
-    [pboard declareTypes: [NSArray arrayWithObject: @"MozBookmarkType"] owner: self];
-    [pboard setPropertyList: draggedID forType: @"MozBookmarkType"];
+      
+    if (count == 1) {
+      // if we have just one item, we add some more flavours
+      [pboard declareTypes: [NSArray arrayWithObjects:
+          @"MozBookmarkType", NSURLPboardType, NSStringPboardType, nil] owner: self];
+      [pboard setPropertyList: draggedID forType: @"MozBookmarkType"];
+
+      NSString* itemURL = [[toDrag objectAtIndex: 0] url];
+      [pboard setString:itemURL forType: NSStringPboardType];
+      [[NSURL URLWithString:itemURL] writeToPasteboard: pboard];
+      // maybe construct the @"MozURLType" type here also
+    }
+    else {
+      // multiple bookmarks. Array sof strings or NSURLs seem to
+      // confuse receivers. Not sure what the correct way is.
+      [pboard declareTypes: [NSArray arrayWithObject: @"MozBookmarkType"] owner: self];
+      [pboard setPropertyList: draggedID 		forType: @"MozBookmarkType"];
+    }
+
     return YES;
   }
 
@@ -782,6 +800,15 @@
   element->GetAttribute(NS_LITERAL_STRING("name"), href);
   NSString* info = [NSString stringWithCharacters: href.get() length: href.Length()];
   return [NSString stringWithFormat:@"<BookmarkItem, name = \"%@\">", info];
+}
+
+- (NSString *)url
+{
+  nsCOMPtr<nsIContent> item = [self contentNode];
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
+  nsAutoString href;
+  element->GetAttribute(NS_LITERAL_STRING("name"), href);
+  return [NSString stringWithCharacters: href.get() length: href.Length()];
 }
 
 -(void)setContentNode: (nsIContent*)aContentNode

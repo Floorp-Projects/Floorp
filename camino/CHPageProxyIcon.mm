@@ -58,8 +58,8 @@
   NSString* title;
 
   nsAutoString hrefStr, titleStr;
-  BookmarksService::GetTitleAndHrefForBrowserView([[[[self window] windowController] getBrowserWrapper] getBrowserView],
-                                                  titleStr, hrefStr);
+  BookmarksService::GetTitleAndHrefForBrowserView(
+    [[[[self window] windowController] getBrowserWrapper] getBrowserView], titleStr, hrefStr);
   
   url = [NSString stringWithCharacters: hrefStr.get() length: nsCRT::strlen(hrefStr.get())];
   title = [NSString stringWithCharacters: titleStr.get() length: nsCRT::strlen(titleStr.get())];
@@ -69,8 +69,10 @@
   data = [NSDictionary dictionaryWithObjects:dataVals forKeys:dataKeys];
 
   pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-  [pboard declareTypes:[NSArray arrayWithObject:@"MozURLType"] owner:self];
+  [pboard declareTypes:[NSArray arrayWithObjects:@"MozURLType", NSURLPboardType, NSStringPboardType, nil] owner:self];
   [pboard setPropertyList:data forType: @"MozURLType"];
+  [[NSURL URLWithString:url] writeToPasteboard: pboard];
+  [pboard setString:url forType: NSStringPboardType];
   
   [self dragImage: [MainController createImageForDragging:[self image] title:title]
                     at: NSMakePoint(0,0) offset: NSMakeSize(0,0)
