@@ -1,0 +1,27 @@
+check HTTP error codes on 1st line
+deal with content type "text/html "
+take stats on domain names e.g. foo.co.kr, www.bar.com
+URL char stats e.g. 8-bit, escaped 8-bit, etc
+hierachical tag and attribute stats, not flat attr space
+more checking in ISO 2022 code
+detect UCS-2, UCS-4
+deal with multiple charset parameters in one content-type
+FRAME SRC URLs
+IMG SRC URLs
+other URLs?
+NNTP robot
+FTP robot
+DNS robot
+IP robot
+parse URLs properly a la RFC
+improve hashing (grow tables, prime numbers)
+parse <!doctype ...> where "..." appears as attribute-name-like thing
+run purify to find memory leaks
+use less memory in URL hash table (value not needed, only key needed)
+use less memory in URL list (use array, remove processed URLs, randomize?)
+get http://www.olelo.hawaii.edu/UTF8/index.html to work
+	(problem in io.c's read whole stream routine)
+---
+2/17/99
+use nm to find all system calls, and do proper error checking on all of them
+  e.g. write() to catch SIGPIPE-like stuff(?)
