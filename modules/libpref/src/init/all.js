@@ -94,12 +94,6 @@ pref("browser.helperApps.alwaysAsk.force",  false);
 pref("browser.helperApps.neverAsk.saveToDisk", "");
 pref("browser.helperApps.neverAsk.openFile", "");
 
-// Blacklist of servers whose content-location headers are unreliable
-// and should be ignored.  This is a comma-separated list of server
-// names, with no spaces before or after the commas.  If the server
-// name you want to add here contains a comma, use a period instead.
-pref("browser.content-location.bogus-servers", "Microsoft-IIS/4.0,Microsoft-IIS/5.0,Microsoft-IIS/6.0,Oracle9iAS/9.0.2,Oracle9iAS (1.0.2.2.1)");
-
 // xxxbsmedberg: where should prefs for the toolkit go?
 pref("browser.chrome.toolbar_tips",         true);
 // 0 = Pictures Only, 1 = Text Only, 2 = Pictures and Text
