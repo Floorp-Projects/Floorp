@@ -553,53 +553,6 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
       mInWhitespace = PR_TRUE;
     }
   }
-  // Else make sure we'll separate block level tags,
-  // even if we're about to leave, before doing any other formatting.
-  else if (IsBlockLevel(aTag)) {
-    EnsureVerticalSpace(0);
-  }
-
-  // The rest of this routine is formatted output stuff,
-  // which we should skip if we're not formatted:
-  if (!(mFlags & nsIDocumentEncoder::OutputFormatted)) {
-    return NS_OK;
-  }
-
-  if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
-      type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
-      type == eHTMLTag_h5 || type == eHTMLTag_h6)
-  {
-    EnsureVerticalSpace(2);
-    if (mHeaderStrategy == 2) {  // numbered
-      mIndent += kIndentSizeHeaders;
-      // Caching
-      nsCAutoString leadup;
-      PRInt32 level = HeaderLevel(type);
-      // Increase counter for current level
-      mHeaderCounter[level]++;
-      // Reset all lower levels
-      PRInt32 i;
-
-      for (i = level + 1; i <= 6; i++) {
-        mHeaderCounter[i] = 0;
-      }
-
-      // Construct numbers
-      for (i = 1; i <= level; i++) {
-        leadup.AppendInt(mHeaderCounter[i]);
-        leadup += ".";
-      }
-      leadup += " ";
-      Write(NS_ConvertASCIItoUCS2(leadup.GetBuffer()));
-    }
-    else if (mHeaderStrategy == 1) { // indent increasingly
-      mIndent += kIndentSizeHeaders;
-      for (PRInt32 i = HeaderLevel(type); i > 1; i--) {
-           // for h(x), run x-1 times
-        mIndent += kIndentIncrementHeaders;
-      }
-    }
-  }
   else if (type == eHTMLTag_ul) {
     // Indent here to support nested list, which aren't included in li :-(
     EnsureVerticalSpace(1); // Must end the current line before we change indent.
@@ -636,6 +589,57 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_dd) {
     mIndent += kIndentSizeDD;
+  }
+
+  // Else make sure we'll separate block level tags,
+  // even if we're about to leave, before doing any other formatting.
+  else if (IsBlockLevel(aTag)) {
+    EnsureVerticalSpace(0);
+  }
+
+  //////////////////////////////////////////////////////////////
+  if (!(mFlags & nsIDocumentEncoder::OutputFormatted)) {
+    return NS_OK;
+  }
+  //////////////////////////////////////////////////////////////
+  // The rest of this routine is formatted output stuff,
+  // which we should skip if we're not formatted:
+  //////////////////////////////////////////////////////////////
+
+  if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
+      type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
+      type == eHTMLTag_h5 || type == eHTMLTag_h6)
+  {
+    EnsureVerticalSpace(2);
+    if (mHeaderStrategy == 2) {  // numbered
+      mIndent += kIndentSizeHeaders;
+      // Caching
+      nsCAutoString leadup;
+      PRInt32 level = HeaderLevel(type);
+      // Increase counter for current level
+      mHeaderCounter[level]++;
+      // Reset all lower levels
+      PRInt32 i;
+
+      for (i = level + 1; i <= 6; i++) {
+        mHeaderCounter[i] = 0;
+      }
+
+      // Construct numbers
+      for (i = 1; i <= level; i++) {
+        leadup.AppendInt(mHeaderCounter[i]);
+        leadup += ".";
+      }
+      leadup += " ";
+      Write(NS_ConvertASCIItoUCS2(leadup.GetBuffer()));
+    }
+    else if (mHeaderStrategy == 1) { // indent increasingly
+      mIndent += kIndentSizeHeaders;
+      for (PRInt32 i = HeaderLevel(type); i > 1; i--) {
+           // for h(x), run x-1 times
+        mIndent += kIndentIncrementHeaders;
+      }
+    }
   }
   else if (type == eHTMLTag_blockquote) {
     EnsureVerticalSpace(1);
@@ -720,11 +724,21 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if ((type == eHTMLTag_tr) ||
            (type == eHTMLTag_li) ||
            (type == eHTMLTag_pre) ||
-           (type == eHTMLTag_dd) ||
            (type == eHTMLTag_dt)) {
     // Items that should always end a line, but get no more whitespace
     EnsureVerticalSpace(0);
   } 
+  else if (type == eHTMLTag_ul) {
+    mIndent -= kIndentSizeList;
+  }
+  else if (type == eHTMLTag_ol) {
+    FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
+    --mOLStackIndex;
+    mIndent -= kIndentSizeList;
+  }
+  else if (type == eHTMLTag_dd) {
+    mIndent -= kIndentSizeDD;
+  }
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
            && type != eHTMLTag_script
@@ -737,11 +751,14 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
                         ? 1 : 0);
   }
 
-  // The rest of this routine is formatted output stuff,
-  // which we should skip if we're not formatted:
+  //////////////////////////////////////////////////////////////
   if (!(mFlags & nsIDocumentEncoder::OutputFormatted)) {
     return NS_OK;
   }
+  //////////////////////////////////////////////////////////////
+  // The rest of this routine is formatted output stuff,
+  // which we should skip if we're not formatted:
+  //////////////////////////////////////////////////////////////
 
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
@@ -757,17 +774,6 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
       }
     }
     EnsureVerticalSpace(1);
-  }
-  else if (type == eHTMLTag_ul) {
-    mIndent -= kIndentSizeList;
-  }
-  else if (type == eHTMLTag_ol) {
-    FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
-    --mOLStackIndex;
-    mIndent -= kIndentSizeList;
-  }
-  else if (type == eHTMLTag_dd) {
-    mIndent -= kIndentSizeDD;
   }
   else if (type == eHTMLTag_blockquote) {
     FlushLine();    // Is this needed?
