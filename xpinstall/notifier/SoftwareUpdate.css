@@ -8,14 +8,6 @@ window {
   background-color: white;
 }
 
-
-treeitem[type="http://home.netscape.com/NC-rdf#SoftwarePackage"] > treerow >  treecell > titledbutton {
- list-style-image: url("resource:/res/xpinstall/SoftwareUpdatePackage.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow >  treecell > titledbutton {
- list-style-image: url("resource:/res/xpinstall/folder-closed.gif");
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow >  treecell > titledbutton {
- list-style-image: url("resource:/res/xpinstall/folder-open.gif");
+treeitem[type="http://home.netscape.com/NC-rdf#XPInstallNotification"] > treerow >  treecell > titledbutton {
+ list-style-image: url("resource:/res/xpinstall/notification.gif");
 }
