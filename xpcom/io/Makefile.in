@@ -70,6 +70,10 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
+ifeq ($(OS_ARCH), Linux)
+DEFINES += -D_BSD_SOURCE
+endif
+
 REQUIRES = xpcom uconv unicharutil
 
 MKSHLIB :=

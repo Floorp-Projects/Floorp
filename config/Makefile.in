@@ -30,6 +30,9 @@ CSRCS		= nsinstall.c pathsub.c
 PLSRCS		= nfspwd.pl revdepth.pl
 
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
+ifeq ($(OS_ARCH), Linux)
+DEFINES         += -D_BSD_SOURCE
+endif
 
 # Generate the build number on the fly.
 ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)

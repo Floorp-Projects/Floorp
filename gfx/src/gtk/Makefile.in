@@ -55,6 +55,9 @@ CFLAGS		+= $(TK_CFLAGS)
 endif
 
 DEFINES		+= -D_IMPL_NS_GFXNONXP
+ifeq ($(OS_ARCH), Linux)
+DEFINES         += -D_BSD_SOURCE
+endif
 
 INCLUDES	+= \
 		-I$(srcdir)/. \

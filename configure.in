@@ -620,6 +620,7 @@ case "$target" in
     ;;
 
 *-*linux*)
+    AC_DEFINE(_POSIX_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     case "${host_cpu}" in
@@ -1527,7 +1528,7 @@ fi
 
 dnl Checks for header files.
 dnl ========================================================
-AC_CHECK_HEADERS(sys/byteorder.h compat.h)
+AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
 AC_CHECK_HEADERS(sys/ipc.h shm.h sys/shm.h X11/extensions/XShm.h)
 
