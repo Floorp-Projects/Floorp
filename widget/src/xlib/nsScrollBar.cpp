@@ -109,6 +109,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
                        mVisual,
                        attr_mask,
                        &attr);
+  XSetWindowBackgroundPixmap(mDisplay, mBar, None);
   AddWindowCallback(mBar, this);
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::CreateNative created window 0x%lx with bar 0x%lx\n",
          mBaseWindow, mBar));

@@ -327,6 +327,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                 mBounds.width, mBounds.height, 0,
                                 mDepth, InputOutput, mVisual,
                                 attr_mask, &attr);
+    XSetWindowBackgroundPixmap(mDisplay, mBaseWindow, None);
     AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
     XSetTransientForHint(mDisplay, mBaseWindow, mParentWindow);
@@ -343,6 +344,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                 mBounds.width, mBounds.height, 0,
                                 mDepth, InputOutput, mVisual,
                                 attr_mask, &attr);
+    XSetWindowBackgroundPixmap(mDisplay, mBaseWindow, None);
     AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
     XSetTransientForHint(mDisplay, mBaseWindow, mParentWindow);
@@ -355,6 +357,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                 mBounds.width, mBounds.height, 0,
                                 mDepth, InputOutput, mVisual,
                                 attr_mask, &attr);
+    XSetWindowBackgroundPixmap(mDisplay, mBaseWindow, None);
     AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
     break;
@@ -826,6 +829,7 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               mVisual,          // visual
                               aMask,
                               &aAttr);
+  XSetWindowBackgroundPixmap(mDisplay, mBaseWindow, None);
 
   mRequestedSize.height = mBounds.height = aRect.height;
   mRequestedSize.width = mBounds.width = aRect.width;
