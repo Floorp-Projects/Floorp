@@ -15,13 +15,15 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef nsHTTPHandlerFactory_h___
+#define nsHTTPHandlerFactory_h___
 
 #include "nsIFactory.h"
 
 class nsHTTPHandlerFactory : public nsIFactory
 {
 public:
-    nsHTTPHandlerFactory(const nsCID &aClass, const char* className, const char* progID);
+    nsHTTPHandlerFactory(const nsCID &aClass);
 
     // nsISupports methods
     NS_DECL_ISUPPORTS
@@ -38,8 +40,6 @@ protected:
 
 protected:
     nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
-
 };
 
+#endif /* nsHTTPHandlerFactory_h___ */

@@ -30,7 +30,7 @@ REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsAboutProtocolHandler.cpp \
-		nsAboutProtocolFactory.cpp \
+		nsAboutProtocolModule.cpp \
 		nsAboutBlank.cpp \
 		$(NULL)
 

@@ -30,7 +30,7 @@ LLIBS= $(LLIBS)                 \
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsAboutProtocolHandler.obj \
-	.\$(OBJDIR)\nsAboutProtocolFactory.obj \
+	.\$(OBJDIR)\nsAboutProtocolModule.obj  \
 	.\$(OBJDIR)\nsAboutBlank.obj           \
 	$(NULL)
 

@@ -26,7 +26,7 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 CPP_OBJS =                                 \
         .\$(OBJDIR)\nsDataHandler.obj      \
         .\$(OBJDIR)\nsDataChannel.obj      \
-        .\$(OBJDIR)\nsDataFactory.obj      \
+        .\$(OBJDIR)\nsDataModule.obj       \
         $(NULL)
 
 LLIBS=                                     \

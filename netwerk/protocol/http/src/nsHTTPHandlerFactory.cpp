@@ -42,10 +42,8 @@ static NS_DEFINE_CID(kHTTPHandlerCID,      NS_HTTP_HANDLER_FACTORY_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsHTTPHandlerFactory::nsHTTPHandlerFactory(const nsCID &aClass, 
-                                   const char* className,
-                                   const char* progID)
-    : mClassID(aClass), mClassName(className), mProgID(progID)
+nsHTTPHandlerFactory::nsHTTPHandlerFactory(const nsCID &aClass)
+    : mClassID(aClass)
 {
     NS_INIT_REFCNT();
 }
@@ -115,70 +113,5 @@ nsHTTPHandlerFactory::CreateInstance(nsISupports *aOuter,
 nsresult nsHTTPHandlerFactory::LockFactory(PRBool aLock)
 {
     // Not implemented in simplest case.
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-
-
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-    if (! aFactory)
-        return NS_ERROR_NULL_POINTER;
-
-    nsHTTPHandlerFactory* factory = new nsHTTPHandlerFactory(aClass, aClassName, aProgID);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
-}
-
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kHTTPHandlerCID,
-                                    "HTTP Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->UnregisterComponent(kHTTPHandlerCID, aPath);
-    if (NS_FAILED(rv)) return rv;
-
     return NS_OK;
 }

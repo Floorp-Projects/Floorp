@@ -26,7 +26,7 @@ MODULE		= necko
 LIBRARY_NAME	= necko
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsNetFactory.cpp
+CPPSRCS		= nsNetModule.cpp
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libneckobase_s.a \
