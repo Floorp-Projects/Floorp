@@ -25,7 +25,14 @@
 <checkbox imap_persist="true" id="dualUseFolders" label="&dualUseFolders.label;"/>
 
 <separator class="groove"/>
+<row>
+  <hbox align="center">
+    <label control="maximumConnectionsNumber" value="&maximumConnectionsNumber.label;"/>
+    <textbox imap_persist="true" size="3" id="maximumConnectionsNumber"/>
+  </hbox>
+</row>
 
+<separator class="groove"/>
 <description>&namespaceDesc.label;</description>
 <grid>
   <columns>

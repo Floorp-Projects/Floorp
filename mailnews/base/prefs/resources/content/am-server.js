@@ -126,6 +126,7 @@ function getImapServer() {
 
     imapServer.usingSubscription = document.getElementById("imap.usingSubscription").checked;
 
+    imapServer.maximumConnectionsNumber = document.getElementById("imap.maximumConnectionsNumber").getAttribute("value");
     // string prefs
     imapServer.personalNamespace = document.getElementById("imap.personalNamespace").getAttribute("value");
     imapServer.publicNamespace = document.getElementById("imap.publicNamespace").getAttribute("value");
@@ -141,6 +142,7 @@ function saveServerLocally(imapServer)
     document.getElementById("imap.dualUseFolders").checked = imapServer.dualUseFolders;
     document.getElementById("imap.usingSubscription").checked = imapServer.usingSubscription;
 
+    document.getElementById("imap.maximumConnectionsNumber").setAttribute("value", imapServer.maximumConnectionsNumber);
     // string prefs
     document.getElementById("imap.personalNamespace").setAttribute("value", imapServer.personalNamespace);
     document.getElementById("imap.publicNamespace").setAttribute("value", imapServer.publicNamespace);
