@@ -94,11 +94,36 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
-	// CloseConnection();
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one....
+#ifdef DEBUG
+	// let's dump out the contents of our db, if possible.
+	if (m_mailDB)
+	{
+		nsMsgKeyArray	keys;
+		nsString		author;
+		nsString		subject;
 
+		m_mailDB->ListAllKeys(keys);
+		for (PRInt32 index = 0; index < keys.GetSize(); index++)
+		{
+			nsMsgHdr *msgHdr = NULL;
+			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], &msgHdr);
+			if (ret == NS_OK && msgHdr)
+			{
+				nsMsgKey key;
+
+				msgHdr->GetMessageKey(&key);
+				msgHdr->GetAuthor(author);
+				msgHdr->GetSubject(subject);
+				// leak nsString return values...
+				printf("hdr key = %ld, author = %s subject = %s\n", key, author.ToNewCString(), subject.ToNewCString());
+				msgHdr->Release();
+			}
+		}
+	}
+#endif
 	return NS_OK;
 
 }
@@ -378,6 +403,8 @@ void nsParseMailMessageState::Clear()
 	m_envelope_pos = 0;
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
+	m_headers.ResetWritePos();
+	m_envelope.ResetWritePos();
 }
 
 PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 lineLength)
