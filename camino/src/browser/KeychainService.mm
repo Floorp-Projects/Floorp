@@ -325,7 +325,8 @@ int KeychainPrefChangedCallback(const char* inPref, void* unused)
     KCDeleteItem(inItemRef);
 }
 
-- (void)removeAllUsernamesAndPasswords {
+- (void)removeAllUsernamesAndPasswords
+{
   const int kBufferLen = 255;
   char buffer[kBufferLen];
   UInt32 actualSize;
