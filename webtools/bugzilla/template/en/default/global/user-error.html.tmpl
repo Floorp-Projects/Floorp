@@ -370,10 +370,10 @@
     [% END %]
     ).
 
-  [% ELSIF error == "invalid_maxrow" %]
+  [% ELSIF error == "invalid_maxrows" %]
     [% title = "Invalid Max Rows" %]
-    The maximum number of rows, '[% maxrows FILTER html %]', must be a positive
-    integer.
+    The maximum number of rows, '[% maxrows FILTER html %]', must be
+    a positive integer.
 
   [% ELSIF error == "invalid_product_name" %]
     [% title = "Invalid Product Name" %]
