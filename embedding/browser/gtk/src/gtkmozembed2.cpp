@@ -556,7 +556,12 @@ gtk_moz_embed_destroy(GtkObject *object)
   embedPrivate = (EmbedPrivate *)embed->data;
 
   if (embedPrivate) {
-    embedPrivate->Destroy();
+
+    // Destroy the widget only if it's been Init()ed.
+    if(embedPrivate->mMozWindowWidget != 0) {
+      embedPrivate->Destroy();
+    }
+
     delete embedPrivate;
     embed->data = NULL;
   }
