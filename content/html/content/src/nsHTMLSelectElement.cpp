@@ -37,6 +37,7 @@
 #include "nsGenericDOMHTMLCollection.h"
 #include "nsIJSScriptObject.h"
 #include "nsISelectElement.h"
+#include "nsCOMPtr.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -480,7 +481,64 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aValue)
   return NS_OK;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value)
+//NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value)
+NS_IMETHODIMP 
+nsHTMLSelectElement::GetValue(nsString& aValue)
+{
+  nsresult result = NS_OK;
+  PRInt32 selectedIndex;
+  
+  result = GetSelectedIndex(&selectedIndex);
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIDOMHTMLCollection> options;
+
+    result = GetOptions(getter_AddRefs(options));
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIDOMNode> node;
+      result = options->Item(selectedIndex, getter_AddRefs(node));
+      if (NS_SUCCEEDED(result) && node) {
+        nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+        if (option) {
+          option->GetValue(aValue);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::SetValue(const nsString& aValue)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMHTMLCollection> options;
+  
+  result = GetOptions(getter_AddRefs(options));
+  if (NS_SUCCEEDED(result)) {
+    PRUint32 i, length;
+    options->GetLength(&length);
+    for(i = 0; i < length; i++) {
+      nsCOMPtr<nsIDOMNode> node;
+      result = options->Item(i, getter_AddRefs(node));
+      if (NS_SUCCEEDED(result) && node) {
+        nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+        if (option) {
+          nsAutoString optionVal;
+          option->GetValue(optionVal);
+          if (optionVal.Equals(aValue)) {
+            SetSelectedIndex((PRInt32)i);
+            break;
+          }
+        }
+      }
+    }
+  }
+    
+  return result;
+}
+
+
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Multiple, multiple)
 NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Name, name)
