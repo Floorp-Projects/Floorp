@@ -394,6 +394,9 @@ NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
     result = imageReq->Init(mIconImageGroup, url, nsnull, nsnull, 0, 0,
                             nsImageLoadFlags_kHighPriority, netContext);
     aImage = imageReq->GetImage();
+	if(!aImage)
+		return NS_ERROR_OUT_OF_MEMORY; //ptn some error msg
+
 
     // Keep the image request object around and avoid reloading the image
     NS_ADDREF(imageReq);
