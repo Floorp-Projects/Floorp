@@ -2006,8 +2006,11 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   
   nsFileSpec path = oldPath;
   
-  path.CopyToDir(newPath);   //necessary for aborting....
-  summarySpec.CopyToDir(newPath);
+  rv = path.CopyToDir(newPath);   //copying necessary for aborting.... if failure return
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = summarySpec.CopyToDir(newPath);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   AddSubfolder(&folderName, getter_AddRefs(newMsgFolder));  
   
