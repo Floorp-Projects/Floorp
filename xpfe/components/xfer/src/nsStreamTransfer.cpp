@@ -70,8 +70,8 @@ protected:
 
 private:
     // Put up file picker dialog.
-    NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **result, const nsCString &suggested );
-    nsCString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
+    NS_IMETHOD SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **result, const nsString &suggested );
+    nsString  SuggestNameFor( nsIChannel *aChannel, char const *suggestedName );
 
     // Objects of this class are counted to manage library unloading...
     nsInstanceCounter instanceCounter;
@@ -214,7 +214,7 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
 }
 
 NS_IMETHODIMP
-nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResult, const nsCString &suggested ) {
+nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResult, const nsString &suggested ) {
     nsresult rv = NS_OK;
 
     if ( aResult ) {
@@ -265,7 +265,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
             PRInt16 rc = nsIFilePicker::returnCancel;
             if ( NS_SUCCEEDED( rv ) ) {
                 // Set default file name.
-                rv = picker->SetDefaultString( NS_ConvertASCIItoUCS2( suggested.GetBuffer() ).GetUnicode() );
+                rv = picker->SetDefaultString( suggested.GetUnicode() );
 
                 // Set file filter mask.
                 rv = picker->AppendFilters( nsIFilePicker::filterAll );
@@ -301,19 +301,19 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
 
 // Guess a save-as file name from channel (URL) and/or "suggested name" (which likely
 // came from content-disposition response header).
-nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *suggestedName ) {
-    nsCString result(suggestedName);
-    if ( !result.IsEmpty() ) {
+nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *suggestedName ) {
+    nsString result;
+    if ( *suggestedName ) {
         // Exclude any path information from this!  This is mandatory as
         // this suggested name comes from a http response header and could
         // try to overwrite c:\config.sys or something.
         nsCOMPtr<nsILocalFile> localFile;
-        if ( NS_SUCCEEDED( NS_NewLocalFile( result, PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
+        nsCAutoString suggestedFileName(suggestedName);
+        if ( NS_SUCCEEDED( NS_NewLocalFile( nsUnescape(suggestedFileName), PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
             // We want base part of name only.
-            nsXPIDLCString baseName;
-            if ( NS_SUCCEEDED( localFile->GetLeafName( getter_Copies( baseName ) ) ) ) {
-                // Unescape this for display in dialog.
-                result = nsUnescape( (char*)(const char*)baseName );
+            nsXPIDLString baseName;
+            if ( NS_SUCCEEDED( localFile->GetUnicodeLeafName( getter_Copies( baseName ) ) ) ) {
+                result = baseName.get();
             }
         }
     } else if ( aChannel ) {
@@ -322,13 +322,38 @@ nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *su
         nsresult rv = aChannel->GetURI( getter_AddRefs( uri ) );
         if ( NS_SUCCEEDED( rv ) && uri ) {
             // Try to get URL from URI.
+            nsCOMPtr<nsIFileURL> fileurl( do_QueryInterface( uri, &rv ) );
+            if ( NS_SUCCEEDED( rv ) && fileurl)
+            {
+              nsCOMPtr<nsIFile> localeFile;
+              rv = fileurl->GetFile(getter_AddRefs(localeFile));
+              if ( NS_SUCCEEDED( rv ) && localeFile)
+              {
+                nsXPIDLString baseName;
+                if ( NS_SUCCEEDED( localeFile->GetUnicodeLeafName( getter_Copies( baseName ) ) ) ) {
+                  result = baseName.get();
+                  return result;
+                }
+              }
+            }
+
             nsCOMPtr<nsIURL> url( do_QueryInterface( uri, &rv ) );
             if ( NS_SUCCEEDED( rv ) && url ) {
                 char *nameFromURL = 0;
                 rv = url->GetFileName( &nameFromURL );
                 if ( NS_SUCCEEDED( rv ) && nameFromURL ) {
                     // Unescape the file name (GetFileName escapes it).
-                    result = nsUnescape( nameFromURL );
+                    nsUnescape( nameFromURL );
+
+                    //make sure nameFromURL only contains ascii,
+                    //otherwise we have no idea about urlname's original charset, suggest nothing
+                    for (char *ptr = nameFromURL; *ptr; ptr++)
+                      if (*ptr & '\200')
+                        break;
+
+                    if (!(*ptr))
+                      result = NS_ConvertASCIItoUCS2(nameFromURL).GetUnicode();
+
                     nsCRT::free( nameFromURL );
                 }
             }
