@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= classic modern 
+DIRS		= classic
+
+ifndef MOZ_PHOENIX
+DIRS		+= modern 
+endif
 
 include $(topsrcdir)/config/rules.mk
 
