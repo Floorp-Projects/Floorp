@@ -1236,6 +1236,7 @@ nsJSContext::InitClasses()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to init xpconnect classes");
   }
 
+  // Initialize the options object and set default options in mContext
   if (NS_SUCCEEDED(rv)) {
     JSObject *optionsObj = ::JS_DefineObject(mContext, globalObj, "options",
                                              &OptionsClass, nsnull, 0);
