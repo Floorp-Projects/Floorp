@@ -28,7 +28,7 @@ enum nsRegionType {
   eRegionType_empty,
   eRegionType_rect,
   eRegionType_poly,
-  eRegionType_complex,
+  eRegionType_complex
 };
 
 
