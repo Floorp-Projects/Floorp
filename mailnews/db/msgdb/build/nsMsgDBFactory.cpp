@@ -17,207 +17,220 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers...
-#include "nsIServiceManager.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsMsgDBCID.h"
-#include "pratom.h"
 
 // include files for components this factory creates...
 #include "nsMailDatabase.h"
 #include "nsNewsDatabase.h"
 #include "nsImapMailDatabase.h"
-#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
 
-class nsMsgDBFactory : public nsIFactory
-{   
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailDatabase)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsDatabase)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailDatabase)
+
+// Module implementation for the msg db library
+class nsMsgDBModule : public nsIModule
+{
 public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
+    nsMsgDBModule();
+    virtual ~nsMsgDBModule();
 
-  nsMsgDBFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
+    NS_DECL_ISUPPORTS
 
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-  NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIMODULE
 
 protected:
-  virtual ~nsMsgDBFactory();   
+    nsresult Initialize();
 
-  nsCID mClassID;
-  char* mClassName;
-  char* mProgID;
-};   
+    void Shutdown();
 
-nsMsgDBFactory::nsMsgDBFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
-  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
-{   
-	NS_INIT_REFCNT();
-}   
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mMailDBFactory;
+    nsCOMPtr<nsIGenericFactory> mNewsDBFactory;
+    nsCOMPtr<nsIGenericFactory> mImapDBFactory;
+};
 
-nsMsgDBFactory::~nsMsgDBFactory()   
+
+nsMsgDBModule::nsMsgDBModule()
+    : mInitialized(PR_FALSE)
 {
-	nsMsgDatabase::CleanupCache();
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-	PL_strfree(mClassName);
-	PL_strfree(mProgID);
-}   
-
-nsresult nsMsgDBFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-    *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::GetIID()))   
-    *aResult = (void *)(nsIFactory*)this;   
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsMsgDBFactory)
-NS_IMPL_RELEASE(nsMsgDBFactory)
-
-nsresult nsMsgDBFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
-{  
-	nsresult rv = NS_OK;
-
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
-
-	*aResult = NULL;  
-  
-	nsISupports *inst = nsnull;
-
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-	// do they want an nsMailDatabase  ?
-	if (mClassID.Equals(kCMailDB)) 
-	{
-		inst = NS_STATIC_CAST(nsIMsgDatabase*, new nsMailDatabase());
-	}
-	// do they want an  nsNewsDatabase ?
-	else if (mClassID.Equals(kCNewsDB))
-	{
-		inst = NS_STATIC_CAST(nsINewsDatabase*, new nsNewsDatabase());
-	}
-	// do they want an nsImapDatabase?
-	else if (mClassID.Equals(kCImapDB)) 
-	{
-		inst = new nsImapMailDatabase();
-	}
-
-	if (inst == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(rv))
-    delete inst;
-  return rv;
-}  
-
-nsresult nsMsgDBFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock) { 
-		PR_AtomicIncrement(&g_LockCount); 
-	} else { 
-		PR_AtomicDecrement(&g_LockCount); 
-	} 
-
-  return NS_OK;
-}  
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-	// If we decide to implement multiple factories in the msg.dll, then we need to check the class
-	// type here and create the appropriate factory instead of always creating a nsMsgFactory...
-	*aFactory = new nsMsgDBFactory(aClass, aClassName, aProgID);
-
-	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+    NS_INIT_ISUPPORTS();
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
+nsMsgDBModule::~nsMsgDBModule()
 {
-	PRBool ret = PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-
-	if (ret)
-		nsMsgDatabase::CleanupCache();
-	return ret;
+    Shutdown();
 }
 
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
+NS_IMPL_ISUPPORTS(nsMsgDBModule, NS_GET_IID(nsIModule))
+
+// Perform our one-time intialization for this module
+nsresult nsMsgDBModule::Initialize()
 {
-  nsresult rv = NS_OK;
-  nsresult finalResult = NS_OK;
+    if (mInitialized)
+        return NS_OK;
 
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kCMailDB, "Local Mail DB", "component://netscape/messenger/maildb",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv))finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kCNewsDB, "News DB", "component://netscape/messenger/newsdb", 
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kCImapDB, "IMAP DB", "component://netscape/messenger/imapdb",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  
-  return finalResult;
+    mInitialized = PR_TRUE;
+    return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
+// Shutdown this module, releasing all of the module resources
+void nsMsgDBModule::Shutdown()
 {
-  nsresult rv = NS_OK;
-  nsresult finalResult = NS_OK;
+    // Release the factory objects
+    mMailDBFactory = null_nsCOMPtr();
+    mNewsDBFactory = null_nsCOMPtr();
+    mImapDBFactory = null_nsCOMPtr();
+}
 
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP nsMsgDBModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
 
-  rv = compMgr->UnregisterComponent(kCMailDB, path);
-  if (NS_FAILED(rv)) finalResult = rv;
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj)
+        return NS_ERROR_INVALID_POINTER;
 
-  rv = compMgr->UnregisterComponent(kCImapDB, path);
-  if (NS_FAILED(rv)) finalResult = rv;
+    *r_classObj = NULL;
 
-  rv = compMgr->UnregisterComponent(kCNewsDB, path);
-  if (NS_FAILED(rv)) finalResult = rv;
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) 
+    {
+        rv = Initialize();
+        if (NS_FAILED(rv)) // Initialization failed! yikes!
+            return rv;
+    }
 
-  return finalResult;
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+
+    if (aClass.Equals(kCMailDB))
+    {
+        if (!mMailDBFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMailDBFactory), &nsMailDatabaseConstructor);
+        fact = mMailDBFactory;
+    }
+    else if (aClass.Equals(kCNewsDB))
+    {
+        if (!mNewsDBFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mNewsDBFactory), &nsNewsDatabaseConstructor);
+        fact = mNewsDBFactory;
+    }
+    else if (aClass.Equals(kCImapDB))
+    {
+        if (!mImapDBFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mImapDBFactory), &nsImapMailDatabaseConstructor);
+        fact = mImapDBFactory;
+    }
+    if (fact)
+        rv = fact->QueryInterface(aIID, r_classObj);
+
+    return rv;
+}
+
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Mail DB", &kCMailDB,
+      nsnull },
+    { "News DB", &kCNewsDB,
+      nsnull },    
+    { "Imap DB", &kCImapDB,
+      nsnull },
+
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP nsMsgDBModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) 
+            break;
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP nsMsgDBModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload)
+        return NS_ERROR_INVALID_POINTER;
+
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsMsgDBModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsMsgDBModule: Module already created.");
+
+    // Create an initialize the imap module instance
+    nsMsgDBModule *module = new nsMsgDBModule();
+    if (!module)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = module->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) 
+    {
+        delete module;
+        module = nsnull;
+    }
+    gModule = module;                  // WARNING: Weak Reference
+    return rv;
 }
