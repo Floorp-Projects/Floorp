@@ -311,7 +311,7 @@ protected:
 };
 
 
-NS_LAYOUT nsresult
+NS_EXPORT nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 {
   nsDOMImplementation* domImpl = new nsDOMImplementation();

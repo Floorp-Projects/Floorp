@@ -3114,7 +3114,7 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRul
 }
 
 // XXX for backwards compatibility and convenience
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
 {
   nsICSSStyleSheet* sheet;
@@ -3131,7 +3131,7 @@ NS_HTML nsresult
   return NS_OK;
 }
 
-NS_HTML nsresult
+NS_EXPORT nsresult
   NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
