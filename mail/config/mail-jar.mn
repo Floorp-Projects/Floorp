@@ -136,6 +136,8 @@ content/global/printPreviewProgress.xul,              toolkit/content/global/pri
 content/global/printPreviewProgress.js,               toolkit/content/global/printPreviewProgress.js
 content/global/printPageSetup.js,                     toolkit/content/global/printPageSetup.js
 content/global/printPageSetup.xul,                    toolkit/content/global/printPageSetup.xul
+content/global/printjoboptions.js,		                toolkit/content/global/printjoboptions.js
+content/global/printjoboptions.xul,		                toolkit/content/global/printjoboptions.xul
 content/global/MPL-1.1.html,                          toolkit/content/global/MPL-1.1.html
 content/global/NPL-1.1.html,                          toolkit/content/global/NPL-1.1.html
 content/global/customizeToolbar.xul,                  toolkit/content/global/customizeToolbar.xul
