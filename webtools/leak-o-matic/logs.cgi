@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 #
-# $Id: logs.cgi,v 1.1 1999/11/16 22:10:11 waterson%netscape.com Exp $
+# $Id: logs.cgi,v 1.2 1999/11/16 22:15:26 waterson%netscape.com Exp $
 #
 
 #
@@ -58,8 +58,8 @@ that are currently available for your perusal.
 </p>
 
 <div align='center'>
-<table border='0'>
-<tr><td align='center' colspan='3'><b>Leaks</b></td></tr>
+<table border='0' cellpadding='2' cellspacing='0' bgcolor='#EEEEEE'>
+<tr><td bgcolor='#DDDDDD' align='center' colspan='3'><b>Leak-o-Matic Logs</b></td></tr>
 
 };
 
@@ -87,11 +87,11 @@ print qq{
 <p>
 For more information on how to use the Leak-o-Matic, see the
 
-<a href="instructions.html">instructions</a>
+<a href="instructions.html">instructions</a>.
 </p>
 
 };
 
-print '<small>$Id: logs.cgi,v 1.1 1999/11/16 22:10:11 waterson%netscape.com Exp $</small>';
+print '<small>$Id: logs.cgi,v 1.2 1999/11/16 22:15:26 waterson%netscape.com Exp $</small>';
 print $::query->end_html;
 
