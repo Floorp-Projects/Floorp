@@ -2285,7 +2285,7 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 	     * left-hand operand.
 	     */
 	    off = len - cs->length;
-	    JS_ASSERT(off == PTRDIFF(pc, begin, jsbytecode));
+	    JS_ASSERT(off == (uintN) PTRDIFF(pc, begin, jsbytecode));
 	    if (mode == JOF_PROP) {
 		tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
 	    } else {
