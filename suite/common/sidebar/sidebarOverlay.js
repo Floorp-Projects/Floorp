@@ -231,6 +231,7 @@ function sidebarShowHide() {
     sidebar.setAttribute('hidden','true')
     sidebar_splitter.setAttribute('hidden','true')
   }
+  document.persist('sidebar-box', 'state')
 }
 
 function dumpAttributes(node) {
