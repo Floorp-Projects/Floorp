@@ -1436,7 +1436,11 @@ NS_IMETHODIMP nsParser::ContinueInterruptedParsing()
   NS_ASSERTION(mFlags & NS_PARSER_FLAG_PARSER_ENABLED,
                "Don't call ContinueInterruptedParsing on a blocked parser.");
 
-  PRBool isFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
+  PRBool isFinalChunk = (mParserContext &&
+                          mParserContext->mStreamListenerState==eOnStop) ?
+                          PR_TRUE : PR_FALSE;
+  if (mParserContext && mParserContext->mScanner)
+    mParserContext->mScanner->SetIncremental(!isFinalChunk);
   
   result=ResumeParse(PR_TRUE,isFinalChunk); // Ref. bug 57999
   
