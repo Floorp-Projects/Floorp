@@ -19,7 +19,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorhtmldoc_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor pref
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -50,7 +50,7 @@ EXPORTS =					\
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\base\src -I..\..\forms\src \
   -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src
+  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 
 LCFLAGS = \
         $(LCFLAGS) \

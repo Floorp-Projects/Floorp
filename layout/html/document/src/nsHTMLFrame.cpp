@@ -38,6 +38,7 @@
 #include "nsIStyleContext.h"
 #include "nsCSSLayout.h"
 #include "nsIDocumentLoader.h"
+#include "nsIPref.h"
 //#include "nsIDocumentWidget.h"
 #include "nsHTMLFrameset.h"
 class nsHTMLFrame;
@@ -511,6 +512,12 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     container->QueryInterface(kIWebShellIID, (void**) &outerShell);
     if (nsnull != outerShell) {
       outerShell->AddChild(mWebShell);
+      nsIPref*  outerPrefs = nsnull;  // connect the prefs
+      outerShell->GetPrefs(outerPrefs);
+      if (nsnull != outerPrefs) {
+        mWebShell->SetPrefs(outerPrefs);
+        NS_RELEASE(outerPrefs);
+      }
       NS_RELEASE(outerShell);
     }
     NS_RELEASE(container);
