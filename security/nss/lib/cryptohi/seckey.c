@@ -1809,6 +1809,11 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
 {
     SECKEYPublicKey *pubk = NULL;
     SECStatus rv = SECFailure;
+    SECItem newDerKey;
+
+    if (!derKey) {
+        return NULL;
+    } 
 
     pubk = PORT_ZNew(SECKEYPublicKey);
     if(pubk == NULL) {
@@ -1818,23 +1823,28 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     if (NULL == pubk->arena) {
         goto finish;
     }
+    rv = SECITEM_CopyItem(pubk->arena, &newDerKey, derKey);
+    if (SECSuccess != rv) {
+        goto finish;
+    }
+
     pubk->pkcs11Slot = NULL;
     pubk->pkcs11ID = CK_INVALID_HANDLE;
 
     switch( type ) {
       case CKK_RSA:
 	prepare_rsa_pub_key_for_asn1(pubk);
-        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_RSAPublicKeyTemplate,derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_RSAPublicKeyTemplate, &newDerKey);
         pubk->keyType = rsaKey;
         break;
       case CKK_DSA:
 	prepare_dsa_pub_key_for_asn1(pubk);
-        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DSAPublicKeyTemplate,derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DSAPublicKeyTemplate, &newDerKey);
         pubk->keyType = dsaKey;
         break;
       case CKK_DH:
 	prepare_dh_pub_key_for_asn1(pubk);
-        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DHPublicKeyTemplate, derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DHPublicKeyTemplate, &newDerKey);
         pubk->keyType = dhKey;
         break;
       default:
@@ -1844,6 +1854,9 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
 
 finish:
     if( rv != SECSuccess && pubk != NULL) {
+        if (pubk->arena) {
+            PORT_FreeArena(pubk->arena, PR_TRUE);
+        }
         PORT_Free(pubk);
         pubk = NULL;
     }
