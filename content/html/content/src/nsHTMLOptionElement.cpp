@@ -69,6 +69,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsXULAtoms.h"
+#include "nsIDOMDocument.h"
 
 /**
  * Implementation of &lt;option&gt;
@@ -154,15 +155,21 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
 
   /*
    * nsHTMLOptionElement's will be created without a nsINodeInfo passed in
-   * if someone creates new option elements in JavaScript, in a case like
-   * that we request the nsINodeInfo from the anonymous nodeinfo list.
+   * if someone says "var opt = new Option();" in JavaScript, in a case like
+   * that we request the nsINodeInfo from the document's nodeinfo list.
    */
+  nsresult rv;
   nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
+    nsCOMPtr<nsIDOMDocument> dom_doc;
+    nsContentUtils::GetDocumentFromCaller(getter_AddRefs(dom_doc));
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
     nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-    nsresult rv;
-    rv = nsNodeInfoManager::GetAnonymousManager(*getter_AddRefs(nodeInfoManager));
-    NS_ENSURE_SUCCESS(rv, rv);
+    doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::option, nsnull,
                                       kNameSpaceID_None,
@@ -176,7 +183,7 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(nodeInfo);
+  rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(nodeInfo);
 
   if (NS_FAILED(rv)) {
     delete it;

@@ -53,12 +53,12 @@
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMError.h"
-
+#include "nsIDOMWindowInternal.h"
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 
-static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+static const char *kJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
 nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
@@ -80,7 +80,7 @@ nsContentUtils::Init()
     sSecurityManager = nsnull;
   }
 
-  rv = CallGetService(sJSStackContractID, &sThreadJSContextStack);
+  rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
   if (NS_FAILED(rv)) {
     sThreadJSContextStack = nsnull;
   }
@@ -91,7 +91,7 @@ nsContentUtils::Init()
 // static
 nsresult
 nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
-                                     nsIScriptGlobalObject** aNativeGlobal)
+                                      nsIScriptGlobalObject** aNativeGlobal)
 {
   if (!sXPConnect) {
     *aNativeGlobal = nsnull;
@@ -126,8 +126,8 @@ nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
 //static
 nsresult
 nsContentUtils::GetStaticScriptContext(JSContext* aContext,
-                                      JSObject* aObj,
-                                      nsIScriptContext** aScriptContext)
+                                       JSObject* aObj,
+                                       nsIScriptContext** aScriptContext)
 {
   nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
   GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
@@ -142,7 +142,7 @@ nsContentUtils::GetStaticScriptContext(JSContext* aContext,
 //static
 nsresult
 nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
-                                      nsIScriptGlobalObject** aNativeGlobal)
+                                       nsIScriptGlobalObject** aNativeGlobal)
 {
   nsCOMPtr<nsIScriptContext> scriptCX;
   GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
@@ -156,7 +156,7 @@ nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
 //static
 nsresult
 nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
-                                       nsIScriptContext** aScriptContext)
+                                        nsIScriptContext** aScriptContext)
 {
   *aScriptContext = nsnull;
 
@@ -617,7 +617,7 @@ nsContentUtils::InProlog(nsIDOMNode *aNode)
 
   // Check that there are no elements before aNode to make sure we are not
   // in the epilog
-  PRInt32 pos, i;
+  PRInt32 pos;
   doc->IndexOf(cont, pos);
   while (pos > 0) {
     --pos;
@@ -823,6 +823,30 @@ nsContentUtils::GetDocShellFromCaller(nsIDocShell** aDocShell)
     if (sgo) {
       sgo->GetDocShell(aDocShell);
     }
+  }
+}
+
+void
+nsContentUtils::GetDocumentFromCaller(nsIDOMDocument** aDocument)
+{
+  *aDocument = nsnull;
+  if (!sThreadJSContextStack) {
+    return;
+  }
+
+  JSContext *cx = nsnull;
+  sThreadJSContextStack->Peek(&cx);
+
+  if (cx) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+
+    nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(sgo));
+    if (!win) {
+      return;
+    }
+
+    win->GetDocument(aDocument);
   }
 }
 
@@ -1138,7 +1162,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
 
   if (cx) {
     if (!mStack) {
-      mStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+      mStack = do_GetService(kJSStackContractID);
     }
 
     if (mStack) {

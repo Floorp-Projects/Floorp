@@ -209,7 +209,7 @@ protected:
   static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
   static PRBool MatchFormControls(nsIContent* aContent, nsString* aData);
 
-  static nsresult GetSourceDocumentURL(JSContext* cx, nsIURI** sourceURL);
+  static nsresult GetSourceDocumentURL(nsIURI** sourceURL);
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
