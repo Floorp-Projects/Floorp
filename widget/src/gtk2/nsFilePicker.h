@@ -43,10 +43,10 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 class nsIWidget;
 class nsILocalFile;
-class nsISupportsArray;
 class PRLibrary;
 
 class nsFilePicker : public nsBaseFilePicker
@@ -70,7 +70,7 @@ protected:
 
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
-  nsCOMPtr<nsISupportsArray> mFiles;
+  nsCOMArray<nsILocalFile> mFiles;
 
   PRInt16   mMode;
   PRInt16   mSelectedType;
