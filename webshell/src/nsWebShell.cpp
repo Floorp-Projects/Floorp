@@ -1916,45 +1916,32 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                  aReferrer);
 }
 
-// Nisheeth: returns true if the host and the file parts of
-// the two nsIURI's match.
+
 static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 {
-  nsXPIDLCString host1;
-  nsXPIDLCString host2;
-  nsXPIDLCString file1;
-  nsXPIDLCString file2;
-  char *  anchor1 = nsnull, * anchor2=nsnull;
-  PRBool rv = PR_FALSE;
-
-  if (url1 && url2) {
-    // XXX We need to make these strcmps case insensitive.
-    url1->GetHost(getter_Copies(host1));
-    url2->GetHost(getter_Copies(host2));
-    if (0 == PL_strcmp(host1, host2)) {
-      url1->GetPath(getter_Copies(file1));
-      url2->GetPath(getter_Copies(file2));
-
-      anchor1 = PL_strrchr(file1, '#');
-      if (anchor1) {
-        char * tmp = PL_strstr(file1, file2);
-        if (tmp && (const char *)tmp == file1) {
-          return PR_TRUE;
-        }
-      }
-      anchor2 = PL_strrchr(file2, '#');
-      if (anchor2) {
-        char * tmp = PL_strstr(file2, file1);
-        if (tmp && (const char *)tmp == file2) {
-          return PR_TRUE;
-        }
-      }
-
-      if (0 == PL_strcmp(file1, file2)) {
-        rv = PR_TRUE;
-      }
-    }  // strcmp(host1, host2)
-  }   // url1 && url2
+   nsXPIDLCString spec1;
+   nsXPIDLCString spec2;
+   char *  anchor1 = nsnull, * anchor2=nsnull;
+   PRBool rv = PR_FALSE;
+  
+   if (url1 && url2) {
+     // XXX We need to make these strcmps case insensitive.
+     url1->GetSpec(getter_Copies(spec1));
+     url2->GetSpec(getter_Copies(spec2));
+ 
+     /* Don't look at the ref-part */
+     anchor1 = PL_strrchr(spec1, '#');
+     anchor2 = PL_strrchr(spec2, '#');
+ 
+     if (anchor1)
+         *anchor1 = '\0';
+     if (anchor2)
+         *anchor2 = '\0';
+ 
+     if (0 == PL_strcmp(spec1,spec2)) {
+       rv = PR_TRUE;
+     }
+   }   // url1 && url2
   return rv;
 }
 
@@ -2021,51 +2008,38 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
         rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
 
         if (NS_SUCCEEDED(rv) && presShell) {
-          if (nsnull != (const char *) ref) {
+		   /* Pass OnStartDocument notifications to the docloaderobserver
+            * so that urlbar, forward/back buttons will
+		    * behave properly when going to named anchors
+			*/
+           nsCOMPtr<nsIChannel> dummyChannel;
+           rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
+           if (NS_FAILED(rv)) return rv;
+           rv = OnStartDocumentLoad(mDocLoader, aUri, "load");
+
+           if (nsnull != (const char *) ref) {
             // Go to the anchor in the current document
-            rv = presShell->GoToAnchor(nsAutoString(ref));
-            if (NS_SUCCEEDED(rv)) {
-              // Pass notifications to BrowserAppCore just to be consistent with
-              // regular page loads thro' necko
-              nsCOMPtr<nsIChannel> dummyChannel;
-              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
-              if (NS_FAILED(rv)) return rv;
-
-              mProcessedEndDocumentLoad = PR_FALSE;
-              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
-
-              return rv;
-            }
-            //
-            // If the anchor does not exist, just fall down into the code
-            // to load a new document...
-            //
-          }
-          else if (aType == nsISessionHistory::LOAD_HISTORY)
-          {
-            // Go to the top of the current document
-            nsCOMPtr<nsIViewManager> viewMgr;
-            rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
-            if (NS_SUCCEEDED(rv) && viewMgr) {
-
-
-              nsIScrollableView* view;
-              rv = viewMgr->GetRootScrollableView(&view);
-              if (NS_SUCCEEDED(rv) && view)
-                rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-
-              // Pass notifications to BrowserAppCore just to be consistent with
-              // regular necko loads.
-              nsCOMPtr<nsIChannel> dummyChannel;
-              rv = NS_OpenURI(getter_AddRefs(dummyChannel), aUri, nsnull);
-              if (NS_FAILED(rv)) return rv;
-              mProcessedEndDocumentLoad = PR_FALSE;
-
-              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
-            }
-            return rv;
-          }
-        }
+            rv = presShell->GoToAnchor(nsAutoString(ref));            
+           }
+           else if (aType == nsISessionHistory::LOAD_HISTORY)
+           {
+              // Go to the top of the current document
+              nsCOMPtr<nsIViewManager> viewMgr;
+              rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
+              if (NS_SUCCEEDED(rv) && viewMgr) {
+                nsIScrollableView* view;
+                rv = viewMgr->GetRootScrollableView(&view);
+			
+				if (NS_SUCCEEDED(rv) && view)
+                  rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+				  
+			  } // NS_SUCCEEDED(rv)            
+           }		   
+		   mProcessedEndDocumentLoad = PR_FALSE;
+		   // Pass on status of scrolling/anchor visit to docloaderobserver
+           rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this);
+		   return rv;		   
+        }  // NS_SUCCEEDED(rv) && presShell
       } // EqualBaseURLs(docURL, url)
     }
   }
@@ -3469,18 +3443,6 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   aURL->GetSpec(getter_Copies(url));
   if (0 == PL_strcmp(url, mURL.GetBuffer()))
     StopAfterURLAvailable();
-
-  // XXX This is a temporary hack for meeting the M4 milestone
-  // for seamonkey.  I think Netlib should send a message to all stream listeners
-  // when it changes the URL like this.  That would mean adding a new method
-  // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
-
-  /* Overriding comments: History mechanism has changed. So is Necko changing.
-   * Need to check in the new world if this is still valid. If so, new methods
-   * need to be added to nsISessionHistory. Until then. We don't need this.
-   * This is being done so that old History code can be removed.
-   */
-//  CheckForTrailingSlash(aURL);
 
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
