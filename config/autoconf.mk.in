@@ -119,6 +119,8 @@ TK_MOTIF_LIBS	= @TK_MOTIF_LIBS@
 TK_GTK_CFLAGS	= @TK_GTK_CFLAGS@
 TK_GTK_LIBS	= @TK_GTK_LIBS@
 
+MOZ_NATIVE_MAKEDEPEND	= @SYSTEM_MAKEDEPEND@
+
 # XXX - these need to be cleaned up and have real checks added -cls
 NGLAYOUT_PLUGINS=1 
 CM_BLDTYPE=dbg 
