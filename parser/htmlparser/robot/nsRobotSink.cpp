@@ -69,6 +69,8 @@ public:
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseTopmostContainer();
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddComment(const nsIParserNode& aNode);
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
@@ -247,6 +249,28 @@ NS_IMETHODIMP RobotSink::CloseTopmostContainer()
 NS_IMETHODIMP RobotSink::AddLeaf(const nsIParserNode& aNode)
 {
   return NS_OK;
+}
+
+/**
+ * This gets called by the parsing system when we find a comment
+ * @update	gess11/9/98
+ * @param   aNode contains a comment token
+ * @return  error code
+ */
+NS_IMETHODIMP RobotSink::AddComment(const nsIParserNode& aNode) {
+  nsresult result= NS_OK;
+  return result;
+}
+
+/**
+ * This gets called by the parsing system when we find a PI
+ * @update	gess11/9/98
+ * @param   aNode contains a comment token
+ * @return  error code
+ */
+NS_IMETHODIMP RobotSink::AddProcessingInstruction(const nsIParserNode& aNode) {
+  nsresult result= NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP RobotSink::Init(nsIURL* aDocumentURL)

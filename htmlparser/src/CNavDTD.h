@@ -589,7 +589,7 @@ protected:
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mFormContext;
     nsDTDContext*       mMapContext;
-
+    PRBool              mAllowUnknownTags;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     PRBool              mHasOpenHead;
@@ -598,7 +598,6 @@ protected:
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
     eParseMode          mParseMode;
-
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

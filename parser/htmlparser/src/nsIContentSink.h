@@ -101,6 +101,27 @@ public:
    * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This gets called by the parser when you want to add
+   * a leaf node to the current container in the content
+   * model.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD AddComment(const nsIParserNode& aNode) = 0;
+
+  /**
+   * This gets called by the parser when you want to add
+   * a leaf node to the current container in the content
+   * model.
+   *
+   * @update 4/1/98 gess
+   * @param  nsIParserNode reference to parser node interface
+   */     
+  NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
+
 };
 
 #endif /* nsIContentSink_h___ */

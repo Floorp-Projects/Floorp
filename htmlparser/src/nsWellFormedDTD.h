@@ -220,10 +220,20 @@ class CWellFormedDTD : public nsIDTD {
     
 protected:
 
-    
+    NS_IMETHODIMP ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    NS_IMETHODIMP ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
+
     nsParser*           mParser;
-    nsIHTMLContentSink* mSink;
-    char*               mFilename;
+    nsIContentSink*     mSink;
+    nsString            mFilename;
+    PRInt32             mLineNumber;
+    nsDeque             mTokenDeque;
 };
 
 extern NS_HTMLPARS nsresult NS_NewWellFormed_DTD(nsIDTD** aInstancePtrResult);

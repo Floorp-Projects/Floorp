@@ -29,6 +29,8 @@
 #include "nsHTMLTags.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
+#include "nsDeque.h"
+#include "nsIDTD.h"
 
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
@@ -42,6 +44,25 @@
   equal to the eStackSize enum. This makes debugging easier, because
   you can see the htmltags on the stack if its not dynamic.
  ***************************************************************/
+
+/**
+ * This method quickly scans the given set of tags,
+ * looking for the given tag.
+ * @update	gess8/27/98
+ * @param   aTag -- tag to be search for in set
+ * @param   aTagSet -- set of tags to be searched
+ * @return
+ */
+inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount)  {
+  PRInt32 index;
+
+  for(index=0;index<aCount;index++)
+    if(aTag==aTagSet[index]) {
+      return PR_TRUE;
+    }
+  return PR_FALSE;
+}
+
 
 //#define _dynstack 1
 class nsTagStack {
@@ -89,6 +110,39 @@ public:
   nsTagStack*   mStyles;    //the dtd should have direct access to them.
 };
 
+
+/**************************************************************
+  Now define the token deallocator class...
+ **************************************************************/
+class CTokenDeallocator: public nsDequeFunctor{
+public:
+  virtual void* operator()(void* anObject) {
+    CToken* aToken = (CToken*)anObject;
+    delete aToken;
+    return 0;
+  }
+};
+
+
+/************************************************************************
+  CTokenRecycler class implementation.
+  This class is used to recycle tokens. 
+  By using this simple class, we cut WAY down on the number of tokens
+  that get created during the run of the system.
+ ************************************************************************/
+class CTokenRecycler : public nsITokenRecycler {
+public:
+  
+//      enum {eCacheMaxSize=100}; 
+
+                  CTokenRecycler();
+  virtual         ~CTokenRecycler();
+  virtual void    RecycleToken(CToken* aToken);
+  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsString& aString);
+
+protected:
+    nsDeque*  mTokenCache[eToken_last-1];
+};
 
 
 #endif

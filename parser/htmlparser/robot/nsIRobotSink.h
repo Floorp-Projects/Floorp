@@ -32,6 +32,7 @@ public:
   NS_IMETHOD Init(nsIURL* aDocumentURL) = 0;
   NS_IMETHOD AddObserver(nsIRobotSinkObserver* aObserver) = 0;
   NS_IMETHOD RemoveObserver(nsIRobotSinkObserver* aObserver) = 0;
+
 };
 
 extern nsresult NS_NewRobotSink(nsIRobotSink** aInstancePtrResult);
