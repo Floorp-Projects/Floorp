@@ -9,7 +9,7 @@ creates a bookmark element and tries to insert it.
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -42,7 +42,7 @@ function AddBookmark()
   newItem.setAttribute('id', 'http://home.netscape.com/people/waterson');
   newItem.setAttribute('type', 'http://home.netscape.com/NC-rdf#Bookmark');
   newItem.setAttribute('nc:Name', 'My Home Page');
-  newItem.setAttribute('rdf:property', 'http://www.w3.org/TR/WD-rdf-syntax#_5');
+  newItem.setAttribute('rdf:property', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#_5');
 
   treechildren.appendChild(newItem);
 }
