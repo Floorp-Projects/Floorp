@@ -139,7 +139,7 @@ NS_NewComposerBootstrap(const nsIID &aIID, void **msgboot,
 class nsComposer : public nsIComposer {
 
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 };
 
 NS_IMPL_ISUPPORTS(nsComposer, nsIComposer::GetIID())
