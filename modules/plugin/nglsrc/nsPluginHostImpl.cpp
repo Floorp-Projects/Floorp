@@ -3509,7 +3509,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
               if (newPostData)
                 {
-                  delete [] newPostData;
+                  delete [] (char *)newPostData;
                   newPostData = nsnull;
                 }
             }
