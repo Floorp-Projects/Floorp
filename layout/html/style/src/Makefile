@@ -53,7 +53,7 @@ EXPORTS =				\
 
 MODULE = raptor
 
-INCLUDES += -I../../base/src -I../../../base/src -I../../table/src -I.
+INCLUDES += -I../../base/src -I../../../base/src -I../../table/src -I../../content/src -I.
 
 REQUIRES = xpcom raptor dom netlib js
 

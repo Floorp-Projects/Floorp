@@ -64,6 +64,7 @@ public:
   static nsIAtom* bottompadding;
   static nsIAtom* br;
 
+  static nsIAtom* caption;
   static nsIAtom* cellpadding;
   static nsIAtom* cellspacing;
   static nsIAtom* ch;
@@ -79,6 +80,8 @@ public:
   static nsIAtom* codebase;
   static nsIAtom* codetype;
   static nsIAtom* color;
+  static nsIAtom* col;
+  static nsIAtom* colgroup;
   static nsIAtom* cols;
   static nsIAtom* colspan;
   static nsIAtom* columnPseudo;
@@ -224,13 +227,17 @@ public:
   static nsIAtom* table;
   static nsIAtom* tabstop;
   static nsIAtom* target;
+  static nsIAtom* tbody;
   static nsIAtom* td;
+  static nsIAtom* tfoot;
+  static nsIAtom* thead;
   static nsIAtom* text;
   static nsIAtom* textarea;
   static nsIAtom* th;
   static nsIAtom* title;
   static nsIAtom* top;
   static nsIAtom* toppadding;
+  static nsIAtom* tr;
   static nsIAtom* type;
 
   static nsIAtom* ul;

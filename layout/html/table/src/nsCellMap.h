@@ -20,8 +20,8 @@
 
 #include "nscore.h"
 #include "celldata.h"
+#include "nsVoidArray.h"
 
-class nsVoidArray;
 class nsTableColFrame;
 class nsTableCellFrame;
 

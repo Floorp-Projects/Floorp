@@ -32,9 +32,8 @@
 #include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
 // the following header files are required for style optimizations that work only when the child content is really a cell
-#include "nsITableContent.h"
-#include "nsTableCell.h"
-static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+#include "nsIHTMLTableCellElement.h"
+static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 // end includes for style optimizations that require real content knowledge
 
 NS_DEF_PTR(nsIStyleContext);
@@ -553,18 +552,14 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
      * other tags mapped to table cell display won't benefit from this optimization
      * see nsHTMLStyleSheet::RulesMatching
      */
-    nsITableContent *tableContentInterface = nsnull;
-    nsresult rv = cell->QueryInterface(kITableContentIID, 
-                                       (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
+    nsIHTMLTableCellElement *cellContent = nsnull;
+    nsresult rv = cell->QueryInterface(kIHTMLTableCellElementIID, 
+                                       (void **)&cellContent);  // cellContent: REFCNT++
     if (NS_SUCCEEDED(rv))
-    { // we know it's a table part of some sort, is it a cell?
-      const int contentType = ((nsTableContent *)tableContentInterface)->GetType();
-      if (contentType == nsITableContent::kTableCellType)
-      {
-        ((nsTableCell *)tableContentInterface)->SetColIndex(colIndex);
-        if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, tableContentInterface, colIndex);
-      }
-      NS_RELEASE(tableContentInterface);
+    { // we know it's a table cell
+      cellContent->SetColIndex(colIndex);
+      if (gsDebug) printf("%p : set cell content %p to col index = %d\n", this, cellContent, colIndex);
+      NS_RELEASE(cellContent);
     }
     // part of the style optimization is to ensure that the column frame for the cell exists
     // we used to do this post-pass1, now we do it incrementally for the optimization
@@ -587,7 +582,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       break;
     }
     // this sets the frame's notion of it's column index
-    ((nsTableCellFrame *)kidFrame)->SetColIndex(colIndex);
+    ((nsTableCellFrame *)kidFrame)->InitCellFrame(colIndex);
     if (gsDebug) printf("%p : set cell frame %p to col index = %d\n", this, kidFrame, colIndex);
     // add the cell frame to the table's cell map
     aState.tableFrame->AddCellToTable(this, (nsTableCellFrame *)kidFrame, isFirst);
@@ -1005,19 +1000,18 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsTableRowFrame::NewFrame( nsIFrame** aInstancePtrResult,
-                                    nsIContent* aContent,
-                                    nsIFrame*   aParent)
+/* ----- global methods ----- */
+
+nsresult 
+NS_NewTableRowFrame(nsIContent* aContent,
+                    nsIFrame*   aParentFrame,
+                    nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableRowFrame(aContent, aParent);
+  nsIFrame* it = new nsTableRowFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 

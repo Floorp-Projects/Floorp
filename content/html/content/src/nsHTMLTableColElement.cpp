@@ -17,9 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLTableColElement.h"
+#include "nsIHTMLTableColElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -28,11 +30,13 @@
 #include "nsIPresContext.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
+static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
-class nsHTMLTableColElement : public nsIDOMHTMLTableColElement,
-                       public nsIScriptObjectOwner,
-                       public nsIDOMEventReceiver,
-                       public nsIHTMLContent
+class nsHTMLTableColElement :  public nsIDOMHTMLTableColElement,
+                               public nsIScriptObjectOwner,
+                               public nsIDOMEventReceiver,
+                               public nsIHTMLContent,
+                               public nsIHTMLTableColElement
 {
 public:
   nsHTMLTableColElement(nsIAtom* aTag);
@@ -76,6 +80,9 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIHTMLTableColElement
+  NS_IMETHOD GetSpanValue(PRInt32* aSpan);
+
 protected:
   nsGenericHTMLContainerElement mInner;
 };
@@ -118,6 +125,12 @@ nsHTMLTableColElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
+  if (aIID.Equals(kIHTMLTableColElementIID)) {
+    nsIHTMLTableColElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    mRefCnt++;
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -144,7 +157,36 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
                                   const nsString& aValue,
                                   nsHTMLValue& aResult)
 {
-  // XXX write me
+  /* ignore these attributes, stored simply as strings
+     ch
+   */
+  /* attributes that resolve to integers */
+  if (aAttribute == nsHTMLAtoms::choff) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else   if (aAttribute == nsHTMLAtoms::repeat) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents or proportions */
+  else if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* other attributes */
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -153,7 +195,22 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
                                   nsHTMLValue& aValue,
                                   nsString& aResult) const
 {
-  // XXX write me
+  /* ignore these attributes, stored already as strings
+     ch
+   */
+  /* ignore attributes that are of standard types
+     choff, repeat, width
+   */
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -162,9 +219,51 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+  if (nsnull != aAttributes) {
+
+    float p2t;
+    nsHTMLValue value;
+    nsStyleText* textStyle = nsnull;
+
+    // width
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      switch (value.GetUnit()) {
+      case eHTMLUnit_Percent:
+        position->mWidth.SetPercentValue(value.GetPercentValue());
+        break;
+
+      case eHTMLUnit_Pixel:
+        p2t = aPresContext->GetPixelsToTwips();
+        position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+      }
+    }
+
+    // align: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+    
+    // valign: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+  }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
 
 NS_IMETHODIMP
 nsHTMLTableColElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
@@ -183,4 +282,17 @@ nsHTMLTableColElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
+}
+
+NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
+{
+  if (nsnull!=aSpan)
+  {
+    PRInt32 span=-1;
+    GetSpan(&span);
+    if (-1==span)
+      span=1; // the default;
+    *aSpan = span;
+  }
+  return NS_OK;
 }

@@ -34,10 +34,6 @@
 #include "nsHTMLParts.h"
 #include "nsITextContent.h"
 
-
-#include "nsTablePart.h"
-#include "nsTableRow.h"
-#include "nsTableCell.h"
 #include "nsIDOMText.h"
 
 #include "nsHTMLForms.h"
@@ -487,13 +483,13 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLBRElement(aResult, aAtom);
     break;
   case eHTMLTag_caption:
-    rv = NS_NewTableCaptionPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableCaptionElement(aResult, aAtom);
     break;
   case eHTMLTag_col:
-    rv = NS_NewTableColPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableColElement(aResult, aAtom);
     break;
   case eHTMLTag_colgroup:
-    rv = NS_NewTableColGroupPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableColGroupElement(aResult, aAtom);
     break;
   case eHTMLTag_dir:
     rv = NS_NewHTMLDirectoryElement(aResult, aAtom);
@@ -603,16 +599,16 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLStyleElement(aResult, aAtom);
     break;
   case eHTMLTag_table:
-    rv = NS_NewTablePart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableElement(aResult, aAtom);
     break;
   case eHTMLTag_tbody:
   case eHTMLTag_thead:
   case eHTMLTag_tfoot:
-    rv = NS_NewTableRowGroupPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableSectionElement(aResult, aAtom);
     break;
   case eHTMLTag_td:
   case eHTMLTag_th:
-    rv = NS_NewTableCellPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableCellElement(aResult, aAtom);
     break;
   case eHTMLTag_textarea:
     rv = NS_NewHTMLTextAreaElement(aResult, aAtom);
@@ -621,7 +617,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLTitleElement(aResult, aAtom);
     break;
   case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(aResult, aAtom);/* XXX old style */
+    rv = NS_NewHTMLTableRowElement(aResult, aAtom);
     break;
   case eHTMLTag_ul:
     rv = NS_NewHTMLUListElement(aResult, aAtom);

@@ -20,6 +20,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -156,6 +157,9 @@ nsHTMLTableElement::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
+// the DOM spec says border, cellpadding, cellSpacing are all "wstring"
+// in fact, they are integers or they are meaningless.  so we store them here as ints.
+
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Align, align, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, BgColor, bgcolor, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLTableElement, Border, border, eSetAttrNotify_Reflow)
@@ -283,12 +287,109 @@ nsHTMLTableElement::DeleteRow(PRInt32 aValue)
   return NS_OK; // XXX write me
 }
 
+static nsGenericHTMLElement::EnumTable kFrameTable[] = {
+  { "void",   NS_STYLE_TABLE_FRAME_NONE },
+  { "above",  NS_STYLE_TABLE_FRAME_ABOVE },
+  { "below",  NS_STYLE_TABLE_FRAME_BELOW },
+  { "hsides", NS_STYLE_TABLE_FRAME_HSIDES },
+  { "lhs",    NS_STYLE_TABLE_FRAME_LEFT },
+  { "rhs",    NS_STYLE_TABLE_FRAME_RIGHT },
+  { "vsides", NS_STYLE_TABLE_FRAME_VSIDES },
+  { "box",    NS_STYLE_TABLE_FRAME_BOX },
+  { "border", NS_STYLE_TABLE_FRAME_BORDER },
+  { 0 }
+};
+
+static nsGenericHTMLElement::EnumTable kRulesTable[] = {
+  { "none",   NS_STYLE_TABLE_RULES_NONE },
+  { "groups", NS_STYLE_TABLE_RULES_GROUPS },
+  { "rows",   NS_STYLE_TABLE_RULES_ROWS },
+  { "cols",   NS_STYLE_TABLE_RULES_COLS },
+  { "all",    NS_STYLE_TABLE_RULES_ALL },
+  { 0 }
+};
+
+
 NS_IMETHODIMP
 nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
-                               nsHTMLValue& aResult)
+                                      const nsString& aValue,
+                                      nsHTMLValue& aResult)
 {
-  // XXX write me
+  /* ignore summary, just a string */
+  /* attributes that resolve to pixels */
+  if ((aAttribute == nsHTMLAtoms::cellspacing) ||
+      (aAttribute == nsHTMLAtoms::cellpadding)) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that are either empty, or integers */
+  else if (aAttribute == nsHTMLAtoms::cols) {
+    nsAutoString tmp(aValue);
+    tmp.StripWhitespace();
+    if (0 == tmp.Length()) {
+      // Just set COLS, same as COLS=number of columns
+      aResult.SetEmptyValue();
+    }
+    else 
+    {
+      nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    }    
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that are either empty, or pixels */
+  else if (aAttribute == nsHTMLAtoms::cols) {
+    nsAutoString tmp(aValue);
+    tmp.StripWhitespace();
+    if (0 == tmp.Length()) {
+      // Just enable the border; same as border=1
+      aResult.SetEmptyValue();
+    }
+    else 
+    {
+      nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel);
+    }    
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents */
+  else if (aAttribute == nsHTMLAtoms::height) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents or proportions */
+  else if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* other attributes */
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::background) {
+    nsAutoString href(aValue);
+    href.StripWhitespace();
+    aResult.SetStringValue(href);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::bgcolor) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::frame) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kFrameTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::rules) {
+    nsGenericHTMLElement::ParseEnumValue(aValue, kRulesTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -297,8 +398,79 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
                                nsString& aResult) const
 {
-  // XXX write me
+  /* ignore summary, just a string */
+  /* ignore attributes that are of standard types
+     border, cellpadding, cellspacing, cols, height, width, background, bgcolor
+   */
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::frame) {
+    if (nsGenericHTMLElement::EnumValueToString(aValue, kFrameTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::rules) {
+    if (nsGenericHTMLElement::EnumValueToString(aValue, kRulesTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+
   return mInner.AttributeToString(aAttribute, aValue, aResult);
+}
+
+// XXX: this is only sufficient for Nav4/HTML3.2
+// XXX: needs to be filled in for HTML4
+static void 
+MapTableBorderInto(nsIHTMLAttributes* aAttributes,
+                   nsIStyleContext* aContext,
+                   nsIPresContext* aPresContext)
+{
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  nsHTMLValue value;
+
+  aAttributes->GetAttribute(nsHTMLAtoms::border, value);
+  if (value.GetUnit() == eHTMLUnit_String)
+  {
+    nsAutoString borderAsString;
+    value.GetStringValue(borderAsString);
+    nsGenericHTMLElement::ParseValue(borderAsString, 0, value, eHTMLUnit_Pixel);
+  }
+  if ((value.GetUnit() == eHTMLUnit_Pixel) || 
+      (value.GetUnit() == eHTMLUnit_Empty)) {
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStyleCoord twips;
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      twips.SetCoordValue(NSIntPixelsToTwips(1, p2t));
+    }
+    else {
+      twips.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+    }
+
+    spacing->mBorder.SetTop(twips);
+    spacing->mBorder.SetRight(twips);
+    spacing->mBorder.SetBottom(twips);
+    spacing->mBorder.SetLeft(twips);
+
+    if (spacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (spacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (spacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (spacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+  }
 }
 
 static void
@@ -306,8 +478,84 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  if (nsnull!=aAttributes)
+  {
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsHTMLValue value;
+
+    // width
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      switch (value.GetUnit()) {
+      case eHTMLUnit_Percent:
+        position->mWidth.SetPercentValue(value.GetPercentValue());
+        break;
+
+      case eHTMLUnit_Pixel:
+        position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+      }
+    }
+    // border
+    MapTableBorderInto(aAttributes, aContext, aPresContext);
+
+    // align
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {  // it may be another type if illegal
+      nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
+      switch (value.GetIntValue()) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        display->mFloats = NS_STYLE_FLOAT_LEFT;
+        break;
+
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        break;
+      }
+    }
+
+    // cellpadding
+    nsStyleTable* tableStyle=nsnull;
+    aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+    }
+
+    // cellspacing  (reuses tableStyle if already resolved)
+    aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      if (nsnull==tableStyle)
+        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mCellSpacing.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+    }
+    else
+    { // XXX: remove me as soon as we get this from the style sheet
+      if (nsnull==tableStyle)
+        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mCellSpacing.SetCoordValue(NSIntPixelsToTwips(2, p2t));
+    }
+
+    // cols
+    aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      if (nsnull==tableStyle)
+        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      if (value.GetUnit() == eHTMLUnit_Integer)
+        tableStyle->mCols = value.GetIntValue();
+      else // COLS had no value, so it refers to all columns
+        tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
+    }
+
+    //background: color
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  }
 }
 
 NS_IMETHODIMP

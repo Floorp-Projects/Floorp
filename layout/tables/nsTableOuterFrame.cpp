@@ -17,8 +17,6 @@
  */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
-#include "nsITableContent.h"
-#include "nsTableContent.h"
 #include "nsBodyFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
@@ -44,8 +42,6 @@ static PRBool gsTiming = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsTiming = PR_FALSE;
 #endif
-
-static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -623,13 +619,13 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
     if (NS_STYLE_DISPLAY_TABLE_CAPTION == childDisplay->mDisplay)
     {
       // Create the caption frame.
-      // XXX In general (e.g. in an XML document) there's no reason to assume
-      // that the content object is of type nsIHTMLContent
-      result = ((nsIHTMLContent*)(nsIContent*)caption)->CreateFrame(aPresContext, 
-                                                                    this, captionSC,
-                                                                    mCaptionFrame);
-      if (NS_OK != result) {
-        return result;
+      nsIContentDelegate* kidDel = nsnull;
+      kidDel = caption->GetDelegate(aPresContext);
+      nsresult rv = kidDel->CreateFrame(aPresContext, caption, this, captionSC,
+                                        mCaptionFrame);
+      NS_RELEASE(kidDel);
+      if (NS_OK != rv) {
+        return rv;
       }
 
       // Determine if the caption is a top or bottom caption
@@ -849,21 +845,18 @@ nsresult nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-/* ----- static methods ----- */
+/* ----- global methods ----- */
 
-nsresult nsTableOuterFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                    nsIContent* aContent,
-                                    nsIFrame*   aParent)
+nsresult 
+NS_NewTableOuterFrame( nsIContent* aContent,
+                       nsIFrame*   aParentFrame,
+                       nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableOuterFrame(aContent, aParent);
+  nsIFrame* it = new nsTableOuterFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 

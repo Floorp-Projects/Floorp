@@ -23,26 +23,23 @@ REQUIRES=xpcom raptor js
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS= nsCellMap.cpp \
-    nsTableCaption.cpp \
-	nsTableCell.cpp nsTableCol.cpp \
-    nsTableCellFrame.cpp  nsTableColFrame.cpp  \
-    nsTableColGroup.cpp nsTableColGroupFrame.cpp \
-	nsTableContent.cpp nsTableFrame.cpp \
-    nsTableOuterFrame.cpp nsTablePart.cpp \
-	nsTableRow.cpp nsTableRowFrame.cpp \
-	nsTableRowGroup.cpp nsTableRowGroupFrame.cpp \
+CPPSRCS= nsCellMap.cpp			\
+    nsTableCellFrame.cpp		\
+	nsTableColFrame.cpp			\
+    nsTableColGroupFrame.cpp	\
+	nsTableFrame.cpp			\
+    nsTableOuterFrame.cpp		\
+	nsTableRowFrame.cpp			\
+	nsTableRowGroupFrame.cpp	\
 	BasicTableLayoutStrategy.cpp 
 
 CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
-    .\$(OBJDIR)\nsTableCaption.obj \
-    .\$(OBJDIR)\nsTableCell.obj .\$(OBJDIR)\nsTableCol.obj \
     .\$(OBJDIR)\nsTableCellFrame.obj .\$(OBJDIR)\nsTableColFrame.obj \
-    .\$(OBJDIR)\nsTableColGroup.obj .\$(OBJDIR)\nsTableColGroupFrame.obj \
-    .\$(OBJDIR)\nsTableContent.obj .\$(OBJDIR)\nsTableFrame.obj \
-    .\$(OBJDIR)\nsTableOuterFrame.obj .\$(OBJDIR)\nsTablePart.obj \
-    .\$(OBJDIR)\nsTableRow.obj .\$(OBJDIR)\nsTableRowFrame.obj \
-    .\$(OBJDIR)\nsTableRowGroup.obj .\$(OBJDIR)\nsTableRowGroupFrame.obj \
+    .\$(OBJDIR)\nsTableColGroupFrame.obj \
+    .\$(OBJDIR)\nsTableFrame.obj \
+    .\$(OBJDIR)\nsTableOuterFrame.obj  \
+    .\$(OBJDIR)\nsTableRowFrame.obj \
+    .\$(OBJDIR)\nsTableRowGroupFrame.obj \
 	.\$(OBJDIR)\BasicTableLayoutStrategy.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \

@@ -40,15 +40,16 @@ class nsTableRowGroupFrame : public nsContainerFrame
 public:
 
   /** instantiate a new instance of nsTableRowGroupFrame.
-    * @param aInstancePtrResult  the new object is returned in this out-param
-    * @param aContent            the table object to map
-    * @param aParent             the parent of the new frame
+    * @param aResult    the new object is returned in this out-param
+    * @param aContent   the table object to map
+    * @param aParent    the parent of the new frame
     *
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  friend nsresult 
+  NS_NewTableRowGroupFrame(nsIContent* aContent,
+                           nsIFrame*   aParentFrame,
+                           nsIFrame*&  aResult);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

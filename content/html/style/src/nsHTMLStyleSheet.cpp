@@ -31,7 +31,7 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
-#include "nsTableCell.h"
+#include "nsIHTMLTableCellElement.h"
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsHTMLIIDs.h"
@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
+static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
 
 class HTMLAnchorRule : public nsIStyleRule {
@@ -520,8 +521,6 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         //      makes table cells process attributes from other content
         //      inherit based style (ie: font-size: 110%) can double on row & cell
         PRInt32 backstopInsertPoint = 0;
-        nsTableCell*  cell = (nsTableCell*)aContent;
-        PRInt32 colIndex = cell->GetColIndex();
 
         nsIFrame* rowFrame = aParentFrame;
         nsIFrame* rowGroupFrame;
@@ -530,17 +529,24 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         rowFrame->GetContentParent(rowGroupFrame);
         rowGroupFrame->GetContentParent(tableFrame);
 
-        nsTableColFrame* colFrame;
-        nsIFrame* colGroupFrame;
+        nsIHTMLTableCellElement* cell=nsnull;  
+        nsresult rv = aContent->QueryInterface(kIHTMLTableCellElementIID, 
+                                       (void **)&cell);  // cell: REFCNT++
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 colIndex;
+          rv = cell->GetColIndex(&colIndex);
+          nsTableColFrame* colFrame;
+          nsIFrame* colGroupFrame;
 
-        ((nsTableFrame*)tableFrame)->GetColumnFrame(colIndex, colFrame);
-        colFrame->GetContentParent(colGroupFrame);
+          ((nsTableFrame*)tableFrame)->GetColumnFrame(colIndex, colFrame);
+          colFrame->GetContentParent(colGroupFrame);
 
-        matchCount += AppendRulesFrom(colGroupFrame, aPresContext, backstopInsertPoint, aResults);
-        matchCount += AppendRulesFrom(colFrame, aPresContext, backstopInsertPoint, aResults);
+          matchCount += AppendRulesFrom(colGroupFrame, aPresContext, backstopInsertPoint, aResults);
+          matchCount += AppendRulesFrom(colFrame, aPresContext, backstopInsertPoint, aResults);
+          NS_RELEASE(cell);                             // cell: REFCNT--
+        }
         matchCount += AppendRulesFrom(rowGroupFrame, aPresContext, backstopInsertPoint, aResults);
         matchCount += AppendRulesFrom(rowFrame, aPresContext, backstopInsertPoint, aResults);
-
       } // end TD/TH tag
 
       // just get the one and only style rule from the content
@@ -1055,9 +1061,6 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     else if (nsHTMLAtoms::wbr == aTag) {
       rv = NS_NewWBRFrame(aContent, aParentFrame, frame);
     }
-    else if (nsHTMLAtoms::table == aTag) {
-      rv = nsTableOuterFrame::NewFrame(&frame, aContent, aParentFrame);
-    }
     else if (nsHTMLAtoms::input == aTag) {
       rv = CreateInputFrame(aContent, aParentFrame, frame);
     }
@@ -1069,6 +1072,32 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
     }
     else if (nsHTMLAtoms::iframe == aTag) {
       rv = NS_NewHTMLFrameOuterFrame(aContent, aParentFrame, frame);
+    }
+
+    // the table content frames...
+    else if (nsHTMLAtoms::caption == aTag) {
+      rv = NS_NewBodyFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::table == aTag) {
+      rv = NS_NewTableOuterFrame(aContent, aParentFrame, frame);
+    }
+    else if ((nsHTMLAtoms::tbody == aTag) ||
+             (nsHTMLAtoms::thead == aTag) ||
+             (nsHTMLAtoms::tfoot == aTag))  {
+      rv = NS_NewTableRowGroupFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::tr == aTag) {
+      rv = NS_NewTableRowFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::colgroup == aTag) {
+      rv = NS_NewTableColGroupFrame(aContent, aParentFrame, frame);
+    }
+    else if (nsHTMLAtoms::col == aTag) {
+      rv = NS_NewTableColFrame(aContent, aParentFrame, frame);
+    }
+    else if ((nsHTMLAtoms::td == aTag) ||
+             (nsHTMLAtoms::th == aTag))   {
+      rv = NS_NewTableCellFrame(aContent, aParentFrame, frame);
     }
 
     if (NS_OK != rv) {

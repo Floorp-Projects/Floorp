@@ -206,6 +206,7 @@
 #define NS_STYLE_TEXT_ALIGN_RIGHT               2
 #define NS_STYLE_TEXT_ALIGN_CENTER              3
 #define NS_STYLE_TEXT_ALIGN_JUSTIFY             4
+#define NS_STYLE_TEXT_ALIGN_CHAR                5   //align based on a certain character, for table cell
 
 // See nsStyleText, nsStyleFont
 #define NS_STYLE_TEXT_DECORATION_NONE           0
@@ -264,5 +265,12 @@
 
 #define NS_STYLE_TABLE_COLS_NONE                (-1)
 #define NS_STYLE_TABLE_COLS_ALL                 PRInt32(1 << 30)
+
+// constants for cell "scope" attribute
+#define NS_STYLE_CELL_SCOPE_ROW                 0
+#define NS_STYLE_CELL_SCOPE_COL                 1
+#define NS_STYLE_CELL_SCOPE_ROWGROUP            2
+#define NS_STYLE_CELL_SCOPE_COLGROUP            3
+
 
 #endif /* nsStyleConsts_h___ */

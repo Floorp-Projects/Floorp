@@ -42,7 +42,7 @@ CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
-  -I..\..\base\src -I..\..\table\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
+  -I..\..\base\src -I..\..\table\src -I..\..\content\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
 
 LCFLAGS = \
         $(LCFLAGS) \

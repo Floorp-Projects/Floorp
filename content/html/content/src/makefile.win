@@ -78,6 +78,7 @@ CPPSRCS=				\
 	nsHTMLTableCaptionElement.cpp	\
 	nsHTMLTableCellElement.cpp	\
 	nsHTMLTableColElement.cpp	\
+	nsHTMLTableColGroupElement.cpp	\
 	nsHTMLTableRowElement.cpp	\
 	nsHTMLTableSectionElement.cpp	\
 	nsHTMLTextAreaElement.cpp	\
@@ -143,6 +144,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTableCaptionElement.obj	\
 	.\$(OBJDIR)\nsHTMLTableCellElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableColElement.obj		\
+	.\$(OBJDIR)\nsHTMLTableColGroupElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableRowElement.obj		\
 	.\$(OBJDIR)\nsHTMLTableSectionElement.obj	\
 	.\$(OBJDIR)\nsHTMLTextAreaElement.obj		\

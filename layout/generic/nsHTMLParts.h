@@ -188,6 +188,9 @@ extern nsresult
 NS_NewHTMLTableColElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
 extern nsresult
+NS_NewHTMLTableColGroupElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+
+extern nsresult
 NS_NewHTMLTableElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
 extern nsresult
@@ -321,6 +324,40 @@ NS_NewHTMLSelectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 extern nsresult
 NS_NewBulletFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                   nsIFrame*& aResult);
+
+// table frame factories
+
+extern nsresult
+NS_NewTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                      nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                 nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableCaptionFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                        nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                    nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                         nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableRowFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                    nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                         nsIFrame*& aResult);
+
+extern nsresult
+NS_NewTableCellFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                     nsIFrame*& aResult);
 
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------

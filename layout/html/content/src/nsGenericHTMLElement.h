@@ -238,6 +238,18 @@ public:
   static PRBool ParseDivAlignValue(const nsString& aString,
                                    nsHTMLValue& aResult);
 
+  static PRBool ParseTableHAlignValue(const nsString& aString,
+                                      nsHTMLValue& aResult);
+
+  static PRBool ParseTableVAlignValue(const nsString& aString,
+                                      nsHTMLValue& aResult);
+
+  static PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
+                                         nsString& aResult);
+
+  static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
+                                         nsString& aResult);
+
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
 

@@ -25,6 +25,8 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLIIDs.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
@@ -55,8 +57,6 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
                                    nsIFrame*   aParentFrame)
   : nsContainerFrame(aContent, aParentFrame)
 {
-  mRowSpan=1;
-  mColSpan=1;
   mColIndex=0;
   mPriorAvailWidth=0;
   mDesiredSize.width=0;
@@ -216,7 +216,39 @@ nsTableFrame* nsTableCellFrame::GetTableFrame()
   return (nsTableFrame*)frame;
 }
 
+PRInt32 nsTableCellFrame::GetRowSpan()
+{  
+  PRInt32 rowSpan=1;
+  nsIHTMLContent *hc=nsnull;
+  nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
+  if (NS_OK==rv)
+  {
+    nsHTMLValue val;
+    hc->GetAttribute(nsHTMLAtoms::rowspan, val); 
+    if (eHTMLUnit_Integer == val.GetUnit()) { 
+       rowSpan=val.GetIntValue(); 
+    }
+    NS_RELEASE(hc);
+  }
+  return rowSpan;
+}
 
+PRInt32 nsTableCellFrame::GetColSpan()
+{  
+  PRInt32 colSpan=1;
+  nsIHTMLContent *hc=nsnull;
+  nsresult rv = mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
+  if (NS_OK==rv)
+  {
+    nsHTMLValue val;
+    hc->GetAttribute(nsHTMLAtoms::colspan, val); 
+    if (eHTMLUnit_Integer == val.GetUnit()) { 
+       colSpan=val.GetIntValue(); 
+    }
+    NS_RELEASE(hc);
+  }
+  return colSpan;
+}
 
 
 /**
@@ -510,7 +542,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   nscoord   border  = 1;
 
   nsTableFrame*  tableFrame = GetTableFrame();
-  tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
+  //tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
   NS_ASSERTION(tableFrame,"Table Must not be null");
   if (!tableFrame)
     return;
@@ -579,21 +611,18 @@ nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-/* ----- static methods ----- */
+/* ----- global methods ----- */
 
-nsresult nsTableCellFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                    nsIContent* aContent,
-                                    nsIFrame*   aParent)
+nsresult 
+NS_NewTableCellFrame( nsIContent* aContent,
+                      nsIFrame*   aParentFrame,
+                      nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableCellFrame(aContent, aParent);
+  nsIFrame* it = new nsTableCellFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 
