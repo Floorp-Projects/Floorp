@@ -6,3 +6,4 @@ xpinstal.ilk
 xpinstal.lib
 xpinstal.pdb
 Makefile
+dependentLibs.h

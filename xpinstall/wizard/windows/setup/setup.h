@@ -496,6 +496,7 @@ typedef struct setupStruct
   char      greCleanupOrphansMessage[MAX_BUF];
   char      greID[MAX_BUF];
   char      grePrivateKey[MAX_BUF];
+  HWND      lastDialog;
 } setupGen;
 
 typedef struct sinfoSmartDownload
@@ -652,6 +653,8 @@ struct sSysInfo
   DWORD dwScreenY;
   DWORD lastWindowPosCenterX;
   DWORD lastWindowPosCenterY;
+  BOOL  lastWindowMinimized;
+  BOOL  lastWindowIsTopWindow;
   BOOL  bScreenReader;
   BOOL  bRefreshIcons;
 };

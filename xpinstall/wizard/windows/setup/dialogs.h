@@ -81,6 +81,7 @@ void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
 void              CommitInstall(void);
 void              RepositionWindow(HWND aHwndDlg, DWORD aBannerImage);
 void              SaveWindowPosition(HWND aDlg);
+void              ClosePreviousDialog(void);
 
 #endif /* _DIALOGS_H_ */
 

@@ -205,6 +205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
     else
     {
+      ShowMessage(NULL, FALSE);
       DlgSequence(NEXT_DLG);
     }
   }

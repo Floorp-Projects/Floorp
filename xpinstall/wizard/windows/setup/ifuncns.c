@@ -515,9 +515,6 @@ HRESULT ProcessXpcomFile()
     char szMsg[MAX_BUF];
     char szErrorString[MAX_BUF];
 
-    if(*siCFXpcomFile.szMessage != '\0')
-      ShowMessage(siCFXpcomFile.szMessage, FALSE);
-
     LogISProcessXpcomFile(LIS_FAILURE, dwErr);
     GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
     wsprintf(szMsg, szErrorString, siCFXpcomFile.szSource, dwErr);
@@ -603,14 +600,11 @@ HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
           char szMsg[MAX_BUF];
           char szErrorString[MAX_BUF];
 
-          ShowMessage(szBuf, FALSE);
           GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
           wsprintf(szMsg, szErrorString, szSource, dwErr);
           PrintError(szMsg, ERROR_CODE_HIDE);
           return(dwErr);
         }
-
-        ShowMessage(szBuf, FALSE);
       }
     }
 
@@ -1464,11 +1458,8 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
         else
         {
           GetPrivateProfileString(szSection, "Message", "", szBuf, sizeof(szBuf), szFileIniConfig);
-          if ( szBuf[0] != '\0' )
-            ShowMessage(szBuf, TRUE);  
+          ShowMessage(szBuf, TRUE);  
           WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
-          if ( szBuf[0] != '\0' )
-            ShowMessage(szBuf, FALSE);  
         }
       }
     }

@@ -439,9 +439,7 @@ DWORD DecrementSharedFileCounter(char *file)
   {
     result = RegQueryValueEx(keyHandle, file, NULL, &type, (LPBYTE)&valbuf, (LPDWORD)&valbufsize);
     if((ERROR_SUCCESS == result) && (type == REG_DWORD))
-    {
-      rv = --valbuf;
-    }
+      rv = valbuf = ((long)valbuf - 1) < 0 ? 0 : (valbuf - 1);
 
     RegSetValueEx(keyHandle, file, 0, REG_DWORD, (LPBYTE)&valbuf, valbufsize);
     RegCloseKey(keyHandle);
@@ -594,20 +592,21 @@ DWORD Uninstall(sil* silInstallLogHead)
         if(DetermineUnRegisterServer(silInstallLogHead, szFile) == TRUE)
           UnregisterServer(szFile);
       }
-      else if(((szSubStr = strstr(szLCLine, KEY_INSTALLING_SHARED_FILE)) != NULL) &&
+      else if((((szSubStr = strstr(szLCLine, KEY_INSTALLING_SHARED_FILE)) != NULL) ||
+               ((szSubStr = strstr(szLCLine, KEY_REPLACING_SHARED_FILE)) != NULL)) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Installing Shared File: " string and delete the file */
         ParseForFile(szSubStr, KEY_INSTALLING_SHARED_FILE, szFile, sizeof(szFile));
         if(DecrementSharedFileCounter(szFile) == 0)
         {
-          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
+          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL) && FileExists(szFile))
           {
             MessageBeep(MB_ICONEXCLAMATION);
             gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
           }
 
-          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
+          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL) || !FileExists(szFile))
           {
             DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
             DeleteOrDelayUntilReboot(szFile);
@@ -622,25 +621,6 @@ DWORD Uninstall(sil* silInstallLogHead)
         /* check for "Installing: " string and delete the file */
         ParseForFile(szSubStr, KEY_INSTALLING, szFile, sizeof(szFile));
         DeleteOrDelayUntilReboot(szFile);
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_REPLACING_SHARED_FILE)) != NULL) &&
-               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        /* check for "Replacing Shared File: " string and delete the file */
-        ParseForFile(szSubStr, KEY_REPLACING_SHARED_FILE, szFile, sizeof(szFile));
-        if(DecrementSharedFileCounter(szFile) == 0)
-        {
-          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
-
-          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
-          {
-            DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
-            DeleteOrDelayUntilReboot(szFile);
-          }
-          else if(gdwWhatToDo == WTD_CANCEL)
-            return(WTD_CANCEL);
-        }
       }
       else if(((szSubStr = strstr(szLCLine, KEY_REPLACING)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
