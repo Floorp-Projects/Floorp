@@ -238,6 +238,7 @@ SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg)
     PRFileDesc *fd;
     PRInt32 nb;
     char *pwFile = arg;
+    int i;
 
     if (!pwFile)
 	return 0;
@@ -256,16 +257,14 @@ SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg)
   
     PR_Close(fd);
     /* handle the Windows EOL case */
-    if ((nb > 2) && (phrase[nb-2] == '\r') ) nb--;
-    if (phrase[nb-1] == '\n') {
-	if ( nb > 2 && phrase[nb-2] == '\r' ) nb--;
-	phrase[nb-1] = '\0';
-	if (nb == 0) {
-	    fprintf(stderr,"password file contains no data\n");
-	    return NULL;
-	} else {
-	    return (char*) PORT_Strdup((char*)phrase);
-	}
+    i = 0;
+    while (phrase[i] != '\r' && phrase[i] != '\n' && i < nb) i++;
+    phrase[i] = '\0';
+    if (nb == 0) {
+	fprintf(stderr,"password file contains no data\n");
+	return NULL;
+    } else {
+	return (char*) PORT_Strdup((char*)phrase);
     }
     return (char*) PORT_Strdup((char*)phrase);
 }
