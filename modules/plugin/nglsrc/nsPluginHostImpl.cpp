@@ -3216,7 +3216,30 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 		}
 
 		nsIPlugin* plugin = pluginTag->mEntryPoint;
-		if(plugin == NULL)
+        if(plugin == NULL)
+        {
+            // nsIPlugin* of xpcom plugins can be found thru a call to
+            //  nsComponentManager::GetClassObject()
+            nsCID clsid;
+            char buf[255];
+            nsString strContractID; 
+            strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
+            strContractID.AppendWithConversion(aMimeType);
+            strContractID.ToCString(buf, 255);
+            nsresult rv = nsComponentManager::ContractIDToClassID(buf, &clsid);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = nsComponentManager::GetClassObject(clsid, nsIPlugin::GetIID(), (void**)&plugin);
+                if (NS_SUCCEEDED(rv) && plugin)
+                {
+                    // plugin was addref'd by nsComponentManager::GetClassObject
+                    pluginTag->mEntryPoint = plugin;
+                    plugin->Initialize();
+                }
+            }
+        }
+
+        if (plugin == NULL)
 		{
             // No, this is not a leak. GetGlobalServiceManager() doesn't
             // addref the pointer on the way out. It probably should.
