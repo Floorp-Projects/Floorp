@@ -410,7 +410,7 @@ nsOperaProfileMigrator::CopyPreferences(PRBool aReplace)
         }
         transform->prefHasValue = PR_TRUE;
         transform->prefSetterFunc(transform, branch);
-        if (transform->stringValue) {
+        if (transform->type == _OPM(STRING) && transform->stringValue) {
           nsCRT::free(transform->stringValue);
           transform->stringValue = nsnull;
         }
