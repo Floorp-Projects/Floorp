@@ -1096,7 +1096,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     return;
 
 //  if( !(pWin->mUpdateArea.width) || !( pWin->mUpdateArea.height ) || pWin->mCreateHold )
-  if( pWin->mCreateHold || pWin->mHold )
+  if( /*pWin->mCreateHold ||*/ pWin->mHold )
   {
 //    printf( "Not drawing: mCreateHold=%d  mHold=%d\n", pWin->mCreateHold, pWin->mHold );
     return;

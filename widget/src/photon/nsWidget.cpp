@@ -83,6 +83,23 @@ nsWidget::~nsWidget()
 }
 
 
+NS_METHOD nsWidget::SetBackgroundColor( const nscolor &aColor )
+{
+  nsBaseWidget::SetBackgroundColor( aColor );
+
+  if( mWidget )
+  {
+    PtArg_t   arg;
+    PgColor_t color = NS_TO_PH_RGB( aColor );
+
+    PtSetArg( &arg, Pt_ARG_FILL_COLOR, color, 0 );
+    PtSetResources( mWidget, 1, &arg );
+  }
+
+  return NS_OK;
+}
+
+
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WidgetToScreen - Not Implemented.\n" ));
@@ -182,7 +199,9 @@ NS_METHOD nsWidget::Show(PRBool bState)
   if (bState)
   {
     if( !PtWidgetIsRealized( mWidget ))
+    {
       PtRealizeWidget(mWidget);
+    }
   }
   else
   {
@@ -612,7 +631,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   {
     PtArg_t  arg;
     PhArea_t *area;
-    nsRect   rect = mBounds;
+    nsRect   rect;
 
     // Just to be safe, get the real widget coords & set mBounds
     PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
@@ -623,28 +642,26 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
       rect.width  = area->size.w;
       rect.height = area->size.h;
       mBounds = rect;
-    }
 
-    GetParentClippedArea( rect );
+      GetParentClippedArea( rect );
 
-    if( rect.width && rect.height )
-    {
-//      mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height );
-//printf( "update area = %d,%d,%d,%d\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
-      mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
-
-      if (aIsSynchronous)
+      if( rect.width && rect.height )
       {
-        UpdateWidgetDamage();
+        mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
+
+        if (aIsSynchronous)
+        {
+          UpdateWidgetDamage();
+        }
+        else
+        {
+          QueueWidgetDamage();
+        }
       }
       else
       {
-        QueueWidgetDamage();
+        mCreateHold = PR_FALSE; // Should do this even if we get a bad (hidden) rect
       }
-    }
-    else
-    {
-      mCreateHold = PR_FALSE; // Should do this even if we get a bad (hidden) rect
     }
   }
   else
@@ -660,11 +677,11 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   if( mWidget )
   {
-//    PtArg_t  arg;
-//    PhArea_t *area;
+    PtArg_t  arg;
+    PhArea_t *area;
     nsRect   rect = aRect;
 
-/*
+
     // Just to be safe, get the real widget coords
     PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
@@ -674,7 +691,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
       mBounds.width  = area->size.w;
       mBounds.height = area->size.h;
     }
-*/
+
 
 //printf( "Invalidate w/ rect: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
 //    rect.x += mBounds.x;
@@ -688,8 +705,8 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
     if( rect.width && rect.height )
     {
 //      mUpdateArea.UnionRect(mUpdateArea, aRect);
-//      rect.x -= mBounds.x;
-//      rect.y -= mBounds.y;
+      rect.x -= mBounds.x;
+      rect.y -= mBounds.y;
 
       mUpdateArea.UnionRect( mUpdateArea, rect );
 
@@ -723,6 +740,7 @@ void nsWidget::GetParentClippedArea( nsRect &rect )
   PtWidget_t *parent;
   PhPoint_t  offset;
   nsRect     rect2;
+  PtWidget_t *disjoint = PtFindDisjoint( mWidget );
 
 //printf( "Clipping widget (%p) rect: %d,%d,%d,%d\n", this, rect.x, rect.y, rect.width, rect.height );
 
@@ -730,6 +748,7 @@ void nsWidget::GetParentClippedArea( nsRect &rect )
   PtWidgetOffset( mWidget, &offset );
   rect.x += offset.x;
   rect.y += offset.y;
+
 
 //printf( "  screen coords: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
 
@@ -739,11 +758,19 @@ void nsWidget::GetParentClippedArea( nsRect &rect )
     PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
     if( PtGetResources( parent, 1, &arg ) == 0 )
     {
-      PtWidgetOffset( parent, &offset );
-      rect2.x = area->pos.x + offset.x;
-      rect2.y = area->pos.y + offset.y;
       rect2.width = area->size.w;
       rect2.height = area->size.h;
+
+      if( parent != disjoint )
+      {
+        PtWidgetOffset( parent, &offset );
+        rect2.x = area->pos.x + offset.x;
+        rect2.y = area->pos.y + offset.y;
+      }
+      else
+      {
+        rect2.x = rect2.y = 0;
+      }
 
 //printf( "  parent at: %d,%d,%d,%d\n", rect2.x, rect2.y, rect2.width, rect2.height );
 
@@ -804,72 +831,11 @@ NS_METHOD nsWidget::Update(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Update\n" ));
 
-#if 0
-  if (! mWidget)
-    return NS_OK;
-
-  if (mUpdateArea.width && mUpdateArea.height)
-  {
-    if (!mIsDestroying)
-    {
-      PhRect_t extent;
-      PhArea_t area;
-
-      PtWidgetArea( mWidget, &area );
-
-//      GdkRectangle nRect;
-//      NSRECT_TO_GDKRECT(mUpdateArea,nRect);
-//      ::gtk_widget_draw(mWidget, &nRect);
-
-      extent.ul.x = mUpdateArea.x + area.pos.x;
-      extent.ul.y = mUpdateArea.y + area.pos.y;
-      extent.lr.x = mUpdateArea.x + mUpdateArea.width - 1;
-      extent.lr.y = mUpdateArea.y + mUpdateArea.height - 1;
-
-      PtDamageExtent( mWidget, &extent );
-      PtFlush();
-      mUpdateArea.SetRect(0, 0, 0, 0);
-
-      return NS_OK;
-    }
-    else
-    {
-      return NS_ERROR_FAILURE;
-    }
-  }
-#endif
-
   UpdateWidgetDamage();
-  return NS_OK;
-
-
-
-#if 0
-  if( mWidget )
-  {
-    if( mDamaged )
-    {
-      PtDamageWidget( mWidget );
-      PtFlush();
-      mDamaged = PR_FALSE;
-    }
-    PtArg_t  arg;
-    int      *flags;
-    
-    PtSetArg( &arg, Pt_ARG_FLAGS, &flags, 0 );
-    if( PtGetResources( mWidget, 1, &arg ) == 0 )
-    {
-      if( !(*flags & Pt_DAMAGED ))
-      {
-        PtDamageWidget( mWidget );
-      }
-    }
-    PtFlush();
-  }
 
   return NS_OK;
-#endif
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -1012,6 +978,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - bounds=(%i,%i,%i,%i)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
 
   CreateNative (parentWidget);
+
+  if( mWidget )
+  {
+    PtAddCallback( mWidget, Pt_CB_GOT_FOCUS, GotFocusCallback, this );
+    PtAddCallback( mWidget, Pt_CB_LOST_FOCUS, LostFocusCallback, this );
+  }
 
   DispatchStandardEvent(NS_CREATE);
 
@@ -1708,4 +1680,23 @@ void nsWidget::UpdateWidgetDamage()
   }
 }
 
+
+int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+  nsWidget *pWidget = (nsWidget *) data;
+
+  pWidget->DispatchStandardEvent(NS_GOTFOCUS);
+
+  return Pt_CONTINUE;
+}
+
+
+int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+  nsWidget *pWidget = (nsWidget *) data;
+
+  pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
+
+  return Pt_CONTINUE;
+}
 
