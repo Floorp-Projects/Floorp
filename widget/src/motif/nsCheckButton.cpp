@@ -229,6 +229,7 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
   XtVaSetValues(mWidget, XmNlabelString, str, nsnull);
   NS_FREE_STR_BUF(label);
   XmStringFree(str);
+  return NS_OK;
 }
 
 

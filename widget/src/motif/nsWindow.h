@@ -130,7 +130,7 @@ public:
     void SetBounds(const nsRect &aRect);
     PRBool ConvertStatus(nsEventStatus aStatus);
     PRBool DispatchEvent(nsGUIEvent* event);
-    PRBool OnPaint(nsPaintEvent &event);
+    virtual PRBool OnPaint(nsPaintEvent &event);
     void OnDestroy();
     PRBool OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
     PRBool DispatchFocus(nsGUIEvent &aEvent);
@@ -139,7 +139,7 @@ public:
     PRBool IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
     PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
-    PRBool OnResize(nsSizeEvent &aEvent);
+    virtual PRBool OnResize(nsSizeEvent &aEvent);
 
    
      // Resize event management
