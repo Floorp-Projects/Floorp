@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,7 +14,6 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 #//
 #// Makefile to build 
@@ -30,9 +29,7 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
 
-!ifndef MAKE_OBJ_TYPE
 MAKE_OBJ_TYPE=DLL
-!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -59,10 +56,9 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
-LIBNAME=libreg$(MOZ_BITS)
+DLLNAME=mozreg
 
-DLL=$(OBJDIR)\$(LIBNAME).dll
-LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
+DLL=$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -78,13 +74,6 @@ LLIBS = \
 !endif
     $(NULL)
 
-#//
-#// Win16 places ALL public header files in $(PUBLIC)/win16
-#//
-!if "$(MOZ_BITS)" != "16"
-LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
-		$(NULL)
-!endif
 
 #//------------------------------------------------------------------------
 #//
