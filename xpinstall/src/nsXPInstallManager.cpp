@@ -379,9 +379,6 @@ nsXPInstallManager::OnStopRequest(nsIURI* aURL,
     DownloadNext();
     return rv;
 }
-
-#define BUF_SIZE 1024
-
 NS_IMETHODIMP
 #ifdef NECKO
 nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
@@ -394,28 +391,30 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
                                     PRUint32 length)
 #endif
 {
-    PRUint32 len;
+    PRUint32 amt;
     PRInt32  result;
     nsresult err;
-    char buffer[BUF_SIZE];
+    char buffer[1025];
     
     do 
     {
-        err = pIStream->Read(buffer, BUF_SIZE, &len);
-        
-        if (NS_SUCCEEDED(err) && len > 0)
+        err = pIStream->Read(buffer, 1024, &amt);
+        if (amt == 0) break;
+        if (NS_FAILED(err)) 
         {
-            err = mItem->mFile->Write( buffer, len, &result);
-            if ( NS_SUCCEEDED(err) && result != (PRInt32)len )
-            {
-                /* Error */ 
-                err = NS_ERROR_FAILURE;
-            }
+            //printf("pIStream->Read Failed!  %d", err);   
+            return err;
         }
+        err = mItem->mFile->Write( buffer, amt, &result);
+        printf("mItem->mFile->Write err:%d   amt:%d    result:%d\n", err, amt, result);
+        if (NS_FAILED(err) || result != (PRInt32)amt) 
+        {
+            //printf("mItem->mFile->Write Failed!  err:%d   amt:%d    result:%d\n", err, amt, result);
+            return NS_ERROR_FAILURE;
+        }
+    } while (amt > 0);
 
-    } while (len > 0 && err == NS_OK);
-
-    return err;
+    return NS_OK;
 }
 
 
