@@ -27,6 +27,7 @@
 #include "nsIFrameImageLoader.h"
 #include "nsIStyleContext.h"
 #include "nsGlobalVariables.h"
+#include "nsStyleUtil.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -35,7 +36,6 @@
 //thickness of dashed line relative to dotted line
 #define DOT_LENGTH  1           //square
 #define DASH_LENGTH 3           //3 times longer than dot
-
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
@@ -124,8 +124,9 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
  * Make a bevel color
  */
 nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
-                                       nscolor baseColor,
-                                       PRBool printing)
+                                       nscolor aBackgroundColor,
+									   nscolor aElementColor,
+									   PRBool printing,PRBool aSpecialCase)
 {
 
   PRBool blackLines = nsGlobalVariables::Instance()->GetBlackLines();
@@ -142,11 +143,15 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
   {
     // Given a background color and a border color
     // calculate the color used for the shading
-    NS_Get3DColors(colors, baseColor);
+	  if(aSpecialCase)
+         NS_GetSpecial3DColors(colors, aBackgroundColor, aElementColor);
+	  else
+         NS_Get3DColors(colors, aBackgroundColor);
   }
  
 
-  if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
+  if ((style == NS_STYLE_BORDER_STYLE_BG_OUTSET) ||
+	  (style == NS_STYLE_BORDER_STYLE_OUTSET) ||
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
     // Flip colors for these two border style
     switch (whichSide) {
@@ -354,8 +359,10 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               PRIntn whichSide,
                               const PRUint8 borderStyle,  
-                              const nscolor borderColor,  
-                              const nsRect& borderOutside,
+                              const nscolor borderColor,
+							  const nscolor aElementColor,
+							  const nscolor aBackgroundColor,
+							  const nsRect& borderOutside,
                               const nsRect& borderInside,
                               PRBool printing,
                               nscoord twipsPerPixel,
@@ -382,7 +389,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                                         ((theStyle == NS_STYLE_BORDER_STYLE_RIDGE) ?
                                          NS_STYLE_BORDER_STYLE_GROOVE :
                                          NS_STYLE_BORDER_STYLE_RIDGE), 
-                                        theColor, printing));
+										 aBackgroundColor, aElementColor, 
+										 printing, PR_TRUE));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -392,7 +400,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_OUTSIDE, 0.5f, twipsPerPixel);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
+		                                aElementColor, printing, PR_TRUE));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -437,11 +446,26 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     }
     break;
 
-  case NS_STYLE_BORDER_STYLE_OUTSET:
-  case NS_STYLE_BORDER_STYLE_INSET:
+  case NS_STYLE_BORDER_STYLE_BG_OUTSET:
+  case NS_STYLE_BORDER_STYLE_BG_INSET:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_FULL, 1.0f, twipsPerPixel);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor,
+		                                 aElementColor,printing, PR_FALSE));
+    if (2 == np) {
+      //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+      DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
+    } else {
+      //aContext.FillPolygon (theSide, np);
+      FillPolygon (aContext, theSide, np, aGap);
+    }
+    break;
+  case NS_STYLE_BORDER_STYLE_OUTSET:
+  case NS_STYLE_BORDER_STYLE_INSET:
+	np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+                   BORDER_FULL, 1.0f, twipsPerPixel);
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
+		                                aElementColor,printing, PR_TRUE));
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
       DrawLine (aContext, theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y, aGap);
@@ -1336,14 +1360,18 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBorderArea,
-                                 const nsStyleSpacing& aStyle,
-                                 PRIntn aSkipSides,
+                                 const nsStyleSpacing& aBorderStyle,
+								 nsIStyleContext* aStyleContext,
+								 PRIntn aSkipSides,
                                  nsRect* aGap)
 {
   PRIntn    cnt;
   nsMargin  border;
   PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
-  aStyle.CalcBorderFor(aForFrame, border);
+  const nsStyleColor* elemColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color); 
+  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
+
+  aBorderStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
@@ -1362,13 +1390,13 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
  
   //see if any sides are dotted or dashed
   for (cnt = 0; cnt < 4; cnt++) {
-    if ((aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
-        (aStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED))  {
+    if ((aBorderStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DOTTED) || 
+        (aBorderStyle.GetBorderStyle(cnt) == NS_STYLE_BORDER_STYLE_DASHED))  {
       break;
     }
   }
   if (cnt < 4) {
-    DrawDashedSides(cnt, aRenderingContext,aStyle,
+    DrawDashedSides(cnt, aRenderingContext,aBorderStyle,
                     inside, outside, aSkipSides, aGap);
   }
 
@@ -1376,27 +1404,31 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     DrawSide(aRenderingContext, NS_SIDE_TOP,
-             aStyle.GetBorderStyle(NS_SIDE_TOP),
-             aStyle.GetBorderColor(NS_SIDE_TOP),
-             inside, outside, printing, twipsPerPixel, aGap);
+             aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
+             aBorderStyle.GetBorderColor(NS_SIDE_TOP),
+			 elemColor->mColor, bgColor->mBackgroundColor,
+			 inside,outside, printing,twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     DrawSide(aRenderingContext, NS_SIDE_LEFT,
-             aStyle.GetBorderStyle(NS_SIDE_LEFT), 
-             aStyle.GetBorderColor(NS_SIDE_LEFT),
-             inside, outside, printing, twipsPerPixel, aGap);
+             aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
+             aBorderStyle.GetBorderColor(NS_SIDE_LEFT),
+			 elemColor->mColor, bgColor->mBackgroundColor,
+			 inside, outside, printing,twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
-             aStyle.GetBorderStyle(NS_SIDE_BOTTOM),
-             aStyle.GetBorderColor(NS_SIDE_BOTTOM),
-             inside, outside, printing, twipsPerPixel, aGap);
+             aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
+             aBorderStyle.GetBorderColor(NS_SIDE_BOTTOM),
+			 elemColor->mColor, bgColor->mBackgroundColor,
+			 inside, outside, printing,twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
     DrawSide(aRenderingContext, NS_SIDE_RIGHT,
-             aStyle.GetBorderStyle(NS_SIDE_RIGHT),
-             aStyle.GetBorderColor(NS_SIDE_RIGHT),
-             inside, outside, printing, twipsPerPixel, aGap);
+             aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
+             aBorderStyle.GetBorderColor(NS_SIDE_RIGHT),
+			 elemColor->mColor, bgColor->mBackgroundColor,
+			 inside, outside, printing,twipsPerPixel, aGap);
   }
 }
 
@@ -1416,10 +1448,14 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
                                       nsBorderEdges * aBorderEdges,
+									  nsIStyleContext* aStyleContext,
                                       PRIntn aSkipSides,
                                       nsRect* aGap)
 {
+  const nsStyleColor* elemColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color); 
+  const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
   PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
+  
   if (nsnull==aBorderEdges) {  // Empty border segments
     return;
   }
@@ -1458,7 +1494,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_TOP,
                borderEdge->mStyle,
                borderEdge->mColor,
-               inside, outside, printing, twipsPerPixel, aGap);
+			   elemColor->mColor, bgColor->mBackgroundColor,
+			   inside, outside,printing, twipsPerPixel, aGap);
     }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
@@ -1478,7 +1515,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_LEFT,
                borderEdge->mStyle,
                borderEdge->mColor,
-               inside, outside, printing, twipsPerPixel, aGap);
+			   elemColor->mColor, bgColor->mBackgroundColor,
+			   inside, outside, printing,twipsPerPixel, aGap);
     }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
@@ -1501,7 +1539,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
                borderEdge->mStyle,
                borderEdge->mColor,
-               inside, outside, printing, twipsPerPixel, aGap);
+			   elemColor->mColor, bgColor->mBackgroundColor,
+			   inside, outside,printing,twipsPerPixel, aGap);
     }
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
@@ -1531,7 +1570,8 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_RIGHT,
                borderEdge->mStyle,
                borderEdge->mColor,
-               inside, outside, printing, twipsPerPixel, aGap);
+			   elemColor->mColor, bgColor->mBackgroundColor,
+			   inside, outside,printing,twipsPerPixel, aGap);
     }
   }
 }
