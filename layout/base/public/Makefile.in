@@ -35,6 +35,7 @@ nsIAutoCopy.h \
 nsICaret.h \
 nsIContent.h \
 nsIContentIterator.h \
+nsContentPolicyUtils.h \
 nsIDiskDocument.h \
 nsIDocument.h \
 nsIDocumentContainer.h \
@@ -85,9 +86,10 @@ nsIScrollableFrame.h \
 $(NULL)
 
 XPIDLSRCS	= \
-		nsIChromeEventHandler.idl			\
-		nsISelectionController.idl \
-		nsIPrintListener.idl          \
+		nsIChromeEventHandler.idl	\
+		nsIContentPolicy.idl            \
+		nsISelectionController.idl      \
+		nsIPrintListener.idl            \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

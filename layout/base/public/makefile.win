@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 EXPORTS =				\
 	nslayout.h			\
+	nsContentPolicyUtils.h          \
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\
 	nsICaret.h			\
@@ -79,9 +80,10 @@ EXPORTS =				\
 
 MODULE=raptor 
 
-XPIDLSRCS=						\
-		.\nsIChromeEventHandler.idl			\
-		.\nsISelectionController.idl		\
+XPIDLSRCS=					\
+		.\nsIChromeEventHandler.idl	\
+		.\nsIContentPolicy.idl		\
+		.\nsISelectionController.idl	\
 		.\nsIPrintListener.idl          \
 		$(NULL)
 
