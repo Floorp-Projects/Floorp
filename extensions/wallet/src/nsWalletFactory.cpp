@@ -29,7 +29,7 @@
 // Define the constructor function for the nsWalletlibService
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWalletlibService)
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_WIN)
 #include "nsBasicStreamGenerator.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicStreamGenerator)
 #endif
@@ -39,7 +39,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBasicStreamGenerator)
 static nsModuleComponentInfo components[] = {
     { NS_WALLETSERVICE_CLASSNAME, NS_WALLETSERVICE_CID,
       NS_WALLETSERVICE_PROGID, nsWalletlibServiceConstructor },
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_WIN)
     { NS_BASIC_STREAM_GENERATOR_CLASSNAME, NS_BASIC_STREAM_GENERATOR_CID,
       NS_BASIC_STREAM_GENERATOR_PROGID, nsBasicStreamGeneratorConstructor },
 #endif

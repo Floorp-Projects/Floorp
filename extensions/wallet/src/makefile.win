@@ -29,6 +29,7 @@ CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
 	.\$(OBJDIR)\singsign.obj		\
 	.\$(OBJDIR)\nsWalletFactory.obj		\
 	.\$(OBJDIR)\nsWalletService.obj		\
+	.\$(OBJDIR)\nsBasicStreamGenerator.obj		\
 	$(NULL)
 
 CPPSRCS = \
