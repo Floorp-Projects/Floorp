@@ -73,13 +73,13 @@
         <description>&pref.weekstarts.label;</description>
         <menulist id="weekstarts" prefstring="calendar.week.start">
           <menupopup id="weekstarts">
-            <menuitem label="&pref.weekstarts.sunday;"    value="0"/>
-            <menuitem label="&pref.weekstarts.monday;"    value="1"/>
-            <menuitem label="&pref.weekstarts.tuesday;"   value="2"/>
-            <menuitem label="&pref.weekstarts.wednesday;" value="3"/>
-            <menuitem label="&pref.weekstarts.thursday;"  value="4"/>
-            <menuitem label="&pref.weekstarts.friday;"    value="5"/>
-            <menuitem label="&pref.weekstarts.saturday;"  value="6" selected="true"/>
+            <menuitem label="&day.1.name;" value="0"/>
+            <menuitem label="&day.2.name;" value="1"/>
+            <menuitem label="&day.3.name;" value="2"/>
+            <menuitem label="&day.4.name;" value="3"/>
+            <menuitem label="&day.5.name;" value="4"/>
+            <menuitem label="&day.6.name;" value="5"/>
+            <menuitem label="&day.7.name;" value="6" selected="true"/>
           </menupopup>
         </menulist>   
     </hbox>
