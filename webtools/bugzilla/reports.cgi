@@ -711,10 +711,15 @@ sub most_recently_doomed
 #       sort people by the number of bugs they have assigned to this milestone
         @people = sort bybugs @people;
         my $totalpeople = @people;
+        
+        if ($totalpeople > 20) {
+            splice @people, 0, $totalpeople-20;
+            }
                 
         print "<TABLE>\n";
         print "<TR><TD COLSPAN=2>\n";
         print "$totalpeople engineers have $bugtotal untouched new bugs.\n";
+        print "These are the 20 most doomed.";
         print "</TD></TR>\n";
 
         while (@people)
