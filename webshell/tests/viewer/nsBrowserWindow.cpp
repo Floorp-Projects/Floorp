@@ -827,8 +827,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.Append("/test");
       url.Append(ix, 10);
       url.Append(".html");
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      webShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+      webNav->LoadURI(url.GetUnicode());
     }
     break;
 
@@ -836,16 +836,16 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/toolbarTest1.xul");
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      webShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+      webNav->LoadURI(url.GetUnicode());
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/treeTest1.xul");
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-      webShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+      webNav->LoadURI(url.GetUnicode());
       break;
     }
   
@@ -1016,8 +1016,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 
   /* invoke the javascript wallet editor */
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->LoadURL(urlString.GetUnicode());
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+  webNav->LoadURI(urlString.GetUnicode());
   }
   break;
 #endif
@@ -1064,10 +1064,10 @@ nsBrowserWindow::Forward()
 }
 
 void
-nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
+nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  webShell->LoadURL(aURL, aCommand, nsnull);
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+   webNav->LoadURI(aURL);
 }
 
 
@@ -1119,8 +1119,8 @@ nsBrowserWindow::DoFileOpen()
   if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
     nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    webShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+    webNav->LoadURI(nsString(fileURL.GetURLString()).GetUnicode());
     SetVisibility(PR_TRUE);
   }
 }
@@ -1404,26 +1404,21 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetClientBounds(r);
 
   // Create web shell
-  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
-/*  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                          NS_GET_IID(nsIDocShell),
-                                          (void**)&mDocShell);
-*/  if (NS_OK != rv) {
-    return rv;
-  }
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+  NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
+
   r.x = r.y = 0;
   nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
   rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+  NS_ENSURE_SUCCESS(EnsureWebBrowserChrome(), NS_ERROR_FAILURE);
+  mWebBrowser->SetTopLevelWindow(mWebBrowserChrome);
+
   webBrowserWin->Create();
   mWebBrowser->GetDocShell(&mDocShell);
   mDocShell->SetAllowPlugins(aAllowPlugins);
   nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
   webShell->SetContainer((nsIWebShellContainer*) this);
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-  EnsureWebBrowserChrome();
-  docShellAsItem->SetTreeOwner(mWebBrowserChrome);
 
   webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
