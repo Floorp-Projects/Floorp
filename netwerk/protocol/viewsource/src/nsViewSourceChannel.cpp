@@ -46,7 +46,7 @@ NS_IMPL_THREADSAFE_ADDREF(nsViewSourceChannel)
 NS_IMPL_THREADSAFE_RELEASE(nsViewSourceChannel)
 /*
   This QI uses hand-expansions of NS_INTERFACE_MAP_ENTRY to check for
-  non-nullness of mHttpChannel and mCachingChannel.
+  non-nullness of mHttpChannel, mCachingChannel, and mUploadChannel.
 
   This seems like a better approach than writing out the whole QI by hand.
 */
@@ -59,6 +59,9 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   else
   if ( mCachingChannel && aIID.Equals(NS_GET_IID(nsICachingChannel)) )
     foundInterface = NS_STATIC_CAST(nsICachingChannel*, this);
+  else
+  if ( mUploadChannel && aIID.Equals(NS_GET_IID(nsIUploadChannel)) )
+    foundInterface = NS_STATIC_CAST(nsIUploadChannel*, this);
   else
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
@@ -80,6 +83,7 @@ nsViewSourceChannel::Init(nsIURI* uri)
     rv = pService->NewChannel(path, nsnull, getter_AddRefs(mChannel));
     mHttpChannel = do_QueryInterface(mChannel);
     mCachingChannel = do_QueryInterface(mChannel);
+    mUploadChannel = do_QueryInterface(mChannel);
     
     return rv;
 }
