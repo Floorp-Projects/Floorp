@@ -98,3 +98,7 @@
 # owned by the top-level Makefile API and no context has been set up for where 
 # derived files should go.
 #
+
+
+# From gmake -f Makefile.mozilla, courtesy REQUIRES magic.
+HEADER_PATHS += -I../../../dist/public/nsprpub -I../../../dist/public/js -I../../../dist/public/img -I../../../dist/public/layer -I../../../dist/public/xp -I../../../dist/public/util -I../../../include   -I../../../dist/Rhapsody5.1_DBG.OBJ/include
