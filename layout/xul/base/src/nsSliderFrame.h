@@ -243,6 +243,7 @@ private:
 
   PRInt32 mCurPos;
   PRBool mMiddlePref;
+  PRInt32 mSnapMultiplier;
 
   nsIScrollbarListener* mScrollbarListener;
 
