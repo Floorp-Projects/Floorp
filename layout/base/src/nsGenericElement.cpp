@@ -1508,7 +1508,7 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
     }
     
     nsAutoString tag;
-    mNodeInfo->GetQualifiedName(tag);
+    mNodeInfo->GetName(tag);
     res = factory->NewScriptElement(tag, aContext, mContent,
                                     mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
                                     (void**)&slots->mScriptObject);
