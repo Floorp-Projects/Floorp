@@ -1168,7 +1168,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
 }
 
 // XXX Wish there was a better macro in nsCom.h...
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 #define STDCALL __stdcall
 #else
 #define STDCALL
