@@ -20,7 +20,7 @@
 #define _MIMEOBJ_H_
 
 #include "mimei.h"
-
+#include "prio.h"
 /* MimeObject is the base-class for the objects representing all other 
    MIME types.  It provides several methods:
 
@@ -133,7 +133,7 @@ struct MimeObjectClass {
   PRBool (*displayable_inline_p) (MimeObjectClass *clazz, MimeHeaders *hdrs);
 
 #if defined(DEBUG) && defined(XP_UNIX)
-  int (*debug_print) (MimeObject *obj, FILE *stream, PRInt32 depth);
+  int (*debug_print) (MimeObject *obj, PRFileDesc *stream, PRInt32 depth);
 #endif
 };
 

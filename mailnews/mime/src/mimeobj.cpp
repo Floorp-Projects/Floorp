@@ -288,7 +288,7 @@ MimeObject_displayable_inline_p (MimeObjectClass *clazz, MimeHeaders *hdrs)
 
 #if defined(DEBUG) && defined(XP_UNIX)
 static int
-MimeObject_debug_print (MimeObject *obj, FILE *stream, PRInt32 depth)
+MimeObject_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
   int i;
   char *addr = mime_part_address(obj);
