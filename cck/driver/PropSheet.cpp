@@ -95,6 +95,8 @@ BOOL CPropSheet::OnInitDialog()
 	}
 	else
 	;
+	SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), FALSE);
+	SetIcon(AfxGetApp()->LoadIcon(IDR_MAINFRAME), TRUE);
 	return bResult;
 }
 
