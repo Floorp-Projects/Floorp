@@ -102,13 +102,16 @@ JS_BEGIN_EXTERN_C
  * TOK_CONTINUE name        pn_atom: label or null
  * TOK_WITH     binary      pn_left: head expr, pn_right: body
  * TOK_VAR      list        pn_head: list of pn_count TOK_NAME nodes
- *                          each name node has pn_atom: variable name and
- *                          pn_expr: initializer or null
+ *                                   each name node has
+ *                                     pn_atom: variable name
+ *                                     pn_expr: initializer or null
  * TOK_RETURN   unary       pn_kid: return expr or null
  * TOK_SEMI     unary       pn_kid: expr or null statement
  * TOK_COLON    name        pn_atom: label, pn_expr: labeled statement
  *
  * <Expressions>
+ * All left-associated binary trees of the same type are optimized into lists
+ * to avoid recursion when processing expression chains.
  * TOK_COMMA    list        pn_head: list of pn_count comma-separated exprs
  * TOK_ASSIGN   binary      pn_left: lvalue, pn_right: rvalue
  *                          pn_op: JSOP_ADD for +=, etc.
@@ -125,6 +128,11 @@ JS_BEGIN_EXTERN_C
  * TOK_SHOP     binary      pn_left: left-assoc SH expr, pn_right: ADD expr
  *                          pn_op: JSOP_LSH, JSOP_RSH, JSOP_URSH
  * TOK_PLUS,    binary      pn_left: left-assoc ADD expr, pn_right: MUL expr
+ *                          pn_strcat: if a left-associated binary TOK_PLUS
+ *                            tree has been flattened into a list (see above
+ *                            under <Expressions>), pn_strcat will be true if
+ *                            at least one list element is a string literal
+ *                            (TOK_STRING), and false otherwise.
  * TOK_MINUS                pn_op: JSOP_ADD, JSOP_SUB
  * TOK_STAR,    binary      pn_left: left-assoc MUL expr, pn_right: UNARY expr
  * TOK_DIVOP                pn_op: JSOP_MUL, JSOP_DIV, JSOP_MOD
@@ -225,6 +233,7 @@ struct JSParseNode {
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count
 #define pn_extra        pn_u.list.extra
+#define pn_strcat       pn_u.list.extra
 #define pn_kid1         pn_u.ternary.kid1
 #define pn_kid2         pn_u.ternary.kid2
 #define pn_kid3         pn_u.ternary.kid3
