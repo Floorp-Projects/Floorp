@@ -160,12 +160,15 @@ nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure);
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
+
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                const char *aLocation,
                                const char *aType,
                                nsIComponentLoader *aLoader)
     : cid(aClass), factory(nsnull), loader(aLoader)
 {
+    MOZ_COUNT_CTOR(nsFactoryEntry);
     loader = aLoader;
     type = aType;
     location = aLocation;
@@ -175,11 +178,13 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
     : cid(aClass), loader(nsnull)
 
 {
+    MOZ_COUNT_CTOR(nsFactoryEntry);
     factory = aFactory;
 }
 
 nsFactoryEntry::~nsFactoryEntry(void)
 {
+    MOZ_COUNT_DTOR(nsFactoryEntry);
     factory = 0;
     loader = 0;
 }
