@@ -5664,6 +5664,11 @@ PresShell::Paint(nsIView              *aView,
   nsIFrame* frame;
   nsresult  rv = NS_OK;
 
+  if (mIsDestroying) {
+    NS_ASSERTION(PR_FALSE, "A paint message was dispatched to a destroyed PresShell");
+    return NS_OK;
+  }
+
   NS_ASSERTION(!(nsnull == aView), "null view");
 
   aView->GetClientData(clientData);
