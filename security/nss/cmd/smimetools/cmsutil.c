@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.39 2003/01/17 02:48:55 wtc%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.40 2003/02/19 00:39:39 thayes%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -140,18 +140,6 @@ Usage(char *progName)
     exit(-1);
 }
 
-char *
-ownpw(PK11SlotInfo *info, PRBool retry, void *arg)
-{
-	char * passwd = NULL;
-
-	if ( (!retry) && arg ) {
-		passwd = PL_strdup((char *)arg);
-	}
-
-	return passwd;
-}
-
 struct optionsStr {
     char *password;
     SECCertUsage certUsage;
@@ -219,10 +207,15 @@ decode(FILE *out, SECItem *output, SECItem *input,
     PK11PasswordFunc pwcb;
     void *pwcb_arg;
     SECItem *item, sitem = { 0, 0, 0 };
+    secuPWData pwdata = { PW_NONE, 0 };
 
-    pwcb     = (decodeOptions->options->password != NULL) ? ownpw : NULL;
-    pwcb_arg = (decodeOptions->options->password != NULL) ? 
-                  (void *)decodeOptions->options->password : NULL;
+    if (decodeOptions->options->password)
+    {
+        pwdata.source = PW_PLAINTEXT;
+        pwdata.data = decodeOptions->options->password;
+    }
+    pwcb = SECU_GetModulePassword;
+    pwcb_arg = (void *)&pwdata;
 
     if (decodeOptions->contentFile) {
 	/* detached content: grab content file */
@@ -1379,12 +1372,21 @@ main(int argc, char **argv)
 	PLArenaPool *arena = PORT_NewArena(1024);
 	NSSCMSEncoderContext *ecx;
 	SECItem output = { 0, 0, 0 };
+	secuPWData pwdata = { PW_NONE, 0 };
+
 	if (!arena) {
 	    fprintf(stderr, "%s: out of memory.\n", progName);
 	    exit(1);
 	}
-	pwcb     = (options.password != NULL) ? ownpw                    : NULL;
-	pwcb_arg = (options.password != NULL) ? (void *)options.password : NULL;
+
+	if (options.password)
+	{
+    	    pwdata.source = PW_PLAINTEXT;
+    	    pwdata.data = options.password;
+	}
+	pwcb = SECU_GetModulePassword;
+	pwcb_arg = (void *)&pwdata;
+
 	if (cms_verbose) {
 	    fprintf(stderr, "cmsg [%p]\n", cmsg);
 	    fprintf(stderr, "arena [%p]\n", arena);
