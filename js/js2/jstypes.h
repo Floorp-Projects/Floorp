@@ -280,9 +280,16 @@ namespace JSTypes {
     class JSString : public std::basic_string<char16, JSCharTraits, JSStringAllocator>, public gc_base {
     public:
         JSString() {}
+        explicit JSString(const String& str);
         explicit JSString(const String* str);
         explicit JSString(const char* str);
     };
+
+    inline Formatter& operator<<(Formatter& f, const JSString& str)
+    {
+        printString(f, str.begin(), str.end());
+        return f;
+    }
 
     /**
      * Provides a set of nested scopes. 

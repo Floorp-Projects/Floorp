@@ -75,7 +75,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         printFormat(f, "0x%08X", value.object);
         break;
     case JSValue::string_tag:
-        printString(f, value.string->begin(), value.string->end());
+        f << *value.string;
         break;
     default:
         f << "undefined";
@@ -134,6 +134,13 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
         break;
     }
     return kUndefinedValue;
+}
+
+JSString::JSString(const String& str)
+{
+    size_t n = str.size();
+    resize(n);
+    traits_type::copy(begin(), str.begin(), n);
 }
 
 JSString::JSString(const String* str)
