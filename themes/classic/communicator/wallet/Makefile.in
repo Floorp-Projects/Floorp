@@ -31,8 +31,6 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/wallet
 
 EXPORT_RESOURCE_SAMPLES = \
-	CookieViewer.css \
-	SignonViewer.css  \
 	WalletEditor.css \
 	wallet.css \
 	$(NULL)

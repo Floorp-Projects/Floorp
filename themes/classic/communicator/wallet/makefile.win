@@ -29,7 +29,5 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\communicator\skin\wallet\*.*
 
 install:: 
-	$(MAKE_INSTALL) CookieViewer.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\wallet
-	$(MAKE_INSTALL) SignonViewer.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\wallet
 	$(MAKE_INSTALL) WalletEditor.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\wallet
 	$(MAKE_INSTALL) wallet.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\wallet
