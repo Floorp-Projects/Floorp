@@ -19,7 +19,11 @@
 
 include $(GDEPTH)/gconfig/UNIX.mk
 
+ifdef MOZILLA_MOTIF_SEARCH_PATH
+INCLUDES += -I$(MOZILLA_MOTIF_SEARCH_PATH)/include
+else
 INCLUDES += -I/usr/lesstif/include
+endif
 
 #
 # The default implementation strategy for Linux is classic nspr.
@@ -54,6 +58,11 @@ ifdef BUILD_OPT
 endif
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
+
+ifdef MOZILLA_MOTIF_SEARCH_PATH
+OS_LIBS			+= -L$(MOZILLA_MOTIF_SEARCH_PATH)/lib
+endif
+
 OS_LIBS			+= -L/usr/X11R6/lib -L/lib -ldl -lc
 
 ifdef USE_PTHREADS
