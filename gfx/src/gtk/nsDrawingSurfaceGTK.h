@@ -66,6 +66,8 @@ private:
 
   /* for locks */
   GdkImage	*mImage;
+  PRint32	mLockX;
+  PRint32	mLockY;
   PRUint32	mLockWidth;
   PRUint32	mLockHeight;
   PRUint32	mLockFlags;
