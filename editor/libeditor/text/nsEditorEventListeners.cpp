@@ -281,8 +281,11 @@ nsresult
 nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  if (!mouseEvent) {
-    //non-ui event passed in.  bad things.
+  nsCOMPtr<nsIDOMNSEvent> nsEvent ( do_QueryInterface(aMouseEvent) );
+  PRBool isTrusted = PR_FALSE;
+  if (!mouseEvent || !nsEvent ||
+      NS_FAILED(nsEvent->GetIsTrusted(&isTrusted)) || !isTrusted) {
+    //non-ui, or non-trusted evet passed in.  bad things.
     return NS_OK;
   }
 
