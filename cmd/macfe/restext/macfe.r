@@ -443,6 +443,16 @@ read 'Tang' ( ABOUT_VISILOGO_TANG, "visilogo.gif", purgeable) "visilogo.gif";
 read 'Tang' ( ABOUT_COSLOGO_TANG, "coslogo.jpg", purgeable) "coslogo.jpg";
 */
 
+
+/* NavCenter gifs */
+read 'Tang' ( ABOUT_HISTORYGIF_TANG, "history.gif", purgeable) ":::modules:rdf:images:history.gif";
+read 'Tang' ( ABOUT_PERSONALGIF_TANG, "personal.gif", purgeable) ":::modules:rdf:images:personal.gif";
+read 'Tang' ( ABOUT_SEARCHGIF_TANG, "search.gif", purgeable) ":::modules:rdf:images:search.gif";
+read 'Tang' ( ABOUT_SITEMAPGIF_TANG, "sitemap.gif", purgeable) ":::modules:rdf:images:sitemap.gif";
+read 'Tang' ( ABOUT_FILESGIF_TANG, "file.gif", purgeable) ":::modules:rdf:images:file.gif";
+read 'Tang' ( ABOUT_GUIDEGIF_TANG, "guide.gif", purgeable) ":::modules:rdf:images:guide.gif";
+
+
 read 'Tang' ( ABOUT_MOZILLA_FLAME, "flamer.gif", purgeable) "flamer.gif";
 read 'TEXT' ( ABOUT_ABOUTPAGE_TEXT, "about-all.html", purgeable ) "about-all.html";
 /*
