@@ -842,6 +842,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     while (--n >= 0) {
       nsIFrame* nextFrame;
 #ifdef IBMBIDI
+      if (!frame)
+        break;
       if (isReordered) {
         nscoord maxX, limX;
         PRInt32 testLine;
@@ -895,6 +897,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     while (--n >= 0) {
       nsIFrame* nextFrame;
 #ifdef IBMBIDI
+      if (!frame)
+        break;
       if (isReordered) {
         nsRect tempRect;
         nsIFrame* tempFrame;
