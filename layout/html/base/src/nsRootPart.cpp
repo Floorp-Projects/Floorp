@@ -332,7 +332,6 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   
     nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
     mFirstChild->SetRect(rect);
-    mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
@@ -381,7 +380,6 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
           status = ReflowChild(kidFrame, &aPresContext, kidSize,
                                kidReflowState);
           kidFrame->SetRect(nsRect(x, y, kidSize.width, kidSize.height));
-          kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
           y += kidSize.height;
   
           // Leave a slight gap between the pages
@@ -449,7 +447,6 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         // Place and size the child
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
         mFirstChild->SetRect(rect);
-        mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     }
     else {
