@@ -39,9 +39,15 @@
 <!ENTITY app.version "prototype_a">
 <!ENTITY app.author "mozilla.org">
 
-<!ENTITY vkm.MainWindow.title "JavaScript Console Debugger">
-<!ENTITY vkm.ReloadUI.label "Reload UI">
-<!ENTITY vkm.ReloadUI.akey "R">
+<!ENTITY MainWindow.title "JavaScript Console Debugger">
+<!ENTITY ReloadUI.label "Reload UI">
+<!ENTITY ReloadUI.aKey "R">
+<!ENTITY Debug.label "Debug">
+<!ENTITY Debug.aKey "D">
+<!ENTITY Cont.label "Continue">
+<!ENTITY Cont.aKey "C">
+<!ENTITY StepIn.label "Step In">
+<!ENTITY StepIn.aKey "I">
 
 <!ENTITY CallStack.header "Call Stack">
 <!ENTITY FunctionName.header "Function">
@@ -51,3 +57,4 @@
 <!ENTITY Breakpoint.header "Breakpoint">
 <!ENTITY SourceText.header "Source Text">
 <!ENTITY ScriptCount.header "Scripts">
+<!ENTITY URL.header "URL">
