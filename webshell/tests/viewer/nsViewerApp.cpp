@@ -1268,7 +1268,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     
     if (NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
     {
-      widget->Create(aParent, rect, HandleSiteEvent, NULL);
+      widget->Create((nsIWidget *) nsnull, rect, HandleSiteEvent, NULL);
       //mSiteDialog->SetLabel("Top 100 Site Walker");
     }
     //mSiteDialog->SetClientData(this);
