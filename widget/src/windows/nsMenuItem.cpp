@@ -350,7 +350,7 @@ NS_IMETHODIMP nsMenuItem::DoCommand()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_MOUSE_EVENT;
-  event.message = NS_MOUSE_LEFT_CLICK;
+  event.message = NS_MENU_ACTION;
 
   nsCOMPtr<nsIContent> contentNode;
   contentNode = do_QueryInterface(mDOMElement);

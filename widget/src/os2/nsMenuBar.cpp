@@ -215,7 +215,7 @@ nsEventStatus nsMenuBar::MenuConstruct( const nsMenuEvent &aMenuEvent,
          if( nodeType.Equals( "menu"))
          {
             // new submenu
-            pMenuElement->GetAttribute( nsAutoString( "name"), menuName);
+            pMenuElement->GetAttribute( nsAutoString( "value"), menuName);
             nsIMenu *pMenu = new nsMenu;
             NS_ADDREF(pMenu);
             pMenu->Create( (nsIMenuBar*)this, menuName);

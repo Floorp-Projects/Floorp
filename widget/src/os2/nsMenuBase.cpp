@@ -388,12 +388,12 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
             nsString itemName;
             nsIMenuItem *pItem = new nsMenuItem;
             NS_ADDREF(pItem);
-            pItemElement->GetAttribute( nsAutoString("name"), itemName);
+            pItemElement->GetAttribute( nsAutoString("value"), itemName);
             pItem->Create( (nsIMenu*)this, itemName, PR_FALSE);
             InsertItemAt( pItem);
 
             nsString itemCmd, disabled, checked;
-            pItemElement->GetAttribute( nsAutoString("onclick"), itemCmd);
+            pItemElement->GetAttribute( nsAutoString("onaction"), itemCmd);
             pItemElement->GetAttribute( nsAutoString("disabled"), disabled);
             pItemElement->GetAttribute( nsAutoString("checked"), checked);
             pItem->SetCommand( itemCmd);
@@ -403,7 +403,7 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
             pItem->SetChecked( checked.Equals( nsAutoString("true")));
             NS_RELEASE(pItem); // ownership of the item has passed to nsMenuBase
          }
-         else if( nodeType.Equals( "separator"))
+         else if( nodeType.Equals( "menuseparator"))
             InsertItemAt( 0);
          else if( nodeType.Equals( "menu"))
          {
@@ -411,7 +411,7 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
             nsString menuName;
             nsIMenu *pMenu = new nsMenu;
             NS_ADDREF(pMenu);
-            pItemElement->GetAttribute( nsAutoString("name"), menuName);
+            pItemElement->GetAttribute( nsAutoString("value"), menuName);
             pMenu->Create( (nsIMenu*)this, menuName);
             pMenu->SetDOMNode( pItemNode);
             pMenu->SetDOMElement( pItemElement);

@@ -302,7 +302,7 @@ NS_METHOD nsMenu::AddSeparator()
   nsresult rv = nsComponentManager::CreateInstance(
     kMenuItemCID, nsnull, nsIMenuItem::GetIID(), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    nsString tmp = "separator";
+    nsString tmp = "menuseparator";
     nsISupports * supports = nsnull;
     QueryInterface(kISupportsIID, (void**) &supports);
     pnsMenuItem->Create(supports, tmp, PR_TRUE);  
@@ -543,7 +543,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
                        menuitemNode,
                        menuIndex,
                        (nsIWebShell*)aWebShell);
-        } else if (menuitemNodeType.Equals("separator")) {
+        } else if (menuitemNodeType.Equals("menuseparator")) {
           AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
           // Load a submenu
@@ -619,7 +619,7 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
       
   // Create nsMenuItem
@@ -650,7 +650,7 @@ void nsMenu::LoadMenuItem(nsIMenu *       pParentMenu,
 		return;
     }
     
-    nsAutoString cmdAtom("onclick");
+    nsAutoString cmdAtom("onaction");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
@@ -673,7 +673,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
                          nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("name"), menuName);
+  menuElement->GetAttribute(nsAutoString("value"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -713,13 +713,13 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
         menuitemElement->GetNodeName(menuitemNodeType);
 
 #ifdef DEBUG_saari
-        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("separator"));
+        printf("Type [%s] %d\n", menuitemNodeType.ToNewCString(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
         if (menuitemNodeType.Equals("menuitem")) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode, menuIndex, mWebShell);
-        } else if (menuitemNodeType.Equals("separator")) {
+        } else if (menuitemNodeType.Equals("menuseparator")) {
           pnsMenu->AddSeparator();
         } else if (menuitemNodeType.Equals("menu")) {
           // Add a submenu
