@@ -178,23 +178,6 @@ interface nsIEditor  : nsISupports
     */
   void IncrementModificationCount(in long aModCount);
   
-  /** Save document to a file
-   *       Note: No UI is used
-   *  @param aFileSpec
-   *          The file to save to
-   *  @param aReplaceExisting
-   *          true if replacing an existing file, otherwise false.
-   *          If false and aFileSpec exists, SaveFile returns an error.
-   *  @param aSaveCopy       
-   *          true if we are saving off a copy of the document
-   *          without changing the disk file associated with the doc.
-   *          This would correspond to a 'Save Copy As' menu command
-   *          (currently not in our UI)
-   *  @param aFormat
-   *          Mime type to save (text/plain or text/html)
-   */
-  void SaveFile(in nsIURI fileSpec, in boolean replaceExisting, in boolean saveCopy, in DOMString format);
-
   /* ------------ Transaction methods -------------- */
 
   /** GetTransactionManagerDo() Get the transaction manager
