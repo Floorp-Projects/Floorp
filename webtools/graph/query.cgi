@@ -101,11 +101,11 @@ sub show_graph {
   print "<td>\n";
   if($AUTOSCALE) {
 	print "Y-axis: (<b>zoom</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&days=$DAYS&units=$UNITS&ltype=$LTYPE\">100%</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">100%</a>";
 	print ") \n";
   } else {
 	print "Y-axis: (";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&days=$DAYS&units=$UNITS&ltype=$LTYPE\">zoom</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">zoom</a>";
 	print "|<b>100%</b>) \n";
   }
   print "</td>\n";
@@ -122,7 +122,7 @@ sub show_graph {
 
   print "Days:";
   if($DAYS) {
-	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=0&units=$UNITS&ltype=$LTYPE\">all data</a>|";
+	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS\">all data</a>|";
     print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
 	print ")\n";
   } else {
@@ -138,12 +138,12 @@ sub show_graph {
   print "Style:";
   if($LTYPE eq "steps") {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=lines\">lines</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS\">lines</a>";
 	print "|<b>steps</b>";
 	print ")";
   } else {
 	print "(<b>lines</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=steps\">steps</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS\">steps</a>";
 	print ")";
   }
   print "</td>\n";
