@@ -30,6 +30,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
@@ -416,35 +417,51 @@ void nsPop3Protocol::SetUsername(const char* name)
 
 const char * nsPop3Protocol::GetPassword()
 {
-	// Okay, here's the scoop...if we have a password already, we will go 
-	// ahead and just use it....if we don't have a password then we'll prompt the
-	// user for their pop password for this username on this host.
+	// okay, here's the scoop for this messs...
+	// (1) if we have a password already, go ahead and use it!
+	// (2) if we don't have a password, see if we've already asked the user
+	//	   for the password this session by checking with the server...If it has a pwd use it!!!
+	// (3) otherwise prompt the user for a password and then remember that password in the server
 
 	if (m_password.IsEmpty())
 	{
-		// we don't have one so ask the user for it.
-		nsresult rv = NS_OK;
-		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-		if (NS_SUCCEEDED(rv))
-		{
-			PRUnichar * uniPassword;
-			PRBool okayValue = PR_TRUE;
-			char * promptText = nsnull;
-			nsXPIDLCString hostName;
+		nsCOMPtr<nsIMsgIncomingServer> server;
+		nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_nsIPop3URL);
+		msgUrl->GetServer(getter_AddRefs(server));
+		nsXPIDLCString serverPassword;
+		server->GetPassword(getter_Copies(serverPassword));
 
-			nsCOMPtr<nsIURI> url = do_QueryInterface(m_nsIPop3URL);
-			if (url)
-				url->GetHost(getter_Copies(hostName));
+		// (2) see if the server already knows the password and use it if does...
+		if (serverPassword && nsCRT::strlen(serverPassword) > 0) 
+			m_password = serverPassword;
+		else
+		{	
+			// (3) prompt the user for the password
+			// we don't have one so ask the user for it.
+			nsresult rv = NS_OK;
+			NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+			if (NS_SUCCEEDED(rv))
+			{
+				PRUnichar * uniPassword;
+				PRBool okayValue = PR_TRUE;
+				char * promptText = nsnull;
+				nsXPIDLCString hostName;
+			
+				msgUrl->GetHost(getter_Copies(hostName));
 
-			if (hostName)
-				promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) m_username, (const char *) hostName);
-			else
-				promptText = PL_strdup("Enter your password here: ");
+				if (hostName)
+					promptText = PR_smprintf("Enter your password for %s@%s.", (const char *) m_username, (const char *) hostName);
+				else
+					promptText = PL_strdup("Enter your password here: ");
 
-			dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
-			PR_FREEIF(promptText);
-			m_password = uniPassword;
-		}
+				dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
+				PR_FREEIF(promptText);
+				m_password = uniPassword;
+				// this ugly cast is ok...there is a bug in the idl compiler that is preventing 
+				// the char * argument to SetPassword from being const.
+				server->SetPassword((char *) m_password.GetBuffer());
+			}
+		} // if the server doesn't know the password
 	}
 	
 	return m_password.GetBuffer();

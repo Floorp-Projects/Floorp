@@ -27,6 +27,7 @@
 #include "nsPop3Protocol.h"
 #include "nsCOMPtr.h"
 #include "nsMsgLocalCID.h"
+#include "nsXPIDLString.h"
 
 #define POP3_PORT 110 // The IANA port for Pop3
 
@@ -163,7 +164,13 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
                                             getter_AddRefs(pop3Url));
 	if (pop3Url)
 	{
+		nsXPIDLCString userName;
+		nsCOMPtr<nsIMsgIncomingServer> msgServer = do_QueryInterface(server);
+		msgServer->GetUsername(getter_Copies(userName));
+
 		pop3Url->SetPop3Sink(pop3Sink);
+		pop3Url->SetUsername(userName);
+
 		if (aUrlListener)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
@@ -195,23 +202,17 @@ nsresult nsPop3Service::RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlT
 	nsresult rv = NS_OK;
 	if (aServer && aUrlToRun)
 	{
-		char * userName = nsnull;
-		char * popPassword = nsnull;
+		nsXPIDLCString userName;
 
 		// load up required server information
-		rv = aServer->GetUsername(&userName);
-        rv = aServer->GetPassword(&popPassword);
+		rv = aServer->GetUsername(getter_Copies(userName));
 
 		nsPop3Protocol * protocol = new nsPop3Protocol(aUrlToRun);
 		if (protocol)
 		{
 			protocol->SetUsername(userName);
-			// protocol->SetPassword(nsnull); // mscott - let's prompt the user instead
 			rv = protocol->LoadUrl(aUrlToRun);
 		}
-
-		if (popPassword) PL_strfree(popPassword);
-		if (userName) PL_strfree(userName);
 	} // if server
 
 	return rv;
