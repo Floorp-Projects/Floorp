@@ -58,6 +58,7 @@ class nsXBLPrototypeBinding;
 #define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
 #define NS_HANDLER_TYPE_XUL             (1 << 2)
+#define NS_HANDLER_TYPE_SYSTEM          (1 << 6)
 #define NS_HANDLER_TYPE_PREVENTDEFAULT  (1 << 7)
 
 // XXX Use nsIDOMEvent:: codes?
