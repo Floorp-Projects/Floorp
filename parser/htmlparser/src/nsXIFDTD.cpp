@@ -1734,6 +1734,3 @@ void nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
       mCSSDeclarationCount++;
     }
 }
-
-
- 
