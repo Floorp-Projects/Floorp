@@ -54,9 +54,9 @@ class nsSVGPathElement : public nsSVGPathElementBase,
 protected:
   friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
-  nsSVGPathElement();
+  nsSVGPathElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGPathElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -75,25 +75,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGPathElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGPathElement* it = new nsSVGPathElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -113,7 +96,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPathElement::nsSVGPathElement()
+nsSVGPathElement::nsSVGPathElement(nsINodeInfo* aNodeInfo)
+  : nsSVGPathElementBase(aNodeInfo)
 {
 
 }
@@ -124,9 +108,9 @@ nsSVGPathElement::~nsSVGPathElement()
 
   
 nsresult
-nsSVGPathElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGPathElement::Init()
 {
-  nsresult rv = nsSVGPathElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGPathElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -137,40 +121,14 @@ nsSVGPathElement::Init(nsINodeInfo* aNodeInfo)
   rv = AddMappedSVGValue(nsSVGAtoms::d, mSegments);
   NS_ENSURE_SUCCESS(rv,rv);
   
-    
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGPathElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGPathElement* it = new nsSVGPathElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
+NS_IMPL_SVG_DOM_CLONENODE(Path)
 
 
 //----------------------------------------------------------------------

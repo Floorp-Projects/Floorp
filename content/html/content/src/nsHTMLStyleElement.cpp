@@ -57,7 +57,7 @@ class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsStyleLinkElement
 {
 public:
-  nsHTMLStyleElement();
+  nsHTMLStyleElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLStyleElement();
 
   // nsISupports
@@ -105,34 +105,12 @@ protected:
                          PRBool* aIsAlternate);
 };
 
-nsresult
-NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLStyleElement* it = new nsHTMLStyleElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 
 
-nsHTMLStyleElement::nsHTMLStyleElement()
+nsHTMLStyleElement::nsHTMLStyleElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -154,33 +132,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+NS_IMPL_HTML_DOM_CLONENODE(Style)
 
-  nsHTMLStyleElement* it = new nsHTMLStyleElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLStyleElement::GetDisabled(PRBool* aDisabled)

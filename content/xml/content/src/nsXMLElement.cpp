@@ -71,29 +71,19 @@
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  *aInstancePtrResult = nsnull;
-
-  nsXMLElement* it = new nsXMLElement();
-
+  nsXMLElement* it = new nsXMLElement(aNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_ADDREF(it);
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(it);
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIXMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult = it);
 
   return NS_OK;
 }
 
-nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
+nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
+  : nsGenericElement(aNodeInfo),
+    mIsLink(PR_FALSE)
 {
 }
 
@@ -437,30 +427,20 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsXMLElement* it = new nsXMLElement();
-
+  nsXMLElement* it = new nsXMLElement(mNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_ADDREF(it);
-  nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(it);
-    return rv;
-  }
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
   CopyInnerTo(it, aDeep);
 
-  rv = CallQueryInterface(it, aReturn);
-  NS_RELEASE(it);
-  return rv;
+  kungFuDeathGrip.swap(*aReturn);
+
+  return NS_OK;
 }
 
 // nsIStyledContent implementation

@@ -59,9 +59,9 @@ class nsSVGTextElement : public nsSVGTextElementBase,
 protected:
   friend nsresult NS_NewSVGTextElement(nsIContent **aResult,
                                        nsINodeInfo *aNodeInfo);
-  nsSVGTextElement();
+  nsSVGTextElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGTextElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -96,25 +96,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGTextElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGTextElement* it = new nsSVGTextElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Text)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -135,7 +118,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTextElement::nsSVGTextElement()
+nsSVGTextElement::nsSVGTextElement(nsINodeInfo* aNodeInfo)
+  : nsSVGTextElementBase(aNodeInfo)
 {
 
 }
@@ -146,9 +130,9 @@ nsSVGTextElement::~nsSVGTextElement()
 
   
 nsresult
-nsSVGTextElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGTextElement::Init()
 {
-  nsresult rv = nsSVGTextElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGTextElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -176,39 +160,16 @@ nsSVGTextElement::Init(nsINodeInfo* aNodeInfo)
     rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGTextElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGTextElement* it = new nsSVGTextElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(Text)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGTextElement methods

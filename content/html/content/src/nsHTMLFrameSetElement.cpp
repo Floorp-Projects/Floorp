@@ -50,7 +50,7 @@ class nsHTMLFrameSetElement : public nsGenericHTMLElement,
                               public nsIFrameSetElement
 {
 public:
-  nsHTMLFrameSetElement();
+  nsHTMLFrameSetElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLFrameSetElement();
 
   // nsISupports
@@ -127,36 +127,14 @@ private:
 
 PRInt32 nsHTMLFrameSetElement::gMaxNumRowColSpecs = 25;
 
-nsresult
-NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult,
-                          nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLFrameSetElement* it = new nsHTMLFrameSetElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
 
-nsHTMLFrameSetElement::nsHTMLFrameSetElement()
-  : mNumRows(0), mNumCols(0), mCurrentRowColHint(NS_STYLE_HINT_REFLOW),
-    mRowSpecs(nsnull), mColSpecs(nsnull)
+nsHTMLFrameSetElement::nsHTMLFrameSetElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo), mNumRows(0), mNumCols(0),
+    mCurrentRowColHint(NS_STYLE_HINT_REFLOW), mRowSpecs(nsnull),
+    mColSpecs(nsnull)
 {
 }
 
@@ -181,33 +159,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameSetElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLFrameSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
+NS_IMPL_HTML_DOM_CLONENODE(FrameSet)
 
-  nsHTMLFrameSetElement* it = new nsHTMLFrameSetElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols)
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)

@@ -186,7 +186,7 @@ class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(PRBool aFromParser);
+  nsHTMLSelectElement(nsINodeInfo *aNodeInfo, PRBool aFromParser = PR_FALSE);
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
@@ -415,47 +415,36 @@ protected:
 
 // construction, destruction
 
+
 nsresult
-NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo,
+NS_NewHTMLSelectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
                         PRBool aFromParser)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(aFromParser);
-
+  nsHTMLSelectElement* it = new nsHTMLSelectElement(aNodeInfo, aFromParser);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(*aResult = it);
 
   return NS_OK;
 }
 
 
-nsHTMLSelectElement::nsHTMLSelectElement(PRBool aFromParser)
+nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
+                                         PRBool aFromParser)
+  : nsGenericHTMLFormElement(aNodeInfo),
+    mOptions(new nsHTMLOptionCollection(this)),
+    mIsDoneAddingChildren(!aFromParser),
+    mNonOptionChildren(0),
+    mOptGroupCount(0),
+    mSelectedIndex(-1),
+    mRestoreState(nsnull)
 {
   // DoneAddingChildren() will be called later if it's from the parser,
   // otherwise it is
-  mIsDoneAddingChildren = !aFromParser;
-  mNonOptionChildren = 0;
-  mOptGroupCount = 0;
 
-  mOptions = new nsHTMLOptionCollection(this);
   NS_IF_ADDREF(mOptions);
-
-  mRestoreState = nsnull;
-  mSelectedIndex = -1;
 }
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
@@ -486,33 +475,9 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLSelectElement
 
-nsresult
-nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(PR_FALSE);
+NS_IMPL_HTML_DOM_CLONENODE(Select)
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
@@ -2259,6 +2224,7 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
   nsresult rv = NS_OK;
 
   *aReturn = nsnull;
+
   for (PRInt32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
 

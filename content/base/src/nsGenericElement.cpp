@@ -799,9 +799,12 @@ nsGenericElement::Shutdown()
   }
 }
 
-nsGenericElement::nsGenericElement()
-  : mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
+nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
+  : mNodeInfo(aNodeInfo),
+    mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
+  NS_ASSERTION(mNodeInfo, "No nsINodeInfo passed to nsGenericElement, "
+               "PREPARE TO CRASH!!!");
 }
 
 nsGenericElement::~nsGenericElement()
@@ -950,22 +953,6 @@ nsGenericElement::InitHashes()
   }
 
   return NS_OK;
-}
-
-nsresult
-nsGenericElement::Init(nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG(aNodeInfo);
-
-  mNodeInfo = aNodeInfo;
-
-  nsresult rv = NS_OK;
-
-  if (!sRangeListsHash.ops) {
-    rv = InitHashes();
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP

@@ -52,9 +52,9 @@ class nsSVGPolygonElement : public nsSVGPolygonElementBase,
 protected:
   friend nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
                                           nsINodeInfo *aNodeInfo);
-  nsSVGPolygonElement();
+  nsSVGPolygonElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGPolygonElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -73,25 +73,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGPolygonElement* it = new nsSVGPolygonElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -111,7 +94,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolygonElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolygonElement::nsSVGPolygonElement()
+nsSVGPolygonElement::nsSVGPolygonElement(nsINodeInfo* aNodeInfo)
+  : nsSVGPolygonElementBase(aNodeInfo)
 {
 
 }
@@ -122,9 +106,9 @@ nsSVGPolygonElement::~nsSVGPolygonElement()
 
   
 nsresult
-nsSVGPolygonElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGPolygonElement::Init()
 {
-  nsresult rv = nsSVGPolygonElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGPolygonElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -134,41 +118,15 @@ nsSVGPolygonElement::Init(nsINodeInfo* aNodeInfo)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = AddMappedSVGValue(nsSVGAtoms::points, mPoints);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-    
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGPolygonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGPolygonElement* it = new nsSVGPolygonElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
+NS_IMPL_SVG_DOM_CLONENODE(Polygon)
 
 
 //----------------------------------------------------------------------

@@ -93,6 +93,7 @@
 #include "nsILoadGroup.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMString.h"
+#include "nsGenericElement.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -131,6 +132,9 @@ nsContentUtils::Init()
   CallGetService(NS_PREF_CONTRACTID, &sPref);
 
   rv = NS_GetNameSpaceManager(&sNameSpaceManager);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsGenericElement::InitHashes();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);

@@ -64,7 +64,7 @@ class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIDOMNSHTMLButtonElement
 {
 public:
-  nsHTMLButtonElement();
+  nsHTMLButtonElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLButtonElement();
 
   // nsISupports
@@ -123,34 +123,12 @@ private:
 
 // Construction, destruction
 
-nsresult
-NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
-                        nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLButtonElement* it = new nsHTMLButtonElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Button)
 
 
-nsHTMLButtonElement::nsHTMLButtonElement()
+nsHTMLButtonElement::nsHTMLButtonElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLFormElement(aNodeInfo)
 {
   mType = NS_FORM_BUTTON_SUBMIT; // default
   mHandlingClick = PR_FALSE;
@@ -176,33 +154,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_END
 
 // nsIDOMHTMLButtonElement
 
-nsresult
-nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
 
-  nsHTMLButtonElement* it = new nsHTMLButtonElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  CopyInnerTo(it, aDeep);
-
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
-
-  NS_ADDREF(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_HTML_DOM_CLONENODE(Button)
 
 
 // nsIDOMHTMLButtonElement

@@ -341,16 +341,10 @@ private:
 class nsGenericElement : public nsIHTMLContent
 {
 public:
-  nsGenericElement();
+  nsGenericElement(nsINodeInfo *aNodeInfo);
   virtual ~nsGenericElement();
 
   NS_DECL_ISUPPORTS
-
-  /**
-   * Initialize this element given a NodeInfo object
-   * @param aNodeInfo information about this type of node
-   */
-  nsresult Init(nsINodeInfo *aNodeInfo);
 
   /**
    * Called during QueryInterface to give the binding manager a chance to

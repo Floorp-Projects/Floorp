@@ -50,7 +50,8 @@ class nsSVGGraphicElement : public nsSVGGraphicElementBase,
                             public nsIDOMSVGTransformable // : nsIDOMSVGLocatable
 {
 protected:
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsSVGGraphicElement(nsINodeInfo *aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:  

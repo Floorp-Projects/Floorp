@@ -59,10 +59,10 @@ class nsSVGImageElement : public nsSVGImageElementBase,
 protected:
   friend nsresult NS_NewSVGImageElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
-  nsSVGImageElement();
+  nsSVGImageElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGImageElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
-  
+  nsresult Init();
+
 public:
   // interfaces:
   
@@ -90,25 +90,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGImageElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGImageElement* it = new nsSVGImageElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -128,7 +111,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGImageElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGImageElement::nsSVGImageElement()
+nsSVGImageElement::nsSVGImageElement(nsINodeInfo *aNodeInfo)
+  : nsSVGImageElementBase(aNodeInfo)
 {
 
 }
@@ -139,9 +123,9 @@ nsSVGImageElement::~nsSVGImageElement()
 
   
 nsresult
-nsSVGImageElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGImageElement::Init()
 {
-  nsresult rv = nsSVGImageElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGImageElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -209,40 +193,16 @@ nsSVGImageElement::Init(nsINodeInfo* aNodeInfo)
     rv = AddMappedSVGValue(nsSVGAtoms::href, mHref, kNameSpaceID_XLink);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGImageElement* it = new nsSVGImageElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(Image)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGImageElement methods:

@@ -51,7 +51,8 @@ class nsSVGStylableElement : public nsSVGStylableElementBase,
                              public nsIDOMSVGStylable
 {
 protected:
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsSVGStylableElement(nsINodeInfo *aNodeInfo);
+  nsresult Init();
 
 public:
   // interfaces:

@@ -52,6 +52,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
 #include "nsISVGContent.h"
+#include "nsICSSStyleRule.h"
 
 class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLContent:nsIStyledContent:nsIContent
                      public nsISVGValueObserver, 
@@ -59,10 +60,8 @@ class nsSVGElement : public nsGenericElement,    // :nsIHTMLContent:nsIXMLConten
                      public nsISVGContent
 {
 protected:
-  nsSVGElement();
+  nsSVGElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGElement();
-
-  nsresult Init(nsINodeInfo* aNodeInfo);
 
 public:
   // nsISupports
@@ -148,5 +147,62 @@ protected:
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 };
+
+/**
+ * A macro to implement the NS_NewSVGXXXElement() functions.
+ */
+#define NS_IMPL_NS_NEW_SVG_ELEMENT(_elementName)                             \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 nsINodeInfo *aNodeInfo)                     \
+{                                                                            \
+  nsSVG##_elementName##Element *it =                                         \
+    new nsSVG##_elementName##Element(aNodeInfo);                             \
+  if (!it)                                                                   \
+    return NS_ERROR_OUT_OF_MEMORY;                                           \
+                                                                             \
+  NS_ADDREF(it);                                                             \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    NS_RELEASE(it);                                                          \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  *aResult = it;                                                             \
+                                                                             \
+  return rv;                                                                 \
+}
+
+/**
+ * A macro to implement the nsSVGXXXElement::CloneNode().
+ */
+#define NS_IMPL_SVG_DOM_CLONENODE(_elementName)                              \
+NS_IMETHODIMP                                                                \
+nsSVG##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)  \
+{                                                                            \
+  *aReturn = nsnull;                                                         \
+                                                                             \
+  nsSVG##_elementName##Element* it =                                         \
+    new nsSVG##_elementName##Element(mNodeInfo);                             \
+  if (!it) {                                                                 \
+    return NS_ERROR_OUT_OF_MEMORY;                                           \
+  }                                                                          \
+                                                                             \
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                  \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  rv |= CopyNode(it, aDeep);                                                 \
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Error copying SVG node!");                 \
+                                                                             \
+  if (NS_SUCCEEDED(rv)) {                                                    \
+    kungFuDeathGrip.swap(*aReturn);                                          \
+  }                                                                          \
+                                                                             \
+  return rv;                                                                 \
+}
+
 
 #endif // __NS_SVGELEMENT_H__

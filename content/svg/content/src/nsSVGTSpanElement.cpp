@@ -55,9 +55,9 @@ class nsSVGTSpanElement : public nsSVGTSpanElementBase,
 protected:
   friend nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
-  nsSVGTSpanElement();
+  nsSVGTSpanElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGTSpanElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -90,25 +90,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGTSpanElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGTSpanElement* it = new nsSVGTSpanElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(TSpan)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -129,7 +112,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGTSpanElement::nsSVGTSpanElement()
+nsSVGTSpanElement::nsSVGTSpanElement(nsINodeInfo *aNodeInfo)
+  : nsSVGTSpanElementBase(aNodeInfo)
 {
 
 }
@@ -140,10 +124,9 @@ nsSVGTSpanElement::~nsSVGTSpanElement()
 
   
 nsresult
-nsSVGTSpanElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGTSpanElement::Init()
 {
-  nsresult rv = nsSVGTSpanElementBase::Init(aNodeInfo);
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
 
   // Create mapped properties:
 
@@ -170,39 +153,16 @@ nsSVGTSpanElement::Init(nsINodeInfo* aNodeInfo)
     rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGTSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGTSpanElement* it = new nsSVGTSpanElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(TSpan)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGTSpanElement methods

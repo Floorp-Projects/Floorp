@@ -54,10 +54,10 @@ class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
 protected:
   friend nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult,
                                                 nsINodeInfo *aNodeInfo);
-  nsSVGForeignObjectElement();
+  nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGForeignObjectElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
-  
+  nsresult Init();
+
 public:
   // interfaces:
   
@@ -81,25 +81,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGForeignObjectElement* it = new nsSVGForeignObjectElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -118,7 +101,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGForeignObjectElement::nsSVGForeignObjectElement()
+nsSVGForeignObjectElement::nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo)
+  : nsSVGForeignObjectElementBase(aNodeInfo)
 {
 
 }
@@ -129,9 +113,9 @@ nsSVGForeignObjectElement::~nsSVGForeignObjectElement()
 
   
 nsresult
-nsSVGForeignObjectElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGForeignObjectElement::Init()
 {
-  nsresult rv = nsSVGForeignObjectElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGForeignObjectElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -186,41 +170,16 @@ nsSVGForeignObjectElement::Init(nsINodeInfo* aNodeInfo)
     rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  
-    
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGForeignObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGForeignObjectElement* it = new nsSVGForeignObjectElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(ForeignObject)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSVGForeignObjectElement methods:

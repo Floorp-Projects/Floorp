@@ -52,9 +52,9 @@ class nsSVGPolylineElement : public nsSVGPolylineElementBase,
 protected:
   friend nsresult NS_NewSVGPolylineElement(nsIContent **aResult,
                                            nsINodeInfo *aNodeInfo);
-  nsSVGPolylineElement();
+  nsSVGPolylineElement(nsINodeInfo* aNodeInfo);
   virtual ~nsSVGPolylineElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
+  nsresult Init();
   
 public:
   // interfaces:
@@ -73,25 +73,8 @@ protected:
 };
 
 
-nsresult NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGPolylineElement* it = new nsSVGPolylineElement();
+NS_IMPL_NS_NEW_SVG_ELEMENT(Polyline)
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -111,7 +94,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPolylineElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPolylineElement::nsSVGPolylineElement()
+nsSVGPolylineElement::nsSVGPolylineElement(nsINodeInfo* aNodeInfo)
+  : nsSVGPolylineElementBase(aNodeInfo)
 {
 
 }
@@ -122,9 +106,9 @@ nsSVGPolylineElement::~nsSVGPolylineElement()
 
   
 nsresult
-nsSVGPolylineElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGPolylineElement::Init()
 {
-  nsresult rv = nsSVGPolylineElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGPolylineElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -134,41 +118,16 @@ nsSVGPolylineElement::Init(nsINodeInfo* aNodeInfo)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = AddMappedSVGValue(nsSVGAtoms::points, mPoints);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-    
-  return NS_OK;
+
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGPolylineElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGPolylineElement* it = new nsSVGPolylineElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
+NS_IMPL_SVG_DOM_CLONENODE(Polyline)
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
- 
-  *aReturn = it;
-
-  return NS_OK; 
-}
 
 //----------------------------------------------------------------------
 // nsIDOMSGAnimatedPoints methods:

@@ -54,10 +54,10 @@ class nsSVGCircleElement : public nsSVGCircleElementBase,
 protected:
   friend nsresult NS_NewSVGCircleElement(nsIContent **aResult,
                                          nsINodeInfo *aNodeInfo);
-  nsSVGCircleElement();
+  nsSVGCircleElement(nsINodeInfo *aNodeInfo);
   virtual ~nsSVGCircleElement();
-  nsresult Init(nsINodeInfo* aNodeInfo);
-  
+  nsresult Init();
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGCIRCLEELEMENT
@@ -79,25 +79,7 @@ protected:
 };
 
 
-nsresult NS_NewSVGCircleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo)
-{
-  *aResult = nsnull;
-  nsSVGCircleElement* it = new nsSVGCircleElement();
-
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aResult = it;
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 
 
 //----------------------------------------------------------------------
@@ -117,7 +99,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGCircleElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGCircleElement::nsSVGCircleElement()
+nsSVGCircleElement::nsSVGCircleElement(nsINodeInfo *aNodeInfo)
+  : nsSVGCircleElementBase(aNodeInfo)
 {
 
 }
@@ -128,9 +111,9 @@ nsSVGCircleElement::~nsSVGCircleElement()
 
   
 nsresult
-nsSVGCircleElement::Init(nsINodeInfo* aNodeInfo)
+nsSVGCircleElement::Init()
 {
-  nsresult rv = nsSVGCircleElementBase::Init(aNodeInfo);
+  nsresult rv = nsSVGCircleElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
@@ -169,40 +152,14 @@ nsSVGCircleElement::Init(nsINodeInfo* aNodeInfo)
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-    
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMETHODIMP
-nsSVGCircleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-  nsSVGCircleElement* it = new nsSVGCircleElement();
 
-  if (!it) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-
-  rv = CopyNode(it, aDeep);
-
-  if (NS_FAILED(rv)) {
-    it->Release();
-    return rv;
-  }
-  
-  *aReturn = it;
-
-  return NS_OK; 
-}
+NS_IMPL_SVG_DOM_CLONENODE(Circle)
 
 
 //----------------------------------------------------------------------

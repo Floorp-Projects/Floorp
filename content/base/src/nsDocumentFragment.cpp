@@ -54,7 +54,7 @@ class nsDocumentFragment : public nsGenericElement,
                            public nsIDOM3Node
 {
 public:
-  nsDocumentFragment(nsIDocument* aOwnerDocument);
+  nsDocumentFragment(nsINodeInfo *aNodeInfo, nsIDocument* aOwnerDocument);
   virtual ~nsDocumentFragment();
 
   // nsISupports
@@ -181,17 +181,9 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                                    getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDocumentFragment* it = new nsDocumentFragment(aOwnerDocument);
+  nsDocumentFragment* it = new nsDocumentFragment(nodeInfo, aOwnerDocument);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  rv = it->Init(nodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
   }
 
   *aInstancePtrResult = NS_STATIC_CAST(nsIDOMDocumentFragment *, it);
@@ -201,7 +193,9 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
   return NS_OK;
 }
 
-nsDocumentFragment::nsDocumentFragment(nsIDocument* aOwnerDocument)
+nsDocumentFragment::nsDocumentFragment(nsINodeInfo *aNodeInfo,
+                                       nsIDocument* aOwnerDocument)
+  : nsGenericElement(aNodeInfo)
 {
   mOwnerDocument = aOwnerDocument;
 }

@@ -52,7 +52,7 @@ class nsHTMLSharedListElement : public nsGenericHTMLElement,
                                 public nsIDOMHTMLUListElement
 {
 public:
-  nsHTMLSharedListElement();
+  nsHTMLSharedListElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLSharedListElement();
 
   // nsISupports
@@ -86,34 +86,12 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
-nsresult
-NS_NewHTMLSharedListElement(nsIHTMLContent** aInstancePtrResult,
-                            nsINodeInfo *aNodeInfo)
-{
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLSharedListElement* it = new nsHTMLSharedListElement();
-
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv = it->Init(aNodeInfo);
-
-  if (NS_FAILED(rv)) {
-    delete it;
-
-    return rv;
-  }
-
-  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 
 
-nsHTMLSharedListElement::nsHTMLSharedListElement()
+nsHTMLSharedListElement::nsHTMLSharedListElement(nsINodeInfo *aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -139,28 +117,23 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedListElement,
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLUListElement, ul)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
+
 nsresult
 nsHTMLSharedListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsRefPtr<nsHTMLSharedListElement> it = new nsHTMLSharedListElement();
-
+  nsHTMLSharedListElement *it = new nsHTMLSharedListElement(mNodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(mNodeInfo);
-
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIDOMNode> kungFuDeathGrip =
+    NS_STATIC_CAST(nsIDOMHTMLOListElement *, it);
 
   CopyInnerTo(it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMHTMLOListElement *, it);
-
-  NS_ADDREF(*aReturn);
+  kungFuDeathGrip.swap(*aReturn);
 
   return NS_OK;
 }
