@@ -3737,6 +3737,8 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
                            &lineFlags);
       if (NS_FAILED(result))
         return result;
+      if (!firstFrame)
+        return NS_ERROR_FAILURE;
 
       lastFrame = firstFrame;
       for (;lineFrameCount > 1;lineFrameCount --){
