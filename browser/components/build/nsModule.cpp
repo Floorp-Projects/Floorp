@@ -35,11 +35,14 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #include "nsIGenericFactory.h"
 
 #include "nsBrowserCompsCID.h"
 #include "nsBookmarksService.h"
+#ifdef XP_WIN
+#include "nsWindowsHooks.h"
+#endif
 #ifdef MIGRATION_ENABLED
 #include "nsProfileMigrator.h"
 #include "nsOperaProfileMigrator.h"
@@ -57,6 +60,10 @@
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
+#ifdef XP_WIN
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
+#endif
+
 #ifdef MIGRATION_ENABLED
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
@@ -74,19 +81,25 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacIEProfileMigrator)
 
 static const nsModuleComponentInfo components[] =
 {
-  { "Bookmarks", 
-    NS_BOOKMARKS_SERVICE_CID, 
+#ifdef XP_WIN
+  { NS_IWINDOWSHOOKS_CLASSNAME,
+    NS_IWINDOWSHOOKS_CID,
+    NS_IWINDOWSHOOKS_CONTRACTID,
+    nsWindowsHooksConstructor },
+#endif
+  { "Bookmarks",
+    NS_BOOKMARKS_SERVICE_CID,
     NS_BOOKMARKS_SERVICE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
-  { "Bookmarks", 
-    NS_BOOKMARKS_SERVICE_CID, 
+  { "Bookmarks",
+    NS_BOOKMARKS_SERVICE_CID,
     NS_BOOKMARKS_DATASOURCE_CONTRACTID,
     nsBookmarksServiceConstructor },
 
 #ifdef MIGRATION_ENABLED
-  { "Profile Migrator", 
-    NS_PROFILEMIGRATOR_CID, 
+  { "Profile Migrator",
+    NS_PROFILEMIGRATOR_CID,
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
 
