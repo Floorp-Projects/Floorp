@@ -1432,15 +1432,16 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             if (ids.length == 0) {
                 continue;
             }
-            if (result.length == 0) {
-                result = ids;
-                continue;
-            }
             if (map == null) {
+                if (result.length == 0) {
+                    result = ids;
+                    continue;
+                }
+                map = new ObjToIntMap(result.length + ids.length);
                 for (int i = 0; i != result.length; ++i) {
                     map.intern(result[i]);
                 }
-                result = null;
+                result = null; // Allow to GC the result
             }
             for (int i = 0; i != ids.length; ++i) {
                 map.intern(ids[i]);
