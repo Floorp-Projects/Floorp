@@ -55,10 +55,9 @@ class nsCachedChromeChannel : public nsIChannel,
                               public nsITimerCallback
 {
 protected:
-    nsCachedChromeChannel(const char* aCommand, nsIURI* aURI);
+    nsCachedChromeChannel(nsIURI* aURI);
     virtual ~nsCachedChromeChannel();
 
-    const char*                 mCommand;
     nsCOMPtr<nsIURI>            mURI;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsIStreamListener> mListener;
@@ -66,7 +65,7 @@ protected:
 
 public:
     static nsresult
-    Create(const char* aCommand, nsIURI* aURI, nsIChannel** aResult);
+    Create(nsIURI* aURI, nsIChannel** aResult);
 	
     NS_DECL_ISUPPORTS
 
@@ -88,13 +87,13 @@ NS_IMPL_RELEASE(nsCachedChromeChannel);
 NS_IMPL_QUERY_INTERFACE3(nsCachedChromeChannel, nsIRequest, nsIChannel, nsITimerCallback);
 
 nsresult
-nsCachedChromeChannel::Create(const char* aCommand, nsIURI* aURI, nsIChannel** aResult)
+nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 {
     NS_PRECONDITION(aURI != nsnull, "null ptr");
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aCommand, aURI);
+    nsCachedChromeChannel* channel = new nsCachedChromeChannel(aURI);
     if (! channel)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -104,9 +103,8 @@ nsCachedChromeChannel::Create(const char* aCommand, nsIURI* aURI, nsIChannel** a
 }
 
 
-nsCachedChromeChannel::nsCachedChromeChannel(const char* aCommand, nsIURI* aURI)
-    : mCommand(aCommand),
-      mURI(aURI)
+nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
+    : mURI(aURI)
 {
     NS_INIT_REFCNT();
 }
@@ -162,6 +160,11 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
     if (listener) {
         nsresult rv;
 
+        if (mLoadGroup) {
+            rv = mLoadGroup->AddChannel(this, nsnull);
+            if (NS_FAILED(rv)) return rv;
+        }
+
         // Fire the OnStartRequest(), which will cause the XUL
         // document to get embedded.
         rv = listener->OnStartRequest(this, ctxt);
@@ -188,6 +191,10 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
         // Uh oh, something went wrong. Fire a balancing
         // OnStopRequest() and indicate an error occurred.
         (void) mListener->OnStopRequest(this, mContext, rv, nsnull);
+
+        if (mLoadGroup) {
+            (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+        }
     }
 
     return NS_OK;
@@ -217,7 +224,7 @@ nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 NS_IMETHODIMP
 nsCachedChromeChannel::GetContentType(char * *aContentType)
 {
-    *aContentType = nsXPIDLCString::Copy("text/xul");
+    *aContentType = nsXPIDLCString::Copy("text/cached-xul");
     return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -262,7 +269,19 @@ nsCachedChromeChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
+    nsresult rv;
+
+    if (mLoadGroup) {
+        rv = mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     mLoadGroup = aLoadGroup;
+
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
     return NS_OK;
 }
 
@@ -286,6 +305,11 @@ void
 nsCachedChromeChannel::Notify(nsITimer* aTimer)
 {
     (void) mListener->OnStopRequest(this, mContext, NS_OK, nsnull);
+
+    if (mLoadGroup) {
+        (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+    }
+
     mListener = nsnull;
     mContext  = nsnull;
     NS_RELEASE(aTimer);
@@ -413,7 +437,7 @@ nsChromeProtocolHandler::NewChannel(const char* aVerb, nsIURI* aURI,
     if (proto) {
         // ...in which case, we'll create a dummy stream that'll just
         // load the thing.
-        rv = nsCachedChromeChannel::Create(aVerb, aURI, getter_AddRefs(result));
+        rv = nsCachedChromeChannel::Create(aURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
     else {
