@@ -778,8 +778,12 @@ char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int m
 
     /* check to see if subject are all ascii or not */
     if(!stateful_encoding((const char *) name) && intlmime_only_ascii_str(subject))
-      return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) 
-                                            subject, maxLineLen, 0, " ", 1);
+      /* Changed to dup the original string - naoki 
+       * TODO: copy code from xp_wrap.c for XP_WordWrapWithPrefix()
+       */
+      return PL_strdup(subject);
+//      return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) 
+//                                            subject, maxLineLen, 0, " ", 1);
 
     if (mail_csid != wincsid)
     {
@@ -1398,31 +1402,25 @@ PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, 
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
 {
-  if (header == 0 || *header == '\0')
-    return NULL;
+  char *result = nsnull;
 
-#if 1
-  // MIME encoded
-  if (intlmime_is_mime_part2_header(header)) {
-    char *header_copy = PL_strdup(header);
-    char *result;
+  if (header == 0)
+    return nsnull;
+
+  // No MIME encoded, duplicate the input
+  if (*header == '\0' || intlmime_is_mime_part2_header(header)) {
+    result = PL_strdup(header);
+  }
+  else {
+    char *header_copy = PL_strdup(header);  // avoid to modify the original string
 
     if (header_copy) {
       result = MIME_StripContinuations(intl_decode_mime_part2_str(header_copy, 0, PR_TRUE, charset));
       PR_Free(header_copy);
     }
-    return result;
   }
-#else //for testing encoder
-  if (intlmime_is_mime_part2_header(header)) {
-    char *cp = MIME_StripContinuations(intl_decode_mime_part2_str(header, 0, PR_TRUE, charset));
-    char *cp2 = MIME_EncodeMimePartIIStr((char *) cp, (char *) charset, kMIME_ENCODED_WORD_SIZE);
-    if (cp2) PR_Free(cp2);
-    return cp;
-  }
-#endif
 
-  return NULL;
+  return result;
 }
 
 char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, const PRInt32 encodedWordSize)
