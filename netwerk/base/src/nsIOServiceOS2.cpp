@@ -40,6 +40,7 @@
 
 #include "nsIOService.h"
 #include "nsEscape.h"
+#include "nsPrintfCString.h"
 //#define INCL_DOSFILEMGR
 //#define INCL_DOSERRORS
 //#define INCL_DOSPROCESS
@@ -85,15 +86,19 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
         rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
         if (NS_SUCCEEDED(rv)) {
         
-            escPath.Insert("file:///", 0);
-
-            PRBool dir;
-            rv = aFile->IsDirectory(&dir);
-			NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
-            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
-                // make sure we have a trailing slash
-                escPath += "/";
+            if (escPath[escPath.Length() - 1] != '/') {
+                PRBool dir;
+                rv = aFile->IsDirectory(&dir);
+                
+                if (NS_FAILED(rv))
+                    NS_WARNING(nsPrintfCString("Cannot tell if %s is a directory or file", escPath.get()).get());
+                
+                if (NS_SUCCEEDED(rv) && dir)
+                    // make sure we have a trailing slash
+                    escPath += "/";
             }
+            
+            escPath.Insert("file:///", 0);
             *aURL = ToNewCString(escPath);
             rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }    
