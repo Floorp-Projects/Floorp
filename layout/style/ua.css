@@ -567,3 +567,17 @@ NOFRAMES {
 :CELL-CONTENT {
   display: block;
 }
+
+:FIELDSET-CONTENT {
+  display: block;
+}
+
+:BUTTON-CONTENT {
+  display: block;
+}
+
+:LABEL-CONTENT {
+  display: block;
+}
+
+
