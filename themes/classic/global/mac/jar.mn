@@ -88,6 +88,15 @@ classic.jar:
     skin/classic/global/button-def-active-right-btm.gif
     skin/classic/global/button-def-active-right-mid.gif
     skin/classic/global/button-def-active-right-top.gif
+    skin/classic/global/button-def-dis-left-btm.gif
+    skin/classic/global/button-def-dis-left-mid.gif
+    skin/classic/global/button-def-dis-left-top.gif
+    skin/classic/global/button-def-dis-mid-btm.gif
+    skin/classic/global/button-def-dis-mid-mid.gif
+    skin/classic/global/button-def-dis-mid-top.gif
+    skin/classic/global/button-def-dis-right-btm.gif
+    skin/classic/global/button-def-dis-right-mid.gif
+    skin/classic/global/button-def-dis-right-top.gif
     skin/classic/global/check-cb-check-active.gif
     skin/classic/global/check-cb-check-disable.gif
     skin/classic/global/check-cb-check.gif

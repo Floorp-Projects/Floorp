@@ -67,6 +67,15 @@ button-def-active-mid-top.gif
 button-def-active-right-btm.gif
 button-def-active-right-mid.gif
 button-def-active-right-top.gif
+button-def-dis-left-btm.gif
+button-def-dis-left-mid.gif
+button-def-dis-left-top.gif
+button-def-dis-mid-mid.gif
+button-def-dis-mid-btm.gif
+button-def-dis-mid-top.gif
+button-def-dis-right-btm.gif
+button-def-dis-right-mid.gif
+button-def-dis-right-top.gif
 button.css
 buttonBindings.xml
 check-cb-check-active.gif
