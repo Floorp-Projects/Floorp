@@ -666,18 +666,18 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
   nsresult result = NS_OK;
 
   *aReturn = nsnull;
-  if (nsnull != mStyleSheet) {
+  if (mStyleSheet) {
     result = mStyleSheet->EnsureUniqueInner(); // needed to ensure rules have correct parent
     if (NS_SUCCEEDED(result)) {
-      nsICSSRule *rule;
+      nsCOMPtr<nsICSSRule> rule;
 
-      result = mStyleSheet->GetStyleRuleAt(aIndex, rule);
-      if (NS_OK == result) {
-        result = rule->QueryInterface(NS_GET_IID(nsIDOMCSSRule),
-                                      (void **)aReturn);
+      result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
+      if (rule) {
+        result = CallQueryInterface(rule, aReturn);
         mRulesAccessed = PR_TRUE; // signal to never share rules again
+      } else if (result == NS_ERROR_ILLEGAL_VALUE) {
+        result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
       }
-      NS_RELEASE(rule);
     }
   }
   
