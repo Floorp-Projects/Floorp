@@ -283,7 +283,6 @@ function UpdateBackForwardButtons()
 		
 	backButton.setAttribute("disabled", !appCore.canGoBack);	
 	forwardButton.setAttribute("disabled", !appCore.canGoForward);
-	dump("XXX CanGoForward = " + appCore.canGoForward + "\r\n");
 }
 
 function Startup()
