@@ -872,9 +872,13 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     caller = cx->fp->down;
     indirectCall = (!caller->pc || *caller->pc != JSOP_EVAL);
 
-    if (JSVERSION_IS_ECMA(cx->version) && indirectCall) {
-	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-			     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
+    if (JSVERSION_IS_ECMA(cx->version) &&
+        indirectCall &&
+        !JS_ReportErrorFlagsAndNumber(cx,
+                                      JSREPORT_WARNING | JSREPORT_STRICT,
+                                      js_GetErrorMessage, NULL,
+                                      JSMSG_BAD_INDIRECT_CALL,
+                                      js_eval_str)) {
         return JS_FALSE;
     }
 
