@@ -76,6 +76,7 @@
 
 // Locally defined keys used by nsAppDirectoryEnumerator
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
+#define NS_USER_PLUGINS_DIR         "UserPlugins"
 
 #if XP_MAC
 #define DEFAULTS_DIR_NAME           "Defaults"
@@ -190,6 +191,12 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
         if (pathVar)
             rv = NS_NewLocalFile(pathVar, PR_TRUE, getter_AddRefs(localFile));
+    }
+    else if (nsCRT::strcmp(prop, NS_USER_PLUGINS_DIR) == 0)
+    {
+        rv = GetProductDirectory(getter_AddRefs(localFile));
+        if (NS_SUCCEEDED(rv))
+            rv = localFile->AppendRelativePath(PLUGINS_DIR_NAME);
     }
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
@@ -432,7 +439,7 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
 #ifdef XP_MAC
         static const char* keys[] = { NS_APP_PLUGINS_DIR };
 #else
-        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_APP_PLUGINS_DIR };
+        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR };
 #endif
 
         *_retval = new nsAppDirectoryEnumerator(this, keys, sizeof(keys) / sizeof(keys[0]));
