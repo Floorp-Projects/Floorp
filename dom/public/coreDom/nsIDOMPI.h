@@ -15,23 +15,34 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMPI_h__
 #define nsIDOMPI_h__
 
-#include "nsDOM.h"
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
+class nsIDOMPI;
+
+#define NS_IDOMPI_IID \
+{ 0x6f7652ea,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMPI : public nsIDOMNode {
 public:
-  //attribute UniString        name;
-  virtual UniString           GetName() = 0;
-  virtual void                SetName(UniString name) = 0;
-  //attribute UniString        data;
-  virtual UniString           GetData() = 0;
-  virtual void                SetData(UniString data) = 0;
+
+  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    SetName(nsString& aName)=0;
+
+  NS_IMETHOD    GetData(nsString& aData)=0;
+  NS_IMETHOD    SetData(nsString& aData)=0;
 };
 
-#endif // nsIDOMPI_h__
+extern nsresult NS_InitPIClass(nsIScriptContext *aContext, void **aPrototype);
 
+extern "C" NS_DOM NS_NewScriptPI(nsIScriptContext *aContext, nsIDOMPI *aSupports, nsISupports *aParent, void **aReturn);
+
+#endif // nsIDOMPI_h__

@@ -20,15 +20,19 @@ DEPTH=../../..
 DEFINES = -D_IMPL_NS_DOM
 
 EXPORTS =               \
-	nsDOM.h		    \
-        nsIDOMAttribute.h   \
-        nsIDOMComment.h     \
-        nsIDOMDocument.h    \
-        nsIDOMElement.h     \
-        nsIDOMIterators.h   \
-        nsIDOMNode.h        \
-        nsIDOMPI.h          \
-        nsIDOMText.h        \
+	nsIDOMAttribute.h \
+	nsIDOMAttributeList.h \
+	nsIDOMComment.h \
+	nsIDOMDOM.h \
+	nsIDOMDocument.h \
+	nsIDOMDocumentContext.h \
+	nsIDOMDocumentFragment.h \
+	nsIDOMElement.h \
+	nsIDOMNode.h \
+	nsIDOMNodeIterator.h \
+	nsIDOMPI.h \
+	nsIDOMText.h \
+	nsIDOMTreeIterator.h
         $(NULL)
 
 MODULE = dom

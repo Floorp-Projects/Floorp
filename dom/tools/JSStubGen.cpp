@@ -75,11 +75,12 @@ JSStubGen::Generate(char *aFileName,
 static const char *kIncludeDefaultsStr = "\n"
 "#include \"jsapi.h\"\n"
 "#include \"nscore.h\"\n"
-"#include \"nsIScriptObject.h\"\n"
+"#include \"nsIScriptContext.h\"\n"
+"#include \"nsIJSScriptObject.h\"\n"
 "#include \"nsIScriptObjectOwner.h\"\n"
+"#include \"nsIScriptGlobalObject.h\"\n"
 "#include \"nsIPtr.h\"\n"
-"#include \"nsString.h\"\n"
-"#include \"nsIJSGlobalObject.h\"\n";
+"#include \"nsString.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 
 static PRIntn 
@@ -107,8 +108,8 @@ JSStubGen::GenerateIncludes(IdlSpecification &aSpec)
 
 static const char *kIIDDefaultStr = "\n"
 "static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);\n"
-"static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);\n"
-"static NS_DEFINE_IID(kIJSGlobalObjectIID, NS_IJSGLOBALOBJECT_IID);\n";
+"static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);\n"
+"static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);\n";
 static const char *kIIDStr = "static NS_DEFINE_IID(kI%sIID, %s);\n";
 
 PRIntn 
@@ -218,7 +219,11 @@ static const char *kPropFuncBeginStr = "\n"
 "%s%sProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)\n"
 "{\n"
 "  nsIDOM%s *a = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  NS_ASSERTION(nsnull != a, \"null pointer\");\n"
+"\n"
+"  // If there's no private data, this must be the prototype, so ignore\n"
+"  if (nsnull == a) {\n"
+"    return JS_TRUE;\n"
+"  }\n"
 "\n"
 "  if (JSVAL_IS_INT(id)) {\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
@@ -226,8 +231,8 @@ static const char *kPropFuncBeginStr = "\n"
 static const char *kPropFuncEndStr = 
 "      default:\n"
 "      {\n"
-"        nsIScriptObject *object;\n"
-"        if (NS_OK == a->QueryInterface(kIScriptObjectIID, (void**)&object)) {\n"
+"        nsIJSScriptObject *object;\n"
+"        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
 "          PRBool rval;\n"
 "          rval =  object->%sProperty(cx, id, vp);\n"
 "          NS_RELEASE(object);\n"
@@ -254,7 +259,7 @@ static const char *kPropCaseEndStr =
 "        break;\n"
 "      }\n";
 
-static const char *kNoAttrStr = "      case 0:";
+static const char *kNoAttrStr = "      case 0:\n";
 
 
 void     
@@ -346,7 +351,8 @@ static const char *kObjectGetCaseStr =
 "            nsIScriptObjectOwner *owner = nsnull;\n"
 "            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
 "              JSObject *object = nsnull;\n"
-"              if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {\n"
+"              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
+"              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {\n"
 "                // set the return value\n"
 "                *vp = OBJECT_TO_JSVAL(object);\n"
 "              }\n"
@@ -588,8 +594,8 @@ static const char *kEnumerateStr =
 "  \n"
 "  if (nsnull != a) {\n"
 "    // get the js object\n"
-"    nsIScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIScriptObjectIID, (void**)&object)) {\n"
+"    nsIJSScriptObject *object;\n"
+"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
 "      object->EnumerateProperty(cx);\n"
 "      NS_RELEASE(object);\n"
 "    }\n"
@@ -624,8 +630,8 @@ static const char *kResolveStr =
 "  \n"
 "  if (nsnull != a) {\n"
 "    // get the js object\n"
-"    nsIScriptObject *object;\n"
-"    if (NS_OK == a->QueryInterface(kIScriptObjectIID, (void**)&object)) {\n"
+"    nsIJSScriptObject *object;\n"
+"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
 "      object->Resolve(cx, id);\n"
 "      NS_RELEASE(object);\n"
 "    }\n"
@@ -656,7 +662,6 @@ static const char *kMethodBeginStr = "\n\n"
 "%s%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
 "  nsIDOM%s *nativeThis = (nsIDOM%s*)JS_GetPrivate(cx, obj);\n"
-"  NS_ASSERTION(nsnull != nativeThis, \"null pointer\");\n"
 "  JSBool rBool = JS_FALSE;\n";
 
 static const char *kMethodReturnStr = 
@@ -666,6 +671,12 @@ static const char *kMethodParamStr =  "  %s b%d;\n";
 
 static const char *kMethodBodyBeginStr = "\n"
 "  *rval = JSVAL_NULL;\n"
+"\n"
+"  // If there's no private data, this must be the prototype, so ignore\n"
+"  if (nsnull == nativeThis) {\n"
+"    return JS_TRUE;\n"
+"  }\n"
+"\n"
 "  if (argc >= %d) {\n";
 
 static const char *kMethodObjectParamStr = "\n"
@@ -742,7 +753,8 @@ static const char *kMethodObjectRetStr =
 "      nsIScriptObjectOwner *owner = nsnull;\n"
 "      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
 "        JSObject *object = nsnull;\n"
-"        if (NS_OK == owner->GetScriptObject(cx, (void**)&object)) {\n"
+"        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
+"        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {\n"
 "          // set the return value\n"
 "          *rval = OBJECT_TO_JSVAL(object);\n"
 "        }\n"
@@ -859,7 +871,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       }
 
       if (rval->GetType() != TYPE_VOID) {
-        strcpy(param_ptr, kMethodParamListDelimiterStr);
+        if (pcount > 0) {
+          strcpy(param_ptr, kMethodParamListDelimiterStr);
+        }
         sprintf(buf, kMethodBodyMiddleStr, method_name, param_buf,
                 rval->GetType() == TYPE_STRING ? "" : "&");
       }
@@ -1060,56 +1074,76 @@ static const char *kInitClassBeginStr =
 "\n\n//\n"
 "// %s class initialization\n"
 "//\n"
-"nsresult NS_Init%sClass(JSContext *aContext, JSObject **aPrototype)\n"
+"nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype)\n"
 "{\n"
+"  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
 "  JSObject *proto = nsnull;\n"
+"  JSObject *constructor = nsnull;\n"
 "  JSObject *parent_proto = nsnull;\n"
-"  JSObject *obj = JS_GetGlobalObject(aContext);\n"
-"  nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, obj);\n"
-"  nsIJSGlobalObject *global;\n"
+"  JSObject *global = JS_GetGlobalObject(jscontext);\n"
+"  jsval vp;\n"
 "\n"
-"  if (NS_OK == supports->QueryInterface(kIJSGlobalObjectIID, (void **)&global)) {\n"
-"    *aPrototype = global->GetClassPrototype(aContext, \"%s\");\n"
-"    if (nsnull == *aPrototype) {\n";
+"  if ((PR_TRUE != JS_LookupProperty(jscontext, global, \"%s\", &vp)) ||\n"
+"      !JSVAL_IS_OBJECT(vp) ||\n"
+"      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||\n"
+"      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), \"prototype\", &vp)) || \n"
+"      !JSVAL_IS_OBJECT(vp)) {\n\n";
 
 #define JSGEN_GENERATE_INITCLASSBEGIN(buffer, className)         \
    sprintf(buffer, kInitClassBeginStr, className, className, className)
 
 static const char *kGetParentProtoStr =
-"      if (NS_OK != NS_Init%sClass(aContext, &parent_proto)) {\n"
-"        return NS_ERROR_FAILURE;\n"
-"      }\n";
+"    if (NS_OK != NS_Init%sClass(aContext, (void **)&parent_proto)) {\n"
+"      return NS_ERROR_FAILURE;\n"
+"    }\n";
 
 static const char *kInitClassBodyStr =
-"      *aPrototype = JS_InitClass(aContext,      // context\n"
-"                                 obj,           // global object\n"
-"                                 parent_proto,  // parent proto \n"
-"                                 &%sClass,      // JSClass\n"
-"                                 %s,            // JSNative ctor\n"
-"                                 0,             // ctor args\n"
-"                                 %sProperties,  // proto props\n"
-"                                 %sMethods,     // proto funcs\n"
-"                                 nsnull,        // ctor props (static)\n"
-"                                 nsnull);       // ctor funcs (static)\n"
-"      if (nsnull == *aPrototype) {\n"
-"        NS_RELEASE(global);\n"
-"        return NS_ERROR_FAILURE;\n"
-"      }\n"
-"\n"
-"      global->SetClassPrototype(aContext, \"%s\", *aPrototype);\n"
+"    proto = JS_InitClass(jscontext,     // context\n"
+"                         global,        // global object\n"
+"                         parent_proto,  // parent proto \n"
+"                         &%sClass,      // JSClass\n"
+"                         %s,            // JSNative ctor\n"
+"                         0,             // ctor args\n"
+"                         %sProperties,  // proto props\n"
+"                         %sMethods,     // proto funcs\n"
+"                         nsnull,        // ctor props (static)\n"
+"                         nsnull);       // ctor funcs (static)\n"
+"    if (nsnull == proto) {\n"
+"      return NS_ERROR_FAILURE;\n"
 "    }\n"
 "\n";
 
 #define JSGEN_GENERATE_INITCLASSBODY(buffer, className)         \
    sprintf(buffer, kInitClassBodyStr, className, className,     \
-           className, className, className) 
+           className, className) 
+
+static const char *kInitStaticBeginStr =
+"    if ((PR_TRUE == JS_LookupProperty(jscontext, global, \"%s\", &vp)) &&\n"
+"        JSVAL_IS_OBJECT(vp) &&\n"
+"        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {\n";
+
+static const char *kInitStaticEntryStr =
+"      vp = INT_TO_JSVAL(nsIDOM%s::%s);\n"
+"      JS_SetProperty(jscontext, constructor, \"%s\", &vp);\n"
+"\n";
+
+static const char *kInitStaticEndStr =
+"    }\n"
+"\n";
 
 static const char *kInitClassEndStr =
-"    return NS_OK;\n"
+"  }\n"
+"  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {\n"
+"    proto = JSVAL_TO_OBJECT(vp);\n"
 "  }\n"
 "  else {\n"
 "    return NS_ERROR_FAILURE;\n"
 "  }\n"
+"\n"
+"  if (aPrototype) {\n"
+"    *aPrototype = proto;\n"
+"  }\n"
+"  return NS_OK;\n"
 "}\n";
 
 void     
@@ -1133,6 +1167,25 @@ JSStubGen::GenerateInitClass(IdlSpecification &aSpec)
   JSGEN_GENERATE_INITCLASSBODY(buf, primary_class);
   *file << buf;
 
+  int c, ccount = primary_iface->ConstCount();
+  
+  if (ccount > 0) {
+    sprintf(buf, kInitStaticBeginStr, primary_iface->GetName());
+    *file << buf;
+    
+    for (c = 0; c < ccount; c++) {
+      IdlVariable *var = primary_iface->GetConstAt(c);
+      
+      if (NULL != var) {
+        sprintf(buf, kInitStaticEntryStr, primary_iface->GetName(), 
+              var->GetName(), var->GetName());
+        *file << buf;
+      }
+    }
+    
+    *file << kInitStaticEndStr;
+  }
+
   *file << kInitClassEndStr;
 }
 
@@ -1141,19 +1194,37 @@ static const char *kNewJSObjectStr =
 "\n\n//\n"
 "// Method for creating a new %s JavaScript object\n"
 "//\n"
-"nsresult NS_NewScript%s(JSContext *aContext, nsIDOM%s *aSupports, JSObject *aParent, JSObject **aReturn)\n"
+"extern \"C\" NS_DOM NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn)\n"
 "{\n"
 "  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, \"null argument to NS_NewScript%s\");\n"
 "  JSObject *proto;\n"
-"  if (NS_OK != NS_Init%sClass(aContext, &proto)) {\n"
+"  JSObject *parent;\n"
+"  nsIScriptObjectOwner *owner;\n"
+"  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
+"\n"
+"  if (nsnull == aParent) {\n"
+"    parent = nsnull;\n"
+"  }\n"
+"  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {\n"
+"    if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {\n"
+"      NS_RELEASE(owner);\n"
+"      return NS_ERROR_FAILURE;\n"
+"    }\n"
+"    NS_RELEASE(owner);\n"
+"  }\n"
+"  else {\n"
+"    return NS_ERROR_FAILURE;\n"
+"  }\n"
+"\n"
+"  if (NS_OK != NS_Init%sClass(aContext, (void **)&proto)) {\n"
 "    return NS_ERROR_FAILURE;\n"
 "  }\n"
 "\n"
 "  // create a js object for this class\n"
-"  *aReturn = JS_NewObject(aContext, &%sClass, proto, aParent);\n"
+"  *aReturn = JS_NewObject(jscontext, &%sClass, proto, parent);\n"
 "  if (nsnull != *aReturn) {\n"
 "    // connect the native object to the js object\n"
-"    JS_SetPrivate(aContext, *aReturn, aSupports);\n"
+"    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);\n"
 "    NS_ADDREF(aSupports);\n"
 "  }\n"
 "  else {\n"

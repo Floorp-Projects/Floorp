@@ -21,9 +21,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-
-typedef struct JSContext         JSContext;
-typedef struct JSObject          JSObject;
+#include "nsIScriptContext.h"
 
 class nsIScriptContext;
 
@@ -54,7 +52,7 @@ public:
    * @return nsresult NS_OK if the script object is successfully returned
    *
    **/
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject) = 0;
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject) = 0;
 
   /**
    * Nuke the current script object.
@@ -64,34 +62,4 @@ public:
   NS_IMETHOD ResetScriptObject() = 0;
 };
 
-class nsIDOMDocument;
-extern "C" NS_DOM nsresult NS_NewScriptDocument(JSContext *aContext, 
-                                                nsIDOMDocument *aDocument, 
-                                                JSObject *aParent, 
-                                                JSObject **aJSObject);
-class nsIDOMElement;
-extern "C" NS_DOM nsresult NS_NewScriptElement(JSContext *aContext, 
-                                               nsIDOMElement *aElement, 
-                                               JSObject *aParent, 
-                                               JSObject **aJSObject);
-class nsIDOMText;
-extern "C" NS_DOM nsresult NS_NewScriptText(JSContext *aContext, 
-                                            nsIDOMText *aText, 
-                                            JSObject *aParent, 
-                                            JSObject **aJSObject);
-class nsIDOMNodeIterator;
-extern "C" NS_DOM nsresult NS_NewScriptNodeIterator(JSContext *aContext, 
-                                                    nsIDOMNodeIterator *aNodeIterator, 
-                                                    JSObject *aParent, 
-                                                    JSObject **aJSObject);
-class nsIDOMAttribute;
-extern "C" NS_DOM nsresult NS_NewScriptAttribute(JSContext *aContext, 
-                                                 nsIDOMAttribute *aAttribute, 
-                                                 JSObject *aParent, 
-                                                 JSObject **aJSObject);
-class nsIDOMAttributeList;
-extern "C" NS_DOM nsresult NS_NewScriptAttributeList(JSContext *aContext, 
-                                                     nsIDOMAttributeList *aAttributeList, 
-                                                     JSObject *aParent, 
-                                                     JSObject **aJSObject);
 #endif // nsIScriptObjectOwner_h__

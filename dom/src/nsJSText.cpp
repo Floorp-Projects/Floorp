@@ -15,237 +15,470 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
 #include "nscore.h"
-#include "nsIScriptObject.h"
+#include "nsIScriptContext.h"
+#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIDOMText.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 
-static NS_DEFINE_IID(kIScriptObjectIID, NS_ISCRIPTOBJECT_IID);
+
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
+
+NS_DEF_PTR(nsIDOMElement);
+NS_DEF_PTR(nsIDOMText);
 
 //
 // Text property ids
 //
-enum text_slot {
-  TEXT_DATA                     = -1
+enum Text_slots {
+  TEXT_DATA = -11
 };
 
 /***********************************************************************/
-
 //
-// Text properties getter
+// Text Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
 GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  // NS_ASSERTION(nsnull != text, "null pointer");
+  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
       case TEXT_DATA:
       {
-        nsAutoString string;
-        if (NS_OK == text->GetData(string)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, string, string.Length());
+        nsAutoString prop;
+        if (NS_OK == a->GetData(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
         }
-      }
-      default:
-      {
-        nsIScriptObject *object;
-        if (NS_OK == text->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-          return object->GetProperty(cx, id, vp);
-        }
-      }
-    }
-  }
-
-  return JS_TRUE;
-}
-
-//
-// Text properties setter
-//
-PR_STATIC_CALLBACK(JSBool)
-SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
-
-  if (JSVAL_IS_INT(id)) {
-    switch(JSVAL_TO_INT(id)) {
-      case TEXT_DATA:
-      {
-        if (JSVAL_IS_STRING(*vp)) {
-          JSString *jsstring = JSVAL_TO_STRING(*vp);
-          nsAutoString string = JS_GetStringChars(jsstring);
-          text->SetData(string);
+        else {
+          return JS_FALSE;
         }
         break;
       }
       default:
       {
-        nsIScriptObject *object;
-        if (NS_OK == text->QueryInterface(kIScriptObjectIID, (void**)&object)) {
-          return object->SetProperty(cx, id, vp);
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->GetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
         }
       }
     }
   }
 
-  return JS_TRUE;
+  return PR_TRUE;
 }
 
+/***********************************************************************/
 //
-// Finalize Text
+// Text Properties Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  if (JSVAL_IS_INT(id)) {
+    switch(JSVAL_TO_INT(id)) {
+      case TEXT_DATA:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetData(prop);
+        
+        break;
+      }
+      default:
+      {
+        nsIJSScriptObject *object;
+        if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+          PRBool rval;
+          rval =  object->SetProperty(cx, id, vp);
+          NS_RELEASE(object);
+          return rval;
+        }
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+
+//
+// Text finalizer
 //
 PR_STATIC_CALLBACK(void)
 FinalizeText(JSContext *cx, JSObject *obj)
 {
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
   
-  if (nsnull != text) {
+  if (nsnull != a) {
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == text->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK == a->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
       owner->ResetScriptObject();
       NS_RELEASE(owner);
     }
 
-    text->Release();
+    NS_RELEASE(a);
   }
 }
+
+
+//
+// Text enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateText(JSContext *cx, JSObject *obj)
+{
+  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->EnumerateProperty(cx);
+      NS_RELEASE(object);
+    }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Text resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveText(JSContext *cx, JSObject *obj, jsval id)
+{
+  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  
+  if (nsnull != a) {
+    // get the js object
+    nsIJSScriptObject *object;
+    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+      object->Resolve(cx, id);
+      NS_RELEASE(object);
+    }
+  }
+  return JS_TRUE;
+}
+
+
+//
+// Native method Append
+//
+PR_STATIC_CALLBACK(JSBool)
+TextAppend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->Append(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Insert
+//
+PR_STATIC_CALLBACK(JSBool)
+TextInsert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return JS_FALSE;
+    }
+
+    JSString *jsstring1 = JS_ValueToString(cx, argv[1]);
+    if (nsnull != jsstring1) {
+      b1.SetString(JS_GetStringChars(jsstring1));
+    }
+    else {
+      b1.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->Insert(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Delete
+//
+PR_STATIC_CALLBACK(JSBool)
+TextDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Delete(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Replace
+//
+PR_STATIC_CALLBACK(JSBool)
+TextReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+  PRInt32 b1;
+  nsAutoString b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return JS_FALSE;
+    }
+
+    JSString *jsstring2 = JS_ValueToString(cx, argv[2]);
+    if (nsnull != jsstring2) {
+      b2.SetString(JS_GetStringChars(jsstring2));
+    }
+    else {
+      b2.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->Replace(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Splice
+//
+PR_STATIC_CALLBACK(JSBool)
+TextSplice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+  PRInt32 b1;
+  PRInt32 b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+    if (JSVAL_IS_OBJECT(argv[0])) {
+      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
+      NS_ASSERTION(nsnull != supports0, "null pointer");
+
+      if ((nsnull == supports0) ||
+          (NS_OK != supports0->QueryInterface(kIElementIID, (void **)(b0.Query())))) {
+        return JS_FALSE;
+      }
+    }
+    else if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else {
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Splice(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 /***********************************************************************/
 //
-// JS->Native functions
+// class for Text
 //
-PR_STATIC_CALLBACK(JSBool)
-Append(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
-  NS_ASSERTION(1 == argc, "wrong number of arguments");
-  if (1 == argc) {
-    // get the arguments
-    if (JSVAL_IS_STRING(argv[0])) {
-      JSString *jsstring1 = JSVAL_TO_STRING(argv[0]);
-      nsAutoString string1 = JS_GetStringChars(jsstring1);
-
-      // call the function
-      text->Append(string1);
-    }
-  }
-
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-Insert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
-  NS_ASSERTION(2 == argc, "wrong number of arguments");
-  if (2 == argc) {
-    // get the arguments
-    if (JSVAL_IS_INT(argv[0]) &&
-        JSVAL_IS_STRING(argv[1])) {
-      JSString *jsstring2 = JSVAL_TO_STRING(argv[1]);
-      nsAutoString string2 = JS_GetStringChars(jsstring2);
-
-      // call the function
-      text->Insert(JSVAL_TO_INT(argv[0]), string2);
-    }
-  }
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-Delete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
-  NS_ASSERTION(2 == argc, "wrong number of arguments");
-  if (2 == argc) {
-    // get the arguments
-    if (JSVAL_IS_INT(argv[0]) && JSVAL_IS_INT(argv[1])) {
-      // call the function
-      text->Delete(JSVAL_TO_INT(argv[0]), JSVAL_TO_INT(argv[1]));
-    }
-  }
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-Replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *text = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != text, "null pointer");
-  NS_ASSERTION(3 == argc, "wrong number of arguments");
-  if (3 == argc) {
-    // get the arguments
-    if (JSVAL_IS_INT(argv[0]) &&
-        JSVAL_IS_INT(argv[1]) &&
-        JSVAL_IS_STRING(argv[2])) {
-      JSString *jsstring3 = JSVAL_TO_STRING(argv[2]);
-      nsAutoString string3 = JS_GetStringChars(jsstring3);
-
-      // call the function
-      text->Replace(JSVAL_TO_INT(argv[0]), JSVAL_TO_INT(argv[1]), string3);
-    }
-  }
-  return JS_TRUE;
-}
-
-PR_STATIC_CALLBACK(JSBool)
-Splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  //XXX TBI
-  return JS_TRUE;
-}
-
-/***********************************************************************/
-//
-// the jscript class for a DOM Text
-//
-JSClass text = {
+JSClass TextClass = {
   "Text", 
   JSCLASS_HAS_PRIVATE,
-  JS_PropertyStub,  
-  JS_PropertyStub,    
-  GetTextProperty,     
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetTextProperty,
   SetTextProperty,
-  JS_EnumerateStub, 
-  JS_ResolveStub,     
-  JS_ConvertStub,      
+  EnumerateText,
+  ResolveText,
+  JS_ConvertStub,
   FinalizeText
 };
+
 
 //
 // Text class properties
 //
-static JSPropertySpec textProperties[] =
+static JSPropertySpec TextProperties[] =
 {
-  {"data",            TEXT_DATA,             JSPROP_ENUMERATE},
+  {"data",    TEXT_DATA,    JSPROP_ENUMERATE},
   {0}
 };
+
 
 //
 // Text class methods
 //
-static JSFunctionSpec textMethods[] = {
-  {"append",          Append,     1},
-  {"insert",          Insert,     2},
-  {"remove",          Delete,     2},
-  {"replace",         Replace,    3},
-  {"splice",          Splice,     3},
+static JSFunctionSpec TextMethods[] = 
+{
+  {"append",          TextAppend,     1},
+  {"insert",          TextInsert,     2},
+  {"delete",          TextDelete,     2},
+  {"replace",          TextReplace,     3},
+  {"splice",          TextSplice,     3},
   {0}
 };
+
 
 //
 // Text constructor
@@ -256,83 +489,96 @@ Text(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_TRUE;
 }
 
-//
-// Text static property ids
-//
 
 //
-// Text static properties
+// Text class initialization
 //
-
-//
-// Text static methods
-//
-
-/***********************************************************************/
-
-//
-// Init this object class
-//
-nsresult NS_InitNodeClass(JSContext *aContext, JSObject **aPrototype);
-nsresult NS_InitTextClass(JSContext *aContext, JSObject **aPrototype)
+nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype)
 {
-  // look in the global object for this class prototype
-  static JSObject *proto = nsnull;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+  JSObject *proto = nsnull;
+  JSObject *constructor = nsnull;
+  JSObject *parent_proto = nsnull;
+  JSObject *global = JS_GetGlobalObject(jscontext);
+  jsval vp;
 
-  if (nsnull == proto) {
-    JSObject *parentProto;
-    NS_InitNodeClass(aContext, &parentProto);
-    JSObject *proto;
-    proto = JS_InitClass(aContext, // context
-                        JS_GetGlobalObject(aContext), // global object
-                        parentProto, // parent proto 
-                        &text, // JSClass
-                        Text, // JSNative ctor
-                        0, // ctor args
-                        textProperties, // proto props
-                        textMethods, // proto funcs
-                        NULL, // ctor props (static)
-                        NULL); // ctor funcs (static)
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "Text", &vp)) ||
+      !JSVAL_IS_OBJECT(vp) ||
+      ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
+      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
+      !JSVAL_IS_OBJECT(vp)) {
+
+    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
+    proto = JS_InitClass(jscontext,     // context
+                         global,        // global object
+                         parent_proto,  // parent proto 
+                         &TextClass,      // JSClass
+                         Text,            // JSNative ctor
+                         0,             // ctor args
+                         TextProperties,  // proto props
+                         TextMethods,     // proto funcs
+                         nsnull,        // ctor props (static)
+                         nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
     }
+
+  }
+  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) {
+    proto = JSVAL_TO_OBJECT(vp);
+  }
+  else {
+    return NS_ERROR_FAILURE;
   }
 
-  if (nsnull != aPrototype) {
+  if (aPrototype) {
     *aPrototype = proto;
   }
-
-  return NS_OK; 
-}
-
-//
-// Text instance property ids
-//
-
-//
-// Text instance properties
-//
-
-//
-// New a text object in js, connect the native and js worlds
-//
-extern "C" NS_DOM nsresult NS_NewScriptText(JSContext *aContext, nsIDOMText *aText, JSObject *aParent, JSObject **aJSObject)
-{
-  NS_PRECONDITION(nsnull != aContext && nsnull != aText && nsnull != aJSObject, "null arg");
-  JSObject *proto;
-  NS_InitTextClass(aContext, &proto);
-
-  // create a js object for this class
-  *aJSObject = JS_NewObject(aContext, &text, proto, aParent);
-  if (nsnull != *aJSObject) {
-    // define the instance specific properties
-
-    // connect the native object to the js object
-    JS_SetPrivate(aContext, *aJSObject, aText);
-    aText->AddRef();
-  }
-  else return NS_ERROR_FAILURE; 
-
   return NS_OK;
 }
 
+
+//
+// Method for creating a new Text JavaScript object
+//
+extern "C" NS_DOM NS_NewScriptText(nsIScriptContext *aContext, nsIDOMText *aSupports, nsISupports *aParent, void **aReturn)
+{
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptText");
+  JSObject *proto;
+  JSObject *parent;
+  nsIScriptObjectOwner *owner;
+  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
+
+  if (nsnull == aParent) {
+    parent = nsnull;
+  }
+  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+    if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
+      NS_RELEASE(owner);
+      return NS_ERROR_FAILURE;
+    }
+    NS_RELEASE(owner);
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_OK != NS_InitTextClass(aContext, (void **)&proto)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // create a js object for this class
+  *aReturn = JS_NewObject(jscontext, &TextClass, proto, parent);
+  if (nsnull != *aReturn) {
+    // connect the native object to the js object
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);
+    NS_ADDREF(aSupports);
+  }
+  else {
+    return NS_ERROR_FAILURE; 
+  }
+
+  return NS_OK;
+}

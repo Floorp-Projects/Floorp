@@ -36,7 +36,10 @@ static const char *kFileSuffix = "h";
 static const char *kIfdefStr = "\n"
 "#ifndef nsIDOM%s_h__\n"
 "#define nsIDOM%s_h__\n\n";
-static const char *kIncludeISupportsStr = "#include \"nsISupports.h\"\n";
+static const char *kIncludeDefaultsStr = 
+"#include \"nsISupports.h\"\n"
+"#include \"nsString.h\"\n"
+"#include \"nsIScriptContext.h\"\n";
 static const char *kIncludeStr = "#include \"nsIDOM%s.h\"\n";
 static const char *kForwardClassStr = "class nsIDOM%s;\n";
 static const char *kUuidStr = 
@@ -46,7 +49,9 @@ static const char *kClassDeclStr = "class nsIDOM%s : ";
 static const char *kBaseClassStr = "public nsIDOM%s";
 static const char *kNoBaseClassStr = "public nsISupports";
 static const char *kClassPrologStr = " {\npublic:\n";
-static const char *kConstDeclStr = "  const %s %s = %l;\n";
+static const char *kEnumDeclBeginStr = "  enum {\n";
+static const char *kEnumEntryStr = "    %s = %d%s\n";
+static const char *kEnumDeclEndStr = "  };\n";
 static const char *kGetterMethodDeclStr = "\n  NS_IMETHOD    Get%s(%s%s a%s)=0;\n";
 static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s a%s)=0;\n";
 static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
@@ -54,8 +59,8 @@ static const char *kParamStr = "%s a%s";
 static const char *kDelimiterStr = ", ";
 static const char *kReturnStr = "%s%s aReturn";
 static const char *kClassEpilogStr = "};\n\n";
-static const char *kInitClassStr = "extern nsresult NS_Init%sClass(JSContext *aContext, JSObject **aPrototype);\n\n";
-static const char *kNewObjStr = "extern nsresult NS_NewScript%s(JSContext *aContext, nsIDOM%s *aSupports, JSObject *aParent, JSObject **aReturn);\n\n";
+static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
+static const char *kNewObjStr = "extern \"C\" NS_DOM NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
 
 
@@ -88,6 +93,7 @@ XPCOMGen::Generate(char *aFileName,
     if (iface) {
       GenerateGuid(*iface);
       GenerateClassDecl(*iface);
+      GenerateEnums(*iface);
       GenerateMethods(*iface);
       GenerateEndClassDecl();
     }
@@ -117,7 +123,7 @@ XPCOMGen::GenerateIncludes(IdlSpecification &aSpec)
   char buf[512];
   ofstream *file = GetFile();
 
-  *file << kIncludeISupportsStr;
+  *file << kIncludeDefaultsStr;
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
     IdlInterface *iface = aSpec.GetInterfaceAt(i);
@@ -195,6 +201,31 @@ XPCOMGen::GenerateClassDecl(IdlInterface &aInterface)
 }
 
 void     
+XPCOMGen::GenerateEnums(IdlInterface &aInterface)
+{
+  char buf[512];
+  ofstream *file = GetFile();
+
+  if (aInterface.ConstCount() > 0) {
+    int c, ccount = aInterface.ConstCount();
+
+    *file << kEnumDeclBeginStr;
+    
+    for (c = 0; c < ccount; c++) {
+      IdlVariable *var = aInterface.GetConstAt(c);
+      
+      if (NULL != var) {
+        sprintf(buf, kEnumEntryStr, var->GetName(), var->GetLongValue(), 
+                ((c < ccount-1) ? "," : ""));
+        *file << buf;
+      }
+    }
+    
+    *file << kEnumDeclEndStr;
+  }
+}
+
+void     
 XPCOMGen::GenerateMethods(IdlInterface &aInterface)
 {
   char buf[512];
@@ -242,13 +273,16 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
 
     IdlVariable *rval = func->GetReturnValue();
     if (rval->GetType() != TYPE_VOID) {
-      if (p > 0) {
+      if (pcount > 0) {
         strcpy(cur_param, kDelimiterStr);
         cur_param += strlen(kDelimiterStr);
       }
       GetVariableTypeForParameter(type_buf, *rval);
       sprintf(cur_param, kReturnStr, type_buf,
               rval->GetType() == TYPE_STRING ? "" : "*");
+    }
+    else {
+      *cur_param++ = '\0';
     }
  
     GetCapitalizedName(name_buf, *func);

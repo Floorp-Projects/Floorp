@@ -3,7 +3,7 @@
 require "find.pl";
 
 $uuid = 0x6f7652e0;
-$format = "{ 0x%x,  0xee43, 0x11d1, \\ \
+$format = "{ 0x%x,  0xee43, 0x11d1, \\\
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }";
 $pattern = "--- IID GOES HERE ---";
 
@@ -37,7 +37,6 @@ sub replaceText {
 	    while (<SEARCHFILE>) { 
 		if (/$pattern/) {
 		    $replacement = sprintf($format, $uuid++);
-		    warn "$name: Changing '$pattern' to '$replacement'\n";
 		    s/$pattern/$replacement /g;
 		}
 		print REPLACEFILE;

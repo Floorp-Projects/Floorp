@@ -69,11 +69,11 @@ NS_IMPL_ADDREF(nsDOMIterator)
 NS_IMPL_RELEASE(nsDOMIterator)
 
 
-nsresult nsDOMIterator::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult nsDOMIterator::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNodeIterator(aContext, this, nsnull, (JSObject**)&mScriptObject);
+    res = NS_NewScriptNodeIterator(aContext, this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -100,11 +100,14 @@ nsresult nsDOMIterator::GetLength(PRUint32 *aLength)
 nsresult nsDOMIterator::GetCurrentNode(nsIDOMNode **aNode)
 {
   nsIContent *content = nsnull;
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   content = mContent.ChildAt(mPosition);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_RELEASE(content);
+  }
+  else {
+    *aNode = nsnull;
   }
 
   return res;
@@ -113,13 +116,16 @@ nsresult nsDOMIterator::GetCurrentNode(nsIDOMNode **aNode)
 nsresult nsDOMIterator::GetNextNode(nsIDOMNode **aNode)
 {
   nsIContent *content = nsnull;
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   content = mContent.ChildAt(++mPosition);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_RELEASE(content);
   }
-  else mPosition = mContent.ChildCount();
+  else {
+    mPosition = mContent.ChildCount();
+    *aNode = nsnull;
+  }
 
   return res;
 }
@@ -127,13 +133,16 @@ nsresult nsDOMIterator::GetNextNode(nsIDOMNode **aNode)
 nsresult nsDOMIterator::GetPreviousNode(nsIDOMNode **aNode)
 {
   nsIContent *content = nsnull;
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   content = mContent.ChildAt(--mPosition);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_RELEASE(content);
   }
-  else mPosition = -1;
+  else {
+    mPosition = -1;
+    *aNode = nsnull;
+  }
 
   return res;
 }
@@ -141,12 +150,15 @@ nsresult nsDOMIterator::GetPreviousNode(nsIDOMNode **aNode)
 nsresult nsDOMIterator::ToFirst(nsIDOMNode **aNode)
 {
   nsIContent *content = nsnull;
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   mPosition = 0;
   content = mContent.ChildAt(mPosition);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_RELEASE(content);
+  }
+  else {
+    *aNode = nsnull;
   }
 
   return res;
@@ -155,12 +167,15 @@ nsresult nsDOMIterator::ToFirst(nsIDOMNode **aNode)
 nsresult nsDOMIterator::ToLast(nsIDOMNode **aNode)
 {
   nsIContent *content = nsnull;
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   mPosition = mPosition = mContent.ChildCount();
   content = mContent.ChildAt(mPosition);
   if (nsnull != content) {
     res = content->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_RELEASE(content);
+  }
+  else {
+    *aNode = nsnull;
   }
 
   return res;

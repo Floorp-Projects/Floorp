@@ -69,11 +69,11 @@ NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE(nsDOMAttribute)
 
 
-nsresult nsDOMAttribute::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult nsDOMAttribute::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttribute(aContext, this, nsnull, (JSObject**)&mScriptObject);
+    res = NS_NewScriptAttribute(aContext, this, nsnull, (void **)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -107,7 +107,7 @@ nsresult nsDOMAttribute::SetValue(nsString &aValue)
   return NS_OK;
 }
 
-nsresult nsDOMAttribute::GetSpecified()
+nsresult nsDOMAttribute::GetSpecified(PRBool *aSpecified)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -173,11 +173,11 @@ NS_IMPL_ADDREF(nsDOMAttributeList)
 
 NS_IMPL_RELEASE(nsDOMAttributeList)
 
-nsresult nsDOMAttributeList::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult nsDOMAttributeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttributeList(aContext, this, nsnull, (JSObject**)&mScriptObject);
+    res = NS_NewScriptAttributeList(aContext, this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;

@@ -15,119 +15,51 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMElement_h__
 #define nsIDOMElement_h__
 
-#include "nsDOM.h"
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-// forward declaration
-class nsIDOMAttribute;
 class nsIDOMAttributeList;
+class nsIDOMElement;
 class nsIDOMNodeIterator;
+class nsIDOMAttribute;
 
 #define NS_IDOMELEMENT_IID \
-{ /* 8f6bca79-ce42-11d1-b724-00600891d8c9 */ \
-0x8f6bca79, 0xce42, 0x11d1, \
-  {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
+{ 0x6f7652e7,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-/**
- * By far the vast majority (apart from text) of node types that authors will generally 
- * encounter when traversing a document will be Element nodes. These objects represent 
- * both the element itself, as well as any contained nodes. 
- */
 class nsIDOMElement : public nsIDOMNode {
 public:
-  /**
-   * This method returns the string that is the element's name 
-   *
-   * @param newChild [out]  The tag name
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetTagName(nsString &aName) = 0;
 
-  /**
-   * The attributes for this element. 
-   *
-   * @param aAttributeList [out]  The AttributeList
-   * @return <b>NS_OK</b>         iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetAttributes(nsIDOMAttributeList **aAttributeList) = 0;
+  NS_IMETHOD    GetTagName(nsString& aReturn)=0;
 
-  /**
-   * Retrieves an attribute value by name from an Element object. 
-   * <I> NOTE: the name of this function will change to GetAttribute in a subsequent
-   * release </I>
-   *
-   * @param aName [in]      The attribute name
-   * @param aValue [out]    The attribute value as a string
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetDOMAttribute(nsString &aName, nsString &aValue) = 0;
+  NS_IMETHOD    GetAttributes(nsIDOMAttributeList** aReturn)=0;
 
-  /**
-   * Set an attribute value from an Element object. 
-   * <I> NOTE: the name of this function will change to SetAttribute in a subsequent
-   * release </I>
-   *
-   * @param aName [in]      The attribute name
-   * @param aValue [in]     The attribute value as a string
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD SetDOMAttribute(nsString &aName, nsString &aValue) = 0;
+  NS_IMETHOD    GetDOMAttribute(nsString& aName, nsString& aReturn)=0;
 
-  /**
-   * Remove the specified attribute 
-   *
-   * @param aName [in]      The attribute name
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD RemoveAttribute(nsString &aName) = 0;
+  NS_IMETHOD    SetDOMAttribute(nsString& aName, nsString& aValue)=0;
 
-  /**
-   * Retrieves an Attribute node by name from an Element object.  
-   *
-   * @param aName [in]        The name of the attribute to retrieve
-   * @param aAttribute [out]  The attribute with the given name
-   * @return <b>NS_OK</b>     iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute) = 0;
+  NS_IMETHOD    RemoveAttribute(nsString& aName)=0;
 
-  /**
-   * Set an Attribute node by name from an Element object.  
-   *
-   * @param aAttribute [in] The attribute to set
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD SetAttributeNode(nsIDOMAttribute *aAttribute) = 0;
+  NS_IMETHOD    GetAttributeNode(nsString& aName, nsIDOMAttribute** aReturn)=0;
 
-  /**
-   * Removes the specified attribute/value pair from an Element node object. 
-   *
-   * @param aAttribute [in] The attribute to remove
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttribute *aAttribute) = 0;
+  NS_IMETHOD    SetAttributeNode(nsIDOMAttribute* aNewAttr)=0;
 
-  /**
-   * Returns an iterator through all subordinate elements with a given tag name.
-   *
-   * @param aName [in]      The name of the tag to match on
-   * @param aIterator [out] The iterator
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator) = 0;
+  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttribute* aOldAttr)=0;
 
-  /**
-   * Puts all Tet nodes in the sub-tree underneath this Element into a "normal" 
-   * form where only markup (e.g., tags, comments, PIs, CDATASections, and and 
-   * entity references separates Text nodes. 
-   *
-   * @return <b>NS_OK</b>   iff the function succeeds, otherwise an error code
-   */
-  NS_IMETHOD Normalize() = 0;
+  NS_IMETHOD    GetElementsByTagName(nsString& aTagname, nsIDOMNodeIterator** aReturn)=0;
+
+  NS_IMETHOD    Normalize()=0;
 };
 
-#endif // nsIDOMElement_h__
+extern nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
 
+extern "C" NS_DOM NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn);
+
+#endif // nsIDOMElement_h__

@@ -20,6 +20,7 @@
 #define nsDOMAttributes_h__
 
 #include "nsIDOMAttribute.h"
+#include "nsIDOMAttributeList.h"
 #include "nsIScriptObjectOwner.h"
 
 class nsIContent;
@@ -32,14 +33,14 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMAttribute interface
   NS_IMETHOD GetName(nsString &aName);
   NS_IMETHOD GetValue(nsString &aValue);
   NS_IMETHOD SetValue(nsString &aValue);
-  NS_IMETHOD GetSpecified();
+  NS_IMETHOD GetSpecified(PRBool *aSpecified);
   NS_IMETHOD SetSpecified(PRBool specified);
   NS_IMETHOD ToString(nsString &aString);
 
@@ -57,7 +58,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMAttributeList interface

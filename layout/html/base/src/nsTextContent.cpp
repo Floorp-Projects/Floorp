@@ -259,13 +259,13 @@ public:
                                nsIFrame*& aResult);
 
   // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
   // nsIDOMText interface
   NS_IMETHOD GetNodeType(PRInt32 *aType);
   NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
   NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD HasChildNodes(PRBool *aReturn);
   NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
   NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
@@ -274,11 +274,11 @@ public:
                           nsIDOMNode *oldChild);
   NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
   NS_IMETHOD GetData(nsString& aString);
-  NS_IMETHOD SetData(const nsString& aString);
-  NS_IMETHOD Append(const nsString& aData);
-  NS_IMETHOD Insert(PRInt32 offset, const nsString& aData);
+  NS_IMETHOD SetData(nsString& aString);
+  NS_IMETHOD Append(nsString& aData);
+  NS_IMETHOD Insert(PRInt32 offset, nsString& aData);
   NS_IMETHOD Delete(PRInt32 offset, PRInt32 count);
-  NS_IMETHOD Replace(PRInt32 offset, PRInt32 count, const nsString& aData);
+  NS_IMETHOD Replace(PRInt32 offset, PRInt32 count, nsString& aData);
   NS_IMETHOD Splice(nsIDOMElement *element, PRInt32 offset, PRInt32 count);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
@@ -1753,19 +1753,11 @@ Text::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-nsresult Text::GetScriptObject(JSContext *aContext, void** aScriptObject)
+nsresult Text::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    *aScriptObject = nsnull;
-    if (nsnull != mParent) {
-      nsIScriptObjectOwner *parent;
-      if (NS_OK == mParent->QueryInterface(kIScriptObjectOwner, (void**)&parent)) {
-        parent->GetScriptObject(aContext, aScriptObject);
-        NS_RELEASE(parent);
-      }
-    }
-    res = NS_NewScriptText(aContext, this, (JSObject*)*aScriptObject, (JSObject**)&mScriptObject);
+    res = NS_NewScriptText(aContext, this, mParent, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -1790,9 +1782,9 @@ nsresult Text::GetChildNodes(nsIDOMNodeIterator **aIterator)
   return nsHTMLContent::GetChildNodes(aIterator);
 }
 
-nsresult Text::HasChildNodes()
+nsresult Text::HasChildNodes(PRBool *aReturn)
 {
-  return nsHTMLContent::HasChildNodes();
+  return nsHTMLContent::HasChildNodes(aReturn);
 }
 
 nsresult Text::GetFirstChild(nsIDOMNode **aNode)
@@ -1835,7 +1827,7 @@ Text::GetData(nsString& aString)
 }
 
 nsresult
-Text::SetData(const nsString& aString)
+Text::SetData(nsString& aString)
 {
   if (mText) {
     delete[] mText;
@@ -1853,13 +1845,13 @@ Text::SetData(const nsString& aString)
 }
 
 nsresult
-Text::Append(const nsString& aData)
+Text::Append(nsString& aData)
 {
   return Replace(mLength, 0, aData);
 }
 
 nsresult
-Text::Insert(PRInt32 offset, const nsString& aData)
+Text::Insert(PRInt32 offset, nsString& aData)
 {
   return Replace(offset, 0, aData);
 }
@@ -1872,7 +1864,7 @@ Text::Delete(PRInt32 offset, PRInt32 count)
 }
 
 nsresult
-Text::Replace(PRInt32 offset, PRInt32 count, const nsString& aData)
+Text::Replace(PRInt32 offset, PRInt32 count, nsString& aData)
 {
   // sanitize arguments
   if (offset < 0) {

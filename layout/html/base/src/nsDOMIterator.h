@@ -19,7 +19,7 @@
 #ifndef nsDOMIterator_h__
 #define nsDOMIterator_h__
 
-#include "nsIDOMIterators.h"
+#include "nsIDOMNodeIterator.h"
 #include "nsIContent.h"
 #include "nsIScriptObjectOwner.h"
 
@@ -30,7 +30,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMIterator interface

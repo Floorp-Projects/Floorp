@@ -121,7 +121,7 @@ public:
   // nsIDOMNode interface
   NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
   NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD HasChildNodes(PRBool *aReturn);
   NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
   NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);

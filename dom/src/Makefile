@@ -25,12 +25,14 @@ CPPSRCS =				\
 	nsJSEnvironment.cpp		\
 	nsJSNode.cpp		\
 	nsJSDocument.cpp	\
+	nsJSDocumentFragment.cpp\
 	nsJSElement.cpp		\
 	nsJSText.cpp		\
 	nsJSNodeIterator.cpp\
 	nsJSAttribute.cpp	\
 	nsJSAttributeList.cpp\
 	nsJSWindow.cpp\
+	nsGlobalWindow.cpp \
 	$(NULL)
 
 MODULE = raptor

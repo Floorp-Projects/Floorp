@@ -33,22 +33,24 @@ public:
   virtual PRBool       EvaluateString(const char *aScript, 
                                       PRUint32 aScriptSize, 
                                       jsval *aRetValue);
-  virtual JSObject*    GetGlobalObject();
-  virtual JSContext*   GetContext();
-  virtual nsresult     InitAllClasses();
-  virtual nsresult     InitContext(nsIWebWidget *aGlobalObject);
+  virtual nsIScriptGlobalObject*    GetGlobalObject();
+  virtual void*                     GetNativeContext();
+  virtual nsresult     InitClasses();
+  virtual nsresult     InitContext(nsIScriptGlobalObject *aGlobalObject);
 };
 
 class nsJSEnvironment {
 private:
-  nsIScriptContext *mScriptContext;
+  static nsJSEnvironment *sTheEnvironment;
   JSRuntime *mRuntime;
 
 public:
   nsJSEnvironment();
   ~nsJSEnvironment();
 
-  nsIScriptContext* GetContext();
+  nsIScriptContext* GetNewContext();
+
+  static nsJSEnvironment *GetScriptingEnvironment();
 };
 
 #endif /* nsJSEnvironment_h___ */

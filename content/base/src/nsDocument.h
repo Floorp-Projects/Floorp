@@ -22,6 +22,7 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMEventCapturer.h"
 
 class nsISelection;
@@ -161,14 +162,14 @@ public:
 
 public:
   
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMDocument interface
   NS_IMETHOD GetNodeType(PRInt32 *aType);
   NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
   NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD HasChildNodes(PRBool *aReturn);
   NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
   NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
@@ -194,7 +195,7 @@ public:
                                               nsIDOMNode *value, 
                                               nsIDOMAttribute **aAttribute);
   NS_IMETHOD CreateAttributeList(nsIDOMAttributeList **aAttributesList);
-  NS_IMETHOD CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator);
+  NS_IMETHOD CreateTreeIterator(nsIDOMNode *aNode, nsIDOMTreeIterator **aTreeIterator);
   NS_IMETHOD GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator);
 
   // nsIDOMEventCapturer interface

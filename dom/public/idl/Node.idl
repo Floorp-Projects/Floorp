@@ -14,12 +14,12 @@
         Node                getFirstChild();
         Node                getPreviousSibling();
         Node                getNextSibling();
-        Node                insertBefore(in Node newChild, 
+        void                insertBefore(in Node newChild, 
                                          in Node refChild)  interface NotMyChildException {};
 
-        Node                replaceChild(in Node newChild, 
+        void                replaceChild(in Node newChild, 
                                          in Node oldChild)  interface NotMyChildException {};
 
-        Node                removeChild(in Node oldChild)  interface NotMyChildException {};
+        void                removeChild(in Node oldChild)  interface NotMyChildException {};
 
       };

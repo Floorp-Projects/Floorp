@@ -57,6 +57,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(PROGRAM)
   echo $(OS_CFLAGS)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+	$(MAKE_INSTALL) geniid.pl  $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\idlc.exe

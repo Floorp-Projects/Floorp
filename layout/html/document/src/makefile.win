@@ -32,7 +32,7 @@ EXPORTS =		\
  nsIHTMLDocument.h	\
  $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\base\src -I..\..\forms\src \
   -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom \
   -I$(PUBLIC)\netlib -I..\..\..\base\src

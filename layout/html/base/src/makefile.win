@@ -19,7 +19,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=raptorhtmlbase_s 
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=			\
@@ -93,7 +93,7 @@ CPP_OBJS=				\
 
 EXPORTS=nsGlobalVariables.h
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
  -I..\..\style\src -I$(PUBLIC)\dom -I$(PUBLIC)\netlib \
  -I..\..\..\base\src
 
