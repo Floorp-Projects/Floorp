@@ -197,7 +197,7 @@ add_buttons(Widget w,XtPointer client_data,XtPointer call_data)
 	Cardinal count = (Cardinal) client_data;
 
 	printf("%s(%s,%d)\n",
-		   __FUNCTION__,
+		   "__FUNCTION__",
 		   XtName(w),
 		   count);
 
@@ -220,7 +220,7 @@ remove_buttons(Widget w,XtPointer client_data,XtPointer call_data)
 	Cardinal count = (Cardinal) client_data;
 
 	printf("%s(%s,%d)\n",
-		   __FUNCTION__,
+		   "__FUNCTION__",
 		   XtName(w),
 		   count);
 
@@ -254,7 +254,7 @@ popup_eh(Widget		w,
 		XtManageChild(popup_menu);
 
 		printf("%s(%s)\n",
-			   __FUNCTION__,
+			   "__FUNCTION__",
 			   XtName(w));
 	}
 	
