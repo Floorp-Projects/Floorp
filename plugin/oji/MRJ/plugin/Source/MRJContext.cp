@@ -904,25 +904,19 @@ void MRJContext::drawApplet()
 	}
 }
 
-void MRJContext::printApplet(GrafPtr printingPort, Point frameOrigin)
+void MRJContext::printApplet(nsPluginWindow* printingWindow)
 {
-	nsPluginWindow* originalPluginWindow = mPluginWindow;
-	JNIEnv* env = ::JMGetCurrentEnv(mSessionRef); 
 	jclass utilsClass = NULL;
 	jobject frameObject = NULL;
 	OSStatus status = noErr;
+	JNIEnv* env = ::JMGetCurrentEnv(mSessionRef); 
 	
 	do {
 		// call the print methods of the applet viewer's frame.
 		jclass utilsClass = env->FindClass("netscape/oji/AWTUtils");
 		if (utilsClass == NULL) break;
-		jmethodID printContainerMethod = env->GetStaticMethodID(utilsClass, "printContainer", "(Ljava/awt/Container;Ljava/lang/Object;)V");
+		jmethodID printContainerMethod = env->GetStaticMethodID(utilsClass, "printContainer", "(Ljava/awt/Container;IIILjava/lang/Object;)V");
 		if (printContainerMethod == NULL) break;
-		
-		// temporarily switch drawing to the printing port.
-		status = ::JMSetFrameVisibility(mViewerFrame, printingPort,
-										frameOrigin, printingPort->clipRgn);
-		if (status != noErr) break;
 		
 		// get the frame object to print.
 		frameObject = JMGetAWTFrameJNIObject(mViewerFrame, env);
@@ -931,23 +925,32 @@ void MRJContext::printApplet(GrafPtr printingPort, Point frameOrigin)
 		// create a monitor to synchronize with.
 		MRJMonitor notifier(mSession);
 
+		// put the printing port into window coordinates.
+		GrafPtr printingPort = GrafPtr(printingWindow->window->port);
+		LocalPort localPort(printingPort);
+		localPort.Enter();
+		::ClipRect((Rect*)&printingWindow->clipRect);
+
 		// start the asynchronous print call.
-		jvalue args[2];
+		jvalue args[5];
 		args[0].l = frameObject;
-		args[1].l = notifier.getObject();
-		OSStatus status = JMExecJNIStaticMethodInContext(mContext, env, utilsClass, printContainerMethod, 2, args);
+		args[1].i = jint(printingPort);
+		args[2].i = jint(printingWindow->x);
+		args[3].i = jint(printingWindow->y);
+		args[4].l = notifier.getObject();
+		OSStatus status = JMExecJNIStaticMethodInContext(mContext, env, utilsClass, printContainerMethod, 5, args);
 
 		// now, wait for the print method to complete.
 		if (status == noErr)
 			notifier.wait();
+		
+		localPort.Exit();
 	} while (0);
 
 	if (frameObject != NULL)
 		env->DeleteLocalRef(frameObject);
 	if (utilsClass != NULL)
 		env->DeleteLocalRef(utilsClass);
-	if (originalPluginWindow != NULL)
-		setWindow(originalPluginWindow);
 }
 
 void MRJContext::activate(Boolean active)
