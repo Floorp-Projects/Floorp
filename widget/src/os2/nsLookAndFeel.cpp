@@ -119,7 +119,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_BUTTONDARK;
       break;
     case eColor_buttontext:
-      idx = SYSCLR_BUTTONDEFAULT;
+      idx = SYSCLR_MENUTEXT;
       break;
     case eColor_captiontext:
       idx = SYSCLR_WINDOWTEXT;
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_SCROLLBAR;
       break;
     case eColor_threeddarkshadow:
-      idx = SYSCLR_SHADOW;
+      idx = SYSCLR_BUTTONDEFAULT;
       break;
     case eColor_threedface:
       idx = SYSCLR_BUTTONMIDDLE;
@@ -172,7 +172,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_BUTTONMIDDLE;
       break;
     case eColor_threedshadow:
-      idx = SYSCLR_SHADOW;
+      idx = SYSCLR_BUTTONDARK;
       break;
     case eColor_window:
       idx = SYSCLR_WINDOW;
