@@ -3,3 +3,6 @@
 #
 
 netCore.h
+nsIHeader.h
+nsIProxy.h
+nsISocketTransportService.h
