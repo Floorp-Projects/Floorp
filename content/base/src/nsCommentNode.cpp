@@ -307,7 +307,10 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
   nsTextFragment* textFrag;
   PRInt32 numFragments;
-  res = mInner.GetText(textFrag, numFragments);
+  // XXX This method is const, but GetText() isn't, so cast away the
+  // XXX constness of mInner to fix windows build bustage temporarily.
+  nsGenericDOMDataNode* inner = (nsGenericDOMDataNode*)&mInner;
+  res = inner->GetText(textFrag, numFragments);
   if (!NS_SUCCEEDED(res))
     return res;
 #ifdef DEBUG_akkana
