@@ -21,8 +21,11 @@
 	NSStdLib and Mozilla.
 */
 
-/* start building for Carbon */
+/* enable to start building for Carbon */
 #define TARGET_CARBON 0
+#if TARGET_CARBON
+#define PP_Target_Carbon 1
+#endif
 
 /* Some build-wide Mac-related defines */
 #define macintosh			/* macintosh is defined for GUSI */
