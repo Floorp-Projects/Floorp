@@ -399,10 +399,16 @@ char* typeFromLog[] = {
 
 void leaky::dumpEntryToLog(malloc_log_entry* lep)
 {
-  printf("%-10s %08lx %5ld %08lx (%ld)-->",
+  printf("%-10s %08lx %5ld ",
 	 typeFromLog[lep->type],
-	 lep->address, lep->size, lep->oldaddress,
-	 lep->numpcs);
+	 lep->address, lep->size);
+  if (IsRefcnt(lep)) {
+    printf("%08ld", lep->oldaddress);
+  }
+  else {
+    printf("%08lx", lep->oldaddress);
+  }
+  printf(" (%ld)-->", lep->numpcs);
   displayStackTrace(stdout, lep);
 }
 
