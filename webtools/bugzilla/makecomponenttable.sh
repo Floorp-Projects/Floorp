@@ -45,15 +45,15 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("Test", "Calendar", "sman@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Install", "Calendar", "sman@netscape.com", "");
 
-insert into components (value, program, initialowner, initialqacontact) values ("CCK-Wizard", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("CCK-Installation", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("CCK-Shell", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("CCK-Whitebox", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Dialup-Install", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Dialup-Account Setup", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Dialup-Mup/Muc", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Dialup-Upgrade", "CCK", "selmer@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("AS-Whitebox", "CCK", "selmer@netscape.com", "");
+insert into components (value, program, initialowner, initialqacontact, description) values ("CCK-Wizard", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "The CCK wizard allows the user to gather data by walking through a series of screens to create a set of customizations and build a media image.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("CCK-Installation", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "The CCK installation includes verifying the CD-layout. Other areas include the installations screens, directory structure, branding and launching the CCK Wizard.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("CCK-Shell", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "CCK allows an ISP to customize the first screen seen by the user. The shell dialog(s) displays a background image as well as buttons and text explaining the installation options to the user.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("CCK-Whitebox", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "This is a series of whitebox tests to test the critical functions of the CCK Wizard.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Dialup-Install", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "This is the Installation of a custom build which includes the Account Setup module created by CCK");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Dialup-Account Setup", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "The Account Setup Wizard is used by the end users who want to create or modify an existing Internet account.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Dialup-Mup/Muc", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "This refers to multiple user configurations which allows association of Microsoft dialup networking connectoids to Netscape user profiles.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("Dialup-Upgrade", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "This is the upgrade path from 4.5 to the latest release where the user preferences are preserved.");
+insert into components (value, program, initialowner, initialqacontact, description) values ("AS-Whitebox", "CCK", "selmer@netscape.com", "bmartin@netscape.com", "This is a series of whitebox tests to test the critical functions of the Account Setup.");
 
 insert into components (value, program, initialowner, initialqacontact) values ("LDAP C SDK", "Directory", "chuckb@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("LDAP Java SDK", "Directory", "chuckb@netscape.com", "");
