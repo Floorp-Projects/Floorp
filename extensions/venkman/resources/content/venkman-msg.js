@@ -191,6 +191,7 @@ const MSN_ERR_BP_NOINDEX     = "msg.err.bp.noindex";
 const MSN_ERR_REQUIRED_PARAM = "err.required.param"; /* also used as exception */
 const MSN_ERR_INVALID_PARAM  = "err.invalid.param";  /* also used as exception */
 const MSN_ERR_SOURCE_LOAD_FAILED = "msg.err.source.load.failed";
+const MSN_ERR_STARTUP        = "msg.err.startup";
 
 const MSN_FMT_ARGUMENT       = "fmt.argument";
 const MSN_FMT_PROPERTY       = "fmt.property";
@@ -200,6 +201,8 @@ const MSN_FMT_VALUE_LONG     = "fmt.value.long";
 const MSN_FMT_VALUE_MED      = "fmt.value.med";
 const MSN_FMT_VALUE_SHORT    = "fmt.value.short";
 const MSN_FMT_OBJECT         = "fmt.object";
+const MSN_FMT_JSEXCEPTION    = "fmt.jsexception";
+const MSN_FMT_BADMOJO        = "fmt.badmojo";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
