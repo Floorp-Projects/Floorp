@@ -186,6 +186,14 @@ PR_PUBLIC_API(HT_Pane) HT_NewPersonalToolbarPane (HT_Notification notify);
 
 PR_PUBLIC_API(HT_Pane) HT_NewBreadcrumbPane (HT_Notification notify);
 
+PR_PUBLIC_API(void) HT_SetViewCollapsedState(HT_View view, PRBool collapsedFlag);
+PR_PUBLIC_API(PRBool) HT_IsViewCollapsed(HT_View view);
+
+PR_PUBLIC_API(void) HT_SetViewHiddenState(HT_View view, PRBool hiddenFlag);
+PR_PUBLIC_API(PRBool) HT_IsViewHidden(HT_View view);
+
+PR_PUBLIC_API(PRBool) HT_IsPaneBusy(HT_Pane pane);
+
 PR_PUBLIC_API(void) HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle);
 PR_PUBLIC_API(void) HT_AddBookmark (char *url, char *optionalTitle);
 

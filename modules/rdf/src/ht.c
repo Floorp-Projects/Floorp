@@ -171,11 +171,16 @@ ht_UpdateURLstate(char *url, PRBool inProgressFlag, int status)
 					{
 						/* start node icon animation */
 						node->flags |= HT_CONTENTS_LOADING_FLAG;
+						++(node->view->pane->loadingCount);
 					}
 					else
 					{
 						/* stop node icon animation */
 						node->flags &= (~HT_CONTENTS_LOADING_FLAG);
+						if (node->view->pane->loadingCount > 0)
+						{
+							--(node->view->pane->loadingCount);
+						}
 					}
 					sendNotification(node, HT_EVENT_NODE_VPROP_CHANGED,
 						gNavCenter->RDF_smallIcon, HT_COLUMN_STRING);
@@ -2063,6 +2068,78 @@ HT_SetWorkspaceOrder(HT_View src, HT_View dest, PRBool afterDestFlag)
 	if ((src == NULL) || (dest == NULL))	return;
 
 	htSetWorkspaceOrder(src->top->node, dest->top->node, afterDestFlag);
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_SetViewCollapsedState(HT_View view, PRBool collapsedFlag)
+{
+	XP_ASSERT(view != NULL);
+	if (view != NULL)
+	{
+		view->collapsedFlag = collapsedFlag;
+	}
+}
+
+
+
+PR_PUBLIC_API(PRBool)
+HT_IsViewCollapsed(HT_View view)
+{
+	PRBool		collapsedFlag = PR_FALSE;
+
+	XP_ASSERT(view != NULL);
+	if (view != NULL)
+	{
+		collapsedFlag = view->collapsedFlag;
+	}
+	return(collapsedFlag);
+}
+
+
+
+PR_PUBLIC_API(void)
+HT_SetViewHiddenState(HT_View view, PRBool hiddenFlag)
+{
+	XP_ASSERT(view != NULL);
+	if (view != NULL)
+	{
+		view->hiddenFlag = hiddenFlag;
+	}
+}
+
+
+
+PR_PUBLIC_API(PRBool)
+HT_IsViewHidden(HT_View view)
+{
+	PRBool		hiddenFlag = PR_FALSE;
+
+	XP_ASSERT(view != NULL);
+	if (view != NULL)
+	{
+		hiddenFlag = view->hiddenFlag;
+	}
+	return(hiddenFlag);
+}
+
+
+
+PR_PUBLIC_API(PRBool)
+HT_IsPaneBusy(HT_Pane pane)
+{
+	PRBool		isLoadingFlag = PR_FALSE;
+
+	XP_ASSERT(pane != NULL);
+	if (pane != NULL)
+	{
+		if (pane->viewListCount > 0)
+		{
+			isLoadingFlag = PR_TRUE;
+		}
+	}
+	return(isLoadingFlag);
 }
 
 

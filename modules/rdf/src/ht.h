@@ -119,6 +119,7 @@ typedef struct _HT_PaneStruct {
 	struct _HT_URLSiteMapAssoc	*smp;
 	struct _HT_URLSiteMapAssoc	*sbp;
 	uint32				viewListCount;
+	uint32				loadingCount;
 	PRBool				autoFlushFlag;
 	SBProvider			smartBrowsingProviders;
 	PRBool				dirty;
@@ -161,6 +162,8 @@ typedef struct _HT_ViewStruct {
 	PRBool				descendingFlag;
 	PRBool				refreshingItemListp;
 	PRBool				inited;
+	PRBool				collapsedFlag;
+	PRBool				hiddenFlag;
 	RDF_Resource			treeRel;
 } HT_ViewStruct;
 
