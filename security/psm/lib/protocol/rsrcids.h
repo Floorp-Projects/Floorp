@@ -64,6 +64,9 @@ typedef enum
     SSM_RESTYPE_SECADVISOR_CONTEXT,
     SSM_RESTYPE_SIGNTEXT,
     SSM_RESTYPE_PKCS12_CONTEXT,
+
+    SSM_RESTYPE_SDR_CONTEXT,  /* Internal - Not used by client protocol */
+
     SSM_RESTYPE_MAX
 } SSMResourceType;
 
