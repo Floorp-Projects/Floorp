@@ -636,3 +636,15 @@ nsSimpleDataBase::AddDataSource(nsIRDFDataSource* source)
 
 
 
+NS_IMETHODIMP
+nsSimpleDataBase::RemoveDataSource(nsIRDFDataSource* source)
+{
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mDataSources.IndexOf(source) >= 0) {
+        mDataSources.RemoveElement(source);
+        NS_RELEASE(source);
+    }
+    return NS_OK;
+}
