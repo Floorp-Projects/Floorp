@@ -124,7 +124,7 @@ public:
 
     OSStatus read(void* buffer, SInt32 bufferSize, SInt32* bytesRead);
 };
-NS_IMPL_ISUPPORTS1(MRJInputStream, nsIPluginStreamListener);
+NS_IMPL_ISUPPORTS1(MRJInputStream, nsIPluginStreamListener)
 
 NS_IMETHODIMP
 MRJInputStream::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)

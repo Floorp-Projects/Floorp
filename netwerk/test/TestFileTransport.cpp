@@ -182,7 +182,7 @@ protected:
     PRUint32 mStopCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(MyListener, nsIStreamListener, nsIRequestObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(MyListener, nsIStreamListener, nsIRequestObserver)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -332,7 +332,7 @@ public:
     virtual ~MyOpenObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIRequestObserver);
+NS_IMPL_ISUPPORTS1(MyOpenObserver, nsIRequestObserver)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

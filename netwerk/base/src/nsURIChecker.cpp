@@ -49,7 +49,7 @@
 //Interfaces for addref, release and queryinterface
 NS_IMPL_ISUPPORTS5(nsURIChecker, nsIURIChecker,
                    nsIRequest, nsIStreamListener,
-                   nsIHttpEventSink, nsIInterfaceRequestor);
+                   nsIHttpEventSink, nsIInterfaceRequestor)
 
 nsURIChecker::nsURIChecker()
 {

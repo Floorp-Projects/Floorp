@@ -302,7 +302,7 @@ void CSecureEnv::sendMessageFromJava(JNIEnv* javaEnv, JavaMessage* msg, Boolean 
 // Thes macro expands to the aggregated query interface scheme.
 
 #if 0
-NS_IMPL_AGGREGATED(CSecureEnv);
+NS_IMPL_AGGREGATED(CSecureEnv)
 
 NS_METHOD
 CSecureEnv::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)

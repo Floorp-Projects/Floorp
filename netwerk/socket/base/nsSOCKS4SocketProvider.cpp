@@ -43,7 +43,7 @@ nsSOCKS4SocketProvider::~nsSOCKS4SocketProvider()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKS4SocketProvider, nsISocketProvider, nsISOCKS4SocketProvider);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKS4SocketProvider, nsISocketProvider, nsISOCKS4SocketProvider)
 
 NS_METHOD
 nsSOCKS4SocketProvider::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

@@ -105,7 +105,7 @@ nsDirIndexParser::~nsDirIndexParser() {
   if (--gRefCntParser == 0) {
     NS_IF_RELEASE(gTextToSubURI);
   }
-};
+}
 
 NS_IMETHODIMP
 nsDirIndexParser::SetListener(nsIDirIndexListener* aListener) {

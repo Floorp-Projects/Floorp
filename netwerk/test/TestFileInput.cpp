@@ -191,8 +191,8 @@ private:
     PRMonitor*          mMonitor;
 };
 
-NS_IMPL_ADDREF(nsReader);
-NS_IMPL_RELEASE(nsReader);
+NS_IMPL_ADDREF(nsReader)
+NS_IMPL_RELEASE(nsReader)
 
 NS_IMETHODIMP
 nsReader::QueryInterface(const nsIID& aIID, void* *aInstancePtr)

@@ -62,7 +62,7 @@ nsHttpDigestAuth::nsHttpDigestAuth()
 // nsHttpDigestAuth::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS1(nsHttpDigestAuth, nsIHttpAuthenticator);
+NS_IMPL_ISUPPORTS1(nsHttpDigestAuth, nsIHttpAuthenticator)
 
 //-----------------------------------------------------------------------------
 // nsHttpDigestAuth <protected>

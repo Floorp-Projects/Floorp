@@ -503,7 +503,7 @@ nsMemoryCacheDevice::CheckEntryCount()
  *****************************************************************************/
 
 
-NS_IMPL_ISUPPORTS1(nsMemoryCacheDeviceInfo, nsICacheDeviceInfo);
+NS_IMPL_ISUPPORTS1(nsMemoryCacheDeviceInfo, nsICacheDeviceInfo)
 
 
 NS_IMETHODIMP

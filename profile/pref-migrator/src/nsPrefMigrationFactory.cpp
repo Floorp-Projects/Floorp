@@ -76,4 +76,4 @@ static const nsModuleComponentInfo components[] =
       NS_PREFCONVERTER_CONTRACTID, nsPrefConverterConstructor}
 };
 
-NS_IMPL_NSGETMODULE(nsPrefMigrationModule, components);
+NS_IMPL_NSGETMODULE(nsPrefMigrationModule, components)

@@ -65,7 +65,7 @@ static const PRUint32 kMaxDNSNodeLen = 63;
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsIDNService,
                               nsIIDNService,
                               nsIObserver,
-                              nsISupportsWeakReference);
+                              nsISupportsWeakReference)
 
 nsresult nsIDNService::Init()
 {

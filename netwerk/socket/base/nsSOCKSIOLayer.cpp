@@ -90,7 +90,7 @@ nsSOCKSSocketInfo::~nsSOCKSSocketInfo()
     PR_FREEIF(mProxyHost);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketInfo, nsISOCKSSocketInfo);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketInfo, nsISOCKSSocketInfo)
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetProxyHost(char * *aProxyHost)

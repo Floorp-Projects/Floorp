@@ -49,7 +49,7 @@ nsNetModuleMgr* nsNetModuleMgr::gManager;
 //// nsISupports
 ///////////////////////////////////
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNetModuleMgr, nsINetModuleMgr);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNetModuleMgr, nsINetModuleMgr)
 
 
 ///////////////////////////////////

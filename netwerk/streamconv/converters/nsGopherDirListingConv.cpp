@@ -45,7 +45,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsGopherDirListingConv,
                               nsIStreamConverter,
                               nsIStreamListener,
-                              nsIRequestObserver);
+                              nsIRequestObserver)
 
 // nsIStreamConverter implementation
 

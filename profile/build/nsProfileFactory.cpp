@@ -40,7 +40,7 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProfile, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProfile, Init)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -51,4 +51,4 @@ static const nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE(nsProfileModule, components);
+NS_IMPL_NSGETMODULE(nsProfileModule, components)

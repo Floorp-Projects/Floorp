@@ -160,7 +160,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFileProtocolHandler, Init)
 #ifdef NECKO_PROTOCOL_ftp
 // ftp
 #include "nsFtpProtocolHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #endif
 
 #ifdef NECKO_PROTOCOL_http
@@ -337,7 +337,7 @@ UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
 }
 
 #ifdef BUILD_BINHEX_DECODER
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder)
 #endif
 
 static NS_IMETHODIMP                 

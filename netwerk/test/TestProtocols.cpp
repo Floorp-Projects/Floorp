@@ -173,7 +173,7 @@ TestHttpEventSink::~TestHttpEventSink()
 }
 
 
-NS_IMPL_ISUPPORTS1(TestHttpEventSink, nsIHttpEventSink);
+NS_IMPL_ISUPPORTS1(TestHttpEventSink, nsIHttpEventSink)
 
 NS_IMETHODIMP
 TestHttpEventSink::OnRedirect(nsIHttpChannel *channel, nsIChannel *newChannel)

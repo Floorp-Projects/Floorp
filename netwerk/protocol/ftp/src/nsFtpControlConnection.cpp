@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpControlConnection, 
                               nsIStreamListener, 
-                              nsIRequestObserver);
+                              nsIRequestObserver)
 
 nsFtpControlConnection::nsFtpControlConnection(const char* host, 
                                                PRUint32 port) 

@@ -77,7 +77,7 @@ PRLogModuleInfo* gFTPDirListConvLog = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFTPDirListingConv,
                               nsIStreamConverter,
                               nsIStreamListener, 
-                              nsIRequestObserver);
+                              nsIRequestObserver)
 
 
 // nsIStreamConverter implementation
