@@ -85,9 +85,11 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
 {
   if (nsnull != aParent) {
     mColor = aParent->mColor;
+    mOpacity = aParent->mOpacity;
   }
   else {
     mColor = NS_RGB(0, 0, 0);
+    mOpacity.SetPercentValue(1.0F);
   }
 
   mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
@@ -459,7 +461,7 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
     mWordSpacing = aParent->mWordSpacing;
   }
   else {
-    mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
+    mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
 
