@@ -4130,7 +4130,8 @@ nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt,
 
 #ifndef BUG_16273_FIXED
         //free the message-
-        CRTFREEIF((PRUnichar*)aMsg);
+        PRUnichar* temp = (PRUnichar*) aMsg;
+        CRTFREEIF(temp);
 #endif
         return rv;
     }
