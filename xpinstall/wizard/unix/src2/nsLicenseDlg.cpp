@@ -155,7 +155,7 @@ nsLicenseDlg::Show(int aDirection)
         // create a new scrollable textarea and add it to the table
         GtkWidget *text = gtk_text_new(NULL, NULL);
         GdkFont *font = gdk_font_load( LICENSE_FONT );
-        gtk_text_set_editable(GTK_TEXT(text), TRUE);
+        gtk_text_set_editable(GTK_TEXT(text), FALSE);
         gtk_table_attach(GTK_TABLE(mTable), text, 1, 2, 0, 1,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
