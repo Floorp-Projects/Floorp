@@ -4,3 +4,4 @@
 *.plg
 Debug
 Release
+Makefile
