@@ -87,9 +87,6 @@ function openNewWindowWith(url)
   else { // forget about the charset information.
     newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, true );
   }
-
-  // Fix new window.    
-  newWin.saveFileAndPos = true;
 }
 
 function openNewTabWith(url) 
