@@ -61,8 +61,8 @@ function selectDownload(aDownload)
   gDownloadView.treeBoxObject.ensureRowIsVisible(dlIndex);
 }
 
-function Startup()
-{
+function DLManagerStartup()
+{  
   if (!window.arguments.length)
     return;
 
@@ -162,7 +162,8 @@ var downloadViewController = {
     if (!selectionCount) return false;
 
     var selectedItem = getSelectedItem();
-    var isDownloading = gDownloadManager.getDownload(selectedItem.id);
+    var isDownloading = selectedItem && gDownloadManager.getDownload(selectedItem.id);
+    
     switch (aCommand) {
     case "cmd_openfile":
       try {
@@ -187,7 +188,7 @@ var downloadViewController = {
     case "cmd_remove":
       // XXX ensure selection isn't still in progress
       //     and how to handle multiple selection?
-      return !isDownloading;
+      return selectionCount > 0 && !isDownloading;
     case "cmd_selectAll":
       return gDownloadView.view.rowCount != selectionCount;
     default:
@@ -203,28 +204,33 @@ var downloadViewController = {
     switch (aCommand) {
     case "cmd_properties":
       selectedItem = getSelectedItem();
-      gDownloadManager.openProgressDialogFor(selectedItem.id, window);
+      if (selectedItem)
+        gDownloadManager.openProgressDialogFor(selectedItem.id, window);
       break;
     case "cmd_openfile":
       selectedItem = getSelectedItem();
-      file = getFileForItem(selectedItem);
-      file.launch();
+      if (selectedItem) {
+        file = getFileForItem(selectedItem);
+        file.launch();
+      }
       break;
     case "cmd_showinshell":
       selectedItem = getSelectedItem();
-      file = getFileForItem(selectedItem);
-      
-      // on unix, open a browser window rooted at the parent
-      if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
-        file = file.QueryInterface(Components.interfaces.nsIFile);
-        var parent = file.parent;
-        if (parent) {
-          const browserURL = "chrome://navigator/content/navigator.xul";
-          window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
+      if (selectedItem) {
+        file = getFileForItem(selectedItem);
+        
+        // on unix, open a browser window rooted at the parent
+        if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
+          file = file.QueryInterface(Components.interfaces.nsIFile);
+          var parent = file.parent;
+          if (parent) {
+            const browserURL = "chrome://navigator/content/navigator.xul";
+            window.openDialog(browserURL, "_blank", "chrome,all,dialog=no", parent.path);
+          }
         }
-      }
-      else {
-        file.reveal();
+        else {
+          file.reveal();
+        }
       }
       break;
     case "cmd_pause":
@@ -296,7 +302,9 @@ var downloadViewController = {
 
 function getSelectedItem()
 {
-  return gDownloadView.contentView.getItemAtIndex(gDownloadView.currentIndex);
+  if (gDownloadView.currentIndex != -1)
+    return gDownloadView.contentView.getItemAtIndex(gDownloadView.currentIndex);
+  return null;
 }
 
 function getSelectedItems()
@@ -334,7 +342,7 @@ function createLocalFile(aFilePath)
   return lf;
 }
 
-function Shutdown()
+function DLManagerShutdown()
 {
   try {
     var observerService = Components.classes[kObserverServiceProgID]

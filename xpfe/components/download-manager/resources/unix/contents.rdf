@@ -8,7 +8,7 @@
   </RDF:Seq>
  
   <RDF:Description about="urn:mozilla:package:download-manager"
-                   chrome:displayName="Mac-specific dl mgr files"
+                   chrome:displayName="Unix-specific dl mgr files"
                    chrome:author="mozilla.org"
                    chrome:name="dlmgr"
                    chrome:localeVersion="1.2"
@@ -21,8 +21,8 @@
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/downloadmanager/downloadmanager.xul">
-    <RDF:li>chrome://communicator/content/downloadmanager/dlmanagermenuoverlay.xul</RDF:li>
-    <RDF:li>chrome://navigator/content/navigatorOverlay.xul</RDF:li>
+    <RDF:li>chrome://communicator/content/tasksOverlay.xul</RDF:li>
+    <RDF:li>chrome://communicator/content/utilityOverlay.xul</RDF:li>
   </RDF:Seq>
 
 </RDF:RDF>
