@@ -318,6 +318,7 @@ function TreeOViewRecord(share)
 {
     this._share = share;
     this.visualFootprint = 1;
+    this.childIndex = -1;
     this.isHidden = true; /* records are considered hidden until they are
                            * inserted into a live tree */
 }
@@ -352,6 +353,9 @@ function tovr_gettree ()
 TreeOViewRecord.prototype.__defineGetter__("level", tovr_getLevel);
 function tovr_getLevel ()
 {
+    if (!("parentRecord" in this))
+        return -1;
+    
     var rv = 0;
     var parentRecord = this.parentRecord;
     while ("parentRecord" in parentRecord &&
@@ -556,6 +560,7 @@ function tovr_appchild (child)
     
     if ("isContainerOpen" in this && this.isContainerOpen)
     {
+        //dd ("appendChild: " + tov_formatRecord(child, ""));
         if (this.calculateVisualRow() >= 0)
         {
             var tree = this.findContainerTree();
@@ -621,8 +626,15 @@ function tovr_remchild (index)
     this.childData[index].childIndex = -1;
     delete this.childData[index].parentRecord;
     arrayRemoveAt (this.childData, index);
-    this.invalidateCache();
-    this.onVisualFootprintChanged (changeStart, fpDelta);
+    if ("isContainerOpen" in this && this.isContainerOpen)
+    {
+        if (this.calculateVisualRow() >= 0)
+        {
+            this.resort(true);  /* resort, don't invalidate.  we're going to do
+                                 * that in the onVisualFootprintChanged call. */
+        }
+        this.onVisualFootprintChanged (changeStart, fpDelta);
+    }
 }
 
 /*
@@ -1055,6 +1067,7 @@ function tov_freeze ()
         this.changeStart = 0;
         this.changeAmount = 0;
     }
+    //dd ("freeze " + this.frozen);
 }
 
 /*
@@ -1063,6 +1076,8 @@ function tov_freeze ()
 TreeOView.prototype.thaw =
 function tov_thaw ()
 {
+    //dd ("thaw " + (this.frozen - 1));
+
     if (this.frozen == 0)
     {
         ASSERT (0, "not frozen");
@@ -1082,7 +1097,7 @@ function tov_thaw ()
     
     delete this.changeStart;
     delete this.changeAmount;
-    
+
 }
 
 /* scroll the line specified by |line| to the center of the outliner */
@@ -1329,3 +1344,41 @@ TreeOView.prototype.performActionOnCell =
 function tov_pactcell (action)
 {
 }
+
+/*******************************************************************************/
+
+function tov_formatRecord (rec, indent)
+{
+    var str = "";
+    
+    for (var i in rec._colValues)
+            str += rec._colValues[i] + ", ";
+    
+    str += "[";
+    
+    str += rec.calculateVisualRow() + ", ";
+    str += rec.childIndex + ", ";
+    str += rec.level + ", ";
+    str += rec.visualFootprint + ", ";
+    str += rec.isHidden + "]";
+    
+    return (indent + str);
+}
+    
+function tov_formatBranch (rec, indent, recurse)
+{
+    var str = "";
+    for (var i = 0; i < rec.childData.length; ++i)
+    {
+        str += tov_formatRecord (rec.childData[i], indent) + "\n";
+        if (recurse)
+        {
+            if ("childData" in rec.childData[i])
+                str += tov_formatBranch(rec.childData[i], indent + "  ",
+                                        --recurse);
+        }
+    }
+
+    return str;
+}
+    
