@@ -45,7 +45,7 @@
 #include "softoken.h"
 
 char *progName;
-char *testdir = NULL;
+char *testdir = ".";
 
 #define CHECKERROR(rv, ln) \
 	if (rv) { \
@@ -1397,10 +1397,12 @@ get_ascii_file_data(SECItem *item, char *mode, char *type, int num)
 	SECStatus rv;
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, mode, type, num);
 	file = PR_Open(filename, PR_RDONLY, 00440);
-	if (file)
+	if (file) {
 		rv = SECU_FileToItem(item, file);
-	else
-		return SECFailure;
+	} else {
+		/* Not a failure if "mode" does not need "type". */
+		return SECSuccess;
+	}
 	if ((PL_strcmp(mode, "rsa") == 0 || PL_strcmp(mode, "dsa") == 0) && 
 	    PL_strcmp(type, "key") == 0)
 		atob(SECITEM_DupItem(item), item);
@@ -1448,6 +1450,10 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 		/* get the number of tests in the directory */
 		sprintf(filename, "%s/tests/%s/%s", testdir, mode, "numtests");
 		file = PR_Open(filename, PR_RDONLY, 00440);
+		if (!file) {
+			fprintf(stderr, "File %s does not exist.\n", filename);
+			return SECFailure;
+		}
 		rv = SECU_FileToItem(&item, file);
 		PR_Close(file);
 		/* loop over the tests in the directory */
@@ -1501,6 +1507,7 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 			}
 		}
 	}
+	return SECSuccess;
 }
 
 static SECStatus
