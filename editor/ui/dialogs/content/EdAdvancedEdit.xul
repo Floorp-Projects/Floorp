@@ -39,51 +39,132 @@
 
     <!-- Methods common to all editor dialogs -->
     <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+    <!-- global dialog functions -->
     <html:script language="JavaScript" src="chrome://editor/content/EdAdvancedEdit.js"/>
+    <!-- element page functions -->
+    <html:script language="JavaScript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
+    <html:script language="JavaScript" src="chrome://editor/content/EdAECSSAttributes.js"/>
+    <html:script language="JavaScript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
+
     <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
     <broadcaster id="args" value=""/>
-
-    <keyset id="keyset"/>
 
     <box align="horizontal">
         <html:label flex="100%">&currentattributesfor.label;</html:label>
         <html:div flex="100%" id="tagLabel"/>
     </box>
     <spring class="spacer"/>
-    <box>
-        <tree id="AttributesTree" class="AttributesTree" flex="100%">
+    <tabcontrol align="vertical">
+      <tabbox>
+        <tab>&tabHTML.label;</tab>
+        <tab>&tabCSS.label;</tab>
+        <tab>&tabJSE.label;</tab>
+      </tabbox>
+      <tabpanel>
+        <!-- CSS Properties -->
+        <box class="tabpanel" flex="100%" align="vertical">
+          <tree id="HTMLATree" class="AttributesTree" flex="100%">
             <treecol width="20%"/>
             <treecol width="80%"/>
             <treehead>
-                <treerow>
-                    <treecell onclick="doSort()">&tree.attributeHeader.label;</treecell>
-                    <treecell>&tree.valueHeader.label;</treecell>
-                </treerow>
+              <treerow>
+                <treecell>&tree.attributeHeader.label;</treecell>
+                <treecell>&tree.valueHeader.label;</treecell>
+              </treerow>
             </treehead>
-            <treechildren id="attributelist"/>
-        </tree>
-    </box>
+            <treechildren id="HTMLAList"/>
+          </tree>
+          <box align="vertical">
+              <spring class="spacer"/>
+              <html:fieldset>
+                  <html:legend>&AddHTMLAttributeLabel.label;</html:legend>
+                  <box align="horizontal">
+                      <html:label for="AddHTMLAttributeNameInput"> &AttName.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling()" onmouseup="doHTMLEnabling()"/></html:div>
+                          <spring class="spacer"/>
+                      </box>
+                      <html:label for="AddHTMLAttributeValueInput"> &AttValue.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddHTMLAttributeValueInput"/></html:div>
+                          <spring flex="100%" class="spacer"/>
+                          <html:div><titledbutton class="hspaced" id="AddHTMLAttribute" onclick="onAddHTMLAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                      </box>
+                  </box>
+              </html:fieldset>
+          </box>
+        </box>
+        <!-- JavaScript Event Handlers -->
+        <box class="tabpanel" flex="100%" align="vertical">
+          <tree id="JSEATree" class="AttributesTree" flex="100%">
+            <treecol width="20%"/>
+            <treecol width="80%"/>
+            <treehead>
+              <treerow>
+                <treecell>&tree.attributeHeader.label;</treecell>
+                <treecell>&tree.valueHeader.label;</treecell>
+              </treerow>
+            </treehead>
+            <treechildren id="JSEAList"/>
+          </tree>
+          <box align="vertical">
+              <spring class="spacer"/>
+              <html:fieldset>
+                  <html:legend>&AddJSEAttributeLabel.label;</html:legend>
+                  <box align="horizontal">
+                      <html:label for="JSEAddAttributeNameInput"> &AttName.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling()" onmouseup="doJSEEnabling()"/></html:div>
+                          <spring class="spacer"/>
+                      </box>
+                      <html:label for="AddJSEAttributeValueInput"> &AttValue.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddJSEAttributeValueInput"/></html:div>
+                          <spring flex="100%" class="spacer"/>
+                          <html:div><titledbutton class="hspaced" id="AddJSEAttribute" onclick="onAddJSEAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                      </box>
+                  </box>
+              </html:fieldset>
+          </box>
+        </box>
+        <!-- HTML Attributes -->
+        <box class="tabpanel" flex="100%" align="vertical">
+          <tree id="CSSATree" class="AttributesTree" flex="100%">
+            <treecol width="20%"/>
+            <treecol width="80%"/>
+            <treehead>
+              <treerow>
+                <treecell>&tree.attributeHeader.label;</treecell>
+                <treecell>&tree.valueHeader.label;</treecell>
+              </treerow>
+            </treehead>
+            <treechildren id="CSSAList"/>
+          </tree>
+          <box align="vertical">
+              <spring class="spacer"/>
+              <html:fieldset>
+                  <html:legend>&AddCSSAttributeLabel.label;</html:legend>
+                  <box align="horizontal">
+                      <html:label for="AddCSSAttributeNameInput"> &AttName.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling()" onmouseup="doCSSEnabling()"/></html:div>
+                          <spring class="spacer"/>
+                      </box>
+                      <html:label for="AddCSSAttributeValueInput"> &AttValue.label;</html:label>
+                      <box align="horizontal" flex="100%">
+            	            <html:div><html:input type="text" id="AddCSSAttributeValueInput"/></html:div>
+                          <spring flex="100%" class="spacer"/>
+                          <html:div><titledbutton class="hspaced" id="AddCSSAttribute" onclick="onAddCSSAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                      </box>
+                  </box>
+              </html:fieldset>
+          </box>
+        </box>
+
+      </tabpanel>
+    </tabcontrol>
   
-    <box align="vertical">
-        <spring class="spacer"/>
-        <html:fieldset>
-            <html:legend>&AddAttributeLabel.label;</html:legend>
-            <box align="horizontal">
-                <html:label for="AddAttributeNameInput"> &AttName.label;</html:label>
-                <box align="horizontal" flex="100%">
-      	            <html:div><html:input type="text" id="AddAttributeNameInput" onkeyup="doOverallEnabling()" onmouseup="doOverallEnabling()"/></html:div>
-                    <spring class="spacer"/>
-                </box>
-                <html:label for="AddAttributeValueInput"> &AttValue.label;</html:label>
-                <box align="horizontal" flex="100%">
-      	            <html:div><html:input type="text" id="AddAttributeValueInput"/></html:div>
-                    <spring flex="100%" class="spacer"/>
-                    <html:div><titledbutton class="hspaced" id="AddAttribute" onclick="onAddAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
-                </box>
-            </box>
-        </html:fieldset>
-    </box>
     <box align="horizontal">
         <html:div style="margin-top: 0.5em"><titledbutton value="&HTMLReference.label;"/></html:div>
         <spring flex="100%"/>

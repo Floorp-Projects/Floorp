@@ -39,9 +39,23 @@ public:
   /** load and apply the style sheet, specified by aURL, to
     * the editor's document. This can involve asynchronous
     * network I/O
-    * @param aURL  The style sheet to be loaded and applied.
+    * @param aURL       The style sheet to be loaded and applied.
     */
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
+
+  /** load and apply an Override style sheet, specified by aURL, to
+    * the editor's document. 
+    * IMPORTANT: This is assumed to be synchronous:
+    *            URL is a local file with no @import used
+    * This action is not undoable.
+    * It is not intended for use by "user", only editor developers
+    *   to change display behavior for editing (like showing special cursors)
+    *   that will not be affected by loading other "document" style sheets
+    *   loaded using ApplyStyleSheet.
+    *
+    * @param aURL       The style sheet to be loaded and applied.
+    */
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL)=0;
 
   /** Add the given Style Sheet to the editor's document
     * This is always synchronous

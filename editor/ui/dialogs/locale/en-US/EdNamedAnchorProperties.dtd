@@ -22,4 +22,6 @@
 
 <!ENTITY windowTitle.label "Named Anchor Properties">
 <!ENTITY anchorNameEditField.label "Anchor Name:">
+<!ENTITY noSpacesMsg.label "(Spaces are not allowed.)">
+
 

@@ -47,6 +47,8 @@ function Startup()
   StartingNumberInput = document.getElementById("StartingNumber");
   StartingNumberLabel = document.getElementById("StartingNumberLabel");
 
+  // Try to get an existing list
+  // 
   InitDialog();
   ListStyleList.focus();
 }

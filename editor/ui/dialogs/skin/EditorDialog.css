@@ -36,7 +36,130 @@ window{
 
 }
 
-/* THIS SHOULD BE KILLED. NO SPECIAL TITLED BUTTONS SHOULD BE USED! */
+tab {
+    padding: 0px 3px;
+}
+
+titledbutton.popup {
+
+    list-style-image:           url(resource:/res/toolbar/TB_popup.gif);
+    width:                      auto;
+    display:                    inline;
+    text-decoration:            none; 
+    color:                      black;
+    padding:                    0px;
+    margin:                     0px;
+    border:                     1px outset white;
+    font:                       inherit;
+}
+
+titledbutton.popup:hover {
+    background-color:           inherit;
+    background-image:           inherit;
+    border:                     1px outset white;
+    padding:                    0px;
+    margin:                     0px;
+    color:                      black;
+    text-decoration:            none;
+}
+
+
+titledbutton.popup:active {
+   
+    text-decoration:            none;
+    border:                     1px outset white;
+    color:                      none;
+    color:                      black;  /* why is color set twice? */
+    padding:                    0px;
+    margin:                     0px;
+
+}  
+
+
+titledbutton.popup[disabled="true"] {
+
+    background-color:           inherit;
+    background-image:           inherit;
+    border :                    1px solid #999999;
+    padding:                    0px;
+    margin:                     0px;
+    color:                      #999999;
+    text-decoration:            none;
+    image-opacity:              25%;
+}
+
+titledbutton.popup[disabled="true"]:hover {
+
+    background-color:           inherit;
+    background-image:           inherit;
+    border :                    1px solid #999999;
+    padding:                    0px;
+    margin:                     0px;
+    color:                      #999999;
+    text-decoration:            none;
+}
+
+titledbutton.popup[disabled="true"]:active {
+
+    background-color:           inherit;
+    background-image:           inherit;
+    padding:                    0px;
+    margin:                     0px;
+    border :                    1px solid #999999;
+    color:                      #999999;
+    text-decoration:            none;
+}
+
+titledbutton.dropdown {
+
+    width:                      100%;
+    display:                    inline;
+    text-decoration:            none; 
+    color:                      black;
+    padding:                    0px;
+    margin:                     0px;
+    border:                     none;
+    font:                       inherit;
+    background-repeat:          no-repeat;
+    background-color:           inherit;
+    color:                      black;
+
+
+}
+
+titledbutton.dropdown:hover {
+
+    width:                      100%;
+    display:                    inline;
+    text-decoration:            none; 
+    color:                      black;
+    padding:                    0px;
+    margin:                     0px;
+    border:                     none;
+    font:                       inherit;
+    background-repeat:          no-repeat;
+    background-color:           #666699;
+    color:                      white;
+
+
+}
+
+titledbutton.dropdown:active {
+
+    width:                      100%;
+    display:                    inline;
+    text-decoration:            none; 
+    color:                      white;
+    padding:                    0px;
+    margin:                     0px;
+    border:                     none;
+    font:                       inherit;
+    background-repeat:          no-repeat;
+    background-color:           #666699;
+
+
+}
+
 titledbutton.select {
 
     width:                      100%;
@@ -87,13 +210,15 @@ titledbutton.select:active {
 
 }
 
-/* Subtle changes, like a little more space, is OK */
+
 /* Don't mess with top and bottom margin! */
 
 titledbutton[class=~spaced] { 
     margin-left:                5px;
     margin-right:               5px;
 }
+
+/* This assumes 1px is shifted to the border
 
 
 
@@ -183,29 +308,30 @@ titledbutton.MsgButton {
     margin:                     5px;
 }
 
-/* What is this for!
+
 menupopup {
+
     font:                       inherit;
     visibility:                 hidden;
     background-color:           #CCCCDD;
-    background-color:           inherit;
     color:                      inherit;
     border:                     1px white outset;
 }
-*/
 
-select.ComboBox {
-/*
-EXPERIMENTAL: This ADDS an outset border,
-but doesn't affect inset border of item and trigger button!
+select.combobox {
+
+    font-family:                Sans-Serif;
+    font-size:                  8pt;
+    border-top:                 2px;
+    border-left:                4px;
+    border-right:               2px;
     border-style:               outset;
-*/
 }
 
 select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
 
     width:                      20em;
-    /* border-style:               inset; */
+    border-style:               inset;
     background-color:           #CCCCCC; /* not working on Macintosh */ 
 }
 
@@ -501,7 +627,6 @@ spring.bigspacer {
       height:                   10px;
 }
 
-/* From Ben Goodger (originally EdAdvancedEdit.css) */
 div.spacer [align~=horizontal] {
     border                    : 1px inset white;
     height                    : 2px;
@@ -587,7 +712,7 @@ input.AttributesCell {
     border                    : none;
     height                    : 100%;
 }
-
+/*
 input.AttributesCell:active {
     border:                     1px white inset;
 }
@@ -595,33 +720,15 @@ input.AttributesCell:active {
 input.AttributesCell:hover {
     border:                     1px white inset;
 }
+*/
 
-/* From Ben Goodger (originally EdTableProps.css) */
-box.header {
-/*  background-color: #7777A4;*/
-  padding: 2px;
+treecell input:hover {
+    background-color          : #ECECEC;
+    font-weight               : bold;
+    border                    : 2px solid #666699;
 }
 
-box.header > div {
-  color: #000000;
-  font-size: 16px;
-  font-weight: bold;
-  margin-left: 5px;
+box.tabpanel {
+  border: 1px outset #CCCCDD;
+  padding: 10px;
 }
-
-box.panel {
-  border: 1px outset white;
-  width: 350px;
-}
-
-fieldset.holder {
-  width: 350px;
-
-/* Always use the arrow cursor, except in input widget */
-*,p,div,legend,box {cursor: pointer;}
-button { cursor: crosshair; }
-
-input[type=text], input[type=textarea] {
-  cursor: text;
-}
-

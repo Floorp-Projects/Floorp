@@ -30,6 +30,11 @@ var hrefInput;
 var linkMessage;
 var href;
 var newLinkText;
+var HeadingsIndex = -1;
+var NamedAnchorsIndex = -1;
+var NamedAnchorsList = 0;
+var HNodeArray;
+var StartIndexOfHeadings = 1;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
@@ -144,6 +149,9 @@ function Startup()
   // Make a copy to use for AdvancedEdit and onSaveDefault
   globalElement = anchorElement.cloneNode(false);
 
+  // Get the list of existing named anchors and headings
+  FillNamedAnchorList();
+
   // Set data for the dialog controls
   InitDialog();
 
@@ -191,6 +199,41 @@ function RemoveLink()
   // Simple clear the input field!
   hrefInput.value = "";
 }
+
+function FillNamedAnchorList()
+{
+  NamedAnchorNodeList = editorShell.editorDocument.anchors;
+  var headingList = editorShell.editorDocument.getElementsByTagName("h2");
+  dump(headingList+" Count= "+headingList.length+"\n");
+  if (headingList.length > 0) {
+    dump("HELLO\n");
+    var heading = headingList.item(0);
+
+    var range = editorShell.editorDocument.createRange();
+    range.setStart(heading,0);
+    var lastChildIndex = heading.childNodes.length;
+    range.setEnd(heading,lastChildIndex);
+    var text = range.toString();
+    dump("Range:"+range+" LastChildIndex = "+lastChildIndex+"\nText: "+text+"\n");
+  }
+}
+
+function SelectNamedAnchor()
+{
+  
+}
+
+function AnchorNameExists(name)
+{
+  if (NamedAnchorsList) {
+    for (i=0; i < NamedAnchorsList.length; i++) {
+      if (NamedAnchorsList[i].name == name)
+        return true;
+    }
+  }
+  return false;
+}
+
 
 // Get and validate data from widgets.
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()

@@ -42,6 +42,7 @@
 #include "nsInterfaceState.h"
 #include "nsIHTMLEditor.h"
 #include "nsIStringBundle.h"
+#include "nsICSSStyleSheet.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -56,7 +57,7 @@ class nsIOutputStream;
 class nsISupportsArray;
 class nsIStringBundleService;
 class nsIStringBundle;
-
+class nsIStyleSheet;
 
 #define NS_EDITORSHELL_CID                            \
 { /* {} */                                            \
@@ -207,6 +208,9 @@ class nsEditorShell :   public nsIEditorShell,
 private:
     // Pointer to localized strings used for UI
     nsCOMPtr<nsIStringBundle> mStringBundle;
+    // Pointer to the EditorContent style sheet we load/unload
+    //   for "Edit Mode"/"Browser mode" display
+    nsCOMPtr<nsIStyleSheet> mEditModeStyleSheet;
 };
 
 #endif // nsEditorShell_h___

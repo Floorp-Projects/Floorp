@@ -29,6 +29,7 @@
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
+#include "nsICSSLoader.h"
 #include "nsITableLayout.h"
 
 #include "TypeInState.h"
@@ -120,6 +121,11 @@ public:
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
   NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL);
+  /* Above 2 methods call this with appropriate aOverride value 
+   * Not exposed to IDL interface 
+  */
+  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride);
   NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
 
@@ -171,8 +177,6 @@ public:
   //   or calls into nsTextEditor to set the page background
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
-
-
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 

@@ -32,10 +32,19 @@ toolbox#EditorToolbars {
 
 box#EditorStatusBar {
   min-width: 50px;
+  border-top: 1px solid darkgray;
 }
 
 box#EditorProgessBox {
   min-width:30px;
+}
+
+box#DisplayModeBar {
+  margin-top: -2px;
+  border-top: 1px solid black;
+  min-width:30px;
+/* temporary - testing background */
+  background-color: inherit; /*#99CCCC; */
 }
 
 window.popup {
@@ -90,6 +99,29 @@ titledbutton#underlineButton {
   text-decoration: underline;
 }
 
+titledbutton[class~=DisplayModeButton] {
+  padding: 1px 4px 0px 4px;
+  margin: 0px;
+  border-width: 1px;
+  border: 1px solid transparent;
+  border-left: 1px solid darkgray;
+}
+
+/* Color must be same as above for Display */
+div.VerticalSeparator { 
+	 height: 100%; 
+	 max-width: 1px; 
+   border-left: 1px solid darkgray;
+	 /* margin: 1px; 0px; */
+}
+
+titledbutton[class~=DisplayModeButton][selected="1"] {
+  border:  1px white outset;
+  padding: 2px 4px 0px 4px;
+  margin: -2px 0px 0px 0px;
+  background-color: white;
+}
+
 button.PopupButton {
   align: left;
   margin: 0px;
@@ -130,5 +162,17 @@ titledbutton[toggled="1"] {
     border:                     1px white inset;
 }
 
+
 // Override the browser's pointer cursor over links
 a { cursor: default; }
+
+/* Messenger uses this -- IT SHOULD BE IN XUL.CSS */
+spring.spacer {
+      width:                    5px;
+      height:                   5px;
+}
+
+spring.bigspacer {
+      width:                    10px;
+      height:                   10px;
+}

@@ -47,7 +47,7 @@
   <xul:keyset id="keyset"/>
 
   <xul:box>
-    <label id="srcMessage"> &sourceEditField.label; </label>
+    <label id="srcMessage"/>
   </xul:box>
   <xul:box>
     <textarea rows="6" cols="50" id="srcInput" />

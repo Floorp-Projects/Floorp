@@ -45,6 +45,11 @@ interface nsIEditorShell : nsISupports
     eDocumentStatusUnmodified,
     eDocumentStatusModified
   };
+
+  enum {
+    eDisplayModeEdit,
+    eDisplayModeBrowserPreview
+  };
 %}
   readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
@@ -285,6 +290,17 @@ interface nsIEditorShell : nsISupports
   void SetBackgroundColor(in wstring color);
 
   void ApplyStyleSheet(in wstring url);
+
+  /** Set the display mode for editing
+    * @param displayMode
+    *       0 (eDisplayModeEdit) Use extra CSS style 
+    *           (from override styles in EditorContent.css) 
+    *           to show named anchors, table borders, etc for editing
+    *       1 (eDisplayModeBrowserPreview) "WYSIWIG" or Preview mode
+    *           that looks exactly like the browser display except
+    *           for certain behaviors like cursor style over links, etc.
+    */
+  void  SetDisplayMode(in PRInt32 displayMode);
     
   /* Output.
    * format is mime type, e.g. text/html;

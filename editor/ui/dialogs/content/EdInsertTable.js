@@ -61,23 +61,28 @@ function Startup()
   // Initialize all widgets with image attributes
   InitDialog();
 
+
+  // Set initial number to 1 row, 2 columns:
+  // Note, these are not attributes on the table,
+  //  so don't put them in InitDialog(),
+  //  else the user's values will be trashed when they use 
+  //  the Advanced Edit dialog
+  dialog.rowsInput.value = 1;
+  dialog.columnsInput.value = 2;
+
   dialog.rowsInput.focus();
 }
 
 // Set dialog widgets with attribute data
 // We get them from globalElement copy so this can be used
 //   by AdvancedEdit(), which is shared by all property dialogs
-function InitData()
+function InitDialog()
 {  
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of button text and "percentChar" variable
   dialog.widthInput.value = InitPixelOrPercentPopupButton(globalElement, "width", "pixelOrPercentButton");
   dialog.borderInput.value = globalElement.getAttribute("border");
-
-  // Set default number to 1 row, 2 columns:
-  dialog.rowsInput.value = 1;
-  dialog.columnsInput.value = 2;
 }
 
 // Get and validate data from widgets.
