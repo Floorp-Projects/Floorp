@@ -946,8 +946,8 @@ nsMenuFrame::IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways)
   else {
     nsAutoString sizedToPopup;
     aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
-    sizeToPopup = (sizedToPopup.EqualsIgnoreCase("always") ||
-                   (!aRequireAlways && sizedToPopup.EqualsIgnoreCase("pref")));
+    sizeToPopup = sizedToPopup.Equals(NS_LITERAL_STRING("always")) ||
+                  !aRequireAlways && sizedToPopup.Equals(NS_LITERAL_STRING("pref"));
   }
   
   return sizeToPopup;

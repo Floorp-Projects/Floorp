@@ -3822,7 +3822,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
         if (attr == nsXULAtoms::removeelement &&
-            value.EqualsIgnoreCase("true")) {
+            value.Equals(NS_LITERAL_STRING("true"))) {
 
             rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
             if (NS_FAILED(rv)) return rv;

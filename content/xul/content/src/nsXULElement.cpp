@@ -2329,7 +2329,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     if (tag == nsXULAtoms::window &&
         aNodeInfo->Equals(nsXULAtoms::hidechrome)) {
       nsAutoString val(aValue);
-      HideWindowChrome(val.EqualsIgnoreCase("true"));
+      HideWindowChrome(val.Equals(NS_LITERAL_STRING("true")));
     }
 
     // XXX need to check if they're changing an event handler: if so, then we need
@@ -3785,7 +3785,7 @@ nsXULElement::GetHidden(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("hidden"), val);
-  if (val.EqualsIgnoreCase("true"))
+  if (val.Equals(NS_LITERAL_STRING("true")))
     *aResult = PR_TRUE;
   return NS_OK;
 }
@@ -3806,7 +3806,7 @@ nsXULElement::GetCollapsed(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("collapsed"), val);
-  if (val.EqualsIgnoreCase("true"))
+  if (val.Equals(NS_LITERAL_STRING("true")))
     *aResult = PR_TRUE;
   return NS_OK;
 }
@@ -3827,7 +3827,7 @@ nsXULElement::GetAllowEvents(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("allowevents"), val);
-  if (val.EqualsIgnoreCase("true"))
+  if (val.Equals(NS_LITERAL_STRING("true")))
     *aResult = PR_TRUE;
   return NS_OK;
 }

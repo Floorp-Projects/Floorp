@@ -299,9 +299,9 @@ void nsBoxFrame::UpdateMouseThrough()
   if (mContent) {
     nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
-        if (value.EqualsIgnoreCase("never")) 
+        if (value.Equals(NS_LITERAL_STRING("never")))
           mMouseThrough = never;
-        else if (value.EqualsIgnoreCase("always")) 
+        else if (value.Equals(NS_LITERAL_STRING("always")))
           mMouseThrough = always;
       
     }
@@ -378,10 +378,10 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::debug, value)) {
-      if (value.EqualsIgnoreCase("true")) {
+      if (value.Equals(NS_LITERAL_STRING("true"))) {
           aDebug = PR_TRUE;
           return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("false")) {
+      } else if (value.Equals(NS_LITERAL_STRING("false"))) {
           aDebug = PR_FALSE;
           return PR_TRUE;
       }
@@ -402,10 +402,10 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
     // XXXdwh Everything inside this if statement is deprecated code.
-    if (value.EqualsIgnoreCase("left")) {
+    if (value.Equals(NS_LITERAL_STRING("left"))) {
         aHalign = nsBoxFrame::hAlign_Left;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("right")) {
+    } else if (value.Equals(NS_LITERAL_STRING("right"))) {
         aHalign = nsBoxFrame::hAlign_Right;
         return PR_TRUE;
     }
@@ -419,13 +419,13 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
     res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
   else res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
-    if (value.EqualsIgnoreCase("start")) {
+    if (value.Equals(NS_LITERAL_STRING("start"))) {
         aHalign = nsBoxFrame::hAlign_Left;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("center")) {
+    } else if (value.Equals(NS_LITERAL_STRING("center"))) {
         aHalign = nsBoxFrame::hAlign_Center;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("end")) {
+    } else if (value.Equals(NS_LITERAL_STRING("end"))) {
         aHalign = nsBoxFrame::hAlign_Right;
         return PR_TRUE;
     }
@@ -484,16 +484,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     return PR_FALSE;
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
-    if (value.EqualsIgnoreCase("top")) {
+    if (value.Equals(NS_LITERAL_STRING("top"))) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("baseline")) {
+    } else if (value.Equals(NS_LITERAL_STRING("baseline"))) {
         aValign = nsBoxFrame::vAlign_BaseLine;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("middle")) {
+    } else if (value.Equals(NS_LITERAL_STRING("middle"))) {
         aValign = nsBoxFrame::vAlign_Middle;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("bottom")) {
+    } else if (value.Equals(NS_LITERAL_STRING("bottom"))) {
         aValign = nsBoxFrame::vAlign_Bottom;
         return PR_TRUE;
     }
@@ -507,16 +507,16 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
   else res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
-    if (value.EqualsIgnoreCase("start")) {
+    if (value.Equals(NS_LITERAL_STRING("start"))) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("center")) {
+    } else if (value.Equals(NS_LITERAL_STRING("center"))) {
         aValign = nsBoxFrame::vAlign_Middle;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("baseline")) {
+    } else if (value.Equals(NS_LITERAL_STRING("baseline"))) {
         aValign = nsBoxFrame::vAlign_BaseLine;
         return PR_TRUE;
-    } else if (value.EqualsIgnoreCase("end")) {
+    } else if (value.Equals(NS_LITERAL_STRING("end"))) {
         aValign = nsBoxFrame::vAlign_Bottom;
         return PR_TRUE;
     }
@@ -589,9 +589,9 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value)) {
-    if (value.EqualsIgnoreCase("vertical"))
+    if (value.Equals(NS_LITERAL_STRING("vertical")))
       aIsHorizontal = PR_FALSE;
-    else if (value.EqualsIgnoreCase("horizontal"))
+    else if (value.Equals(NS_LITERAL_STRING("horizontal")))
      aIsHorizontal = PR_TRUE;
   }
 }
@@ -622,11 +622,11 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value)) {
-    if (value.EqualsIgnoreCase("reverse"))
+    if (value.Equals(NS_LITERAL_STRING("reverse")))
       aIsNormal = !aIsNormal; // Invert our direction.
-    else if (value.EqualsIgnoreCase("ltr"))
+    else if (value.Equals(NS_LITERAL_STRING("ltr")))
       aIsNormal = PR_TRUE;
-    else if (value.EqualsIgnoreCase("rtl"))
+    else if (value.Equals(NS_LITERAL_STRING("rtl")))
       aIsNormal = PR_FALSE;
   }
 }
@@ -647,7 +647,7 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::equalsize, value))
   {
-      if (value.EqualsIgnoreCase("always")) {
+      if (value.Equals(NS_LITERAL_STRING("always"))) {
          aEqualSize = PR_TRUE;
          return PR_TRUE;
       }
@@ -671,7 +671,7 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
   
   // Check the align attribute.
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-    aStretch = value.EqualsIgnoreCase("stretch");
+    aStretch = value.Equals(NS_LITERAL_STRING("stretch"));
     return PR_TRUE;
   }
 
