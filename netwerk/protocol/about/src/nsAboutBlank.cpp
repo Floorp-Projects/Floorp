@@ -48,7 +48,7 @@ nsAboutBlank::NewChannel(const char *verb,
     NS_RELEASE(s);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->NewInputStreamChannel(aURI, "text/html", in, &channel);
+    rv = serv->NewInputStreamChannel(aURI, "text/html", in, aGroup, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

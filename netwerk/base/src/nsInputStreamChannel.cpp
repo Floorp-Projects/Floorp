@@ -56,9 +56,10 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
 
 nsresult
 nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
-                           nsIInputStream* in)
+                           nsIInputStream* in, nsILoadGroup* group)
 {
     mURI = uri;
+    mLoadGroup = group;
     nsCAutoString cType(contentType);
     cType.ToLowerCase();
     mContentType = cType.ToNewCString();

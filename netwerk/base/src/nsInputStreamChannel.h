@@ -43,7 +43,8 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    nsresult Init(nsIURI* uri, const char* contentType, nsIInputStream* in);
+    nsresult Init(nsIURI* uri, const char* contentType, 
+                  nsIInputStream* in, nsILoadGroup* group);
 
 protected:
     nsCOMPtr<nsIURI>            mURI;
