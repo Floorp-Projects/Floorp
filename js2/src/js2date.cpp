@@ -101,7 +101,7 @@ static float64 firstDayOfMonth[2][12] = {
 #define Day(t)                          floor((t) / msPerDay)
 #define TIMECLIP(d)                     ((JSDOUBLE_IS_FINITE(d) \
 		                            && !((d < 0 ? -d : d) > HalfTimeDomain)) \
-                                                ? JS2Engine::float64toInt32(d + (+0.)) : nan)
+                                                ? JS2Engine::truncateFloat64(d + (+0.)) : nan)
 #define LocalTime(t)                    ((t) + LocalTZA + DaylightSavingTA(t))
 #define DayFromMonth(m, leap)           firstDayOfMonth[leap][(int32)m];
 #define DayFromYear(y)                  (365 * ((y)-1970) + fd::floor(((y)-1969)/4.0)            \

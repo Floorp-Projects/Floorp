@@ -311,6 +311,20 @@ namespace MetaData {
         return i;
     }
 
+    float64 JS2Engine::truncateFloat64(float64 d)
+    {
+        if (d == 0)
+	        return d;
+        if (!JSDOUBLE_IS_FINITE(d)) {
+	        if (JSDOUBLE_IS_NaN(d))
+	            return 0;
+	        return d;
+        }
+        bool neg = (d < 0);
+        d = fd::floor(neg ? -d : d);
+        return neg ? -d : d;
+    }
+
     int32 JS2Engine::float64toInt32(float64 d)
     {
         if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )

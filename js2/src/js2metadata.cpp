@@ -2275,6 +2275,7 @@ doUnary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 SetupExprNode(env, phase, b->op1, exprType);
+                bCon->emitOp(ePopv, p->pos);
                 SetupExprNode(env, phase, b->op2, exprType);
             }
             break;
