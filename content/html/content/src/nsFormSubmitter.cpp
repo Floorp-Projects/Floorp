@@ -302,7 +302,7 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
       if (isMailto) {
         PRBool enabled;
         rv = securityManager->IsCapabilityEnabled("UniversalSendMail",
-                                                      &enabled);
+                                                  &enabled);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -422,8 +422,14 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
                              postBuffer.get(), 0);
       } else {
         // Cut-and-paste of NS_NewPostDataStream
-        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID));
-        if (serv && multipartDataFile) {
+
+        nsCOMPtr<nsIIOService> serv;
+
+        if (multipartDataFile) {
+          serv = do_GetService(kIOServiceCID);
+        }
+
+        if (serv) {
           nsCOMPtr<nsIInputStream> rawStream;
           NS_NewLocalFileInputStream(getter_AddRefs(rawStream),
                                      multipartDataFile,

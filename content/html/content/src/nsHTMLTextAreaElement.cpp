@@ -260,8 +260,7 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -281,8 +280,7 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   // first place, so allow it to be removed.
   nsresult rv = NS_OK;
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
@@ -348,8 +346,7 @@ nsHTMLTextAreaElement::Select()
       esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     }
 
-    nsIFormControlFrame* formControlFrame = nsnull;
-    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
     if (formControlFrame) {
       formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -365,8 +362,7 @@ nsHTMLTextAreaElement::Select()
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SelectAll(nsIPresContext* aPresContext)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
   if (formControlFrame) {
     formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
@@ -396,12 +392,10 @@ nsHTMLTextAreaElement::GetType(nsAWritableString& aType)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-
   // No need to flush here, if there is no frame yet for this textarea
   // there won't be a value in it we don't already have even if we
   // force the frame to be created.
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   nsIGfxTextControlFrame2* textControlFrame = nsnull;
   if (formControlFrame) {
@@ -432,7 +426,7 @@ nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
   if (!textControlFrame) {
     // No need to flush here, if there is no frame for this yet forcing
     // creation of one will not do us any good
-    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+    formControlFrame = GetFormControlFrame(PR_FALSE);
 
     if (formControlFrame) {
       CallQueryInterface(formControlFrame, &textControlFrame);
@@ -591,8 +585,7 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return rv;
   }
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
