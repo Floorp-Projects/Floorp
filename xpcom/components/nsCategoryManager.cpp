@@ -69,7 +69,7 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
     ...works with |nsHashtableEnumerator| to make the hash keys enumerable.
   */
 {
-  nsresult status;
+  nsresult status = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupportsString> obj = new nsSupportsStringImpl();
   if ( obj ) {
