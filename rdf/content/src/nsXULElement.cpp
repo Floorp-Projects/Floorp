@@ -136,6 +136,37 @@ static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
 
 //----------------------------------------------------------------------
 
+static JSRuntime* gScriptRuntime;
+static PRInt32 gScriptRuntimeRefcnt;
+
+static nsresult
+AddJSGCRoot(JSContext* cx, void* aScriptObjectRef, const char* aName)
+{
+    PRBool ok;
+    ok = JS_AddNamedRoot(cx, aScriptObjectRef, aName);
+    if (! ok) return NS_ERROR_OUT_OF_MEMORY;
+
+    if (gScriptRuntimeRefcnt++ == 0) {
+        gScriptRuntime = JS_GetRuntime(cx);
+    }
+
+    return NS_OK;
+}
+
+static nsresult
+RemoveJSGCRoot(void* aScriptObjectRef)
+{
+    JS_RemoveRootRT(gScriptRuntime, aScriptObjectRef);
+
+    if (--gScriptRuntimeRefcnt == 0) {
+        gScriptRuntime = nsnull;
+    }
+
+    return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
 struct XULBroadcastListener
 {
     nsVoidArray* mAttributeList;
@@ -1523,7 +1554,31 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
 
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName.get() == aName)) {
+                nsresult rv;
+
                 attr->mEventHandler = aHandler;
+
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+                NS_ASSERTION(global != nsnull, "no script global object");
+                if (! global)
+                    return NS_ERROR_UNEXPECTED;
+
+                nsCOMPtr<nsIScriptContext> context;
+                rv = global->GetContext(getter_AddRefs(context));
+                if (NS_FAILED(rv)) return rv;
+
+                JSContext *cx = (JSContext*) context->GetNativeContext();
+                if (!cx)
+                    return NS_ERROR_UNEXPECTED;
+
+                nsAutoString handlername;
+                rv = aName->ToString(handlername);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = AddJSGCRoot(cx, &attr->mEventHandler, nsCAutoString(handlername));
+                if (NS_FAILED(rv)) return rv;
+
                 break;
             }
         }
@@ -3640,6 +3695,18 @@ nsXULElement::Slots::~Slots()
 
 //----------------------------------------------------------------------
 //
+// nsXULPrototypeAttribute
+//
+
+nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
+{
+    if (mEventHandler)
+        RemoveJSGCRoot(&mEventHandler);
+}
+
+
+//----------------------------------------------------------------------
+//
 // nsXULPrototypeElement
 //
 
@@ -3658,11 +3725,15 @@ nsXULPrototypeElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsStri
 }
 
 
+//----------------------------------------------------------------------
+//
+// nsXULPrototypeScript
+//
+
 nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
     : nsXULPrototypeNode(eType_Script, aLineNo),
       mSrcLoading(PR_FALSE),
       mSrcLoadWaiters(nsnull),
-      mScriptRuntime(nsnull),
       mScriptObject(nsnull),
       mLangVersion(aVersion)
 {
@@ -3672,8 +3743,8 @@ nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion
 
 nsXULPrototypeScript::~nsXULPrototypeScript()
 {
-    if (mScriptRuntime)
-        JS_RemoveRootRT(mScriptRuntime, &mScriptObject);
+    if (mScriptObject)
+        RemoveJSGCRoot(&mScriptObject);
     MOZ_COUNT_DTOR(nsXULPrototypeScript);
 }
 
@@ -3695,14 +3766,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
     rv = global->GetContext(getter_AddRefs(context));
     if (NS_FAILED(rv)) return rv;
 
-    if (!mScriptRuntime) {
-        JSContext *cx = (JSContext*) context->GetNativeContext();
-        if (!cx)
-            return NS_ERROR_UNEXPECTED;
-        if (!JS_AddNamedRoot(cx, &mScriptObject, "mScriptObject"))
-            return NS_ERROR_OUT_OF_MEMORY;
-        mScriptRuntime = JS_GetRuntime(cx);
-    }
+    JSContext *cx = (JSContext*) context->GetNativeContext();
+    if (!cx)
+        return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIPrincipal> principal =
         dont_AddRef(aDocument->GetDocumentPrincipal());
@@ -3713,5 +3779,8 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
     rv = context->CompileScript(aText, aTextLength, nsnull,
                                 principal, urlspec, aLineNo, mLangVersion,
                                 (void**) &mScriptObject);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = AddJSGCRoot(cx, &mScriptObject, "mScriptObject");
     return rv;
 }

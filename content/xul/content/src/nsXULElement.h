@@ -87,6 +87,8 @@ public:
 #endif
     }
 
+    ~nsXULPrototypeAttribute();
+
     PRInt32           mNameSpaceID;
     nsCOMPtr<nsIAtom> mName;
     nsString          mValue;
@@ -228,7 +230,6 @@ public:
     nsCOMPtr<nsIURI>         mSrcURI;
     PRBool                   mSrcLoading;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
-    JSRuntime*               mScriptRuntime;    // XXX use service, save space?
     JSObject*                mScriptObject;
     const char*              mLangVersion;
 };
