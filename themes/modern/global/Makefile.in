@@ -30,7 +30,9 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
 
-EXPORT_RESOURCE_SAMPLES = \
+# split EXPORT_RESOURCE_SAMPLES in two otherwise the generated commands
+# can be too long for some systems.
+EXPORT_RESOURCE_SAMPLES_1 = \
 	alert-icon.gif \
 	animthrob.gif \
 	animthrob_single.gif \
@@ -99,7 +101,9 @@ EXPORT_RESOURCE_SAMPLES = \
 	question-icon.gif \
 	radio.css \
 	return-disabled.gif \
-	return.gif \
+	return.gif
+
+EXPORT_RESOURCE_SAMPLES_2 = \
 	arrow-up.gif \
 	arrow-down.gif \
 	arrow-left.gif \
@@ -160,8 +164,10 @@ EXPORT_RESOURCE_SAMPLES = \
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_1)) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES_2)) $(SAMPLES_DIR)
 
+distclean clean clobber realclean clobber_all::
+	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_1))
+	rm -f $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES_2))
