@@ -270,7 +270,7 @@ public:
   nsresult InitOthers();
   nsresult InitSecondaryTiers();
   nsresult InitAutodetMenu();
-  nsresult RefreshBroserMenu();
+  nsresult RefreshBrowserMenu();
   nsresult RefreshMailviewMenu();
   nsresult RefreshMaileditMenu();
   nsresult RefreshComposerMenu();
@@ -394,7 +394,7 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
 
     if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
       // refresh menus which share this pref
-      rv = mCharsetMenu->RefreshBroserMenu();
+      rv = mCharsetMenu->RefreshBrowserMenu();
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mCharsetMenu->RefreshMailviewMenu();
       NS_ENSURE_SUCCESS(rv, rv);
@@ -499,7 +499,7 @@ nsCharsetMenu::~nsCharsetMenu()
 
 // XXX collapse these 2 in one
 
-nsresult nsCharsetMenu::RefreshBroserMenu()
+nsresult nsCharsetMenu::RefreshBrowserMenu()
 {
   nsresult res = NS_OK;
 
