@@ -29,7 +29,7 @@
 #include <iostream.h>
 #endif
 
-#if !defined XP_UNIX && !defined XP_MAC
+#if !defined XP_UNIX && !defined XP_MAC && ! defined XP_BEOS
 #include <direct.h>
 #endif
 
@@ -85,13 +85,13 @@ int main(int argc, char *argv[])
     if (op_dir) {
       struct stat sb;
       if (stat(argv[op_dir_arg], &sb) == 0) {
-#if defined XP_UNIX || defined XP_MAC
+#if defined XP_UNIX || defined XP_MAC || defined XP_BEOS
         if (!(sb.st_mode & S_IFDIR)) {
 #else
         if (!(sb.st_mode & _S_IFDIR)) {
 #endif
           cout << "Creating directory " << argv[op_dir_arg] << " ...\n";
-#if defined XP_UNIX 
+#if defined XP_UNIX || defined XP_BEOS
           if (mkdir(argv[op_dir_arg],S_IWGRP | S_IWOTH) < 0) {
 #elif defined XP_MAC
           if (mkdir(argv[op_dir_arg], 0) < 0) {			// mode is ignored
