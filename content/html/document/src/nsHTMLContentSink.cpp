@@ -787,6 +787,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   // Add tag attributes to the content attributes
   nsAutoString k, v;
   PRInt32 ac = aNode.GetAttributeCount();
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
@@ -801,6 +802,12 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
         aContent->GetHTMLAttribute(keyAtom, value)) {
       // Get value and remove mandatory quotes
       GetAttributeValueAt(aNode, i, v);
+
+      if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
+        NS_ConvertUCS2toUTF8 cname(v);
+        v.Assign(NS_ConvertUTF8toUCS2(nsUnescape(NS_CONST_CAST(char *,
+                                                               cname.get()))));
+      }
 
       // Add attribute to content
       aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, aNotify);
