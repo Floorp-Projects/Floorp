@@ -40,17 +40,17 @@ COMPONENTS_DIR		= /share/builds/components
 
 # NSPR - Netscape Portable Runtime
 NSPR_LIBVERSION		= 4
-NSPR_RELEASE_TAG	= v4.2.2
+NSPR_RELEASE_TAG	= v4.4.1
 NSPR_RELEASE_TREE	= $(COMPONENTS_DIR)
 
 # NSS - Network Security Services
 NSSVERS			= 3
-NSS_RELEASE_TAG		= NSS_3_7_7_RTM
+NSS_RELEASE_TAG		= NSS_3_9_3_RTM
 NSS_DYNAMIC_SOFTOKN	= 1
 NSS_RELEASE_TREE	= $(COMPONENTS_DIR)
 
 # SVRCORE - Client/server utility library
-SVRCORE_RELEASE_TAG	= SVRCORE_3_3_RTM
+SVRCORE_RELEASE_TAG	= SVRCORE_4_0_RTM
 SVRCORE_RELEASE_TREE	= $(COMPONENTS_DIR)
 
 # LDAP library
@@ -86,24 +86,3 @@ SSLDAPVERS_SUFFIX 	= 5.0
 NLS_LIBVERSION		= 31
 LIBNLS_RELDATE		= v3.2
 LIBNLS_RELEASE_TREE	= $(COMPONENTS_DIR)
-
-# Some components already had existing Solaris 5.8 symbolic
-# link to a Solaris 5.6 version.  Hence, the new respun components
-# were put in in a forte6 directory in each of the component
-# respectively.  For Solaris 5.8 only we have to pick up the components
-# from the forte6 directory.  As we move forward with new components,
-# we can take the mess below out
-# Michael.....
-ifeq ($(OS_ARCH), SunOS)
-    ifneq ($(USE_64), 1)
-	OS_VERS         := $(shell uname -r)
-	ifeq ($(OS_VERS),5.8)
-	    ifneq ($(OS_TEST),i86pc)
-		NSPR_RELEASE_TAG=v4.1.2/forte6
-		NSS_RELEASE_TAG =NSS_3_3_1_RTM/forte6
-		SVRCORE_RELEASE_TAG=SVRCORE_3_3_RTM/forte6
-		LIBNLS_RELDATE=v3.2/forte6
-	    endif
-	endif
-    endif
-endif
