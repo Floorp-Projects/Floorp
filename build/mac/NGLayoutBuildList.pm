@@ -18,7 +18,8 @@ use File::Copy;
 
 # homegrown
 use Moz;
-use MozJar;
+#use MozJar;
+use MakeJarsMac;
 use MacCVS;
 use MANIFESTO;
 
@@ -1133,7 +1134,8 @@ sub BuildJarFiles()
 
     my($chrome_dir) = "$dist_dir"."Chrome";
 
-    CreateJarFile("$chrome_dir:communicator", "$chrome_dir:communicator.jar");
+    MozJar::ProcessJarManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir);
+#    CreateJarFile("$chrome_dir:communicator", "$chrome_dir:communicator.jar");
 }
 
 
@@ -2544,7 +2546,6 @@ sub BuildMozilla()
 
 sub BuildProjects()
 {
-    # BuildJarFiles();
     MakeLibAliases();
 
     # activate CodeWarrior
@@ -2573,4 +2574,6 @@ sub BuildProjects()
     # activate CodeWarrior
     ActivateApplication('McPL');
     MakeResourceAliases();
+
+    BuildJarFiles();
 }
