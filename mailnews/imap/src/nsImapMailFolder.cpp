@@ -481,7 +481,8 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (path.IsDirectory()) 
     {
         newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
-        SetFlag(newFlags);
+        if (!mIsServer)
+          SetFlag(newFlags);
         rv = CreateSubFolders(path);
     }
     if (isServer)
@@ -758,7 +759,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     path.SetLeafName(proposedDBName);
 
     NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-    rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
+    rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
@@ -1304,7 +1305,7 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **url)
     
 NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force) 
 {
-  if (!mNotifyCountChanges)
+  if (!mNotifyCountChanges || mIsServer)
     return NS_OK;
 
   // could we move this into nsMsgDBFolder, or do we need to deal
@@ -1582,7 +1583,6 @@ NS_IMETHODIMP nsImapMailFolder::Adopt(nsIMsgFolder *srcFolder,
 NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
 {
   nsresult rv;
-
   nsCOMPtr<nsIMsgDatabase> db; 
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));

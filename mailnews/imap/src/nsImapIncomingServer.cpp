@@ -1881,7 +1881,12 @@ nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersAr
 	nsCOMPtr<nsIFolder> rootFolder;
 	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
 	if(NS_SUCCEEDED(rv) && rootFolder)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+    if (imapRoot)
+      imapRoot->SetVerifiedAsOnlineFolder(PR_TRUE); // don't need to verify the root.
 		rv = GetUnverifiedSubFolders(rootFolder, aFoldersArray, aNumUnverifiedFolders);
+  }
 	return rv;
 }
 
