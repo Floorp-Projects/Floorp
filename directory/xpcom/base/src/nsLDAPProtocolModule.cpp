@@ -31,6 +31,7 @@
  * GPL.
  */
 
+#include "nsLDAPURL.h"
 #include "nsIGenericFactory.h"
 #include "nsLDAPProtocolHandler.h"
 #include "nsLDAPChannel.h"
@@ -38,7 +39,6 @@
 #include "nsLDAPConnection.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPMessage.h"
-#include "nsLDAPURL.h"
 
 // use the default constructor
 //
@@ -65,7 +65,7 @@ static nsModuleComponentInfo components[] =
     { "LDAP Message", NS_LDAPMESSAGE_CID,
 	  "mozilla.network.ldapmessage", nsLDAPMessageConstructor },
     { "LDAP URL", NS_LDAPURL_CID,
-	  "mozilla.network.ldapurl", nsLDAPURLConstructor }
+          "mozilla.network.ldapurl", nsLDAPURLConstructor }
 };
 
 // implement the NSGetModule() exported function
