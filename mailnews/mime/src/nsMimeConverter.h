@@ -38,6 +38,9 @@
 #include "nsISupports.h"
 #include "prtypes.h"
 #include "nsIMimeConverter.h"
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsCOMPtr.h"
 
 class nsMimeConverter : public nsIMimeConverter {
 public: 
@@ -99,6 +102,11 @@ public:
 
   NS_IMETHOD EncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size, PRInt32 *written);
 
+private:
+  // cache unicode decoder
+  nsCOMPtr <nsIUnicodeDecoder>            mDecoder;
+  nsCOMPtr <nsIAtom>                      mDecoderCharsetAtom;
+  nsCOMPtr <nsICharsetConverterManager2>  mCharsetConverterManager;
 }; 
 
 #endif /* nsMimeConverter_h_ */

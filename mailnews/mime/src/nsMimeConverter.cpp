@@ -112,10 +112,48 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
     }
   }
   else {
-    // convert MIME charset to unicode
-    nsAutoString decodedStr;
-    res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charsetCstr), (const char *) decodedCstr, decodedStr);
-    *decodedString = decodedStr.ToNewUnicode();
+    if (!nsCRT::strcasecmp(charsetCstr, "us-ascii")) {
+      *decodedString = NS_ConvertASCIItoUCS2(decodedCstr).ToNewUnicode();
+      if (!(*decodedString))
+        res = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+
+      // convert MIME charset to unicode
+      // use cached converter since this is the main case for non ASCII users
+      if (!mCharsetConverterManager)
+        mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+      if (NS_SUCCEEDED(res)) {
+        nsCOMPtr <nsIAtom>  charsetAtom;
+        res = mCharsetConverterManager->GetCharsetAtom(NS_ConvertASCIItoUCS2(charsetCstr), getter_AddRefs(charsetAtom));
+        if (NS_SUCCEEDED(res)) {
+          if (charsetAtom != mDecoderCharsetAtom) {
+            mDecoderCharsetAtom = charsetAtom;
+            res = mCharsetConverterManager->GetUnicodeDecoder(mDecoderCharsetAtom, getter_AddRefs(mDecoder));
+          }
+        
+          if (NS_SUCCEEDED(res)) {
+            PRUnichar *unichars;
+            PRInt32 unicharLen;
+            PRInt32 decodedLen = nsCRT::strlen(decodedCstr);
+            res = mDecoder->GetMaxLength(decodedCstr, decodedLen, &unicharLen);
+            if (NS_SUCCEEDED(res)) {
+              unichars = (PRUnichar *) nsMemory::Alloc((unicharLen+1) * sizeof(PRUnichar));
+              if (!unichars)
+                res = NS_ERROR_OUT_OF_MEMORY;
+              else {
+                res = mDecoder->Convert(decodedCstr, &decodedLen, unichars, &unicharLen);
+                if (NS_SUCCEEDED(res)) {
+                  unichars[unicharLen] = 0;
+                  *decodedString = unichars;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     PR_FREEIF(decodedCstr);
   }
   return res;
