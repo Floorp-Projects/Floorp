@@ -232,7 +232,8 @@ sub fixaddresses {
                 next;
             }
         }
-        if ($emailnotification eq "ExcludeSelfChanges" && $i eq $nametoexclude) {
+        if ($emailnotification eq "ExcludeSelfChanges" &&
+           (lc($i) eq $nametoexclude)) {
             $didexclude = 1;
             next;
         }
@@ -355,7 +356,7 @@ if ($ARGV[0] eq "regenerate") {
 }
 
 if ($#ARGV == 1) {
-    $nametoexclude = $ARGV[1];
+    $nametoexclude = lc($ARGV[1]);
 }
 
 ProcessOneBug($ARGV[0]);
