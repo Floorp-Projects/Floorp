@@ -6,17 +6,12 @@
 // STREAM CONVERTER USERS
 ////////////////////////////////////////////////////////////////////////////
 
-// There are three ways to use a stream converter:
+// There are currently two ways to use a stream converter:
 // 1. SYNCRONOUS. Stream to Stream.
 //    You can supply the service with a stream of type X
 //    and it will convert it to your desired output type and return
 //    a converted stream to you.
 // 
-// 2. ASYNCRONOUS. Stream to nsIStreamListener
-//    You can supply the service with a stream of type X
-//    and it will convert it to your desired output type and return
-//    converted data to you via the nsIStreamListener you passed in
-//    by calling its nsIStreamListener::OnDataAvailable() method.
 //
 // 3. ASYNCRONOUS. nsIStreamListener to nsIStreamListener
 //    You can supply data directly to the converter by calling it's
@@ -51,14 +46,7 @@ interface nsIStreamConverter : nsIStreamListener {
 						   in wstring aFromType,
 						   in wstring aToType);
 
-	// ASYNCRONOUS VERSIONS
-
-	// Converts aFromStream of type aFromType, to type aToType pushing the converted
-	// data out to the caller via aListener::OnDataAvailable().
-	void AsyncConvertStream(in nsIInputStream aFromStream,
-				 in wstring aFromType,
-				 in wstring aToType,
-				 in nsIStreamListener aListener);
+	// ASYNCRONOUS VERSION
 
 	// Converts data arriving via the converter's nsIStreamListener::OnDataAvailable() method
 	// from type aFromType to aToType pushing the converted data out to the caller via
@@ -67,3 +55,7 @@ interface nsIStreamConverter : nsIStreamListener {
 				 in wstring aToType,
 				 in nsIStreamListener aListener);
 };
+
+%{C++
+#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
+%}
