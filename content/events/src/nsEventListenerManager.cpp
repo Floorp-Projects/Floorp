@@ -1679,15 +1679,13 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     default:
       break;
   }
-  //XXX This is going away
-  *aEventStatus = (NS_OK == ret)
-    ? *aEventStatus
-    : nsEventStatus_eConsumeNoDefault;
 
-  // This is correct
-  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
-    ? nsEventStatus_eConsumeNoDefault
-    : *aEventStatus;
+  // XXX (NS_OK != ret) is going away,
+  // (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) is correct
+  if ((NS_OK != ret) ||
+    (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)) {
+    *aEventStatus = nsEventStatus_eConsumeNoDefault;
+  }
 
   return NS_OK;
 }
