@@ -27,6 +27,7 @@
 #include "imgRequestProxy.h"
 
 #include "imgILoader.h"
+#include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "gfxIImageFrame.h"

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imglib2
 
-EXPORTS		= ImageLogging.h
+EXPORTS		= ImageErrors.h ImageLogging.h
 
 XPIDLSRCS	= imgICache.idl             \
 						imgIContainer.idl         \

@@ -131,6 +131,24 @@ NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+
+int
+nsImageFrame::GetImageLoad(imgIRequest *aRequest)
+{
+  if (aRequest == mLoads[0].mRequest)
+    return 0;
+  else if (aRequest == mLoads[1].mRequest)
+    return 1;
+  else if (aRequest == mLoads[2].mRequest)
+    return 2;
+
+  NS_ASSERTION((aRequest == mLoads[0].mRequest &&
+               aRequest == mLoads[1].mRequest &&
+               aRequest == mLoads[2].mRequest), "Failure to figure out which imgIRequest this is!");
+
+  return -1;
+}
+
 nsImageFrame::nsImageFrame() :
   mIntrinsicSize(0, 0),
   mGotInitialReflow(PR_FALSE),
@@ -208,17 +226,17 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
     NS_RELEASE(mImageMap);
   }
 
-  if (mImageRequest)
-    mImageRequest->Cancel(NS_ERROR_FAILURE); // NS_BINDING_ABORT ?
-  if (mLowImageRequest)
-    mLowImageRequest->Cancel(NS_ERROR_FAILURE); // NS_BINDING_ABORT ?
+  for (int i=0; i != 3; ++i) {
+    if (mLoads[i].mRequest) {
+      mLoads[i].mRequest->Cancel(NS_ERROR_FAILURE);
+      mLoads[i].mRequest = nsnull;
+    }
+  }
 
   // set the frame to null so we don't send messages to a dead object.
   if (mListener)
     NS_REINTERPRET_CAST(nsImageListener*, mListener.get())->SetFrame(nsnull);
 
-  mImageRequest = nsnull;
-  mLowImageRequest = nsnull;
   mListener = nsnull;
 
   return nsLeafFrame::Destroy(aPresContext);
@@ -258,15 +276,17 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
 
   // Set the image loader's source URL and base URL
   if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && !lowSrc.IsEmpty()) {
-    LoadImage(lowSrc, aPresContext, getter_AddRefs(mLowImageRequest));
+    mLoads[1].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
+    LoadImage(lowSrc, aPresContext, mLoads[1].mRequest);
   }
 
   mInitialLoadCompleted = PR_FALSE;
   mCanSendLoadEvent = PR_TRUE;
 
-  rv = LoadImage(src, aPresContext, getter_AddRefs(mImageRequest)); // if the image was found in the cache,
-                                                                       // it is possible that LoadImage will result in
-                                                                       // a call to OnStartContainer()
+  mLoads[0].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
+  rv = LoadImage(src, aPresContext, mLoads[0].mRequest); // if the image was found in the cache,
+                                                         // it is possible that LoadImage will result in
+                                                         // a call to OnStartContainer()
 
   return rv;
 }
@@ -279,7 +299,13 @@ NS_IMETHODIMP nsImageFrame::OnStartDecode(imgIRequest *aRequest, nsIPresContext 
 
 NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
 {
+  if (!aImage) return NS_ERROR_INVALID_ARG;
+
   mInitialLoadCompleted = PR_TRUE;
+
+  int whichLoad = GetImageLoad(aRequest);
+  if (whichLoad == -1) return NS_ERROR_FAILURE;
+  struct ImageLoad *load= &mLoads[whichLoad];
 
   if (aImage)
   {
@@ -295,11 +321,6 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   }
 
   nscoord w, h;
-#ifdef DEBUG_pavlov
-  NS_ENSURE_ARG_POINTER(aImage);
-#else
-  if (!aImage) return NS_ERROR_INVALID_ARG;
-#endif
   aImage->GetWidth(&w);
   aImage->GetHeight(&h);
 
@@ -308,19 +329,19 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
 
   nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
-  if (mIntrinsicSize != newsize) {
-    mIntrinsicSize = newsize;
+  if (load->mIntrinsicSize != newsize) {
+    load->mIntrinsicSize = newsize;
 
-    if (mIntrinsicSize.width != 0 && mIntrinsicSize.height != 0)
-      mTransform.SetToScale((float(mComputedSize.width) / float(mIntrinsicSize.width)),
-                            (float(mComputedSize.height) / float(mIntrinsicSize.height)));
+    if (load->mIntrinsicSize.width != 0 && load->mIntrinsicSize.height != 0)
+      load->mTransform.SetToScale((float(mComputedSize.width) / float(load->mIntrinsicSize.width)),
+                                  (float(mComputedSize.height) / float(load->mIntrinsicSize.height)));
 
     if (!mSizeConstrained) {
       nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       NS_ASSERTION(presShell, "No PresShell.");
-      if (mParent && presShell && mGotInitialReflow) { // don't reflow if we havn't gotten the inital reflow yet
+      if (mParent && presShell && mGotInitialReflow && whichLoad == 0) { // don't reflow if we havn't gotten the inital reflow yet
         mState |= NS_FRAME_IS_DIRTY;
         mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
       }
@@ -343,6 +364,12 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   if (!aRect)
     return NS_ERROR_NULL_POINTER;
 
+  int whichLoad = GetImageLoad(aRequest);
+  if (whichLoad == -1) return NS_ERROR_FAILURE;
+  if (whichLoad != 0) return NS_OK;
+  struct ImageLoad *load= &mLoads[whichLoad];
+
+
   nsRect r(aRect->x, aRect->y, aRect->width, aRect->height);
 
   float p2t;
@@ -352,12 +379,13 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   r.width = NSIntPixelsToTwips(r.width, p2t);
   r.height = NSIntPixelsToTwips(r.height, p2t);
 
-  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+  load->mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
   r.x += mBorderPadding.left;
   r.y += mBorderPadding.top;
 
-  Invalidate(aPresContext, r, PR_FALSE);
+  if (whichLoad == 0)
+    Invalidate(aPresContext, r, PR_FALSE);
 
   return NS_OK;
 }
@@ -519,16 +547,55 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   // check to see if an image error occurred
   PRBool imageFailedToLoad = PR_FALSE;
 
-  if (NS_FAILED(aStatus)) { // We failed to load the image. Notify the pres shell
+  int whichLoad = GetImageLoad(aRequest);
+
+  if (whichLoad == -1) return NS_ERROR_FAILURE;
+
+  if (whichLoad == 2) {
+    if (NS_SUCCEEDED(aStatus)) {
+      if (mLoads[0].mRequest) {
+        mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
+      }
+
+      mLoads[0].mRequest = mLoads[2].mRequest;
+      mLoads[0].mIntrinsicSize = mLoads[2].mIntrinsicSize;
+      // XXX i don't think we always want to set this.
+      mLoads[0].mTransform = mLoads[2].mTransform;
+      struct ImageLoad *load= &mLoads[0];
+
+      mLoads[2].mRequest = nsnull;
+
+      if (!mSizeConstrained && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+        NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
+        NS_ASSERTION(presShell, "No PresShell.");
+        if (mParent && presShell && mGotInitialReflow) { // don't reflow if we havn't gotten the inital reflow yet
+          mState |= NS_FRAME_IS_DIRTY;
+          mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
+        }
+      } else {
+        nsSize s;
+        GetSize(s);
+        nsRect r(0,0, s.width, s.height);
+        Invalidate(aPresContext, r, PR_FALSE);
+      }
+
+    } else {
+      mLoads[2].mRequest = nsnull;
+    }
+
+  } else if (NS_FAILED(aStatus)) {
     PRBool lowFailed = PR_FALSE;
     PRBool imageFailed = PR_FALSE;
 
     // One of the two images didn't load, which one?
-    if (mLowImageRequest == aRequest || !mLowImageRequest) {
-      lowFailed = PR_TRUE;
-    }
-    if (mImageRequest == aRequest || !mImageRequest) {
+    if (whichLoad == 0 || !mLoads[0].mRequest) {
       imageFailed = PR_TRUE;
+    }
+
+    if (whichLoad == 1 || !mLoads[1].mRequest) {
+      lowFailed = PR_TRUE;
     }
 
     if (imageFailed && lowFailed)
@@ -568,19 +635,25 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
 NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresContext *aPresContext, gfxIImageFrame *aNewFrame, nsRect *aDirtyRect)
 {
-  nsRect r(*aDirtyRect);
+  if (!mLoads[0].mRequest)
+    return NS_OK; // if mLoads[0].mRequest is null, this isn't for the first one, so we don't care about it.
 
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
-  r.x = NSIntPixelsToTwips(r.x, p2t);
-  r.y = NSIntPixelsToTwips(r.y, p2t);
-  r.width = NSIntPixelsToTwips(r.width, p2t);
-  r.height = NSIntPixelsToTwips(r.height, p2t);
+  nsCOMPtr<imgIContainer> con;
+  mLoads[0].mRequest->GetImage(getter_AddRefs(con));
+  if (aContainer == con.get()) {
+    nsRect r(*aDirtyRect);
 
-  mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    r.x = NSIntPixelsToTwips(r.x, p2t);
+    r.y = NSIntPixelsToTwips(r.y, p2t);
+    r.width = NSIntPixelsToTwips(r.width, p2t);
+    r.height = NSIntPixelsToTwips(r.height, p2t);
 
-  Invalidate(aPresContext, r, PR_FALSE);
+    mLoads[0].mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
+    Invalidate(aPresContext, r, PR_FALSE);
+  }
   return NS_OK;
 }
 
@@ -597,7 +670,6 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-
   nscoord widthConstraint = NS_INTRINSICSIZE;
   nscoord heightConstraint = NS_INTRINSICSIZE;
   PRBool fixedContentWidth = PR_FALSE;
@@ -620,6 +692,18 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (heightConstraint != NS_UNCONSTRAINEDSIZE) {
     fixedContentHeight = PR_TRUE;
   }
+
+  // if mLoads[0].mIntrinsicSize.width and height are 0, then we should check to see
+  // if the size is already known by the image container.
+  if (mLoads[0].mIntrinsicSize.width == 0 && mLoads[0].mIntrinsicSize.height == 0) {
+    nsCOMPtr<imgIContainer> con;
+    mLoads[0].mRequest->GetImage(getter_AddRefs(con));
+    if (con) {
+      con->GetWidth(&mLoads[0].mIntrinsicSize.width);
+      con->GetHeight(&mLoads[0].mIntrinsicSize.height);
+    }
+  }
+  mIntrinsicSize = mLoads[0].mIntrinsicSize;
 
   PRBool haveComputedSize = PR_FALSE;
   PRBool needIntrinsicImageSize = PR_FALSE;
@@ -675,11 +759,13 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   mComputedSize.width = newWidth;
   mComputedSize.height = newHeight;
 
+  nsTransform2D *transform = &mLoads[0].mTransform;
+
   if (mComputedSize == mIntrinsicSize) {
-    mTransform.SetToIdentity();
+    transform->SetToIdentity();
   } else {
     if (mIntrinsicSize.width != 0 && mIntrinsicSize.height != 0) {
-      mTransform.SetToScale(float(mComputedSize.width) / float(mIntrinsicSize.width),
+      transform->SetToScale(float(mComputedSize.width) / float(mIntrinsicSize.width),
                             float(mComputedSize.height) / float(mIntrinsicSize.height));
     }
   }
@@ -977,17 +1063,16 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     nsCOMPtr<imgIContainer> imgCon;
     nsCOMPtr<imgIContainer> lowImgCon;
 
-    if (mImageRequest) {
-      mImageRequest->GetImage(getter_AddRefs(imgCon));
+    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
+
+    if (mLoads[0].mRequest) {
+      mLoads[0].mRequest->GetImage(getter_AddRefs(imgCon));
+      mLoads[0].mRequest->GetImageStatus(&loadStatus);
     }
-    if (mLowImageRequest) {
-      mLowImageRequest->GetImage(getter_AddRefs(lowImgCon));
+    if (mLoads[1].mRequest) {
+      mLoads[1].mRequest->GetImage(getter_AddRefs(lowImgCon));
     }
 
-    PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
-    if (mImageRequest) {
-      mImageRequest->GetImageStatus(&loadStatus);
-    }
     if (loadStatus & imgIRequest::STATUS_ERROR || !(imgCon || lowImgCon)) {
       // No image yet, or image load failed. Draw the alt-text and an icon
       // indicating the status
@@ -1019,7 +1104,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
         if (imgCon) {
           nsPoint p(inner.x, inner.y);
-          if (mIntrinsicSize == mComputedSize) {
+          if (mLoads[0].mIntrinsicSize == mComputedSize) {
             inner.IntersectRect(inner, aDirtyRect);
             nsRect r(inner.x, inner.y, inner.width, inner.height);
             r.x -= mBorderPadding.left;
@@ -1027,8 +1112,8 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
             aRenderingContext.DrawImage(imgCon, &r, &p);
           } else {
             nsTransform2D trans;
-            trans.SetToScale((float(mIntrinsicSize.width) / float(inner.width)),
-                             (float(mIntrinsicSize.height) / float(inner.height)));
+            trans.SetToScale((float(mLoads[0].mIntrinsicSize.width) / float(inner.width)),
+                             (float(mLoads[0].mIntrinsicSize.height) / float(inner.height)));
 
             nsRect r(0, 0, inner.width, inner.height);
 
@@ -1409,20 +1494,25 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
 
     PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
 
-    if (mImageRequest)
-      mImageRequest->GetImageStatus(&loadStatus);
+    if (mLoads[0].mRequest)
+      mLoads[0].mRequest->GetImageStatus(&loadStatus);
 
     if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-      if (mImageRequest) {
+      if (mLoads[0].mRequest) {
         mFailureReplace = PR_FALSE; // don't cause a CantRenderReplacedElement call
-        mImageRequest->Cancel(NS_ERROR_FAILURE);
-        mImageRequest = nsnull;
+        mLoads[0].mRequest->Cancel(NS_ERROR_FAILURE);
+        mLoads[0].mRequest = nsnull;
       }
 
       mCanSendLoadEvent = PR_TRUE;
     }
 
-    LoadImage(newSRC, aPresContext, getter_AddRefs(mImageRequest));
+    if (mLoads[2].mRequest) {
+      mLoads[2].mRequest->Cancel(NS_ERROR_FAILURE);
+      mLoads[2].mRequest = nsnull;
+    }
+    mLoads[2].mRequest = do_CreateInstance("@mozilla.org/image/request;1");
+    LoadImage(newSRC, aPresContext, mLoads[2].mRequest);
   }
   else if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op
@@ -1448,7 +1538,7 @@ nsImageFrame::GetFrameType(nsIAtom** aType) const
 NS_IMETHODIMP 
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
-  aSize = mIntrinsicSize;
+  aSize = mLoads[0].mIntrinsicSize;
   return NS_OK;
 }
 
@@ -1459,9 +1549,9 @@ nsImageFrame::GetNaturalImageSize(PRUint32 *naturalWidth,
   *naturalWidth = 0;
   *naturalHeight = 0;
 
-  if (mImageRequest) {
+  if (mLoads[0].mRequest) {
     nsCOMPtr<imgIContainer> container;
-    mImageRequest->GetImage(getter_AddRefs(container));
+    mLoads[0].mRequest->GetImage(getter_AddRefs(container));
     if (container) {
       PRInt32 w, h;
       container->GetWidth(&w);
@@ -1478,7 +1568,7 @@ nsImageFrame::GetNaturalImageSize(PRUint32 *naturalWidth,
 NS_IMETHODIMP
 nsImageFrame::GetImageRequest(imgIRequest **aRequest)
 {
-  *aRequest = mImageRequest;
+  *aRequest = mLoads[0].mRequest;
   NS_IF_ADDREF(*aRequest);
   return NS_OK;
 }
@@ -1487,13 +1577,13 @@ NS_IMETHODIMP
 nsImageFrame::IsImageComplete(PRBool* aComplete)
 {
   NS_ENSURE_ARG_POINTER(aComplete);
-  if (!mImageRequest) {
+  if (!mLoads[0].mRequest) {
     *aComplete = PR_FALSE;
     return NS_OK;
   }
 
   PRUint32 status;
-  mImageRequest->GetImageStatus(&status);
+  mLoads[0].mRequest->GetImageStatus(&status);
   *aComplete = ((status & imgIRequest::STATUS_LOAD_COMPLETE) != 0);
 
   return NS_OK;
@@ -1516,7 +1606,7 @@ void HaveFixedSize(const nsHTMLReflowState& aReflowState, PRPackedBool& aConstra
 
 
 nsresult
-nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest **aRequest)
+nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest)
 {
   nsresult rv = NS_OK;
 
@@ -1561,7 +1651,8 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   /* set this back to FALSE before we do the real load */
   mInitialLoadCompleted = PR_FALSE;
 
-  return il->LoadImage(uri, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest);
+  nsCOMPtr<imgIRequest> tempRequest;
+  return il->LoadImage(uri, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
 }
 
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */

@@ -55,8 +55,13 @@ interface imgILoader : nsISupports
    * @param aLoadFlags Load flags for the request
    * @param aCacheKey cache key to use for a load if the original
    *                  image came from a request that had post data
+   * @param aRequest A newly created, unused imgIRequest object or NULL for one to
+                     be created for you.
    */
-  imgIRequest loadImage(in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey);
+  imgIRequest loadImage(in nsIURI aURI, in nsILoadGroup aLoadGroup,
+                        in imgIDecoderObserver aObserver, in nsISupports aCX,
+                        in nsLoadFlags aLoadFlags, in nsISupports cacheKey,
+                        in imgIRequest aRequest);
 
   /**
    * Start the load and decode of an image.
