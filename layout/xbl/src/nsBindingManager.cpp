@@ -76,13 +76,15 @@ public:
   NS_IMETHOD ClearAttachedQueue();
   NS_IMETHOD ProcessAttachedQueue();
 
+  NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
+  NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult);
+
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable;
   nsSupportsHashtable* mDocumentTable;
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
-
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -279,6 +281,35 @@ nsBindingManager::ProcessAttachedQueue()
   ClearAttachedQueue();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBindingManager::PutXBLDocument(nsIDocument* aDocument)
+{
+  if (!mDocumentTable)
+    mDocumentTable = new nsSupportsHashtable();
+
+  nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
+  char* aString;
+  uri->GetSpec(&aString);
+
+  nsStringKey key(aString);
+  mDocumentTable->Put(&key, aDocument);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetXBLDocument(const nsCString& aURL, nsIDocument** aResult)
+{
+  *aResult = nsnull;
+  if (!mDocumentTable)
+    return NS_OK;
+
+  nsStringKey key(aURL);
+  *aResult = NS_STATIC_CAST(nsIDocument*, mDocumentTable->Get(&key)); // Addref happens here.
+  return NS_OK;
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
