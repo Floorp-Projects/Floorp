@@ -906,6 +906,8 @@ static nsFontCharSetInfo JISX0201 =
   { "jis_0201", SingleByteConvert, 1 };
 static nsFontCharSetInfo KOI8R =
   { "KOI8-R", SingleByteConvert, 0 };
+static nsFontCharSetInfo KOI8U =
+  { "KOI8-U", SingleByteConvert, 0 };
 static nsFontCharSetInfo TIS620 =
   { "TIS-620", SingleByteConvert, 0 };
 
@@ -1048,6 +1050,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "jisx0208.1990-0",    &JISX0208      },
   { "jisx0212.1990-0",    &JISX0212      },
   { "koi8-r",             &KOI8R         },
+  { "koi8-u",             &KOI8U         },
   { "johab-1",            &X11Johab      },
   { "johabs-1",           &X11Johab      },
   { "johabsh-1",          &X11Johab      },
