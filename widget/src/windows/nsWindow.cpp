@@ -1459,6 +1459,12 @@ NS_METHOD nsWindow::SetFocus(void)
     }
 
     if (mWnd) {
+        // Uniconify, if necessary
+        HWND toplevelWnd = mWnd;
+        while (::GetParent(toplevelWnd))
+            toplevelWnd = ::GetParent(toplevelWnd);
+        if (::IsIconic(toplevelWnd))
+            ::OpenIcon(toplevelWnd);
         ::SetFocus(mWnd);
     }
     return NS_OK;
