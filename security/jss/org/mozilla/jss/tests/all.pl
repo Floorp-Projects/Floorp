@@ -67,7 +67,7 @@ sub setup_vars {
         $ld_lib_path = "LD_LIBRARY_PATH";
     }
 
-    my $dbg_suffix = "_dbg";
+    my $dbg_suffix = "_DBG";
     $ENV{BUILD_OPT} and $dbg_suffix = "";
 
     $ENV{CLASSPATH}  = "";
@@ -102,6 +102,7 @@ sub setup_vars {
     }
 
     $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
+    $pwfile = "passwords";
 
     print "*****ENVIRONMENT*****\n";
     print "java=$java\n";
@@ -111,13 +112,9 @@ sub setup_vars {
 
 setup_vars(\@ARGV);
 
-my $passwd = "netscape";
-my $passwdfile = "password";
-my $ssltesthost = "trading.etrade.com";
 my $signingToken = "Internal Key Storage Token";
 (-f $java) or die "'$java' does not exist\n";
 
-print "password is $passwd\n";
 print "*********************\n";
 
 #
@@ -138,22 +135,25 @@ if( ! -d $testdir ) {
     $result and die "Failed to copy builtins library";
 }
 my $result;
-$result = system("$java org.mozilla.jss.tests.SetupDBs testdir"); $result >>=8;
+$result = system("$java org.mozilla.jss.tests.SetupDBs testdir $pwfile");
+$result >>=8;
 $result and die "SetupDBs returned $result";
 
 #
 # test sockets
 #
-$result = system("$java org.mozilla.jss.tests.socketTest $testdir $ssltesthost"); $result >>=8;
-$result and die "socketTest returned $result";
+$result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile");
+$result >>=8;
+$result and die "SSLClientAuth returned $result";
 
 # test key gen
 #
-$result = system("$java org.mozilla.jss.tests.TestKeyGen $testdir");$result >>=8;
+$result = system("$java org.mozilla.jss.tests.TestKeyGen $testdir $pwfile");
+$result >>=8;
 $result and die "TestKeyGen returned $result";
 
 # test signing
 #
 $result = system("$java org.mozilla.jss.tests.SigTest $testdir " .
-            "\"$signingToken\""); $result >>=8;
+            "\"$signingToken\" $pwfile"); $result >>=8;
 $result and die "SigTest returned $result";

@@ -41,7 +41,7 @@ public class SetupDBs {
 
     public static void main(String args[]) {
       try {
-        if( args.length != 1 ) {
+        if( args.length != 2 ) {
             System.err.println("Invalid number of arguments");
             System.exit(1);
         }
@@ -52,7 +52,7 @@ public class SetupDBs {
 
         CryptoToken tok = cm.getInternalKeyStorageToken();
         tok.initPassword( new NullPasswordCallback(),
-            new Password( ("netscape").toCharArray() )
+            new FilePasswordCallback( args[1] )
         );
 
         System.exit(0);
