@@ -19,6 +19,8 @@
 
 #include "nsIBlockingNotification.h"
 #include "nsIURL.h"
+#include "nsIWebShell.h"
+#include "nsNetSupportDialog.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
@@ -32,11 +34,10 @@ static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIBlockingNotificationObserverIID, 
                                              NS_IBLOCKINGNOTIFICATION_OBSERVER_IID);
+static NS_DEFINE_IID(kIBlockingNotificationIID, NS_IBLOCKINGNOTIFICATION_IID);
 
 // Forward declarations...
 class nsDefaultProtocolHelper;
-
-
 
 /*-------------------- Notification Event Class ----------------------------*/
 
@@ -65,8 +66,6 @@ struct NotificationEvent : public PLEvent
 /*----------------------------- nsDefaultProtocolHelper ---------------------*/
 
 
-
-
 class nsDefaultProtocolHelper : public nsIBlockingNotificationObserver
 {
 public:
@@ -80,7 +79,7 @@ public:
                     nsIURL *aUrl,
                     PRThread *aThread,
                     PRInt32 aCode,
-                    nsISupports *aExtraInfo);
+                    void *aExtraInfo);
 
   NS_IMETHOD CancelNotify(nsIURL *aUrl);
 
@@ -88,7 +87,7 @@ public:
   nsresult HandleNotification(nsIBlockingNotification *aCaller,
                               nsIURL *aUrl,
                               PRInt32 aCode,
-                              nsISupports *aExtraInfo);
+                              void *aExtraInfo);
 
 protected:
   virtual ~nsDefaultProtocolHelper();
@@ -139,7 +138,7 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
                                 nsIURL *aUrl,
                                 PRThread *aThread,
                                 PRInt32 aCode,
-                                nsISupports *aExtraInfo)
+                                void *aExtraInfo)
 {
   nsresult rv;
   NotificationEvent *ev;
@@ -155,7 +154,7 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
    * immediately...
    */
   if (PR_GetCurrentThread() == aThread) {
-    rv = HandleNotification(aCaller, aUrl, aCode, aExtraInfo);
+    rv = HandleNotification(aCaller, aUrl, aCode, (void *)aExtraInfo);
   }
   else {
     /*
@@ -171,7 +170,7 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
 
     /* Create and dispatch the notification event... */
     if (evQ) {
-      ev = new NotificationEvent(this, aCaller, aUrl, aCode, aExtraInfo);
+      ev = new NotificationEvent(this, aCaller, aUrl, aCode, (nsISupports *) aExtraInfo);
       if (ev) {
         PRStatus status;
 
@@ -209,9 +208,41 @@ nsDefaultProtocolHelper::CancelNotify(nsIURL *aUrl)
 nsresult nsDefaultProtocolHelper::HandleNotification(nsIBlockingNotification *aCaller,
                                                      nsIURL *aUrl,
                                                      PRInt32 aCode,
-                                                     nsISupports *aExtraInfo)
+                                                     void *aExtraInfo)
 {
+  /* XXX this definition must match the one in network/protocol/http/mkhttp.c 
+     this will go away as netlib cleanup continues */
 
+  typedef struct _NET_AuthClosure {
+    char * msg;
+    char * user;
+    char * pass;
+    void * _private;
+  } NET_AuthClosure;
+
+  NET_AuthClosure * auth_closure = (NET_AuthClosure *) aExtraInfo;
+
+  nsAutoString aText(auth_closure->msg);
+  nsAutoString aUser;
+  nsAutoString aPass(auth_closure->pass);
+
+  // create a dialog
+  nsNetSupportDialog *dialog = new nsNetSupportDialog;
+  if (!dialog) {
+    return NS_ERROR_FAILURE;
+  }
+
+  dialog->PromptUserAndPassword (aText, aUser, aPass);
+
+  auth_closure->user = aUser.ToNewCString();
+  auth_closure->pass = aPass.ToNewCString();
+
+  aCaller->Resume(aUrl, (void *) auth_closure);
+
+  // delete aUser;
+  // delete aPass;
+  // delete aText;
+  // dialog->Release();
 
   return NS_NOTIFY_BLOCKED;
 }
@@ -254,7 +285,7 @@ void PR_CALLBACK NotificationEvent::HandlePLEvent(PLEvent* aEvent)
   NotificationEvent *ev = (NotificationEvent*)aEvent;
 
   (void)ev->mSelf->HandleNotification(ev->mCaller, ev->mUrl, ev->mCode, 
-                                      ev->mExtraInfo);
+                                      (void *)ev->mExtraInfo);
 }
 
 void PR_CALLBACK NotificationEvent::DestroyPLEvent(PLEvent* aEvent)
@@ -298,3 +329,5 @@ nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult)
   *aResult = inst;
   return rv;
 }
+
+
