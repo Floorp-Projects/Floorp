@@ -170,6 +170,27 @@ nsTableRowFrame::Init(nsIPresContext*  aPresContext,
 
 
 NS_IMETHODIMP
+nsTableRowFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
+{
+  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  // see if the row has a cell with a row span > 1
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); 
+       kidFrame && !(mState & NS_FRAME_OUTSIDE_CHILDREN); 
+       kidFrame->GetNextSibling(&kidFrame)) {
+    nsCOMPtr<nsIAtom> frameType;
+    kidFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
+      if (((nsTableCellFrame*)kidFrame)->GetRowSpan() > 1) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      }
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 nsTableRowFrame::AppendFrames(nsIPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
@@ -189,6 +210,9 @@ nsTableRowFrame::AppendFrames(nsIPresContext* aPresContext,
       tableFrame->AppendCell(*aPresContext, (nsTableCellFrame&)*childFrame, GetRowIndex());
       // XXX this could be optimized with some effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);
+      if (!(mState & NS_FRAME_OUTSIDE_CHILDREN) && (((nsTableCellFrame*)childFrame)->GetRowSpan() > 1)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      }
     }
   }
 
@@ -221,6 +245,9 @@ nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
       cellChildren.AppendElement(childFrame);
       // XXX this could be optimized with some effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);
+      if (!(mState & NS_FRAME_OUTSIDE_CHILDREN) && (((nsTableCellFrame*)childFrame)->GetRowSpan() > 1)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      }
     }
   }
   // insert the cells into the cell map
