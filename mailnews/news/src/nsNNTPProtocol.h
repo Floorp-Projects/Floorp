@@ -406,6 +406,7 @@ private:
 	PRInt32 mBytesReceived;
     PRInt32 mBytesReceivedSinceLastStatusUpdate;
     PRTime m_startTime;
+    PRInt32 mNumGroupsListed;
 };
 
 NS_BEGIN_EXTERN_C

@@ -2880,6 +2880,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 PRInt32 nsNNTPProtocol::BeginReadNewsList()
 {
 	m_readNewsListCount = 0;
+    mNumGroupsListed = 0;
     m_nextState = NNTP_READ_LIST;
 
     mBytesReceived = 0;
@@ -3001,11 +3002,14 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 nsString rateStr;
                 rateStr.AppendWithConversion(rate_buf);
 
-                const PRUnichar *formatStrings[2] = { bytesStr.GetUnicode(), rateStr.GetUnicode() };
+                nsString numGroupsStr;
+                numGroupsStr.AppendInt(mNumGroupsListed);
+
+                const PRUnichar *formatStrings[3] = { numGroupsStr.GetUnicode(), bytesStr.GetUnicode(), rateStr.GetUnicode() };
                 NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
 				const PRUnichar *propertyTag = literalPropertyTag.get();
                 rv = bundle->FormatStringFromName(propertyTag,
-                                                  formatStrings, 2,
+                                                  formatStrings, 3,
                                                   getter_Copies(statusString));
 
         	    rv = msgStatusFeedback->ShowStatusString(statusString);
@@ -3032,6 +3036,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
 		m_readNewsListCount++;
+        mNumGroupsListed++;
 		rv = m_nntpServer->AddNewsgroupToList(line);
 		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
 	}
