@@ -100,13 +100,12 @@ the following information:
       be 6667 or therabouts.
 
    3. Channels.
-
       What channels the bot should initially connect to. It is
       recommended that this just be a bot channel or a test channel,
       for example #mozbot, since running a bot for the first time
       before it is known to be ready is a bad idea. You can enter more
       than one channel, just hit enter after each one (leave a blank
-      line when you have finished). (To make oopsbot join a keyed
+      line when you have finished). (To make mozbot join a keyed
       channel, you must first add the channel's key to the
       'channelKeys' variable. To do this, the bot will have to be on
       IRC first, so don't worry about it for now.)
@@ -234,10 +233,10 @@ what they are by typing:
    /msg mozbot vars module
 
 ...where module is the module in question. These always include
-"Admin" and "General". Admin is only available to authenticated users,
-and provides the commands such as "shutdown", "cycle", "leave",
-"password", and so on. "General" provides the "help" command to
-everyone.
+"Admin" and "General". Admin provides the commands such as "auth",
+"newuser", "password", and provides additional commands to admins,
+such as "shutdown", "cycle", "leave", "restart", and so on. "General"
+provides the "help" command to everyone.
 
 The main variables are:
 
@@ -254,8 +253,8 @@ The main variables are:
    channel. If this is not enabled, then you will have to add new
    channels to the "channels" list each time.
 
-   channelsBlocked -- channels that will not be autojoined, so if the
-   module has been disabled, it won't rejoin the channel if it is
+   channelsBlocked -- channels that will not be autojoined, so if a
+   module has been disabled, it won't rejoin the channel if the bot is
    kicked then reinvited.
 
    denyusers -- user@host regexp masks of users that should be
@@ -283,7 +282,7 @@ are prompted for during initial startup. The interesting ones are:
    channels -- unlike other modules, the channels variable for the
    Admin module actually controls which channels the bot itself
    appears in. The preferred method for controlling this is using
-   /invite and /kick or "go" and "leave", though (since editing the
+   /invite and /kick or "join" and "part", though (since editing the
    list directly will probably require a cycle of the bot to take
    effect).
 
