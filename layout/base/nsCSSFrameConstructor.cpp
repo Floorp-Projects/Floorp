@@ -10099,7 +10099,13 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       if (hint & (nsChangeHint_RepaintFrame | nsChangeHint_SyncFrameView)) {
         ApplyRenderingChangeToTree(aPresContext, frame, nsnull, hint);
       }
+      if (hint & nsChangeHint_UpdateCursor) {
+        nsIViewManager* viewMgr = aPresContext->GetViewManager();
+        if (viewMgr)
+          viewMgr->SynthesizeMouseMove(PR_FALSE);
+      }
     }
+
 #ifdef DEBUG
     // reget from content since it may have been regenerated...
     if (content) {
