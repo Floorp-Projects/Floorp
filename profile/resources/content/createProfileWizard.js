@@ -124,18 +124,26 @@ function processCreateProfileData( aProfName, aProfDir )
     //       dropout layery thing. yeah. something like that to tell them when 
     //       it happens, not when the whole wizard is complete. blah. 
     if( profile.profileExists( aProfName ) )	{
-      try {
-        alert( bundle.GetStringFromName( "profileExists" ) );
-      }
-      catch(e) {
-        // mac stringbundle failure. put up a ridiculous hard coded message.
-        alert( "Oh Yah, the profile name you chose already exists, yah!");
-      }
+      alert( bundle.GetStringFromName( "profileExists" ) );
       // this is a bad but probably acceptable solution for now. 
       // when we add more panels, we will want a better solution. 
       window.frames["content"].document.getElementById("ProfileName").focus();
 			return false;
 		}
+    var invalidChars = ["/", "\\", "*", ":"];
+    for( var i = 0; i < invalidChars.length; i++ )
+    {
+      if( aProfName.indexOf( invalidChars[i] ) != -1 ) {
+        var aString = pmbundle.GetStringFromName("invalidCharA");
+        var bString = pmbundle.GetStringFromName("invalidCharB");
+        bString = bString.replace(/\s*<html:br\/>/g,"\n");
+        var lString = aString + invalidChars[i] + bString;
+        alert( lString );
+        window.frames["content"].document.getElementById("ProfileName").focus();
+        return false;
+      }
+    }
+
 		profile.createNewProfile( aProfName, aProfDir );
 		return true;
   }
@@ -159,4 +167,4 @@ function ExitApp()
 
 // load string bundle
 var bundle = srGetStrBundle("chrome://profile/locale/createProfileWizard.properties");
-
+var pmbundle = srGetStrBundle("chrome://profile/locale/profileManager.properties");

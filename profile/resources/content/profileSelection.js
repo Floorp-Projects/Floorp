@@ -30,6 +30,14 @@ if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfile);
 var unset       = true;
 
+var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+var Registry;
+var REGISTRY_NAMESPACE_URI = 'urn:mozilla-registry:'
+var REGISTRY_VALUE_PREFIX = REGISTRY_NAMESPACE_URI + 'value:';
+var kRegistry_Subkeys = RDF.GetResource(REGISTRY_NAMESPACE_URI + 'subkeys');
+
 function StartUp()
 {
   SetUpOKCancelButtons();
@@ -37,6 +45,11 @@ function StartUp()
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
 
+  Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
+  Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
+  Registry.openDefaultRegistry();
+  Registry = Registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  
   loadElements();
   highlightCurrentProfile();
   DoEnabling();
@@ -60,64 +73,75 @@ function highlightCurrentProfile()
 
 // function : <profileSelection.js>::AddItem();
 // purpose  : utility function for adding items to a tree.
-function AddItem( aChildren, aCells, aIdfier, aMigrate)
+function AddItem( aChildren, aProfileObject )
 {
   var kids    = document.getElementById(aChildren);
   var item    = document.createElement("treeitem");
   var row     = document.createElement("treerow");
   var cell    = document.createElement("treecell");
-  cell.setAttribute("value",aCells);
+  cell.setAttribute("value", aProfileObject.mName );
   cell.setAttribute("align","left");
-  if( aMigrate )
-    cell.setAttribute("class", "dimmed-lowcontrast" );
   row.appendChild(cell);
   item.appendChild(row);
-  item.setAttribute("profile_name", aIdfier);
-  item.setAttribute("rowName", aIdfier);
-  item.setAttribute("id", ( "profileName_" + aIdfier ) );
-  if( aMigrate )
-    item.setAttribute("rowMigrate", "true");
+  item.setAttribute("profile_name", aProfileObject.mName );
+  item.setAttribute("rowName", aProfileObject.mName );
+  item.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
+  item.setAttribute("rowMigrate",  aProfileObject.mMigrated );
+  item.setAttribute("directory", aProfileObject.mDir );
   // 23/10/99 - no roaming access yet!
   //  var roaming = document.getElementById("roamingitem");
   //  kids.insertBefore(item,roaming);
   kids.appendChild(item);
 }
 
+function Profile ( aName, aDir, aMigrated ) 
+{
+  this.mName       = aName ? aName : null;
+  this.mDir        = aDir ? aDir : null;
+  this.mMigrated   = aMigrated ? aMigrated : null;
+}
+
 // function : <profileSelection.js>::loadElements();
 // purpose  : load profiles into tree
 function loadElements()
 {
-  var profileList   = "";
-  profileList       = profile.getProfileList();
-  profileList       = profileList.split(",");
-
-  try {
-    currProfile = profile.currentProfile;
-  }
-  catch (ex) {
-    if (profileList != "")
-      currProfile = profileList;
-  }
-
-  dump("profile list = " + profileList + "\n");
-
-  // remove existing nodes...
-  var profilekids = document.getElementById( "profilekids" );
-  while( profilekids.hasChildNodes() )
+  var profileSRC = RDF.GetResource( "urn:mozilla-registry:key:/Profiles" );
+  var profileProperty = RDF.GetResource( "urn:mozilla-registry:subkeys" );
+  var profiles = Registry.GetTargets( profileSRC, profileProperty, true );
+  if( profiles )
+    profiles = profiles.QueryInterface( Components.interfaces.nsISimpleEnumerator );
+  while( profiles.HasMoreElements() )
   {
-    profilekids.removeChild( profilekids.firstChild );
-  }
-  
-  for (var i = 0; i < profileList.length; i++) {
-    var pvals = profileList[i].split(" - ");
-    // only add profiles that have been migrated
-    if( profileManagerMode == "selection" && pvals[1] != "migrate" ) {
-      AddItem( "profilekids", pvals[0], pvals[0], false );
+    var currProfile = profiles.GetNext().QueryInterface( Components.interfaces.nsIRDFResource );
+    // begin BAD BAD BAD BAD BAD BAD HACK {{
+    var profileName = currProfile.Value.substring( currProfile.Value.lastIndexOf("/") + 1 );
+    // }} end BAD BAD BAD BAD BAD BAD HACK
+    var arcs = Registry.ArcLabelsOut( currProfile )
+    if( arcs ) 
+      arcs = arcs.QueryInterface( Components.interfaces.nsISimpleEnumerator );
+    while( arcs.HasMoreElements() ) 
+    {
+      var property = arcs.GetNext().QueryInterface( Components.interfaces.nsIRDFResource );
+      if( property == kRegistry_Subkeys )
+        continue;
+      var propstr = property.Value.substring( REGISTRY_VALUE_PREFIX.length );
+      var target = Registry.GetTarget( currProfile, property, true );
+      var literal = target.QueryInterface( Components.interfaces.nsIRDFLiteral );
+      if( literal ) 
+        var targetstr = literal.Value;
+      else {
+        literal = target.QueryInterface( Components.interfaces.nsIRDFInt )
+        if( literal ) 
+          var targetstr = literal.Value;
+      }
+      if( propstr == "migrated" )
+        var migrated = targetstr;
+      else if( propstr == "directory" )
+        var directory = targetstr;
     }
-    else if( profileManagerMode == "manager" ){
-      AddItem( "profilekids", pvals[0], pvals[0], ( pvals[1] == "migrate" ) );
-    }
-  }
+    var profile = new Profile( profileName, directory, migrated );
+    AddItem( "profilekids", profile );
+  }  
 }
 
 // function : <profileSelection.js>::onStart();
@@ -133,7 +157,7 @@ function onStart()
   var selected = profileTree.selectedItems[0];
     
   var profilename = selected.getAttribute("profile_name");
-  if( selected.getAttribute("rowMigrate") == "true" ) {
+  if( selected.getAttribute("rowMigrate") == "no" ) {
     var lString = bundle.GetStringFromName("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     if( confirm( lString ) ) 

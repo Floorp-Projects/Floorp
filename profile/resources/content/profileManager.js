@@ -28,13 +28,14 @@ var set = null;
 function CreateProfileWizard()
 {
   // Need to call CreateNewProfile xuls
-  window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome');
+  window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome,modal=yes');
 }
 
 // update the display to show the additional profile
 function CreateProfile( aProfName, aProfDir )
 {
-  AddItem( "profilekids", aProfName, aProfName );
+  var profile = new Profile( aProfName, aProfDir, "yes" );
+  AddItem( "profilekids", profile );
 }
 
 // rename the selected profile
@@ -54,8 +55,8 @@ function RenameProfile()
   }
   else {
     var selected = profileTree.selectedItems[0];
-    if( selected.getAttribute("rowMigrate") == "true" ) {
-      // auto migrate if the user wants to
+    if( selected.getAttribute("rowMigrate") == "no" ) {
+      // migrate if the user wants to
       var lString = bundle.GetStringFromName("migratebeforerename");
       lString = lString.replace(/\s*<html:br\/>/g,"\n");
       if( confirm( lString ) ) 
@@ -66,8 +67,21 @@ function RenameProfile()
     else {
       var oldName = selected.getAttribute("rowName");
       var newName = prompt( bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB"), "" );
+      dump("*** newName = |" + newName + "|\n");
       if( newName == "" || !newName )
         return false;
+      var invalidChars = ["/", "\\", "*", ":"];
+      for( var i = 0; i < invalidChars.length; i++ )
+      {
+        if( newName.indexOf( invalidChars[i] ) != -1 ) {
+          var aString = bundle.GetStringFromName("invalidCharA");
+          var bString = bundle.GetStringFromName("invalidCharB");
+          bString = bString.replace(/\s*<html:br\/>/g,"\n");
+          var lString = aString + invalidChars[i] + bString;
+          alert( lString );
+          return false;
+        }
+      }
         
       var migrate = selected.getAttribute("rowMigrate");
       dump("*** oldName = "+ oldName+ ", newName = "+ newName+ ", migrate = "+ migrate+ "\n");
@@ -77,9 +91,8 @@ function RenameProfile()
         selected.setAttribute( "rowName", newName );
         selected.setAttribute( "profile_name", newName );
       }
-      catch (ex) {
-        var lString = bundle.GetStringFromName("renamefailed");
-        lString = lString.replace(/\s*<html:br\/>/g,"\n");
+      catch(e) {
+        var lString = bundle.GetStringFromName("profileExists");
         alert( lString );
       }
     }
@@ -107,7 +120,7 @@ function ConfirmDelete()
   var selected = profileTree.selectedItems[0];
   var name = selected.getAttribute("rowName");
 
-  if( selected.getAttribute("rowMigrate") == "true" ) {
+  if( selected.getAttribute("rowMigrate") == "no" ) {
       // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
     var lString = bundle.GetStringFromName("migratebeforedelete");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
@@ -171,7 +184,6 @@ function SwitchProfileManagerMode()
     var manageParent = manage.parentNode;
     manageParent.removeChild( manage );
     profileManagerMode = "manager";                         // swap the mode
-    PersistAndLoadElements( selItems );                     // save the selection and load elements
   } 
   else {
     prattleIndex = 0;
@@ -182,7 +194,6 @@ function SwitchProfileManagerMode()
     }
     buttonDisplay = "display: none;";
     profileManagerMode = "selection";
-    PersistAndLoadElements( selItems );
   }
 
   // swap deck  
@@ -201,28 +212,6 @@ function SwitchProfileManagerMode()
     set = false;
   else
     set = true;
-}
-
-// save which elements are selected in this mode and load elements into other mode,
-// then reselect selected elements
-function PersistAndLoadElements( aSelItems )
-{
-  // persist the profiles that are selected;
-  var profileTree = document.getElementById("profiles");
-  var selItemNodes = profileTree.selectedItems;    
-  for( var i = 0; i < selItemNodes.length; i++ )
-  {
-    aSelItems[i] = selItemNodes[i].getAttribute("profile_name");
-  }
-  loadElements();                                         // reload list of profiles
-  for( var i = 0; i < aSelItems.length; i++ )
-  {
-    var item = document.getElementsByAttribute("profile_name", aSelItems[i]);
-    if( item.length ) {
-      var item = item[0];
-      profileTree.addItemToSelection( item );
-    }
-  }
 }
 
 // change the title of the profile manager/selection window.
