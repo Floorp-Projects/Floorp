@@ -704,8 +704,8 @@ nsJSContext::InitClasses()
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
       NS_OK == NS_InitEventClass(this, nsnull) &&
-      NS_OK == InitializeExternalClasses() &&
       NS_OK == InitializeLiveConnectClasses() &&
+      NS_OK == InitializeExternalClasses() &&
       // XXX Temporarily here. These shouldn't be hardcoded.
       NS_OK == NS_InitHTMLImageElementClass(this, nsnull) &&
       NS_OK == NS_InitHTMLOptionElementClass(this, nsnull)) {
