@@ -86,7 +86,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     return NS_ERROR_NOT_AVAILABLE;
 #else
     nsAutoString path;
-    rv = aFile->GetPath(path);
+    nsresult rv = aFile->GetPath(path);
     if (NS_FAILED(rv))
         return rv;
 
