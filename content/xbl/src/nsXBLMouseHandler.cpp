@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"

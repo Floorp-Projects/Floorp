@@ -406,49 +406,10 @@ nsNode3Tearoff::LookupNamespacePrefix(const nsAString& aNamespaceURI,
 
   // XXX Waiting for DOM spec to list error codes.
 
-  nsCOMPtr<nsINameSpaceManager> manager;
-  nsCOMPtr<nsINodeInfo> ni;
-
-  mContent->GetNodeInfo(*getter_AddRefs(ni));
-
-  if (!ni) {
-    // If there's no nodeinfo (i.e. mContent is a non-element node),
-    // check if the parent has nodeinfo
-    nsCOMPtr<nsIContent> parent;
-
-    mContent->GetParent(*getter_AddRefs(parent));
-
-    if (parent) {
-      parent->GetNodeInfo(*getter_AddRefs(ni));
-    }
-  }
-
-  if (ni) {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-
-    ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_UNEXPECTED);
-
-    nimgr->GetNamespaceManager(*getter_AddRefs(manager));
-  }
-
-  // If there's no nodeinfo, get the manager from the document
-  if (!manager) {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-
-    if (doc) {
-      doc->GetNameSpaceManager(*getter_AddRefs(manager));
-    }
-  }
-
-  if (!manager) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   // Get the namespace id for the URI
   PRInt32 namespaceId;
-  manager->GetNameSpaceID(aNamespaceURI, namespaceId);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                        namespaceId);
   if (namespaceId == kNameSpaceID_Unknown) {
     return NS_OK;
   }
@@ -1477,15 +1438,7 @@ nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsINameSpaceManager> nsmgr;
-  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unkonwn namespace means no attr...
@@ -1524,15 +1477,7 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsINameSpaceManager> nsmgr;
-  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unkonwn namespace means no attr...
@@ -1606,15 +1551,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIContentList> list;
 
   if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsINameSpaceManager> nsmgr;
-    nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-    NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-    nsmgr->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                          nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
@@ -1662,15 +1600,7 @@ nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
 
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-  NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsINameSpaceManager> nsmgr;
-  nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-  NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
 
   if (nsid == kNameSpaceID_Unknown) {
     // Unkonwn namespace means no attr...

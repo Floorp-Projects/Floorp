@@ -69,6 +69,7 @@ nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
 nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 nsIParserService *nsContentUtils::sParserService = nsnull;
+nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
 
 // static
 nsresult
@@ -82,15 +83,18 @@ nsContentUtils::Init()
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                       &sSecurityManager);
   if (NS_FAILED(rv)) {
+    // We can run without a security manager, so don't return early.
     sSecurityManager = nsnull;
   }
 
   rv = CallGetService(kJSStackContractID, &sThreadJSContextStack);
   if (NS_FAILED(rv)) {
     sThreadJSContextStack = nsnull;
+
+    return rv;
   }
 
-  return rv;
+  return NS_GetNameSpaceManager(&sNameSpaceManager);
 }
 
 /**
@@ -379,6 +383,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sThreadJSContextStack);
+  NS_IF_RELEASE(sNameSpaceManager);
   NS_IF_RELEASE(sParserService);
 }
 

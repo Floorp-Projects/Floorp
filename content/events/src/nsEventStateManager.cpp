@@ -61,7 +61,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
-#include "nsINameSpaceManager.h"  // for kNameSpaceID_XHTML
+#include "nsINameSpaceManager.h"
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIScrollableView.h"

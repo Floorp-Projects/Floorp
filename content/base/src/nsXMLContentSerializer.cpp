@@ -56,6 +56,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIXMLDocument.h"
+#include "nsContentUtils.h"
 
 typedef struct {
   nsString mPrefix;
@@ -477,13 +478,6 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // Now serialize each of the attributes
   // XXX Unfortunately we need a namespace manager to get
   // attribute URIs.
-  nsCOMPtr<nsIDocument> document;
-  nsCOMPtr<nsINameSpaceManager> nsmanager;
-  content->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->GetNameSpaceManager(*getter_AddRefs(nsmanager));
-  }
-  
   for (index = 0; index < count; index++) {
     content->GetAttrNameAt(index, 
                            namespaceID,
@@ -498,8 +492,9 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     }
 
     addNSAttr = PR_FALSE;
-    if (kNameSpaceID_XMLNS != namespaceID && nsmanager) {
-      nsmanager->GetNameSpaceURI(namespaceID, uriStr);
+    if (kNameSpaceID_XMLNS != namespaceID) {
+      nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(namespaceID,
+                                                             uriStr);
       addNSAttr = ConfirmPrefix(prefixStr, uriStr);
     }
     

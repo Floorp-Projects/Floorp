@@ -74,7 +74,6 @@
 #include "nsIAtom.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
-#include "nsINameSpaceManager.h"
 #include "nsGUIEvent.h"
 
 #include "nsILink.h"

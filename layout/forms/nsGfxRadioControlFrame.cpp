@@ -47,7 +47,6 @@
 #include "nsIPresState.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsINameSpaceManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif

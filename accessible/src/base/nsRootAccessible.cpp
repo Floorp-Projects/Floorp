@@ -970,8 +970,9 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAString& aDocType)
 NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAString& aNameSpaceURI)
 {
   if (mDocument) {
-    nsCOMPtr<nsINameSpaceManager> nameSpaceManager;
-    if (NS_SUCCEEDED(mDocument->GetNameSpaceManager(*getter_AddRefs(nameSpaceManager)))) 
+    nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
+        do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
+    if (nameSpaceManager) 
       return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
   }
   return NS_ERROR_FAILURE;

@@ -44,7 +44,6 @@
 #define nsXULTemplateBuilder_h__
 
 #include "nsIDocumentObserver.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -205,7 +204,7 @@ public:
      * syntax.
      */
     nsresult
-    CompileSimpleRule(nsIContent* aRuleElement, PRInt32 aPriorty, InnerNode* naParentNode);
+    CompileSimpleRule(nsIContent* aRuleElement, PRInt32 aPriorty, InnerNode* aParentNode);
 
     /**
      * Can be overridden by subclasses to handle special attribute conditions
@@ -334,12 +333,8 @@ protected:
     static nsrefcnt gRefCnt;
     static nsIRDFService*            gRDFService;
     static nsIRDFContainerUtils*     gRDFContainerUtils;
-    static nsINameSpaceManager*      gNameSpaceManager;
     static nsIScriptSecurityManager* gScriptSecurityManager;
     static nsIPrincipal*             gSystemPrincipal;
-
-    static PRInt32  kNameSpaceID_RDF;
-    static PRInt32  kNameSpaceID_XUL;
 
     enum {
         eDontTestEmpty = (1 << 0)

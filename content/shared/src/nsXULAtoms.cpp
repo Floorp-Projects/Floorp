@@ -38,14 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
-#include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
-#include "nsContentCID.h"
-static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
-
-static const char kXULNameSpace[] = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-PRInt32  nsXULAtoms::nameSpaceID;
 
 // define storage for all atoms
 #define XUL_ATOM(_name, _value) nsIAtom* nsXULAtoms::_name;
@@ -54,38 +47,24 @@ PRInt32  nsXULAtoms::nameSpaceID;
 
 
 static nsrefcnt gRefCnt = 0;
-static nsINameSpaceManager* gNameSpaceManager;
 
-void nsXULAtoms::AddRefAtoms() {
-
-  if (gRefCnt == 0) {
-    /* XUL Atoms registers the XUL name space ID because it's a convenient
-       place to do this, if you don't want a permanent, "well-known" ID.
-    */
-    if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kNameSpaceManagerCID,nsnull,NS_GET_IID(nsINameSpaceManager),(void**)&gNameSpaceManager))) {
-//    gNameSpaceManager->CreateRootNameSpace(namespace);
-      nsAutoString nameSpace; nameSpace.AssignWithConversion(kXULNameSpace);
-      gNameSpaceManager->RegisterNameSpace(nameSpace, nameSpaceID);
-    } else {
-      NS_ASSERTION(0, "failed to create xul atoms namespace manager");
-    }
-
-    // now register the atoms
+void nsXULAtoms::AddRefAtoms()
+{
+  if (++gRefCnt == 1) {
+    // create atoms
 #define XUL_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsXULAtomList.h"
 #undef XUL_ATOM
   }
-  ++gRefCnt;
 }
 
-void nsXULAtoms::ReleaseAtoms() {
-
+void nsXULAtoms::ReleaseAtoms()
+{
   NS_PRECONDITION(gRefCnt != 0, "bad release of xul atoms");
   if (--gRefCnt == 0) {
+    // release atoms
 #define XUL_ATOM(_name, _value) NS_RELEASE(_name);
 #include "nsXULAtomList.h"
 #undef XUL_ATOM
-
-    NS_IF_RELEASE(gNameSpaceManager);
   }
 }

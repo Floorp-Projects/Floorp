@@ -726,7 +726,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts,
                                 nsINodeInfo* aNodeInfo, 
                                 nsIContent** aResult)
 {
-  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
+  if (aNameSpaceID == kNameSpaceID_XUL) {
     nsXULPrototypeElement* prototype = new nsXULPrototypeElement();
     if (!prototype)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -816,7 +816,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
 
   // XUL elements may require some additional work to compute
   // derived information.
-  if (aElement->mNodeInfo->NamespaceEquals(nsXULAtoms::nameSpaceID)) {
+  if (aElement->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
     nsAutoString value;
 
     // Compute the element's class list if the element has a 'class' attribute.

@@ -40,7 +40,6 @@
 #define nsNodeInfoManager_h___
 
 #include "nsINodeInfo.h"
-#include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
 #include "nsIURI.h"
@@ -55,8 +54,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINodeInfoManager
-  NS_IMETHOD Init(nsIDocument *aDocument,
-                  nsINameSpaceManager *aNameSpaceManager);
+  NS_IMETHOD Init(nsIDocument *aDocument);
   NS_IMETHOD DropDocumentReference();
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
@@ -70,7 +68,6 @@ public:
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo); 
-  NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
   NS_IMETHOD GetDocument(nsIDocument*& aDocument);
   NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
@@ -94,7 +91,6 @@ private:
                                                         void* arg);
 
   PLHashTable *mNodeInfoHash;
-  nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
   nsIDocument *mDocument; // WEAK
   nsCOMPtr<nsIPrincipal> mPrincipal;
 

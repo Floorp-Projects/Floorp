@@ -246,10 +246,7 @@ nsXULPrototypeDocument::Init()
     mNodeInfoManager = do_CreateInstance(NS_NODEINFOMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsINameSpaceManager> nsmgr;
-    rv = NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mNodeInfoManager->Init(nsnull, nsmgr);
+    rv = mNodeInfoManager->Init(nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

@@ -48,7 +48,6 @@
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"

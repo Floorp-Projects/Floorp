@@ -65,7 +65,6 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsILineBreakerFactory.h"
-#include "nsINameSpaceManager.h"
 #include "nsIParser.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFDataSource.h"
@@ -261,8 +260,6 @@ public:
     NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject);
 
     NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
-
-    NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
 
     NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
 
@@ -513,9 +510,6 @@ protected:
     static nsIElementFactory* gHTMLElementFactory;
     static nsIElementFactory* gXMLElementFactory;
 
-    static nsINameSpaceManager* gNameSpaceManager;
-    static PRInt32 kNameSpaceID_XUL;
-
     static nsIXULContentUtils* gXULUtils;
     static nsIXULPrototypeCache* gXULCache;
 
@@ -562,7 +556,6 @@ protected:
     // if we're attached to a DocumentViewImpl, we have a presshell
     nsAutoVoidArray            mPresShells;
     nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]
-    nsCOMPtr<nsINameSpaceManager>     mNameSpaceManager;  // [OWNER]
     nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER]
     nsCOMPtr<nsIHTMLCSSStyleSheet>    mInlineStyleSheet;  // [OWNER]
     nsCOMPtr<nsICSSLoader>            mCSSLoader;         // [OWNER]

@@ -42,7 +42,6 @@
 #include "nsXBLMutationHandler.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"

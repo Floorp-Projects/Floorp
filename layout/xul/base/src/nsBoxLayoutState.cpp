@@ -49,7 +49,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), 

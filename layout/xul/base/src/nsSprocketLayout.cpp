@@ -55,7 +55,6 @@
 #include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBoxFrame.h"
-#include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"

@@ -27,8 +27,6 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 
-class nsINameSpaceManager;
-
 /**
  * This class wraps up the creation and destruction of the standard
  * set of SVG atoms used during normal SVG handling. This object
@@ -41,9 +39,6 @@ public:
   static void AddRefAtoms();
   static void ReleaseAtoms();
 
-  // SVG namespace ID, good for the life of the nsSVGAtoms object
-  static PRInt32  nameSpaceID;
-  
   /* Declare all atoms
 
      The atom names and values are stored in nsCSSAtomList.h and

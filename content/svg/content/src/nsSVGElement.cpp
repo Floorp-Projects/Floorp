@@ -42,7 +42,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsStyleConsts.h"

@@ -153,7 +153,6 @@
 // For style data reconstruction
 #include "nsStyleChangeList.h"
 #include "nsIStyleFrameConstruction.h"
-#include "nsINameSpaceManager.h"
 #include "nsIBindingManager.h"
 #include "nsIMenuFrame.h"
 #include "nsITreeBoxObject.h"

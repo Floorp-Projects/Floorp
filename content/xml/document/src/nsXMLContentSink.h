@@ -69,7 +69,6 @@ class nsIUnicharInputStream;
 class nsIParser;
 class nsINameSpace;
 class nsICSSLoader;
-class nsINameSpaceManager;
 class nsIElementFactory;
 
 typedef enum {
@@ -178,9 +177,6 @@ protected:
   
   nsresult MaybePrettyPrint();
   
-  static nsINameSpaceManager* gNameSpaceManager;
-  static PRUint32 gRefCnt;
-
   nsIDocument*     mDocument;
   nsIURI*          mDocumentURL;
   nsIURI*          mDocumentBaseURL; // can be set via HTTP headers

@@ -263,8 +263,8 @@ STDMETHODIMP SimpleDOMNode::get_attributesForNames(
   if (!doc)
     return E_FAIL;
 
-  nsCOMPtr<nsINameSpaceManager> nameSpaceManager;
-  doc->GetNameSpaceManager(*getter_AddRefs(nameSpaceManager));
+  nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
+    do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
 
   PRInt32 index;
 

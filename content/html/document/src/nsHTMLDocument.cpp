@@ -1580,8 +1580,8 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
   nodeInfo->GetNamespaceID(namespaceID);
 
   nsCOMPtr<nsIElementFactory> elementFactory;
-  mNameSpaceManager->GetElementFactory(namespaceID,
-                                       getter_AddRefs(elementFactory));
+  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
+                                                           getter_AddRefs(elementFactory));
 
   nsCOMPtr<nsIContent> content;
 

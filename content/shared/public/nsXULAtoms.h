@@ -39,10 +39,7 @@
 #ifndef nsXULAtoms_h___
 #define nsXULAtoms_h___
 
-#include "prtypes.h"
 #include "nsIAtom.h"
-
-class nsINameSpaceManager;
 
 /**
  * This class wraps up the creation and destruction of the standard
@@ -55,9 +52,6 @@ public:
 
   static void AddRefAtoms();
   static void ReleaseAtoms();
-
-  // XUL namespace ID, good for the life of the nsXULAtoms object
-  static PRInt32  nameSpaceID;
 
   /* Declare all atoms
 

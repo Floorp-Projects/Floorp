@@ -62,7 +62,6 @@
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 

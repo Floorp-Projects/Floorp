@@ -42,7 +42,6 @@
 
 #include "nsIDOMXPathEvaluator.h"
 #include "txIXPathContext.h"
-#include "nsINameSpaceManager.h"
 
 /**
  * A class for evaluating an XPath expression string
@@ -86,7 +85,6 @@ private:
     private:
         nsIDOMXPathNSResolver* mResolver;
         nsresult mLastError;
-        nsCOMPtr<nsINameSpaceManager> mNSMan;
     };
 };
 

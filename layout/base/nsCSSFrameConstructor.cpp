@@ -3472,7 +3472,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 #endif 
 #ifdef MOZ_SVG
         if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) && 
-            (nameSpaceID == nsSVGAtoms::nameSpaceID)) {
+            (nameSpaceID == kNameSpaceID_SVG)) {
           rv = NS_NewSVGOuterSVGFrame(aPresShell, aDocElement, &contentFrame);
           if (NS_FAILED(rv)) {
             return rv;
@@ -5361,7 +5361,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
   const nsStyleDisplay* display = (const nsStyleDisplay*)
            aStyleContext->GetStyleData(eStyleStruct_Display);
   
-  PRBool isXULNS = (aNameSpaceID == nsXULAtoms::nameSpaceID);
+  PRBool isXULNS = (aNameSpaceID == kNameSpaceID_XUL);
   PRBool isXULDisplay = IsXULDisplayType(display);
 
   if (isXULNS || isXULDisplay) {
@@ -7107,7 +7107,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
                                           nsFrameItems&            aFrameItems)
 {
   NS_ASSERTION(NS_SUCCEEDED(aContent->GetNameSpaceID(aNameSpaceID)) && 
-            (aNameSpaceID == nsSVGAtoms::nameSpaceID), "SVG frame constructed in wrong namespace");
+            (aNameSpaceID == kNameSpaceID_SVG), "SVG frame constructed in wrong namespace");
 
   nsresult  rv = NS_OK;
   PRBool isAbsolutelyPositioned = PR_FALSE;
@@ -7465,7 +7465,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) &&
       ((nsnull == aFrameItems.childList) ||
        (lastChild == aFrameItems.lastChild)) &&
-      (aNameSpaceID == nsSVGAtoms::nameSpaceID)) {
+      (aNameSpaceID == kNameSpaceID_SVG)) {
     rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                               aTag, aNameSpaceID, styleContext, aFrameItems);
   }

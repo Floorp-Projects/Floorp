@@ -62,7 +62,6 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsNetCID.h"
 

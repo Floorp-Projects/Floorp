@@ -81,15 +81,10 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_CID(kNameSpaceManagerCID,    NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,   NS_RDFCONTAINERUTILS_CID);
-
-static const char kXULNameSpaceURI[]
-    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
@@ -162,9 +157,6 @@ private:
   static nsString *kAscendingStr;
   static nsString *kDescendingStr;
 
-  static PRInt32 kNameSpaceID_XUL;
-  static PRInt32 kNameSpaceID_RDF;
-
   static nsIRDFService *gRDFService;
   static nsIRDFContainerUtils *gRDFC;
 
@@ -216,9 +208,6 @@ nsString* XULSortServiceImpl::kNaturalStr = nsnull;
 nsString* XULSortServiceImpl::kAscendingStr = nsnull;
 nsString* XULSortServiceImpl::kDescendingStr = nsnull;
 
-PRInt32 XULSortServiceImpl::kNameSpaceID_XUL;
-PRInt32 XULSortServiceImpl::kNameSpaceID_RDF;
-
 ////////////////////////////////////////////////////////////////////////
 
 XULSortServiceImpl::XULSortServiceImpl(void)
@@ -265,17 +254,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
         NS_ERROR("unable to get application locale");
     } else
       NS_ERROR("couldn't get locale factory");
-
-    // Register the XUL and RDF namespaces: these'll just retrieve
-    // the IDs if they've already been registered by someone else.
-    nsCOMPtr<nsINameSpaceManager> mgr = do_CreateInstance(kNameSpaceManagerCID);
-    if (mgr) {
-      rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-      rv = mgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
-    } else
-      NS_ERROR("couldn't create namepsace manager");
   }
 
   ++gRefCnt;

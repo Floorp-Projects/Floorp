@@ -68,6 +68,7 @@
 #include "nsXULTemplateBuilder.h"
 #include "nsVoidArray.h"
 #include "nsUnicharUtils.h"
+#include "nsINameSpaceManager.h"
 
 // For security check
 #include "nsIDocument.h"

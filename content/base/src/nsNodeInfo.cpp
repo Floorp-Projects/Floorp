@@ -42,10 +42,9 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
-#include "nsINameSpaceManager.h"
 #include "domstubs.h" // for SetDOMStringToNull();
 #include "nsCRT.h"
-
+#include "nsContentUtils.h"
 
 nsNodeInfo::nsNodeInfo()
   : nsINodeInfo(), mOwnerManager(nsnull)
@@ -140,12 +139,8 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
   nsresult rv = NS_OK;
 
   if (mInner.mNamespaceID > 0) {
-    nsCOMPtr<nsINameSpaceManager> nsm;
-
-    mOwnerManager->GetNamespaceManager(*getter_AddRefs(nsm));
-    NS_ENSURE_TRUE(nsm, NS_ERROR_NOT_INITIALIZED);
-
-    rv = nsm->GetNameSpaceURI(mInner.mNamespaceID, aNameSpaceURI);
+    rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(mInner.mNamespaceID,
+                                                                aNameSpaceURI);
   } else {
     SetDOMStringToNull(aNameSpaceURI);
   }
@@ -245,13 +240,8 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
 NS_IMETHODIMP_(PRBool)
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
-  nsCOMPtr<nsINameSpaceManager> nsmgr;
-
-  NS_ENSURE_SUCCESS(mOwnerManager->GetNamespaceManager(*getter_AddRefs(nsmgr)),
-                    NS_ERROR_NOT_INITIALIZED);
-
   PRInt32 nsid;
-  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+  nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
 
   return nsINodeInfo::NamespaceEquals(nsid);
 }

@@ -453,11 +453,6 @@ public:
   NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aGlobalObject);
   NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
-  /** 
-   * Get the name space manager for this document
-   */
-  NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
-
   /**
    * Get the script loader for this document
    */ 
@@ -645,7 +640,6 @@ protected:
   nsIEventListenerManager* mListenerManager;
   PRBool mInDestructor;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
-  nsINameSpaceManager* mNameSpaceManager;
   nsCOMPtr<nsIScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
   nsCOMPtr<nsILineBreaker> mLineBreaker;

@@ -62,6 +62,9 @@
 #include "TxLog.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsINameSpaceManager.h"
+
+extern nsINameSpaceManager* gNameSpaceManager;
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
@@ -111,10 +114,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     mOutputFormat.setFromDefaults();
 
     aFragment->GetOwnerDocument(getter_AddRefs(mDocument));
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-    NS_ASSERTION(doc, "can't QI to nsIDocument");
-    doc->GetNameSpaceManager(*getter_AddRefs(mNameSpaceManager));
-    NS_ASSERTION(mNameSpaceManager, "Can't get namespace manager.");
 
     mCurrentNode = aFragment;
 }
@@ -154,7 +153,7 @@ void txMozillaXMLOutput::attribute(const String& aName,
     }
     else {
         nsAutoString nsURI;
-        mNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        gNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
         element->SetAttributeNS(nsURI, aName, aValue);
     }
 }
@@ -374,7 +373,7 @@ void txMozillaXMLOutput::startElement(const String& aName,
     }
     else {
         nsAutoString nsURI;
-        mNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        gNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
         rv = mDocument->CreateElementNS(nsURI, aName,
                                         getter_AddRefs(element));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create element");
@@ -679,8 +678,6 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
         doc = do_QueryInterface(aResultDocument);
     }
     mCurrentNode = mDocument;
-    doc->GetNameSpaceManager(*getter_AddRefs(mNameSpaceManager));
-    NS_ASSERTION(mNameSpaceManager, "Can't get namespace manager.");
 
     // Reset and set up the document
     nsCOMPtr<nsILoadGroup> loadGroup;

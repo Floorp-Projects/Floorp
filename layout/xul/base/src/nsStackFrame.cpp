@@ -48,7 +48,6 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsUnitConversion.h"
-#include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
