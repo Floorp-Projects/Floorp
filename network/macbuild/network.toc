@@ -7,6 +7,7 @@ mozilla/lib/xp/allxpstr.c
 mozilla/lib/xp/xp_hash.c
 mozilla/lib/xp/xp_list.c
 mozilla/lib/xp/xp_qsort.c
+mozilla/lib/xp/xp_regexp.c
 mozilla/lib/xp/xp_str.c
 mozilla/lib/xp/xp_stub.c
 mozilla/lib/xp/xp_trace.c
@@ -59,6 +60,5 @@ mozilla/network/protocol/gopher/mkgopher.c
 mozilla/network/protocol/http/mkaccess.c
 mozilla/network/protocol/http/mkhttp.c
 mozilla/network/protocol/remote/mkremote.c
-mozilla/network/util/mkreg.c
 mozilla/webshell/tests/viewer/macToBeImplemented.cp
 mozilla/webshell/tests/viewer/nsMacFile.cp
