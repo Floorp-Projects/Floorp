@@ -62,6 +62,7 @@ CPPSRCS = 				\
 	nsPKCS12Blob.cpp                \
 	nsNSSASN1Object.cpp		\
 	nsCertOutliner.cpp              \
+	nsKeygenHandler.cpp		\
 	$(NULL)
 
 REQUIRES = nspr security xpcom string necko uriloader pref caps dom intl locale profile windowwatcher js docshell widget layout gfx2

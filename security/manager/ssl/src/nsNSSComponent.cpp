@@ -585,7 +585,7 @@ PipUIContext::~PipUIContext()
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
     nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
@@ -795,6 +795,17 @@ CertDownloader::OnDataAvailable(nsIRequest* request,
   
   PRUint32 amt;
   nsresult err;
+  //Do a check to see if we need to allocate more memory.
+  if ((mBufferOffset + (PRInt32)aLength) > mContentLength) {
+      size_t newSize = mContentLength + kDefaultCertAllocLength;
+      char *newBuffer;
+      newBuffer = (char*)nsMemory::Realloc(mByteData, newSize);
+      if (newBuffer == nsnull) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mByteData = newBuffer;
+      mContentLength = newSize;
+  }
   
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnDataAvailable\n"));
   do {
@@ -819,24 +830,35 @@ CertDownloader::OnStopRequest(nsIRequest* request,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStopRequest\n"));
   /* this will init NSS if it hasn't happened already */
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-  nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(mByteData, mBufferOffset);
-  if (certdb == nsnull)
-    return NS_ERROR_FAILURE;
 
   nsresult rv;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new CertDownloaderContext();
-  nsCOMPtr<nsICertificateDialogs> dialogs;
-  PRBool canceled;
-  PRUint32 trust;
-  rv = ::getNSSDialogs(getter_AddRefs(dialogs), 
-                       NS_GET_IID(nsICertificateDialogs));
-  if (NS_FAILED(rv)) goto loser;
-  rv = dialogs->DownloadCACert(ctx, cert, &trust, &canceled);
-  if (NS_FAILED(rv)) goto loser;
-  if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("trust is %d\n", trust));
 
-  return certdb->ImportCertificate(cert, mType, trust, nsnull);
+  switch (mType) {
+  case nsIX509Cert::CA_CERT:
+    {
+      nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(mByteData, mBufferOffset);
+      if (certdb == nsnull)
+        return NS_ERROR_FAILURE;
+      nsCOMPtr<nsICertificateDialogs> dialogs;
+      PRBool canceled;
+      PRUint32 trust;
+      rv = ::getNSSDialogs(getter_AddRefs(dialogs), 
+                         NS_GET_IID(nsICertificateDialogs));
+      if (NS_FAILED(rv)) goto loser;
+      rv = dialogs->DownloadCACert(ctx, cert, &trust, &canceled);
+      if (NS_FAILED(rv)) goto loser;
+      if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("trust is %d\n", trust));
+
+      return certdb->ImportCertificate(cert, mType, trust, nsnull);
+    }
+  case nsIX509Cert::USER_CERT:
+    return certdb->ImportUserCertificate(mByteData, mBufferOffset, ctx);
+  default:
+	  rv = NS_ERROR_FAILURE;
+	  break;
+  }
 loser:
   return rv;
 }

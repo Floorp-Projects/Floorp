@@ -88,6 +88,7 @@ OBJS = \
     .\$(OBJDIR)\nsPK11TokenDB.obj \
     .\$(OBJDIR)\nsNSSCertificate.obj \
     .\$(OBJDIR)\nsPKCS12Blob.obj \
+    .\$(OBJDIR)\nsKeygenHandler.obj \
     .\$(OBJDIR)\nsCertOutliner.obj \
     .\$(OBJDIR)\nsNSSASN1Object.obj \
     $(NULL)

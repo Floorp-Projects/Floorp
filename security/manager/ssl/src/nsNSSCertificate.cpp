@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.20 2001/05/02 22:27:47 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.21 2001/05/03 01:00:56 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -54,6 +54,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsILocaleService.h"
 
+#include "nspr.h"
 extern "C" {
 #include "pk11func.h"
 #include "certdb.h"
@@ -2158,6 +2159,234 @@ done:
   if (tmpCert) 
     CERT_DestroyCertificate(tmpCert);
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
+}
+
+static char *
+default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx)
+{   
+  nsresult rv;
+  char *username = NULL;
+  char *caname = NULL;
+  char *nickname = NULL;
+  char *tmp = NULL;
+  int count;
+  char *nickFmt=NULL, *nickFmtWithNum = NULL;
+  CERTCertificate *dummycert;
+  PK11SlotInfo *slot=NULL;
+  CK_OBJECT_HANDLE keyHandle;
+  nsAutoString tmpNickFmt;
+  nsAutoString tmpNickFmtWithNum;
+
+  CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv)) goto loser; 
+
+  username = CERT_GetCommonName(&cert->subject);
+  if ( username == NULL ) 
+    username = PL_strdup("");
+
+  if ( username == NULL ) 
+    goto loser;
+    
+  caname = CERT_GetOrgName(&cert->issuer);
+  if ( caname == NULL ) 
+    caname = PL_strdup("");
+  
+  if ( caname == NULL ) 
+    goto loser;
+  
+  count = 1;
+  nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("nick_template").get(),
+                              tmpNickFmt);
+  nickFmt = tmpNickFmt.ToNewUTF8String();
+
+  nssComponent->GetPIPNSSBundleString(
+                              NS_LITERAL_STRING("nick_template_with_num").get(),
+                              tmpNickFmtWithNum);
+  nickFmtWithNum = tmpNickFmtWithNum.ToNewUTF8String();
+
+
+  nickname = PR_smprintf(nickFmt, username, caname);
+  /*
+   * We need to see if the private key exists on a token, if it does
+   * then we need to check for nicknames that already exist on the smart
+   * card.
+   */
+  slot = PK11_KeyForCertExists(cert, &keyHandle, ctx);
+  if (slot == NULL) {
+    goto loser;
+  }
+  if (!PK11_IsInternal(slot)) {
+    tmp = PR_smprintf("%s:%s", PK11_GetTokenName(slot), nickname);
+    PR_Free(nickname);
+    nickname = tmp;
+    tmp = NULL;
+  }
+  tmp = nickname;
+  while ( 1 ) {	
+    if ( count > 1 ) {
+      nickname = PR_smprintf("%s #%d", tmp, count);
+    }
+  
+    if ( nickname == NULL ) 
+      goto loser;
+ 
+    if (PK11_IsInternal(slot)) {
+      /* look up the nickname to make sure it isn't in use already */
+      dummycert = CERT_FindCertByNickname(defaultcertdb, nickname);
+      
+    } else {
+      /*
+       * Check the cert against others that already live on the smart 
+       * card.
+       */
+      dummycert = PK11_FindCertFromNickname(nickname, ctx);
+      if (dummycert != NULL) {
+	/*
+	 * Make sure the subject names are different.
+	 */ 
+	if (CERT_CompareName(&cert->subject, &dummycert->subject) == SECEqual)
+	{
+	  /*
+	   * There is another certificate with the same nickname and
+	   * the same subject name on the smart card, so let's use this
+	   * nickname.
+	   */
+	  CERT_DestroyCertificate(dummycert);
+	  dummycert = NULL;
+	}
+      }
+    }
+    if ( dummycert == NULL ) 
+      goto done;
+    
+    /* found a cert, destroy it and loop */
+    CERT_DestroyCertificate(dummycert);
+    if (tmp != nickname) PR_Free(nickname);
+    count++;
+  } /* end of while(1) */
+    
+loser:
+  if ( nickname ) {
+    PR_Free(nickname);
+  }
+  nickname = NULL;
+done:
+  if ( caname ) {
+    PR_Free(caname);
+  }
+  if ( username )  {
+    PR_Free(username);
+  }
+  if (slot != NULL) {
+      PK11_FreeSlot(slot);
+      if (nickname != NULL) {
+	      tmp = nickname;
+	      nickname = strchr(tmp, ':');
+	      if (nickname != NULL) {
+	        nickname++;
+	        nickname = PL_strdup(nickname);
+	        PR_Free(tmp);
+	      } else {
+	        nickname = tmp;
+	        tmp = NULL;
+	      }
+      }
+    }
+    PR_FREEIF(tmp);
+    return(nickname);
+}
+static SECStatus
+collect_certs(void *arg, SECItem **certs, int numcerts)
+{
+    CERTDERCerts *collectArgs;
+    SECItem *cert;
+    SECStatus rv;
+
+    collectArgs = (CERTDERCerts *)arg;
+
+    collectArgs->numcerts = numcerts;
+    collectArgs->rawCerts = (SECItem *) PORT_ArenaZAlloc(collectArgs->arena,
+                                           sizeof(SECItem) * numcerts);
+    if ( collectArgs->rawCerts == NULL )
+      return(SECFailure);
+    cert = collectArgs->rawCerts;
+
+    while ( numcerts-- ) {
+        rv = SECITEM_CopyItem(collectArgs->arena, cert, *certs);
+        if ( rv == SECFailure )
+          return(SECFailure);
+        cert++;
+        certs++;
+    }
+
+    return (SECSuccess);
+}
+
+NS_IMETHODIMP 
+nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterfaceRequestor *ctx)
+{
+  PK11SlotInfo *slot;
+  char * nickname = NULL;
+  SECStatus sec_rv;
+  int numCACerts;
+	SECItem *CACerts;
+	CERTDERCerts * collectArgs;
+	PRArenaPool *arena;
+	CERTCertificate * cert=NULL;
+
+  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if ( arena == NULL ) 
+    goto loser;
+
+  collectArgs = (CERTDERCerts *)PORT_ArenaZAlloc(arena, sizeof(CERTDERCerts));
+  if ( collectArgs == NULL ) 
+    goto loser;
+
+  collectArgs->arena = arena;
+  sec_rv = CERT_DecodeCertPackage(data, length, collect_certs, 
+			      (void *)collectArgs);
+  if (sec_rv != PR_SUCCESS)
+    goto loser;
+
+  cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), collectArgs->rawCerts,
+                	       (char *)NULL, PR_FALSE, PR_TRUE);
+  if (!cert)
+    goto loser;
+
+  slot = PK11_KeyForCertExists(cert, NULL, ctx);
+  if ( slot == NULL ) {
+    goto loser;
+  }
+  PK11_FreeSlot(slot);
+
+  /* pick a nickname for the cert */
+  if (cert->subjectList && cert->subjectList->entry && 
+    cert->subjectList->entry->nickname) {
+  	nickname = cert->subjectList->entry->nickname;
+  } else {
+    nickname = default_nickname(cert, ctx);
+  }
+
+  /* user wants to import the cert */
+  slot = PK11_ImportCertForKey(cert, nickname, ctx);
+  if (!slot) 
+      goto loser;
+  PK11_FreeSlot(slot);
+  numCACerts = collectArgs->numcerts - 1;
+
+  if (numCACerts) {
+  	CACerts = collectArgs->rawCerts+1;
+    sec_rv = CERT_ImportCAChain(CACerts, numCACerts, certUsageUserCertImport);
+  }
+  
+loser:
+  if (arena) {
+    PORT_FreeArena(arena, PR_FALSE);
+  }
+  CERT_DestroyCertificate(cert);
+  return (sec_rv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 /*

@@ -111,12 +111,13 @@ nsNSSDialogs::~nsNSSDialogs()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSDialogs, nsINSSDialogs, 
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsNSSDialogs, nsINSSDialogs, 
                                             nsITokenPasswordDialogs,
                                             nsISecurityWarningDialogs,
                                             nsIBadCertListener,
                                             nsICertificateDialogs,
-                                            nsIClientAuthDialogs);
+                                            nsIClientAuthDialogs,
+                                            nsITokenDialogs);
 
 nsresult
 nsNSSDialogs::Init()
@@ -735,3 +736,43 @@ nsNSSDialogs::ViewCert(nsIX509Cert *cert)
                                      block);
   return rv;
 }
+
+NS_IMETHODIMP
+nsNSSDialogs::ChooseToken(nsIInterfaceRequestor *aCtx, const PRUnichar **aTokenList, PRUint32 aCount, PRUnichar **aTokenChosen, PRBool *aCanceled) {
+  nsresult rv;
+  PRUint32 i;
+
+  *aCanceled = PR_FALSE;
+
+  // Get the parent window for the dialog
+  nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(aCtx);
+
+  nsCOMPtr<nsIDialogParamBlock> block(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (!block) return NS_ERROR_FAILURE;
+
+  for (i = 0; i < aCount; i++) {
+	  rv = block->SetString(i+1, aTokenList[i]);
+	  if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = block->SetInt(1, aCount);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                "chrome://pippki/content/choosetoken.xul",
+                                block);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32 status;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv)) return rv;
+
+  *aCanceled = (status == 0)?PR_TRUE:PR_FALSE;
+  if (!*aCanceled) {
+    // retrieve the nickname
+    rv = block->GetString(1, aTokenChosen);
+  }
+  return rv;
+}
+
