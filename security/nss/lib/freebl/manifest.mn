@@ -43,7 +43,6 @@ else
   else
     LIBRARY_NAME = freebl_hybrid
   endif
-  MD_LIB_RELEASE_FILES = $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.chk)
 endif
 
 # same version as rest of freebl
