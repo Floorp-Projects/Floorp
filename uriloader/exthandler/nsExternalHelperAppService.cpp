@@ -2012,59 +2012,56 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aContentType) 
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  // first try to get a url out of the uri so we can skip post
-  // filename stuff (i.e. query string)
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
-    
-#if defined(XP_MAC) || defined (XP_MACOSX)
- 	if (NS_SUCCEEDED(rv))
- 	{
-    nsresult rv2;
-    nsCOMPtr<nsIFileURL> fileurl = do_QueryInterface( url, &rv2 );
-    if ( NS_SUCCEEDED ( rv2 ) )
-    {
-      nsCOMPtr <nsIFile> file;
-      rv2 = fileurl->GetFile(getter_AddRefs(file));
-      if (NS_SUCCEEDED(rv2))
-      {
-        rv2 = GetTypeFromFile(file, aContentType);
-        if (NS_SUCCEEDED(rv2))
-          return rv2;
+  NS_PRECONDITION(aContentType, "Null out param!");
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  *aContentType = nsnull;
+
+  // First look for a file to use.  If we have one, we just use that.
+  nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(aURI);
+  if (fileUrl) {
+    nsCOMPtr<nsIFile> file;
+    rv = fileUrl->GetFile(getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv)) {
+      rv = GetTypeFromFile(file, aContentType);
+      if (NS_SUCCEEDED(rv)) {
+        // we got something!
+        return rv;
       }
     }
   }
-#endif
-    
-  if (NS_SUCCEEDED(rv)) 
-  {
-      nsCAutoString ext;
-      rv = url->GetFileExtension(ext);
-      if (NS_FAILED(rv)) return rv;
-      if (ext.IsEmpty()) {
-          *aContentType = nsnull;
-          return NS_ERROR_FAILURE;
-      }
-      rv = GetTypeFromExtension(ext.get(), aContentType);
-      return rv;
-  }
 
-  nsCAutoString specStr;
+  // Now try to get an nsIURL so we don't have to do our own parsing
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (url) {
+    nsCAutoString ext;
+    rv = url->GetFileExtension(ext);
+    if (NS_FAILED(rv)) return rv;
+    if (ext.IsEmpty()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return GetTypeFromExtension(ext.get(), aContentType);
+  }
+    
   // no url, let's give the raw spec a shot
+  nsCAutoString specStr;
   rv = aURI->GetSpec(specStr);
   if (NS_FAILED(rv)) return rv;
 
   // find the file extension (if any)
-  nsCAutoString extStr;
   PRInt32 extLoc = specStr.RFindChar('.');
-  if (-1 != extLoc) 
+  if (-1 != extLoc &&
+      extLoc != specStr.Length() - 1 &&
+      // nothing over 20 chars long can be sanely considered an
+      // extension.... Dat dere would be just data.
+      specStr.Length() - extLoc < 20) 
   {
-      specStr.Right(extStr, specStr.Length() - extLoc - 1);
-      rv = GetTypeFromExtension(extStr.get(), aContentType);
+    return GetTypeFromExtension(PromiseFlatCString(
+             Substring(specStr, extLoc, specStr.Length() - extLoc - 1)
+           ).get(), aContentType);
   }
-  else
-      return NS_ERROR_FAILURE;
-  return rv;
+
+  // We found no information; say so.
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char **aContentType )

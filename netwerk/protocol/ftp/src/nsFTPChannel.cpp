@@ -39,13 +39,13 @@
 #include "nsFTPChannel.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
-#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
+#include "nsIStreamConverterService.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -410,22 +410,13 @@ nsFTPChannel::GetContentType(nsACString &aContentType)
 {
     nsAutoLock lock(mLock);
 
-    aContentType.Truncate();
     if (mContentType.IsEmpty()) {
-        nsresult rv;
-        nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
-        if (NS_FAILED(rv)) return rv;
-        nsXPIDLCString mimeType;
-        rv = MIMEService->GetTypeFromURI(mURL, getter_Copies(mimeType));
-        if (NS_SUCCEEDED(rv))
-            mContentType = mimeType;
-        else
-            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+        aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+    } else {
+        aContentType = mContentType;
     }
 
-    aContentType = mContentType;
-
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", mContentType.get()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", PromiseFlatCString(aContentType).get()));
     return NS_OK;
 }
 
@@ -676,6 +667,24 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
     
     nsresult rv = NS_OK;
     if (mListener) {
+        if (mContentType.IsEmpty()) {
+            // Time to sniff!
+            nsCOMPtr<nsIStreamConverterService> serv =
+                do_GetService("@mozilla.org/streamConverters;1", &rv);
+            if (NS_SUCCEEDED(rv)) {
+                NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
+                nsCOMPtr<nsIStreamListener> converter;
+                rv = serv->AsyncConvertData(from.get(),
+                                            NS_LITERAL_STRING("*/*").get(),
+                                            mListener,
+                                            mUserContext,
+                                            getter_AddRefs(converter));
+                if (NS_SUCCEEDED(rv)) {
+                    mListener = converter;
+                }
+            }
+        }
+        
         rv = mListener->OnStartRequest(this, mUserContext);
         if (NS_FAILED(rv)) return rv;
     }

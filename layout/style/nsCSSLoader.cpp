@@ -59,6 +59,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
+#include "nsMimeTypes.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIXULPrototypeCache.h"
@@ -969,12 +970,13 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     if (channel) {
       channel->GetContentType(contentType);
     }
-    if (mLoader->mCompatMode == eCompatibility_NavQuirks ||
-        contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
-        contentType.IsEmpty()) {
-
-      if (!contentType.IsEmpty() &&
-          contentType != NS_LITERAL_CSTRING("text/css")) {
+    
+    PRBool validType = contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
+      contentType.Equals(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE)) ||
+      contentType.IsEmpty();
+                                          
+    if (mLoader->mCompatMode == eCompatibility_NavQuirks || validType) {
+      if (!validType) {
         nsCAutoString spec;
         if (channel) {
           nsCOMPtr<nsIURI> uri;

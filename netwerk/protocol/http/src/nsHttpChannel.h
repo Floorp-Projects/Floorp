@@ -113,6 +113,7 @@ private:
     void     HandleAsyncNotModified();
     nsresult SetupTransaction();
     void     ApplyContentConversions();
+    nsresult CallOnStartRequest();
     nsresult ProcessResponse();
     nsresult ProcessNormal();
     nsresult ProcessNotModified();

@@ -48,6 +48,8 @@
 #include "nsIPref.h"
 #include "imgILoader.h"
 
+#include "nsIMIMEService.h"
+
 #include "nsIViewSourceChannel.h"
 
 #include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
@@ -325,7 +327,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
     PRBool isLocalFile = PR_FALSE;
     if (request) {
       nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-      if (!request) { NS_WARNING("QI failed"); return; }
+      if (!aChannel) { NS_WARNING("QI failed"); return; }
 
       nsCOMPtr<nsIURI> pURL;
       if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(pURL))))
@@ -376,6 +378,27 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
     // we don't need to check for isLocalFile here..
     SniffForImageMimeType((const char*)mBuffer, mBufferLen);
   }
+
+  if (mContentType.IsEmpty()) {
+    // We don't know what this is yet.  Before we just give up, try
+    // the URI from the request.
+    nsCOMPtr<nsIMIMEService> mimeService(do_GetService("@mozilla.org/mime;1"));
+    if (mimeService) {
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      if (channel) {
+        nsCOMPtr<nsIURI> uri;
+        nsresult result = channel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(result) && uri) {
+          nsXPIDLCString type;
+          result = mimeService->GetTypeFromURI(uri, getter_Copies(type));
+          if (NS_SUCCEEDED(result)) {
+            mContentType = type;
+          }
+        }
+      }
+    }
+  }
+  
   //
   // See if the buffer has any embedded nulls.  If not, then lets just
   // call it text/plain...

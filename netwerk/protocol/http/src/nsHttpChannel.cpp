@@ -38,7 +38,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
-#include "nsCExternalHandlerService.h"
 #include "nsCPasswordManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -555,6 +554,42 @@ nsHttpChannel::ApplyContentConversions()
 }
 
 nsresult
+nsHttpChannel::CallOnStartRequest()
+{
+    if (mResponseHead && mResponseHead->ContentType().IsEmpty()) {
+        // Uh-oh.  We had better find out what type we are!
+
+        // XXX This does not work with content-encodings...  but
+        // neither does applying the conversion from the URILoader
+
+        nsCOMPtr<nsIStreamConverterService> serv;
+        nsresult rv = nsHttpHandler::get()->
+                GetStreamConverterService(getter_AddRefs(serv));
+        // If we failed, we just fall through to the "normal" case
+        if (NS_SUCCEEDED(rv)) {
+            NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
+            nsCOMPtr<nsIStreamListener> converter;
+            rv = serv->AsyncConvertData(from.get(),
+                                        NS_LITERAL_STRING("*/*").get(),
+                                        mListener,
+                                        mListenerContext,
+                                        getter_AddRefs(converter));
+            if (NS_SUCCEEDED(rv)) {
+                mListener = converter;
+            }
+        }
+    }
+    
+    nsresult rv = mListener->OnStartRequest(this, mListenerContext);
+    if (NS_FAILED(rv)) return rv;
+
+    // install stream converter if required
+    ApplyContentConversions();
+
+    return rv;
+}
+
+nsresult
 nsHttpChannel::ProcessResponse()
 {
     nsresult rv;
@@ -670,11 +705,8 @@ nsHttpChannel::ProcessNormal()
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = mListener->OnStartRequest(this, mListenerContext);
+    rv = CallOnStartRequest();
     if (NS_FAILED(rv)) return rv;
-
-    // install stream converter if required
-    ApplyContentConversions();
 
     // install cache listener if we still have a cache entry open
     if (mCacheEntry)
@@ -2305,61 +2337,22 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 NS_IMETHODIMP
 nsHttpChannel::GetContentType(nsACString &value)
 {
-    nsresult rv;
+    if (!mResponseHead) {
+        // We got no data, we got no headers, we got nothing
+        value.Truncate();
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
-    value.Truncate();
-
-    if (mResponseHead && !mResponseHead->ContentType().IsEmpty()) {
+    if (!mResponseHead->ContentType().IsEmpty()) {
         value = mResponseHead->ContentType();
         return NS_OK;
     }
 
-    // else if the there isn't a response yet or if the response does not
-    // contain a content-type header, try to determine the content type
-    // from the file extension of the URI...
-
-    // We had to do this same hack in 4.x. Sometimes, we run an http url that
-    // ends in special extensions like .dll, .exe, etc and the server doesn't
-    // provide a specific content type for the document. In actuality the 
-    // document is really text/html (sometimes). For these cases, we don't want
-    // to ask the mime service for the content type because it will make 
-    // incorrect conclusions based on the file extension. Instead, set the 
-    // content type to unknown and allow our unknown content type decoder a
-    // chance to sniff the data stream and conclude a content type. 
-
-    PRBool doMimeLookup = PR_TRUE;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mURI);
-    if (url) {
-        nsCAutoString ext;
-        url->GetFileExtension(ext);
-        if (!nsCRT::strcasecmp(ext.get(), "dll") ||
-            !nsCRT::strcasecmp(ext.get(), "exe"))
-            doMimeLookup = PR_FALSE;
-    }
-    if (doMimeLookup) {
-        nsCOMPtr<nsIMIMEService> mime;
-        nsHttpHandler::get()->GetMimeService(getter_AddRefs(mime));
-        if (mime) {
-            nsXPIDLCString mimeType;
-            rv = mime->GetTypeFromURI(mURI, getter_Copies(mimeType));
-            if (NS_SUCCEEDED(rv)) {
-                // cache this result if possible
-                if (mResponseHead)
-                    mResponseHead->SetContentType(mimeType);
-                value = mimeType;
-                return rv;
-            }
-        }
-    }
-
-    // the content-type can only be set to application/x-unknown-content-type 
-    // if there is data from which to infer a content-type.
-    if (!mResponseHead)
-        return NS_ERROR_NOT_AVAILABLE;
-
+    
     value = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
     return NS_OK;
 }
+
 NS_IMETHODIMP
 nsHttpChannel::SetContentType(const nsACString &value)
 {
@@ -2725,7 +2718,8 @@ nsHttpChannel::SetUploadFile(nsIFile *file, const char* contentType, PRInt32 con
     if (contentType)
         return SetUploadStream(stream, contentType, contentLength); 
 
-    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIMIMEService> MIMEService;
+    rv = nsHttpHandler::get()->GetMimeService(getter_AddRefs(MIMEService));
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString mimeType;
     rv = MIMEService->GetTypeFromFile(file, getter_Copies(mimeType));
@@ -2935,13 +2929,7 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         return NS_OK;
     }
 
-    // there won't be a response head if we've been cancelled
-    nsresult rv = mListener->OnStartRequest(this, mListenerContext);
-    if (NS_FAILED(rv)) return rv;
-
-    // install stream converter if required
-    ApplyContentConversions();
-    return NS_OK;
+    return CallOnStartRequest();
 }
 
 NS_IMETHODIMP
