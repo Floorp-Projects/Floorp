@@ -549,6 +549,14 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
     rv = GetCount(&count);
     if (NS_FAILED(rv)) return rv;
 
+    if (aIncrement > 0) {
+        // Update the container's nextVal to reflect the
+        // renumbering. We do this now if aIncrement > 0 because we'll
+        // want to be able to acknowledge that new elements are in the
+        // container.
+        rv = SetNextValue(count + aIncrement + 1);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     PRInt32 i;
     if (aIncrement < 0) {
@@ -604,9 +612,14 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         i -= aIncrement;
     }
 
-    // Update the container's nextVal to reflect the renumbering
-    rv = SetNextValue(count + aIncrement + 1);
-    if (NS_FAILED(rv)) return rv;
+    if (aIncrement < 0) {
+        // Update the container's nextVal to reflect the
+        // renumbering. We do this now if aIncrement < 0 because, up
+        // until this point, we'll want people to be able to find
+        // things that are still "at the end".
+        rv = SetNextValue(count + aIncrement + 1);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return NS_OK;
 }
