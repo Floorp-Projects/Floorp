@@ -254,6 +254,11 @@ bool nsDrawingSurfaceBeOS :: LockDrawable()
 
 void nsDrawingSurfaceBeOS :: UnlockDrawable()
 {
-  if (!mBitmap)
+  if (!mView)
+    return;
+    
+  if (mBitmap)
+    mView->Sync();
+  else
     mView->UnlockLooper();
 }
