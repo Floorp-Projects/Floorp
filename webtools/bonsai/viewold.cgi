@@ -46,7 +46,6 @@ my @list;
 
 foreach my $i (glob(DataDir() . "/batch-*\[0-9\].pl")) {
     if ($i =~ /batch-([0-9]*)\.pl/) {
-        print "Pushing in $1 <br>\n";
         push(@list, $1);
     }
 }
