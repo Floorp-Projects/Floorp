@@ -2649,6 +2649,9 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
 nsresult
 nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  if (nsFormFrame::GetDisabled(this))
+    return NS_OK;
+
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   if (keyEvent) {
     PRUint32 code;
@@ -2667,6 +2670,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
       if (numOptions == 0) {
         rv = NS_OK;
       } else {
+
         if (code == nsIDOMKeyEvent::DOM_VK_UP || code == nsIDOMKeyEvent::DOM_VK_LEFT) {
           printf("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
           if (mSelectedIndex > 0) {
