@@ -26,6 +26,9 @@
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
+#include "nsIPref.h"
+#include "nsIObserver.h"
+
 class nsIDocument;
 class nsIScrollableView;
 class nsISelfScrollingFrame;
@@ -37,13 +40,19 @@ class nsISelfScrollingFrame;
  * Event listener manager
  */
 
-class nsEventStateManager : public nsIEventStateManager {
+class nsEventStateManager : public nsIEventStateManager,
+                            public nsIObserver
+{
 
 public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  nsresult Init();
+  nsresult Shutdown();
 
   /* The PreHandleEvent method is called before event dispatch to either
    * the DOM or frames.  Any processing which must not be prevented or
@@ -114,6 +123,7 @@ protected:
                                      nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
 #endif
   void ForceViewUpdate(nsIView* aView);
+  nsresult getPrefService();
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
@@ -162,7 +172,8 @@ protected:
   PRUint32 mRClickCount;
 
   static PRUint32 mInstanceCount;
-
+  nsCOMPtr<nsIPref> mPrefService;
+  PRBool m_haveShutdown;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

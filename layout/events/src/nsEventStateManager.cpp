@@ -61,11 +61,15 @@
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
+#include "nsIObserverService.h"
 
 #undef DEBUG_scroll            // define to see ugly mousewheel messages
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 
 nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
 nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
@@ -76,228 +80,15 @@ nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 
-// For caching mousewheel prefs
-struct IntPrefPair
-{
-  char* name;
-  PRInt32 value;
-};
-
-struct BoolPrefPair
-{
-  char* name;
-  PRBool value;
-};
-
 enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
  MOUSE_SCROLL_HISTORY
 };
 
-static IntPrefPair	mwIntPrefValues[] = 
-{
-  { "mousewheel.withnokey.action", MOUSE_SCROLL_N_LINES },
-  { "mousewheel.withnokey.numlines", 3 },
-  { "mousewheel.withcontrolkey.action", MOUSE_SCROLL_N_LINES },
-  { "mousewheel.withcontrolkey.numlines", 3 },
-  { "mousewheel.withshiftkey.action", MOUSE_SCROLL_N_LINES },
-  { "mousewheel.withshiftkey.numlines", 3 },
-  { "mousewheel.withaltkey.action", MOUSE_SCROLL_N_LINES },
-  { "mousewheel.withaltkey.numlines", 3 }
-};
-
-static BoolPrefPair mwBoolPrefValues[] =
-{
-  { "mousewheel.withnokey.sysnumlines", PR_FALSE },
-  { "mousewheel.withcontrolkey.sysnumlines", PR_FALSE },
-  { "mousewheel.withshiftkey.sysnumlines", PR_FALSE },
-  { "mousewheel.withaltkey.sysnumlines", PR_FALSE }
-};
-
-static PRUint32 numIntPrefValues =
-  (sizeof(mwIntPrefValues) / sizeof(mwIntPrefValues[0]));
-
-static PRUint32 numBoolPrefValues =
-  (sizeof(mwBoolPrefValues) / sizeof(mwBoolPrefValues[0]));
-
-static PRInt32 getCachedIntPref (const char* aPrefName)
-{
-  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
-
-  for (PRUint32 i = 0; i < numIntPrefValues; i++)
-  {
-    if (nsAutoString(mwIntPrefValues[i].name) == aPrefName)
-    {
-      return mwIntPrefValues[i].value;
-    }
-  }
-
-  // Hopefully we never reach this code
-  NS_ASSERTION(PR_FALSE,
-               "Attempt to get a cached pref that is not in the cache.");
-  return 0;
-}
-
-static PRBool getCachedBoolPref(const char* aPrefName)
-{
-  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
-
-  for (PRUint32 i = 0; i < numBoolPrefValues; i++)
-  {
-    if (nsAutoString(mwBoolPrefValues[i].name) == aPrefName)
-    {
-      return mwBoolPrefValues[i].value;
-    }
-  }
-
-  // Hopefully we never reach this code
-  NS_ASSERTION(PR_FALSE,
-               "Attempt to get a cached pref that is not in the cache.");
-  return 0;
-}
-
-static void setCachedIntPref (const char* aPrefName, PRInt32 aValue)
-{
-  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
-
-  for (PRUint32 i = 0; i < numIntPrefValues; i++)
-  {
-    if (nsAutoString(mwIntPrefValues[i].name) == aPrefName)
-    {
-      mwIntPrefValues[i].value = aValue;
-      return;
-    }
-  }
-
-  NS_ASSERTION(PR_FALSE,
-               "Attempt to set a cached pref that is not in the cache.");
-}
-
-static void setCachedBoolPref (const char* aPrefName, PRBool aValue)
-{
-  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
-
-  for (PRUint32 i = 0; i < numBoolPrefValues; i++)
-  {
-    if (nsAutoString(mwBoolPrefValues[i].name) == aPrefName)
-    {
-      mwBoolPrefValues[i].value = aValue;
-      return;
-    }
-  }
-
-  NS_ASSERTION(PR_FALSE,
-               "Attempt to set a cached pref that is not in the cache.");
-}
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
-int mwIntPrefChangedCallback(const char* name, void * closure)
-{
-  nsIPref* prefs = nsnull;
-  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                             (nsISupports**) &prefs);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-  NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
-
-  if (NS_SUCCEEDED(rv))
-  {
-    PRInt32 value;
-    prefs->GetIntPref(name, &value);
-    setCachedIntPref(name, value);
-    NS_RELEASE(prefs);
-  }
-
-  return PREF_NOERROR;
-}
-
-int mwBoolPrefChangedCallback(const char* name, void * closure)
-{
-  nsIPref* prefs = nsnull;
-  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                             (nsISupports**) &prefs);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-  NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
-
-  if (NS_SUCCEEDED(rv))
-  {
-    PRBool value;
-    prefs->GetBoolPref(name, &value);
-    setCachedBoolPref(name, value);
-    NS_RELEASE(prefs);
-  }
-
-  return PREF_NOERROR;
-}
-
-PRInt32 getIntPref(nsIPref* aPrefs, const char* aPrefName)
-{
-  NS_ASSERTION(nsnull != aPrefName,"aPrefName = null.");
-  NS_ASSERTION(nsnull != aPrefs,"aPrefs = null.");
-
-  PRInt32 value = 0;
-  if (aPrefs)
-  {
-    aPrefs->GetIntPref(aPrefName, &value);
-  }
-
-  return value;
-}
-
-PRBool getBoolPref(nsIPref* aPrefs, const char* aPrefName)
-{
-  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null.");
-  NS_ASSERTION(nsnull != aPrefs, "aPrefs = null.");
-
-  PRBool value = PR_FALSE;
-  if (aPrefs)
-  {
-    aPrefs->GetBoolPref(aPrefName, &value);
-  }
-
-  return value;
-}
-      
-void mwRegisterPrefCallbacks()
-{
-  static PRBool once = PR_TRUE;
-
-  if (once) {
-    once = PR_FALSE;
-    nsIPref* prefs = nsnull;
-    nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-                                               (nsISupports**) &prefs);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
-    NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
-
-    if (NS_SUCCEEDED(rv))
-    {
-     PRUint32 i;
- 
-     for (i = 0; i < numIntPrefValues; i++)
-      {
-        mwIntPrefValues[i].value = getIntPref(prefs, mwIntPrefValues[i].name);
-        prefs->RegisterCallback(mwIntPrefValues[i].name,
-                                mwIntPrefChangedCallback, NULL);
-      }
-
-      for (i = 0; i < numBoolPrefValues; i++)
-      {
-        mwBoolPrefValues[i].value = getBoolPref(prefs,
-                                                mwBoolPrefValues[i].name);
-        prefs->RegisterCallback(mwBoolPrefValues[i].name,
-                                mwBoolPrefChangedCallback, NULL);
-      }
-
-      NS_RELEASE(prefs);
-    }
-  }
-}
-
-
 nsEventStateManager::nsEventStateManager()
-  : mGestureDownPoint(0,0)
+  : mGestureDownPoint(0,0),
+    m_haveShutdown(PR_FALSE)
 {
   mLastMouseOverFrame = nsnull;
   mLastDragOverFrame = nsnull;
@@ -330,7 +121,22 @@ nsEventStateManager::nsEventStateManager()
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
-  mwRegisterPrefCallbacks();
+}
+
+nsresult
+nsEventStateManager::Init()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIObserverService, observerService,
+                  NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    observerService->AddObserver(this, topic.GetUnicode());
+  }
+
+  rv = getPrefService();
+  return rv;
 }
 
 nsEventStateManager::~nsEventStateManager()
@@ -358,7 +164,66 @@ nsEventStateManager::~nsEventStateManager()
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
   }
+
+  if (!m_haveShutdown) {
+    Shutdown();
+
+    // Don't remove from Observer service in Shutdown because Shutdown also
+    // gets called from xpcom shutdown observer.  And we don't want to remove
+    // from the service in that case.
+
+    nsresult rv;
+
+    NS_WITH_SERVICE (nsIObserverService, observerService,
+                     NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      {
+        nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        observerService->RemoveObserver(this, topic.GetUnicode());
+      }
+  }
+  
 }
+
+nsresult
+nsEventStateManager::Shutdown()
+{
+  if (mPrefService) {
+    mPrefService = null_nsCOMPtr();
+  }
+
+  m_haveShutdown = PR_TRUE;
+  return NS_OK;
+}
+
+nsresult
+nsEventStateManager::getPrefService()
+{
+  nsresult rv = NS_OK;
+
+  if (!mPrefService) {
+    mPrefService = do_GetService(kPrefCID, &rv);
+  }
+
+  if (NS_FAILED(rv)) return rv;
+
+  if (!mPrefService) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+                             const PRUnichar *someData) {
+  nsAutoString topicString(aTopic);
+  nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+  if (topicString == shutdownString)
+    Shutdown();
+
+  return NS_OK;
+}
+
 
 NS_IMPL_ISUPPORTS1(nsEventStateManager, nsIEventStateManager)
 
@@ -898,34 +763,44 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_MOUSE_SCROLL:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+      nsresult rv;
+      rv = getPrefService();
+      if (NS_FAILED(rv)) return rv;
+
       nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
       PRInt32 action = 0;
       PRInt32 numLines = 0;
+      PRBool  aBool;
+
 
       if (msEvent->isShift) {
-        action = getCachedIntPref("mousewheel.withshiftkey.action");
-        if (getCachedBoolPref("mousewheel.withshiftkey.sysnumlines"))
+        mPrefService->GetIntPref("mousewheel.withshiftkey.action", &action);
+        mPrefService->GetBoolPref("mousewheel.withshiftkey.sysnumlines", &aBool);
+        if (aBool)
           numLines = msEvent->deltaLines;
         else
-          numLines = getCachedIntPref("mousewheel.withshiftkey.numlines");
+          mPrefService->GetIntPref("mousewheel.withshiftkey.numlines", &numLines);
       } else if (msEvent->isControl) {
-        action = getCachedIntPref("mousewheel.withcontrolkey.action");
-        if (getCachedBoolPref("mousewheel.withcontrolkey.sysnumlines"))
+        mPrefService->GetIntPref("mousewheel.withcontrolkey.action", &action);
+        mPrefService->GetBoolPref("mousewheel.withcontrolkey.sysnumlines", &aBool);
+        if (aBool)
           numLines = msEvent->deltaLines;
         else
-          numLines = getCachedIntPref("mousewheel.withcontrolkey.numlines");
+          mPrefService->GetIntPref("mousewheel.withcontrolkey.numlines", &numLines);
       } else if (msEvent->isAlt) {
-        action = getCachedIntPref("mousewheel.withaltkey.action");
-        if (getCachedBoolPref("mousewheel.withaltkey.sysnumlines"))
+        mPrefService->GetIntPref("mousewheel.withaltkey.action", &action);
+        mPrefService->GetBoolPref("mousewheel.withaltkey.sysnumlines", &aBool);
+        if (aBool)
           numLines = msEvent->deltaLines;
         else
-          numLines = getCachedIntPref("mousewheel.withaltkey.numlines");
+          mPrefService->GetIntPref("mousewheel.withaltkey.numlines", &numLines);
       } else {
-        action = getCachedIntPref("mousewheel.withnokey.action");
-        if (getCachedBoolPref("mousewheel.withnokey.sysnumlines"))
+        mPrefService->GetIntPref("mousewheel.withnokey.action", &action);
+        mPrefService->GetBoolPref("mousewheel.withnokey.sysnumlines", &aBool);
+        if (aBool)
           numLines = msEvent->deltaLines;
         else
-          numLines = getCachedIntPref("mousewheel.withnokey.numlines");
+          mPrefService->GetIntPref("mousewheel.withnokey.numlines", &numLines);
       }
 
       if ((msEvent->deltaLines < 0) && (numLines > 0))
@@ -2714,6 +2589,8 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
 {
+  nsresult rv;
+
   NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
@@ -2722,7 +2599,10 @@ nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
   if (nsnull == manager) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return manager->QueryInterface(NS_GET_IID(nsIEventStateManager),
+  rv =  manager->QueryInterface(NS_GET_IID(nsIEventStateManager),
                                  (void **) aInstancePtrResult);
+  if (NS_FAILED(rv)) return rv;
+
+  return manager->Init();
 }
 
