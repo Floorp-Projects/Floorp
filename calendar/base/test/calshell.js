@@ -72,6 +72,8 @@ calOpListener.prototype =
     dump("onOperationComplete:\n\t");
     dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + aOperationType + 
 	 "\n\t" + aId + "\n\t" + aDetail + "\n");
+
+    stopEventPump();
     return;
   },
 
