@@ -777,7 +777,7 @@ public:
     nsAutoString(const char* aCString,PRInt32 aLength=-1);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
 
-    nsAutoString(CBufDescriptor& aBuffer);    
+    nsAutoString(const CBufDescriptor& aBuffer);    
     nsAutoString(const nsStr& aString);
     nsAutoString(const nsAutoString& aString);
 #ifdef AIX

@@ -2062,7 +2062,7 @@ nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString(
  * constructor that uses external buffer
  * @param   aBuffer describes the external buffer
  */
-nsAutoString::nsAutoString(CBufDescriptor& aBuffer) : nsString() {
+nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
   mAgent=0;
   if(!aBuffer.mBuffer) {
     nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
