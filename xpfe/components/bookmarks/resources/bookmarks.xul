@@ -103,7 +103,7 @@
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
-       <treeitem uri="...">
+       <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell>
              <html:hr width="75%" align="center" size="1" />
@@ -113,7 +113,7 @@
      </rule>
 
      <rule rootcontainment="treechildren" subcontainment="treechildren">
-       <treeitem uri="...">
+       <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
            <treecell>
              <treeindentation />
