@@ -41,7 +41,8 @@
   char *buf = nsnull;
   nsresult rv = mPrefService->GetCharPref(prefName, &buf);
   if (NS_SUCCEEDED(rv) && buf) {
-    prefValue = [NSString stringWithCString:buf];
+    // prefs are UTF-8
+    prefValue = [NSString stringWithUTF8String:buf];
     free(buf);
     if (outSuccess) *outSuccess = YES;
   } else {
@@ -93,8 +94,9 @@
 
 - (void)setPref: (const char*)prefName toString:(NSString*)value
 {
+  // prefs are UTF-8
   if (mPrefService) {
-    mPrefService->SetCharPref(prefName, [value cString]);
+    mPrefService->SetCharPref(prefName, [value UTF8String]);
   }
 }
 
