@@ -2160,6 +2160,9 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
         PRUint32 i;
         if (compositor == nsISchemaModelGroup::COMPOSITOR_ALL) {  //  This handles out-of-order appearances.
           nsCOMPtr<nsISupportsArray> all = new nsSupportsArray(); //  Create something we can mutate
+          if (!all)
+            return NS_ERROR_OUT_OF_MEMORY;
+
           all->SizeTo(particleCount);
           nsCOMPtr<nsISchemaParticle> child;
           PRBool mangled = PR_FALSE;
