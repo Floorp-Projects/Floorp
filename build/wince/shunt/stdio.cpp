@@ -40,6 +40,8 @@
 
 #include "mozce_internal.h"
 
+#include <stdarg.h>
+
 extern "C" {
 #if 0
 }
@@ -49,7 +51,7 @@ extern "C" {
 MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 {
 #ifdef DEBUG
-    printf("mozce_rewind called\n");
+    mozce_printf("mozce_rewind called\n");
 #endif
 
     fseek(inStream, 0, SEEK_SET);
@@ -59,7 +61,7 @@ MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 {
 #ifdef DEBUG
-    printf("mozce_fdopen called\n");
+    mozce_printf("mozce_fdopen called\n");
 #endif
 
     FILE* retval = NULL;
@@ -82,7 +84,7 @@ MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 MOZCE_SHUNT_API void mozce_perror(const char* inString)
 {
 #ifdef DEBUG
-    printf("mozce_perror called\n");
+    mozce_printf("mozce_perror called\n");
 #endif
 
     fprintf(stderr, "%s", inString);
@@ -92,7 +94,7 @@ MOZCE_SHUNT_API void mozce_perror(const char* inString)
 MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 {
 #ifdef DEBUG
-    printf("mozce_remove called on %s\n", inPath);
+    mozce_printf("mozce_remove called on %s\n", inPath);
 #endif
 
     int retval = -1;
@@ -117,9 +119,38 @@ MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 {
 #ifdef DEBUG
-    printf("mozce_getcwd called.  NOT IMPLEMENTED!!\n");
+    mozce_printf("mozce_getcwd called.  NOT IMPLEMENTED!!\n");
 #endif
     return NULL;
+}
+
+MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
+{
+    int result;
+    char buffer[1024];
+    unsigned short wBuffer[1024];
+    
+    va_list argp;
+    va_start(argp, format);
+    
+
+    result = _snprintf(buffer, 1023, format, argp);
+    
+    if (result<=0)
+        return result;
+
+#ifdef USE_NC_LOGGING
+	nclograw(buffer, strlen(buffer));
+#endif
+
+    if(0 != a2w_buffer(buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(unsigned short)))
+    {
+        OutputDebugString(wBuffer);
+    }
+    
+    va_end(argp);
+    
+    return result;
 }
 
 #if 0

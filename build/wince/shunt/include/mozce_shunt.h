@@ -216,6 +216,11 @@
 #define getcwd      mozce_getcwd
 
 
+#ifdef printf
+#undef printf
+#endif
+#define printf mozce_printf
+
 
 // From stdlib.cpp
 #ifdef _fullpath
@@ -255,13 +260,16 @@
 #define strnicmp    _strnicmp
 
 
-
 // From string.cpp
 #ifdef strerror
 #undef strerror
 #endif
 #define strerror	mozce_strerror
 
+#ifdef wsprintfA
+#undef wsprintfA
+#endif
+#define wsprintfA mozce_wsprintfA
 
 // From time.cpp
 #ifdef strftime
@@ -1145,6 +1153,9 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_remove(const char* inPath);
 
   MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size);
+  
+  MOZCE_SHUNT_API int mozce_printf(const char *, ...);
+
 
   // From stdlib.cpp
   MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt);
@@ -1153,7 +1164,8 @@ extern "C" {
   
   // From string.cpp
   MOZCE_SHUNT_API char* mozce_strerror(int);
-  
+  MOZCE_SHUNT_API int mozce_wsprintfA(LPTSTR lpOut, LPCTSTR lpFmt, ... );
+
   // From time.cpp
   MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval);
   MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval);

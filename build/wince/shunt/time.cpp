@@ -55,7 +55,7 @@ static struct tm tmStorage;
 MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct tm *)
 {
 #ifdef DEBUG
-    printf("mozce_strftime called\n");
+    mozce_printf("mozce_strftime called\n");
 #endif
 
     return 0;
@@ -65,7 +65,7 @@ MOZCE_SHUNT_API size_t mozce_strftime(char *, size_t, const char *, const struct
 MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* outRetval)
 {
 #ifdef DEBUG
-    printf("tm* mozce_localtime_r called\n");
+    mozce_printf("tm* mozce_localtime_r called\n");
 #endif
 
     struct tm* retval = NULL;
@@ -114,7 +114,7 @@ MOZCE_SHUNT_API struct tm* mozce_localtime_r(const time_t* inTimeT,struct tm* ou
 MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
 {
 #ifdef DEBUG
-    printf("tm* mozce_localtime called\n");
+    mozce_printf("tm* mozce_localtime called\n");
 #endif
 
     return mozce_localtime_r(inTimeT, &tmStorage);
@@ -124,7 +124,7 @@ MOZCE_SHUNT_API struct tm* mozce_localtime(const time_t* inTimeT)
 MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outRetval)
 {
 #ifdef DEBUG
-    printf("tm* mozce_gmtime_r called\n");
+    mozce_printf("tm* mozce_gmtime_r called\n");
 #endif
 
     struct tm* retval = NULL;
@@ -173,7 +173,7 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime_r(const time_t* inTimeT, struct tm* outR
 MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
 {
 #ifdef DEBUG
-    printf("tm* mozce_gmtime called\n");
+    mozce_printf("tm* mozce_gmtime called\n");
 #endif
 
     return mozce_gmtime_r(inTimeT, &tmStorage);
@@ -183,7 +183,7 @@ MOZCE_SHUNT_API struct tm* mozce_gmtime(const time_t* inTimeT)
 MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
 {
 #ifdef DEBUG
-    printf("mozce_mktime called\n");
+    mozce_printf("mozce_mktime called\n");
 #endif
 
     time_t retval = (time_t)-1;
@@ -224,7 +224,7 @@ MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM)
 MOZCE_SHUNT_API time_t mozce_time(time_t* inStorage)
 {
 #ifdef DEBUG
-    printf("mozce_time called\n");
+    mozce_printf("mozce_time called\n");
 #endif
 
     time_t retval = 0;
@@ -243,7 +243,7 @@ MOZCE_SHUNT_API time_t mozce_time(time_t* inStorage)
 MOZCE_SHUNT_API char* mozce_ctime(const time_t* timer)
 {
 #ifdef DEBUG
-    printf("mozce_ctime called\n");
+    mozce_printf("mozce_ctime called\n");
 #endif
 
     char* retval = NULL;

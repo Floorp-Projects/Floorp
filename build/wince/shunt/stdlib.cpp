@@ -53,7 +53,7 @@ MOZCE_SHUNT_API char *mozce_fullpath(char *absPath, const char *relPath, size_t 
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("*mozce_fullpath called\n");
+    mozce_printf("*mozce_fullpath called\n");
 #endif
 #endif
     return 0;
@@ -63,7 +63,7 @@ MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* o
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_splitpath called\n");
+    mozce_printf("mozce_splitpath called\n");
 #endif
 #endif
     if(NULL != outDrive)
@@ -172,7 +172,7 @@ MOZCE_SHUNT_API void mozce_makepath(char* outPath, const char* inDrive, const ch
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_makepath called\n");
+    mozce_printf("mozce_makepath called\n");
 #endif
 #endif
     if(NULL != outPath)
@@ -200,7 +200,7 @@ MOZCE_SHUNT_API int mozce_strcmpi(const char *dest, const char *src)
 {
 #ifdef LOG_CALLS
 #ifdef DEBUG
-    printf("mozce_strcmpi called\n");
+    mozce_printf("mozce_strcmpi called\n");
 #endif
 #endif
     int f,l;

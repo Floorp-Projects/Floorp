@@ -49,7 +49,7 @@ extern "C" {
 MOZCE_SHUNT_API int mozce_chmod(const char* inFilename, int inMode)
 {
 #ifdef DEBUG
-    printf("mozce_chmod called\n");
+    mozce_printf("mozce_chmod called\n");
 #endif
     
     int retval = -1;
@@ -91,7 +91,7 @@ MOZCE_SHUNT_API int mozce_chmod(const char* inFilename, int inMode)
 MOZCE_SHUNT_API int mozce_isatty(int inHandle)
 {
 #ifdef DEBUG
-    printf("mozce_isatty called\n");
+    mozce_printf("mozce_isatty called\n");
 #endif
     
     int retval = 0;

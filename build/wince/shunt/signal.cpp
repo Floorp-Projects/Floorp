@@ -60,7 +60,7 @@ static void defaultSighandler(int inSignal)
 MOZCE_SHUNT_API int mozce_raise(int inSignal)
 {
 #ifdef DEBUG
-    printf("mozce_raise called\n");
+    mozce_printf("mozce_raise called\n");
 #endif
 
     void (*handler)(int inSignal) = defaultSighandler;
@@ -81,7 +81,7 @@ MOZCE_SHUNT_API int mozce_raise(int inSignal)
 MOZCE_SHUNT_API _sigsig mozce_signal(int inSignal, _sigsig inFunc)
 {
 #ifdef DEBUG
-    printf("mozce_signal called\n");
+    mozce_printf("mozce_signal called\n");
 #endif
 
     void (*retval)(int inSignal) = defaultSighandler;

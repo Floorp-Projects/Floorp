@@ -48,9 +48,18 @@ extern "C" {
 MOZCE_SHUNT_API char* mozce_strerror(int inErrno)
 {
 #ifdef DEBUG
-    printf("mozce_strerror called\n");
+    mozce_printf("mozce_strerror called\n");
 #endif
     return "Unknown Error";
+}
+
+
+MOZCE_SHUNT_API int mozce_wsprintfA(LPTSTR lpOut, LPCTSTR lpFmt, ... )
+{
+#ifdef DEBUG
+    mozce_printf("-- mozce_wsprintfA called\n");
+#endif
+    return 0;
 }
 
 #if 0
