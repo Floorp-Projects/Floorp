@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.88 2005/01/10 07:30:18 travis%sedsystems.ca Exp $ -->
+<!-- $Id: installation.xml,v 1.89 2005/01/10 07:57:54 travis%sedsystems.ca Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1305,16 +1305,6 @@ AddType text/xml .rdf</screen>
           </para>
         </section>
   
-      <section id="win32-perl">
-        <title>Win32 Perl</title>
-
-        <para>Perl for Windows can be obtained from <ulink
-        url="http://www.activestate.com/">ActiveState</ulink>. You should be
-        able to find a compiled binary at <ulink
-        url="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/"/>.
-        </para>
-      </section>
-
       <section id="win32-perl-modules">
         <title>Perl Modules on Win32</title>
 
