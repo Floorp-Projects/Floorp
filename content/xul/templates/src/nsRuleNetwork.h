@@ -808,11 +808,11 @@ public:
 /**
  * A collection of nodes in the rule network
  */
-class NodeSet
+class ReteNodeSet
 {
 public:
-    NodeSet();
-    ~NodeSet();
+    ReteNodeSet();
+    ~ReteNodeSet();
 
     nsresult Add(ReteNode* aNode);
     nsresult Clear();
@@ -960,7 +960,7 @@ public:
     nsresult RemoveAllChildren() { return mKids.Clear(); }
 
 protected:
-    NodeSet mKids;
+    ReteNodeSet mKids;
 };
 
 //----------------------------------------------------------------------
@@ -1170,7 +1170,7 @@ protected:
     /**
      * Other nodes in the network
      */
-    NodeSet mNodes;
+    ReteNodeSet mNodes;
 
     void Init();
     void Finish();
