@@ -1251,6 +1251,7 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
   styles.AppendElement((void*)spacing);
   //    4. rowgroup
   nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
+  // XXX: some decision needs to be made about row-spanning cell
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
@@ -1273,15 +1274,86 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
 
 void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
+#if 0
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 colCount = mCellMap->GetColCount();
-      if ((colCount-1)==aColIndex)
-      { // table is right neighbor
-      }
-      else
-      { // interior cell
-      }
+  PRInt32 numSegments = mBorderEdges[NS_SIDE_RIGHT].Count();
+  while (numSegments<=aRowIndex)
+  {
+    nsBorderEdge *borderToAdd = new nsBorderEdge();
+    mBorderEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
+    numSegments++;
+  }
+  // "border" is the border segment we are going to set
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
 
+  // collect all the incident frames and compute the dominant border 
+  nsVoidArray styles;
+  // styles are added to the array in the order least dominant -> most dominant
+  //    1. table, only if this cell is in the right-most column and no rowspanning cell is
+  //       to it's right.
+  PRBool useTable=PR_FALSE;
+  nsTableCellFrame *rightNeighborFrame=nsnull;
+  if ((colCount-1)==aColIndex)
+    useTable=PR_TRUE;
+  else
+  {
+    PRInt32 colIndex = aColIndex+1;
+    for ( ; colIndex<colCount; colIndex++)
+    {
+// XXX this is what I'm working on now
+		  CellData *cd = GetCellAt(aRowIndex, colIndex);
+		  if (cd != nsnull)
+		  { // there's really a cell at (aRowIndex, colIndex)
+			  if (nsnull==cd->mCell)
+			  { // the cell at (aRowIndex, colIndex) is the result of a span
+				  nsTableCellFrame *cell = cd->mRealCell->mCell;
+				  NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
+				  const PRInt32 realRowIndex = cell->GetRowIndex ();
+				  if (realRowIndex!=aRowIndex)
+				  { // the span is caused by a rowspan
+					  result = PR_TRUE;
+					  break;
+				  }
+			  }
+		  }
+
+
+      rightNeighborFrame = mCellMap->GetCellFrameAt(aRowIndex, colIndex);
+    }
+  }
+  const nsStyleSpacing *spacing;
+  GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+  styles.AppendElement((void*)spacing);
+  //    2. colgroup
+  nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
+  nsIFrame *colGroupFrame;
+  colFrame->GetContentParent(colGroupFrame);
+  colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+  styles.AppendElement((void*)spacing);
+  //    3. col
+  colFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+  styles.AppendElement((void*)spacing);
+  //    4. rowgroup
+  nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(aRowIndex, aColIndex);
+  // XXX: some decision needs to be made about row-spanning cell
+  if (nsnull!=cellFrame)
+  {
+    nsIFrame *rowFrame;
+    cellFrame->GetContentParent(rowFrame);
+    nsIFrame *rowGroupFrame;
+    rowFrame->GetContentParent(rowGroupFrame);
+    rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+    //    5. row
+    rowFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+    //    6. cell (need to do something smart for rowspanner with row frame)
+    cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+  }
+  ComputeCollapsedBorderSegment(NS_SIDE_RIGHT, &styles, *border);
+#endif
 }
 
 void nsTableFrame::ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
