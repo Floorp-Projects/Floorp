@@ -1,0 +1,288 @@
+From -
+From -
+From -
+Return-Path: <johng@netscape.com>
+Received: from judge.mcom.com ([205.217.237.53]) by dredd.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA3BF5
+          for <guha@dredd.mcom.com>; Tue, 3 Mar 1998 22:15:57 -0800
+Received: from netscape.com ([208.12.38.138]) by judge.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA1668
+          for <guha@netscape.com>; Tue, 3 Mar 1998 22:15:54 -0800
+Message-ID: <34FCF19A.6DD68867@netscape.com>
+Date: Tue, 03 Mar 1998 22:15:54 -0800
+From: johng@netscape.com (John Gable)
+Organization: Netscape Communication
+X-Mailer: Mozilla 4.04b9 [en] (Win95; I)
+X-Accept-Language: en
+MIME-Version: 1.0
+To: "guha@netscape.com" <guha@netscape.com>
+Subject: Better then flaky?
+Content-Type: multipart/mixed; boundary="------------42F73A432115F5CA91E4965C"
+X-Mozilla-Status: 0001
+Content-Length: 1109
+
+This is a multi-part message in MIME format.
+--------------42F73A432115F5CA91E4965C
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+
+<HTML>
+Guha,
+<P>Do you have a Aurora build better then Flaky?&nbsp; I'm showing some
+of this stuff to Clinton tomorrow at 11am, and it would be nice to
+have a build that works better by 10:30a (when I have a different meeting).
+<P>I'll be OK with Flaky if you don't have time, or if you can't just point
+me to it and let me take care of setting it up.
+<P>Thanks,
+<P>John</HTML>
+
+--------------42F73A432115F5CA91E4965C
+Content-Type: text/x-vcard; charset=us-ascii; name="vcard.vcf"
+Content-Transfer-Encoding: 7bit
+Content-Description: Card for John Gable
+Content-Disposition: attachment; filename="vcard.vcf"
+
+begin:          vcard
+fn:             John Gable
+n:              Gable;John
+org:            Netscape
+email;internet: Johng@netscape.com
+title:          Communicator Team/ Aurora
+x-mozilla-cpt:  ;0
+x-mozilla-html: TRUE
+version:        2.1
+end:            vcard
+
+
+--------------42F73A432115F5CA91E4965C--
+
+From -
+Return-Path: <list@glacier.mcom.com>
+Received: from glacier.mcom.com ([205.217.233.39]) by dredd.mcom.com
+          (Netscape Messaging Server 3.5)  with ESMTP id AAA9AB;
+          Wed, 18 Mar 1998 13:46:13 -0800
+Received: (from list@localhost) by glacier.mcom.com (8.7.3/8.7.3) id NAA04464; Wed, 18 Mar 1998 13:46:10 -0800 (PST)
+Resent-Date: Wed, 18 Mar 1998 13:46:10 -0800 (PST)
+Message-ID: <3510409D.33ADB2F@netscape.com>
+Date: Wed, 18 Mar 1998 13:46:06 -0800
+From: johng@netscape.com (John Gable)
+Organization: Netscape Communication
+X-Mailer: Mozilla 4.04 [en]C-NSCP  (Win95; U)
+MIME-Version: 1.0
+To: relatedlinks@netscape.com
+Subject: Cancel meeting today
+Content-Type: text/html; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Resent-Message-ID: <"acOC-2.0.i51.X244r"@glacier>
+Resent-From: relatedlinks@netscape.com
+X-Mailing-List: <relatedlinks@netscape.com> archive/latest/84
+X-Loop: relatedlinks@netscape.com
+Precedence: list
+Resent-Sender: relatedlinks-request@netscape.com
+X-Mozilla-Status: 0001
+Content-Length: 333
+
+<HTML>
+Gang,
+
+
+<P>John</HTML>
+
+From -
+X-Mozilla-Status: 0000
+Return-Path: <FareTracker@expedia.com>
+Received: from hemail.mcom.com ([198.93.92.25]) by dredd.mcom.com
+          (Netscape Messaging Server 3.52)  with ESMTP id AAA2024
+          for <guha@dredd.mcom.com>; Sat, 25 Jul 1998 03:16:19 -0700
+Received: from xwing.netscape.com (xwing.netscape.com [207.200.76.40])
+	by hemail.mcom.com (8.8.8/8.8.5) with ESMTP id DAA02578
+	for <guha@netscape.com>; Sat, 25 Jul 1998 03:16:17 -0700 (PDT)
+From: FareTracker@expedia.com
+Received: from UPIMSSMTPSYS09 (upimssmtpsys09.email.msn.com [207.68.152.46])
+	by xwing.netscape.com (8.8.5/8.8.5) with ESMTP id DAA28286
+	for <guha@netscape.com>; Sat, 25 Jul 1998 03:16:16 -0700 (PDT)
+Received: from [10.204.149.250] - 10.204.149.250 by email.msn.com with Microsoft SMTPSVC;
+	 Sat, 25 Jul 1998 02:13:35 -0700
+To: guha@netscape.com
+Subject: Expedia Fare Tracker Update
+Message-ID: <033bb3413091978UPIMSSMTPSYS09@email.msn.com>
+Date: 25 Jul 1998 02:13:35 -0700
+
+Dear Bonzle Boogledog,
+
+Here is your customized report listing the lowest roundtrip published
+airfares on the trips you requested.
+
+The fares listed in your personal Fare Tracker report do not reflect
+actual availability of seats on any specific flights, but rather the
+lowest fares the airlines have filed for the city pairs you have
+requested.  This service is intended to assist you in locating these
+low fares by providing you with the fare rules and parameters necessary
+to secure seats at these fares if available.
+
+Since airline restrictions apply to these fares, please be sure to
+read the footnotes below.
+
+***************************
+FARE TRACKER LOW FARES 
+
+
+1.	32.00 US Dollars
+	From:	San Francisco, CA, United States (SFO)
+	To:	San Jose, CA, United States (SJC)
+	On:	United Airlines
+	Rules:	Trip must occur on or after 27 Apr 98.
+		Other restrictions may apply.  
+
+	752.00 US Dollars
+	From:	San Francisco, CA, United States (SFO)
+	To:	San Jose, CA, United States (SJC)
+	On:	United Airlines
+	Rules:	Trip must occur on or after 26 Sep 97.
+		Other restrictions may apply.  
+
+	The information above shows the best airfares currently offered
+	on this route at the time of this mailing.  To find out more, and to view
+	up-to-date fares, please visit our site at:
+	http://expedia.msn.com/pub/ft.dll?qscr=airp&afr1=SFO&ato1=SJC
+	After you sign in, Expedia will show you complete details about
+	this fare, including rules and regulations.
+
+
+
+*******************
+IMPORTANT: Fares are typically for one adult, flying roundtrip
+between the selected airports.  Prices DO NOT INCLUDE taxes
+or fees (taxes and fees to international destinations may
+be higher).  Seats are subject to availability and other
+restrictions may apply.
+*******************
+
+To reserve or purchase a ticket, visit the Expedia
+Travel Agent at: http://expedia.com/
+
+You may cancel or change your Fare Tracker subscription at:
+http://expedia.msn.com/pub/ft.dll?qscr=subs&xerr=
+
+*******************
+ADVERTISER MESSAGE
+
+Spectacular dining, exciting nightlife, impeccable service, and visits
+to the most remarkable ports of call. These are just a few of the
+things you'll find on a fabulous cruise adventure. If you'd rather stay
+in one place, try a great package vacation to any of hundreds of
+fascinating places, including the Caribbean, Europe, Mexico, Hawaii,
+Orlando, Las Vegas, and many more. You decide where to go and we'll
+take care of all the details.
+
+For the world's best vacation packages and cruises at great prices
+visit the Cruise Outlet at http://www.expcruiseoutlet.com or the Vacation
+Outlet at http://www.expvacationoutlet.com. 
+
+*******************
+EXPEDIA PROMOTION
+
+France has never been more fun, and you can be part of it if you win 
+the City of Light, Speed of Sound sweepstakes cosponsored by Air France
+and Expedia.com. Winners will fly the supersonic Air France Concorde to
+Paris and stay seven nights at a luxurious Le Meridien hotel. Enter 
+between 14 July and 15 August by visiting Expedia.com at http://expedia.msn.com/promos/concorFrom -
+X-Mozilla-Status: 0000
+Return-Path: <scopus@netscape.com>
+Received: from netscape.com ([205.217.237.46]) by dredd.mcom.com
+          (Netscape Messaging Server 3.52)  with ESMTP id AAA13C8
+          for <guha@dredd.mcom.com>; Mon, 10 Aug 1998 12:25:47 -0700
+Received: from admitone.mcom.com (admitone.mcom.com [205.217.237.154])
+	by netscape.com (8.8.5/8.8.5) with ESMTP id MAA25187
+	for <guha@netscape.com>; Mon, 10 Aug 1998 12:25:47 -0700 (PDT)
+Received: (from scopus@localhost)
+	by admitone.mcom.com (8.8.5/8.8.5) id MAA10647
+	for guha@netscape.com; Mon, 10 Aug 1998 12:25:35 -0700 (PDT)
+Date: Mon, 10 Aug 1998 12:25:35 -0700 (PDT)
+From: Scopus Account <scopus@netscape.com>
+Message-Id: <199808101925.MAA10647@admitone.mcom.com>
+To: guha@netscape.com
+Subject: 312965  Defect ID(s) modified
+
+312965  Defect ID(s) modified
+=====================================
+
+
+======================================================================
+Defect ID: 312965 has been modified on 10-AUG-98 12:19:24 
+http://scopus/bugsplat/show_bug.cgi?id=312965 
+Reported by: glynn 
+Old Assigned To:  >> New Assigned to: guha
+Old Status:  >> New Status: REOPENED  
+Old Priority:  >> New Priority: P0 
+Old Severity:  >> New Severity: critical  
+Resolution: FIXED 
+
+Summary: lower case "netscape" fails DNS on Internet Keyword lookup 
+Description: Could be server, could be app..not sure yet
+Aug 6 4.06 builds
+PPC, NT 4.0, UNIX IRIX 6.3
+
+1.  Launch Communicator with direct connection set in proxies:prefs (default) 
+into a browser window.
+2.  Enter precisely "netscape" into the location field and hit return.
+
+•  DNS failure to find server alert will present itself.
+
+If keywords are off std DNS works fine on "netscape"....if on the problem 
+continues...only lower case "netscape" fails
+
+Wiping out pref files does not help/new profile does not help
+
+*******One clue...when I was routed through "ducky" at 8288 last night my NT 4.0 
+would work where ernie's NT 4.0 with direct connect failed...when I turned my 
+machine back to direct connect it failed...cannot check ducky right now because 
+it is out due to power outage.
+
+Summary:   Direct connect set in proxy prefs
+
+"netscape"  -  FAILS
+
+"Netscape" works
+"Netscape Communications" works
+"netscape communications" works
+
+
+------- Additional Comments From glynn  08/07/98 17:51 ------- 
+
+Steve Dagley investigating....has clue as to where in code problem 
+lies...talking to valeski....assign to sdagley...reassign as needed
+
+
+------- Additional Comments From sdagley  08/07/98 18:17 ------- 
+
+After looking at the code and discussing things with valeski and guha the problem 
+is understood and the fix simple.  Reassigning to guha since he'll be making the 
+fix on valeski's machine.
+
+
+------- Additional Comments From valeski  08/07/98 19:34 ------- 
+
+checked in fix 8/7/98 7:35pm into 4.06 tree
+
+------- Additional Comments From varada  08/09/98 15:16 ------- 
+
+I tried the builds on the 9th - on the win nt and win 98 ( there were no other 
+new builds on the unix platform ) and while netscape works - netscape.com and 
+http://netscape.com fails and Netscape.com and http://Netscape.com throws up 
+server not found - dns entry not there 
+
+------- Additional Comments From kenh  08/10/98 09:51 ------- 
+
+The failure to resolve netscape.com and http://netscape.com is independent of 
+the Keyword system. Both are fully qualified URLs (the first because Nav adds 
+the protocol), so they are resolved directly, but are not found because they are 
+not registered domains or aliases to www.netscape.com or home.netscape.com.
+
+------- Additional Comments From varada  08/10/98 12:08 ------- 
+
+This is more of a comment for future improvements rather than reopening the bug 
+- I tried the pages of microsoft,oracle,sun,intel,yahoo etc., etc.. and all of 
+them seem to have registered or made an alias of their "[company].com" - I think 
+it would make sense for us to also do so and not blame it on the existence or 
+non existence of the IK preferences - cuz the end
