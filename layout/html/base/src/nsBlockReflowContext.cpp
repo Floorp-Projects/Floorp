@@ -404,34 +404,32 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
             }
           }
           else if (eStyleUnit_Auto != rightUnit) {
-            PRBool mozCenter = PR_TRUE;/* XXX compatability-mode or ua.css hack */
-            PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
-            if (mozCenter && mIsTable) {
-              // When neither margin is auto then text-align applies
+            PRBool doCSS = PR_TRUE;
+            if (mIsTable) {
               const nsStyleText* styleText;
               mOuterReflowState.frame->GetStyleData(eStyleStruct_Text,
-                                            (const nsStyleStruct*&)styleText);
+                                           (const nsStyleStruct*&)styleText);
+              // This is a navigator compatability case: tables are
+              // affected by the text alignment of the containing
+              // block. CSS doesn't do this, so we use special
+              // text-align attribute values to signal these
+              // compatability cases.
               switch (styleText->mTextAlign) {
-                case NS_STYLE_TEXT_ALIGN_DEFAULT:
-                case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-                  if (NS_STYLE_DIRECTION_RTL == direction) {
-                    // When given a default alignment, and a right-to-left
-                    // direction, right align the frame.
-                    x += remainder;
-                  }
-                  break;
-                case NS_STYLE_TEXT_ALIGN_RIGHT:
+                case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
                   x += remainder;
+                  doCSS = PR_FALSE;
                   break;
-                case NS_STYLE_TEXT_ALIGN_CENTER:
+                case NS_STYLE_TEXT_ALIGN_MOZ_CENTER:
                   x += remainder / 2;
+                  doCSS = PR_FALSE;
                   break;
               }
             }
-            else {
+            if (doCSS) {
               // When neither margin is auto then the block is said to
               // be over constrained, Depending on the direction, choose
               // which margin to treat as auto.
+              PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
               if (NS_STYLE_DIRECTION_RTL == direction) {
                 // The left margin becomes auto
                 x += remainder;
