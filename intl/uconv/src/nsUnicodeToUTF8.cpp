@@ -42,31 +42,6 @@
 #include "nsUnicodeToUTF8.h"
 #include <string.h>
 
-NS_IMETHODIMP NS_NewUnicodeToUTF8(nsISupports* aOuter, 
-                                            const nsIID& aIID,
-                                            void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUnicodeToUTF8 * inst = new nsUnicodeToUTF8();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
-
 static const PRUint16 g_UTF8MappingTable[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
 };

@@ -42,6 +42,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsIPlatformCharset.h"
@@ -55,6 +56,12 @@
 #include "nsConverterInputStream.h"
 
 #include "nsUCvMinSupport.h"
+#include "nsCharsetConverterManager.h"
+#include "nsUnicodeDecodeHelper.h"
+#include "nsUnicodeEncodeHelper.h"
+#include "nsPlatformCharset.h"
+#include "nsCharsetAlias.h"
+#include "nsTextToSubURI.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsMacRomanToUnicode.h"
@@ -65,160 +72,135 @@
 #include "nsUnicodeToUTF8.h"
 #include "nsScriptableUConv.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
+NS_IMPL_NSUCONVERTERREGSELF
 
-/**
- * Extra information about charset converters that is stored in the
- * component registry.
- */
-struct ConverterInfo {
-  nsCID       mCID;
-  const char* mSource;
-  const char* mDestination;
-};
+NS_UCONV_REG_UNREG(nsISO88591ToUnicode, "ISO-8859-1", "Unicode", NS_ISO88591TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsCP1252ToUnicode, "windows-1252", "Unicode", NS_CP1252TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacRomanToUnicode, "x-mac-roman", "Unicode", NS_MACROMANTOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUTF8ToUnicode, "UTF-8", "Unicode", NS_UTF8TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToISO88591, "Unicode", "ISO-8859-1", NS_UNICODETOISO88591_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToCP1252, "Unicode", "windows-1252",  NS_UNICODETOCP1252_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacRoman, "Unicode", "x-mac-roman", NS_UNICODETOMACROMAN_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToUTF8, "Unicode", "UTF-8",  NS_UNICODETOUTF8_CID);
 
-static ConverterInfo gConverterInfo[] = {
-  { NS_ISO88591TOUNICODE_CID,  "ISO-8859-1",   "Unicode" },
-  { NS_CP1252TOUNICODE_CID,    "windows-1252", "Unicode" },
-  { NS_MACROMANTOUNICODE_CID,  "x-mac-roman",  "Unicode" },
-  { NS_UTF8TOUNICODE_CID,      "UTF-8",        "Unicode" },
-  { NS_UNICODETOISO88591_CID,  "Unicode",      "ISO-8859-1" },
-  { NS_UNICODETOCP1252_CID,    "Unicode",      "windows-1252" },
-  { NS_UNICODETOMACROMAN_CID,  "Unicode",      "x-mac-roman" },
-  { NS_UNICODETOUTF8_CID,      "Unicode",      "UTF-8" },
-};
-
-#define NUM_CONVERTERS (sizeof(gConverterInfo) / sizeof(gConverterInfo[0]))
-
-/**
- * Register the to/from information about a converter.
- */
-static NS_IMETHODIMP
-RegisterConverter(nsIComponentManager* aCompMgr,
-                  nsIFile* aPath,
-                  const char *aLocation,
-                  const char *aType,
-                  const nsModuleComponentInfo* aInfo)
-{
-  nsresult rv;
-
-  // Find the relevant information for the converter we're registering
-  const ConverterInfo* info = gConverterInfo;
-  const ConverterInfo* limit = gConverterInfo + NUM_CONVERTERS;
-  for ( ; info < limit; ++info) {
-    if (info->mCID.Equals(aInfo->mCID))
-      break;
-  }
-
-  if (info == limit) {
-    NS_ERROR("failed to find converter info");
-    return NS_OK; // so as not to completely kill component registration
-  }
-
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID);
-  if (! registry)
-    return NS_ERROR_FAILURE;
-
-  // Open the registry                                                          
-  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);                               
-  if (NS_FAILED(rv)) return rv;
-
-  // Register source and destination strings under the key
-  // ``software/netscape/intl/uconv/[cid]''.
-  static NS_NAMED_LITERAL_CSTRING(kConverterKeyPrefix, "software/netscape/intl/uconv/");
-  nsXPIDLCString cid;
-  cid.Adopt(info->mCID.ToString());
-
-  nsRegistryKey key;
-  rv = registry->AddSubtree(nsIRegistry::Common,
-                            PromiseFlatCString(kConverterKeyPrefix + cid).get(),
-                            &key);
-
-  if (NS_SUCCEEDED(rv)) {
-    registry->SetStringUTF8(key, "source", info->mSource);
-    registry->SetStringUTF8(key, "destination", info->mDestination);
-  }
-
-  return NS_OK;
-}
-
-/**
- * Unregister the extra converter information.
- */
-static NS_IMETHODIMP
-UnregisterConverter(nsIComponentManager* aCompMgr,
-                    nsIFile* aPath,
-                    const char* aRegistryLocation,
-                    const nsModuleComponentInfo* aInfo)
-{
-  // XXX TODO: remove converter key
-  return NS_OK;
-}
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeDecodeHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeEncodeHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO88591ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP1252ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacRomanToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO88591);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP1252);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacRoman);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF8);
 
-// The list of components we register
-static nsModuleComponentInfo gComponents[] = {
-  { "Charset Conversion Manager", NS_ICHARSETCONVERTERMANAGER_CID,
-    NS_CHARSETCONVERTERMANAGER_CONTRACTID, NS_NewCharsetConverterManager,
-    NS_RegisterConverterManagerData,
-    NS_UnregisterConverterManagerData },
+NS_IMETHODIMP
+nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
+                                nsIFile* aPath,
+                                const char *aLocation,
+                                const char *aType,
+                                const nsModuleComponentInfo* aInfo)
+{
+  return nsCharsetConverterManager::RegisterConverterManagerData();
+}
 
-  { "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
-    NS_UNICODEDECODEHELPER_CONTRACTID, NS_NewUnicodeDecodeHelper },
-
-  { "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
-    NS_UNICODEENCODEHELPER_CONTRACTID, NS_NewUnicodeEncodeHelper },
-  
-  { "Platform Charset Information", NS_PLATFORMCHARSET_CID,
-    NS_PLATFORMCHARSET_CONTRACTID, NS_NewPlatformCharset },
-
-  { "Charset Alias Information",  NS_CHARSETALIAS_CID,
-    NS_CHARSETALIAS_CONTRACTID, NS_NewCharsetAlias },
-
-  { "Text To Sub URI Helper", NS_TEXTTOSUBURI_CID,
-    NS_ITEXTTOSUBURI_CONTRACTID, NS_NewTextToSubURI },
-
-  { "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
-    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, nsScriptableUnicodeConverterConstructor },
-
-  { "Unicode converter input stream", NS_CONVERTERINPUTSTREAM_CID,
-    NS_CONVERTERINPUTSTREAM_CONTRACTID, nsConverterInputStreamConstructor },
-
-  // Converters
-  { "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID,
-    NS_ISO88591TOUNICODE_CONTRACTID, NS_NewISO88591ToUnicode,
-    RegisterConverter, UnregisterConverter },
-
-  { "windows-1252 To Unicode Converter", NS_CP1252TOUNICODE_CID,
-    NS_CP1252TOUNICODE_CONTRACTID, NS_NewCP1252ToUnicode,
-    RegisterConverter, UnregisterConverter },
-
-  { "x-mac-roman To Unicode Converter", NS_MACROMANTOUNICODE_CID,
-    NS_MACROMANTOUNICODE_CONTRACTID, NS_NewMacRomanToUnicode,
-    RegisterConverter, UnregisterConverter },
-
-  { "UTF-8 To Unicode Converter", NS_UTF8TOUNICODE_CID,
-    NS_UTF8TOUNICODE_CONTRACTID, NS_NewUTF8ToUnicode,
-    RegisterConverter, UnregisterConverter },
-
-  { "Unicode To ISO-8859-1 Converter", NS_UNICODETOISO88591_CID,
-    NS_UNICODETOISO88591_CONTRACTID, NS_NewUnicodeToISO88591,
-    RegisterConverter, UnregisterConverter },
-
-  { "Unicode To windows-1252 Converter", NS_UNICODETOCP1252_CID,
-    NS_UNICODETOCP1252_CONTRACTID, NS_NewUnicodeToCP1252,
-    RegisterConverter, UnregisterConverter },
-
-  { "Unicode To x-mac-roman Converter", NS_UNICODETOMACROMAN_CID,
-    NS_UNICODETOMACROMAN_CONTRACTID, NS_NewUnicodeToMacRoman,
-    RegisterConverter, UnregisterConverter },
-
-  { "Unicode To UTF-8 Converter", NS_UNICODETOUTF8_CID,
-    NS_UNICODETOUTF8_CONTRACTID, NS_NewUnicodeToUTF8,
-    RegisterConverter, UnregisterConverter },
+static nsModuleComponentInfo components[] = 
+{
+  { 
+    "Charset Conversion Manager", NS_ICHARSETCONVERTERMANAGER_CID,
+    NS_CHARSETCONVERTERMANAGER_CONTRACTID, 
+    nsCharsetConverterManagerConstructor,
+    nsConverterManagerDataRegister,
+  },
+  { 
+    "Unicode Decode Helper", NS_UNICODEDECODEHELPER_CID,
+    NS_UNICODEDECODEHELPER_CONTRACTID, 
+    nsUnicodeDecodeHelperConstructor 
+  },
+  { 
+    "Unicode Encode Helper", NS_UNICODEENCODEHELPER_CID,
+    NS_UNICODEENCODEHELPER_CONTRACTID, 
+    nsUnicodeEncodeHelperConstructor 
+  },
+  { 
+    "Platform Charset Information", NS_PLATFORMCHARSET_CID,
+    NS_PLATFORMCHARSET_CONTRACTID, 
+    nsPlatformCharsetConstructor
+  },
+  { 
+    "Charset Alias Information",  NS_CHARSETALIAS_CID,
+    NS_CHARSETALIAS_CONTRACTID, 
+    nsCharsetAlias2Constructor 
+  },
+  { 
+    "Text To Sub URI Helper", NS_TEXTTOSUBURI_CID,
+    NS_ITEXTTOSUBURI_CONTRACTID, 
+    nsTextToSubURIConstructor
+  },
+  { 
+    "Unicode Encoder / Decoder for Script", NS_ISCRIPTABLEUNICODECONVERTER_CID,
+    NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, 
+    nsScriptableUnicodeConverterConstructor
+  },
+  { "Unicode converter input stream", NS_CONVERTERINPUTSTREAM_CID,              
+    NS_CONVERTERINPUTSTREAM_CONTRACTID, 
+    nsConverterInputStreamConstructor 
+  },    
+  { 
+    "ISO-8859-1 To Unicode Converter", NS_ISO88591TOUNICODE_CID, 
+    NS_ISO88591TOUNICODE_CONTRACTID,
+    nsISO88591ToUnicodeConstructor,
+    nsISO88591ToUnicodeRegSelf, nsISO88591ToUnicodeUnRegSelf 
+  },
+  { 
+    "windows-1252 To Unicode Converter", NS_CP1252TOUNICODE_CID, 
+    NS_CP1252TOUNICODE_CONTRACTID,
+    nsCP1252ToUnicodeConstructor,
+    nsCP1252ToUnicodeRegSelf, nsCP1252ToUnicodeUnRegSelf 
+  },
+  { 
+    "x-mac-roman To Unicode Converter", NS_MACROMANTOUNICODE_CID,
+    NS_MACROMANTOUNICODE_CONTRACTID,
+    nsMacRomanToUnicodeConstructor,
+    nsMacRomanToUnicodeRegSelf, nsMacRomanToUnicodeUnRegSelf 
+  },
+  { 
+    "UTF-8 To Unicode Converter", NS_UTF8TOUNICODE_CID,
+    NS_UTF8TOUNICODE_CONTRACTID,
+    nsUTF8ToUnicodeConstructor,
+    nsUTF8ToUnicodeRegSelf, nsUTF8ToUnicodeUnRegSelf 
+  },
+  { 
+    "Unicode To ISO-8859-1 Converter", NS_UNICODETOISO88591_CID,
+    NS_UNICODETOISO88591_CONTRACTID,
+    nsUnicodeToISO88591Constructor, 
+    nsUnicodeToISO88591RegSelf, nsUnicodeToISO88591UnRegSelf
+  },
+  { 
+    "Unicode To windows-1252 Converter", NS_UNICODETOCP1252_CID,
+    NS_UNICODETOCP1252_CONTRACTID, 
+    nsUnicodeToCP1252Constructor, 
+    nsUnicodeToCP1252RegSelf, nsUnicodeToCP1252UnRegSelf
+  },
+  { 
+    "Unicode To x-mac-roman Converter", NS_UNICODETOMACROMAN_CID,
+    NS_UNICODETOMACROMAN_CONTRACTID, 
+    nsUnicodeToMacRomanConstructor, 
+    nsUnicodeToMacRomanRegSelf, nsUnicodeToMacRomanUnRegSelf
+  },
+  { 
+    "Unicode To UTF-8 Converter", NS_UNICODETOUTF8_CID,
+    NS_UNICODETOUTF8_CONTRACTID, 
+    nsUnicodeToUTF8Constructor, 
+    nsUnicodeToUTF8RegSelf, nsUnicodeToUTF8UnRegSelf
+  }
 };
 
-NS_IMPL_NSGETMODULE(nsUConvModule, gComponents)
+NS_IMPL_NSGETMODULE(nsUConvModule, components);
+

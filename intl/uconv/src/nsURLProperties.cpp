@@ -48,7 +48,7 @@ static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 nsIIOService*   nsURLProperties::gIOService = nsnull;
 nsrefcnt        nsURLProperties::gRefCnt = 0;
 
-nsURLProperties::nsURLProperties(nsString& aUrl)
+nsURLProperties::nsURLProperties(const nsAFlatString& aUrl)
 {
   mDelegate = nsnull; 
   nsresult res = NS_OK;
@@ -102,7 +102,7 @@ nsURLProperties::~nsURLProperties()
   }
 }
 
-NS_IMETHODIMP nsURLProperties::Get(const nsAString& aKey, nsAString& oValue)
+NS_IMETHODIMP nsURLProperties::Get(const nsAReadableString& aKey, nsAWritableString& oValue)
 {
   if(mDelegate)
      return mDelegate->GetStringProperty(aKey, oValue);

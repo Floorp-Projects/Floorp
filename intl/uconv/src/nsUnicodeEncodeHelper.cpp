@@ -43,50 +43,7 @@
 #include "nsUConvDll.h"
 #include "nsIMappingCache.h"
 #include "nsMappingCache.h"
-
-//----------------------------------------------------------------------
-// Class nsUnicodeEncodeHelper [declaration]
-
-/**
- * The actual implementation of the nsIUnicodeEncodeHelper interface.
- *
- * @created         22/Nov/1998
- * @author  Catalin Rotaru [CATA]
- */
-class nsUnicodeEncodeHelper : public nsIUnicodeEncodeHelper
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeEncodeHelper();
-
-  /**
-   * Class destructor.
-   */
-  virtual ~nsUnicodeEncodeHelper();
-
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeEncodeHelper [declaration]
-
-  NS_IMETHOD ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
-      char * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
-      uMappingTable  * aMappingTable);
-
-  NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
-      char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
-      uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
-
-  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
-
-  NS_IMETHOD DestroyCache(nsIMappingCache aCache);
- 
-  NS_IMETHOD FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable);
-  NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable);
-};
+#include "nsUnicodeEncodeHelper.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeEncodeHelper [implementation]
@@ -210,31 +167,4 @@ NS_IMETHODIMP nsUnicodeEncodeHelper::FillInfo(PRUint32 *aInfo, PRInt32 aTableCou
    for (PRInt32 i=0; i<aTableCount; i++) 
       uFillInfo((uTable*) aMappingTable[i], aInfo);
    return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewUnicodeEncodeHelper(nsISupports* aOuter, 
-                          const nsIID &aIID,
-                          void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUnicodeEncodeHelper* inst = new nsUnicodeEncodeHelper();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
 }

@@ -35,29 +35,63 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsCharsetConverterManager_h__
+#define nsCharsetConverterManager_h__
 
-#ifndef nsURLProperties_h__
-#define nsURLProperties_h__
+#include "nsISupports.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIStringBundle.h"
+#include "nsISupportsArray.h"
+#include "nsIRegistry.h"
 
-#include "nsIPersistentProperties2.h"
-#include "nsString.h"
-#include "nsIIOService.h"
+class nsCharsetConverterManager : public nsICharsetConverterManager, 
+public nsICharsetConverterManager2
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICHARSETCONVERTERMANAGER2
 
-class nsURLProperties {
 public:
-  nsURLProperties(const nsAFlatString& aUrl);
-  virtual ~nsURLProperties();
 
-  NS_IMETHOD DidLoad(PRBool&);
-  NS_IMETHOD Get( const nsAReadableString& aKey, nsAWritableString& value);
+  nsCharsetConverterManager();
+  virtual ~nsCharsetConverterManager();
+
+  NS_IMETHOD GetUnicodeEncoder(const nsString * aDest, 
+      nsIUnicodeEncoder ** aResult);
+  NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
+      nsIUnicodeDecoder ** aResult);
+  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult);
 
 private:
-  static nsIIOService*  gIOService;    // to speed up creating URLs
-  static nsrefcnt       gRefCnt;
 
-  nsIPersistentProperties *mDelegate;
+  nsIStringBundle * mDataBundle;
+  nsIStringBundle * mTitleBundle;
+
+  nsresult LoadExtensibleBundle(const char * aRegistryKey, 
+      nsIStringBundle ** aResult);
+
+  static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
+      const char * aRegistryPath);
+
+  static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
+      const char * aRegistryPath);
+
+  nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
+    const nsAFlatString& aProp, PRUnichar ** aResult);
+
+  nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
+    const nsAFlatString& aProp, nsIAtom ** aResult);      
+
+  nsresult GetRegistryEnumeration(const char * aRegistryKey, const char * aAddPrefix,
+    nsISupportsArray ** aArray);
+
+  nsresult GetRegistryEnumeration2(const char * aRegistryKey, PRBool aDecoder,
+    nsISupportsArray ** aArray);
+
+public:
+  static nsresult RegisterConverterManagerData();
 
 };
 
-#endif /* nsURLProperties_h__ */
+#endif // nsCharsetConverterManager_h__
+
 
