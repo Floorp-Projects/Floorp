@@ -143,6 +143,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
+#if 0
   int count = 0;
   while (XPeekEvent(XtDisplay(w), &xev))
   {
@@ -155,6 +156,7 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
        break;
      }
   }
+#endif
 
   widgetWindow->OnPaint(pevent);
 
@@ -517,7 +519,8 @@ extern XtAppContext gAppContext;
 
       if (! widgetWindow->GetResized()) {
         printf("Adding timeout for %d\n", widgetWindow);
-        XtAppAddTimeOut(gAppContext, 100, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
+        XSync(XtDisplay(w), 0);
+        XtAppAddTimeOut(gAppContext, 500, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
       }
 
       widgetWindow->SetResizeRect(rect);
@@ -612,4 +615,12 @@ void nsXtWidget_Refresh_Callback(XtPointer call_data)
     widgetWindow->SetBounds(bounds); 
     widgetWindow->OnResize(event);
     widgetWindow->SetResized(PR_FALSE);
+
+
+    nsPaintEvent pevent;
+    pevent.message = NS_PAINT;
+    pevent.widget = widgetWindow;
+    pevent.time = 0;
+    pevent.rect = (nsRect *)&bounds;
+    widgetWindow->OnPaint(pevent);
 }
