@@ -48,6 +48,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
+#ifndef SA_RESTART
+#define SA_RESTART 0
+#endif
 
 /*
  * Record whether or not we have the privilege to set the scheduling
