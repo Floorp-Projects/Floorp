@@ -1117,6 +1117,17 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
     return;
   }
 
+  // check if the size of the (deflated) rect is big enough to show the icon
+  // - if not, then just bail, leaving the border rect by itself
+  // NOTE: setting the clip (below) should be enough, but there is a bug in the Linux
+  //       rendering context that images are not clipped when a clip rect is set (bugzilla bug 78497)
+  //       and also this will be slightly more efficient since we will not try to render any icons
+  //       or ALT text into the rect.
+  if (inner.width < NSIntPixelsToTwips(ICON_SIZE, p2t) || 
+      inner.height < NSIntPixelsToTwips(ICON_SIZE, p2t)) {
+    return;
+  }
+
   // Clip so we don't render outside the inner rect
   PRBool clipState;
   aRenderingContext.PushState();
@@ -2095,6 +2106,8 @@ PRBool nsImageFrame::HandleIconLoads(imgIRequest* aRequest, PRBool aLoaded)
 
 void nsImageFrame::InvalidateIcon(nsIPresContext *aPresContext)
 {
+  // invalidate the inner area, where the icon lives
+
   NS_ASSERTION(aPresContext, "null presContext in InvalidateIcon");
   float   p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2105,6 +2118,7 @@ void nsImageFrame::InvalidateIcon(nsIPresContext *aPresContext)
               inner.y,
               NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t),
               NSIntPixelsToTwips(ICON_SIZE+ICON_PADDING, p2t));
+  NS_ASSERTION(!rect.IsEmpty(), "icon rect cannot be empty!");
   Invalidate(aPresContext, rect, PR_FALSE);
 }
 
