@@ -45,9 +45,7 @@ public:
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
   virtual ~nsDOMEvent();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   // nsIDOMEventInterface
   NS_IMETHOD    GetType(nsString& aType);
@@ -101,7 +99,6 @@ public:
 
 protected:
 
-  PRUint32 mRefCnt : 31;
   nsEvent *mEvent;
   nsIPresContext *mPresContext;
 

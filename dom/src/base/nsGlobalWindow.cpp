@@ -35,6 +35,10 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIDOMLoadListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIScriptEventListener.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBrowserWindow.h"
@@ -54,10 +58,10 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
+static NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMFORMLISTENER_IID);
+static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
+static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
@@ -263,6 +267,37 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
+{
+  *aOpener = nsnull;
+  NS_IF_ADDREF(*aOpener);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
+{
+  nsresult ret = NS_OK;
+  nsIWebShell *mParentWebShell;
+  mWebShell->GetParent(mParentWebShell);
+
+  if (nsnull != mParentWebShell) {
+    nsIScriptContextOwner *mParentContextOwner;
+    if (NS_OK == mParentWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)mParentContextOwner)) {
+      nsIScriptGlobalObject *mParentGlobalObject;
+      if (NS_OK == mParentContextOwner->GetScriptGlobalObject(&mParentGlobalObject)) {
+        ret = mParentGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aParent);
+        NS_RELEASE(mParentGlobalObject);
+      }
+      NS_RELEASE(mParentContextOwner);
+    }
+    NS_RELEASE(mParentWebShell);
+  }
+  return ret;
+}
+
 NS_IMETHODIMP    
 GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 {
@@ -278,11 +313,84 @@ GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
+GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 {
-  *aOpener = nsnull;
-  NS_IF_ADDREF(*aOpener);
+  nsresult ret = NS_OK;
+  nsIWebShell *mRootWebShell;
+  mWebShell->GetRootWebShell(mRootWebShell);
 
+  if (nsnull != mRootWebShell) {
+    nsIScriptContextOwner *mRootContextOwner;
+    if (NS_OK == mRootWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)mRootContextOwner)) {
+      nsIScriptGlobalObject *mRootGlobalObject;
+      if (NS_OK == mRootContextOwner->GetScriptGlobalObject(&mRootGlobalObject)) {
+        ret = mRootGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aTop);
+        NS_RELEASE(mRootGlobalObject);
+      }
+      NS_RELEASE(mRootContextOwner);
+    }
+    NS_RELEASE(mRootWebShell);
+  }
+  return ret;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetClosed(PRBool* aClosed)
+{
+  if (nsnull == mDocument) {
+    *aClosed = PR_TRUE;
+  }
+  else {
+    *aClosed = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetStatus(nsString& aStatus)
+{
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->GetStatus(aStatus);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetStatus(const nsString& aStatus)
+{
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->SetStatus(aStatus);
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetDefaultStatus(nsString& aDefaultStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetName(nsString& aName)
+{
+  mWebShell->GetName(aName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetName(const nsString& aName)
+{
+  mWebShell->SetName(aName);
   return NS_OK;
 }
 
@@ -950,9 +1058,84 @@ GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
   return ret;
 }
 
-PRBool    
+PRBool
+GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName)
+{
+  nsIEventListenerManager *mManager = nsnull;
+
+  if (aPropName == "onmousedown" || aPropName == "onmouseup" || aPropName ==  "onclick" ||
+     aPropName == "onmouseover" || aPropName == "onmouseout") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onkeydown" || aPropName == "onkeyup" || aPropName == "onkeypress") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onmousemove") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onfocus" || aPropName == "onblur") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFocusListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onsubmit" || aPropName == "onreset") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onload" || aPropName == "onunload" || aPropName == "onabort" ||
+           aPropName == "onerror") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  NS_IF_RELEASE(mManager);
+
+  return PR_TRUE;
+}
+
+PRBool
 GlobalWindowImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
+    nsString mPropName;
+    nsAutoString mPrefix;
+    mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    mPrefix.SetString(mPropName, 2);
+    if (mPrefix == "on") {
+      return CheckForEventListener(aContext, mPropName);
+    }
+  }
   return PR_TRUE;
 }
 
@@ -997,73 +1180,16 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
   return PR_TRUE;
 }
 
-PRBool    
+PRBool
 GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
-    nsAutoString mPropName, mPrefix;
-    mPropName.SetString(JS_GetStringBytes(JS_ValueToString(aContext, aID)));
+    nsString mPropName;
+    nsAutoString mPrefix;
+    mPropName.SetString(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     mPrefix.SetString(mPropName, 2);
     if (mPrefix == "on") {
-      nsIEventListenerManager *mManager = nsnull;
-
-      if (mPropName == "onmousedown" || mPropName == "onmouseup" || mPropName ==  "onclick" ||
-         mPropName == "onmouseover" || mPropName == "onmouseout") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (mPropName == "onmousemove") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (mPropName == "onfocus" || mPropName == "onblur") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFocusListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (mPropName == "onsubmit" || mPropName == "onreset") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      else if (mPropName == "onload" || mPropName == "onunload" || mPropName == "onabort" ||
-               mPropName == "onerror") {
-        if (NS_OK == GetListenerManager(&mManager)) {
-          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
-            NS_RELEASE(mManager);
-            return PR_FALSE;
-          }
-        }
-      }
-      NS_IF_RELEASE(mManager);
+      return CheckForEventListener(aContext, mPropName);
     }
   }
   else if (JSVAL_IS_STRING(aID) && 

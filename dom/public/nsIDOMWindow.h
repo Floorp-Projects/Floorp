@@ -46,6 +46,21 @@ public:
 
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener)=0;
 
+  NS_IMETHOD    GetParent(nsIDOMWindow** aParent)=0;
+
+  NS_IMETHOD    GetTop(nsIDOMWindow** aTop)=0;
+
+  NS_IMETHOD    GetClosed(PRBool* aClosed)=0;
+
+  NS_IMETHOD    GetStatus(nsString& aStatus)=0;
+  NS_IMETHOD    SetStatus(const nsString& aStatus)=0;
+
+  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus)=0;
+  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus)=0;
+
+  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    SetName(const nsString& aName)=0;
+
   NS_IMETHOD    Dump(const nsString& aStr)=0;
 
   NS_IMETHOD    Alert(const nsString& aStr)=0;
@@ -68,6 +83,15 @@ public:
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);  \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
+  NS_IMETHOD    GetParent(nsIDOMWindow** aParent);  \
+  NS_IMETHOD    GetTop(nsIDOMWindow** aTop);  \
+  NS_IMETHOD    GetClosed(PRBool* aClosed);  \
+  NS_IMETHOD    GetStatus(nsString& aStatus);  \
+  NS_IMETHOD    SetStatus(const nsString& aStatus);  \
+  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus);  \
+  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
   NS_IMETHOD    Dump(const nsString& aStr);  \
   NS_IMETHOD    Alert(const nsString& aStr);  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);  \
@@ -84,6 +108,15 @@ public:
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to##GetDocument(aDocument); } \
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator) { return _to##GetNavigator(aNavigator); } \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to##GetOpener(aOpener); } \
+  NS_IMETHOD    GetParent(nsIDOMWindow** aParent) { return _to##GetParent(aParent); } \
+  NS_IMETHOD    GetTop(nsIDOMWindow** aTop) { return _to##GetTop(aTop); } \
+  NS_IMETHOD    GetClosed(PRBool* aClosed) { return _to##GetClosed(aClosed); } \
+  NS_IMETHOD    GetStatus(nsString& aStatus) { return _to##GetStatus(aStatus); } \
+  NS_IMETHOD    SetStatus(const nsString& aStatus) { return _to##SetStatus(aStatus); } \
+  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus) { return _to##GetDefaultStatus(aDefaultStatus); } \
+  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus) { return _to##SetDefaultStatus(aDefaultStatus); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
   NS_IMETHOD    Dump(const nsString& aStr) { return _to##Dump(aStr); }  \
   NS_IMETHOD    Alert(const nsString& aStr) { return _to##Alert(aStr); }  \
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID) { return _to##ClearTimeout(aTimerID); }  \
