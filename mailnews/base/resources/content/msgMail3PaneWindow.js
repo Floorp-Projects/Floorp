@@ -523,6 +523,12 @@ function loadStartFolder(initialUri)
 
                 startFolderResource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
             }
+            else
+            {
+                // set the startFolderResource to the server, so we select it
+                // so we'll get account central
+                startFolderResource = RDF.GetResource(defaultServer.serverURI);
+            }
         }
 
         var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIFolder);
@@ -561,32 +567,6 @@ function loadStartFolder(initialUri)
     {
         MsgGetMessagesForAllServers(defaultServer);
     }
-}
-
-function OpenTwistyForServer(folderOutliner, server)
-{
-    var folderIndex = GetFolderIndexForServerURI(folderOutliner, server.serverURI);
-
-    if (folderIndex >= 0)
-    {
-        var isContainerOpen = folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex);
-        if (!isContainerOpen)
-            folderOutliner.outlinerBoxObject.view.toggleOpenState(folderIndex);
-    }
-}
-
-
-function GetFolderIndexForServerURI(folderOutliner, serverURI)
-{
-    var folderResource = RDF.GetResource(serverURI);
-    var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
-    if (isServer == "true")
-    {
-        var folderIndex = GetFolderIndex(folderOutliner, folderResource);
-        return folderIndex;
-     }
-    else
-        return -1;
 }
 
 function TriggerGetMessages(server)
@@ -631,16 +611,13 @@ function OnFolderUnreadColAttrModified(event)
     if (event.attrName == "hidden")
     {
         var folderNameCell = document.getElementById("folderNameCell");
-        var folderNameCol = document.getElementById("folderNameCol");
         if (event.newValue == "true")
         {
             folderNameCell.setAttribute("label", "?folderTreeName");
-            folderNameCol.setAttribute("sort", "?folderTreeNameSort");
         }
         else if (event.attrChange == Components.interfaces.nsIDOMMutationEvent.REMOVAL)
         {
             folderNameCell.setAttribute("label", "?folderTreeSimpleName");
-            folderNameCol.setAttribute("sort", "?folderTreeSimpleNameSort");
         }
     }
 }
@@ -652,9 +629,7 @@ function OnLoadFolderPane()
     if (!hidden)
     {
         var folderNameCell = document.getElementById("folderNameCell");
-        var folderNameCol = document.getElementById("folderNameCol");
         folderNameCell.setAttribute("label", "?folderTreeSimpleName");
-        folderNameCol.setAttribute("sort", "?folderTreeSimpleNameSort");
     }
     folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
 
@@ -1023,6 +998,12 @@ function EnsureAllAncestorsAreExpanded(outliner, resource)
     // get the parent of the desired folder, and then try to get
     // the index of the parent in the outliner
     var folder = resource.QueryInterface(Components.interfaces.nsIFolder);
+    
+    // if this is a server, there are no ancestors, so stop.
+    var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+    if (msgFolder.isServer)
+      return;
+
     var parentFolderResource = RDF.GetResource(folder.parent.URI);
     var folderIndex = GetFolderIndex(outliner, parentFolderResource);
 

@@ -113,8 +113,8 @@ protected:
                             nsIRDFNode **target);
   nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
   nsresult createFolderOpenNode(nsIMsgFolder *folder,nsIRDFNode **target);
-  nsresult createFolderTreeNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
-  nsresult createFolderTreeSimpleNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
+  nsresult createFolderTreeNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderTreeSimpleNameNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderServerTypeNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
@@ -177,8 +177,6 @@ protected:
 
 	nsresult CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name);
 	nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
-	nsresult GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order);
-
 	nsresult CreateArcsOutEnumerator();
 
 	nsresult OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item,
@@ -200,7 +198,6 @@ protected:
   static nsIRDFResource* kNC_FolderTreeSimpleName;
   static nsIRDFResource* kNC_NameSort;
   static nsIRDFResource* kNC_FolderTreeNameSort;
-  static nsIRDFResource* kNC_FolderTreeSimpleNameSort;
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
   static nsIRDFResource* kNC_SpecialFolder;

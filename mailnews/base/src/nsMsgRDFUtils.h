@@ -101,7 +101,6 @@ typedef struct _nsMsgRDFNotification {
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
 #define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"
-#define NC_RDF_FOLDERTREESIMPLENAME_SORT		NC_NAMESPACE_URI "FolderTreeSimpleName?sort=true"
 
 //Folder Commands
 #define NC_RDF_DELETE				NC_NAMESPACE_URI "Delete"

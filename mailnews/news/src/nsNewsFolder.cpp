@@ -254,6 +254,14 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   rv = newsFolder->SetCachedNewsrcLine(setStr);
   if (NS_FAILED(rv)) return rv;        
   
+  PRUint32 numExistingGroups;
+  rv = Count(&numExistingGroups);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // add 1000 to prevent this problem:  1,10,11,2,3,4,5
+  rv = folder->SetSortOrder(numExistingGroups + 1000);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
   //convert to an nsISupports before appending
   nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(folder));
   if(folderSupports)
@@ -1822,4 +1830,17 @@ NS_IMETHODIMP nsMsgNewsFolder::GetMessageIdForKey(nsMsgKey key, char **result)
   if (!hdr) return NS_ERROR_INVALID_ARG;
 
   return hdr->GetMessageId(result);
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::SetSortOrder(PRInt32 order)
+{
+  mSortOrder = order;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgNewsFolder::GetSortOrder(PRInt32 *order)
+{
+  NS_ENSURE_ARG_POINTER(order);
+  *order = mSortOrder;
+  return NS_OK;
 }

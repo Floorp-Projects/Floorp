@@ -79,7 +79,6 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeName=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeSimpleName=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_NameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeNameSort=nsnull;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeSimpleNameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_IsDefaultServer=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_SupportsFilters=nsnull;
@@ -140,7 +139,6 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_FOLDERTREESIMPLENAME, &kNC_FolderTreeSimpleName);
       getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
       getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
-      getRDFService()->GetResource(NC_RDF_FOLDERTREESIMPLENAME_SORT, &kNC_FolderTreeSimpleNameSort);
       getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
       getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
       getRDFService()->GetResource(NC_RDF_SUPPORTSFILTERS, &kNC_SupportsFilters);
@@ -184,7 +182,6 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_FolderTreeSimpleName);
       NS_IF_RELEASE(kNC_NameSort);
       NS_IF_RELEASE(kNC_FolderTreeNameSort);
-      NS_IF_RELEASE(kNC_FolderTreeSimpleNameSort);
       NS_IF_RELEASE(kNC_PageTag);
       NS_IF_RELEASE(kNC_IsDefaultServer);
       NS_IF_RELEASE(kNC_SupportsFilters);
@@ -349,8 +346,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
   // handle sorting of servers
   else if ((property == kNC_NameSort) ||
-           (property == kNC_FolderTreeNameSort) || 
-           (property == kNC_FolderTreeSimpleNameSort)) {
+           (property == kNC_FolderTreeNameSort)) {
 
     // make sure we're handling a root folder that is a server
     nsCOMPtr<nsIMsgIncomingServer> server;
@@ -654,7 +650,6 @@ nsMsgAccountManagerDataSource::getAccountArcs(nsISupportsArray **aResult)
         mAccountArcsOut->AppendElement(kNC_FolderTreeSimpleName);
         mAccountArcsOut->AppendElement(kNC_NameSort);
         mAccountArcsOut->AppendElement(kNC_FolderTreeNameSort);
-        mAccountArcsOut->AppendElement(kNC_FolderTreeSimpleNameSort);
         mAccountArcsOut->AppendElement(kNC_PageTag);
     }
 
@@ -681,7 +676,6 @@ nsMsgAccountManagerDataSource::getAccountRootArcs(nsISupportsArray **aResult)
         mAccountRootArcsOut->AppendElement(kNC_FolderTreeSimpleName);
         mAccountRootArcsOut->AppendElement(kNC_NameSort);
         mAccountRootArcsOut->AppendElement(kNC_FolderTreeNameSort);
-        mAccountRootArcsOut->AppendElement(kNC_FolderTreeSimpleNameSort);
         mAccountRootArcsOut->AppendElement(kNC_PageTag);
     }
 

@@ -371,4 +371,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   attribute nsIMsgRetentionSettings retentionSettings;
   attribute nsIMsgDownloadSettings downloadSettings;
+
+  /**
+   * used for order in the folder pane, folder pickers, etc.
+   */
+  attribute long sortOrder;
 };

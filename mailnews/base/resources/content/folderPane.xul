@@ -58,9 +58,6 @@
                      predicate="http://home.netscape.com/NC-rdf#FolderTreeSimpleName"
                      object="?folderTreeSimpleName" />
             <binding subject="?member"
-                     predicate="http://home.netscape.com/NC-rdf#FolderTreeSimpleName?sort=true"
-                     object="?folderTreeSimpleNameSort" />
-            <binding subject="?member"
                      predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
                      object="?specialFolder" />
             <binding subject="?member"

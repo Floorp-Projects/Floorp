@@ -59,7 +59,6 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
-nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateFoldersOnServer = nsnull;
@@ -122,7 +121,6 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME,    &kNC_FolderTreeSimpleName);
     rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
     rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
-    rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME_SORT,    &kNC_FolderTreeSimpleNameSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     rdf->GetResource(NC_RDF_CANCREATEFOLDERSONSERVER, &kNC_CanCreateFoldersOnServer);
@@ -189,7 +187,6 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_FolderTreeSimpleName, refcnt);
 		NS_RELEASE2(kNC_NameSort, refcnt);
 		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
-		NS_RELEASE2(kNC_FolderTreeSimpleNameSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
 		NS_RELEASE2(kNC_CanCreateFoldersOnServer, refcnt);
@@ -965,17 +962,15 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
   if (kNC_NameSort == property)
     rv = createFolderNameNode(folder, target, PR_TRUE);
   else if(kNC_FolderTreeNameSort == property)
-    rv = createFolderTreeNameNode(folder, target, PR_TRUE);
-  else if(kNC_FolderTreeSimpleNameSort == property)
-    rv = createFolderTreeSimpleNameNode(folder, target, PR_TRUE);
+    rv = createFolderNameNode(folder, target, PR_TRUE);
   else if (kNC_Name == property)
     rv = createFolderNameNode(folder, target, PR_FALSE);
   else if(kNC_Open == property)
     rv = createFolderOpenNode(folder, target);
   else if (kNC_FolderTreeName == property)
-    rv = createFolderTreeNameNode(folder, target, PR_FALSE);
+    rv = createFolderTreeNameNode(folder, target);
   else if (kNC_FolderTreeSimpleName == property)
-    rv = createFolderTreeSimpleNameNode(folder, target, PR_FALSE);
+    rv = createFolderTreeSimpleNameNode(folder, target);
   else if ((kNC_SpecialFolder == property))
     rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
@@ -1028,60 +1023,47 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 }
 
 
-nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
-                                                     nsIRDFNode **target, PRBool sort)
+nsresult 
+nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
+                                            nsIRDFNode **target, PRBool sort)
 {
-
   nsXPIDLString name;
   nsresult rv = folder->GetName(getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
   nsAutoString nameString(name);
-	if(sort)
-	{
-		CreateNameSortString(folder, nameString);
-	}
-	createNode(nameString, target, getRDFService());
+
+  if(sort)
+    CreateNameSortString(folder, nameString);
+
+  createNode(nameString, target, getRDFService());
   return NS_OK;
 }
 
 
-nsresult nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
-                                                     nsIRDFNode **target, PRBool sort)
-{
-
-	nsXPIDLString name;
-	nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
-	if (NS_FAILED(rv)) return rv;
-	nsAutoString nameString(name);
-	if(sort)
-	{
-		CreateNameSortString(folder, nameString);
-	}
-	else
-	{
-		PRInt32 unreadMessages;
-
-		rv = folder->GetNumUnread(PR_FALSE, &unreadMessages);
-		if(NS_SUCCEEDED(rv)) 
-		{
-			CreateUnreadMessagesNameString(unreadMessages, nameString);	
-		}
-
-	}
-	createNode(nameString, target, getRDFService());
-  return NS_OK;
-}
-
-nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * folder, nsIRDFNode **target, PRBool sort)
+nsresult 
+nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
+                                                nsIRDFNode **target)
 {
   nsXPIDLString name;
   nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
   nsAutoString nameString(name);
-  if(sort)
-  {
-    CreateNameSortString(folder, nameString);
-  }
+  PRInt32 unreadMessages;
+
+  rv = folder->GetNumUnread(PR_FALSE, &unreadMessages);
+  if(NS_SUCCEEDED(rv)) 
+    CreateUnreadMessagesNameString(unreadMessages, nameString);	
+
+  createNode(nameString, target, getRDFService());
+  return NS_OK;
+}
+
+nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * folder, nsIRDFNode **target)
+{
+  nsXPIDLString name;
+  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+  if (NS_FAILED(rv)) return rv;
+  nsAutoString nameString(name);
   createNode(nameString, target, getRDFService());
   return NS_OK;
 }
@@ -1089,13 +1071,14 @@ nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * fo
 nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name)
 {
 	PRInt32 order;
-	nsresult rv = GetFolderSortOrder(folder, &order);
-	if(NS_FAILED(rv))
-		return rv;
+	nsresult rv = folder->GetSortOrder(&order);
+        NS_ENSURE_SUCCESS(rv,rv);
 
 	nsAutoString orderString;
 	orderString.AppendInt(order);
 
+        // sort is insensitive to case
+        name.ToLowerCase();
 	name.Insert(orderString, 0);
 
 	return NS_OK;
@@ -2037,33 +2020,3 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 
 
 }
-
-
-nsresult nsMsgFolderDataSource::GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order)
-{
-	nsresult rv;
-
-  PRUint32 flags;
-  rv = folder->GetFlags(&flags);
-  if(NS_FAILED(rv)) return rv;
-  
-  
-  if(flags & MSG_FOLDER_FLAG_INBOX)
-    *order = 0;
-  else if(flags & MSG_FOLDER_FLAG_QUEUE)
-    *order = 1;
-  else if(flags & MSG_FOLDER_FLAG_DRAFTS)
-    *order = 2;
-  else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
-    *order = 3;
-  else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
-    *order = 4;
-  else if(flags & MSG_FOLDER_FLAG_TRASH)
-    *order = 5;
-  else
-    *order = 6;
-
-	return NS_OK;
-
-}
-

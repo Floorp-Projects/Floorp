@@ -2658,3 +2658,36 @@ NS_IMETHODIMP nsMsgFolder::NotifyCompactCompleted()
   NS_ASSERTION(PR_FALSE, "should be overridden by child class");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP nsMsgFolder::SetSortOrder(PRInt32 order)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetSortOrder(PRInt32 *order)
+{
+  NS_ENSURE_ARG_POINTER(order);
+
+  PRUint32 flags;
+  nsresult rv = GetFlags(&flags);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (flags & MSG_FOLDER_FLAG_INBOX)
+    *order = 0;
+  else if (flags & MSG_FOLDER_FLAG_QUEUE)
+    *order = 1;
+  else if (flags & MSG_FOLDER_FLAG_DRAFTS)
+    *order = 2;
+  else if (flags & MSG_FOLDER_FLAG_TEMPLATES)
+    *order = 3;
+  else if (flags & MSG_FOLDER_FLAG_SENTMAIL)
+    *order = 4;
+  else if (flags & MSG_FOLDER_FLAG_TRASH)
+    *order = 5;
+  else
+    *order = 6;
+
+  return NS_OK;
+}
+

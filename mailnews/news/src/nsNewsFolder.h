@@ -97,6 +97,9 @@ public:
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window);
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
+  NS_IMETHOD GetSortOrder(PRInt32 *order);
+  NS_IMETHOD SetSortOrder(PRInt32 order);
+
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
@@ -138,6 +141,7 @@ protected:
 
   // the name of the newsgroup.
   char    *mAsciiName;
+  PRInt32 mSortOrder;
 
 private:
     nsresult CreateNewsgroupUsernameUrlForSignon(const char *inUriStr, char **result);

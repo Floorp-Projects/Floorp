@@ -523,12 +523,8 @@ function OpenInboxForServer(server)
 {
     try {
         HideAccountCentral();
-        OpenTwistyForServer(server);
         var inboxFolder = GetInboxFolder(server);
-        var folderResource = RDF.GetResource(inboxFolder.URI)
-        var folderOutliner = GetFolderOutliner();
-        var folderIndex = GetFolderIndex(folderOutliner, folderResource);
-        ChangeSelection(folderOutliner, folderIndex);
+        SelectFolder(inboxFolder.URI);
 
         if(CheckOnline())
             GetMessagesForInboxOnServer(server);
