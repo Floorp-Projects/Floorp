@@ -235,6 +235,12 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
   if (NS_FAILED(rv)) return rv;
   
+  nsCOMPtr<nsIMsgNewsFolder> newsFolder(do_QueryInterface(res, &rv));
+  if (NS_FAILED(rv)) return rv;        
+  
+  // cache this for when we open the db
+  rv = newsFolder->SetReadSetFromStr(setStr);
+
   rv = folder->SetParent(this);
   NS_ENSURE_SUCCESS(rv,rv);
   
@@ -245,11 +251,6 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
   if (NS_FAILED(rv)) return rv;        
   
-  nsCOMPtr<nsIMsgNewsFolder> newsFolder(do_QueryInterface(res, &rv));
-  if (NS_FAILED(rv)) return rv;        
-  
-  // cache this for when we open the db
-  rv = newsFolder->SetReadSetFromStr(setStr);
   if (NS_FAILED(rv)) return rv;        
   
   PRUint32 numExistingGroups;
@@ -406,11 +407,10 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
       
       rv = db->SetReadSet(mReadSet);
       if (NS_FAILED(rv)) return rv;        
+      rv = UpdateSummaryTotals(PR_TRUE);
     }
     if (NS_FAILED(rv)) return rv;
     
-    rv = UpdateSummaryTotals(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
   }
   return NS_OK;
 }
@@ -575,25 +575,12 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
   rv = NS_MsgHashIfNecessary(hashedName);
   path += (const char *) hashedName;
   
-  rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
-  if (NS_SUCCEEDED(rv) && newsDBFactory) {
-    nsCOMPtr <nsIFileSpec> dbFileSpec;
-    NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-    rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, getter_AddRefs(newsDB));
-    if (NS_SUCCEEDED(rv) && newsDB) {
-      //Now let's create the actual new folder
-      rv = AddNewsgroup(newsgroupname, "", getter_AddRefs(child));
-      
-      rv = SetNewsrcHasChanged(PR_TRUE);
-      
-      newsDB->SetSummaryValid(PR_TRUE);
-      newsDB->Close(PR_TRUE);
-    }
-    else
-    {
-      rv = NS_MSG_CANT_CREATE_FOLDER;
-    }
-  }
+  //Now let's create the actual new folder
+  rv = AddNewsgroup(newsgroupname, "", getter_AddRefs(child));
+  
+  if (NS_SUCCEEDED(rv))
+    SetNewsrcHasChanged(PR_TRUE); // subscribe UI does this - but maybe we got here through auto-subscribe
+
   if(NS_SUCCEEDED(rv) && child)
   {
     nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
