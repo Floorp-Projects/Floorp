@@ -31,6 +31,16 @@ import mozLock;
 
 my $objdir = getcwd;
 
+# if there's a "--", everything after it goes into $defines.  We don't do
+# this with the remaining args in @ARGV after the getopts call because
+# old versions of Getopt::Std don't understand "--".
+my $ddindex = 0;
+foreach my $arg (@ARGV) {
+  ++$ddindex;
+  last if ($arg eq "--");
+}
+my $defines = @ARGV[ $ddindex .. $#ARGV ];
+
 getopts("d:s:f:avlD:o:p:xz:");
 
 my $baseFilesDir = ".";
@@ -107,11 +117,6 @@ if ($zipprog eq "") {
 my $force_os;
 if (defined($::opt_o)) {
     $force_os = $::opt_o;
-}
-
-my $defines = "";
-while (@ARGV) {
-    $defines = "$defines ".shift(@ARGV);
 }
 
 if ($verbose) {
