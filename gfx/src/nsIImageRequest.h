@@ -45,6 +45,8 @@ public:
   /**
    *  Returns the natural dimensions of the image.  Returns 0,0 
    *  if the dimensions are unknown.
+   *
+   *  Note: the dimensions that are returned are in pixels
    * 
    * @param aWidth, aHeight - pointers to integers to be filled in with
    *      the dimensions.

@@ -115,7 +115,7 @@ public:
    *                The string storage is static, so it must be copied if
    *                it is to be preserved after the call to the observer. 
    * kDimensions - aParam1 and aParam2 are the width and height respectively
-   *               of the image.
+   *               of the image in pixels.
    * kPixmapUpdate - aParame3 is a pointer to a nsRect struct containing the
    *                 rectangular area of pixels which has been modified by 
    *                 the image library.  This notification enables the 
