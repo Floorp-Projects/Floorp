@@ -452,7 +452,9 @@ public abstract class ScriptableObject implements Scriptable {
      *
      * <p>Any properties with the attribute DONTENUM are not listed. <p>
      *
-     * Properties accessed via an integer index will have a corresponding
+     * @return an array of java.lang.Objects with an entry for every
+     * listed property. Properties accessed via an integer index will 
+     * have a corresponding
      * Integer entry in the returned array. Properties accessed by
      * a String will have a String entry in the returned array.
      */
@@ -460,7 +462,17 @@ public abstract class ScriptableObject implements Scriptable {
         return getIds(false);
     }
     
-    // TODO: doc
+    /**
+     * Returns an array of ids for the properties of the object.
+     *
+     * <p>All properties, even those with attribute DONTENUM, are listed. <p>
+     *
+     * @return an array of java.lang.Objects with an entry for every
+     * listed property. Properties accessed via an integer index will 
+     * have a corresponding
+     * Integer entry in the returned array. Properties accessed by
+     * a String will have a String entry in the returned array.
+     */
     public Object[] getAllIds() {
         return getIds(true);
     }
@@ -675,6 +687,35 @@ public abstract class ScriptableObject implements Scriptable {
         defineClass(scope, clazz, false);
     }
     
+    /**
+     * Defines JavaScript objects from a Java class, optionally 
+     * allowing sealing.
+     *
+     * Similar to <code>defineClass(Scriptable scope, Class clazz)</code>
+     * except that sealing is allowed. An object that is sealed cannot have 
+     * properties added or removed. Note that sealing is not allowed in
+     * the current ECMA/ISO language specification, but is likely for
+     * the next version.
+     * 
+     * @param scope The scope in which to define the constructor
+     * @param clazz The Java class to use to define the JavaScript objects
+     *              and properties
+     * @param sealed whether or not to create sealed standard objects that
+     *               cannot be modified. 
+     * @exception IllegalAccessException if access is not available
+     *            to a reflected class member
+     * @exception InstantiationException if unable to instantiate
+     *            the named class
+     * @exception InvocationTargetException if an exception is thrown
+     *            during execution of methods of the named class
+     * @exception ClassDefinitionException if an appropriate
+     *            constructor cannot be found to create the prototypical
+     *            instance
+     * @exception PropertyException if getter and setter
+     *            methods do not conform to the requirements of the
+     *            defineProperty method
+     * @since 1.4R3
+     */
     public static void defineClass(Scriptable scope, Class clazz, 
                                    boolean sealed)
         throws IllegalAccessException, InstantiationException,
@@ -1167,6 +1208,8 @@ public abstract class ScriptableObject implements Scriptable {
      * 
      * A sealed object may not have properties added or removed. Once
      * an object is sealed it may not be unsealed.
+     * 
+     * @since 1.4R3
      */
     public void sealObject() {
         count = -1;
@@ -1177,6 +1220,9 @@ public abstract class ScriptableObject implements Scriptable {
      * 
      * It is an error to attempt to add or remove properties to 
      * a sealed object.
+     * 
+     * @return true if sealed, false otherwise.
+     * @since 1.4R3
      */
     public boolean isSealed() {
         return count == -1;
@@ -1184,9 +1230,8 @@ public abstract class ScriptableObject implements Scriptable {
         
     /**
      * Adds a property attribute to all properties.
-     * TODO: do we really need this, or should we just use getAllIds?
      */
-    public synchronized void addPropertyAttribute(int attribute) {
+    synchronized void addPropertyAttribute(int attribute) {
         if (slots == null)
             return;
         for (int i=0; i < slots.length; i++) {
