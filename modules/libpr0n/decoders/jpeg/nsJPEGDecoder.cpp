@@ -86,11 +86,12 @@ nsJPEGDecoder::nsJPEGDecoder()
 
   mSamples = nsnull;
   mSamples3 = nsnull;
+  mRGBPadRow = nsnull;
+  mRGBPadRowLength = 0;
 
   mBytesToSkip = 0;
   
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
-  mRGBPadRow = nsnull;
 
   mCompletedPasses = 0;
 
@@ -108,6 +109,8 @@ nsJPEGDecoder::~nsJPEGDecoder()
     PR_Free(mBuffer);
   if (mBackBuffer)
     PR_Free(mBackBuffer);
+  if (mRGBPadRow)
+    PR_Free(mRGBPadRow);
 }
 
 
@@ -298,28 +301,30 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      * jpeg_start_compress().
      */
     int row_stride;
-#ifdef XP_MAC
+
     if(mInfo.output_components == 1)
-      row_stride = mInfo.output_width * 1;
+      row_stride = mInfo.output_width;
     else
-      row_stride = mInfo.output_width * 4;
-#else
-    row_stride = mInfo.output_width * mInfo.output_components;
-#endif
+      row_stride = mInfo.output_width * 4; // use 4 instead of mInfo.output_components
+                                           // so we don't have to fuss with byte alignment.
+                                           // Mac wants 4 anyways.
+
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                            JPOOL_IMAGE,
                                            row_stride, 1);
-                                         
-    mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);                                  
-    memset(mRGBPadRow, 0, row_stride);
+
+#if defined(XP_PC) || defined(XP_MAC)
+    // allocate buffer to do byte flipping if needed
+    if (mInfo.output_components == 3) {
+      mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);
+      mRGBPadRowLength = row_stride;
+      memset(mRGBPadRow, 0, mRGBPadRowLength);
+    }
+#endif
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
-#ifdef XP_MAC
       row_stride = mInfo.output_width * 4;
-#else
-      row_stride = mInfo.output_width * 3;
-#endif
       mSamples3 = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                               JPOOL_IMAGE,
                                               row_stride, 1);
@@ -487,12 +492,10 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       } else {
         /* 24-bit color image */
 #ifdef XP_PC
-        memset(mRGBPadRow, 0, mInfo.output_width * mInfo.output_components);
+        memset(mRGBPadRow, 0, mInfo.output_width * 4);
         PRUint8 *ptrOutputBuf = mRGBPadRow;
 
         JSAMPLE *j1 = mSamples[0];
-        const JSAMPLE *j1end = j1 + (mInfo.output_width * mInfo.output_components);
-
         for (PRUint32 i=0;i<mInfo.output_width;++i) {
           ptrOutputBuf[2] = *j1++;
           ptrOutputBuf[1] = *j1++;
@@ -500,7 +503,7 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
           ptrOutputBuf += 3;
         }
 
-        samples = ptrOutputBuf;
+        samples = mRGBPadRow;
 #else
 #ifdef XP_MAC
         memset(mRGBPadRow, 0, mInfo.output_width * 4);

@@ -96,6 +96,7 @@ public:
   JSAMPARRAY mSamples;
   JSAMPARRAY mSamples3;
   PRUint8*   mRGBPadRow;
+  PRUint32   mRGBPadRowLength;
 
   PRInt32 mCompletedPasses;
   PRInt32 mPasses;
