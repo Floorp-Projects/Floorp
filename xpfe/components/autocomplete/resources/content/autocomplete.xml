@@ -355,8 +355,13 @@
 						break;
 
 					default:
-						me.needToAutocomplete = true;
-						me.autoCompleteTimer = setTimeout(me.privatefunc.callListener, me.timeout, me, 'startLookup');
+						/*We want to autocomplete only if the user is editing at the end of the text*/
+						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+						if (inputElement.selectionEnd >= inputElement.value.length)
+						{
+						  me.needToAutocomplete = true;
+						  me.autoCompleteTimer = setTimeout(me.privatefunc.callListener, me.timeout, me, 'startLookup');
+						}
 				}
 			},
 
