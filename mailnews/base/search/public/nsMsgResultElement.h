@@ -24,6 +24,8 @@
 #define __nsMsgResultElement_h
 
 #include "nsMsgSearchCore.h"
+#include "nsIMsgSearchAdapter.h"
+#include "nsMsgSearchArray.h"
 
 // nsMsgResultElement specifies a single search hit.
 
@@ -39,13 +41,13 @@ public:
 	virtual ~nsMsgResultElement ();
 
 	static nsresult AssignValues (nsMsgSearchValue *src, nsMsgSearchValue *dst);
-	nsresult GetValue (nsMsgSearchAttribute, nsMsgSearchValue **) const;
+	nsresult GetValue (nsMsgSearchAttribValue, nsMsgSearchValue **) const;
 	nsresult AddValue (nsMsgSearchValue*);
 
 	nsresult GetPrettyName (nsMsgSearchValue**);
 
 
-	const nsMsgSearchValue *GetValueRef (nsMsgSearchAttribute) const;
+	const nsMsgSearchValue *GetValueRef (nsMsgSearchAttribValue) const;
 	nsresult Open (void *window);
 
 	// added as part of the search as view capabilities...

@@ -86,56 +86,86 @@ nsMsgSearchValueImpl::SetStatus(PRUint32 aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetSize(PRUint32 *aResult)
 {
-    
+    *aResult = mValue.u.size;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetSize(PRUint32 aValue)
 {
-
+    mValue.u.size = aValue;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetMsgKey(nsMsgKey *aResult)
 {
-
+    *aResult = mValue.u.key;
+    return NS_OK;
 }
+
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetMsgKey(nsMsgKey aValue)
 {
-
+    mValue.u.key = aValue;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetAge(PRUint32 *aResult)
 {
-
+    *aResult = mValue.u.age;
+    return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetAge(PRUint32 aValue)
 {
-
+    mValue.u.age = aValue;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
 {
-
+    *aResult = mValue.u.folder;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetFolder(nsIMsgFolder* aValue)
 {
-
+    mValue.u.folder = aValue;
+    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetDate(PRTime *aResult)
 {
-
+    *aResult = mValue.u.date;
+    return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetDate(PRTime aValue)
 {
+    mValue.u.date = aValue;
+    return NS_OK;
+}
 
+
+NS_IMETHODIMP
+nsMsgSearchValueImpl::GetAttrib(nsMsgSearchAttribValue *aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    
+    *aResult = mValue.attribute;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchValueImpl::SetAttrib(nsMsgSearchAttribValue aValue)
+{
+    mValue.attribute = aValue;
+    return NS_OK;
 }
 

@@ -25,8 +25,10 @@
 #include "nsMsgUtils.h"
 #include "nsMsgBodyHandler.h"
 #include "nsMsgSearchTerm.h"
+#include "nsFileStream.h"
+#include "nsIFileStream.h"
 
-nsMsgBodyHandler::nsMsgBodyHandler (nsMsgSearchScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase * db)
+nsMsgBodyHandler::nsMsgBodyHandler (nsIMsgSearchScopeTerm * scope, PRUint32 offset, PRUint32 numLines, nsIMsgDBHdr* msg, nsIMsgDatabase * db)
 {
 	m_scope = scope;
 	m_localFileOffset = offset;
@@ -44,7 +46,7 @@ nsMsgBodyHandler::nsMsgBodyHandler (nsMsgSearchScopeTerm * scope, PRUint32 offse
 	OpenLocalFolder();	    
 }
 
-nsMsgBodyHandler::nsMsgBodyHandler(nsMsgSearchScopeTerm * scope,
+nsMsgBodyHandler::nsMsgBodyHandler(nsIMsgSearchScopeTerm * scope,
                                    PRUint32 offset, PRUint32 numLines,
                                    nsIMsgDBHdr* msg, nsIMsgDatabase* db,
                                    const char * headers, PRUint32 headersSize,
@@ -84,11 +86,7 @@ void nsMsgBodyHandler::Initialize()
 
 nsMsgBodyHandler::~nsMsgBodyHandler()
 {
-	if (m_scope->m_fileStream)
-	{
-		delete m_scope->m_fileStream;
-		m_scope->m_fileStream = NULL;
-	}
+    m_scope->SetFileStream(nsnull);
 }
 
 		
@@ -120,7 +118,12 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
 }
 void nsMsgBodyHandler::OpenLocalFolder()
 {
-	if (!m_scope->m_fileStream)
+    nsInputFileStream *stream=nsnull;
+    
+    nsCOMPtr<nsIInputStream> scopeFileStream;
+    nsresult rv = m_scope->GetFileStream(getter_AddRefs(scopeFileStream));
+
+	if (NS_FAILED(rv) || !scopeFileStream)
 	{
 		nsCOMPtr <nsIFileSpec> fileSpec;
 		nsresult rv = m_scope->GetMailPath(getter_AddRefs(fileSpec));
@@ -128,11 +131,17 @@ void nsMsgBodyHandler::OpenLocalFolder()
 		{
 			nsFileSpec path;
 			fileSpec->GetFileSpec(&path);
-			m_scope->m_fileStream = new nsInputFileStream(path);
+            stream = new nsInputFileStream(path);
+            scopeFileStream = stream->GetIStream();
+            m_scope->SetFileStream(scopeFileStream);
 		}
-	}
-	if (m_scope->m_fileStream)
-		m_scope->m_fileStream->seek(m_localFileOffset); 
+	} else {
+        stream = new nsInputFileStream(scopeFileStream);
+    }
+	if (stream) {
+        stream->seek(m_localFileOffset);
+        delete stream;
+    }
 }
 
 
@@ -181,10 +190,14 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 		if (m_passedHeaders)
 			m_numLocalLines--; // the line count is only for body lines
 		// do we need to check the return value here?
-		if (m_scope->m_fileStream->eof())
+        nsCOMPtr<nsIInputStream> inputStream;
+        m_scope->GetFileStream(getter_AddRefs(inputStream));
+
+        nsInputFileStream fileStream(inputStream);
+		if (fileStream.eof())
 			return -1;
 
-		if (m_scope->m_fileStream->readline(buf, bufSize))
+		if (fileStream.readline(buf, bufSize))
 			return nsCRT::strlen(buf);
 	}
 

@@ -23,6 +23,7 @@
 
 #include "nsIFileSpec.idl"
 #include "nsIInputStream.idl"
+#include "nsIMsgSearchSession.idl"
 
 interface nsIMsgFolder;
 
@@ -31,5 +32,6 @@ interface nsIMsgSearchScopeTerm : nsISupports {
   attribute nsIInputStream fileStream;
   readonly attribute nsIFileSpec mailPath;
   readonly attribute nsIMsgFolder folder;
+  readonly attribute nsIMsgSearchSession searchSession;
 };
 

@@ -27,6 +27,7 @@
 #include "nsIMsgSearchAdapter.h"
 #include "nsMsgSearchArray.h"
 
+class nsIMsgSearchScopeTerm;
 class nsINNTPHost;
 
 //-----------------------------------------------------------------------------
@@ -38,7 +39,7 @@ class nsINNTPHost;
 // the special smarts for that protocol.
 //-----------------------------------------------------------------------------
 
-inline PRBool IsStringAttribute (nsMsgSearchAttribute a)
+inline PRBool IsStringAttribute (nsMsgSearchAttribValue a)
 {
 	return ! (a == nsMsgSearchAttrib::Priority || a == nsMsgSearchAttrib::Date || 
 		a == nsMsgSearchAttrib::MsgStatus || a == nsMsgSearchAttrib::MessageKey ||
@@ -49,7 +50,7 @@ inline PRBool IsStringAttribute (nsMsgSearchAttribute a)
 class nsMsgSearchAdapter : public nsIMsgSearchAdapter
 {
 public:
-	nsMsgSearchAdapter (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
+	nsMsgSearchAdapter (nsIMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchAdapter ();
 
   NS_DECL_ISUPPORTS
@@ -64,7 +65,7 @@ public:
 //	NS_IMETHOD FindTargetFolder (const nsMsgResultElement*, nsIMsgFolder **aFolder);
 //	NS_IMETHOD Abort ();
 
-	nsMsgSearchScopeTerm		*m_scope;
+	nsIMsgSearchScopeTerm		*m_scope;
 	nsMsgSearchTermArray &m_searchTerms;
 
 	PRBool m_abortCalled;
@@ -214,7 +215,7 @@ protected:
 	nsresult InitLocalNewsTable(); 
 	nsresult InitNewsExTable (nsINNTPHost *host = nsnull);
 
-	void EnableLdapAttribute (nsMsgSearchAttribute, PRBool enabled = TRUE);
+	void EnableLdapAttribute (nsMsgSearchAttribValue, PRBool enabled = PR_TRUE);
 };
 
 extern nsMsgSearchValidityManager gValidityMgr;

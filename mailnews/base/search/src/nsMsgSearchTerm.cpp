@@ -26,6 +26,7 @@
 #include "nsMsgUtils.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgSearchTerm.h"
+#include "nsMsgSearchScopeTerm.h"
 #include "nsMsgBodyHandler.h"
 #include "nsMsgResultElement.h"
 #include "nsIMsgImapMailFolder.h"
@@ -43,7 +44,7 @@
 
 typedef struct
 {
-	nsMsgSearchAttribute	attrib;
+	nsMsgSearchAttribValue	attrib;
 	const char			*attribName;
 } nsMsgSearchAttribEntry;
 
@@ -106,7 +107,7 @@ nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
 
 typedef struct
 {
-	nsMsgSearchOperator	op;
+	nsMsgSearchOpValue  op;
 	const char			*opName;
 } nsMsgSearchOperatorEntry;
 
@@ -252,8 +253,8 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 #endif
 
 nsMsgSearchTerm::nsMsgSearchTerm (
-	nsMsgSearchAttribute attrib, 
-	nsMsgSearchOperator op, 
+	nsMsgSearchAttribValue attrib, 
+	nsMsgSearchOpValue op, 
 	nsMsgSearchValue *val,
 	nsMsgSearchBooleanOperator boolOp,
 	const char * arbitraryHeader) 
@@ -444,7 +445,8 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 }
 
 // find the operator code for this operator string.
-nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
+nsMsgSearchOpValue
+nsMsgSearchTerm::ParseOperator(char *inStream)
 {
 	PRInt16				operatorVal;
 	nsresult		err;
@@ -458,11 +460,12 @@ nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
 		*commaSep = '\0';
 
 	err = NS_MsgGetOperatorFromString(inStream, &operatorVal);
-	return (nsMsgSearchOperator) operatorVal;
+	return (nsMsgSearchOpValue) operatorVal;
 }
 
 // find the attribute code for this comma-delimited attribute. 
-nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
+nsMsgSearchAttribValue
+nsMsgSearchTerm::ParseAttribute(char *inStream)
 {
 	nsCAutoString			attributeStr;
 	PRInt16				attributeVal;
@@ -489,7 +492,7 @@ nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 		*separator = '\0';
 
 	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
-	nsMsgSearchAttribute attrib = (nsMsgSearchAttribute) attributeVal;
+	nsMsgSearchAttribValue attrib = (nsMsgSearchAttribValue) attributeVal;
 	
 	if (attrib == nsMsgSearchAttrib::OtherHeader)  // if we are dealing with an arbitrary header....
 		m_arbitraryHeader =  inStream;
@@ -576,7 +579,7 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
-nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
+nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
 														nsIMsgDBHdr *msg, nsIMsgDatabase* db, const char * headers, 
 														PRUint32 headersSize, PRBool ForFiltering, PRBool *pResult)
 {
@@ -653,7 +656,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRU
 	}
 }
 
-nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
+nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
 										   nsIMsgDBHdr *msg, nsIMsgDatabase* db, PRBool *pResult)
 {
 	if (!pResult)
@@ -1128,7 +1131,9 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 //-----------------------------------------------------------------------------
 // nsMsgSearchScopeTerm implementation
 //-----------------------------------------------------------------------------
-nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session, nsMsgSearchScopeAttribute attribute, nsIMsgFolder *folder)
+nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
+                                            nsMsgSearchScopeValue attribute,
+                                            nsIMsgFolder *folder)
 {
 	m_attribute = attribute;
 	m_folder = folder;
@@ -1145,6 +1150,44 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 
 nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
 {
+}
+
+NS_IMPL_ISUPPORTS1(nsMsgSearchScopeTerm, nsIMsgSearchScopeTerm)
+
+NS_IMETHODIMP
+nsMsgSearchScopeTerm::GetFileStream(nsIInputStream** aResult)
+{
+    *aResult = m_fileStream->GetIStream();
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchScopeTerm::SetFileStream(nsIInputStream *aStream)
+{
+    if (m_fileStream)
+        delete m_fileStream;
+    m_fileStream = new nsInputFileStream(aStream);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchScopeTerm::GetFolder(nsIMsgFolder **aResult)
+{
+    *aResult = m_folder;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    *aResult = m_searchSession;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
 }
 
 // ### purely temporary
@@ -1344,7 +1387,8 @@ nsresult nsMsgResultElement::AssignValues (nsMsgSearchValue *src, nsMsgSearchVal
 }
 
 
-nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribute attrib, nsMsgSearchValue **outValue) const
+nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribValue attrib,
+                                       nsMsgSearchValue **outValue) const
 {
 	nsresult err = NS_OK;
 	nsMsgSearchValue *value = NULL;
@@ -1387,7 +1431,8 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribute attrib, nsMsgSearchV
 }
 
 
-const nsMsgSearchValue *nsMsgResultElement::GetValueRef (nsMsgSearchAttribute attrib) const 
+const nsMsgSearchValue *
+nsMsgResultElement::GetValueRef (nsMsgSearchAttribValue attrib) const 
 {
 	nsMsgSearchValue *value =  NULL;
 	for (int i = 0; i < m_valueList.Count(); i++)

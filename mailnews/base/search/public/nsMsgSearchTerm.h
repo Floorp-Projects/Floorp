@@ -30,7 +30,7 @@
 // perhaps this should go in its own header file, if this class gets
 // its own cpp file, nsMsgSearchTerm.cpp
 #include "nsIMsgSearchSession.h"
-#include "nsMsgSearchScopeTerm.h"
+#include "nsIMsgSearchScopeTerm.h"
 
 #define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
 
@@ -41,7 +41,7 @@ public:
 #if 0
 	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsMsgSearchValue *, PRBool, char * arbitraryHeader); // the bool is true if AND, PR_FALSE if OR
 #endif
-	nsMsgSearchTerm (nsMsgSearchAttribute, nsMsgSearchOperator, nsMsgSearchValue *, nsMsgSearchBooleanOperator, const char * arbitraryHeader);
+	nsMsgSearchTerm (nsMsgSearchAttribValue, nsMsgSearchOpValue, nsMsgSearchValue *, nsMsgSearchBooleanOperator, const char * arbitraryHeader);
 
 	virtual ~nsMsgSearchTerm ();
 
@@ -49,9 +49,9 @@ public:
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 
+	nsresult MatchBody (nsIMsgSearchScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, 
 						nsIMsgDBHdr * msg, nsIMsgDatabase * db, PRBool *pResult);
-	nsresult MatchArbitraryHeader (nsMsgSearchScopeTerm *,
+	nsresult MatchArbitraryHeader (nsIMsgSearchScopeTerm *,
                                    PRUint32 offset,
                                    PRUint32 length,
                                    const char *charset,
@@ -85,16 +85,16 @@ public:
 
 	nsCOMPtr<nsIMsgHeaderParser> m_headerAddressParser;
 
-	nsMsgSearchAttribute m_attribute;
-	nsMsgSearchOperator m_operator;
+	nsMsgSearchAttribValue m_attribute;
+	nsMsgSearchOpValue m_operator;
 	nsMsgSearchValue m_value;
 	nsMsgSearchBooleanOperator m_booleanOp;  // boolean operator to be applied to this search term and the search term which precedes it.
 	nsCString m_arbitraryHeader;         // user specified string for the name of the arbitrary header to be used in the search
 									  // only has a value when m_attribute = attribOtherHeader!!!!
 protected:
 	nsresult		OutputValue(nsCString &outputStr);
-	nsMsgSearchAttribute ParseAttribute(char *inStream);
-	nsMsgSearchOperator	ParseOperator(char *inStream);
+	nsMsgSearchAttribValue ParseAttribute(char *inStream);
+	nsMsgSearchOpValue	ParseOperator(char *inStream);
 	nsresult		ParseValue(char *inStream);
 	nsresult		InitHeaderAddressParser();
 

@@ -483,7 +483,9 @@ void nsMsgSearchNews::ReportHit (nsIMsgDBHdr *pHeaders, const char *location)
 	    }
 	    if (!pValue)
 		    err = NS_ERROR_OUT_OF_MEMORY;
-	    m_scope->m_searchSession->AddResultElement (newResult);
+        nsCOMPtr<nsIMsgSearchSession> session;
+        m_scope->GetSearchSession(getter_AddRefs(session));
+        session->AddResultElement (newResult);
     }
 }
 

@@ -26,6 +26,7 @@
 #include "nsMsgSearchSession.h"
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
+#include "nsMsgSearchScopeTerm.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsXPIDLString.h"
@@ -55,7 +56,12 @@ nsMsgSearchSession::~nsMsgSearchSession()
 }
 
 /* [noscript] void AddSearchTerm (in nsMsgSearchAttribute attrib, in nsMsgSearchOperator op, in nsMsgSearchValue value, in boolean BooleanAND, in string arbitraryHeader); */
-NS_IMETHODIMP nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribute attrib, nsMsgSearchOperator op, nsMsgSearchValue * value, PRBool BooleanAND, const char *arbitraryHeader)
+NS_IMETHODIMP
+nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
+                                  nsMsgSearchOpValue op,
+                                  nsMsgSearchValue * value,
+                                  PRBool BooleanAND,
+                                  const char *arbitraryHeader)
 {
 	nsMsgSearchTerm *pTerm = new nsMsgSearchTerm (attrib, op, value, nsMsgSearchBooleanOp::BooleanAND, arbitraryHeader);
 	if (nsnull == pTerm)
@@ -73,7 +79,11 @@ NS_IMETHODIMP nsMsgSearchSession::GetNumSearchTerms(PRInt32 *aNumSearchTerms)
 }
 
 /* [noscript] void GetNthSearchTerm (in long whichTerm, in nsMsgSearchAttribute attrib, in nsMsgSearchOperator op, in nsMsgSearchValue value); */
-NS_IMETHODIMP nsMsgSearchSession::GetNthSearchTerm(PRInt32 whichTerm, nsMsgSearchAttribute attrib, nsMsgSearchOperator op, nsMsgSearchValue * value)
+NS_IMETHODIMP
+nsMsgSearchSession::GetNthSearchTerm(PRInt32 whichTerm,
+                                     nsMsgSearchAttribValue attrib,
+                                     nsMsgSearchOpValue op,
+                                     nsMsgSearchValue * value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -86,7 +96,10 @@ NS_IMETHODIMP nsMsgSearchSession::CountSearchScopes(PRInt32 *_retval)
 }
 
   /* void GetNthSearchScope (in long which, out nsMsgSearchScope scopeId, out nsIMsgFolder folder); */
-NS_IMETHODIMP nsMsgSearchSession::GetNthSearchScope(PRInt32 which, nsMsgSearchScopeAttribute *scopeId, nsIMsgFolder **folder)
+NS_IMETHODIMP
+nsMsgSearchSession::GetNthSearchScope(PRInt32 which,
+                                      nsMsgSearchScopeValue *scopeId,
+                                      nsIMsgFolder **folder)
 {
   // argh, does this do an addref?
 	nsMsgSearchScopeTerm *scopeTerm = m_scopeList.ElementAt(which);
@@ -97,7 +110,9 @@ NS_IMETHODIMP nsMsgSearchSession::GetNthSearchScope(PRInt32 which, nsMsgSearchSc
 }
 
 /* void AddScopeTerm (in nsMsgSearchScope attrib, in nsIMsgFolder folder); */
-NS_IMETHODIMP nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeAttribute attrib, nsIMsgFolder *folder)
+NS_IMETHODIMP
+nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue attrib,
+                                 nsIMsgFolder *folder)
 {
   if (attrib != nsMsgSearchScope::AllSearchableGroups)
 	{
@@ -196,20 +211,27 @@ NS_IMETHODIMP nsMsgSearchSession::AddLdapScope(nsMsgDIRServer * server)
 }
 
 /* [noscript] boolean ScopeUsesCustomHeaders (in nsMsgSearchScope scope, in voidStar selection, in boolean forFilters); */
-NS_IMETHODIMP nsMsgSearchSession::ScopeUsesCustomHeaders(nsMsgSearchScopeAttribute scope, void * selection, PRBool forFilters, PRBool *_retval)
+NS_IMETHODIMP
+nsMsgSearchSession::ScopeUsesCustomHeaders(nsMsgSearchScopeValue scope,
+                                           void * selection,
+                                           PRBool forFilters,
+                                           PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* boolean IsStringAttribute (in nsMsgSearchAttribute attrib); */
-NS_IMETHODIMP nsMsgSearchSession::IsStringAttribute(nsMsgSearchAttribute attrib, PRBool *_retval)
+NS_IMETHODIMP
+nsMsgSearchSession::IsStringAttribute(nsMsgSearchAttribValue attrib,
+                                      PRBool *_retval)
 {
   NS_ENSURE_ARG(_retval);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void AddAllScopes (in nsMsgSearchScope attrib); */
-NS_IMETHODIMP nsMsgSearchSession::AddAllScopes(nsMsgSearchScopeAttribute attrib)
+NS_IMETHODIMP
+nsMsgSearchSession::AddAllScopes(nsMsgSearchScopeValue attrib)
 {
   // don't think this is needed.
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -23,14 +23,13 @@
 
 #include "nsISupports.idl"
 #include "nsMsgSearchCore.idl"
+#include "nsIMsgSearchScopeTerm.idl"
 
 [ptr] native nsMsgSearchTermArray(nsMsgResultElement);
 [ptr] native nsMsgResultElement(nsMsgResultElement);
-[ptr] native nsMsgSearchScopeTerm(nsMsgSearchScopeTerm);
 
 %{C++
 class nsMsgResultElement;
-class nsMsgSearchScopeTerm; 
 %}
 
 [scriptable, uuid(66f4b80c-0fb5-11d3-a515-0060b0fc04b7)]

@@ -70,7 +70,7 @@ protected:
 	nsresult TimeSliceSerial (PRBool *aDone);
 	nsresult TimeSliceParallel ();
 
-	nsMsgSearchAttribute m_sortAttribute;
+	nsMsgSearchAttribValue m_sortAttribute;
 	PRBool m_descending;
 	// support for searching multiple scopes in parallel
 	PRBool m_parallel;

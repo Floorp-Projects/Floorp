@@ -77,7 +77,7 @@ NS_IMETHODIMP nsMsgSearchAdapter::OpenResultElement(nsMsgResultElement *)
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchAdapter, nsIMsgSearchAdapter)
 
-nsMsgSearchAdapter::nsMsgSearchAdapter(nsMsgSearchScopeTerm *scope, nsMsgSearchTermArray &searchTerms) 
+nsMsgSearchAdapter::nsMsgSearchAdapter(nsIMsgSearchScopeTerm *scope, nsMsgSearchTermArray &searchTerms) 
 	: m_searchTerms(searchTerms)
 {
   NS_INIT_ISUPPORTS();
@@ -305,6 +305,7 @@ char *nsMsgSearchAdapter::UnEscapeSearchUrl (const char *commandSpecificData)
 void
 nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset)
 {
+    nsresult rv;
 //  char *defaultCharset =   nsMsgI18NGetDefaultMailCharset();
   nsAutoString defaultCharset = nsMsgI18NGetDefaultMailCharset();
 	srcCharset = defaultCharset;
@@ -314,13 +315,16 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 	{
     // ### DMB is there a way to get the charset for the "window"?
 
+        nsCOMPtr<nsIMsgFolder> folder;
+        rv = m_scope->GetFolder(getter_AddRefs(folder));
+        
 		// Ask the newsgroup/folder for its csid.
-		if (m_scope->m_folder)
-    {
-      nsXPIDLString folderCharset;
-			m_scope->m_folder->GetCharset(getter_Copies(folderCharset));
-      dstCharset = folderCharset;
-    }
+		if (NS_SUCCEEDED(rv) && folder)
+        {
+            nsXPIDLString folderCharset;
+            folder->GetCharset(getter_Copies(folderCharset));
+            dstCharset = folderCharset;
+        }
 	}
 
 
@@ -333,7 +337,6 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 		dstCharset = srcCharset;
 
 	PRBool forceAscii = PR_FALSE;
-  nsresult rv;
 
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 

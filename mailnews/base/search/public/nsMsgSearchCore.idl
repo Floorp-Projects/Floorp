@@ -32,7 +32,7 @@ interface nsIMsgHeaderParser;
 interface nsIMsgDatabase;
 interface nsIMsgDBHdr;
 
-typedef long nsMsgSearchScopeAttribute;
+typedef long nsMsgSearchScopeValue;
 
 [scriptable, uuid(5fe70a74-304e-11d3-9be1-00a0c900d445)]
 interface nsMsgSearchScope {
@@ -43,7 +43,7 @@ interface nsMsgSearchScope {
     const long AllSearchableGroups = 4;
 };
 
-typedef long nsMsgSearchAttribute;
+typedef long nsMsgSearchAttribValue;
 
 [scriptable, uuid(68c8710a-304e-11d3-97bf-00a0c900d445)]
 interface nsMsgSearchAttrib {
@@ -116,7 +116,7 @@ interface nsMsgSearchAttrib {
  *     RULES.DAT stores enum values persistently
  */
 
-typedef long nsMsgSearchOperator;
+typedef long nsMsgSearchOpValue;
 
 [scriptable, uuid(82cc4518-304e-11d3-831d-00a0c900d445)]
 interface nsMsgSearchOp {
@@ -146,7 +146,7 @@ interface nsMsgSearchOp {
     const long kNumMsgSearchOperators  = 16;     /* must be last operator */
 };
 
-typedef long nsMsgSearchValueWidget;
+typedef long nsMsgSearchWidgetValue;
 
 /* FEs use this to help build the search dialog box */
 [scriptable,uuid(903dd2e8-304e-11d3-92e6-00a0c900d445)]
@@ -158,7 +158,7 @@ interface nsMsgSearchWidget {
     const long None = 4;
 };
 
-typedef long nsMsgSearchTypeVal;
+typedef long nsMsgSearchTypeValue;
 
 
 /* Used to specify type of search to be performed */
@@ -186,7 +186,7 @@ interface nsMsgSearchBooleanOp {
 %{C++
 typedef struct nsMsgSearchValue
 {
-    nsMsgSearchAttribute attribute;
+    nsMsgSearchAttribValue attribute;
     union
     {
         char *string;

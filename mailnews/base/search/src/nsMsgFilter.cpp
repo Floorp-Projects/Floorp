@@ -33,7 +33,9 @@
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
+#include "nsMsgSearchScopeTerm.h"
 #include "nsIMsgAccountManager.h"
+#include "nsMsgSearchValue.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -127,11 +129,13 @@ NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 }
 
 NS_IMETHODIMP nsMsgFilter::AddTerm(     
-	nsMsgSearchAttribute attrib,    /* attribute for this term                */
-	nsMsgSearchOperator op,         /* operator e.g. opContains               */
-	nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
-	PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operators */
-	const char * arbitraryHeader)       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
+	nsMsgSearchAttribValue attrib,    /* attribute for this term          */
+	nsMsgSearchOpValue op,         /* operator e.g. opContains           */
+	nsIMsgSearchValue *value,        /* value e.g. "Dogbert"               */
+	PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator.
+                                  PR_FALSE if OR is the boolean operators */
+	const char * arbitraryHeader)  /* arbitrary header specified by user.
+                                      ignored unless attrib = attribOtherHeader */
 {
 	return NS_OK;
 }
@@ -147,11 +151,13 @@ NS_IMETHODIMP nsMsgFilter::GetNumTerms(PRInt32 *aResult)
 
 
 NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex, 
-	nsMsgSearchAttribute *attrib,    /* attribute for this term                */
-	nsMsgSearchOperator *op,         /* operator e.g. opContains               */
-	nsMsgSearchValue *value,         /* value e.g. "Dogbert"                   */
-	PRBool *booleanAnd,				/* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operator */
-	char ** arbitraryHeader)        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
+	nsMsgSearchAttribValue *attrib,    /* attribute for this term          */
+	nsMsgSearchOpValue *op,         /* operator e.g. opContains           */
+	nsIMsgSearchValue **value,         /* value e.g. "Dogbert"               */
+	PRBool *booleanAnd,		 /* PR_TRUE if AND is the boolean operator.
+                                PR_FALSE if OR is the boolean operator */
+	char ** arbitraryHeader) /* arbitrary header specified by user.
+                                ignore unless attrib = attribOtherHeader */
 {
 	if (!attrib || !op || !value || !booleanAnd || !arbitraryHeader)
 		return NS_ERROR_NULL_POINTER;
@@ -161,7 +167,13 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	{
 		*attrib = term->m_attribute;
 		*op = term->m_operator;
-		*value = term->m_value;
+
+        // create the search value object
+        nsMsgSearchValueImpl *searchValue =
+            new nsMsgSearchValueImpl(&term->m_value);
+		*value = NS_STATIC_CAST(nsIMsgSearchValue*,searchValue);
+        NS_ADDREF(*value);
+        
 		*booleanAnd = term->m_booleanOp;
 		if (term->m_attribute == nsMsgSearchAttrib::OtherHeader)
 			*arbitraryHeader = PL_strdup(term->m_arbitraryHeader.GetBuffer());
@@ -169,13 +181,13 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetScope(nsMsgSearchScopeTerm *aResult)
+NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
 {
 	m_scope = aResult;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetScope(nsMsgSearchScopeTerm **aResult)
+NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
 {
 	if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
@@ -284,9 +296,11 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 									const char *headers, PRUint32 headersSize, PRBool *pResult)
 {
 
-	nsMsgSearchScopeTerm scope (nsnull, nsMsgSearchScope::MailFolder, folder);
+	nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::MailFolder, folder);
+    nsCOMPtr<nsIMsgSearchScopeTerm> scopeInterface = scope;
+
 	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
-                                                           &scope,
+                                                           scope,
                                                            db, 
                                                            headers,
                                                            headersSize,

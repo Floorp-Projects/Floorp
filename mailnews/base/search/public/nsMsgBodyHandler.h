@@ -2,7 +2,7 @@
 #ifndef __nsMsgBodyHandler_h
 #define __nsMsgBodyHandler_h
 
-#include "nsMsgSearchScopeTerm.h"
+#include "nsIMsgSearchScopeTerm.h"
 
 //---------------------------------------------------------------------------
 // MSG_BodyHandler: used to retrive lines from POP and IMAP offline messages.
@@ -11,7 +11,7 @@
 class nsMsgBodyHandler
 {
 public:
-	nsMsgBodyHandler (nsMsgSearchScopeTerm *,
+	nsMsgBodyHandler (nsIMsgSearchScopeTerm *,
                       PRUint32 offset,
                       PRUint32 length,
                       nsIMsgDBHdr * msg,
@@ -21,7 +21,7 @@ public:
     // filtering...we need the list of headers and the header size as well
 	// if we are doing filtering...if ForFilters is false, headers and
     // headersSize is ignored!!!
-	nsMsgBodyHandler (nsMsgSearchScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
+	nsMsgBodyHandler (nsIMsgSearchScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
 					 const char * headers /* NULL terminated list of headers */, PRUint32 headersSize, PRBool ForFilters);
 
 	virtual ~nsMsgBodyHandler();
@@ -51,7 +51,7 @@ protected:
     // goes through the mail folder 
 	PRInt32 GetNextLocalLine(char * buf, int bufSize);      
 
-	nsMsgSearchScopeTerm *m_scope;
+	nsIMsgSearchScopeTerm *m_scope;
 
 	// local file state
 //	XP_File	*m_localFile;

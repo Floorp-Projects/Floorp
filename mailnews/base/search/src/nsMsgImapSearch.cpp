@@ -131,7 +131,10 @@ nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         {
           nsXPIDLString folderName;
             pValue->attribute = nsMsgSearchAttrib::Location;
-            m_scope->m_folder->GetName(getter_Copies(folderName));
+            nsCOMPtr<nsIMsgFolder> folder;
+            err = m_scope->GetFolder(getter_AddRefs(folder));
+            if (NS_SUCCEEDED(err) && folder)
+              folder->GetName(getter_Copies(folderName));
            // pValue->u.wString = nsCRT::strdup((const PRUnichar *) folderName);
             newResult->AddValue (pValue);
         }
@@ -151,7 +154,11 @@ nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         }
         if (!pValue)
             err = NS_ERROR_OUT_OF_MEMORY;
-        m_scope->m_searchSession->AddResultElement (newResult);
+        nsCOMPtr<nsIMsgSearchSession> searchSession;
+        m_scope->GetSearchSession(getter_AddRefs(searchSession));
+        if (searchSession)
+          searchSession->AddResultElement(newResult);
+        //XXXX alecf do not checkin without fixing!        m_scope->m_searchSession->AddResultElement (newResult);
     }
     return err;
 }

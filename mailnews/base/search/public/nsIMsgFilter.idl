@@ -23,12 +23,8 @@
 
 #include "nsISupports.idl"
 #include "nsMsgFilterCore.idl"
-
-%{C++
-#include "nsMsgSearchScopeTerm.h"
-%}
-
-[ptr] native nsMsgSearchScopeTerm(nsMsgSearchScopeTerm);
+#include "nsIMsgSearchScopeTerm.idl"
+#include "nsIMsgSearchValue.idl"
 
 interface nsOutputStream;
 
@@ -38,21 +34,21 @@ interface nsIMsgFilter : nsISupports {
     attribute boolean enabled;
     attribute string filterName;
     attribute string filterDesc;
-    [noscript] void AddTerm(in nsMsgSearchAttribute attrib,
-                            in nsMsgSearchOperator op,
-                            in nsMsgSearchValue value,
-                            in boolean BooleanAND,
-                            in string arbitraryHeader);
+    void AddTerm(in nsMsgSearchAttribValue attrib,
+                 in nsMsgSearchOpValue op,
+                 in nsIMsgSearchValue value,
+                 in boolean BooleanAND,
+                 in string arbitraryHeader);
 
     readonly attribute long numTerms;
-    [noscript] void GetTerm(in long termIndex,
-                            out nsMsgSearchAttribute attrib,
-                            out nsMsgSearchOperator op,
-                            in nsMsgSearchValue value, // bad! using shared structure
-                            out boolean BooleanAND,
-                            out string arbitraryHeader);
+    void GetTerm(in long termIndex,
+                 out nsMsgSearchAttribValue attrib,
+                 out nsMsgSearchOpValue op,
+                 out nsIMsgSearchValue value, // bad! using shared structure
+                 out boolean BooleanAND,
+                 out string arbitraryHeader);
 
-    [noscript] attribute nsMsgSearchScopeTerm scope;
+    attribute nsIMsgSearchScopeTerm scope;
 
     [noscript] void SetAction(in nsMsgRuleActionType type, in voidStar value);
     [noscript] void GetAction(out nsMsgRuleActionType type, out voidStar value);

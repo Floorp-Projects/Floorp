@@ -25,6 +25,7 @@
 
 #include "nsMsgSearchCore.h"
 #include "nsMsgSearchArray.h"
+#include "nsMsgSearchScopeTerm.h"
 #include "nsIMsgSearchAdapter.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgSearchAdapter.h"
@@ -32,24 +33,26 @@
 #include "nsIMsgSearchSession.h"
 #include "nsCOMPtr.h"
 
-class nsMsgSearchScopeTerm 
+class nsMsgSearchScopeTerm : public nsIMsgSearchScopeTerm
 {
 public:
-	nsMsgSearchScopeTerm (nsIMsgSearchSession *, nsMsgSearchScopeAttribute, nsIMsgFolder *);
+	nsMsgSearchScopeTerm (nsIMsgSearchSession *, nsMsgSearchScopeValue, nsIMsgFolder *);
 	nsMsgSearchScopeTerm ();
 	virtual ~nsMsgSearchScopeTerm ();
 
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGSEARCHSCOPETERM
+    
 	PRBool IsOfflineNews();
 	PRBool IsOfflineMail ();
 	PRBool IsOfflineIMAPMail();  // added by mscott 
-	nsresult GetMailPath(nsIFileSpec **aFileSpec);
 	nsresult TimeSlice (PRBool *aDone);
 
 	nsresult InitializeAdapter (nsMsgSearchTermArray &termList);
 
 	char *GetStatusBarName ();
 
-	nsMsgSearchScopeAttribute m_attribute;
+	nsMsgSearchScopeValue m_attribute;
 	char *m_name;
 	nsCOMPtr <nsIMsgFolder> m_folder;
 	nsInputFileStream		*m_fileStream;

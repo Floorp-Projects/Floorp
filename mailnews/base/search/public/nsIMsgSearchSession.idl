@@ -35,8 +35,8 @@ interface nsMsgResultElement;
 interface nsIMsgSearchSession :  nsISupports {
 
     [noscript]
-    void AddSearchTerm(in nsMsgSearchAttribute attrib, /* attribute for this term */
-                       in nsMsgSearchOperator op,/* operator e.g. opContains */
+    void AddSearchTerm(in nsMsgSearchAttribValue attrib, /* attribute for this term */
+                       in nsMsgSearchOpValue op,/* operator e.g. opContains */
                        in nsMsgSearchValue value, /* value e.g. "Dogbert" */
                        in boolean BooleanAND, /* set to true if associated boolean operator is AND */
                        in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
@@ -45,16 +45,16 @@ interface nsIMsgSearchSession :  nsISupports {
 
     [noscript]
     void GetNthSearchTerm(in long whichTerm,
-                          in nsMsgSearchAttribute attrib,
-                          in nsMsgSearchOperator op,
+                          in nsMsgSearchAttribValue attrib,
+                          in nsMsgSearchOpValue op,
                           in nsMsgSearchValue value); // wrong, should be out
 
     long CountSearchScopes();
 
-    void GetNthSearchScope(in long which,out nsMsgSearchScopeAttribute scopeId, out nsIMsgFolder folder);
+    void GetNthSearchScope(in long which,out nsMsgSearchScopeValue scopeId, out nsIMsgFolder folder);
 
 	/* add a scope (e.g. a mail folder) to the search */
-    void AddScopeTerm(in nsMsgSearchScopeAttribute attrib,
+    void AddScopeTerm(in nsMsgSearchScopeValue attrib,
                       in nsIMsgFolder folder);
 
     /* special cases for LDAP since LDAP isn't really a folderInfo */
@@ -64,16 +64,16 @@ interface nsIMsgSearchSession :  nsISupports {
     /* Call this function everytime the scope changes! It informs the FE if 
        the current scope support custom header use. FEs should not display the
        custom header dialog if custom headers are not supported */
-    [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeAttribute scope,
+    [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeValue scope,
                                    /* could be a folder or server based on scope */
                                    in voidStar selection,
                                    in boolean forFilters);
 
     /* use this to determine if your attribute is a string attrib */
-    boolean IsStringAttribute(in nsMsgSearchAttribute attrib);
+    boolean IsStringAttribute(in nsMsgSearchAttribValue attrib);
 
     /* add all scopes of a given type to the search */
-    void AddAllScopes(in nsMsgSearchScopeAttribute attrib);
+    void AddAllScopes(in nsMsgSearchScopeValue attrib);
     
     void Search(in nsIMsgWindow aWindow);
     void InterruptSearch();
