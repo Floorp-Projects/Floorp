@@ -1293,6 +1293,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
         }
 
         if (NS_OK != rv) {
+            printf("DocLoaderFactory: Unable to create ContentViewer for content-type: %s\n", aContentType);
             goto done;
         }
 
