@@ -214,7 +214,7 @@ pref("font.scale.outline.min",      6);
 
 // below a certian pixel size anti-aliased bitmat scaled fonts 
 // produce poor results
-pref("font.scale.aa_bitmap.enable", true);
+pref("font.scale.aa_bitmap.enable", false);
 pref("font.scale.aa_bitmap.min", 6);
 pref("font.scale.aa_bitmap.undersize", 80);
 pref("font.scale.aa_bitmap.oversize", 120);
