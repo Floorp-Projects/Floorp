@@ -462,7 +462,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 
   if (*aRegion) // copy it, they should be using CopyClipRegion
   {
-    printf("you should be calling CopyClipRegion()\n");
+    // printf("you should be calling CopyClipRegion()\n");
     (*aRegion)->SetTo(*mClipRegion);
     rv = NS_OK;
   }
