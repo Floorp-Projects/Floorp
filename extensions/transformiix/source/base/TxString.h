@@ -177,6 +177,16 @@ public:
     /*
      * Return a reference to this string's nsString.
      */
+    operator nsAFlatString&();
+
+    /*
+     * Return a const reference to this string's nsString.
+     */
+    operator const nsAFlatString&() const;
+
+    /*
+     * Return a reference to this string's nsString.
+     */
     operator nsAString&();
 
     /*
