@@ -172,7 +172,7 @@ PRUint32 nsUInt32Array::Add(PRUint32 newElement)
 PRUint32 nsUInt32Array::Add(PRUint32 *elementPtr, PRUint32 numElements) 
 { 
 	if (SetSize(m_nSize + numElements))
-		nsCRT::memcpy(m_pData + m_nSize, elementPtr, numElements * sizeof(PRUint32)); 
+		nsCRT::memcpy(m_pData + m_nSize - numElements, elementPtr, numElements * sizeof(PRUint32)); 
 
 	return m_nSize; 
 } 
