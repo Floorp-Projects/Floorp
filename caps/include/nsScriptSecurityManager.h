@@ -61,6 +61,7 @@ class nsString;
 class nsIClassInfo;
 class nsIIOService;
 class nsIXPConnect;
+class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
 
@@ -410,7 +411,8 @@ private:
                          JSStackFrame** frameResult);
 
     static PRBool
-    CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal, PRBool *checkValue);
+    CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
+                       const char* aCapability, PRBool *checkValue);
 
     nsresult
     SavePrincipal(nsIPrincipal* aToSave);
@@ -478,8 +480,9 @@ private:
     static const char sXPCDefaultGrantAllName[];
 #endif
 
-    static nsIIOService* sIOService;
-    static nsIXPConnect* sXPConnect;
+    static nsIIOService    *sIOService;
+    static nsIXPConnect    *sXPConnect;
+    static nsIStringBundle *sStrBundle;
 };
 
 #endif // nsScriptSecurityManager_h__

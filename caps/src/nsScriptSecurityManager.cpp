@@ -82,8 +82,9 @@
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
-nsIIOService* nsScriptSecurityManager::sIOService = nsnull;
-nsIXPConnect* nsScriptSecurityManager::sXPConnect = nsnull;
+nsIIOService    *nsScriptSecurityManager::sIOService = nsnull;
+nsIXPConnect    *nsScriptSecurityManager::sXPConnect = nsnull;
+nsIStringBundle *nsScriptSecurityManager::sStrBundle = nsnull;
 
 ///////////////////////////
 // Convenience Functions //
@@ -756,24 +757,37 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
     if (NS_FAILED(rv)) //-- Security tests failed, access is denied, report error
     {
-        nsCAutoString errorMsg("Permission denied to ");
+        nsAutoString stringName;
         switch(aAction)
         {
         case nsIXPCSecurityManager::ACCESS_GET_PROPERTY:
-            errorMsg += "get property ";
+            stringName.Assign(NS_LITERAL_STRING("GetPropertyDenied"));
             break;
         case nsIXPCSecurityManager::ACCESS_SET_PROPERTY:
-            errorMsg += "set property ";
+            stringName.Assign(NS_LITERAL_STRING("SetPropertyDenied"));
             break;
         case nsIXPCSecurityManager::ACCESS_CALL_METHOD:
-            errorMsg += "call method ";
+            stringName.Assign(NS_LITERAL_STRING("CallMethodDenied"));
         }
-        errorMsg += classInfoData.GetName();
-        errorMsg += '.';
-        errorMsg.AppendWithConversion((PRUnichar*)JSValIDToString(cx, aProperty));
 
+        NS_ConvertUTF8toUTF16 className(classInfoData.GetName());
+        const PRUnichar *formatStrings[] =
+        {
+            className.get(),
+            JSValIDToString(cx, aProperty)
+        };
+
+        nsXPIDLString errorMsg;
+        rv = sStrBundle->FormatStringFromName(stringName.get(),
+                                              formatStrings,
+                                              NS_ARRAY_LENGTH(formatStrings),
+                                              getter_Copies(errorMsg));
+        NS_ENSURE_SUCCESS(rv, rv);
+ 
         JS_SetPendingException(cx,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(cx, errorMsg.get())));
+            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
+                NS_REINTERPRET_CAST(const jschar*, errorMsg.get()))));
+
         if (sXPConnect)
         {
             nsCOMPtr<nsIXPCNativeCallContext> xpcCallContext;
@@ -1272,23 +1286,12 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     return NS_OK;
 }
 
-#define PROPERTIES_URL "chrome://communicator/locale/security/caps.properties"
-
 nsresult
 nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
                                      nsIURI* aSource, nsIURI* aTarget)
 {
     nsresult rv;
     NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
-
-    // First, create the error message text
-    // create a bundle for the localization
-    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the source URL spec
     nsCAutoString sourceSpec;
@@ -1305,10 +1308,10 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
     NS_ConvertASCIItoUCS2 ucsSourceSpec(sourceSpec);
     NS_ConvertASCIItoUCS2 ucsTargetSpec(targetSpec);
     const PRUnichar *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
-    rv = bundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
-                                      formatStrings,
-                                      2,
-                                      getter_Copies(message));
+    rv = sStrBundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
+                                          formatStrings,
+                                          NS_ARRAY_LENGTH(formatStrings),
+                                          getter_Copies(message));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If a JS context was passed in, set a JS exception.
@@ -1997,7 +2000,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 
 PRBool
 nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrincipal,
-                                            PRBool *checkValue)
+                                            const char* aCapability, PRBool *checkValue)
 {
     nsresult rv;
     *checkValue = PR_FALSE;
@@ -2028,28 +2031,16 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
             return PR_FALSE;
     }
 
-    // create a bundle for the localization
-    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    nsCOMPtr<nsIStringBundle> bundle;
-    rv = bundleService->CreateBundle(PROPERTIES_URL, getter_AddRefs(bundle));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
     //-- Localize the dialog text
-    nsXPIDLString query, check, title;
-    rv = bundle->GetStringFromName(NS_LITERAL_STRING("EnableCapabilityQuery").get(),
-                                   getter_Copies(query));
+    nsXPIDLString check;
+    rv = sStrBundle->GetStringFromName(NS_LITERAL_STRING("CheckMessage").get(),
+                                       getter_Copies(check));
     if (NS_FAILED(rv))
         return PR_FALSE;
-    rv = bundle->GetStringFromName(NS_LITERAL_STRING("CheckMessage").get(),
-                                   getter_Copies(check));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-    rv = bundle->GetStringFromName(NS_LITERAL_STRING("Titleline").get(),
-                                   getter_Copies(title));
+
+    nsXPIDLString title;
+    rv = sStrBundle->GetStringFromName(NS_LITERAL_STRING("Titleline").get(),
+                                       getter_Copies(title));
     if (NS_FAILED(rv))
         return PR_FALSE;
 
@@ -2064,15 +2055,23 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     if (NS_FAILED(rv))
         return PR_FALSE;
 
-    PRUnichar* message = nsTextFormatter::smprintf(query.get(), val.get());
-    NS_ENSURE_TRUE(message, PR_FALSE);
+    NS_ConvertUTF8toUTF16 location(val.get());
+    NS_ConvertUTF8toUTF16 capability(aCapability);
+    const PRUnichar *formatStrings[] = { location.get(), capability.get() };
+
+    nsXPIDLString message;
+    rv = sStrBundle->FormatStringFromName(NS_LITERAL_STRING("EnableCapabilityQuery").get(),
+                                          formatStrings,
+                                          NS_ARRAY_LENGTH(formatStrings),
+                                          getter_Copies(message));
+    if (NS_FAILED(rv))
+        return PR_FALSE;
 
     PRInt32 buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
-    rv = prompter->ConfirmEx(title.get(), message,
+    rv = prompter->ConfirmEx(title.get(), message.get(),
                              (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                              (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
                              nsnull, nsnull, nsnull, check.get(), checkValue, &buttonPressed);
-    nsTextFormatter::smprintf_free(message);
 
     if (NS_FAILED(rv))
         *checkValue = PR_FALSE;
@@ -2090,7 +2089,7 @@ nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal,
         // Prompt user for permission to enable capability.
         JSContext* cx = GetCurrentJSContext();
         PRBool remember;
-        if (CheckConfirmDialog(cx, aPrincipal, &remember))
+        if (CheckConfirmDialog(cx, aPrincipal, capability, &remember))
             *canEnable = nsIPrincipal::ENABLE_GRANTED;
         else
             *canEnable = nsIPrincipal::ENABLE_DENIED;
@@ -2137,8 +2136,34 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
 
     if (canEnable != nsIPrincipal::ENABLE_GRANTED)
     {
-        static const char msg[] = "enablePrivilege not granted";
-        JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        nsXPIDLCString val;
+        PRBool hasCert;
+        nsresult rv;
+        principal->GetHasCertificate(&hasCert);
+        if (hasCert)
+            rv = principal->GetCommonName(getter_Copies(val));
+        else
+            rv = principal->GetOrigin(getter_Copies(val));
+
+        if (NS_FAILED(rv))
+            return rv;
+
+        NS_ConvertUTF8toUTF16 location(val.get());
+        NS_ConvertUTF8toUTF16 cap(capability);
+        const PRUnichar *formatStrings[] = { location.get(), cap.get() };
+
+        nsXPIDLString message;
+        rv = sStrBundle->FormatStringFromName(NS_LITERAL_STRING("EnableCapabilityDenied").get(),
+                                              formatStrings,
+                                              NS_ARRAY_LENGTH(formatStrings),
+                                              getter_Copies(message));
+        if (NS_FAILED(rv))
+            return rv;
+
+        JS_SetPendingException(cx,
+            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
+                NS_REINTERPRET_CAST(const jschar*, message.get()))));
+
         return NS_ERROR_FAILURE; // XXX better error code?
     }
     if (NS_FAILED(principal->EnableCapability(capability, &annotation)))
@@ -2261,7 +2286,8 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     nsCRT::free(iidStr);
 #endif
 // XXX Special case for nsIXPCException ?
-    if (ClassInfoData(aClassInfo, nsnull).IsDOMClass())
+    ClassInfoData objClassInfo = ClassInfoData(aClassInfo, nsnull);
+    if (objClassInfo.IsDOMClass())
     {
 #ifdef DEBUG_CAPS_CanCreateWrapper
         printf("DOM class - GRANTED.\n");
@@ -2282,19 +2308,21 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     if (NS_FAILED(rv))
     {
         //-- Access denied, report an error
-        nsCAutoString errorMsg("Permission denied to create wrapper for object ");
-        nsXPIDLCString className;
-        if (aClassInfo)
-        {
-            aClassInfo->GetClassDescription(getter_Copies(className));
-            if (className)
-            {
-                errorMsg += "of class ";
-                errorMsg += className;
-            }
-        }
+
+        NS_NAMED_LITERAL_STRING(strName, "CreateWrapperDenied");
+        NS_ConvertUTF8toUTF16 className(objClassInfo.GetName());
+        const PRUnichar* formatStrings[] = { className.get() };
+        nsXPIDLString errorMsg;
+        nsresult rv2 =
+            sStrBundle->FormatStringFromName(strName.get(),
+                                             formatStrings,
+                                             NS_ARRAY_LENGTH(formatStrings),
+                                             getter_Copies(errorMsg));
+        NS_ENSURE_SUCCESS(rv2, rv2);
+
         JS_SetPendingException(cx,
-                               STRING_TO_JSVAL(JS_NewStringCopyZ(cx, errorMsg.get())));
+            STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
+                NS_REINTERPRET_CAST(const jschar*, errorMsg.get()))));
 
 #ifdef DEBUG_CAPS_CanCreateWrapper
         printf("DENIED.\n");
@@ -2573,6 +2601,12 @@ nsresult nsScriptSecurityManager::Init()
     rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = bundleService->CreateBundle("chrome://communicator/locale/security/caps.properties", &sStrBundle);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     //-- Register security check callback in the JS engine
     //   Currently this is used to control access to function.caller
     nsCOMPtr<nsIJSRuntimeService> runtimeService =
@@ -2612,6 +2646,7 @@ nsScriptSecurityManager::Shutdown()
 
     NS_IF_RELEASE(sIOService);
     NS_IF_RELEASE(sXPConnect);
+    NS_IF_RELEASE(sStrBundle);
 }
 
 nsScriptSecurityManager *
