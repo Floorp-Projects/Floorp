@@ -233,35 +233,26 @@ JNI_GEN_DIR		= _jni
 JDK_STUB_DIR		= _stubs
 XPIDL_GEN_DIR		= _xpidlgen
 
-#
-# If this is an "official" build, try to build everything.
-# I.e., don't exit on errors.
-#
-ifdef BUILD_OFFICIAL
-EXIT_ON_ERROR		= +e
-CLICK_STOPWATCH		= date
-else
-EXIT_ON_ERROR		= -e
-CLICK_STOPWATCH		= true
+ifdef MOZ_UPDATE_XTERM
+UPDATE_TITLE = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-depth-path.sh)/$$d";
 endif
 
-ifdef MOZ_UPDATE_XTERM
-UPDATE_TITLE           = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-depth-path.sh)/$$d"
-else
-UPDATE_TITLE		= true
+ifdef BUILD_OFFICIAL
+# "Official" build only: Continue past errors.
+CONTINUE_ON_ERROR := set -e;
+EXIT_ON_ERROR := set +e;
+PRINT_TIMESTAMP := date;
 endif
 
 ifdef DIRS
-LOOP_OVER_DIRS		=					\
-	@for d in $(DIRS); do					\
-		$(UPDATE_TITLE);				\
-		set $(EXIT_ON_ERROR);				\
-		echo "cd $$d; $(MAKE) $@";			\
-		oldDir=`pwd`;					\
-		cd $$d; $(MAKE) $@; cd $$oldDir;		\
-		set +e;						\
-		$(CLICK_STOPWATCH);				\
-	done
+LOOP_OVER_DIRS = \
+    @for d in $(DIRS); do \
+        $(UPDATE_TITLE) \
+        $(CONTINUE_ON_ERROR) \
+        $(MAKE) -C $$d $@; \
+        $(EXIT_ON_ERROR) \
+        $(PRINT_TIMESTAMP) \
+    done
 endif
 
 #
