@@ -16,6 +16,6 @@ OBJS=                                          \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 install:: $(LIBRARY)
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
