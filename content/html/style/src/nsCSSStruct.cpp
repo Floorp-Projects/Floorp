@@ -937,6 +937,7 @@ public:
   NS_IMETHOD AppendStructValue(nsCSSProperty aProperty, void* aStruct);
   NS_IMETHOD SetValueImportant(nsCSSProperty aProperty);
   NS_IMETHOD AppendComment(const nsString& aComment);
+  NS_IMETHOD RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue);
 
   NS_IMETHOD GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
   NS_IMETHOD GetValue(nsCSSProperty aProperty, nsString& aValue);
@@ -961,6 +962,9 @@ public:
   NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsString& aReturn);
 
   NS_IMETHOD GetStyleImpact(PRInt32* aHint) const;
+
+protected:
+  nsresult RemoveProperty(nsCSSProperty aProperty);
 
 private:
   CSSDeclarationImpl& operator=(const CSSDeclarationImpl& aCopy);
@@ -1700,6 +1704,7 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
     case eCSSProperty_border_style:
     case eCSSProperty_border_width:
     case eCSSProperty__moz_border_radius:
+    case eCSSProperty__moz_outline_radius:
       NS_ERROR("can't append shorthand properties");
 //    default:  // XXX explicitly removing default case so compiler will help find missed props
     case eCSSProperty_UNKNOWN:
@@ -2445,6 +2450,7 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       case eCSSProperty_border_spacing:
         SetValueImportant(eCSSProperty_border_x_spacing);
         SetValueImportant(eCSSProperty_border_y_spacing);
+        break;
       case eCSSProperty_clip:
         SetValueImportant(eCSSProperty_clip_top);
         SetValueImportant(eCSSProperty_clip_right);
@@ -2550,6 +2556,698 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
       default:
         result = NS_ERROR_ILLEGAL_VALUE;
         break;
+    }
+  }
+  return result;
+}
+
+
+#define CSS_CHECK(data)              \
+  if (nsnull == m##data) {            \
+    result = NS_ERROR_NOT_AVAILABLE;  \
+  }                                   \
+  else
+
+#define CSS_CHECK_RECT(data)         \
+  if (nsnull == data) {               \
+    result = NS_ERROR_NOT_AVAILABLE;  \
+  }                                   \
+  else
+
+#define CSS_CHECK_DATA(data,type)    \
+  if (nsnull == data) {               \
+    result = NS_ERROR_NOT_AVAILABLE;  \
+  }                                   \
+  else
+
+
+nsresult
+CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty)
+{
+  nsresult result = NS_OK;
+
+  switch (aProperty) {
+    // nsCSSFont
+    case eCSSProperty_font_family:
+    case eCSSProperty_font_style:
+    case eCSSProperty_font_variant:
+    case eCSSProperty_font_weight:
+    case eCSSProperty_font_size:
+    case eCSSProperty_font_size_adjust:
+    case eCSSProperty_font_stretch:
+      CSS_CHECK(Font) {
+        switch (aProperty) {
+          case eCSSProperty_font_family:      mFont->mFamily.Reset();      break;
+          case eCSSProperty_font_style:       mFont->mStyle.Reset();       break;
+          case eCSSProperty_font_variant:     mFont->mVariant.Reset();     break;
+          case eCSSProperty_font_weight:      mFont->mWeight.Reset();      break;
+          case eCSSProperty_font_size:        mFont->mSize.Reset();        break;
+          case eCSSProperty_font_size_adjust: mFont->mSizeAdjust.Reset();  break;
+          case eCSSProperty_font_stretch:     mFont->mStretch.Reset();     break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    // nsCSSColor
+    case eCSSProperty_color:
+    case eCSSProperty_background_color:
+    case eCSSProperty_background_image:
+    case eCSSProperty_background_repeat:
+    case eCSSProperty_background_attachment:
+    case eCSSProperty_background_x_position:
+    case eCSSProperty_background_y_position:
+    case eCSSProperty_cursor:
+    case eCSSProperty_opacity:
+      CSS_CHECK(Color) {
+        switch (aProperty) {
+          case eCSSProperty_color:                  mColor->mColor.Reset();           break;
+          case eCSSProperty_background_color:       mColor->mBackColor.Reset();       break;
+          case eCSSProperty_background_image:       mColor->mBackImage.Reset();       break;
+          case eCSSProperty_background_repeat:      mColor->mBackRepeat.Reset();      break;
+          case eCSSProperty_background_attachment:  mColor->mBackAttachment.Reset();  break;
+          case eCSSProperty_background_x_position:  mColor->mBackPositionX.Reset();   break;
+          case eCSSProperty_background_y_position:  mColor->mBackPositionY.Reset();   break;
+          case eCSSProperty_cursor:
+            CSS_CHECK_DATA(mColor->mCursor, nsCSSValueList) {
+              mColor->mCursor->mValue.Reset();
+              CSS_IF_DELETE(mColor->mCursor->mNext);
+            }
+            break;
+          case eCSSProperty_opacity:                mColor->mOpacity.Reset();         break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    // nsCSSText
+    case eCSSProperty_word_spacing:
+    case eCSSProperty_letter_spacing:
+    case eCSSProperty_text_decoration:
+    case eCSSProperty_vertical_align:
+    case eCSSProperty_text_transform:
+    case eCSSProperty_text_align:
+    case eCSSProperty_text_indent:
+    case eCSSProperty_unicode_bidi:
+    case eCSSProperty_line_height:
+    case eCSSProperty_white_space:
+      CSS_CHECK(Text) {
+        switch (aProperty) {
+          case eCSSProperty_word_spacing:     mText->mWordSpacing.Reset();    break;
+          case eCSSProperty_letter_spacing:   mText->mLetterSpacing.Reset();  break;
+          case eCSSProperty_text_decoration:  mText->mDecoration.Reset();     break;
+          case eCSSProperty_vertical_align:   mText->mVerticalAlign.Reset();  break;
+          case eCSSProperty_text_transform:   mText->mTextTransform.Reset();  break;
+          case eCSSProperty_text_align:       mText->mTextAlign.Reset();      break;
+          case eCSSProperty_text_indent:      mText->mTextIndent.Reset();     break;
+          case eCSSProperty_unicode_bidi:     mText->mUnicodeBidi.Reset();    break;
+          case eCSSProperty_line_height:      mText->mLineHeight.Reset();     break;
+          case eCSSProperty_white_space:      mText->mWhiteSpace.Reset();     break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    case eCSSProperty_text_shadow_color:
+    case eCSSProperty_text_shadow_radius:
+    case eCSSProperty_text_shadow_x:
+    case eCSSProperty_text_shadow_y:
+      CSS_CHECK(Text) {
+        CSS_CHECK_DATA(mText->mTextShadow, nsCSSShadow) {
+          switch (aProperty) {
+            case eCSSProperty_text_shadow_color:  mText->mTextShadow->mColor.Reset();    break;
+            case eCSSProperty_text_shadow_radius: mText->mTextShadow->mRadius.Reset();   break;
+            case eCSSProperty_text_shadow_x:      mText->mTextShadow->mXOffset.Reset();  break;
+            case eCSSProperty_text_shadow_y:      mText->mTextShadow->mYOffset.Reset();  break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+          CSS_IF_DELETE(mText->mTextShadow->mNext);
+        }
+      }
+      break;
+
+      // nsCSSDisplay
+    case eCSSProperty_float:
+    case eCSSProperty_clear:
+    case eCSSProperty_display:
+    case eCSSProperty_direction:
+    case eCSSProperty_visibility:
+    case eCSSProperty_overflow:
+      CSS_CHECK(Display) {
+        switch (aProperty) {
+          case eCSSProperty_float:      mDisplay->mFloat.Reset();      break;
+          case eCSSProperty_clear:      mDisplay->mClear.Reset();      break;
+          case eCSSProperty_display:    mDisplay->mDisplay.Reset();    break;
+          case eCSSProperty_direction:  mDisplay->mDirection.Reset();  break;
+          case eCSSProperty_visibility: mDisplay->mVisibility.Reset(); break;
+          case eCSSProperty_overflow:   mDisplay->mOverflow.Reset();   break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    case eCSSProperty_clip_top:
+    case eCSSProperty_clip_right:
+    case eCSSProperty_clip_bottom:
+    case eCSSProperty_clip_left:
+      CSS_CHECK(Display) {
+        CSS_CHECK_RECT(mDisplay->mClip) {
+          switch(aProperty) {
+            case eCSSProperty_clip_top:     mDisplay->mClip->mTop.Reset();     break;
+            case eCSSProperty_clip_right:   mDisplay->mClip->mRight.Reset();   break;
+            case eCSSProperty_clip_bottom:  mDisplay->mClip->mBottom.Reset();  break;
+            case eCSSProperty_clip_left:    mDisplay->mClip->mLeft.Reset();    break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    // nsCSSMargin
+    case eCSSProperty_margin_top:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_margin_left:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mMargin) {
+          switch (aProperty) {
+            case eCSSProperty_margin_top:     mMargin->mMargin->mTop.Reset();     break;
+            case eCSSProperty_margin_right:   mMargin->mMargin->mRight.Reset();   break;
+            case eCSSProperty_margin_bottom:  mMargin->mMargin->mBottom.Reset();  break;
+            case eCSSProperty_margin_left:    mMargin->mMargin->mLeft.Reset();    break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty_padding_top:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_bottom:
+    case eCSSProperty_padding_left:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mPadding) {
+          switch (aProperty) {
+            case eCSSProperty_padding_top:    mMargin->mPadding->mTop.Reset();    break;
+            case eCSSProperty_padding_right:  mMargin->mPadding->mRight.Reset();  break;
+            case eCSSProperty_padding_bottom: mMargin->mPadding->mBottom.Reset(); break;
+            case eCSSProperty_padding_left:   mMargin->mPadding->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty_border_top_width:
+    case eCSSProperty_border_right_width:
+    case eCSSProperty_border_bottom_width:
+    case eCSSProperty_border_left_width:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mBorderWidth) {
+          switch (aProperty) {
+            case eCSSProperty_border_top_width:     mMargin->mBorderWidth->mTop.Reset();     break;
+            case eCSSProperty_border_right_width:   mMargin->mBorderWidth->mRight.Reset();   break;
+            case eCSSProperty_border_bottom_width:  mMargin->mBorderWidth->mBottom.Reset();  break;
+            case eCSSProperty_border_left_width:    mMargin->mBorderWidth->mLeft.Reset();    break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty_border_top_color:
+    case eCSSProperty_border_right_color:
+    case eCSSProperty_border_bottom_color:
+    case eCSSProperty_border_left_color:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mBorderColor) {
+          switch (aProperty) {
+            case eCSSProperty_border_top_color:     mMargin->mBorderColor->mTop.Reset();    break;
+            case eCSSProperty_border_right_color:   mMargin->mBorderColor->mRight.Reset();  break;
+            case eCSSProperty_border_bottom_color:  mMargin->mBorderColor->mBottom.Reset(); break;
+            case eCSSProperty_border_left_color:    mMargin->mBorderColor->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty_border_top_style:
+    case eCSSProperty_border_right_style:
+    case eCSSProperty_border_bottom_style:
+    case eCSSProperty_border_left_style:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mBorderStyle) {
+          switch (aProperty) {
+            case eCSSProperty_border_top_style:     mMargin->mBorderStyle->mTop.Reset();    break;
+            case eCSSProperty_border_right_style:   mMargin->mBorderStyle->mRight.Reset();  break;
+            case eCSSProperty_border_bottom_style:  mMargin->mBorderStyle->mBottom.Reset(); break;
+            case eCSSProperty_border_left_style:    mMargin->mBorderStyle->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty__moz_border_radius_topLeft:
+    case eCSSProperty__moz_border_radius_topRight:
+    case eCSSProperty__moz_border_radius_bottomRight:
+    case eCSSProperty__moz_border_radius_bottomLeft:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mBorderRadius) {
+          switch (aProperty) {
+            case eCSSProperty__moz_border_radius_topLeft:			mMargin->mBorderRadius->mTop.Reset();    break;
+            case eCSSProperty__moz_border_radius_topRight:		mMargin->mBorderRadius->mRight.Reset();  break;
+            case eCSSProperty__moz_border_radius_bottomRight:	mMargin->mBorderRadius->mBottom.Reset(); break;
+            case eCSSProperty__moz_border_radius_bottomLeft:	mMargin->mBorderRadius->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty__moz_outline_radius_topLeft:
+    case eCSSProperty__moz_outline_radius_topRight:
+    case eCSSProperty__moz_outline_radius_bottomRight:
+    case eCSSProperty__moz_outline_radius_bottomLeft:
+      CSS_CHECK(Margin) {
+        CSS_CHECK_RECT(mMargin->mOutlineRadius) {
+          switch (aProperty) {
+            case eCSSProperty__moz_outline_radius_topLeft:			mMargin->mOutlineRadius->mTop.Reset();    break;
+            case eCSSProperty__moz_outline_radius_topRight:			mMargin->mOutlineRadius->mRight.Reset();  break;
+            case eCSSProperty__moz_outline_radius_bottomRight:	mMargin->mOutlineRadius->mBottom.Reset(); break;
+            case eCSSProperty__moz_outline_radius_bottomLeft:		mMargin->mOutlineRadius->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+    case eCSSProperty_outline_width:
+    case eCSSProperty_outline_color:
+    case eCSSProperty_outline_style:
+    case eCSSProperty_float_edge:
+      CSS_CHECK(Margin) {
+        switch (aProperty) {
+          case eCSSProperty_outline_width:      mMargin->mOutlineWidth.Reset();  break;
+          case eCSSProperty_outline_color:      mMargin->mOutlineColor.Reset();  break;
+          case eCSSProperty_outline_style:      mMargin->mOutlineStyle.Reset();  break;
+          case eCSSProperty_float_edge:         mMargin->mFloatEdge.Reset();     break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    // nsCSSPosition
+    case eCSSProperty_position:
+    case eCSSProperty_width:
+    case eCSSProperty_min_width:
+    case eCSSProperty_max_width:
+    case eCSSProperty_height:
+    case eCSSProperty_min_height:
+    case eCSSProperty_max_height:
+    case eCSSProperty_box_sizing:
+    case eCSSProperty_z_index:
+      CSS_CHECK(Position) {
+        switch (aProperty) {
+          case eCSSProperty_position:   mPosition->mPosition.Reset();   break;
+          case eCSSProperty_width:      mPosition->mWidth.Reset();      break;
+          case eCSSProperty_min_width:  mPosition->mMinWidth.Reset();   break;
+          case eCSSProperty_max_width:  mPosition->mMaxWidth.Reset();   break;
+          case eCSSProperty_height:     mPosition->mHeight.Reset();     break;
+          case eCSSProperty_min_height: mPosition->mMinHeight.Reset();  break;
+          case eCSSProperty_max_height: mPosition->mMaxHeight.Reset();  break;
+          case eCSSProperty_box_sizing: mPosition->mBoxSizing.Reset();  break;
+          case eCSSProperty_z_index:    mPosition->mZIndex.Reset();     break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    case eCSSProperty_top:
+    case eCSSProperty_right:
+    case eCSSProperty_bottom:
+    case eCSSProperty_left:
+      CSS_CHECK(Position) {
+        CSS_CHECK_RECT(mPosition->mOffset) {
+          switch (aProperty) {
+            case eCSSProperty_top:    mPosition->mOffset->mTop.Reset();    break;
+            case eCSSProperty_right:  mPosition->mOffset->mRight.Reset();   break;
+            case eCSSProperty_bottom: mPosition->mOffset->mBottom.Reset(); break;
+            case eCSSProperty_left:   mPosition->mOffset->mLeft.Reset();   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
+      // nsCSSList
+    case eCSSProperty_list_style_type:
+    case eCSSProperty_list_style_image:
+    case eCSSProperty_list_style_position:
+      CSS_CHECK(List) {
+        switch (aProperty) {
+          case eCSSProperty_list_style_type:      mList->mType.Reset();     break;
+          case eCSSProperty_list_style_image:     mList->mImage.Reset();    break;
+          case eCSSProperty_list_style_position:  mList->mPosition.Reset(); break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // nsCSSTable
+    case eCSSProperty_border_collapse:
+    case eCSSProperty_border_x_spacing:
+    case eCSSProperty_border_y_spacing:
+    case eCSSProperty_caption_side:
+    case eCSSProperty_empty_cells:
+    case eCSSProperty_table_layout:
+      CSS_CHECK(Table) {
+        switch (aProperty) {
+          case eCSSProperty_border_collapse:  mTable->mBorderCollapse.Reset(); break;
+          case eCSSProperty_border_x_spacing: mTable->mBorderSpacingX.Reset(); break;
+          case eCSSProperty_border_y_spacing: mTable->mBorderSpacingY.Reset(); break;
+          case eCSSProperty_caption_side:     mTable->mCaptionSide.Reset();    break;
+          case eCSSProperty_empty_cells:      mTable->mEmptyCells.Reset();     break;
+          case eCSSProperty_table_layout:     mTable->mLayout.Reset();         break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // nsCSSBreaks
+    case eCSSProperty_orphans:
+    case eCSSProperty_widows:
+    case eCSSProperty_page:
+    case eCSSProperty_page_break_after:
+    case eCSSProperty_page_break_before:
+    case eCSSProperty_page_break_inside:
+      CSS_CHECK(Breaks) {
+        switch (aProperty) {
+          case eCSSProperty_orphans:            mBreaks->mOrphans.Reset();         break;
+          case eCSSProperty_widows:             mBreaks->mWidows.Reset();          break;
+          case eCSSProperty_page:               mBreaks->mPage.Reset();            break;
+          case eCSSProperty_page_break_after:   mBreaks->mPageBreakAfter.Reset();  break;
+          case eCSSProperty_page_break_before:  mBreaks->mPageBreakBefore.Reset(); break;
+          case eCSSProperty_page_break_inside:  mBreaks->mPageBreakInside.Reset(); break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // nsCSSPage
+    case eCSSProperty_marks:
+    case eCSSProperty_size_width:
+    case eCSSProperty_size_height:
+      CSS_CHECK(Page) {
+        switch (aProperty) {
+          case eCSSProperty_marks:        mPage->mMarks.Reset(); break;
+          case eCSSProperty_size_width:   mPage->mSizeWidth.Reset();  break;
+          case eCSSProperty_size_height:  mPage->mSizeHeight.Reset();  break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // nsCSSContent
+    case eCSSProperty_content:
+    case eCSSProperty_counter_increment:
+    case eCSSProperty_counter_reset:
+    case eCSSProperty_marker_offset:
+    case eCSSProperty_quotes_open:
+    case eCSSProperty_quotes_close:
+      CSS_CHECK(Content) {
+        switch (aProperty) {
+          case eCSSProperty_content:
+            CSS_CHECK_DATA(mContent->mContent, nsCSSValueList) {
+              mContent->mContent->mValue.Reset();          
+              CSS_IF_DELETE(mContent->mContent->mNext);
+            }
+            break;
+          case eCSSProperty_counter_increment:
+            CSS_CHECK_DATA(mContent->mCounterIncrement, nsCSSCounterData) {
+              mContent->mCounterIncrement->mCounter.Reset(); 
+              CSS_IF_DELETE(mContent->mCounterIncrement->mNext);
+            }
+            break;
+          case eCSSProperty_counter_reset:
+            CSS_CHECK_DATA(mContent->mCounterReset, nsCSSCounterData) {
+              mContent->mCounterReset->mCounter.Reset();
+              CSS_IF_DELETE(mContent->mCounterReset->mNext);
+            }
+            break;
+          case eCSSProperty_marker_offset:      mContent->mMarkerOffset.Reset();     break;
+          case eCSSProperty_quotes_open:
+            CSS_CHECK_DATA(mContent->mQuotes, nsCSSQuotes) {
+              mContent->mQuotes->mOpen.Reset();          
+              CSS_IF_DELETE(mContent->mQuotes->mNext);
+            }
+            break;
+          case eCSSProperty_quotes_close:
+            CSS_CHECK_DATA(mContent->mQuotes, nsCSSQuotes) {
+              mContent->mQuotes->mClose.Reset();          
+              CSS_IF_DELETE(mContent->mQuotes->mNext);
+            }
+            break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+    // nsCSSUserInterface
+    case eCSSProperty_user_input:
+    case eCSSProperty_user_modify:
+    case eCSSProperty_user_select:
+    case eCSSProperty_key_equivalent:
+    case eCSSProperty_user_focus:
+    case eCSSProperty_resizer:
+    case eCSSProperty_behavior:
+      CSS_CHECK(UserInterface) {
+        switch (aProperty) {
+          case eCSSProperty_user_input:       mUserInterface->mUserInput.Reset();      break;
+          case eCSSProperty_user_modify:      mUserInterface->mUserModify.Reset();     break;
+          case eCSSProperty_user_select:      mUserInterface->mUserSelect.Reset();     break;
+          case eCSSProperty_key_equivalent: 
+            CSS_CHECK_DATA(mUserInterface->mKeyEquivalent, nsCSSValueList) {
+              mUserInterface->mKeyEquivalent->mValue.Reset();
+              CSS_IF_DELETE(mUserInterface->mKeyEquivalent->mNext);
+            }
+            break;
+          case eCSSProperty_user_focus:       mUserInterface->mUserFocus.Reset();      break;
+          case eCSSProperty_resizer:          mUserInterface->mResizer.Reset();        break;
+          case eCSSProperty_behavior:         
+            mUserInterface->mBehavior.Reset();      
+            break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // nsCSSAural
+    case eCSSProperty_azimuth:
+    case eCSSProperty_elevation:
+    case eCSSProperty_cue_after:
+    case eCSSProperty_cue_before:
+    case eCSSProperty_pause_after:
+    case eCSSProperty_pause_before:
+    case eCSSProperty_pitch:
+    case eCSSProperty_pitch_range:
+    case eCSSProperty_play_during:
+    case eCSSProperty_play_during_flags:
+    case eCSSProperty_richness:
+    case eCSSProperty_speak:
+    case eCSSProperty_speak_header:
+    case eCSSProperty_speak_numeral:
+    case eCSSProperty_speak_punctuation:
+    case eCSSProperty_speech_rate:
+    case eCSSProperty_stress:
+    case eCSSProperty_voice_family:
+    case eCSSProperty_volume:
+      CSS_CHECK(Aural) {
+        switch (aProperty) {
+          case eCSSProperty_azimuth:            mAural->mAzimuth.Reset();          break;
+          case eCSSProperty_elevation:          mAural->mElevation.Reset();        break;
+          case eCSSProperty_cue_after:          mAural->mCueAfter.Reset();         break;
+          case eCSSProperty_cue_before:         mAural->mCueBefore.Reset();        break;
+          case eCSSProperty_pause_after:        mAural->mPauseAfter.Reset();       break;
+          case eCSSProperty_pause_before:       mAural->mPauseBefore.Reset();      break;
+          case eCSSProperty_pitch:              mAural->mPitch.Reset();            break;
+          case eCSSProperty_pitch_range:        mAural->mPitchRange.Reset();       break;
+          case eCSSProperty_play_during:        mAural->mPlayDuring.Reset();       break;
+          case eCSSProperty_play_during_flags:  mAural->mPlayDuringFlags.Reset();  break;
+          case eCSSProperty_richness:           mAural->mRichness.Reset();         break;
+          case eCSSProperty_speak:              mAural->mSpeak.Reset();            break;
+          case eCSSProperty_speak_header:       mAural->mSpeakHeader.Reset();      break;
+          case eCSSProperty_speak_numeral:      mAural->mSpeakNumeral.Reset();     break;
+          case eCSSProperty_speak_punctuation:  mAural->mSpeakPunctuation.Reset(); break;
+          case eCSSProperty_speech_rate:        mAural->mSpeechRate.Reset();       break;
+          case eCSSProperty_stress:             mAural->mStress.Reset();           break;
+          case eCSSProperty_voice_family:       mAural->mVoiceFamily.Reset();      break;
+          case eCSSProperty_volume:             mAural->mVolume.Reset();           break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      break;
+
+      // Shorthands
+    case eCSSProperty_background:
+      RemoveProperty(eCSSProperty_background_color);
+      RemoveProperty(eCSSProperty_background_image);
+      RemoveProperty(eCSSProperty_background_repeat);
+      RemoveProperty(eCSSProperty_background_attachment);
+      RemoveProperty(eCSSProperty_background_x_position);
+      RemoveProperty(eCSSProperty_background_y_position);
+      break;
+    case eCSSProperty_border:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mBorderWidth);
+        CSS_IF_DELETE(mMargin->mBorderStyle);
+        CSS_IF_DELETE(mMargin->mBorderColor);
+      }
+      break;
+    case eCSSProperty_border_spacing:
+      RemoveProperty(eCSSProperty_border_x_spacing);
+      RemoveProperty(eCSSProperty_border_y_spacing);
+      break;
+    case eCSSProperty_clip:
+      CSS_CHECK(Display) {
+        CSS_IF_DELETE(mDisplay->mClip);
+      }
+      break;
+    case eCSSProperty_cue:
+      RemoveProperty(eCSSProperty_cue_after);
+      RemoveProperty(eCSSProperty_cue_before);
+      break;
+    case eCSSProperty_font:
+      RemoveProperty(eCSSProperty_font_family);
+      RemoveProperty(eCSSProperty_font_style);
+      RemoveProperty(eCSSProperty_font_variant);
+      RemoveProperty(eCSSProperty_font_weight);
+      RemoveProperty(eCSSProperty_font_size);
+      RemoveProperty(eCSSProperty_line_height);
+      break;
+    case eCSSProperty_list_style:
+      RemoveProperty(eCSSProperty_list_style_type);
+      RemoveProperty(eCSSProperty_list_style_image);
+      RemoveProperty(eCSSProperty_list_style_position);
+      break;
+    case eCSSProperty_margin:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mMargin);
+      }
+      break;
+    case eCSSProperty_outline:
+      RemoveProperty(eCSSProperty_outline_color);
+      RemoveProperty(eCSSProperty_outline_style);
+      RemoveProperty(eCSSProperty_outline_width);
+      break;
+    case eCSSProperty_padding:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mPadding);
+      }
+      break;
+    case eCSSProperty_pause:
+      RemoveProperty(eCSSProperty_pause_after);
+      RemoveProperty(eCSSProperty_pause_before);
+      break;
+    case eCSSProperty_quotes:
+      CSS_CHECK(Content) {
+	      CSS_IF_DELETE(mContent->mQuotes);
+      }
+      break;
+    case eCSSProperty_size:
+      RemoveProperty(eCSSProperty_size_width);
+      RemoveProperty(eCSSProperty_size_height);
+      break;
+    case eCSSProperty_text_shadow:
+      CSS_CHECK(Text) {
+	      CSS_IF_DELETE(mText->mTextShadow);
+      }
+      break;
+    case eCSSProperty_background_position:
+      RemoveProperty(eCSSProperty_background_x_position);
+      RemoveProperty(eCSSProperty_background_y_position);
+      break;
+    case eCSSProperty_border_top:
+      RemoveProperty(eCSSProperty_border_top_width);
+      RemoveProperty(eCSSProperty_border_top_style);
+      RemoveProperty(eCSSProperty_border_top_color);
+      break;
+    case eCSSProperty_border_right:
+      RemoveProperty(eCSSProperty_border_right_width);
+      RemoveProperty(eCSSProperty_border_right_style);
+      RemoveProperty(eCSSProperty_border_right_color);
+      break;
+    case eCSSProperty_border_bottom:
+      RemoveProperty(eCSSProperty_border_bottom_width);
+      RemoveProperty(eCSSProperty_border_bottom_style);
+      RemoveProperty(eCSSProperty_border_bottom_color);
+      break;
+    case eCSSProperty_border_left:
+      RemoveProperty(eCSSProperty_border_left_width);
+      RemoveProperty(eCSSProperty_border_left_style);
+      RemoveProperty(eCSSProperty_border_left_color);
+      break;
+    case eCSSProperty_border_color:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mBorderColor);
+      }
+      break;
+    case eCSSProperty_border_style:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mBorderStyle);
+      }
+      break;
+    case eCSSProperty_border_width:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mBorderWidth);
+      }
+      break;
+    case eCSSProperty__moz_border_radius:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mBorderRadius);
+      }
+      break;
+    case eCSSProperty__moz_outline_radius:
+      CSS_CHECK(Margin) {
+        CSS_IF_DELETE(mMargin->mOutlineRadius);
+      }
+      break;
+//    default:  // XXX explicitly removing default case so compiler will help find missed props
+    case eCSSProperty_UNKNOWN:
+    case eCSSProperty_COUNT:
+      result = NS_ERROR_ILLEGAL_VALUE;
+      break;
+  }
+
+  if (NS_OK == result) {
+    if (nsnull != mOrder) {
+      PRInt32 index = mOrder->IndexOf((void*)aProperty);
+      if (-1 != index) {
+        mOrder->RemoveElementAt(index);
+      }
+    }
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP
+CSSDeclarationImpl::RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue)
+{
+  nsresult result = NS_OK;
+
+  PRBool  isImportant = PR_FALSE;
+  GetValueIsImportant(aProperty, isImportant);
+  if (isImportant) {
+    result = mImportant->GetValue(aProperty, aValue);
+    if (NS_SUCCEEDED(result)) {
+      result = mImportant->RemoveProperty(aProperty);
+    }
+  } else {
+    result = GetValue(aProperty, aValue);
+    if (NS_SUCCEEDED(result)) {
+      result = RemoveProperty(aProperty);
     }
   }
   return result;

@@ -151,23 +151,18 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsString& aPropertyName,
     if (doc)
       doc->BeginUpdate();
 
+    PRInt32 hint;
+    decl->GetStyleImpact(&hint);
+
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
     nsCSSValue val;
-
-#if 0 // Once nsICSSDeclaration has a RemoveProperty this ifdef should be removed
     rv = decl->RemoveProperty(prop, val);
-#else
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
     if (NS_FAILED(rv))
       return rv;
 
     val.ToString(aReturn, prop);
 
     if (doc) {
-      PRInt32 hint;
-      decl->GetStyleImpact(&hint);
 
       doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style,
                             hint);
