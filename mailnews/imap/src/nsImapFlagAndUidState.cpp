@@ -164,6 +164,10 @@ NS_IMETHODIMP nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
 
 NS_IMETHODIMP nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
 {
+  // protect ourselves in case the server gave us an index key of -1.....
+  if ((PRInt32) msgIndex < 0)
+    return NS_ERROR_INVALID_ARG;
+
   PRUint32 counter = 0;
   
   if ((PRUint32) fNumberOfMessagesAdded < msgIndex)
