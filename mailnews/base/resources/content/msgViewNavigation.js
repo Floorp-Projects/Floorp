@@ -29,6 +29,7 @@ var navigateNew = 3;
 var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 var commonDialogs = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogs = commonDialogs.QueryInterface(Components.interfaces.nsICommonDialogs);
+var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
 function FindNextFolder(originalFolderURI)
 {
@@ -113,7 +114,35 @@ function GoNextMessage(type, startFromBeginning )
         else if (type == navigateUnread) {
 	        var treeFolder = GetThreadTreeFolder();
 	        var originalFolderURI = treeFolder.getAttribute('ref');
-            var nextFolderURI = FindNextFolder(originalFolderURI);
+            var nextFolderURI = null;
+            var done = false;
+            var startAtURI = originalFolderURI;
+            var i = 0;
+            var allServers = accountManager.allServers;
+            var numServers = allServers.Count();
+
+            // todo:  
+            // this will search the originalFolderURI server twice
+            // prevent that.
+            while (!done) {
+                dump("start looking at " + startAtURI + "\n");
+                nextFolderURI = FindNextFolder(startAtURI);
+                if (!nextFolderURI) {
+                    if (i == numServers) {
+                        // no more servers, we're done
+                        done = true;
+                    }
+                    else {
+                        // get the uri for the next server and start there
+                        startAtURI = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer).serverURI;
+                        i++;
+                    }
+                }
+                else {
+                    // got a folder with unread messages, start with it
+                    done = true;    
+                }
+            }
             if (nextFolderURI && (originalFolderURI != nextFolderURI)) {
                 var nextFolderResource = RDF.GetResource(nextFolderURI);
                 var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
