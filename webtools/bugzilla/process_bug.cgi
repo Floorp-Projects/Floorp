@@ -617,7 +617,8 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
                    "version", "op_sys",
                    "target_milestone", "status_whiteboard") {
     if (defined $::FORM{$field}) {
-        if ($::FORM{$field} ne $::FORM{'dontchange'}) {
+        if (!$::FORM{'dontchange'}
+            || $::FORM{$field} ne $::FORM{'dontchange'}) {
             DoComma();
             $::query .= "$field = " . SqlQuote(trim($::FORM{$field}));
         }
