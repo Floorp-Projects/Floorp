@@ -1008,9 +1008,13 @@ private:
   void FillCurrentData();
 };
 
-DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText, 
-                                             PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt16 aSelectionStatus, nsIPresContext *aPresContext)
-              :mOldStyle(aTextStyle)
+DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, 
+                                             PRUnichar *aText, 
+                                             PRUint32 aTextLength, 
+                                             nsTextFrame::TextStyle &aTextStyle, 
+                                             PRInt16 aSelectionStatus, 
+                                             nsIPresContext *aPresContext)
+                                             :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
     mCurrentIdx = 0;
@@ -1023,8 +1027,8 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
     // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
     nsCOMPtr<nsILookAndFeel> look;
     if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(look))) && look) {
-           look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention, mAttentionColor);
-           look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled, mDisabledColor);
+      look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention, mAttentionColor);
+      look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled, mDisabledColor);
       mDisabledColor  = EnsureDifferentColors(mDisabledColor, mOldStyle.mSelectionBGColor);
       mAttentionColor = EnsureDifferentColors(mAttentionColor, mOldStyle.mSelectionBGColor);
     }
