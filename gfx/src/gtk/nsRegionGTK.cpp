@@ -99,7 +99,7 @@ nsresult nsRegionGTK::Init(void)
 
 void nsRegionGTK::SetTo(const nsIRegion &aRegion)
 {
-  SetRegionEmpty();
+  Init();
 
   nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
 
@@ -108,7 +108,7 @@ void nsRegionGTK::SetTo(const nsIRegion &aRegion)
 
 void nsRegionGTK::SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  SetRegionEmpty();
+  Init();
 
   mRegion = gdk_region_from_rect(aX, aY, aWidth, aHeight);
 }
