@@ -1,14 +1,5 @@
 #!/usr/bin/perl
 
-# List of chrome files and directories that the embedding manifest will be
-# generated from.
-#
-# Format is:
-#
-# "<destination path in jar>", "<source path relative to the base chrome dir>"
-#
-# Use XXXX if a file or directory is locale specific.
-
 %embed_files = ();
 
 #################################################################
@@ -85,22 +76,23 @@ sub parse_input_manifest() {
   while(<MANIFEST>) {
     chomp;
     s/^\s+//;
+    s/\s+$//;
 
-    # Skip comments
-    next if ($_[0] eq "#");
+    # Skip comments & blank lines
+    next if (/^\#/);
+    next if (/^\s*$/);
 
     # Read key & data
     ($key, $value) = split(/,/, $_);
     
-    # Strip out whitespace and brackets
+    # Strip out any remaining whitespace from key & value
     for ($key) {
-        s/^\s+//;
         s/\s+$//;
     }
     for ($value) {
         s/^\s+//;
-        s/\s+$//;
     }
+
     $embed_files{$key} = $value;
   }
 }
@@ -117,7 +109,7 @@ sub dump_output_manifest() {
     $is_dir = (-d $ls_path) ? 1 : 0;
     $is_file = (-f $ls_path) ? 1 : 0;
 
-    print STDERR "Listing $ls_path\n" unless !$verbose;
+    print STDERR "Listing \"$ls_path\"\n" unless !$verbose;
 
     if (!$is_dir && !$is_file) {
       print STDERR "Warning: File or directory \"$ls_path\" does not exist.\n";
@@ -138,7 +130,7 @@ sub dump_output_manifest() {
 	$chrome_file = $key;
 	$real_file = $value;
       }
-      # Ignore directories which are returned
+      # Ignore directories which are returned by ls
       if (! -d "$chrome/$real_file") {
 	print "  $chrome_file   ($real_file)\n";
       }

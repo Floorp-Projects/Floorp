@@ -17,3 +17,6 @@ content,install,url,jar:resource:/chrome/embed.jar!/content/global-region/
 content,install,url,jar:resource:/chrome/embed.jar!/content/global-platform/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/US/global-region/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global-platform/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/navigator/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pipnss/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pippki/
