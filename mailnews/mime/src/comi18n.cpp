@@ -1325,12 +1325,12 @@ static PRUint32 INTL_ConvertCharset(const char* from_charset, const char* to_cha
         aCharset.SetString(to_charset);
         res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
         if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-          res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+          res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
           // allocale an output buffer
           dstPtr = (char *) PR_Malloc(dstLength + 1);
           if (dstPtr != nsnull) {
-           res = encoder->Convert(unichars, 0, &unicharLength, dstPtr, 0, &dstLength);
-           dstPtr[dstLength] = '\0';
+           res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+          dstPtr[dstLength] = '\0';
           }
           NS_IF_RELEASE(encoder);
         }
@@ -1403,11 +1403,11 @@ static PRUint32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniB
       const PRUnichar *unichars = (const PRUnichar *) uniBuffer;
       PRInt32 unicharLength = uniLength;
       PRInt32 dstLength;
-      res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
       // allocale an output buffer
       *aBuffer = (char *) PR_Malloc(dstLength + 1);
       if (*aBuffer != nsnull) {
-        res = encoder->Convert(unichars, 0, &unicharLength, *aBuffer, 0, &dstLength);
+        res = encoder->Convert(unichars, &unicharLength, *aBuffer, &dstLength);
         (*aBuffer)[dstLength] = '\0';
       }
       else {
