@@ -3909,7 +3909,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
       return PR_FALSE;
     }
     if (SelectorMatches(*newdata, selector, 0, nsnull, 0)) {
-      // to avoid greedy matching, we need to recurse if this is a
+      // to avoid greedy matching, we need to recur if this is a
       // descendant combinator and the next combinator is not
       if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
           (selector->mNext) &&
@@ -3918,7 +3918,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         // pretend the selector didn't match, and step through content
         // while testing the same selector
 
-        // This approach is slightly strange is that when it recurses
+        // This approach is slightly strange is that when it recurs
         // it tests from the top of the content tree, down.  This
         // doesn't matter much for performance since most selectors
         // don't match.  (If most did, it might be faster...)
