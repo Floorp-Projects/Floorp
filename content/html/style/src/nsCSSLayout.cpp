@@ -59,10 +59,9 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   PRIntn kidCount = aChildCount;
   while (--kidCount >= 0) {
     nscoord kidAscent = *aAscents++;
-    nsIStyleContextPtr kidSC;
 
-    kid->GetStyleContext(aCX, kidSC.AssignRef());
-    const nsStyleText* textStyle = (const nsStyleText*)kidSC->GetStyleData(eStyleStruct_Text);
+    const nsStyleText* textStyle;
+    kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
     PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
 
@@ -162,10 +161,8 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid = aFirstChild;
     while (--kidCount >= 0) {
       // Get kid's vertical align style data
-      nsIStyleContextPtr kidSC;
-
-      kid->GetStyleContext(aCX, kidSC.AssignRef());
-      const nsStyleText* textStyle = (const nsStyleText*)kidSC->GetStyleData(eStyleStruct_Text);
+      const nsStyleText* textStyle;
+      kid->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
       nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
       if (eStyleUnit_Percent == verticalAlignUnit) {
@@ -261,11 +258,8 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   nsPoint origin;
   nsIFrame* kid = aFirstChild;
   while (--aChildCount >= 0) {
-    nsIStyleContextPtr kidSC;
-
-    kid->GetStyleContext(aCX, kidSC.AssignRef());
-    const nsStylePosition* kidPosition = (const nsStylePosition*)
-      kidSC->GetStyleData(eStyleStruct_Position);
+    const nsStylePosition* kidPosition;
+    kid->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)kidPosition);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
       // XXX Check the unit: could be auto or percent (not just length)
@@ -338,11 +332,10 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   // XXX if display == col || colspan ignore height
 
   PRIntn rv = NS_SIZE_HAS_NONE;
-  nsIStyleContext* sc = nsnull;
-  aReflowState.frame->GetStyleContext(aPresContext, sc);
-  if (nsnull != sc) {
-    const nsStylePosition* pos = (const nsStylePosition*)
-      sc->GetStyleData(eStyleStruct_Position);
+  const nsStylePosition* pos;
+  nsresult  result = aReflowState.frame->GetStyleData(eStyleStruct_Position,
+                                                      (const nsStyleStruct*&)pos);
+  if (NS_OK == result) {
     if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mWidth,
                           aStyleSize.width)) {
       rv |= NS_SIZE_HAS_WIDTH;
@@ -351,7 +344,6 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
                           aStyleSize.height)) {
       rv |= NS_SIZE_HAS_HEIGHT;
     }
-    NS_RELEASE(sc);
   }
   return rv;
 }
