@@ -312,9 +312,11 @@ const int kReuseWindowOnAE = 2;
 }
 
 //
-// this gets called by bookmark load background thread, so it's a possible
-// point of contention.  but, it's only called once on startup, so probably
-// won't be a problem.
+// setupBookmarkMenus
+//
+// Needs to be called at startup after we've initialized the bookmark service. Currently
+// it's called on a delayed call after we run through the event loop once, but still
+// on the main thread.
 //
 - (void)setupBookmarkMenus:(BookmarkManager *)BookmarkManager
 {

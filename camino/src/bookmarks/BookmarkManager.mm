@@ -89,7 +89,6 @@ static unsigned gFirstUserCollection = 0;
     startupLock = nil;
     [avoidRaceLock unlock];
     [avoidRaceLock release];
-    [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
     [mainThreadRunLoopMessenger target:gBookmarksManager performSelector:@selector(delayedStartupItems)];
   }
   [pool release];
@@ -180,6 +179,8 @@ static unsigned gFirstUserCollection = 0;
 
 - (void)delayedStartupItems
 {
+  [[NSApp delegate] setupBookmarkMenus:gBookmarksManager];
+
   // check update status of 1 bookmark every 2 minutes.
   mUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:kTimeToCheckAnotherBookmark target:self selector:@selector(checkForUpdates:) userInfo:nil repeats:YES];
   [mSmartFolderManager postStartupInitialization:self];
