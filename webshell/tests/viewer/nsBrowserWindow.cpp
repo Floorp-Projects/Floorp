@@ -1272,9 +1272,12 @@ nsBrowserWindow::SetWebCrawler(nsWebCrawler* aCrawler)
   }
   if (aCrawler) {
     mWebCrawler = aCrawler;
+    /* Nisheeth: the crawler registers as a document loader observer with
+     * the webshell when nsWebCrawler::Start() is called.
     if (mWebShell) {
       mWebShell->SetDocLoaderObserver(aCrawler);
     }
+    */
     NS_ADDREF(aCrawler);
   }
 }
