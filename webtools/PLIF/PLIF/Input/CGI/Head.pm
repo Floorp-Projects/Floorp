@@ -65,3 +65,7 @@ sub filterOutput {
     return $string;
 }
 
+# return 1 if we are not allowed to have side effects
+sub idempotent {
+    return 1;
+}

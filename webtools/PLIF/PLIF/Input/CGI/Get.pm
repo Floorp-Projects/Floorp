@@ -49,3 +49,8 @@ sub decodeHTTPArguments {
         $self->dump(9, 'HTTP GET. No input.');
     }
 }
+
+# return 1 if we are not allowed to have side effects
+sub idempotent {
+    return 1;
+}
