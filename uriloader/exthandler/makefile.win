@@ -19,8 +19,6 @@
 
 MODULE = exthandler
 
-DIRS=win
-
 DEPTH = ..\..
 include <$(DEPTH)/config/config.mak>
 
