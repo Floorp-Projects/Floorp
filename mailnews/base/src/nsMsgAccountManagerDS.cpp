@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -20,13 +20,15 @@
  * RDF datasource for the account manager
  */
 
-#include "nsIMsgAccountManager.h"
 #include "nsMsgAccountManagerDS.h"
+#include "nsMsgRDFDataSource.h"
+
+#include "nsIMsgAccountManager.h"
 
 #include "rdf.h"
 #include "nsRDFCID.h"
 #include "nsIRDFDataSource.h"
-
+#include "nsEnumeratorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
 
@@ -37,38 +39,20 @@
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-class nsMsgAccountManagerDataSource : public nsIRDFDataSource,
-                                      public nsIShutdownListener
+class nsMsgAccountManagerDataSource : public nsMsgRDFDataSource
 {
 
 public:
-  NS_DECL_ISUPPORTS
-
+    
   nsMsgAccountManagerDataSource();
   virtual ~nsMsgAccountManagerDataSource();
   // service manager shutdown method
-
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
 
   // RDF datasource methods
   
   /* void Init (in string uri); */
   NS_IMETHOD Init(const char *uri);
-
-  /* readonly attribute string URI; */
-  NS_IMETHOD GetURI(char * *aURI);
-
-  /* nsIRDFResource GetSource (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD GetSource(nsIRDFResource *property,
-                       nsIRDFNode *aTarget,
-                       PRBool aTruthValue,
-                       nsIRDFResource **_retval);
-
-  /* nsISimpleEnumerator GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD GetSources(nsIRDFResource *property,
-                        nsIRDFNode *aTarget,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator **_retval);
+    
 
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTarget(nsIRDFResource *source,
@@ -81,213 +65,99 @@ public:
                         nsIRDFResource *property,
                         PRBool aTruthValue,
                         nsISimpleEnumerator **_retval);
-
-  /* void Assert (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD Assert(nsIRDFResource *source,
-                    nsIRDFResource *property,
-                    nsIRDFNode *aTarget,
-                    PRBool aTruthValue);
-
-  /* void Unassert (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget); */
-  NS_IMETHOD Unassert(nsIRDFResource *source,
-                      nsIRDFResource *property,
-                      nsIRDFNode *aTarget);
-
-  /* boolean HasAssertion (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-  NS_IMETHOD HasAssertion(nsIRDFResource *source,
-                          nsIRDFResource *property,
-                          nsIRDFNode *aTarget,
-                          PRBool aTruthValue,
-                          PRBool *_retval);
-
-  /* void AddObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD AddObserver(nsIRDFObserver *aObserver);
-
-  /* void RemoveObserver (in nsIRDFObserver aObserver); */
-  NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
-
-  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
-  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval);
-
   /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
   NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsISimpleEnumerator **_retval);
 
-  /* nsISimpleEnumerator GetAllResources (); */
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
-
-  /* void Flush (); */
-  NS_IMETHOD Flush();
-
-  /* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-  NS_IMETHOD GetAllCommands(nsIRDFResource *source, nsIEnumerator **_retval);
-
-  /* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource command, in nsISupportsArray arguments); */
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray *sources, nsIRDFResource *command, nsISupportsArray *arguments, PRBool *_retval);
-
-  /* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource command, in nsISupportsArray arguments); */
-  NS_IMETHOD DoCommand(nsISupportsArray *sources, nsIRDFResource *command, nsISupportsArray *arguments);
-
-
 protected:
 
-  static inline nsresult getAccountManager(nsIRDFResource *resource,
-                                           nsIMsgAccountManager* *accountManager)
-    { return resource->QueryInterface(nsIMsgAccountManager::GetIID(),
-                                      (void **)accountManager); }
-
-  
+  static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_Account;
   static nsIRDFResource* kNC_Server;
   static nsIRDFResource* kNC_Identity;
 
 private:
-
-  char* mURI;
-
+  // enumeration function to convert each server (element)
+  // to an nsIRDFResource and append it to the array (in data)
+  static PRBool createServerResources(nsISupports *element, void *data);
+  
   nsIMsgAccountManager *mAccountManager;
-  nsIRDFService *mRDFService;
 
 };
 
-#define NS_GET_ACCOUNT_MANAGER(_resource, _variable)	\
-nsIMsgAccountManager *_variable;						\
-rv = getAccountManager(_resource, &_variable);			\
-if (NS_FAILED(rv)) return rv;					\
-
-
+typedef struct _serverCreationParams {
+  nsISupportsArray *serverArray;
+  nsIRDFService *rdfService;
+} serverCreationParams;
 
 // static members
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Name=nsnull;
 
 // properties corresponding to interfaces
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Account;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Server;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Identity;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Account=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Server=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Identity=nsnull;
 
 // RDF to match
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Account);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Server);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Identity);
 
-
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource():
-  mURI(nsnull),
-  mRDFService(nsnull)
+    nsMsgRDFDataSource::nsMsgRDFDataSource()
 {
-  NS_INIT_REFCNT();
-  
+  fprintf(stderr, "nsMsgAccountManagerDataSource() being created\n");
 }
 
 nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
 {
-  if (mRDFService) nsServiceManager::ReleaseService(kRDFServiceCID,
-                                                    mRDFService,
+  if (getRDFService()) nsServiceManager::ReleaseService(kRDFServiceCID,
+                                                    getRDFService(),
                                                     this);
 
-  if (mURI) PL_strfree(mURI);
-  
 }
-
-NS_IMPL_ADDREF(nsMsgAccountManagerDataSource)
-NS_IMPL_RELEASE(nsMsgAccountManagerDataSource)
-
-nsresult
-nsMsgAccountManagerDataSource::QueryInterface(const nsIID& iid,
-                                              void ** result)
-{
-
-  return NS_OK;
-}
-
-
 /* void Init (in string uri); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::Init(const char *uri)
 {
+    nsMsgRDFDataSource::Init(uri);
+    nsresult rv=NS_OK;
 
-  nsresult rv=NS_OK;
-
-  if (!mRDFService) {
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsIRDFService::GetIID(),
-                                      (nsISupports**) &mRDFService,
-                                      this);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  if (!mAccountManager) {
-    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    fprintf(stderr, "nsMsgAccountManagerDataSource::Init(%s)\n", uri ? uri : "(null)");
     
-    // maybe the account manager should be a service too? not sure.
-    rv = mailSession->GetAccountManager(&mAccountManager);
-    if (NS_FAILED(rv)) return rv;
-  }
-  
-  if (!mURI || PL_strcmp(uri, mURI) != 0)
-    mURI = PL_strdup(uri);
-  
-  rv = mRDFService->RegisterDataSource(this, PR_FALSE);
-  if (!rv) return rv;
-  
-
-  if (! kNC_Child) {
-    mRDFService->GetResource(kURINC_child, &kNC_Child);
-    mRDFService->GetResource(kURINC_Account, &kNC_Account);
-    mRDFService->GetResource(kURINC_Server, &kNC_Server);
-    mRDFService->GetResource(kURINC_Identity, &kNC_Identity);
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute string URI; */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetURI(char * *aURI)
-{
-  if (!aURI) return NS_ERROR_NULL_POINTER;
-  
-  *aURI = PL_strdup(mURI);
-  
-  return NS_OK;
-}
-
-/* nsIRDFResource GetSource (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetSource(nsIRDFResource *property,
-                                  nsIRDFNode *aTarget,
-                                  PRBool aTruthValue,
-                                  nsIRDFResource **_retval)
-{
-  
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsISimpleEnumerator GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetSources(nsIRDFResource *property,
-                                   nsIRDFNode *aTarget,
-                                   PRBool aTruthValue,
-                                   nsISimpleEnumerator **_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+    if (!mAccountManager) {
+        NS_WITH_SERVICE(nsIMsgMailSession, mailSession,
+                        kMsgMailSessionCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        
+        // maybe the account manager should be a service too? not sure.
+        rv = mailSession->GetAccountManager(&mAccountManager);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    if (! kNC_Child) {
+      getRDFService()->GetResource(kURINC_child, &kNC_Child);
+      getRDFService()->GetResource(kURINC_Name, &kNC_Name);
+      getRDFService()->GetResource(kURINC_Account, &kNC_Account);
+      getRDFService()->GetResource(kURINC_Server, &kNC_Server);
+      getRDFService()->GetResource(kURINC_Identity, &kNC_Identity);
+    }
+    return NS_OK;
 }
 
 /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
-                                  nsIRDFResource *property,
-                                  PRBool aTruthValue,
-                                  nsIRDFNode **target)
+                                         nsIRDFResource *property,
+                                         PRBool aTruthValue,
+                                         nsIRDFNode **target)
 {
   nsresult rv = NS_RDF_NO_VALUE;
   if (!aTruthValue) return NS_RDF_NO_VALUE;
   
-  NS_GET_ACCOUNT_MANAGER(source, accountManager);
-
-
-  NS_RELEASE(accountManager);
+  // I don't think we'll ever get this?
+  
   return rv;
 }
 
@@ -299,84 +169,91 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
                                    PRBool aTruthValue,
                                    nsISimpleEnumerator **_retval)
 {
+  printf("accountmanager::GetTargets()\n");
   nsresult rv = NS_RDF_NO_VALUE;
 
   if (!aTruthValue) return NS_RDF_NO_VALUE;
 
-  nsIMsgAccountManager *accountManager;
-  if (NS_FAILED(source->QueryInterface(nsIMsgAccountManager::GetIID(),
-                                          (void **)&accountManager)))
-    return rv;
-
-  
   // if the property is "account" or "child" then return the
   // list of accounts
   // if the property is "server" return a union of all servers
   // in the account (mainly for the folder pane)
 
+  char *source_value=nsnull;
+  rv = source->GetValue(&source_value);
 
+#ifdef DEBUG_alecf
+  char *property_value=nsnull;
+  rv = property->GetValue(&property_value);
+  printf("nsMsgAccountManagerDataSource::GetTargets(%s, %s, %s, ..)\n",
+         source_value, property_value, aTruthValue?"PR_TRUE":"PR_FALSE");
+#endif
   
-  return rv;
+  if (NS_FAILED(rv) ||
+      PL_strcmp(source_value, "msgaccounts:/")!=0)
+    return NS_RDF_NO_VALUE;
+
+  printf("GetTargets(): This is an account manager..\n");
+
+  nsISupportsArray *servers;
+  mAccountManager->GetAllServers(&servers);
+
+  nsISupportsArray *nodes;
+  NS_NewISupportsArray(&nodes);
+
+  // fill up the nodes array with the RDF Resources for the servers
+  serverCreationParams params = { nodes, getRDFService() };
+  servers->EnumerateForwards(createServerResources, (void*)&params);
+  
+  nsISimpleEnumerator* enumerator =
+    new nsArrayEnumerator(nodes);
+
+  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
+    
+  NS_ADDREF(enumerator);
+  *_retval = enumerator;
+  return NS_OK;
   
 }
 
-
-/* void Assert (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::Assert(nsIRDFResource *source,
-                               nsIRDFResource *property,
-                               nsIRDFNode *aTarget,
-                               PRBool aTruthValue)
+// enumeration function to convert each server (element)
+// to an nsIRDFResource and append it to the array (in data)
+// always return PR_TRUE to try on every element instead of aborting early
+PRBool
+nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
+                                                     void *data)
 {
+  nsresult rv;
+  // get parameters out of the data argument
+  serverCreationParams *params = (serverCreationParams*)data;
+  nsISupportsArray *servers = params->serverArray;
+  nsIRDFService *rdf = params->rdfService;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  // the server itself is in the element argument
+  nsIMsgIncomingServer *server;
+  rv = element->QueryInterface(nsIMsgIncomingServer::GetIID(),
+                               (void **)&server);
+  if (NS_FAILED(rv)) return PR_TRUE;
 
-/* void Unassert (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::Unassert(nsIRDFResource *source,
-                                 nsIRDFResource *property,
-                                 nsIRDFNode *aTarget)
-{
+  // get the URI from the incoming server
+  char *serverUri;
+  rv = server->GetServerURI(&serverUri);
+  if (NS_FAILED(rv)) return PR_TRUE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  printf("createServerResources: Adding %s\n", serverUri);
+  // get the corresponding RDF resource
+  // RDF will create the server resource if it doesn't already exist
+  nsIRDFResource *serverResource;
+  rv = rdf->GetResource(serverUri, &serverResource);
+  if (NS_FAILED(rv)) return PR_TRUE;
 
-/* boolean HasAssertion (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::HasAssertion(nsIRDFResource *source,
-                                     nsIRDFResource *property,
-                                     nsIRDFNode *aTarget,
-                                     PRBool aTruthValue,
-                                     PRBool *_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void AddObserver (in nsIRDFObserver aObserver); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::AddObserver(nsIRDFObserver *aObserver)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void RemoveObserver (in nsIRDFObserver aObserver); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::RemoveObserver(nsIRDFObserver *aObserver)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::ArcLabelsIn(nsIRDFNode *aNode,
-                                    nsISimpleEnumerator **_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // add the resource to the array
+  rv = servers->AppendElement(serverResource);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
+  NS_RELEASE(server);
+  
+  return PR_TRUE;
 }
 
 /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
@@ -384,64 +261,29 @@ NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
                                      nsISimpleEnumerator **_retval)
 {
+    char *value=nsnull;
+    source->GetValue(&value);
+    printf("accountmanager::ArcLabelsOut(%s)\n", value ? value : "(nsnull)");
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+    if (PL_strcmp(value, "msgaccounts:/")!=0)
+      return NS_RDF_NO_VALUE;
+
+    nsISupportsArray *arcs;
+    NS_NewISupportsArray(&arcs);
+
+    arcs->AppendElement(kNC_Child);
+    arcs->AppendElement(kNC_Name);
+    arcs->AppendElement(kNC_Server);
+
+    nsArrayEnumerator* enumerator =
+        new nsArrayEnumerator(arcs);
+
+    if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(enumerator);
+    *_retval = enumerator;
+    
+    return NS_OK;
 }
-
-/* nsISimpleEnumerator GetAllResources (); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetAllResources(nsISimpleEnumerator **_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void Flush (); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::Flush()
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsIEnumerator GetAllCommands (in nsIRDFResource aSource); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetAllCommands(nsIRDFResource *source,
-                                       nsIEnumerator **_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean IsCommandEnabled (in nsISupportsArray aSources, in nsIRDFResource command, in nsISupportsArray arguments); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::IsCommandEnabled(nsISupportsArray *sources,
-                                         nsIRDFResource *command,
-                                         nsISupportsArray *arguments,
-                                         PRBool *_retval)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource command, in nsISupportsArray arguments); */
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::DoCommand(nsISupportsArray *sources,
-                                  nsIRDFResource *command,
-                                  nsISupportsArray *arguments)
-{
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsMsgAccountManagerDataSource::OnShutdown(const nsCID& aClass,
-                                          nsISupports* service)
-{
-  return NS_OK;
-}
-
 
 nsresult
 NS_NewMsgAccountManagerDataSource(const nsIID& iid, void ** result)
