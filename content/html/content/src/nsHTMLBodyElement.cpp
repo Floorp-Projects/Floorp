@@ -486,7 +486,11 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::link) ||
       (aAttribute == nsHTMLAtoms::alink) ||
       (aAttribute == nsHTMLAtoms::vlink)) {
-    if (aResult.ParseColor(aValue, mDocument)) {
+    nsCOMPtr<nsIDocument> doc(mDocument);
+    if (!doc) {
+      mNodeInfo->GetDocument(getter_AddRefs(doc));
+    }
+    if (aResult.ParseColor(aValue, doc)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -51,6 +51,7 @@
 #include "nsHTMLParts.h"
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
+#include "nsIDocument.h"
 
 /* for collections */
 #include "nsIDOMElement.h"
@@ -1029,7 +1030,11 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor ||
            aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue, mDocument)) {
+    nsCOMPtr<nsIDocument> doc(mDocument);
+    if (!doc) {
+      mNodeInfo->GetDocument(getter_AddRefs(doc));
+    }
+    if (aResult.ParseColor(aValue, doc)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

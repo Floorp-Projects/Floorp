@@ -47,6 +47,7 @@
 #include "GenericElementCollection.h"
 #include "nsRuleNode.h"
 #include "nsDOMError.h"
+#include "nsIDocument.h"
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
@@ -311,7 +312,11 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (aResult.ParseColor(aValue, mDocument)) {
+    nsCOMPtr<nsIDocument> doc(mDocument);
+    if (!doc) {
+      mNodeInfo->GetDocument(getter_AddRefs(doc));
+    }
+    if (aResult.ParseColor(aValue, doc)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
