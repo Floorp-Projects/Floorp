@@ -91,39 +91,17 @@
 #include "nsITransferable.h"
 #include "nsISupportsArray.h"
 
-// Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,         NS_EDITORAPPCORE_CID);
+static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
+static NS_DEFINE_CID(kTextEditorCID,            NS_TEXTEDITOR_CID);
+static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
+static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 
 /* Define Interface IDs */
-static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
-
-static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIEditorAppCoreIID,         NS_IDOMEDITORAPPCORE_IID);
-
-static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
-static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
-
-
 static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
-static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
-
-static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID,        NS_IDOCUMENT_VIEWER_IID);
-
-static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
-static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-
-static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
-static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
-
-static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
-static NS_DEFINE_CID(kCSpellCheckerCID, NS_SPELLCHECKER_CID);
 
 #define APP_DEBUG 0 
 
@@ -144,7 +122,6 @@ nsEditorAppCore::nsEditorAppCore()
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
-  mEditor               = nsnull;
   mSuggestedWordIndex   = 0;
   
   IncInstanceCount();
@@ -177,7 +154,7 @@ nsEditorAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-  if ( aIID.Equals(kIEditorAppCoreIID) ) {
+  if ( aIID.Equals(nsIDOMEditorAppCore::GetIID()) ) {
     *aInstancePtr = (void*) ((nsIDOMEditorAppCore*)this);
     AddRef();
     return NS_OK;
@@ -187,7 +164,7 @@ nsEditorAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIStreamObserverIID)) {
+  if (aIID.Equals(nsIStreamObserver::GetIID())) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -248,7 +225,7 @@ nsEditorAppCore::GetPresShellFor(nsIWebShell* aWebShell)
     aWebShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
-      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      cv->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &docv);
       if (nsnull != docv) {
         nsIPresContext* cx;
         docv->GetPresContext(cx);
@@ -271,7 +248,7 @@ nsEditorAppCore::GetPresShellFor(nsIWebShell* aWebShell)
 NS_METHOD
 nsEditorAppCore::SetEditorType(const nsString& aEditorType)
 {  
-  if (mEditor != nsnull)
+  if (mEditor)
     return NS_ERROR_ALREADY_INITIALIZED;
     
   nsAutoString  theType = aEditorType;
@@ -308,8 +285,8 @@ nsEditorAppCore::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShel
   
   if (mEditorTypeString == "text")
   {
-    nsITextEditor *editor = nsnull;
-    err = nsComponentManager::CreateInstance(kTextEditorCID, nsnull, kITextEditorIID, (void **)&editor);
+    nsCOMPtr<nsITextEditor> editor;
+    err = nsComponentManager::CreateInstance(kTextEditorCID, nsnull, nsITextEditor::GetIID(), getter_AddRefs(editor));
     if(!editor)
       err = NS_ERROR_OUT_OF_MEMORY;
       
@@ -318,16 +295,15 @@ nsEditorAppCore::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShel
       err = editor->Init(aDoc, aPresShell);
       if (NS_SUCCEEDED(err) && editor)
       {
-        // The EditorAppCore "owns" the editor
-        mEditor = editor;
+        mEditor = do_QueryInterface(editor);		// this does the addref that is the owning reference
         mEditorType = ePlainTextEditorType;
       }
     }
   }
   else if (mEditorTypeString == "html" || mEditorTypeString == "")  // empty string default to HTML editor
   {
-    nsIHTMLEditor *editor = nsnull;
-    err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, kIHTMLEditorIID, (void **)&editor);
+    nsCOMPtr<nsIHTMLEditor> editor;
+    err = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull, nsIHTMLEditor::GetIID(), getter_AddRefs(editor));
     if(!editor)
       err = NS_ERROR_OUT_OF_MEMORY;
       
@@ -336,8 +312,7 @@ nsEditorAppCore::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShel
       err = editor->Init(aDoc, aPresShell);
       if (NS_SUCCEEDED(err) && editor)
       {
-        // The EditorAppCore "owns" the editor
-        mEditor = editor;
+        mEditor = do_QueryInterface(editor);		// this does the addref that is the owning reference
         mEditorType = eHTMLTextEditorType;
       }
     }
@@ -373,14 +348,14 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
   if (contViewer)
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
-    if (NS_SUCCEEDED(contViewer->QueryInterface(kIDocumentViewerIID, (void**)getter_AddRefs(docViewer))))
+    if (NS_SUCCEEDED(contViewer->QueryInterface(nsIDocumentViewer::GetIID(), (void**)getter_AddRefs(docViewer))))
     {
       nsCOMPtr<nsIDocument> aDoc;
       docViewer->GetDocument(*getter_AddRefs(aDoc));
       if (aDoc)
       {
         nsCOMPtr<nsIDOMDocument> aDOMDoc;
-        if (NS_SUCCEEDED(aDoc->QueryInterface(kIDOMDocumentIID, (void**)getter_AddRefs(aDOMDoc))))
+        if (NS_SUCCEEDED(aDoc->QueryInterface(nsIDOMDocument::GetIID(), (void**)getter_AddRefs(aDOMDoc))))
         {
           nsCOMPtr<nsIPresShell> presShell = dont_AddRef(GetPresShellFor(aWebShell));
           if( presShell )
@@ -760,7 +735,7 @@ nsEditorAppCore::CreateWindowWithURL(const char* urlStr)
    */
   nsIAppShellService* appShell = nsnull;
   rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
+                                    nsIAppShellService::GetIID(),
                                     (nsISupports**)&appShell);
   if (NS_FAILED(rv))
     return rv;
@@ -952,7 +927,7 @@ nsEditorAppCore::Exit()
    * Create the Application Shell instance...
    */
   nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                             kIAppShellServiceIID,
+                                             nsIAppShellService::GetIID(),
                                              (nsISupports**)&appShell);
   if (NS_SUCCEEDED(rv)) {
     appShell->Shutdown();
