@@ -651,6 +651,16 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         }
     }
 
+    // grab the event queue so that we can process events one last time before exiting
+    nsCOMPtr <nsIEventQueue> currentQ;
+    {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
+                         kEventQueueServiceCID, &rv);
+        
+        if (eventQService) {
+            eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentQ));
+        }
+    }
     // XPCOM is officially in shutdown mode NOW
     // Set this only after the observers have been notified as this
     // will cause servicemanager to become inaccessible.
@@ -662,6 +672,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Shutdown global servicemanager
     nsServiceManager::ShutdownGlobalServiceManager(NULL);
+    
+    if (currentQ) {
+        currentQ->ProcessPendingEvents();
+        currentQ = 0;
+    }
 
 #ifndef XPCOM_STANDALONE
     // Release the global case converter
