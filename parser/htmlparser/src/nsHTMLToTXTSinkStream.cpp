@@ -1001,7 +1001,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
         temp.AppendWithConversion(" ["); // Should we output chars at all here?
         desc.StripChars("\"");
         temp += desc;
-        temp.AppendWithConversion("]");
+        temp.AppendWithConversion("] ");
       }
       // If the alt attribute has an empty value (|alt=""|), output nothing
     }
