@@ -26,10 +26,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgmng
 LIBRARY_NAME	= imgmng
+EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGDecoderModule
 
-REQUIRES	= $(MNG_REQUIRES) \
+REQUIRES	= xpcom \
+		  gfx \
+		  gfx2 \
+		  imglib2 \
+		  timer \
+		  $(MNG_REQUIRES) \
 		  $(JPEG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
