@@ -905,9 +905,9 @@ sub GetCommandMenu {
         if ($::anyvotesallowed) {
             $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
         }
-        SendSQL("SELECT mybugslink, userid FROM profiles WHERE login_name = " .
-                SqlQuote($::COOKIE{'Bugzilla_login'}));
-        my ($mybugslink, $userid) = (FetchSQLData());
+        SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
+                "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
+        my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
         if ($mybugslink) {
             my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
             $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
@@ -923,7 +923,7 @@ sub GetCommandMenu {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
-        if (UserInGroup("editusers") || UserInGroup("editgroupmembers")) {
+        if (UserInGroup("editusers") || $blessgroupset) {
             $html .= ", <a href=editusers.cgi>users</a>";
         }
         if (UserInGroup("editcomponents")) {
