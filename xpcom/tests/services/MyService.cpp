@@ -19,6 +19,7 @@
 #include "MyService.h"
 #include "nsIServiceManager.h"
 #include <stdio.h>
+#include "nsIFactory.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
