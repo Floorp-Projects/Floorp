@@ -966,6 +966,14 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc, PRUint32 *pProgress)
 
 void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
 {
+    // If no data to process then reset CR/LF counters and return.
+    if (m_ldifLine.IsEmpty())
+    {
+      m_LFCount = 0;
+      m_CRCount = 0;
+      return;
+    }
+
     nsCOMPtr <nsIMdbRow> newRow;
     if (m_database)
     {
