@@ -734,7 +734,7 @@ handle_iid_is:
 #endif
                         );
 #ifdef DEBUG_shaver
-                PR_ASSERT(0);
+                XPT_ASSERT(0);
 #endif
                 return FALSE;
             }
@@ -1051,11 +1051,11 @@ typelib_const_dcl(TreeState *state)
       }
       case IDLN_TYPE_CHAR:
         cd->value.ch = IDL_CHAR(dcl->const_exp).value[0];
-        PR_ASSERT(cd->value.ch);
+        XPT_ASSERT(cd->value.ch);
         break;
       case IDLN_TYPE_WIDE_CHAR:
         cd->value.wch = IDL_WIDE_CHAR(dcl->const_exp).value[0];
-        PR_ASSERT(cd->value.wch);
+        XPT_ASSERT(cd->value.wch);
         break;
       case IDLN_TYPE_STRING:
         cd->value.string = XPT_NewStringZ(IDL_STRING(dcl->const_exp).value);
@@ -1063,7 +1063,7 @@ typelib_const_dcl(TreeState *state)
             return FALSE;
         break;
       case IDLN_TYPE_WIDE_STRING:
-        PR_ASSERT(0);
+        XPT_ASSERT(0);
         break;
       case IDLN_TYPE_BOOLEAN:
         cd->value.bul = IDL_BOOLEAN(dcl->const_exp).value;
