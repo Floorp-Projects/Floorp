@@ -5,11 +5,25 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <binding name="thumb" extends="xul:box">
+    <content>
+      <xul:spring flex="1"/>
+		  <xul:image inherits="src"/>
+		  <xul:spring flex="1"/>
+    </content>
+  </binding>
+
   <binding name="scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement"/>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment"/>
-      <xul:scrollbarbutton type="increment"/>
+      <xul:scrollbarbutton type="decrement">
+	      <xul:image inherits="src"/>
+	    </xul:scrollbarbutton>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
+	      <xul:thumb inherits="align,src" flex="1"/>
+      </xul:slider>
+      <xul:scrollbarbutton type="increment">
+	    <xul:image inherits="src"/>
+	  </xul:scrollbarbutton>
     </content>
   </binding>
 
