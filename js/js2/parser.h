@@ -449,6 +449,7 @@ namespace JavaScript {
 	struct FunctionDefinition: FunctionName {
 		VariableBinding *parameters;	// Linked list of all parameters, including optional and rest parameters, if any
 		VariableBinding *optParameters;	// Pointer to first non-required parameter inside parameters list; nil if none
+		VariableBinding *namedParameters; // The first parameter after the named parameter marker. May or may not have aliases.
 		VariableBinding *restParameter;	// Pointer to rest parameter inside parameters list; nil if none
 		ExprNode *resultType;			// Result type expression or nil if not provided
 		BlockStmtNode *body;			// Body; nil if none
