@@ -3082,7 +3082,6 @@ IsCanvasFrame(nsIFrame* aFrame)
   return parentType.get() == nsLayoutAtoms::canvasFrame;
 }
 
-#if 0 // unused currently
 static void
 PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
                             const nsStyleColor* aColor,
@@ -3107,7 +3106,6 @@ PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
   mutableColor->mBackgroundImage.SetLength(0);
   mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
 }
-#endif // 0
 
 /**
  * New one
@@ -3347,10 +3345,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         }
     }
 
-#if 0 
-    // this is not sufficient nor required: if the background gets changed via DOM after
-    // frame construction we need to do this again, besides, it is not
-    // necessary since the BODY manages to paint the background correctly
+    // this is not sufficient: if the background gets changed via DOM after
+    // frame construction we need to do this again...
 
     // Section 14.2 of the CSS2 spec says that the background of the root element
     // covers the entire canvas. See if a background was specified for the root
@@ -3364,8 +3360,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       PropagateBackgroundToParent(styleContext, color, parentContext);
       NS_RELEASE(parentContext);
     }
-#endif // 0
-
   }
 
   return NS_OK;
