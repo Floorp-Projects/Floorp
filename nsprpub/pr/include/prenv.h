@@ -35,6 +35,10 @@ PR_BEGIN_EXTERN_C
 */
 PR_EXTERN(char*) PR_GetEnv(const char *var);
 
+#ifdef XP_MAC
+PR_EXTERN(PRIntn) PR_PutEnv(const char *string);
+#endif
+
 PR_END_EXTERN_C
 
 #endif /* prenv_h___ */
