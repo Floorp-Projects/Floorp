@@ -372,3 +372,11 @@ echo "  freetype: $use_freetype"
 echo "  atsui: $use_atsui"
 echo ""
 
+if test x"$use_freetype" != "xyes" && \
+   test x"$use_atsui"    != "xyes" ; then
+
+   AC_MSG_ERROR([Cairo requires at least one font backend.
+                  Please install freetype and fontconfig, then try again:
+                  http://freetype.org/  http://fontconfig.org/
+                ])
+fi
