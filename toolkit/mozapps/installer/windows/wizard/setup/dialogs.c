@@ -1140,11 +1140,12 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
 #ifdef STUB_INSTALLER
     // XXXben We don't support net stub installs yet. 
-    // SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
+    SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
 #endif
 
     gdwACFlag = AC_COMPONENTS;
     OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
+
     break;
 
   case WM_DRAWITEM:
