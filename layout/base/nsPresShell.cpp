@@ -1161,8 +1161,10 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
       PL_PostEvent(eventQueue, ev);
     }
   }
-#endif
   return rv;
+#else
+  return NS_OK;
+#endif
 }
 
 #ifdef NS_DEBUG
