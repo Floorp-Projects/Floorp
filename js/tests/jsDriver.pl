@@ -52,6 +52,7 @@ my $opt_rhino_interp = 0;
 my $opt_rhino_ms = 0;
 my @opt_engine_list;
 my $opt_engine_type = "";
+my $opt_engine_params = "";
 my $opt_user_output_file = 0;
 my $opt_output_file = "";
 my @opt_test_list_files;
@@ -66,7 +67,8 @@ my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
 # command line option definition
 my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
-  "p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u x noexitmunge>x";
+  "o=s opt>o p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u " .
+  "x noexitmunge>x";
 
 if ($os_type eq "MAC") {
     $opt_suite_path = `directory`;
@@ -403,6 +405,10 @@ sub parse_args {
             $option = "L";
             &dd ("opt: adding negative list '$value'.");
             push (@opt_neg_list_files, $value);
+
+        } elsif ($option eq "o") {
+            $opt_engine_params = $value;
+            &dd ("opt: setting engine params to '$opt_engine_params'.");
             
         } elsif ($option eq "p") {
             $opt_suite_path = $value;
@@ -465,6 +471,8 @@ sub usage {
        "(-k|--confail)            Log failures to console (also.)\n" . 
        "(-l|--list) <file> ...    List of tests to execute.\n" . 
        "(-L|--neglist) <file> ... List of tests to skip.\n" . 
+       "(-o|--opt) <options>      Options to pass to the JavaScript engine\n" .
+       "                          (Make sure to quote them!)\n" .
        "(-p|--testpath) <path>    Root of the test suite. (default is ./)\n" .
        "(-s|--shellpath) <path>   Location of JavaScript shell.\n" .
        "(-t|--trace)              Trace script execution.\n" .
@@ -517,6 +525,8 @@ sub get_engine_command {
         die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
     
+    $retval .= " $opt_engine_params";
+
     &dd ("got '$retval'");
     
     return $retval;
