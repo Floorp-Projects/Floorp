@@ -227,7 +227,8 @@ static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsHashtable* gAliases = nsnull;
 static nsHashtable* gCharSetMaps = nsnull;
 static nsHashtable* gFamilies = nsnull;
-static nsHashtable* gNodes = nsnull;
+static nsHashtable* gFFRENodes = nsnull;
+static nsHashtable* gAFRENodes = nsnull;
 // gCachedFFRESearches holds the "already looked up"
 // FFRE (Foundry Family Registry Encoding) font searches
 static nsHashtable* gCachedFFRESearches = nsnull;
@@ -748,10 +749,15 @@ FreeGlobals(void)
     delete gCachedFFRESearches;
     gCachedFFRESearches = nsnull;
   }
-  if (gNodes) {
-    gNodes->Reset(FreeNode, nsnull);
-    delete gNodes;
-    gNodes = nsnull;
+  if (gFFRENodes) {
+    gFFRENodes->Reset(FreeNode, nsnull);
+    delete gFFRENodes;
+    gFFRENodes = nsnull;
+  }
+  if (gAFRENodes) {
+    gAFRENodes->Reset(FreeNode, nsnull);
+    delete gAFRENodes;
+    gAFRENodes = nsnull;
   }
   NS_IF_RELEASE(gPref);
   if (gSpecialCharSets) {
@@ -853,8 +859,13 @@ InitGlobals(void)
     SIZE_FONT_PRINTF(("gBitmapUndersize = %g", gBitmapUndersize));
   }
 
-  gNodes = new nsHashtable();
-  if (!gNodes) {
+  gFFRENodes = new nsHashtable();
+  if (!gFFRENodes) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  gAFRENodes = new nsHashtable();
+  if (!gAFRENodes) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2492,7 +2503,11 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
 
   // if we do not have the correct size 
   // check if we can use a scaled font
-  if ((mPixelSize != bitmap_size) && (aStretch->mScalable)) {
+  // (when the size of a hand tuned font is close to the desired size
+  // favor it over outline scaled font)
+  if ((  (bitmap_size < mPixelSize-(mPixelSize/10))
+      || (bitmap_size > mPixelSize+(mPixelSize/10)))
+       && (aStretch->mScalable)) {
     // if we have an outline font then use that
     // if it is allowed to be closer than the bitmap
     if (aStretch->mOutlineScaled) {
@@ -2991,8 +3006,129 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
   }
 }
 
+static nsFontStyle*
+NodeGetStyle(nsFontNode* aNode, int aStyleIndex)
+{
+  nsFontStyle* style = aNode->mStyles[aStyleIndex];
+  if (!style) {
+    style = new nsFontStyle;
+    if (!style) {
+      return nsnull;
+    }
+    aNode->mStyles[aStyleIndex] = style;
+  }
+  return style;
+}
+
+static nsFontWeight*
+NodeGetWeight(nsFontStyle* aStyle, int aWeightIndex)
+{
+  nsFontWeight* weight = aStyle->mWeights[aWeightIndex];
+  if (!weight) {
+    weight = new nsFontWeight;
+    if (!weight) {
+      return nsnull;
+    }
+    aStyle->mWeights[aWeightIndex] = weight;
+  }
+  return weight;
+}
+
+static nsFontStretch* 
+NodeGetStretch(nsFontWeight* aWeight, int aStretchIndex)
+{
+  nsFontStretch* stretch = aWeight->mStretches[aStretchIndex];
+  if (!stretch) {
+    stretch = new nsFontStretch;
+    if (!stretch) {
+      return nsnull;
+    }
+    aWeight->mStretches[aStretchIndex] = stretch;
+  }
+  return stretch;
+}
+
+static PRBool
+NodeAddScalable(nsFontStretch* aStretch, PRBool aOutlineScaled, 
+                const char *aDashFoundry, const char *aFamily, 
+                const char *aWeight,      const char * aSlant, 
+                const char *aWidth,       const char *aStyle, 
+                const char *aSpacing,     const char *aCharSet)
+{
+      // if we have both an outline scaled font and a bitmap 
+      // scaled font pick the outline scaled font
+      if ((aStretch->mScalable) && (!aStretch->mOutlineScaled) 
+          && (aOutlineScaled)) {
+        PR_smprintf_free(aStretch->mScalable);
+        aStretch->mScalable = nsnull;
+      }
+      if (!aStretch->mScalable) {
+        aStretch->mOutlineScaled = aOutlineScaled;
+        if (aOutlineScaled) {
+          aStretch->mScalable = 
+              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s", 
+              aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+              aSpacing, aCharSet);
+        }
+        else {
+          aStretch->mScalable = 
+              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s", 
+              aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+              aSpacing, aCharSet);
+        }
+      }
+  return PR_TRUE;
+}
+
+static PRBool
+NodeAddSize(nsFontStretch* aStretch, int aSize, const char *aName,
+        nsFontCharSetInfo* aCharSetInfo)
+{
+  PRBool haveSize = PR_FALSE;
+  if (aStretch->mSizesCount) {
+    nsFontGTK** end = &aStretch->mSizes[aStretch->mSizesCount];
+    nsFontGTK** s;
+    for (s = aStretch->mSizes; s < end; s++) {
+      if ((*s)->mSize == aSize) {
+        haveSize = PR_TRUE;
+        break;
+      }
+    }
+  }
+  if (!haveSize) {
+    if (aStretch->mSizesCount == aStretch->mSizesAlloc) {
+      int newSize = 2 * (aStretch->mSizesAlloc ? aStretch->mSizesAlloc : 1);
+      nsFontGTK** newSizes = new nsFontGTK*[newSize];
+      if (!newSizes)
+        return PR_FALSE;
+      for (int j = aStretch->mSizesAlloc - 1; j >= 0; j--) {
+        newSizes[j] = aStretch->mSizes[j];
+      }
+      aStretch->mSizesAlloc = newSize;
+      delete [] aStretch->mSizes;
+      aStretch->mSizes = newSizes;
+    }
+    char* copy = PR_smprintf("%s", aName);
+    if (!copy) {
+      return PR_FALSE;
+    }
+    nsFontGTK* size = new nsFontGTKNormal();
+    if (!size) {
+      return PR_FALSE;
+    }
+    aStretch->mSizes[aStretch->mSizesCount++] = size;
+    size->mName = copy;
+    // size->mFont is initialized in the constructor
+    size->mSize = aSize;
+    size->mBaselineAdjust = 0;
+    size->mCCMap = nsnull;
+    size->mCharSetInfo = aCharSetInfo;
+  }
+  return PR_TRUE;
+}
+
 static void
-GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
+GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
 {
 #ifdef NS_FONT_DEBUG_CALL_TRACE
   if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
@@ -3001,6 +3137,14 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 #endif
 
   nsCAutoString previousNodeName;
+  nsHashtable* node_hash;
+  if (aAnyFoundry) {
+    NS_ASSERTION(aPattern[1] == '*', "invalid 'anyFoundry' pattern");
+    node_hash = gAFRENodes;
+  }
+  else {
+    node_hash = gFFRENodes;
+  }
 
   /*
    * We do not use XListFontsWithInfo here, because it is very expensive.
@@ -3141,22 +3285,27 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     SetCharsetLangGroup(charSetInfo);
     SetFontLangGroupInfo(charSetMap);
 
-    nsCAutoString nodeName(foundry);
+    nsCAutoString nodeName("");
+    if (aAnyFoundry)
+      nodeName.Append('*');
+    else
+      nodeName.Append(foundry);
     nodeName.Append('-');
     nodeName.Append(familyName);
     nodeName.Append('-');
     nodeName.Append(charSetName);
     nsCStringKey key(nodeName);
-    nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
+    nsFontNode* node = (nsFontNode*) node_hash->Get(&key);
     if (!node) {
       node = new nsFontNode;
       if (!node) {
         continue;
       }
-      gNodes->Put(&key, node);
+      node_hash->Put(&key, node);
       node->mName = nodeName;
       node->mCharSetInfo = charSetInfo;
     }
+
     int found = 0;
     if (nodeName == previousNodeName) {
       found = 1;
@@ -3183,14 +3332,9 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       styleIndex = NS_FONT_STYLE_NORMAL;
       break;
     }
-    nsFontStyle* style = node->mStyles[styleIndex];
-    if (!style) {
-      style = new nsFontStyle;
-      if (!style) {
-        continue;
-      }
-      node->mStyles[styleIndex] = style;
-    }
+    nsFontStyle* style = NodeGetStyle(node, styleIndex);
+    if (!style)
+      continue;
 
     nsCStringKey weightKey(weightName);
     int weightNumber = NS_PTR_TO_INT32(gWeights->Get(&weightKey));
@@ -3201,14 +3345,9 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
     int weightIndex = WEIGHT_INDEX(weightNumber);
-    nsFontWeight* weight = style->mWeights[weightIndex];
-    if (!weight) {
-      weight = new nsFontWeight;
-      if (!weight) {
-        continue;
-      }
-      style->mWeights[weightIndex] = weight;
-    }
+    nsFontWeight* weight = NodeGetWeight(style, weightIndex);
+    if (!weight)
+      continue;
   
     nsCStringKey setWidthKey(setWidth);
     int stretchIndex = NS_PTR_TO_INT32(gStretches->Get(&setWidthKey));
@@ -3219,68 +3358,16 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       stretchIndex = 5;
     }
     stretchIndex--;
-    nsFontStretch* stretch = weight->mStretches[stretchIndex];
-    if (!stretch) {
-      stretch = new nsFontStretch;
-      if (!stretch) {
-        continue;
-      }
-      weight->mStretches[stretchIndex] = stretch;
-    }
-    if (scalable) {
-      // if we have both an outline scaled font and a bitmap 
-      // scaled font pick the outline scaled font
-      if ((stretch->mScalable) && (!stretch->mOutlineScaled) 
-          && (outline_scaled)) {
-        PR_smprintf_free(stretch->mScalable);
-        stretch->mScalable = nsnull;
-      }
-      if (!stretch->mScalable) {
-        stretch->mOutlineScaled = outline_scaled;
-        if (outline_scaled) {
-          stretch->mScalable = 
-              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s", 
-              name, familyName, weightName, slant, setWidth, addStyle, 
-              spacing, charSetName);
-        }
-        else {
-          stretch->mScalable = 
-              PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s", 
-              name, familyName, weightName, slant, setWidth, addStyle, 
-              spacing, charSetName);
-        }
-      }
+    nsFontStretch* stretch = NodeGetStretch(weight, stretchIndex);
+    if (!stretch)
       continue;
+
+    if (scalable) {
+      if (!NodeAddScalable(stretch, outline_scaled, name, familyName, 
+           weightName, slant, setWidth, addStyle, spacing, charSetName))
+        continue;
     }
   
-    int pixels = atoi(pixelSize);
-    if (stretch->mSizesCount) {
-      nsFontGTK** end = &stretch->mSizes[stretch->mSizesCount];
-      nsFontGTK** s;
-      for (s = stretch->mSizes; s < end; s++) {
-        if ((*s)->mSize == pixels) {
-          break;
-        }
-      }
-      if (s != end) {
-        continue;
-      }
-    }
-    if (stretch->mSizesCount == stretch->mSizesAlloc) {
-      int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
-      nsFontGTK** newPointer = new nsFontGTK*[newSize];
-      if (newPointer) {
-        for (int j = stretch->mSizesAlloc - 1; j >= 0; j--) {
-          newPointer[j] = stretch->mSizes[j];
-        }
-        stretch->mSizesAlloc = newSize;
-        delete [] stretch->mSizes;
-        stretch->mSizes = newPointer;
-      }
-      else {
-        continue;
-      }
-    }
     p = name;
     while (p < charSetName) {
       if (!*p) {
@@ -3288,21 +3375,10 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       }
       p++;
     }
-    char* copy = PR_smprintf("%s", name);
-    if (!copy) {
+
+    int pixels = atoi(pixelSize);
+    if (!NodeAddSize(stretch, pixels, name, charSetInfo))
       continue;
-    }
-    nsFontGTK* size = new nsFontGTKNormal();
-    if (!size) {
-      continue;
-    }
-    stretch->mSizes[stretch->mSizesCount++] = size;
-    size->mName = copy;
-    // size->mFont is initialized in the constructor
-    size->mSize = pixels;
-    size->mBaselineAdjust = 0;
-    size->mCCMap = nsnull;
-    size->mCharSetInfo = charSetInfo;
   }
   XFreeFontNames(list);
 
@@ -3321,7 +3397,7 @@ GetAllFontNames(void)
     if (!gGlobalList) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*", gGlobalList);
+    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*", PR_FALSE, gGlobalList);
   }
 
   return NS_OK;
@@ -3338,7 +3414,7 @@ FindFamily(nsCString* aName)
       char pattern[256];
       PR_snprintf(pattern, sizeof(pattern), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*",
         aName->get());
-      GetFontNames(pattern, &family->mNodes);
+      GetFontNames(pattern, PR_TRUE, &family->mNodes);
       gFamilies->Put(&key, family);
     }
   }
@@ -3413,9 +3489,10 @@ FFRESubstituteEncoding(nsAWritableCString &aFFREName, char *aReplacementEncoding
 nsFontGTK*
 nsFontMetricsGTK::TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar)
 {
-  FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", 
-                        PromiseFlatCString(aFFREName).get()));
-  nsCStringKey key(PromiseFlatCString(aFFREName).get());
+  const nsPromiseFlatCString& FFREName = PromiseFlatCString(aFFREName);
+  FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", FFREName.get()));
+  nsCStringKey key(FFREName.get());
+  PRBool anyFoundry = (FFREName.get()[0] == '*');
   nsFontNodeArray* nodes = (nsFontNodeArray*) gCachedFFRESearches->Get(&key);
   if (!nodes) {
     nsCAutoString pattern;
@@ -3423,7 +3500,7 @@ nsFontMetricsGTK::TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar)
     nodes = new nsFontNodeArray;
     if (!nodes)
       return nsnull;
-    GetFontNames(pattern.get(), nodes);
+    GetFontNames(pattern.get(), anyFoundry, nodes);
     gCachedFFRESearches->Put(&key, nodes);
   }
   int i, cnt = nodes->Count();
@@ -3447,17 +3524,16 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
   nsFontGTK* font;
  
   nsCStringKey key(*aName);
-  nsFontNode* node = (nsFontNode*) gNodes->Get(&key);
+  nsFontNode* node = (nsFontNode*) gFFRENodes->Get(&key);
   if (!node) {
     nsCAutoString pattern;
     FFREToXLFDPattern(*aName, pattern);
     nsFontNodeArray nodes;
-    GetFontNames(pattern.get(), &nodes);
-    // no need to call gNodes->Put() since GetFontNames already did
+    GetFontNames(pattern.get(), PR_FALSE, &nodes);
+    // no need to call gFFRENodes->Put() since GetFontNames already did
     if (nodes.Count() > 0) {
-      // XXX This assertion may be spurious; you can have more than
-      // -*-courier-iso8859-1 font, for example, from different
-      // foundries.
+      // This assertion is not spurious; when searching for an FFRE
+      // like -*-courier-iso8859-1 TryNodes should be called not TryNode
       NS_ASSERTION((nodes.Count() == 1), "unexpected number of nodes");
       node = nodes.GetElement(0);
     }
@@ -3467,7 +3543,7 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
       if (!node) {
         return nsnull;
       }
-      gNodes->Put(&key, node);
+      gFFRENodes->Put(&key, node);
       node->mDummy = 1;
     }
   }
