@@ -80,7 +80,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     if (i_EventSinkGetter) {
         nsIHTTPEventSink *sink = nsnull;
 
-        (void) i_EventSinkGetter->GetEventSink(i_Verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
+        (void) i_EventSinkGetter->GetEventSink(i_Verb, NS_GET_IID(nsIHTTPEventSink),
                                              (nsISupports**)&sink);
         mEventSink = sink;
         NS_IF_RELEASE(sink);
@@ -113,9 +113,9 @@ nsHTTPChannel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIHTTPChannel)) ||
+        aIID.Equals(NS_GET_IID(nsIChannel)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsIHTTPChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;

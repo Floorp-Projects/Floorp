@@ -34,7 +34,7 @@ static PRBool DeleteEntry(nsISupports *aElement, void *aData) {
 //// nsISupports
 ///////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsNetModuleMgr, nsCOMTypeInfo<nsINetModuleMgr>::GetIID());
+NS_IMPL_ISUPPORTS(nsNetModuleMgr, NS_GET_IID(nsINetModuleMgr));
 
 
 ///////////////////////////////////
@@ -59,7 +59,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
     
     if (NS_FAILED(rv)) return rv;
     
-    rv = newEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), getter_AddRefs(newEntryI));
+    rv = newEntry->QueryInterface(NS_GET_IID(nsINetModRegEntry), getter_AddRefs(newEntryI));
     if (NS_FAILED(rv)) return rv;
 
     // Check for a previous registration
@@ -101,7 +101,7 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsINetNotify *aNotify)
     
     if (NS_FAILED(rv)) return rv;
 
-    rv = tmpEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), getter_AddRefs(tmpEntryI));
+    rv = tmpEntry->QueryInterface(NS_GET_IID(nsINetModRegEntry), getter_AddRefs(tmpEntryI));
     if (NS_FAILED(rv)) return rv;
 
     mEntries->Count(&cnt);
@@ -180,7 +180,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rv = arrEnum->QueryInterface(nsCOMTypeInfo<nsISimpleEnumerator>::GetIID(), (void**)&outEnum);
+    rv = arrEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void**)&outEnum);
     if (NS_FAILED(rv)) {
         delete arrEnum;
         return rv;

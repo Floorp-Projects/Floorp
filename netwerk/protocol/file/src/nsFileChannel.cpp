@@ -112,7 +112,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (getter) {
-        (void)getter->GetEventSink(verb, nsCOMTypeInfo<nsIStreamListener>::GetIID(), (nsISupports**)&mListener);
+        (void)getter->GetEventSink(verb, NS_GET_IID(nsIStreamListener), (nsISupports**)&mListener);
         // ignore the failure -- we can live without having an event sink
     }
 
@@ -189,9 +189,9 @@ NS_IMETHODIMP
 nsFileChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsIFileChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIFileChannel)) ||
+        aIID.Equals(NS_GET_IID(nsIChannel)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aInstancePtr = NS_STATIC_CAST(nsIFileChannel*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -351,7 +351,7 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     nsISupports* str;
     rv = NS_NewTypicalOutputFileStream(&str, mSpec);
     if (NS_FAILED(rv)) return rv;
-    rv = str->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)result);
+    rv = str->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)result);
     NS_RELEASE(str);
     PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
            ("nsFileTransport: OpenOutputStream [this=%x %s]", 
@@ -412,7 +412,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 		if (!mStreamConverter)
 			rv = comMgr->CreateInstance(NS_ISTREAMCONVERTER_KEY "?from=message/rfc822?to=text/xul", 
-													NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
+													NULL, NS_GET_IID(nsIStreamConverter), 
 													(void **) getter_AddRefs(mStreamConverter)); 
 		if (NS_FAILED(rv)) return rv;
 
@@ -638,7 +638,7 @@ nsFileChannel::Process(void)
 		  }
 
 		  
-          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
@@ -703,7 +703,7 @@ nsFileChannel::Process(void)
           mStatus = NS_NewTypicalOutputFileStream(&fs, mSpec);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
@@ -932,7 +932,7 @@ protected:
     nsIFileChannel*             mNext;
 };
 
-NS_IMPL_ISUPPORTS(nsDirEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID());
+NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
 
 NS_IMETHODIMP
 nsFileChannel::GetChildren(nsISimpleEnumerator * *aChildren)
@@ -1002,7 +1002,7 @@ nsFileChannel::MoveFrom(nsIURI *src)
 #if 0
     nsresult rv;
     nsIFileChannel* fc;
-    rv = src->QueryInterface(nsCOMTypeInfo<nsIFileChannel>::GetIID(), (void**)&fc);
+    rv = src->QueryInterface(NS_GET_IID(nsIFileChannel), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
         rv = fc->moveToDir(this);
         NS_RELEASE(fc);
@@ -1024,7 +1024,7 @@ nsFileChannel::CopyFrom(nsIURI *src)
 #if 0
     nsresult rv;
     nsIFileChannel* fc;
-    rv = src->QueryInterface(nsCOMTypeInfo<nsIFileChannel>::GetIID(), (void**)&fc);
+    rv = src->QueryInterface(NS_GET_IID(nsIFileChannel), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
         rv = fc->copyToDir(this);
         NS_RELEASE(fc);
@@ -1097,7 +1097,7 @@ nsFileChannel::Execute(const char *args)
     
     if (args == nsnull) {
         nsIURL* url;
-        rv = mURI->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&url);
+        rv = mURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
         if (NS_SUCCEEDED(rv)) {
             rv = url->GetQuery(&queryArgs);
             NS_RELEASE(url);

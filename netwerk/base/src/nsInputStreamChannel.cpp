@@ -71,7 +71,7 @@ nsInputStreamChannel::Init(nsIURI* uri, const char* contentType,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsInputStreamChannel, nsCOMTypeInfo<nsIChannel>::GetIID());
+NS_IMPL_ISUPPORTS(nsInputStreamChannel, NS_GET_IID(nsIChannel));
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:

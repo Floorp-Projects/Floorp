@@ -66,7 +66,7 @@ nsBasicAuth::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsISupports))) 
 	{
         *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);
         NS_ADDREF_THIS();

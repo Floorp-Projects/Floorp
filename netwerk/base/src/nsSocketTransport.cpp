@@ -1140,20 +1140,20 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
-      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIChannel)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
 #ifndef NSPIPE2
-  if (aIID.Equals(nsCOMTypeInfo<nsIBufferObserver>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIBufferObserver))) {
     *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
 #else
-  if (aIID.Equals(nsCOMTypeInfo<nsIPipeObserver>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIPipeObserver))) {
     *aInstancePtr = NS_STATIC_CAST(nsIPipeObserver*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 

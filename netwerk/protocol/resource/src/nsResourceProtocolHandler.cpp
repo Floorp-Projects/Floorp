@@ -58,7 +58,7 @@ nsResourceProtocolHandler::~nsResourceProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsResourceProtocolHandler, nsCOMTypeInfo<nsIProtocolHandler>::GetIID());
+NS_IMPL_ISUPPORTS(nsResourceProtocolHandler, NS_GET_IID(nsIProtocolHandler));
 
 NS_METHOD
 nsResourceProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -131,7 +131,7 @@ nsResourceProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else {
         rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                NS_GET_IID(nsIURI),
                                                 (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
@@ -323,7 +323,7 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     nsIURL* url;
-    rv = uri->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&url);
+    rv = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
     if (NS_SUCCEEDED(rv)) {
         char* query;
         rv = url->GetQuery(&query);
@@ -332,7 +332,7 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
             rv = channel->GetURI(&fileURI);
             if (NS_SUCCEEDED(rv)) {
                 nsIURL* fileURL;
-                rv = fileURI->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&fileURL);
+                rv = fileURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&fileURL);
                 if (NS_SUCCEEDED(rv)) {
                     (void)fileURL->SetQuery(query);
                     NS_RELEASE(fileURL);

@@ -92,9 +92,9 @@ nsDirectoryIndexStream::QueryInterface(REFNSIID aIID, void** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (aIID.Equals(nsCOMTypeInfo<nsIInputStream>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIBaseStream>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIInputStream)) ||
+        aIID.Equals(NS_GET_IID(nsIBaseStream)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsIInputStream*, this);
         NS_ADDREF(this);
         return NS_OK;

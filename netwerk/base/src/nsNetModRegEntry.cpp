@@ -31,7 +31,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //////////////////////////////
 //// nsISupports
 //////////////////////////////
-NS_IMPL_ISUPPORTS(nsNetModRegEntry, nsCOMTypeInfo<nsINetModRegEntry>::GetIID());
+NS_IMPL_ISUPPORTS(nsNetModRegEntry, NS_GET_IID(nsINetModRegEntry));
 
 
 //////////////////////////////
@@ -118,14 +118,14 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
     if (NS_FAILED(*result)) return;
 
     *result = proxyManager->GetProxyObject(  mEventQ,
-                                             nsCOMTypeInfo<nsINetNotify>::GetIID(),
+                                             NS_GET_IID(nsINetNotify),
                                              aNotify,
                                              PROXY_SYNC | PROXY_ALWAYS,
                                              getter_AddRefs(mSyncProxy));
     if (NS_FAILED(*result)) return;
     
     *result = proxyManager->GetProxyObject(  mEventQ,
-                                             nsCOMTypeInfo<nsINetNotify>::GetIID(),
+                                             NS_GET_IID(nsINetNotify),
                                              aNotify,
                                              PROXY_ASYNC | PROXY_ALWAYS,
                                              getter_AddRefs(mAsyncProxy));
