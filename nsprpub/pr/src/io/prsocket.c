@@ -165,7 +165,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 {
     PRInt32 osfd;
     PRFileDesc *bottom = pd->fd;
-    int err, len;
+    int err;
 
     if (pd->out_flags & PR_POLL_NVAL) {
         PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
@@ -194,13 +194,13 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 #elif defined(WIN32) || defined(WIN16)
 
     if (pd->out_flags & PR_POLL_EXCEPT) {
+        int len = sizeof(err);
 #if defined(WIN32)
 /* Note: There is a bug in Win32 WinSock. The sleep circumvents the
 ** bug. See wtc. /s lth.
 */
         Sleep(0);
 #endif /* WIN32 */
-        len = sizeof(err);
         if (getsockopt(osfd, (int)SOL_SOCKET, SO_ERROR, (char *) &err, &len)
                 == SOCKET_ERROR) {
             _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
@@ -220,7 +220,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 #elif defined(XP_OS2)
 
     if (pd->out_flags & PR_POLL_EXCEPT) {
-        len = sizeof(err);
+        int len = sizeof(err);
         if (getsockopt(osfd, SOL_SOCKET, SO_ERROR, (char *) &err, &len)
                 < 0) {
             _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
