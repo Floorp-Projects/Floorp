@@ -240,7 +240,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   nsresult rv = nsComponentManager::CreateInstance(
     kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(this, labelStr, 0);                 
+    pnsMenuItem->Create(this, labelStr, PR_FALSE); //PR_TRUE);                
     nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     AddItem(supports); // Parent should now own menu item
@@ -439,7 +439,6 @@ nsEventStatus nsMenu::MenuConstruct(
     aWebShell = mWebShell;
   }
 
-   printf("nsMenu::MenuConstruct called \n");
    // Begin menuitem inner loop
     nsCOMPtr<nsIDOMNode> menuitemNode;
     ((nsIDOMNode*)mDOMNode)->GetFirstChild(getter_AddRefs(menuitemNode));
@@ -597,15 +596,15 @@ void nsMenu::LoadSubMenu(
 
     supports = nsnull;
     pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
-	pParentMenu->AddItem(supports); // parent takes ownership
-	NS_RELEASE(supports);
+    pParentMenu->AddItem(supports); // parent takes ownership
+    NS_RELEASE(supports);
 
-	NS_ASSERTION(mWebShell, "get debugger");
-	pnsMenu->SetWebShell(mWebShell);
-	pnsMenu->SetDOMNode(menuNode);
+    pnsMenu->SetWebShell(mWebShell);
+    pnsMenu->SetDOMNode(menuNode);
 
+    /*
     // Begin menuitem inner loop
-	unsigned short menuIndex = 0;
+    unsigned short menuIndex = 0;
 
     nsCOMPtr<nsIDOMNode> menuitemNode;
     menuNode->GetFirstChild(getter_AddRefs(menuitemNode));
@@ -633,5 +632,6 @@ void nsMenu::LoadSubMenu(
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
+    */
   }     
 }
