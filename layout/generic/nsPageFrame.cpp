@@ -481,7 +481,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     // print document URL
     PRUnichar * url;
     mPrintOptions->GetDocURL(&url);
-    if (title != url && (printOptBits & nsIPrintOptions::kOptPrintDocLoc)) {
+    if ((nsnull != url) && (printOptBits & nsIPrintOptions::kOptPrintDocLoc)) {
       DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustRight, nsAutoString(url), rect, visibleHeight, usingHalfThePage);
       nsMemory::Free(url);
     }
