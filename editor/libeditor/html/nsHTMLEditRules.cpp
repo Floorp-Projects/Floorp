@@ -1501,6 +1501,8 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   else
   {
     nsCOMPtr<nsIDOMNode> brNode;
+    PRBool bAfterBlock = PR_FALSE;
+    
     if (bPlaintext)
     {
       res = mHTMLEditor->CreateBR(node, offset, address_of(brNode));
@@ -1508,26 +1510,45 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
     else
     {
       nsWSRunObject wsObj(mHTMLEditor, node, offset);
+      nsCOMPtr<nsIDOMNode> visNode;
+      PRInt32 visOffset=0;
+      PRInt16 wsType;
+      res = wsObj.PriorVisibleNode(node, offset, address_of(visNode), &visOffset, &wsType);
+      if (NS_FAILED(res)) return res;
+      if (wsType==nsWSRunObject::eOtherBlock)
+        bAfterBlock = PR_TRUE;
       res = wsObj.InsertBreak(address_of(node), &offset, address_of(brNode), nsIEditor::eNone);
     }
     if (NS_FAILED(res)) return res;
     res = nsEditor::GetNodeLocation(brNode, address_of(node), &offset);
     if (NS_FAILED(res)) return res;
-    // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
-    // We want the caret to stick to whatever is past the break.  This is
-    // because the break is on the same line we were on, but the next content
-    // will be on the following line.
-    
-    // An exception to this is if the break has a next sibling that is a block node.
-    // Then we stick to the left to aviod an uber caret.
-    nsCOMPtr<nsIDOMNode> siblingNode;
-    brNode->GetNextSibling(getter_AddRefs(siblingNode));
-    if (siblingNode && IsBlockNode(siblingNode))
-      selPriv->SetInterlinePosition(PR_FALSE);
-    else 
+    if (bAfterBlock)
+    {
+      // we just placed a br after a block.  This is the one case where we want the 
+      // selection to be before the br we just placed, as the br will be on a new line,
+      // rather than at end of prior line.
       selPriv->SetInterlinePosition(PR_TRUE);
-    res = aSelection->Collapse(node, offset+1);
-    if (NS_FAILED(res)) return res;
+      res = aSelection->Collapse(node, offset);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
+      // We want the caret to stick to whatever is past the break.  This is
+      // because the break is on the same line we were on, but the next content
+      // will be on the following line.
+      
+      // An exception to this is if the break has a next sibling that is a block node.
+      // Then we stick to the left to aviod an uber caret.
+      nsCOMPtr<nsIDOMNode> siblingNode;
+      brNode->GetNextSibling(getter_AddRefs(siblingNode));
+      if (siblingNode && IsBlockNode(siblingNode))
+        selPriv->SetInterlinePosition(PR_FALSE);
+      else 
+        selPriv->SetInterlinePosition(PR_TRUE);
+      res = aSelection->Collapse(node, offset+1);
+      if (NS_FAILED(res)) return res;
+    }
     *aHandled = PR_TRUE;
   }
   
@@ -6847,10 +6868,9 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     return NS_OK; // we LIKE it when we are in a text node.  that RULZ
   
   // do we need to insert a special mozBR?  We do if we are:
-  // 1) that block is same block where selection is AND
-  // 2) in a collapsed selection AND
-  // 3) after a normal (non-moz) br AND
-  // 4) that br is the last editable node in it's block 
+  // 1) prior node is in same block where selection is AND
+  // 2) prior node is a br AND
+  // 3) that br is not visible
 
   nsCOMPtr<nsIDOMNode> nearNode;
   res = mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(nearNode));
