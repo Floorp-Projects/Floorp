@@ -377,6 +377,7 @@ public:
 protected:
   nsCOMPtr<nsIURI> m_url;
   nsresult mStatus;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
 nsMailtoChannel::nsMailtoChannel(nsIURI * aURI)
@@ -392,19 +393,21 @@ NS_IMPL_ISUPPORTS2(nsMailtoChannel, nsIChannel, nsIRequest);
 
 NS_IMETHODIMP nsMailtoChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
-    *aLoadGroup = nsnull;
-    return NS_OK;
+  *aLoadGroup = mLoadGroup;
+  NS_IF_ADDREF(*aLoadGroup);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
-	return NS_OK;
+  mLoadGroup = aLoadGroup;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailtoChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-    NS_NOTREACHED("GetNotificationCallbacks");
-	return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTREACHED("GetNotificationCallbacks");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
@@ -414,8 +417,8 @@ NS_IMETHODIMP nsMailtoChannel::SetNotificationCallbacks(nsIInterfaceRequestor* a
 
 NS_IMETHODIMP nsMailtoChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = nsnull;
-    return NS_OK; 
+  *aURI = nsnull;
+  return NS_OK; 
 }
  
 NS_IMETHODIMP nsMailtoChannel::SetOriginalURI(nsIURI* aURI)
@@ -438,6 +441,11 @@ NS_IMETHODIMP nsMailtoChannel::Open(nsIInputStream **_retval)
 
 NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
+  // Add to the load group to fire start event
+  if (mLoadGroup) {
+    mLoadGroup->AddRequest(this, ctxt);
+  }
+
   mStatus = listener->OnStartRequest(this, ctxt);
 
   // If OnStartRequest(...) failed, then propagate the error code...
@@ -448,6 +456,11 @@ NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupport
 
   // Call OnStopRequest(...) for correct-ness.
   (void) listener->OnStopRequest(this, ctxt, mStatus);
+
+  // Remove from the load group to fire stop event
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, ctxt, mStatus);
+  }
 
   // Always return NS_ERROR_NO_CONTENT since this channel never provides
   // data...
@@ -532,7 +545,7 @@ NS_IMETHODIMP nsMailtoChannel::GetName(nsACString &aName)
 
 NS_IMETHODIMP nsMailtoChannel::IsPending(PRBool *result)
 {
-    *result = PR_TRUE;
+    *result = PR_FALSE;
     return NS_OK; 
 }
 
