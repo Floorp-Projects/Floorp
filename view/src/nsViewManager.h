@@ -360,7 +360,7 @@ private:
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootView() const { return mRootView; }
   nsView* GetMouseEventGrabber() const;
-	nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
+  nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
 
   nsEventStatus HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
