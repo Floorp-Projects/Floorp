@@ -91,7 +91,8 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   void SerializeAttr(const nsAReadableString& aPrefix,
                      const nsAReadableString& aName,
                      const nsAReadableString& aValue,
-                     nsAWritableString& aStr);
+                     nsAWritableString& aStr,
+                     PRBool aDoEscapeEntities);
 
   PRInt32 mPrefixIndex;
   nsVoidArray mNameSpaceStack;
