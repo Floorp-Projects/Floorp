@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= urlbarhistory
 LIBRARY_NAME	= urlbarhistory
 IS_COMPONENT	= 1
+SHORT_LIBNAME	= urlbhist
 
 CPPSRCS		= nsUrlbarHistory.cpp        \
 			  nsUBHistoryModule.cpp		 \
