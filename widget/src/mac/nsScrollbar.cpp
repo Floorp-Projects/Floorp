@@ -174,15 +174,18 @@ PRBool 	result;
 void
 nsScrollbar::DrawWidget()
 {
-	nsRect	theRect;
-	Rect		macRect;
+	if (mVisible)
+	{
+		nsRect	theRect;
+		Rect		macRect;
 
-	GetBounds(theRect);
-	theRect.x = theRect.y = 0;
-	nsRectToMacRect(theRect, macRect);
-	::FrameRect(&macRect);
+		GetBounds(theRect);
+		theRect.x = theRect.y = 0;
+		nsRectToMacRect(theRect, macRect);
+		::FrameRect(&macRect);
 
-	DrawThumb(PR_FALSE);
+		DrawThumb(PR_FALSE);
+	}
 }
 
 /**-------------------------------------------------------------------------------
@@ -301,12 +304,6 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
     if (aSize <= 0) 
   		aSize = 1;
   	mThumbSize = aSize;
-
-	if (mContext != NULL) {			// beard - can't draw w/o a context.
-		StartDraw();
-  		DrawWidget();				// ??? is this necessary - DWC
-		EndDraw();
-	}
   	return(NS_OK);
 }
 
