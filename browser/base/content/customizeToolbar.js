@@ -91,16 +91,39 @@ function buildDialog()
   newToolbar.setAttribute("minheight", newToolbar.boxObject.height);
 }
 
+function createEnclosure(paletteItem, currentRow)
+{
+  // Create an enclosure for the item.
+  var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                       "toolbarpaletteitem");
+  enclosure.setAttribute("align", "center");
+  enclosure.setAttribute("pack", "center");
+  enclosure.setAttribute("flex", "1");
+  enclosure.setAttribute("width", "0");
+  enclosure.setAttribute("minheight", "0");
+  enclosure.setAttribute("minwidth", "0");
+  enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
+
+  enclosure.appendChild(paletteItem);
+  currentRow.appendChild(enclosure);
+}
+
 function buildPalette(paletteBox, toolbar, currentSet)
 {
   var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "hbox");
   currentRow.setAttribute("class", "paletteRow");
 
-  var rowSlot = 0;
+  var rowSlot = 1;
   var rowMax = 4;
 
-  var node = toolbar.palette.firstChild;
+  // Add the toolbar separator first.
+  var node = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                      "toolbarseparator");
+  node.id = "separator";
+  createEnclosure(node, currentRow);
+
+  node = toolbar.palette.firstChild;
   var isOnToolbar = false;
   while (node) {
     for (var i = 0; i < currentSet.length; ++i) {
@@ -129,20 +152,7 @@ function buildPalette(paletteBox, toolbar, currentSet)
     } 
 
     rowSlot++;
-    // Create an enclosure for the item.
-    var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                         "toolbarpaletteitem");
-    enclosure.setAttribute("align", "center");
-    enclosure.setAttribute("pack", "center");
-    enclosure.setAttribute("flex", "1");
-    enclosure.setAttribute("width", "0");
-    enclosure.setAttribute("minheight", "0");
-    enclosure.setAttribute("minwidth", "0");
-    enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
- 
-    enclosure.appendChild(paletteItem);
-    currentRow.appendChild(enclosure);
-
+    createEnclosure(paletteItem, currentRow);
     node = node.nextSibling;
   }
 
@@ -222,6 +232,14 @@ var toolbarDNDObserver = {
     if (!item)
       return;
 
+    // If we're a separator and dragging from the palette, do a clone so that the
+    // separator always stays in the palette.
+    var isSeparator = false;
+    if (gDraggingFromPalette && item.firstChild.localName == "toolbarseparator") {
+      item = item.cloneNode(true);
+      isSeparator = true;
+    }
+
     // We have to remove the funky flex and width attributes that were set on
     // the item to space it properly in the palette.
     item.removeAttribute("flex");
@@ -238,7 +256,7 @@ var toolbarDNDObserver = {
     item.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver);");
  
     var currentRow;
-    if (gDraggingFromPalette)
+    if (gDraggingFromPalette && !isSeparator)
       currentRow = item.parentNode;
 
     if (gCurrentDragOverItem.id == "cloneToolbar")
