@@ -35,7 +35,16 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIReflowCommand.h"
+#include "nsHTMLParts.h"
+#include "nsIPresShell.h"
+#include "nsStyleChangeList.h"
+#include "nsCSSRendering.h"
 
+/*
+void
+ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
+                           nsIFrame* aFrame);
+*/
 
 nsresult
 NS_NewDeckFrame ( nsIFrame** aNewFrame )
@@ -95,8 +104,17 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
         ForceResolveToPseudoElement(*aPresContext,mSelected, hide);
       */
 
-      nsIFrame* frame = GetSelectedFrame();
-      mSelected = frame;
+      /*
+         // reflow
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+    
+      nsCOMPtr<nsIReflowCommand> reflowCmd;
+      nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                            nsIReflowCommand::StyleChanged);
+      if (NS_SUCCEEDED(rv)) 
+        shell->AppendReflowCommand(reflowCmd);
+        */
 
       /*
       if (nsnull != frame)
@@ -105,8 +123,12 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
          ForceResolveToPseudoElement(*aPresContext,mSelected, show);
       }
 */
+   // ApplyRenderingChangeToTree(aPresContext, this);
+
+  /*
 	  nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
+    */
   }
 
 
@@ -135,10 +157,6 @@ nsDeckFrame::GetSelectedFrame()
 
     // convert it to an integer
     index = value.ToInteger(&error);
-    printf("index=%d\n",index);
-  } else {
-    printf("no index set\n");
-
   }
 
   // get the child at that index. 
@@ -153,10 +171,38 @@ nsDeckFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
+  // if a tab is hidden all its children are too.
+ 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
+	mStyleContext->GetStyleData(eStyleStruct_Display);
+	if (!disp->mVisible)
+		return NS_OK;
 
-   
-  nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->mVisible && mRect.width && mRect.height) {
+      // Paint our background and border
+      PRIntn skipSides = GetSkipSides();
+      const nsStyleColor* color = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+
+      nsRect  rect(0, 0, mRect.width, mRect.height);
+      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                      aDirtyRect, rect, *color, *spacing, 0, 0);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+    }
+  }
+
+  nsIFrame* frame = GetSelectedFrame();
+
+  if (frame != nsnull)
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, frame, aWhichLayer);
+
   return NS_OK;
+
 }
 
 
@@ -708,10 +754,6 @@ nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleCon
     return result;
   }
 
-  if (aLocalChange) {
-    *aLocalChange = ourChange;
-  }
-
   // get our hidden pseudo
   nsCOMPtr<nsIAtom> hide (do_QueryInterface(NS_NewAtom(":-moz-deck-hidden")));
 
@@ -736,6 +778,12 @@ nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleCon
     index = value.ToInteger(&error);
   } 
 
+
+  if (aLocalChange) {
+    *aLocalChange = ourChange;
+  }
+
+
   // resolve all our children that are not selected with the hidden pseudo elements
   // style context
     nsIFrame* childFrame = mFrames.FirstChild(); 
@@ -743,17 +791,37 @@ nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleCon
     while (nsnull != childFrame) 
     {
       
+      nsIStyleContext* oldS = nsnull;
+      nsIStyleContext* newS = nsnull;
+
+  
       if (count == index)
       {
-
+        childFrame->GetStyleContext(&oldS);
         childFrame->ReResolveStyleContext(aPresContext, mStyleContext, 
                                               ourChange, aChangeList, &ourChange);
       } else {
         // use hidden style context
+        childFrame->GetStyleContext(&oldS);
         childFrame->ReResolveStyleContext(aPresContext, newSC, 
                                               ourChange, aChangeList, &ourChange);
 
       }
+
+      childFrame->GetStyleContext(&newS);
+
+      //CaptureStyleChangeFor(childFrame, oldS, newS, 
+      //      ourChange, aChangeList, &ourChange);
+
+      if (oldS != newS)
+      {
+        if (aChangeList) 
+            aChangeList->AppendChange(childFrame, NS_STYLE_HINT_VISUAL);
+      }
+
+      NS_RELEASE(oldS);
+      NS_RELEASE(newS);
+
       childFrame->GetNextSibling(&childFrame); 
       count++;
     }

@@ -177,6 +177,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                       nsDidReflowStatus aStatus);
+
   NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
 
@@ -696,6 +699,30 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   NS_IF_RELEASE(baseURL);
 }
 
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsLeafFrame::DidReflow(aPresContext, aStatus);
+
+
+  // The view is created hidden; once we have reflowed it and it has been
+  // positioned then we show it.
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    nsIView* view = nsnull;
+    GetView(&view);
+    const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    nsViewVisibility newVis = NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow;
+    nsViewVisibility oldVis;
+    // only change if different.
+    view->GetVisibility(oldVis);
+    if (newVis != oldVis) 
+      view->SetVisibility(newVis);
+  }
+  
+  return rv;
+}
 
 nsresult
 nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
@@ -826,6 +853,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,

@@ -363,6 +363,10 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
             !display->mVisible) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
         }
+
+        // Set the initial visiblity of the view -EDV
+        view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == display->mVisible ? nsViewVisibility_kHide : nsViewVisibility_kShow);
+
         // XXX If it's relatively positioned or absolutely positioned then we
         // need to mark it as having transparent content, too. See bug #2502
         const nsStylePosition* position = (const nsStylePosition*)

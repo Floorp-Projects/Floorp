@@ -547,7 +547,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
 
       // if we don't need a reflow then 
       // lets see if we are already that size. Yes? then don't even reflow. We are done.
-      if (/*aReflowState.reason == eReflowReason_Incremental && */!mSprings[spring].needsReflow) {
+      if (!mSprings[spring].needsReflow) {
           nsRect currentSize;
           childFrame->GetRect(currentSize);
 
@@ -571,6 +571,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
         reflowState.reason = reason;
 
+        // tell the child what size they should be
         reflowState.computedWidth = mSprings[spring].calculatedSize.width;
         reflowState.computedHeight = mSprings[spring].calculatedSize.height;
 
@@ -581,7 +582,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         if (reflowState.computedHeight != NS_INTRINSICSIZE)
             reflowState.computedHeight -= (total.top + total.bottom);
 
-        // HTML flames do not implement nsIBox so unless they set both their width and height we do not know
+        // HTML frames do not implement nsIBox so unless they set both their width and height we do not know
         // what there preferred size is. We can assume a preferred width or height of 0 when flexable but when
         // not flexible we are in trouble. Why? Well if the child is fixed we really want its intrinsic size and
         // the only way to get it is to flow with NS_INTRINSIC. So lets do that if we have to.
@@ -620,33 +621,6 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
           }
             
         } 
-        
-        /*
-        else {
-          if (mSprings[spring].prefWidthIntrinsic && reflowState.computedWidth != NS_INTRINSICSIZE) {
-              reflowState.computedWidth = mSprings[spring].calculatedSize.width;
-              mSprings[spring].calculatedSize.width = NS_INTRINSICSIZE;
-              FlowChildAt(childFrame, aPresContext, desiredSize, aReflowState, aStatus, spring, incrementalChild);
-              if (reflowState.computedWidth < desiredSize.width)
-                 reflowState.computedWidth = desiredSize.width;
-          }
-        }
-        */
-    
-        /*
-        // XXX complete hack. HTML block don't seem to return the actually size they layed themselves
-        // out in if they did not fit. So if the height is 0 indicating no one set it them. Get this 
-        // fixed in blocks themselves.
-        if (mHorizontal) {
-          // if we could not get the height of the child because it did not implement nsIBox and
-          // it did not provide a height via css and we are trying to lay it out with a height of 0
-          if (mSprings[spring].prefHeightIntrinsic && mSprings[spring].calculatedSize.height == 0)
-            reflowState.computedHeight = NS_INTRINSICSIZE;
-        } else {
-          if (mSprings[spring].prefWidthIntrinsic && mSprings[spring].calculatedSize.width == 0)
-            reflowState.computedWidth = NS_INTRINSICSIZE;
-        }
-        */
 
         nsSize maxElementSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
         desiredSize.maxElementSize = &maxElementSize;
@@ -661,23 +635,18 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
-  
         if (maxElementSize.width != NS_INTRINSICSIZE && maxElementSize.width > desiredSize.width)
             desiredSize.width = maxElementSize.width;
 
-        /*
-        if (maxElementSize.height != NS_INTRINSICSIZE && maxElementSize.height < desiredSize.height)
-            desiredSize.height = maxElementSize.height;
-        */
-
-        // set the rect
+          // set the rect
         childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
       }
-
       // add the margin back in. The child should add its border automatically
       desiredSize.height += (margin.top + margin.bottom);
       desiredSize.width += (margin.left + margin.right);
-    
+
+   
+
       mSprings[spring].needsReflow = PR_FALSE;
 
       return NS_OK;

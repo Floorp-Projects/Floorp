@@ -1716,11 +1716,13 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
         aEvent->point.x += offset.x;
         aEvent->point.y += offset.y;
-
+ 
+        PRBool handled = PR_FALSE;
         view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
                                   NS_VIEW_FLAG_CHECK_PARENT |
                                   NS_VIEW_FLAG_CHECK_SIBLINGS,
-                          aStatus);
+                          aStatus,
+                          handled);
 
         aEvent->point.x -= offset.x;
         aEvent->point.y -= offset.y;
