@@ -33,7 +33,7 @@ class nsICalICalendarContentSink : public nsISupports
 public:
 
   NS_IMETHOD                 Init() = 0 ;
-  NS_IMETHOD                 SetViewerContainer(nsIWebViewerContainer * aViewerContainer) = 0;
+  /*NS_IMETHOD                 SetViewerContainer(nsIWebViewerContainer * aViewerContainer) = 0; */
 
 };
 

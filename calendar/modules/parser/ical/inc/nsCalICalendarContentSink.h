@@ -29,9 +29,13 @@
 #include "nsCalICalendarDTD.h"
 #include "nsICalICalendarParserObject.h"
 #include "nsICalICalendarContentSink.h"
+#include "nsIXPFCICalContentSink.h"
+#include "nsIXPFCContentSink.h"
 //#include "nsCalICalendarParserCIID.h"
 
 class nsCalICalendarContentSink : public nsICalICalendarContentSink,
+                                  public nsIXPFCICalContentSink,
+                                  public nsIXPFCContentSink,
                                   public nsIContentSink
 {
 public:
@@ -43,7 +47,7 @@ public:
 
   //nsICalICalendarContentSink
   NS_IMETHOD Init();
-  NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
+  /*NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);*/
 
   //nsIContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
@@ -62,6 +66,10 @@ private:
 public:
   NS_IMETHOD_(PRBool) IsContainer(const nsIParserNode& aNode);
 
+  NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
+  NS_IMETHOD SetContentSinkContainer(nsISupports * aContentSinkContainer);
+  NS_IMETHOD SetCalendarList(nsIArray * aCalendarList);
+
 
 private:
     nsIWebViewerContainer * mViewerContainer ;
@@ -70,6 +78,7 @@ private:
     nsIArray * mContainerList ;
     PRUint32    mState;
 
+    nsIArray * mCalendarList;
 };
 
 

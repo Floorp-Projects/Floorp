@@ -373,8 +373,7 @@ nsresult nsCalICalendarDTD::HandleBeginToken(CToken* aToken)
       case eCalICalendarTag_vtimezone:          
       {
         // todo: xxx: close any already open containers;
-        if (eCalICalendarTag_begin == aToken->GetTypeID())
-          mSink->OpenContainer(*attrNode);
+        mSink->OpenContainer(*attrNode);
       }
       break;
 
