@@ -37,13 +37,6 @@ interface nsIWebProgressListener;
 [scriptable, uuid(663CC0AA-42EA-11d4-98D0-001083010E9B)]
 interface nsIExternalHelperAppService : nsISupports
 {
-  // canHandleContent: determines if we have an external helper application for a given mime type
-  // aMimeContentType --> the specified mime type we are attempting to get a helper application for
-  // aUri --> the url for the data we are trying to load. The implementor may need this in order to figure 
-  // out the file extension of the document.
-  // returns TRUE if we have such an app and FALSE otherwise.
-  boolean canHandleContent (in string aMimeContentType, in nsIURI aUri); 
-
   // doContent: binds an external helper application to a stream listener. The caller should pump data
   // into the returned stream listener. When the OnStopRequest is issued, the stream listener implementation
   // will launch the helper app with this data.
