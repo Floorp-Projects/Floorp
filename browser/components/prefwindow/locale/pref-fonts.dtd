@@ -52,21 +52,9 @@
 
 <!ENTITY  newLanguages.label                      "New languages can be configured using the Languages Panel.">
 
-<!ENTITY  useDocumentFonts.label                  "Fonts">
-<!ENTITY  useDocumentFonts.accesskey              "F">
-
 <!-- leaving this stuff in for now -->
 
 <!ENTITY  header2                                 "When a webpage chooses its own fonts">
-<!ENTITY  useDefaultFont.label                    "Use my default fonts, ignoring the fonts the page has chosen">
-<!ENTITY  useDefaultFont.accesskey                "u">
-<!-- LOCALIZATION NOTE (useDocFontNonDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontNonDynamic.label              "Use the fonts chosen by the page">
-<!ENTITY  useDocFontNonDynamic.accesskey          "p">
-<!-- LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
-<!ENTITY  useDocFontDynamic.label                 "Use all the fonts chosen by the page">
-<!ENTITY  useDocFontDynamic.accesskey             "a">
-
 <!-- font scaling -->
 <!ENTITY  resolution.label                        "Display resolution:">
 <!ENTITY  resolution.accesskey                    "r">
@@ -100,5 +88,8 @@
 <!ENTITY  visitedLinkColor.label          "Visited Links:">
 <!ENTITY  visitedLinkColor.accesskey      "v">
 <!ENTITY  someProvColors                  "When a web page provides its own colors and background">
-<!ENTITY  alwaysUseMyColors.label   "Colors">
-<!ENTITY  alwaysUseMyColors.accesskey "C">
+<!ENTITY  useMyColors.label   "Colors">
+<!ENTITY  useMyColors.accesskey "C">
+<!ENTITY  useMyFonts.label                  "Fonts">
+<!ENTITY  useMyFonts.accesskey              "F">
+
