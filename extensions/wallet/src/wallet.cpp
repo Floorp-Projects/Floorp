@@ -1197,6 +1197,16 @@ wallet_FetchSchemaConcatFromNetCenter() {
     ("http://people.netscape.com/morse/wallet/SchemaConcat.tbl","SchemaConcat.tbl");
 }
 
+/*
+ * fetch wallet editor from netcenter and put into
+ * local copy of file at walleted.html
+ */
+void
+wallet_FetchWalletEditorFromNetCenter() {
+  wallet_FetchFromNetCenter
+    ("http://people.netscape.com/morse/wallet/walleted.html","walleted.html");
+}
+
 /*********************************************************************/
 /* The following are utility routines for the main wallet processing */
 /*********************************************************************/
@@ -1418,6 +1428,7 @@ wallet_Initialize() {
     wallet_FetchFieldSchemaFromNetCenter();
     wallet_FetchURLFieldSchemaFromNetCenter();
     wallet_FetchSchemaConcatFromNetCenter();
+    wallet_FetchWalletEditorFromNetCenter();
 
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
@@ -1906,9 +1917,7 @@ wallet_RequestToPrefill(XP_List * list) {
   return;
 }
 
-#define WALLET_EDITOR_URL "http://people.netscape.com/morse/wallet/walleted.html"
-//#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
-//#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
+#define WALLET_EDITOR_NAME "walleted.html"
 // bad!!! should pass the above URL as parameter to wallet_PostEdit
 #define BREAK '\001'
 
@@ -1928,8 +1937,8 @@ wallet_PostEdit() {
                                      kINetServiceIID,
                                      (nsISupports **)&netservice);
   if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
-    const nsAutoString walletEditor = nsAutoString(WALLET_EDITOR_URL);
-    if (!NS_FAILED(NS_NewURL(&url, walletEditor))) {
+    nsFileURL u = nsFileURL(Wallet_ProfileDirectory(WALLET_EDITOR_NAME));
+    if (!NS_FAILED(NS_NewURL(&url, (char *)u.GetURLString()))) {
       res = netservice->GetCookieString(url, *nsCookie);
     }
     nsServiceManager::ReleaseService(kNetServiceCID, netservice);
@@ -2189,8 +2198,9 @@ wallet_ClearStopwatch();
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
   char * message = Wallet_Localize("WantToCaptureForm?");
+  nsFileURL u = nsFileURL(Wallet_ProfileDirectory(WALLET_EDITOR_NAME));
   *result =
-    (PL_strcmp(URLName, WALLET_EDITOR_URL)) && wallet_GetFormsCapturingPref() &&
+    (PL_strcmp(URLName, (char *)u.GetURLString())) && wallet_GetFormsCapturingPref() &&
     (count>=3) && FE_Confirm(message);
   PR_FREEIF(message);
 }

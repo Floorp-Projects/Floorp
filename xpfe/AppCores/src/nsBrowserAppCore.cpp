@@ -69,6 +69,12 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 
 #if defined(ClientWallet) || defined(SingleSignon)
+#ifdef ClientWallet
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+#endif
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -319,12 +325,26 @@ nsBrowserAppCore::Stop()
 }
 
 #ifdef ClientWallet
-//#define WALLET_EDITOR_URL "resource:/res/samples/walleted.html"
-//#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
-#define WALLET_EDITOR_URL "http://people.netscape.com/morse/wallet/walleted.html"
+#define WALLET_EDITOR_NAME "walleted.html"
 
 #define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples/"
 //#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
+
+nsFileSpec ProfileDirectory(char * file) {
+  nsresult rv;
+  nsIFileLocator* locator = nsnull;
+  rv = nsServiceManager::GetService
+    (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+  if (NS_FAILED(rv) || !locator)
+    return (nsFileSpec)NULL;
+  nsFileSpec dirSpec;
+  rv = locator->GetFileLocation
+     (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
+  nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+  if (NS_FAILED(rv))
+    return (nsFileSpec)NULL;
+  return dirSpec+file;
+}
 
 PRInt32
 newWind(char* urlName) {
@@ -387,16 +407,17 @@ nsBrowserAppCore::WalletEditor()
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
+  nsFileURL u = nsFileURL(ProfileDirectory(WALLET_EDITOR_NAME));
   if ((NS_OK == res) && (nsnull != walletservice)) {
     nsIURL * url;
-    if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
+    if (!NS_FAILED(NS_NewURL(&url, (char *)(u.GetURLString())))) {
       res = walletservice->WALLET_PreEdit(url);
       nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     }
   }
 
   /* bring up the wallet editor in a new window */
-  return newWind(WALLET_EDITOR_URL);
+  return newWind((char *)(u.GetURLString()));
 }
 
 NS_IMETHODIMP    
