@@ -39,18 +39,18 @@
 #define ipcTransport_h__
 
 #include "nsIObserver.h"
-#include "nsIStreamListener.h"
-#include "nsIStreamProvider.h"
 #include "nsITransport.h"
 #include "nsITimer.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "prio.h"
 
 #include "ipcMessage.h"
 #include "ipcMessageQ.h"
 
-class ipcTransport;
+#ifdef XP_UNIX
+#include "prio.h"
+#include "ipcTransportUnix.h"
+#endif
 
 //----------------------------------------------------------------------------
 // ipcTransportObserver interface
@@ -64,54 +64,6 @@ public:
     virtual void OnMessageAvailable(const ipcMessage *) = 0;
 };
 
-//----------------------------------------------------------------------------
-// ipcSendQueue
-//----------------------------------------------------------------------------
-
-class ipcSendQueue : public nsIStreamProvider
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMPROVIDER
-
-    ipcSendQueue(ipcTransport *transport)
-        : mTransport(transport)
-        { }
-    virtual ~ipcSendQueue() { }
-
-    void EnqueueMsg(ipcMessage *msg) { mQueue.Append(msg); }
-
-    PRBool IsEmpty() { return mQueue.IsEmpty(); }
-
-private:
-    ipcTransport *mTransport;
-    ipcMessageQ   mQueue;
-};
-
-//-----------------------------------------------------------------------------
-// ipcReceiver
-//-----------------------------------------------------------------------------
-
-class ipcReceiver : public nsIStreamListener
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-
-    ipcReceiver(ipcTransport *transport)
-        : mTransport(transport)
-        { }
-    virtual ~ipcReceiver() { }
-
-    nsresult ReadSegment(const char *, PRUint32 count, PRUint32 *countRead);
-
-private:
-    ipcTransport         *mTransport;
-    ipcMessage            mMsg;  // message in progress
-};
-
 //-----------------------------------------------------------------------------
 // ipcTransport
 //-----------------------------------------------------------------------------
@@ -123,20 +75,23 @@ public:
     NS_DECL_NSIOBSERVER
 
     ipcTransport()
-        : mSendQ(this)
-        , mReceiver(this)
-        , mObserver(nsnull)
-        , mFD(nsnull)
-        , mWriteSuspended(PR_FALSE)
+        : mObserver(nsnull)
         , mSentHello(PR_FALSE)
         , mHaveConnection(PR_FALSE)
         , mSpawnedDaemon(PR_FALSE)
         , mConnectionAttemptCount(0)
-        { }
+#ifdef XP_UNIX
+        , mSendQ(this)
+        , mReceiver(this)
+        , mFD(nsnull)
+        , mWriteSuspended(PR_FALSE)
+#endif
+        { NS_INIT_ISUPPORTS(); }
+
     virtual ~ipcTransport();
 
     nsresult Init(const nsACString &appName,
-                  const nsACString &socketPath,
+                  const nsACString &socketPath, // ignored if not UNIX
                   ipcTransportObserver *observer);
     nsresult Shutdown();
 
@@ -146,12 +101,10 @@ public:
     PRBool   HaveConnection() const { return mHaveConnection; }
 
 public:
-    // internal to implementation 
+    //
+    // internal to implementation
+    //
     void OnMessageAvailable(const ipcMessage *);
-    void SetWriteSuspended(PRBool val) { mWriteSuspended = val; }
-    void OnStartRequest(nsIRequest *req);
-    void OnStopRequest(nsIRequest *req, nsresult status);
-    PRFileDesc *FD() { return mFD; }
 
 private:
     //
@@ -159,28 +112,43 @@ private:
     //
     nsresult Connect();
     nsresult SendMsg_Internal(ipcMessage *msg);
-    nsresult CreateTransport();
     nsresult SpawnDaemon();
 
     //
     // data
     //
-    ipcSendQueue           mSendQ;
-    ipcReceiver            mReceiver;
     ipcMessageQ            mDelayedQ;
     ipcTransportObserver  *mObserver;
-    nsCOMPtr<nsITransport> mTransport;
-    nsCOMPtr<nsIRequest>   mReadRequest;
-    nsCOMPtr<nsIRequest>   mWriteRequest;
     nsCOMPtr<nsITimer>     mTimer;
     nsCString              mAppName;
-    nsCString              mSocketPath;
-    PRFileDesc            *mFD;
-    PRPackedBool           mWriteSuspended;
     PRPackedBool           mSentHello;
     PRPackedBool           mHaveConnection;
     PRPackedBool           mSpawnedDaemon;
     PRUint8                mConnectionAttemptCount;
+
+#ifdef XP_UNIX
+
+    ipcSendQueue           mSendQ;
+    ipcReceiver            mReceiver;
+    nsCOMPtr<nsITransport> mTransport;
+    nsCOMPtr<nsIRequest>   mReadRequest;
+    nsCOMPtr<nsIRequest>   mWriteRequest;
+    nsCString              mSocketPath;
+    PRFileDesc            *mFD;
+    PRPackedBool           mWriteSuspended;
+
+    nsresult CreateTransport();
+
+public:
+    //
+    // internal helper methods for ipcSendQueue and ipcReceiver
+    //
+    void SetWriteSuspended(PRBool val) { mWriteSuspended = val; }
+    void OnStartRequest(nsIRequest *req);
+    void OnStopRequest(nsIRequest *req, nsresult status);
+    PRFileDesc *FD() { return mFD; }
+
+#endif
 };
 
 #endif // !ipcTransport_h__

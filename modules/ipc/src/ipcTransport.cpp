@@ -37,8 +37,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsISocketTransportService.h"
-#include "nsISocketTransport.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIFile.h"
@@ -58,9 +56,10 @@
 
 #ifdef XP_UNIX
 #include "ipcSocketProviderUnix.h"
-#endif
+#include "nsISocketTransportService.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+#endif
 
 //-----------------------------------------------------------------------------
 // ipcTransport
@@ -68,8 +67,10 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 ipcTransport::~ipcTransport()
 {
+#ifdef XP_UNIX
     if (mFD)
         PR_Close(mFD);
+#endif
 }
 
 nsresult
@@ -78,10 +79,10 @@ ipcTransport::Init(const nsACString &appName,
                    ipcTransportObserver *obs)
 {
     mAppName = appName;
-    mSocketPath = socketPath;
     mObserver = obs;
 
 #ifdef XP_UNIX
+    mSocketPath = socketPath;
     ipcSocketProviderUnix::SetSocketPath(socketPath);
 #endif
 
@@ -104,6 +105,7 @@ ipcTransport::Shutdown()
 
     mHaveConnection = PR_FALSE;
 
+#ifdef XP_UNIX
     if (mReadRequest) {
         mReadRequest->Cancel(NS_BINDING_ABORTED);
         mReadRequest = nsnull;
@@ -114,6 +116,7 @@ ipcTransport::Shutdown()
         mWriteSuspended = PR_FALSE;
     }
     mTransport = nsnull;
+#endif
     return NS_OK;
 }
 
@@ -140,6 +143,7 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
 
     mSendQ.EnqueueMsg(msg);
 
+#ifdef XP_UNIX
     if (!mWriteRequest) {
         if (!mTransport)
             return NS_ERROR_FAILURE;
@@ -152,6 +156,7 @@ ipcTransport::SendMsg_Internal(ipcMessage *msg)
         mWriteRequest->Resume();
         mWriteSuspended = PR_FALSE;
     }
+#endif
     return NS_OK;
 }
 
@@ -167,12 +172,16 @@ ipcTransport::Connect()
         return NS_ERROR_ABORT;
     }
 
+#ifdef XP_UNIX
     rv = CreateTransport();
     if (NS_FAILED(rv)) return rv; 
 
     rv = mTransport->AsyncRead(&mReceiver, nsnull, 0, PRUint32(-1), 0,
                                getter_AddRefs(mReadRequest));
     return rv;
+#else
+    return NS_OK;
+#endif
 }
 
 void
@@ -205,6 +214,8 @@ ipcTransport::OnMessageAvailable(const ipcMessage *rawMsg)
     else if (mObserver)
         mObserver->OnMessageAvailable(rawMsg);
 }
+
+#ifdef XP_UNIX
 
 void
 ipcTransport::OnStartRequest(nsIRequest *req)
@@ -297,6 +308,8 @@ ipcTransport::CreateTransport()
     return rv;
 }
 
+#endif // !XP_UNIX
+
 nsresult
 ipcTransport::SpawnDaemon()
 {
@@ -344,200 +357,6 @@ ipcTransport::Observe(nsISupports *subject, const char *topic, const PRUnichar *
     else if (strcmp(topic, "xpcom-shutdown") == 0 ||
              strcmp(topic, "profile-change-net-teardown") == 0)
         Shutdown(); 
-
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// ipcSendQueue
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP_(nsrefcnt)
-ipcSendQueue::AddRef()
-{
-    return mTransport->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-ipcSendQueue::Release()
-{
-    return mTransport->Release();
-}
-
-NS_IMPL_QUERY_INTERFACE2(ipcSendQueue, nsIStreamProvider, nsIRequestObserver)
-
-NS_IMETHODIMP
-ipcSendQueue::OnStartRequest(nsIRequest *request,
-                             nsISupports *context)
-{
-    LOG(("ipcSendQueue::OnStartRequest\n"));
-
-    if (mTransport)
-        mTransport->OnStartRequest(request);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ipcSendQueue::OnStopRequest(nsIRequest *request,
-                            nsISupports *context,
-                            nsresult status)
-{
-    LOG(("ipcSendQueue::OnStopRequest [status=%x]\n", status));
-
-    if (mTransport)
-        mTransport->OnStopRequest(request, status);
-
-    return NS_OK;
-}
-
-struct ipcWriteState
-{
-    ipcMessage *msg;
-    PRBool      complete;
-};
-
-static NS_METHOD ipcWriteMessage(nsIOutputStream *stream,
-                                 void            *closure,
-                                 char            *segment,
-                                 PRUint32         offset,
-                                 PRUint32         count,
-                                 PRUint32        *countWritten)
-{
-    ipcWriteState *state = (ipcWriteState *) closure;
-
-    if (state->msg->WriteTo(segment, count,
-                            countWritten, &state->complete) != PR_SUCCESS)
-        return NS_ERROR_UNEXPECTED;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ipcSendQueue::OnDataWritable(nsIRequest *request,
-                             nsISupports *context,
-                             nsIOutputStream *stream,
-                             PRUint32 offset,
-                             PRUint32 count)
-{
-    PRUint32 n;
-    nsresult rv;
-    ipcWriteState state;
-    PRBool wroteSomething = PR_FALSE;
-
-    LOG(("ipcSendQueue::OnDataWritable\n"));
-
-    while (!mQueue.IsEmpty()) {
-        state.msg = mQueue.First();
-        state.complete = PR_FALSE;
-
-        rv = stream->WriteSegments(ipcWriteMessage, &state, count, &n);
-        if (NS_FAILED(rv))
-            break;
-
-        if (state.complete) {
-            LOG(("  wrote message %u bytes\n", mQueue.First()->MsgLen()));
-            mQueue.DeleteFirst();
-        }
-
-        wroteSomething = PR_TRUE;
-    }
-
-    if (wroteSomething)
-        return NS_OK;
-
-    LOG(("  suspending write request\n"));
-
-    mTransport->SetWriteSuspended(PR_TRUE);
-    return NS_BASE_STREAM_WOULD_BLOCK;
-}
-
-//----------------------------------------------------------------------------
-// ipcReceiver
-//----------------------------------------------------------------------------
-
-NS_IMETHODIMP_(nsrefcnt)
-ipcReceiver::AddRef()
-{
-    return mTransport->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-ipcReceiver::Release()
-{
-    return mTransport->Release();
-}
-
-NS_IMPL_QUERY_INTERFACE2(ipcReceiver, nsIStreamListener, nsIRequestObserver)
-
-NS_IMETHODIMP
-ipcReceiver::OnStartRequest(nsIRequest *request,
-                            nsISupports *context)
-{
-    LOG(("ipcReceiver::OnStartRequest\n"));
-
-    if (mTransport)
-        mTransport->OnStartRequest(request);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ipcReceiver::OnStopRequest(nsIRequest *request,
-                           nsISupports *context,
-                           nsresult status)
-{
-    LOG(("ipcReceiver::OnStopRequest [status=%x]\n", status));
-
-    if (mTransport)
-        mTransport->OnStopRequest(request, status);
-
-    return NS_OK;
-}
-
-static NS_METHOD ipcReadMessage(nsIInputStream *stream,
-                                void           *closure,
-                                const char     *segment,
-                                PRUint32        offset,
-                                PRUint32        count,
-                                PRUint32       *countRead)
-{
-    ipcReceiver *receiver = (ipcReceiver *) closure;
-    return receiver->ReadSegment(segment, count, countRead);
-}
-
-NS_IMETHODIMP
-ipcReceiver::OnDataAvailable(nsIRequest *request,
-                             nsISupports *context,
-                             nsIInputStream *stream,
-                             PRUint32 offset,
-                             PRUint32 count)
-{
-    LOG(("ipcReceiver::OnDataAvailable [count=%u]\n", count));
-
-    PRUint32 countRead;
-    return stream->ReadSegments(ipcReadMessage, this, count, &countRead);
-}
-
-nsresult
-ipcReceiver::ReadSegment(const char *ptr, PRUint32 count, PRUint32 *countRead)
-{
-    *countRead = 0;
-    while (count) {
-        PRUint32 nread;
-        PRBool complete;
-
-        mMsg.ReadFrom(ptr, count, &nread, &complete);
-
-        if (complete) {
-            mTransport->OnMessageAvailable(&mMsg);
-            mMsg.Reset();
-        }
-
-        count -= nread;
-        ptr += nread;
-        *countRead += nread;
-    }
 
     return NS_OK;
 }
