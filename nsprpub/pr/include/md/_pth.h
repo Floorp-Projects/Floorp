@@ -91,7 +91,11 @@
 #define _PT_PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_destroy
 #define _PT_PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), &(a))
 #define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (EBUSY == pthread_mutex_trylock(&(m)))
+#if defined(DARWIN)
+#define _PT_PTHREAD_CONDATTR_INIT(x)      0
+#else
 #define _PT_PTHREAD_CONDATTR_INIT         pthread_condattr_init
+#endif
 #define _PT_PTHREAD_CONDATTR_DESTROY      pthread_condattr_destroy
 #define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), &(a))
 #endif
@@ -182,21 +186,20 @@
 #endif
 
 /*
- * These platforms don't have pthread_atfork()
- */
-#if defined(_PR_DCETHREADS) || defined(FREEBSD) \
-	|| (defined(LINUX) && defined(__alpha)) \
-	|| defined(NETBSD) || defined(OPENBSD)
-#define PT_NO_ATFORK
-#endif
-
-/*
  * These platforms don't have sigtimedwait()
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(VMS) || defined(UNIXWARE)
+	|| defined(BSDI) || defined(VMS) || defined(UNIXWARE) \
+	|| defined(DARWIN)
 #define PT_NO_SIGTIMEDWAIT
+#endif
+
+/*
+ * These platforms don't have pthread_kill()
+ */
+#if defined(DARWIN)
+#define pthread_kill(thread, sig) ENOSYS
 #endif
 
 #if defined(OSF1) || defined(VMS)
