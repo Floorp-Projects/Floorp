@@ -679,3 +679,8 @@ function RemoveLastAttachment()
 		}
 	}
 }
+
+function AttachVCard()
+{
+	dump("AttachVCard()\n");
+}

@@ -64,11 +64,13 @@ Rights Reserved.
 		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
 		<menuitem value="&saveAsTemplateCmd.label;" onaction="SaveAsTemplate()"/>
 		<menu  id="attachMenu" name="&attachMenu.label;">
-			<menuitem name="&attachFileCmd.label;" onclick="AttachFile()"/>
-			<menuitem name="&attachPageCmd.label;" onclick="AttachPage()"/>
-			<menuitem name="&removeLastAttachmentCmd.label;" onclick="RemoveLastAttachment()"/>
+			<menupopup>
+			<menuitem value="&attachFileCmd.label;" onaction="AttachFile()"/>
+			<menuitem value="&attachPageCmd.label;" onaction="AttachPage()"/>
+			<menuitem value="&removeLastAttachmentCmd.label;" onaction="RemoveLastAttachment()"/>
 			<menuseparator/>
-			<menuitem name="&attachVCardCmd.label;" onclick="AttachVCard()"/>
+			<menuitem value="&attachVCardCmd.label;" onaction="AttachVCard()"/>
+			</menupopup>
 		</menu>
 		<menuseparator/>
 		<menuitem value="&sendNowCmd.label;" onaction="SendMessage()"/>
