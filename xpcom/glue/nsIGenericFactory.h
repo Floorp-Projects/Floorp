@@ -39,6 +39,7 @@
 #define nsIGenericFactory_h___
 
 #include "nsIFactory.h"
+#include "nsIModule.h"
 
 // {3bc97f01-ccdf-11d2-bab8-b548654461fc}
 #define NS_GENERICFACTORY_CID                                                 \
@@ -72,39 +73,154 @@ NS_NewGenericFactory(nsIGenericFactory **result,
                      const nsModuleComponentInfo *info);
 
 
-////////////////////////////////////////////////////////////////////////////////
-// Generic Modules
-// 
-// (See xpcom/sample/nsSampleModule.cpp to see how to use this.)
+/** Component Callbacks **/
 
-#include "nsIModule.h"
-
-typedef NS_CALLBACK(NSConstructorProcPtr)(nsISupports *aOuter, REFNSIID aIID,
+ /** 
+  * NSConstructorProcPtr
+  *
+  * This function will be used by the generic factory to create an 
+  * instance of the given CID.
+  *
+  * @param aOuter    : Pointer to a component that wishes to be aggregated
+  *                    in the resulting instance. This will be nsnull if no
+  *                    aggregation is requested.
+  * @param iid       : The IID of the interface being requested in
+  *                    the component which is being currently created.
+  * @param result    : [out] Pointer to the newly created instance, if successful.
+  *
+  * @return NS_OK                     Component successfully created and the interface 
+  *                                   being requested was successfully returned in result.
+  *         NS_NOINTERFACE            Interface not accessible.
+  *         NS_ERROR_NO_AGGREGATION   if an 'outer' object is supplied, but the
+  *                                   component is not aggregatable.
+  *         NS_ERROR*                 Method failure.
+  **/
+typedef NS_CALLBACK(NSConstructorProcPtr)(nsISupports *aOuter, 
+                                          REFNSIID aIID,
                                           void **aResult);
 
+/**
+ * NSRegisterSelfProcPtr
+ *
+ * One time registration call back.  Allows you to perform registration 
+ * specific activity like adding yourself to a category.
+ *
+ * @param aCompMgr    : The global component manager
+ * @param aFile       : Component File. This file must have an associated 
+ *                      loader and export the required symbols which this 
+ *                      loader defines.
+ * @param aLoaderStr  : Opaque loader specific string.  This value is
+ *                      passed into the nsIModule's registerSelf
+ *                      callback and must be fowarded unmodified when
+ *                      registering factories via their location.
+ * @param aType       : Component Type of CID aClass.  This value is
+ *                      passed into the nsIModule's registerSelf
+ *                      callback and must be fowarded unmodified when
+ *                      registering factories via their location.
+ * @param aInfo       : Pointer to array of nsModuleComponentInfo 
+ *
+ * @param aInfo         
+ * @return NS_OK        Registration was successful.
+ *         NS_ERROR*    Method failure.
+ **/
 typedef NS_CALLBACK(NSRegisterSelfProcPtr)(nsIComponentManager *aCompMgr,
                                            nsIFile *aPath,
-                                           const char *aRegistryLocation,
-                                           const char *aComponentType,
+                                           const char *aLoaderStr,
+                                           const char *aType,
                                            const nsModuleComponentInfo *aInfo);
 
+/**
+ * NSUnregisterSelfProcPtr
+ *
+ * One time unregistration call back.  Allows you to perform unregistration
+ * specific activity like removing yourself from a category.
+ *
+ * @param aCompMgr    : The global component manager
+ * @param aFile       : Component File. This file must have an associated 
+ *                      loader and export the required symbols which this 
+ *                      loader defines.
+ * @param aLoaderStr  : Opaque loader specific string.  This value is
+ *                      passed into the nsIModule's registerSelf
+ *                      callback and must be fowarded unmodified when
+ *                      registering factories via their location
+ * @param aInfo       : Pointer to array of nsModuleComponentInfo 
+ *
+ * @param aInfo         
+ * @return NS_OK        Registration was successful.
+ *         NS_ERROR*    Method failure.
+
+ **/
 typedef NS_CALLBACK(NSUnregisterSelfProcPtr)(nsIComponentManager *aCompMgr,
                                              nsIFile *aPath,
-                                             const char *aRegistryLocation,
+                                             const char *aLoaderStr,
                                              const nsModuleComponentInfo *aInfo);
 
+/** 
+ * NSFactoryDestructorProcPtr
+ *
+ * This function will be called when the factory is being destroyed. 
+ *
+ **/ 
 typedef NS_CALLBACK(NSFactoryDestructorProcPtr)(void);
 
+
+/** 
+ * NSGetInterfacesProcPtr
+ *
+ * This function is used to implement class info.
+ *       
+ * Get an ordered list of the interface ids that instances of the class 
+ * promise to implement. Note that nsISupports is an implicit member 
+ * of any such list and need not be included. 
+ *
+ * Should set *count = 0 and *array = null and return NS_OK if getting the 
+ * list is not supported.
+ * 
+ * @see nsIClassInfo.idl
+ **/
 typedef NS_CALLBACK(NSGetInterfacesProcPtr)(PRUint32 *countp,
                                             nsIID* **array);
 
+/** 
+ * NSGetLanguageHelperProcPtr
+ *      
+ * This function is used to implement class info.
+ *
+ * Get a language mapping specific helper object that may assist in using
+ * objects of this class in a specific lanaguage. For instance, if asked
+ * for the helper for nsIProgrammingLanguage::JAVASCRIPT this might return 
+ * an object that can be QI'd into the nsIXPCScriptable interface to assist 
+ * XPConnect in supplying JavaScript specific behavior to callers of the 
+ * instance object.
+ *
+ * @see: nsIClassInfo.idl, nsIProgrammingLanguage.idl
+ *
+ * Should return null if no helper available for given language.
+ **/
 typedef NS_CALLBACK(NSGetLanguageHelperProcPtr)(PRUint32 language,
                                                 nsISupports **helper);
 
 /**
+ * nsModuleComponentInfo
+ *
  * Use this type to define a list of module component info to pass to 
- * NS_NewGenericModule. E.g.:
+ * NS_NewGenericModule. 
+ *
+ * @param mDescription           : Class Name of given object
+ * @param mCID                   : CID of given object
+ * @param mContractID            : Contract ID of given object
+ * @param mConstructor           : Constructor of given object
+ * @param mRegisterSelfProc      : (optional) Registration Callback
+ * @param mUnregisterSelfProc    : (optional) Unregistration Callback
+ * @param mFactoryDestructor     : (optional) Destruction Callback
+ * @param mGetInterfacesProc     : (optional) Interfaces Callback
+ * @param mGetLanguageHelperProc : (optional) Language Helper Callback
+ * @param mClassInfoGlobal       : (optional) Global Class Info of given object 
+ * @param mFlags                 : (optional) Class Info Flags @see nsIClassInfo 
+ *                                 
+ * E.g.:
  *     static nsModuleComponentInfo components[] = { ... };
+ *
  * See xpcom/sample/nsSampleModule.cpp for more info.
  */
 struct nsModuleComponentInfo {
@@ -121,14 +237,48 @@ struct nsModuleComponentInfo {
     PRUint32                                    mFlags;
 };
 
+
+/** Module Callbacks **/
+
+
+/** 
+ * nsModuleConstructorProc
+ *      
+ * This function is called when the module is first being constructed.
+ * @param self module which is being constructed.
+ * 
+ * @return NS_OK        Construction successful.
+ *         NS_ERROR*    Method failure which will result in module not being 
+ *                      loaded. 
+ **/
 typedef nsresult (PR_CALLBACK *nsModuleConstructorProc) (nsIModule *self);
+
+
+/** 
+ * nsModuleDestructorProc
+ *      
+ * This function is called when the module is being destroyed.
+ * @param self module which is being destroyed.
+ * 
+ **/
 typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
 
 /**
+ * nsModuleInfo
+ *
  * Use this structure to define meta-information about the module
  * itself, including the name, its components, and an optional
  * module-level initialization or shutdown routine.
- */
+ *
+ * @param mVersion     : Module Info Version
+ * @param mModuleName  : Module Name
+ * @param mComponents  : Array of Components
+ * @param mCount       : Count of mComponents
+ * @param mCtor        : Module user defined constructor
+ * @param mDtor        : Module user defined destructor
+ *
+ **/
+
 struct nsModuleInfo {
     PRUint32                mVersion;
     const char*             mModuleName;
@@ -176,6 +326,12 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
     return NS_NewGenericModule2(&(_info), result);                            \
 }
 #endif
+
+/** 
+ * Ease of use Macros which define NSGetModule for your component. 
+ * See xpcom/sample/nsSampleModule.cpp for more info.
+ *
+ **/
 
 #define NS_IMPL_NSGETMODULE(_name, _components)                               \
     NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, nsnull)
@@ -248,7 +404,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
         return rv;                                                            \
     }                                                                         \
     NS_ADDREF(inst);                                                          \
-	rv = inst->_InitMethod();                                             \
+	rv = inst->_InitMethod();                                                 \
     if(NS_SUCCEEDED(rv)) {                                                    \
         rv = inst->QueryInterface(aIID, aResult);                             \
     }                                                                         \
