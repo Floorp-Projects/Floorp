@@ -63,6 +63,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
 //static PRInt32 gMsgCount = 0;
+static ipcIService *gIpcServ = nsnull;
 
 //-----------------------------------------------------------------------------
 
@@ -110,8 +111,12 @@ myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, ipcIClientInfo *aClientI
         PRUint32 cID;
         if (NS_SUCCEEDED(aClientInfo->GetID(&cID))) {
             nsCAutoString cName;
-            if (NS_SUCCEEDED(aClientInfo->GetName(cName)))
+            if (NS_SUCCEEDED(aClientInfo->GetName(cName))) {
                 printf("***   name:%s --> ID:%u\n", cName.get(), cID);
+
+                const char hello[] = "hello friend!";
+                gIpcServ->SendMessage(cID, TestTargetID, hello, sizeof(hello));
+            }
         }
     }
 
@@ -164,6 +169,7 @@ int main(int argc, char **argv)
 
         nsCOMPtr<ipcIService> ipcServ(do_GetService("@mozilla.org/ipc/service;1", &rv));
         RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");
+        NS_ADDREF(gIpcServ = ipcServ);
 
         ipcServ->SetMessageObserver(TestTargetID, new myIpcMessageObserver());
 
@@ -236,6 +242,8 @@ int main(int argc, char **argv)
 
         while (gKeepRunning)
             gEventQ->ProcessPendingEvents();
+
+        NS_RELEASE(gIpcServ);
 
         printf("*** processing remaining events\n");
 

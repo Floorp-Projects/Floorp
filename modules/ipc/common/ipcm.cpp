@@ -159,7 +159,7 @@ ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
     Init(IPCM_TARGET, NULL, len);
 
     SetData(0, (char *) &MSG_TYPE, sizeof(MSG_TYPE));
-    SetData(1, (char *) &cID, sizeof(cID));
+    SetData(4, (char *) &cID, sizeof(cID));
 
     ipcMessageHeader hdr;
     hdr.mLen = IPC_MSG_HEADER_SIZE + dataLen;
@@ -167,7 +167,7 @@ ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
     hdr.mFlags = 0;
     hdr.mTarget = target;
 
-    SetData(1 + sizeof(cID), (char *) &hdr, IPC_MSG_HEADER_SIZE);
+    SetData(8, (char *) &hdr, IPC_MSG_HEADER_SIZE);
     if (data)
         SetInnerData(0, data, dataLen);
 }
@@ -181,7 +181,7 @@ ipcmMessageForward::SetInnerData(PRUint32 offset, const char *data, PRUint32 dat
 PRUint32
 ipcmMessageForward::DestClientID() const
 {
-    return * (PRUint32 *) (Data() + 4);
+    return ((PRUint32 *) Data())[1];
 }
 
 const nsID &
