@@ -323,11 +323,13 @@ class Document : public Node
     //for it. 
     Node* createWrapper(nsIDOMNode* node); 
  
-    //TK - Just deffer to the Node implementation 
+    // XXX HACK (Pvdb)
+    // See implementation
+    Node* insertBefore(Node* newChild, Node* refChild);
+    Node* appendChild(Node* newChild);
+
+    //TK - Just defer to the Node implementation 
     // 
-    //Override functions to enforce the One Element rule for documents, as well 
-    //as limit documents to certain types of nodes. 
-    //Node* insertBefore(Node* newChild, Node* refChild); 
     //Node* replaceChild(Node* newChild, Node* oldChild); 
     //Node* removeChild(Node* oldChild); 
  
