@@ -65,11 +65,10 @@
 /*                                                                  */
 /********************************************************************/
 
-static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_3_0";
+static const char* DLL_JSS_VERSION     = "JSS_VERSION = JSS_3_2";
 static const char* DLL_JDK_VERSION     = "JDK_VERSION = JDK 1.2.2";
-static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_3_2_RTM";
-static const char* DLL_DBM_VERSION     = "DBM_VERSION = NSS_3_1_1_RTM";
-static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_1";
+static const char* DLL_NSS_VERSION     = "NSS_VERSION = NSS_3_4_1_RTM";
+static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = NSPRPUB_RELEASE_4_2";
 
 static jobject
 makePWCBInfo(JNIEnv *env, PK11SlotInfo *slot);
