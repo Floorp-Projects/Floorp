@@ -95,13 +95,41 @@ CSRCS = \
 
 EXTRA_DSO_LDOPTS =	\
 	-L$(DIST)/bin	\
-	$(NSPR_LIBS)	\
-	-ljs			\
-	-lraptorbase	\
-	-lpref			\
-	-lsecfree		\
-	-lxp			\
-	-lxpcom			\
+	$(TK_LIBS) \
+	-labouturl \
+	-lfileurl \
+	-lftpurl \
+	-lgophurl \
+	-lremoturl \
+	-lhttpurl \
+	-lsockstuburl \
+	-lnetcache \
+	-lmimetype \
+	-lnetcnvts \
+	-lnetwork \
+	-lnetlib \
+	-lnetutil \
+	-lreg	\
+	-lxpcom	\
+	-lpwcac \
+	-lmozdbm	\
+	-lxp	\
+	-lpref	\
+	-ljs	\
+	-lraptorbase \
+	-lgmbase$(MOZ_TOOLKIT) \
+	-lsecfree \
+	-lraptorhtml \
+	-lraptorhtmlpars	\
+	-lraptorgfx	\
+	-ljsdom	\
+	-ljsurl	\
+	-limg	\
+	-lpng	\
+	-ljpeg	\
+	-lmozutil	\
+	-lz \
+	$(DIST)/lib/librdfbase_s.a \
 	$(NULL)
 
 #
