@@ -242,20 +242,24 @@ nsInlineReflow::CalculateMargins()
 {
   const nsStyleSpacing* spacing = GetSpacing();
   if (mTreatFrameAsBlock) {
-    CalculateBlockMarginsFor(mPresContext, mFrame, spacing, mMargin);
+    mMarginFlags = CalculateBlockMarginsFor(mPresContext, mFrame, spacing,
+                                            mMargin);
   }
   else {
     // Get the margins from the style system
     spacing->CalcMarginFor(mFrame, mMargin);
+    mMarginFlags = 0;
   }
 }
 
-void
+PRUintn
 nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
                                          nsIFrame* aFrame,
                                          const nsStyleSpacing* aSpacing,
                                          nsMargin& aMargin)
 {
+  PRUint32 rv = 0;
+
   aSpacing->CalcMarginFor(aFrame, aMargin);
 
   // Get font height if we will be doing an auto margin. We use the
@@ -274,17 +278,18 @@ nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
   // For auto margins use the font height computed above
   if (eStyleUnit_Auto == topUnit) {
     aMargin.top = fontHeight;
+    rv |= NS_CARRIED_TOP_MARGIN_IS_AUTO;
   }
   if (eStyleUnit_Auto == bottomUnit) {
     aMargin.bottom = fontHeight;
+    rv |= NS_CARRIED_BOTTOM_MARGIN_IS_AUTO;
   }
-
-  // XXX Add in code to provide a zero top margin when the frame is
-  // the "first" block frame in a margin-root situation.?
-
-  // XXX Add in code to provide a zero bottom margin when the frame is
-  // the "last" block frame in a margin-root situation.?
+  return rv;
 }
+
+// XXX doesn't apply top margin; it should for inlines, yes? should
+// top margins for inlines end up in the ascent and bottom margins in
+// the descent?
 
 void
 nsInlineReflow::ApplyTopLeftMargins()
@@ -527,9 +532,10 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
     mMaxDescent = aMetrics.descent;
   }
 
-  // Compute collapsed margin information
+  // Save carried out information for caller
   mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
   mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
+  mCarriedOutMarginFlags = aMetrics.mCarriedOutMarginFlags;
 
   // Advance to next X coordinate
   mX = aBounds.XMost() + mRightMargin;
