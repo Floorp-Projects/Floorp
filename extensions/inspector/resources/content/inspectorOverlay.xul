@@ -47,7 +47,9 @@
         label="Browser" closebutton="true" collapse="after"/>
         
     <hbox id="bxBrowser" flex="1">
-      <browser id="ifBrowser" type="content-primary" disablehistory="true" flex="1" src="about:blank"/>
+      <browser id="ifBrowser" type="content-primary"
+               disablehistory="true" disablesecurity="true"
+               flex="1" src="about:blank"/>
     </hbox>
 
     <!--
@@ -61,7 +63,7 @@
       </tree>
     
       TEMPORARY UNTIL FIX FOR 54237
-      <browser id="inSearchServiceLoader" disablehistory="true" height="1"/>
+      <browser id="inSearchServiceLoader" disablehistory="true" disablesecurity="true" height="1"/>
     </vbox>
     -->
   </vbox>
