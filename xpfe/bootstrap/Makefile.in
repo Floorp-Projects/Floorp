@@ -100,6 +100,12 @@ CPPSRCS += nsNativeAppSupportPh.cpp
 LIBS += -lphexlib
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nsNativeAppSupportOS2.cpp
+CPPSRCS += nsNativeAppSupportBase.cpp
+OS2_PROGRAM_RESOURCE = $(srcdir)/splashos2.rc
+endif
+
 #ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 #CPPSRCS += nsNativeAppSupportGtk.cpp
 #LIBS += $(MOZ_GTK_LDFLAGS) -lgdk -lglib -lX11 
