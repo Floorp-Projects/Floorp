@@ -23,6 +23,7 @@ Inc. All Rights Reserved.
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCDATASection.h"
+#include "nsIDOMEntityReference.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsDOMError.h"
@@ -327,7 +328,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
     return NULL;
   }
 
-  nsIDOMCDATASection* ret = nsnull;
+  nsIDOMEntityReference* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
   const char* name = env->GetStringUTFChars(jname, &iscopy);
   if (!name) {
@@ -336,8 +337,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
     return NULL;
   }
 
-
-  nsresult rv = doc->CreateCDATASection(name, &ret);
+  nsresult rv = doc->CreateEntityReference(name, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !ret) {
