@@ -225,4 +225,11 @@ NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsPopUpMenu::GetParent(nsIWidget *& aParent)
+{
+  aParent = mParent;
+  return NS_OK;
+}
+
 

@@ -81,6 +81,10 @@ nsToolbarManager::nsToolbarManager() : ChildWindow(), nsIToolbarManager(), nsIIm
 nsToolbarManager::~nsToolbarManager()
 {
   NS_IF_RELEASE(mListener);
+  PRInt32 i;
+  for (i=0;i<kMaxNumToolbars;i++) {
+    NS_RELEASE(mToolbars[i]);
+  }
 }
 
 //--------------------------------------------------------------------
@@ -298,6 +302,7 @@ NS_METHOD nsToolbarManager::AddToolbar(nsIToolbar* aToolbar)
   aToolbar->SetToolbarManager(this);
 
   AddTabToToolbar(aToolbar);
+  NS_ADDREF(aToolbar);
 
   return NS_OK;    
 }
@@ -321,6 +326,7 @@ NS_METHOD nsToolbarManager::InsertToolbarAt(nsIToolbar* aToolbar, PRInt32 anInde
   mToolbars[downToInx] = aToolbar;
   mNumToolbars++;
   aToolbar->SetToolbarManager(this);
+  NS_ADDREF(aToolbar);
 
   return NS_OK;    
 }

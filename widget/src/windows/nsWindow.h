@@ -117,6 +117,7 @@ public:
     NS_IMETHOD              EndResizingChildren(void);
     NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
     virtual void            SetUpForPaint(HDC aHDC);
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
@@ -135,6 +136,7 @@ public:
 protected:
 
   virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
+  virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
 
      // Allow Derived classes to modify the height that is passed
      // when the window is created or resized.
@@ -164,7 +166,6 @@ protected:
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
     void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
-    PRBool DispatchEvent(nsGUIEvent* event);
     PRBool DispatchStandardEvent(PRUint32 aMsg);
     void AddTooltip(HWND hwndOwner, nsRect* aRect, int aId);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);

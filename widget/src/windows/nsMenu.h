@@ -42,6 +42,7 @@ public:
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
 
   // nsIMenu Methods
+  NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD AddItem(const nsString &aText);
   NS_IMETHOD AddItem(nsIMenuItem * aMenuItem);
@@ -61,8 +62,8 @@ protected:
   PRUint32     mNumMenuItems;
   HMENU        mMenu;
 
-  //nsIMenuBar * mMenuBarParent;
-  //nsIMenu    * mMenuParent;
+  nsIMenuBar * mMenuBarParent;
+  nsIMenu    * mMenuParent;
 
 };
 

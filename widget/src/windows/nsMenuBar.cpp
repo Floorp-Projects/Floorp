@@ -75,6 +75,13 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
+{
+  aParent = mParent;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
 
