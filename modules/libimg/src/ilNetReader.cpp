@@ -99,9 +99,7 @@ NetReaderImpl::Write(const unsigned char *str, int32 len)
         if(ret >= 0)
             return NS_OK;
     }
-    else {
-        return NS_ERROR_FAILURE;
-    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
