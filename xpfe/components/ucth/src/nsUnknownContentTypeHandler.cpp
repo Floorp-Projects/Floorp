@@ -212,7 +212,7 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
                     if ( argv ) {
                         // Open the dialog.
                         nsCOMPtr<nsIDOMWindowInternal> dialog;
-                        rv = parent->OpenDialog( jsContext, argv, 6, getter_AddRefs( dialog ) );
+                        rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( dialog ) );
                         // Pop arguments.
                         JS_PopArguments( jsContext, stackPtr );
                     }

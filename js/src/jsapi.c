@@ -245,8 +245,10 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 	    break;
 	  default:
 	    format--;
-	    if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp, JS_ADDRESSOF_VA_LIST(ap)))
+	    if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp,
+                                      JS_ADDRESSOF_VA_LIST(ap))) {
 		return JS_FALSE;
+            }
 	    /* NB: the formatter already updated sp, so we continue here. */
 	    continue;
 	}
@@ -276,6 +278,7 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
     const char *cp;
     JSString *str;
     JSFunction *fun;
+    JSStackHeader *sh;
 
     CHECK_REQUEST(cx);
     *markp = NULL;
@@ -345,8 +348,10 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 	    break;
 	  default:
 	    format--;
-	    if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, JS_ADDRESSOF_VA_LIST(ap)))
+	    if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp,
+                                      JS_ADDRESSOF_VA_LIST(ap))) {
 		goto bad;
+            }
 	    /* NB: the formatter already updated sp, so we continue here. */
 	    continue;
 	}
@@ -358,8 +363,15 @@ JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
      * handled by a JSArgumentFormatter.  Give back that stack space!
      */
     JS_ASSERT(sp <= argv + argc);
-    if (sp < argv + argc)
+    if (sp < argv + argc) {
+        /* Return slots not pushed to the current stack arena. */
 	cx->stackPool.current->avail = (jsuword)sp;
+
+        /* Reduce the count of slots the GC will scan in this stack segment. */
+        sh = cx->stackHeaders;
+        JS_ASSERT(JS_STACK_SEGMENT(sh) + sh->nslots == argv + argc);
+        sh->nslots -= argc - (sp - argv);
+    }
     return argv;
 
 bad:
