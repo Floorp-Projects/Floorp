@@ -113,7 +113,7 @@ function UpdateBookmarksLastVisitedDate(event)
     var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                          .getService(Components.interfaces.nsIBookmarksService);
 
-    bmks.UpdateBookmarkLastVisitedDate(url, _content.document.characterSet);
+    bmks.updateLastVisitedDate(url, _content.document.characterSet);
   }
 }
 
@@ -868,7 +868,7 @@ function getShortcutOrURI(url)
     var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
                          .getService(Components.interfaces.nsIBookmarksService);
 
-    var shortcutURL = bmks.FindShortcut(url);
+    var shortcutURL = bmks.resolveKeyword(url);
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
@@ -876,7 +876,7 @@ function getShortcutOrURI(url)
       if (aOffset > 0) {
         var cmd = url.substr(0, aOffset);
         var text = url.substr(aOffset+1);
-        shortcutURL = bmks.FindShortcut(cmd);
+        shortcutURL = bmks.resolveKeyword(cmd);
         if (shortcutURL && text) {
           aOffset = shortcutURL.indexOf("%s");
           if (aOffset >= 0)
