@@ -479,22 +479,25 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     } else {
       // Any remaining 'auto' values for 'left', 'right', 'margin-left', or
       // 'margin-right' are replaced with 0 (their default value)
-      leftIsAuto = PR_FALSE;
-      rightIsAuto = PR_FALSE;
-      marginLeftIsAuto = PR_FALSE;
-      marginRightIsAuto = PR_FALSE;
-
       mComputedWidth = containingBlockWidth - mComputedOffsets.left -
         mComputedMargin.left - mComputedBorderPadding.left -
         mComputedBorderPadding.right -
         mComputedMargin.right - mComputedOffsets.right;
-    }
 
-    // Factor in any minimum and maximum size information
-    if (mComputedWidth > mComputedMaxWidth) {
-      mComputedWidth = mComputedMaxWidth;
-    } else if (mComputedWidth < mComputedMinWidth) {
-      mComputedWidth = mComputedMinWidth;
+      // Factor in any minimum and maximum size information
+      if (mComputedWidth > mComputedMaxWidth) {
+        mComputedWidth = mComputedMaxWidth;
+      } else if (mComputedWidth < mComputedMinWidth) {
+        mComputedWidth = mComputedMinWidth;
+      } else {
+        // Note that we wait until after checkin minimum and maximum size
+        // information, because if we use the minimum or maximum value instead
+        // then the rules are applied again and that means margin recalculation
+        leftIsAuto = PR_FALSE;
+        rightIsAuto = PR_FALSE;
+        marginLeftIsAuto = PR_FALSE;
+        marginRightIsAuto = PR_FALSE;
+      }
     }
 
   } else {
@@ -505,7 +508,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       ComputeHorizontalValue(containingBlockWidth, widthUnit,
                              mStylePosition->mWidth, mComputedWidth);
     }
-    
+
     // Factor in any minimum and maximum size information
     if (mComputedWidth > mComputedMaxWidth) {
       mComputedWidth = mComputedMaxWidth;
@@ -617,14 +620,6 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     if (NS_FRAME_IS_REPLACED(mFrameType)) {
       mComputedHeight = NS_INTRINSICSIZE;
     } else {
-      // Replace any 'auto' on 'margin-top' or 'margin-bottom' with 0 (their
-      // default values)
-      marginTopIsAuto = PR_FALSE;
-      marginBottomIsAuto = PR_FALSE;
-
-      // If 'bottom' is 'auto', then replace it with '0' (its default value), too
-      bottomIsAuto = PR_FALSE;
-
       // Solve for the value of 'height'
       if (NS_AUTOHEIGHT == containingBlockHeight) {
         // If the containing block's height was not explicitly specified (i.e.,
@@ -632,6 +627,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
         mComputedHeight = NS_AUTOHEIGHT;
 
       } else {
+        // Replace any 'auto' on 'margin-top' or 'margin-bottom' with 0 (their
+        // default values). If 'bottom' is 'auto', then replace it with '0' (its
+        // default value), too
         mComputedHeight = containingBlockHeight - mComputedOffsets.top - 
           mComputedMargin.top - mComputedBorderPadding.top -
           mComputedBorderPadding.bottom -
@@ -642,6 +640,13 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
           mComputedHeight = mComputedMaxHeight;
         } else if (mComputedHeight < mComputedMinHeight) {
           mComputedHeight = mComputedMinHeight;
+        } else {
+          // Note that we wait until after checkin minimum and maximum size
+          // information, because if we use the minimum or maximum value instead
+          // then the rules are applied again and that means margin recalculation
+          marginTopIsAuto = PR_FALSE;
+          marginBottomIsAuto = PR_FALSE;
+          bottomIsAuto = PR_FALSE;
         }
       }
     }
