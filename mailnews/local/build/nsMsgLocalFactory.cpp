@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Adam D. Moss <adam@gimp.org>
  */
 
 #include "msgCore.h" // for pre-compiled headers...
@@ -33,6 +34,10 @@
 #include "nsLocalMailFolder.h"
 #include "nsParseMailbox.h"
 #include "nsPop3Service.h"
+#ifdef HAVE_MOVEMAIL
+#include "nsMovemailService.h"
+#include "nsMovemailIncomingServer.h"
+#endif /* HAVE_MOVEMAIL */
 #include "nsNoneService.h"
 #include "nsPop3IncomingServer.h"
 #include "nsNoIncomingServer.h"
@@ -44,6 +49,10 @@ static NS_DEFINE_CID(kMailboxParserCID, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kMailboxServiceCID, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kLocalMailFolderResourceCID, NS_LOCALMAILFOLDERRESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
+#ifdef HAVE_MOVEMAIL
+static NS_DEFINE_CID(kMovemailServiceCID, NS_MOVEMAILSERVICE_CID);
+static NS_DEFINE_CID(kMovemailIncomingServerCID, NS_MOVEMAILINCOMINGSERVER_CID);
+#endif /* HAVE_MOVEMAIL */
 static NS_DEFINE_CID(kNoneServiceCID, NS_NONESERVICE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
@@ -59,10 +68,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3URL)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgMailboxParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailboxService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3Service)
+#ifdef HAVE_MOVEMAIL
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMovemailService)
+#endif /* HAVE_MOVEMAIL */
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoneService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgLocalMailFolder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParseMailMessageState)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3IncomingServer)
+#ifdef HAVE_MOVEMAIL
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMovemailIncomingServer)
+#endif /* HAVE_MOVEMAIL */
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
 
@@ -88,10 +103,16 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMailboxParserFactory;
     nsCOMPtr<nsIGenericFactory> mMailboxServiceFactory;
     nsCOMPtr<nsIGenericFactory> mPop3ServiceFactory;
+#ifdef HAVE_MOVEMAIL
+    nsCOMPtr<nsIGenericFactory> mMovemailServiceFactory;
+#endif /* HAVE_MOVEMAIL */
     nsCOMPtr<nsIGenericFactory> mNoneServiceFactory;
     nsCOMPtr<nsIGenericFactory> mLocalMailFolderFactory;
     nsCOMPtr<nsIGenericFactory> mParseMailMsgStateFactory;
     nsCOMPtr<nsIGenericFactory> mPop3IncomingServerFactory;
+#ifdef HAVE_MOVEMAIL
+    nsCOMPtr<nsIGenericFactory> mMovemailIncomingServerFactory;
+#endif /* HAVE_MOVEMAIL */
     nsCOMPtr<nsIGenericFactory> mNoIncomingServerFactory;
     nsCOMPtr<nsIGenericFactory> mLocalStringBundleFactory;
 };
@@ -129,10 +150,16 @@ void nsMsgLocalModule::Shutdown()
     mMailboxParserFactory = null_nsCOMPtr();
     mMailboxServiceFactory = null_nsCOMPtr();
     mPop3ServiceFactory = null_nsCOMPtr();
+#ifdef HAVE_MOVEMAIL
+    mMovemailServiceFactory = null_nsCOMPtr();
+#endif /* HAVE_MOVEMAIL */
     mNoneServiceFactory = null_nsCOMPtr();
     mLocalMailFolderFactory = null_nsCOMPtr();
     mParseMailMsgStateFactory = null_nsCOMPtr();
     mPop3IncomingServerFactory = null_nsCOMPtr();
+#ifdef HAVE_MOVEMAIL
+    mMovemailIncomingServerFactory = null_nsCOMPtr();
+#endif /* HAVE_MOVEMAIL */
     mNoIncomingServerFactory = null_nsCOMPtr();
     mLocalStringBundleFactory = null_nsCOMPtr();
 }
@@ -193,6 +220,14 @@ NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mPop3ServiceFactory), &nsPop3ServiceConstructor);
         fact = mPop3ServiceFactory;
     }
+#ifdef HAVE_MOVEMAIL
+    else if (aClass.Equals(kMovemailServiceCID)) 
+    {
+        if (!mMovemailServiceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMovemailServiceFactory), &nsMovemailServiceConstructor);
+        fact = mMovemailServiceFactory;
+    }
+#endif /* HAVE_MOVEMAIL */
     else if (aClass.Equals(kNoneServiceCID)) 
     {
         if (!mNoneServiceFactory)
@@ -217,6 +252,14 @@ NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mPop3IncomingServerFactory), &nsPop3IncomingServerConstructor);
         fact = mPop3IncomingServerFactory;
     }
+#ifdef HAVE_MOVEMAIL
+    else if (aClass.Equals(kMovemailIncomingServerCID)) 
+    {
+        if (!mMovemailIncomingServerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMovemailIncomingServerFactory), &nsMovemailIncomingServerConstructor);
+        fact = mMovemailIncomingServerFactory;
+    }
+#endif /* HAVE_MOVEMAIL */
     else if (aClass.Equals(kNoIncomingServerCID)) 
     {
         if (!mNoIncomingServerFactory)
@@ -264,14 +307,26 @@ static Components gComponents[] = {
       NS_POP3SERVICE_CONTRACTID2 },
     { "None Service", &kNoneServiceCID,
       NS_NONESERVICE_CONTRACTID },
+#ifdef HAVE_MOVEMAIL
+    { "Movemail Service", &kMovemailServiceCID,
+      NS_MOVEMAILSERVICE_CONTRACTID },
+#endif /* HAVE_MOVEMAIL */
     { "pop3 Protocol Information", &kPop3ServiceCID,
       NS_POP3PROTOCOLINFO_CONTRACTID },
     { "none Protocol Information", &kNoneServiceCID,
       NS_NONEPROTOCOLINFO_CONTRACTID },
+#ifdef HAVE_MOVEMAIL
+    { "movemail Protocol Information", &kMovemailServiceCID,
+      NS_MOVEMAILPROTOCOLINFO_CONTRACTID },
+#endif /* HAVE_MOVEMAIL */
     { "Local Mail Folder Resource Factory", &kLocalMailFolderResourceCID,
       NS_LOCALMAILFOLDERRESOURCE_CONTRACTID },
     { "Pop3 Incoming Server", &kPop3IncomingServerCID,
       NS_POP3INCOMINGSERVER_CONTRACTID },
+#ifdef HAVE_MOVEMAIL
+    { "Movemail Incoming Server", &kMovemailIncomingServerCID,
+      NS_MOVEMAILINCOMINGSERVER_CONTRACTID },
+#endif /* HAVE_MOVEMAIL */
     { "No Incoming Server", &kNoIncomingServerCID,
       NS_NOINCOMINGSERVER_CONTRACTID },
     { "Parse MailMessage State", &kParseMailMsgStateCID,

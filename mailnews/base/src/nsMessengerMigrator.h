@@ -65,10 +65,6 @@
 
 #endif /* XP_UNIX || XP_BEOS */
 
-#ifdef XP_UNIX
-#define HAVE_MOVEMAIL 1
-#endif /* HAVE_MOVEMAIL */
-
 class nsMessengerMigrator
 	: public nsIMessengerMigrator, public nsIObserver
 {

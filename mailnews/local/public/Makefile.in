@@ -38,7 +38,9 @@ XPIDLSRCS	= \
 		nsIMsgParseMailMsgState.idl \
 		nsINoIncomingServer.idl \
 		nsINoneService.idl	\
-        nsIMsgLocalMailFolder.idl \
+		nsIMovemailService.idl  \
+		nsIMovemailIncomingServer.idl \
+		nsIMsgLocalMailFolder.idl \
 		nsILocalMailIncomingServer.idl \
 		$(NULL)
 

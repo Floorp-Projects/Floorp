@@ -787,8 +787,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
-    printf("sorry, movemail not supported yet.\n");
-    
     summaryMailDriveDefault = PR_TRUE;
     summaryMailDrive = profileDrive;
 
@@ -1021,8 +1019,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
 #ifdef HAVE_MOVEMAIL
   else if (serverType == MOVEMAIL_4X_MAIL_TYPE) {
-    printf("sorry, movemail not supported yet.\n");
-
     rv = newMOVEMAILMailPath->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (!exists)  {

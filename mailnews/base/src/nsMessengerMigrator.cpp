@@ -1186,9 +1186,11 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
-  // for right now, use "none".  eventually, we'll have "movemail"
+  //
+  // create the server
+  //
   rv = accountManager->CreateIncomingServer(username, MOVEMAIL_FAKE_HOST_NAME,
-                            "none", getter_AddRefs(server));
+                            "movemail", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
   // create the identity

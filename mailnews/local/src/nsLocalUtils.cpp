@@ -64,6 +64,20 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
 	  return rv;
   }
 
+#ifdef HAVE_MOVEMAIL
+  // find all movemail "servers" matching the given hostname
+  nsCOMPtr<nsIMsgIncomingServer> movemail_server;
+  rv = accountManager->FindServer(username,
+                                  hostname,
+                                  "movemail",
+                                  getter_AddRefs(movemail_server));
+  if (NS_SUCCEEDED(rv)) {
+	 *aResult = movemail_server;
+	  NS_ADDREF(*aResult);
+	  return rv;
+  }
+#endif /* HAVE_MOVEMAIL */
+
   // if that fails, look for the pop hosts matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> pop3_server;
   if (NS_FAILED(rv)) {
@@ -78,7 +92,7 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
 	}
   }
 
-  // if you fail after looking at all "pop3" and all "none" servers, you fail.
+  // if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.
   return rv;
 }
 
@@ -86,7 +100,6 @@ static nsresult
 nsLocalURI2Server(const char* uriStr,
                   nsIMsgIncomingServer ** aResult)
 {
-
   nsresult rv;
 
   // start parsing the uriStr
@@ -169,7 +182,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = nsLocalURI2Server(uriStr, getter_AddRefs(server));
-  
+
   if (NS_FAILED(rv))
   	return rv;
   
@@ -191,7 +204,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     nsAutoString sbdSep;
     rv = nsGetMailFolderSeparator(sbdSep);
     
-        
+       
     nsCAutoString newPath("");
     char *unescaped = nsCRT::strdup(curPos);  
     // Unescape folder name
@@ -205,6 +218,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 
     pathResult+=newPath.GetBuffer();
   }
+
   return NS_OK;
 }
 

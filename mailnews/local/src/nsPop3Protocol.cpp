@@ -2938,7 +2938,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 			{
 				nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
 				if (server)
-					server->SetServerBusy(PR_FALSE); // the server is now busy
+					server->SetServerBusy(PR_FALSE); // the server is now not busy
 			}
 
 			CloseSocket();

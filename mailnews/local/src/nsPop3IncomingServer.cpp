@@ -57,9 +57,9 @@ PRUnichar *nsPop3IncomingServer::kTemplatesName = 0;
 PRUnichar *nsPop3IncomingServer::kUnsentName = 0;
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsPop3IncomingServer,
-				nsMsgIncomingServer,
-                            	nsIPop3IncomingServer,
-				nsILocalMailIncomingServer)
+                             nsMsgIncomingServer,
+                             nsIPop3IncomingServer,
+			     nsILocalMailIncomingServer)
 
 nsPop3IncomingServer::nsPop3IncomingServer()
 {    
