@@ -389,102 +389,53 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 
   // Send the WillReflow() notification and position the frame
+  nscoord x;
+
   aKidFrame->WillReflow(aPresContext);
+  if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
+    // Just current the current x-offset
+    nsPoint origin;
+    aKidFrame->GetOrigin(origin);
+    x = origin.x;
+  } else {
+    x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
+  }
   aKidFrame->MoveTo(aPresContext, 
-                    border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
-                    border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
+                    x, border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
 
   // Position its view
   nsIView*  kidView;
   aKidFrame->GetView(aPresContext, &kidView);
-  nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
+  // Don't bother it doing it now if we haven't yet determined the left offset
+  if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
+    nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
+  }
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
-  // Because we don't know the size of a replaced element until after we reflow
-  // it 'auto' margins must be computed now, and we need to take into account
-  // min-max information
-  if (NS_FRAME_IS_REPLACED(kidReflowState.mFrameType)) {
-    // Factor in any minimum and maximum size information
-    if (kidDesiredSize.width > kidReflowState.mComputedMaxWidth) {
-      kidDesiredSize.width = kidReflowState.mComputedMaxWidth;
-    } else if (kidDesiredSize.width < kidReflowState.mComputedMinWidth) {
-      kidDesiredSize.width = kidReflowState.mComputedMinWidth;
-    }
-    if (kidDesiredSize.height > kidReflowState.mComputedMaxHeight) {
-      kidDesiredSize.height = kidReflowState.mComputedMaxHeight;
-    } else if (kidDesiredSize.height < kidReflowState.mComputedMinHeight) {
-      kidDesiredSize.height = kidReflowState.mComputedMinHeight;
+  // If we're solving for 'left' or 'top', then compute it now that we know the
+  // width/height
+  if ((NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) ||
+      (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)) {
+    if (-1 == aContainingBlockWidth) {
+      // Get the containing block width/height
+      kidReflowState.ComputeContainingBlockRectangle(&aReflowState,
+                                                     aContainingBlockWidth,
+                                                     aContainingBlockHeight);
     }
 
-    // Get the containing block width/height
-    nscoord containingBlockWidth, containingBlockHeight;
-    kidReflowState.ComputeContainingBlockRectangle(&aReflowState,
-                                                   containingBlockWidth,
-                                                   containingBlockHeight);
-
-    // XXX This code belongs in nsHTMLReflowState...
-    if ((NS_AUTOMARGIN == kidReflowState.mComputedMargin.left) ||
-        (NS_AUTOMARGIN == kidReflowState.mComputedMargin.right)) {
-      // Calculate the amount of space for margins
-      nscoord availMarginSpace = containingBlockWidth -
-        kidReflowState.mComputedOffsets.left - kidReflowState.mComputedBorderPadding.left -
-        kidDesiredSize.width - kidReflowState.mComputedBorderPadding.right -
-        kidReflowState.mComputedOffsets.right;
-
-      if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.left) {
-        if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.right) {
-          // Both 'margin-left' and 'margin-right' are 'auto', so they get
-          // equal values
-          kidReflowState.mComputedMargin.left = availMarginSpace / 2;
-          kidReflowState.mComputedMargin.right = availMarginSpace -
-            kidReflowState.mComputedMargin.left;
-        } else {
-          // Just 'margin-left' is 'auto'
-          kidReflowState.mComputedMargin.left = availMarginSpace -
-            kidReflowState.mComputedMargin.right;
-        }
-      } else {
-        // Just 'margin-right' is 'auto'
-        kidReflowState.mComputedMargin.right = availMarginSpace -
-          kidReflowState.mComputedMargin.left;
-      }
+    if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
+      kidReflowState.mComputedOffsets.left = aContainingBlockWidth -
+        kidReflowState.mComputedOffsets.right - kidReflowState.mComputedMargin.right -
+        kidReflowState.mComputedBorderPadding.right - kidDesiredSize.width -
+        kidReflowState.mComputedMargin.left - kidReflowState.mComputedBorderPadding.left;
     }
-    if ((NS_AUTOMARGIN == kidReflowState.mComputedMargin.top) ||
-        (NS_AUTOMARGIN == kidReflowState.mComputedMargin.bottom)) {
-      // Calculate the amount of space for margins
-      nscoord availMarginSpace = containingBlockHeight -
-        kidReflowState.mComputedOffsets.top - kidReflowState.mComputedBorderPadding.top -
-        kidDesiredSize.height - kidReflowState.mComputedBorderPadding.bottom -
-        kidReflowState.mComputedOffsets.bottom;
-
-      if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.top) {
-        if (NS_AUTOMARGIN == kidReflowState.mComputedMargin.bottom) {
-          // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
-          // equal values
-          kidReflowState.mComputedMargin.top = availMarginSpace / 2;
-          kidReflowState.mComputedMargin.bottom = availMarginSpace -
-            kidReflowState.mComputedMargin.top;
-        } else {
-          // Just 'margin-top' is 'auto'
-          kidReflowState.mComputedMargin.top = availMarginSpace -
-            kidReflowState.mComputedMargin.bottom;
-        }
-      } else {
-        // Just 'margin-bottom' is 'auto'
-        kidReflowState.mComputedMargin.bottom = availMarginSpace -
-          kidReflowState.mComputedMargin.top;
-      }
-    }
-  }
-
-  // XXX If the child had a fixed height, then make sure it respected it...
-  if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
-    if (kidDesiredSize.height < kidReflowState.mComputedHeight) {
-      kidDesiredSize.height = kidReflowState.mComputedHeight;
-      kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
-                               kidReflowState.mComputedBorderPadding.bottom;
+    if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top) {
+      kidReflowState.mComputedOffsets.top = aContainingBlockHeight -
+        kidReflowState.mComputedOffsets.bottom - kidReflowState.mComputedMargin.bottom -
+        kidReflowState.mComputedBorderPadding.bottom - kidDesiredSize.height -
+        kidReflowState.mComputedMargin.top - kidReflowState.mComputedBorderPadding.top;
     }
   }
     

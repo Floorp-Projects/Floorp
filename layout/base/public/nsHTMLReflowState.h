@@ -34,6 +34,7 @@ class nsLineLayout;
 struct nsStyleDisplay;
 struct nsStylePosition;
 struct nsStyleSpacing;
+struct nsHypotheticalBox;
 
 /**
  * Constant used to indicate an unconstrained size.
@@ -96,6 +97,7 @@ typedef PRUint32  nsCSSFrameType;
 #define NS_SHRINKWRAPWIDTH  NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
 #define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
+#define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
 
 /**
  * Reflow state passed to a frame during reflow.
@@ -318,6 +320,13 @@ protected:
                        nscoord         aContainingBlockWidth,
                        nscoord         aContainingBlockHeight);
 
+  void CalculateHypotheticalBox(nsIPresContext*    aPresContext,
+                                nsIFrame*          aPlaceholderFrame,
+                                nsIFrame*          aBlockFrame,
+                                nsMargin&          aBlockContentArea,
+                                nsIFrame*          aAbsoluteContainingBlockFrame,
+                                nsHypotheticalBox& aHypotheticalBox);
+
   void InitAbsoluteConstraints(nsIPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,
                                nscoord aContainingBlockWidth,
@@ -368,6 +377,7 @@ protected:
                            nscoord                  aContainingBlockHeight,
                            const nsHTMLReflowState* aContainingBlockRS);
 
+  nscoord CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWidth);
 };
 
 #endif /* nsHTMLReflowState_h___ */
