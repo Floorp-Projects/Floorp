@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.4 $ $Date: 2001/11/08 00:15:23 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.5 $ $Date: 2002/01/04 05:22:06 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -38,10 +38,9 @@ include config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 # Generate oiddata.h and oiddata.c.
-$(OBJDIR)/oiddata.c $(OBJDIR)/oiddata.h: oidgen.perl oids.txt
-	@$(MAKE_OBJDIR)
-	rm -f $(OBJDIR)/oiddata.c $(OBJDIR)/oiddata.h
-	perl oidgen.perl $(OBJDIR)/oiddata.c $(OBJDIR)/oiddata.h oids.txt
+oidgen: oidgen.perl oids.txt
+	rm -f oiddata.c oiddata.h
+	perl oidgen.perl oiddata.c oiddata.h oids.txt
 
 export::  private_export 
 
