@@ -291,7 +291,6 @@ nsLDAPDataSource.prototype = {
 	this.mConnection = Components.classes
 	                   ["mozilla.network.ldapconnection"].createInstance(
 			   Components.interfaces.nsILDAPConnection);
-        this.mConnection.messageListener = this;
 	this.mConnection.init(aServer, aPort, null);
 	this.mOperation = Components.classes["mozilla.network.ldapoperation"].
                           createInstance(Components.interfaces.
