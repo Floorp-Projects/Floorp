@@ -132,10 +132,10 @@ public:
 
   NS_IMETHOD    Detach();
 
-  NS_IMETHOD    ToString(nsAWritableString& aReturn);
+  NS_IMETHOD    ToString(nsAString& aReturn);
 
 /*BEGIN nsIDOMNSRange interface implementations*/
-  NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, 
+  NS_IMETHOD    CreateContextualFragment(const nsAString& aFragment, 
                                          nsIDOMDocumentFragment** aReturn);
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset,
                                PRBool* aResult);

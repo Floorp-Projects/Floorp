@@ -65,7 +65,7 @@ public:
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
                   PRBool aDoFlush) = 0;
 
-  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn,
+  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
                        PRBool aDoFlush) = 0;
 
   NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex,

@@ -99,7 +99,7 @@ protected:
 class nsDocHeaderData
 {
 public:
-  nsDocHeaderData(nsIAtom* aField, const nsAReadableString& aData)
+  nsDocHeaderData(nsIAtom* aField, const nsAString& aData)
   {
     mField = aField;
     NS_IF_ADDREF(mField);
@@ -277,7 +277,7 @@ public:
   /**
    * Return the content language of this document.
    */
-  NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
+  NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;
 
   /**
    * Return the LoadGroup for the document. May return null.
@@ -293,15 +293,15 @@ public:
   /**
    * Get/Set the base target of a link in a document.
    */
-  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget);
-  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget);
+  NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget);
+  NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget);
 
   /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharsetID);
-  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
+  NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharsetID);
+  NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID);
 
   NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource);
   NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource);
@@ -341,9 +341,9 @@ public:
    * HTML META tags).
    */
   NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField,
-                           nsAWritableString& aData) const;
+                           nsAString& aData) const;
   NS_IMETHOD SetHeaderData(nsIAtom* aheaderField,
-                           const nsAReadableString& aData);
+                           const nsAString& aData);
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -535,10 +535,10 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
   // nsIDOMEventTarget interface
-  NS_IMETHOD AddEventListener(const nsAReadableString& aType,
+  NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener, 
                               PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
+  NS_IMETHOD RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);

@@ -40,7 +40,7 @@
 #define _nsIContentSerializer_h__
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsIAtom.h"
 
 class nsIDOMText; /* forward declaration */
@@ -66,30 +66,30 @@ class nsIContentSerializer : public nsISupports {
                   nsIAtom* aCharSet, PRBool aIsCopying) = 0;
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
-                        PRInt32 aEndOffset, nsAWritableString& aStr) = 0;
+                        PRInt32 aEndOffset, nsAString& aStr) = 0;
 
   NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
-                                nsAWritableString& aStr) = 0;
+                                nsAString& aStr) = 0;
 
   NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,
-                                         nsAWritableString& aStr) = 0;
+                                         nsAString& aStr) = 0;
 
   NS_IMETHOD AppendComment(nsIDOMComment* aComment, PRInt32 aStartOffset,
-                           PRInt32 aEndOffset, nsAWritableString& aStr) = 0;
+                           PRInt32 aEndOffset, nsAString& aStr) = 0;
 
   NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
-                           nsAWritableString& aStr) = 0;
+                           nsAString& aStr) = 0;
 
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                nsAWritableString& aStr) = 0;
+                                nsAString& aStr) = 0;
 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
-                              nsAWritableString& aStr) = 0;
+                              nsAString& aStr) = 0;
 
-  NS_IMETHOD Flush(nsAWritableString& aStr) = 0;
+  NS_IMETHOD Flush(nsAString& aStr) = 0;
 };
 
 #define NS_CONTENTSERIALIZER_CONTRACTID_PREFIX \

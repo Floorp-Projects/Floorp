@@ -2379,7 +2379,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
   return NS_OK;
 }
 
-nsresult nsRange::ToString(nsAWritableString& aReturn)
+nsresult nsRange::ToString(nsAString& aReturn)
 { 
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -2687,7 +2687,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
 
 // nsIDOMNSRange interface
 NS_IMETHODIMP    
-nsRange::CreateContextualFragment(const nsAReadableString& aFragment, 
+nsRange::CreateContextualFragment(const nsAString& aFragment, 
                                   nsIDOMDocumentFragment** aReturn)
 {
   nsresult result = NS_OK;

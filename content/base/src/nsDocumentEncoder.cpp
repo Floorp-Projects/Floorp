@@ -100,7 +100,7 @@ public:
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType, PRUint32 aFlags);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -109,33 +109,33 @@ public:
   NS_IMETHOD SetSelection(nsISelection* aSelection);
   NS_IMETHOD SetRange(nsIDOMRange* aRange);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
-  NS_IMETHOD SetCharset(const nsAReadableString& aCharset);
-  NS_IMETHOD GetMimeType(nsAWritableString& aMimeType);
+  NS_IMETHOD SetCharset(const nsAString& aCharset);
+  NS_IMETHOD GetMimeType(nsAString& aMimeType);
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
-  NS_IMETHOD EncodeToString(nsAWritableString& aOutputString);
-  NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
-                                       nsAWritableString& aContextString,
-                                       nsAWritableString& aInfoString);
+  NS_IMETHOD EncodeToString(nsAString& aOutputString);
+  NS_IMETHOD EncodeToStringWithContext(nsAString& aEncodedString, 
+                                       nsAString& aContextString,
+                                       nsAString& aInfoString);
   NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup);
                                        
 protected:
   nsresult SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
-                              PRInt32 aEndOffset, nsAWritableString& aStr);
+                              PRInt32 aEndOffset, nsAString& aStr);
   nsresult SerializeToStringRecursive(nsIDOMNode* aNode,
-                                      nsAWritableString& aStr);
-  nsresult SerializeNodeEnd(nsIDOMNode* aNode, nsAWritableString& aStr);
+                                      nsAString& aStr);
+  nsresult SerializeNodeEnd(nsIDOMNode* aNode, nsAString& aStr);
   nsresult SerializeRangeToString(nsIDOMRange *aRange,
-                                  nsAWritableString& aOutputString);
+                                  nsAString& aOutputString);
   nsresult SerializeRangeNodes(nsIDOMRange* aRange, 
                                nsIDOMNode* aNode, 
-                               nsAWritableString& aString,
+                               nsAString& aString,
                                PRInt32 aDepth);
   nsresult SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
-                                      nsAWritableString& aString);
+                                      nsAString& aString);
   nsresult SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
-                                    nsAWritableString& aString);
+                                    nsAString& aString);
 
-  nsresult FlushText(nsAWritableString& aString, PRBool aForce);
+  nsresult FlushText(nsAString& aString, PRBool aForce);
 
   static PRBool IsTag(nsIDOMNode* aNode, nsIAtom* aAtom);
   
@@ -228,7 +228,7 @@ IsScriptEnabled(nsIDocument *aDoc)
 
 NS_IMETHODIMP
 nsDocumentEncoder::Init(nsIDocument* aDocument,
-                        const nsAReadableString& aMimeType,
+                        const nsAString& aMimeType,
                         PRUint32 aFlags)
 {
   if (!aDocument)
@@ -266,14 +266,14 @@ nsDocumentEncoder::SetRange(nsIDOMRange* aRange)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetCharset(const nsAReadableString& aCharset)
+nsDocumentEncoder::SetCharset(const nsAString& aCharset)
 {
   mCharset = aCharset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::GetMimeType(nsAWritableString& aMimeType)
+nsDocumentEncoder::GetMimeType(nsAString& aMimeType)
 {
   aMimeType = mMimeType;
   return NS_OK;
@@ -289,7 +289,7 @@ nsDocumentEncoder::IncludeInContext(nsIDOMNode *aNode)
 nsresult
 nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
                                       PRInt32 aEndOffset,
-                                      nsAWritableString& aStr)
+                                      nsAString& aStr)
 {
   PRUint16 type;
 
@@ -349,7 +349,7 @@ nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
 
 nsresult
 nsDocumentEncoder::SerializeNodeEnd(nsIDOMNode* aNode,
-                                    nsAWritableString& aStr)
+                                    nsAString& aStr)
 {
   PRUint16 type;
 
@@ -368,7 +368,7 @@ nsDocumentEncoder::SerializeNodeEnd(nsIDOMNode* aNode,
 
 nsresult
 nsDocumentEncoder::SerializeToStringRecursive(nsIDOMNode* aNode,
-                                              nsAWritableString& aStr)
+                                              nsAString& aStr)
 {
   nsresult rv = SerializeNodeStart(aNode, 0, -1, aStr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -423,7 +423,7 @@ nsDocumentEncoder::IsTag(nsIDOMNode* aNode, nsIAtom* aAtom)
 }
 
 static nsresult
-ConvertAndWrite(nsAReadableString& aString,
+ConvertAndWrite(const nsAString& aString,
                 nsIOutputStream* aStream,
                 nsIUnicodeEncoder* aEncoder)
 {
@@ -484,7 +484,7 @@ ConvertAndWrite(nsAReadableString& aString,
 }
 
 nsresult
-nsDocumentEncoder::FlushText(nsAWritableString& aString, PRBool aForce)
+nsDocumentEncoder::FlushText(nsAString& aString, PRBool aForce)
 {
   if (!mStream)
     return NS_OK;
@@ -650,7 +650,7 @@ static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount)
 nsresult
 nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange, 
                                        nsIDOMNode* aNode, 
-                                       nsAWritableString& aString,
+                                       nsAString& aString,
                                        PRInt32 aDepth)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
@@ -769,7 +769,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
 
 nsresult
 nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
-                                              nsAWritableString& aString)
+                                              nsAString& aString)
 {
   PRInt32 i = aAncestorArray.Count();
   nsresult rv = NS_OK;
@@ -793,7 +793,7 @@ nsDocumentEncoder::SerializeRangeContextStart(const nsVoidArray& aAncestorArray,
 
 nsresult
 nsDocumentEncoder::SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
-                                            nsAWritableString& aString)
+                                            nsAString& aString)
 {
   PRInt32 i = 0;
   PRInt32 count = aAncestorArray.Count();
@@ -818,7 +818,7 @@ nsDocumentEncoder::SerializeRangeContextEnd(const nsVoidArray& aAncestorArray,
 
 nsresult
 nsDocumentEncoder::SerializeRangeToString(nsIDOMRange *aRange,
-                                          nsAWritableString& aOutputString)
+                                          nsAString& aOutputString)
 {
   if (!aRange)
     return NS_OK;
@@ -881,7 +881,7 @@ nsDocumentEncoder::SerializeRangeToString(nsIDOMRange *aRange,
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::EncodeToString(nsAWritableString& aOutputString)
+nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
 {
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
@@ -980,9 +980,9 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString, 
-                                             nsAWritableString& aContextString,
-                                             nsAWritableString& aInfoString)
+nsDocumentEncoder::EncodeToStringWithContext(nsAString& aEncodedString, 
+                                             nsAString& aContextString,
+                                             nsAString& aInfoString)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1021,13 +1021,13 @@ public:
   nsHTMLCopyEncoder();
   virtual ~nsHTMLCopyEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType, PRUint32 aFlags);
 
   // overridden methods from nsDocumentEncoder
   NS_IMETHOD SetSelection(nsISelection* aSelection);
-  NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
-                                       nsAWritableString& aContextString,
-                                       nsAWritableString& aInfoString);
+  NS_IMETHOD EncodeToStringWithContext(nsAString& aEncodedString, 
+                                       nsAString& aContextString,
+                                       nsAString& aInfoString);
 
 protected:
 
@@ -1069,7 +1069,7 @@ nsHTMLCopyEncoder::~nsHTMLCopyEncoder()
 
 NS_IMETHODIMP
 nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
-                        const nsAReadableString& aMimetype,
+                        const nsAString& aMimetype,
                         PRUint32 aFlags)
 {
   if (!aDocument)
@@ -1207,9 +1207,9 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::EncodeToStringWithContext(nsAWritableString& aEncodedString, 
-                                             nsAWritableString& aContextString,
-                                             nsAWritableString& aInfoString)
+nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aEncodedString, 
+                                             nsAString& aContextString,
+                                             nsAString& aInfoString)
 {
   nsresult rv = EncodeToString(aEncodedString);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -193,7 +193,7 @@ NS_IMPL_RELEASE(nsNode3Tearoff)
 
 
 NS_IMETHODIMP
-nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
+nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 {
   nsCOMPtr<nsIURI> uri;
 
@@ -246,8 +246,8 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
 }
 
 NS_IMETHODIMP
-nsNode3Tearoff::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                      nsAWritableString& aPrefix)
+nsNode3Tearoff::LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                      nsAString& aPrefix)
 {
   SetDOMStringToNull(aPrefix);
 
@@ -338,8 +338,8 @@ nsNode3Tearoff::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsNode3Tearoff::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                   nsAWritableString& aNamespaceURI)
+nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                   nsAString& aNamespaceURI)
 {
   nsCOMPtr<nsIAtom> name;
 
@@ -511,7 +511,7 @@ nsDOMEventRTTearoff::HandleEvent(nsIDOMEvent *aEvent)
 // nsIDOMEventTarget
 
 NS_IMETHODIMP
-nsDOMEventRTTearoff::AddEventListener(const nsAReadableString& type,
+nsDOMEventRTTearoff::AddEventListener(const nsAString& type,
                                       nsIDOMEventListener *listener,
                                       PRBool useCapture)
 {
@@ -523,7 +523,7 @@ nsDOMEventRTTearoff::AddEventListener(const nsAReadableString& type,
 }
 
 NS_IMETHODIMP
-nsDOMEventRTTearoff::RemoveEventListener(const nsAReadableString& type,
+nsDOMEventRTTearoff::RemoveEventListener(const nsAString& type,
                                          nsIDOMEventListener *listener,
                                          PRBool useCapture)
 {
@@ -643,19 +643,19 @@ nsGenericElement::Init(nsINodeInfo *aNodeInfo)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetNodeName(nsAWritableString& aNodeName)
+nsGenericElement::GetNodeName(nsAString& aNodeName)
 {
   return mNodeInfo->GetQualifiedName(aNodeName);
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetLocalName(nsAWritableString& aLocalName)
+nsGenericElement::GetLocalName(nsAString& aLocalName)
 {
   return mNodeInfo->GetLocalName(aLocalName);
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetNodeValue(nsAWritableString& aNodeValue)
+nsGenericElement::GetNodeValue(nsAString& aNodeValue)
 {
   SetDOMStringToNull(aNodeValue);
 
@@ -663,7 +663,7 @@ nsGenericElement::GetNodeValue(nsAWritableString& aNodeValue)
 }
 
 NS_IMETHODIMP
-nsGenericElement::SetNodeValue(const nsAReadableString& aNodeValue)
+nsGenericElement::SetNodeValue(const nsAString& aNodeValue)
 {
   // The node value can't be modified
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -794,19 +794,19 @@ nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsGenericElement::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetPrefix(nsAWritableString& aPrefix)
+nsGenericElement::GetPrefix(nsAString& aPrefix)
 {
   return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
+nsGenericElement::SetPrefix(const nsAString& aPrefix)
 {
   // XXX: Validate the prefix string!
 
@@ -829,8 +829,8 @@ nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
 }
 
 nsresult
-nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
-                                      const nsAReadableString& aVersion,
+nsGenericElement::InternalIsSupported(const nsAString& aFeature,
+                                      const nsAString& aVersion,
                                       PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -863,8 +863,8 @@ nsGenericElement::InternalIsSupported(const nsAReadableString& aFeature,
 }
 
 NS_IMETHODIMP
-nsGenericElement::IsSupported(const nsAReadableString& aFeature,
-                              const nsAReadableString& aVersion,
+nsGenericElement::IsSupported(const nsAString& aFeature,
+                              const nsAString& aVersion,
                               PRBool* aReturn)
 {
   return InternalIsSupported(aFeature, aVersion, aReturn);
@@ -910,7 +910,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetTagName(nsAWritableString& aTagName)
+nsGenericElement::GetTagName(nsAString& aTagName)
 {
   aTagName.Truncate();
   if (mNodeInfo) {
@@ -920,8 +920,8 @@ nsGenericElement::GetTagName(nsAWritableString& aTagName)
 }
 
 nsresult
-nsGenericElement::GetAttribute(const nsAReadableString& aName,
-                               nsAWritableString& aReturn)
+nsGenericElement::GetAttribute(const nsAString& aName,
+                               nsAString& aReturn)
 {
   nsCOMPtr<nsINodeInfo> ni;
   NormalizeAttrString(aName, *getter_AddRefs(ni));
@@ -944,8 +944,8 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
 }
 
 nsresult
-nsGenericElement::SetAttribute(const nsAReadableString& aName,
-                               const nsAReadableString& aValue)
+nsGenericElement::SetAttribute(const nsAString& aName,
+                               const nsAString& aValue)
 {
   nsCOMPtr<nsINodeInfo> ni;
   NormalizeAttrString(aName, *getter_AddRefs(ni));
@@ -953,7 +953,7 @@ nsGenericElement::SetAttribute(const nsAReadableString& aName,
 }
 
 nsresult
-nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
+nsGenericElement::RemoveAttribute(const nsAString& aName)
 {
   nsCOMPtr<nsINodeInfo> ni;
   NormalizeAttrString(aName, *getter_AddRefs(ni));
@@ -969,7 +969,7 @@ nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
 }
 
 nsresult
-nsGenericElement::GetAttributeNode(const nsAReadableString& aName,
+nsGenericElement::GetAttributeNode(const nsAString& aName,
                                    nsIDOMAttr** aReturn)
 {
   if (nsnull == aReturn) {
@@ -1053,7 +1053,7 @@ nsGenericElement::RemoveAttributeNode(nsIDOMAttr* aAttribute,
 }
 
 nsresult
-nsGenericElement::GetElementsByTagName(const nsAReadableString& aTagname,
+nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
   nsCOMPtr<nsIAtom> nameAtom;
@@ -1073,9 +1073,9 @@ nsGenericElement::GetElementsByTagName(const nsAReadableString& aTagname,
 }
 
 nsresult
-nsGenericElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aLocalName,
-                                 nsAWritableString& aReturn)
+nsGenericElement::GetAttributeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aLocalName,
+                                 nsAString& aReturn)
 {
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
@@ -1103,9 +1103,9 @@ nsGenericElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 nsresult
-nsGenericElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aQualifiedName,
-                                 const nsAReadableString& aValue)
+nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aQualifiedName,
+                                 const nsAString& aValue)
 {
   nsCOMPtr<nsINodeInfoManager> nimgr;
   mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
@@ -1120,8 +1120,8 @@ nsGenericElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 nsresult
-nsGenericElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                                    const nsAReadableString& aLocalName)
+nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
+                                    const nsAString& aLocalName)
 {
   nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nsid;
@@ -1149,8 +1149,8 @@ nsGenericElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
 }
 
 nsresult
-nsGenericElement::GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                     const nsAReadableString& aLocalName,
+nsGenericElement::GetAttributeNodeNS(const nsAString& aNamespaceURI,
+                                     const nsAString& aLocalName,
                                      nsIDOMAttr** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -1202,8 +1202,8 @@ nsGenericElement::SetAttributeNodeNS(nsIDOMAttr* aNewAttr,
 }
 
 nsresult
-nsGenericElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                         const nsAReadableString& aLocalName,
+nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                         const nsAString& aLocalName,
                                          nsIDOMNodeList** aReturn)
 {
   nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
@@ -1238,7 +1238,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 }
 
 nsresult
-nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
+nsGenericElement::HasAttribute(const nsAString& aName, PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -1257,8 +1257,8 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
 }
 
 nsresult
-nsGenericElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                                 const nsAReadableString& aLocalName,
+nsGenericElement::HasAttributeNS(const nsAString& aNamespaceURI,
+                                 const nsAString& aLocalName,
                                  PRBool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -1828,14 +1828,14 @@ nsGenericElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRul
 NS_IMETHODIMP
 nsGenericElement::AttributeToString(nsIAtom* aAttribute,
                                     const nsHTMLValue& aValue,
-                                    nsAWritableString& aResult) const
+                                    nsAString& aResult) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsGenericElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsAReadableString& aValue,
+                                    const nsAString& aValue,
                                     nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -1848,7 +1848,7 @@ nsGenericElement::GetBaseURL(nsIURI*& aBaseURL) const
 }
 
 NS_IMETHODIMP
-nsGenericElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
+nsGenericElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2640,7 +2640,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
 
 nsresult
 nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
-                                         const nsAReadableString& aValue)
+                                         const nsAString& aValue)
 {
   nsresult ret = NS_OK;
   nsCOMPtr<nsIScriptContext> context = nsnull;
@@ -2707,7 +2707,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
 struct nsGenericAttribute
 {
-  nsGenericAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue)
+  nsGenericAttribute(nsINodeInfo *aNodeInfo, const nsAString& aValue)
     : mNodeInfo(aNodeInfo),
       mValue(aValue)
   {
@@ -2762,7 +2762,7 @@ nsGenericContainerElement::~nsGenericContainerElement()
 }
 
 nsresult
-nsGenericContainerElement::NormalizeAttrString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo)
+nsGenericContainerElement::NormalizeAttrString(const nsAString& aStr, nsINodeInfo*& aNodeInfo)
 {
   if (mAttributes) {
     PRInt32 indx, count = mAttributes->Count();
@@ -2902,7 +2902,7 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
 
 nsresult
 nsGenericContainerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   const nsAReadableString& aValue,
+                                   const nsAString& aValue,
                                    PRBool aNotify)
 {
   nsresult rv;
@@ -2990,7 +2990,7 @@ PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
 
 nsresult
 nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
-                                   const nsAReadableString& aValue,
+                                   const nsAString& aValue,
                                    PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -3088,7 +3088,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
 
 nsresult
 nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                   nsAWritableString& aResult) const
+                                   nsAString& aResult) const
 {
   nsCOMPtr<nsIAtom> prefix;
   return GetAttr(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
@@ -3097,7 +3097,7 @@ nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 nsresult
 nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                    nsIAtom*& aPrefix,
-                                   nsAWritableString& aResult) const
+                                   nsAString& aResult) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {

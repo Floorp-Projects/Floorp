@@ -219,7 +219,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::Initialize(nsAWritableString* aOutString,
+nsPlainTextSerializer::Initialize(nsAString* aOutString,
                                   PRUint32 aFlags, PRUint32 aWrapCol)
 {
   nsresult rv = Init(aFlags, aWrapCol, nsnull, PR_FALSE);
@@ -237,7 +237,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::AppendText(nsIDOMText* aText, 
                                   PRInt32 aStartOffset,
                                   PRInt32 aEndOffset, 
-                                  nsAWritableString& aStr)
+                                  nsAString& aStr)
 {
   if (mIgnoreAboveIndex != (PRUint32)kNotFound) {
     return NS_OK;
@@ -319,7 +319,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                          nsAWritableString& aStr)
+                                          nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -354,7 +354,7 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
  
 NS_IMETHODIMP 
 nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
-                                        nsAWritableString& aStr)
+                                        nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -385,7 +385,7 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::Flush(nsAWritableString& aStr)
+nsPlainTextSerializer::Flush(nsAString& aStr)
 {
   mOutputString = &aStr;
   FlushLine();
@@ -406,7 +406,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
-  const nsAReadableString&   namestr = aNode.GetText();
+  const nsAString&   namestr = aNode.GetText();
   nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
   
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
@@ -421,7 +421,7 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
   }
 
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-  const nsAReadableString& text = aNode.GetText();
+  const nsAString& text = aNode.GetText();
 
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
   if ((type == eHTMLTag_text) ||
@@ -962,7 +962,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 
 nsresult
 nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag, 
-                                 const nsAReadableString& aText)
+                                 const nsAString& aText)
 {
   // If we don't want any output, just return
   if (!DoOutput()) {
@@ -1486,7 +1486,7 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
  * line wrapping, indentation, whitespace compression and other things.
  */
 void
-nsPlainTextSerializer::Write(const nsAReadableString& aString)
+nsPlainTextSerializer::Write(const nsAString& aString)
 {
 #ifdef DEBUG_wrapping
   printf("Write(%s): wrap col = %d\n",
@@ -1525,7 +1525,7 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
         OutputQuotesAndIndent();
       }
 
-      // Find one of '\n' or '\r' using iterators since nsAReadableString
+      // Find one of '\n' or '\r' using iterators since nsAString
       // doesn't have the old FindCharInSet function.
       nsAString::const_iterator iter;           aString.BeginReading(iter);
       nsAString::const_iterator done_searching; aString.EndReading(done_searching);
@@ -1678,7 +1678,7 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
 
     PRInt32 count = mParserNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {
-      const nsAReadableString& key = mParserNode->GetKeyAt(i);
+      const nsAString& key = mParserNode->GetKeyAt(i);
       if (key.Equals(name)) {
         aValueRet = mParserNode->GetValueAt(i);
         aValueRet.StripChars("\"");

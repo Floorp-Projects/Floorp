@@ -54,12 +54,12 @@ class nsDOMDocumentType : public nsGenericDOMDataNode,
                           public nsIDOMDocumentType
 {
 public:
-  nsDOMDocumentType(const nsAReadableString& aName,
+  nsDOMDocumentType(const nsAString& aName,
                     nsIDOMNamedNodeMap *aEntities,
                     nsIDOMNamedNodeMap *aNotations,
-                    const nsAReadableString& aPublicId,
-                    const nsAReadableString& aSystemId,
-                    const nsAReadableString& aInternalSubset);
+                    const nsAString& aPublicId,
+                    const nsAString& aSystemId,
+                    const nsAString& aInternalSubset);
 
   virtual ~nsDOMDocumentType();
 
@@ -90,11 +90,11 @@ protected:
 
 extern nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      const nsAReadableString& aName,
+                      const nsAString& aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
-                      const nsAReadableString& aPublicId,
-                      const nsAReadableString& aSystemId,
-                      const nsAReadableString& aInternalSubset);
+                      const nsAString& aPublicId,
+                      const nsAString& aSystemId,
+                      const nsAString& aInternalSubset);
 
 #endif // nsDOMDocument_h___

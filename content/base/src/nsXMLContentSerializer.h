@@ -57,57 +57,57 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                   nsIAtom* aCharSet, PRBool aIsCopying);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
-                        PRInt32 aEndOffset, nsAWritableString& aStr);
+                        PRInt32 aEndOffset, nsAString& aStr);
 
   NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
-                                nsAWritableString& aStr);
+                                nsAString& aStr);
 
   NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,
-                                         nsAWritableString& aStr);
+                                         nsAString& aStr);
 
   NS_IMETHOD AppendComment(nsIDOMComment* aComment, PRInt32 aStartOffset,
-                           PRInt32 aEndOffset, nsAWritableString& aStr);
+                           PRInt32 aEndOffset, nsAString& aStr);
   
   NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
-                           nsAWritableString& aStr);
+                           nsAString& aStr);
 
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                nsAWritableString& aStr);
+                                nsAString& aStr);
   
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
-                              nsAWritableString& aStr);
+                              nsAString& aStr);
 
-  NS_IMETHOD Flush(nsAWritableString& aStr) { return NS_OK; }
+  NS_IMETHOD Flush(nsAString& aStr) { return NS_OK; }
 
  protected:
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,
-                              nsAWritableString& aOutputStr);
+                              nsAString& aOutputStr);
   virtual void AppendToString(const PRUnichar aChar,
-                              nsAWritableString& aOutputStr);
-  virtual void AppendToString(const nsAReadableString& aStr,
-                              nsAWritableString& aOutputStr,
+                              nsAString& aOutputStr);
+  virtual void AppendToString(const nsAString& aStr,
+                              nsAString& aOutputStr,
                               PRBool aTranslateEntities = PR_FALSE,
                               PRBool aIncrColumn = PR_TRUE);
   nsresult AppendTextData(nsIDOMNode* aNode, 
                           PRInt32 aStartOffset,
                           PRInt32 aEndOffset,
-                          nsAWritableString& aStr,
+                          nsAString& aStr,
                           PRBool aTranslateEntities,
                           PRBool aIncrColumn);
-  virtual nsresult PushNameSpaceDecl(const nsAReadableString& aPrefix,
-                                     const nsAReadableString& aURI,
+  virtual nsresult PushNameSpaceDecl(const nsAString& aPrefix,
+                                     const nsAString& aURI,
                                      nsIDOMElement* aOwner);
   void PopNameSpaceDeclsFor(nsIDOMElement* aOwner);
-  PRBool ConfirmPrefix(nsAWritableString& aPrefix,
-                       const nsAReadableString& aURI);
-  void SerializeAttr(const nsAReadableString& aPrefix,
-                     const nsAReadableString& aName,
-                     const nsAReadableString& aValue,
-                     nsAWritableString& aStr,
+  PRBool ConfirmPrefix(nsAString& aPrefix,
+                       const nsAString& aURI);
+  void SerializeAttr(const nsAString& aPrefix,
+                     const nsAString& aName,
+                     const nsAString& aValue,
+                     nsAString& aStr,
                      PRBool aDoEscapeEntities);
 
   PRInt32 mPrefixIndex;

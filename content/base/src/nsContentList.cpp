@@ -327,7 +327,7 @@ nsContentList::nsContentList(nsIDocument *aDocument,
 
 nsContentList::nsContentList(nsIDocument *aDocument,
                              nsContentListMatchFunc aFunc,
-                             const nsAReadableString& aData,
+                             const nsAString& aData,
                              nsIContent* aRootContent)
   : nsBaseContentList()
 {
@@ -423,7 +423,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn, PRBool aDoFlush)
 }
 
 NS_IMETHODIMP
-nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn, PRBool aDoFlush)
+nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn, PRBool aDoFlush)
 {
   nsresult result = CheckDocumentExistence();
 
@@ -482,7 +482,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 {
   return NamedItem(aName, aReturn, PR_TRUE);
 }

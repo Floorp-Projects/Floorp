@@ -52,14 +52,14 @@ public:
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
-  static void ParseLinkTypes(const nsAReadableString& aTypes, nsStringArray& aResult);
+  static void ParseLinkTypes(const nsAString& aTypes, nsStringArray& aResult);
   static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams);
 
 protected:
-  virtual void GetStyleSheetInfo(nsAWritableString& aUrl,
-                                 nsAWritableString& aTitle,
-                                 nsAWritableString& aType,
-                                 nsAWritableString& aMedia,
+  virtual void GetStyleSheetInfo(nsAString& aUrl,
+                                 nsAString& aTitle,
+                                 nsAString& aType,
+                                 nsAString& aMedia,
                                  PRBool* aIsAlternate) = 0;
 
 

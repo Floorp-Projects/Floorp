@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include "nsISupports.h"
 #include "nsEvent.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 // Forward declarations
 class nsIAtom;
@@ -113,7 +113,7 @@ public:
    * @param aName out parameter representing the complete name of the
    * attribute
    */
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, 
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr, 
                                  nsINodeInfo*& aNodeInfo) = 0;
 
   /**
@@ -131,7 +131,7 @@ public:
    * notified of the attribute change.
    */
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify) = 0;
 
   /**
@@ -149,7 +149,7 @@ public:
    * notified of the attribute change.
    */
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify) = 0;
 
   /**
@@ -170,7 +170,7 @@ public:
    * </UL>
    */
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAWritableString& aResult) const = 0;
+                     nsAString& aResult) const = 0;
 
   /**
    * Get the current value and prefix of the attribute. This returns a form
@@ -193,7 +193,7 @@ public:
    */
 
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom*& aPrefix, nsAWritableString& aResult) const = 0;
+                     nsIAtom*& aPrefix, nsAString& aResult) const = 0;
 
   /**
    * Determine if an attribute has been set.

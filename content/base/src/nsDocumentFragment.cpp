@@ -65,11 +65,11 @@ public:
   NS_IMETHOD DropChildReferences();
 
   // interface nsIDOMDocumentFragment
-  NS_IMETHOD    GetNodeName(nsAWritableString& aNodeName)
+  NS_IMETHOD    GetNodeName(nsAString& aNodeName)
   { return nsGenericContainerElement::GetNodeName(aNodeName); }
-  NS_IMETHOD    GetNodeValue(nsAWritableString& aNodeValue)
+  NS_IMETHOD    GetNodeValue(nsAString& aNodeValue)
   { return nsGenericContainerElement::GetNodeValue(aNodeValue); }
-  NS_IMETHOD    SetNodeValue(const nsAReadableString& aNodeValue)
+  NS_IMETHOD    SetNodeValue(const nsAString& aNodeValue)
   { return nsGenericContainerElement::SetNodeValue(aNodeValue); }
   NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)
@@ -107,30 +107,30 @@ public:
   NS_IMETHOD    HasAttributes(PRBool* aReturn)
   { return nsGenericContainerElement::HasAttributes(aReturn); }
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-  NS_IMETHOD    GetPrefix(nsAWritableString& aPrefix)
+  NS_IMETHOD    GetPrefix(nsAString& aPrefix)
   { return nsGenericContainerElement::GetPrefix(aPrefix); }
-  NS_IMETHOD    SetPrefix(const nsAReadableString& aPrefix);
-  NS_IMETHOD    GetNamespaceURI(nsAWritableString& aNamespaceURI)
+  NS_IMETHOD    SetPrefix(const nsAString& aPrefix);
+  NS_IMETHOD    GetNamespaceURI(nsAString& aNamespaceURI)
   { return nsGenericContainerElement::GetNamespaceURI(aNamespaceURI); }
-  NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName)
+  NS_IMETHOD    GetLocalName(nsAString& aLocalName)
   { return nsGenericContainerElement::GetLocalName(aLocalName); }
   NS_IMETHOD    Normalize()
   { return nsGenericContainerElement::Normalize(); }
-  NS_IMETHOD    IsSupported(const nsAReadableString& aFeature,
-                            const nsAReadableString& aVersion,
+  NS_IMETHOD    IsSupported(const nsAString& aFeature,
+                            const nsAString& aVersion,
                             PRBool* aReturn)
   { return nsGenericContainerElement::IsSupported(aFeature, aVersion,
                                                   aReturn); }
 
   // nsIDOM3Node
-  NS_IMETHOD    GetBaseURI(nsAWritableString& aURI)
+  NS_IMETHOD    GetBaseURI(nsAString& aURI)
   { aURI.Truncate(); return NS_OK; }
-  NS_IMETHOD    LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                      nsAWritableString& aPrefix) {
+  NS_IMETHOD    LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                      nsAString& aPrefix) {
     aPrefix.Truncate(); return NS_OK;
   }
-  NS_IMETHOD    LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                   nsAWritableString& aNamespaceURI) {
+  NS_IMETHOD    LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                   nsAString& aNamespaceURI) {
     aNamespaceURI.Truncate(); return NS_OK;
   }
 
@@ -138,18 +138,18 @@ public:
   NS_IMETHOD SetParent(nsIContent* aParent)
     { return NS_OK; }
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsAWritableString& aResult) const
+                     nsAString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                     nsIAtom*& aPrefix, nsAWritableString& aResult) const
+                     nsIAtom*& aPrefix, nsAString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                        PRBool aNotify)
@@ -338,7 +338,7 @@ nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::SetPrefix(const nsAReadableString& aPrefix)
+nsDocumentFragment::SetPrefix(const nsAString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
