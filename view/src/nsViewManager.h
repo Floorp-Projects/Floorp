@@ -27,6 +27,8 @@
 #include "prtime.h"
 #include "nsVoidArray.h"
 #include "nsIScrollableView.h"
+#include "nsIRegion.h"
+#include "nsIBlender.h"
 
 class nsViewManager : public nsIViewManager
 {
@@ -141,7 +143,6 @@ private:
   void PauseTimer(void);
   void RestartTimer(void);
 
-
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
@@ -155,16 +156,26 @@ private:
   nsVoidArray       *mFlatViews;
   nsIScrollableView *mRootScrollable;
 
+  //from here to public should be static and locked... MMP
   static PRUint32          mVMCount;        //number of viewmanagers
   static nsDrawingSurface  mDrawingSurface; //single drawing surface
   static nsRect            mDSBounds;       //for all VMs
 
   //blending buffers
-  nsDrawingSurface  gOffScreen;
-  nsDrawingSurface  gRed;
-  nsDrawingSurface  gBlue;
-  PRInt32           gBlendWidth;
-  PRInt32           gBlendHeight;
+  static nsDrawingSurface  gOffScreen;
+  static nsDrawingSurface  gRed;
+  static nsDrawingSurface  gBlue;
+  static PRInt32           gBlendWidth;
+  static PRInt32           gBlendHeight;
+
+  //compositor regions
+  nsIRegion         *mTransRgn;
+  nsIRegion         *mOpaqueRgn;
+  nsIRegion         *mRCRgn;
+  nsIRegion         *mTRgn;
+  nsRegionRectSet   *mTransRects;
+
+  nsIBlender        *mBlender;
 
 public:
   //these are public so that our timer callback can poke them.
