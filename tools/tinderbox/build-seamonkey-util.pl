@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.200 $ ';
+$::UtilsVersion = '$Revision: 1.201 $ ';
 
 package TinderUtils;
 
@@ -221,7 +221,7 @@ sub GetSystemInfo {
         $Settings::BuildName = "BSD/OS $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'Darwin') {
-        $Settings::BuildName = "MacOSX/Darwin $os_ver $host $build_type";
+        $Settings::BuildName = "MacOSX Darwin $os_ver $host $build_type";
     }
     if ($Settings::OS eq 'FreeBSD') {
         $Settings::BuildName = "$Settings::OS/$Settings::CPU $os_ver $host $build_type";
@@ -890,6 +890,8 @@ sub get_profile_dir {
         $profile_dir =~ s|\\|/|g;
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
+    } elsif ($Settings::OS eq "Darwin") {
+        $profile_dir = "$ENV{HOME}/Library/Mozilla/Profiles/$Settings::MozProfileName";
     } else {
         # *nix
         $profile_dir = "$build_dir/.mozilla/$Settings::MozProfileName";
@@ -1352,18 +1354,31 @@ sub run_all_tests {
                   $Settings::RegxpcomTestTimeout);
     }
 
-    my $mozappdir="$build_dir/.mozilla";
-    my $profiledir = get_profile_dir($build_dir);
+    my $all_profiles_dir;  # All Profiles directory.
+    my $profiledir;        # Profile directory.
+
+    if($Settings::OS eq 'Darwin') {
+       $all_profiles_dir="~/Library/Mozilla/Profiles";
+    } else {
+       $all_profiles_dir="$build_dir/.mozilla";
+    }
+    
+    $profiledir = get_profile_dir($build_dir);
+
 
     #
     # Make sure we have a profile to run tests.  This is assumed to be called
     # $Settings::MozProfileName and will live in $build_dir/.mozilla.
     # Also assuming only one profile here.
     #
+    # MacOSX/Darwin stores profiles in ~/Library/Mozilla/Profiles.
     my $cp_result = 0;
-    unless ((-d "$profiledir")||
-            ((-d "$mozappdir/Profiles/$Settings::MozProfileName") and 
-             ($Settings::OS eq 'Darwin'))) {
+
+    print "XXXX all_profiles_dir = $all_profiles_dir\n";
+    print "XXXX profiledir = $profiledir\n";
+    print "XXXX Settings::OS = $Settings::OS\n";
+
+    unless (-d "$profiledir") {
         print_log "No profile found, creating profile.\n";
         $cp_result = create_profile($build_dir, $binary_dir, $binary);
     } else {
@@ -1371,7 +1386,7 @@ sub run_all_tests {
 
         # Recreate profile if we have $Settings::CleanProfile set.
         if ($Settings::CleanProfile) {
-            my $deletedir = $mozappdir;
+            my $deletedir = $all_profiles_dir;
             $deletedir = $profiledir if ($Settings::OS eq "BeOS" || $Settings::OS =~ /^WIN/);
             print_log "Creating clean profile ...\n";
             print_log "Deleting $deletedir ...\n";
@@ -1397,7 +1412,7 @@ sub run_all_tests {
     # e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
     # so File::Path::find will find the prefs.js file.
     #
-    my ($pref_file, $profile_dir) = find_pref_file($build_dir);
+    my ($pref_file, $profile_dir) = find_pref_file($profiledir);
     #XXX this is ugly and hacky 
     $test_result = 'testfailed' unless $pref_file;;
 
