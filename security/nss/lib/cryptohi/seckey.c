@@ -1113,7 +1113,7 @@ CERT_KMIDPublicKey(CERTCertificate *cert)
 }
 
 int
-SECKEY_ECParamsToKeySize(SECItem *encodedParams)
+SECKEY_ECParamsToKeySize(const SECItem *encodedParams)
 {
     SECOidTag tag;
     SECItem oid = { siBuffer, NULL, 0};
