@@ -311,7 +311,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     
   nsAutoString  theType = editorType;
   theType.ToLowerCase();
-  if (theType == "text" || theType == "html" || theType == "" || theType == "htmlMail")
+  if (theType == "text" || theType == "html" || theType == "" || theType == "htmlmail")
   {
     mEditorTypeString = theType;
     return NS_OK;
