@@ -30,7 +30,8 @@ LIBRARY_NAME    = exthandler_s
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = 	nsExternalHelperAppService.h \
-		 	unix/nsOSHelperAppService.h \
+		unix/nsOSHelperAppService.h \
+		nsHelperAppRDF.h	    \
 			$(NULL)
 
 XPIDLSRCS = \
