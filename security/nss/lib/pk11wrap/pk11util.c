@@ -39,6 +39,7 @@
 #include "secmodi.h"
 #include "pk11func.h"
 #include "pki3hack.h"
+#include "secerr.h"
 
 /* these are for displaying error messages */
 
@@ -47,6 +48,7 @@ static  SECMODModuleList *modulesDB = NULL;
 static  SECMODModuleList *modulesUnload = NULL;
 static  SECMODModule *internalModule = NULL;
 static  SECMODModule *defaultDBModule = NULL;
+static  SECMODModule *pendingModule = NULL;
 static SECMODListLock *moduleLock = NULL;
 
 int secmod_PrivateModuleCount = 0;
@@ -303,6 +305,11 @@ SECMOD_DeleteInternalModule(char *name) {
     SECMODModuleList **mlpp;
     SECStatus rv = SECFailure;
 
+    if (pendingModule) {
+	PORT_SetError(SEC_ERROR_MODULE_STUCK);
+	return rv;
+    }
+
     SECMOD_GetWriteLock(moduleLock);
     for(mlpp = &modules,mlp = modules; 
 				mlp != NULL; mlpp = &mlp->next, mlp = *mlpp) {
@@ -347,7 +354,7 @@ SECMOD_DeleteInternalModule(char *name) {
 	}
 	newModule->libraryParams = 
 	     PORT_ArenaStrdup(newModule->arena,mlp->module->libraryParams);
-	oldModule = internalModule;
+	pendingModule = oldModule = internalModule;
 	internalModule = NULL;
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
@@ -451,6 +458,10 @@ SECStatus SECMOD_AddNewModuleEx(char* moduleName, char* dllPath,
     PR_SetErrorText(0, NULL);
 
     module = SECMOD_CreateModule(dllPath,moduleName, modparms, nssparms);
+
+    if (module == NULL) {
+	return result;
+    }
 
     if (module->dllName != NULL) {
         if (module->dllName[0] != 0) {
@@ -652,6 +663,11 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) {
 	PK11_USE_THREADS(PZ_Unlock((PZLock *)module->refLock);)
         if (!willfree) return;
     }
+
+    if (module == pendingModule) {
+	pendingModule = NULL;
+    }
+
     if (module->loaded) {
 	SECMOD_UnloadModule(module);
     }
