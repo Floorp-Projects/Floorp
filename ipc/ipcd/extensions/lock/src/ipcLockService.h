@@ -40,15 +40,7 @@
 #define ipcLockService_h__
 
 #include "ipcILockService.h"
-#include "ipcList.h"
 #include "ipcdclient.h"
-#include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-
-//-----------------------------------------------------------------------------
-
-typedef nsDataHashtableMT<nsCStringHashKey, nsresult*> ipcLockResultMap;
 
 //-----------------------------------------------------------------------------
 
@@ -63,9 +55,7 @@ public:
     NS_HIDDEN_(nsresult) Init();
 
 private:
-    // maps lockname to the address of a nsresult, which will be assigned a
-    // value once a STATUS event is received.
-    ipcLockResultMap mResultMap;
+    PRUintn mTPIndex;
 };
 
 //-----------------------------------------------------------------------------

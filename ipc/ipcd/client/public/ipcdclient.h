@@ -136,7 +136,7 @@ IPC_METHOD IPC_DisableMessageObserver(
 
 /**
  * Call this method to re-enable the message observer configured for a
- * message target that was disabled by a call to IPC_DisableMessageObserver.
+ * message target.
  */
 IPC_METHOD IPC_EnableMessageObserver(
   const nsID          &aTarget

@@ -1,4 +1,4 @@
-# vim: noexpandtab ts=4 sw=4
+# vim:set ts=8 sw=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,13 +14,12 @@
 #
 # The Original Code is Mozilla IPC.
 #
-# The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# The Initial Developer of the Original Code is IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Darin Fisher <darin@netscape.com>
+#   Darin Fisher <darin@meer.net>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,17 +35,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS        = public src
+MODULE = dconnect
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+REQUIRES	= ipcd \
+		  nspr \
+		  string \
+		  xpcom \
+		  $(NULL)
+
+CPPSRCS = \
+  TestIPCLocks.cpp \
+  $(NULL)
+
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+include $(topsrcdir)/config/config.mk
+
+LIBS = \
+  $(EXTRA_DSO_LIBS) \
+  $(XPCOM_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

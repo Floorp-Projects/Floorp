@@ -222,7 +222,7 @@ int main(int argc, char **argv)
             gIpcServ->AddName(argv[1]);
         }
 
-        ipcServ->DefineTarget(kTestTargetID, new myIpcMessageObserver());
+        ipcServ->DefineTarget(kTestTargetID, new myIpcMessageObserver(), PR_TRUE);
 
         const char data[] =
                 "01 this is a really long message.\n"
