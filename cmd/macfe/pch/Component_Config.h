@@ -47,5 +47,3 @@
 	#define MOZ_COMMUNICATOR_CONFIG_JS
 	#define MOZ_SPELLCHK
 #endif
-
-#define NO_SECURITY
