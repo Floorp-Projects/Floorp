@@ -421,6 +421,7 @@ public:
   nsresult CreatePluginHost(PRBool aAllowPlugins);
   nsresult DestroyPluginHost(void);
 
+  NS_IMETHOD IsBusy(PRBool& aResult);
   NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet);
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
 
@@ -1055,6 +1056,19 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 done:
   return rv;
 }
+
+
+NS_IMETHODIMP
+nsWebShell::IsBusy(PRBool& aResult)
+{
+
+  if (mDocLoader!=nsnull) {
+    mDocLoader->IsBusy(aResult);
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsWebShell::Destroy()

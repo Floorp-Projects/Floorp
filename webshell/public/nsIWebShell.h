@@ -332,6 +332,11 @@ public:
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
 
   /**
+   * Lets us know if the webshell document fired off a load
+   */  
+  NS_IMETHOD IsBusy(PRBool& aResult) = 0;
+
+  /**
    * Load the document associated with the specified URL into the WebShell.
    */
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
