@@ -91,6 +91,11 @@ public:
                   nsIRDFResource* aProperty,
                   nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 
+    nsresult
+    RemoveWidgetItem(nsIContent* aMenuItemElement,
+                     nsIRDFResource* aProperty,
+                     nsIRDFResource* aValue);
+
     nsresult 
     GetRootWidgetAtom(nsIAtom** aResult) {
         NS_ADDREF(kMenuAtom);
@@ -290,4 +295,14 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         return rv;
 
     return NS_OK;
+}
+
+
+nsresult
+RDFMenuBuilderImpl::RemoveWidgetItem(nsIContent* aMenuItemElement,
+                                     nsIRDFResource* aProperty,
+                                     nsIRDFResource* aValue)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

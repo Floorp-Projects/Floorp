@@ -128,6 +128,11 @@ public:
                   nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 
     nsresult
+    RemoveWidgetItem(nsIContent* aTreeItemElement,
+                     nsIRDFResource* aProperty,
+                     nsIRDFResource* aValue);
+
+    nsresult
     EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
 
     nsresult
@@ -400,7 +405,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         }
 
         // Ignore properties that are used to indicate "tree-ness"
-        if (IsWidgetProperty(aElement, property))
+        if (IsContainmentProperty(aElement, property))
             continue;
 
         PRInt32 nameSpaceID;
@@ -460,6 +465,73 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
     if (NS_FAILED(rv = treeItem->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
         return rv;
 
+    return NS_OK;
+}
+
+
+
+
+nsresult
+RDFTreeBuilderImpl::RemoveWidgetItem(nsIContent* aTreeItemElement,
+                                     nsIRDFResource* aProperty,
+                                     nsIRDFResource* aValue)
+{
+    nsresult rv;
+    nsCOMPtr<nsIContent> treechildren;
+
+    if (NS_FAILED(rv = FindChildByTag(aTreeItemElement,
+                                      kNameSpaceID_XUL,
+                                      kTreeChildrenAtom,
+                                      getter_AddRefs(treechildren)))) {
+        // XXX make this a warning
+        NS_ERROR("attempt to remove child from an element with no treechildren");
+        return NS_OK;
+    }
+
+
+    PRInt32 count;
+    if (NS_FAILED(rv = treechildren->ChildCount(count)))
+        return rv;
+
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kid;
+        if (NS_FAILED(rv = treechildren->ChildAt(i, *getter_AddRefs(kid))))
+            return rv; // XXX fatal
+
+        // Make sure it's a <xul:treeitem>
+        PRInt32 nameSpaceID;
+        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
+            return rv; // XXX fatal
+
+        if (nameSpaceID != kNameSpaceID_XUL)
+            continue; // wrong namespace
+
+        nsCOMPtr<nsIAtom> tag;
+        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
+            return rv; // XXX fatal
+
+        if (tag.get() != kTreeItemAtom)
+            continue; // wrong tag
+
+        // Now get the resource ID from the RDF:ID attribute. We do it
+        // via the content model, because you're never sure who
+        // might've added this stuff in...
+        nsCOMPtr<nsIRDFResource> resource;
+        if (NS_FAILED(rv = GetElementResource(kid, getter_AddRefs(resource)))) {
+            NS_ERROR("severe error retrieving resource");
+            return rv;
+        }
+
+        if (resource.get() != aValue)
+            continue; // not the resource we want
+
+        // Fount it! Now kill it.
+        treechildren->RemoveChildAt(i, PR_TRUE);
+        return NS_OK;
+    }
+
+    // XXX make this a warning
+    NS_ERROR("unable to find child to remove");
     return NS_OK;
 }
 

@@ -97,8 +97,13 @@ public:
                   nsIRDFResource* aValue, 
                   PRInt32 naturalOrderPos) = 0;
 
+    virtual nsresult
+    RemoveWidgetItem(nsIContent* aWidgetElement,
+                     nsIRDFResource* aProperty,
+                     nsIRDFResource* aValue) = 0;
+
     virtual PRBool
-    IsWidgetProperty(nsIContent* aElement, nsIRDFResource* aProperty);
+    IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
     PRBool
     IsOpen(nsIContent* aElement);
