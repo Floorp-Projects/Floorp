@@ -223,7 +223,7 @@ protected:
   void RunTimeout(nsTimeoutImpl *aTimeout);
   void DropTimeout(nsTimeoutImpl *aTimeout, nsIScriptContext* aContext=nsnull);
   void HoldTimeout(nsTimeoutImpl *aTimeout);
-  nsresult ClearTimeoutOrInterval(PRInt32 aTimerID);
+  nsresult ClearTimeoutOrInterval();
   void ClearAllTimeouts();
   void InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
                              nsTimeoutImpl *aTimeout);

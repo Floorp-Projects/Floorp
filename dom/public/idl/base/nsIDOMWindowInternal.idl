@@ -139,8 +139,8 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   void                      resizeBy(in long widthDif, in long heightDif);
   void                      scroll(in long xScroll, in long yScroll);
 
-  void                      clearTimeout(in long timerID);
-  void                      clearInterval(in long timerID);
+  //void                      clearTimeout(in long timerID);
+  //void                      clearInterval(in long timerID);
   //[noscript] long           setTimeout(/* in function,
   //                                        in unsigned long timeout */);
   //[noscript] long           setInterval(/* in function,

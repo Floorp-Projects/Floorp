@@ -2487,15 +2487,15 @@ GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::ClearTimeout(PRInt32 aTimerID)
+GlobalWindowImpl::ClearTimeout()
 {
-  return ClearTimeoutOrInterval(aTimerID);
+  return ClearTimeoutOrInterval();
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::ClearInterval(PRInt32 aTimerID)
+GlobalWindowImpl::ClearInterval()
 {
-  return ClearTimeoutOrInterval(aTimerID);
+  return ClearTimeoutOrInterval();
 }
 
 NS_IMETHODIMP
@@ -4429,16 +4429,51 @@ GlobalWindowImpl::HoldTimeout(nsTimeoutImpl *aTimeout)
 }
 
 nsresult
-GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
+GlobalWindowImpl::ClearTimeoutOrInterval()
 {
-  PRUint32 public_id;
-  nsTimeoutImpl **top, *timeout;
+  NS_ENSURE_STATE(sXPConnect);
 
-  public_id = (PRUint32) aTimerID;
-  if (!public_id) {             /* id of zero is reserved for internal use */
-    /* return silently for compatibility (see bug 30700) */
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!ncc)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  JSContext *cx = nsnull;
+
+  rv = ncc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 argc;
+
+  ncc->GetArgc(&argc);
+
+  if (argc < 1) {
+    // No arguments, return early.
+
     return NS_OK;
   }
+
+  jsval *argv = nsnull;
+
+  ncc->GetArgvPtr(&argv);
+
+  int32 timer_id;
+
+  if (argv[0] == JSVAL_VOID || !::JS_ValueToInt32(cx, argv[0], &timer_id) ||
+      timer_id <= 0) {
+    // Undefined or non-positive number passed as argument, return
+    // early.
+
+    return NS_OK;
+  }
+
+  PRUint32 public_id = (PRUint32)timer_id;
+  nsTimeoutImpl **top, *timeout;
+
   for (top = &mTimeouts; (timeout = *top) != NULL; top = &timeout->next) {
     if (timeout->public_id == public_id) {
       if (mRunningTimeout == timeout) {
