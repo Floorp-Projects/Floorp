@@ -78,6 +78,10 @@ static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
     cwd += "Mozilla";
     if (!cwd.Exists())
         cwd.CreateDir();
+
+    cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
 #elif defined(XP_UNIX)  
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Unix_HomeDirectory);
     cwd += ".mozilla";
@@ -90,12 +94,14 @@ static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
     nsFileSpec parent;
     cwd.GetParent(parent); // "program files\Netscape\Communicator"
     parent.GetParent(cwd); // "program files\Netscape\"
-#else
-#error dont_know_how_to_do_profiles_on_your_platform
-#endif
+
     cwd += "Users50";
     if (!cwd.Exists())
         cwd.CreateDir();
+
+#else
+#error dont_know_how_to_do_profiles_on_your_platform
+#endif
     cwd += "Default";
     outSpec = cwd;
 } // CreateDefaultProfileDirectorySpec
