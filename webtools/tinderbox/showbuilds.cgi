@@ -380,10 +380,9 @@ sub print_table_header {
   print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
 
   print "<tr align=center>\n";
-  print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
-        "since time</font></td>";
-  print "<td><font size=-1>",
-        "Click name to see what they did</font></td>";
+
+  print "<TH>Build Time</TH>\n";
+  print "<TH>Guilty</th>\n";
 
   for (my $ii=0; $ii < $name_count; $ii++) {
 
@@ -406,8 +405,12 @@ sub print_table_header {
     }
   }
   print "</tr><tr>\n";
-  print "<TH>Build Time</TH>\n";
-  print "<TH>Guilty</th>\n";
+
+  print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
+        "since time</font></td>";
+  print "<td><font size=-1>",
+        "Click name to see what they did</font></td>";
+
   print "</tr>\n";
 }
 
