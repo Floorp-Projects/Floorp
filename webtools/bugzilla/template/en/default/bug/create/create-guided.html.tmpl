@@ -253,12 +253,15 @@ function PutDescription() {
             </select>
           </td>
           <td valign="top" width="100%">
-            [% IF cgi.user_agent("Mozilla/5") %]
               <div id="description" style="color: green; margin-left: 10px;
                                            height: 5em; overflow: auto;">
-                Select a component to see its description here.
+                <script type="text/javascript" language="JavaScript"> 
+                  if ((document.getElementById) && (document.body.innerHTML)) {
+                    document.write("\
+                    Select a component to see its description here.");
+                  }
+                </script>
               </div>
-            [% END %]
           </td>
         </tr>
       </table>
