@@ -28,7 +28,6 @@ XPIDLSRCS=						\
 		.\nsIDocShellContainer.idl			\
 		.\nsIDocShellFile.idl	\
 		.\nsIDocShellEdit.idl	\
-		.\nsIGenericWindow.idl	\
 		.\nsIScrollable.idl		\
 		.\nsITextScroll.idl		\
 		$(NULL)
