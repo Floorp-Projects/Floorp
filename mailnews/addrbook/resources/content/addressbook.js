@@ -54,11 +54,27 @@ function ChangeDirectoryByDOMNode(dirNode)
 	ClearCardViewPane();
 }
 
-
 function ChangeDirectoryByURI(uri)
 {
 	var tree = frames[0].frames[1].document.getElementById('resultTree');
 	tree.childNodes[7].setAttribute('id', uri);
+}
+
+
+function saChangeDirectoryByDOMNode(dirNode)
+{
+	var uri = dirNode.getAttribute('id');
+	dump(uri + "\n");
+	saChangeDirectoryByURI(uri);
+}
+
+function saChangeDirectoryByURI(uri)
+{
+	var tree = frames[0].document.getElementById('resultTree');
+	dump("tree = " + tree + "\n");
+	dump("tree.childNodes[7].id = " + tree.childNodes[7].getAttribute('id') + "\n");
+	tree.childNodes[7].setAttribute('id', uri);
+	dump("tree.childNodes[7].id = " + tree.childNodes[7].getAttribute('id') + "\n");
 }
 
 
@@ -97,20 +113,36 @@ function EditCardCancelButton()
 	dump("Cancel Hit\n");
 }
 
+
+function TestSelectionChange(abNode)
+{
+	var selArray = document.getElementsByAttribute('selected', 'true');
+	if ( selArray && (selArray.length == 2) )
+	{
+		var uri = selArray[1].getAttribute('id');
+		dump("Clicked on = " + uri + "\n");
+	}
+}
+
 function ResultsPaneSelectionChange(abNode)
 {
-	var doc = parent.parent.frames["resultsFrame"].document;
-	
-	var selArray = doc.getElementsByAttribute('selected', 'true');
-	if ( selArray && (selArray.length == 1) )
-		DisplayCardViewPane(selArray[0]);
-	else
-		ClearCardViewPane();
+	// not in ab window if no parent.parent.rdf
+	if ( parent.parent.rdf )
+	{
+		var doc = parent.parent.frames["resultsFrame"].document;
+		
+		var selArray = doc.getElementsByAttribute('selected', 'true');
+		if ( selArray && (selArray.length == 1) )
+			DisplayCardViewPane(selArray[0]);
+		else
+			ClearCardViewPane();
+	}
 }
 
 function DisplayCardViewPane(abNode)
 {
 	var uri = abNode.getAttribute('id');
+	dump("Clicked on = " + uri + "\n");
 	var cardResource = parent.parent.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
@@ -208,4 +240,29 @@ function cvSetVisible(node, visible)
 		node.style.display = "block";
 	else
 		node.style.display = "none";
+}
+
+function SelectAddressToButton()
+{
+	var tree = document.getElementById('addressBucket');
+	dump("tree = " + tree + "\n");
+	dump("tree.childNodes[1] = " + tree.childNodes[1] + "\n");
+	dump("tree.childNodes[1].childNodes[0] = " + tree.childNodes[1].childNodes[0] + "\n");
+
+	var body = document.getElementById("bucketBody");
+	dump("body = " + body + "\n");
+	
+	var num = 4;
+	var name = "To: another@aol.com";
+	
+	var newitem = document.createElement('treeitem');
+	//newitem.setAttribute("rowID", num);
+	//newitem.setAttribute("rowName", name);
+
+	var elem = document.createElement('treecell');
+	var text = document.createTextNode(name);
+	elem.appendChild(text);
+	newitem.appendChild(elem);
+
+	body.appendChild(newitem);
 }

@@ -55,8 +55,74 @@ spring[class="PromptEditSpacing"] {
 	width: 5px;
 }
 
+/* HACKS */
+label {
+	background-color:#CCCCCC;
+}
+
+/* Standard Tree */
+
+tree {
+ display: table;
+ background-color: white;
+ border: none;
+ border-spacing: 0px;
+ width: 100%;
+ table-layout: fixed;
+}
+
+treeitem { 
+ display: table-row; 
+ color: black;
+ font-family: Verdona;
+ font-size: 10pt;
+} 
+
+treehead { 
+ display: table-header-group; 
+} 
+
+treebody { 
+ display: table-row-group; 
+} 
+
 treeitem[selected="true"] { 
  color: white;
  background-color: #666699; 
+}
+
+treecell { 
+ display: table-cell; 
+ white-space: nowrap;
+} 
+
+treehead treeitem treecell { 
+ font-size: 10pt;
+ background-color: #a0a0a0; 
+ border: thin black solid; 
+ border-top: none;
+ color: black;
+} 
+
+
+treecol {
+ display: table-column;
+}
+
+
+/* Custom Trees */
+
+tree[class="abDirectory"] treeitem > treecell > titledbutton {
+ vertical-align: bottom;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+}
+
+tree[class="abResults"] treeitem > treecell > titledbutton {
+ vertical-align: middle;
+ height: 16px;
+ width: 16px;
+ list-style-image: url("chrome://addressbook/skin/person.gif");
 }
 
