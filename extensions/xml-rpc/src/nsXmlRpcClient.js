@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.19 $
+ *  Version: $Revision: 1.20 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.19 2001/12/19 00:11:33 dougt%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.20 2002/01/24 22:31:28 heikki%netscape.com Exp $
  */
 
 /*
@@ -146,20 +146,18 @@ nsXmlRpcClient.prototype = {
         var chann = ioService.newChannelFromURI(this._serverUrl)
             .QueryInterface(Components.interfaces.nsIHttpChannel);
 
-        // Set the request method.
-        chann.requestMethod = 'POST';
-
         // Create a stream out of the request and attach it to the channel
         // Note: pending bug #37773, an extra \r\n needs to be added.
-        // and pending bug 112479, we have to set the headers manually.
-        chann.setRequestHeader('content-type', 'text/xml');
-        chann.setRequestHeader('content-length', request.length);
         request = "\r\n" + request;
         var upload = chann.QueryInterface(Components.interfaces.nsIUploadChannel);
         var postStream = createInstance('@mozilla.org/io/string-input-stream;1',
             'nsIStringInputStream');
         postStream.setData(request, request.length);
         upload.setUploadStream(postStream, 'text/xml', -1);
+
+        // Set the request method. setUploadStream guesses the method,
+        // so we gotta do this afterwards.
+        chann.requestMethod = 'POST';
 
         return chann;
     },
