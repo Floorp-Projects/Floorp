@@ -682,8 +682,22 @@ PRBool nsHTMLDTD::VerifyContextStack(eHTMLTags aStack[],PRInt32 aCount) const {
  * @return  Non zero count of intermediate nodes; 
  *          0 if unable to comply
  */ //----------------------------------------------------
-PRInt32 nsHTMLDTD::CreateContextMapBetween(PRInt32 aParent,PRInt32 aChild) const {
-  PRInt32 result=0;
+PRInt32 nsHTMLDTD::ForwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const{
+  int result=0;
   return result;
 }
 
+/** -------------------------------------------------------
+ * This method tries to design a context map (without actually
+ * changing our parser state) from the child up to the parent.
+ *
+ * @update	gess4/6/98
+ * @param   aParent -- tag type of parent
+ * @param   aChild -- tag type of child
+ * @return  Non zero count of intermediate nodes; 
+ *          0 if unable to comply
+ */ //----------------------------------------------------
+PRInt32 nsHTMLDTD::BackwardPropagate(PRInt32 aVector[],PRInt32 aParent,PRInt32 aChild) const{
+  int result=0;
+  return result;
+}
