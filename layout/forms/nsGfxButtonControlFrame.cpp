@@ -23,6 +23,7 @@
 #include "nsGfxButtonControlFrame.h"
 #include "nsIButton.h"
 #include "nsWidgetsCID.h"
+#include "nsIFontMetrics.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
@@ -162,6 +163,160 @@ nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetri
 }
 
 NS_IMETHODIMP 
+nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext&          aPresContext, 
+                                           nsHTMLReflowMetrics&     aDesiredSize,
+                                           const nsHTMLReflowState& aReflowState, 
+                                           nsReflowStatus&          aStatus)
+{
+  nsIFrame* firstKid = mFrames.FirstChild();
+
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsFormControlHelper::GetFrameFontFM(aPresContext, (nsIFormControlFrame *)this, getter_AddRefs(fontMet));
+  nsSize desiredSize;
+  if (fontMet) {
+    aReflowState.rendContext->SetFont(fontMet);
+
+    // Get the text from the "value" attribute 
+    // for measuring the height, width of the text
+    // if there is no value attr or its length is 0
+    // then go to the generated content to get it
+    PRBool getContent = PR_FALSE;
+    nsAutoString value;
+    GetValue(&value);
+    PRInt32 type;
+    GetType(&type);
+    if ((NS_FORM_INPUT_SUBMIT == type) ||
+        (NS_FORM_INPUT_RESET == type)) {
+      getContent = value.Length() == 0;
+    } else {
+      if (value.Length() == 0) {
+        value = "  ";
+      }
+    }
+
+    // if there was not value specified for a reset & submit element
+    // then go get the content of the generated content
+    // we can't make any assumption as to what the default would be
+    // because of the value is specified in the html.css and for
+    // for non-english platforms it might not be the string 
+    // "Reset" or "Submit Query"
+    if (getContent) {
+      value = "  ";
+      // The child frame will br the generated content
+      nsIFrame* fKid;
+      firstKid->FirstChild(nsnull, &fKid);
+      if (fKid) {
+        const nsStyleContent* content;
+        fKid->GetStyleData(eStyleStruct_Content,  (const nsStyleStruct *&)content);
+        PRUint32 count = content->ContentCount();
+        // XXX not sure if I need to get more than the first index?
+        if (count > 0) {
+          nsStyleContentType type = eStyleContentType_String;
+          content->GetContentAt(0, type, value);
+        }
+      }
+    }
+
+    nsInputDimensionSpec btnSpec(NULL, PR_FALSE, nsnull, 
+                                  &value,0, 
+                                  PR_FALSE, NULL, 1);
+    nsFormControlHelper::CalcNavQuirkSizing(aPresContext, aReflowState.rendContext, 
+                                            fontMet, (nsIFormControlFrame*)this, 
+                                            btnSpec, desiredSize);
+
+    // This calculates the reflow size
+    // get the css size and let the frame use or override it
+    nsSize styleSize;
+    nsFormControlFrame::GetStyleSize(aPresContext, aReflowState, styleSize);
+
+    if (CSS_NOTSET != styleSize.width) {  // css provides width
+      NS_ASSERTION(styleSize.width >= 0, "form control's computed width is < 0"); 
+      if (NS_INTRINSICSIZE != styleSize.width) {
+        desiredSize.width = styleSize.width;
+        desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+      }
+    }
+
+    if (CSS_NOTSET != styleSize.height) {  // css provides height
+      NS_ASSERTION(styleSize.height > 0, "form control's computed height is <= 0"); 
+      if (NS_INTRINSICSIZE != styleSize.height) {
+        desiredSize.height = styleSize.height;
+        desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+      }
+    }
+
+    aDesiredSize.width   = desiredSize.width;
+    aDesiredSize.height  = desiredSize.height;
+    aDesiredSize.ascent  = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+  } else {
+    // XXX ASSERT HERE
+    desiredSize.width = 0;
+    desiredSize.height = 0;
+  }
+
+  // get border and padding
+  /*const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+*/
+  // remove it from the the desired size
+  // because the content need to fit inside of it
+  desiredSize.width  -= (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  desiredSize.height -= (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+
+  // now reflow the first child (genertaed content)
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, desiredSize);
+  reflowState.mComputedWidth  = desiredSize.width;
+  reflowState.mComputedHeight = desiredSize.height;
+  // XXX Proper handling of incremental reflow...
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+
+      nsIReflowCommand::ReflowType  reflowType;
+      aReflowState.reflowCommand->GetType(reflowType);
+      if (nsIReflowCommand::StyleChanged == reflowType) {
+        reflowState.reason = eReflowReason_StyleChange;
+      }
+      else {
+        reflowState.reason = eReflowReason_Resize;
+      }
+    } else {
+      nsIFrame* nextFrame;
+
+      // Remove the next frame from the reflow path
+      aReflowState.reflowCommand->GetNext(nextFrame);  
+    }
+  }
+  printf("             is: %d %d\n", aDesiredSize.width, aDesiredSize.height);
+  nsHTMLReflowMetrics childReflowMetrics(aDesiredSize);
+  nsRect kidRect;
+  firstKid->GetRect(kidRect);
+  ReflowChild(firstKid, aPresContext, childReflowMetrics, reflowState, kidRect.x, kidRect.y, 0, aStatus);
+
+  // Now do the reverse calculation of the 
+  // NavQuirks button to get the size of the text
+  nscoord textWidth  = (2 * aDesiredSize.width) / 3;
+  nscoord textHeight = (2 * aDesiredSize.height) / 3;
+
+  // Center the child and add back in the border and badding
+  nsRect rect = nsRect(((desiredSize.width - textWidth)/2)+ aReflowState.mComputedBorderPadding.left, 
+                       ((desiredSize.height - textHeight)/2) + aReflowState.mComputedBorderPadding.top, 
+                       desiredSize.width, 
+                       desiredSize.height);
+  firstKid->SetRect(&aPresContext, rect);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext, 
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState, 
@@ -172,7 +327,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
-
     nsHTMLReflowState suggestedReflowState(aReflowState);
 
       // Honor the suggested width and/or height.
@@ -187,10 +341,25 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
     rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
 
   } else { // Normal reflow.
-    rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
+
+    nsIFrame* firstKid = mFrames.FirstChild();
+
+    if (mode == eCompatibility_NavQuirks) {
+      // Do NavQuirks Sizing and layout
+      rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus);   
+    } else {
+      // Do Standard mode sizing and layout
+      rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    }
   }
 
-  COMPARE_QUIRK_SIZE("nsGfxButtonControlFrame", 36, 24) //with the text "one" in it
+#ifdef DEBUG_rods
+  COMPARE_QUIRK_SIZE("nsGfxButtonControlFrame", 84, 24) // with the text "Press Me" in it
+#endif
+  aStatus = NS_FRAME_COMPLETE;
 
   return rv;
 }
