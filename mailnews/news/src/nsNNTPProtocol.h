@@ -26,8 +26,6 @@
 #include "nsMsgProtocol.h"
 
 #include "nsCOMPtr.h"
-#include "nsIEventQueue.h"
-#include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIBufferInputStream.h"
@@ -48,6 +46,9 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
 
@@ -146,11 +147,15 @@ NEWS_FREE,
 NEWS_FINISHED
 } StatesEnum;
 
-class nsNNTPProtocol : public nsINNTPProtocol, public nsMsgProtocol
+class nsNNTPProtocol : public nsINNTPProtocol, public nsITimerCallback, public nsMsgProtocol
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSINNTPPROTOCOL
+
+  // nsITimerCallback interfaces
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
 	// Creating a protocol instance requires the URL 
 	// need to call Initialize after we do a new of nsNNTPProtocol
 	nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow);	
@@ -391,18 +396,9 @@ private:
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	void SetProgressStatus(char * message);
 	nsresult InitializeNewsFolderFromUri(const char *uri);
-
-protected:
-    struct ReadNewsListEvent {
-        PLEvent                mEvent;
-        nsNNTPProtocol * mNNTPProtocol;
-		nsIInputStream * mInputStream;
-    };
-    static nsresult
-    PostReadNewsListEvent(nsNNTPProtocol* aNNTPProtocol, nsIInputStream * aInputStream, PLHandleEventProc aHandler);
-
-    static void* HandleReadNewsListEvent(PLEvent* aEvent);
-    static void DestroyReadNewsListEvent(PLEvent* aEvent);	
+	void TimerCallback();
+	nsCOMPtr <nsIInputStream> mInputStream;
+    nsCOMPtr <nsITimer> mUpdateTimer; 
 };
 
 NS_BEGIN_EXTERN_C

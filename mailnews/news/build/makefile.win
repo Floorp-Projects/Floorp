@@ -45,6 +45,7 @@ LLIBS=											\
 			$(DIST)\lib\msgnews_s.lib			\
 			$(LIBNSPR)							\
 			$(DIST)\lib\rdfutil_s.lib			\
+			$(DIST)\lib\timer_s.lib				\
 			$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

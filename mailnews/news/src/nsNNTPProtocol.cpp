@@ -93,7 +93,8 @@
 #define PREF_NEWS_CANCEL_CONFIRM	"news.cancel.confirm"
 #define PREF_NEWS_CANCEL_ALERT_ON_SUCCESS "news.cancel.alert_on_success"
 #define DEFAULT_NEWS_CHUNK_SIZE -1
-#define READ_NEWS_LIST_COUNT_MAX 4 /* number of groups to process at a time when reading the list from the server */
+#define READ_NEWS_LIST_COUNT_MAX 20 /* number of groups to process at a time when reading the list from the server */
+#define READ_NEWS_LIST_TIMEOUT 50	/* uSec to wait until doing more */
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
@@ -151,7 +152,6 @@ static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -448,6 +448,7 @@ NS_IMPL_RELEASE_INHERITED(nsNNTPProtocol, nsMsgProtocol)
 
 NS_INTERFACE_MAP_BEGIN(nsNNTPProtocol)
     NS_INTERFACE_MAP_ENTRY(nsINNTPProtocol)
+	NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
 
 nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
@@ -490,6 +491,10 @@ nsNNTPProtocol::~nsNNTPProtocol()
     if (m_lineStreamBuffer) {
         delete m_lineStreamBuffer;
     }
+    if (mUpdateTimer) {
+      mUpdateTimer->Cancel();
+	  mUpdateTimer = nsnull;
+	}
 }
 
 NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
@@ -1008,6 +1013,15 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
+
+#if 0
+    // cancel any outstanding udpate timer
+    if (mUpdateTimer) {
+      mUpdateTimer->Cancel();
+	  mUpdateTimer = nsnull;
+	}
+#endif
+
 	return CloseSocket();
 }
 
@@ -2912,86 +2926,45 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
 	if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
 		m_readNewsListCount = 0;
-		rv = PostReadNewsListEvent(this, inputStream, HandleReadNewsListEvent); 
-		if (NS_FAILED(rv)) {
-			NS_ASSERTION(0,"failed to post ReadNewsListEvent");
-		}
-		else {
-			m_nextState = NEWS_FINISHED;
-		}
+ 	    if (mUpdateTimer) {
+			mUpdateTimer->Cancel();
+			mUpdateTimer = nsnull;
+	    } 
+ 	    rv = NS_NewTimer(getter_AddRefs(mUpdateTimer));
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create timer");
+		if (NS_FAILED(rv)) return -1;
+
+		mInputStream = inputStream;
+
+		const PRUint32 kUpdateTimerDelay = READ_NEWS_LIST_TIMEOUT;
+		rv = mUpdateTimer->Init(NS_STATIC_CAST(nsITimerCallback*,this), kUpdateTimerDelay);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to init timer");
+		if (NS_FAILED(rv)) return -1;
+
+		m_nextState = NEWS_FINISHED;
     }
 
-	if (NS_FAILED(rv)) {
-		return -1;
-	}
+	if (NS_FAILED(rv)) return -1;
     return(status);
 }
 
-nsresult
-nsNNTPProtocol::PostReadNewsListEvent(nsNNTPProtocol * aNNTPProtocol, nsIInputStream *aInputStream, PLHandleEventProc aHandler)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!svc) return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIEventQueue> queue;
-    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
-
-    if (!queue) return NS_ERROR_UNEXPECTED;
-
-    ReadNewsListEvent* event = new ReadNewsListEvent;
-    if (!event) return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                 nsnull,
-                 aHandler,
-                 DestroyReadNewsListEvent);
-
-    event->mNNTPProtocol = aNNTPProtocol;
-    NS_ADDREF(event->mNNTPProtocol);
-
-    event->mInputStream = aInputStream;
-    NS_ADDREF(event->mInputStream);
-
-    rv = queue->EnterMonitor();
-    if (NS_SUCCEEDED(rv)) {
-        (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
-        (void) queue->ExitMonitor();
-        return NS_OK;
-    }
-
-    // If we get here, something bad happened. Clean up.
-    NS_RELEASE(event->mNNTPProtocol);
-    NS_RELEASE(event->mInputStream);
-    delete event;
-    return rv;
-}
-
-void*
-nsNNTPProtocol::HandleReadNewsListEvent(PLEvent* aEvent)
-{
-    ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
-    nsNNTPProtocol* aNNTPProtocol = event->mNNTPProtocol;
-
-	aNNTPProtocol->m_nextState = NNTP_READ_LIST;
-	aNNTPProtocol->ProcessProtocolState(nsnull, event->mInputStream, 0,0); 
-
-    return nsnull;
-}
-
 void
-nsNNTPProtocol::DestroyReadNewsListEvent(PLEvent* aEvent)
+nsNNTPProtocol::Notify(nsITimer *timer)
 {
-    ReadNewsListEvent* event = NS_REINTERPRET_CAST(ReadNewsListEvent*, aEvent);
-    NS_RELEASE(event->mNNTPProtocol);
-    NS_RELEASE(event->mInputStream);
-    delete event;
+  NS_ASSERTION(timer == mUpdateTimer.get(), "Hey, this ain't my timer!");
+  mUpdateTimer = nsnull;    // release my hold  
+  TimerCallback();
 }
 
+void nsNNTPProtocol::TimerCallback()
+{
+	m_nextState = NNTP_READ_LIST;
+	ProcessProtocolState(nsnull, mInputStream, 0,0); 
+#if 0
+	mInputStream = null;
+#endif
+	return;
+}
 
 /* start the xover command
  */
