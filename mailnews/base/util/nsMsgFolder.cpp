@@ -33,6 +33,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsIAllocator.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
@@ -376,8 +377,8 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 	nsCOMPtr<nsIMsgFolder> folder;
 
 	PRUint32 count;
-  rv = mSubFolders->Count(&count);
-  if (NS_FAILED(rv)) return rv;
+	rv = mSubFolders->Count(&count);
+	if (NS_FAILED(rv)) return rv;
 
 	for (PRUint32 i = 0; i < count; i++)
 	{
@@ -389,7 +390,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 
 			folder->GetName(&folderName);
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (folderName && nsCRT::strcasecmp(folderName, name)!=0)
+			if (folderName && nsCRT::strcasecmp(folderName, name)==0)
 			{
 				*aChild = folder;
 				delete[] folderName;
@@ -401,6 +402,51 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** child)
+{
+	NS_ASSERTION(child, "NULL child");
+	nsresult rv;
+	// will return nsnull if we can't find it
+	*child = nsnull;
+
+
+	PRUint32 count;
+	rv = mSubFolders->Count(&count);
+	if (NS_FAILED(rv)) return rv;
+
+	for (PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
+		nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(supports);
+		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+		if(folderResource  && folder)
+		{
+			char *folderURI;
+			rv = folderResource->GetValue(&folderURI);
+			if(NS_FAILED(rv))
+				return rv;
+
+			// case-insensitive compare is probably LCD across OS filesystems
+			PRBool equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);
+			nsAllocator::Free(folderURI);
+			if (equal)
+			{
+				*child = folder;
+				return NS_OK;
+			}
+			else if(deep)
+			{
+				rv = folder->GetChildWithURI(uri, deep, child);
+				if(NS_FAILED(rv))
+					return rv;
+
+				if(*child)
+					return NS_OK;
+			}
+		}
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgFolder::GetPrettiestName(PRUnichar **name)
 {
@@ -1373,6 +1419,37 @@ nsMsgFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 
 NS_IMETHODIMP
 nsMsgFolder::GetPath(nsIFileSpec * *aPath)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
+{
+	PRUint32 count;
+	nsresult rv;
+
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+		nsCOMPtr<nsIMessage> message = do_QueryInterface(msgSupports);
+
+		if(message)
+			rv = message->MarkRead(markRead);
+
+		if(NS_FAILED(rv))
+			return rv;
+
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::MarkAllMessagesRead(void)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -291,6 +291,11 @@ public:
 	NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 	NS_IMETHOD GetPath(nsIFileSpec * *aPath);
 
+	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
+	NS_IMETHOD MarkAllMessagesRead(void);
+
+	NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** folder);
+
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
 	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
