@@ -673,3 +673,9 @@ Description1=North America
 ;*** LOCALIZE ME BABY ***
 Domain1=$ArchiveUrl$
 
+;RunApp section
+[RunApp0]
+Timing=pre launchapp
+Wait=TRUE
+Target=gre-win32-installer.exe
+Parameters=-mmi -ma -app mfcembed -app_path [SETUP PATH]\mfcembed.exe

@@ -213,6 +213,11 @@ if(system("copy $inDistPath\\..\\install\\setuprsc.dll $inDistPath"))
 {
   die "\n Error: copy $inDistPath\\..\\install\\setuprsc.dll $inDistPath\n";
 }
+# Copy GRE blob installer
+if(system("copy $inDistPath\\..\\inst_gre\\gre-win32-installer.exe $inDistPath"))
+{
+  die "\n Error: copy $inDistPath\\..\\inst_gre\\gre-win32-installer.exe $inDistPath\n";
+}
 if(system("copy install.ini $inDistPath\\setup"))
 {
   die "\n Error: copy install.ini $inDistPath\\setup\n";
@@ -300,7 +305,7 @@ if(system("copy $inDistPath\\..\\install\\$seiFileNameGeneric $inDistPath\\$seiF
 {
   die "\n Error: copy $inDistPath\\..\\install\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific\n";
 }
-if(system("$inDistPath\\..\\install\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*"))
+if(system("$inDistPath\\..\\install\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.* $inDistPath\\gre-win32-installer.exe"))
 {
   die "\n Error: $inDistPath\\..\\install\\nsztool.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*\n";
 }
