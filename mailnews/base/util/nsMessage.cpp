@@ -320,6 +320,14 @@ NS_IMETHODIMP nsMessage::MarkRead(PRBool bRead)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::MarkFlagged(PRBool bFlagged)
+{
+	if(mMsgHdr)
+		return mMsgHdr->MarkFlagged(bFlagged);
+	else
+		return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsMessage::GetMessageKey(nsMsgKey *result)
 {
 	if(mMsgHdr)

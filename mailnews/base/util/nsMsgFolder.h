@@ -299,6 +299,7 @@ public:
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
+	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markRead);
 
 	NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder ** folder);
 

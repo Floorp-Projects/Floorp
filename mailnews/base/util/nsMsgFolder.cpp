@@ -113,7 +113,6 @@ NS_IMETHODIMP nsMsgFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsMsgFolder::Init(const char* aURI)
 {
-  nsresult rv;
 
   // this parsing is totally hacky. we really should generalize this,
   // but I'm not going to do this until we can eliminate the
@@ -903,10 +902,6 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
 #endif
 	
-#ifdef HAVE_PANE
-virtual void	MarkAllRead(MSG_Pane *pane, PRBool deep);
-#endif
-
 #ifdef HAVE_DB	
 // These functions are used for tricking the front end into thinking that we have more 
 // messages than are really in the DB.  This is usually after and IMAP message copy where
@@ -1503,6 +1498,31 @@ nsMsgFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 
 		if(message)
 			rv = message->MarkRead(markRead);
+
+		if(NS_FAILED(rv))
+			return rv;
+
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged)
+{
+	PRUint32 count;
+	nsresult rv;
+
+	rv = messages->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+		nsCOMPtr<nsIMessage> message = do_QueryInterface(msgSupports);
+
+		if(message)
+			rv = message->MarkFlagged(markFlagged);
 
 		if(NS_FAILED(rv))
 			return rv;
