@@ -476,8 +476,19 @@ nsAuthURLParser::ParseAuthority(const char *auth, PRInt32 authLen,
     if (authLen < 0)
         authLen = strlen(auth);
 
-    const char *p = (const char *) memchr(auth, '@', authLen);
-    if (p) {
+    if (authLen == 0) {
+        SET_RESULT(username, 0, -1);
+        SET_RESULT(password, 0, -1);
+        SET_RESULT(hostname, 0, 0);
+        if (port)
+            *port = -1;
+        return NS_OK;
+    }
+
+    // search backwards for @
+    const char *p = auth + authLen - 1;
+    for (; (*p != '@') && (p > auth); --p);
+    if ( *p == '@' ) {
         // auth = <user-info@server-info>
         ParseUserInfo(auth, p - auth,
                       usernamePos, usernameLen,
@@ -531,6 +542,13 @@ nsAuthURLParser::ParseServerInfo(const char *serverinfo, PRInt32 serverinfoLen,
 
     if (serverinfoLen < 0)
         serverinfoLen = strlen(serverinfo);
+
+    if (serverinfoLen == 0) {
+        SET_RESULT(hostname, 0, 0);
+        if (port)
+            *port = -1;
+        return NS_OK;
+    }
 
     // search backwards for a ':' but stop on ']' (IPv6 address literal
     // delimiter)
