@@ -730,6 +730,12 @@ SEARCH_API int MSG_AddProfileGroup (MSG_Pane *pane, MSG_NewsHost* host,
 
 #endif
 
+#ifdef XP_BEOS
+nsresult nsMsgSearchValidityManager::NewTable(nsMsgSearchValidityTable **aTable)
+{
+    return NS_OK;
+}
+#endif
 
 nsresult nsMsgSearchValidityManager::InitNewsTable ()
 {
