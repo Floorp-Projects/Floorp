@@ -1686,8 +1686,26 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
 			PR_FREEIF(m_attachments[i].m_type);
 			m_attachments[i].m_type = PL_strdup (preloaded_attachments[i].type);
+
+      // Set it to the compose fields for a default...
 			PR_FREEIF(m_attachments[i].m_charset);
-			m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+      m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+
+      // For local files, if they are HTML docs and we don't have a charset, we should
+      // sniff the file and see if we can figure it out.
+      if ( (m_attachments[i].m_type) &&  (*m_attachments[i].m_type) ) 
+      {
+        if (PL_strcasecmp(m_attachments[i].m_type, TEXT_HTML) == 0)
+        {
+          char *tmpCharset = (char *)nsMsgI18NParseMetaCharset(m_attachments[i].mFileSpec);
+          if (tmpCharset[0] != '\0')
+          {
+            PR_FREEIF(m_attachments[i].m_charset);
+            m_attachments[i].m_charset = PL_strdup(tmpCharset);
+          }
+        }
+      }
+
 			PR_FREEIF(m_attachments[i].m_description);
 			m_attachments[i].m_description = PL_strdup (preloaded_attachments[i].description);
 			PR_FREEIF(m_attachments[i].m_real_name);
