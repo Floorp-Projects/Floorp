@@ -143,13 +143,7 @@ AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
 
 static PLHashNumber HashKey(const PRUnichar* k)
 {
-  PRUint32 hashResult = 0; 
-  PRUint32 N = nsCRT::strlen(k);
-
-  for ( PRUint32 n=0; n<N; ++n )
-    hashResult = (hashResult<<5) + (hashResult<<2) + hashResult + *k++;  // mHash = mHash*37 + *s
-
-  return hashResult;
+  return nsCRT::HashCode(k);
 }
 
 static PRIntn CompareKeys( const PRUnichar* k1, const PRUnichar* k2 )
