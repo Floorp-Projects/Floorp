@@ -48,7 +48,6 @@ ifeq ($(OS_ARCH), WINNT)
 
 EXTRA_LIBS += \
 	$(DIST)/lib/pkcs12.lib \
-	$(DIST)/lib/pkcs7.lib \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
@@ -59,9 +58,12 @@ else
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
-EXTRA_LIBS += \
+SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libpkcs12.${LIB_SUFFIX} \
-	$(DIST)/lib/libpkcs7.${LIB_SUFFIX} \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../pkcs12 \
 	$(NULL)
 
 EXTRA_SHARED_LIBS += \

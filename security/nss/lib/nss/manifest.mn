@@ -40,7 +40,6 @@ MODULE = security
 
 CSRCS = \
 	nssinit.c \
-	nsssym.c\
 	$(NULL)
 
 REQUIRES = security dbm

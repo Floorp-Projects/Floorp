@@ -78,24 +78,36 @@ else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+CRYPTODIR=../freebl
 ifdef MOZILLA_SECURITY_BUILD
 	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+	CRYPTODIR=../crypto
 endif
-ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
-	CRYPTOLIB+=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
-endif
-EXTRA_LIBS += \
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(NULL)
+EXTRA_LIBS += \
 	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
+	$(NULL)
+ifdef MOZILLA_BSAFE_BUILD
+	EXTRA_LIBS+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+endif
+SHARED_LIBRARY_DIRS = \
+	../pkcs7 \
+	../certhigh \
+	../pk11wrap \
+	../cryptohi \
+	../softoken \
+	../certdb \
+	$(CRYPTODIR) \
+	../util \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
@@ -108,3 +120,10 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
+#ifeq ($(OS_ARCH),SunOS)
+#MKSHLIB += -z text -M mapfile
+#endif
+
+#ifeq ($(OS_ARCH),Linux)
+#MKSHLIB += -Wl,--version-script,mapfile
+#endif
