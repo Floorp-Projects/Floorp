@@ -162,13 +162,13 @@ function setFocus( theObject )
 	theObject.select();
 }
 
-function message( txt )
+function setMessage( txt )
 {
 	window.status = txt;
-	setTimeout( "remove_message()", 10000 );
+	setTimeout( "clearMessage()", 10000 );
 }
 
-function remove_message()
+function clearMessage()
 {
 	window.status = "";
 }
