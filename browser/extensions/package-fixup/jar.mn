@@ -12,7 +12,6 @@ comm.jar:
 
 en-US.jar:
 *       locale/en-US/communicator/contents.rdf                                (../../../xpfe/communicator/resources/locale/en-US/contents.rdf)
-        locale/en-US/communicator/xpinstall/xpinstall.properties              (../../../xpinstall/res/locale/en-US/xpinstall.properties)
         locale/en-US/global/plugins.properties                                (../../../xpfe/global/resources/locale/en-US/plugins.properties)
         
 toolkit.jar:
