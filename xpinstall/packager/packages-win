@@ -220,6 +220,7 @@ bin\components\xmlextras.xpt
 bin\components\xmlextras.dll
 
 ; chrome stuff
+bin\chrome\help.jar
 bin\chrome\comm.jar
 bin\chrome\toolkit.jar
 bin\chrome\modern.jar

@@ -25,6 +25,7 @@ include <$(DEPTH)/config/config.mak>
 DIRS = wallet \
 	cookie \
 	irc \
+	help \
 !if defined(BUILD_PSM)
 	psm-glue \
 !endif 

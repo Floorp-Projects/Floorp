@@ -216,6 +216,7 @@ bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
 bin/components/libxmlextras.so
 
+bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
 bin/chrome/modern.jar
