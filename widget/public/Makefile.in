@@ -44,10 +44,8 @@ EXPORTS		= \
 		nsIButton.h \
 		nsICheckButton.h \
 		nsIListWidget.h \
-		nsIComboBox.h \
 		nsITextWidget.h \
 		nsITextAreaWidget.h \
-		nsIComboBox.h \
 		nsIListBox.h \
 		nsIScrollbar.h \
 		nsGUIEvent.h \
