@@ -600,7 +600,7 @@ chrome::
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
 chrome::
-    -for %t in ($(CHROME_TYPE)) do echo %t,install,url,jar:resource:/chrome/$(CHROME_DIR:\=/).jar!/ >>$(DIST)\bin\chrome\installed-chrome.txt
+    -for %t in ($(CHROME_TYPE)) do @perl $(DEPTH)\config\add-chrome.pl $(CHROME_DIR:\=/).jar packageName %t $(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
 regchrome:
