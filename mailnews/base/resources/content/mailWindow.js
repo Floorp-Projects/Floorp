@@ -55,9 +55,9 @@ var messageDataSource;
 
 //Progress and Status variables
 var gStatusText;
+var gStatusBar;
+var gThrobber;
 var bindCount = 0;
-var gThrobberObserver;
-var gMeterObserver;
 var startTime = 0;
 //End progress and Status variables
 
@@ -173,39 +173,6 @@ function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 		menu.setAttribute('ref', 'msgaccounts:/');
 	}
 }
-
-function onProgress() {
-    if (!gThrobberObserver)
-        gThrobberObserver = document.getElementById("Messenger:Throbber");
-    if (!gMeterObserver)
-        gMeterObserver = document.getElementById("Messenger:LoadingProgress");
-    if ( gThrobberObserver && gMeterObserver ) {
-        var busy = gThrobberObserver.getAttribute("busy");
-        var wasBusy = gMeterObserver.getAttribute("mode") == "undetermined" ? "true" : "false";
-        if ( busy == "true" ) {
-            if ( wasBusy == "false" ) {
-                // Remember when loading commenced.
-    			      startTime = (new Date()).getTime();
-                // Turn progress meter on.
-                gMeterObserver.setAttribute("mode","undetermined");
-            }
-            // Update status bar.
-        } else if ( busy == "false" && wasBusy == "true" ) {
-            // Record page loading time.
-            if (window.MsgStatusFeedback)
-            {
-				        var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-				        var msg = "Document: Done (" + elapsed + " secs)";
-				        dump( msg + "\n" );
-                window.MsgStatusFeedback.ShowStatusString(msg);
-                defaultStatus = msg;
-            }
-            // Turn progress meter off.
-            gMeterObserver.setAttribute("mode","normal");
-        }
-    }
-}
-
 function dumpProgress() {
     var broadcaster = document.getElementById("Messenger:LoadingProgress");
 
@@ -233,34 +200,54 @@ nsMsgStatusFeedback.prototype =
 		},
 	ShowStatusString : function(statusText)
 		{
-       if (!gStatusText )
-        gStatusText = document.getElementById("statusText");
+       if (!gStatusText ) gStatusText = document.getElementById("statusText");
        if ( statusText == "" )
           statusText = defaultStatus;
-       //gStatusText.value = statusText;
-        gStatusText.setAttribute( "value", statusText );
+       gStatusText.value = statusText;
 		},
 	StartMeteors : function()
 		{
-      if (!gThrobberObserver)
-        gThrobberObserver = document.getElementById("Messenger:Throbber");
-      gThrobberObserver.setAttribute("busy", "true");
-      onProgress();
+      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
+      if(!gThrobber) gThrobber = document.getElementById("navigator-throbber");
+
+      // Turn progress meter on.
+      gStatusBar.setAttribute("mode","undetermined");
+      
+      // turn throbber on 
+      gThrobber.setAttribute("busy", true);
+      
+      // Remember when loading commenced.
+    	startTime = (new Date()).getTime();
 		},
 	StopMeteors : function()
 		{
-      if (!gThrobberObserver)
-        gThrobberObserver = document.getElementById("Messenger:Throbber");
-      gThrobberObserver.setAttribute("busy", "false");
-      onProgress();
+      dump("stopping meteors 1\n");
+      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
+      if(!gThrobber) gThrobber = document.getElementById("navigator-throbber");
+
+			// Record page loading time.
+			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+			var msg = "Document: Done (" + elapsed + " secs)";
+			dump( msg + "\n" );
+      window.MsgStatusFeedback.ShowStatusString(msg);
+      defaultStatus = msg;
+
+      gThrobber.setAttribute("busy", false);
+      dump("stopping meteors\n");
+      // Turn progress meter off.
+      gStatusBar.setAttribute("mode","normal");
+      gStatusBar.value = 0;  // be sure to clear the progress bar
+      gStatusBar.progresstext = "";
 		},
 	ShowProgress : function(percentage)
 		{
-      if (!gMeterObserver)
-        gMeterObserver = document.getElementById("Messenger:LoadingProgress");
+      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
       if (percentage >= 0)
-        gMeterObserver.setAttribute("mode", "normal");
-      gMeterObserver.setAttribute("value", percentage);
+      {
+        gStatusBar.setAttribute("mode", "normal");
+        gStatusBar.value = percentage; 
+        gStatusBar.progresstext = Math.round(percentage) + "%";
+      }
 		},
 	CloseWindow : function(percent)
 		{
