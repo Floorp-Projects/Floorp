@@ -126,18 +126,18 @@ function ChangeDirectoryByURI(uri)
 function ResultsPaneSelectionChange()
 {
 	// FIX ME! - Should use some js var to determine abmain vs selectaddress dialog
-	
 	// not in ab window if no parent.parent.rdf
 	if ( parent.parent.rdf )
 	{
 		var tree = document.getElementById('resultsTree');
 		
-		var selArray = tree.getElementsByAttribute('selected', 'true');
+		var selArray = tree.selectedItems;
 		if ( selArray && (selArray.length == 1) )
 			DisplayCardViewPane(selArray[0]);
 		else
 			ClearCardViewPane();
 	}
+
 }
 
 function SortResultPane(column, sortKey)
