@@ -71,8 +71,10 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
 
+#if 0
 	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
-		
+#endif
+	
 	mIMEIsComposing = PR_FALSE;
 	mIMECompositionString = nsnull;
 	mIMECompositionStringSize = 0;
@@ -1029,29 +1031,37 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 														nsMouseEvent&		aMouseEvent,
 														PRUint32				aMessage)
 {
-		static long		lastWhen = 0;
-		static Point	lastWhere = {0, 0};
-		static short	lastClickCount = 0;
-
-	// get the click count
-	if (((aOSEvent.when - lastWhen) < ::LMGetDoubleTime())
-		&& (abs(aOSEvent.where.h - lastWhere.h) < 5)
-		&& (abs(aOSEvent.where.v - lastWhere.v) < 5)) 
+	static UInt32	sLastMouseUp = 0;
+	static Point	sLastWhere = {0};
+	static SInt16	sLastClickCount = 0;
+	
+	// we're going to time double-clicks from mouse *up* to next mouse *down*
+	if (aMessage == NS_MOUSE_LEFT_BUTTON_UP)
 	{
-		if (aOSEvent.what == mouseDown)
-		{
-			lastClickCount ++;
-			if (lastClickCount == 2)
+		// remember when this happened for the next mouse down
+		sLastMouseUp = aOSEvent.when;
+		sLastWhere = aOSEvent.where;
+	}
+	else if (aMessage == NS_MOUSE_LEFT_BUTTON_DOWN)
+	{
+		// now look to see if we want to convert this to a double- or triple-click
+		const short kDoubleClickMoveThreshold	= 5;
+		
+		if (((aOSEvent.when - sLastMouseUp) < ::LMGetDoubleTime()) &&
+				(((abs(aOSEvent.where.h - sLastWhere.h) < kDoubleClickMoveThreshold) &&
+				 	(abs(aOSEvent.where.v - sLastWhere.v) < kDoubleClickMoveThreshold))))
+		{		
+			sLastClickCount ++;
+			
+			if (sLastClickCount == 2)
 				aMessage = NS_MOUSE_LEFT_DOUBLECLICK;
 		}
+		else
+		{
+			// reset the click count, to count *this* click
+			sLastClickCount = 1;
+		}
 	}
-	else
-	{
-		if (! ::StillDown())
-			lastClickCount = 0;
-	}
-	lastWhen  = aOSEvent.when;
-	lastWhere = aOSEvent.where;
 
 	// get the widget hit and the hit point inside that widget
 	Point hitPoint = aOSEvent.where;
@@ -1114,7 +1124,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	aMouseEvent.isCommand	= ((aOSEvent.modifiers & cmdKey) != 0);
 
 	// nsMouseEvent
-	aMouseEvent.clickCount = lastClickCount;
+	aMouseEvent.clickCount = sLastClickCount;
 }
 
 //-------------------------------------------------------------------------
