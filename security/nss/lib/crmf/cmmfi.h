@@ -41,7 +41,6 @@
 #define _CMMFI_H_
 #include "cmmfit.h"
 #include "crmfi.h"
-#include "nssrenam.h"
 
 #define CMMF_MAX_CHALLENGES 10
 #define CMMF_MAX_KEY_PAIRS  50
