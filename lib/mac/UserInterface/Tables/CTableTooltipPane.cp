@@ -168,8 +168,7 @@ CStandardFlexTable* CTableToolTipPane::GetTableAndCell(
 		table->PortToLocalPoint(mouseLocal);
 		SPoint32 whereImage;
 		table->LocalToImagePoint(mouseLocal, whereImage);
-		if (!table->GetCellHitBy(whereImage, outCell))
-			table = nil;
+		table->GetCellHitBy(whereImage, outCell);
 	}
 	return table;
 } // CTableToolTipPane::GetTableAndCell
