@@ -34,7 +34,7 @@
 #include "nsIWin32Locale.h"
 #endif
 #ifdef XP_OS2
-#include <locale.h>
+#include "unidef.h"
 #include "nsIOS2Locale.h"
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
@@ -280,8 +280,8 @@ nsLocaleService::nsLocaleService(void)
     nsresult result = nsComponentManager::CreateInstance(kOS2LocaleFactoryCID,
                            NULL,kIOS2LocaleIID,(void**)&os2Converter);
     if (NS_SUCCEEDED(result) && os2Converter!=nsnull) {
-        char* lc_all = setlocale(LC_ALL,"");
-        char* lang = getenv("LANG");
+        char* lc_all = nsnull;
+        char* lang = nsnull;
 
         if (lc_all!=nsnull) {
             result = os2Converter->GetXPLocale(lc_all,&xpLocale);
@@ -309,7 +309,9 @@ nsLocaleService::nsLocaleService(void)
                 nsLocale* resultLocale = new nsLocale();
 				        if (resultLocale==NULL) { os2Converter->Release(); return; }
                 for(i=0;i<LocaleListLength;i++) {
-                    char* lc_temp = setlocale(os2_locale_category[i],"");
+                // setlocale requires the C runtime
+                // later down the path the system will be queried for the correct locale
+                    char* lc_temp = nsnull; // setlocale(os2_locale_category[i],"");
                     category.AssignWithConversion(LocaleList[i]);
                     if (lc_temp==nsnull) xpLocale.AssignWithConversion("en-US");
                     else xpLocale.AssignWithConversion(lc_temp);
