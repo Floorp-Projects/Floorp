@@ -35,7 +35,7 @@ DIRS		= smime
 endif
 
 ifdef BUILD_MAIL_SMOKETEST
-DIRS		= smoketest
+DIRS		+= smoketest
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -30,7 +30,7 @@ DIRS=smime
 !endif
 
 !if defined(BUILD_MAIL_SMOKETEST)
-DIRS=smoketest
+DIRS=$(DIRS) smoketest
 !endif
 
 include <$(DEPTH)\config\rules.mak>
