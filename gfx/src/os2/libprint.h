@@ -97,24 +97,10 @@ BOOL PrnDoJobProperties( PRTQUEUE *pPrintQueue);
 // Get a DC for the selected printer.  Must supply the application name.
 HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName);
 
-// Close the print DC; your PS should have been disassociated.
-BOOL PrnCloseDC( HDC hdc);
-
 // Get the hardcopy caps for the selected form
 BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
 
-// Begin a print job.  A PS should have been associated with the dc
-// (returned from PrnOpenDC()), a job name is required.
-BOOL PrnStartJob( HDC hdc, PSZ pszJobName);
-
-// End a print job previously started with PrnStartJob().
-BOOL PrnEndJob( HDC hdc);
-
 // Abort the current job started with PrnStartJob().
 BOOL PrnAbortJob( HDC hdc);
-
-// Make a page-break.
-BOOL PrnNewPage( HDC hdc);
-
 
 #endif
