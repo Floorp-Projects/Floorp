@@ -1654,5 +1654,6 @@ main(int argc, char **argv)
 
     NSS_Shutdown();
     PR_Cleanup();
+    printf("selfserv: normal termination\n");
     return 0;
 }
