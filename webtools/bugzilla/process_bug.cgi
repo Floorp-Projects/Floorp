@@ -521,7 +521,7 @@ SWITCH: for ($::FORM{'knob'}) {
         $num = FetchOneColumn();
         if (!$num) {
             PuntTryAgain("You must specify a bug number of which this bug " .
-                         "is a duplicate.  The bug has not been changed.")
+                         "is a duplicate or a valid bug number.  The bug has not been changed.")
         }
         if (!defined($::FORM{'id'}) || $num == $::FORM{'id'}) {
             PuntTryAgain("Nice try, $::FORM{'who'}.  But it doesn't really ".

@@ -1,3 +1,5 @@
+
+
 #!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
@@ -687,7 +689,7 @@ Refresh: 0; URL=$url
                 "AND name = " . SqlQuote($::FORM{'namedcmd'}));
         
         print "Content-type: text/html\n\n";
-        PutHeader("Forget what?", "");
+        PutHeader("Query is gone", "");
 
         print qq{
 OK, the <B>$::FORM{'namedcmd'}</B> query is gone.

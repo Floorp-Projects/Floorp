@@ -345,7 +345,7 @@ if (Param('letsubmitterchoosepriority')) {
         value_quote($priority) . '">';
 }
 print "
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity</A>:</B></TD>
+    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
     <TD>$sev_popup</TD>
     <td></td>
     <td></td>
