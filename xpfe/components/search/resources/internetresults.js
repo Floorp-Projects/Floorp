@@ -1,4 +1,44 @@
 
+function searchResultsOpenURL(event,node)
+{
+	var url = node.getAttribute('id');
+
+	if (node.getAttribute('container') == "true")
+	{
+		return(false);
+	}
+
+	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+	if (rdf)
+	{
+		var fileSys = rdf.GetDataSource("rdf:internetsearch");
+		if (fileSys)
+		{
+			var src = rdf.GetResource(url, true);
+			var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+			var target = fileSys.GetTarget(src, prop, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target)	url = target;
+			
+		}
+	}
+
+	// Ignore "NC:" urls.
+	if (url.substring(0, 3) == "NC:")
+		return(false);
+
+	dump("Opening URL: " + url + "\n");
+	if( top.content )
+	{
+		top.content.location.href = url;
+	}
+	return true;
+}
+
+
+
 function onLoadInternetResults()
 {
 	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
@@ -12,6 +52,8 @@ function onLoadInternetResults()
 	return true;
 }
 
+
+
 function loadResultsTree( aSearchURL )
 {
   var resultsTree = document.getElementById( "internetresultstree" );
@@ -20,6 +62,8 @@ function loadResultsTree( aSearchURL )
   resultsTree.setAttribute( "ref", aSearchURL );
   return true;
 }
+
+
 
 function doEngineClick( aNode )
 {
