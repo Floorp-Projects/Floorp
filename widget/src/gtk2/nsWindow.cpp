@@ -209,11 +209,13 @@ nsWindow::Destroy(void)
   if (mShell) {
     gtk_widget_destroy(mShell);
     mShell = nsnull;
+    mContainer = nsnull;
   }
-
-  mContainer = nsnull;
-
-  if (mDrawingarea) {
+  else if (mContainer) {
+    gtk_widget_destroy(GTK_WIDGET(mContainer));
+    mContainer = nsnull;
+  }
+  else if (mDrawingarea) {
     g_object_unref(mDrawingarea);
     mDrawingarea = nsnull;
   }
@@ -1183,21 +1185,24 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
   // figure out our parent window
   MozDrawingarea *parentArea = nsnull;
-  MozContainer   *parentContainer = nsnull;
+  MozContainer   *parentMozContainer = nsnull;
+  GtkContainer   *parentGtkContainer = nsnull;
+  GdkWindow      *parentGdkWindow = nsnull;
   GtkWindow      *topLevelParent = nsnull;
-  if (aParent || aNativeParent) {
-    GdkWindow *parentWindow;
-    // get the drawing area and the container from the parent
-    if (aParent)
-      parentWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
-    else
-      parentWindow = GDK_WINDOW(aNativeParent);
 
+  if (aParent)
+    parentGdkWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
+  else if (aNativeParent && GDK_IS_WINDOW(aNativeParent))
+    parentGdkWindow = GDK_WINDOW(aNativeParent);
+  else if (aNativeParent && GTK_IS_CONTAINER(aNativeParent))
+    parentGtkContainer = GTK_CONTAINER(aNativeParent);
+
+  if (parentGdkWindow) {
     // find the mozarea on that window
     gpointer user_data = nsnull;
-    user_data = g_object_get_data(G_OBJECT(parentWindow), "mozdrawingarea");
+    user_data = g_object_get_data(G_OBJECT(parentGdkWindow), "mozdrawingarea");
     parentArea = MOZ_DRAWINGAREA(user_data);
-
+    
     NS_ASSERTION(parentArea, "no drawingarea for parent widget!\n");
     if (!parentArea)
       return NS_ERROR_FAILURE;
@@ -1210,15 +1215,15 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
       return NS_ERROR_FAILURE;
 
     // XXX support generic containers here for embedding!
-    parentContainer = MOZ_CONTAINER(user_data);
-    NS_ASSERTION(parentContainer, "owning widget is not a mozcontainer!\n");
-    if (!parentContainer)
+    parentMozContainer = MOZ_CONTAINER(user_data);
+    NS_ASSERTION(parentMozContainer, "owning widget is not a mozcontainer!\n");
+    if (!parentMozContainer)
       return NS_ERROR_FAILURE;
 
     // get the toplevel window just in case someone needs to use it
     // for setting transients or whatever.
     topLevelParent =
-      GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentContainer)));
+      GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentMozContainer)));
   }
 
   // ok, create our windows
@@ -1278,7 +1283,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     break;
   case eWindowType_child:
     {
-      mDrawingarea = moz_drawingarea_new(parentArea, parentContainer);
+      if (parentMozContainer) {
+	mDrawingarea = moz_drawingarea_new(parentArea, parentMozContainer);
+      }
+      else {
+	mContainer = MOZ_CONTAINER(moz_container_new());
+	gtk_container_add(parentGtkContainer, GTK_WIDGET(mContainer));
+	gtk_widget_realize(GTK_WIDGET(mContainer));
+
+	mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
+      }
     }
     break;
   default:
@@ -1310,6 +1324,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     g_signal_connect(G_OBJECT(mShell), "delete_event",
 		     G_CALLBACK(delete_event_cb), NULL);
   }
+
   if (mContainer) {
     g_signal_connect_after(G_OBJECT(mContainer), "size_allocate",
 			   G_CALLBACK(size_allocate_cb), NULL);
@@ -1344,11 +1359,13 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     LOG(("\tmShell %p %p %lx\n", (void *)mShell, (void *)mShell->window,
 	 GDK_WINDOW_XWINDOW(mShell->window)));
   }
+
   if (mContainer) {
     LOG(("\tmContainer %p %p %lx\n", (void *)mContainer,
 	 (void *)GTK_WIDGET(mContainer)->window,
 	 GDK_WINDOW_XWINDOW(GTK_WIDGET(mContainer)->window)));
   }
+
   if (mDrawingarea) {
     LOG(("\tmDrawingarea %p %p %p %lx %lx\n", (void *)mDrawingarea,
 	 (void *)mDrawingarea->clip_window,
@@ -1372,8 +1389,17 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
   // clear our resize flag
   mNeedsResize = PR_FALSE;
 
-  if (mIsTopLevel)
+  if (mIsTopLevel) {
     gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+  }
+  else if (mContainer) {
+    GtkAllocation allocation;
+    allocation.x = 0;
+    allocation.y = 0;
+    allocation.width = aWidth;
+    allocation.height = aHeight;
+    gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
+  }
   
   moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
 }
@@ -1404,6 +1430,15 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
       moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
     }
   }
+  else if (mContainer) {
+    GtkAllocation allocation;
+    allocation.x = 0;
+    allocation.y = 0;
+    allocation.width = aWidth;
+    allocation.height = aHeight;
+    gtk_widget_size_allocate(GTK_WIDGET(mContainer), &allocation);
+    moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
+  }
   else {
     moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
   }
@@ -1422,8 +1457,12 @@ nsWindow::NativeShow (PRBool  aAction)
       gtk_widget_show(mShell);
       
     }
+    else if (mContainer) {
+      moz_drawingarea_set_visibility(mDrawingarea, TRUE);
+      gtk_widget_show(GTK_WIDGET(mContainer));
+    }
     else {
-      moz_drawingarea_set_visibility(mDrawingarea, aAction);
+      moz_drawingarea_set_visibility(mDrawingarea, TRUE);
     }
   }
   else {
@@ -1431,7 +1470,11 @@ nsWindow::NativeShow (PRBool  aAction)
       gtk_widget_hide(GTK_WIDGET(mShell));
       gtk_widget_hide(GTK_WIDGET(mContainer));
     }
-    moz_drawingarea_set_visibility(mDrawingarea, aAction);
+    else if (mContainer) {
+      gtk_widget_hide(GTK_WIDGET(mContainer));
+      moz_drawingarea_set_visibility(mDrawingarea, FALSE);
+    }
+    moz_drawingarea_set_visibility(mDrawingarea, FALSE);
   }
 }
 

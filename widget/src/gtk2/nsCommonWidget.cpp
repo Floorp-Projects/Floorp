@@ -36,10 +36,6 @@
 #include "nsCommonWidget.h"
 #include "nsGtkKeyUtils.h"
 
-#ifdef PR_LOGGING
-PRLogModuleInfo *gWidgetLog = nsnull;
-#endif
-
 nsCommonWidget::nsCommonWidget()
 {
   mIsTopLevel       = PR_FALSE;
@@ -52,12 +48,6 @@ nsCommonWidget::nsCommonWidget()
 
   mPreferredWidth   = 0;
   mPreferredHeight  = 0;
-
-#ifdef PR_LOGGING
-  if (!gWidgetLog)
-    gWidgetLog = PR_NewLogModule("Widget");
-#endif
-
 }
 
 nsCommonWidget::~nsCommonWidget()
