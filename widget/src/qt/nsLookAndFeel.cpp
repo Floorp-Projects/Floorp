@@ -38,6 +38,9 @@
 #include "nsLookAndFeel.h"
 #include "nsQApplication.h"
 #include "nsXPLookAndFeel.h"
+#ifdef NS_DEBUG
+#include "nsSize.h"  // needed for nsILookAndFeel's forward declaration
+#endif
 
 #include <qpalette.h>
 
