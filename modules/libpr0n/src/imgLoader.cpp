@@ -44,9 +44,6 @@
 
 #include "ImageLogging.h"
 
-static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
-static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
-
 NS_IMPL_ISUPPORTS1(imgLoader, imgILoader)
 
 imgLoader::imgLoader()
@@ -129,8 +126,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
       newChannel->SetLoadAttributes(flags);
     }
 
-    nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
-    request = NS_REINTERPRET_CAST(imgRequest*, req.get());
+    NS_NEWXPCOM(request, imgRequest);
+    if (!request) return NS_ERROR_OUT_OF_MEMORY;
+
     NS_ADDREF(request);
 
     PR_LOG(gImgLog, PR_LOG_DEBUG,
@@ -162,14 +160,21 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgLoader::LoadImage -- creating proxy request.\n", this));
 
-  nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
+  imgRequestProxy *proxyRequest;
+  NS_NEWXPCOM(proxyRequest, imgRequestProxy);
+  if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(proxyRequest);
+
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx);
+  proxyRequest->Init(request, aLoadGroup, aObserver, cx);
 
   NS_RELEASE(request);
 
-  *_retval = proxyRequest;
+  *_retval = NS_STATIC_CAST(imgIRequest*, proxyRequest);
   NS_ADDREF(*_retval);
+
+  NS_RELEASE(proxyRequest);
 
   return NS_OK;
 }
@@ -198,9 +203,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     *listener = nsnull; // give them back a null nsIStreamListener
   } else {
-    nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
+    NS_NEWXPCOM(request, imgRequest);
+    if (!request) return NS_ERROR_OUT_OF_MEMORY;
 
-    request = NS_REINTERPRET_CAST(imgRequest*, req.get());
     NS_ADDREF(request);
 
 #ifdef MOZ_NEW_CACHE
@@ -217,22 +222,21 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     NS_IF_ADDREF(*listener);
   }
 
-  nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
+  imgRequestProxy *proxyRequest;
+  NS_NEWXPCOM(proxyRequest, imgRequestProxy);
+  if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(proxyRequest);
 
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx);
+  proxyRequest->Init(request, nsnull, aObserver, cx);
 
   NS_RELEASE(request);
 
-  *_retval = proxyRequest;
+  *_retval = NS_STATIC_CAST(imgIRequest*, proxyRequest);
   NS_ADDREF(*_retval);
+
+  NS_RELEASE(proxyRequest);
 
   return NS_OK;
 }
-
-/* readonly attribute nsISimpleEnumerator requests; */
-NS_IMETHODIMP imgLoader::GetRequests(nsISimpleEnumerator * *aRequests)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
