@@ -1218,6 +1218,26 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           }
         }
     }
+    //
+    // Doc failed to load because the server generated too many redirects
+    //
+    else if (aStatus == NS_ERROR_REDIRECT_LOOP) {
+      nsCOMPtr<nsIPrompt> prompter;
+      nsCOMPtr<nsIStringBundle> stringBundle;
+
+      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
+                                    getter_AddRefs(stringBundle));
+      if (!stringBundle) {
+        return rv;
+      }
+
+      nsXPIDLString messageStr;
+      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("redirectLoop").get(),
+                                           getter_Copies(messageStr));
+      if (NS_FAILED(rv)) return rv;
+
+      prompter->Alert(nsnull, messageStr);
+    }
   } // if we have a host
 
   return NS_OK;

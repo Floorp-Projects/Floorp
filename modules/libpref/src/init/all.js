@@ -43,6 +43,7 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
+pref("general.useragent.override", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:0.9.5+) Gecko/20011010 Netscape6/6.1b1");
 pref("general.useragent.misc", "rv:0.9.6+");
 
 pref("general.startup.browser",             true);
@@ -368,6 +369,9 @@ pref("network.http.request.timeout", 120);	// in seconds
 pref("network.http.accept.default", "text/xml, application/xml, application/xhtml+xml, text/html;q=0.9, image/png, image/jpeg, image/gif;q=0.2, text/plain;q=0.8, text/css, */*;q=0.1");
 
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
+
+// Maximum number of consecutive redirects before aborting.
+pref("network.http.redirection-limit", 10);
 
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip, deflate, compress;q=0.9");

@@ -111,6 +111,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
     , mMaxPersistentConnectionsPerProxy(4)
+    , mRedirectionLimit(10)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mActiveConnections(0)
@@ -1234,9 +1235,15 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
-        rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), (PRInt32 *) &val);
+        rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerLevel = (PRUint8) CLAMP(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("redirection-limit"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
+        if (NS_SUCCEEDED(rv))
+            mRedirectionLimit = (PRUint8) CLAMP(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {

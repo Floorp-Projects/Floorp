@@ -91,6 +91,13 @@ interface nsIHttpChannel : nsIChannel
      * by default.
      */
     attribute boolean applyConversion;
+
+    /**
+     * This attribute specifies the number of redirects this channel is allowed
+     * to make.  If zero, the channel will fail to redirect and will generate
+     * a NS_ERROR_REDIRECT_LOOP failure status.
+     */
+    attribute unsigned long redirectionLimit;
 };
 
 /**
