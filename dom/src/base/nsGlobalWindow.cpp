@@ -127,7 +127,9 @@ static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+static const char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
@@ -2748,8 +2750,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
   NS_ENSURE_TRUE(mJSObject, NS_ERROR_NOT_AVAILABLE);
 
   // Get JSContext from stack.
-  nsCOMPtr<nsIThreadJSContextStack>
-    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
 
   JSContext *cx;
@@ -3012,10 +3013,9 @@ GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
   char *features = nsnull;
   char *name = nsnull;
   char *url = nsnull;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   *aReturn = nsnull;
-  rv = NS_ERROR_FAILURE;
 
   if (!aUrl.IsEmpty()) {
     // fix bug 35076
@@ -3054,6 +3054,12 @@ GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
 
     if (!escapedURL.IsEmpty())
       url = ToNewCString(escapedURL);
+
+    /* Check whether the URI is allowed, but not for dialogs --
+       see bug 56851. The security of this function depends on
+       window.openDialog being inaccessible from web scripts */
+    if (url && !aDialog)
+      rv = SecurityCheckURL(url);
   }
 
   if (!aName.IsEmpty()) {
@@ -3064,26 +3070,33 @@ GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
     features = ToNewUTF8String(aOptions);
   }
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
-  if (wwatch) {
-    if (argc) {
-      nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
-      NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID, &rv));
+    if (wwatch) {
+      if (argc) {
+        nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+        NS_ENSURE_TRUE(pwwatch, NS_ERROR_UNEXPECTED);
 
-      PRUint32 extraArgc = argc >= 3 ? argc-3 : 0;
-      rv = pwwatch->OpenWindowJS(this, url, name, features, aDialog,
-                                 extraArgc, argv+3,
-                                 getter_AddRefs(domReturn));
-    } else {
-      rv = wwatch->OpenWindow(this, url, name, features, aExtraArgument,
-                              getter_AddRefs(domReturn));
+        PRUint32 extraArgc = argc >= 3 ? argc-3 : 0;
+        rv = pwwatch->OpenWindowJS(this, url, name, features, aDialog,
+                                   extraArgc, argv+3,
+                                   getter_AddRefs(domReturn));
+      } else {
+        rv = wwatch->OpenWindow(this, url, name, features, aExtraArgument,
+                                getter_AddRefs(domReturn));
+      }
+
+      if (domReturn)
+        CallQueryInterface(domReturn, aReturn);
     }
-
-    if (domReturn)
-      CallQueryInterface(domReturn, aReturn);
   }
 
-  nsMemory::Free(url);
+  if (features)
+    nsMemory::Free(features);
+  if (name)
+    nsMemory::Free(name);
+  if (url)
+    nsMemory::Free(url);
   return rv;
 
 }
@@ -3706,6 +3719,57 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
         return vm->GetRootScrollableView(aScrollableView);
     }
   }
+  return NS_OK;
+}
+
+nsresult
+GlobalWindowImpl::SecurityCheckURL(const char *aURL)
+{
+  nsresult   rv;
+  JSContext *cx = 0;
+
+  // get JSContext
+  NS_ASSERTION(mContext, "opening window missing its context");
+  NS_ASSERTION(mDocument, "opening window missing its document");
+  if (!mContext || !mDocument)
+    return NS_ERROR_FAILURE;
+
+  // get the JSContext from the call stack
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
+  if (stack)
+    stack->Peek(&cx);
+  if (!cx)        // not bloody likely. but if there's no JS on the call stack,
+    return NS_OK; // then we should pass the security check.
+
+  /* resolve the URI, which could be relative to the calling window
+     (note the algorithm to get the base URI should match the one
+     used to actually kick off the load in nsWindowWatcher.cpp). */
+  nsCOMPtr<nsIURI> baseURI;
+  nsCOMPtr<nsIURI> uriToLoad;
+
+  nsCOMPtr<nsIScriptContext> scriptcx = (nsIScriptContext *) JS_GetContextPrivate(cx);
+  if (scriptcx) {
+    nsCOMPtr<nsIScriptGlobalObject> gobj(dont_AddRef(scriptcx->GetGlobalObject()));
+    nsCOMPtr<nsIDOMWindow> caller(do_QueryInterface(gobj));
+    if (caller) {
+      nsCOMPtr<nsIDOMDocument> callerDOMdoc;
+      caller->GetDocument(getter_AddRefs(callerDOMdoc));
+      nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDOMdoc));
+      if (callerDoc)
+        baseURI = dont_AddRef(callerDoc->GetDocumentURL());
+    }
+  }
+
+  rv = NS_NewURI(getter_AddRefs(uriToLoad), aURL, baseURI);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+
+  if (NS_FAILED(mContext->GetSecurityManager(getter_AddRefs(secMan))) ||
+      NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))
+    return NS_ERROR_FAILURE;
+
   return NS_OK;
 }
 
