@@ -1335,6 +1335,7 @@ function EditorSelectColor(colorType, mouseEvent)
     // Get color from command node state
     commandNode = document.getElementById("cmd_fontColor");
     currentColor = commandNode.getAttribute("state");
+    currentColor = ConvertRGBColorIntoHEXColor(currentColor);
     gColorObj.TextColor = currentColor;
 
     if (useLastColor && gColorObj.LastTextColor )
@@ -1349,6 +1350,7 @@ function EditorSelectColor(colorType, mouseEvent)
     // Get color from command node state
     commandNode = document.getElementById("cmd_highlight");
     currentColor = commandNode.getAttribute("state");
+    currentColor = ConvertRGBColorIntoHEXColor(currentColor);
     gColorObj.HighlightColor = currentColor;
 
     if (useLastColor && gColorObj.LastHighlightColor )
