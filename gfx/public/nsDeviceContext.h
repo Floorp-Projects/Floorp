@@ -124,6 +124,8 @@ public:
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
 
+  NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
+
 #ifdef NS_PRINT_PREVIEW
   NS_IMETHOD SetAltDevice(nsIDeviceContext* aAltDC);
   NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) { *aAltDC = mAltDC.get(); NS_IF_ADDREF(*aAltDC); return NS_OK;}

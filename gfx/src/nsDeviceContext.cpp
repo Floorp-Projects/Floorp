@@ -360,6 +360,15 @@ NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)
   return NS_OK;
 }
 
+NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+{
+  aPaletteInfo.isPaletteDevice = PR_FALSE;
+  aPaletteInfo.sizePalette = 0;
+  aPaletteInfo.numReserved = 0;
+  aPaletteInfo.palette = nsnull;
+  return NS_OK;
+}
+
 struct FontEnumData {
   FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
     : mDC(aDC), mFaceName(aFaceName)
