@@ -21,8 +21,6 @@
 #   Doug Turner <dougt@netscape.com>
 # 
 
-MODULE = psmglue
-
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -37,9 +35,12 @@ LIBRARY_NAME	= psmglue
 
 
 CPPSRCS	= \
-	nsPSMComponent.cpp	\
-	nsPSMModule.cpp	            \
-	nsPSMUICallbacks.cpp	    \
+	nsPSMComponent.cpp \
+	nsPSMUICallbacks.cpp \
+	nsSSLSocketProvider.cpp \
+	nsPSMModule.cpp \
+	nsSSLIOLayer.cpp \
+	nsSecureBrowserUIImpl.cpp \
 	$(NULL)
 
 CSRCS = \
