@@ -648,6 +648,10 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
 NS_IMETHODIMP
 RDFServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResource)
 {
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
+        return NS_ERROR_NULL_POINTER;
+
     char buf[128];
     char* uri = buf;
 
@@ -826,7 +830,7 @@ RDFServiceImpl::IsAnonymousResource(nsIRDFResource* aResource, PRBool* _result)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
+RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool aReplace)
 {
     NS_PRECONDITION(aResource != nsnull, "null ptr");
     if (! aResource)
@@ -852,7 +856,7 @@ RDFServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
     PLHashEntry** hep = PL_HashTableRawLookup(mResources, keyhash, uri);
 
     if (*hep) {
-        if (!replace) {
+        if (!aReplace) {
             NS_WARNING("resource already registered, and replace not specified");
             return NS_ERROR_FAILURE;    // already registered
         }
@@ -937,7 +941,7 @@ RDFServiceImpl::UnregisterResource(nsIRDFResource* aResource)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace)
+RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool aReplace)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
@@ -953,7 +957,7 @@ RDFServiceImpl::RegisterDataSource(nsIRDFDataSource* aDataSource, PRBool replace
         PL_HashTableRawLookup(mNamedDataSources, (*mNamedDataSources->keyHash)(uri), uri);
 
     if (*hep) {
-        if (! replace)
+        if (! aReplace)
             return NS_ERROR_FAILURE; // already registered
 
         // N.B., we only hold a weak reference to the datasource, so
@@ -1021,15 +1025,19 @@ RDFServiceImpl::UnregisterDataSource(nsIRDFDataSource* aDataSource)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
+RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
 {
+    NS_PRECONDITION(aURI != nsnull, "null ptr");
+    if (! aURI)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
 
     // First, check the cache to see if we already have this
     // datasource loaded and initialized.
     {
         nsIRDFDataSource* cached =
-            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, uri));
+            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, aURI));
 
         if (cached) {
             nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(cached);
@@ -1046,7 +1054,7 @@ RDFServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
     // Nope. So go to the repository to try to create it.
     nsCOMPtr<nsIRDFDataSource> ds;
-	nsAutoString rdfName(uri);
+	nsAutoString rdfName(aURI);
     static const char kRDFPrefix[] = "rdf:";
     PRInt32 pos = rdfName.Find(kRDFPrefix);
     if (pos == 0) {
@@ -1086,7 +1094,7 @@ RDFServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds);
         if (remote) {
-            rv = remote->Init(uri);
+            rv = remote->Init(aURI);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -1106,7 +1114,7 @@ RDFServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         NS_ASSERTION(remote, "not a remote RDF/XML data source!");
         if (! remote) return NS_ERROR_UNEXPECTED;
 
-        rv = remote->Init(uri);
+        rv = remote->Init(aURI);
         if (NS_FAILED(rv)) return rv;
 
         rv = remote->Refresh(PR_FALSE);
@@ -1124,6 +1132,8 @@ nsresult
 RDFServiceImpl::RegisterLiteral(nsIRDFLiteral* aLiteral, PRBool aReplace)
 {
     NS_PRECONDITION(aLiteral != nsnull, "null ptr");
+    if (! aLiteral)
+        return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
 
