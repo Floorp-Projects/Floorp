@@ -70,6 +70,9 @@
         command="cmd_redo"/>
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
+    <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
+    <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
+    <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
     </handlers>
   </binding>
 
@@ -152,6 +155,9 @@
         command="cmd_redo"/>
     <handler event="keypress" key="a" modifiers="alt"
         command="cmd_selectAll"/>
+    <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
+    <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
+    <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
     </handlers>
   </binding>
 
@@ -218,6 +224,9 @@
       <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_moveBottom"/>
       <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_movePageUp"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_movePageDown"/>
+      <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
+      <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
+      <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
     </handlers>
   </binding>
 </bindings>
