@@ -239,9 +239,9 @@ void StringListIterator::add(String* strptr) {
 **/
 MBool StringListIterator::hasNext() {
     if (currentItem) {
-        return (MBool)(currentItem->nextItem);
+        return (currentItem->nextItem != 0);
     }
-    return (MBool)(stringList->firstItem);
+    return (stringList->firstItem != 0);
 } //-- hasNext
 
 /**
@@ -249,7 +249,7 @@ MBool StringListIterator::hasNext() {
 **/
 MBool StringListIterator::hasPrevious() {
     if (currentItem) {
-        return (MBool)(currentItem->prevItem);
+        return (currentItem->prevItem != 0);
     }
     return MB_FALSE;
 } //-- hasPrevious
