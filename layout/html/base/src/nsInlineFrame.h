@@ -261,6 +261,8 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 protected:
   nsAbsoluteContainingBlock mAbsoluteContainer;
