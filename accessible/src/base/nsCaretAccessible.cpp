@@ -193,7 +193,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     if (isCollapsed) {
       PRInt32 caretOffset;
       domSel->GetFocusOffset(&caretOffset);
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, accessible, (AccessibleEventData*)&caretOffset);
+      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
     }
     else
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);

@@ -262,8 +262,7 @@ void nsRootAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
     // We only want to fire accessibilty scroll event when scrolling stops or pauses
     // Therefore, we wait for no scroll events to occur between 2 ticks of this timer
     // That indicates a pause in scrolling, so we fire the accessibilty scroll event
-    if (rootAcc->mListener)
-      rootAcc->mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SCROLLINGEND, rootAcc, nsnull);
+    rootAcc->HandleEvent(nsIAccessibleEventListener::EVENT_SCROLLINGEND, rootAcc, nsnull);
     rootAcc->mScrollPositionChangedTicks = 0;
     rootAcc->mScrollWatchTimer->Cancel();
     rootAcc->mScrollWatchTimer = nsnull;
@@ -435,7 +434,7 @@ NS_IMETHODIMP nsRootAccessible::GetCaretAccessible(nsIAccessibleCaret **aCaretAc
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode)
 {
   if (focusAccessible && focusNode && gLastFocusedNode != focusNode) {
-    mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, focusAccessible, nsnull);
+    HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
     PRUint32 role = ROLE_NOTHING;
     focusAccessible->GetAccRole(&role);
@@ -505,7 +504,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // tree event
     if (treeItemAccessible && 
         (eventType.EqualsIgnoreCase("DOMMenuItemActive") || eventType.EqualsIgnoreCase("select"))) {
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
       return NS_OK;
     }
 
@@ -525,27 +524,27 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         FireAccessibleFocusEvent(accessible, targetNode);
     }
     else if (eventType.EqualsIgnoreCase("ListitemStateChange")) {
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
       FireAccessibleFocusEvent(accessible, optionTargetNode);
     }
     else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
     }
     else if (eventType.EqualsIgnoreCase("RadioStateChange") ) {
       // first the XUL radio buttons
       if (targetNode &&
           NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
         FireAccessibleFocusEvent(accessible, targetNode);
       }
       else { // for the html radio buttons -- apparently the focus code just works. :-)
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
       }
     }
     else if (eventType.EqualsIgnoreCase("DOMMenuBarActive")) 
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUSTART, accessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_MENUSTART, accessible, nsnull);
     else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUEND, accessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_MENUEND, accessible, nsnull);
       GetAccFocused(getter_AddRefs(accessible));
       if (accessible) {
         accessible->AccGetDOMNode(getter_AddRefs(targetNode));
@@ -563,7 +562,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         PRUint32 role = ROLE_NOTHING;
         accessible->GetAccRole(&role);
         if (role == ROLE_MENUPOPUP)
-          mListener->HandleEvent(menuEvent, accessible, nsnull);
+          HandleEvent(menuEvent, accessible, nsnull);
       }
     }
 #else
@@ -571,7 +570,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     AtkTextChange textData;
     if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
       if (treeItemAccessible) // use focused treeitem
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
       else if (optionTargetNode && // use focused option
           NS_SUCCEEDED(mAccService->GetAccessibleFor(optionTargetNode, getter_AddRefs(accessible))))
         FireAccessibleFocusEvent(accessible, optionTargetNode);
@@ -580,23 +579,23 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
     else if (eventType.EqualsIgnoreCase("change")) {
       if (selectElement) // it's a HTML <select>
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
       else {
         nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(targetNode));
         if (inputElement) { // it's a HTML <input>
           accessible->GetAccState(&stateData.state);
           stateData.enable = (stateData.state & STATE_CHECKED) != 0;
           stateData.state = STATE_CHECKED;
-          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, (AccessibleEventData*)&stateData);
+          HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, &stateData);
         }
       }
     }
     else if (eventType.EqualsIgnoreCase("select")) {
       if (selectControl) // it's a XUL <listbox>
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_ATK_SELECTION_CHANGE, accessible, nsnull);
       else if (treeBox && treeIndex >= 0) // it's a XUL <tree>
         // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
+        HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, treeItemAccessible, nsnull);
     }
     else if (eventType.EqualsIgnoreCase("input")) {
       // XXX kyle.yuan@sun.com future work, put correct values for text change data
@@ -605,16 +604,16 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       textData.add = PR_TRUE;
       nsAutoString accName;
       accessible->GetAccValue(accName);
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE, accessible, (AccessibleEventData*)&textData);
+      HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE, accessible, &textData);
     }
     else if (eventType.EqualsIgnoreCase("ListitemStateChange")) // it's a XUL <listbox>
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
+      HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
     else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
              eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
       accessible->GetAccState(&stateData.state);
       stateData.enable = (stateData.state & STATE_CHECKED) != 0;
       stateData.state = STATE_CHECKED;
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, (AccessibleEventData*)&stateData);
+      HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, &stateData);
     }
     else if (eventType.EqualsIgnoreCase("popupshowing")) 
       FireAccessibleFocusEvent(accessible, targetNode);
@@ -638,6 +637,13 @@ NS_IMETHODIMP nsRootAccessible::GetTargetNode(nsIDOMEvent *aEvent, nsCOMPtr<nsID
   aTargetNode = do_QueryInterface(domEventTarget, &rv);
 
   return rv;
+}
+
+NS_IMETHODIMP nsRootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData)
+{
+  if (mListener)
+    mListener->HandleEvent(aEvent, aTarget, aData);
+  return NS_OK;
 }
 
 // ------- nsIDOMFocusListener Methods (1) -------------
@@ -835,9 +841,7 @@ void nsRootAccessible::FireDocLoadFinished()
     if (mBusy != eBusyStateDone) {
       mBusy = eBusyStateDone;
 #ifndef MOZ_ACCESSIBILITY_ATK
-      if (mListener) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
-      }
+      HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
 #endif
     }
   }
@@ -875,16 +879,13 @@ NS_IMETHODIMP nsRootAccessible::OnLocationChange(nsIWebProgress *aWebProgress,
     mBusy = eBusyStateLoading; 
     // Fire a "new doc has started to load" event
 #ifndef MOZ_ACCESSIBILITY_ATK
-    if (mListener)
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
+    HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
 #else
-    if (mListener) {
-      AtkChildrenChange childrenData;
-      childrenData.index = -1;
-      childrenData.child = 0;
-      childrenData.add = PR_FALSE;
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_REORDER , this, (AccessibleEventData*)&childrenData);
-    }
+    AtkChildrenChange childrenData;
+    childrenData.index = -1;
+    childrenData.child = 0;
+    childrenData.add = PR_FALSE;
+    HandleEvent(nsIAccessibleEventListener::EVENT_REORDER , this, &childrenData);
 #endif
   }
 
