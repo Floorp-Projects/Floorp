@@ -37,10 +37,13 @@ use PLIF::Input::Arguments;
 # The CommandLine module can't tell the difference between a keyword
 # query and real command line.
 
+# XXX should split this up into one CGI module per request method
+
 sub init {
     my $self = shift;
     my($app) = @_;
     require MIME::Base64; import MIME::Base64; # DEPENDENCY
+    require MIME::Parser; import MIME::Parser; # DEPENDENCY
     $self->SUPER::init(@_);
 }
 
@@ -66,31 +69,80 @@ sub splitArguments {
             $self->propertySet($parameter, $ENV{$parameter});
         }
     }
-    if (defined($ENV{'QUERY_STRING'})) {
-        foreach my $argument (split(/&/o, $ENV{'QUERY_STRING'})) {
-            if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
-                my $name = $1;
-                my $value = $2;
-                # decode the strings
-                foreach my $string ($name, $value) {
-                    if (defined($string)) {
-                        $string =~ tr/+/ /; # convert + to spaces
-                        $string =~ s/% # a percent symbol
-                                     ( # followed by
-                        [0-9A-Fa-f]{2} # 2 hexidecimal characters
-                                     ) # which we shall put in $1
-                         /chr(hex($1)) # and convert back into a character
-                                /egox; # (evaluate, globally, optimised, with comments)
-                    } else {
-                        $string = '';
+    my $method = $ENV{'REQUEST_METHOD'} || '';
+    if ($method eq 'POST') {
+        local $/ = undef;
+        $ENV{'QUERY_STRING'} = <STDIN>;
+        $method = 'GET';
+    }
+    if ($method eq 'GET') {
+        if (defined($ENV{'QUERY_STRING'})) {
+            foreach my $argument (split(/&/o, $ENV{'QUERY_STRING'})) {
+                if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
+                    my $name = $1;
+                    my $value = $2;
+                    # decode the strings
+                    foreach my $string ($name, $value) {
+                        if (defined($string)) {
+                            $string =~ tr/+/ /; # convert + to spaces
+                            $string =~ s/% # a percent symbol
+                                ( # followed by
+                                  [0-9A-Fa-f]{2} # 2 hexidecimal characters
+                                  ) # which we shall put in $1
+                                    /chr(hex($1)) # and convert back into a character
+                                        /egox; # (evaluate, globally, optimised, with comments)
+                        } else {
+                            $string = '';
+                        }
                     }
+                    $self->addArgument($name, $value);
+                } else {
+                    $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
                 }
-                $self->addArgument($name, $value);
-            } else {
-                $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
             }
+        } else {
+             # XXX no arguments
         }
-    } # should also deal with HTTP POST, PUT, etc, here XXX
+    } elsif ($method eq 'POST') {
+=wip
+    # XXX
+
+   check CONTENT_TYPE. is it 'application/x-www-form-urlencoded', 'multipart/form-data'?
+
+    ### Create parser, and set some parsing options:
+        my $parser = new MIME::Parser;
+        $parser->output_under("$ENV{HOME}/mimemail");
+
+    ### Parse input:
+        my $entity = $parser->parse(\*STDIN);
+
+            foreach my $argument (XXX) {
+                if ($argument =~ /^(.*?)(?:=(.*))?$/os) {
+                    my $name = $1;
+                    my $value = $2;
+                    # decode the strings
+                    foreach my $string ($name, $value) {
+                        if (defined($string)) {
+                            $string =~ tr/+/ /; # convert + to spaces
+                            $string =~ s/% # a percent symbol
+                                ( # followed by
+                                  [0-9A-Fa-f]{2} # 2 hexidecimal characters
+                                  ) # which we shall put in $1
+                                    /chr(hex($1)) # and convert back into a character
+                                        /egox; # (evaluate, globally, optimised, with comments)
+                        } else {
+                            $string = '';
+                        }
+                    }
+                    $self->addArgument($name, $value);
+                } else {
+                    $self->warn(2, "argument (|$argument|) did not match regexp (can't happen!)");
+                }
+
+=cut
+    } else {
+        # should also deal with HTTP HEAD, PUT, etc, here XXX
+    }
     if (defined($ENV{'HTTP_AUTHORIZATION'})) {
         if ($self->HTTP_AUTHORIZATION =~ /^Basic +(.*)$/os) {
             # HTTP Basic Authentication
