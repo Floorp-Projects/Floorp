@@ -53,7 +53,6 @@ import java.lang.reflect.*;
 public class Codegen extends Interpreter {
 
     public Codegen() {
-        itsConstantList = new ConstantList();
     }
     
     public IRFactory createIRFactory(TokenStream ts, 
@@ -155,12 +154,13 @@ public class Codegen extends Interpreter {
         {
             String name = onh.getJavaScriptClassName(null, true);
             ScriptableObject obj = new NativeObject();
-            ShallowNodeIterator i = tree.getChildIterator();
-            while (i.hasMoreElements()) {
-                Node n = i.nextNode();
-                if (n.getType() == TokenStream.FUNCTION) 
-                    obj.put(n.getString(), obj, 
-                            n.getProp(Node.FUNCTION_PROP));
+            for (Node cursor = tree.getFirstChild(); cursor != null;
+                 cursor = cursor.getNextSibling()) 
+            {
+                if (cursor.getType() == TokenStream.FUNCTION) {
+                    obj.put(cursor.getString(), obj, 
+                            cursor.getProp(Node.FUNCTION_PROP));
+                }
             }
             try {
                 Class superClass = onh.getTargetExtends();
@@ -2894,14 +2894,13 @@ public class Codegen extends Interpreter {
         }
     }
     
-    private Number nodeIsConvertToObjectOfNumber(Node node)
-    {
+    private Node getConvertToObjectOfNumberNode(Node node) {
         if (node.getType() == TokenStream.CONVERT) {
             Object toType = node.getProp(Node.TYPE_PROP);
             if (toType == ScriptRuntime.ObjectClass) {
                 Node convertChild = node.getFirstChild();
                 if (convertChild.getType() == TokenStream.NUMBER)
-                    return convertChild.getNumber();
+                    return convertChild;
             }
         }
         return null;
@@ -3015,28 +3014,29 @@ public class Codegen extends Interpreter {
 
             Node rChild = child.getNextSibling();
             
-            Number numChild = nodeIsConvertToObjectOfNumber(rChild);
-            if (nodeIsDirectCallParameter(child)
-                    && (numChild != null)) {
-                OptLocalVariable lVar1
-                    = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));                        
-                aload(lVar1.getJRegister());
-                classFile.add(ByteCode.GETSTATIC,
-                        "java/lang/Void",
-                        "TYPE",
-                        "Ljava/lang/Class;");
-                int notNumbersLabel = acquireLabel();
-                addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
-                dload((short)(lVar1.getJRegister() + 1));
-                push(numChild.doubleValue());
-                addByteCode(ByteCode.DCMPL);
-                if (op == TokenStream.EQ)
-                    addByteCode(ByteCode.IFEQ, trueGOTO);
-                else
-                    addByteCode(ByteCode.IFNE, trueGOTO);
-                addByteCode(ByteCode.GOTO, falseGOTO);
-                markLabel(notNumbersLabel);
-                // fall thru into generic handling
+            if (nodeIsDirectCallParameter(child)) {
+                Node convertChild = getConvertToObjectOfNumberNode(rChild);
+                if (convertChild != null) {
+                    OptLocalVariable lVar1
+                        = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));                        
+                    aload(lVar1.getJRegister());
+                    classFile.add(ByteCode.GETSTATIC,
+                            "java/lang/Void",
+                            "TYPE",
+                            "Ljava/lang/Class;");
+                    int notNumbersLabel = acquireLabel();
+                    addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
+                    dload((short)(lVar1.getJRegister() + 1));
+                    push(convertChild.getDouble());
+                    addByteCode(ByteCode.DCMPL);
+                    if (op == TokenStream.EQ)
+                        addByteCode(ByteCode.IFEQ, trueGOTO);
+                    else
+                        addByteCode(ByteCode.IFNE, trueGOTO);
+                    addByteCode(ByteCode.GOTO, falseGOTO);
+                    markLabel(notNumbersLabel);
+                    // fall thru into generic handling
+                }
             }
 
             generateCodeFromNode(child, node, -1, -1);
@@ -3082,119 +3082,95 @@ public class Codegen extends Interpreter {
             // just load the string constant
             push(node.getString());
         } else {
-            Number num = node.getNumber();
+            double num = node.getDouble();
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                push(num.doubleValue());
+                push(num);
+            }
+            else if (itsConstantListSize >= 2000) {
+                // There appears to be a limit in the JVM on either the number
+                // of static fields in a class or the size of the class
+                // initializer. Either way, we can't have any more than 2000
+                // statically init'd constants.            
+                pushAsWrapperObject(num);
             }
             else {
-                    /*
-                     * Generate code to create the new numeric constant
-                     *
-                     * new java/lang/<WrapperType>
-                     * dup
-                     * push <number>
-                     * invokestatic java/lang/<WrapperType>/<init>(D)V
-                     */
-                String wrapperType = "";
-                String signature = "";
-                boolean isInteger = false;
-
-                if (num instanceof Float)
-                  num = new Double(num.floatValue());
-
-                // OPT: cache getClass() and compare == Type.class
-                if (num instanceof Integer) {
-                    wrapperType = "Integer";
-                    signature = "I";
-                    isInteger = true;
-                    /*
-                    } else if (num instanceof Float) {
-                    wrapperType = "Float";
-                    signature = "F";
-                    */
-                } else if (num instanceof Double) {
-                    wrapperType = "Double";
-                    signature = "D";
-                } else if (num instanceof Byte) {
-                    wrapperType = "Byte";
-                    signature = "B";
-                    isInteger = true;
-                } else if (num instanceof Short) {
-                    wrapperType = "Short";
-                    signature = "S";
-                    isInteger = true;
-                } else {
-                    throw Context.reportRuntimeError(
-                        "NumberNode contains unsupported Number type: " +
-                        num.getClass().getName());
-                }
-                /*
-                    There appears to be a limit in the JVM on either the number of
-                    static fields in a class or the size of the class initializer.
-                    Either way, we can't have any more than 2000 statically init'd
-                    constants.            
-                */
-                if (itsConstantList.itsTop >= 2000) {
-                    addByteCode(ByteCode.NEW, "java/lang/" + wrapperType);
-                    addByteCode(ByteCode.DUP);
-                    if (isInteger)
-                        push(num.longValue());
-                    else
-                        push(num.doubleValue());
-                    addSpecialInvoke("java/lang/"
-                                    + wrapperType,
-                                    "<init>", 
-                                    "(" + 
-                                        signature
-                                    + ")",
-                                    "V");
-                }
-                else {
-                    classFile.add(ByteCode.GETSTATIC,
-                            classFile.fullyQualifiedForm(this.name),
-                            "jsK_" 
-                                  + itsConstantList.addConstant(wrapperType,
-                                                                    signature,
-                                                                    num,
-                                                                    isInteger),
-                            "Ljava/lang/" + wrapperType + ";");
-                }
+                String constantName = "jsK_" + addNumberConstant(num);
+                String constantType = getStaticConstantWrapperType(num);
+                classFile.add(ByteCode.GETSTATIC,
+                              classFile.fullyQualifiedForm(this.name),
+                              constantName, constantType);
             }
         }
     }
+    
+    private String getStaticConstantWrapperType(double num) {
+        String constantType;
+        int inum = (int)num;
+        if (inum == num) {
+            if ((byte)inum == inum) {
+                constantType = "Ljava/lang/Byte;";
+            }
+            else if ((short)inum == inum) {
+                constantType = "Ljava/lang/Short;";
+            }
+            else {
+                constantType = "Ljava/lang/Integer;";
+            }
+        }
+        else {
+            // See comments in push(double)
+            //if ((float)num == num) {
+            //      constantType = "Ljava/lang/Float;";
+            //}
+            //else {
+                constantType = "Ljava/lang/Double;";
+            //}
+        }
+        return constantType;
+    }
 
+    private int addNumberConstant(double num) {
+        int N = itsConstantListSize;
+        if (N == 0) {
+            itsConstantList = new double[128];
+        } 
+        else {
+            double[] array = itsConstantList;
+            for (int i = 0; i != N; ++i) {
+                if (array[i] == num) { return i; }
+            }
+            if (N == array.length) {
+                array = new double[N * 2];
+                System.arraycopy(itsConstantList, 0, array, 0, N);
+                itsConstantList = array;
+            }
+        }
+        itsConstantList[N] = num;
+        itsConstantListSize = N + 1;
+        return N;
+    }
+    
     private void emitConstantDudeInitializers() {
-        if (itsConstantList.itsTop == 0)
+        int N = itsConstantListSize;
+        if (N == 0)
             return;
+        
         classFile.startMethod("<clinit>", "()V",
             (short)(ClassFileWriter.ACC_STATIC + ClassFileWriter.ACC_FINAL));
 
-        for (int i = 0; i < itsConstantList.itsTop; i++) {
-            addByteCode(ByteCode.NEW,
-                               "java/lang/"
-                               + itsConstantList.itsList[i].itsWrapperType);
-            addByteCode(ByteCode.DUP);
-            if (itsConstantList.itsList[i].itsIsInteger)
-                push(itsConstantList.itsList[i].itsLValue);
-            else
-                push(itsConstantList.itsList[i].itsDValue);
-            addSpecialInvoke("java/lang/"
-                            + itsConstantList.itsList[i].itsWrapperType,
-                            "<init>",
-                            "(" +
-                                itsConstantList.itsList[i].itsSignature
-                            + ")",
-                            "V");
-            classFile.addField("jsK_" + i,
-                       "Ljava/lang/"
-                       + itsConstantList.itsList[i].itsWrapperType + ";",
-                       ClassFileWriter.ACC_STATIC);
+        double[] array = itsConstantList;
+        for (int i = 0; i != N; ++i) {
+            double num = array[i];
+            String constantName = "jsK_" + addNumberConstant(num);
+            String constantType = getStaticConstantWrapperType(num);
+            classFile.addField(constantName, constantType,
+                               ClassFileWriter.ACC_STATIC);
+            pushAsWrapperObject(num);
             classFile.add(ByteCode.PUTSTATIC,
-                     classFile.fullyQualifiedForm(this.name),
-                     "jsK_" + i,
-                     "Ljava/lang/"
-                     + itsConstantList.itsList[i].itsWrapperType + ";");
-        }        
+                          classFile.fullyQualifiedForm(this.name),
+                          constantName, constantType);
+        }
+                
         addByteCode(ByteCode.RETURN);
         classFile.stopMethod((short)0, null);
     }
@@ -3702,19 +3678,19 @@ public class Codegen extends Interpreter {
         locals[local] = false;
     }
 
-    private void push(long l) {
-        if (l == -1) {
-            addByteCode(ByteCode.ICONST_M1);
-        } else if (0 <= l && l <= 5) {
-            addByteCode((byte) (ByteCode.ICONST_0 + l));
-        } else if (Byte.MIN_VALUE <= l && l <= Byte.MAX_VALUE) {
-            addByteCode(ByteCode.BIPUSH, (byte) l);
-        } else if (Short.MIN_VALUE <= l && l <= Short.MAX_VALUE) {
-            addByteCode(ByteCode.SIPUSH, (short) l);
-        } else if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
-            classFile.addLoadConstant((int)l);
+    private void push(int i) {
+        if ((byte)i == i) {
+            if (i == -1) {
+                addByteCode(ByteCode.ICONST_M1);
+            } else if (0 <= i && i <= 5) {
+                addByteCode((byte) (ByteCode.ICONST_0 + i));
+            } else {
+                addByteCode(ByteCode.BIPUSH, (byte) i);
+            }
+        } else if ((short)i == i) {
+            addByteCode(ByteCode.SIPUSH, (short) i);
         } else {
-            classFile.addLoadConstant((long)l);
+            classFile.addLoadConstant(i);
         }
     }
 
@@ -3731,7 +3707,54 @@ public class Codegen extends Interpreter {
             classFile.addLoadConstant((double)d);
         }
     }
+    
+    private void pushAsWrapperObject(double num) {
+        // Generate code to create the new numeric constant
+        //
+        // new java/lang/<WrapperType>
+        // dup
+        // push <number>
+        // invokestatic java/lang/<WrapperType>/<init>(X)V
 
+        String wrapperType;
+        String signature;
+        boolean isInteger;
+        int inum = (int)num;
+        if (inum == num) {
+            isInteger = true;
+            if ((byte)inum == inum) {
+                wrapperType = "java/lang/Byte";
+                signature = "(B)";
+            }
+            else if ((short)inum == inum) {
+                wrapperType = "java/lang/Short";
+                signature = "(S)";
+            }
+            else {
+                wrapperType = "java/lang/Integer";
+                signature = "(I)";
+            }
+        }
+        else {
+            isInteger = false;
+            // See comments in push(double)
+            //if ((float)num == num) {
+            //    wrapperType = "java/lang/Float";
+            //    signature = "(F)";
+            //}
+            //else {
+                wrapperType = "java/lang/Double";
+                signature = "(D)";
+            //}
+        }
+        
+        addByteCode(ByteCode.NEW, wrapperType);
+        addByteCode(ByteCode.DUP);
+        if (isInteger) { push(inum); }
+        else { push(num); }
+        addSpecialInvoke(wrapperType, "<init>", signature, "V");
+    }
+    
     private void push(String s) {
         classFile.addLoadConstant(s);
     }
@@ -3778,7 +3801,8 @@ public class Codegen extends Interpreter {
     private short firstFreeLocal;
     private short localsMax;
 
-    private ConstantList itsConstantList;
+    private double[] itsConstantList;
+    private int itsConstantListSize;
 
     // special known locals. If you add a new local here, be sure
     // to initialize it to -1 in startNewMethod
@@ -3803,69 +3827,3 @@ public class Codegen extends Interpreter {
     private int optLevel;
 }
 
-class ConstantList {
-
-    int addConstant(String wrapperType, String signature, Number num, boolean isInteger)
-    {
-        long lValue = num.longValue();
-        double dValue = num.doubleValue();
-
-        for (int i = 0; i < itsTop; i++) {
-            if (signature.equals(itsList[i].itsSignature)) {
-                if (itsList[i].itsIsInteger) {
-                    if (isInteger && (lValue == itsList[i].itsLValue)) {
-                        return i;
-                    }
-                }
-                else {
-                    if (!isInteger && (dValue == itsList[i].itsDValue)) {
-                        return i;
-                    }
-                }
-            }
-        }
-
-        if (itsTop == itsList.length) {
-            ConstantDude[] newList = new ConstantDude[itsList.length * 2];
-            System.arraycopy(itsList, 0, newList, 0, itsList.length);
-            itsList = newList;
-        }
-        if (isInteger) {
-            itsList[itsTop] = new ConstantDude(wrapperType, signature, lValue);
-        }
-        else {
-            itsList[itsTop] = new ConstantDude(wrapperType, signature, dValue);
-        }
-        return itsTop++;
-    }
-
-    ConstantDude[] itsList = new ConstantDude[128];
-    int itsTop;
-
-}
-
-class ConstantDude {
-
-    ConstantDude(String wrapperType, String signature, long value)
-    {
-        itsWrapperType = wrapperType;
-        itsSignature = signature;
-        itsIsInteger = true;
-        itsLValue = value;
-    }
-
-    ConstantDude(String wrapperType, String signature, double value)
-    {
-        itsWrapperType = wrapperType;
-        itsSignature = signature;
-        itsIsInteger = false;
-        itsDValue = value;
-    }
-
-    String itsWrapperType;
-    String itsSignature;
-    long itsLValue;
-    double itsDValue;
-    boolean itsIsInteger;
-
-}
