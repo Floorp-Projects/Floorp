@@ -16,6 +16,8 @@
 
 # if defined(LINUX) && !defined(POWERPC)
 #   include <linux/version.h>
+#   include <asm/sigcontext.h>
+typedef void* caddr_t;
 #   if (LINUX_VERSION_CODE <= 0x10400)
       /* Ugly hack to get struct sigcontext_struct definition.  Required      */
       /* for some early 1.3.X releases.  Will hopefully go away soon. */
