@@ -81,6 +81,7 @@
 #include "nsMsgPrintEngine.h"
 #include "nsMsgSearchSession.h"
 #include "nsMsgSearchAdapter.h"
+#include "nsMsgSearchDataSource.h"
 
 
 // private factory declarations for each component we know how to produce
@@ -98,6 +99,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMessageDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccountManagerDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchValidityManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDelegateFactory)
@@ -182,6 +184,10 @@ static nsModuleComponentInfo gComponents[] = {
     { "Message Search Validity Manager", NS_MSGSEARCHVALIDITYMANAGER_CID,
         NS_MSGSEARCHVALIDITYMANAGER_PROGID,
         nsMsgSearchValidityManagerConstructor,
+    },
+    { "Search Datasource", NS_MSGSEARCHDATASOURCE_CID,
+      NS_MSGSEARCHDATASOURCE_PROGID,
+      nsMsgSearchDataSourceConstructor,
     },
     { "Message Filter Service", NS_MSGFILTERSERVICE_CID,
       NS_MSGFILTERSERVICE_PROGID,
