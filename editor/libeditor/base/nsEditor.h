@@ -33,6 +33,7 @@
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
+#include "nsISupportsArray.h"
 #include "nsIEditProperty.h"
 #include "nsIFileSpec.h"
 #include "nsIDOMCharacterData.h"
@@ -40,6 +41,7 @@
 #include "nsIDTD.h"
 
 class nsIEditActionListener;
+class nsIDocumentStateListener;
 class nsIDOMCharacterData;
 class nsIDOMRange;
 class nsIPresShell;
@@ -97,8 +99,12 @@ private:
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
 
-  nsVoidArray *mActionListeners;
-  nsCOMPtr<nsIStringBundle> mStringBundle;
+  nsVoidArray*                  mActionListeners;
+  nsCOMPtr<nsISupportsArray>    mDocStateListeners;
+  nsCOMPtr<nsIStringBundle>     mStringBundle;
+
+  PRInt8                        mDocDirtyState;		// -1 = not initialized
+
 protected:
   nsIDOMDocument * mDoc;
   nsCOMPtr<nsIDTD> mDTD;
@@ -252,6 +258,10 @@ public:
 
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
+  NS_IMETHOD AddDocumentStateListener(nsIDocumentStateListener *aListener);
+  NS_IMETHOD RemoveDocumentStateListener(nsIDocumentStateListener *aListener);
+  NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
+
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
@@ -384,6 +394,9 @@ protected:
   
   // called after the document has been saved
   NS_IMETHOD DoAfterDocumentSave();
+  
+  // tell the doc state listeners that the doc state has changed
+  NS_IMETHOD NotifyDocumentStateListeners();
   
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);

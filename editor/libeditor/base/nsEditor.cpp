@@ -57,7 +57,7 @@
 #include "nsIStyleSet.h"
 #include "nsStyleSheetTxns.h"
 #include "nsIDocumentObserver.h"
-
+#include "nsIDocumentStateListener.h"
 
 #ifdef NECKO
 #include "nsNeckoUtil.h"
@@ -320,6 +320,7 @@ nsEditor::nsEditor()
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)
 ,  mActionListeners(nsnull)
+,  mDocDirtyState(-1)
 ,  mDoc(nsnull)
 ,  mPrefs(nsnull)
 #ifdef ENABLE_JS_EDITOR_LOG
@@ -500,7 +501,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(mDoc);
   if (theDoc)
     theDoc->SetDisplaySelection(PR_TRUE);
-
+  
   // disable links
   nsCOMPtr<nsIPresContext> context;
   mPresShell->GetPresContext(getter_AddRefs(context));
@@ -602,6 +603,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   // Set the selection to the beginning:
   BeginningOfDocument();
 
+  // update the UI with our state
+  NotifyDocumentStateListeners();
+  
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
 
   return NS_OK;
@@ -898,7 +902,8 @@ nsEditor::DoAfterRedoTransaction()
 NS_IMETHODIMP 
 nsEditor::DoAfterDocumentSave()
 {
-  // the mod count is reset by nsIDiskDocument. Nothing else to do now.
+  // the mod count is reset by nsIDiskDocument.
+  NotifyDocumentStateListeners();
   return NS_OK;
 }
 
@@ -1616,12 +1621,93 @@ nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 }
 
 
+NS_IMETHODIMP
+nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
+{
+  if (!aListener)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+  
+  if (!mDocStateListeners)
+  {
+    rv = NS_NewISupportsArray(getter_AddRefs(mDocStateListeners));
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return mDocStateListeners->AppendElement(iSupports);
+}
+
+
+NS_IMETHODIMP
+nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
+{
+  if (!aListener || !mDocStateListeners)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return mDocStateListeners->RemoveElement(iSupports);
+}
+
+NS_IMETHODIMP
+nsEditor::NotifyDocumentStateListeners()
+{
+  if (!mDocStateListeners)
+    return NS_OK;		// maybe there just aren't any.
+ 
+  PRBool docIsDirty;
+  nsresult rv = GetDocumentModified(&docIsDirty);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (docIsDirty == mDocDirtyState)
+    return NS_OK;
+  
+  mDocDirtyState = (PRInt8)docIsDirty;
+  
+  PRUint32 cnt;
+  rv = mDocStateListeners->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i = 0; i < cnt;i++)
+  {
+    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
+    nsCOMPtr<nsIDocumentStateListener> thisListener = do_QueryInterface(iSupports);
+    if (thisListener)
+    	thisListener->NotifyDocumentStateChanged(mDocDirtyState);
+  }
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::GetDocumentModified(PRBool *outDocModified)
+{
+  if (!outDocModified)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMDocument>  theDoc;
+  nsresult  rv = GetDocument(getter_AddRefs(theDoc));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRInt32  modCount = 0;
+  diskDoc->GetModCount(&modCount);
+
+  *outDocModified = (modCount != 0);
+  return NS_OK;
+}
+
 nsString & nsIEditor::GetTextNodeTag()
 {
   static nsString gTextNodeTag("special text node tag");
   return gTextNodeTag;
 }
-
 
 NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
                                    nsIDOMNode *    aParent,
@@ -3446,6 +3532,7 @@ NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
 	if (diskDoc)
     diskDoc->IncrementModCount(inNumMods);
 
+  NotifyDocumentStateListeners();
   return NS_OK;
 }
 
@@ -3470,6 +3557,7 @@ NS_IMETHODIMP nsEditor::ResetDocModCount()
 	if (diskDoc)
     diskDoc->ResetModCount();
 
+  NotifyDocumentStateListeners();
   return NS_OK;
 }
 
