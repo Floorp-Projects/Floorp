@@ -310,6 +310,7 @@ public:
 /*BEGIN nsIFrameSelection interfaces*/
   NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollView);
+  NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollView) {*aScrollView = mScrollView; return NS_OK;}
 
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
@@ -446,7 +447,6 @@ private:
   nsresult      FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame);
 
   nsTypedSelection *mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
-  nsIScrollableView *GetScrollView(){return mScrollView;}
 
   // Table selection support.
   // Interfaces that let us get info based on cellmap locations
@@ -6863,8 +6863,12 @@ nsTypedSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
 
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;//nothing to do
-  nsresult rv = NS_OK;
-  nsIScrollableView *scrollView = mFrameSelection->GetScrollView();
+  nsresult rv;
+  nsIScrollableView *scrollView;
+  rv = mFrameSelection->GetScrollableView(&scrollView);
+  if ( NS_FAILED(rv))
+    return rv;
+
   if (!scrollView)
   {
 
@@ -6898,7 +6902,8 @@ nsTypedSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
   {
     *aScrollableView = scrollView;
   }
-  return NS_OK;
+
+  return rv;
 }
 
 nsresult
