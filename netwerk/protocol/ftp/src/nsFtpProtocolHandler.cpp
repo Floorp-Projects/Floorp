@@ -167,33 +167,16 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     nsFTPChannel* channel = nsnull;
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+    if (serv)
+        serv->CreateSession("FTP",
+                            nsICache::STORE_ANYWHERE,
+                            nsICache::STREAM_BASED,
+                            getter_AddRefs(mCacheSession));
     
-    static PRBool checkedPref = PR_FALSE;
-    static PRBool useCache = PR_TRUE;
-
-     if (!checkedPref) {
-        // XXX should register a prefs changed callback for this
-        nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        prefs->GetBoolPref("browser.cache.enable", &useCache);
-
-        checkedPref = PR_TRUE;
-    }
-
-    if (useCache && !mCacheSession) {
-         nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = serv->CreateSession("FTP",
-                                 nsICache::STORE_ANYWHERE,
-                                 nsICache::STREAM_BASED,
-                                 getter_AddRefs(mCacheSession));
-        if (NS_FAILED(rv)) return rv;
-
+    if (mCacheSession)
         rv = mCacheSession->SetDoomEntriesIfExpired(PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     rv = channel->Init(url, mCacheSession);
     if (NS_FAILED(rv)) {

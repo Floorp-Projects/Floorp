@@ -71,7 +71,6 @@ private:
     nsCOMPtr<nsITransport>      mCPipe;
     nsCOMPtr<nsIOutputStream>   mOutStream;
     nsCOMPtr<nsIStreamListener> mListener;
-    PRPackedBool                mConnected;
     PRPackedBool                mWriteSuspened;
 };
 
