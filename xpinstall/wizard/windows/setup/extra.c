@@ -190,6 +190,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   dwTempSetupType       = dwWizardState;
   siComponents          = NULL;
   bCreateDestinationDir = FALSE;
+  bReboot               = FALSE;
 
   if((szSetupDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -2414,12 +2415,42 @@ void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, D
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
-    dwErr  = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+    dwErr = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
 
     if((*szReturnValue != '\0') && (dwErr == ERROR_SUCCESS))
       ExpandEnvironmentStrings(szBuf, szReturnValue, MAX_BUF);
     else
       *szReturnValue = '\0';
+
+    RegCloseKey(hkResult);
+  }
+}
+
+void SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR szData, DWORD dwSize)
+{
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
+  char    szBuf[MAX_BUF];
+
+  memset(szBuf, '\0', MAX_BUF);
+
+  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+  if(dwErr != ERROR_SUCCESS)
+    dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+
+  if(dwErr == ERROR_SUCCESS)
+  {
+/**
+    dwErr = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
+
+    if((*szReturnValue != '\0') && (dwErr == ERROR_SUCCESS))
+      ExpandEnvironmentStrings(szBuf, szReturnValue, MAX_BUF);
+    else
+      *szReturnValue = '\0';
+**/
+
+    dwErr = RegSetValueEx(hkResult, szName, 0, dwType, szData, dwSize);
 
     RegCloseKey(hkResult);
   }
@@ -2858,6 +2889,14 @@ HRESULT FileExists(LPSTR szFile)
   {
     return(rv);
   }
+}
+
+BOOL NeedReboot()
+{
+   if(diReboot.dwShowDialog == AUTO)
+     return(bReboot);
+   else
+     return(diReboot.dwShowDialog);
 }
 
 HRESULT InitializeSmartDownload()

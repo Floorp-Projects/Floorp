@@ -76,6 +76,7 @@ typedef int PRInt32;
 #define T_POST_SMARTUPDATE              6
 #define T_PRE_LAUNCHAPP                 7
 #define T_POST_LAUNCHAPP                8
+#define T_DEPEND_REBOOT                 9
 
 #define MAX_BUF                         4096
 #define ERROR_CODE_HIDE                 0

@@ -38,6 +38,7 @@ HRESULT           ParseConfigIni(LPSTR lpszCmdLine);
 HRESULT           DecriptString(LPSTR szOutputStr, LPSTR szInputStr);
 HRESULT           DecriptVariable(LPSTR szVariable, DWORD dwVariableSize);
 void              GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
+void              SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR szData, DWORD dwSize);
 HRESULT           InitSetupGeneral(void);
 HRESULT           InitDlgWelcome(diW *diDialog);
 HRESULT           InitDlgLicense(diL *diDialog);
@@ -109,6 +110,7 @@ ULONGLONG         GetDiskSpaceAvailable(LPSTR szPath);
 HRESULT           VerifyDiskSpace(void);
 void              SetCustomType(void);
 void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
+BOOL              NeedReboot(void);
 
 BOOL              bSDInit;
 

@@ -197,7 +197,9 @@ HRESULT SmartUpdateJars()
         }
 
         hrResult = pfnXpiInstall(szArchive, "", 0xFFFF);
-        if(hrResult != WIZ_OK)
+        if(hrResult == 999)
+          bReboot = TRUE;
+        else if(hrResult != WIZ_OK)
         {
           if(NS_LoadString(hSetupRscInst, IDS_ERROR_XPI_INSTALL, szEXpiInstall, MAX_BUF) == WIZ_OK)
           {
