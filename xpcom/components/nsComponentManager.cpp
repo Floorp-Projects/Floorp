@@ -76,9 +76,9 @@
 #include "prlog.h"
 PRLogModuleInfo* nsComponentManagerLog = NULL;
 
-//#if defined(DEBUG_)
+#if defined(DEBUG)
 #define SHOW_DENIED_ON_SHUTDOWN
-//#endif
+#endif
 
 #include "nsAutoLock.h"
 
