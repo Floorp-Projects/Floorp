@@ -153,6 +153,9 @@ private:
     nsIThread  *mThread;
     PRFileDesc *mThreadEvent;
 
+    // pref to control autodial code
+    PRBool      mAutodialEnabled;
+
     //-------------------------------------------------------------------------
     // event queue (any thread)
     //-------------------------------------------------------------------------
