@@ -371,6 +371,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     if ((action == nsEditor::kOpInsertText) || 
         (action == nsEditor::kOpInsertIMEText) ||
         (action == nsEditor::kOpDeleteSelection) ||
+        (action == nsEditor::kOpInsertBreak) || 
         (action == nsHTMLEditor::kOpHTMLPaste))
     {
       res = AdjustSelection(selection, aDirection);
