@@ -33,8 +33,8 @@ class nsIProtocolURLFactory;
 class nsIProtocol;
 
  /* XXX: This should be moved to ns/xpcom/src/nserror.h */
-#define NS_OK    0
-#define NS_FALSE 1
+// #define NS_OK         0
+#define NS_FALSE      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 20)
 
 
 /* cfb1a480-c78f-11d1-bea2-00805f8a66dc */
