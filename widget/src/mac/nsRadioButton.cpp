@@ -17,6 +17,9 @@
  */
 
 #include "nsRadioButton.h"
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsRadioButton);
 NS_IMPL_RELEASE(nsRadioButton);
