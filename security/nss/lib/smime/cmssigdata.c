@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.17 2003/02/18 23:26:39 wtc%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.18 2003/07/31 00:16:27 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -488,8 +488,11 @@ NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
 	goto loser;
     }
     for (i=0; i < certcount; i++) {
-	CERTCertificate *cert = CERT_DupCertificate(certArray[i]);
-	CERT_AddCertToListTail(certList,cert);
+	CERTCertificate *cert = certArray[i];
+	if (cert)
+	    cert = CERT_DupCertificate(cert);
+	if (cert)
+	    CERT_AddCertToListTail(certList,cert);
     }
 
     /* filter out the certs we don't want */
