@@ -96,6 +96,8 @@ nsWindow::nsWindow()
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
+  mClipChildren = PR_FALSE;
+  mClipSiblings = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -214,6 +216,8 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget - Not Implemented.\n"));
 
+  mClipChildren = aInitData->clipChildren;
+  mClipSiblings = aInitData->clipSiblings;
 /*
   if (nsnull != aInitData) {
     switch(aInitData->mBorderStyle)
@@ -477,6 +481,8 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     widget = mWidget;
   else
     widget = mClientWidget;
+
+  if (aDx==0 && aDy==0) return NS_OK;
 
   if( widget )
   {
@@ -1079,8 +1085,6 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
   return result;
 }
 
-//int lastx=-1;
-//int lasty=-1;
 
 void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 {
@@ -1094,7 +1098,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 //  if( !(pWin->mUpdateArea.width) || !( pWin->mUpdateArea.height ) || pWin->mCreateHold )
   if( pWin->mCreateHold || pWin->mHold )
   {
-    printf( "Not drawing: mCreateHold=%d  mHold=%d\n", pWin->mCreateHold, pWin->mHold );
+//    printf( "Not drawing: mCreateHold=%d  mHold=%d\n", pWin->mCreateHold, pWin->mHold );
     return;
   }
 
@@ -1112,6 +1116,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     PtWidgetOffset( pWidget, &offset );
     offset.x += area.pos.x;  
     offset.y += area.pos.y;  
+//if (offset.x!=9) return;
 
     // Convert damage rect to widget's coordinates...
     rect = damage->rect;
@@ -1125,15 +1130,16 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       return;
 
     // clip damage to widgets bounds...
-/*
     if( rect.ul.x < 0 ) rect.ul.x = 0;
     if( rect.ul.y < 0 ) rect.ul.y = 0;
     if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
     if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
-*/
+
+if (rect.ul.x>=rect.lr.x || rect.ul.y>=rect.lr.y) return;
+
     // Make damage relative to widgets parent
-    nsDmg.x = rect.ul.x + area.pos.x;
-    nsDmg.y = rect.ul.y + area.pos.y;
+//    nsDmg.x = rect.ul.x + area.pos.x;
+//    nsDmg.y = rect.ul.y + area.pos.y;
     nsDmg.x = rect.ul.x;
     nsDmg.y = rect.ul.y;
 
@@ -1171,6 +1177,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
       pev.renderingContext->Init( pWin->mContext, pWin );
 
+/*
       rects = PhTilesToRects( damage->next, &rect_count );
 
       for(i=0;i<rect_count;i++)
@@ -1180,9 +1187,12 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
         rects[i].lr.x -= offset.x;
         rects[i].lr.y -= offset.y;
       }
+*/
+      pWin->SetWindowClipping( damage, offset );
 
-      PgSetClipping( rect_count, rects );
+//      PgSetClipping( rect_count, rects );
 
+/*
       for(i=0;i<rect_count;i++)
       {
         rects[i].ul.x += offset.x;
@@ -1190,17 +1200,11 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
         rects[i].lr.x += offset.x;
         rects[i].lr.y += offset.y;
       }
-
+*/
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
 /*
 	nsDmg.y = 0;
  	nsDmg.x = 0;
-	nsDmg.width = 640;
-	nsDmg.height = 480;
-*/
-/*
-	nsDmg.x = 20;
-	nsDmg.y = 70;
 	nsDmg.width = 100;
 	nsDmg.height = 100;
 */
@@ -1214,7 +1218,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
 //  NS_RELEASE(pev.widget);
 //  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("*  widget released (not really)\n"));
-
   }
 }
 
@@ -1324,6 +1327,72 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
       }  
     }
   }
+
+  return res;
+}
+
+
+NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
+{
+  nsresult res = NS_ERROR_FAILURE;
+
+  PhTile_t   *tile, *last, *clip_tiles;
+  PtWidget_t *w;
+  PhArea_t   *area;
+  PtArg_t    arg;
+
+  clip_tiles = last = nsnull;
+
+  if( mClipChildren )
+  {
+    for( w=PtWidgetChildFront( mWidget ); w; w=PtWidgetBrotherBehind( w )) 
+    { 
+      PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+      PtGetResources( w, 1, &arg );
+      tile = PhGetTile();
+      if( tile )
+      {
+        tile->rect.ul.x = area->pos.x;
+        tile->rect.ul.y = area->pos.y;
+        tile->rect.lr.x = area->pos.x + area->size.w - 1;
+        tile->rect.lr.y = area->pos.y + area->size.h - 1;
+        tile->next = NULL;
+        if( !clip_tiles )
+          clip_tiles = tile;
+        if( last )
+          last->next = tile;
+        last = tile;
+      }
+    }
+  }
+
+  int rect_count;
+  PhRect_t *rects;
+  PhTile_t *dmg;
+  
+  if( damage->next )
+    dmg = PhCopyTiles( damage->next );
+  else
+    dmg = PhCopyTiles( damage );
+
+  PhDeTranslateTiles( dmg, &offset );
+
+  if( clip_tiles )
+  {
+
+    // We have chiluns... now clip'em
+    dmg = PhClipTilings( dmg, clip_tiles, nsnull );
+
+    PhFreeTiles( clip_tiles );
+
+    res = NS_OK;
+  }  
+
+  rects = PhTilesToRects( dmg, &rect_count );
+  PgSetClipping( rect_count, rects );
+  free( rects );
+  PhFreeTiles( dmg );
+  res = NS_OK;
 
   return res;
 }

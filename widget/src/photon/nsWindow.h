@@ -106,6 +106,7 @@ protected:
   PRBool      HandleEvent( PtCallbackInfo_t* aCbInfo );
   void        ScreenToWidget( PhPoint_t &pt );
   NS_METHOD   GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles );
+  NS_METHOD   SetWindowClipping( PhTile_t *damage, PhPoint_t &offset );
 
   PtWidget_t  *mClientWidget;
   PtWidget_t  *mRawDraw;
@@ -113,6 +114,8 @@ protected:
   PRBool      mVisible;
   PRBool      mDisplayed;
   PRBool      mIsDestroying;
+  PRBool      mClipChildren;
+  PRBool      mClipSiblings;
 
 
 //  GtkWindowType mBorderStyle;
