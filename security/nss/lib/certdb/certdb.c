@@ -37,7 +37,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.66 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: certdb.c,v 1.67 2004/05/05 01:15:39 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2311,7 +2311,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	}
     }
 
-    return (fcerts ? SECSuccess : SECFailure);
+    return ((fcerts || !ncerts) ? SECSuccess : SECFailure);
 }
 
 /*
