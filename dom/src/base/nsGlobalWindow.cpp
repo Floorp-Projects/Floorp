@@ -2952,10 +2952,10 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
                                              PRBool aDialog,
                                              nsIDOMWindowInternal ** aReturn)
 {
-  const PRUnichar *name = nsnull,
-                  *url = nsnull,
-                  *features = nsnull;
-  nsresult         rv;
+  char     *name = nsnull,
+           *url = nsnull,
+           *features = nsnull;
+  nsresult  rv;
   nsCOMPtr<nsIDOMWindow> domReturn;
 
   *aReturn = nsnull;
@@ -2963,18 +2963,46 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   if (argc > 0) {
     JSString *str = ::JS_ValueToString(cx, argv[0]);
-    if (str)
-      url = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(str));
+    if (str) {
+      const PRUnichar *uurl = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(str));
+
+      // fix bug 35076
+      // if the URL contains non ASCII, escape from the first non ASCII char
+      nsAutoString unescapedURL(uurl);
+      nsAutoString escapedURL;
+
+      if (unescapedURL.IsASCII())
+        escapedURL = unescapedURL;
+      else {
+        // const PRUnichar *pt = unescapedURL.GetUnicode();
+        PRUint32 len = unescapedURL.Length();
+        PRUint32 nonAsciiPos;
+        for (nonAsciiPos = 0; nonAsciiPos < len; nonAsciiPos++)
+          if ((0xFF80 & *uurl++) != 0)
+            break;
+
+        nsAutoString right, escapedRight;
+        unescapedURL.Left(escapedURL, nonAsciiPos);
+        unescapedURL.Right(right, len - nonAsciiPos);
+        if (NS_SUCCEEDED(Escape(right, escapedRight)))
+          escapedURL.Append(escapedRight);
+        else
+          escapedURL = unescapedURL;
+      }
+
+      if (!escapedURL.IsEmpty())
+        url = ToNewCString(escapedURL);
+    }
   }
   if (argc > 1) {
     JSString *str = ::JS_ValueToString(cx, argv[1]);
     if (str)
-      name = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(str));
+      name = ::JS_GetStringBytes(str);
   }
   if (argc > 2) {
     JSString *str = ::JS_ValueToString(cx, argv[2]);
     if (str)
-      features = NS_REINTERPRET_CAST(const PRUnichar *, ::JS_GetStringChars(str));
+      features = ::JS_GetStringBytes(str);
   }
 
   nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
@@ -2986,6 +3014,8 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
     if (domReturn)
       CallQueryInterface(domReturn, aReturn);
   }
+
+  nsMemory::Free(url);
   return rv;
 
 }
