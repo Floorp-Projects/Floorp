@@ -50,7 +50,7 @@ $cwdPackager   = GetCwd("packager", $DEPTH, $cwdBuilder);
 $verPartial    = "5.0.0.";
 $ver           = $verPartial . GetVersion($DEPTH);
 
-if(-e "$cwdDist\\stage")
+if(-d "$cwdDist\\stage")
 {
   system("perl $cwdPackager\\windows\\rdir.pl $cwdDist\\stage");
 }
@@ -59,9 +59,9 @@ mkdir("$cwdDist\\stage", 775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\packages-win -o dos -v");
 
 chdir("$cwdPackager\\windows");
-if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install") != 0)
+if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install"))
 {
-  print "Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install\n";
+  print "\n Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install\n";
   exit(1);
 }
 
@@ -74,7 +74,7 @@ chdir($cwdBuilder);
 # Mozilla-win32-install.exe (a self extracting file) will use the .xpi
 # files from its current directory as well, but it is not a requirement
 # that they exist because it already contains the .xpi files within itself.
-if(system("copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install") != 0)
+if(system("copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install"))
 {
   print "Error: copy $cwdDistWin\\install\\xpi\\*.* $cwdDistWin\\install\n";
   exit(1);
