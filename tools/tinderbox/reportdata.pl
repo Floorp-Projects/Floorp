@@ -10,7 +10,7 @@ require 5.003;
 
 use strict;
 
-$::Version = '$Revision: 1.2 $ ';
+$::Version = '$Revision: 1.3 $ ';
 
 package ReportData;
 
@@ -52,30 +52,33 @@ sub send_results_to_server {
 
 # Fake a tinderbox message.
 sub send_tbox_packet {
-  #my ($server, $status, $log, $build_name) = @_;
+  my ($server_email, $tree, $status,
+      $log, $machine, $build_name) = @_;
 
   my $foo;
 
   my $now = time();
 
   $foo .= <<END_PRINT;
-tinderbox: tree: Talkback
+tinderbox: tree: $tree
 tinderbox: builddate: $now
-tinderbox: status: busted
-tinderbox: build: Linux btek Depend 
+tinderbox: status: $status
+tinderbox: build: $build_name
 tinderbox: errorparser: unix
 tinderbox: buildfamily: unix
 tinderbox: END
 END_PRINT
-  
+
+$foo .= $log;
+
   print "foo = \n$foo\n";
 
-  open MSG, ">msg.txt";
+  open MSG, ">msg.$machine";
   print MSG $foo;
   close MSG;
 
-  system "/bin/mail  tinderbox-daemon\@warp.mcom.com " . "< msg.txt";
+  system "/bin/mail  $server_email " . "< msg.$machine";
 
 
-  unlink "msg.txt";
+  unlink "msg.$machine";
 }

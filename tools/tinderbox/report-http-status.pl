@@ -12,7 +12,7 @@ my $script_dir = "/builds/tinderbox/mozilla/tools/tinderbox";
 
 
 # Send data to graph server via HTTP.
-require "$script_dir/reportdata.pl";
+require "$script_dir/reportdata2.pl";
 
 use Sys::Hostname;  # for ::hostname()
 
@@ -69,12 +69,15 @@ sub is_http_alive() {
 # main
 {
   my $alive_time = 0;  # Hours http has been up.
-
+  my $alive = 0;
   my $timefile = "$script_dir/http_alive_timefile.$ARGV[0]";
 
+
   PrintUsage() if $#ARGV == -1;
+
+  $alive = is_http_alive();
   
-  if (is_http_alive()) {
+  if ($alive) {
     print "$ARGV[0] is alive\n";
 
     #
@@ -131,6 +134,22 @@ sub is_http_alive() {
                                      "$alive_time",
                                      ::hostname(),
                                      "http_alive", 
-                                     "$ARGV[0]")
+                                     "$ARGV[0]");
 
+  my $status = "";
+  if($alive) {
+    $status = "success";
+  } else {
+    $status = "busted";
+  }
+
+  # Hard-coded for now.
+  my $graph_url = "http://tegu.mozilla.org/graph/query.cgi?tbox=$ARGV[0]&testname=http_alive&autoscale=&size=&days=&units=hours&ltype=&points=&avg=&showpoint=";
+
+  ReportData::send_tbox_packet("tinderbox-daemon\@warp.mcom.com",
+                               "Talkback",
+                               $status,
+                               "TinderboxPrint:<a title=\"Hours httpd:80 has been alive.\" href=\"$graph_url\">Ta</a>",
+                               "$ARGV[0]",
+                               "$ARGV[0] HTTP Alive Test");
 }
