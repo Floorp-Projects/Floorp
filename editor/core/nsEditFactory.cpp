@@ -85,8 +85,10 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
     return NS_NOINTERFACE;   // XXX right error?
 
 
+#if THIS_DOESNT_COMPILE
   if (mCID.Equals(kEditorCID))
     obj = (nsISupports *)new nsEditor();
+#endif
   //more class ids to support. here
 
 
