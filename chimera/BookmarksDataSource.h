@@ -111,6 +111,7 @@ class BookmarksService;
 
 - (nsIContent*)contentNode;
 - (void)setContentNode: (nsIContent*)aContentNode;
+- (NSString*)url;
 - (NSNumber*)contentID;
 - (id)copyWithZone:(NSZone *)aZone;
 

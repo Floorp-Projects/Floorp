@@ -34,7 +34,10 @@
 //////////////////////////
 
 @interface CHExtendedTabView (Private)
+
 - (void)showOrHideTabsAsAppropriate;
+- (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url;
+
 @end
 
 @implementation CHExtendedTabView
@@ -54,7 +57,8 @@
 - (void)awakeFromNib
 {
     [self showOrHideTabsAsAppropriate];
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:
+        @"MozURLType", @"MozBookmarkType", NSStringPboardType, NSFilenamesPboardType, nil]];
 }
 
 /******************************************/
@@ -127,6 +131,17 @@
 //    }
 }
 
+
+- (void)handleDropOnTab:(NSTabViewItem*)overTabViewItem overContent:(BOOL)overContentArea withURL:(NSString*)url
+{
+  if (overTabViewItem) {
+    [[[overTabViewItem view] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
+  } else if (overContentArea) {
+    [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url flags: NSLoadFlagsNone];
+  } else
+    [self addTabForURL:url];
+}
+
 // NSDraggingDestination ///////////
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
@@ -146,54 +161,62 @@
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  NSArray* contentIds;
-  NSTabViewItem* overTabViewItem = nil;
-  BOOL overContentArea = NO;
-
   // determine if we are over a tab or the content area
-  NSPoint localPoint = [self convertPoint: [sender draggingLocation] fromView: nil];
-  overTabViewItem = [self tabViewItemAtPoint: localPoint];
-  overContentArea = NSPointInRect(localPoint, [self contentRect]);
+  NSPoint 				localPoint 			= [self convertPoint: [sender draggingLocation] fromView: nil];
+  NSTabViewItem*	overTabViewItem = [self tabViewItemAtPoint: localPoint];
+  BOOL						overContentArea = NSPointInRect(localPoint, [self contentRect]);
   
-  // check for recognized drag types
-  contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-  if (contentIds) {
-    // drag type is chimera bookmarks
-    for (unsigned int i = 0; i < [contentIds count]; ++i) {
-      BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
-      nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
-
-      nsCOMPtr<nsIAtom> tagName;
-      [item contentNode]->GetTag(*getter_AddRefs(tagName));
-      
-      nsAutoString href;
-      bookmarkElt->GetAttribute(NS_LITERAL_STRING("href"), href);
-      NSString* url = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
-
-      nsAutoString group;
-      bookmarkElt->GetAttribute(NS_LITERAL_STRING("group"), group);
-      if (!group.IsEmpty()) {
-        BookmarksService::OpenBookmarkGroup(self, bookmarkElt);
-      } else {
-        if (overTabViewItem) {
-          [[[overTabViewItem view] getBrowserView] loadURI: url
-                                                   flags: NSLoadFlagsNone];
-        } else if (overContentArea) {
-          [[[[self selectedTabViewItem] view] getBrowserView] loadURI: url
-                                                              flags: NSLoadFlagsNone];
-        } else
-          [self addTabForURL:url];
-      }
+  NSArray*				pasteBoardTypes = [[sender draggingPasteboard] types];
+  
+  if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
+  {
+    NSArray* contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+    if (contentIds) {
+      // drag type is chimera bookmarks
+      for (unsigned int i = 0; i < [contentIds count]; ++i) {
+        BookmarkItem* item = [BookmarksService::gDictionary objectForKey: [contentIds objectAtIndex:i]];
+        nsCOMPtr<nsIDOMElement> bookmarkElt = do_QueryInterface([item contentNode]);
+  
+        nsCOMPtr<nsIAtom> tagName;
+        [item contentNode]->GetTag(*getter_AddRefs(tagName));
+        
+        nsAutoString href;
+        bookmarkElt->GetAttribute(NS_LITERAL_STRING("href"), href);
+        NSString* url = [NSString stringWithCharacters: href.get() length: nsCRT::strlen(href.get())];
+  
+        nsAutoString group;
+        bookmarkElt->GetAttribute(NS_LITERAL_STRING("group"), group);
+        if (!group.IsEmpty()) {
+          BookmarksService::OpenBookmarkGroup(self, bookmarkElt);
+        } else {
+          [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:url];
+        }
+      }	// for each item
     }
-  } else {
-    // add bookmark for chimera url type
+  }
+  else if ([pasteBoardTypes containsObject: @"MozURLType"])
+  {
+    // drag type is MozURLType
     NSDictionary* data = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
-
-    if (overTabViewItem || overContentArea) {
-      [[[overTabViewItem view] getBrowserView] loadURI:[data objectForKey:@"url"]
-                                                flags: NSLoadFlagsNone];
-    } else
-      [self addTabForURL:[data objectForKey:@"url"]];
+    if (data) {
+      NSString*	urlString = [data objectForKey:@"url"];
+      [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
+    }
+  }
+  else if ([pasteBoardTypes containsObject: NSStringPboardType])
+  {
+    NSString*	urlString = [[sender draggingPasteboard] propertyListForType: NSStringPboardType];
+    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
+  }
+  else if ([pasteBoardTypes containsObject: NSURLPboardType])
+  {
+    NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
+    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[urlData absoluteString]];
+  }
+  else if ([pasteBoardTypes containsObject: NSFilenamesPboardType])
+  {
+    NSString*	urlString = [[sender draggingPasteboard] propertyListForType: NSFilenamesPboardType];
+    [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   
   return YES;    

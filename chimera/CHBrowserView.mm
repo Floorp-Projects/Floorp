@@ -981,8 +981,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
         baseWin->Create();
         
   // register the view as a drop site for text, files, and urls. 
-        [self registerForDraggedTypes:
-                [NSArray arrayWithObjects:NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
+        [self registerForDraggedTypes: [NSArray arrayWithObjects:
+                  @"MozURLType", NSStringPboardType, NSURLPboardType, NSFilenamesPboardType, nil]];
     }
   return self;
 }
@@ -1595,9 +1595,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     nsCOMPtr<nsIEventSink> sink;
     [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
             inWindow:[sender draggingDestinationWindow]];
-    NS_ASSERTION(sink, "Couldn't get event sink for view");
-
-    mDragHelper->Enter ( [sender draggingSequenceNumber], sink );
+    if (sink)
+      mDragHelper->Enter ( [sender draggingSequenceNumber], sink );
   }
   
   return NSDragOperationCopy;
@@ -1609,9 +1608,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     nsCOMPtr<nsIEventSink> sink;
     [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
             inWindow:[sender draggingDestinationWindow]];
-    NS_ASSERTION(sink, "Couldn't get event sink for view");
-
-    mDragHelper->Leave ( [sender draggingSequenceNumber], sink );
+    if (sink)
+      mDragHelper->Leave( [sender draggingSequenceNumber], sink );
     NS_RELEASE(mDragHelper);     
   }
 }
@@ -1623,9 +1621,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     nsCOMPtr<nsIEventSink> sink;
     [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
             inWindow:[sender draggingDestinationWindow]];
-    NS_ASSERTION(sink, "Couldn't get event sink for view");
-    
-    mDragHelper->Tracking ( [sender draggingSequenceNumber], sink, &dropAllowed );
+    if (sink)
+      mDragHelper->Tracking([sender draggingSequenceNumber], sink, &dropAllowed);
   }
   
   return dropAllowed ? NSDragOperationCopy : NSDragOperationNone;
@@ -1639,16 +1636,16 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   PRBool dragAccepted = PR_FALSE;
+    
   if ( mDragHelper ) {
     nsCOMPtr<nsIEventSink> sink;
     [self findEventSink:getter_AddRefs(sink) forPoint:[sender draggingLocation]
             inWindow:[sender draggingDestinationWindow]];
-    NS_ASSERTION(sink, "Couldn't get event sink for view");
-
-    mDragHelper->Drop ( [sender draggingSequenceNumber], sink, &dragAccepted );
+    if (sink)
+      mDragHelper->Drop([sender draggingSequenceNumber], sink, &dragAccepted);
   }
   
-  return dragAccepted;
+  return dragAccepted ? YES : NO;
 }
 
 
@@ -1675,4 +1672,3 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 }
 
 @end
-
