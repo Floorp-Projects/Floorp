@@ -86,7 +86,7 @@ main(int argc, char **argv)
 {
   gtk_init(&argc, &argv);
 
-  TestGtkBrowser *browser = new_gtk_browser(gtk_moz_embed_flag_defaultChrome);
+  TestGtkBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
 
   // set our minimum size
   gtk_widget_set_usize(browser->topLevelWindow, 400, 400);
@@ -288,7 +288,7 @@ void
 reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 {
   g_print("reload_clicked_cb\n");
-  gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed), gtk_moz_embed_flag_reloadNormal);
+  gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed), GTK_MOZ_EMBED_FLAG_RELOADNORMAL);
 }
 
 void 
@@ -400,26 +400,26 @@ void
 net_status_change_cb (GtkMozEmbed *embed, gint flags, TestGtkBrowser *browser)
 {
   //  g_print("net_status_change_cb %d\n", flags);
-  if (flags & gtk_moz_embed_flag_net_dns)
+  if (flags & GTK_MOZ_EMBED_FLAG_NET_DNS)
     browser->statusMessage = "Looking up host...";
-  else if (flags & gtk_moz_embed_flag_net_connecting)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_CONNECTING)
     browser->statusMessage = "Connecting to site...";
-  else if (flags & gtk_moz_embed_flag_net_redirecting)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_REDIRECTING)
     browser->statusMessage = "Connecting to site...";
-  else if (flags & gtk_moz_embed_flag_net_transferring)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_TRANSFERRING)
     browser->statusMessage = "Transferring data from site...";
-  else if (flags & gtk_moz_embed_flag_net_failedDNS)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDDNS)
     browser->statusMessage = "Site not found.";
-  else if (flags & gtk_moz_embed_flag_net_failedConnect)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDCONNECT)
     browser->statusMessage = "Failed to connect to site.";
-  else if (flags & gtk_moz_embed_flag_net_failedTransfer)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_FAILEDTRANSFER)
     browser->statusMessage =  "Failed to transfer any data from site.";
-  else if (flags & gtk_moz_embed_flag_net_userCancelled)
+  else if (flags & GTK_MOZ_EMBED_FLAG_NET_USERCANCELLED)
     browser->statusMessage = "User cancelled connecting to site.";
 
-  if (flags & gtk_moz_embed_flag_win_start)
+  if (flags & GTK_MOZ_EMBED_FLAG_WIN_START)
     browser->statusMessage = "Loading site...";
-  else if (flags & gtk_moz_embed_flag_win_stop)
+  else if (flags & GTK_MOZ_EMBED_FLAG_WIN_STOP)
     browser->statusMessage = "Done.";
 
   update_status_bar_text(browser);
