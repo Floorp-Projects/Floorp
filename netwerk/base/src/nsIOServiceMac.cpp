@@ -83,10 +83,14 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, char **aURL)
     NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
 
     // Escape the path with the directory mask
-    if (NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
-        escPath.Insert(prefix, 0);
-    else
-        escPath.Assign(prefix + ePath);
+    if (!NS_EscapeURLPart(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+        escPath.Assign(ePath);
+
+    // colons [originally slashes, before SwapSlashColon() usage above]
+    // need encoding; use %2F which is a forward slash
+    escPath.ReplaceSubstring(":", "%2F");
+
+    escPath.Insert(prefix, 0);
 
     // XXX this should be unnecessary
     if (escPath[escPath.Length() - 1] != '/') {
@@ -140,6 +144,12 @@ nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char *aURL)
     if (directory) {
         if (!NS_EscapeURLPart(directory.get(), directory.Length(), esc_Directory, path))
             path += directory;
+
+        // "%2F"s need to become slashes, while all other slashes need to
+        // become colons. If we start out by changing "%2F"s to colons, we
+        // can reply on SwapSlashColon() to do what we need
+        path.ReplaceSubstring("%2F", ":");
+
         SwapSlashColon((char *) path.get());
     }
     if (fileBaseName) {
