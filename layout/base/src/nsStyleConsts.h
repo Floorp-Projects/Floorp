@@ -42,13 +42,13 @@
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
 
-// See nsStyleBorder
+// See nsStyleSpacing mBorder enum values
 #define NS_STYLE_BORDER_WIDTH_THIN              0
 #define NS_STYLE_BORDER_WIDTH_MEDIUM            1
 #define NS_STYLE_BORDER_WIDTH_THICK             2
-#define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
+// XXX chopping block #define NS_STYLE_BORDER_WIDTH_LENGTH_VALUE      3
 
-// See nsStyleBorder
+// See nsStyleSpacing mBorderStyle
 #define NS_STYLE_BORDER_STYLE_NONE              0
 #define NS_STYLE_BORDER_STYLE_GROOVE            1
 #define NS_STYLE_BORDER_STYLE_RIDGE             2
@@ -125,8 +125,14 @@
 #define NS_STYLE_POSITION_ABSOLUTE              2
 
 // See nsStylePosition.mClip
-#define NS_STYLE_CLIP_AUTO                      0
-#define NS_STYLE_CLIP_RECT                      1
+#define NS_STYLE_CLIP_AUTO                      0x00
+#define NS_STYLE_CLIP_INHERIT                   0x01
+#define NS_STYLE_CLIP_RECT                      0x02
+#define NS_STYLE_CLIP_TYPE_MASK                 0x0F
+#define NS_STYLE_CLIP_LEFT_AUTO                 0x10
+#define NS_STYLE_CLIP_TOP_AUTO                  0x20
+#define NS_STYLE_CLIP_RIGHT_AUTO                0x40
+#define NS_STYLE_CLIP_BOTTOM_AUTO               0x80
 
 // See nsStylePosition.mOverflow
 #define NS_STYLE_OVERFLOW_VISIBLE               0
@@ -205,5 +211,24 @@
 #define NS_STYLE_WHITESPACE_NORMAL              0
 #define NS_STYLE_WHITESPACE_PRE                 1
 #define NS_STYLE_WHITESPACE_NOWRAP              2
+
+// See nsStyleTable (here for HTML 4.0 for now, should probably change to side flags)
+#define NS_STYLE_TABLE_FRAME_NONE               0
+#define NS_STYLE_TABLE_FRAME_ABOVE              1
+#define NS_STYLE_TABLE_FRAME_BELOW              2
+#define NS_STYLE_TABLE_FRAME_HSIDES             3
+#define NS_STYLE_TABLE_FRAME_VSIDES             4
+#define NS_STYLE_TABLE_FRAME_LEFT               5
+#define NS_STYLE_TABLE_FRAME_RIGHT              6
+#define NS_STYLE_TABLE_FRAME_BOX                7
+#define NS_STYLE_TABLE_FRAME_BORDER             8
+
+// See nsStyleTable
+#define NS_STYLE_TABLE_RULES_NONE               0
+#define NS_STYLE_TABLE_RULES_GROUPS             1
+#define NS_STYLE_TABLE_RULES_ROWS               2
+#define NS_STYLE_TABLE_RULES_COLS               3
+#define NS_STYLE_TABLE_RULES_ALL                4
+
 
 #endif /* nsStyleConsts_h___ */
