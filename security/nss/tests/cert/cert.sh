@@ -433,11 +433,11 @@ cert_extended_ssl()
   certu -C -c "chain-2-serverCA" -m "$CERTSERIAL" -v 60 -d "${SERVER_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
-  CU_ACTION="Import $CERTNAME's Cert (ext)"
+  CU_ACTION="Import $CERTNAME's Cert  -t u,u,u (ext)"
   certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
 
-  CU_ACTION="Import Client Root CA for $CERTNAME (ext.)"
+  CU_ACTION="Import Client Root CA -t T,, for $CERTNAME (ext.)"
   certu -A -n "clientCA" -t "T,," -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${CLIENT_CADIR}/clientCA.ca.cert" 2>&1
   echo "Importing all the server's own CA chain into the servers DB"
@@ -449,7 +449,7 @@ cert_extended_ssl()
       else
           T="-t u,u,u"
       fi
-      CU_ACTION="Import $N  CA $T for $CERTNAME (ext.) "
+      CU_ACTION="Import $N CA $T for $CERTNAME (ext.) "
       certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${CA}" 2>&1
   done
@@ -469,10 +469,10 @@ cert_extended_ssl()
   certu -C -c "chain-2-clientCA" -m "$CERTSERIAL" -v 60 -d "${CLIENT_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
-  CU_ACTION="Import $CERTNAME's Cert (ext)"
+  CU_ACTION="Import $CERTNAME's Cert -t u,u,u (ext)"
   certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
-  CU_ACTION="Import Server Root CA for $CERTNAME (ext.)"
+  CU_ACTION="Import Server Root CA -t C,C,C for $CERTNAME (ext.)"
   certu -A -n "serverCA" -t "C,C,C" -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${SERVER_CADIR}/serverCA.ca.cert" 2>&1
   echo "Importing all the client's own CA chain into the servers DB"
@@ -484,7 +484,7 @@ cert_extended_ssl()
       else
           T="-t u,u,u"
       fi
-      CU_ACTION="Import $N  CA for $CERTNAME (ext.)"
+      CU_ACTION="Import $N CA $T for $CERTNAME (ext.)"
       certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${CA}" 2>&1
   done
