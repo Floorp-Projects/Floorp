@@ -1020,7 +1020,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         nsCOMPtr<nsISupports> owner;
         GetCurrentDocumentOwner(getter_AddRefs(owner));
         
-        InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, loadLink); 
+        InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, nsIDocShellLoadInfo::loadLink); 
       }
       break;
     case eLinkVerb_Embed:

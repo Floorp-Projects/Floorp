@@ -46,9 +46,8 @@ protected:
 
 protected:
    nsCOMPtr<nsIURI>                 mReferrer;
-   PRBool                           mReplaceSessionHistorySlot;
-   PRBool                           mRefresh;
    nsCOMPtr<nsISupports>            mOwner;
+   nsDocShellInfoLoadType           mLoadType;
    nsCOMPtr<nsISHEntry>             mSHEntry;
 };
 

@@ -68,6 +68,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgressListener.h"
 #include "nsISHContainer.h"
+#include "nsIDocShellLoadInfo.h"
 
 //*****************************************************************************
 //***    nsRefreshTimer
@@ -173,28 +174,16 @@ protected:
       nsIStreamListener** aContentHandler, nsIContentViewer** aViewer);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
-   // Site Loading
-   typedef enum
-   {
-      loadNormal,          // Normal Load
-      loadNormalReplace,   // Normal Load but replaces current history slot
-      loadHistory,         // Load from history
-      loadReloadNormal,    // Reload
-      loadReloadBypassCache,
-      loadReloadBypassProxy,
-      loadReloadBypassProxyAndCache,
-      loadLink,
-      loadRefresh
-   } loadType;
 #ifdef SH_IN_FRAMES
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal, nsISHEntry * aSHEntry = nsnull);
+      nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal, nsISHEntry * aSHEntry = nsnull);
 #else
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal);
+      nsIInputStream* aPostData=nsnull, nsDocShellInfoLoadType aLoadType=nsIDocShellLoadInfo::loadNormal);
 #endif
+
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
@@ -206,7 +195,9 @@ protected:
       nsIInputStream* aPostData);
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
-   NS_IMETHOD OnNewURI(nsIURI *aURI, nsIChannel* aChannel, loadType aLoadType);
+
+   NS_IMETHOD OnNewURI(nsIURI *aURI, nsIChannel* aChannel, nsDocShellInfoLoadType aLoadType);
+
    virtual void SetCurrentURI(nsIURI* aURI);
    virtual void SetReferrerURI(nsIURI* aURI);
 
@@ -263,7 +254,7 @@ protected:
    PRInt32                    mItemType;
    nsPoint                    mCurrentScrollbarPref; // this document only
    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
-   loadType                   mLoadType;
+   nsDocShellInfoLoadType     mLoadType;
    PRBool                     mInitialPageLoad;
    PRBool                     mAllowPlugins;
    PRInt32                    mViewMode;
