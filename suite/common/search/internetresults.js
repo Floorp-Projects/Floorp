@@ -1,5 +1,29 @@
 
-function doClick(node)
+function doEngineClick(node)
+{
+	dump("doEngineClick entered.\n");
+
+	var resultsTree = document.getElementById("internetresultstree");
+	if (!resultsTree)	return;
+	var contentArea = document.getElementById("content");
+	if (!contentArea)	return;
+
+	var engineURI = node.getAttribute("id");
+	if (engineURI == "allEngines")
+	{
+		resultsTree.removeAttribute("style");
+		contentArea.setAttribute("style", "height: 100; width: 100%;");
+		dump("Show all engine results.\n");
+	}
+	else
+	{
+		dump("Show HTML for '" + engineURI + "'\n");
+		resultsTree.setAttribute("style", "display: none;");
+		contentArea.setAttribute("style", "height: 100%; width: 100%;");
+	}
+}
+
+function doResultClick(node)
 {
 	var theID = node.getAttribute("id");
 	if (!theID)	return(false);

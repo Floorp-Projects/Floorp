@@ -8,12 +8,12 @@
 [
 <!ENTITY results.title.label         "Results:">
 
-<!ENTITY resultsites.title.label     "Search Sites:">
-
 <!ENTITY name.column.label           "Name">
 <!ENTITY relevance.column.label      "Relevance">
 <!ENTITY site.column.label           "Internet Site">
 <!ENTITY engine.column.label         "Search Engine">
+
+<!ENTITY allresults.title.label      "All Search Engines">
 ]>
 
 
@@ -25,45 +25,12 @@
 	<html:script src="internetresults.js" />
 	<html:script src="shared.js" />
 
-	<box align="horizontal" style="width: 100%;" >
-		<titledbutton style="width: 100%;" id="internetresultssummary" value="&results.title.label;" />
-	</box>
-
-	<box align="horizontal" style="width: 100%;" >
-	<tree id="NC:SearchResultsSitesRoot" style="height: 64;" flex="100%" datasources="rdf:internetsearch">
+	<box id="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" style="height: 64;" align="horizontal">
 		<template>
-			<treechildren>
-				<treeitem>
-					<treerow>
-						<treecell uri="...">
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
-						</treecell>
-					</treerow>
-				</treeitem>
-			</treechildren>
+			<titledbutton uri="..." onclick="doEngineClick(this)" class="engine" align="left" crops="right" value="rdf:http://home.netscape.com/NC-rdf#Name" loading="rdf:http://home.netscape.com/NC-rdf#loading" />
 		</template>
-
-		<treecol id="SiteNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#SiteNameColumn"/>
-		<treehead>
-			<treerow>
-				<treecell resource="http://home.netscape.com/NC-rdf#SiteNameColumn" onclick="return doSort('SiteNameColumn');">
-					<observes element="SiteNameColumn" attribute="sortActive"/>
-					<observes element="SiteNameColumn" attribute="sortDirection"/>
-					&resultsites.title.label;
-				</treecell>
-			</treerow>
-		</treehead>
-
-		<treechildren>
-			<treeitem>
-				<treerow>
-					<treecell>
-						<titledbutton value="All Search Results" align="left" />
-					</treecell>
-				</treerow>
-			</treeitem>
-		</treechildren>
-	</tree>
+		<titledbutton id="internetresultssummary" align="left" value="&results.title.label;" style="list-style-image: none;" />
+		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="engine" value="&allresults.title.label;" align="left" />
 	</box>
 
 	<tree id="internetresultstree" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
@@ -87,9 +54,9 @@
 
 			<rule>
                                 <treechildren>
-				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
+				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
 					<treerow>
-						<treecell onclick="doClick(this.parentNode.parentNode)">
+						<treecell onclick="doResultClick(this.parentNode.parentNode)" >
 							<treeindentation />
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
@@ -135,5 +102,5 @@
 		</treehead>
 	</tree>
 
-	<html:iframe id="content" type="content-primary" style="height: 30%; width: 100%;" src="resource:/res/samples/default.htm" />
+	<html:iframe id="content" type="content-primary" style="height: 100; width: 100%;" flex="100%" src="resource:/res/samples/default.htm" />
 </window>

@@ -21,19 +21,17 @@
 
 	<html:script src="search.js" />
 
-	<box id="sidebox" align="vertical" flex="100%" style="height: 100%; width: 100%;" >
-		<box class="sidebartitle" align="horizontal" style="width: 100%;" >
-			<titledbutton value="&find.title.label;" onclick="return loadPage('find');" />
-			<spring align="horizontal" flex="5%"/>
-			<titledbutton value="&internet.title.label;" onclick="return loadPage('internet');" />
-			<spring align="horizontal" flex="5%"/>
-			<titledbutton value="&mailnews.title.label;" onclick="return loadPage('mail');" />
-			<spring align="horizontal" flex="5%"/>
-			<titledbutton value="&addressbook.title.label;" onclick="return loadPage('addressbook');" />
-			<spring align="horizontal" flex="100%" />
-		</box>
-		
-		<html:iframe style="height: 40%; width: 100%;" flex="100%" id="content" src="about:blank" />
-		<html:iframe style="height: 60%; width: 100%;" flex="100%" id="results" src="about:blank" />
-	</box>
+	<tabcontrol align="vertical"> 
+		<tabbox align="horizontal"> 
+			<tab onclick="loadPage('find', null);">&find.title.label;</tab> 
+			<tab onclick="loadPage('internet', null);">&internet.title.label;</tab> 
+			<tab onclick="loadPage('mail', null);">&mailnews.title.label;</tab> 
+			<tab onclick="loadPage('addressbook', null);">&addressbook.title.label;</tab> 
+		</tabbox> 
+                    
+		<tabpanel />
+	</tabcontrol> 
+
+	<html:iframe src="about:blank" height="200" width="100%" style="height: 200; width: 100%;" id="content" />
+	<html:iframe src="about:blank" height="100%" width="100%" style="height: 100%; width: 100%;" flex="100%" id="results" />
 </window>
