@@ -428,6 +428,7 @@ NS_IMETHODIMP
 nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 aCount, PRUint32 *aNumRead)
 {
     PRUint32 count, availableInSegment, remainingCapacity, bytesConsumed;
+    nsresult rv;
 
     remainingCapacity = aCount;
     while (remainingCapacity) {
@@ -443,7 +444,9 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
         }
 	
         count = PR_MIN(availableInSegment, remainingCapacity);
-        writer(this, closure, mReadCursor, mLogicalCursor, count, &bytesConsumed);
+        rv = writer(this, closure, mReadCursor, mLogicalCursor, count, &bytesConsumed);
+        if (NS_FAILED(rv) || (bytesConsumed == 0))
+          break;
         remainingCapacity -= bytesConsumed;
         mReadCursor += bytesConsumed;
         mLogicalCursor += bytesConsumed;
