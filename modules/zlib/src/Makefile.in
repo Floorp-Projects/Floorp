@@ -35,7 +35,6 @@ ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
 DEFFILE	= $(srcdir)/zlib.def
 DEFINES	+= -DZLIB_DLL=1
-LIBRARY_NAME = zlib
 endif
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)

@@ -45,7 +45,6 @@ js3250.dll
 ; XPCOM:
 ; 
 xpcom.dll
-mozreg.dll
 components\xpcom_base.xpt
 components\xpcom_components.xpt
 components\xpcom_ds.xpt
@@ -55,6 +54,8 @@ components\xpcom_io.xpt
 components\xpcom_nativeapp.xpt
 components\xpcom_thread.xpt
 components\xpcom_xpti.xpt
+components\mozreg.dll
+components\mozreg.xpt
 
 ; xpconnect
 components\xpc3250.dll
@@ -81,7 +82,7 @@ components\content_base.xpt
 ; 
 ; Imaging:
 ; 
-zlib.dll
+mozz.dll
 components\imglib2.dll
 
 ; 
