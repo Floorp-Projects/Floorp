@@ -303,7 +303,6 @@ PresShell::Init(nsIDocument* aDocument,
 NS_METHOD
 PresShell::EnterReflowLock()
 {
-  printf("enter reflow lock\n");
   ++mReflowLockCount;
   return NS_OK;
 }
@@ -311,7 +310,6 @@ PresShell::EnterReflowLock()
 NS_METHOD
 PresShell::ExitReflowLock()
 {
-  printf("exit reflow lock\n");
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
   if (newReflowLockCount == 0) {
     ProcessReflowCommands();
