@@ -74,19 +74,15 @@ extern "C" char * _XmStringGetTextConcat(XmString);
 #include <sys/vfs.h>      /* for statfs() */
 extern "C" int statfs(char *, struct statfs *);
 #define STATFS statfs
-#elif defined(BSDI)
-#include <sys/mount.h>    /* for statfs() */
-#define STATFS statfs
-#elif defined(NETBSD)
-#include <sys/mount.h>    /* for statfs() */
-#define STATFS statfs
-#elif defined(OPENBSD)
+#else
+#if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY)
 #include <sys/mount.h>    /* for statfs() */
 #define STATFS statfs
 #else
 #include <sys/statfs.h>  /* for statfs() */
 #define STATFS statfs
 extern "C" int statfs(char *, struct statfs *);
+#endif
 #endif
 
 #if defined(OSF1)
