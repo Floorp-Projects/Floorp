@@ -249,7 +249,6 @@ class InternetSearchDataSource : public nsIInternetSearchService,
 private:
 static PRInt32				gRefCnt;
 static	PRBool				mEngineListBuilt;
-static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 
     // pseudo-constants
 	static nsIRDFResource		*kNC_SearchResult;
@@ -290,6 +289,7 @@ static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 protected:
 	static nsIRDFDataSource		*mInner;
 
+	static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;
 
 friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -404,7 +404,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService);
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		rv = NS_NewLoadGroup(this, getter_AddRefs(mLoadGroup));
+		rv = NS_NewLoadGroup(nsnull, getter_AddRefs(mLoadGroup));
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
 		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
@@ -487,9 +487,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 		NS_IF_RELEASE(mInner);
 
-		// XXX for the moment, leak mLoadGroup...
-//		mLoadGroup = nsnull;
-
+		mLoadGroup = nsnull;
 		categoryDataSource = nsnull;		
 
 		if (gRDFService)
