@@ -28,6 +28,8 @@
   # the shortened title is included.  For columns whose values should be
   # abbreviated, a maximum length is provided along with the ellipsis that
   # should be added to an abbreviated value, if any.
+  # wrap is set if a column's contents should be allowed to be word-wrapped
+  # by the browser.
   #%]
 [% abbrev = 
   {
@@ -39,8 +41,9 @@
     "owner"             => { maxlength => 30 , ellipsis => "..." } , 
     "qa_contact"        => { maxlength => 30 , ellipsis => "..." , title => "QAContact" } , 
     "resolution"        => { maxlength => 4 } , 
-    "summary"           => { maxlength => 60 , ellipsis => "..." } , 
-    "status_whiteboard" => { title => "StatusSummary" } , 
+    "summary"           => { maxlength => 60 , ellipsis => "..." , wrap => 1 } ,
+    "summaryfull"       => { wrap => 1 } ,
+    "status_whiteboard" => { title => "StatusSummary" , wrap => 1 } , 
     "component"         => { maxlength => 8 , title => "Comp" } , 
     "product"           => { maxlength => 8 } , 
     "version"           => { maxlength => 5 , title => "Vers" } , 
@@ -128,7 +131,9 @@
 
     [% FOREACH column = displaycolumns %]
     <td>
-      [%+ bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html %]
+      [% '<nobr>' IF NOT abbrev.$column.wrap %]
+      [%- bug.$column.truncate(abbrev.$column.maxlength, abbrev.$column.ellipsis) FILTER html -%]
+      [%- '</nobr>' IF NOT abbrev.$column.wrap %]
     </td>
     [% END %]
 
