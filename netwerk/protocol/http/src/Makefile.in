@@ -30,7 +30,6 @@ CPPSRCS =			   \
         nsHTTPHandlerFactory.cpp   \
         nsHTTPChannel.cpp	   \
         nsHTTPRequest.cpp	   \
-        nsHTTPRequestObserver.cpp  \
         nsHTTPResponseListener.cpp \
         nsHTTPResponse.cpp	   \
         $(NULL)
