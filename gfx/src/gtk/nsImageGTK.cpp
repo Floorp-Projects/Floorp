@@ -78,9 +78,10 @@ nsImageGTK::~nsImageGTK()
   if (nsnull != mAlphaBits) {
     delete[] (PRUint8*)mAlphaBits;
     mAlphaBits = nsnull;
-    if (nsnull != mAlphaPixmap) {
-      gdk_pixmap_unref(mAlphaPixmap);
-    }
+  }
+
+  if (mAlphaPixmap) {
+    gdk_pixmap_unref(mAlphaPixmap);
   }
 
   if (mImagePixmap) {
