@@ -14,7 +14,7 @@ int StartIB(CString parms)
 	CString destPath = root + "\\Configs\\" + config + "\\Output";
 
 	// Copy default installer files into config
-	CopyDir(fromPath, destPath);
+	CopyDir(fromPath, destPath,"NULL");
 
 	// Update config.ini with new content
 	CString inst_text1 = GetGlobal("InstallerScreenText1");
