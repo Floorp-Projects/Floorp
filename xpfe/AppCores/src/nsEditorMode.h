@@ -23,9 +23,9 @@
 
 class nsIDOMDocument;
 class nsIPresShell;
-class nsITextEditor;
+class nsIHTMLEditor;
 
 extern nsresult NS_InitEditorMode(nsIDOMDocument * aDOMDocument, nsIPresShell* aPresShell);
-extern nsITextEditor * GetEditor();
+extern nsIHTMLEditor * GetEditor();
 
 #endif //nsEditorMode_h__

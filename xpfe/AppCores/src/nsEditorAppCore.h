@@ -36,7 +36,7 @@ class nsIDOMWindow;
 class nsIURL;
 class nsIWebShellWindow;
 class nsIPresShell;
-class nsITextEditor;
+class nsIHTMLEditor;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsEditorAppCore:
@@ -92,7 +92,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     nsIWebShellWindow  *mWebShellWin;
     nsIWebShell *       mWebShell;
 
-    nsITextEditor * mEditor;
+    nsIHTMLEditor * mEditor;
     nsIDOMDocument* mDomDoc;
     nsIDOMNode* mCurrentNode;
 

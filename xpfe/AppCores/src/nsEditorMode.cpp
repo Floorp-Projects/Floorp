@@ -19,18 +19,21 @@
 #include "nsString.h"
 #include "nsIDOMDocument.h"
 
-#include "nsITextEditor.h"
+#include "nsIHTMLEditor.h"
 #include "nsEditorCID.h"
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 
-static nsITextEditor *gEditor;
+static nsIHTMLEditor *gEditor;
 
-static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
-static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
+static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
+static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
 static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
+static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID); // Still needed to register factory
+//Don't think we these - switched to using HTMLEditor
+//static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 
 #ifdef XP_PC
 #define EDITOR_DLL "ender.dll"
@@ -42,7 +45,7 @@ static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 #endif
 #endif
 
-nsITextEditor * GetEditor()
+nsIHTMLEditor * GetEditor()
 {
   return gEditor;
 }
@@ -65,15 +68,22 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if (PR_TRUE==needsInit)
   {
     needsInit=PR_FALSE;
-    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL,
-                                           EDITOR_DLL, PR_FALSE, PR_FALSE);
+    result = nsRepository::RegisterComponent(kHTMLEditorCID, NULL, NULL, EDITOR_DLL, 
+                                             PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
         return result;
     }
-    result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL,
-                                           EDITOR_DLL, PR_FALSE, PR_FALSE);
+    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL, EDITOR_DLL, 
+                                             PR_FALSE, PR_FALSE);
+    if (NS_ERROR_FACTORY_EXISTS!=result)
+    {
+      if (NS_FAILED(result))
+        return result;
+    }
+    result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL, EDITOR_DLL, 
+                                             PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
@@ -83,20 +93,21 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   /** end temp code **/
 /*
   nsISupports *isup = nsnull;
-  result = nsServiceManager::GetService(kTextEditorCID,
-                                        kITextEditorIID, &isup);
+  result = nsServiceManager::GetService(kHTMLEditorCID,
+                                        kIHTMLEditorIID, &isup);
 */
-  result = nsRepository::CreateInstance(kTextEditorCID,
+  result = nsRepository::CreateInstance(kHTMLEditorCID,
                                         nsnull,
-                                        kITextEditorIID, (void **)&gEditor);
+                                        kIHTMLEditorIID, (void **)&gEditor);
   if (NS_FAILED(result))
     return result;
   if (!gEditor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gEditor->InitTextEditor(aDOMDocument, aPresShell);
+  gEditor->InitHTMLEditor(aDOMDocument, aPresShell);
   gEditor->EnableUndo(PR_TRUE);
 
   return result;
 }
+
