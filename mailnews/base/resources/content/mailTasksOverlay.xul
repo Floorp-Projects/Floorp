@@ -64,7 +64,7 @@
   </box>
   
   <menupopup id="taskPopup">
-    <menuitem position="2" value="&messengerCmd.label;" accesskey="&messengerCmd.accesskey;" key="key_mail" observes="Tasks:Mail"/>
+    <menuitem position="2" accesskey="&messengerCmd.accesskey;" key="key_mail" observes="Tasks:Mail"/>
   </menupopup>
   
 </overlay>         
