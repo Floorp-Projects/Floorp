@@ -1124,7 +1124,7 @@ nsNNTPArticleSet::LastMissingRange(PRInt32 min, PRInt32 max,
 
 
 
-#ifdef DEBUG /* A buttload of test cases for the above */
+#ifdef DEBUG_sspitzer /* A buttload of test cases for the above */
 
 #define countof(x) (sizeof(x) / sizeof(*(x)))
 
