@@ -59,9 +59,9 @@
 #include "nsIEventQueueService.h"
 
 class nsToolkit;
-class nsMacMessageSink;
 class nsMacTSMMessagePump;
-
+class nsIEventSink;
+class nsIWidget;
 
 
 //================================================
@@ -75,13 +75,12 @@ private:
 	Point					mMousePoint;	// keep track of where the mouse is at all times
 	RgnHandle				mMouseRgn;
 	nsToolkit*				mToolkit;
-	nsMacMessageSink*       mMessageSink;
 	nsMacTSMMessagePump*	mTSMMessagePump;
 
 	// CLASS METHODS
 		    	    
 public:
-						nsMacMessagePump(nsToolkit *aToolKit, nsMacMessageSink* aSink);
+						nsMacMessagePump(nsToolkit *aToolKit);
 	virtual 	~nsMacMessagePump();
   
 	void			DoMessagePump();

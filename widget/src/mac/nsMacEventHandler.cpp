@@ -1522,6 +1522,13 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
 			break;
 		}
+
+#if TARGET_CARBON
+    case inToolbarButton:           // rjc: Mac OS X
+      gEventDispatchHandler.DispatchGuiEvent(mTopLevelWidget, NS_XUL_CLOSE);		
+      break;
+#endif
+    
 	}
 	return retVal;
 }

@@ -70,6 +70,10 @@
 
 #include <MacTypes.h>
 
+class nsIEventSink;
+class nsIWidget;
+
+
 class nsToolkit : public nsIToolkit
 {
 
@@ -93,6 +97,11 @@ public:
   static void AppInForeground ( ) ;
   static void AppInBackground ( ) ;
   static bool IsAppInForeground ( ) ;
+
+  // utility routines for getting the toplevel widget and event sink
+  // stashed in properties of the window.
+  static void GetWindowEventSink ( WindowPtr aWindow, nsIEventSink** outSink ) ;
+  static void GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget ) ;
 
 protected:
   bool          mInited;

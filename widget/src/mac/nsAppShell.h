@@ -56,7 +56,6 @@
 using std::auto_ptr;
 
 class nsMacMessagePump;
-class nsMacMessageSink;
 class nsMacMemoryCushion;
 
 
@@ -73,7 +72,6 @@ class nsAppShell : public nsIAppShell
     nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
     nsCOMPtr<nsIToolkit>           mToolkit;
     auto_ptr<nsMacMessagePump>     mMacPump;
-    auto_ptr<nsMacMessageSink>     mMacSink;             // this will be COM, so use scc's COM_auto_ptr
     auto_ptr<nsMacMemoryCushion>    mMacMemoryCushion;
     PRBool                         mExitCalled;
 	static PRBool                  mInitializedToolbox;

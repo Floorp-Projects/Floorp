@@ -37,8 +37,8 @@
 
 #include "nsMacWindow.h"
 #include "nsMacEventHandler.h"
-#include "nsMacMessageSink.h"
 #include "nsMacControl.h"
+#include "nsToolkit.h"
 
 #include "nsIServiceManager.h"    // for drag and drop
 #include "nsWidgetsCID.h"
@@ -75,10 +75,10 @@ static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1"
 
 // from MacHeaders.c
 #ifndef topLeft
-	#define topLeft(r)	(((Point *) &(r))[0])
+  #define topLeft(r)  (((Point *) &(r))[0])
 #endif
 #ifndef botRight
-	#define botRight(r)	(((Point *) &(r))[1])
+  #define botRight(r) (((Point *) &(r))[1])
 #endif
 
 // externs defined in nsWindow.cpp
@@ -113,21 +113,21 @@ void SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModi
 void
 SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) 
 {
-	nsCOMPtr<nsIDragSession> dragSession;
-	inDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-	if ( dragSession ) {
-		PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
-		
-		// force copy = option, alias = cmd-option, default is move
-		if ( inModifiers & optionKey ) {
-			if ( inModifiers & cmdKey )
-				action = nsIDragService::DRAGDROP_ACTION_LINK;
-			else
-				action = nsIDragService::DRAGDROP_ACTION_COPY;
-		}
+  nsCOMPtr<nsIDragSession> dragSession;
+  inDragService->GetCurrentSession ( getter_AddRefs(dragSession) );
+  if ( dragSession ) {
+    PRUint32 action = nsIDragService::DRAGDROP_ACTION_MOVE;
+    
+    // force copy = option, alias = cmd-option, default is move
+    if ( inModifiers & optionKey ) {
+      if ( inModifiers & cmdKey )
+        action = nsIDragService::DRAGDROP_ACTION_LINK;
+      else
+        action = nsIDragService::DRAGDROP_ACTION_COPY;
+    }
 
-    dragSession->SetDragAction ( action );		
-	}
+    dragSession->SetDragAction ( action );    
+  }
 
 } // SetDragActionBasedOnModifiers
 
@@ -137,158 +137,165 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 //еее this should probably go into the drag session as a static
 pascal OSErr
 nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
-										void *handlerRefCon, DragReference theDrag)
+                    void *handlerRefCon, DragReference theDrag)
 {
-	// holds our drag service across multiple calls to this callback. The reference to
-	// the service is obtained when the mouse enters the window and is released when
-	// the mouse leaves the window (or there is a drop). This prevents us from having
-	// to re-establish the connection to the service manager 15 times a second when
-	// handling the |kDragTrackingInWindow| message.
-	static nsIDragService* sDragService = nsnull;
+  // holds our drag service across multiple calls to this callback. The reference to
+  // the service is obtained when the mouse enters the window and is released when
+  // the mouse leaves the window (or there is a drop). This prevents us from having
+  // to re-establish the connection to the service manager 15 times a second when
+  // handling the |kDragTrackingInWindow| message.
+  static nsIDragService* sDragService = nsnull;
 
-	nsMacWindow* geckoWindow = reinterpret_cast<nsMacWindow*>(handlerRefCon);
-	if ( !theWindow || !geckoWindow )
-		return dragNotAcceptedErr;
-		
-	nsresult rv = NS_OK;
-	switch ( theMessage ) {
-	
-		case kDragTrackingEnterHandler:
-			break;
-			
-		case kDragTrackingEnterWindow:
-		{
-			// get our drag service for the duration of the drag.
-			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                       					NS_GET_IID(nsIDragService),
-      	                            					(nsISupports **)&sDragService);
-      	    NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
-
-			// tell the session about this drag
-			if ( sDragService ) {
-				sDragService->StartDragSession();
-				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
-				if ( macSession )
-					macSession->SetDragReference ( theDrag );
-			}
-			
-			// let gecko know that the mouse has entered the window so it
-			// can start tracking and sending enter/exit events to frames.
-			Point mouseLocGlobal;
-			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-			geckoWindow->DragEvent ( NS_DRAGDROP_ENTER, mouseLocGlobal, 0L );			
-			break;
-		}
-		
-		case kDragTrackingInWindow:
-		{
-			Point mouseLocGlobal;
-			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-			short modifiers;
-			::GetDragModifiers ( theDrag, &modifiers, nsnull, nsnull );
-			
-			NS_ASSERTION ( sDragService, "If we don't have a drag service, we're fucked" );
-			
-			// set the drag action on the service so the frames know what is going on
-			SetDragActionBasedOnModifiers ( sDragService, modifiers );
-			
-			// clear out the |canDrop| property of the drag session. If it's meant to
-			// be, it will be set again.
-			nsCOMPtr<nsIDragSession> session;
-			sDragService->GetCurrentSession(getter_AddRefs(session));
-			NS_ASSERTION ( session, "If we don't have a drag session, we're fucked" );
-			if ( session )
-			  session->SetCanDrop(PR_FALSE);
-
-			// pass into gecko for handling...
-			geckoWindow->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal, modifiers );
-			break;
-		}
-		
-		case kDragTrackingLeaveWindow:
-		{
-			// tell the drag service that we're done with it.
-			if ( sDragService ) {
-				sDragService->EndDragSession();
-				
-				// clear out the dragRef in the drag session. We are guaranteed that
-				// this will be called _after_ the drop has been processed (if there
-				// is one), so we're not destroying valuable information if the drop
-				// was in our window.
-				nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
-				if ( macSession )
-					macSession->SetDragReference ( 0 );					
-			}			
+  nsCOMPtr<nsIEventSink> windowEventSink;
+  nsToolkit::GetWindowEventSink(theWindow, getter_AddRefs(windowEventSink));
+  if ( !theWindow || !windowEventSink )
+    return dragNotAcceptedErr;
     
-			// let gecko know that the mouse has left the window so it
-			// can stop tracking and sending enter/exit events to frames.
-			Point mouseLocGlobal;
-			::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
-			geckoWindow->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal, 0L );
-			
-			::HideDragHilite ( theDrag );
- 	
- 			// we're _really_ done with it, so let go of the service.
-			if ( sDragService ) {
-				nsServiceManager::ReleaseService(kCDragServiceCID, sDragService);
-				sDragService = nsnull;			
-			}
-			
-			break;
-		}
-		
-	} // case of each drag message
+  nsresult rv = NS_OK;
+  switch ( theMessage ) {
+  
+    case kDragTrackingEnterHandler:
+      break;
+      
+    case kDragTrackingEnterWindow:
+    {
+      // get our drag service for the duration of the drag.
+      nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
+                                                NS_GET_IID(nsIDragService),
+                                              (nsISupports **)&sDragService);
+            NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
 
-	return noErr;
-	
+      // tell the session about this drag
+      if ( sDragService ) {
+        sDragService->StartDragSession();
+        nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
+        if ( macSession )
+          macSession->SetDragReference ( theDrag );
+      }
+      
+      // let gecko know that the mouse has entered the window so it
+      // can start tracking and sending enter/exit events to frames.
+      Point mouseLocGlobal;
+      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
+      PRBool handled = PR_FALSE;
+      windowEventSink->DragEvent ( NS_DRAGDROP_ENTER, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );     
+      break;
+    }
+    
+    case kDragTrackingInWindow:
+    {
+      Point mouseLocGlobal;
+      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
+      short modifiers;
+      ::GetDragModifiers ( theDrag, &modifiers, nsnull, nsnull );
+      
+      NS_ASSERTION ( sDragService, "If we don't have a drag service, we're fucked" );
+      
+      // set the drag action on the service so the frames know what is going on
+      SetDragActionBasedOnModifiers ( sDragService, modifiers );
+      
+      // clear out the |canDrop| property of the drag session. If it's meant to
+      // be, it will be set again.
+      nsCOMPtr<nsIDragSession> session;
+      sDragService->GetCurrentSession(getter_AddRefs(session));
+      NS_ASSERTION ( session, "If we don't have a drag session, we're fucked" );
+      if ( session )
+        session->SetCanDrop(PR_FALSE);
+
+      // pass into gecko for handling...
+      PRBool handled = PR_FALSE;
+      windowEventSink->DragEvent ( NS_DRAGDROP_OVER, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
+      break;
+    }
+    
+    case kDragTrackingLeaveWindow:
+    {
+      // tell the drag service that we're done with it.
+      if ( sDragService ) {
+        sDragService->EndDragSession();
+        
+        // clear out the dragRef in the drag session. We are guaranteed that
+        // this will be called _after_ the drop has been processed (if there
+        // is one), so we're not destroying valuable information if the drop
+        // was in our window.
+        nsCOMPtr<nsIDragSessionMac> macSession ( do_QueryInterface(sDragService) );
+        if ( macSession )
+          macSession->SetDragReference ( 0 );         
+      }     
+    
+      // let gecko know that the mouse has left the window so it
+      // can stop tracking and sending enter/exit events to frames.
+      Point mouseLocGlobal;
+      ::GetDragMouse ( theDrag, &mouseLocGlobal, nsnull );
+      PRBool handled = PR_FALSE;
+      windowEventSink->DragEvent ( NS_DRAGDROP_EXIT, mouseLocGlobal.h, mouseLocGlobal.v, 0L, &handled );
+      
+      ::HideDragHilite ( theDrag );
+  
+      // we're _really_ done with it, so let go of the service.
+      if ( sDragService ) {
+        nsServiceManager::ReleaseService(kCDragServiceCID, sDragService);
+        sDragService = nsnull;      
+      }
+      
+      break;
+    }
+    
+  } // case of each drag message
+
+  return noErr;
+  
 } // DragTrackingHandler
 
 
 //еее this should probably go into the drag session as a static
 pascal OSErr
 nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
-									DragReference theDragRef)
+                  DragReference theDragRef)
 {
-	// get our window back from the refCon
-	nsMacWindow* geckoWindow = reinterpret_cast<nsMacWindow*>(handlerRefCon);
-	if ( !theWindow || !geckoWindow )
-		return dragNotAcceptedErr;
+  nsCOMPtr<nsIEventSink> windowEventSink;
+  nsToolkit::GetWindowEventSink(theWindow, getter_AddRefs(windowEventSink));
+  if ( !theWindow || !windowEventSink )
+    return dragNotAcceptedErr;
     
-    // We make the assuption that the dragOver handlers have correctly set
-    // the |canDrop| property of the Drag Session. Before we dispatch the event
-    // into Gecko, check that value and either dispatch it or set the result
-    // code to "spring-back" and show the user the drag failed. 
-    OSErr result = noErr;
-	nsCOMPtr<nsIDragService> dragService ( do_GetService(kCDragServiceCID) );
-	if ( dragService ) {
-		nsCOMPtr<nsIDragSession> dragSession;
-		dragService->GetCurrentSession ( getter_AddRefs(dragSession) );
-		if ( dragSession ) {
-			// if the target has set that it can accept the drag, pass along
-			// to gecko, otherwise set phasers for failure.
-			PRBool canDrop = PR_FALSE;
-			if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
-				if ( canDrop ) {
-                	// pass the drop event along to Gecko
-                	Point mouseLocGlobal;
-                	::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
-                	short modifiers;
-                	::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
-                	geckoWindow->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal, modifiers );
-                }
-                else
-					result = dragNotAcceptedErr;	
-		} // if a valid drag session
+  // We make the assuption that the dragOver handlers have correctly set
+  // the |canDrop| property of the Drag Session. Before we dispatch the event
+  // into Gecko, check that value and either dispatch it or set the result
+  // code to "spring-back" and show the user the drag failed. 
+  OSErr result = noErr;
+  nsCOMPtr<nsIDragService> dragService ( do_GetService(kCDragServiceCID) );
+  if ( dragService ) {
+    nsCOMPtr<nsIDragSession> dragSession;
+    dragService->GetCurrentSession ( getter_AddRefs(dragSession) );
+    if ( dragSession ) {
+      // if the target has set that it can accept the drag, pass along
+      // to gecko, otherwise set phasers for failure.
+      PRBool canDrop = PR_FALSE;
+      if ( NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) )
+        if ( canDrop ) {
+          // pass the drop event along to Gecko
+          Point mouseLocGlobal;
+          ::GetDragMouse ( theDragRef, &mouseLocGlobal, nsnull );
+          short modifiers;
+          ::GetDragModifiers ( theDragRef, &modifiers, nsnull, nsnull );
+          PRBool handled = PR_FALSE;
+          windowEventSink->DragEvent ( NS_DRAGDROP_DROP, mouseLocGlobal.h, mouseLocGlobal.v, modifiers, &handled );
+        }
+        else
+          result = dragNotAcceptedErr;  
+    } // if a valid drag session
         
-		// we don't need the drag session anymore, the user has released the
-		// mouse and the event has already gone to gecko.
-		dragService->EndDragSession();
-	}
-	
-	return result;
-	
+    // we don't need the drag session anymore, the user has released the
+    // mouse and the event has already gone to gecko.
+    dragService->EndDragSession();
+  }
+  
+  return result;
+  
 } // DragReceiveHandler
 
+
+NS_IMPL_ISUPPORTS_INHERITED3(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac, nsPIEventSinkStandalone);
 
 
 //-------------------------------------------------------------------------
@@ -297,20 +304,20 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 //
 //-------------------------------------------------------------------------
 nsMacWindow::nsMacWindow() : Inherited()
-	, mWindowMadeHere(PR_FALSE)
-	, mIsDialog(PR_FALSE)
-	, mMacEventHandler(nsnull)
-	, mAcceptsActivation(PR_TRUE)
-	, mIsActive(PR_FALSE)
-	, mZoomOnShow(PR_FALSE)
+  , mWindowMadeHere(PR_FALSE)
+  , mIsDialog(PR_FALSE)
+  , mMacEventHandler(nsnull)
+  , mAcceptsActivation(PR_TRUE)
+  , mIsActive(PR_FALSE)
+  , mZoomOnShow(PR_FALSE)
 #if !TARGET_CARBON
-	, mPhantomScrollbar(nsnull)
-	, mPhantomScrollbarData(nsnull)
+  , mPhantomScrollbar(nsnull)
+  , mPhantomScrollbarData(nsnull)
 #endif
-	, mResizeIsFromUs(PR_FALSE)
+  , mResizeIsFromUs(PR_FALSE)
 {
-	mMacEventHandler.reset(new nsMacEventHandler(this));
-	WIDGET_SET_CLASSNAME("nsMacWindow");	
+  mMacEventHandler.reset(new nsMacEventHandler(this));
+  WIDGET_SET_CLASSNAME("nsMacWindow");  
 
   // create handlers for drag&drop
   mDragTrackingHandlerUPP = NewDragTrackingHandlerUPP(DragTrackingHandler);
@@ -325,36 +332,35 @@ nsMacWindow::nsMacWindow() : Inherited()
 //-------------------------------------------------------------------------
 nsMacWindow::~nsMacWindow()
 {
-	if (mWindowPtr)
-	{
-	  // cleanup our special defproc if we are a popup
+  if (mWindowPtr)
+  {
+    // cleanup our special defproc if we are a popup
     if ( mWindowType == eWindowType_popup )
       RemoveBorderlessDefProc ( mWindowPtr );
 
 #if !TARGET_CARBON
-  	// cleanup the struct we hang off the scrollbar's refcon	
-  	if ( mPhantomScrollbar ) {
-  	  ::SetControlReference(mPhantomScrollbar, (long)nsnull);
-  	  delete mPhantomScrollbarData;
-  	}
-#endif  	
-		if (mWindowMadeHere)
-			::DisposeWindow(mWindowPtr);
+    // cleanup the struct we hang off the scrollbar's refcon  
+    if ( mPhantomScrollbar ) {
+      ::SetControlReference(mPhantomScrollbar, (long)nsnull);
+      delete mPhantomScrollbarData;
+    }
+#endif    
+    if (mWindowMadeHere)
+      ::DisposeWindow(mWindowPtr);
       
-		// clean up DragManager stuff
-		if ( mDragTrackingHandlerUPP ) {
-		  ::RemoveTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr );
-		  ::DisposeDragTrackingHandlerUPP ( mDragTrackingHandlerUPP );
-		 }
-		if ( mDragReceiveHandlerUPP ) {
-		  ::RemoveReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr );
-		  ::DisposeDragReceiveHandlerUPP ( mDragReceiveHandlerUPP );
-		}
+    // clean up DragManager stuff
+    if ( mDragTrackingHandlerUPP ) {
+      ::RemoveTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr );
+      ::DisposeDragTrackingHandlerUPP ( mDragTrackingHandlerUPP );
+     }
+    if ( mDragReceiveHandlerUPP ) {
+      ::RemoveReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr );
+      ::DisposeDragReceiveHandlerUPP ( mDragReceiveHandlerUPP );
+    }
 
-		nsMacMessageSink::RemoveRaptorWindowFromList(mWindowPtr);
-		mWindowPtr = nsnull;
-	}
-	
+    mWindowPtr = nsnull;
+  }
+  
 }
 
 
@@ -365,66 +371,66 @@ nsMacWindow::~nsMacWindow()
 //-------------------------------------------------------------------------
 
 nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
-	                      const nsRect &aRect,
-	                      EVENT_CALLBACK aHandleEventFunction,
-	                      nsIDeviceContext *aContext,
-	                      nsIAppShell *aAppShell,
-	                      nsIToolkit *aToolkit,
-	                      nsWidgetInitData *aInitData,
-	                      nsNativeWidget aNativeParent)
+                        const nsRect &aRect,
+                        EVENT_CALLBACK aHandleEventFunction,
+                        nsIDeviceContext *aContext,
+                        nsIAppShell *aAppShell,
+                        nsIToolkit *aToolkit,
+                        nsWidgetInitData *aInitData,
+                        nsNativeWidget aNativeParent)
 {
-	short	bottomPinDelta = 0;			// # of pixels to subtract to pin window bottom
-	nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
-	
-	// build the main native window
-	if (aNativeParent == nsnull)
-	{
-		nsWindowType windowType;
-		if (aInitData)
-		{
-			mWindowType = aInitData->mWindowType;
-			// if a toplevel window was requested without a titlebar, use a dialog windowproc
-			if (aInitData->mWindowType == eWindowType_toplevel &&
-				(aInitData->mBorderStyle == eBorderStyle_none ||
-				 aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
-				windowType = eWindowType_dialog;
-		} else
-			mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+  short bottomPinDelta = 0;     // # of pixels to subtract to pin window bottom
+  nsCOMPtr<nsIToolkit> theToolkit = aToolkit;
+  
+  // build the main native window
+  if (aNativeParent == nsnull)
+  {
+    nsWindowType windowType;
+    if (aInitData)
+    {
+      mWindowType = aInitData->mWindowType;
+      // if a toplevel window was requested without a titlebar, use a dialog windowproc
+      if (aInitData->mWindowType == eWindowType_toplevel &&
+        (aInitData->mBorderStyle == eBorderStyle_none ||
+         aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
+        windowType = eWindowType_dialog;
+    } else
+      mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
-		short			wDefProcID = kWindowDocumentProc;
-		Boolean		goAwayFlag;
-		short			hOffset;
-		short			vOffset;
+    short     wDefProcID = kWindowDocumentProc;
+    Boolean   goAwayFlag;
+    short     hOffset;
+    short     vOffset;
 
-		switch (mWindowType)
-		{
-			case eWindowType_popup:
-		    // We're a popup, context menu, etc. Sets
-		    // mAcceptsActivation to false so we don't activate the window
-		    // when we show it.
-		    mOffsetParent = aParent;
-		    if( !aParent )
-		    	theToolkit = getter_AddRefs(aParent->GetToolkit());
+    switch (mWindowType)
+    {
+      case eWindowType_popup:
+        // We're a popup, context menu, etc. Sets
+        // mAcceptsActivation to false so we don't activate the window
+        // when we show it.
+        mOffsetParent = aParent;
+        if( !aParent )
+          theToolkit = getter_AddRefs(aParent->GetToolkit());
 
         mAcceptsActivation = PR_FALSE;
-				goAwayFlag = false;
-				hOffset = 0;
-				vOffset = 0;
+        goAwayFlag = false;
+        hOffset = 0;
+        vOffset = 0;
 #if TARGET_CARBON
-				wDefProcID = kWindowSimpleProc;
+        wDefProcID = kWindowSimpleProc;
 #else
-				wDefProcID = plainDBox;
+        wDefProcID = plainDBox;
 #endif
         break;
 
-			case eWindowType_child:
-				wDefProcID = plainDBox;
-				goAwayFlag = false;
-				hOffset = 0;
-				vOffset = 0;
-				break;
+      case eWindowType_child:
+        wDefProcID = plainDBox;
+        goAwayFlag = false;
+        hOffset = 0;
+        vOffset = 0;
+        break;
 
-			case eWindowType_dialog:
+      case eWindowType_dialog:
         if (aInitData)
         {
           // Prior to Carbon, defProcs were solely about appearance. If told to create a dialog,
@@ -441,7 +447,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
           switch (aInitData->mBorderStyle)
           {
             case eBorderStyle_none:
-					    wDefProcID = kWindowModalDialogProc;
+              wDefProcID = kWindowModalDialogProc;
               break;
               
             case eBorderStyle_all:
@@ -453,7 +459,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
               
             case eBorderStyle_default:
-					    wDefProcID = kWindowModalDialogProc;
+              wDefProcID = kWindowModalDialogProc;
               break;
             
             default:
@@ -486,96 +492,103 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         }
         else
         {
-					wDefProcID = kWindowModalDialogProc;
-					goAwayFlag = true; // revisit this below
+          wDefProcID = kWindowModalDialogProc;
+          goAwayFlag = true; // revisit this below
         }
                 
         hOffset = kDialogMarginWidth;
         vOffset = kDialogTitleBarHeight;
-				break;
+        break;
 
-			case eWindowType_toplevel:
-				if (aInitData &&
-					aInitData->mBorderStyle != eBorderStyle_all &&
-					aInitData->mBorderStyle != eBorderStyle_default &&
-					(aInitData->mBorderStyle == eBorderStyle_none ||
-					 !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
-					wDefProcID = kWindowDocumentProc;
-				else
-					wDefProcID = kWindowFullZoomGrowDocumentProc;
-				goAwayFlag = true;
-				hOffset = kWindowMarginWidth;
-				vOffset = kWindowTitleBarHeight;
-				break;
+      case eWindowType_toplevel:
+        if (aInitData &&
+          aInitData->mBorderStyle != eBorderStyle_all &&
+          aInitData->mBorderStyle != eBorderStyle_default &&
+          (aInitData->mBorderStyle == eBorderStyle_none ||
+           !(aInitData->mBorderStyle & eBorderStyle_resizeh)))
+          wDefProcID = kWindowDocumentProc;
+        else
+          wDefProcID = kWindowFullZoomGrowDocumentProc;
+        goAwayFlag = true;
+        hOffset = kWindowMarginWidth;
+        vOffset = kWindowTitleBarHeight;
+        break;
 
       case eWindowType_invisible:
         // don't do anything
         break;
-		}
+    }
 
-		// now turn off some default features if requested by aInitData
-		if (aInitData && aInitData->mBorderStyle != eBorderStyle_all)
-		{
-			if (aInitData->mBorderStyle == eBorderStyle_none ||
-					aInitData->mBorderStyle == eBorderStyle_default &&
-					windowType == eWindowType_dialog ||
-					!(aInitData->mBorderStyle & eBorderStyle_close))
-				goAwayFlag = false;
-		}
+    // now turn off some default features if requested by aInitData
+    if (aInitData && aInitData->mBorderStyle != eBorderStyle_all)
+    {
+      if (aInitData->mBorderStyle == eBorderStyle_none ||
+          aInitData->mBorderStyle == eBorderStyle_default &&
+          windowType == eWindowType_dialog ||
+          !(aInitData->mBorderStyle & eBorderStyle_close))
+        goAwayFlag = false;
+    }
 
-		Rect wRect;
-		nsRectToMacRect(aRect, wRect);
+    Rect wRect;
+    nsRectToMacRect(aRect, wRect);
 
-		if (eWindowType_popup != mWindowType)
-			::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
-		else
-			::OffsetRect(&wRect, hOffset, vOffset);
+    if (eWindowType_popup != mWindowType)
+      ::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
+    else
+      ::OffsetRect(&wRect, hOffset, vOffset);
 
-		nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
-		if (screenmgr) {
-			nsCOMPtr<nsIScreen> screen;
-			//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-			screenmgr->ScreenForRect(wRect.left, wRect.top,
-		                             wRect.right - wRect.left, wRect.bottom - wRect.top,
-		                             getter_AddRefs(screen));
-			if (screen) {
-		  		PRInt32 left, top, width, height;
-				screen->GetAvailRect(&left, &top, &width, &height);
-				if (wRect.bottom > top+height) {
-					bottomPinDelta = wRect.bottom - (top+height);
-					wRect.bottom -= bottomPinDelta;
-				}
-			}
-		}
-		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
-		mWindowMadeHere = PR_TRUE;
-	}
-	else
-	{
-		mWindowPtr = (WindowPtr)aNativeParent;
-		mWindowMadeHere = PR_FALSE;
-	}
+    nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+    if (screenmgr) {
+      nsCOMPtr<nsIScreen> screen;
+      //screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+      screenmgr->ScreenForRect(wRect.left, wRect.top,
+                                 wRect.right - wRect.left, wRect.bottom - wRect.top,
+                                 getter_AddRefs(screen));
+      if (screen) {
+          PRInt32 left, top, width, height;
+        screen->GetAvailRect(&left, &top, &width, &height);
+        if (wRect.bottom > top+height) {
+          bottomPinDelta = wRect.bottom - (top+height);
+          wRect.bottom -= bottomPinDelta;
+        }
+      }
+    }
+    mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
+    mWindowMadeHere = PR_TRUE;
+  }
+  else
+  {
+    mWindowPtr = (WindowPtr)aNativeParent;
+    mWindowMadeHere = PR_FALSE;
+  }
 
-	if (mWindowPtr == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
+  if (mWindowPtr == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
   
-	nsMacMessageSink::AddRaptorWindowToList(mWindowPtr, this);
+  // Create the root control. 
+  ControlHandle rootControl = nsnull;
+  if ( GetRootControl(mWindowPtr, &rootControl) != noErr ) {
+    OSErr err = CreateRootControl(mWindowPtr, &rootControl);
+    NS_ASSERTION(err == noErr, "Error creating window root control");
+  }
 
-	// create the root control
-	ControlHandle		rootControl = nil;
-	if (GetRootControl(mWindowPtr, &rootControl) != noErr)
-	{
-		OSErr	err = CreateRootControl(mWindowPtr, &rootControl);
-		NS_ASSERTION(err == noErr, "Error creating window root control");
-	}
+  // In order to get back to this nsIWidget from a WindowPtr, we hang
+  // ourselves off a property of the window. This allows places like
+  // event handlers to get our widget or event sink when all they have
+  // is a native WindowPtr.
+  nsIWidget* temp = NS_STATIC_CAST(nsIWidget*, this);
+  OSStatus swpStatus = ::SetWindowProperty ( mWindowPtr, 'MOSS', 'GEKO', sizeof(nsIWidget*), &temp );
+  NS_ASSERTION ( swpStatus == noErr, "couldn't set a property on the window, event handling will fail" );
+  if ( swpStatus != noErr )
+    return NS_ERROR_FAILURE;
+  
+  // reset the coordinates to (0,0) because it's the top level widget
+  // and adjust for any adjustment required to requested window bottom
+  nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
-	// reset the coordinates to (0,0) because it's the top level widget
-	// and adjust for any adjustment required to requested window bottom
-	nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
-
-	// init base class
+  // init base class
   // (note: aParent is ignored. Mac (real) windows don't want parents)
-	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
+  Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
 #if TARGET_CARBON
   if ( mWindowType == eWindowType_toplevel)
@@ -598,9 +611,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     // created. Do so. We currently leave the collapse widget for all dialogs.
     ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
   }
-  
-  // Setup the live window resizing
-  if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
+  else if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
+    // Setup the live window resizing
     WindowAttributes removeAttributes = kWindowNoAttributes;
     if ( mWindowType == eWindowType_invisible )
       removeAttributes |= kWindowInWindowMenuAttribute;     
@@ -647,22 +659,22 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   ::EmbedControl ( rootControl, mPhantomScrollbar );
 #endif
     
-	// register tracking and receive handlers with the native Drag Manager
-	if ( mDragTrackingHandlerUPP ) {
-		OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, this );
-		NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
-	}
-	if ( mDragReceiveHandlerUPP ) {
-		OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, this );
-		NS_ASSERTION ( result == noErr, "can't install drag receive handler");
-	}
+  // register tracking and receive handlers with the native Drag Manager
+  if ( mDragTrackingHandlerUPP ) {
+    OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, nsnull );
+    NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
+  }
+  if ( mDragReceiveHandlerUPP ) {
+    OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, nsnull );
+    NS_ASSERTION ( result == noErr, "can't install drag receive handler");
+  }
 
   // If we're a popup, we don't want a border (we want CSS to draw it for us). So
   // install our own window defProc.
   if ( mWindowType == eWindowType_popup )
     InstallBorderlessDefProc(mWindowPtr);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 
@@ -675,11 +687,11 @@ nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
   SInt32 delta = 0;
   Point mouseLoc;
   OSErr err1 = ::GetEventParameter ( inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis,
-                        NULL, sizeof(EventMouseWheelAxis), NULL, &axis );	
+                        NULL, sizeof(EventMouseWheelAxis), NULL, &axis ); 
   OSErr err2 = ::GetEventParameter ( inEvent, kEventParamMouseWheelDelta, typeLongInteger,
-                        NULL, sizeof(SInt32), NULL, &delta );	
+                        NULL, sizeof(SInt32), NULL, &delta ); 
   OSErr err3 = ::GetEventParameter ( inEvent, kEventParamMouseLocation, typeQDPoint,
-                        NULL, sizeof(Point), NULL, &mouseLoc );	
+                        NULL, sizeof(Point), NULL, &mouseLoc ); 
 
   if ( err1 == noErr && err2 == noErr && err3 == noErr ) {
     nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
@@ -732,7 +744,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
         }
         break;
       }      
-      	
+        
       default:
         // do nothing...
         break;
@@ -752,7 +764,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
 // Create a nsMacWindow using a native window provided by the application
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,		// this is a windowPtr
+NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,   // this is a windowPtr
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -760,9 +772,9 @@ NS_IMETHODIMP nsMacWindow::Create(nsNativeWidget aNativeParent,		// this is a wi
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-	return(StandardCreate(nsnull, aRect, aHandleEventFunction,
-													aContext, aAppShell, aToolkit, aInitData,
-														aNativeParent));
+  return(StandardCreate(nsnull, aRect, aHandleEventFunction,
+                          aContext, aAppShell, aToolkit, aInitData,
+                            aNativeParent));
 }
 
 
@@ -816,7 +828,7 @@ nsMacWindow :: RemoveBorderlessDefProc ( WindowPtr inWindow )
 NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 {
   Inherited::Show(bState);
-	
+  
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
@@ -838,12 +850,12 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     // be lurking. We want to catch this here because we're guaranteed that
     // we hide a window before we destroy it, and doing it here more closely
     // approximates where we do the same thing on windows.
-  	if ( mWindowType == eWindowType_toplevel ) {
-  	  if ( gRollupListener )
+    if ( mWindowType == eWindowType_toplevel ) {
+      if ( gRollupListener )
         gRollupListener->Rollup();
       NS_IF_RELEASE(gRollupListener);
       NS_IF_RELEASE(gRollupWidget);
-  	}
+    }
     ::HideWindow(mWindowPtr);
   }
   
@@ -870,61 +882,61 @@ NS_METHOD nsWindow::Restore(void)
 
 NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
-	if (eWindowType_popup == mWindowType || !mWindowMadeHere)
-		return NS_OK;
+  if (eWindowType_popup == mWindowType || !mWindowMadeHere)
+    return NS_OK;
 
-	// Sanity check against screen size
-	// make sure the window stays visible
+  // Sanity check against screen size
+  // make sure the window stays visible
 
-	// get the window bounds
-	Rect portBounds;
-	::GetWindowPortBounds(mWindowPtr, &portBounds);
-	short pos;
-	short windowWidth = portBounds.right - portBounds.left;
-	short windowHeight = portBounds.bottom - portBounds.top;
+  // get the window bounds
+  Rect portBounds;
+  ::GetWindowPortBounds(mWindowPtr, &portBounds);
+  short pos;
+  short windowWidth = portBounds.right - portBounds.left;
+  short windowHeight = portBounds.bottom - portBounds.top;
 
-	// now get our playing field. use the current screen, or failing that for any reason,
-	// the GrayRgn (which of course is arguably more correct but has drawbacks as well)
-	Rect screenRect;
-	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
-	if (screenmgr) {
-		nsCOMPtr<nsIScreen> screen;
-		PRInt32 left, top, width, height, fullHeight;
+  // now get our playing field. use the current screen, or failing that for any reason,
+  // the GrayRgn (which of course is arguably more correct but has drawbacks as well)
+  Rect screenRect;
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    PRInt32 left, top, width, height, fullHeight;
 
-		// zero size rects can happen during window creation, and confuse
-		// the screen manager
-		width = windowWidth > 0 ? windowWidth : 1;
-		height = windowHeight > 0 ? windowHeight : 1;
-		screenmgr->ScreenForRect(*aX, *aY, width, height,
-		                        getter_AddRefs(screen));
-		if (screen) {
-			screen->GetAvailRect(&left, &top, &width, &height);
-			screen->GetRect(&left, &top, &width, &fullHeight);
-			screenRect.left = left;
-			screenRect.right = left+width;
-			screenRect.top = top;
-			screenRect.bottom = top+height;
-		}
-	} else
-		::GetRegionBounds(::GetGrayRgn(), &screenRect);
+    // zero size rects can happen during window creation, and confuse
+    // the screen manager
+    width = windowWidth > 0 ? windowWidth : 1;
+    height = windowHeight > 0 ? windowHeight : 1;
+    screenmgr->ScreenForRect(*aX, *aY, width, height,
+                            getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailRect(&left, &top, &width, &height);
+      screen->GetRect(&left, &top, &width, &fullHeight);
+      screenRect.left = left;
+      screenRect.right = left+width;
+      screenRect.top = top;
+      screenRect.bottom = top+height;
+    }
+  } else
+    ::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
-	pos = screenRect.left;
-	if (windowWidth > kWindowPositionSlop)
-		pos -= windowWidth - kWindowPositionSlop;
-	if (*aX < pos)
-		*aX = pos;
-	else if (*aX >= screenRect.right - kWindowPositionSlop)
-		*aX = screenRect.right - kWindowPositionSlop;
+  pos = screenRect.left;
+  if (windowWidth > kWindowPositionSlop)
+    pos -= windowWidth - kWindowPositionSlop;
+  if (*aX < pos)
+    *aX = pos;
+  else if (*aX >= screenRect.right - kWindowPositionSlop)
+    *aX = screenRect.right - kWindowPositionSlop;
 
-	pos = screenRect.top;
-	if (windowHeight > kWindowPositionSlop)
-		pos -= windowHeight - kWindowPositionSlop;
-	if (*aY < pos)
-		*aY = pos;
-	else if (*aY >= screenRect.bottom - kWindowPositionSlop)
-		*aY = screenRect.bottom - kWindowPositionSlop;
+  pos = screenRect.top;
+  if (windowHeight > kWindowPositionSlop)
+    pos -= windowHeight - kWindowPositionSlop;
+  if (*aY < pos)
+    *aY = pos;
+  else if (*aY >= screenRect.bottom - kWindowPositionSlop)
+    *aY = screenRect.bottom - kWindowPositionSlop;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -939,87 +951,87 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   StPortSetter setOurPortForLocalToGlobal ( mWindowPtr );
   
-	if (eWindowType_popup == mWindowType) {
-		PRInt32	xOffset=0,yOffset=0;
-		nsRect	localRect,globalRect;
+  if (eWindowType_popup == mWindowType) {
+    PRInt32 xOffset=0,yOffset=0;
+    nsRect  localRect,globalRect;
 
-		// convert to screen coordinates
-		localRect.x = aX;
-		localRect.y = aY;
-		localRect.width = 100;
-		localRect.height = 100;	
+    // convert to screen coordinates
+    localRect.x = aX;
+    localRect.y = aY;
+    localRect.width = 100;
+    localRect.height = 100; 
 
-		if ( mOffsetParent ) {
-			mOffsetParent->WidgetToScreen(localRect,globalRect);
-			aX=globalRect.x;
-			aY=globalRect.y;
-			
-			// there is a bug on OSX where if we call ::MoveWindow() with the same
-			// coordinates (within a pixel or two) as a window's current location, it will 
-			// move to (0,0,-1,-1). The fix is to not move the window if we're already
-			// there. (radar# 2669004)
+    if ( mOffsetParent ) {
+      mOffsetParent->WidgetToScreen(localRect,globalRect);
+      aX=globalRect.x;
+      aY=globalRect.y;
+      
+      // there is a bug on OSX where if we call ::MoveWindow() with the same
+      // coordinates (within a pixel or two) as a window's current location, it will 
+      // move to (0,0,-1,-1). The fix is to not move the window if we're already
+      // there. (radar# 2669004)
 #if TARGET_CARBON
       const PRInt32 kMoveThreshold = 2;
 #else
       const PRInt32 kMoveThreshold = 0;
 #endif
-			Rect currBounds;
-			::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
-			if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
-			  ::MoveWindow(mWindowPtr, aX, aY, false);
-			  
-			  Rect newBounds;
-			  ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &newBounds );
-			}  
-		}
+      Rect currBounds;
+      ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &currBounds );
+      if ( abs(currBounds.left-aX) > kMoveThreshold || abs(currBounds.top-aY) > kMoveThreshold ) {
+        ::MoveWindow(mWindowPtr, aX, aY, false);
+        
+        Rect newBounds;
+        ::GetWindowBounds ( mWindowPtr, kWindowGlobalPortRgn, &newBounds );
+      }  
+    }
 
-		return NS_OK;
-	} else if (mWindowMadeHere) {
-		Rect portBounds;
-		::GetWindowPortBounds(mWindowPtr, &portBounds);
+    return NS_OK;
+  } else if (mWindowMadeHere) {
+    Rect portBounds;
+    ::GetWindowPortBounds(mWindowPtr, &portBounds);
 
-		if (mIsDialog) {
-			aX += kDialogMarginWidth;
-			aY += kDialogTitleBarHeight;
-		} else {
-			aX += kWindowMarginWidth;
-			aY += kWindowTitleBarHeight;
-		}
+    if (mIsDialog) {
+      aX += kDialogMarginWidth;
+      aY += kDialogTitleBarHeight;
+    } else {
+      aX += kWindowMarginWidth;
+      aY += kWindowTitleBarHeight;
+    }
 
-		nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
-		if (screenmgr) {
-			nsCOMPtr<nsIScreen> screen;
-			PRInt32 left, top, width, height, fullTop;
-			// adjust for unset bounds, which confuses the screen manager
-			width = portBounds.right - portBounds.left;
-			height = portBounds.bottom - portBounds.top;
-			if (height <= 0) height = 1;
-			if (width <= 0) width = 1;
+    nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+    if (screenmgr) {
+      nsCOMPtr<nsIScreen> screen;
+      PRInt32 left, top, width, height, fullTop;
+      // adjust for unset bounds, which confuses the screen manager
+      width = portBounds.right - portBounds.left;
+      height = portBounds.bottom - portBounds.top;
+      if (height <= 0) height = 1;
+      if (width <= 0) width = 1;
 
-			screenmgr->ScreenForRect(aX, aY, width, height,
-			                         getter_AddRefs(screen));
-			if (screen) {
-				screen->GetAvailRect(&left, &top, &width, &height);
-				screen->GetRect(&left, &fullTop, &width, &height);
-				aY += top-fullTop;
-			}
-		}
+      screenmgr->ScreenForRect(aX, aY, width, height,
+                               getter_AddRefs(screen));
+      if (screen) {
+        screen->GetAvailRect(&left, &top, &width, &height);
+        screen->GetRect(&left, &fullTop, &width, &height);
+        aY += top-fullTop;
+      }
+    }
 
-		// move the window if it has not been moved yet
-		// (ie. if this function isn't called in response to a DragWindow event)
-		Point macPoint = topLeft(portBounds);
-		::LocalToGlobal(&macPoint);
-		if (macPoint.h != aX || macPoint.v != aY)
-			::MoveWindow(mWindowPtr, aX, aY, false);
+    // move the window if it has not been moved yet
+    // (ie. if this function isn't called in response to a DragWindow event)
+    Point macPoint = topLeft(portBounds);
+    ::LocalToGlobal(&macPoint);
+    if (macPoint.h != aX || macPoint.v != aY)
+      ::MoveWindow(mWindowPtr, aX, aY, false);
 
-		// propagate the event in global coordinates
-		Inherited::Move(aX, aY);
+    // propagate the event in global coordinates
+    Inherited::Move(aX, aY);
 
-		// reset the coordinates to (0,0) because it's the top level widget
-		mBounds.x = 0;
-		mBounds.y = 0;
-	}
-	return NS_OK;
+    // reset the coordinates to (0,0) because it's the top level widget
+    mBounds.x = 0;
+    mBounds.y = 0;
+  }
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1081,7 +1093,15 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
   return rv;
 }
 
-void nsMacWindow::CalculateAndSetZoomedSize()
+
+//
+// CalculateAndSetZoomedSize
+//
+// Recomputes the zoomed window size taking things such as window chrome,
+// dock position, menubar, and finder icons into account
+//
+NS_IMETHODIMP
+nsMacWindow::CalculateAndSetZoomedSize()
 {
   StPortSetter setOurPort(mWindowPtr);
 
@@ -1116,7 +1136,7 @@ void nsMacWindow::CalculateAndSetZoomedSize()
   // find which screen the window is (mostly) on and get its rect. GetAvailRect()
   // handles subtracting out the menubar and the dock for us. Set the zoom rect
   // to the screen rect, less some fudging and room for icons on the primary screen.
-	nsCOMPtr<nsIScreenManager> screenMgr = do_GetService(sScreenManagerContractID);
+  nsCOMPtr<nsIScreenManager> screenMgr = do_GetService(sScreenManagerContractID);
   if ( screenMgr ) {
     nsCOMPtr<nsIScreen> screen;
     screenMgr->ScreenForRect ( windRect.left, windRect.top, windRect.right - windRect.left, windRect.bottom - windRect.top,
@@ -1138,16 +1158,18 @@ void nsMacWindow::CalculateAndSetZoomedSize()
         newWindowRect.width -= iconSpace;
       }
 
-    	Rect zoomRect;
-    	::SetRect(&zoomRect,
+      Rect zoomRect;
+      ::SetRect(&zoomRect,
                   newWindowRect.x + wLeftBorder,
                   newWindowRect.y + wTitleHeight,
                   newWindowRect.x + newWindowRect.width - wRightBorder,
                   newWindowRect.y + newWindowRect.height - wBottomBorder); 
-    	::SetWindowStandardState ( mWindowPtr, &zoomRect );
+      ::SetWindowStandardState ( mWindowPtr, &zoomRect );
     }
   }
   
+  return NS_OK;
+
 } // CalculateAndSetZoomedSize
 
 
@@ -1163,37 +1185,37 @@ void nsMacWindow::CalculateAndSetZoomedSize()
 //-------------------------------------------------------------------------
 void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 {
-	PRInt32 left, top, width, height, fullTop;
-	Rect portBounds;
+  PRInt32 left, top, width, height, fullTop;
+  Rect portBounds;
 
-	StPortSetter doThatThingYouDo(mWindowPtr);
-	::GetWindowPortBounds(mWindowPtr, &portBounds);
+  StPortSetter doThatThingYouDo(mWindowPtr);
+  ::GetWindowPortBounds(mWindowPtr, &portBounds);
 
-	width = portBounds.right - portBounds.left;
-	height = portBounds.bottom - portBounds.top;
-	::LocalToGlobal(&topLeft(portBounds));
+  width = portBounds.right - portBounds.left;
+  height = portBounds.bottom - portBounds.top;
+  ::LocalToGlobal(&topLeft(portBounds));
 
-	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
-	if (screenmgr) {
-		nsCOMPtr<nsIScreen> screen;
-		//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-		screenmgr->ScreenForRect(portBounds.left, portBounds.top, width, height,
-		                         getter_AddRefs(screen));
-		if (screen) {
-			screen->GetAvailRect(&left, &top, &width, &height);
-			screen->GetRect(&left, &fullTop, &width, &height);
-			aY -= top-fullTop;
-		}
-	}
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    //screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+    screenmgr->ScreenForRect(portBounds.left, portBounds.top, width, height,
+                             getter_AddRefs(screen));
+    if (screen) {
+      screen->GetAvailRect(&left, &top, &width, &height);
+      screen->GetRect(&left, &fullTop, &width, &height);
+      aY -= top-fullTop;
+    }
+  }
 
-	if (mIsDialog) {
-		aX -= kDialogMarginWidth;
-		aY -= kDialogTitleBarHeight;
-	} else {
-		aX -= kWindowMarginWidth;
-		aY -= kWindowTitleBarHeight;
-	}
-	Move(aX, aY);
+  if (mIsDialog) {
+    aX -= kDialogMarginWidth;
+    aY -= kDialogTitleBarHeight;
+  } else {
+    aX -= kWindowMarginWidth;
+    aY -= kWindowTitleBarHeight;
+  }
+  Move(aX, aY);
 }
 
 //-------------------------------------------------------------------------
@@ -1203,10 +1225,10 @@ void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-	if (mWindowMadeHere) {
+  if (mWindowMadeHere) {
       // Sanity check against screen size
       Rect screenRect;
-	  ::GetRegionBounds(::GetGrayRgn(), &screenRect);
+    ::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
       // Need to use non-negative coordinates
       PRInt32 screenWidth;
@@ -1226,19 +1248,19 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
         
       if(aWidth > screenWidth)
         aWidth = screenWidth;      
-		
-		Rect macRect;
-		::GetWindowPortBounds ( mWindowPtr, &macRect );
+    
+    Rect macRect;
+    ::GetWindowPortBounds ( mWindowPtr, &macRect );
 
     short w = macRect.right - macRect.left;
     short h = macRect.bottom - macRect.top;
     Boolean needReposition = (w == 1 && h == 1);
 
-		if ((w != aWidth)	|| (h != aHeight))
-		{
-		  // make sure that we don't infinitely recurse if live-resize is on
+    if ((w != aWidth) || (h != aHeight))
+    {
+      // make sure that we don't infinitely recurse if live-resize is on
       mResizeIsFromUs = PR_TRUE;
-			::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+      ::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
       mResizeIsFromUs = PR_FALSE;
 
 #if defined(XP_MACOSX)
@@ -1246,43 +1268,43 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
       if (needReposition)
         RepositionWindow(mWindowPtr, NULL, kWindowCascadeOnMainScreen);
 #endif
-		}
-	}
-	Inherited::Resize(aWidth, aHeight, aRepaint);
-	return NS_OK;
+    }
+  }
+  Inherited::Resize(aWidth, aHeight, aRepaint);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
  
-	nsRect localBounds;
-	PRInt32 yAdjust = 0;
+  nsRect localBounds;
+  PRInt32 yAdjust = 0;
 
-	GetBounds(localBounds);
-	// nsMacWindow local bounds are always supposed to be local (0,0) but in the middle of a move
-	// can be global. This next adjustment assures they are in local coordinates, even then.
-	localBounds.MoveBy(-localBounds.x, -localBounds.y);
-	WidgetToScreen(localBounds, aRect);
+  GetBounds(localBounds);
+  // nsMacWindow local bounds are always supposed to be local (0,0) but in the middle of a move
+  // can be global. This next adjustment assures they are in local coordinates, even then.
+  localBounds.MoveBy(-localBounds.x, -localBounds.y);
+  WidgetToScreen(localBounds, aRect);
 
-	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
-	if (screenmgr) {
-		nsCOMPtr<nsIScreen> screen;
-		//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-		screenmgr->ScreenForRect(aRect.x, aRect.y, aRect.width, aRect.height,
-		                         getter_AddRefs(screen));
-		if (screen) {
-			PRInt32 left, top, width, height, fullTop;
-			screen->GetAvailRect(&left, &top, &width, &height);
-			screen->GetRect(&left, &fullTop, &width, &height);
-			yAdjust = top-fullTop;
-		}
-	}
+  nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+  if (screenmgr) {
+    nsCOMPtr<nsIScreen> screen;
+    //screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+    screenmgr->ScreenForRect(aRect.x, aRect.y, aRect.width, aRect.height,
+                             getter_AddRefs(screen));
+    if (screen) {
+      PRInt32 left, top, width, height, fullTop;
+      screen->GetAvailRect(&left, &top, &width, &height);
+      screen->GetRect(&left, &fullTop, &width, &height);
+      yAdjust = top-fullTop;
+    }
+  }
  
-	if (mIsDialog)
-		aRect.MoveBy(-kDialogMarginWidth, -kDialogTitleBarHeight-yAdjust);
-	else
-		aRect.MoveBy(-kWindowMarginWidth, -kWindowTitleBarHeight-yAdjust);
+  if (mIsDialog)
+    aRect.MoveBy(-kDialogMarginWidth, -kDialogTitleBarHeight-yAdjust);
+  else
+    aRect.MoveBy(-kWindowMarginWidth, -kWindowTitleBarHeight-yAdjust);
 
-	return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1291,7 +1313,7 @@ NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
 //-------------------------------------------------------------------------
 PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 {
-	return PR_TRUE;	// don't dispatch the update event
+  return PR_TRUE; // don't dispatch the update event
 }
 
 //-------------------------------------------------------------------------
@@ -1320,67 +1342,84 @@ NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
 }
 
 
-//-------------------------------------------------------------------------
+#pragma mark -
+
+
 //
-// Handle OS events
+// DispatchEvent
 //
-//-------------------------------------------------------------------------
-PRBool nsMacWindow::HandleOSEvent ( EventRecord& aOSEvent )
+// Handle an event coming into us and send it to gecko.
+//
+NS_IMETHODIMP
+nsMacWindow::DispatchEvent ( void* anEvent, PRBool *_retval )
 {
-	PRBool retVal;
-	if (mMacEventHandler.get())
-		retVal = mMacEventHandler->HandleOSEvent(aOSEvent);
-	else
-		retVal = PR_FALSE;
-	return retVal;
+  *_retval = PR_FALSE;
+  if (mMacEventHandler.get())
+    *_retval = mMacEventHandler->HandleOSEvent(*NS_REINTERPRET_CAST(EventRecord*,anEvent));
+
+  return NS_OK;
 }
 
 
+//
+// DispatchEvent
+//
+// Handle an event coming into us and send it to gecko.
+//
+NS_IMETHODIMP
+nsMacWindow::DispatchMenuEvent ( void* anEvent, PRInt32 aNativeResult, PRBool *_retval )
+{
 #if USE_MENUSELECT
-
-//-------------------------------------------------------------------------
-//
-// Handle Menu commands
-//
-//-------------------------------------------------------------------------
-PRBool nsMacWindow::HandleMenuCommand ( EventRecord& aOSEvent, long aMenuResult )
-{
-	PRBool retVal;
-	if (mMacEventHandler.get())
-		retVal = mMacEventHandler->HandleMenuCommand(aOSEvent, aMenuResult);
-	else
-		retVal = PR_FALSE;
-	return retVal;
-}
-
+  *_retval = PR_FALSE;
+  if (mMacEventHandler.get())
+    *_retval = mMacEventHandler->HandleMenuCommand(*NS_REINTERPRET_CAST(EventRecord*,anEvent), aNativeResult);
 #endif
 
-//-------------------------------------------------------------------------
-// Pass notification of some drag event to Gecko
+  return NS_OK;
+}
+
+
+//
+// DragEvent
 //
 // The drag manager has let us know that something related to a drag has
 // occurred in this window. It could be any number of things, ranging from 
 // a drop, to a drag enter/leave, or a drag over event. The actual event
 // is passed in |aMessage| and is passed along to our event hanlder so Gecko
 // knows about it.
-//-------------------------------------------------------------------------
-PRBool nsMacWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
+//
+NS_IMETHODIMP
+nsMacWindow::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseGlobalY,
+                         PRUint16 aKeyModifiers, PRBool *_retval)
 {
-	PRBool retVal;
-	if (mMacEventHandler.get())
-		retVal = mMacEventHandler->DragEvent(aMessage, aMouseGlobal, aKeyModifiers);
-	else
-		retVal = PR_FALSE;
-	return retVal;
+  *_retval = PR_FALSE;
+  Point globalPoint = {aMouseGlobalY, aMouseGlobalX};         // QD Point stored as v, h
+  if (mMacEventHandler.get())
+    *_retval = mMacEventHandler->DragEvent(aMessage, globalPoint, aKeyModifiers);
+  
+  return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsMacWindow::Idle()
+{
+  // do some idle stuff?
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+#pragma mark -
+
 
 //-------------------------------------------------------------------------
 //
 // Like ::BringToFront, but constrains the window to its z-level
 //
 //-------------------------------------------------------------------------
-void nsMacWindow::ComeToFront() {
-
+NS_IMETHODIMP
+nsMacWindow::ComeToFront()
+{
   nsZLevelEvent  event;
 
   event.point.x = mBounds.x;
@@ -1397,12 +1436,14 @@ void nsMacWindow::ComeToFront() {
   event.mAdjusted = PR_FALSE;
 
   DispatchWindowEvent(event);
+  
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMacWindow::ResetInputState()
 {
-	return mMacEventHandler->ResetInputState();
+  return mMacEventHandler->ResetInputState();
 }
 
 void nsMacWindow::SetIsActive(PRBool aActive)

@@ -44,6 +44,9 @@ using std::auto_ptr;
 
 #include "nsWindow.h"
 #include "nsMacEventHandler.h"
+#include "nsIEventSink.h"
+#include "nsPIWidgetMac.h"
+#include "nsPIEventSinkStandalone.h"
 
 #if TARGET_CARBON
 #include <CarbonEvents.h>
@@ -59,7 +62,7 @@ struct PhantomScrollbarData;
 //-------------------------------------------------------------------------
 //	MacOS native window
 
-class nsMacWindow : public nsChildWindow
+class nsMacWindow : public nsChildWindow, public nsIEventSink, public nsPIWidgetMac, public nsPIEventSinkStandalone
 {
 private:
 	typedef nsChildWindow Inherited;
@@ -68,6 +71,11 @@ public:
     nsMacWindow();
     virtual ~nsMacWindow();
 
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIEVENTSINK 
+    NS_DECL_NSPIWIDGETMAC
+    NS_DECL_NSPIEVENTSINKSTANDALONE
+    
 /*
     // nsIWidget interface
     NS_IMETHOD            Create(nsIWidget *aParent,
@@ -103,27 +111,12 @@ public:
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
-    void                    CalculateAndSetZoomedSize();
 
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
 
 		NS_IMETHOD              SetTitle(const nsString& aTitle);
-
-		virtual PRBool					HandleOSEvent(
-																		EventRecord&		aOSEvent);
-
-#if USE_MENUSELECT
-		virtual PRBool					HandleMenuCommand(
-																		EventRecord&		aOSEvent,
-																		long						aMenuResult);
-#endif
-
-		// be notified that a some form of drag event needs to go into Gecko
-	virtual PRBool 			DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
-
-    void                    ComeToFront();
 
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();

@@ -79,9 +79,6 @@
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
-// CBrowserShell static variables
-nsMacMessageSink	CBrowserShell::mMessageSink;
-
 
 //*****************************************************************************
 //***    CBrowserShell: constructors/destructor
@@ -156,6 +153,11 @@ void CBrowserShell::FinishCreateSelf()
 	nsCOMPtr<nsIWidget>  aWidget;
 	ourWindow->GetWidget(getter_AddRefs(aWidget));
 	ThrowIfNil_(aWidget);
+	
+	// the widget is also our avenue for dispatching events into Gecko via
+	// nsIEventSink. Save this sink for later.
+	mEventSink = do_QueryInterface(aWidget);
+	ThrowIfNil_(mEventSink);
 
 	Rect portFrame;
 	CalcPortFrameRect(portFrame);
@@ -209,7 +211,8 @@ void CBrowserShell::DrawSelf()
 {
     EventRecord osEvent;
     osEvent.what = updateEvt;
-    mMessageSink.DispatchOSEvent(osEvent, Compat_GetMacWindow());
+    PRBool handled = PR_FALSE;
+    mEventSink->DispatchEvent(&osEvent, &handled);
 }
 
 	
@@ -219,14 +222,16 @@ void CBrowserShell::ClickSelf(const SMouseDownEvent	&inMouseDown)
 		SwitchTarget(this);
 
 	FocusDraw();
-	mMessageSink.DispatchOSEvent((EventRecord&)inMouseDown.macEvent, Compat_GetMacWindow());
+  PRBool handled = PR_FALSE;
+	mEventSink->DispatchEvent(&const_cast<EventRecord&>(inMouseDown.macEvent), &handled);
 }
 
 
 void CBrowserShell::EventMouseUp(const EventRecord	&inMacEvent)
 {
     FocusDraw();
-    mMessageSink.DispatchOSEvent((EventRecord&)inMacEvent, Compat_GetMacWindow());
+    PRBool handled = PR_FALSE;
+    mEventSink->DispatchEvent(&const_cast<EventRecord&>(inMacEvent), &handled);
     
     LEventDispatcher *dispatcher = LEventDispatcher::GetCurrentEventDispatcher();
     if (dispatcher)
@@ -288,7 +293,8 @@ Boolean CBrowserShell::HandleKeyPress(const EventRecord	&inKeyEvent)
 	FocusDraw();
 
 	// dispatch the event
-	Boolean keyHandled = mMessageSink.DispatchOSEvent((EventRecord&)inKeyEvent, Compat_GetMacWindow());
+  PRBool handled = PR_FALSE;
+	Boolean keyHandled = mEventSink->DispatchEvent(&const_cast<EventRecord&>(inKeyEvent), &handled);
 
 	return keyHandled;
 }
@@ -466,12 +472,14 @@ void CBrowserShell::SpendTime(const EventRecord&		inMacEvent)
     {
         case osEvt:
         {
-            // The MacMessageSink will not set the cursor if we are in the background - which is right.
+            // The event sink will not set the cursor if we are in the background - which is right.
             // We have to feed it suspendResumeMessages for it to know
 
             unsigned char eventType = ((inMacEvent.message >> 24) & 0x00ff);
-            if (eventType == suspendResumeMessage)
-            mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), Compat_GetMacWindow());
+            if (eventType == suspendResumeMessage) {
+              PRBool handled = PR_FALSE;
+              mEventSink->DispatchEvent(&const_cast<EventRecord&>(inMacEvent), &handled);
+            }
         }
         break;
     }
@@ -872,7 +880,8 @@ void CBrowserShell::HandleMouseMoved(const EventRecord& inMacEvent)
     if (IsActive())
     {
         FocusDraw();
-        mMessageSink.DispatchOSEvent(const_cast<EventRecord&>(inMacEvent), Compat_GetMacWindow());
+        PRBool handled = PR_FALSE;
+        mEventSink->DispatchEvent(&const_cast<EventRecord&>(inMacEvent), &handled);
     }
 }
 

@@ -23,14 +23,46 @@
 
 #include "nsISupports.idl"
 
+/* THIS IS A PUBLIC EMBEDDING API */
 
+/**
+ * The nsIEventSink is implemented internally by Gecko as the conduit
+ * through which native events travel into Gecko. You obtain an
+ * event sink by QI'ing the top-level nsIWidget, usually a window.
+ *
+ * @status UNDER_REVIEW
+ */
+ 
 [uuid(c0d3a7c8-1dd1-11b2-8903-adcd22d004ab)]
 interface nsIEventSink : nsISupports
 {
- /**
-  * Entry point for native events into Gecko
-  */ 
+  /**
+   * Entry point for native events into Gecko.
+   *
+   * @return <code>PR_TRUE</code> if event was handled
+   *         <code>PR_FALSE</code> if not handled
+   *
+   * On Mac, <code>anEvent</code> is a native <code>EventRecord*</code>.
+   */   
+  boolean dispatchEvent ( in voidPtr anEvent ) ;
   
-  boolean DispatchEvent ( in voidPtr anEvent, in voidPtr aNativeChild ) ;
+  /**
+   * Alerts gecko of a drag event. 
+   *
+   * @param aMessage the message parameter for a Gecko NS_DRAGDROP_EVENT (See nsGUIEvent.h for list).
+   * @param aMouseGlobalX x coordinate of mouse, in global coordinates
+   * @param aMouseGlobalY y coordinate of mouse, in global coordinates
+   * @param aKeyModifiers a native bitfield of which modifier keys are currently pressed
+   *
+   * @return <code>PR_TRUE</code> if event was handled
+   *         <code>PR_FALSE</code> if not handled
+   */
+  boolean dragEvent ( in unsigned long aMessage, in short aMouseGlobalX, in short aMouseGlobalY,
+                       in unsigned short aKeyModifiers ) ;
+  
+  /**
+   * Perform any idle processing (handle timers, set the cursor, etc)
+   */
+  void Idle ( ) ;
 
 };
