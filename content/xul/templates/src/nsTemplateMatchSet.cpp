@@ -277,7 +277,8 @@ nsTemplateMatchRefSet::ConstIterator
 nsTemplateMatchRefSet::First() const
 {
     if (mInlineMatches.mCount <= kMaxInlineMatches)
-        return ConstIterator(this, NS_CONST_CAST(nsTemplateMatch**, mInlineMatches.mEntries));
+        // XXX C-style cast to avoid gcc-2.7.2.3. bustage
+        return ConstIterator(this, (nsTemplateMatch**) mInlineMatches.mEntries);
 
     Entry* entry = NS_REINTERPRET_CAST(Entry*, mTable.entryStore);
     Entry* limit = entry + PR_BIT(mTable.sizeLog2);
@@ -294,7 +295,8 @@ nsTemplateMatchRefSet::Last() const
 {
     PRUint32 count = mInlineMatches.mCount;
     if (count <= kMaxInlineMatches) {
-        nsTemplateMatch** first = NS_CONST_CAST(nsTemplateMatch**, mInlineMatches.mEntries);
+        // XXX C-style cast to avoid gcc-2.7.2.3 bustage
+        nsTemplateMatch** first = (nsTemplateMatch**) mInlineMatches.mEntries;
         nsTemplateMatch** limit = first + count;
         return ConstIterator(this, limit);
     }

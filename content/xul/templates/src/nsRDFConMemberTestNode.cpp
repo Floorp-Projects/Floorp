@@ -184,9 +184,9 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
             if (isconsistent) {
                 // Add a memory element to our set-of-support.
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(),
-                                    VALUE_TO_IRDFRESOURCE(containerValue),
-                                    VALUE_TO_IRDFNODE(memberValue));
+                    nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                                                            VALUE_TO_IRDFRESOURCE(containerValue),
+                                                            VALUE_TO_IRDFNODE(memberValue));
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -240,9 +240,9 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                 newinst.AddAssignment(mMemberVariable, Value(node.get()));
 
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(),
-                                    VALUE_TO_IRDFRESOURCE(containerValue),
-                                    node);
+                    nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                                                            VALUE_TO_IRDFRESOURCE(containerValue),
+                                                            node);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -333,9 +333,9 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
                         newinst.AddAssignment(mContainerVariable, Value(source.get()));
 
                         Element* element =
-                            Element::Create(mConflictSet.GetPool(),
-                                            source,
-                                            VALUE_TO_IRDFNODE(memberValue));
+                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                                                                    source,
+                                                                    VALUE_TO_IRDFNODE(memberValue));
 
                         if (! element)
                             return NS_ERROR_OUT_OF_MEMORY;
@@ -429,14 +429,16 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, 
 
                     Element* element;
                     if (hasContainerBinding) {
-                        element = Element::Create(mConflictSet.GetPool(),
-                                                  VALUE_TO_IRDFRESOURCE(containerValue),
-                                                  VALUE_TO_IRDFNODE(value));
+                        element =
+                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                                                                    VALUE_TO_IRDFRESOURCE(containerValue),
+                                                                    VALUE_TO_IRDFNODE(value));
                     }
                     else {
-                        element = Element::Create(mConflictSet.GetPool(),
-                                                  VALUE_TO_IRDFRESOURCE(value),
-                                                  VALUE_TO_IRDFNODE(memberValue));
+                        element =
+                            nsRDFConMemberTestNode::Element::Create(mConflictSet.GetPool(),
+                                                                    VALUE_TO_IRDFRESOURCE(value),
+                                                                    VALUE_TO_IRDFNODE(memberValue));
                     }
 
                     if (! element)

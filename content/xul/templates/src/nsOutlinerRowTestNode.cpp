@@ -76,7 +76,7 @@ nsOutlinerRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
 
                 PR_LOG(gXULTemplateLog, PR_LOG_DEBUG, ("    => passed"));
                 Element* element =
-                    Element::Create(mConflictSet.GetPool(), container);
+                    nsOutlinerRowTestNode::Element::Create(mConflictSet.GetPool(), container);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
