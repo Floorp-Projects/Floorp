@@ -47,6 +47,7 @@ public:
   NS_IMETHOD MenuIsOpen(PRBool& aResult) = 0;
   NS_IMETHOD MenuIsContainer(PRBool& aResult) = 0;
   NS_IMETHOD MenuIsChecked(PRBool& aResult) = 0;
+  NS_IMETHOD MenuIsDisabled(PRBool& aResult) = 0;
 
   NS_IMETHOD SelectFirstItem() = 0;
 
