@@ -52,7 +52,8 @@ for $br (last_successful_builds($tree)) {
 
   warn "Parsing build log, $log_file\n";
 
-  $fh = new FileHandle "gunzip -c $tree/$log_file |";
+  $fh = new FileHandle "gunzip -c $tree/$log_file |" 
+    or die "Unable to open $tree/$log_file\n";
   &gcc_parser($fh, $cvsroot, $tree, $log_file, $file_bases, $file_fullpaths);
   $fh->close;
 
@@ -131,10 +132,6 @@ sub last_successful_builds {
   my @build_records = ();
   my $br;
 
-
-  $maxdate = time;
-  $mindate = $maxdate - 5*60*60; # Go back 5 hours
-  
   print STDERR "Loading build data...";
   &load_data;
   print STDERR "done\n";
