@@ -166,7 +166,7 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
   if (!initialized)
   {
     initialized = 1;
-    // Set prefVal the value of the preference "browser.screen_resolution"
+    // Set prefVal the value of the preference "browser.display.screen_resolution"
     // or -1 if we can't get it.
     // If it's negative, we pretend it's not set.
     // If it's 0, it means force use of the operating system's logical resolution.
@@ -177,13 +177,13 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
     if (NS_SUCCEEDED(res) && prefs)
     {
-      res = prefs->GetIntPref("browser.screen_resolution", &prefVal);
+      res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
       if (! NS_SUCCEEDED(res))
       {
         prefVal = 96;
       }
 
-      prefs->RegisterCallback("browser.screen_resolution", prefChanged,
+      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
                               (void *)this);
       mDpi = prefVal;
     }
@@ -553,7 +553,7 @@ int nsDeviceContextPh::prefChanged(const char *aPref, void *aClosure)
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::prefChanged aPref=<%s>\n", aPref));
   
-  if (nsCRT::strcmp(aPref, "browser.screen_resolution")==0) {
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) {
     PRInt32 dpi;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     rv = prefs->GetIntPref(aPref, &dpi);

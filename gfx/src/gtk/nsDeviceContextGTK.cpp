@@ -84,7 +84,7 @@ nsDeviceContextGTK::~nsDeviceContextGTK()
   nsresult rv;
   nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    prefs->UnregisterCallback("browser.screen_resolution",
+    prefs->UnregisterCallback("browser.display.screen_resolution",
                               prefChanged, (void *)this);
   }
 }
@@ -117,7 +117,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   if (!initialized) {
     initialized = 1;
 
-    // Set prefVal the value of the preference "browser.screen_resolution"
+    // Set prefVal the value of the preference "browser.display.screen_resolution"
     // or -1 if we can't get it.
     // If it's negative, we pretend it's not set.
     // If it's 0, it means force use of the operating system's logical resolution.
@@ -127,11 +127,11 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
     if (NS_SUCCEEDED(res) && prefs) {
-      res = prefs->GetIntPref("browser.screen_resolution", &prefVal);
+      res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
       if (! NS_SUCCEEDED(res)) {
         prefVal = -1;
       }
-      prefs->RegisterCallback("browser.screen_resolution", prefChanged,
+      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
                               (void *)this);
     }
 
@@ -521,7 +521,7 @@ int nsDeviceContextGTK::prefChanged(const char *aPref, void *aClosure)
   nsDeviceContextGTK *context = (nsDeviceContextGTK*)aClosure;
   nsresult rv;
   
-  if (nsCRT::strcmp(aPref, "browser.screen_resolution")==0) {
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) {
     PRInt32 dpi;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     rv = prefs->GetIntPref(aPref, &dpi);

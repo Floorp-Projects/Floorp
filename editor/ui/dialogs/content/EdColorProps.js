@@ -109,22 +109,22 @@ function Startup()
     dump("Getting browser prefs...\n");
 
     // This doesn't necessarily match what appears in the page
-    // It is complicated by browser.use_document_colors
+    // It is complicated by browser.display.use_document_colors
     // TODO: WE MUST FORCE WINDOW TO USE DOCUMENT COLORS!!!
     //       How do we do that without changing browser prefs?
-    var useDocumentColors =    prefs.GetBoolPref("browser.use_document_colors");
-    dump("browser.use_document_colors = "+ useDocumentColors+"\n");
+    var useDocumentColors =    prefs.GetBoolPref("browser.display.use_document_colors");
+    dump("browser.display.use_document_colors = "+ useDocumentColors+"\n");
     if (useDocumentColors)
     {
       // How do I get current colors as show in page?
     } else {
       try {
         // Use author's browser pref colors
-        defaultTextColor =         prefs.CopyCharPref("browser.foreground_color");
+        defaultTextColor =         prefs.CopyCharPref("browser.display.foreground_color");
         defaultLinkColor =         prefs.CopyCharPref("browser.anchor_color");
         // Note: Browser doesn't store a value for ActiveLinkColor
         defaultVisitedLinkColor =  prefs.CopyCharPref("browser.visited_color");
-        defaultBackgroundColor=    prefs.CopyCharPref("browser.background_color");
+        defaultBackgroundColor=    prefs.CopyCharPref("browser.display.background_color");
       }
       catch (ex) {
         dump("Failed getting browser colors from prefs\n");

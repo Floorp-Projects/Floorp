@@ -63,8 +63,8 @@ pref("browser.cache.enable",                true);
 pref("browser.cache.disk.enable",                true);
 pref("browser.cache.memory_cache_size",     1024);
 pref("browser.cache.disk_cache_ssl",        false);
-pref("browser.foreground_color",            "#000000");
-pref("browser.background_color",            "#C0C0C0");
+pref("browser.display.foreground_color",    "#000000");
+pref("browser.display.background_color",    "#C0C0C0");
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.chrome.show_directory_buttons",   true);
@@ -87,7 +87,7 @@ pref("browser.display_while_loading",       true);
 pref("browser.custom_link_color",           false);
 pref("browser.custom_visited_color",        false);
 pref("browser.custom_text_color",           false);
-pref("browser.use_document_colors",         true);
+pref("browser.display.use_document_colors", true);
 pref("browser.ldapfile_location",       "");
 pref("browser.print_background",            false);
 pref("browser.prefs_window.modeless",       false);
@@ -96,7 +96,7 @@ pref("browser.find_window_rect",            "-1,-1,-1,-1");
 pref("browser.bookmark_window_rect",        "-1,-1,-1,-1");
 pref("browser.download_window_rect",        "-1,-1,-1,-1");
 pref("browser.wfe.ignore_def_check",false);
-pref("browser.wfe.use_windows_colors",true);
+pref("browser.display.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
 
 // Dialog modality issues
@@ -337,8 +337,8 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
-pref("browser.enable_webfonts",         true);
-pref("browser.use_document_fonts",              1); // 0 = never, 1 = quick, 2 = always
+pref("browser.enable_webfonts",                 true);
+pref("browser.display.use_document_fonts",      1); // 0 = never, 1 = quick, 2 = always
 
 // -- folders (Mac: these are binary aliases.)
 localDefPref("browser.download_directory",      "");
