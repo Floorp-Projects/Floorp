@@ -28,6 +28,12 @@ REAL_XPDIR	= $(topsrcdir)/lib/xp
 HSRCS		= $(wildcard $(srcdir)/*.html)
 MSRCS		= $(wildcard $(srcdir)/*.msg)
 
+HOBJS		= $(subst $(srcdir),.,$(HSRCS))
+HOBJS		:= $(HOBJS:.html=.h)
+
+MOBJS		= $(subst $(srcdir),.,$(MSRCS))
+MOBJS		:= $(MOBJS:.msg=.h)
+
 RM		= /bin/rm -f
 
 #
@@ -37,7 +43,7 @@ RM		= /bin/rm -f
 #
 TR69		= $(OBJDIR)/tr69
 
-TARGETS		= $(TR69) $(HSRCS:.html=.h) $(MSRCS:.msg=.h) splash.h splash-java.h \
+TARGETS		= $(TR69) $(HOBJS) $(MOBJS) splash.h splash-java.h \
 		  about-lite.h about-java-lite.h splash-lite.h splash-java-lite.h
 
 include $(topsrcdir)/config/rules.mk
@@ -68,7 +74,7 @@ endif
 # Win16:  no Mercutio MDEF
 # Unix:   no Mercutio MDEF, no Macromedia, no Symantec, no Quicktime
 #
-about.h:	about-all.html
+about.h:	$(srcdir)/about-all.html
 	@echo generating $@ from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
@@ -100,7 +106,7 @@ about.h:	about-all.html
 	echo;								\
 	$(RM) $$RTMP
 
-about-java.h:	about-all.html
+about-java.h:	$(srcdir)/about-all.html
 	@echo generating $@ from $<;					\
 	NAME=Netscape;							\
 	CLASS=Netscape;							\
@@ -132,7 +138,7 @@ about-java.h:	about-all.html
 	echo;								\
 	$(RM) $$RTMP
 
-about-all.h:	about-all.html
+about-all.h:	$(srcdir)/about-all.html
 	@echo "Garbage file" > $@
 
 splash.input:		about.h
