@@ -48,6 +48,7 @@
 #define PP_PATH_ONLY                    2
 #define PP_ROOT_ONLY                    3
 
+#define CLASS_NAME_SETUP                "MozillaSetup"
 #define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 
 char      szTitle[MAX_BUF];
@@ -965,7 +966,7 @@ RunInstaller()
 int APIENTRY
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	WNDCLASS	wc;
+  WNDCLASS  wc;
   HWND      hwndFW;
 
 	hInst = hInstance;
@@ -979,7 +980,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
       to have its own unique setup directory 
    */
   if(FindWindow("NSExtracting", "Extracting...") != NULL ||
-    (hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+    (hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL ||
+    (hwndFW = FindWindow(CLASS_NAME_SETUP, NULL)) != NULL)
   {
     if (gbAllowMultipleInstalls)
     {
@@ -1002,12 +1004,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
     else
     {
       if (hwndFW!=NULL)
-  {
-    ShowWindow(hwndFW, SW_RESTORE);
-    SetForegroundWindow(hwndFW);
+      {
+        ShowWindow(hwndFW, SW_RESTORE);
+        SetForegroundWindow(hwndFW);
       }
-    return(1);
-  }
+      return(1);
+    }
   }
 
 	// Figure out the total size of the resources

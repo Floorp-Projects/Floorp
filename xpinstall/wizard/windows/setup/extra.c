@@ -101,15 +101,60 @@ BOOL InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
+  BOOL     bRv;
+  WNDCLASS wc;
+
+  wc.style         = CS_HREDRAW | CS_VREDRAW | CS_PARENTDC | CS_SAVEBITS;
+  wc.lpfnWndProc   = DefWindowProc;
+  wc.cbClsExtra    = 0;
+  wc.cbWndExtra    = 0;
+  wc.hInstance     = hInstance;
+  wc.hIcon         = LoadIcon(hSetupRscInst, MAKEINTRESOURCE(IDI_SETUP));
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH)(COLOR_ACTIVECAPTION + 1);
+  wc.lpszMenuName  = NULL;
+  wc.lpszClassName = CLASS_NAME_SETUP;
+
+  bRv = RegisterClass(&wc);
+  if(bRv == FALSE)
+    return(bRv);
+
   return(InitDialogClass(hInstance, hSetupRscInst));
 }
 
 BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
 {
+  HWND hWnd;
+
   gSystemInfo.dwScreenX = GetSystemMetrics(SM_CXSCREEN);
   gSystemInfo.dwScreenY = GetSystemMetrics(SM_CYSCREEN);
 
+  gSystemInfo.lastWindowPosCenterX = gSystemInfo.dwScreenX / 2;
+  gSystemInfo.lastWindowPosCenterY = gSystemInfo.dwScreenY / 2;
+
   hInst = hInstance;
+
+  /* This window is only for the purpose of allowing the self-extracting .exe
+   * code to detect that a setup.exe is currenly running and do the appropriate
+   * action given certain conditions.  This window is created and left in the
+   * invisible state.
+   * There's no other purpose for this window at this time.
+   */
+  hWnd = CreateWindow(CLASS_NAME_SETUP,
+                      DEFAULT_SETUP_WINDOW_NAME,
+                      WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+                      -150,
+                      -50,
+                      1,
+                      1,
+                      NULL,
+                      NULL,
+                      hInstance,
+                      NULL);
+
+  if(!hWnd)
+    return(FALSE);
+
   hWndMain = NULL;
 
   return(TRUE);
@@ -5342,6 +5387,47 @@ void ResolveDependees(LPSTR szToggledReferenceName, HWND hwndListBox)
     ResolveDependees(szToggledReferenceName, hwndListBox);
 }
 
+/* Function: ReplacePrivateProfileStrCR()
+ *
+ *       in: LPSTR aInputOutputStr: In/out string to containing "\\n" to replace.
+ *           
+ *  purpose: To parse for and replace "\\n" string with "\n".  Strings stored
+ *           in .ini files cannot contain "\n" because it's a key delimiter.
+ *           To work around this limination, "\\n" chars can be used to
+ *           represent '\n'.  This function will look for "\\n" and replace
+ *           them with a true "\n".
+ *           If it encounters a string of "\\\\n" (which looks like '\\n'),
+ *           then this function will strip out the extra '\\' and just show
+ *           "\\n";
+ */
+void ReplacePrivateProfileStrCR(LPSTR aInputOutputStr)
+{
+  LPSTR pSearch          = aInputOutputStr;
+  LPSTR pSearchEnd       = aInputOutputStr + lstrlen(aInputOutputStr);
+  LPSTR pPreviousSearch  = NULL;
+
+  while (pSearch < pSearchEnd)
+  {
+    if (('\\' == *pSearch) || ('n' == *pSearch))
+    {
+      // found a '\\' or 'n'.  check to see if  the prefivous char is also a '\\'.
+      if (pPreviousSearch && ('\\' == *pPreviousSearch))
+      {
+        if ('n' == *pSearch)
+          *pSearch = '\n';
+
+        memmove(pPreviousSearch, pSearch, pSearchEnd-pSearch+1);
+
+        // our string is shorter now ...
+        pSearchEnd -= pSearch - pPreviousSearch;
+      }
+    }
+
+    pPreviousSearch = pSearch;
+    pSearch = CharNext(pSearch);
+  }
+}
+
 void PrintUsage(void)
 {
   char szBuf[MAX_BUF];
@@ -5356,6 +5442,7 @@ void PrintUsage(void)
    * -greLocal: Forces GRE to be installed into the application dir.
    * -greShared: Forces GRE to be installed into a global, shared dir (normally
    *    c:\program files\common files\mozilla.org\GRE
+   * -reg_path [path]: Where to make entries in the Windows registry. (Shared installs)
    * -f: Force install of GRE installer (Shared installs), though it'll work
    *    for non GRE installers too.
    * -greForce: Force 'Component GRE' to be downloaded, run, and installed.  This
@@ -5364,11 +5451,14 @@ void PrintUsage(void)
    * -n [filename]: setup's parent's process filename
    * -ma: run setup in Auto mode
    * -mmi: Allow multiple installer instances. (Shared installs)
+   * -showBanner: Show the banner in the download and install process dialogs.
+   *              This will override config.ini
+   * -hideBanner: Hides the banner in the download and install process dialogs.
+   *              This will override config.ini
    * -ms: run setup in Silent mode
    * -ira: ignore the [RunAppX] sections
    * -ispf: ignore the [Program FolderX] sections that show
    *        the Start Menu shortcut folder at the end of installation.
-   * -reg_path [path]: Where to make entries in the Windows registry. (Shared installs)
    */
 
   if(sgProduct.szParentProcessFilename && *sgProduct.szParentProcessFilename != '\0')
@@ -5382,12 +5472,74 @@ void PrintUsage(void)
   GetPrivateProfileString("Strings", "UsageMsg Usage", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if (lstrlen(szBuf) > 0)
   {
-    wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
-    PrintError(szUsageMsg, ERROR_CODE_HIDE);
+    char strUsage[MAX_BUF];
+
+    ReplacePrivateProfileStrCR(szBuf);
+    _snprintf(szUsageMsg, sizeof(szUsageMsg), szBuf, szProcessFilename);
+    GetPrivateProfileString("Messages", "DLG_USAGE_TITLE", "", strUsage, sizeof(strUsage), szFileIniInstall);
+    MessageBox(hWndMain, szUsageMsg, strUsage, MB_ICONEXCLAMATION);
   }
 }
 
-DWORD ParseCommandLine(LPSTR lpszCmdLine)
+/* Function: ParseForStartupOptions()
+ *       in: aCmdLine
+ *  purpose: Parses for options that affect the initialization of setup.exe,
+ *           such as -ms, -ma, -mmi.
+ *           This is required to be parsed this early because setup needs to
+ *           know if dialogs need to be shown (-ms, -ma) and also where to
+ *           create the temp directory for temporary items to be placed at
+ *           (-mmi).
+ */
+DWORD ParseForStartupOptions(LPSTR aCmdLine)
+{
+  char  szArgVBuf[MAX_BUF];
+  int   i;
+  int   iArgC;
+
+#ifdef XXX_DEBUG
+  char  szBuf[MAX_BUF];
+  char  szOutputStr[MAX_BUF];
+#endif
+
+  iArgC = GetArgC(aCmdLine);
+
+#ifdef XXX_DEBUG
+  wsprintf(szOutputStr, "ArgC: %d\n", iArgC);
+#endif
+
+  i = 0;
+  while(i < iArgC)
+  {
+    GetArgV(aCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+
+    if(!lstrcmpi(szArgVBuf, "-mmi") || !lstrcmpi(szArgVBuf, "/mmi"))
+    {
+      gbAllowMultipleInstalls = TRUE;    
+    }
+    else if(!lstrcmpi(szArgVBuf, "-ma") || !lstrcmpi(szArgVBuf, "/ma"))
+      SetSetupRunMode("AUTO");
+    else if(!lstrcmpi(szArgVBuf, "-ms") || !lstrcmpi(szArgVBuf, "/ms"))
+      SetSetupRunMode("SILENT");
+
+#ifdef XXX_DEBUG
+    itoa(i, szBuf, 10);
+    lstrcat(szOutputStr, "    ");
+    lstrcat(szOutputStr, szBuf);
+    lstrcat(szOutputStr, ": ");
+    lstrcat(szOutputStr, szArgVBuf);
+    lstrcat(szOutputStr, "\n");
+#endif
+
+    ++i;
+  }
+
+#ifdef XXX_DEBUG
+  MessageBox(NULL, szOutputStr, "Output", MB_OK);
+#endif
+  return(WIZ_OK);
+}
+
+DWORD ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine)
 {
   char  szArgVBuf[MAX_BUF];
   int   i;
@@ -5411,6 +5563,7 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
 
     if(!lstrcmpi(szArgVBuf, "-h") || !lstrcmpi(szArgVBuf, "/h"))
     {
+      ShowMessage(aMessageToClose, FALSE);
       PrintUsage();
       return(WIZ_ERROR_UNDEFINED);
     }
@@ -5442,10 +5595,6 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szParentProcessFilename, szArgVBuf);
     }
-    else if(!lstrcmpi(szArgVBuf, "-ma") || !lstrcmpi(szArgVBuf, "/ma"))
-      SetSetupRunMode("AUTO");
-    else if(!lstrcmpi(szArgVBuf, "-ms") || !lstrcmpi(szArgVBuf, "/ms"))
-      SetSetupRunMode("SILENT");
     else if(!lstrcmpi(szArgVBuf, "-ira") || !lstrcmpi(szArgVBuf, "/ira"))
       /* ignore [RunAppX] sections */
       gbIgnoreRunAppX = TRUE;
@@ -5480,9 +5629,13 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szRegPath, szArgVBuf);
     }
-    else if(!lstrcmpi(szArgVBuf, "-mmi") || !lstrcmpi(szArgVBuf, "/mmi"))
+    else if(!lstrcmpi(szArgVBuf, "-showBanner") || !lstrcmpi(szArgVBuf, "/showBanner"))
     {
-      gbAllowMultipleInstalls = TRUE;    
+      gShowBannerImage = TRUE;
+    }
+    else if(!lstrcmpi(szArgVBuf, "-hideBanner") || !lstrcmpi(szArgVBuf, "/hideBanner"))
+    {
+      gShowBannerImage = FALSE;
     }
 
 #ifdef XXX_DEBUG
@@ -6172,12 +6325,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
   {
-    // If the path was set on the command-line than we don't want to use the default here.
-    if(*sgProduct.szPath == '\0')
-    {
-      GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      DecryptString(sgProduct.szPath, szBuf);
-    }
+    GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    DecryptString(sgProduct.szPath, szBuf);
   }
   else
   {
@@ -6275,11 +6424,15 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   GetPrivateProfileString("General", "GRE Private Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(*szBuf != '\0')
-  {
     DecryptString(sgProduct.grePrivateKey, szBuf);
-    lstrcat(sgProduct.grePrivateKey, "_");
-    lstrcat(sgProduct.grePrivateKey, sgProduct.szProductNameInternal);
-  }
+
+  GetPrivateProfileString("General", "Show Banner Image", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "FALSE") == 0)
+    gShowBannerImage = FALSE;
+
+  iRv = ParseCommandLine(szMsgInitSetup, lpszCmdLine);
+  if(iRv)
+    return(iRv);
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
@@ -6629,7 +6782,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
           wsprintf(szTitle, szBuf, sgProduct.szProductName);
 
         GetPrivateProfileString("Strings", "Message Unfinished Download Restart", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
+        if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND) == IDNO)
         {
           UnsetSetupCurrentDownloadFile();
           UnsetSetupState(); /* unset the download state so that the archives can be deleted */
@@ -6656,7 +6809,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
           wsprintf(szTitle, szBuf, sgProduct.szProductName);
 
         GetPrivateProfileString("Strings", "Message Unfinished Install Xpi Restart", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
+        if(MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND) == IDNO)
         {
           UnsetSetupCurrentDownloadFile();
           UnsetSetupState(); /* unset the installing xpis state so that the archives can be deleted */
@@ -6718,6 +6871,7 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "PROGRAMFOLDER_", "", sgInstallGui.szProgramFolder_, sizeof(sgInstallGui.szProgramFolder_), szFileIniInstall);
   GetPrivateProfileString("General", "EXISTINGFOLDERS_", "", sgInstallGui.szExistingFolder_, sizeof(sgInstallGui.szExistingFolder_), szFileIniInstall);
   GetPrivateProfileString("General", "SETUPMESSAGE", "", sgInstallGui.szSetupMessage, sizeof(sgInstallGui.szSetupMessage), szFileIniInstall);
+  GetPrivateProfileString("General", "RESTART", "", sgInstallGui.szRestart, sizeof(sgInstallGui.szRestart), szFileIniInstall);
   GetPrivateProfileString("General", "YESRESTART", "", sgInstallGui.szYesRestart, sizeof(sgInstallGui.szYesRestart), szFileIniInstall);
   GetPrivateProfileString("General", "NORESTART", "", sgInstallGui.szNoRestart, sizeof(sgInstallGui.szNoRestart), szFileIniInstall);
   GetPrivateProfileString("General", "ADDITIONALCOMPONENTS_", "", sgInstallGui.szAdditionalComponents_, sizeof(sgInstallGui.szAdditionalComponents_), szFileIniInstall);

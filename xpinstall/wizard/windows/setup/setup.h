@@ -50,7 +50,9 @@ typedef int PRInt32;
 #include "resource.h"
 #include "zipfile.h"
 
-#define CLASS_NAME_SETUP                "Setup"
+#define DEFAULT_SETUP_WINDOW_NAME       "Setup"
+/* Class name for the invisible window to be created */
+#define CLASS_NAME_SETUP                "MozillaSetup"
 #define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 #define FILE_INI_SETUP                  "setup.ini"
 #define FILE_INI_CONFIG                 "config.ini"
@@ -91,6 +93,10 @@ typedef int PRInt32;
 
 #define INCLUDE_INVISIBLE_OBJS          TRUE
 #define SKIP_INVISIBLE_OBJS             FALSE
+
+#define NO_BANNER_IMAGE                 0x00000000
+#define BANNER_IMAGE_DOWNLOAD           0x00000001
+#define BANNER_IMAGE_INSTALLING         0x00000002
 
 #define APPPATH_GRE_PATH_SET            0x00000000
 #define APPPATH_GRE_PATH_NOT_SET        0x00000001
@@ -572,6 +578,7 @@ typedef struct dlgInstall
     char szProgramFolder_[MAX_BUF];
     char szExistingFolder_[MAX_BUF];
     char szSetupMessage[MAX_BUF];
+    char szRestart[MAX_BUF];
     char szYesRestart[MAX_BUF];
     char szNoRestart[MAX_BUF];
     char szAdditionalComponents_[MAX_BUF];
@@ -618,6 +625,8 @@ struct sSysInfo
   DWORD dwMemoryAvailablePhysical;
   DWORD dwScreenX;
   DWORD dwScreenY;
+  DWORD lastWindowPosCenterX;
+  DWORD lastWindowPosCenterY;
   BOOL  bScreenReader;
   BOOL  bRefreshIcons;
 };
