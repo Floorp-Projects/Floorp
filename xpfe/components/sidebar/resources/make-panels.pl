@@ -168,7 +168,7 @@ nc-panel|"MozillaZine"|net.254|most-popular
 nc-panel|"Reuters" News|reuters|most-popular
 nc-panel|Sports|sports|most-popular
 nc-panel|Stocks|stocks|most-popular
-panel|"Tinderbox"|tinderbox|most-popular|http://tinderbox.mozilla.org/seamonky/
+panel|"Tinderbox"|tinderbox|most-popular|http://tinderbox.mozilla.org/seamonkey/panel.html
 nc-panel|Weather|weather|most-popular
 
 panel-group|Local|local|master-panel-list
