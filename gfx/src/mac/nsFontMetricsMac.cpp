@@ -293,12 +293,12 @@ nscoord nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 //  PR_Free(xstring);
 
   //return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
-  
+   
   return width;
 }
 
 // XXX this needs to be implemented correctly
-nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+nscoord  nsFontMetricsMac:: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
 {
   return GetWidth(aString.GetUnicode(), aString.Length());
 }
