@@ -169,6 +169,17 @@ endif
 # 
 # NSS libs needed for final link in static build
 # 
+NSS_3_4=1
+
+ifdef NSS_3_4
+NSS_LIBS	= \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)smime3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)ssl3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)nss3$(DLL_SUFFIX) \
+	$(DIST)/lib/$(NSS_LIB_PREFIX)softokn3$(DLL_SUFFIX) \
+	$(NULL)
+else
 NSS_LIBS	= \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)smime.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
@@ -185,6 +196,7 @@ NSS_LIBS	= \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)secutil.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(NSS_LIB_PREFIX)dbm.$(LIB_SUFFIX) \
 	$(NULL)
+endif
 
 MOZ_UNICHARUTIL_LIBS = $(DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX)
 MOZ_REGISTRY_LIBS          = $(DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)

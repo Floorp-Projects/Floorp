@@ -130,9 +130,7 @@ NSS_CO_FLAGS=$(MOZ_CO_FLAGS)
 !if "$(NSS_CO_TAG)" != ""
 NSS_CO_FLAGS=$(NSS_CO_FLAGS) -r $(NSS_CO_TAG)
 !else
-!ifndef NSS_3_4
 NSS_CO_FLAGS=$(NSS_CO_FLAGS) -r NSS_CLIENT_TAG
-!endif
 !endif
 
 CVSCO_NSS = cvs $(CVS_FLAGS) co $(NSS_CO_FLAGS)

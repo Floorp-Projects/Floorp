@@ -73,7 +73,11 @@ REQUIRES	= \
 
 include <$(DEPTH)/config/config.mak>
 
+NSS_3_4=1
+
+!if !defined(NSS_3_4)
 CFLAGS = $(CFLAGS) -DNSS_USE_STATIC_LIBS
+!endif
 
 LINCS = $(LINCS)     \
     -I$(XPDIST)/public/security \
