@@ -839,7 +839,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
-    nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
     PRInt32 startPos = 0;
 //    PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
@@ -851,7 +850,13 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-        frameselection->HandleClick(newContent, startPos , contentOffsetEnd , inputEvent->isShift, inputEvent->isControl,beginContent);
+        PRBool doMultipleSelection;
+#ifdef XP_MAC
+        doMultipleSelection = me->isMeta;
+#else
+        doMultipleSelection = me->isControl;
+#endif
+        frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, doMultipleSelection, beginContent);
       }
       //no release 
     }
