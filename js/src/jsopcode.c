@@ -112,7 +112,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
     JSString *str;
     char *cstr;
 
-    op = *pc;
+    op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
 	JS_ReportError(cx, "bytecode %d too large (limit %d)", op, JSOP_LIMIT);
 	return 0;
