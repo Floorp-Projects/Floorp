@@ -324,6 +324,7 @@ nsOnStopBindingEvent::~nsOnStopBindingEvent()
 nsresult
 nsOnStopBindingEvent::Init(nsresult status, nsIString* aMsg)
 {
+    mStatus = status;
     mMessage = aMsg;
     NS_IF_ADDREF(mMessage);
     return NS_OK;
