@@ -45,6 +45,9 @@
 #include "jsatom.h"
 #include "jsscope.h"
 
+#ifdef OJI
+#include "jvmmgr.h"
+#endif
 #include "nsCaps.h"
 
 extern JRIEnv * LJ_JSJ_CurrentEnv(JSContext * cx);
@@ -586,20 +589,18 @@ lm_GetPrincipalsFromStackFrame(JSContext *cx)
      */
     JSStackFrame *fp;
     JSScript *script;
+    JSStackFrame *pFrameToStartLooking = JVM_GetStartJSFrameFromParallelStack();
+    JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
 
-    fp = NULL;
-    while ((fp = JS_FrameIterator(cx, &fp)) != NULL) {
+    fp = pFrameToStartLooking;
+    while ((fp = JS_FrameIterator(cx, &fp)) != pFrameToEndLooking) {
         script = JS_GetFrameScript(cx, fp);
         if (script) {
             return JS_GetScriptPrincipals(cx, script);
         }
     }
-#ifdef JAVA
-    /* =-= sudu: What do we do here for OJI? Ask raman.
-    */
-    if (JSJ_IsCalledFromJava(cx)) {
-        return LM_GetJSPrincipalsFromJavaCaller(cx, 0);
-    }
+#ifdef OJI
+        return JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
 #endif
 
     return NULL;
@@ -1508,6 +1509,7 @@ lm_CanAccessTarget(JSContext *cx, JSTarget target)
     return JS_TRUE;
 }
 
+
 /* This array must be kept in sync with the JSTarget enum in jsapi.h */
 static char *targetStrings[] = {
     "UniversalBrowserRead",
@@ -1520,6 +1522,35 @@ static char *targetStrings[] = {
     "AccountSetup",
     /* See Target.java for more targets */
 };
+
+int
+findTarget(const char *target)
+{ 
+   int i=0;
+   for(i=0; i<JSTARGET_MAX; i++)
+   {
+      if (XP_STRCMP(target, targetStrings[i]) == 0)
+      {
+         return i;
+      }
+   }
+   return -1;
+}
+/*
+** Exported entry point to support nsISecurityContext::Implies method.
+*/
+JSBool
+LM_CanAccessTargetStr(JSContext *cx, const char *target)
+{
+    int      intTarget = findTarget(target);
+    JSTarget jsTarget;
+    if(intTarget < 0)
+    {
+      return PR_FALSE;
+    }
+    jsTarget = (JSTarget)intTarget;
+    return lm_CanAccessTarget(cx, jsTarget);
+}
 
 
 /*
@@ -1537,6 +1568,8 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
     JSStackFrame *fp;
     void *annotationRef;
     void *principalArray = NULL;
+    JSStackFrame *pFrameToStartLooking = JVM_GetStartJSFrameFromParallelStack();
+    JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
 
     setupJSCapsCallbacks();
 
@@ -1548,8 +1581,8 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
     /* Find annotation */
     annotationRef = NULL;
     principalArray = NULL;
-    fp = NULL;
-    while ((fp = JS_FrameIterator(cx, &fp)) != NULL) {
+    fp = pFrameToStartLooking;
+    while ((fp = JS_FrameIterator(cx, &fp)) != pFrameToEndLooking) {
         void *current;
         if (JS_GetFrameScript(cx, fp) == NULL)
             continue;
@@ -1574,34 +1607,26 @@ principalsCanAccessTarget(JSContext *cx, JSTarget target)
     if (annotationRef) {
         annotation = (struct nsPrivilegeTable *)annotationRef;
     } else {
-#ifdef JAVA
-        if (JSJ_IsCalledFromJava(cx)) {
-            /*
-             * Call from Java into JS. Just call the Java routine for checking
-             * privileges.
-             */
-            if (principalArray) {
-                /*
-                 * Must check that the principals that signed the Java applet are
-                 * a subset of the principals that signed this script.
-                 */
-                void *javaPrincipals = NULL;
+#ifdef OJI
+         /*
+          * Call from Java into JS. Just call the Java routine for checking
+          * privileges.
+          */
+          if (principalArray) {
+              /*
+               * Must check that the principals that signed the Java applet are
+               * a subset of the principals that signed this script.
+               */
+              void *javaPrincipals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
 
-                /* XXX: The following is a LiveConnect call. We need to find
-                 * out from the VM who the principal is (may be get the
-                 * certificate from VM and create a principal from it).
-                 * Pass that principal to canExtendTrust call. Until this is
-                 * fixed deny the privileged operations from Java to JS.
-                 */
-                /* XXX: raman: We need to fix this with LiveConnect integration.
-                 *  javaPrincipals = nsCapsGetClassPrincipalsFromStack(cx, 0);
-                 */
-                if (!canExtendTrust(cx, javaPrincipals, principalArray)) {
-                    return JS_FALSE;
-                }
-            }
-            return (JSBool)nsCapsIsPrivilegeEnabled(cx, capsTarget, 0);
-        }
+              if (!canExtendTrust(cx, javaPrincipals, principalArray)) {
+                  return JS_FALSE;
+              }
+          }
+         /*
+          * XXX sudu: TODO: Setup the parameters representing a target.
+          */
+          return JVM_NSISecurityContextImplies(pFrameToStartLooking, targetStrings[target], NULL);
 #endif /* JAVA */
         /* No annotation in stack */
         return JS_FALSE;

@@ -43,10 +43,7 @@
 #if defined(JAVA)
 #include "jsjava.h"
 #elif defined (OJI)
-/*
-#include "np2.h"
 #include "jsjava.h"
-*/
 #include "jvmmgr.h"
 #endif
 

@@ -106,17 +106,23 @@ public:
     ReleaseJNIEnv(JNIEnv* env) = 0;
 
 	/**
-	 * This creates a new secure communication channel with Java.
+	 * This creates a new secure communication channel with Java. The second parameter,
+	 * nativeEnv, if non-NULL, will be the actual thread for Java communication.
+	 * Otherwise, a new thread should be created.
+	 * @param	proxyEnv		the env to be used by all clients on the browser side
+	 * @return	outSecureEnv	the secure environment used by the proxyEnv
 	 */
 	NS_IMETHOD
-	GetSecureJNI(JNIEnv* proxyJNI, nsISecureJNI2* *result) = 0;
+	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv) = 0;
 
 	/**
 	 * Gives time to the JVM from the main event loop of the browser. This is
 	 * necessary when there aren't any plugin instances around, but Java threads exist.
 	 */
+#ifdef XP_MAC
 	NS_IMETHOD
 	SpendTime(PRUint32 timeMillis) = 0;
+#endif
 };
 
 #define NS_IJVMPLUGIN_IID                            \

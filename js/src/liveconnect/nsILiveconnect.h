@@ -45,7 +45,8 @@ public:
      *                     wrapped up as java wrapper netscape.javascript.JSObject.
      */
     NS_IMETHOD
-    GetMember(JNIEnv *jEnv, jsobject jsobj, const jchar *name, jsize length, jobject *pjobj) = 0;
+    GetMember(JNIEnv *jEnv, jsobject jsobj, const jchar *name, jsize length, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj) = 0;
 
     /**
      * get member of a Native JSObject for a given index.
@@ -56,7 +57,8 @@ public:
      *                     the member. 
      */
     NS_IMETHOD
-    GetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, jobject *pjobj) = 0;
+    GetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj) = 0;
 
     /**
      * set member of a Native JSObject for a given name.
@@ -68,7 +70,8 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD
-    SetMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobject jobj) = 0;
+    SetMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobject jobj, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext) = 0;
 
     /**
      * set member of a Native JSObject for a given index.
@@ -80,7 +83,8 @@ public:
      *                     then a internal mapping is consulted to convert to a NJSObject.
      */
     NS_IMETHOD
-    SetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, jobject jobj) = 0;
+    SetSlot(JNIEnv *jEnv, jsobject jsobj, jint slot, jobject jobj, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext) = 0;
 
     /**
      * remove member of a Native JSObject for a given name.
@@ -89,7 +93,8 @@ public:
      * @param name       - Name of a member.
      */
     NS_IMETHOD
-    RemoveMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length) = 0;
+    RemoveMember(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length,  void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext) = 0;
 
     /**
      * call a method of Native JSObject. 
@@ -100,19 +105,21 @@ public:
      * @param pjobj      - return value.
      */
     NS_IMETHOD
-    Call(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobjectArray jobjArr, jobject *pjobj) = 0;
+    Call(JNIEnv *jEnv, jsobject jsobj, const jchar* name, jsize length, jobjectArray jobjArr,  void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj) = 0;
 
     /**
      * Evaluate a script with a Native JS Object representing scope.
      *
      * @param obj                - A Native JS Object.
-     * @param pNSIPrincipaArray  - Array of principals to be used to compare privileges.
+     * @param principalsArray    - Array of principals to be used to compare privileges.
      * @param numPrincipals      - Number of principals being passed.
      * @param script             - Script to be executed.
      * @param pjobj              - return value.
      */
-    NS_IMETHOD
-    Eval(JNIEnv *jEnv, jsobject jsobj, const char* codebase, const jchar* script, jsize length, jobject *pjobj) = 0;
+    NS_IMETHOD	
+    Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
+         int numPrincipals, void *pNSISecurityContext, jobject *pjobj) = 0;
 
     /**
      * Get the window object for a plugin instance.
@@ -124,7 +131,8 @@ public:
      *                             in which a applet/bean resides.
      */
     NS_IMETHOD
-    GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj) = 0;
+    GetWindow(JNIEnv *jEnv, void *pJavaObject, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jsobject *pobj) = 0;
 
     /**
      * Get the window object for a plugin instance.

@@ -322,7 +322,8 @@ jsj_ConvertJavaObjectToJSBoolean(JSContext *cx, JNIEnv *jEnv,
                                  jobject java_obj, jsval *vp);
 extern JSJavaThreadState *
 jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
-         JSContext **cxp, JSObject **js_objp, JavaToJSSavedState* saved_state);
+         JSContext **cxp, JSObject **js_objp, JavaToJSSavedState* saved_state, 
+         void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext);
 extern JSBool
 jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JavaToJSSavedState* original_state);
 

@@ -28,7 +28,6 @@
 #define nsISecurityContext_h___
 
 #include "nsISupports.h"
-#include "nsIFactory.h"
 
 class nsISecurityContext : public nsISupports {
 public:

@@ -584,7 +584,8 @@ done:
 
 JSJavaThreadState *
 jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
-         JSContext **cxp, JSObject **js_objp, JavaToJSSavedState* saved_state)
+         JSContext **cxp, JSObject **js_objp, JavaToJSSavedState* saved_state,
+         void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext)
 {
     JSContext *cx;
     char *err_msg;
@@ -596,7 +597,11 @@ jsj_enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
 
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks->enter_js_from_java) {
+#ifdef OJI
+        if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg, pNSIPrincipaArray, numPrincipals, pNSISecurityContext))
+#else
         if (!JSJ_callbacks->enter_js_from_java(jEnv, &err_msg))
+#endif
             goto entry_failure;
     }
 
@@ -753,7 +758,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
 
@@ -806,7 +811,7 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv *jEnv,
     jobject member;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -844,7 +849,7 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -890,7 +895,7 @@ Java_netscape_javascript_JSObject_setSlot(JNIEnv *jEnv,
     JavaToJSSavedState saved_state;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -921,7 +926,7 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv *jEnv,
     jboolean is_copy;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return;
     
@@ -969,7 +974,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
     jobject result;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1059,7 +1064,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
     jobject result;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1120,7 +1125,7 @@ Java_netscape_javascript_JSObject_toString(JNIEnv *jEnv,
     JavaToJSSavedState saved_state;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, java_wrapper_obj, &cx, &js_obj, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     
@@ -1157,7 +1162,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
     jobject java_obj;
     JSJavaThreadState *jsj_env;
     
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, NULL, 0, NULL);
     if (!jsj_env)
         return NULL;
     

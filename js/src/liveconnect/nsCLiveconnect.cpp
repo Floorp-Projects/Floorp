@@ -52,7 +52,6 @@ PR_END_EXTERN_C
 #include "nsCLiveconnect.h"
 
 static NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
-static NS_DEFINE_IID(kISecureLiveconnectIID, NS_ISECURELIVECONNECT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
@@ -77,12 +76,6 @@ nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         AddRef();
         return NS_OK;
     }
-    if (aIID.Equals(kISecureLiveconnectIID)) 
-    {
-        *aInstancePtr = (nsISecureLiveconnect *)this;
-        AddRef();
-        return NS_OK;
-    }
     return NS_NOINTERFACE;
 }
 
@@ -103,7 +96,8 @@ nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
  *                     wrapped up as java wrapper netscape.javascript.JSObject.
  */
 NS_METHOD	
-nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject *pjobj)
+nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -119,7 +113,7 @@ nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
 
@@ -156,7 +150,8 @@ done:
  *                     the member. 
  */
 NS_METHOD	
-nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject *pjobj)
+nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext,  jobject *pjobj)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -172,7 +167,7 @@ nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject *pjobj)
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
     
@@ -203,7 +198,8 @@ done:
  *                     then a internal mapping is consulted to convert to a NJSObject.
  */
 NS_METHOD	
-nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject java_obj)
+nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject java_obj, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -217,7 +213,7 @@ nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize l
        return NS_ERROR_FAILURE;
     }
     
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
     
@@ -248,7 +244,8 @@ done:
  *                     then a internal mapping is consulted to convert to a NJSObject.
  */
 NS_METHOD	
-nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj)
+nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,  void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -261,7 +258,7 @@ nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj)
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
     
@@ -283,7 +280,8 @@ done:
  * @param name       - Name of a member.
  */
 NS_METHOD	
-nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length)
+nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
+                             int numPrincipals, void *pNSISecurityContext)
 {
     JSContext         *cx             = NULL;
     JSJavaThreadState *jsj_env        = NULL;
@@ -296,7 +294,7 @@ nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsiz
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
     
@@ -322,7 +320,8 @@ done:
  * @param pjobj      - return value.
  */
 NS_METHOD	
-nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray java_args, jobject *pjobj)
+nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray java_args, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
     int                i              = 0;
     int                argc           = 0;
@@ -343,7 +342,7 @@ nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
         return NS_ERROR_FAILURE;
     
@@ -399,23 +398,59 @@ done:
     return NS_OK;
 }
 
-
-/**
- * Evaluate a script with a Native JS Object representing scope.
- *
- * @param jEnv       - JNIEnv on which the call is being made.
- * @param obj                - A Native JS Object.
- * @param pNSIPrincipaArray  - Array of principals to be used to compare privileges.
- * @param numPrincipals      - Number of principals being passed.
- * @param script             - Script to be executed.
- * @param pjobj              - return value.
- */
 NS_METHOD	
-nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const char* codebase, const jchar *script, jsize length, jobject *pjobj)
+nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
-  // sudu: codebase needs to be converted to a nsIPrincipal. Will do this later.
-  return Eval(jEnv, obj, script, length, NULL, 0, NULL, pjobj);
- //return NS_OK;
+    JSContext         *cx             = NULL;
+    JSJavaThreadState *jsj_env        = NULL;
+    JSObject          *js_obj         = (JSObject *)obj;
+    jsval              js_val;
+    int                dummy_cost     = 0;
+    JSBool             dummy_bool     = PR_FALSE;
+    JavaToJSSavedState saved_state    = {NULL,NULL};
+    jobject            result         = NULL;
+	   const char		      *codebase       = NULL;
+    JSPrincipals      *principals     = NULL;
+    JSBool             eval_succeeded = PR_FALSE;
+
+    if(jEnv == NULL)
+    {
+       return NS_ERROR_FAILURE;
+    }
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
+    if (!jsj_env)
+       return NS_ERROR_FAILURE;
+    
+    result = NULL;
+    if (!script) {
+        JS_ReportError(cx, "illegal null string eval argument");
+        goto done;
+    }
+
+    /* Set up security stuff */
+    principals = NULL;
+    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
+        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, principalsArray, numPrincipals, pNSISecurityContext);
+    codebase = principals ? (const char *)principals->codebase : NULL;
+
+    /* Have the JS engine evaluate the unicode string */
+    eval_succeeded = JS_EvaluateUCScriptForPrincipals(cx, js_obj, principals,
+                                                      script, length,
+                                                      codebase, 0, &js_val);
+    if (!eval_succeeded)
+        goto done;
+
+    /* Convert result to a subclass of java.lang.Object */
+    jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, jsj_get_jlObject_descriptor(cx, jEnv),
+                                   &dummy_cost, &result, &dummy_bool);
+
+done:
+    if (!jsj_exit_js(cx, jsj_env, &saved_state))
+       return NS_ERROR_FAILURE;
+    
+    *pjobj = result;
+    return NS_OK;
 }
 
 
@@ -430,7 +465,8 @@ nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const char* codebase, const jch
  *                             in which a applet/bean resides.
  */
 NS_METHOD	
-nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj)
+nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArray[], 
+                     int numPrincipals, void *pNSISecurityContext, jsobject *pobj)
 {
     char              *err_msg        = NULL;
     JSContext         *cx             = NULL;
@@ -443,7 +479,7 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject, jsobject *pobj)
     {
        return NS_ERROR_FAILURE;
     }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
+    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
     if (!jsj_env)
        return NS_ERROR_FAILURE;
     
@@ -492,62 +528,6 @@ nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// from nsISecureLiveconnect:
-NS_METHOD	
-nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void **pNSIPrincipaArray, 
-                     int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
-{
-    JSContext         *cx             = NULL;
-    JSJavaThreadState *jsj_env        = NULL;
-    JSObject          *js_obj         = (JSObject *)obj;
-    jsval              js_val;
-    int                dummy_cost     = 0;
-    JSBool             dummy_bool     = PR_FALSE;
-    JavaToJSSavedState saved_state    = {NULL,NULL};
-    jobject            result         = NULL;
-	   const char		      *codebase       = NULL;
-    JSPrincipals      *principals     = NULL;
-    JSBool             eval_succeeded = PR_FALSE;
-
-    if(jEnv == NULL)
-    {
-       return NS_ERROR_FAILURE;
-    }
-    jsj_env = jsj_enter_js(jEnv, NULL, &cx, NULL, &saved_state);
-    if (!jsj_env)
-       return NS_ERROR_FAILURE;
-    
-    result = NULL;
-    if (!script) {
-        JS_ReportError(cx, "illegal null string eval argument");
-        goto done;
-    }
-
-    /* Set up security stuff */
-    principals = NULL;
-    if (JSJ_callbacks->get_JSPrincipals_from_java_caller)
-        principals = JSJ_callbacks->get_JSPrincipals_from_java_caller(jEnv, cx, pNSIPrincipaArray, numPrincipals, pNSISecurityContext);
-    codebase = principals ? (const char *)principals->codebase : NULL;
-
-    /* Have the JS engine evaluate the unicode string */
-    eval_succeeded = JS_EvaluateUCScriptForPrincipals(cx, js_obj, principals,
-                                                      script, length,
-                                                      codebase, 0, &js_val);
-    if (!eval_succeeded)
-        goto done;
-
-    /* Convert result to a subclass of java.lang.Object */
-    jsj_ConvertJSValueToJavaObject(cx, jEnv, js_val, jsj_get_jlObject_descriptor(cx, jEnv),
-                                   &dummy_cost, &result, &dummy_bool);
-
-done:
-    if (!jsj_exit_js(cx, jsj_env, &saved_state))
-       return NS_ERROR_FAILURE;
-    
-    *pjobj = result;
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsCLiveconnect:
@@ -564,20 +544,3 @@ nsCLiveconnect::~nsCLiveconnect()
 {
 }
 
-
-PR_BEGIN_EXTERN_C
-
-
-PR_IMPLEMENT(PRBool)
-JSJ_NSISecurityContextImplies(void *pNSISecurityContextIN, const char* target, const char* action)
-{
-    nsISecurityContext *pNSISecurityContext = (nsISecurityContext *)pNSISecurityContextIN;
-    PRBool bAllowedAccess = PR_FALSE;
-    if (pNSISecurityContext != NULL)
-    {
-       pNSISecurityContext->Implies(target, action, &bAllowedAccess);
-    }
-    return bAllowedAccess;
-}
-
-PR_END_EXTERN_C

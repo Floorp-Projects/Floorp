@@ -33,7 +33,10 @@ EXPORTS	=			  \
 	nsIJVMPluginInstance.h	  \
 	nsIJVMPluginTagInfo.h	  \
 	nsISymantecDebugManager.h \
-	nsISymantecDebugger.h
+	nsISymantecDebugger.h  \
+ nsISecureJNI2.h \
+ ProxyJNI.h \
+ nsIThreadManager.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 

@@ -49,10 +49,15 @@ enum {
 // to JVM plugins for browsers that support JVM plugins.
 
 class nsIJVMPlugin;
+class nsISecureJNI2;
 
 class nsIJVMManager : public nsISupports {
 public:
-
+    /**
+     * Creates a proxy JNI for a given secure environment.
+     */
+	NS_IMETHOD
+	CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv) = 0;
 };
 
 #define NS_IJVMMANAGER_IID                           \
