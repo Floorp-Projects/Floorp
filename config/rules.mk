@@ -1269,7 +1269,7 @@ else
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND_BUILTIN):
-	$(MAKE) -C $(DEPTH)/config nsinstall
+	$(MAKE) -C $(DEPTH)/config nsinstall$(BIN_SUFFIX)
 	$(MAKE) -C $(MKDEPEND_DIR) mkdepend
 endif
 
