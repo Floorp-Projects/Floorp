@@ -104,6 +104,12 @@ sub is_tree_open {
       $sheriff_string =~ s/mailto://g;
       $sheriff_string =~ s/a href//g;
       $sheriff_string =~ s/[sS]heriff//g;
+      $sheriff_string =~ s/[mM]onday//g;
+      $sheriff_string =~ s/[tT]uesday//g;
+      $sheriff_string =~ s/[wW]ednesday//g;
+      $sheriff_string =~ s/[tT]hursday//g;
+      $sheriff_string =~ s/[fF]riday//g;
+      $sheriff_string =~ s/[wW]eekend//g;
       $sheriff_string =~ s/^[tT]he //g;
       $sheriff_string =~ s/\/a//g;
       $sheriff_string =~ s/netscape.com/nscp/g;
@@ -111,6 +117,7 @@ sub is_tree_open {
       $sheriff_string =~ s/ is / /g;
       $sheriff_string =~ s/ for / /g;
       $sheriff_string =~ s/ on / /g;
+      $sheriff_string =~ s/ in / /g;
       $sheriff_string =~ s/ = / /g;
       $sheriff_string =~ s/ - / /g;
 
