@@ -166,8 +166,8 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     rv = profileService->SetCurrentProfile(newProfileName.get());
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-        NSString *alert = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningAlert", @""), NSLocalizedString(@"Navigator", @"")];
-        NSString *message = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningMsg", @""), NSLocalizedString(@"Navigator", @"")];
+        NSString *alert = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningAlert", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)];
+        NSString *message = [NSString stringWithFormat: NSLocalizedString(@"AlreadyRunningMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)];
         NSString *quit = NSLocalizedString(@"AlreadyRunningButton",@"");
         NSRunAlertPanel(alert,message,quit,nil,nil);
         [NSApp terminate:self];

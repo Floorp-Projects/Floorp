@@ -54,7 +54,7 @@ static CHAboutBox *sharedInstance = nil;
             return;
         }
 
-        [window setTitle:@"About Navigator"];
+        [window setTitle:[NSString stringWithFormat: @"About %@", NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
         creditsPath = [[NSBundle mainBundle] pathForResource:@"Credits" ofType:@"rtf"];
         creditsString = [[NSAttributedString alloc] initWithPath:creditsPath documentAttributes:nil];

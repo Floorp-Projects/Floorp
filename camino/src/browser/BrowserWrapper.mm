@@ -494,7 +494,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
       // popup.
       nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
       BOOL confirm = [controller confirm: [self window] title: @"Unrequested Popup Detected"
-                                text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedString(@"Navigator", @"")]];
+                                text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
       // This is a one-time dialog.
       pref->SetBoolPref("browser.popups.showPopupBlocker", PR_FALSE);
