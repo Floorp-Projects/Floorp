@@ -150,7 +150,7 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetLabel(nsString &aText)
+NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 {
    mLabel = aText;
   
