@@ -63,7 +63,7 @@
 
 
 
-#+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
+#+mcl (dolist (indent-spec '((? . 1) (/*/ . 1) (throw-error . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (assert . 1) (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
                              (new . 1) (set-field . 1) (:narrow . 1) (:select . 1)))
@@ -3467,6 +3467,20 @@
 ;;; Expressions
 
 
+; (/*/ <value-expr> . <styled-text>)
+; Evaluate <value-expr>, but depict <styled-text>.
+(defun scan-/*/ (world type-env special-form value-expr &rest text)
+  (multiple-value-bind (code type annotated-expr) (scan-value world type-env value-expr)
+    (declare (ignore annotated-expr))
+    (when (endp text)
+      (error "/*/ needs a text comment"))
+    (let ((text2 (scan-expressions-in-comment world type-env text)))
+      (values
+       code
+       type
+       (list* 'expr-annotation:special-form special-form text2)))))
+
+
 (defun semantic-expt (base exponent)
   (assert-true (and (rationalp base) (integerp exponent)))
   (when (and (zerop base) (not (plusp exponent)))
@@ -5284,16 +5298,41 @@
 
 (defconstant *semantic-exception-type-name* 'semantic-exception)
 
-; (throw <value-expr>)
+; (throw <value-expr> . <styled-text>)
 ; <value-expr> must have type *semantic-exception-type-name*, which must be the name of some user-defined type in the environment.
-(defun scan-throw (world type-env rest-statements last special-form value-expr)
+; If present, <styled-text> is depicted after the throw statement, separated by an em-dash.
+(defun scan-throw (world type-env rest-statements last special-form value-expr &rest text)
   (multiple-value-bind (value-code value-annotated-expr)
                        (scan-typed-value world type-env value-expr (scan-type world *semantic-exception-type-name*))
     (scan-statements world type-env rest-statements last)
-    (values
-     (list (list 'throw :semantic-exception value-code))
-     :dead
-     (list (list special-form value-annotated-expr)))))
+    (let ((text2 (scan-expressions-in-comment world type-env text)))
+      (values
+       (list (list 'throw :semantic-exception value-code))
+       :dead
+       (list (list* special-form value-annotated-expr text2))))))
+
+
+(defparameter *an-error-list* '(-argument-error -attribute-error -eval-error -uninitialized-error))
+
+; (throw-error <error> . <styled-text>)
+; Syntactic sugar for:
+; (throw (/*/ (construct-error <error>) "a[n] " <error> " exception " :m-dash " " . <styled-text>))
+(defun scan-throw-error (world type-env rest-statements last special-form error-name &rest text)
+  (declare (ignore special-form))
+  (when text
+    (setq text (list* " " :m-dash " " text)))
+  (scan-statements
+   world
+   type-env
+   (cons `(throw (/*/ (construct-error ,error-name)
+                   ,(if (member error-name *an-error-list*) "an" "a")
+                   :nbsp
+                   (:global ,error-name)
+                   :nbsp
+                   "exception"
+                   ,@text))
+         rest-statements)
+   last))
 
 
 ; (catch <body-statements> (<var> [:unused]) . <handler-statements>)
@@ -5647,6 +5686,7 @@
      (while scan-while depict-while)
      (for-each scan-for-each depict-for-each)
      (throw scan-throw depict-throw)
+     (throw-error scan-throw-error nil)
      (catch scan-catch depict-catch)
      (case scan-case depict-case))
     
@@ -5657,6 +5697,7 @@
      (hex scan-hex depict-hex)
      
      ;;Expressions
+     (/*/ scan-/*/ depict-/*/)
      (expt scan-expt depict-expt)
      (= scan-= depict-comparison)
      (/= scan-/= depict-comparison)
