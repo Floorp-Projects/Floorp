@@ -165,7 +165,7 @@ public class NetworkDate {
       byte c3 = ((i+2 < end) ? string[i+2] : 0);
 
       switch (c) {
-      case 'a': case 'A':
+      case (byte)'a': case (byte)'A':
         if (month == UNKNOWN &&
             (c2 == 'p' || c2 == 'P') &&
             (c3 == 'r' || c3 == 'R'))
@@ -179,13 +179,13 @@ public class NetworkDate {
                  (c3 == 'g' || c3 == 'G'))
           month = AUG;
         break;
-      case 'b': case 'B':
+      case (byte)'b': case (byte)'B':
         if (zone == UNKNOWN &&
             (c2 == 's' || c2 == 'S') &&
             (c3 == 't' || c3 == 'T'))
           zone = BST;
         break;
-      case 'c': case 'C':
+      case (byte)'c': case (byte)'C':
         if (zone == UNKNOWN &&
             (c2 == 'd' || c2 == 'D') &&
             (c3 == 't' || c3 == 'T'))
@@ -195,13 +195,13 @@ public class NetworkDate {
                  (c3 == 't' || c3 == 'T'))
           zone = CST;
         break;
-      case 'd': case 'D':
+      case (byte)'d': case (byte)'D':
         if (month == UNKNOWN &&
             (c2 == 'e' || c2 == 'E') &&
             (c3 == 'c' || c3 == 'C'))
           month = DEC;
         break;
-      case 'e': case 'E':
+      case (byte)'e': case (byte)'E':
         if (zone == UNKNOWN &&
             (c2 == 'd' || c2 == 'D') &&
             (c3 == 't' || c3 == 'T'))
@@ -215,7 +215,7 @@ public class NetworkDate {
                  (c3 == 't' || c3 == 'T'))
           zone = EST;
         break;
-      case 'f': case 'F':
+      case (byte)'f': case (byte)'F':
         if (month == UNKNOWN &&
             (c2 == 'e' || c2 == 'E') &&
             (c3 == 'b' || c3 == 'B'))
@@ -225,13 +225,13 @@ public class NetworkDate {
                  (c3 == 'i' || c3 == 'I'))
           dotw = FRI;
         break;
-      case 'g': case 'G':
+      case (byte)'g': case (byte)'G':
         if (zone == UNKNOWN &&
             (c2 == 'm' || c2 == 'M') &&
             (c3 == 't' || c3 == 'T'))
           zone = GMT;
         break;
-      case 'j': case 'J':
+      case (byte)'j': case (byte)'J':
         if (month == UNKNOWN &&
             (c2 == 'a' || c2 == 'A') &&
             (c3 == 'n' || c3 == 'N'))
@@ -249,7 +249,7 @@ public class NetworkDate {
                  (c3 == 'n' || c3 == 'N'))
           month = JUN;
         break;
-      case 'm': case 'M':
+      case (byte)'m': case (byte)'M':
         if (month == UNKNOWN &&
             (c2 == 'a' || c2 == 'A') &&
             (c3 == 'r' || c3 == 'R'))
@@ -275,7 +275,7 @@ public class NetworkDate {
                  (c3 == 't' || c3 == 'T'))
           zone = MST;
         break;
-      case 'n': case 'N':
+      case (byte)'n': case (byte)'N':
         if (month == UNKNOWN &&
             (c2 == 'o' || c2 == 'O') &&
             (c3 == 'v' || c3 == 'V'))
@@ -285,13 +285,13 @@ public class NetworkDate {
                  (c3 == 't' || c3 == 'T'))
           zone = NST;
         break;
-      case 'o': case 'O':
+      case (byte)'o': case (byte)'O':
         if (month == UNKNOWN &&
             (c2 == 'c' || c2 == 'C') &&
             (c3 == 't' || c3 == 'T'))
           month = OCT;
         break;
-      case 'p': case 'P':
+      case (byte)'p': case (byte)'P':
         if (zone == UNKNOWN &&
             (c2 == 'd' || c2 == 'D') &&
             (c3 == 't' || c3 == 'T'))
@@ -301,7 +301,7 @@ public class NetworkDate {
                  (c3 == 't' || c3 == 'T'))
           zone = PST;
         break;
-      case 's': case 'S':
+      case (byte)'s': case (byte)'S':
         if (dotw == UNKNOWN &&
             (c2 == 'a' || c2 == 'A') &&
             (c3 == 't' || c3 == 'T'))
@@ -315,7 +315,7 @@ public class NetworkDate {
                  (c3 == 'n' || c3 == 'N'))
           dotw = SUN;
         break;
-      case 't': case 'T':
+      case (byte)'t': case (byte)'T':
         if (dotw == UNKNOWN &&
             (c2 == 'h' || c2 == 'H') &&
             (c3 == 'u' || c3 == 'U'))
@@ -325,7 +325,7 @@ public class NetworkDate {
                  (c3 == 'e' || c3 == 'E'))
           dotw = TUE;
         break;
-      case 'u': case 'U':
+      case (byte)'u': case (byte)'U':
         if (zone == UNKNOWN &&
             (c2 == 't' || c2 == 'T') &&
             !(c3 >= 'A' && c3 <= 'Z') &&
@@ -333,7 +333,7 @@ public class NetworkDate {
           // UT is the same as GMT but UTx is not.
           zone = GMT;
         break;
-      case 'w': case 'W':
+      case (byte)'w': case (byte)'W':
         if (dotw == UNKNOWN &&
             (c2 == 'e' || c2 == 'E') &&
             (c3 == 'd' || c3 == 'D'))
@@ -344,7 +344,7 @@ public class NetworkDate {
 
         // parsing timezone offsets
 
-      case '+': case '-': {
+      case (byte)'+': case (byte)'-': {
 
         if (zone_offset >= 0) {
           // already got one...
@@ -396,8 +396,9 @@ public class NetworkDate {
 
       // parsing numeric tokens
 
-      case '0': case '1': case '2': case '3': case '4':
-      case '5': case '6': case '7': case '8': case '9': {
+      case (byte)'0': case (byte)'1': case (byte)'2': case (byte)'3': 
+      case (byte)'4': case (byte)'5': case (byte)'6': case (byte)'7': 
+      case (byte)'8': case (byte)'9': {
 
         int tmp_hour = -1;
         int tmp_min = -1;
