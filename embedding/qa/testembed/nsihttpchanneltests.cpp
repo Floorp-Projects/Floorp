@@ -87,6 +87,24 @@ void CnsIHttpChannelTests::OnStartTests(UINT nMenuID)
 		case ID_INTERFACES_NSIHTTPCHANNEL_VISITREQUESTHEADERS :
 			VisitRequestHeadersTest(theHttpChannel, 2);
 			break;
+		case ID_INTERFACES_NSIHTTPCHANNEL_SETALLOWPIPELINING :
+			SetAllowPipeliningTest(theHttpChannel, PR_FALSE, 2);
+			break;
+		case ID_INTERFACES_NSIHTTPCHANNEL_GETALLOWPIPELINING :
+			GetAllowPipeliningTest(theHttpChannel, 2);
+			break;
+		case ID_INTERFACES_NSIHTTPCHANNEL_SETREDIRECTIONLIMIT :
+			SetRedirectionLimitTest(theHttpChannel, 100, 2);
+			break;
+		case ID_INTERFACES_NSIHTTPCHANNEL_GETREDIRECTIONLIMIT :
+			GetRedirectionLimitTest(theHttpChannel, 2);
+			break;
+
+			// response methods
+
+		case ID_INTERFACES_NSIHTTPCHANNEL_GETRESPONSESTATUS :
+			GetResponseStatusTest(theHttpChannel, 2);
+			break;
 	}
 }
 
@@ -107,7 +125,16 @@ void CnsIHttpChannelTests::RunAllTests()
 	SetRequestHeaderTest(theHttpChannel, 1);
 	GetRequestHeaderTest(theHttpChannel, 1);
 	VisitRequestHeadersTest(theHttpChannel, 1);
+	SetAllowPipeliningTest(theHttpChannel, PR_FALSE, 1);
+	SetAllowPipeliningTest(theHttpChannel, PR_TRUE, 1);
+	GetAllowPipeliningTest(theHttpChannel, 1);
+	SetRedirectionLimitTest(theHttpChannel, 0, 1);
+	SetRedirectionLimitTest(theHttpChannel, 5, 1);
+	GetRedirectionLimitTest(theHttpChannel, 1);
 
+	// see nsIRequestObserver->OnStartRequest for response tests
+
+	GetResponseStatusTest(theHttpChannel, 1);
 	QAOutput("\n");
 }
 
@@ -195,3 +222,55 @@ void  CnsIHttpChannelTests::VisitRequestHeadersTest(nsIHttpChannel *theHttpChann
 	rv = theHttpChannel->VisitRequestHeaders(theVisitor);
 	RvTestResult(rv, "VisitRequestHeaders()", displayMode);
 }
+
+void  CnsIHttpChannelTests::SetAllowPipeliningTest(nsIHttpChannel *theHttpChannel,
+											   PRBool mAllowPipelining,
+											   PRInt16 displayMode)
+{
+	rv = theHttpChannel->SetAllowPipelining(mAllowPipelining);
+	RvTestResult(rv, "SetAllowPipelining()", displayMode);
+	FormatAndPrintOutput("SetAllowPipelining value = ", mAllowPipelining, displayMode);
+
+	rv = theHttpChannel->GetAllowPipelining(&mAllowPipelining);
+	FormatAndPrintOutput("GetAllowPipelining value = ", mAllowPipelining, displayMode);
+}
+
+void  CnsIHttpChannelTests::GetAllowPipeliningTest(nsIHttpChannel *theHttpChannel,
+												   PRInt16 displayMode)
+{
+	PRBool mAllowPipelining;
+
+	rv = theHttpChannel->GetAllowPipelining(&mAllowPipelining);
+	RvTestResult(rv, "GetAllowPipelining()", displayMode);
+	FormatAndPrintOutput("GetAllowPipelining value = ", mAllowPipelining, displayMode);
+}
+
+void  CnsIHttpChannelTests::SetRedirectionLimitTest(nsIHttpChannel *theHttpChannel,
+												   PRUint32 mRedirectionLimit,
+												   PRInt16 displayMode)
+{
+	rv = theHttpChannel->SetRedirectionLimit(mRedirectionLimit);
+	RvTestResult(rv, "SetRedirectionLimit()", displayMode);
+}
+
+void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChannel,
+												    PRInt16 displayMode)
+{
+	PRUint32 mRedirectionLimit;
+
+	rv = theHttpChannel->GetRedirectionLimit(&mRedirectionLimit);
+	RvTestResult(rv, "GetRedirectionLimit()", displayMode);
+	FormatAndPrintOutput("GetRedirectionLimit value = ", mRedirectionLimit, displayMode);
+}
+
+void CnsIHttpChannelTests::GetResponseStatusTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	PRUint32 mResponseStatus;
+
+	rv = theHttpChannel->GetResponseStatus(&mResponseStatus);
+	RvTestResult(rv, "GetResponseStatus()", displayMode);
+	FormatAndPrintOutput("GetResponseStatus value = ", mResponseStatus, displayMode);
+}
+
+

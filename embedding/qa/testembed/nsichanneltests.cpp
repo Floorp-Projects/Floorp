@@ -332,7 +332,7 @@ void CnsIChannelTests::PostAsyncTests(nsIChannel *theChannel, PRInt16 displayMod
 
 void CnsIChannelTests::OnStartTests(UINT nMenuID)
 {
-	theSpec = "ftp://ftp.netscape.com";
+	theSpec = "http://www.netscape.com";
 	theChannel = GetChannelObject(theSpec);
 	if (!theChannel)
 	{

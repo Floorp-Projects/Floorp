@@ -90,6 +90,7 @@
 #include "Tests.h"
 #include "prmem.h"
 #include "nsichanneltests.h"
+#include "nsihttpchanneltests.h"
 
 CBrowserImpl::CBrowserImpl()
 {
@@ -544,12 +545,20 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 	// these are for nsIChannel tests found in nsichanneltests.cpp (post AsyncOpen() tests)
 	// they will only be run if a nsISupports context was passed to AsyncOpen()
 	nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+	nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
 	CBrowserImpl *aBrowserImpl = new CBrowserImpl();
 	CnsIChannelTests  *obj = new CnsIChannelTests(mWebBrowser, aBrowserImpl);
-	if (obj && ctxt)
+	CnsIHttpChannelTests *httpObj = new CnsIHttpChannelTests(mWebBrowser, aBrowserImpl);
+	if (obj && ctxt && channel)
 		obj->PostAsyncTests(channel, 1);
 	else if (!obj && ctxt)
 		QAOutput("No object to run PostAsyncTests().", 1);
+
+	if (!httpObj)
+		QAOutput("No object to run GetResponseStatusTest().", 1);
+	else
+		httpObj->GetResponseStatusTest(httpChannel, 1);
+
 
 	if (!ctxt)
 		QAOutput("OnStartRequest():We didn't get the nsISupports object.", 1);
