@@ -116,6 +116,9 @@
 
         <constructor>
             <![CDATA[
+            this.mInitialized = false;
+            this.mSelected = false;
+            this.mValue = null;
             this.refreshDisplay( );
             ]]>
         </constructor>
@@ -131,11 +134,10 @@
                     "@mozilla.org/preferences-service;1"
                 ].getService(Components.interfaces.nsIPrefBranch);
                 
-                this.weekStart;
+                // this.weekStart;
                 try {
                     this.weekStart = pref.getIntPref("calendar.week.start");
-                }
-                catch (e) {
+                } catch (e) {
                     this.weekStart = 0;
                 }
 
@@ -147,15 +149,28 @@
                 this.mRightBtn.mCalendar = this;
                 this.mMonthCell = monthbox.childNodes[2];
 
-                var val = this.parentNode.parentNode.parentNode.parentNode.value;
-                if (val) this.mValue = new Date(val);
-                else this.mValue = new Date();
+                //var val = this.parentNode.parentNode.parentNode.parentNode.value;
+                //if (val) this.mValue = new Date(val);
+                //else this.mValue = new Date();
+                if (!this.mValue) this.mValue = new Date();
 
-                var change = this.getAttribute("onchange");
-                if (change) this.onchange = new Function(change);
-              
-                var monthchange = this.getAttribute("onmonthchange");
-                if (monthchange) this.onmonthchange = new Function(monthchange);
+                // In moz 1.7, onchange event handler attributes must be read as:
+                // yes: "this.onchange = function(){ eval(onChangeAttr); };"  
+                // The following alternatives break for some expressions:
+                // no:  "this.onchange = new Function(eval(onChangeAttr));"
+                // no:  "this.onchange = new Function(onChangeAttr);"
+                // The latter two can produce unbound identifier errors
+                // for free variables of the onchange expression 
+                // (variables defined outside the expression, such as globals).
+               
+                var onChangeAttr = this.getAttribute("onchange");
+                if (onChangeAttr) this.onchange = function(){ eval(onChangeAttr); };
+                else this.onchange = null;
+
+                var onMonthChangeAttr = this.getAttribute("onmonthchange");
+                if (onMonthChangeAttr)
+                    this.onmonthchange = function(){ eval(onMonthChangeAttr) };
+                else this.onmonthchange = null;
               
                 this.setHeader();
                 this.showMonth(this.mValue);
@@ -196,7 +211,6 @@
                         )
                     );
                 }
-
             ]]></body>
         </method>
 
@@ -350,10 +364,6 @@
             this.value = aDay.date;
 
             if (this.onchange) this.onchange();
-
-            if (this.parentNode.parentNode.parentNode.parentNode.callback) 
-                this.parentNode.parentNode.parentNode.parentNode.callback();
-
             ]]></body>
         </method>
 
