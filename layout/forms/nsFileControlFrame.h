@@ -28,6 +28,7 @@ class nsButtonControlFrame;
 class nsTextControlFrame;
 class nsFormFrame;
 class nsISupportsArray;
+class nsIHTMLContent;
 
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
@@ -37,6 +38,7 @@ class nsFileControlFrame : public nsAreaFrame,
 {
 public:
   nsFileControlFrame();
+  virtual ~nsFileControlFrame();
 
   virtual void MouseClicked(nsIPresContext* aPresContext) {}
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
@@ -59,6 +61,11 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
 
   virtual PRInt32 GetMaxNumValues();
 
@@ -141,8 +148,9 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  nsTextControlFrame*   mTextFrame;
-  nsFormFrame* mFormFrame;
+  nsTextControlFrame* mTextFrame;
+  nsFormFrame*        mFormFrame;
+  nsIHTMLContent*     mTextContent;
 
 private:
   nsTextControlFrame* GetTextControlFrame(nsIFrame* aStart);

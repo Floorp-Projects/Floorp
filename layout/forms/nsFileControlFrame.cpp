@@ -68,10 +68,18 @@ NS_NewFileControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsFileControlFrame::nsFileControlFrame():mTextFrame(nsnull), mFormFrame(nsnull)
+nsFileControlFrame::nsFileControlFrame():
+  mTextFrame(nsnull), 
+  mFormFrame(nsnull),
+  mTextContent(nsnull)
 {
     //Shrink the area around it's contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
+}
+
+nsFileControlFrame::~nsFileControlFrame()
+{
+  NS_IF_RELEASE(mTextContent);
 }
 
 NS_IMETHODIMP
@@ -79,27 +87,32 @@ nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
 {
   
   // create text field
-  nsIHTMLContent* text = nsnull;
   nsIAtom* tag = NS_NewAtom("input");
-  NS_NewHTMLInputElement(&text, tag);
-  text->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
-  aChildList.AppendElement(text);
+  if (NS_OK == NS_NewHTMLInputElement(&mTextContent, tag)) {
+    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
+    if (nsFormFrame::GetDisabled(this)) {
+      mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, nsAutoString("true"), PR_FALSE);
+    }
+    aChildList.AppendElement(mTextContent);
+  }
 
   // create browse button
   nsIHTMLContent* browse = nsnull;
   tag = NS_NewAtom("input");
-  NS_NewHTMLInputElement(&browse, tag);
-  browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
-  browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
-  aChildList.AppendElement(browse);
+  if (NS_OK == NS_NewHTMLInputElement(&browse, tag)) {
+    browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
+    //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
-  // get the reciever interface from the browser button's content node
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(browse));
+    aChildList.AppendElement(browse);
 
-  // we shouldn't have to unregister this listener because when
-  // our frame goes away all these content node go away as well
-  // because our frame is the only one who references them.
-  reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+    // get the reciever interface from the browser button's content node
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(browse));
+
+    // we shouldn't have to unregister this listener because when
+    // our frame goes away all these content node go away as well
+    // because our frame is the only one who references them.
+    reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+  }
 
   return NS_OK;
 }
@@ -197,8 +210,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   nsString title("File Upload");
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
-  if (fileWidget)
-  {
+  if (fileWidget) {
 	  nsString titles[] = {"all files"};
 	  nsString filters[] = {"*.*"};
 	  fileWidget->SetFilterList(1, titles, filters);
@@ -263,8 +275,7 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(nsnull, &childFrame);
 
-  while (nsnull != childFrame) 
-  {    
+  while (nsnull != childFrame) {    
     // see if the child is a text control
     nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
@@ -272,10 +283,10 @@ nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
     if (content->GetTag(atom) == NS_OK && atom == nsHTMLAtoms::input) {
       nsString value;
 
-      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value))
-      {
-        if (value == "text")
+      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
+        if (value == "text") {
            return (nsTextControlFrame*)childFrame;      
+        }
       }
     }
 
@@ -347,6 +358,33 @@ nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 
   return status;
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                       nsIContent*     aChild,
+                                       nsIAtom*        aAttribute,
+                                       PRInt32         aHint)
+{
+  // set the text control to readonly or not
+  if (nsHTMLAtoms::disabled == aAttribute) {
+    nsAutoString val(nsFormFrame::GetDisabled(this) ? "true":"false");
+    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::readonly, val, PR_FALSE);
+  }
+
+  return nsAreaFrame::AttributeChanged(aPresContext, aChild,  aAttribute, aHint);
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+{
+  if (nsFormFrame::GetDisabled(this)) {
+    *aFrame = this;
+    return NS_OK;
+  } else {
+    return nsAreaFrame::GetFrameForPoint(aPoint, aFrame);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
