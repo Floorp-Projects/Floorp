@@ -52,7 +52,7 @@ CPPSRCS		= \
         $(NULL)
 
 LIBS        = \
-        `gtk-config --libs` \
+        `$(GTK_CONFIG) --libs` \
         -ljar$(VERSION_NUMBER)_s \
         $(NULL)
 
@@ -64,4 +64,4 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += `gtk-config --cflags`
+CXXFLAGS += `$(GTK_CONFIG) --cflags`
