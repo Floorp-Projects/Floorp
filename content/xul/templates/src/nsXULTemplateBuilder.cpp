@@ -278,6 +278,9 @@ public:
                   nsIAtom* aTag,
                   nsIContent** aResult);
 
+	nsresult
+	SetEmpty(nsIContent *element, PRBool empty);
+
 #ifdef PR_LOGGING
     nsresult
     Log(const char* aOperation,
@@ -1007,7 +1010,11 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
             }
 
             if (! contentsGenerated)
+			{ 
+				// Update the "empty" attribute
+				rv = SetEmpty(element, PR_FALSE);
                 return NS_OK;
+			}
 
             // Okay, it's a "live" element, so go ahead and append the new
             // child to this node.
@@ -1015,15 +1022,9 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) return rv;
 
-            // Update the "empty" attribute
-            nsAutoString empty;
-            rv = element->GetAttribute(kNameSpaceID_None, kEmptyAtom, empty);
-            if (NS_FAILED(rv)) return rv;
-
-            if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! empty.Equals("false"))) {
-                rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, nsAutoString("false"), PR_TRUE);
-                if (NS_FAILED(rv)) return rv;
-            }
+			// Update the "empty" attribute
+			rv = SetEmpty(element, PR_FALSE);
+			if(NS_FAILED(rv)) return rv;
         }
         else {
             // Either the target of the assertion is not a resource,
@@ -1582,7 +1583,9 @@ RDFGenericBuilderImpl::FindTemplate(nsIContent* aElement,
 
 			nsCOMPtr<nsIAtom>	ruleTag;
 			rv = aRule->GetTag(*getter_AddRefs(ruleTag));
+
 			if (NS_FAILED(rv)) return rv;
+
 
 			if (ruleTag.get() == kRuleAtom)
 			{
@@ -3045,6 +3048,25 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
     return NS_OK;
 }
 
+nsresult
+RDFGenericBuilderImpl::SetEmpty(nsIContent *element, PRBool empty)
+{
+	nsresult rv;
+
+	nsAutoString newEmptyStr(empty ? "true" : "false");
+	nsAutoString emptyStr;
+
+	rv = element->GetAttribute(kNameSpaceID_None, kEmptyAtom, emptyStr);
+	if (NS_FAILED(rv)) return rv;
+
+	if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! emptyStr.Equals(newEmptyStr))) {
+		rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, newEmptyStr, PR_TRUE);
+		if (NS_FAILED(rv)) return rv;
+	}
+
+	return NS_OK;
+
+}
 
 #ifdef PR_LOGGING
 nsresult
