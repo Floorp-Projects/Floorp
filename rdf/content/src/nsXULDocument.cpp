@@ -708,6 +708,32 @@ XULDocumentImpl::~XULDocumentImpl()
       NS_RELEASE(subdoc);
     }
 
+    // set all builder references to document to nsnull
+    if (mBuilders)
+    {
+
+#ifdef	DEBUG
+	printf("# of builders: %lu\n", (unsigned long)mBuilders->Count());
+#endif
+
+	    for (PRUint32 i = 0; i < mBuilders->Count(); ++i)
+	    {
+		// XXX we should QueryInterface() here
+		nsIRDFContentModelBuilder* builder
+		    = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
+
+		NS_ASSERTION(builder != nsnull, "null ptr");
+		if (! builder)
+		    continue;
+
+		nsresult rv = builder->SetDocument(nsnull);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "error creating content");
+		// XXX ignore error code?
+
+		NS_RELEASE(builder);
+	    }
+    }
+
     NS_IF_RELEASE(mBuilders);
     NS_IF_RELEASE(mXULBuilder);
     NS_IF_RELEASE(mSelection);

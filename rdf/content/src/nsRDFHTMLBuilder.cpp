@@ -214,24 +214,19 @@ done:
 NS_IMETHODIMP
 RDFHTMLBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 {
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
-    if (! aDocument)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDocument == nsnull, "already initialized");
-    if (mDocument)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
+    // note: document can now be null to indicate going away
     mDocument = aDocument; // not refcounted
-
-    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-    if (doc) {
-        nsCOMPtr<nsINameSpaceManager> mgr;
-        doc->GetNameSpaceManager( *getter_AddRefs(mgr) );
-        if (mgr) {
-static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
-            mgr->GetNameSpaceID(kRDFNameSpaceURI, kNameSpaceID_RDF);
-        }
+    if (aDocument != nsnull)
+    {
+	    nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
+	    if (doc) {
+		nsCOMPtr<nsINameSpaceManager> mgr;
+		doc->GetNameSpaceManager( *getter_AddRefs(mgr) );
+		if (mgr) {
+	static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+		    mgr->GetNameSpaceID(kRDFNameSpaceURI, kNameSpaceID_RDF);
+		}
+	    }
     }
     return NS_OK;
 }

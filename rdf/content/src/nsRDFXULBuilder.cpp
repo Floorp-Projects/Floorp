@@ -407,14 +407,7 @@ RDFXULBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
 NS_IMETHODIMP
 RDFXULBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
 {
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
-    if (! aDocument)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDocument == nsnull, "already initialized");
-    if (mDocument)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
+	// note: document can now be null to indicate its going away
     mDocument = aDocument; // not refcounted
     return NS_OK;
 }
