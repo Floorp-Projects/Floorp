@@ -198,32 +198,10 @@ public: // public non-poly morkStream methods
   mork_size  PutStringThenNewline(morkEnv* ev, const char* inString);
   // PutStringThenNewline() returns total number of bytes written.
 
-  mork_size  PutStringThenNewlineThenSpace(morkEnv* ev, const char* inString);
-  // PutStringThenNewlineThenSpace() returns total number of bytes written.
-
   mork_size  PutByteThenNewline(morkEnv* ev, int inByte);
   // PutByteThenNewline() returns total number of bytes written.
 
-  mork_size  PutByteThenNewlineThenSpace(morkEnv* ev, int inByte);
-  // PutByteThenNewlineThenSpace() returns total number of bytes written.
-  
   // ````` ````` stdio type methods ````` ````` 
-  void    Printf(morkEnv* ev, const char* inFormat, ...);
-  
-  mork_pos  Ftell(morkEnv* ev) /*i*/ { return this->Tell(ev); }
-  
-  void    Fsetpos(morkEnv* ev, mork_pos inPos) /*i*/ { this->Seek(ev, inPos); }
-  
-  void    Rewind(morkEnv* ev) /*i*/ { this->Fsetpos(ev, 0); }
-  
-  void    Fflush(morkEnv* ev) /*i*/ { this->Flush(ev); }
-  
-  mork_bool Feof() /*i*/ { return mStream_HitEof; }
-    // Feof() is never true for writable stream output sinks 
-  
-  void    Puts(morkEnv* ev, const char* inString) /*i*/
-  { this->PutString(ev, inString); }
-
   void    Ungetc(int c) /*i*/
   { if ( mStream_At > mStream_Buf && c > 0 ) *--mStream_At = (mork_u1) c; }
   
