@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= svg_doc
 LIBRARY_NAME	= gkconsvgdoc_s
+LIBXUL_LIBRARY	= 1
 REQUIRES	= content \
 		  layout \
 		  widget \
