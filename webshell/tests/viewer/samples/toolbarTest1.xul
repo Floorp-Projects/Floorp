@@ -11,7 +11,8 @@
 
 <html:h3>
 You should see a two toolbars with buttons that don't do anything. This test is useful for checking layout
-and look/feel of rollover and clicks.
+and look/feel of rollover and clicks. Note that the last toolbar is empty, and should be of
+normal size because of min-height.
 </html:h3>
 
 <html:hr/>
@@ -47,6 +48,9 @@ and look/feel of rollover and clicks.
     <toolbar>
       <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" />
 	  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News"/>
+    </toolbar>
+    
+    <toolbar>
     </toolbar>
     
   </toolbox>
