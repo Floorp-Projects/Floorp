@@ -36,7 +36,12 @@ CPU_ARCH		= sparc
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 # Purify doesn't like -MDupdate
 NOMD_OS_CFLAGS		= -Wall -Wno-format -DSUNOS4
+
+ifdef NO_MDUPDATE
+OS_CFLAGS		= $(DSO_CFLAGS) $(NOMD_OS_CFLAGS)
+else
 OS_CFLAGS		= $(DSO_CFLAGS) $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
+endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
