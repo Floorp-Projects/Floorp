@@ -47,7 +47,7 @@
 
   <text class="label" id="srcMessage" value="&sourceEditField.label;"/>
   <box orient="vertical" flex="1" style="width: 30em; height: 20em;">
-    <textfield id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1"/> -->
+    <textfield id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1"/>
   </box>
   <!-- Will this accept the embedded HTML tags? -->
   <box>
