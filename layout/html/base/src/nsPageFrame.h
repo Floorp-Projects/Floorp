@@ -29,6 +29,7 @@ public:
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
   /**
    * Get the "type" of the frame

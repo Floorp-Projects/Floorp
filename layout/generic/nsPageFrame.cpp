@@ -57,9 +57,8 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     // Dispatch the reflow command to our content child. Allow it to be as high
     // as it wants
     nsSize            maxSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState kidReflowState(aPresContext, mFrames.FirstChild(),
-                                     aReflowState,
-                                     maxSize);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
+                                     mFrames.FirstChild(), maxSize);
   
     kidReflowState.isTopOfPage = PR_TRUE;
     ReflowChild(mFrames.FirstChild(), aPresContext, aDesiredSize,
@@ -100,7 +99,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     if (mFrames.NotEmpty()) {
       nsIFrame* frame = mFrames.FirstChild();
       nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      nsHTMLReflowState kidReflowState(aPresContext, frame, aReflowState,
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame,
                                        maxSize);
       kidReflowState.isTopOfPage = PR_TRUE;
 
@@ -151,6 +150,13 @@ NS_IMETHODIMP
 nsPageFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Page", aResult);
+}
+
+NS_IMETHODIMP
+nsPageFrame::IsPercentageBase(PRBool& aBase) const
+{
+  aBase = PR_TRUE;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
