@@ -404,6 +404,17 @@ else
 	$(CCF) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
 
+#
+# Purify target.  Solaris/sparc only to start.
+# Purify does not recognize "egcs" or "c++" so we go with 
+# "gcc" and "g++" for now.
+#
+pure:	$(PROGRAM)
+ifdef CPP_PROG_LINK
+	$(PURIFY) g++ $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+else
+	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+endif
 
 
 ifneq ($(OS_ARCH),OS2)
