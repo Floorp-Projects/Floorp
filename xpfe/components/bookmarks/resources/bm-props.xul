@@ -93,7 +93,7 @@
 			</menulist>
 			<spring align="horizontal" flex="1" />
 			<text class="label" value="&from.label;" />
-			<menulist id="startHourRange">
+			<menulist id="startHourRange" oncommand="setEndHourRange()">
 				<menupopup>
 					<menuitem data="0" value="&midnight.label;"/>
 					<menuitem data="1" value="&AMone.label;"/>
@@ -126,7 +126,7 @@
 			<spring align="horizontal" flex="1" />
 			<text value="&to.label;" />
 			<menulist id="endHourRange">
-				<menupopup>
+				<menupopup oncreate="setEndHourRange()">
 					<menuitem data="1" value="&AMone.label;"/>
 					<menuitem data="2" value="&AMtwo.label;"/>
 					<menuitem data="3" value="&AMthree.label;"/>

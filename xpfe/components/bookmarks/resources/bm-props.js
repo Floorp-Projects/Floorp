@@ -319,7 +319,7 @@ function Commit()
 				endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
 			}
 
-			if (startHourRange > endHourRange)
+			if (parseInt(startHourRange) > parseInt(endHourRange))
 			{
 				var temp = startHourRange;
 				startHourRange = endHourRange;
@@ -414,3 +414,48 @@ function updateAttribute(prop, oldvalue, newvalue)
   return(changed);
 }
 
+
+
+function setEndHourRange()
+{
+   // Get the values of the start-time and end-time as ints
+   var startHourRange = "";
+   var startHourRangeNode = document.getElementById("startHourRange");
+   if (startHourRangeNode)
+   {
+      startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
+      var startHourRangeInt = parseInt(startHourRange);
+   }
+   var endHourRange = "";
+   var endHourRangeNode = document.getElementById("endHourRange");
+   if (endHourRangeNode)
+   {
+      endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
+      var endHourRangeInt = parseInt(endHourRange);
+   }
+   
+   if (endHourRangeNode)
+   {
+      var endHourItemNode = endHourRangeNode.firstChild.firstChild;
+
+      if (endHourItemNode) {
+
+         // disable all those end-times before the start-time
+         for (var index = 0; index < startHourRangeInt; index++) {
+            endHourItemNode.setAttribute("disabled", "true");
+            endHourItemNode = endHourItemNode.nextSibling;
+         }
+
+         // update the selected value if it's out of the allowed range
+         if (startHourRangeInt >= endHourRangeInt) {
+            endHourRangeNode.selectedItem = endHourItemNode;
+         }
+
+         // make sure all the end-times after the start-time are enabled
+         for (; index < 24; index++) {
+            endHourItemNode.removeAttribute("disabled");
+            endHourItemNode = endHourItemNode.nextSibling;
+         }
+      }
+   }
+}
