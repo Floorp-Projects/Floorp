@@ -49,7 +49,7 @@
 <dialog id="serverPrefs" title="$serverPrefsLabel">
   <panel layout="gridbag">
     <input type="jlist" ID="hostList"
-     weightx="1" fill="both" gridwidth="relative" gridheight="3"
+     weightx="1" fill="both" gridwidth="relative" gridheight="4"
      insets="[5,5,0,5]"/>
 
     <input type="button" ID="newButton" command="newButton" title="$newLabel"
@@ -64,6 +64,10 @@
      title="$deleteLabel"
      weightx="1" fill="horizontal" gridwidth="remainder"
      insets="[5,0,0,5]"/>
+
+    <label title=""
+     weightx="1" fill="horizontal" gridwidth="remainder"
+     insets="[0,0,0,0]"/>
     
     <input type="checkbox" ID="leaveOnServerCheck" value="leaveOnServerCheck"
      title="$mailLeaveOnServerLabel"
