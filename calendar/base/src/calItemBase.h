@@ -39,8 +39,12 @@
 #ifndef CALITEMBASE_H_
 #define CALITEMBASE_H_
 
+#include "nsString.h"
+
 #include "nsCOMPtr.h"
 #include "nsIPropertyBag.h"
+
+#include "nsIArray.h"
 
 #include "calIDateTime.h"
 #include "calICalendar.h"
@@ -67,7 +71,7 @@ protected:
     nsCOMPtr<calIDateTime> mCreationDate;
     PRTime mLastModifiedTime;
 
-    nsCString mID;
+    nsCString mId;
     nsCString mTitle;
 
     PRInt16 mPriority;
@@ -83,26 +87,36 @@ protected:
     // recurrence
     PRInt32 mRecurType;
     nsCOMPtr<calIDateTime> mRecurEnd;
-    nsCOMArray<calIDateTime> mRecurrenceExceptions;
+    //nsCOMArray<calIDateTime> mRecurrenceExceptions;
+    nsCOMPtr<nsIMutableArray> mRecurrenceExceptions;
 
     // attachments
-    nsCOMArray<nsIMsgAttachment> mAttachments;
+    //nsCOMArray<nsIMsgAttachment> mAttachments;
+    nsCOMPtr<nsIMutableArray> mAttachments;
 
     // contacts
-    nsCOMArray<nsIAbCard> mContacts;
+    //nsCOMArray<nsIAbCard> mContacts;
+    nsCOMPtr<nsIMutableArray> mContacts;
 
     // properties
-    nsCOMPtr<nsWritablePropertyBag> mProperties;
+    nsCOMPtr<nsIWritablePropertyBag> mProperties;
 };
 
 
-class calItemOccurrence : public class calIItemOccurrence
+class calItemOccurrence : public calIItemOccurrence
 {
 public:
     calItemOccurrence();
     calItemOccurrence(calIItemBase *aBaseItem,
                       calIDateTime *aStart,
                       calIDateTime *aEnd);
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // calIItemOccurrence interface
+    NS_DECL_CALIITEMOCCURRENCE
+
 protected:
     nsCOMPtr<calIItemBase> mItem;
     nsCOMPtr<calIDateTime> mOccurrenceStartDate;

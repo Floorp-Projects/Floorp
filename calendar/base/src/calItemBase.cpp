@@ -40,7 +40,9 @@
 
 #include "calItemBase.h"
 
-NS_IMPL_ISUPPORTS1(calItemBase, calIItemBase);
+#include "calAttributeHelpers.h"
+
+NS_IMPL_ISUPPORTS1(calItemBase, calIItemBase)
 
 /***
  *** calItemBase impl
@@ -56,50 +58,6 @@ calItemBase::calItemBase()
  ** calIItemBase interface
  **/
 
-// helpers for value types
-#define VALUETYPE_ATTR_GETTER(mtype,name) \
-NS_IMETHODIMP \
-calItemBase::Get##name (mtype *_retval) { \
-    *_retval = m##name; \
-    return NS_OK; \
-}
-
-#define VALUETYPE_ATTR_SETTER(mtype,name) \
-NS_IMETHODIMP \
-calItemBase::Set##name (mtype aValue) { \
-    if (m##name != aValue) { \
-        m##name = aValue; \
-        mLastModified = PR_Now(); \
-    } \
-    return NS_OK;
-}
-
-#define VALUETYPE_ATTR(mtype,name) \
-    VALUETYPE_ATTR_GETTER(mtype,name) \
-    VALUETYPE_ATTR_SETTER(mtype,name)
-
-// helpers for interface types
-#define ISUPPORTS_ATTR_GETTER(mtype,name)
-NS_IMETHODIMP
-calItemBase::Get##name (mtype **_retval) { \
-    NS_IF_ADDREF (*_retval = m##name); \
-    return NS_OK; \
-}
-
-#define ISUPPORTS_ATTR_SETTER(mtype,name) \
-NS_IMETHODIMP \
-calItemBase::Set##name (mtype *aValue) { \
-    if (m##name != aValue) { \
-        m##name = aValue; \
-        mLastModified = PR_Now(); \
-    } \
-    return NS_OK;
-}
-
-#define ISUPPORTS_ATTR(mtype,name) \
-    ISUPPORTS_ATTR_GETTER(mtype,name) \
-    ISUPPORTS_ATTR_SETTER(mtype,name)
-
 /*
  * calIItemBase attributes
  */
@@ -107,42 +65,42 @@ calItemBase::Set##name (mtype *aValue) { \
 
 // General attrs
 
-ISUPPORTS_ATTR(calIDateTime, CreationDate);
-VALUETYPE_ATTR_GETTER(PRTime, LastModifiedTime);
+CAL_ISUPPORTS_ATTR(calItemBase, calIDateTime, CreationDate)
+CAL_VALUETYPE_ATTR_GETTER(calItemBase, PRTime, LastModifiedTime)
 
-ISUPPORTS_ATTR(calICalendar, Parent);
+CAL_ISUPPORTS_ATTR(calItemBase, calICalendar, Parent)
 
-VALUETYPE_ATTR(nsACString&, Id);
+CAL_STRINGTYPE_ATTR(calItemBase, nsACString, Id)
 
-VALUETYPE_ATTR(nsACString&, Title);
-VALUETYPE_ATTR(PRInt16, Priority);
-VALUETYPE_ATTR(PRBool, IsPrivate);
+CAL_STRINGTYPE_ATTR(calItemBase, nsACString, Title)
+CAL_VALUETYPE_ATTR(calItemBase, PRInt16, Priority)
+CAL_VALUETYPE_ATTR(calItemBase, PRBool, IsPrivate)
 
-VALUETYPE_ATTR(PRInt32, Method);
-VALUETYPE_ATTR(PRInt32, Status);
+CAL_VALUETYPE_ATTR(calItemBase, PRInt32, Method)
+CAL_VALUETYPE_ATTR(calItemBase, PRInt32, Status)
 
 // Alarm attrs
 
-VALUETYPE_ATTR(PRBool, HasAlarm);
-ISUPPORTS_ATTR(calIDateTime, AlarmTime);
+CAL_VALUETYPE_ATTR(calItemBase, PRBool, HasAlarm)
+CAL_ISUPPORTS_ATTR(calItemBase, calIDateTime, AlarmTime)
 
 // Recurrence attrs
 
-VALUETYPE_ATTR(PRInt32, RecurType);
-ISUPPORTS_ATTR(calIDateTime, RecurEnd);
-ISUPPORTS_ATTR_GETTER(nsISupportsArray, RecurrenceExceptions);
+CAL_VALUETYPE_ATTR(calItemBase, PRInt32, RecurType)
+CAL_ISUPPORTS_ATTR(calItemBase, calIDateTime, RecurEnd)
+CAL_ISUPPORTS_ATTR_GETTER(calItemBase, nsIMutableArray, RecurrenceExceptions)
 
 // Attachments
 
-ISUPPORTS_ATTR_GETTER(nsISupportsArray, Attachments);
+CAL_ISUPPORTS_ATTR_GETTER(calItemBase, nsIMutableArray, Attachments)
 
 // Contacts
 
-ISUPPORTS_ATTR_GETTER(nsISupportsArray, Contacts);
+CAL_ISUPPORTS_ATTR_GETTER(calItemBase, nsIMutableArray, Contacts)
 
 // Properties
 
-ISUPPORTS_ATTR_GETTER(nsIWritablePropertyBag, Properties);
+CAL_ISUPPORTS_ATTR_GETTER(calItemBase, nsIWritablePropertyBag, Properties)
 
 /*
  * calIItemBase methods
@@ -151,26 +109,31 @@ ISUPPORTS_ATTR_GETTER(nsIWritablePropertyBag, Properties);
 NS_IMETHODIMP
 calItemBase::Clone (calIItemBase **_retval)
 {
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 calItemBase::SnoozeAlarm (calIDateTime *aSnoozeFor)
 {
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-calItemBase::GetNextOccurrence (calIDateTime *aStartTime)
+calItemBase::GetNextOccurrence (calIDateTime *aStartTime, calIItemOccurrence **_retval)
 {
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-calItemBase::GetPreviousOccurrence (calIDateTime *aStartTime)
+calItemBase::GetPreviousOccurrence (calIDateTime *aStartTime, calIItemOccurrence **_retval)
 {
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-calItemBase::GetAllOccurrences (calIDateTime *aStartTime)
+calItemBase::GetAllOccurrences (calIDateTime *aStartTime, calIDateTime *aEndTime, nsIMutableArray **_retval)
 {
+    return NS_ERROR_FAILURE;
 }
 
 
@@ -178,7 +141,7 @@ calItemBase::GetAllOccurrences (calIDateTime *aStartTime)
  *** calItemOccurrence impl
  ***/
 
-NS_IMPL_ISUPPORTS1(calItemOccurrence, calIItemOccurrence);
+NS_IMPL_ISUPPORTS1(calItemOccurrence, calIItemOccurrence)
 
 calItemOccurrence::calItemOccurrence()
 {
@@ -191,6 +154,6 @@ calItemOccurrence::calItemOccurrence(calIItemBase *aBaseItem,
 {
 }
 
-ISUPPORTS_ATTR_GETTER(calIItemBase, Item);
-ISUPPORTS_ATTR_GETTER(calIDateTime, OccurrenceStartDate);
-ISUPPORTS_ATTR_GETTER(calIDateTime, OccurrenceEndDate);
+CAL_ISUPPORTS_ATTR_GETTER(calItemOccurrence, calIItemBase, Item)
+CAL_ISUPPORTS_ATTR_GETTER(calItemOccurrence, calIDateTime, OccurrenceStartDate)
+CAL_ISUPPORTS_ATTR_GETTER(calItemOccurrence, calIDateTime, OccurrenceEndDate)
