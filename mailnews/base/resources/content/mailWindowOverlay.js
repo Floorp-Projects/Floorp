@@ -1556,7 +1556,7 @@ var gMarkButton = null;
 
 function SetUpToolbarButtons(uri)
 {
-    // dump("SetUpToolbarButtons("+uri+")\n");
+    //dump("SetUpToolbarButtons("+uri+")\n");
 
     // eventually, we might want to set up the toolbar differently for imap,
     // pop, and news.  for now, just tweak it based on if it is news or not.

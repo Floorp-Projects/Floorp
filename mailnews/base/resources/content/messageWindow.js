@@ -91,19 +91,16 @@ var folderListener = {
       HandleDeleteOrMoveMsgFailed(folder);
     else if (eventType == "FolderLoaded") {
       if (folder) {
-        var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        if (resource) {
-          var uri = resource.Value;
-          if (uri == gCurrentFolderToRerootForStandAlone) {
-            gCurrentFolderToRerootForStandAlone = null;
-            var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-            if (msgFolder) {
-              msgFolder.endFolderLoading();
-              if (gRerootOnFolderLoadForStandAlone) {
-                RerootFolderForStandAlone(uri);
-              }
-            }   
-          }
+        var uri = folder.URI;
+        if (uri == gCurrentFolderToRerootForStandAlone) {
+          gCurrentFolderToRerootForStandAlone = null;
+          var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+          if (msgFolder) {
+            msgFolder.endFolderLoading();
+            if (gRerootOnFolderLoadForStandAlone) {
+              RerootFolderForStandAlone(uri);
+            }
+          }   
         }
       }
     }
@@ -555,7 +552,11 @@ function RerootFolderForStandAlone(uri)
     var type = gNextMessageAfterLoad;
     gNextMessageAfterLoad = null;
     LoadMessageByNavigationType(type);
-  }   
+  }
+  
+  SetUpToolbarButtons(gCurrentFolderUri);
+  
+  UpdateMailToolbar("reroot folder in stand alone window");   
 } 
 
 function GetMsgHdrFromUri(messageUri)

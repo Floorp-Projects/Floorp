@@ -322,9 +322,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
   UpdateStatusMessageCounts(newFolder);
   
-  // hook for extra toolbar items
-  var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  observerService.notifyObservers(window, "mail:updateToolbarItems", null);
+  UpdateMailToolbar("reroot folder in 3 pane");
 }
 
 function SwitchView(command)

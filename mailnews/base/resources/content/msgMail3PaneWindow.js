@@ -129,119 +129,116 @@ var folderListener = {
        var eventType = event.GetUnicode();
        if (eventType == "FolderLoaded") {
          if (folder) {
-           var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
-           if (resource) {
-             var uri = resource.Value;
-             if (uri == gCurrentFolderToReroot) {
-               gQSViewIsDirty = true;
-               gCurrentFolderToReroot = null;
-               var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-               if(msgFolder) {
-                 msgFolder.endFolderLoading();
-                 // suppress command updating when rerooting the folder
-                 // when rerooting, we'll be clearing the selection
-                 // which will cause us to update commands.
-                 if (gDBView) {
-                   gDBView.suppressCommandUpdating = true;
-                   // if the db's view isn't set, something went wrong and we should reroot
-                   // the folder, which will re-open the view.
-                   if (!gDBView.db)
-                    gRerootOnFolderLoad = true;
-                 }
-                 if (gRerootOnFolderLoad)
-                   RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
+           var uri = folder.URI;
+           if (uri == gCurrentFolderToReroot) {
+             gQSViewIsDirty = true;
+             gCurrentFolderToReroot = null;
+             var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+             if(msgFolder) {
+               msgFolder.endFolderLoading();
+               // suppress command updating when rerooting the folder
+               // when rerooting, we'll be clearing the selection
+               // which will cause us to update commands.
+               if (gDBView) {
+                 gDBView.suppressCommandUpdating = true;
+                 // if the db's view isn't set, something went wrong and we should reroot
+                 // the folder, which will re-open the view.
+                 if (!gDBView.db)
+                   gRerootOnFolderLoad = true;
+               }
+               if (gRerootOnFolderLoad)
+                 RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
 
-                 var db = msgFolder.getMsgDatabase(msgWindow);
-                 if (db) 
-                   db.resetHdrCacheSize(100);
+               var db = msgFolder.getMsgDatabase(msgWindow);
+               if (db) 
+                 db.resetHdrCacheSize(100);
                  
-                 if (gDBView) {
-                   gDBView.suppressCommandUpdating = false;
-                 }
+               if (gDBView) {
+                 gDBView.suppressCommandUpdating = false;
+               }
 
-                 gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
+               gIsEditableMsgFolder = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_DRAFTS);
 
-                 gCurrentLoadingFolderSortType = 0;
-                 gCurrentLoadingFolderSortOrder = 0;
-                 gCurrentLoadingFolderViewType = 0;
-                 gCurrentLoadingFolderViewFlags = 0;
+               gCurrentLoadingFolderSortType = 0;
+               gCurrentLoadingFolderSortOrder = 0;
+               gCurrentLoadingFolderViewType = 0;
+               gCurrentLoadingFolderViewFlags = 0;
 
-                 var scrolled = false;
+               var scrolled = false;
 
-                 LoadCurrentlyDisplayedMessage();  //used for rename folder msg loading after folder is loaded.
+               LoadCurrentlyDisplayedMessage();  //used for rename folder msg loading after folder is loaded.
 
-                 if (gStartMsgKey != nsMsgKey_None) {
-                   scrolled = SelectAndScrollToKey(gStartMsgKey);
-                   gStartMsgKey = nsMsgKey_None;
-                 }
+               if (gStartMsgKey != nsMsgKey_None) {
+                 scrolled = SelectAndScrollToKey(gStartMsgKey);
+                 gStartMsgKey = nsMsgKey_None;
+               }
 
-                 if (gNextMessageAfterLoad) {
-                   var type = gNextMessageAfterLoad;
-                   gNextMessageAfterLoad = null;
+               if (gNextMessageAfterLoad) {
+                 var type = gNextMessageAfterLoad;
+                 gNextMessageAfterLoad = null;
 
-                   // scroll to and select the proper message
-                   scrolled = ScrollToMessage(type, true, true /* selectMessage */);
-                 }
+                 // scroll to and select the proper message
+                 scrolled = ScrollToMessage(type, true, true /* selectMessage */);
                }
              }
-             if (uri == gCurrentLoadingFolderURI) {
-               gCurrentLoadingFolderURI = "";
+           }
+           if (uri == gCurrentLoadingFolderURI) {
+             gCurrentLoadingFolderURI = "";
 
-               if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
-                 var lastMessageLoaded = msgFolder.lastMessageLoaded;
+             if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
+               var lastMessageLoaded = msgFolder.lastMessageLoaded;
                  
-                 if (lastMessageLoaded != nsMsgKey_None) {
-                   scrolled = SelectAndScrollToKey(lastMessageLoaded);
-                 }
+               if (lastMessageLoaded != nsMsgKey_None) {
+                 scrolled = SelectAndScrollToKey(lastMessageLoaded);
                }
+             }
 
-               // Now let's select the first new message if there is one
-               if (!scrolled) {
-                 // if we didn't just scroll, scroll to the first new message
-                 // don't select it though
-                 scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+             // Now let's select the first new message if there is one
+             if (!scrolled) {
+               // if we didn't just scroll, scroll to the first new message
+               // don't select it though
+               scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
                     
-                 // if we failed to find a new message, 
-                 // scroll to the newest, which might be the top or the bottom
-                 // depending on our sort order and sort type
-                 if (!scrolled) {
-                   if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
-                     switch (gDBView.sortType) {
-                       case nsMsgViewSortType.byDate: 
-                       case nsMsgViewSortType.byId: 
-                       case nsMsgViewSortType.byThread: 
-                         scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
-                         break;
-                     }
+               // if we failed to find a new message, 
+               // scroll to the newest, which might be the top or the bottom
+               // depending on our sort order and sort type
+               if (!scrolled) {
+                 if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
+                   switch (gDBView.sortType) {
+                     case nsMsgViewSortType.byDate: 
+                     case nsMsgViewSortType.byId: 
+                     case nsMsgViewSortType.byThread: 
+                       scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+                       break;
                    }
                  }
-
-                 if (!scrolled)
-                   EnsureRowInThreadTreeIsVisible(0);
                }
-               SetBusyCursor(window, false);
+
+               if (!scrolled)
+                 EnsureRowInThreadTreeIsVisible(0);
              }
-             if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))
-             {
-                var defaultAccount = accountManager.defaultAccount;
-                defaultServer = defaultAccount.incomingServer;
-                var inboxFolder = GetInboxFolder(defaultServer);
-                if (inboxFolder && inboxFolder.URI == folder.URI)
-                {
-                  NotifyObservers(null,"defaultInboxLoadedOnStartup",null);
-                  gNotifyDefaultInboxLoadedOnStartup = false;
-                }
-             }
-             //folder loading is over, now issue quick search if there is an email address
-             if (gSearchEmailAddress)
-             {
-               Search(gSearchEmailAddress);
-               gSearchEmailAddress = null;
-             } 
-             else if (gDefaultSearchViewTerms)
-             {
-               Search("");
-             }
+             SetBusyCursor(window, false);
+           }
+           if (gNotifyDefaultInboxLoadedOnStartup && (folder.flags & 0x1000))
+           {
+              var defaultAccount = accountManager.defaultAccount;
+              defaultServer = defaultAccount.incomingServer;
+              var inboxFolder = GetInboxFolder(defaultServer);
+              if (inboxFolder && inboxFolder.URI == folder.URI)
+              {
+                NotifyObservers(null,"defaultInboxLoadedOnStartup",null);
+                gNotifyDefaultInboxLoadedOnStartup = false;
+              }
+           }
+           //folder loading is over, now issue quick search if there is an email address
+           if (gSearchEmailAddress)
+           {
+             Search(gSearchEmailAddress);
+             gSearchEmailAddress = null;
+           } 
+           else if (gDefaultSearchViewTerms)
+           {
+             Search("");
            }
          }
        } 
