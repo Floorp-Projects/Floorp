@@ -259,7 +259,11 @@ CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
 endif
 
 ifeq ($(GNU_CC),1)
+ifdef HAVE_GCC3_ABI
+ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC3.s xptcstubs_asm_sparc_solaris.s
+else
 ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC.s xptcstubs_asm_sparc_solaris.s
+endif
 else
 ifdef HAVE_64BIT_OS
 ASFILES		:= xptcinvoke_asm_sparcv9_solaris_SUNW.s xptcstubs_asm_sparcv9_solaris.s
