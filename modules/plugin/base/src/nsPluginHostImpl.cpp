@@ -1479,7 +1479,12 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
   for(i=0; i<mNumActivePlugins; i++)
   {
     if(mActivePluginList[i].mInstance)
+    {
   	  mActivePluginList[i].mInstance->Destroy();
+      NS_RELEASE(mActivePluginList[i].mInstance);
+      NS_RELEASE(mActivePluginList[i].mPeer);
+      PL_strfree(mActivePluginList[i].mURL);
+    }
   }
 
   while (nsnull != plug)
@@ -1719,6 +1724,9 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance,
     if(mOldestActivePlugin == MAX_ACTIVE_PLUGINS)
       mOldestActivePlugin = 0;
   }
+
+  NS_ADDREF(aInstance);
+
   nsCRT::free(url);
 }
 
@@ -1786,6 +1794,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
       return result;
     }
 
+    // it is adreffed here
     aOwner->SetInstance(instance);
 
     nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
@@ -1807,9 +1816,11 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 
     NS_RELEASE(pi);
 
+    // we should addref here
     AddInstanceToActiveList(instance, aURL);
 
-    //NS_RELEASE(instance);
+    //release what was addreffed in Create(Plugin)Instance
+    NS_RELEASE(instance);
 
     return NS_OK;
 }
