@@ -271,7 +271,9 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
 {
   nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
+
+  nsCOMPtr<nsIJVMManager> jvm(do_GetService(nsIJVMManager::GetCID(), &rv));
+
   if (NS_SUCCEEDED(rv)) {
     if (!mReflectedApplet) {
       // 0. Make sure the presentation is up-to-date
@@ -283,7 +285,7 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
       JSObject* elementObject = nsnull;
       rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
                                                           (void**)&elementObject);
-      if (NS_OK != rv)
+      if (NS_FAILED(rv))
         return rv;
 
       // 2. get the plugin instance corresponding to this element.
@@ -312,10 +314,9 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
       JSObject* wrappedAppletObject = nsnull;
       nsCOMPtr<nsIPluginInstance> pluginInstance;
 
-      rv = NS_GetObjectFramePluginInstance(frame,
-                                           *getter_AddRefs(pluginInstance));
+      NS_GetObjectFramePluginInstance(frame, *getter_AddRefs(pluginInstance));
 
-      if ((rv == NS_OK) && (nsnull != pluginInstance)) {
+      if (pluginInstance) {
         nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;
 
         javaPluginInstance = do_QueryInterface(pluginInstance);
@@ -323,7 +324,8 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
         if (javaPluginInstance) {
           jobject appletObject = nsnull;
           rv = javaPluginInstance->GetJavaObject(&appletObject);
-          if (NS_OK == rv) {
+
+          if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsILiveConnectManager> manager;
 
             manager = do_GetService(nsIJVMManager::GetCID());
@@ -338,12 +340,21 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 
       // 4. set the __proto__ field of the applet object to be the
       // element script object.
-      if (nsnull != wrappedAppletObject) {
+      if (wrappedAppletObject) {
         JS_SetPrototype(context, wrappedAppletObject, elementObject);
+
+        // Cache the wrapped applet object as our script object.
         SetScriptObject(wrappedAppletObject);
+
         mReflectedApplet = PR_TRUE;
+
+        *aScriptObject = wrappedAppletObject;
+      } else {
+        // We didn't wrap the applet object so we'll fall back and use
+        // the plain DOM script object.
+
+        *aScriptObject = elementObject;
       }
-      *aScriptObject = wrappedAppletObject;
     }
     else {
       rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
