@@ -32,6 +32,11 @@
 #if defined(XP_UNIX) || defined(BEOS)
 #include <locale.h>
 #include <stdlib.h>
+#include "nsIPosixLocale.h"
+#endif
+#ifdef XP_MAC
+#include <script.h>
+#include "nsIMacLocale.h"
 #endif
 
 //
@@ -47,6 +52,9 @@ static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 #ifdef XP_UNIX
 static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
 #endif
+#ifdef XP_MAC
+static NS_DEFINE_IID(kIMacLocaleIID,NS_IMACLOCALE_IID);
+#endif
 
 //
 // cids
@@ -56,6 +64,9 @@ static NS_DEFINE_CID(kWin32LocaleFactoryCID,NS_WIN32LOCALEFACTORY_CID);
 #endif
 #ifdef XP_UNIX
 static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
+#endif
+#ifdef XP_MAC
+static NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
 #endif
 
 //
@@ -241,6 +252,23 @@ nsLocaleService::nsLocaleService(void)
         }
     }
 #endif // XP_PC
+#ifdef XP_MAC
+	long script = GetScriptManagerVariable(smSysScript);
+	long region = GetScriptManagerVariable(smRegionCode);
+	nsIMacLocale*	macConverter;
+	nsresult result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
+						NULL,kIMacLocaleIID,(void**)&macConverter);
+	if (result==NS_OK && macConverter!=nsnull) {
+		nsString xpLocale;
+		result = macConverter->GetXPLocale((short)script,(short)region,&xpLocale);
+		if (result!=NS_OK) { macConverter->Release(); return; }
+		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+		if (result!=NS_OK) { macConverter->Release(); return; }
+		mApplicationLocale = mSystemLocale;
+		mApplicationLocale->AddRef();
+		macConverter->Release();
+	}
+#endif	
                               
 }
 
