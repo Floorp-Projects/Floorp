@@ -45,23 +45,10 @@
 #include "nsIBrowserInstance.h"
 
 #include "nscore.h"
-#include "nsString.h"
 #include "nsISupports.h"
 
-#include "nsIRequestObserver.h"
-#include "nsIInputStream.h"
-#include "nsIObserver.h"
-#include "nsICmdLineHandler.h"
-#include "nsIWebShell.h"
-#include "nsIUrlbarHistory.h"
-
 class nsIDocShell;
-class nsIScriptContext;
 class nsIDOMWindowInternal;
-class nsIDOMNode;
-class nsIURI;
-class nsIWebShellWindow;
-class nsIFindComponent;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
@@ -86,11 +73,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
   protected:
 
     nsresult LoadUrl(const PRUnichar * urlToLoad);
-    nsresult GetContentDocShell(nsIDocShell** aDocShell);
     nsresult GetContentAreaDocShell(nsIDocShell** outDocShell);
-    nsresult GetContentWindow(nsIDOMWindowInternal** outContentWindow);
-    
-    nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
     
     void ReinitializeContentVariables();
     
@@ -99,12 +82,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     nsWeakPtr          mContentAreaDocShellWeak;
 
-    nsIWebShellWindow  *mWebShellWin;								// weak reference
-    nsIDocShell *       mDocShell;									// weak reference
     nsIDOMWindowInternal*       mDOMWindow;                         // weak reference
 
-    nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
-    nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif

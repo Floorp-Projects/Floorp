@@ -44,7 +44,6 @@
 #include "nsIGenericFactory.h"
 
 // Interfaces Needed
-#include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -55,7 +54,7 @@
 
 ///  Unsorted Includes
 
-#include "nsIMarkupDocumentViewer.h"
+#include "nsIObserver.h"
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
@@ -66,11 +65,9 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindowInternal.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIWebShell.h"
-#include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWindowWatcher.h"
@@ -82,7 +79,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
-#include "nsIURL.h"
 #include "nsIWidget.h"
 #include "plevent.h"
 
@@ -91,22 +87,10 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsIDocumentViewer.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
-#include "nsIUrlbarHistory.h"
 
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-
-
-#include "nsIPresContext.h"
-#include "nsIPresShell.h"
-
-#include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
 
 #include "nsIFileSpec.h"
@@ -116,35 +100,10 @@
 #include "nsNetUtil.h"
 #include "nsICmdLineHandler.h"
 
-#include "nsIWindowMediator.h"
-
-#include "nsDocumentCharsetInfoCID.h"
-#include "nsIDocumentCharsetInfo.h"
-#include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
-
-#include "nsIDocShellHistory.h"
-
 // Stuff to implement file download dialog.
-#include "nsIDocumentObserver.h"
-#include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
-// Stuff to implement find/findnext
-#include "nsIFindComponent.h"
-
-// if DEBUG or MOZ_PERF_METRICS are defined, enable the PageCycler
-#ifdef DEBUG
-#define ENABLE_PAGE_CYCLER
-#endif
 
 // if DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_PERF_METRICS is defined,
 // enable the PageCycler
@@ -153,11 +112,11 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #endif
 
 /* Define Class IDs */
+static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
-static NS_DEFINE_CID(kCPrefServiceCID,          NS_PREF_CID);
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 
 #ifdef DEBUG                                                           
@@ -168,7 +127,6 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 
 
 #define PREF_HOMEPAGE_OVERRIDE_URL "startup.homepage_override_url"
-#define PREF_HOMEPAGE_OVERRIDE "browser.startup.homepage_override.1"
 #define PREF_HOMEPAGE_OVERRIDE_MSTONE "browser.startup.homepage_override.mstone"
 #define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -297,7 +255,7 @@ public:
           // if the aSubject arg is 'this' then we were called by the Timer
           // Stop the current load and move on to the next
           nsCOMPtr<nsIDocShell> docShell;
-          mAppCore->GetContentDocShell(getter_AddRefs(docShell));
+          mAppCore->GetContentAreaDocShell(getter_AddRefs(docShell));
 
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
           if(webNav)
@@ -440,8 +398,6 @@ PRBool nsBrowserInstance::sCmdLineURLUsed = PR_FALSE;
 
 nsBrowserInstance::nsBrowserInstance() : mIsClosed(PR_FALSE)
 {
-  mWebShellWin          = nsnull;
-  mDocShell             = nsnull;
   mDOMWindow            = nsnull;
   mContentAreaDocShellWeak  = nsnull;
   NS_INIT_REFCNT();
@@ -458,7 +414,6 @@ nsBrowserInstance::ReinitializeContentVariables()
   NS_ASSERTION(mDOMWindow,"Reinitializing Content Variables without a window will cause a crash. see Bugzilla Bug 46454");
   if (!mDOMWindow)
     return;
-  nsresult rv;
 
   nsCOMPtr<nsIDOMWindow> contentWindow;
   mDOMWindow->GetContent(getter_AddRefs(contentWindow));
@@ -468,24 +423,16 @@ nsBrowserInstance::ReinitializeContentVariables()
   if (globalObj) {
     nsCOMPtr<nsIDocShell> docShell;
     globalObj->GetDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
 
-    if (webShell) {
-      mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
+    mContentAreaDocShellWeak = dont_AddRef(NS_GetWeakReference(docShell)); // Weak reference
 
-      if (APP_DEBUG) {
-        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    if (APP_DEBUG) {
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+      if (docShellAsItem) {
         nsXPIDLString name;
         docShellAsItem->GetName(getter_Copies(name));
-        nsCAutoString str;
-        str.AssignWithConversion(name);
-        printf("Attaching to Content WebShell [%s]\n", str.get());
+        printf("Attaching to Content WebShell [%s]\n", NS_LossyConvertUCS2toASCII(name).get());
       }
-
-      nsCOMPtr<nsIUrlbarHistory> ubHistory = do_GetService(NS_URLBARHISTORY_CONTRACTID, &rv);
-
-      if (ubHistory)
-        mUrlbarHistory = ubHistory;
     }
   }
 }
@@ -513,53 +460,6 @@ nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
   return NS_OK;
 }
     
-
-nsresult nsBrowserInstance::GetContentWindow(nsIDOMWindowInternal** outDOMWindow)
-{
-  nsCOMPtr<nsIDOMWindow> contentWindow;
-  mDOMWindow->GetContent(getter_AddRefs(contentWindow));
-
-  if (contentWindow) {
-    return CallQueryInterface(contentWindow, outDOMWindow);
-  }
-
-  return NS_OK;
-}
-
-nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow)
-{
-  nsCOMPtr<nsIDOMWindow> focussedWindow;
-  
-  // get the window that has focus (e.g. framesets)
-  if (mDocShell)
-  {    
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));    
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (docv)
-    {
-      // Get the document from the doc viewer.
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      if (xulDoc)
-      {
-        nsCOMPtr<nsIDOMXULCommandDispatcher>  commandDispatcher;
-        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-        
-        if (commandDispatcher)
-          commandDispatcher->GetFocusedWindow(getter_AddRefs(focussedWindow));
-      }
-    }
-  }
-  
-  if (!focussedWindow)
-    return GetContentWindow(outFocussedWindow);   // default to content window
-
-  return CallQueryInterface(focussedWindow, outFocussedWindow);
-}
-
-
 //*****************************************************************************
 //    nsBrowserInstance: nsISupports
 //*****************************************************************************
@@ -679,14 +579,6 @@ nsBrowserInstance::Init()
   return rv;
 }
 
-nsresult
-nsBrowserInstance::GetContentDocShell(nsIDocShell** aDocShell)
-{
-  NS_ENSURE_ARG_POINTER(aDocShell);
-
-  return GetContentAreaDocShell(aDocShell);
-}
-
 NS_IMETHODIMP    
 nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
 {
@@ -698,28 +590,15 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
-  if (docShell) {
-    mDocShell = docShell.get();
-    //NS_ADDREF(mDocShell); WE DO NOT OWN THIS
-    // inform our top level webshell that we are its parent URI content listener...
-    if (APP_DEBUG) {
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  if (APP_DEBUG) {
+    nsCOMPtr<nsIDocShell> docShell;
+    globalObj->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    if (docShellAsItem) {
+      // inform our top level webshell that we are its parent URI content listener...
       nsXPIDLString name;
       docShellAsItem->GetName(getter_Copies(name));
-      nsCAutoString str;
-      str.AssignWithConversion(name);
-      printf("Attaching to WebShellWindow[%s]\n", str.get());
-    }
-
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    nsCOMPtr<nsIWebShellContainer> webShellContainer;
-    webShell->GetContainer(*getter_AddRefs(webShellContainer));
-    if (webShellContainer) {
-      nsCOMPtr<nsIWebShellWindow> webShellWin;
-      if (NS_OK == webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), getter_AddRefs(webShellWin)))
-        mWebShellWin = webShellWin;   // WE DO NOT OWN THIS
+      printf("Attaching to WebShellWindow[%s]\n", NS_LossyConvertUCS2toASCII(name).get());
     }
   }
 
@@ -736,12 +615,6 @@ nsBrowserInstance::Close()
     return NS_OK;
   else
     mIsClosed = PR_TRUE;
-
-  // Release search context.
-  mSearchContext = nsnull;;
-
-  //Release Urlbar History
-  mUrlbarHistory = nsnull;
 
   return NS_OK;
 }
@@ -862,7 +735,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
   nsAutoString args;
 
   if (args.IsEmpty()) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
     if (!prefs) return NS_ERROR_FAILURE;
 
     if (NeedHomepageOverride(prefs)) {
