@@ -85,6 +85,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsProcess.h"
 #include "nsILocalFile.h"
+#include "nsILookAndFeel.h"
 
 #ifdef MOZ_XPINSTALL
 #include "InstallCleanupDefines.h"
@@ -125,6 +126,8 @@
 #endif
 
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
+#include "nsWidgetsCID.h"
+static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 #define UILOCALE_CMD_LINE_ARG "-UILocale"
 #define CONTENTLOCALE_CMD_LINE_ARG "-contentLocale"
@@ -914,6 +917,28 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     return NS_OK;
 }
 
+// Use classic skin if OS has indicated that the 
+// current theme is being used for accessibility.
+static void CheckUseAccessibleSkin()
+{
+    PRInt32 useAccessibilityTheme = 0;
+
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme, 
+                             useAccessibilityTheme);
+    }
+
+    if (useAccessibilityTheme) {
+      // Use classic skin, it obeys the system's accessibility theme
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+      if (chromeRegistry) {
+        chromeRegistry->SetRuntimeProvider(PR_TRUE);  // The skin change isn't permanent
+        chromeRegistry->SelectSkin(NS_LITERAL_CSTRING("classic/1.0"), PR_TRUE);
+      }
+    }
+}
+
 static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 {
     // If we are being launched in -turbo mode, we cannot show UI
@@ -1213,6 +1238,13 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   rv = InitializeProfileService(cmdLineArgs);
   NS_TIMELINE_LEAVE("InitializeProfileService");
   if (NS_FAILED(rv)) return rv;
+
+  NS_TIMELINE_ENTER("CheckUseAccessibleSkin");
+  // Need to do this after profile service init'd
+  // If OS accessibility theme is used, then we always load classic theme 
+  // which follows the system appearance.
+  CheckUseAccessibleSkin();
+  NS_TIMELINE_LEAVE("CheckUseAccessibleSkin");
 
   NS_TIMELINE_ENTER("appShell->CreateHiddenWindow");
   appShell->CreateHiddenWindow();
