@@ -33,17 +33,8 @@
 #// root of NS
 #//
 #//------------------------------------------------------------------------
+MODULE=java
 DEPTH= ..\..\..
-
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-
-INSTALL_DIR=$(XPDIST)\include\java
-
 
 #//------------------------------------------------------------------------
 #//
@@ -51,28 +42,26 @@ INSTALL_DIR=$(XPDIST)\include\java
 #//
 #//------------------------------------------------------------------------
 
+EXPORTS = \
+    bool.h \
+    interpreter.h  \
+    javaString.h  \
+    javaThreads.h  \
+    jmc.h  \
+    jni.h  \
+    jni_md.h  \
+    jri.h  \
+    jri_md.h  \
+    jriext.h  \
+    jritypes.h  \
+    nspr_md.h  \
+    oobj.h  \
+    sysmacros_md.h  \
+    tree.h  \
+    typedefs.h  \
+    typedefs_md.h  \
+    zip.h  \
+	$(NULL)
+
 include <$(DEPTH)/config/rules.mak>
 
-export:: 
-    $(MAKE_INSTALL) bool.h $(INSTALL_DIR)
-    $(MAKE_INSTALL) interpreter.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) javaString.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) javaThreads.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jmc.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jni.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jni_md.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jri.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jri_md.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jriext.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) jritypes.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) nspr_md.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) oobj.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) sysmacros_md.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) tree.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) typedefs.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) typedefs_md.h  $(INSTALL_DIR)
-    $(MAKE_INSTALL) zip.h  $(INSTALL_DIR)
-
-install::
-
-clobber::
