@@ -1122,14 +1122,13 @@ XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *
   char             *value;
   char             *tok_lasts;
   const char       *s;
-  long              default_resolution = 0;
+  long              default_resolution = -1;
   int               default_resolution_rec_index = -1;
 
   /* Get default document resolution */
   if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "default-printer-resolution", &default_resolution) != 1 )
   {
-    fprintf(stderr, "XpuGetResolutionList: Internal error, no 'default-printer-resolution' XPDocAttr found.\n");
-    return(NULL);
+    default_resolution = -1;
   }
   
   value = XpGetOneAttribute(pdpy, pcontext, XPPrinterAttr, "printer-resolutions-supported");
@@ -1161,11 +1160,14 @@ XpuResolutionList XpuGetResolutionList( Display *pdpy, XPContext pcontext, int *
     
     list[rec_count-2].dpi = tmp;
 
-    /* Default resolution ? */
-    if( list[rec_count-2].dpi == default_resolution )
+    if( default_resolution != -1 )
     {
-      default_resolution_rec_index = rec_count-2;
-    }
+      /* Is this the default resolution ? */
+      if( list[rec_count-2].dpi == default_resolution )
+      {
+        default_resolution_rec_index = rec_count-2;
+      }
+    }  
   }  
 
   XFree(value);
