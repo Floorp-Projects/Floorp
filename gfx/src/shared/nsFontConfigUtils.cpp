@@ -41,19 +41,18 @@
 
 struct MozXftLangGroup {
     const char    *mozLangGroup;
-    FcChar32       character;
     const FcChar8 *XftLang;
 };
 
 const MozXftLangGroup MozXftLangGroups[] = {
-    { "x-western",      0x0041, (const FcChar8 *)"en" },
-    { "x-central-euro", 0x0100, (const FcChar8 *)"pl" },
-    { "x-cyrillic",     0x0411, (const FcChar8 *)"ru" },
-    { "x-baltic",       0x0104, (const FcChar8 *)"lv" },
-    { "x-devanagari",   0x0905, (const FcChar8 *)"hi" },
-    { "x-tamil",        0x0B85, (const FcChar8 *)"ta" },
-    { "x-unicode",      0x0000,                  0    },
-    { "x-user-def",     0x0000,                  0    },
+    { "x-western",      (const FcChar8 *)"en" },
+    { "x-central-euro", (const FcChar8 *)"pl" },
+    { "x-cyrillic",     (const FcChar8 *)"ru" },
+    { "x-baltic",       (const FcChar8 *)"lv" },
+    { "x-devanagari",   (const FcChar8 *)"hi" },
+    { "x-tamil",        (const FcChar8 *)"ta" },
+    { "x-unicode",                       0    },
+    { "x-user-def",                      0    },
 };
 
 #define NUM_XFT_LANG_GROUPS (sizeof (MozXftLangGroups) / \
