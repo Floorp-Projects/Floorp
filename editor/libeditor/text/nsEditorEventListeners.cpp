@@ -517,7 +517,8 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
          if (mailEditor)
             mailEditor->PasteAsQuotation();
       }
-      editor->Paste();
+      else
+        editor->Paste();
       return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
    }
    return NS_OK;   // did not process the event
