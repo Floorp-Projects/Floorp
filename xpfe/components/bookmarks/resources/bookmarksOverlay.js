@@ -425,7 +425,7 @@ BookmarksUIElement.prototype = {
     xferable.setTransferData("text/html", htmlstring, sTextHTML.length*2)
     
     xferable.addDataFlavor("text/unicode");
-    unicodestring.data = sTextHTML;
+    unicodestring.data = sTextUnicode;
     xferable.setTransferData("text/unicode", unicodestring, sTextUnicode.length*2)
     
     const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
