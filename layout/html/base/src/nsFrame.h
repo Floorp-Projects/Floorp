@@ -117,12 +117,13 @@ public:
   // (which comes from the presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresShell* aPresShell);
 
-private:
   // Overridden to prevent the global delete from being called, since the memory
-  // came out of an nsIArena instead of the global delete operator's heap.  This is private
-  // to ensure that only the base class Destroy is allowed to delete the frame.
+  // came out of an nsIArena instead of the global delete operator's heap.  
+  // XXX Would like to make this private some day, but our UNIX compilers can't 
+  // deal with it.
   void operator delete(void* aPtr, size_t sz);
 
+private:
   // The normal operator new is disallowed on nsFrames.
   void* operator new(size_t sz) { return nsnull; };
 
