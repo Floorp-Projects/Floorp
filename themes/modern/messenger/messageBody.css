@@ -129,6 +129,12 @@ span.moz-txt-underscore {
   text-decoration: underline;
 }
 
+span.moz-txt-formfeed {
+  display: block;
+  height: 100%;
+}
+
+
 /* ::::: signature ::::: */
 
 .moz-txt-sig,
