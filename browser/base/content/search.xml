@@ -141,9 +141,19 @@
           if (this.currentEngine != "__PhoenixFindInPage") {
             var ISEARCHSVC = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                        .getService(Components.interfaces.nsIInternetSearchService);
-            var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine, encodeURIComponent(this.value), 
-                                                            0, 0, {value:0});
-            gURLBar.value = searchURL;
+            var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine,
+                                         this.value? encodeURIComponent(this.value):"", 
+                                         0, 0, {value:0});
+#           if the search box is empty, let''s load the host
+            if (!this.value) {
+              var uri = Components.classes['@mozilla.org/network/standard-url;1']
+                                  .createInstance(Components.interfaces.nsIURI);
+              uri.spec = searchURL;
+              searchURL = uri.host;
+              if (!searchURL)
+                return;
+            }
+            gURLBar.value = searchURL; //pch: ugly!
             BrowserLoadURL(this.mEnterEvent); // from autocomplete.xml
           } else {
             quickFindInPage(this.value);
