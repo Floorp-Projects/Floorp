@@ -183,5 +183,13 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_FACTORY_EXISTS            (NS_ERROR_BASE + 0x100)
 
 /*@}*/
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef XP_PC
+#pragma warning(disable: 4251) // 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream'
+#pragma warning(disable: 4275) // non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode'
+#endif
+
 #endif
 
