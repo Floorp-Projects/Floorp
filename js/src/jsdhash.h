@@ -55,6 +55,7 @@ JS_BEGIN_EXTERN_C
 /* Primitive and forward-struct typedefs. */
 typedef uint32                  JSDHashNumber;
 typedef struct JSDHashEntryHdr  JSDHashEntryHdr;
+typedef struct JSDHashEntryStub JSDHashEntryStub;
 typedef struct JSDHashTable     JSDHashTable;
 typedef struct JSDHashTableOps  JSDHashTableOps;
 
@@ -200,7 +201,7 @@ struct JSDHashTableOps {
 };
 
 /*
- * Default implementations for some of the above ops.
+ * Default implementations for the above ops.
  */
 extern JS_PUBLIC_API(void *)
 JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes);
@@ -211,8 +212,41 @@ JS_DHashFreeTable(JSDHashTable *table, void *ptr);
 extern JS_PUBLIC_API(JSDHashNumber)
 JS_DHashStringKey(JSDHashTable *table, const void *key);
 
+/* A minimal entry contains a keyHash header and a void key pointer. */
+struct JSDHashEntryStub {
+    JSDHashEntryHdr hdr;
+    const void      *key;
+};
+
+extern JS_PUBLIC_API(const void *)
+JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry);
+
+extern JS_PUBLIC_API(JSDHashNumber)
+JS_DHashVoidPtrKeyStub(JSDHashTable *table, const void *key);
+
+extern JS_PUBLIC_API(JSBool)
+JS_DHashMatchEntryStub(JSDHashTable *table,
+                       const JSDHashEntryHdr *entry,
+                       const void *key);
+
+extern JS_PUBLIC_API(void)
+JS_DHashMoveEntryStub(JSDHashTable *table,
+                      const JSDHashEntryHdr *from,
+                      JSDHashEntryHdr *to);
+
+extern JS_PUBLIC_API(void)
+JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry);
+
 extern JS_PUBLIC_API(void)
 JS_DHashFinalizeStub(JSDHashTable *table);
+
+/*
+ * If you use JSDHashEntryStub or a subclass of it as your entry struct, and
+ * if your entries move via memcpy and clear via memset(0), you can use these
+ * stub operations.
+ */
+extern JS_PUBLIC_API(JSDHashTableOps *)
+JS_DHashGetStubOps(void);
 
 /*
  * Dynamically allocate a new JSDHashTable using malloc, initialize it using
@@ -295,6 +329,18 @@ extern JS_PUBLIC_API(JSDHashEntryHdr *)
 JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op);
 
 /*
+ * Remove an entry already accessed via LOOKUP or ADD.
+ *
+ * NB: this is a "raw" or low-level routine, intended to be used only where
+ * the inefficiency of a full JS_DHashTableOperate (which rehashes in order
+ * to find the entry given its key) is not tolerable.  This function does not
+ * shrink the table if it is underloaded.  It does not update stats #ifdef
+ * JS_DHASHMETER, either.
+ */
+extern JS_PUBLIC_API(void)
+JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry);
+
+/*
  * Enumerate entries in table using etor:
  *
  *   count = JS_DHashTableEnumerate(table, etor, arg);
@@ -313,8 +359,8 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op);
  * that were enumerated so far.  Return the total number of live entries when
  * enumeration completes normally.
  *
- * If etor adds or removes an entry, it must return JS_DHASH_STOP; otherwise,
- * undefined behavior results.
+ * If etor calls JS_DHashTableOperate on table, it must return JS_DHASH_STOP;
+ * otherwise undefined behavior results.
  */
 typedef JSDHashOperator
 (* CRT_CALL JSDHashEnumerator)(JSDHashTable *table, JSDHashEntryHdr *hdr,

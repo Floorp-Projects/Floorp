@@ -148,6 +148,7 @@ JS_HFILES =		\
 	jsparse.h	\
 	jsarena.h	\
 	jsclist.h	\
+	jsdhash.h	\
 	jsdtoa.h	\
 	jshash.h	\
 	jslong.h	\
@@ -196,6 +197,7 @@ JS_CFILES =		\
 	jscntxt.c	\
 	jsdate.c	\
 	jsdbgapi.c	\
+	jsdhash.c	\
 	jsdtoa.c	\
 	jsemit.c	\
 	jsexn.c		\
