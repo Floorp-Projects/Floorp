@@ -113,7 +113,9 @@ public class NativeArray extends ScriptableObject {
         if (ScriptRuntime.toUint32(d) == d &&
             ScriptRuntime.numberToString(d).equals(id) &&
             this.length <= d && d != 4294967295.0)
+        {
             this.length = (long)d + 1;
+        }
 
         super.put(id, start, value);
     }
