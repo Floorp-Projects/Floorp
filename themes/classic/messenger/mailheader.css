@@ -70,3 +70,53 @@ body {
 .moz-txt-sig > a, .moz-signature > a {
   color: 7777FF /* light blue */;
 }
+
+/* smileys */
+span[-moz-smiley] {
+  min-height: 17px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-repeat: no-repeat; 
+  background-position: center center;
+
+
+}
+
+span[-moz-smiley] > span {
+
+    display: none;
+}
+
+
+
+span[-moz-smiley="s1"] {
+  background-image: url(chrome://global/skin/smiley/smile_n.gif);
+}
+
+
+span[-moz-smiley="s2"] {
+  background-image: url(chrome://global/skin/smiley/frown_n.gif);
+}
+
+
+span[-moz-smiley="s3"] {
+  background-image: url(chrome://global/skin/smiley/wink_n.gif);
+}
+
+
+span[-moz-smiley="s4"] { 
+  background-image: url(chrome://global/skin/smiley/tongue_n.gif);
+}
+
+span[-moz-smiley="s5"] {
+  background-image: url(chrome://global/skin/smiley/laughing_n.gif);
+}
+
+span[-moz-smiley="s6"] {
+  background-image: url(chrome://global/skin/smiley/embarrassed_n.gif);
+}
+
+
+span[-moz-smiley="s7"] {
+  background-image: url(chrome://global/skin/smiley/undecided_n.gif);
+}
+
