@@ -27,11 +27,14 @@ LIBRARY_NAME=imap
 
 EXPORTS = \
 	nsIMAPGroupRecord.h \
+	nsImapMessage.h \
 	$(NULL)
 
 CPPSRCS = \
 	nsIMAPGroupRecord.cpp \
-	$(NULL)
+	nsImapMessage.cpp \
+	nsImapUtils.cpp		\
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 

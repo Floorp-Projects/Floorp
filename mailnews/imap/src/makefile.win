@@ -37,6 +37,8 @@ CPPSRCS=    nsImapUrl.cpp								\
 			nsImapService.cpp							\
 			nsImapIncomingServer.cpp					\
 			nsImapMailFolder.cpp						\
+			nsImapMessage.cpp							\
+			nsImapUtils.cpp								\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
@@ -52,6 +54,8 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapService.obj				\
 			.\$(OBJDIR)\nsImapIncomingServer.obj		\
 			.\$(OBJDIR)\nsImapMailFolder.obj			\
+			.\$(OBJDIR)\nsImapMessage.obj				\
+			.\$(OBJDIR)\nsImapUtils.obj					\
 			$(NULL)
 
 
@@ -68,6 +72,7 @@ EXPORTS=	nsImapUrl.h									\
 			nsImapIncomingServer.h						\
 			nsIMAPNamespace.h							\
 			nsImapMailFolder.h							\
+			nsImapMessage.h								\
             $(NULL)
 
 LINCS=													\
