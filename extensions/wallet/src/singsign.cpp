@@ -2337,8 +2337,12 @@ SINGSIGN_PromptPassword
     return res;
   }
   nsAutoString prehost = nsAutoString(prehostCString);
-  PRInt32 colon = prehost.Find(prehost, ':');
-  prehost.Left(username, colon);  
+  PRInt32 colon = prehost.FindChar(':');
+  if (colon == -1) {
+    username = prehost;
+  } else {
+    prehost.Left(username, colon);  
+  }
 
   PR_FREEIF(prehostCString);
 
