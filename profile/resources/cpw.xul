@@ -3,14 +3,13 @@
 
 <!DOCTYPE window>
 
-<html:div flex="100%">
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="CreateProfile Wizard"> 
 
+<html:div flex="100%">
 
 <html:script>
 var profName = "";
@@ -115,4 +114,6 @@ function Finish()
 <html:iframe src="content1.xul" name="frame1" width="100%" height="350px"> </html:iframe>
 <html:iframe src="navigationStart.xul" name="frame2" width="100%" height="100px"> </html:iframe>
 
+
+</html:div>
 </window>

@@ -3,13 +3,12 @@
 
 <!DOCTYPE window>
 
-<html:div flex="100%">
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:div flex="100%">
 
 <html:script>
 	var count = parent.count;
@@ -45,7 +44,7 @@
 	{
 		parent.frames[0].commit();
 		parent.Finish();
-		parent.location.replace("resource:/res/profile/profileManager.html");
+		parent.location.replace("resource:/res/profile/pm.xul");
 	}
 </html:script>
 
@@ -55,4 +54,5 @@
 	<html:button onclick="ExitWizard();"> Finish </html:button>
 </html:center>
 
+</html:div>
 </window>

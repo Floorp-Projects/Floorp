@@ -3,12 +3,11 @@
 
 <!DOCTYPE window>
 
-<html:div flex="100%">
-
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40">
 
+<html:div flex="100%">
 
 <script>
 function InitializeValues()
@@ -48,4 +47,5 @@ Outgoing SMTP server
 <input type="text" id="SMTP" size="30"/>
 </p>
 
+</html:div>
 </xul:window>

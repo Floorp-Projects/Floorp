@@ -9,6 +9,8 @@
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:div flex="100%">
+
 
 <html:script>
 	var count = 0;
@@ -72,4 +74,5 @@
 	<html:button onclick="ExitWizard();"> Exit </html:button>
 </html:center>
 
+</html:div>
 </window>

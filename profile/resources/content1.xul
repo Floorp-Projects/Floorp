@@ -3,50 +3,58 @@
 
 <!DOCTYPE window>
 
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
 <html:div flex="100%">
 
-<xul:window
-  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns="http://www.w3.org/TR/REC-html40">
+<html:script>
+function foo()
+{
+}
 
-
-<script>
 function commit()
 {
 }
-</script>
+
+setTimeout("foo()", 0);
+</html:script>
 
 
-<b>Communicator Profile Manager</b>
-<p>
+<html:b>Communicator Profile Manager</html:b>
+<html:p>
 Creating a New Profile
-<br></br>
+<html:br></html:br>
 Communicator stores information about your settings, preferences, bookmarks and 
-<br></br>
+<html:br></html:br>
 stored messages in your personal profile.
-</p>
+</html:p>
 
-<p>
+<html:p>
 If you are sharing this copy of Communicator with other users, you can use profiles 
-<br></br>
+<html:br></html:br>
 to keep each user's information separate. To do this, each user should create his or 
-<br></br>
+<html:br></html:br>
 her own profile and optionally protect it with a password.
-</p>
+</html:p>
 
-<p>
+<html:p>
 If you are the only person using this copy of Communicator, you must create atleast
-<br></br>
+<html:br></html:br>
 one profile. If you would like, you can create multiple profiles for yourself to store 
-<br></br>
+<html:br></html:br>
 different sets of setting and preferences. For example, you may want to have separate 
-<br></br>
+<html:br></html:br>
 profiles for business and personal use.
-</p>
+</html:p>
 
 
-<p>
+<html:p>
 To begin Creating your profile, click Next.
-</p>
+</html:p>
 
-</xul:window>
+</html:div>
+</window>

@@ -2,13 +2,12 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="pm.css" type="text/css"?>
 
-<html:div flex="100%">
-
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:div flex="100%">
 
 <html:script>
 var profileCore = "";
@@ -53,12 +52,32 @@ function MigrateProfile(override)
 function MigrateAllProfiles()
 {
 	var body = document.getElementById("theTreeBody");
-	var child = body.firstChild;
+	dump("I am here 1\n");
+	dump("body: "+body);                 
+
+	var child = body.getChild;
+	dump("I am here 2\n");
+	dump("child: "+child+"\n");
+
 	while (child)
 	{
+		dump("Inside while loop\n\n");
 		dump("Child : " + child);
+
+		var var3 = child.getAttribute("rowMigrate");
+		dump("var3: "+var3+"\n");
+
 		if (child.getAttribute("rowMigrate") == "true")
+		{
+			dump("Child to be migrated: "+child+"\n");
+
+			var var1 = child.getAttribute("rowName");
+			var var2 = child.getAttribute("rowMigrate");
+			dump("var1: "+var1+"\n");
+			dump("var1: "+var2+"\n");
+
 			MigrateProfile(child);
+		}
 		child = child.nextSibling;
 	}
 }
@@ -100,6 +119,27 @@ function DeleteProfile()
 	//dump("Delete '" + name + "'\n");
 	profileCore.DeleteProfile(name);
 	this.location.replace(this.location);
+}
+
+function StartCommunicator()
+{
+	//dump("************Inside Start Communicator prof\n");
+	if (!selected)
+	{
+		dump("Select a profile to migrate.\n");
+		return;
+	}
+
+	var migrate = selected.getAttribute("rowMigrate");
+	var name = selected.getAttribute("rowName");
+
+	if (migrate == "true")
+	{
+		dump("Migrate this profile before using it to start communicator.\n");
+		return;
+	}
+	profileCore.StartCommunicator(name);
+	ExitApp();
 }
 
 function ExitApp()
@@ -209,6 +249,27 @@ function openRename()
 	}
 }
 
+
+function ConfirmDelete() {
+	if (!selected)
+	{
+		dump("Select a profile to delete.\n");
+		return;
+	}
+
+	var migrate = selected.getAttribute("rowMigrate");
+	var name = selected.getAttribute("rowName");
+
+	if (migrate == "true")
+	{
+		dump("Migrate this profile before deleting it.\n");
+		return;
+	}
+
+    var win = window.openDialog('pmDelete.xul', 'Deleter', 'chrome');
+    return win;
+}
+
 </html:script>
 
 <popup id="deletePopup">
@@ -270,7 +331,7 @@ bookmarks, and stored messages in your personal profile.
 <titledbutton value="New" class="push" onclick="CreateProfile();" />
 <titledbutton value="Migrate" class="push" onclick="MigrateProfile();" />
 <titledbutton value="Rename" class="push" onclick="openRename();" />
-<titledbutton value="Delete" class="push" popup="deletePopup" />
+<titledbutton value="Delete" class="push" onclick="ConfirmDelete();" />
 </html:center>
 
 <html:p />
@@ -279,9 +340,10 @@ bookmarks, and stored messages in your personal profile.
 
 <box align="horizontal" style="width: 100%">
   <html:div flex="100%"/>
-  <titledbutton value="Migrate All" class="push" popup="migratePopup" />
-  <titledbutton value="Start" class="push" onclick="window.close();" />
+  <titledbutton value="Start" class="push" onclick="StartCommunicator();" />
   <titledbutton value="Exit" class="push" onclick="ExitApp();" />
   <html:div style="width: 10px"/>
 </box>
+
+</html:div>
 </window>
