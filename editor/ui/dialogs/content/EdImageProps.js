@@ -211,6 +211,7 @@ function onAccept()
       else if (gImageMap)
       {
         // un-comment to see that inserting image maps does not work!
+        /*
         gImageMap = editor.createElementWithDefaults("map");
         gImageMap.setAttribute("name", "testing");
         var testArea = editor.createElementWithDefaults("area");
@@ -218,6 +219,7 @@ function onAccept()
         testArea.setAttribute("coords", "86,102,52");
         testArea.setAttribute("href", "test");
         gImageMap.appendChild(testArea);
+        */
 
         // Assign to map if there is one
         var mapName = gImageMap.getAttribute("name");
