@@ -32,6 +32,8 @@ EXPORTS =	 						\
 			nsISmtpUrl.h			\
 			nsISmtpService.h		\
 			MsgCompGlue.h			\
+			nsIDOMComposeAppCore.h	\
+			nsIComposer.h			\
 			$(NULL)
 
 MODULE=mailnews

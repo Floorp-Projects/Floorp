@@ -37,6 +37,8 @@ EXPORTS = \
 		nsIMsgSend.h	\
 		nsISmtpService.h \
 		MsgCompGlue.h \
+		nsIDOMComposeAppCore.h	\
+		nsIComposer.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
