@@ -4403,7 +4403,6 @@ dnl ========================================================
 if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_PC)
   AC_DEFINE(XP_OS2)
-  AC_DEFINE(BSD_SELECT)
   AC_DEFINE(XP_OS2_FIX)
   if test "$VACPP" = "yes"; then
       LIBS='so32dll.lib tcp32dll.lib'
