@@ -30,6 +30,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
 
+#include "nsXPComCIID.h"
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
@@ -38,6 +39,7 @@
 #include "nsIEditor.h"
 
 #ifdef XP_PC
+#define XPCOM_DLL  "xpcom32.dll"
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
 #define VIEW_DLL   "raptorview.dll"
@@ -52,6 +54,7 @@
 #define RDF_DLL    "rdf.dll"
 #else
 #ifdef XP_MAC
+#define XPCOM_DLL   "XPCOM.DLL" // XXX: is this correct?
 #define WIDGET_DLL		"WIDGET_DLL"
 #define GFXWIN_DLL		"GFXWIN_DLL"
 #define VIEW_DLL		"VIEW_DLL"
@@ -65,6 +68,7 @@
 //#define EDITOR_DLL	"EDITOR_DLL"	// temporary
 #define RDF_DLL			"RDF_DLL"
 #else
+#define XPCOM_DLL  "libxpcom.so"
 /* let CFLAGS override these */
 #ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetmotif.so"
@@ -86,6 +90,7 @@
 #endif
 
 // Class ID's
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -151,6 +156,7 @@ static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 extern "C" void
 NS_SetupRegistry()
 {
+  nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCTreeViewCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
