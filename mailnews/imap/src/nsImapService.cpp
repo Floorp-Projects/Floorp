@@ -116,7 +116,7 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     PR_FREEIF(uri);
     PR_FREEIF(hostname);
     if (NS_SUCCEEDED(rv))
-        folderName = name;
+        folderName = (const nsCString &) name;
     return rv;
 }
 
