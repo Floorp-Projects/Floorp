@@ -70,6 +70,16 @@ function onLoad()
       oldpwbox.focus();
     }
   }
+
+  if (params) {
+    // Return value 0 means "canceled"
+    params.SetInt(1, 0);
+  }
+
+  if (params) {
+    // Return value 0 means "canceled"
+    params.SetInt(1, 0);
+  }
 }
 
 function onP12Load()
@@ -88,13 +98,19 @@ function setPassword()
   var oldpwbox = document.getElementById("oldpw");
   var initpw = oldpwbox.getAttribute("inited");
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+  
+  var success = false;
+  
   if (initpw == "false") {
     try {
       var passok = token.checkPassword(oldpwbox.value);
       if (passok) {
         token.changePassword(oldpwbox.value, pw1.value);
         alert(bundle.GetStringFromName("pw_change_ok")); 
+        success = true;
       } else {
+        oldpwbox.focus();
+        oldpwbox.setAttribute("value", "");
         alert(bundle.GetStringFromName("incorrect_pw")); 
       }
     } catch (e) {
@@ -102,15 +118,18 @@ function setPassword()
     }
   } else {
     token.initPassword(pw1.value);
-  }
-
-  if (params) {
-    // Return value
-    params.SetInt(1, 1);
+    success = true;
   }
 
   // Terminate dialog
-  window.close();
+  if (success) {
+    if (params) {
+      // Return value 1 means "successfully executed ok"
+      params.SetInt(1, 1);
+    }
+
+    window.close();
+  }
 }
 
 function getPassword()

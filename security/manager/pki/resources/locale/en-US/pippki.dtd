@@ -21,12 +21,12 @@
   -->
 
 <!-- Values for changepassword.xul -->
-<!ENTITY setPassword.title  "Set Master Password">
+<!ENTITY setPassword.title  "Change Master Password">
 <!ENTITY setPassword.tokenName.label "Security Device">
-<!ENTITY setPassword.oldPassword.label "Old password">
-<!ENTITY setPassword.newPassword.label "Enter a new password">
-<!ENTITY setPassword.reenterPassword.label "Enter the password again">
-<!ENTITY setPassword.meter.label "Password quality meter:">
+<!ENTITY setPassword.oldPassword.label "Current password:">
+<!ENTITY setPassword.newPassword.label "New password:">
+<!ENTITY setPassword.reenterPassword.label "New password (again):">
+<!ENTITY setPassword.meter.label "Password quality meter">
 <!ENTITY setPassword.meter.loading "Loading">
 
 <!-- Values for getpassword.xul -->
