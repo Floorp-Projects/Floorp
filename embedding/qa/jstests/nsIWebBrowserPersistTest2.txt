@@ -1,0 +1,181 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> nsIWebBrowserPersist Test Case </title>
+<!-- Descrpt: This Test Case tests saveDocument method.
+     Author: dsirnapalli@netscape.com
+     Revs: 10.03.01 - Created
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+
+<head>
+
+<!-- script below is ngdriverspecific  -->
+<script TYPE="text/javascript" SRC="http://bubblegum/ngdriver/suites/testlib.js">
+</script>
+
+<script TYPE="text/javascript">
+file = "c:\\test2.htm";
+data = "c:\\test2_data";
+astatus = new Array();
+i = 0;
+
+function saveDocument()
+{
+  try {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    localFile = Components.classes["@mozilla.org/file/local;1"]
+               .createInstance(Components.interfaces.nsILocalFile);
+    localFile.initWithPath(file)
+
+    dataPath = Components.classes["@mozilla.org/file/local;1"]
+              .createInstance(Components.interfaces.nsILocalFile)
+    dataPath.initWithPath(data)
+
+    persistListener = new PersistProgressListener;
+    persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+             .createInstance(Components.interfaces.nsIWebBrowserPersist);
+
+    persist.progressListener = persistListener;
+    persist.saveDocument(document, localFile, dataPath);
+    //persist.cancelSave();
+  }
+  catch(e) {
+    alert("Exception: " + e);
+  }
+}
+
+function setStatus(text)
+{
+  astatus[i] = text;
+  i++;
+}
+
+function setProgress(current, max)
+{
+  progress = current + " out of " + max;
+}
+
+function PersistProgressListener()
+{
+  this.init();
+}
+
+PersistProgressListener.prototype =
+{
+  QueryInterface : function(aIID)
+  {
+    if(aIID.equals(Components.interfaces.nsIWebProgressListener))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  },
+
+  init : function()
+  {
+  },
+
+  destroy : function()
+  {
+  },
+
+  // nsIWebProgressListener
+  onProgressChange : function (aWebProgress, aRequest,
+                               aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress)
+  {
+    setProgress(aCurTotalProgress, aMaxTotalProgress);
+  },
+
+  onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+  {
+  },
+
+  onLocationChange : function(aWebProgress, aRequest, aLocation)
+  {
+  },
+
+  onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
+  {
+    setStatus(aMessage);
+  },
+
+  onSecurityChange : function(aWebProgress, aRequest, aState)
+  {
+  }
+}
+
+function constructResults()
+{
+  var results = "";
+  results = results + "<html><br>";
+  results = results + "<b><u> Interface:nsIWebBrowserPersist</u></b><br>";
+  results = results + "<b><u>Method:saveDocument()</u></b><br><br>";
+  results = results + "<b> Result: </b><br>";
+  results = results + "If " + "<b>" + file + "</b>" + " exist physically and " + "<b><br>";
+  results = results + "If " + data + "</b>" + " exist physically and if " + data +
+                      " contains file1_htm, testlib.js, file_1.data folder then the Result is Pass" +  "<br><br>";
+  results = results + "<b> Status: </b><br>";
+  for(i=0;i<astatus.length;i++)
+    results = results + astatus[i] + "<br>";
+  results = results + "<br>";
+  results = results + "<b> Progress: </b><br>";
+  results = results + progress + "<br>";
+  results = results + "</html>";
+
+  displayResults(results);
+}
+
+function displayResults(results)
+{
+  document.results.textarea.value = results;
+  if (top.name == "testWindow")
+  {
+    fixSubmit();
+  }
+  else
+  {
+    document.write(document.results.textarea.value);
+  }
+}
+
+</script>
+</head>
+<body>
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script TYPE="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<p>This is nsIWebBrowserPersist Interface test case</p>
+<p>This is the IFRAME used for testing</p>
+<iframe id="frame1" width="100%" height="480" src="http://www.mozilla.org/"/>
+
+<script TYPE="text/javascript">
+setTimeout("saveDocument();", 2000);
+setTimeout("constructResults();", 5000);
+</script>
+
+</body>
+</html>
