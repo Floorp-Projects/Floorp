@@ -171,6 +171,8 @@
 //
 #define PUSH_STRING(S) \
  do { PL_strcpy (buffer_tail, S); buffer_tail += PL_strlen (S); } while(0)
+#define PUSH_STRINGN(S,N) \
+ do { memcpy(buffer_tail, (S), (N)); buffer_tail += (N); } while(0)
 #define PUSH_NEWLINE() \
  do { *buffer_tail++ = nsCRT::CR; *buffer_tail++ = nsCRT::LF; *buffer_tail = '\0'; } while(0)
 

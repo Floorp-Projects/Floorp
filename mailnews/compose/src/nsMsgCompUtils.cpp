@@ -662,6 +662,16 @@ RRT_HEADER:
     else
       PUSH_STRING (pReference);
     PUSH_NEWLINE ();
+    {
+      char *trimAt = PL_strchr(pReference, '>');
+
+      if (trimAt) {
+        trimAt++;
+        PUSH_STRING ("In-Reply-To: ");
+        PUSH_STRINGN (pReference, trimAt-pReference);
+        PUSH_NEWLINE ();
+      }
+    }
   }
 
   if (pOtherHdr && *pOtherHdr) {
