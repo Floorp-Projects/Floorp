@@ -140,7 +140,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
       aFrame->GetGeometricParent(parentFrame);  // XXX may not be direct parent...
       if (nsnull != parentFrame) {
         nsIStyleContext* parentContext;
-        parentFrame->GetStyleContext(nsnull, parentContext);
+        parentFrame->GetStyleContext(parentContext);
         if (nsnull != parentContext) {
           const nsStyleSpacing* parentSpacing = (const nsStyleSpacing*)parentContext->GetStyleData(eStyleStruct_Spacing);
           nsMargin  parentMargin;
@@ -621,7 +621,8 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
 
 class StyleContextImpl : public nsIStyleContext {
 public:
-  StyleContextImpl(nsIStyleContext* aParent, nsISupportsArray* aRules, 
+  StyleContextImpl(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
+                   nsISupportsArray* aRules, 
                    nsIPresContext* aPresContext);
   ~StyleContextImpl();
 
@@ -636,10 +637,10 @@ public:
   virtual nsIStyleContext*  GetParent(void) const;
   virtual nsISupportsArray* GetStyleRules(void) const;
   virtual PRInt32 GetStyleRuleCount(void) const;
-  virtual PRInt32 GetBackstopStyleRuleCount(void) const;
-  virtual void SetBackstopStyleRuleCount(PRInt32 aCount);
+  NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const;
 
-  virtual nsIStyleContext* FindChildWithRules(nsISupportsArray* aRules);
+  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, const nsISupportsArray* aRules,
+                                nsIStyleContext*& aResult);
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
@@ -652,9 +653,6 @@ public:
   virtual void ForceUnique(void);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
 
-  virtual void  ReParent(nsIStyleContext* aNewParentContext,
-                         nsIPresContext* aPresContext);
-
   virtual void  List(FILE* out, PRInt32 aIndent);
 
 protected:
@@ -663,16 +661,14 @@ protected:
 
   StyleContextImpl* mParent;
   StyleContextImpl* mChild;
+  StyleContextImpl* mEmptyChild;
   StyleContextImpl* mPrevSibling;
   StyleContextImpl* mNextSibling;
-  StyleContextImpl* mEmptyChild;
 
-  StyleContextImpl* mPrevLinear;
-  StyleContextImpl* mNextLinear;
+  nsIAtom*          mPseudoTag;
 
   PRUint32          mRuleHash;
   nsISupportsArray* mRules;
-  PRInt32           mBackstopRuleCount;
   PRInt32           mDataCode;
 
   // the style data...
@@ -704,13 +700,14 @@ PRBool HashStyleRule(nsISupports* aRule, void* aData)
 }
 
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
+                                   nsIAtom* aPseudoTag,
                                    nsISupportsArray* aRules, 
                                    nsIPresContext* aPresContext)
   : mParent((StyleContextImpl*)aParent), // weak ref
     mChild(nsnull),
     mEmptyChild(nsnull),
+    mPseudoTag(aPseudoTag),
     mRules(aRules),
-    mBackstopRuleCount(0),
     mDataCode(-1),
     mFont(aPresContext->GetDefaultFont(), aPresContext->GetDefaultFixedFont()),
     mColor(),
@@ -722,6 +719,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mTable(nsnull)
 {
   NS_INIT_REFCNT();
+  NS_IF_ADDREF(mPseudoTag);
   NS_IF_ADDREF(mRules);
 
   mNextSibling = this;
@@ -729,9 +727,6 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   if (nsnull != mParent) {
     mParent->AppendChild(this);
   }
-
-  mNextLinear = this;
-  mPrevLinear = this;
 
   mRuleHash = 0;
   if (nsnull != mRules) {
@@ -750,16 +745,14 @@ StyleContextImpl::~StyleContextImpl()
 {
   mParent = nsnull; // weak ref
 
-  if (nsnull != mChild) {
-    StyleContextImpl* child = mChild;
-    do {
-      StyleContextImpl* goner = child;
-      child = child->mNextSibling;
-      NS_RELEASE(goner);
-    } while (child != mChild);
-    mChild = nsnull;
+  while (nsnull != mChild) {
+    RemoveChild(mChild);
   }
-  NS_IF_RELEASE(mEmptyChild);
+  while (nsnull != mEmptyChild) {
+    RemoveChild(mEmptyChild);
+  }
+
+  NS_IF_RELEASE(mPseudoTag);
 
   NS_IF_RELEASE(mRules);
 
@@ -810,9 +803,16 @@ nsIStyleContext* StyleContextImpl::GetParent(void) const
 
 void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
 {
-  if (0 == aChild->mRules->Count()) {
-    NS_ASSERTION(nsnull == mEmptyChild, "shouldn't have two empty children");
-    mEmptyChild = aChild;
+  if (0 == aChild->GetStyleRuleCount()) {
+    if (nsnull == mEmptyChild) {
+      mEmptyChild = aChild;
+    }
+    else {
+      aChild->mNextSibling = mEmptyChild;
+      aChild->mPrevSibling = mEmptyChild->mPrevSibling;
+      mEmptyChild->mPrevSibling->mNextSibling = aChild;
+      mEmptyChild->mPrevSibling = aChild;
+    }
   }
   else {
     if (nsnull == mChild) {
@@ -830,24 +830,28 @@ void StyleContextImpl::AppendChild(StyleContextImpl* aChild)
 
 void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
 {
-  NS_ASSERTION((nsnull != aChild) && (this == mChild->mParent), "bad argument");
+  NS_ASSERTION((nsnull != aChild) && (this == aChild->mParent), "bad argument");
 
-  if ((nsnull == aChild) || (this != mChild->mParent)) {
+  if ((nsnull == aChild) || (this != aChild->mParent)) {
     return;
   }
 
-  if (mEmptyChild == aChild) {
-    mEmptyChild = nsnull;
+  if (0 == aChild->GetStyleRuleCount()) { // is empty 
+    if (aChild->mPrevSibling != aChild) { // has siblings
+      if (mEmptyChild == aChild) {
+        mEmptyChild = mEmptyChild->mNextSibling;
+      }
+    } 
+    else {
+      NS_ASSERTION(mEmptyChild == aChild, "bad sibling pointers");
+      mEmptyChild = nsnull;
+    }
   }
-  else {
-    if (aChild->mPrevSibling != aChild) {
+  else {  // isn't empty
+    if (aChild->mPrevSibling != aChild) { // has siblings
       if (mChild == aChild) {
         mChild = mChild->mNextSibling;
       }
-      aChild->mPrevSibling->mNextSibling = aChild->mNextSibling;
-      aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
-      aChild->mNextSibling = aChild;
-      aChild->mPrevSibling = aChild;
     }
     else {
       NS_ASSERTION(mChild == aChild, "bad sibling pointers");
@@ -856,18 +860,11 @@ void StyleContextImpl::RemoveChild(StyleContextImpl* aChild)
       }
     }
   }
+  aChild->mPrevSibling->mNextSibling = aChild->mNextSibling;
+  aChild->mNextSibling->mPrevSibling = aChild->mPrevSibling;
+  aChild->mNextSibling = aChild;
+  aChild->mPrevSibling = aChild;
   NS_RELEASE(aChild);
-}
-
-void StyleContextImpl::ReParent(nsIStyleContext* aNewParentContext,
-                                nsIPresContext* aPresContext)
-{
-  if (aNewParentContext != mParent) {
-    mParent->RemoveChild(this);
-    mParent = (StyleContextImpl*)aNewParentContext;  // weak ref
-    mParent->AppendChild(this);
-    RemapStyle(aPresContext);
-  }
 }
 
 nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
@@ -884,38 +881,49 @@ PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
   return 0;
 }
 
-PRInt32 StyleContextImpl::GetBackstopStyleRuleCount(void) const
+NS_IMETHODIMP
+StyleContextImpl::GetPseudoType(nsIAtom*& aPseudoTag) const
 {
-  return mBackstopRuleCount;
+  aPseudoTag = mPseudoTag;
+  NS_IF_ADDREF(aPseudoTag);
+  return NS_OK;
 }
 
-void StyleContextImpl::SetBackstopStyleRuleCount(PRInt32 aCount)
+NS_IMETHODIMP
+StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag, 
+                                     const nsISupportsArray* aRules,
+                                     nsIStyleContext*& aResult)
 {
-  NS_PRECONDITION(aCount <= GetStyleRuleCount(), "bad backstop rule count");
-  mBackstopRuleCount = aCount;
-}
-
-nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
-{
-  nsIStyleContext* result = nsnull;
+  aResult = nsnull;
 
   if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
-    StyleContextImpl* child = mChild;
-    PRInt32 ruleCount = aRules->Count();
+    StyleContextImpl* child;
+    PRInt32 ruleCount = ((nsnull != aRules) ? aRules->Count() : 0);
     if (0 == ruleCount) {
-      result = mEmptyChild;
-      NS_IF_ADDREF(result);
+      if (nsnull != mEmptyChild) {
+        child = mEmptyChild;
+        do {
+          if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
+              (aPseudoTag == child->mPseudoTag)) {
+            aResult = child;
+            break;
+          }
+          child = child->mNextSibling;
+        } while (child != mEmptyChild);
+      }
     }
     else if (nsnull != mChild) {
       PRUint32 hash = 0;
       aRules->EnumerateForwards(HashStyleRule, &hash);
+      child = mChild;
       do {
         if ((0 == child->mDataCode) &&  // only look at children with un-twiddled data
             (child->mRuleHash == hash) &&
-            (child->GetStyleRuleCount() == ruleCount)) {
+            (child->mPseudoTag == aPseudoTag) &&
+            (nsnull != child->mRules) &&
+            (child->mRules->Count() == ruleCount)) {
           if (child->mRules->Equals(aRules)) {
-            result = child;
-            NS_ADDREF(result);
+            aResult = child;
             break;
           }
         }
@@ -923,7 +931,8 @@ nsIStyleContext* StyleContextImpl::FindChildWithRules(nsISupportsArray* aRules)
       } while (child != mChild);
     }
   }
-  return result;
+  NS_IF_ADDREF(aResult);
+  return NS_OK;
 }
 
 
@@ -939,9 +948,17 @@ PRBool StyleContextImpl::Equals(const nsIStyleContext* aOther) const
     else if (mDataCode != other->mDataCode) {
       result = PR_FALSE;
     }
+    else if (mPseudoTag != other->mPseudoTag) {
+      result = PR_FALSE;
+    }
     else {
       if ((nsnull != mRules) && (nsnull != other->mRules)) {
-        result = mRules->Equals(other->mRules);
+        if (mRuleHash == other->mRuleHash) {
+          result = mRules->Equals(other->mRules);
+        }
+        else {
+          result = PR_FALSE;
+        }
       }
       else {
         result = PRBool((nsnull == mRules) && (nsnull == other->mRules));
@@ -1098,7 +1115,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if (-1 == mDataCode) {
     mDataCode = 0;
   }
-  if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) || 
+  if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) || 
       (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
     // time to emulate a sub-document
     // This is ugly, but we need to map style once to determine display type
@@ -1117,6 +1134,8 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
     }
   }
 
+  RecalcAutomaticData(aPresContext);
+
   if (nsnull != mChild) {
     StyleContextImpl* child = mChild;
     do {
@@ -1125,7 +1144,11 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
     } while (mChild != child);
   }
   if (nsnull != mEmptyChild) {
-    mEmptyChild->RemapStyle(aPresContext);
+    StyleContextImpl* child = mEmptyChild;
+    do {
+      child->RemapStyle(aPresContext);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
   }
   return NS_OK;
 }
@@ -1147,7 +1170,13 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
   // Indent
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
-  PRInt32 count = mRules->Count();
+  if (nsnull != mPseudoTag) {
+    nsAutoString  buffer;
+    mPseudoTag->ToString(buffer);
+    fputs(buffer, out);
+    fputs(" ", out);
+  }
+  PRInt32 count = GetStyleRuleCount();
   if (0 < count) {
     fputs("{\n", out);
 
@@ -1172,13 +1201,18 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
     } while (mChild != child);
   }
   if (nsnull != mEmptyChild) {
-    mEmptyChild->List(out, aIndent + 1);
+    StyleContextImpl* child = mEmptyChild;
+    do {
+      child->List(out, aIndent + 1);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
   }
 }
 
 NS_LAYOUT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                    nsIStyleContext* aParentContext,
+                   nsIAtom* aPseudoTag,
                    nsISupportsArray* aRules,
                    nsIPresContext* aPresContext)
 {
@@ -1187,11 +1221,10 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  StyleContextImpl* context = new StyleContextImpl(aParentContext, aRules, aPresContext);
+  StyleContextImpl* context = new StyleContextImpl(aParentContext, aPseudoTag, 
+                                                   aRules, aPresContext);
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  context->RecalcAutomaticData(aPresContext);
-
   return context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
 }
