@@ -20,7 +20,7 @@
 #define _NS_PRIVILEGE_H_
 
 #include "prtypes.h"
-#include "nsCaps.h"
+//#include "nsCaps.h"
 #include "nsCapsEnums.h"
 
 PRBool nsPrivilegeInitialize(void);

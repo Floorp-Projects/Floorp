@@ -21,14 +21,13 @@
 
 #include "prtypes.h"
 #include "nsCapsEnums.h"
-
 PR_BEGIN_EXTERN_C
 
-struct nsPrincipal;
-struct nsTarget;
+class nsTarget;
+class nsIPrincipal;
+class nsPrivilegeTable;
 struct nsPrivilegeManager;
 struct nsPrivilege;
-struct nsPrivilegeTable;
 struct NSJSJavaFrameWrapper;
 
 /* wrappers for nsPrivilegeManager object */
@@ -36,19 +35,19 @@ PR_IMPLEMENT(PRBool)
 nsCapsInitialize();
 
 PR_EXTERN(PRBool) 
-nsCapsRegisterPrincipal(struct nsPrincipal *principal); 
+nsCapsRegisterPrincipal(class nsIPrincipal * principal); 
 
 PR_EXTERN(PRBool) 
-nsCapsEnablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
+nsCapsEnablePrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsIsPrivilegeEnabled(void* context, struct nsTarget *target, PRInt32 callerDepth);
+nsCapsIsPrivilegeEnabled(void* context, class nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsRevertPrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
+nsCapsRevertPrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(PRBool) 
-nsCapsDisablePrivilege(void* context, struct nsTarget *target, PRInt32 callerDepth);
+nsCapsDisablePrivilege(void* context, class nsTarget *target, PRInt32 callerDepth);
 
 PR_EXTERN(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
@@ -63,38 +62,39 @@ PR_EXTERN(PRBool)
 nsCapsCanExtendTrust(void* from, void* to);
 
 
+
 /* wrappers for nsPrincipal object */
-PR_EXTERN(struct nsPrincipal *) 
-nsCapsNewPrincipal(nsPrincipalType type, void * key, 
+PR_EXTERN(class nsIPrincipal *) 
+nsCapsNewPrincipal(PRInt16 * principalType, void * key, 
                    PRUint32 key_len, void *zig);
 
 PR_EXTERN(const char *) 
-nsCapsPrincipalToString(struct nsPrincipal *principal);
+nsCapsPrincipalToString(nsIPrincipal * principal);
 
 PR_EXTERN(PRBool) 
-nsCapsIsCodebaseExact(struct nsPrincipal *principal);
+nsCapsIsCodebaseExact(nsIPrincipal * principal);
 
 PR_EXTERN(const char *) 
-nsCapsPrincipalGetVendor(struct nsPrincipal *principal);
+nsCapsPrincipalGetVendor(nsIPrincipal * principal);
 
 PR_EXTERN(void *) 
 nsCapsNewPrincipalArray(PRUint32 count);
 
 PR_EXTERN(void) 
-nsCapsFreePrincipalArray(void *prinArray);
+nsCapsFreePrincipalArray(void * prinArray);
 
 PR_EXTERN(void *) 
-nsCapsGetPrincipalArrayElement(void *prinArray, PRUint32 index);
+nsCapsGetPrincipalArrayElement(void * prinArray, PRUint32 index);
 
 PR_EXTERN(void) 
-nsCapsSetPrincipalArrayElement(void *prinArray, PRUint32 index, void *element);
+nsCapsSetPrincipalArrayElement(void * prinArray, PRUint32 index, void *element);
 
 PR_EXTERN(PRUint32) 
-nsCapsGetPrincipalArraySize(void *prinArray);
+nsCapsGetPrincipalArraySize(void * prinArray);
 
 
 /* wrappers for nsTarget object */
-PR_EXTERN(struct nsTarget *) 
+PR_EXTERN(class nsTarget *) 
 nsCapsFindTarget(char *name);
 
 
@@ -104,8 +104,8 @@ nsCapsGetPermission(struct nsPrivilege *privilege);
 
 
 /* wrappers for nsPrivilegeTable object */
-PR_EXTERN(struct nsPrivilege *)
-nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target);
+PR_EXTERN(nsPrivilege *)
+nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsTarget * target);
 
 /* Methods for stack walking */
 

@@ -16,15 +16,13 @@
  * Reserved.
  */
 
-#ifndef nsCCapsManager_h___
-#define nsCCapsManager_h___
+#ifndef _NS_CCAPS_MANANGER_H_
+#define _NS_CCAPS_MANAGER_H_
 
 #include "nsIPrincipal.h"
 #include "nsISupports.h"
 #include "nsICapsManager.h"
 #include "nsAgg.h"
-
-#include "nsPrincipal.h"
 #include "nsPrivilegeManager.h"
 
 /**
@@ -37,238 +35,232 @@
  */
 class nsCCapsManager : public nsICapsManager {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsISupports and AggregatedQueryInterface:
+////////////////////////////////////////////////////////////////////////////
+// from nsISupports and AggregatedQueryInterface:
 
-    NS_DECL_AGGREGATED
+NS_DECL_AGGREGATED
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsICapsManager:
+////////////////////////////////////////////////////////////////////////////
+// from nsICapsManager:
 
-    NS_IMETHOD
-    CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin);
+NS_IMETHOD
+CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin);
 
-    NS_IMETHOD
-    CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
+NS_IMETHOD
+CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
 
-    /**
-     * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
-     * and nsICertPrincipal
-     *
-     * @param certByteData     - The ceritificate's byte array data including the chain.
-     * @param certByteDataSize - the length of certificate byte array.
-     * @param codebaseURL - the codebase URL
-     */
-    NS_IMETHOD
-    CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin);
+/**
+ * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
+ * and nsICertPrincipal
+ *
+ * @param certByteData     - The ceritificate's byte array data including the chain.
+ * @param certByteDataSize - the length of certificate byte array.
+ * @param codebaseURL - the codebase URL
+ */
+/*
+NS_IMETHOD
+CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin);
+*/
 
+/**
+ * Returns the permission for given principal and target
+ *
+ * @param prin   - is either certificate principal or codebase principal
+ * @param target - is NS_ALL_PRIVILEGES.
+ * @param state  - the return value is passed in this parameter.
+ */
+NS_IMETHOD
+GetPermission(nsIPrincipal * prin, nsTarget * target, nsPermission * state);
 
-    /**
-     * Returns the permission for given principal and target
-     *
-     * @param prin   - is either certificate principal or codebase principal
-     * @param target - is NS_ALL_PRIVILEGES.
-     * @param state  - the return value is passed in this parameter.
-     */
-    NS_IMETHOD
-    GetPermission(nsIPrincipal* prin, nsITarget* target, nsPermission *state);
+/**
+ * Set the permission state for given principal and target. This wouldn't 
+ * prompt the end user with UI.
+ *
+ * @param prin   - is either certificate principal or codebase principal
+ * @param target - is NS_ALL_PRIVILEGES.
+ * @param state  - is permisson state that should be set for the given prin
+ *                 and target parameters.
+ */
+NS_IMETHOD
+SetPermission(nsIPrincipal * prin, nsTarget* target, nsPermission state);
 
-    /**
-     * Set the permission state for given principal and target. This wouldn't 
-     * prompt the end user with UI.
-     *
-     * @param prin   - is either certificate principal or codebase principal
-     * @param target - is NS_ALL_PRIVILEGES.
-     * @param state  - is permisson state that should be set for the given prin
-     *                 and target parameters.
-     */
-    NS_IMETHOD
-    SetPermission(nsIPrincipal* prin, nsITarget* target, nsPermission state);
-
-    /**
-     * Prompts the user if they want to grant permission for the given principal and 
-     * for the given target. 
-     *
-     * @param prin   - is either certificate principal or codebase principal
-     * @param target - is NS_ALL_PRIVILEGES.
-     * @param result - is the permission user has given for the given principal and 
-     *                 target
-     */
-    NS_IMETHOD
-    AskPermission(nsIPrincipal* prin, nsITarget* target, nsPermission *result);
-
-
-
-    /* 
-     * All of the following methods are used by JS (the code located
-     * in lib/libmocha area).
-     */
-
-    /**
-     * Initializes the capabilities subsytem (ie setting the system principal, initializing
-     * privilege Manager, creating the capsManager factory etc 
-     *
-     * @param result - is true if principal was successfully registered with the system
-     */
-    NS_IMETHOD
-    Initialize(PRBool *result);
-
-    NS_IMETHOD
-    InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface);
-
-    /**
-     * Registers the given Principal with the system.
-     *
-     * @param prin   - is either certificate principal or codebase principal
-     * @param result - is true if principal was successfully registered with the system
-     */
-    NS_IMETHOD
-    RegisterPrincipal(nsIPrincipal* prin, PRBool *result);
-
-    /**
-     * Prompts the user if they want to grant permission for the principal located
-     * at the given stack depth for the given target. 
-     *
-     * @param context      - is the parameter JS needs to determinte the principal 
-     * @param targetName   - is the name of the target.
-     * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
-     *                       principal 
-     * @param result - is true if user has given permission for the given principal and 
-     *                 target
-     */
-    NS_IMETHOD
-    EnablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-    /**
-     * Returns if the user granted permission for the principal located at the given 
-     * stack depth for the given target. 
-     *
-     * @param context     - is the parameter JS needs to determinte the principal 
-     * @param targetName  - is the name of the target.
-     * @param callerDepth - is the depth of JS stack frame, which JS uses to determinte the 
-     *                      principal 
-     * @param result - is true if user has given permission for the given principal and 
-     *                 target
-     */
-    NS_IMETHOD
-    IsPrivilegeEnabled(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-    /**
-     * Reverts the permission (granted/denied) user gave for the principal located
-     * at the given stack depth for the given target. 
-     *
-     * @param context      - is the parameter JS needs to determinte the principal 
-     * @param targetName   - is the name of the target.
-     * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
-     *                       principal 
-     * @param result - is true if user has given permission for the given principal and 
-     *                 target
-     */
-    NS_IMETHOD
-    RevertPrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-    /**
-     * Disable permissions for the principal located at the given stack depth for the 
-     * given target. 
-     *
-     * @param context      - is the parameter JS needs to determinte the principal 
-     * @param targetName   - is the name of the target.
-     * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
-     *                       principal 
-     * @param result - is true if user has given permission for the given principal and 
-     *                 target
-     */
-    NS_IMETHOD
-    DisablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
-
-
-    /* XXX: Some of the arguments for the following interfaces may change.
-     * This is a first cut. I need to talk to joki. We should get rid of void* parameters.
-     */
-    NS_IMETHOD
-    ComparePrincipalArray(void* prin1Array, void* prin2Array, nsSetComparisonType *result);
-
-    NS_IMETHOD
-    IntersectPrincipalArray(void* prin1Array, void* prin2Array, void* *result);
-
-    NS_IMETHOD
-    CanExtendTrust(void* fromPrinArray, void* toPrinArray, PRBool *result);
-
-
-    /* interfaces for nsIPrincipal object, may be we should move some of them to nsIprincipal */
-
-    NS_IMETHOD
-    NewPrincipal(nsPrincipalType type, void* key, PRUint32 key_len, void *zig, nsIPrincipal* *result);
-
-    NS_IMETHOD
-    IsCodebaseExact(nsIPrincipal* principal, PRBool *result);
-
-    NS_IMETHOD
-    ToString(nsIPrincipal* principal, char* *result);
-
-    NS_IMETHOD
-    GetVendor(nsIPrincipal* principal, char* *result);
-
-    NS_IMETHOD
-    CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result);
-
-    NS_IMETHOD
-    NewPrincipalArray(PRUint32 count, void* *result);
-
-    NS_IMETHOD
-    FreePrincipalArray(void *prinArray);
-
-    NS_IMETHOD
-    GetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, nsIPrincipal* *result);
-
-    NS_IMETHOD
-    SetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, nsIPrincipal* principal);
-
-    NS_IMETHOD
-    GetPrincipalArraySize(void *prinArrayArg, PRUint32 *result);
-
-    /* The following interfaces will replace all of the following old calls.
-     *
-     * nsCapsGetPermission(struct nsPrivilege *privilege)
-     * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
-     *
-     */
-    NS_IMETHOD
-    IsAllowed(void *annotation, char* target, PRBool *result);
-
-    /* XXX: TODO: We need to set up the JS frame walking callbacks */
+/**
+ * Prompts the user if they want to grant permission for the given principal and 
+ * for the given target. 
+ *
+ * @param prin   - is either certificate principal or codebase principal
+ * @param target - is NS_ALL_PRIVILEGES.
+ * @param result - is the permission user has given for the given principal and 
+ *                 target
+ */
+NS_IMETHOD
+AskPermission(nsIPrincipal * prin, nsTarget * target, nsPermission * result);
 
 
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsCCapsManager:
+/* 
+ * All of the following methods are used by JS (the code located
+ * in lib/libmocha area).
+ */
 
-    nsCCapsManager(nsISupports *aOuter);
-    virtual ~nsCCapsManager(void);
+/**
+ * Initializes the capabilities subsytem (ie setting the system principal, initializing
+ * privilege Manager, creating the capsManager factory etc 
+ *
+ * @param result - is true if principal was successfully registered with the system
+ */
+NS_IMETHOD
+Initialize(PRBool * result);
 
-    void
-    CreateNSPrincipalArray(nsPrincipalArray* prinArray, 
-                           nsPrincipalArray* *pPrincipalArray);
+NS_IMETHOD
+InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface);
 
-    NS_METHOD
-    GetNSPrincipal(nsIPrincipal* pNSIPrincipal, nsPrincipal **ppNSPRincipal);
+/**
+ * Registers the given Principal with the system.
+ *
+ * @param prin   - is either certificate principal or codebase principal
+ * @param result - is true if principal was successfully registered with the system
+ */
+NS_IMETHOD
+RegisterPrincipal(nsIPrincipal * prin);
 
-    NS_METHOD
-    GetNSPrincipalArray(nsPrincipalArray* prinArray, 
-                        nsPrincipalArray* *pPrincipalArray);
+/**
+ * Prompts the user if they want to grant permission for the principal located
+ * at the given stack depth for the given target. 
+ *
+ * @param context      - is the parameter JS needs to determinte the principal 
+ * @param targetName   - is the name of the target.
+ * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
+ *                       principal 
+ * @param result - is true if user has given permission for the given principal and 
+ *                 target
+ */
+NS_IMETHOD
+EnablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
 
-    nsPermission
-    ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege);
+/**
+ * Returns if the user granted permission for the principal located at the given 
+ * stack depth for the given target. 
+ *
+ * @param context     - is the parameter JS needs to determinte the principal 
+ * @param targetName  - is the name of the target.
+ * @param callerDepth - is the depth of JS stack frame, which JS uses to determinte the 
+ *                      principal 
+ * @param result - is true if user has given permission for the given principal and 
+ *                 target
+ */
+NS_IMETHOD
+IsPrivilegeEnabled(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
 
-    nsPrivilege *
-    ConvertPermissionToPrivilege(nsPermission state);
+/**
+ * Reverts the permission (granted/denied) user gave for the principal located
+ * at the given stack depth for the given target. 
+ *
+ * @param context      - is the parameter JS needs to determinte the principal 
+ * @param targetName   - is the name of the target.
+ * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
+ *                       principal 
+ * @param result - is true if user has given permission for the given principal and 
+ *                 target
+ */
+NS_IMETHOD
+RevertPrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
 
-    void
-    SetSystemPrivilegeManager();
+/**
+ * Disable permissions for the principal located at the given stack depth for the 
+ * given target. 
+ *
+ * @param context      - is the parameter JS needs to determinte the principal 
+ * @param targetName   - is the name of the target.
+ * @param callerDepth  - is the depth of JS stack frame, which JS uses to determinte the 
+ *                       principal 
+ * @param result - is true if user has given permission for the given principal and 
+ *                 target
+ */
+NS_IMETHOD
+DisablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRBool *result);
 
+
+/* XXX: Some of the arguments for the following interfaces may change.
+ * This is a first cut. I need to talk to joki. We should get rid of void* parameters.
+ */
+NS_IMETHOD
+ComparePrincipalArray(void* prin1Array, void* prin2Array, nsSetComparisonType *result);
+
+NS_IMETHOD
+IntersectPrincipalArray(void* prin1Array, void* prin2Array, void* *result);
+
+NS_IMETHOD
+CanExtendTrust(void* fromPrinArray, void* toPrinArray, PRBool *result);
+
+
+/* interfaces for nsIPrincipal object, may be we should move some of them to nsIprincipal */
+/*
+NS_IMETHOD
+NewPrincipal(PRInt16 prinType, void* key, PRUint32 key_len, void *zig, nsIPrincipal* *result);
+
+NS_IMETHOD
+IsCodebaseExact(nsIPrincipal* principal, PRBool *result);
+
+NS_IMETHOD
+ToString(nsIPrincipal* principal, char* *result);
+
+NS_IMETHOD
+GetVendor(nsIPrincipal* principal, char* *result);
+*/
+NS_IMETHOD
+CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result);
+
+NS_IMETHOD
+NewPrincipalArray(PRUint32 count, void* *result);
+
+NS_IMETHOD
+FreePrincipalArray(void *prinArray);
+
+NS_IMETHOD
+GetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, nsIPrincipal * * result);
+
+NS_IMETHOD
+SetPrincipalArrayElement(void *prinArrayArg, PRUint32 index, nsIPrincipal * principal);
+
+NS_IMETHOD
+GetPrincipalArraySize(void *prinArrayArg, PRUint32 *result);
+
+/* The following interfaces will replace all of the following old calls.
+ *
+ * nsCapsGetPermission(struct nsPrivilege *privilege)
+ * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsTarget *target)
+ *
+ */
+NS_IMETHOD
+IsAllowed(void *annotation, char* target, PRBool *result);
+
+////////////////////////////////////////////////////////////////////////////
+// from nsCCapsManager:
+
+nsCCapsManager(nsISupports *aOuter);
+virtual ~nsCCapsManager(void);
+
+void
+CreateNSPrincipalArray(nsPrincipalArray* prinArray, nsPrincipalArray* *pPrincipalArray);
+/*
+NS_METHOD
+GetNSPrincipal(nsIPrincipal * pNSIPrincipal, nsIPrincipal ** ppNSPRincipal);
+*/
+NS_METHOD
+GetNSPrincipalArray(nsPrincipalArray* prinArray, nsPrincipalArray* *pPrincipalArray);
+
+nsPermission
+ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege);
+
+nsPrivilege *
+ConvertPermissionToPrivilege(nsPermission state);
+
+void
+SetSystemPrivilegeManager();
 
 protected:
-    nsPrivilegeManager    *m_pNSPrivilegeManager;  
+    nsPrivilegeManager * privilegeManager;  
 };
 
 #endif // nsCCapsManager_h___

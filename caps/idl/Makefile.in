@@ -24,13 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = caps
 
-XPIDLSRCS = \
+XPIDLSRCS =                          \
 	nsIScriptSecurityManager.idl \
 	nsICapsSecurityCallbacks.idl \
-	nsIPrincipal.idl \
-	nsICodebasePrincipal.idl \
-	nsICertificatePrincipal.idl \
-	nsICodeSourcePrincipal.idl \
+	nsIPrincipal.idl             \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -16,48 +16,46 @@
  * Reserved.
  */
 
-#ifndef nsCodebasePrincipal_h___
-#define nsCodebasePrincipal_h___
+#ifndef _NS_CODEBASE_PRINCIPAL_H_
+#define _NS_CODEBASE_PRINCIPAL_H_
 
-#include "nsICodebasePrincipal.h"
-#include "nsPrincipal.h"
+#include "nsIPrincipal.h"
 
 class nsCodebasePrincipal : public nsICodebasePrincipal {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsISupports:
 
-    NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIPrincipal:
+	NS_IMETHOD
+	GetURL(char ** cburl);
 
-    NS_IMETHOD
-    IsTrusted(const char* scope, PRBool *pbIsTrusted);
-     
+	NS_IMETHOD 
+	IsCodebaseExact(PRBool * result);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // from nsICodebasePrincipal:
+	NS_IMETHOD
+	IsCodebaseRegex(PRBool * result);
 
-    /**
-     * Returns the codebase URL of the principal.
-     *
-     * @param result - the resulting codebase URL
-     */
-    NS_IMETHOD
-    GetURL(char **ppCodeBaseURL);
+	NS_IMETHOD
+	GetType(PRInt16 * type);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsCCodebasePrincipal:
+	NS_IMETHOD
+	IsSecure(PRBool * result);
 
-    nsCodebasePrincipal(const char *codebaseURL, nsresult *result);
-    nsCodebasePrincipal(nsPrincipal *pNSPrincipal);
+	NS_IMETHOD
+	ToString(char ** result);
 
-    virtual ~nsCodebasePrincipal(void);
-    nsPrincipal *GetPeer(void);
+	NS_IMETHOD
+	HashCode(PRUint32 * code);
+
+	NS_IMETHOD
+	Equals(nsIPrincipal * other, PRBool * result);
+
+	nsCodebasePrincipal(PRInt16 * type, const char *codebaseURL);
+	virtual ~nsCodebasePrincipal(void);
 
 protected:
-    nsPrincipal *m_pNSPrincipal;
+	const char * codeBaseURL;
+	PRInt16  * itsType;
 };
 
-#endif // nsCCodebasePrincipal_h___
+#endif // _NS_CODEBASE_PRINCIPAL_H_

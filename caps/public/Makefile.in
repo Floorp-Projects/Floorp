@@ -23,9 +23,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS	= \
-	nsICapsManager.h  \
-	nsCapsPublicEnums.h \
+EXPORTS	=                    \
+	nsICapsManager.h     \
+	nsCapsPublicEnums.h  \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

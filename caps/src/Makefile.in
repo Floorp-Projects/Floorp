@@ -27,23 +27,21 @@ MODULE		= caps
 
 LIBRARY_NAME	= caps
 
-CPPSRCS		=	        \
-                nsUserDialogHelper.cpp            \
-		nsZig.cpp                         \
-		nsPrincipal.cpp                   \
+CPPSRCS		=	        		  \
+		admin.cpp                         \
+		nsCaps.cpp                        \
+		nsCCapsManager.cpp		  \
+		nsCCapsManagerFactory.cpp	  \
+		nsCertificatePrincipal.cpp	  \
+		nsCodebasePrincipal.cpp	          \
 		nsPrivilege.cpp                   \
 		nsPrivilegeManager.cpp            \
 		nsPrivilegeTable.cpp              \
 		nsSystemPrivilegeTable.cpp        \
 		nsTarget.cpp                      \
+                nsUserDialogHelper.cpp            \
 		nsUserTarget.cpp                  \
-		admin.cpp                         \
-		nsCaps.cpp                        \
-		nsCCapsManager.cpp		  \
-		nsCertificatePrincipal.cpp		  \
-		nsCodebasePrincipal.cpp	  \
-		nsCCapsManagerFactory.cpp	  \
-		nsCCodeSourcePrincipal.cpp        \
+		nsZig.cpp                         \
 		$(NULL)
 
 REQUIRES	= nspr xpcom security layer js jar pref img util rdf caps 
@@ -52,10 +50,10 @@ ifndef MOZ_NATIVE_ZLIB
 REQUIRES += zlib
 endif
 
-CSRCS		=	        \
-		nsZip.c                         \
-		nsLoadZig.c                     \
+CSRCS		=	                        \
 		jpermission.c                   \
+		nsLoadZig.c                     \
+		nsZip.c                         \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
