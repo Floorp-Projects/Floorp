@@ -99,7 +99,7 @@ TagList  gFormKids={1,{eHTMLTag_keygen}};
 TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
 TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
-TagList  gHeadKids={9,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_userdefined}}; // added userdefined to fix bug 167493
+TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
 
 TagList  gLabelKids={1,{eHTMLTag_span}};
 TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
