@@ -97,7 +97,7 @@ FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 
 #ifdef XP_MAC
-#ifdef MAC_TEST_HACK
+#if defined(MAC_TEST_HACK) || defined(XP_MAC_MPW)
 /* this is the data file that all Print strings will be echoed into */
 FILE *gTestResultFile = NULL;
 #define isatty(f) 0
