@@ -552,6 +552,8 @@ nsCachedNetData::GetUriSpec(char* *aUriSpec)
     PRUint32 keyLength;
     nsresult rv;
 
+    *aUriSpec = 0;
+
     rv = mRecord->GetKey(&keyLength, &key);
     if (NS_FAILED(rv)) return rv;
 
@@ -561,6 +563,9 @@ nsCachedNetData::GetUriSpec(char* *aUriSpec)
     // the nsINetDataCacheRecord key and is separated from the second component
     // by a NUL character, so we can use plain 'ol strdrup().
     *aUriSpec = nsCRT::strdup(key);
+
+    nsMemory::Free(key);
+
     if (!*aUriSpec)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -595,8 +600,10 @@ nsCachedNetData::GetSecondaryKey(PRUint32 *aLength, char **aSecondaryKey)
     
     if (keyLength) {
         char* copy = (char*)nsMemory::Alloc(keyLength);
-        if (!copy)
+        if (!copy) {
+            nsMemory::Free(key);
             return NS_ERROR_OUT_OF_MEMORY;
+        }
         memcpy(copy, secondaryKey, keyLength);
         *aSecondaryKey = copy;
     }
