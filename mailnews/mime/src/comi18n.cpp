@@ -355,7 +355,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
     conv = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv)) {
       rv = conv->Init(charset, 
-                       nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityNone, 
+                       nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                        nsIEntityConverter::transliterate);
     }
     if (NS_FAILED(rv)) {

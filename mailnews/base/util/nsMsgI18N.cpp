@@ -659,7 +659,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
   else
     // fallback for text/plain: first try transliterate then '?'
     res = conv->Init(NS_ConvertUCS2toUTF8(charsetName).get(), 
-                     nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityNone, 
+                     nsISaveAsCharset::attr_FallbackQuestionMark + nsISaveAsCharset::attr_EntityAfterCharsetConv, 
                      nsIEntityConverter::transliterate);
   NS_ENSURE_SUCCESS(res, res);
 
