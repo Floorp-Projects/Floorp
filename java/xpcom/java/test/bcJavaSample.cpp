@@ -83,7 +83,11 @@ void test() {
     //sigsend(P_PID, getpid(),SIGINT);
     //test->Test1(2000);
     //test->Test1(1000);
-    test->Test2(a);
+    if (NS_FAILED(r)) {
+	printf("failed to get component. try to restart test\n");
+    } else {
+        test->Test2(a);
+    }
     printf("--BlackConnect test end\n");
 }
 
