@@ -167,7 +167,6 @@ protected:
   nsColConstraint   mConstraint;
   nsTableCellFrame* mConstrainingCell;
   PRPackedBool      mIsAnonymous;
-  PRPackedBool      mNonPercentSpansPercent;
 };
 
 inline PRInt32 nsTableColFrame::GetColIndex() const

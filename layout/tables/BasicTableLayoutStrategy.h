@@ -101,10 +101,10 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
-                                               nscoord                  aComputedWidth,
-                                               const nsHTMLReflowState& aReflowState,
-                                               float                    aPixelToTwips);
+  virtual PRBool AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
+                                          nscoord                  aComputedWidth,
+                                          const nsHTMLReflowState& aReflowState,
+                                          float                    aPixelToTwips);
 
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
@@ -115,13 +115,9 @@ protected:
     * @param aColSpan     - the colspan of the cell
     * @param aConsiderPct - if true, consider columns that have pct widths and are spanned by the cell
     */
-  void ComputeColspanWidths(PRInt32           aWidthIndex,
-                            nsTableCellFrame* aCellFrame,
-                            PRInt32           aColIndex,
-                            PRInt32           aColSpan,
-                            PRBool            aConsiderPct,
-                            nscoord           aPercentBase,
-                            float             aPixelToTwips);
+  void ComputeNonPctColspanWidths(const nsHTMLReflowState& aReflowState,
+                                  PRBool                   aConsiderPct,
+                                  float                    aPixelToTwips);
 
   /** 
     * main helper for above. For min width calculations, it can get called up to
@@ -133,18 +129,20 @@ protected:
     *                       to reach a limit
     * @return             - true if the computation completed, false otherwise
     */
-  PRBool ComputeColspanWidths(PRInt32           aWidthIndex,
-                              nsTableCellFrame* aCellFrame,
-                              nscoord           aCellWidth,
-                              PRInt32           aColIndex,
-                              PRInt32           aColSpan,
-                              PRBool            aConsiderPct,
-                              PRInt32           aLimitType,
-                              float             aPixelToTwips);
+  PRBool ComputeNonPctColspanWidths(PRInt32           aWidthIndex,
+                                    nsTableCellFrame* aCellFrame,
+                                    nscoord           aCellWidth,
+                                    PRInt32           aColIndex,
+                                    PRInt32           aColSpan,
+                                    PRInt32&          aLimitType,
+                                    float             aPixelToTwips);
 
-  nscoord AssignPercentageColumnWidths(nscoord aBasis,
-                                       PRBool  aTableIsAutoWidth,
-                                       float   aPixelToTwips);
+  nscoord AssignPctColumnWidths(const nsHTMLReflowState aReflowState,
+                                nscoord                 aBasis,
+                                PRBool                  aTableIsAutoWidth,
+                                float                   aPixelToTwips);
+
+  void ReduceOverSpecifiedPctCols(nscoord aExcess);
 
   void CalculateTotals(PRInt32& aCellSpacing,
                        PRInt32* aTotalCounts,

@@ -43,8 +43,7 @@ static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), 
     mProportion(WIDTH_NOT_SET),
-    mIsAnonymous(PR_FALSE), 
-    mNonPercentSpansPercent(PR_FALSE)
+    mIsAnonymous(PR_FALSE) 
 {
   // note that all fields are initialized to 0 by nsFrame::operator new
   ResetSizingInfo();
