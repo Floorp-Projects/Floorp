@@ -26,8 +26,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = winEmbed
 
+ifndef GNU_CC
 ifndef NO_MFC
 DIRS += mfcembed/components mfcembed
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -216,7 +216,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 RCINCLUDE = splash.rc
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
-OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
+OS_LIBS	+= $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
 endif
 
 ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
@@ -326,7 +326,9 @@ ifeq ($(OS_ARCH),WINNT)
 #
 # Set it to 256k.  See bug 127069.
 #
+ifndef GNU_CC
 LDFLAGS += /HEAP:0x40000
+endif
 endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)

@@ -47,6 +47,8 @@ CPPSRCS		= \
 		utils.cpp \
 		$(NULL)
 
+LOCAL_INCLUDES	= -I$(srcdir)
+
 # plugins should always be shared, even in the "static" build
 FORCE_SHARED_LIB = 1
 
@@ -58,8 +60,14 @@ NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
 
+_OS_LIBS	= version
+ifdef GNU_CC
+CXXFLAGS	+= -fexceptions
+_OS_LIBS	+= gdi32
+else
 CXXFLAGS	+= -GX
-OS_LIBS		+= version.lib
+endif
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 install-plugin: $(SHARED_LIBRARY)
 ifdef SHARED_LIBRARY

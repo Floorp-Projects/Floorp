@@ -32,8 +32,10 @@ LIBRARY_NAME	= mozz
 GRE_MODULE	= 1
 
 ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
 MAPFILE	= $(LIBRARY_NAME).map
 DEFFILE	= $(srcdir)/zlib.def
+endif
 DEFINES	+= -DZLIB_DLL=1
 endif
 

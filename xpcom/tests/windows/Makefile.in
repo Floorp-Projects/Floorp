@@ -39,6 +39,6 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-OS_LIBS = rpcrt4.lib uuid.lib
+OS_LIBS	= $(call EXPAND_LIBNAME,rpcrt4 uuid)
 
 LIBS = $(XPCOM_LIBS) $(NSPR_LIBS)

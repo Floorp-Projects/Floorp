@@ -82,7 +82,11 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+ifdef GNU_CXX
+CXXFLAGS	+= -fexceptions
+else
 CXXFLAGS	+= -GX
+endif
 endif
 
 libs::

@@ -105,7 +105,7 @@ CPPSRCS		+= \
 		nsWinShortcut.cpp \
 		$(NULL)
 
-OS_LIBS		+= ole32.lib version.lib
+OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 version uuid)
 endif	
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public
