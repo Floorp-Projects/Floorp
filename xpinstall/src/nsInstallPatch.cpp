@@ -245,7 +245,7 @@ PRInt32 nsInstallPatch::Prepare()
     mPatchFile->Exists(&flagExists);
     if ( (mPatchFile != nsnull) && (flagExists) )
     {
-        mPatchFile->Delete(PR_FALSE);
+        mPatchFile->Remove(PR_FALSE);
     }
 
 
@@ -255,7 +255,7 @@ PRInt32 nsInstallPatch::Prepare()
       mPatchFile->Exists(&flagExists);
  		  if ((mPatchedFile != nsnull) && (flagExists))
       {
-			    mPatchedFile->Delete(PR_FALSE);
+			    mPatchedFile->Remove(PR_FALSE);
       }
 		return err;
     }
@@ -610,7 +610,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         
         outFileSpec->GetParent(getter_AddRefs(parent));
         
-        outFileSpec->Delete(PR_FALSE);
+        outFileSpec->Remove(PR_FALSE);
         
         char* leaf;
         anotherName->GetLeafName(&leaf);
@@ -660,7 +660,7 @@ cleanup:
     {
         tempSrcFile->Exists(&flagExists);
         if (flagExists)
-            tempSrcFile->Delete(PR_FALSE);
+            tempSrcFile->Remove(PR_FALSE);
     }
 
     /* lets map any GDIFF error to nice SU errors */

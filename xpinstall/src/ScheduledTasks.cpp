@@ -171,7 +171,7 @@ PRInt32 DeleteFileNowOrSchedule(nsIFile* filename)
     PRBool flagExists;  
     PRInt32 result = nsInstall::SUCCESS;
 
-    filename->Delete(PR_FALSE);
+    filename->Remove(PR_FALSE);
     filename->Exists(&flagExists);
     if (flagExists)
         result = ScheduleFileForDeletion(filename);
@@ -472,7 +472,7 @@ void DeleteScheduledFiles( HREG reg )
                     if (NS_SUCCEEDED(rv)) 
                     {
                         PRBool flagExists;
-                        doomedFile->Delete(PR_FALSE);
+                        doomedFile->Remove(PR_FALSE);
                         doomedFile->Exists(&flagExists);
                         if ( !flagExists )
                         {

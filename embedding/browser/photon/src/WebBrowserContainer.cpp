@@ -455,7 +455,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 						fileToUse->Equals( tempFile, &equalToTempFile );
 						fileToUse->Exists(&filetoUseAlreadyExists);
 						if( filetoUseAlreadyExists && !equalToTempFile )
-							fileToUse->Delete(PR_FALSE);
+							fileToUse->Remove(PR_FALSE);
 
 						// extract the new leaf name from the file location
 						nsXPIDLCString fileName;

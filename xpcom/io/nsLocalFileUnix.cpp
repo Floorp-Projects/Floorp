@@ -753,7 +753,7 @@ nsLocalFile::MoveTo(nsIFile *newParent, const char *newName)
 #endif
             rv = CopyTo(newParent, newName);
             if (NS_SUCCEEDED(rv))
-                rv = Delete(PR_TRUE);
+                rv = Remove(PR_TRUE);
         } else {
             rv = NSRESULT_FOR_ERRNO();
         }
@@ -762,7 +762,7 @@ nsLocalFile::MoveTo(nsIFile *newParent, const char *newName)
 }
 
 NS_IMETHODIMP
-nsLocalFile::Delete(PRBool recursive)
+nsLocalFile::Remove(PRBool recursive)
 {
     CHECK_mPath();
 
@@ -795,7 +795,7 @@ nsLocalFile::Delete(PRBool recursive)
                 nsCOMPtr<nsIFile> file = do_QueryInterface(item, &rv);
                 if (NS_FAILED(rv))
                     return NS_ERROR_FAILURE;
-                if (NS_FAILED(rv = file->Delete(recursive)))
+                if (NS_FAILED(rv = file->Remove(recursive)))
                     return rv;
             }
         }

@@ -133,7 +133,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const PRUnichar *aTo
   if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-before-change").get())) {
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       if (mCurrentFile) {
-        mCurrentFile->Delete(PR_FALSE);
+        mCurrentFile->Remove(PR_FALSE);
         NS_RELEASE(mCurrentFile);
       }
     } else {

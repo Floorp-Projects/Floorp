@@ -2318,7 +2318,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	// save data to file
 	// Note: write out one character at a time, as we might be dealing
 	//       with binary data (such as 0x00) [especially for images]
-	outFile->Delete(PR_FALSE);
+	outFile->Remove(PR_FALSE);
 
      // Make an nsFileSpec from file so we can use nsOutputFileStream
      nsXPIDLCString pathBuf;
@@ -5745,7 +5745,7 @@ InternetSearchDataSource::Observe(nsISupports *aSubject, const PRUnichar *aTopic
             nsCOMPtr<nsIFile> searchFile;
             rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
             if (NS_SUCCEEDED(rv))
-                rv = searchFile->Delete(PR_FALSE);
+                rv = searchFile->Remove(PR_FALSE);
         }
     }
     else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get()))

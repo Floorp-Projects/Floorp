@@ -2151,7 +2151,7 @@ nsGlobalHistory::OpenDB()
 
     // we couldn't open the file, so it's either corrupt or doesn't exist.
     // attempt to delete the file, but ignore the error
-    historyFile->Delete(PR_FALSE);
+    historyFile->Remove(PR_FALSE);
     rv = OpenNewFile(factory, filePath);
   }
 
@@ -3163,7 +3163,7 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
       nsCOMPtr <nsIFile> historyFile;
       rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
       if (NS_SUCCEEDED(rv))
-        rv = historyFile->Delete(PR_FALSE);
+        rv = historyFile->Remove(PR_FALSE);
     }
   }
   else if (aTopicString.Equals(NS_LITERAL_STRING("profile-do-change")))

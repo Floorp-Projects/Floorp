@@ -759,7 +759,7 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
 
         rv = GetFileForDiskCacheRecord(record, metaData, getter_AddRefs(file));
         if (NS_SUCCEEDED(rv)) {
-            rv = file->Delete(PR_FALSE);    // false == non-recursive
+            rv = file->Remove(PR_FALSE);    // false == non-recursive
         }
         DecrementTotalSize(sizeK * 1024);
         

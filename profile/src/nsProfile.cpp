@@ -1667,7 +1667,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
                 if (NS_SUCCEEDED(rv))
                     dirToDelete = parentDir;
             }
-            rv = dirToDelete->Delete(PR_TRUE);
+            rv = dirToDelete->Remove(PR_TRUE);
         }
     }
 

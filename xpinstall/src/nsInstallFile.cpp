@@ -237,7 +237,7 @@ void nsInstallFile::RemoveAllFolders()
       mFinalFile->GetParent(nsfsFolder);
       for(i = 0; i < mFolderCreateCount; i++)
       {
-          nsfsFolder.Delete(PR_FALSE);
+          nsfsFolder.Remove(PR_FALSE);
           nsfsFolder.GetParent(nsfsParentFolder);
           nsfsFolder = nsfsParentFolder;
       }
@@ -308,7 +308,7 @@ PRInt32 nsInstallFile::Complete()
 void nsInstallFile::Abort()
 {
     if (mExtractedFile != nsnull)
-        mExtractedFile->Delete(PR_FALSE);
+        mExtractedFile->Remove(PR_FALSE);
 }
 
 #define RESBUFSIZE 4096

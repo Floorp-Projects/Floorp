@@ -543,7 +543,7 @@ void nsXPInstallManager::Shutdown()
             {
                 item = NS_STATIC_CAST(nsXPITriggerItem*, mTriggers->Get(i));
                 if ( item && item->mFile && !item->IsFileURL() )
-                    item->mFile->Delete(PR_FALSE);
+                    item->mFile->Remove(PR_FALSE);
             }
         }
 
@@ -754,7 +754,7 @@ nsXPInstallManager::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
             nsresult rv2 ;
             rv2 = mItem->mFile->Exists(&flagExists);
             if (NS_SUCCEEDED(rv2) && flagExists)
-                mItem->mFile->Delete(PR_FALSE);
+                mItem->mFile->Remove(PR_FALSE);
 
             mItem->mFile = 0;
         }

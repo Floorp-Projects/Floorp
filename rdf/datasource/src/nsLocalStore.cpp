@@ -488,7 +488,7 @@ LocalStoreImpl::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PR
             nsCOMPtr<nsIFile> aFile;
             rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
             if (NS_SUCCEEDED(rv))
-                rv = aFile->Delete(PR_FALSE);
+                rv = aFile->Remove(PR_FALSE);
         }
     }
     else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-do-change").get())) {

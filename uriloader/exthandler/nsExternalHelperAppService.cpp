@@ -563,7 +563,7 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
     {
       localFile = do_QueryInterface(element);
       if (localFile)
-        localFile->Delete(PR_FALSE);
+        localFile->Remove(PR_FALSE);
     }
   }
 
@@ -1107,7 +1107,7 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
     fileToUse->Equals(mTempFile, &equalToTempFile);
     fileToUse->Exists(&filetoUseAlreadyExists);
     if (filetoUseAlreadyExists && !equalToTempFile)
-      fileToUse->Delete(PR_FALSE);
+      fileToUse->Remove(PR_FALSE);
 
      // extract the new leaf name from the file location
      nsXPIDLCString fileName;
@@ -1243,7 +1243,7 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   // clean up after ourselves and delete the temp file...
   if (mTempFile)
   {
-    mTempFile->Delete(PR_TRUE);
+    mTempFile->Remove(PR_TRUE);
     mTempFile = nsnull;
   }
 

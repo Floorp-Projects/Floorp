@@ -301,7 +301,7 @@ DeletionTest(char* creationPath, char* appendPath, PRBool recursive)
     else
         printf("no.\n");
 
-    rv = file->Delete(recursive);  
+    rv = file->Remove(recursive);  
     VerifyResult(rv);
 
     rv = file->Exists(&exists);
