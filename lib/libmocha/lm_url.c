@@ -834,11 +834,9 @@ loc_assign(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSObject *locobj;
 
     if (!JS_InstanceOf(cx, obj, &lm_location_class, NULL))  {
-        if(!JS_LookupProperty(cx, obj, lm_location_str, &v))  {
+        if(!JS_LookupProperty(cx, obj, "location", &v) ||
+	   !JSVAL_IS_OBJECT(v))  {
 	    return JS_FALSE;
-	}
-	if(!JSVAL_IS_OBJECT(v) || !JSVAL_TO_OBJECT(v))  {
-	    return JS_TRUE;
 	}
 	locobj = JSVAL_TO_OBJECT(v);
     }  else  {
@@ -869,6 +867,7 @@ loc_replace(JSContext *cx, JSObject *obj,
 	    uint argc, jsval *argv, jsval *rval)
 {
     JSURL *url;
+    jsid   jid;
     JSBool ans;
 
     if (!(url = JS_GetInstancePrivate(cx, obj, &lm_location_class, argv)))
@@ -921,12 +920,12 @@ lm_DefineLocation(MochaDecoder *decoder)
 
     if (!JS_DefineProperty(cx, decoder->window_object, lm_location_str,
 			   OBJECT_TO_JSVAL(obj), NULL, loc_assign,
-			   JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+			   JSPROP_ENUMERATE)) {
 	return NULL;
     }
     if (!JS_DefineProperty(cx, decoder->document, lm_location_str, 
                            OBJECT_TO_JSVAL(obj), NULL, loc_assign, 
-                           JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+                           JSPROP_ENUMERATE)) {
 	return NULL;
     }
 
