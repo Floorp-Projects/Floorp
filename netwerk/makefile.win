@@ -24,8 +24,11 @@ DIRS=            \
 	dns      \
 	build    \
 	protocol \
+!ifdef NET_SOCKET_PROVIDER_BUILD
+	socket   \
+!endif
 	util     \
-    mime     \
+	mime     \
 	streamconv \
 	test     \
 	$(NULL)
