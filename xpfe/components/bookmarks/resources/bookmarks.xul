@@ -23,6 +23,7 @@
   Contributor(s): 
     Ben Goodger <ben@netscape.com>
     Blake Ross <blakeross@telocity.com>
+    Dean Tessman <dean_tessman@hotmail.com>
 
 -->
 
@@ -293,7 +294,7 @@
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-              <treecell crop="right" class="treecell-editable" editable="true"
+              <treecell crop="center" class="treecell-editable" editable="true"
                         label="rdf:http://home.netscape.com/NC-rdf#URL"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
                         class="treecell-editable" editable="true"/>
