@@ -609,8 +609,13 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 void nsWindow::Show(PRBool bState)
 {
   mShown = bState;
-  UpdateVisibilityFlag();
-  UpdateDisplay();
+  if (bState)
+    XtManageChild(mWidget);
+  else
+    XtUnmanageChild(mWidget);
+
+//  UpdateVisibilityFlag();
+//  UpdateDisplay();
 }
 
 //-------------------------------------------------------------------------
