@@ -193,7 +193,9 @@ class CToken {
      * @update	gess5/11/98
      * @param   value is the new ord value for this token
      */
-    virtual void SetTypeID(PRInt32 aValue);
+    void SetTypeID(PRInt32 aValue) {
+      mTypeID = aValue;
+    }
     
     /**
      * Getter which retrieves the current ordinal value for this token
@@ -225,15 +227,6 @@ class CToken {
      * @return  int containing token type
      */
     virtual PRInt32 GetTokenType(void);
-
-    /**
-     * Getter which retrieves the class name for this token 
-     * This method is only used for debug purposes.
-     * @update	gess5/11/98
-     * @return  const char* containing class name
-     */
-    virtual const char* GetClassName(void);
-
 
     /**
      * For tokens who care, this can tell us whether the token is 
