@@ -220,7 +220,7 @@
         <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
         <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuseparator id="menu_PrefsSeparator"/> 
-        <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+        <menuitem id="menu_preferences" oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
     </menu>
 
@@ -259,7 +259,7 @@
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
           <menupopup id="theme" datasources="rdf:chrome" ref="urn:mozilla:skin:root" oncommand="applyTheme(event.target)" onpopupshowing="checkTheme()">
             <menuitem label="&themePreferencesCmd.label;" accesskey="&themePreferencesCmd.accesskey;"
-                      oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/pref-themes.xul')"/>
+                      oncommand="goPreferences('appearance','chrome://communicator/content/pref/pref-themes.xul', 'themes-panel')"/>
             <menuitem label="&getNewThemesCmd.label;" accesskey="&getNewThemesCmd.accesskey;" oncommand="getNewThemes();"/>
             <menuseparator/>
             <template>

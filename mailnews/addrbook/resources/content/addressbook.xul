@@ -173,7 +173,7 @@ Contributor(s):
                       accesskey="&propertiesCmd.accesskey;"
                       key="key_properties"
                       command="cmd_properties"/>
-            <menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
+            <menuitem id="menu_preferences" oncommand="goPreferences('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
           </menupopup>
         </menu>
         <menu id="menu_View">

@@ -83,7 +83,7 @@
             <treecell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem>
+        <treeitem id="mailcomposepref">
           <treerow>
             <treecell url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
           </treerow>
@@ -93,7 +93,7 @@
             <treecell url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem>
+        <treeitem id="mailaddressbookpref">
           <treerow>
             <treecell url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
           </treerow>

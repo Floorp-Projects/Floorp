@@ -201,7 +201,7 @@
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
             <menuitem id="menu_preferences"
-              oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
+              oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
         </menu> 
 

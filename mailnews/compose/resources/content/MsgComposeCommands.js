@@ -1139,7 +1139,7 @@ function DoCommandPrint()
 
 function DoCommandPreferences()
 {
-  goPreferences('messengercompose.xul', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul')
+  goPreferences('mailnews', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');
 }
 
 function ToggleWindowLock()
