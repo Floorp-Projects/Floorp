@@ -371,7 +371,7 @@ public:
   NS_IMETHOD  GetFileSpec(nsFileSpec& aFileSpec);
   NS_IMETHOD  GetModCount(PRInt32 *outModCount);
   NS_IMETHOD  ResetModCount();
-  NS_IMETHOD  IncrementModCount();
+  NS_IMETHOD  IncrementModCount(PRInt32 aNumMods);
 
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 

@@ -726,12 +726,6 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mLineBreaker);
   NS_IF_RELEASE(mWordBreaker);
   
-#ifdef DEBUG
-  if (mModCount > 0)
-  {
-  	NS_WARNING("Disposing an unsaved modified document");
-  }
-#endif
 	delete mFileSpec;
 	
 }
@@ -2865,9 +2859,10 @@ nsDocument::ResetModCount()
 }
 
 NS_IMETHODIMP
-nsDocument::IncrementModCount()
+nsDocument::IncrementModCount(PRInt32 aNumMods)
 {
-  mModCount++;
+  mModCount += aNumMods;
+  NS_ASSERTION(mModCount >= 0, "Modification count went negative");
   return NS_OK;
 }
 

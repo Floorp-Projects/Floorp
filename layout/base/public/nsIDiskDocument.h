@@ -98,11 +98,10 @@ public:
     */
   NS_IMETHOD ResetModCount()=0;
 
-  /** Increment the modification count for the document.
-  	* this marks the documents as 'dirty' and
-  	* in need of saving.
+  /** Increment the modification count for the document by the given
+    * amount (which may be -ve).
     */
-  NS_IMETHOD IncrementModCount()=0;
+  NS_IMETHOD IncrementModCount(PRInt32 aNumMods)=0;
 	
 };
 
