@@ -60,6 +60,9 @@ public:
                    nsIRenderingContext *aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
                    nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0));
 
+  NS_IMETHOD GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
+                       nsDrawingSurface aWhite, PRUint8** aAlphas);
+
 protected:
 
  /** --------------------------------------------------------------------------

@@ -484,6 +484,26 @@ NS_IMETHODIMP nsBaseWidget::SetWindowType(nsWindowType aWindowType)
 
 //-------------------------------------------------------------------------
 //
+// Window transparency methods
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsBaseWidget::SetWindowTranslucency(PRBool aTranslucent) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsBaseWidget::GetWindowTranslucency(PRBool& aTranslucent) {
+  aTranslucent = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseWidget::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas) {
+  NS_ASSERTION(PR_FALSE, "Window is not translucent");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//-------------------------------------------------------------------------
+//
 // Hide window borders/decorations for this widget
 //
 //-------------------------------------------------------------------------

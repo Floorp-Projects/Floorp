@@ -99,6 +99,33 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define SUPPORT_TRANSLUCENT_VIEWS
 
+/*
+  This class encapsulates all the offscreen buffers we might want to
+  render into. mOffscreen is the basic buffer for doing
+  double-buffering.  mBlack and mWhite are buffers for collecting an
+  individual view drawn onto black and drawn onto white, from which we
+  can recover the alpha values of the view's pixels. mOffscreenWhite
+  is only for when the widget being rendered is transparent; it's an
+  alternative double-buffer buffer that starts off white instead of
+  black, and allows us to recover alpha values for the widget.
+*/
+class BlendingBuffers {
+public:
+  BlendingBuffers(nsIRenderingContext* aCleanupContext);
+  ~BlendingBuffers();
+
+  nsCOMPtr<nsIRenderingContext> mCleanupContext;
+  nsCOMPtr<nsIRenderingContext> mOffScreenCX;
+  nsCOMPtr<nsIRenderingContext> mOffScreenWhiteCX;
+  nsCOMPtr<nsIRenderingContext> mBlackCX;
+  nsCOMPtr<nsIRenderingContext> mWhiteCX;
+
+  nsDrawingSurface  mOffScreen;
+  nsDrawingSurface  mOffScreenWhite;
+  nsDrawingSurface  mBlack;
+  nsDrawingSurface  mWhite;
+};
+
 // A DisplayListElement2 records the information needed to paint one view.
 // Note that child views get their own DisplayListElement2s; painting a view
 // paints that view's frame and all its child frames EXCEPT for the child frames
@@ -291,10 +318,6 @@ nsViewManager::PostInvalidateEvent()
 
 PRInt32 nsViewManager::mVMCount = 0;
 nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
-nsDrawingSurface nsViewManager::gOffScreen = nsnull;
-nsDrawingSurface nsViewManager::gBlack = nsnull;
-nsDrawingSurface nsViewManager::gWhite = nsnull;
-nsSize nsViewManager::gOffScreenSize = nsSize(0, 0);
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager::gViewManagers = nsnull;
@@ -366,36 +389,15 @@ nsViewManager::~nsViewManager()
     if (gCleanupContext) {
 
       gCleanupContext->DestroyCachedBackbuffer();
-
-      if (nsnull != gOffScreen)
-        gCleanupContext->DestroyDrawingSurface(gOffScreen);
-
-      if (nsnull != gWhite)
-        gCleanupContext->DestroyDrawingSurface(gWhite);
-
-      if (nsnull != gBlack)
-        gCleanupContext->DestroyDrawingSurface(gBlack);
-
     } else {
       NS_ASSERTION(PR_FALSE, "Cleanup of drawing surfaces + offscreen buffer failed");
     }
-
-    gOffScreen = nsnull;
-    gWhite = nsnull;
-    gBlack = nsnull;
-    gOffScreenSize.SizeTo(0, 0);
 
     NS_IF_RELEASE(gCleanupContext);
   }
 
   mObserver = nsnull;
   mContext = nsnull;
-
-  NS_IF_RELEASE(mBlender);
-
-  NS_IF_RELEASE(mOffScreenCX);
-  NS_IF_RELEASE(mBlackCX);
-  NS_IF_RELEASE(mWhiteCX);
 
   if (nsnull != mCompositeListeners) {
     mCompositeListeners->Clear();
@@ -1005,13 +1007,11 @@ static void PushStateAndClip(nsIRenderingContext **aRCs, PRInt32 aRCCount, nsRec
                              PRInt32 aDX, PRInt32 aDY) {
   PRBool clipEmpty;
   nsRect rect = aRect;
+  rect.x -= aDX;
+  rect.y -= aDY;
   for (PRInt32 i = 0; i < aRCCount; i++) {
     aRCs[i]->PushState();
-    if (i == 1) {
-      rect.x -= aDX;
-      rect.y -= aDY;
-    }
-    aRCs[i]->SetClipRect(rect, nsClipCombine_kIntersect, clipEmpty);
+    aRCs[i]->SetClipRect(i == 0 ? aRect : rect, nsClipCombine_kIntersect, clipEmpty);
   }
 }
 
@@ -1126,15 +1126,29 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
     
   // We keep a list of all the rendering contexts whose clip rects
   // need to be updated.
-  nsIRenderingContext* RCList[4];
+  nsIRenderingContext* RCList[5];
   PRInt32 RCCount = 1;
   RCList[0] = &aRC;
+
+  nsCOMPtr<nsIWidget> widget;
+  aRootView->GetWidget(*getter_AddRefs(widget));
+  PRBool translucentWindow = PR_FALSE;
+  if (widget) {
+    widget->GetWindowTranslucency(translucentWindow);
+    if (translucentWindow) {
+      // for a translucent window, we'll pretend the whole area is
+      // translucent.
+      mTranslucentArea = aRect;
+    }
+  }
     
+  BlendingBuffers* buffers = nsnull;
+
   // create blending buffers, if necessary.
-  if (mTranslucentViewCount > 0) {
-    nsresult rv = CreateBlendingBuffers(aRC);
-    NS_ASSERTION((rv == NS_OK), "not enough memory to blend");
-    if (NS_FAILED(rv)) {
+  if (mTranslucentViewCount > 0 || translucentWindow) {
+    buffers = CreateBlendingBuffers(&aRC, translucentWindow);
+    NS_ASSERTION(buffers, "not enough memory to blend");
+    if (!buffers) {
       // fall back by just rendering with transparency.
       mTranslucentViewCount = 0;
       for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
@@ -1142,17 +1156,21 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
         element->mFlags &= ~VIEW_TRANSLUCENT;
       }
     } else {
-      RCCount = 4;
-      RCList[1] = mBlackCX;
-      RCList[2] = mWhiteCX;
-      RCList[3] = mOffScreenCX;
-    }
+      RCList[RCCount++] = buffers->mOffScreenCX;
+      if (translucentWindow) {
+        RCList[RCCount++] = buffers->mOffScreenWhiteCX;
+      }
+      if (mTranslucentViewCount > 0) {
+        RCList[RCCount++] = buffers->mBlackCX;
+        RCList[RCCount++] = buffers->mWhiteCX;
+      }
       
-    if (!finalTransparentRect.IsEmpty()) {
-      // There are some bits that aren't going to be completely painted, so
-      // make sure we don't leave garbage in the offscreen context 
-      mOffScreenCX->SetColor(NS_RGB(128, 128, 128));
-      mOffScreenCX->FillRect(nsRect(0, 0, gOffScreenSize.width, gOffScreenSize.height));
+      if (!translucentWindow && !finalTransparentRect.IsEmpty()) {
+        // There are some bits that aren't going to be completely painted, so
+        // make sure we don't leave garbage in the offscreen context 
+        buffers->mOffScreenCX->SetColor(NS_RGB(128, 128, 128));
+        buffers->mOffScreenCX->FillRect(nsRect(0, 0, mTranslucentArea.width, mTranslucentArea.height));
+      }
     }
     // DEBUGGING:  fill in complete offscreen image in green, to see if we've got a blending bug.
     //mOffScreenCX->SetColor(NS_RGB(0, 255, 0));
@@ -1168,10 +1186,10 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
       if (element->mFlags & VIEW_CLIPPED) {
         //Render the view using the clip rect set by it's ancestors
         PushStateAndClip(RCList, RCCount, element->mBounds, mTranslucentArea.x, mTranslucentArea.y);
-        RenderDisplayListElement(element, aRC);
+        RenderDisplayListElement(element, aRC, buffers);
         PopState(RCList, RCCount);
       } else {
-        RenderDisplayListElement(element, aRC);
+        RenderDisplayListElement(element, aRC, buffers);
       }
         
     } else {
@@ -1190,31 +1208,51 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
     
   // flush bits back to screen.
   // Must flush back when no clipping is in effect.
-  if (mTranslucentViewCount > 0) {
+  if (buffers) {
+    if (translucentWindow) {
+      // Set window alphas
+      nsRect r = mTranslucentArea;
+      r *= mTwipsToPixels;
+      nsRect bufferRect(0, 0, r.width, r.height);
+      PRUint8* alphas = nsnull;
+      nsresult rv = mBlender->GetAlphas(bufferRect, buffers->mOffScreen,
+                                        buffers->mOffScreenWhite, &alphas);
+      if (NS_SUCCEEDED(rv)) {
+        widget->UpdateTranslucentWindowAlpha(r, alphas);
+      }
+      delete[] alphas;
+    }
+
     // DEBUG: is this getting through?
     // mOffScreenCX->SetColor(NS_RGB(0, 0, 0));
     // mOffScreenCX->DrawRect(nsRect(0, 0, mTranslucentArea.width, mTranslucentArea.height));
-    aRC.CopyOffScreenBits(gOffScreen, 0, 0, mTranslucentArea,
+    aRC.CopyOffScreenBits(buffers->mOffScreen, 0, 0, mTranslucentArea,
                           NS_COPYBITS_XFORM_DEST_VALUES |
                           NS_COPYBITS_TO_BACK_BUFFER);
     // DEBUG: what rectangle are we blitting?
     // aRC.SetColor(NS_RGB(0, 0, 0));
     // aRC.DrawRect(mTranslucentArea);
+
+    delete buffers;
   }
     
   mDisplayList.Clear();
 }
 
-void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC)
+void nsViewManager::RenderDisplayListElement(DisplayListElement2* element,
+                                             nsIRenderingContext &aRC,
+                                             BlendingBuffers* aBuffers)
 {
-  PRBool isTranslucent = (element->mFlags & VIEW_TRANSLUCENT) != 0;
   PRBool clipEmpty;
   nsRect r;
   nsView* view = element->mView;
 
   view->GetDimensions(r);
 
-  if (!isTranslucent) {
+  // if this element is contained by the translucent area, then
+  // there's no point in drawing it here because it will be
+  // overwritten by the final copy of the composited offscreen area
+  if (!aBuffers || !mTranslucentArea.Contains(element->mBounds)) {
     aRC.PushState();
 
     nscoord x = element->mAbsX - r.x, y = element->mAbsY - r.y;
@@ -1229,11 +1267,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
   }
 
 #if defined(SUPPORT_TRANSLUCENT_VIEWS)  
-  if (mTranslucentViewCount > 0 && (isTranslucent || mTranslucentArea.Intersects(element->mBounds))) {
-    // transluscency case. if this view is transluscent, have to use the nsIBlender, otherwise, just
-    // render in the offscreen. when we reach the last transluscent view, then we flush the bits
-    // to the onscreen rendering context.
-    
+  if (aBuffers && mTranslucentArea.Intersects(element->mBounds)) {
     // compute the origin of the view, relative to the offscreen buffer, which has the
     // same dimensions as mTranslucentArea.
     nscoord x = element->mAbsX - r.x, y = element->mAbsY - r.y;
@@ -1243,16 +1277,21 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
     damageRect.IntersectRect(damageRect, mTranslucentArea);
     // -> coordinates relative to element->mView origin
     damageRect.x -= x, damageRect.y -= y;
+
+    // the element must be rendered into mOffscreenCX and also
+    // mOffScreenWhiteCX if the window is transparent/translucent.
+    nsIRenderingContext* targets[2] =
+      { aBuffers->mOffScreenCX, aBuffers->mOffScreenWhiteCX };
     
     if (element->mFlags & VIEW_TRANSLUCENT) {
       // paint the view twice, first in the black buffer, then the white;
       // the blender will pick up the touched pixels only.
-      PaintView(view, *mBlackCX, viewX, viewY, damageRect);
+      PaintView(view, *aBuffers->mBlackCX, viewX, viewY, damageRect);
       // DEBUGGING ONLY
       //aRC.CopyOffScreenBits(gBlack, 0, 0, element->mBounds,
       //            NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
 
-      PaintView(view, *mWhiteCX, viewX, viewY, damageRect);
+      PaintView(view, *aBuffers->mWhiteCX, viewX, viewY, damageRect);
       // DEBUGGING ONLY
       //aRC.CopyOffScreenBits(gWhite, 0, 0, element->mBounds,
       //            NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
@@ -1269,16 +1308,21 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
       nsRect damageRectInPixels = damageRect;
       damageRectInPixels *= mTwipsToPixels;
       if (damageRectInPixels.width > 0 && damageRectInPixels.height > 0) {
-        nsresult rv = mBlender->Blend(damageRectInPixels.x, damageRectInPixels.y,
-                                      damageRectInPixels.width, damageRectInPixels.height,
-                                      mBlackCX, mOffScreenCX,
-                                      damageRectInPixels.x, damageRectInPixels.y,
-                                      opacity, mWhiteCX,
-                                      NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Blend failed!");
-          // let's paint SOMETHING. Paint opaquely
-          PaintView(view, *mOffScreenCX, viewX, viewY, damageRect);
+        PRIntn i;
+        for (i = 0; i < 2; i++) {
+          if (targets[i]) {
+            nsresult rv = mBlender->Blend(damageRectInPixels.x, damageRectInPixels.y,
+                                          damageRectInPixels.width, damageRectInPixels.height,
+                                          aBuffers->mBlackCX, targets[i],
+                                          damageRectInPixels.x, damageRectInPixels.y,
+                                          opacity, aBuffers->mWhiteCX,
+                                          NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
+            if (NS_FAILED(rv)) {
+              NS_WARNING("Blend failed!");
+              // let's paint SOMETHING. Paint opaquely
+              PaintView(view, *targets[i], viewX, viewY, damageRect);
+            }
+          }
         }
       }
  
@@ -1286,12 +1330,17 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
       // We do that here because we know that whatever the clip region is,
       // everything we just painted is within the clip region so we are
       // sure to be able to overwrite it now.
-      mBlackCX->SetColor(NS_RGB(0, 0, 0));
-      mBlackCX->FillRect(damageRect);
-      mWhiteCX->SetColor(NS_RGB(255, 255, 255));
-      mWhiteCX->FillRect(damageRect);
+      aBuffers->mBlackCX->SetColor(NS_RGB(0, 0, 0));
+      aBuffers->mBlackCX->FillRect(damageRect);
+      aBuffers->mWhiteCX->SetColor(NS_RGB(255, 255, 255));
+      aBuffers->mWhiteCX->FillRect(damageRect);
     } else {
-      PaintView(view, *mOffScreenCX, viewX, viewY, damageRect);
+      PRIntn i;
+      for (i = 0; i < 2; i++) {
+        if (targets[i]) {
+          PaintView(view, *targets[i], viewX, viewY, damageRect);
+        }
+      }
     }
   }
 #endif
@@ -1305,14 +1354,6 @@ void nsViewManager::PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x
   PRBool unused;
   aView->Paint(aRC, aDamageRect, 0, unused);
   aRC.PopState(unused);
-}
-
-inline PRInt32 nextPowerOf2(PRInt32 value)
-{
-  PRInt32 result = 1;
-  while (value > result)
-    result <<= 1;
-  return result;
 }
 
 static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSurface surface,
@@ -1334,87 +1375,119 @@ static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSu
   return NS_OK;
 }
 
-nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
+BlendingBuffers::BlendingBuffers(nsIRenderingContext* aCleanupContext) {
+  mCleanupContext = aCleanupContext;
+
+  mOffScreen = nsnull;
+  mOffScreenWhite = nsnull;
+  mWhite = nsnull;
+  mBlack = nsnull;
+}
+
+BlendingBuffers::~BlendingBuffers() {
+  if (mOffScreen)
+    mCleanupContext->DestroyDrawingSurface(mOffScreen);
+
+  if (mOffScreenWhite)
+    mCleanupContext->DestroyDrawingSurface(mOffScreenWhite);
+
+  if (mWhite)
+    mCleanupContext->DestroyDrawingSurface(mWhite);
+
+  if (mBlack)
+    mCleanupContext->DestroyDrawingSurface(mBlack);
+}
+
+BlendingBuffers* nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
+                                                      PRBool aTranslucentWindow)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   // create a blender, if none exists already.
-  if (nsnull == mBlender) {
-    rv = nsComponentManager::CreateInstance(kBlenderCID, nsnull, NS_GET_IID(nsIBlender), (void **)&mBlender);
+  if (!mBlender) {
+    mBlender = do_CreateInstance(kBlenderCID, &rv);
     if (NS_FAILED(rv))
-      return rv;
+      return nsnull;
     rv = mBlender->Init(mContext);
     if (NS_FAILED(rv))
-      return rv;
+      return nsnull;
   }
 
-  // ensure that the global drawing surfaces are large enough.
-  if (mTranslucentArea.width > gOffScreenSize.width || mTranslucentArea.height > gOffScreenSize.height) {
-    nsRect offscreenBounds(0, 0, mTranslucentArea.width, mTranslucentArea.height);
-    offscreenBounds.ScaleRoundOut(mTwipsToPixels);
-    offscreenBounds.width = nextPowerOf2(offscreenBounds.width);
-    offscreenBounds.height = nextPowerOf2(offscreenBounds.height);
+  BlendingBuffers* buffers = new BlendingBuffers(aRC);
+  if (!buffers)
+    return nsnull;
 
-    NS_IF_RELEASE(mOffScreenCX);
-    NS_IF_RELEASE(mBlackCX);
-    NS_IF_RELEASE(mWhiteCX);
+  nsRect offscreenBounds(0, 0, mTranslucentArea.width, mTranslucentArea.height);
+  offscreenBounds.ScaleRoundOut(mTwipsToPixels);
+  nsSize offscreenSize(mTranslucentArea.width, mTranslucentArea.height);
 
-    if (nsnull != gOffScreen) {
-      aRC.DestroyDrawingSurface(gOffScreen);
-      gOffScreen = nsnull;
+  rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mOffScreen);
+  if (NS_FAILED(rv)) {
+    delete buffers;
+    return nsnull;
+  }
+
+  rv = NewOffscreenContext(mContext, buffers->mOffScreen, offscreenSize, getter_AddRefs(buffers->mOffScreenCX));
+  if (NS_FAILED(rv)) {
+    delete buffers;
+    return nsnull;
+  }
+
+  if (mTranslucentViewCount > 0) {
+    rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mBlack);
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
     }
-    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
-    if (NS_FAILED(rv))
-      return rv;
 
-    if (nsnull != gBlack) {
-      aRC.DestroyDrawingSurface(gBlack);
-      gBlack = nsnull;
+    rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mWhite);
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
     }
-    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gBlack);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (nsnull != gWhite) {
-      aRC.DestroyDrawingSurface(gWhite);
-      gWhite = nsnull;
+    
+    rv = NewOffscreenContext(mContext, buffers->mBlack, offscreenSize, getter_AddRefs(buffers->mBlackCX));
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
     }
-    rv = aRC.CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gWhite);
-    if (NS_FAILED(rv))
-      return rv;
 
-    offscreenBounds.ScaleRoundIn(mPixelsToTwips);
-    gOffScreenSize.width = offscreenBounds.width;
-    gOffScreenSize.height = offscreenBounds.height;
+    rv = NewOffscreenContext(mContext, buffers->mWhite, offscreenSize, getter_AddRefs(buffers->mWhiteCX));
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
+    }
+
+    nsRect fillArea(0, 0, mTranslucentArea.width, mTranslucentArea.height);
+    
+    buffers->mBlackCX->SetColor(NS_RGB(0, 0, 0));
+    buffers->mBlackCX->FillRect(fillArea);
+    buffers->mWhiteCX->SetColor(NS_RGB(255, 255, 255));
+    buffers->mWhiteCX->FillRect(fillArea);
   }
 
-  // recreate local offscreen & blending contexts, if necessary.
-  if (mOffScreenCX == nsnull) {
-    rv = NewOffscreenContext(mContext, gOffScreen, gOffScreenSize, &mOffScreenCX);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-  if (mBlackCX == nsnull) {
-    rv = NewOffscreenContext(mContext, gBlack, gOffScreenSize, &mBlackCX);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-  if (mWhiteCX == nsnull) {
-    rv = NewOffscreenContext(mContext, gWhite, gOffScreenSize, &mWhiteCX);
-    if (NS_FAILED(rv))
-      return rv;
+  if (aTranslucentWindow) {
+    rv = aRC->CreateDrawingSurface(offscreenBounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, buffers->mOffScreenWhite);
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
+    }
+    
+    rv = NewOffscreenContext(mContext, buffers->mOffScreenWhite, offscreenSize, getter_AddRefs(buffers->mOffScreenWhiteCX));
+    if (NS_FAILED(rv)) {
+      delete buffers;
+      return nsnull;
+    }
+
+    nsRect fillArea(0, 0, mTranslucentArea.width, mTranslucentArea.height);
+
+    buffers->mOffScreenCX->SetColor(NS_RGB(0, 0, 0));
+    buffers->mOffScreenCX->FillRect(fillArea);
+    buffers->mOffScreenWhiteCX->SetColor(NS_RGB(255, 255, 255));
+    buffers->mOffScreenWhiteCX->FillRect(fillArea);
   }
 
-  nsRect fillArea = mTranslucentArea;
-  fillArea.x = 0;
-  fillArea.y = 0;
-
-  mBlackCX->SetColor(NS_RGB(0, 0, 0));
-  mBlackCX->FillRect(fillArea);
-  mWhiteCX->SetColor(NS_RGB(255, 255, 255));
-  mWhiteCX->FillRect(fillArea);
-
-  return NS_OK;
+  return buffers;
 }
 
 void nsViewManager::ProcessPendingUpdates(nsView* aView)

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
@@ -558,15 +559,41 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
     !aFrame->CanPaintBackground() ||
     HasNonZeroBorderRadius(aStyleContext);
-  if (isCanvas && viewHasTransparentContent) {
+  if (isCanvas) {
     nsIView* rootView;
     vm->GetRootView(rootView);
     nsIView* rootParent;
     rootView->GetParent(rootParent);
-    if (nsnull == rootParent) {
+    if (!rootParent) {
       viewHasTransparentContent = PR_FALSE;
+
+      // We need to set window translucency for top-level windows
+      // which have transparent backgrounds
+      if (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        nsCOMPtr<nsIDocument> doc;
+        shell->GetDocument(getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIDocument> parentDoc;
+          doc->GetParentDocument(getter_AddRefs(parentDoc));
+          if (!parentDoc) {
+            // our document is the root of the doc tree, so we must
+            // either be a top-level XUL window or something embedded.
+            // The SetWindowTranslucency call will fail if we're embedded.
+            nsCOMPtr<nsIWidget> widget;
+            aView->GetWidget(*getter_AddRefs(widget));
+            if (widget) {
+              // Enable translucency in the widget
+              widget->SetWindowTranslucency(PR_TRUE);
+              viewHasTransparentContent = PR_TRUE;
+            }
+          }
+        }
+      }
     }
   }
+  // XXX we should also set widget transparency for XUL popups that ask for it
 
   const nsStyleDisplay* display;
   ::GetStyleData(aStyleContext, &display);

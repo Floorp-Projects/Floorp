@@ -99,6 +99,9 @@ public:
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              GetWindowType(nsWindowType& aWindowType);
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
+  NS_IMETHOD              SetWindowTranslucency(PRBool aTranslucent);
+  NS_IMETHOD              GetWindowTranslucency(PRBool& aTranslucent);
+  NS_IMETHOD              UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
   virtual nsIRenderingContext* GetRenderingContext();
