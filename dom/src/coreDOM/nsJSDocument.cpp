@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -101,6 +102,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -111,7 +113,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case DOCUMENT_DOCTYPE:
@@ -119,16 +121,16 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "document.doctype", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDocumentType* prop;
-        if (NS_SUCCEEDED(a->GetDoctype(&prop))) {
+        result = a->GetDoctype(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -137,16 +139,16 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "document.implementation", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDOMImplementation* prop;
-        if (NS_SUCCEEDED(a->GetImplementation(&prop))) {
+        result = a->GetImplementation(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -155,16 +157,16 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "document.documentelement", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMElement* prop;
-        if (NS_SUCCEEDED(a->GetDocumentElement(&prop))) {
+        result = a->GetDocumentElement(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -173,25 +175,24 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.stylesheets", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMStyleSheetCollection* prop;
         nsIDOMNSDocument* b;
         if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetStyleSheets(&prop))) {
+          result = b->GetStyleSheets(&prop);
+          if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -214,6 +215,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDocument *a = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -224,7 +226,7 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -277,6 +279,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -285,14 +288,13 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createelement",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -303,14 +305,14 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createElement requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateElement(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateElement(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -327,6 +329,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMDocumentFragment* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -334,14 +337,13 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createdocumentfragment",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -352,8 +354,9 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   {
 
-    if (NS_OK != nativeThis->CreateDocumentFragment(&nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateDocumentFragment(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -370,6 +373,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMText* nativeRet;
   nsAutoString b0;
 
@@ -378,14 +382,13 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createtextnode",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -396,14 +399,14 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createTextNode requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateTextNode(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateTextNode(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -420,6 +423,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMComment* nativeRet;
   nsAutoString b0;
 
@@ -428,14 +432,13 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createcomment",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -446,14 +449,14 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createComment requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateComment(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateComment(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -470,6 +473,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMCDATASection* nativeRet;
   nsAutoString b0;
 
@@ -478,14 +482,13 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createcdatasection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -496,14 +499,14 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createCDATASection requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateCDATASection(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateCDATASection(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -520,6 +523,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMProcessingInstruction* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -529,14 +533,13 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createprocessinginstruction",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -547,15 +550,15 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function createProcessingInstruction requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->CreateProcessingInstruction(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateProcessingInstruction(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -572,6 +575,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMAttr* nativeRet;
   nsAutoString b0;
 
@@ -580,14 +584,13 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createattribute",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -598,14 +601,14 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createAttribute requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateAttribute(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateAttribute(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -622,6 +625,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMEntityReference* nativeRet;
   nsAutoString b0;
 
@@ -630,14 +634,13 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.createentityreference",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -648,14 +651,14 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function createEntityReference requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CreateEntityReference(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateEntityReference(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -672,6 +675,7 @@ PR_STATIC_CALLBACK(JSBool)
 DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDocument *nativeThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
 
@@ -680,14 +684,13 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "document.getelementsbytagname",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -698,14 +701,14 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getElementsByTagName requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetElementsByTagName(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetElementsByTagName(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -723,9 +726,9 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsIDOMElement* nativeRet;
@@ -737,14 +740,13 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createelementwithnamespace",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -755,15 +757,15 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function createElementWithNameSpace requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->CreateElementWithNameSpace(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateElementWithNameSpace(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -781,9 +783,9 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsIDOMRange* nativeRet;
@@ -793,14 +795,13 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createrange",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -811,8 +812,9 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   {
 
-    if (NS_OK != nativeThis->CreateRange(&nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CreateRange(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -830,9 +832,9 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type EventCapturer");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsAutoString b0;
@@ -842,14 +844,13 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -860,14 +861,14 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function captureEvent requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->CaptureEvent(b0)) {
-      return JS_FALSE;
+    result = nativeThis->CaptureEvent(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -885,9 +886,9 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsIDOMDocument *privateThis = (nsIDOMDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventCapturer *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type EventCapturer");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsAutoString b0;
@@ -897,14 +898,13 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -915,14 +915,14 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function releaseEvent requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->ReleaseEvent(b0)) {
-      return JS_FALSE;
+    result = nativeThis->ReleaseEvent(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

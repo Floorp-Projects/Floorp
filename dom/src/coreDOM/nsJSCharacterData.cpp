@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -54,6 +55,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMCharacterData *a = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -64,7 +66,7 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case CHARACTERDATA_DATA:
@@ -72,15 +74,15 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetData(prop))) {
+        result = a->GetData(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -89,15 +91,15 @@ GetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "characterdata.length", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
-        if (NS_SUCCEEDED(a->GetLength(&prop))) {
+        result = a->GetLength(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -120,6 +122,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMCharacterData *a = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -130,7 +133,7 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case CHARACTERDATA_DATA:
@@ -138,8 +141,7 @@ SetCharacterDataProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "characterdata.data", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -197,6 +199,7 @@ PR_STATIC_CALLBACK(JSBool)
 CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString nativeRet;
   PRUint32 b0;
   PRUint32 b1;
@@ -206,14 +209,13 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.substringdata",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -224,21 +226,19 @@ CharacterDataSubstringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function substringData requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
-    if (NS_OK != nativeThis->SubstringData(b0, b1, nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->SubstringData(b0, b1, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
@@ -255,6 +255,7 @@ PR_STATIC_CALLBACK(JSBool)
 CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -262,14 +263,13 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.appenddata",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -280,14 +280,14 @@ CharacterDataAppendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function appendData requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->AppendData(b0)) {
-      return JS_FALSE;
+    result = nativeThis->AppendData(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -304,6 +304,7 @@ PR_STATIC_CALLBACK(JSBool)
 CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRUint32 b0;
   nsAutoString b1;
 
@@ -312,14 +313,13 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.insertdata",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -330,18 +330,17 @@ CharacterDataInsertData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function insertData requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->InsertData(b0, b1)) {
-      return JS_FALSE;
+    result = nativeThis->InsertData(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -358,6 +357,7 @@ PR_STATIC_CALLBACK(JSBool)
 CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRUint32 b0;
   PRUint32 b1;
 
@@ -366,14 +366,13 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.deletedata",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -384,21 +383,19 @@ CharacterDataDeleteData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function deleteData requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
-    if (NS_OK != nativeThis->DeleteData(b0, b1)) {
-      return JS_FALSE;
+    result = nativeThis->DeleteData(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -415,6 +412,7 @@ PR_STATIC_CALLBACK(JSBool)
 CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMCharacterData *nativeThis = (nsIDOMCharacterData*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRUint32 b0;
   PRUint32 b1;
   nsAutoString b2;
@@ -424,14 +422,13 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "characterdata.replacedata",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -442,22 +439,20 @@ CharacterDataReplaceData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   {
     if (argc < 3) {
-      JS_ReportError(cx, "Function replaceData requires 3 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
     if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (NS_OK != nativeThis->ReplaceData(b0, b1, b2)) {
-      return JS_FALSE;
+    result = nativeThis->ReplaceData(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

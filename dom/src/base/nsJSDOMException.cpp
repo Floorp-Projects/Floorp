@@ -29,34 +29,34 @@
 #include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMHistory.h"
+#include "nsIDOMDOMException.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
+static NS_DEFINE_IID(kIDOMExceptionIID, NS_IDOMDOMEXCEPTION_IID);
 
-NS_DEF_PTR(nsIDOMHistory);
+NS_DEF_PTR(nsIDOMDOMException);
 
 //
-// History property ids
+// DOMException property ids
 //
-enum History_slots {
-  HISTORY_LENGTH = -1,
-  HISTORY_CURRENT = -2,
-  HISTORY_PREVIOUS = -3,
-  HISTORY_NEXT = -4
+enum DOMException_slots {
+  DOMEXCEPTION_CODE = -1,
+  DOMEXCEPTION_RESULT = -2,
+  DOMEXCEPTION_MESSAGE = -3,
+  DOMEXCEPTION_NAME = -4
 };
 
 /***********************************************************************/
 //
-// History Properties Getter
+// DOMException Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHistory *a = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMDOMException *a = (nsIDOMDOMException*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
@@ -71,15 +71,15 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case HISTORY_LENGTH:
+      case DOMEXCEPTION_CODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.length", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "domexception.code", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        PRInt32 prop;
-        result = a->GetLength(&prop);
+        PRUint32 prop;
+        result = a->GetCode(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -88,15 +88,32 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HISTORY_CURRENT:
+      case DOMEXCEPTION_RESULT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.current", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "domexception.result", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRUint32 prop;
+        result = a->GetResult(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case DOMEXCEPTION_MESSAGE:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "domexception.message", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        result = a->GetCurrent(prop);
+        result = a->GetMessage(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
@@ -105,32 +122,15 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HISTORY_PREVIOUS:
+      case DOMEXCEPTION_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.previous", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "domexception.name", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        result = a->GetPrevious(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case HISTORY_NEXT:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "history.next", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        nsAutoString prop;
-        result = a->GetNext(prop);
+        result = a->GetName(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
@@ -152,12 +152,12 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// History Properties Setter
+// DOMException Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMHistory *a = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMDOMException *a = (nsIDOMDOMException*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
@@ -186,43 +186,44 @@ SetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// History finalizer
+// DOMException finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeHistory(JSContext *cx, JSObject *obj)
+FinalizeDOMException(JSContext *cx, JSObject *obj)
 {
   nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
 //
-// History enumerate
+// DOMException enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateHistory(JSContext *cx, JSObject *obj)
+EnumerateDOMException(JSContext *cx, JSObject *obj)
 {
   return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
 //
-// History resolve
+// DOMException resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveHistory(JSContext *cx, JSObject *obj, jsval id)
+ResolveDOMException(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
 //
-// Native method Back
+// Native method ToString
 //
 PR_STATIC_CALLBACK(JSBool)
-HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+DOMExceptionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMDOMException *nativeThis = (nsIDOMDOMException*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
+  nsAutoString nativeRet;
 
   *rval = JSVAL_NULL;
 
@@ -233,7 +234,7 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.back",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "domexception.tostring",PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -246,106 +247,12 @@ HistoryBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   {
 
-    result = nativeThis->Back();
+    result = nativeThis->ToString(nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, result);
     }
 
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Forward
-//
-PR_STATIC_CALLBACK(JSBool)
-HistoryForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.forward",PR_FALSE , &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-
-    result = nativeThis->Forward();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method Go
-//
-PR_STATIC_CALLBACK(JSBool)
-HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-  PRInt32 b0;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "history.go",PR_FALSE , &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-    if (argc < 1) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
-    }
-
-    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
-    }
-
-    result = nativeThis->Go(b0);
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
-    }
-
-    *rval = JSVAL_VOID;
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
   }
 
   return JS_TRUE;
@@ -354,61 +261,59 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 /***********************************************************************/
 //
-// class for History
+// class for DOMException
 //
-JSClass HistoryClass = {
-  "History", 
+JSClass DOMExceptionClass = {
+  "DOMException", 
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetHistoryProperty,
-  SetHistoryProperty,
-  EnumerateHistory,
-  ResolveHistory,
+  GetDOMExceptionProperty,
+  SetDOMExceptionProperty,
+  EnumerateDOMException,
+  ResolveDOMException,
   JS_ConvertStub,
-  FinalizeHistory
+  FinalizeDOMException
 };
 
 
 //
-// History class properties
+// DOMException class properties
 //
-static JSPropertySpec HistoryProperties[] =
+static JSPropertySpec DOMExceptionProperties[] =
 {
-  {"length",    HISTORY_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"current",    HISTORY_CURRENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"previous",    HISTORY_PREVIOUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"next",    HISTORY_NEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"code",    DOMEXCEPTION_CODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"result",    DOMEXCEPTION_RESULT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"message",    DOMEXCEPTION_MESSAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    DOMEXCEPTION_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
 
 //
-// History class methods
+// DOMException class methods
 //
-static JSFunctionSpec HistoryMethods[] = 
+static JSFunctionSpec DOMExceptionMethods[] = 
 {
-  {"back",          HistoryBack,     0},
-  {"forward",          HistoryForward,     0},
-  {"go",          HistoryGo,     1},
+  {"toString",          DOMExceptionToString,     0},
   {0}
 };
 
 
 //
-// History constructor
+// DOMException constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-History(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+DOMException(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// History class initialization
+// DOMException class initialization
 //
-extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitDOMExceptionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -417,7 +322,7 @@ extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void 
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "History", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "DOMException", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
@@ -426,15 +331,50 @@ extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void 
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &HistoryClass,      // JSClass
-                         History,            // JSNative ctor
+                         &DOMExceptionClass,      // JSClass
+                         DOMException,            // JSNative ctor
                          0,             // ctor args
-                         HistoryProperties,  // proto props
-                         HistoryMethods,     // proto funcs
+                         DOMExceptionProperties,  // proto props
+                         DOMExceptionMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
+    }
+
+    if ((PR_TRUE == JS_LookupProperty(jscontext, global, "DOMException", &vp)) &&
+        JSVAL_IS_OBJECT(vp) &&
+        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INDEX_SIZE_ERR);
+      JS_SetProperty(jscontext, constructor, "INDEX_SIZE_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::DOMSTRING_SIZE_ERR);
+      JS_SetProperty(jscontext, constructor, "DOMSTRING_SIZE_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::HIERARCHY_REQUEST_ERR);
+      JS_SetProperty(jscontext, constructor, "HIERARCHY_REQUEST_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::WRONG_DOCUMENT_ERR);
+      JS_SetProperty(jscontext, constructor, "WRONG_DOCUMENT_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INVALID_CHARACTER_ERR);
+      JS_SetProperty(jscontext, constructor, "INVALID_CHARACTER_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::NO_DATA_ALLOWED_ERR);
+      JS_SetProperty(jscontext, constructor, "NO_DATA_ALLOWED_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::NO_MODIFICATION_ALLOWED_ERR);
+      JS_SetProperty(jscontext, constructor, "NO_MODIFICATION_ALLOWED_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::NOT_FOUND_ERR);
+      JS_SetProperty(jscontext, constructor, "NOT_FOUND_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::NOT_SUPPORTED_ERR);
+      JS_SetProperty(jscontext, constructor, "NOT_SUPPORTED_ERR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMDOMException::INUSE_ATTRIBUTE_ERR);
+      JS_SetProperty(jscontext, constructor, "INUSE_ATTRIBUTE_ERR", &vp);
+
     }
 
   }
@@ -453,17 +393,17 @@ extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void 
 
 
 //
-// Method for creating a new History JavaScript object
+// Method for creating a new DOMException JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptHistory(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptDOMException(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptHistory");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptDOMException");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMHistory *aHistory;
+  nsIDOMDOMException *aDOMException;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -479,23 +419,23 @@ extern "C" NS_DOM nsresult NS_NewScriptHistory(nsIScriptContext *aContext, nsISu
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitHistoryClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitDOMExceptionClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIHistoryIID, (void **)&aHistory);
+  result = aSupports->QueryInterface(kIDOMExceptionIID, (void **)&aDOMException);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &HistoryClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &DOMExceptionClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aHistory);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aDOMException);
   }
   else {
-    NS_RELEASE(aHistory);
+    NS_RELEASE(aDOMException);
     return NS_ERROR_FAILURE; 
   }
 

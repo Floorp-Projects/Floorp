@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -54,6 +55,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLFrameSetElement *a = (nsIDOMHTMLFrameSetElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -64,7 +66,7 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLFRAMESETELEMENT_COLS:
@@ -72,15 +74,15 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetCols(prop))) {
+        result = a->GetCols(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -89,15 +91,15 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetRows(prop))) {
+        result = a->GetRows(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -120,6 +122,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLFrameSetElement *a = (nsIDOMHTMLFrameSetElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -130,7 +133,7 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLFRAMESETELEMENT_COLS:
@@ -138,8 +141,7 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -153,8 +155,7 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);

@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -87,6 +88,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -98,7 +100,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
@@ -107,15 +109,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetTitle(prop))) {
+        result = a->GetTitle(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -124,15 +126,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.referrer", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetReferrer(prop))) {
+        result = a->GetReferrer(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -141,15 +143,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetDomain(prop))) {
+        result = a->GetDomain(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -158,15 +160,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.url", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetURL(prop))) {
+        result = a->GetURL(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -175,16 +177,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLElement* prop;
-        if (NS_SUCCEEDED(a->GetBody(&prop))) {
+        result = a->GetBody(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -193,16 +195,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.images", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_SUCCEEDED(a->GetImages(&prop))) {
+        result = a->GetImages(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -211,16 +213,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.applets", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_SUCCEEDED(a->GetApplets(&prop))) {
+        result = a->GetApplets(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -229,16 +231,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.links", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_SUCCEEDED(a->GetLinks(&prop))) {
+        result = a->GetLinks(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -247,16 +249,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.forms", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_SUCCEEDED(a->GetForms(&prop))) {
+        result = a->GetForms(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -265,16 +267,16 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.anchors", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_SUCCEEDED(a->GetAnchors(&prop))) {
+        result = a->GetAnchors(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -283,15 +285,15 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetCookie(prop))) {
+        result = a->GetCookie(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -300,24 +302,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetAlinkColor(prop))) {
+          result = b->GetAlinkColor(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -326,24 +327,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetLinkColor(prop))) {
+          result = b->GetLinkColor(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -352,24 +352,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetVlinkColor(prop))) {
+          result = b->GetVlinkColor(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -378,24 +377,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetBgColor(prop))) {
+          result = b->GetBgColor(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -404,24 +402,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetFgColor(prop))) {
+          result = b->GetFgColor(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -430,24 +427,23 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.lastmodified", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetLastModified(prop))) {
+          result = b->GetLastModified(prop);
+          if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -456,25 +452,24 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.embeds", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetEmbeds(&prop))) {
+          result = b->GetEmbeds(&prop);
+          if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -483,25 +478,24 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.layers", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetLayers(&prop))) {
+          result = b->GetLayers(&prop);
+          if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -510,25 +504,24 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.plugins", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_SUCCEEDED(b->GetPlugins(&prop))) {
+          result = b->GetPlugins(&prop);
+          if(NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
           }
           else {
             NS_RELEASE(b);
-            return JS_FALSE;
+            return nsJSUtils::nsReportError(cx, result);
           }
         }
         else {
-          JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -551,7 +544,8 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-      if (NS_OK == b->NamedItem(name, &prop)) {
+      result = b->NamedItem(name, &prop);
+      if (NS_SUCCEEDED(result)) {
         NS_RELEASE(b);
         if (NULL != prop) {
           // get the js object
@@ -563,12 +557,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       else {
         NS_RELEASE(b);
-        return JS_FALSE;
+        return nsJSUtils::nsReportError(cx, result);
       }
     }
     else {
-      JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
     }
   }
   else {
@@ -586,6 +579,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLDocument *a = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -597,7 +591,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
@@ -606,8 +600,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -621,14 +614,13 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIHTMLElementIID, "HTMLElement",
                                                 cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
         a->SetBody(prop);
@@ -640,8 +632,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -655,8 +646,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -668,8 +658,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
            
-           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-           return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         
         break;
@@ -679,8 +668,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -692,8 +680,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
            
-           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-           return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         
         break;
@@ -703,8 +690,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -716,8 +702,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
            
-           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-           return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         
         break;
@@ -727,8 +712,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -740,8 +724,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
            
-           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-           return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         
         break;
@@ -751,8 +734,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -764,8 +746,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         else {
            
-           JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-           return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         
         break;
@@ -819,20 +800,20 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -843,8 +824,9 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   {
 
-    if (NS_OK != nativeThis->Close()) {
-      return JS_FALSE;
+    result = nativeThis->Close();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -861,6 +843,7 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -869,14 +852,13 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -887,14 +869,14 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getElementById requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetElementById(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetElementById(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -911,6 +893,7 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
 
@@ -919,14 +902,13 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -937,14 +919,14 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function getElementsByName requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->GetElementsByName(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetElementsByName(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -962,9 +944,9 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsAutoString nativeRet;
@@ -974,14 +956,13 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -992,8 +973,9 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   {
 
-    if (NS_OK != nativeThis->GetSelection(nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->GetSelection(nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
@@ -1011,9 +993,9 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsIDOMElement* nativeRet;
@@ -1024,14 +1006,13 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -1042,14 +1023,14 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function namedItem requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->NamedItem(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->NamedItem(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -1067,9 +1048,9 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
 
@@ -1078,14 +1059,13 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.open",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -1096,8 +1076,9 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   {
 
-    if (NS_OK != nativeThis->Open(cx, argv+0, argc-0)) {
-      return JS_FALSE;
+    result = nativeThis->Open(cx, argv+0, argc-0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -1115,9 +1096,9 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
 
@@ -1126,14 +1107,13 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.write",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -1144,8 +1124,9 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   {
 
-    if (NS_OK != nativeThis->Write(cx, argv+0, argc-0)) {
-      return JS_FALSE;
+    result = nativeThis->Write(cx, argv+0, argc-0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -1163,9 +1144,9 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsIDOMHTMLDocument *privateThis = (nsIDOMHTMLDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMNSHTMLDocument *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLDocumentIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type NSHTMLDocument");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
 
@@ -1174,14 +1155,13 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.writeln",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -1192,8 +1172,9 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   {
 
-    if (NS_OK != nativeThis->Writeln(cx, argv+0, argc-0)) {
-      return JS_FALSE;
+    result = nativeThis->Writeln(cx, argv+0, argc-0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

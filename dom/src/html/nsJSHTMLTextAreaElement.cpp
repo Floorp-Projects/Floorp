@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -66,6 +67,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -76,7 +78,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
@@ -84,15 +86,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetDefaultValue(prop))) {
+        result = a->GetDefaultValue(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -101,16 +103,16 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.form", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMHTMLFormElement* prop;
-        if (NS_SUCCEEDED(a->GetForm(&prop))) {
+        result = a->GetForm(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -119,15 +121,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetAccessKey(prop))) {
+        result = a->GetAccessKey(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -136,15 +138,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
-        if (NS_SUCCEEDED(a->GetCols(&prop))) {
+        result = a->GetCols(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -153,15 +155,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
-        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
+        result = a->GetDisabled(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -170,15 +172,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetName(prop))) {
+        result = a->GetName(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -187,15 +189,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
-        if (NS_SUCCEEDED(a->GetReadOnly(&prop))) {
+        result = a->GetReadOnly(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -204,15 +206,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
-        if (NS_SUCCEEDED(a->GetRows(&prop))) {
+        result = a->GetRows(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -221,15 +223,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
-        if (NS_SUCCEEDED(a->GetTabIndex(&prop))) {
+        result = a->GetTabIndex(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -238,15 +240,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.type", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetType(prop))) {
+        result = a->GetType(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -255,15 +257,15 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetValue(prop))) {
+        result = a->GetValue(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -286,6 +288,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMHTMLTextAreaElement *a = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -296,7 +299,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
@@ -304,8 +307,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -319,8 +321,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -334,8 +335,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
         int32 temp;
@@ -343,8 +343,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           prop = (PRInt32)temp;
         }
         else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
         }
       
         a->SetCols(prop);
@@ -356,12 +355,11 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
         }
       
         a->SetDisabled(prop);
@@ -373,8 +371,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -388,12 +385,11 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
         }
       
         a->SetReadOnly(prop);
@@ -405,8 +401,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
         int32 temp;
@@ -414,8 +409,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           prop = (PRInt32)temp;
         }
         else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
         }
       
         a->SetRows(prop);
@@ -427,8 +421,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
         int32 temp;
@@ -436,8 +429,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           prop = (PRInt32)temp;
         }
         else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
         }
       
         a->SetTabIndex(prop);
@@ -449,8 +441,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -508,20 +499,20 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.blur",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -532,8 +523,9 @@ HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
 
-    if (NS_OK != nativeThis->Blur()) {
-      return JS_FALSE;
+    result = nativeThis->Blur();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -550,20 +542,20 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.focus",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -574,8 +566,9 @@ HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   {
 
-    if (NS_OK != nativeThis->Focus()) {
-      return JS_FALSE;
+    result = nativeThis->Focus();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -592,20 +585,20 @@ PR_STATIC_CALLBACK(JSBool)
 HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMHTMLTextAreaElement *nativeThis = (nsIDOMHTMLTextAreaElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.select",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -616,8 +609,9 @@ HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   {
 
-    if (NS_OK != nativeThis->Select()) {
-      return JS_FALSE;
+    result = nativeThis->Select();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

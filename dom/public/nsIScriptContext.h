@@ -26,6 +26,7 @@
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
 class nsIScriptNameSpaceManager;
+class nsIScriptContextOwner;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
@@ -149,6 +150,22 @@ public:
    * @return NS_OK if the method is successful
    */
   NS_IMETHOD ScriptEvaluated(void) = 0;
+
+  /**
+   * Let the script context know who its owner is.
+   * The script context should not addref the owner. It
+   * will be told when the owner goes away.
+   * @return NS_OK if the method is successful
+   */
+  NS_IMETHOD SetOwner(nsIScriptContextOwner* owner) = 0;
+
+  /**
+   * Get the script context of the owner. The method
+   * addrefs the returned reference according to regular
+   * XPCOM rules, even though the internal reference itself
+   * is a "weak" reference.
+   */
+  NS_IMETHOD GetOwner(nsIScriptContextOwner** owner) = 0;
 };
 
 /**

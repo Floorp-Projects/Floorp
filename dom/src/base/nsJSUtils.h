@@ -34,6 +34,11 @@ class nsIDOMEventListener;
 
 class nsJSUtils {
 public:
+
+  static NS_EXPORT JSBool nsReportError(JSContext* aContext, 
+                                        nsresult aResult,
+                                        const char* aMessage=nsnull);
+
   static NS_EXPORT PRBool nsCallJSScriptObjectGetProperty(nsISupports* aSupports,
                                                 JSContext* aContext,
                                                 jsval aId,
@@ -102,6 +107,12 @@ public:
 
   static NS_EXPORT nsISupports* nsGetNativeThis(JSContext* aContext,
                                           JSObject* aObj);
+
+protected:
+  static PRBool NameAndFormatForNSResult(nsresult rv,
+                                         const char** name,
+                                         const char** format);
+
 };
 
 #endif /* nsJSUtils_h__ */

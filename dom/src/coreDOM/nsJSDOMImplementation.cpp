@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -47,6 +48,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -57,7 +59,7 @@ GetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -80,6 +82,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMDOMImplementation *a = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -90,7 +93,7 @@ SetDOMImplementationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -143,6 +146,7 @@ PR_STATIC_CALLBACK(JSBool)
 DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMDOMImplementation *nativeThis = (nsIDOMDOMImplementation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRBool nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -152,14 +156,13 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "domimplementation.hasfeature",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -170,15 +173,15 @@ DOMImplementationHasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function hasFeature requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->HasFeature(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->HasFeature(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = BOOLEAN_TO_JSVAL(nativeRet);

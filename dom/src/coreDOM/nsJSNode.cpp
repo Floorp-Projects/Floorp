@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -78,6 +79,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -88,7 +90,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case NODE_NODENAME:
@@ -96,15 +98,15 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.nodename", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetNodeName(prop))) {
+        result = a->GetNodeName(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -113,15 +115,15 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetNodeValue(prop))) {
+        result = a->GetNodeValue(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -130,15 +132,15 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.nodetype", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint16 prop;
-        if (NS_SUCCEEDED(a->GetNodeType(&prop))) {
+        result = a->GetNodeType(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -147,16 +149,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.parentnode", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
-        if (NS_SUCCEEDED(a->GetParentNode(&prop))) {
+        result = a->GetParentNode(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -165,16 +167,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.childnodes", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNodeList* prop;
-        if (NS_SUCCEEDED(a->GetChildNodes(&prop))) {
+        result = a->GetChildNodes(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -183,16 +185,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.firstchild", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
-        if (NS_SUCCEEDED(a->GetFirstChild(&prop))) {
+        result = a->GetFirstChild(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -201,16 +203,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.lastchild", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
-        if (NS_SUCCEEDED(a->GetLastChild(&prop))) {
+        result = a->GetLastChild(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -219,16 +221,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.previoussibling", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
-        if (NS_SUCCEEDED(a->GetPreviousSibling(&prop))) {
+        result = a->GetPreviousSibling(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -237,16 +239,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.nextsibling", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNode* prop;
-        if (NS_SUCCEEDED(a->GetNextSibling(&prop))) {
+        result = a->GetNextSibling(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -255,16 +257,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.attributes", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMNamedNodeMap* prop;
-        if (NS_SUCCEEDED(a->GetAttributes(&prop))) {
+        result = a->GetAttributes(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -273,16 +275,16 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.ownerdocument", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsIDOMDocument* prop;
-        if (NS_SUCCEEDED(a->GetOwnerDocument(&prop))) {
+        result = a->GetOwnerDocument(&prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -305,6 +307,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNode *a = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -315,7 +318,7 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case NODE_NODEVALUE:
@@ -323,8 +326,7 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -382,6 +384,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
@@ -391,14 +394,13 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.insertbefore",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -409,8 +411,7 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function insertBefore requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -418,18 +419,19 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
                                            "Node",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
                                            cx,
                                            argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->InsertBefore(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->InsertBefore(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -446,6 +448,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
@@ -455,14 +458,13 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.replacechild",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -473,8 +475,7 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   {
     if (argc < 2) {
-      JS_ReportError(cx, "Function replaceChild requires 2 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -482,18 +483,19 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
                                            "Node",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
                                            kINodeIID,
                                            "Node",
                                            cx,
                                            argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->ReplaceChild(b0, b1, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->ReplaceChild(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -510,6 +512,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
@@ -518,14 +521,13 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.removechild",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -536,8 +538,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function removeChild requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -545,11 +546,12 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
                                            "Node",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->RemoveChild(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->RemoveChild(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -566,6 +568,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
@@ -574,14 +577,13 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.appendchild",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -592,8 +594,7 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function appendChild requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -601,11 +602,12 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
                                            "Node",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->AppendChild(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->AppendChild(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -622,6 +624,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
@@ -629,14 +632,13 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.haschildnodes",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -647,8 +649,9 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   {
 
-    if (NS_OK != nativeThis->HasChildNodes(&nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->HasChildNodes(&nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = BOOLEAN_TO_JSVAL(nativeRet);
@@ -665,6 +668,7 @@ PR_STATIC_CALLBACK(JSBool)
 NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMNode* nativeRet;
   PRBool b0;
 
@@ -673,14 +677,13 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "node.clonenode",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -691,16 +694,16 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function cloneNode requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!nsJSUtils::nsConvertJSValToBool(&b0, cx, argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
     }
 
-    if (NS_OK != nativeThis->CloneNode(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->CloneNode(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
@@ -718,9 +721,9 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 {
   nsIDOMNode *privateThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventTarget *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type EventTarget");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsAutoString b0;
@@ -732,14 +735,13 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -750,8 +752,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   {
     if (argc < 3) {
-      JS_ReportError(cx, "Function addEventListener requires 3 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
@@ -759,14 +760,15 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
                                          cx,
                                          obj,
                                          argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_FUNCTION_ERR);
     }
     if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
     }
 
-    if (NS_OK != nativeThis->AddEventListener(b0, b1, b2)) {
-      return JS_FALSE;
+    result = nativeThis->AddEventListener(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -784,9 +786,9 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
 {
   nsIDOMNode *privateThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMEventTarget *nativeThis = nsnull;
+  nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
-    JS_ReportError(cx, "Object must be of type EventTarget");
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
   }
 
   nsAutoString b0;
@@ -798,14 +800,13 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -816,8 +817,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
 
   {
     if (argc < 3) {
-      JS_ReportError(cx, "Function removeEventListener requires 3 parameters");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
@@ -825,14 +825,15 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
                                          cx,
                                          obj,
                                          argv[1])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_FUNCTION_ERR);
     }
     if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
     }
 
-    if (NS_OK != nativeThis->RemoveEventListener(b0, b1, b2)) {
-      return JS_FALSE;
+    result = nativeThis->RemoveEventListener(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;

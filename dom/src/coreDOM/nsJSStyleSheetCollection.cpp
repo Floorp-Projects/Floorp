@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -56,6 +57,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -66,7 +68,7 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case STYLESHEETCOLLECTION_LENGTH:
@@ -74,27 +76,28 @@ GetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.length", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRUint32 prop;
-        if (NS_SUCCEEDED(a->GetLength(&prop))) {
+        result = a->GetLength(&prop);
+        if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
       default:
       {
         nsIDOMStyleSheet* prop;
-        if (NS_OK == a->Item(JSVAL_TO_INT(id), &prop)) {
+        result = a->Item(JSVAL_TO_INT(id), &prop);
+        if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
       }
     }
@@ -114,6 +117,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMStyleSheetCollection *a = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -124,7 +128,7 @@ SetStyleSheetCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -177,6 +181,7 @@ PR_STATIC_CALLBACK(JSBool)
 StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMStyleSheetCollection *nativeThis = (nsIDOMStyleSheetCollection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMStyleSheet* nativeRet;
   PRUint32 b0;
 
@@ -185,14 +190,13 @@ StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "stylesheetcollection.item",PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -203,17 +207,16 @@ StyleSheetCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function item requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
-      JS_ReportError(cx, "Parameter must be a number");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
     }
 
-    if (NS_OK != nativeThis->Item(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->Item(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);

@@ -29,7 +29,9 @@ REQUIRES	= xpcom raptor dom js netlib caps oji ojiimpl
 
 CPPSRCS		= \
 		nsBarProps.cpp \
+		nsDOMException.cpp \
 		nsJSBarProp.cpp \
+		nsJSDOMException.cpp \
 		nsJSEnvironment.cpp \
 		nsJSWindow.cpp \
 		nsJSNavigator.cpp \

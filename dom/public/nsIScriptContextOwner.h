@@ -58,6 +58,16 @@ public:
    * method.
    */
   NS_IMETHOD  ReleaseScriptContext(nsIScriptContext *aContext) = 0;
+
+  /**
+   * Error notification method. Informs the owner that an error 
+   * occurred while a script was being evaluted.
+   *
+   */
+  NS_IMETHOD ReportScriptError(const char* aErrorString,
+                               const char* aFileName,
+                               PRInt32     aLineNo,
+                               const char* aLineBuf) = 0;
 };
 
 #endif // nsIScriptContextOwner_h__

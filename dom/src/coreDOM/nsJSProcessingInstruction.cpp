@@ -19,6 +19,7 @@
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -54,6 +55,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -64,7 +66,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_TARGET:
@@ -72,15 +74,15 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.target", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetTarget(prop))) {
+        result = a->GetTarget(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -89,15 +91,15 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", PR_FALSE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
-        if (NS_SUCCEEDED(a->GetData(prop))) {
+        result = a->GetData(prop);
+        if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, result);
         }
         break;
       }
@@ -120,6 +122,7 @@ PR_STATIC_CALLBACK(JSBool)
 SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -130,7 +133,7 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_DATA:
@@ -138,8 +141,7 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
         PRBool ok = PR_FALSE;
         secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", PR_TRUE, &ok);
         if (!ok) {
-          //Need to throw error here
-          return JS_FALSE;
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);

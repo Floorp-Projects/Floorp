@@ -30,3 +30,4 @@ nsIScriptGlobalObjectData.h
 nsIScriptNameSetRegistry.h
 nsIScriptExternalNameSet.h
 nsIScriptNameSpaceManager.h
+nsDOMError.h
