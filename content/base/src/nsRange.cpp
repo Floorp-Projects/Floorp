@@ -36,14 +36,14 @@ public:
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
   NS_IMETHOD    SetIsPositioned(PRBool aIsPositioned);
 
-  NS_IMETHOD    GetStartParent(nsIDOMElement** aStartParent);
-  NS_IMETHOD    SetStartParent(nsIDOMElement* aStartParent);
+  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);
+  NS_IMETHOD    SetStartParent(nsIDOMNode* aStartParent);
 
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
   NS_IMETHOD    SetStartOffset(PRInt32 aStartOffset);
 
-  NS_IMETHOD    GetEndParent(nsIDOMElement** aEndParent);
-  NS_IMETHOD    SetEndParent(nsIDOMElement* aEndParent);
+  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);
+  NS_IMETHOD    SetEndParent(nsIDOMNode* aEndParent);
 
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
   NS_IMETHOD    SetEndOffset(PRInt32 aEndOffset);
@@ -120,10 +120,10 @@ nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
 nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::GetStartParent(nsIDOMElement** aStartParent)
+nsresult nsRange::GetStartParent(nsIDOMNode** aStartParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::SetStartParent(nsIDOMElement* aStartParent)
+nsresult nsRange::SetStartParent(nsIDOMNode* aStartParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
@@ -132,10 +132,10 @@ nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
 nsresult nsRange::SetStartOffset(PRInt32 aStartOffset)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::GetEndParent(nsIDOMElement** aEndParent)
+nsresult nsRange::GetEndParent(nsIDOMNode** aEndParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::SetEndParent(nsIDOMElement* aEndParent)
+nsresult nsRange::SetEndParent(nsIDOMNode* aEndParent)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
