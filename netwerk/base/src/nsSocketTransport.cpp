@@ -994,7 +994,7 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
   rv = mWriteBuffer->ReadSegments(nsWriteToSocket, (void*)mSocketFD, 
                                   MAX_IO_TRANSFER_SIZE, aCount);
 #else
-  PRUint32 transferCount = mWriteCount >= 0 ? PR_MIN(mWriteCount, MAX_IO_TRANSFER_SIZE) : MAX_IO_TRANSFER_SIZE;
+  PRUint32 transferCount = mWriteCount > 0 ? PR_MIN(mWriteCount, MAX_IO_TRANSFER_SIZE) : MAX_IO_TRANSFER_SIZE;
   rv = mWritePipeIn->ReadSegments(nsWriteToSocket, (void*)mSocketFD, 
                                   transferCount, aCount);
 #endif
