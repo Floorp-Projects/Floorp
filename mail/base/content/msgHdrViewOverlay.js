@@ -846,7 +846,7 @@ function setFromBuddyIcon(email)
          gIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
          gFileHandler = gIOService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
          
-         var dirService = Components.classes["@mozilla.org/directory_service;1"]
+         var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
              .getService(Components.interfaces.nsIProperties);
          var profileDir = dirService.get("ProfD", Components.interfaces.nsIFile);
          gProfileDirURL = gIOService.newFileURI(profileDir);
