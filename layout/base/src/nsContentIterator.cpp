@@ -195,38 +195,76 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   if (!aRange) 
     return NS_ERROR_NULL_POINTER; 
 
-  nsCOMPtr<nsIContent> cN;
   nsCOMPtr<nsIDOMNode> dN;
+  nsCOMPtr<nsIContent> cChild;
+  
+  nsCOMPtr<nsIContent> startCon;
+  nsCOMPtr<nsIDOMNode> startDOM;
+  nsCOMPtr<nsIContent> endCon;
+  nsCOMPtr<nsIDOMNode> endDOM;
+  PRInt32 startIndx;
+  PRInt32 endIndx;
+  
   // get common content parent
   if (NS_FAILED(aRange->GetCommonParent(getter_AddRefs(dN))) || !dN)
     return NS_ERROR_FAILURE;
   mCommonParent = do_QueryInterface(dN);
 
   // get the start node and offset, convert to nsIContent
-  aRange->GetStartParent(getter_AddRefs(dN));
-  if (!dN) 
+  aRange->GetStartParent(getter_AddRefs(startDOM));
+  if (!startDOM) 
     return NS_ERROR_ILLEGAL_VALUE;
-  cN = do_QueryInterface(dN);
-  if (!cN) 
+  startCon = do_QueryInterface(startDOM);
+  if (!startCon) 
     return NS_ERROR_FAILURE;
   
-  PRInt32 indx;
-  aRange->GetStartOffset(&indx);
+  aRange->GetStartOffset(&startIndx);
+  
+  // get the end node and offset, convert to nsIContent
+  aRange->GetEndParent(getter_AddRefs(endDOM));
+  if (!endDOM) 
+    return NS_ERROR_ILLEGAL_VALUE;
+  endCon = do_QueryInterface(endDOM);
+  if (!endCon) 
+    return NS_ERROR_FAILURE;
+
+  aRange->GetEndOffset(&endIndx);
+  
+  // short circuit when start node == end node
+  if (startDOM == endDOM)
+  {
+    startCon->ChildAt(0,*getter_AddRefs(cChild));
+  
+    if (!cChild) // no children, must be a text node or empty container
+    {
+      mFirst = startCon;
+      mLast = startCon;
+      mCurNode = startCon;
+      return NS_OK;
+    }
+    else
+    {
+      if (startIndx == endIndx)  // collapsed range
+      {
+        MakeEmpty();
+        return NS_OK;
+      }
+    }
+  }
   
   // find first node in range
-  nsCOMPtr<nsIContent> cChild;
-  cN->ChildAt(0,*getter_AddRefs(cChild));
+  startCon->ChildAt(0,*getter_AddRefs(cChild));
   
   if (!cChild) // no children, must be a text node
   {
-    mFirst = cN; 
+    mFirst = startCon; 
   }
   else
   {
-    cN->ChildAt(indx,*getter_AddRefs(cChild));
+    startCon->ChildAt(startIndx,*getter_AddRefs(cChild));
     if (!cChild)  // offset after last child, parent is first node
     {
-      mFirst = cN;
+      mFirst = startCon;
     }
     else
     {
@@ -245,33 +283,24 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
     }
   }
   
-  aRange->GetEndParent(getter_AddRefs(dN));
-  if (!dN) 
-    return NS_ERROR_ILLEGAL_VALUE;
-  cN = do_QueryInterface(dN);
-  if (!cN) 
-    return NS_ERROR_FAILURE;
-
-  aRange->GetEndOffset(&indx);
-  
   // find last node in range
-  cN->ChildAt(0,*getter_AddRefs(cChild));
+  endCon->ChildAt(0,*getter_AddRefs(cChild));
 
   if (!cChild) // no children, must be a text node
   {
-    mLast = cN; 
+    mLast = endCon; 
   }
-  else if (indx == 0) // before first child, parent is last node
+  else if (endIndx == 0) // before first child, parent is last node
   {
-    mLast = cN; 
+    mLast = endCon; 
   }
   else
   {
-    cN->ChildAt(--indx,*getter_AddRefs(cChild));
+    endCon->ChildAt(--endIndx,*getter_AddRefs(cChild));
     if (!cChild)  // offset after last child, last child is last node
     {
-      cN->ChildCount(indx);
-      cN->ChildAt(--indx,*getter_AddRefs(cChild)); 
+      endCon->ChildCount(endIndx);
+      endCon->ChildAt(--endIndx,*getter_AddRefs(cChild)); 
       if (!cChild)
       {
         NS_NOTREACHED("nsContentIterator::nsContentIterator");
