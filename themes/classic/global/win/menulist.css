@@ -106,7 +106,7 @@
     {
       padding             : 0px 1px 0px 1px;
       min-width           : 0px;  /* should be in content*/
-      max-width           : auto; /* should be in content*/
+      max-width           : none; /* should be in content*/
       border              : 1px solid window;
     }
 

@@ -157,7 +157,7 @@
     {
       padding             : 0px;
       min-width: 0px;
-      max-width: auto;
+      max-width: none;
     }
 
   menulist > menupopup > menuitem > .menu-left 
