@@ -107,9 +107,15 @@ public class Decompiler
         return sourceTop;
     }
 
-    int markFunctionStart()
+    int markFunctionStart(int functionType, String name)
     {
-        return getCurrentOffset();
+        int savedOffset = getCurrentOffset();
+        addToken(Token.FUNCTION);
+        append((char)functionType);
+        if (name.length() != 0) {
+            addName(name);
+        }
+        return savedOffset;
     }
 
     int markFunctionEnd(int functionStart)
@@ -334,6 +340,13 @@ public class Decompiler
         int braceNesting = 0;
         boolean afterFirstEOL = false;
         int i = 0;
+        int topFunctionType;
+        if (source.charAt(i) == Token.SCRIPT) {
+            ++i;
+            topFunctionType = -1;
+        } else {
+            topFunctionType = source.charAt(i + 1);
+        }
 
         while (i < length) {
             switch(source.charAt(i)) {
@@ -367,6 +380,7 @@ public class Decompiler
                 break;
 
             case Token.FUNCTION:
+                ++i; // skip function type, it is used only when decompiling
                 result.append("function ");
                 break;
 

@@ -103,6 +103,7 @@ class Parser {
         currentScriptOrFn = nf.createScript();
         this.decompiler = decompiler;
         int sourceStartOffset = decompiler.getCurrentOffset();
+        decompiler.addToken(Token.SCRIPT);
 
         this.ok = true;
 
@@ -197,6 +198,7 @@ class Parser {
     private Object function(TokenStream ts, int functionType)
         throws IOException, ParserException
     {
+        int syntheticType = functionType;
         int baseLineno = ts.getLineno();  // line number where source starts
 
         String name;
@@ -229,6 +231,7 @@ class Parser {
         }
 
         if (memberExprNode != null) {
+            syntheticType = FunctionNode.FUNCTION_EXPRESSION;
             // transform 'function' <memberExpr> to  <memberExpr> = function
             // even in the decompilated source
             decompiler.addAssign(Token.NOP);
@@ -253,7 +256,8 @@ class Parser {
 
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        int functionSourceStart = decompiler.markFunctionStart();
+        int functionSourceStart = decompiler.markFunctionStart(syntheticType,
+                                                               name);
         int functionSourceEnd;
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
@@ -264,10 +268,6 @@ class Parser {
         Object body;
         String source;
         try {
-            decompiler.addToken(Token.FUNCTION);
-            if (name.length() != 0) {
-                decompiler.addName(name);
-            }
             decompiler.addToken(Token.LP);
             if (!ts.matchToken(Token.RP)) {
                 boolean first = true;
@@ -322,7 +322,7 @@ class Parser {
 
         Object pn;
         if (memberExprNode == null) {
-            pn = nf.initFunction(fnNode, functionIndex, body, functionType);
+            pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
                 // The following can be removed but then code generators should
                 // be modified not to push on the stack function expression
@@ -330,8 +330,7 @@ class Parser {
                 pn = nf.createExprStatementNoReturn(pn, baseLineno);
             }
         } else {
-            pn = nf.initFunction(fnNode, functionIndex, body,
-                                 FunctionNode.FUNCTION_EXPRESSION);
+            pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             pn = nf.createAssignment(Token.NOP, memberExprNode, pn);
             if (functionType != FunctionNode.FUNCTION_EXPRESSION) {
                 pn = nf.createExprStatement(pn, baseLineno);
