@@ -171,6 +171,7 @@ protected:
 #endif
 
     char*               mAcceptLanguages;
+    char*               mAcceptLanguagesPrepped;
     char*               mAcceptEncodings;
     char*               mAcceptCharset;
     char*               mAcceptCharsetPrepped;
