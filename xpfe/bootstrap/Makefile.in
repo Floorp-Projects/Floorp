@@ -78,7 +78,7 @@ ifdef MOZ_OJI
 OJI_LIBS	= -ljsj
 endif
 
-LIBS		= $(XP_LIBS)
+LIBS		= $(XP_LIBS) -lxpfelocation_s
 
 ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
