@@ -55,6 +55,7 @@ static NS_DEFINE_IID(kIRDFArcsOutCursorIID,        NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,             NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,                 NS_IRDFNODE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,              NS_IRDFLITERAL_IID);
 
 
 
@@ -141,32 +142,33 @@ FindDataSource::FindDataSource(void)
 
 FindDataSource::~FindDataSource (void)
 {
-    gRDFService->UnregisterDataSource(this);
+	gRDFService->UnregisterDataSource(this);
 
-    PL_strfree(mURI);
-    if (nsnull != mObservers)
+	PL_strfree(mURI);
+	if (nsnull != mObservers)
 	{
-            for (PRInt32 i = mObservers->Count(); i >= 0; --i)
+		for (PRInt32 i = mObservers->Count(); i >= 0; --i)
 		{
-                    nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-                    NS_RELEASE(obs);
+			nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+			NS_RELEASE(obs);
 		}
-            delete mObservers;
-            mObservers = nsnull;
+		delete mObservers;
+		mObservers = nsnull;
 	}
 
-    if (--gRefCnt == 0) {
-        NS_RELEASE(kNC_Child);
-        NS_RELEASE(kNC_Name);
-        NS_RELEASE(kNC_URL);
-        NS_RELEASE(kNC_FindObject);
-        NS_RELEASE(kRDF_InstanceOf);
-        NS_RELEASE(kRDF_type);
+	if (--gRefCnt == 0)
+	{
+		NS_RELEASE(kNC_Child);
+		NS_RELEASE(kNC_Name);
+		NS_RELEASE(kNC_URL);
+		NS_RELEASE(kNC_FindObject);
+		NS_RELEASE(kRDF_InstanceOf);
+		NS_RELEASE(kRDF_type);
 
-        gFindDataSource = nsnull;
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        gRDFService = nsnull;
-    }
+		gFindDataSource = nsnull;
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		gRDFService = nsnull;
+	}
 }
 
 
@@ -327,6 +329,55 @@ FindDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr toke
 
 
 NS_METHOD
+FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchText)
+{
+	PRBool			found = PR_FALSE;
+
+	if ((nsnull == literal) || (nsnull == matchMethod) || (nsnull == matchText))
+		return(found);
+
+	const	PRUnichar	*str;
+	literal->GetValue(&str);
+	if (nsnull == str)	return(found);
+	nsAutoString	value(str);
+
+	if (!PL_strcmp(matchMethod, "contains"))
+	{
+		if (value.Find(matchText) >= 0)
+			found = PR_TRUE;
+	}
+	else if (!PL_strcmp(matchMethod, "startswith"))
+	{
+		if (value.Find(matchText) == 0)
+			found = PR_TRUE;
+	}
+	else if (!PL_strcmp(matchMethod, "endswith"))
+	{
+		PRInt32 pos = value.Find(matchText);
+		if ((pos >= 0) && (pos == (value.Length() - strlen(matchText))))
+			found = PR_TRUE;
+	}
+	else if (!PL_strcmp(matchMethod, "is"))
+	{
+		if (value.EqualsIgnoreCase(matchText))
+			found = PR_TRUE;
+	}
+	else if (!PL_strcmp(matchMethod, "isnot"))
+	{
+		if (!value.EqualsIgnoreCase(matchText))
+			found = PR_TRUE;
+	}
+	else if (!PL_strcmp(matchMethod, "doesntcontain"))
+	{
+		if (value.Find(matchText) < 0)
+			found = PR_TRUE;
+	}
+	return(found);
+}
+
+
+
+NS_METHOD
 FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 {
 	findTokenStruct		tokens[5];
@@ -354,13 +405,34 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 					nsIRDFNode	*node = nsnull;
 					if (NS_SUCCEEDED(rv = cursor->GetValue(&node)))
 					{
-						nsIRDFResource	*res = nsnull;
-						if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void **)&res)))
+						nsIRDFResource	*source = nsnull;
+						if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void **)&source)))
 						{
-							// XXX TO DO
-							// get resource for token[1], then getTarget(res, token[1])
-							// then match it based upon token[2] and token[3]
-							array->AppendElement(node);
+							const char *uri;
+							source->GetValue(&uri);
+							if (PL_strncmp(uri, "find:", PL_strlen("find:")))	// never match against a "find:" URI
+							{
+								nsIRDFResource	*property = nsnull;
+								if (NS_SUCCEEDED(rv = gRDFService->GetResource(tokens[1].value, &property)))
+								{
+									nsIRDFNode	*value = nsnull;
+									if (NS_SUCCEEDED(rv = datasource->GetTarget(source, property, PR_TRUE, &value)))
+									{
+										nsIRDFLiteral	*literal = nsnull;
+										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, &literal)))
+										{
+											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))
+											{
+												array->AppendElement(node);
+											}
+											NS_RELEASE(literal);
+										}
+										NS_RELEASE(node);
+									}
+									NS_RELEASE(property);
+								}
+							}
+							NS_RELEASE(source);
 						}
 					}
 				}
@@ -612,8 +684,8 @@ FindDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -623,8 +695,8 @@ FindDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsIRDFResource*   aCommand,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	NS_NOTYETIMPLEMENTED("write me!");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
