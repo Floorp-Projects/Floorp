@@ -2543,7 +2543,16 @@ nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIScriptObjectOwner *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     inst = NS_STATIC_CAST(nsIJSScriptObject *, this);
-  } else {
+  } 
+  else if (mDOMSlots && mDOMSlots->mScriptObject && mDocument) {
+    nsCOMPtr<nsIBindingManager> manager;
+    mDocument->GetBindingManager(getter_AddRefs(manager));
+    if (manager)
+      return manager->GetBindingImplementation(NS_STATIC_CAST(nsIStyledContent*, this), mDOMSlots->mScriptObject, 
+                                               aIID, aInstancePtr);
+    return NS_NOINTERFACE;
+  }
+  else {
     return NS_NOINTERFACE;
   }
 
