@@ -195,6 +195,8 @@ public:
     static nsIAtom* kTreeIconAtom;
     static nsIAtom* kTreeIndentationAtom;
     static nsIAtom* kTreeItemAtom;
+
+    static nsIAtom* kTitledButtonAtom;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -210,6 +212,8 @@ nsIAtom* RDFTreeBuilderImpl::kTreeHeadAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIconAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
+
+nsIAtom* RDFTreeBuilderImpl::kTitledButtonAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -244,6 +248,8 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeIconAtom        = NS_NewAtom("treeicon");
         kTreeIndentationAtom = NS_NewAtom("treeindentation");
         kTreeItemAtom        = NS_NewAtom("treeitem");
+
+        kTitledButtonAtom    = NS_NewAtom("titledbutton");
     }
 
     ++gRefCnt;
@@ -263,6 +269,8 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeIconAtom);
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
+
+        NS_RELEASE(kTitledButtonAtom);
     }
 }
 
@@ -630,7 +638,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
 
             nsCOMPtr<nsIContent> iconElement;
             if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_XUL,
-                                                kTreeIconAtom,
+                                                kTitledButtonAtom /* kTreeIconAtom */,
                                                 getter_AddRefs(iconElement)))) {
                 NS_ERROR("unable to create icon node");
                 return rv;
@@ -641,7 +649,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
                 return rv;
             }
 
-            textParent = iconElement;
+            //textParent = iconElement;
         }
 
 
