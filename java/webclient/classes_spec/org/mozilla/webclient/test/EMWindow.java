@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.36 2002/05/08 21:55:10 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.37 2002/08/31 02:09:12 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -800,7 +800,8 @@ public void mouseEntered(java.awt.event.MouseEvent e)
             System.out.println("Shift ");
         }
         if (e.isMetaDown()) {
-            System.out.println("Meta ");
+            // PENDING(edburns): this is always sent for some reason
+            //System.out.println("Meta ");
         }
         String href = eventProps.getProperty("href");
         if (null != href) {
