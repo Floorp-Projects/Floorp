@@ -1,7 +1,6 @@
-
-<!ENTITY      windowtitle.label               "Signon Viewer">
-<!ENTITY      tab.signonsstored.label         "Signons Saved">
-<!ENTITY      tab.signonsnotstored.label      "Signons Never Saved">
+<!ENTITY      windowtitle.label               "Stored Passwords">
+<!ENTITY      tab.signonsstored.label         "Passwords Saved">
+<!ENTITY      tab.signonsnotstored.label      "Passwords Never Saved">
 <!ENTITY      tab.nopreview.label             "Forms never Previewed">
 <!ENTITY      tab.nocapture.label             "Forms never Saved">
 
