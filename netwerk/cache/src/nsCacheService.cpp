@@ -23,6 +23,8 @@
 
 
 #include "nsCacheService.h"
+#include "nsCacheEntry.h"
+#include "nsCacheEntryDescriptor.h"
 #include "nsCacheDevice.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsAutoLock.h"
@@ -66,9 +68,11 @@ nsCacheService::Init()
     if (mCacheServiceLock == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
+#if 0
     // initialize hashtable for client ids
     rv = mClientIDs.Init();
     NS_ASSERTION(NS_SUCCEEDED(rv), "mClientIDs.Init() failed");
+#endif
 
     // initialize hashtable for active cache entries
     rv = mActiveEntries.Init();
@@ -111,7 +115,7 @@ nsCacheService::Shutdown()
     if (mCacheServiceLock) {
         //** check for pending requests...
 
-        //** finalize active entries and clientID
+        //** finalize active entries
 
         //** deallocate memory and disk caches
 
@@ -143,10 +147,23 @@ nsCacheService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     return rv;
 }
 
-/* nsICacheSession createSession (in string clientID, in long storagePolicy, in boolean streamBased); */
-NS_IMETHODIMP nsCacheService::CreateSession(const char *clientID, PRInt32 storagePolicy, PRBool streamBased, nsICacheSession **_retval)
+
+NS_IMETHODIMP
+nsCacheService::CreateSession(const char *      clientID,
+                              PRInt32           storagePolicy, 
+                              PRBool            streamBased,
+                              nsICacheSession **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = nsnull;
+
+    nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
+    if (!session)  return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(session);
+    nsresult  rv = session->QueryInterface(NS_GET_IID(nsICacheSession),(void**) result);
+    NS_RELEASE(session);
+
+    return rv;
 }
 
 
@@ -158,50 +175,50 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 
 
 nsresult
-nsCacheService::CommonOpenCacheEntry(const char *clientID, const char *clientKey,
-                                     PRUint32  accessRequested, PRBool  streamBased,
-                                     nsCacheRequest **request, nsCacheEntry **entry)
+nsCacheService::CommonOpenCacheEntry(nsCacheSession *   session,
+                                     const char *       clientKey,
+                                     nsCacheAccessMode  accessRequested,
+                                     nsICacheListener * listener,
+                                     nsCacheRequest **  request,
+                                     nsCacheEntry **    entry)
 {
     NS_ASSERTION(request && entry, "CommonOpenCacheEntry: request or entry is null");
-    nsAutoLock lock(mCacheServiceLock);
-    
-    mClientIDs.AddClientID(clientID);  // add clientID to list of clientIDs
-    
-    
-    nsCString * key = new nsCString(nsLiteralCString(clientID) + 
+     
+    nsCString * key = new nsCString(*session->ClientID() + 
                                     nsLiteralCString(clientKey));
     if (!key) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
     
     // create request
-    *request = new  nsCacheRequest(key, (nsICacheListener *)nsnull, 
-                                   accessRequested, streamBased);
+    *request = new  nsCacheRequest(key, listener, accessRequested, 
+                                   session->StreamBased(),
+                                   session->StoragePolicy());
     
-    // procure active entry (and queue request?)
+    // procure active entry
     return ActivateEntry(*request, entry);
 }                                     
 
 
 nsresult
-nsCacheService::OpenCacheEntry(const char *clientID, const char *clientKey, 
-                               PRUint32  accessRequested, PRBool  streamBased,
-                               nsICacheEntryDescriptor **result)
+nsCacheService::OpenCacheEntry(nsCacheSession *           session,
+                               const char *               key, 
+                               nsCacheAccessMode          accessRequested,
+                               nsICacheEntryDescriptor ** result)
 {
-    result = nsnull;
-    if (!mCacheServiceLock)
-        return NS_ERROR_NOT_INITIALIZED;
+    *result = nsnull;
+    if (!mCacheServiceLock)  return NS_ERROR_NOT_INITIALIZED;
 
     nsCacheRequest * request = nsnull;
     nsCacheEntry *   entry   = nsnull;
 
-    nsresult rv = CommonOpenCacheEntry(clientID, clientKey, accessRequested, streamBased,
-                              &request, &entry);
+    nsresult rv = CommonOpenCacheEntry(session, key, accessRequested, nsnull,
+                                       &request, &entry);
     if (NS_FAILED(rv))  return rv;
 
     while (1) {
         rv = entry->Open(request, result);
-        if (NS_SUCCEEDED(rv) | (rv != NS_ERROR_CACHE_ENTRY_DOOMED)) break;
+        if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
 
         rv = ActivateEntry(request, &entry);
         if (NS_FAILED(rv)) break;
@@ -211,19 +228,19 @@ nsCacheService::OpenCacheEntry(const char *clientID, const char *clientKey,
 
 
 nsresult
-nsCacheService::AsyncOpenCacheEntry(const char *  clientID, const char *  key, 
-                                    PRUint32  accessRequested, PRBool streamBased, 
-                                    nsICacheListener *listener)
+nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
+                                    const char *       key, 
+                                    nsCacheAccessMode  accessRequested,
+                                    nsICacheListener * listener)
 {
-    if (!mCacheServiceLock)
-        return NS_ERROR_NOT_INITIALIZED;
-
+    if (!mCacheServiceLock)  return NS_ERROR_NOT_INITIALIZED;
+    if (!listener)           return NS_ERROR_NULL_POINTER;
 
     nsCacheRequest * request = nsnull;
     nsCacheEntry *   entry   = nsnull;
 
-    nsresult rv = CommonOpenCacheEntry(clientID, key, accessRequested, streamBased,
-                              &request, &entry);
+    nsresult rv = CommonOpenCacheEntry(session, key, accessRequested, listener,
+                                       &request, &entry);
 
     if (NS_SUCCEEDED(rv)) {
         entry->AsyncOpen(request);
@@ -244,21 +261,19 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     if (request == nsnull)  return NS_ERROR_NULL_POINTER;
     if (result) *result = nsnull;
 
-    // PRBool asyncRequest = (result == nsnull);
-    
     nsAutoLock lock(mCacheServiceLock);  // hold monitor to keep mActiveEntries coherent
-
  
     // search active entries (including those not bound to device)
     nsCacheEntry *entry = mActiveEntries.GetEntry(request->mKey);
 
     // doom existing entry if we are processing a FORCE-WRITE
     if (entry && (request->mAccessRequested == nsICache::ACCESS_WRITE)) {
-        entry->Doom();
+        Doom(entry);
+        entry = nsnull;
     }
 
     if (!entry) {
-        entry = new nsCacheEntry(request->mKey);
+        entry = new nsCacheEntry(request->mKey, request->mStoragePolicy);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -285,8 +300,8 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 }
 
 
-static nsresult
-SearchCacheDevices(nsCacheEntry * entry, nsCacheDevice ** result)
+nsresult
+nsCacheService::SearchCacheDevices(nsCacheEntry * entry, nsCacheDevice ** result)
 {
     nsresult        rv = NS_OK;
     nsCacheDevice * device;
@@ -310,121 +325,40 @@ SearchCacheDevices(nsCacheEntry * entry, nsCacheDevice ** result)
     return rv;
 }
 
-nsCacheEntry *
-nsCacheService::SearchActiveEntries(const nsCString * key)
-{
-    return nsnull;
-}
-
-
-
-/*
- *  nsCacheClientHashTable
- */
-
-PLDHashTableOps
-nsCacheClientHashTable::ops =
-{
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    GetKey,
-    HashKey,
-    MatchEntry,
-    MoveEntry,
-    ClearEntry,
-    Finalize
-};
-
-
-nsCacheClientHashTable::nsCacheClientHashTable()
-    : initialized(0)
-{
-}
-
-nsCacheClientHashTable::~nsCacheClientHashTable()
-{
-    //** maybe we should finalize the table...
-}
-
 
 nsresult
-nsCacheClientHashTable::Init()
+nsCacheService::Doom(nsCacheEntry * entry)
 {
-    nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nsnull,
-                                    sizeof(nsCacheClientHashTableEntry), 16);
-
-    if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
-    return rv;
+    //** remove from hashtable
+    //** put on doom list to wait for descriptors to close
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 void
-nsCacheClientHashTable::AddClientID(const char * clientID)
+nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
 {
-    PLDHashEntryHdr *hashEntry;
-    char * copy;
-    hashEntry = PL_DHashTableOperate(&table, clientID, PL_DHASH_ADD);
-    if (((nsCacheClientHashTableEntry *)hashEntry)->clientID == 0) {
-        copy = nsCRT::strdup(clientID);
-        ((nsCacheClientHashTableEntry *)hashEntry)->clientID = copy;
+    nsAutoLock lock(mCacheServiceLock);
+
+    // ask entry to remove descriptor
+    nsCacheEntry * entry       = descriptor->CacheEntry();
+    PRBool         stillActive = entry->RemoveDescriptor(descriptor);
+    
+    if (!stillActive) {
+        DeactivateEntry(entry);
     }
 }
 
-//** enumerate clientIDs
-
-
-/*
- *  hash table operation callback functions
- */
-
-const void *
-nsCacheClientHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEntry)
-{
-    return ((nsCacheClientHashTableEntry *)hashEntry)->clientID;
-}
-
-PLDHashNumber
-nsCacheClientHashTable::HashKey( PLDHashTable *table, const void *key)
-{
-    // XXX write a good hash function!
-    return PLDHashNumber(key);
-}
-
-PRBool
-nsCacheClientHashTable::MatchEntry(PLDHashTable *       /* table */,
-                                  const PLDHashEntryHdr * hashEntry,
-                                  const void *            key)
-{
-    NS_ASSERTION(key !=  nsnull, "nsCacheClientHashTable::MatchEntry : null key");
-    char * clientID = ((nsCacheClientHashTableEntry *)hashEntry)->clientID;
-
-    return nsCRT::strcmp((char *)key, clientID) == 0;
-}
-
 
 void
-nsCacheClientHashTable::MoveEntry(PLDHashTable * /* table */,
-                                 const PLDHashEntryHdr *from,
-                                 PLDHashEntryHdr       *to)
+nsCacheService::DeactivateEntry(nsCacheEntry * entry)
 {
-    to->keyHash = from->keyHash;
-    ((nsCacheClientHashTableEntry *)to)->clientID =
-        ((nsCacheClientHashTableEntry *)from)->clientID;
+    //** remove from hashtable
+    nsCacheDevice * device = entry->CacheDevice();
+    if (device) {
+        nsresult rv = device->DeactivateEntry(entry);
+        //** what do we do on errors?
+    } else {
+        //** increment deactivating unbound entry statistic
+    }
 }
-
-
-void
-nsCacheClientHashTable::ClearEntry(PLDHashTable * /* table */,
-                                  PLDHashEntryHdr * hashEntry)
-{
-    ((nsCacheClientHashTableEntry *)hashEntry)->keyHash  = 0;
-    ((nsCacheClientHashTableEntry *)hashEntry)->clientID = 0;
-}
-
-void
-nsCacheClientHashTable::Finalize(PLDHashTable * /* table */)
-{
-    //** gee, if there's anything left in the table, maybe we should get rid of it.
-}
-
