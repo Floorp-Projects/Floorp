@@ -807,6 +807,19 @@ sub expand_user_test_list {
     my ($list_file) = @_;
     my @retval = ();
 
+    #
+    # Trim off the leading path separator that begins relative paths on the Mac.
+    # Each path will get concatenated with $opt_suite_path, which ends in one.
+    #
+    # Also note:
+    #
+    # We will call expand_test_list_entry(), which does pattern-matching on $list_file.
+    # This will make the pattern-matching the same as it would be on Linux/Windows -
+    #
+    if ($os_type eq "MAC") {
+        $list_file =~ s/^$path_sep//;
+    }
+
     if ($list_file =~ /\.js$/ || -d $opt_suite_path . $list_file) {
 
         push (@retval, &expand_test_list_entry($list_file));
@@ -839,25 +852,11 @@ sub expand_user_test_list {
 #
 sub expand_test_list_entry {
     my ($entry) = @_;
-    my $isFile = -f $opt_suite_path . $entry;
     my @retval;
-
-    #
-    # Trim off the leading path separator that begins relative paths on the Mac.
-    # This makes the pattern-matching the same as it would be on Linux/Windows -
-    #
-    # Also note:
-    #
-    # In execute_tests(), each path gets concatenated with $opt_suite_path,
-    # which ends in a path separator. On the Mac, avoid duplicating it -
-    #
-    if ($os_type eq "MAC") {
-        $entry =~ s/^$path_sep//;
-    }
 
     if ($entry =~ /\.js$/) {
         # it's a regular entry, add it to the list
-        if ($isFile) {
+        if (-f $opt_suite_path . $entry) {
             push (@retval, $entry);
         } else {
             status ("testcase '$entry' not found.");
