@@ -57,6 +57,7 @@ private:
   
   static nsCOMPtr<nsISupportsArray> mServerArcsOut;
   static nsCOMPtr<nsISupportsArray> mServerRootArcsOut;
+  nsCOMPtr <nsISupportsArray> mObservers;
   
 };
 

@@ -297,13 +297,32 @@ NS_IMETHODIMP nsSmtpDataSource::HasAssertion(nsIRDFResource *aSource, nsIRDFReso
 /* void AddObserver (in nsIRDFObserver aObserver); */
 NS_IMETHODIMP nsSmtpDataSource::AddObserver(nsIRDFObserver *aObserver)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
+        return NS_ERROR_NULL_POINTER;
+ 
+    if (! mObservers)
+    {
+        nsresult rv;
+        rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+        if (NS_FAILED(rv)) return rv;
+    }
+    mObservers->AppendElement(aObserver);
+    return NS_OK;
 }
 
 /* void RemoveObserver (in nsIRDFObserver aObserver); */
 NS_IMETHODIMP nsSmtpDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_PRECONDITION(aObserver != nsnull, "null ptr");
+    if (! aObserver)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mObservers)
+        return NS_OK;
+
+    mObservers->RemoveElement(aObserver);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
