@@ -124,7 +124,7 @@ private:
     static nsINameSpaceManager* gNameSpaceManager;
 
     static nsIAtom* kContainerAtom;
-    static nsIAtom* kContentsGeneratedAtom;
+    static nsIAtom* kTreeContentsGeneratedAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kResourceAtom;
@@ -251,6 +251,12 @@ public:
     GetResource(PRInt32 aNameSpaceID,
                 nsIAtom* aNameAtom,
                 nsIRDFResource** aResource);
+
+    nsresult
+    OpenTreeItem(nsIContent* aElement);
+
+    nsresult
+    CloseTreeItem(nsIContent* aElement);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -258,7 +264,7 @@ public:
 nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
 
 nsIAtom* RDFTreeBuilderImpl::kContainerAtom;
-nsIAtom* RDFTreeBuilderImpl::kContentsGeneratedAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeContentsGeneratedAtom;
 nsIAtom* RDFTreeBuilderImpl::kIdAtom;
 nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
 nsIAtom* RDFTreeBuilderImpl::kResourceAtom;
@@ -312,8 +318,8 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
     NS_INIT_REFCNT();
 
     if (gRefCnt == 0) {
-        kContainerAtom         = NS_NewAtom("container");
-        kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
+        kContainerAtom             = NS_NewAtom("container");
+        kTreeContentsGeneratedAtom = NS_NewAtom("treecontentsgenerated");
 
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
@@ -395,7 +401,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
     --gRefCnt;
     if (gRefCnt == 0) {
         NS_RELEASE(kContainerAtom);
-        NS_RELEASE(kContentsGeneratedAtom);
+        NS_RELEASE(kTreeContentsGeneratedAtom);
 
         NS_RELEASE(kIdAtom);
         NS_RELEASE(kOpenAtom);
@@ -655,20 +661,37 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 NS_IMETHODIMP
 RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 {
+    nsresult rv;
+
     // First, make sure that the element is in the right tree -- ours.
     if (! IsElementInTree(aElement))
         return NS_OK;
 
     // Next, see if the treeitem is even "open". If not, then just
-    // pretend it doesn't have _any_ contents.
+    // pretend it doesn't have _any_ contents. We check this _before_
+    // checking the contents-generated attribute so that we don't
+    // eagerly set contents-generated on a closed node.
     if (! IsOpen(aElement))
+        return NS_OK;
+
+    // Now see if someone has marked the element's contents as being
+    // generated: this prevents a re-entrant call from triggering
+    // another generation.
+    nsAutoString attrValue;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
+                                              kTreeContentsGeneratedAtom,
+                                              attrValue))) {
+        NS_ERROR("unable to test contents-generated attribute");
+        return rv;
+    }
+
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
         return NS_OK;
 
     // Get the treeitem's resource so that we can generate cell
     // values. We could QI for the nsIRDFResource here, but doing this
     // via the nsIContent interface allows us to support generic nodes
     // that might get added in by DOM calls.
-    nsresult rv;
     nsAutoString uri;
     if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_RDF,
                                               kIdAtom,
@@ -682,9 +705,13 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
-        NS_ERROR("unable to create resource");
+    // Now mark the element's contents as being generated so that
+    // any re-entrant calls don't trigger an infinite recursion.
+    if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_None,
+                                              kTreeContentsGeneratedAtom,
+                                              "true",
+                                              PR_FALSE))) {
+        NS_ERROR("unable to set contents-generated attribute");
         return rv;
     }
 
@@ -693,8 +720,13 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
     // handles multi-attributes. For performance...
 
     // Create a cursor that'll enumerate all of the outbound arcs
-    nsCOMPtr<nsIRDFArcsOutCursor> properties;
+    nsCOMPtr<nsIRDFResource> resource;
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, getter_AddRefs(resource)))) {
+        NS_ERROR("unable to create resource");
+        return rv;
+    }
 
+    nsCOMPtr<nsIRDFArcsOutCursor> properties;
     if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties))))
         return rv;
 
@@ -855,7 +887,7 @@ RDFTreeBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // them later.
             nsAutoString contentsGenerated;
             if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kContentsGeneratedAtom,
+                                                     kTreeContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
                 return rv;
@@ -960,47 +992,104 @@ RDFTreeBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aNam
         return NS_ERROR_UNEXPECTED;
     }
 
+    // Make sure that the element is in the tree. XXX Even this may be
+    // a bit too promiscuous: an element may also be a XUL element...
+    if (! IsElementInTree(element))
+        return NS_OK;
+
+    // Split the element into its namespace and tag components
+    PRInt32  elementNameSpaceID;
+    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
+        NS_ERROR("unable to get element namespace ID");
+        return rv;
+    }
+
+    nsCOMPtr<nsIAtom> elementNameAtom;
+    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
+        NS_ERROR("unable to get element tag");
+        return rv;
+    }
+
     // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+    PRInt32  attrNameSpaceID;
+    nsCOMPtr<nsIAtom> attrNameAtom;
+    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
         NS_ERROR("unable to parse attribute string");
         return rv;
     }
 
-    nsCOMPtr<nsIRDFResource> property;
-    if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
-        NS_ERROR("unable to construct resource");
-        return rv;
-    }
+    // Now do the work to change the attribute. There are a couple of
+    // special cases that we need to check for here...
 
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
+        (elementNameAtom.get() == kTreeItemAtom) &&
+        (attrNameSpaceID       == kNameSpaceID_None) &&
+        (attrNameAtom.get()    == kOpenAtom)) {
+        // We are possibly changing the value of the "open"
+        // attribute. This may require us to generate or destroy
+        // content in the tree. See what the old value was...
+        nsAutoString attrValue;
+        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue))) {
+            NS_ERROR("unable to get current open state");
             return rv;
         }
 
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-    }
+        if ((rv == NS_CONTENT_ATTR_NO_VALUE) || (rv == NS_CONTENT_ATTR_NOT_THERE) ||
+            ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (! attrValue.EqualsIgnoreCase(aValue)))) {
+            // Okay, it's really changing.
 
-    // Assert the new value
-    {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+            // This is a "transient" property, so we _don't_ go to the
+            // RDF graph to set it.
+            if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kOpenAtom, aValue, PR_TRUE))) {
+                NS_ERROR("unable to update attribute on content node");
+                return rv;
+            }
+
+            if (aValue.EqualsIgnoreCase("true")) {
+                rv = OpenTreeItem(element);
+            }
+            else {
+                rv = CloseTreeItem(element);
+            }
+
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open/close tree item");
+        }
+    }
+    else {
+        // It's a "vanilla" property: push its value into the graph.
+        nsCOMPtr<nsIRDFResource> property;
+        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
+            NS_ERROR("unable to construct resource");
             return rv;
         }
 
-        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-            NS_ERROR("unable to assert new property value");
-            return rv;
+        // Unassert the old value, if there was one.
+        nsAutoString oldValue;
+        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            rv = mDB->Unassert(resource, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
         }
-    }
-    
+
+        // Assert the new value
+        {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
+                NS_ERROR("unable to assert new property value");
+                return rv;
+            }
+        }
+    }    
 
     return NS_OK;
 }
@@ -1025,33 +1114,72 @@ RDFTreeBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& a
         return NS_ERROR_UNEXPECTED;
     }
 
+    // Make sure that the element is in the tree. XXX Even this may be
+    // a bit too promiscuous: an element may also be a XUL element...
+    if (! IsElementInTree(element))
+        return NS_OK;
+
+    // Split the element into its namespace and tag components
+    PRInt32  elementNameSpaceID;
+    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
+        NS_ERROR("unable to get element namespace ID");
+        return rv;
+    }
+
+    nsCOMPtr<nsIAtom> elementNameAtom;
+    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
+        NS_ERROR("unable to get element tag");
+        return rv;
+    }
+
     // Split the property name into its namespace and tag components
-    PRInt32  nameSpaceID;
-    nsCOMPtr<nsIAtom> nameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(nameAtom), nameSpaceID))) {
+    PRInt32  attrNameSpaceID;
+    nsCOMPtr<nsIAtom> attrNameAtom;
+    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
         NS_ERROR("unable to parse attribute string");
         return rv;
     }
 
-    nsCOMPtr<nsIRDFResource> property;
-    if (NS_FAILED(rv = GetResource(nameSpaceID, nameAtom, getter_AddRefs(property)))) {
-        NS_ERROR("unable to construct resource");
-        return rv;
-    }
+    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
+        (elementNameAtom.get() == kTreeItemAtom) &&
+        (attrNameSpaceID       == kNameSpaceID_None) &&
+        (attrNameAtom.get()    == kOpenAtom)) {
+        // We are removing the value of the "open" attribute. This may
+        // require us to destroy content from the tree.
 
-    // Unassert the old value, if there was one.
-    nsAutoString oldValue;
-    if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(nameSpaceID, nameAtom, oldValue)) {
-        nsCOMPtr<nsIRDFLiteral> value;
-        if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-            NS_ERROR("unable to construct literal");
+        // XXX should we check for existence of the attribute first?
+        if (NS_FAILED(rv = element->UnsetAttribute(kNameSpaceID_None, kOpenAtom, PR_TRUE))) {
+            NS_ERROR("unable to attribute on update content node");
             return rv;
         }
 
-        rv = mDB->Unassert(resource, property, value);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+        if (NS_FAILED(rv = CloseTreeItem(element))) {
+            NS_ERROR("unable to close tree item");
+            return rv;
+        }
     }
+    else {
+        // It's a "vanilla" property: push its value into the graph.
 
+        nsCOMPtr<nsIRDFResource> property;
+        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
+            NS_ERROR("unable to construct resource");
+            return rv;
+        }
+
+        // Unassert the old value, if there was one.
+        nsAutoString oldValue;
+        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
+            nsCOMPtr<nsIRDFLiteral> value;
+            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
+                NS_ERROR("unable to construct literal");
+                return rv;
+            }
+
+            rv = mDB->Unassert(resource, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
+        }
+    }
     return NS_OK;
 }
 
@@ -2008,4 +2136,62 @@ RDFTreeBuilderImpl::GetResource(PRInt32 aNameSpaceID,
     nsresult rv = gRDFService->GetUnicodeResource(uri, aResource);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     return rv;
+}
+
+
+nsresult
+RDFTreeBuilderImpl::OpenTreeItem(nsIContent* aElement)
+{
+    return CreateContents(aElement);
+}
+
+
+nsresult
+RDFTreeBuilderImpl::CloseTreeItem(nsIContent* aElement)
+{
+    nsresult rv;
+
+    // Find the <xul:treechildren> tag so that we can remove all of
+    // the children.
+    nsCOMPtr<nsIContent> treeChildren;
+    rv = FindChildByTag(aElement, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(treeChildren));
+
+    // No <xul:treechildren> tag; must've already been closed
+    if (rv == NS_ERROR_RDF_NO_VALUE)
+        return NS_OK;
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("severe error retrieving <xul:treechildren> node");
+        return rv;
+    }
+
+    PRInt32 count;
+    if (NS_FAILED(rv = treeChildren->ChildCount(count))) {
+        NS_ERROR("unable to get count of <xul:treechildren>'s children");
+        return rv;
+    }
+
+    while (--count >= 0) {
+        // XXX This is a bit gross. We need to recursively remove any
+        // subtrees before we remove the current subtree.
+        nsIContent* child;
+        if (NS_SUCCEEDED(rv = treeChildren->ChildAt(count, child))) {
+            rv = CloseTreeItem(child);
+            NS_RELEASE(child);
+        }
+
+        rv = treeChildren->RemoveChildAt(count, PR_TRUE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
+    }
+
+    // Clear the contents-generated attribute so that the next time we
+    // come back, we'll regenerate the kids we just killed.
+    if (NS_FAILED(rv = aElement->UnsetAttribute(kNameSpaceID_None,
+                                                kTreeContentsGeneratedAtom,
+                                                PR_FALSE))) {
+        NS_ERROR("unable to clear contents-generated attribute");
+        return rv;
+    }
+
+    return NS_OK;
 }
