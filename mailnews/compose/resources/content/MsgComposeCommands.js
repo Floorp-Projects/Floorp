@@ -138,10 +138,16 @@ function ComposeStartup()
  	identitySelect.remove(0);   
     }
 
+    var identity;
     if (args.preselectid)
-        identitySelect.value = args.preselectid;
+        identity = getIdentityForKey(args.preselectid);
     else
-        identitySelect.selectedIndex = 0;
+    {
+    	//TODO: what I need here is not the current selected identity but the default one. 
+    	//      For now GetCurrentIdentity gives back the first identity (not the selected one).
+    	identity = msgService.currentIdentity;
+    }
+    identitySelect.value = identity.key;
 
     // fill in Recipient type combobox
     FillRecipientTypeCombobox();
@@ -152,7 +158,6 @@ function ComposeStartup()
         // back to an identity, to pass to initcompose
         // it would be nice if there was some way to actually send the
         // identity through "args"
-        var identity = getIdentityForKey(args.preselectid);
         
 		msgCompose = msgComposeService.InitCompose(window, args.originalMsg, args.type, args.format, args.fieldsAddr, identity);
 		if (msgCompose)
@@ -298,7 +303,7 @@ function ComposeLoad()
 function ComposeUnload(calledFromExit)
 {
 	dump("\nComposeUnload from XUL\n");
-
+	
 	if (msgCompose && msgComposeService)
 		msgComposeService.DisposeCompose(msgCompose, false);
 	//...and what's about the editor appcore, how can we release it?
