@@ -142,6 +142,9 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                      &widgetData,
                      nsnull);
 
+  // XXX: Don't need? 
+  // ourView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+
   return rv;
 }
 
@@ -322,13 +325,43 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
     return NS_OK;
 
   // Unset the current child.
-  if (mCurrentMenu)
+  if (mCurrentMenu) {
+    printf("Unsetting current child.\n");
     mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-  
+  }
+
   // Set the new child.
-  if (aMenuItem)
+  if (aMenuItem) {
+    printf("Setting new child.\n");
     aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  }
   mCurrentMenu = aMenuItem;
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
+{
+  // get its view
+  nsIView* view = nsnull;
+  GetView(&view);
+  nsCOMPtr<nsIViewManager> viewMan;
+  PRBool result;
+
+  if (view) {
+    view->GetViewManager(*getter_AddRefs(viewMan));
+    if (viewMan) {
+      if (aGrabMouseEvents) {
+        viewMan->GrabMouseEvents(view,result);
+        mIsCapturingMouseEvents = PR_TRUE;
+      } else {
+        viewMan->GrabMouseEvents(nsnull,result);
+        mIsCapturingMouseEvents = PR_FALSE;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+

@@ -240,12 +240,17 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
   
+  nsIFrame* frame = mPopupFrames.FirstChild();
+  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+
   if (aActivateFlag) {
     // Open the menu.
     mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
     if (child)
       child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
     mMenuOpen = PR_TRUE;
+    //if (menuPopup)
+    //  menuPopup->CaptureMouseEvents(PR_TRUE);
   }
   else {
     // Close the menu.
