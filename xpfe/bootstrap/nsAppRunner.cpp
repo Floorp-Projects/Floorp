@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIServiceManager.h"
@@ -164,11 +164,11 @@ nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
     return rv;
 }
 
-PRBool NS_CanRun() 
+PRBool NS_CanRun()
 {
 	return PR_TRUE;
 }
-#endif 
+#endif
 
 /*********************************************/
 // Default implementation for new and improved
@@ -184,7 +184,7 @@ PRBool NS_CanRun()
 //       "splash screen" interface.  The code below will
 //       then rely on nsINativeAppSupport and its use of
 //       nsISplashScreen will be removed.
-// 
+//
 #if !defined( NS_WIN32 )
 
 nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
@@ -225,7 +225,7 @@ PrintUsage(void)
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
-static nsresult OpenWindow( const char*urlstr, const PRUnichar *args ) 
+static nsresult OpenWindow( const char*urlstr, const PRUnichar *args )
 {
 #ifdef DEBUG_CMD_LINE
     printf("OpenWindow(%s,?)\n",urlstr);
@@ -283,7 +283,7 @@ static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCON
 }
 
 
-static void DumpArbitraryHelp() 
+static void DumpArbitraryHelp()
 {
   nsresult rv;
   NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
@@ -298,22 +298,22 @@ static void DumpArbitraryHelp()
 
         nsXPIDLCString progidString;
         progid->ToString (getter_Copies(progidString));
-        
+
 #ifdef DEBUG_CMD_LINE
         printf("cmd line handler progid = %s\n", (const char *)progidString);
 #endif /* DEBUG_CMD_LINE */
-        
+
         nsCOMPtr <nsICmdLineHandler> handler = do_GetService((const char *)progidString, &rv);
-        
+
         if (handler) {
           nsXPIDLCString commandLineArg;
           rv = handler->GetCommandLineArgument(getter_Copies(commandLineArg));
           if (NS_FAILED(rv)) continue;
-          
+
           nsXPIDLCString helpText;
           rv = handler->GetHelpText(getter_Copies(helpText));
           if (NS_FAILED(rv)) continue;
-          
+
           if ((const char *)commandLineArg) {
             printf("%s%s", HELP_SPACER_1,(const char *)commandLineArg);
 
@@ -327,11 +327,11 @@ static void DumpArbitraryHelp()
             }
           }
         }
-        
+
       }
     }
   }
-  return;    
+  return;
 }
 
 static
@@ -347,7 +347,7 @@ nsresult LaunchApplication(const char *progID, PRInt32 height, PRInt32 width)
   nsXPIDLCString chromeUrlForTask;
   rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
   if (NS_FAILED(rv)) return rv;
-          
+
   PRBool handlesArgs = PR_FALSE;
   rv = handler->GetHandlesArgs(&handlesArgs);
   if (handlesArgs) {
@@ -372,17 +372,17 @@ static nsresult LaunchApplicationWithArgs(const char *commandLineArg, nsICmdLine
 
   nsCOMPtr <nsICmdLineHandler> handler = do_GetService(progID, &rv);
   if (NS_FAILED(rv)) return rv;
-        
+
   if (!handler) return NS_ERROR_FAILURE;
-          
+
   nsXPIDLCString chromeUrlForTask;
   rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
   if (NS_FAILED(rv)) return rv;
-          
+
 #ifdef DEBUG_CMD_LINE
   printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
 #endif /* DEBUG_CMD_LINE */
-          
+
   rv = cmdLineArgs->GetCmdLineValue(commandLineArg, getter_Copies(cmdResult));
   if (NS_FAILED(rv)) return rv;
 #ifdef DEBUG_CMD_LINE
@@ -456,15 +456,15 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
   if (!data || !prefName) return;
 
   StartupClosure *closure = (StartupClosure *)data;
- 
-#ifdef DEBUG_CMD_LINE  
+
+#ifdef DEBUG_CMD_LINE
   printf("getting %s\n", prefName);
 #endif /* DEBUG_CMD_LINE */
 
   rv = closure->prefs->GetBoolPref(prefName, &prefValue);
   if (NS_FAILED(rv)) return;
 
-#ifdef DEBUG_CMD_LINE  
+#ifdef DEBUG_CMD_LINE
   printf("%s = %d\n", prefName, prefValue);
 #endif /* DEBUG_CMD_LINE */
 
@@ -472,13 +472,13 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
 
   // if the pref is "general.startup.", ignore it.
   if (PL_strlen(prefName) <= prefixLen) return;
- 
+
   if (prefValue) {
     // this is the progid prefix that all the command line handlers register
     nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
     progID += (prefName + prefixLen);
 
-#ifdef DEBUG_CMD_LINE  
+#ifdef DEBUG_CMD_LINE
     printf("progid = %s\n", (const char *)progID);
 #endif /* DEBUG_CMD_LINE */
     rv = LaunchApplication((const char *)progID, closure->height, closure->width);
@@ -489,12 +489,12 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
 static PRBool IsStartupCommand(const char *arg)
 {
   if (!arg) return PR_FALSE;
-  
+
   if (PL_strlen(arg) <= 1) return PR_FALSE;
 
   // windows allows /mail or -mail
-  if ((arg[0] == '-') 
-#ifdef XP_PC 
+  if ((arg[0] == '-')
+#ifdef XP_PC
       || (arg[0] == '/')
 #endif /* XP_PC */
       ) {
@@ -516,13 +516,13 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 	if (NS_FAILED(rv)) return rv;
 	
 	if (tempString) PR_sscanf(tempString, "%d", &width);
-	  
+	
 	// Get the value of -height option
 	rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
 	if (NS_FAILED(rv)) return rv;
 	
 	if (tempString) PR_sscanf(tempString, "%d", &height);
-  
+
   if (heedGeneralStartupPrefs) {
 #ifdef DEBUG_CMD_LINE
     printf("XXX iterate over all the general.startup.* prefs\n");
@@ -546,7 +546,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
     char **argv = nsnull;
     rv = cmdLineArgs->GetArgv(&argv);
     if (NS_FAILED(rv)) return rv;
-    
+
     PRInt32 i = 0;
     for (i=1;i<argc;i++) {
 #ifdef DEBUG_CMD_LINE
@@ -554,7 +554,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 #endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
         nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
-        
+
         // skip over the - (or / on windows)
         char *command = argv[i] + 1;
 #ifdef XP_UNIX
@@ -562,7 +562,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
         if ((argv[i][0] == '-') && (argv[i][1] == '-')) {
           command = argv[i] + 2;
         }
-#endif /* XP_UNIX */ 
+#endif /* XP_UNIX */
         progID += (const char *)command;
         // this can fail, as someone could do -foo, where -foo is not handled
         rv = LaunchApplicationWithArgs((const char *)(argv[i]), cmdLineArgs, (const char *)progID, height, width);
@@ -570,7 +570,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
     }
   }
 
-  return NS_OK;    
+  return NS_OK;
 }
 
 // This should be done by app shell enumeration someday
@@ -578,7 +578,7 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 {
 	nsresult  rv;
 	
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
     rv = HandleArbitraryStartup( cmdLine, prefs, heedGeneralStartupPrefs);
@@ -589,15 +589,15 @@ static nsresult DoOnShutdown()
 {
   nsresult rv;
   {
-    // Scoping this in a block to force the pref service to be           
-    // released. 
+    // Scoping this in a block to force the pref service to be
+    // released.
     //
   	// save the prefs, in case they weren't saved
   	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
   	if (NS_SUCCEEDED(rv)) {
   		prefs->SavePrefFile();
-  	}  
+  	}
   }
 
   // at this point, all that is on the clipboard is a proxy object, but that object
@@ -648,7 +648,7 @@ static void	InitCachePrefs()
 	rv = NS_NewFileSpec(getter_AddRefs(cacheSubDir));
 	if(NS_FAILED(rv)) return;
 
-	nsCOMPtr<nsIFileSpec> spec(dont_AddRef(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50)));	    
+	nsCOMPtr<nsIFileSpec> spec(dont_AddRef(NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50)));	
 	rv = cacheSubDir->FromFileSpec(spec);
 	if(NS_FAILED(rv)) return;
 		
@@ -668,7 +668,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
   if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
   {
     PRBool more;
-	      
+	
     windowEnumerator->HasMoreElements(&more);
     if ( !more )
     {
@@ -684,7 +684,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       if (tempString)
         PR_sscanf(tempString, "%d", &width);
 				
-				  
+				
       // Get the value of -height option
       rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
       if (NS_FAILED(rv))
@@ -692,7 +692,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 
       if (tempString)
         PR_sscanf(tempString, "%d", &height);
-				 
+				
       rv = OpenBrowserWindow(height, width);
     }
 	}
@@ -756,10 +756,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
       obsService->AddObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode());
     }
   }
-  
+
   //----------------------------------------------------------------
   // XPInstall needs to clean up after any updates that couldn't
-  // be completed because components were in use. This must be done 
+  // be completed because components were in use. This must be done
   // **BEFORE** any other libraries are loaded!
   //
   // Will also check to see if AutoReg is required due to version
@@ -777,10 +777,10 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     }
   }
 //  nsServiceManager::UnregisterService(kSoftUpdateCID);
-   
-#if XP_MAC 
+
+#if XP_MAC
   stTSMCloser  tsmCloser;
-  
+
   rv = InitializeMacCommandLine( argc, argv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
 #endif
@@ -803,12 +803,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get command line service");
- 
+
   if (NS_FAILED(rv)) {
     fprintf(stderr, "Could not obtain CmdLine processing service\n");
     return rv;
   }
- 
+
   rv = cmdLineArgs->Initialize(argc, argv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize command line args");
   if (rv  == NS_ERROR_INVALID_ARG) {
@@ -834,7 +834,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
             splashScreen->Hide();
         }
     }
-    
+
     // Release argument object.
     NS_IF_RELEASE( nativeApp );
     return rv;
@@ -845,11 +845,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // the app shell owns it now.
   NS_IF_RELEASE( nativeApp );
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
-  if ( NS_FAILED(rv) ) return rv; 
+  if ( NS_FAILED(rv) ) return rv;
 
   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
-  if ( NS_FAILED(rv) ) return rv; 
+  if ( NS_FAILED(rv) ) return rv;
 
   rv = profileMgr->StartupWithArgs(cmdLineArgs);
   if (NS_FAILED(rv)) return rv;
@@ -858,7 +858,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
   nsXPIDLString currentProfileStr;
   rv = profileMgr->GetCurrentProfile(getter_Copies(currentProfileStr));
-  if (NS_FAILED(rv) || !((const PRUnichar *)currentProfileStr) || 
+  if (NS_FAILED(rv) || !((const PRUnichar *)currentProfileStr) ||
                         (nsCRT::strlen((const PRUnichar *)currentProfileStr) == 0)) {
   	return NS_ERROR_FAILURE;
   }
@@ -884,7 +884,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 	if ( NS_FAILED(rv) )
     return rv;
 
-  // Make sure there exists at least 1 window. 
+  // Make sure there exists at least 1 window.
   rv = Ensure1Window( cmdLineArgs );
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
@@ -908,7 +908,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // XXX we crash somewhere under nsAppShellService::Shutdown...
   NS_TraceMallocShutdown();
 #endif
-  
+
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)
    * method returned an error.
@@ -962,7 +962,7 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 
   for (i=1; i<argc; i++) {
     if ((PL_strcasecmp(argv[i], "-h") == 0)
-        || (PL_strcasecmp(argv[i], "-help") == 0) 
+        || (PL_strcasecmp(argv[i], "-help") == 0)
 #if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--help") == 0)
 #endif /* XP_UNIX || XP_BEOS*/
@@ -976,7 +976,7 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
       return PR_TRUE;
     }
     if ((PL_strcasecmp(argv[i], "-v") == 0)
-        || (PL_strcasecmp(argv[i], "-version") == 0) 
+        || (PL_strcasecmp(argv[i], "-version") == 0)
 #if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--version") == 0)
 #endif /* XP_UNIX || XP_BEOS */
@@ -1019,7 +1019,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[])
       dosplash = PR_FALSE;
 	}
 #endif
-  
+
   return dosplash;
 }
 
@@ -1040,10 +1040,10 @@ void SetupMallocTracing(int argc, char* argv[])
   {
     if (PL_strcasecmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
       char *logfile;
-      int logfd, sitefd, pipefds[2];
+      int logfd, pipefds[2];
 
       logfile = argv[i+1];
-      logfd = sitefd = -1;
+      logfd = -1;
       switch (*logfile) {
         case '|':
           if (pipe(pipefds) == 0) {
@@ -1094,16 +1094,11 @@ void SetupMallocTracing(int argc, char* argv[])
           }
           break;
 
-        case '^':
-          logfile++;
-          sitefd = open(logfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-          if (sitefd < 0) {
-            fprintf(stderr,
-                    "%s: can't create trace-malloc callsite logfile %s: %s\n",
-                    argv[0], logfile, strerror(errno));
-            return 1;
-          }
-          break;
+        case '-':
+          /* Don't log from startup, but do prepare to log later. */
+          if (logfile[1] == '\0')
+            break;
+          /* FALL THROUGH */
 
         default:
           logfd = open(logfile, O_CREAT | O_WRONLY | O_TRUNC, 0644);
@@ -1116,7 +1111,7 @@ void SetupMallocTracing(int argc, char* argv[])
           break;
       }
 
-      NS_TraceMallocStartup(logfd, sitefd);
+      NS_TraceMallocStartup(logfd);
 
       /* Now remove --trace-malloc and its argument from argv. */
       for (argc -= 2; i < argc; i++)
@@ -1138,9 +1133,9 @@ int main(int argc, char* argv[])
   // They should return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
     return 0;
-  
+
   SetupMallocTracing(argc, argv);
-    
+
   // Call the code to install our handler
 #ifdef MOZ_JPROF
   setupProfilingStuff();
@@ -1164,13 +1159,13 @@ int main(int argc, char* argv[])
     // If platform doesn't implement nsINativeAppSupport, fall
     // back to old method.
     if (!NS_CanRun())
-      return 1; 
+      return 1;
   }
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsISplashScreen *splash = 0;
   PRBool dosplash = GetWantSplashScreen(argc, argv);
-  
+
   if (dosplash && !nativeApp) {
       // If showing splash screen and platform doesn't implement
       // nsINativeAppSupport, then use older nsISplashScreen interface.
