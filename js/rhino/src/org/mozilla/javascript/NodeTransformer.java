@@ -346,13 +346,6 @@ public class NodeTransformer
                 visitNew(node, tree);
                 break;
 
-              case Token.DOT:
-              {
-                Node right = node.getLastChild();
-                right.setType(Token.STRING);
-                break;
-              }
-
               case Token.VAR:
               {
                 Node result = new Node(Token.BLOCK);
