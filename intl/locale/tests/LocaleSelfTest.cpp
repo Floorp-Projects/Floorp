@@ -25,8 +25,11 @@
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
-#ifdef XP_PC
+#ifdef XP_MAC
+#elif defined(XP_PC)
 #include "nsIWin32Locale.h"
+#else
+#include "nsIPosixLocale.h"
 #endif
 #include "nsICharsetConverterManager.h"
 #include "nsUCvLatinCID.h"
@@ -55,6 +58,7 @@
 #endif
 
 
+
 // Collation
 //
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
@@ -68,15 +72,23 @@ static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 // locale
 //
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
-#ifdef XP_PC
-static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
-#endif
 // case conversion
 //
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+// platform specific
+//
+#ifdef XP_MAC
+#elif defined(XP_PC)
+static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+#else
+static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
+#endif
 
 // global variable
 static PRBool g_verbose = PR_FALSE;
+static FILE *g_outfp = NULL;
 
 // Create a collation key, the memory is allocated using new which need to be deleted by a caller.
 //
@@ -266,7 +278,7 @@ static void TestCollation(nsILocale *locale)
 
       cout.flush();
       for (i = 0; i < keyLength1; i++) {
-        printf("%0.2x ", aKey1[i]);
+        printf("%.2x ", aKey1[i]);
         //cout << "key[" << i << "]: " << aKey1[i] << " ";
       }
       cout << "\n";
@@ -281,7 +293,7 @@ static void TestCollation(nsILocale *locale)
 
       cout.flush();
       for (i = 0; i < keyLength2; i++) {
-       printf("%0.2x ", aKey2[i]);
+       printf("%.2x ", aKey2[i]);
        //cout << "key[" << i << "]: " << aKey2[i] << " ";
       }
       cout << "\n";
@@ -370,6 +382,16 @@ static void TestSortPrint1(nsString *string_array, int len)
     DebugDump(string_array[i], cout);
   }
   cout << "\n";
+}
+
+static void TestSortPrintToFile(nsString *string_array, int len)
+{
+  char cstr[4096];  //huge
+  for (int i = 0; i < len; i++) {
+    string_array[i].ToCString(cstr, 4096);
+    fprintf(g_outfp, "%s\n", cstr);
+  }
+  fprintf(g_outfp, "\n");
 }
 
 static void DebugPrintCompResult(nsString string1, nsString string2, int result)
@@ -483,7 +505,7 @@ static void TestSortPrint2(collation_rec *key_array, int len)
     aLength = key_array[i].aLength;
     aKey = key_array[i].aKey;
     for (int j = 0; j < (int)aLength; j++) {
-      printf("%0.2x ", aKey[j]);
+      printf("%.2x ", aKey[j]);
     }
     printf("\n");
   }
@@ -521,7 +543,7 @@ static void SortTestFile(nsICollation* collationInst, FILE* fp)
   qsort( (void *)string_array, i, sizeof(nsString), compare1 );
 
   cout << "print string after sort\n";
-  TestSortPrint1(string_array, i);
+  (g_outfp == NULL) ? TestSortPrint1(string_array, i) : TestSortPrintToFile(string_array, i);
 }
 
 // Use nsICollation for qsort.
@@ -779,6 +801,84 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
   return res;
 }
 
+static void Test_nsLocale()
+{
+#ifdef XP_MAC
+#elif defined(XP_PC)
+  nsString localeName;
+  nsIWin32Locale* win32Locale;
+  LCID lcid;
+  char cstr[32];
+  nsresult res;
+
+  if (NS_SUCCEEDED(res = nsComponentManager::CreateInstance(
+                         kWin32LocaleFactoryCID, NULL, kIWin32LocaleIID, (void**)&win32Locale))) {
+    
+    localeName.SetString("en-US");
+    res = win32Locale->GetPlatformLocale(&localeName, &lcid);
+    printf("LCID for en-US is 1033\n");
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+
+    localeName.SetString("en-GB");
+    res = win32Locale->GetPlatformLocale(&localeName, &lcid);
+    printf("LCID for en-GB is 2057\n");
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+
+    localeName.SetString("fr-FR");
+    res = win32Locale->GetPlatformLocale(&localeName, &lcid);
+    printf("LCID for fr-FR is 1036\n");
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+
+    localeName.SetString("de-DE");
+    res = win32Locale->GetPlatformLocale(&localeName, &lcid);
+    printf("LCID for de-DE is 1031\n");
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+
+    localeName.SetString("ja-JP");
+    res = win32Locale->GetPlatformLocale(&localeName, &lcid);
+    printf("LCID for ja-JP is 1041\n");
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+
+    win32Locale->Release();
+  }
+#else
+  nsString localeName;
+  char locale[32];
+  size_t length = 32;
+  nsIPosixLocale* posixLocale;
+  char cstr[32];
+  nsresult res;
+
+  if (NS_SUCCEEDED(res = nsComponentManager::CreateInstance(
+                         kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale))) {
+    localeName.SetString("en-US");
+    res = posixLocale->GetPlatformLocale(&localeName, locale, length);
+    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+
+    localeName.SetString("en-GB");
+    res = posixLocale->GetPlatformLocale(&localeName, locale, length);
+    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+
+    localeName.SetString("fr-FR");
+    res = posixLocale->GetPlatformLocale(&localeName, locale, length);
+    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+
+    localeName.SetString("de-DE");
+    res = posixLocale->GetPlatformLocale(&localeName, locale, length);
+    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+
+    localeName.SetString("ja-JP");
+    res = posixLocale->GetPlatformLocale(&localeName, locale, length);
+    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+
+    posixLocale->Release();
+  }
+  else {
+    printf("Fail: CreateInstance PosixLocale\n");
+  }
+#endif
+}
+
 static char* get_option(int argc, char** argv, char* arg)
 {
   for (int i = 0; i < argc; i++) {
@@ -803,7 +903,7 @@ int main(int argc, char** argv) {
   nsILocale *locale = NULL;
   nsresult res; 
 
-#if 0
+#if 1
 	nsILocaleFactory*	localeFactory;
 
 	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
@@ -839,16 +939,22 @@ int main(int argc, char** argv) {
     s = find_option(argc, argv, "-h");
     if (s) {
       cout << argv[0] << " usage:\n-date\tdate time format test\n-col\tcollation test\n-sort\tsort test\n\
--f file\tsort data file\n-case\tcase sensitive sort\n-locale\tlocale\n-v\tverbose";
+-f file\tsort data file\n-o out file\tsort result file\n-case\tcase sensitive sort\n-locale\tlocale\n-v\tverbose";
       return 0;
     }
     s = find_option(argc, argv, "-v");
     if (s) {
       g_verbose = PR_TRUE;
+      //test for locale
+      Test_nsLocale();
     }
     s = get_option(argc, argv, "-f");
     if (s) {
       fp = fopen(s, "r");
+    }
+    s = get_option(argc, argv, "-o");
+    if (s) {
+      g_outfp = fopen(s, "w");
     }
     s = find_option(argc, argv, "-case");
     if (s) {
@@ -858,7 +964,7 @@ int main(int argc, char** argv) {
     if (s) {
       nsString localeName(s);
       NS_IF_RELEASE(locale);
- //     res = NewLocale(&localeName, &locale);  // reset the locale
+      res = NewLocale(&localeName, &locale);  // reset the locale
     }
 
     while (argc--) {
@@ -871,6 +977,9 @@ int main(int argc, char** argv) {
     }
     if (fp != NULL) {
       fclose(fp);
+    }
+    if (g_outfp != NULL) {
+      fclose(g_outfp);
     }
   }
 #endif//XP_MAC
