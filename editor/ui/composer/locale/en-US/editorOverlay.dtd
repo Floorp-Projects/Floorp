@@ -20,6 +20,7 @@
    - Contributor(s):
    -    Sammy Ford
    -    Blake Ross
+   -    Ryan Cassin (rcassin@supernova.org)
   -->
 
 
@@ -426,12 +427,16 @@
 <!ENTITY formatalignmenu.accesskey "a">
 <!ENTITY alignLeft.label "Left">
 <!ENTITY alignleft.accesskey "l">
+<!ENTITY alignLeft.tooltip "Align Left">
 <!ENTITY alignCenter.label "Center">
 <!ENTITY aligncenter.accesskey "c">
+<!ENTITY alignCenter.tooltip "Align Center">
 <!ENTITY alignRight.label "Right">
 <!ENTITY alignright.accesskey "r">
+<!ENTITY alignRight.tooltip "Align Right">
 <!ENTITY alignJustify.label "Justify">
 <!ENTITY alignjustify.accesskey "j">
+<!ENTITY alignJustify.tooltip "Align Justified">
 
 <!ENTITY increaseIndent.label "Increase Indent">
 <!ENTITY increaseindent.accesskey "i">
