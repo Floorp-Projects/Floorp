@@ -679,7 +679,15 @@ retry:
 		    RETURN(TOK_ERROR);
 		c = GetChar(ts);
 		radix = 16;
-	    } else if (JS7_ISDEC(c)) {
+	    } else if (JS7_ISDEC(c) && c < '8') {
+                /*
+                 * XXX Warning needed. Checking against c < '8' above is
+                 * non-ECMA, but is required to support legacy code; it's
+                 * likely that "08" and "09" are in use in code having to do
+                 * with dates.  So we need to support it, which makes our
+                 * behavior a superset of ECMA in this area.  We should be
+                 * raising a warning if '8' or '9' is encountered.
+                 */
 		radix = 8;
 	    }
 	}
