@@ -760,7 +760,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
       mCrypto = do_CreateInstance(kCryptoProgID, &rv);
     }
   *aCrypto = mCrypto;
-   return NS_OK;
+  NS_IF_ADDREF(*aCrypto);
+  return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
@@ -772,6 +773,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
       mPkcs11 = do_CreateInstance(kPkcs11ProgID, &rv);
     }
   *aPkcs11 = mPkcs11;
+  NS_IF_ADDREF(*aPkcs11);
    return NS_OK;
 }
 
