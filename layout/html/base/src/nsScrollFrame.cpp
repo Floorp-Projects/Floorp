@@ -89,8 +89,14 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
 {
   nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
-
   nsIFrame* frame = mFrames.FirstChild();
+
+  // There must be one and only one child frame
+  if (!frame) {
+    return NS_ERROR_INVALID_ARG;
+  } else if (mFrames.GetLength() > 1) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
 #ifdef NS_DEBUG
   // Verify that the scrolled frame has a view
@@ -107,6 +113,37 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   frame->SetFrameState(state);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::AppendFrames(nsIPresContext& aPresContext,
+                            nsIPresShell&   aPresShell,
+                            nsIAtom*        aListName,
+                            nsIFrame*       aFrameList)
+{
+  // Only one child frame allowed
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::InsertFrames(nsIPresContext& aPresContext,
+                            nsIPresShell&   aPresShell,
+                            nsIAtom*        aListName,
+                            nsIFrame*       aPrevFrame,
+                            nsIFrame*       aFrameList)
+{
+  // Only one child frame allowed
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::RemoveFrame(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame)
+{
+  // Scroll frames doesn't support incremental changes
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -221,31 +258,32 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     // Set the view's opacity
     viewManager->SetViewOpacity(view, color->mOpacity);
 
-    // Because we only paintg the border and we don't paint a background,
+    // Because we only paint the border and we don't paint a background,
     // inform the view manager that we have transparent content
     viewManager->SetViewContentTransparency(view, PR_TRUE);
 
-    // XXX If it's fixed positioned, then create a widget too
+    // If it's fixed positioned, then create a widget too
     CreateScrollingViewWidget(view, position);
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
     view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
 
-    // Create widgets for scrolling
+    // Have the scrolling view create its internal widgets
     scrollingView->CreateScrollControls();
 
-    // Set the scroll preference
+    // Set the scrolling view's scroll preference
     nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
                                     ? nsScrollPreference_kAlwaysScroll :
                                       nsScrollPreference_kAuto;
-    // if this is a scroll frame for a viewport and its webshell 
+
+    // If this is a scroll frame for a viewport and its webshell 
     // has its scrolling set, use that value
+    // XXX This is a huge hack, and we should not be checking the web shell's
+    // scrolling preference...
     nsIFrame* parentFrame = nsnull;
     GetParent(&parentFrame);
-    //nsCOMPtr<nsIAtom> frameType;
     nsIAtom* frameType = nsnull;
-    //parent->GetFrameType(getter_AddRefs(frameType));
     parent->GetFrameType(&frameType);
     if (nsLayoutAtoms::viewportFrame == frameType) {
       NS_RELEASE(frameType);
