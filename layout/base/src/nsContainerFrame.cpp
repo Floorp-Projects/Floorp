@@ -263,7 +263,15 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.Translate(kidRect.x, kidRect.y);
         kid->Paint(aPresContext, aRenderingContext, kidDamageArea);
         if (nsIFrame::GetShowFrameBorders()) {
-          aRenderingContext.SetColor(NS_RGB(255,0,0));
+          nsIView* view;
+          GetView(view);
+          if (nsnull != view) {
+            aRenderingContext.SetColor(NS_RGB(0,0,255));
+            NS_RELEASE(view);
+          }
+          else {
+            aRenderingContext.SetColor(NS_RGB(255,0,0));
+          }
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
         aRenderingContext.PopState();
