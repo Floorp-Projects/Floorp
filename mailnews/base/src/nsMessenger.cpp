@@ -1518,10 +1518,8 @@ nsSaveMsgListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
         nsCOMPtr<nsIMsgFolder> templateFolder;
         templateFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) goto done;
-        NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv);
-        if (NS_FAILED(rv)) goto done;
-        rv = copyService->CopyFileMessage(m_fileSpec, templateFolder, nsnull,
-                                          PR_TRUE, this, nsnull);
+        rv = templateFolder->CopyFileMessage(m_fileSpec, nsnull,
+                                          PR_TRUE, nsnull, this);
         killSelf = PR_FALSE;
     }
   }
