@@ -1406,7 +1406,7 @@ nsresult nsCharsetMenu::AddSeparatorToContainer(
   // hack to generate unique id's for separators
   static PRInt32 u = 0;
   u++;
-  str.Append(u);
+  str.AppendInt(u);
 
   nsMenuItem2 item;
   item.mCharset = getter_AddRefs(NS_NewAtom(str));

@@ -1518,22 +1518,22 @@ NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsString& aCursor)
   nsresult ret = NS_OK;
   PRInt32 cursor;
 
-  if (aCursor == "auto") cursor = NS_STYLE_CURSOR_AUTO;
-  else if (aCursor == "default") cursor = NS_STYLE_CURSOR_DEFAULT;
-  else if (aCursor == "pointer") cursor = NS_STYLE_CURSOR_POINTER;
-  else if (aCursor == "crosshair") cursor = NS_STYLE_CURSOR_CROSSHAIR;
-  else if (aCursor == "move") cursor = NS_STYLE_CURSOR_MOVE;
-  else if (aCursor == "text") cursor = NS_STYLE_CURSOR_TEXT;
-  else if (aCursor == "wait") cursor = NS_STYLE_CURSOR_WAIT;
-  else if (aCursor == "help") cursor = NS_STYLE_CURSOR_HELP;
-  else if (aCursor == "n-resize") cursor = NS_STYLE_CURSOR_N_RESIZE;
-  else if (aCursor == "s-resize") cursor = NS_STYLE_CURSOR_S_RESIZE;
-  else if (aCursor == "w-resize") cursor = NS_STYLE_CURSOR_W_RESIZE;
-  else if (aCursor == "e-resize") cursor = NS_STYLE_CURSOR_E_RESIZE;
-  else if (aCursor == "ne-resize") cursor = NS_STYLE_CURSOR_NE_RESIZE;
-  else if (aCursor == "nw-resize") cursor = NS_STYLE_CURSOR_NW_RESIZE;
-  else if (aCursor == "se-resize") cursor = NS_STYLE_CURSOR_SE_RESIZE;
-  else if (aCursor == "sw-resize") cursor = NS_STYLE_CURSOR_SW_RESIZE;
+  if (aCursor.EqualsWithConversion("auto")) cursor = NS_STYLE_CURSOR_AUTO;
+  else if (aCursor.EqualsWithConversion("default")) cursor = NS_STYLE_CURSOR_DEFAULT;
+  else if (aCursor.EqualsWithConversion("pointer")) cursor = NS_STYLE_CURSOR_POINTER;
+  else if (aCursor.EqualsWithConversion("crosshair")) cursor = NS_STYLE_CURSOR_CROSSHAIR;
+  else if (aCursor.EqualsWithConversion("move")) cursor = NS_STYLE_CURSOR_MOVE;
+  else if (aCursor.EqualsWithConversion("text")) cursor = NS_STYLE_CURSOR_TEXT;
+  else if (aCursor.EqualsWithConversion("wait")) cursor = NS_STYLE_CURSOR_WAIT;
+  else if (aCursor.EqualsWithConversion("help")) cursor = NS_STYLE_CURSOR_HELP;
+  else if (aCursor.EqualsWithConversion("n-resize")) cursor = NS_STYLE_CURSOR_N_RESIZE;
+  else if (aCursor.EqualsWithConversion("s-resize")) cursor = NS_STYLE_CURSOR_S_RESIZE;
+  else if (aCursor.EqualsWithConversion("w-resize")) cursor = NS_STYLE_CURSOR_W_RESIZE;
+  else if (aCursor.EqualsWithConversion("e-resize")) cursor = NS_STYLE_CURSOR_E_RESIZE;
+  else if (aCursor.EqualsWithConversion("ne-resize")) cursor = NS_STYLE_CURSOR_NE_RESIZE;
+  else if (aCursor.EqualsWithConversion("nw-resize")) cursor = NS_STYLE_CURSOR_NW_RESIZE;
+  else if (aCursor.EqualsWithConversion("se-resize")) cursor = NS_STYLE_CURSOR_SE_RESIZE;
+  else if (aCursor.EqualsWithConversion("sw-resize")) cursor = NS_STYLE_CURSOR_SW_RESIZE;
   else return NS_OK;
 
   nsCOMPtr<nsIPresContext> presContext;
