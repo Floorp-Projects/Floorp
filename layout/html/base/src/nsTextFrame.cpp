@@ -2200,7 +2200,11 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       }
 
       if (!found)
-        result = nsFrame::PeekOffset(aPos);
+      {
+        result = GetFrameFromDirection(aPos);
+        if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
+          result = aPos->mResultFrame->PeekOffset(aPos);
+      }
       else 
         aPos->mResultContent = mContent;
     }
@@ -2233,7 +2237,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       if (aPos->mDirection == eDirPrevious){
         keepSearching = PR_TRUE;
         tx.Init(this, mContent, aPos->mStartOffset);
-
+        aPos->mContentOffset = mContentOffset;//initialize
         if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
                            PR_FALSE) &&
           (aPos->mStartOffset - contentLen >= mContentOffset) ){
@@ -2270,6 +2274,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       }
       else if (aPos->mDirection == eDirNext) {
         tx.Init(this, mContent, aPos->mStartOffset );
+        aPos->mContentOffset = mContentOffset + mContentLength;//initialize
 
 #ifdef DEBUGWORDJUMP
         printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
@@ -2304,7 +2309,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           }
           else if (!keepSearching) //we have found the "whole" word so just looking for WS
             aPos->mEatingWS = PR_TRUE;
-        }
+        } 
         frameUsed = GetNextInFlow();
         start = 0;
       }
@@ -2315,11 +2320,19 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
-
-        result = nsFrame::PeekOffset(aPos);
+        result = GetFrameFromDirection(aPos);
+        if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
+        {
+          if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPos)))
+            return NS_OK;//else fall through
+        }
+        else 
+          aPos->mResultContent = mContent;
       }
       else 
+      {
         aPos->mResultContent = mContent;
+      }
     }
     break;
     default:
@@ -2365,6 +2378,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.triple_click_style", &prefInt)) && prefInt)
         return nsFrame::HandleMultiplePress(aPresContext, aEvent, aEventStatus);
     }
+    //THIS NEXT CODE IS FOR PARAGRAPH
     nsCOMPtr<nsIDOMNode> startNode;
     nsCOMPtr<nsIDOMNode> endNode;
 
@@ -2437,9 +2451,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
       //find which word needs to be selected! use peek offset one way then the other
-      nsCOMPtr<nsIContent> startContent;
       nsCOMPtr<nsIDOMNode> startNode;
-      nsCOMPtr<nsIContent> endContent;
       nsCOMPtr<nsIDOMNode> endNode;
       if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
                        getter_AddRefs(newContent), startPos, contentOffsetEnd))){
@@ -2451,7 +2463,8 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         eDirPrevious,
                         startPos,
                         PR_FALSE,
-                        PR_TRUE);
+                        PR_TRUE,
+                        PR_FALSE);
         rv = PeekOffset(&startpos);
         if (NS_FAILED(rv))
           return rv;
@@ -2461,6 +2474,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         eSelectWord,
                         eDirNext,
                         startPos,
+                        PR_FALSE,
                         PR_FALSE,
                         PR_FALSE);
         rv = PeekOffset(&endpos);
@@ -2473,6 +2487,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
         startNode = do_QueryInterface(startpos.mResultContent,&rv);
         if (NS_FAILED(rv))
           return rv;
+
         nsCOMPtr<nsIDOMSelection> selection;
         if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
           rv = selection->Collapse(startNode,startpos.mContentOffset);
@@ -2489,6 +2504,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   return NS_OK;
 
 }
+
 
 NS_IMETHODIMP
 nsTextFrame::GetOffsets(PRInt32 &start, PRInt32 &end) const

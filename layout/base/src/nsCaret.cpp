@@ -224,7 +224,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
   nsCOMPtr<nsIFrameSelection> frameSelection;
   err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
 	if (NS_FAILED(err) || !frameSelection)
-		return err; 
+		return err;  
   err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame);
 	if (NS_FAILED(err))
 		return err;
@@ -394,6 +394,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 			  
 		      // see if we have an offset between child nodes, or an offset into a text
 		      // node.
+#if NOT_NEEDED
 				if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
 				{
 					// point the caret to the start of the child node
@@ -412,7 +413,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 					// we can be in a text node, or a BR node here.
 				}
-			
+#endif // NOT_NEEDED
 				nsIFrame*	theFrame = nsnull;
 
 				//get frame selection and find out what frame to use...

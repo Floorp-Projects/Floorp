@@ -332,8 +332,17 @@ protected:
 
   PRBool DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn = PR_FALSE);
 
+  //this will modify aPos and return the next frame ect.
+  NS_IMETHOD GetFrameFromDirection(nsPeekOffsetStruct *aPos);
+
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
+  //return the line number of the aFrame
+  static PRInt32 GetLineNumber(nsIFrame *aFrame);
+  //given a frame five me the first/last leaf available
+  static void GetLastLeaf(nsIFrame **aFrame);
+  static void GetFirstLeaf(nsIFrame **aFrame);
 
   /**
    * Dump out the "base classes" regression data. This should dump

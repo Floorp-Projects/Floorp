@@ -62,6 +62,7 @@ struct SelectionDetails
    *  @param mResultFrame resulting frame for peeking
    *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
    *  @param mPreferLeft true = prev line end, false = next line begin
+   *  @param mJumpLines if this is true then its ok to cross lines while peeking
 */
 struct nsPeekOffsetStruct
 {
@@ -71,11 +72,12 @@ struct nsPeekOffsetStruct
                nsDirection aDirection,
                PRInt32 aStartOffset, 
                PRBool aEatingWS,
-               PRBool aPreferLeft)
+               PRBool aPreferLeft,
+               PRBool aJumpLines)
       {
        mTracker=aTracker;mDesiredX=aDesiredX;mAmount=aAmount;
        mDirection=aDirection;mStartOffset=aStartOffset;mEatingWS=aEatingWS;
-       mPreferLeft=aPreferLeft;
+       mPreferLeft=aPreferLeft;mJumpLines = aJumpLines;
       }
   nsIFocusTracker *mTracker;
   nscoord mDesiredX;
@@ -88,6 +90,7 @@ struct nsPeekOffsetStruct
   nsIFrame *mResultFrame;
   PRBool mEatingWS;
   PRBool mPreferLeft;
+  PRBool mJumpLines;
 };
 
 
@@ -216,6 +219,7 @@ public:
    * @param aResultFrame will contain the return frame. MUST NOT BE NULL or will return error
    */
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame)=0;
+
 };
 
 
