@@ -873,6 +873,9 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 {
 	PRBool		isVisible = PR_TRUE;
 
+	isVisible = (!file.IsHidden());
+
+#if 0
 #ifdef	XP_MAC
 	CInfoPBRec	cInfo;
 	OSErr		err;
@@ -896,7 +899,7 @@ FileSystemDataSource::isVisible(const nsNativeFileSpec& file)
 		nsCRT::free(baseFilename);
 	}
 #endif
-
+#endif
 	return(isVisible);
 }
 
