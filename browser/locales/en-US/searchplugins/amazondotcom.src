@@ -8,6 +8,7 @@
    description="Amazon.com Search"
    method="GET"
    action="http://www.amazon.com/exec/obidos/external-search/" 
+   queryCharset="ISO-8859-1"
 >
 
 <input name="field-keywords" user>

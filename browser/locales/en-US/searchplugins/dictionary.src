@@ -7,6 +7,7 @@
    description="Dictionary.com Search"
    method="get"
    action="http://www.dictionary.com/search"
+   queryCharset="ISO-8859-1"
 >
 
 <input name="q" user>
