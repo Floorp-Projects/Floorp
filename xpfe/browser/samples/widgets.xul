@@ -21,7 +21,6 @@
   
   Contributor(s): 
     Ben Goodger <ben@netscape.com>
-    Michael Lowe <michael.lowe@bigfoot.com> 
 
 -->
 
@@ -34,21 +33,43 @@
         style="width: 250px;"
         align="vertical"> 
               
+  <script>
+  <![CDATA[
+  
+  function testProperty( aID )
+  {
+    var element = document.getElementById( aID );
+    if (!element)
+      return false;
+      
+    var pValPair = prompt("Enter property,value:","").split(",");
+    var property = pValPair[0];
+    var value = pValPair[1];
+    element[property] = value;
+  }
+  
+  ]]>
+  </script>              
+              
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 1:" for="nerp1"/>
     <textfield flex="1" id="nerp1" disabled="true" value="disabled"/>
+    <button value="Test Property APIs" oncommand="testProperty('nerp1');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2"/>
     <textfield flex="1" id="nerp2" readonly="true" value="readonly"/>
+    <button value="Test Property APIs" oncommand="testProperty('nerp2');"/>
   </box>
   <box autostretch="never" valign="center">
-    <text class="label" value="Foo Label 2:" for="nerp2"/>
-    <textfield flex="1" id="nerp2" readonly="true" disabled="true" value="readonly disabled"/>
+    <text class="label" value="Foo Label 2:" for="nerp2r"/>
+    <textfield flex="1" id="nerp2r" readonly="true" disabled="true" value="readonly disabled"/>
+    <button value="Test Property APIs" oncommand="testProperty('nerp2r');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 3:" for="nerp3"/>
     <textfield flex="1" id="nerp3" value="regular"/>
+    <button value="Test Property APIs" oncommand="testProperty('nerp3');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 5:" for="nerp4"/>
@@ -91,13 +112,21 @@
     <box orient="vertical" flex="1">
       <textfield flex="1"/>
       <box orient="vertical" autostretch="never">
-        <checkbox value="Checkbox 1"/>
+        <box flex="1">
+          <checkbox value="Checkbox 1" id="checkbox1"/>
+          <spring flex="1"/>
+          <button value="Test Property APIs" oncommand="testProperty('checkbox1');"/>
+        </box>
         <checkbox value="Checkbox 2" disabled="true" checked="true"/>
         <checkbox value="Checkbox 3"/>
       </box>
       <separator class="groove"/>
       <radiogroup orient="vertical">
-        <radio value="Radio 1"/>
+        <box>
+          <radio value="Radio 1" id="radio1"/>
+          <spring flex="1"/>
+          <button value="Test Property APIs" oncommand="testProperty('radio1');"/>
+        </box>
         <radio value="Radio 2"/>
         <radio value="Radio 3" disabled="true" checked="true"/>
       </radiogroup>
@@ -120,7 +149,11 @@
       <text class="label" value="Foo Label 6:"/>
       <spring flex="1"/>
     </box>
-    <textfield rows="3" multiline="true" value="Regular multiline textfield"/>
+    <textfield id="textarea" rows="3" multiline="true" value="Regular multiline textfield"/>
+    <box orient="vertical">
+      <button value="Test Property APIs" oncommand="testProperty('textarea');"/>
+      <spring flex="1"/>
+    </box>
   </box>
   
   <box>
@@ -133,16 +166,35 @@
   
   <separator/>
 
-  <box class="funky">
-    <button value="foo"/>
-    <button value="foo"/>
-    <button value="foo"/>
+  <progressmeter mode="undetermined" flex="1"/>
+  
+  <script>
+  <![CDATA[
+    function advanceProgress()
+    {
+      var progressMeter = document.getElementById("normal");
+      if(progressMeter.getAttribute('value') <= 100) {
+        var newvalue = parseInt(progressMeter.getAttribute('value')) + 10;
+        progressMeter.setAttribute('value', newvalue);
+        setTimeout("advanceProgress()", 100);
+      }
+      else {
+        progressMeter.setAttribute('value', 0);
+        setTimeout("advanceProgress()", 100);
+      }
+    }  
+  
+  ]]>
+  </script>
+  
+  
+  <box autostretch="never" valign="center">
+    <progressmeter id="normal" mode="normal" flex="1"/>
+    <button value="Advance Progress" oncommand="advanceProgress();"/>
   </box>
   
-  <box id="boo" style="background-color: blue; color: white;">
-    <box style="background-color: inherit;">
-      <html:input type="text" id="foo" style="border: 1px solid red; background-color: inherit; color: inherit;"/>
-    </box>
-  </box>
+  <separator/>
+  
+  <scrollbar align="horizontal"/>
   
  </window>
