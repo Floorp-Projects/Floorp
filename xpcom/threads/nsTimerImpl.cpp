@@ -514,10 +514,9 @@ nsTimerManager::~nsTimerManager()
 
   nsTimerImpl *theTimer;
   PRInt32 count = mIdleTimers.Count();
- 
-  for(PRInt32 i = 0; i<=count; i++) {
-    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[0]);
-    mIdleTimers.RemoveElement(theTimer);
+
+  for (PRInt32 i = 0; i < count; i++) {
+    theTimer = NS_STATIC_CAST(nsTimerImpl*, mIdleTimers[i]);
     NS_IF_RELEASE(theTimer);
   }
 }
