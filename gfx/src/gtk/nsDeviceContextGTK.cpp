@@ -91,6 +91,19 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK::CreateRenderingContext(nsIRenderingContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets)
+{
+  //XXX it is very critical that this not lie!! MMP
+  aSupportsWidgets = PR_TRUE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // how are we going to get this? Must be set by the widget library FRV
@@ -155,8 +168,36 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
   return rv;
 }
 
+NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  aWidth = 1;
+  aHeight = 1;
 
+  return NS_ERROR_FAILURE;
+}
 
+NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                      nsIDeviceContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
 
+NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(void)
+{
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsDeviceContextGTK::EndDocument(void)
+{
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsDeviceContextGTK::BeginPage(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextGTK::EndPage(void)
+{
+  return NS_OK;
+}

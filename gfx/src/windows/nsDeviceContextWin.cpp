@@ -18,6 +18,7 @@
 
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
+#include "nsDeviceContextSpecWin.h"
 #include "il_util.h"
 
 // Size of the color cube
@@ -26,18 +27,18 @@
 nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
 {
-  HDC hdc = ::GetDC(NULL);
-
-  mTwipsToPixels = ((float)::GetDeviceCaps(hdc, LOGPIXELSY)) / (float)NSIntPointsToTwips(72);
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-  ::ReleaseDC(NULL, hdc);
-
   mSurface = NULL;
   mPaletteInfo.isPaletteDevice = PR_FALSE;
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
+  mDC = NULL;
+  mPixelScale = 1.0f;
+  mWidthFloat = 0.0f;
+  mHeightFloat = 0.0f;
+  mWidth = -1;
+  mHeight = -1;
+  mSpec = nsnull;
 }
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
@@ -47,24 +48,124 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
 
-  if (NULL != mPaletteInfo.palette) {
+  if (NULL != mPaletteInfo.palette)
     ::DeleteObject((HPALETTE)mPaletteInfo.palette);
+
+  if (NULL != mDC)
+  {
+    ::DeleteDC(mDC);
+    mDC = NULL;
   }
+
+  NS_IF_RELEASE(mSpec);
 }
 
-NS_IMETHODIMP nsDeviceContextWin::Init(nsNativeWidget aWidget)
+NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
 {
   HWND  hwnd = (HWND)aWidget;
   HDC   hdc = ::GetDC(hwnd);
-  int   rasterCaps = ::GetDeviceCaps(hdc, RASTERCAPS);
 
-  mDepth = (PRUint32)::GetDeviceCaps(hdc, BITSPIXEL);
-  mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
-  mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(hdc, SIZEPALETTE);
-  mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(hdc, NUMRESERVED);
+  CommonInit(hdc);
+
   ::ReleaseDC(hwnd, hdc);
 
   return DeviceContextImpl::Init(aWidget);
+}
+
+//local method...
+
+nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext)
+{
+  float origscale, newscale;
+  float t2d, a2d;
+
+  mDC = (HDC)aContext;
+
+  CommonInit(mDC);
+
+  GetTwipsToDevUnits(newscale);
+  aOrigContext->GetTwipsToDevUnits(origscale);
+
+  mPixelScale = newscale / origscale;
+
+  aOrigContext->GetTwipsToDevUnits(t2d);
+  aOrigContext->GetAppUnitsToDevUnits(a2d);
+
+  mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
+  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+  
+  return NS_OK;
+}
+
+void nsDeviceContextWin :: CommonInit(HDC aDC)
+{
+  int   rasterCaps = ::GetDeviceCaps(aDC, RASTERCAPS);
+
+  mTwipsToPixels = ((float)::GetDeviceCaps(aDC, LOGPIXELSY)) / (float)NSIntPointsToTwips(72);
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+  mDepth = (PRUint32)::GetDeviceCaps(aDC, BITSPIXEL);
+  mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
+  mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
+  mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
+
+  mWidthFloat = (float)::GetDeviceCaps(aDC, HORZRES);
+  mHeightFloat = (float)::GetDeviceCaps(aDC, VERTRES);
+
+  DeviceContextImpl::CommonInit();
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *&aContext)
+{
+  nsIRenderingContext *pContext;
+  nsresult             rv;
+  nsDrawingSurfaceWin  *surf;
+
+  pContext = new nsRenderingContextWin();
+
+  if (nsnull != pContext)
+  {
+    NS_ADDREF(pContext);
+
+    surf = new nsDrawingSurfaceWin();
+
+    if (nsnull != surf)
+    {
+      rv = surf->Init(mDC);
+
+      if (NS_OK == rv)
+        rv = pContext->Init(this, surf);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else
+    rv = NS_ERROR_OUT_OF_MEMORY;
+
+  if (NS_OK != rv)
+  {
+    NS_IF_RELEASE(pContext);
+  }
+
+  aContext = pContext;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
+{
+  if (nsnull == mDC)
+    aSupportsWidgets = PR_TRUE;
+  else
+    aSupportsWidgets = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: GetCanonicalPixelScale(float &aScale) const
+{
+  aScale = mPixelScale;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
@@ -218,5 +319,129 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   aPixel = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  if (mWidth == -1)
+    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+
+  if (mHeight == -1)
+    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+
+  aWidth = mWidth;
+  aHeight = mHeight;
+
+  return NS_OK;
+}
+
+BOOL CALLBACK abortproc( HDC hdc, int iError )
+{
+  return TRUE;
+} 
+ 
+
+
+NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                        nsIDeviceContext *&aContext)
+{
+  char *devicename;
+  char *drivername;
+  HGLOBAL hdevmode;
+  DEVMODE *devmode;
+
+  //XXX this API should take an CID, use the repository and
+  //then QI for the real object rather than casting... MMP
+
+  aContext = new nsDeviceContextWin();
+
+  ((nsDeviceContextWin *)aContext)->mSpec = aDevice;
+  NS_ADDREF(aDevice);
+ 
+  ((nsDeviceContextSpecWin *)aDevice)->GetDeviceName(devicename);
+  ((nsDeviceContextSpecWin *)aDevice)->GetDriverName(drivername);
+  ((nsDeviceContextSpecWin *)aDevice)->GetDEVMODE(hdevmode);
+
+  devmode = (DEVMODE *)::GlobalLock(hdevmode);
+  HDC dc = ::CreateDC(drivername, devicename, NULL, devmode);
+
+//  ::SetAbortProc(dc, (ABORTPROC)abortproc);
+
+  ::GlobalUnlock(hdevmode);
+
+  return ((nsDeviceContextWin *)aContext)->Init(dc, this);
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(void)
+{
+  if (NULL != mDC)
+  {
+    DOCINFO docinfo;
+
+    docinfo.cbSize = sizeof(docinfo);
+    docinfo.lpszDocName = "New Layout Document";
+    docinfo.lpszOutput = NULL;
+    docinfo.lpszDatatype = NULL;
+    docinfo.fwType = 0;
+
+    HGLOBAL hdevmode;
+    DEVMODE *devmode;
+
+    //XXX need to QI rather than cast... MMP
+
+    ((nsDeviceContextSpecWin *)mSpec)->GetDEVMODE(hdevmode);
+
+    devmode = (DEVMODE *)::GlobalLock(hdevmode);
+
+//  ::ResetDC(mDC, devmode);
+
+    ::GlobalUnlock(hdevmode);
+
+    if (::StartDoc(mDC, &docinfo) > 0)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)
+{
+  if (NULL != mDC)
+  {
+    if (::EndDoc(mDC) > 0)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: BeginPage(void)
+{
+  if (NULL != mDC)
+  {
+    if (::StartPage(mDC) > 0)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
+{
+  if (NULL != mDC)
+  {
+    if (::EndPage(mDC) > 0)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }

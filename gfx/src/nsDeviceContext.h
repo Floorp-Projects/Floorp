@@ -20,6 +20,7 @@
 #define nsDeviceContext_h___
 
 #include "nsIDeviceContext.h"
+#include "nsIDeviceContextSpec.h"
 #include "libimg.h"
 
 class nsIImageRequest;
@@ -48,6 +49,8 @@ public:
   NS_IMETHOD  GetAppUnitsToDevUnits(float &aAppUnits) const;
   NS_IMETHOD  GetDevUnitsToAppUnits(float &aDevUnits) const;
 
+  NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
+
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
 
   NS_IMETHOD  SetZoom(float aZoom);
@@ -57,8 +60,6 @@ public:
   NS_IMETHOD  SetGamma(float aGamma);
 
   NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable);
-
-  NS_IMETHOD  GetNativeWidget(nsNativeWidget &aNativeWidget);
 
   NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
 
@@ -76,6 +77,7 @@ public:
 protected:
   virtual ~DeviceContextImpl();
 
+  void CommonInit(void);
   nsresult CreateFontCache();
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
   nsresult CreateIconILGroupContext();
@@ -92,11 +94,13 @@ protected:
   float             mZoom;
   float             mGammaValue;
   PRUint8           *mGammaTable;
-  nsNativeWidget    mWidget;
   IL_GroupContext*  mIconImageGroup;
   nsIImageRequest*  mIcons[NS_NUMBER_OF_ICONS];
   nsHashtable*      mFontAliasTable;
   IL_ColorSpace*    mColorSpace;
+
+public:
+  nsNativeWidget    mWidget;
 };
 
 #endif /* nsDeviceContext_h___ */

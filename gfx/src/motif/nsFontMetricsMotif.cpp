@@ -43,9 +43,7 @@ nsFontMetricsMotif :: ~nsFontMetricsMotif()
   }
   
   if (nsnull != mFontHandle) {
-    nsNativeWidget  widget;
-    mContext->GetNativeWidget(widget);
-    ::XUnloadFont(XtDisplay((Widget)widget), mFontHandle);  
+    ::XUnloadFont(((nsDeviceContextMotif *)mContext)->GetDisplay(), mFontHandle);  
   }
 }
 
@@ -69,9 +67,8 @@ NS_IMETHODIMP nsFontMetricsMotif :: Init(const nsFont& aFont, nsIDeviceContext* 
   float       t2d;
   aCX->GetTwipsToDevUnits(t2d);
   PRInt32     dpi = NSToIntRound(t2d * 1440);
-  nsNativeWidget  widget;
-  aCX->GetNativeWidget(widget);
-  Display     *dpy = XtDisplay((Widget)widget);
+  Display     *dpy;
+  dpy = ((nsDeviceContextMotif *)aCX->GetDisplay();
 
   if (nsnull == wildstring)
     return NS_ERROR_NOT_INITIALIZED;
@@ -239,9 +236,7 @@ char * nsFontMetricsMotif::PickAppropriateSize(char **names, XFontStruct *fonts,
 
 void nsFontMetricsMotif::RealizeFont()
 {
-  nsNativeWidget  widget;
-  mContext->GetNativeWidget(widget);
-  mFontInfo = ::XQueryFont(XtDisplay((Widget)widget), mFontHandle);
+  mFontInfo = ::XQueryFont(((nsDeviceContextMotif *)mContext)->GetDisplay(), mFontHandle);
 
   float f;
   mContext->GetDevUnitsToAppUnits(f);

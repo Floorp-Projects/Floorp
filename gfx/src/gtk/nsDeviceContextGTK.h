@@ -36,6 +36,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
+
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
+
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
   //get a low level drawing surface for rendering. the rendering context
@@ -47,6 +51,17 @@ public:
 
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
+
+  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+
+  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                 nsIDeviceContext *&aContext);
+
+  NS_IMETHOD BeginDocument(void);
+  NS_IMETHOD EndDocument(void);
+
+  NS_IMETHOD BeginPage(void);
+  NS_IMETHOD EndPage(void);
 
 protected:
   ~nsDeviceContextGTK();
