@@ -244,36 +244,69 @@ function AbDelete()
 function AbDeleteDirectory()
 {
 	dump("\AbDeleteDirectory from XUL\n");
-	var confirmDeleteAddressbook =
-	Bundle.GetStringFromName("confirmDeleteAddressbook");
-	if(!window.confirm(confirmDeleteAddressbook))
-		return;
 
-	var selArray = dirTree.selectedItems;
-	var count = selArray.length;
-	debugDump("selArray.length = " + count + "\n");
-	if (count == 0)
-		return;
+    var commonDialogsService 
+        = Components.classes["component://netscape/appshell/commonDialogs"].getService();
+    commonDialogsService 
+        = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
-	var parentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
-	if ( !parentArray ) return (false); 
-	for ( var i = 0; i < count; ++i )
-	{
-		var parent = selArray[i].parentNode.parentNode;
-		if (parent)
-		{
-			if (parent == dirTree)
-				var parentId = "abdirectory://";
-			else	
-				var parentId = parent.getAttribute("id");
-			debugDump("    parentId #" + i + " = " + parentId + "\n");
-			var dirResource = rdf.GetResource(parentId);
-			var parentDir = dirResource.QueryInterface(Components.interfaces.nsIAbDirectory);
-			parentArray.AppendElement(parentDir);
-		}
-	}
+    var selArray = dirTree.selectedItems;
+    var count = selArray.length;
+    debugDump("selArray.length = " + count + "\n");
+    if (count == 0)
+        return;
 
-	top.addressbook.deleteAddressBooks(dirTree.database, parentArray, dirTree.selectedItems);
+    var isPersonalOrCollectedAbsSelectedForDeletion = false;
+    var parentArray = Components.classes["component://netscape/supports-array"].createInstance(Components.interfaces.nsISupportsArray);
+    if ( !parentArray ) return (false); 
+
+    for ( var i = 0; i < count; ++i )
+    {
+        debugDump("    nodeId #" + i + " = " + selArray[i].getAttribute("id") + "\n");
+		
+        // check to see if personal or collected address books is selected for deletion.
+        // if yes, prompt the user an appropriate message saying these cannot be deleted
+        // if no, mark the selected items for deletion
+        if ((selArray[i].getAttribute("id") != "abdirectory://history.mab") &&
+             (selArray[i].getAttribute("id") != "abdirectory://abook.mab"))
+        {
+            var parent = selArray[i].parentNode.parentNode;
+            if (parent)
+            {
+                if (parent == dirTree)
+                    var parentId = "abdirectory://";
+                else	
+                    var parentId = parent.getAttribute("id");
+
+                debugDump("    parentId #" + i + " = " + parentId + "\n");
+                var dirResource = rdf.GetResource(parentId);
+                var parentDir = dirResource.QueryInterface(Components.interfaces.nsIAbDirectory);
+                parentArray.AppendElement(parentDir);
+            }
+        }
+        else 
+        {
+            if (commonDialogsService)
+            {
+                commonDialogsService.Alert(window,
+                    Bundle.GetStringFromName("cannotDeleteTitle"), 
+                    Bundle.GetStringFromName("cannotDeleteMessage"));
+            }
+
+            isPersonalOrCollectedAbsSelectedForDeletion = true;
+            break;
+        }
+    }
+
+    if (!isPersonalOrCollectedAbsSelectedForDeletion) {
+        var confirmDeleteAddressbook =
+            Bundle.GetStringFromName("confirmDeleteAddressbook");
+
+        if(!window.confirm(confirmDeleteAddressbook))
+            return;
+
+        top.addressbook.deleteAddressBooks(dirTree.database, parentArray, dirTree.selectedItems);
+    }
 }
 
 function clickResultsTree(event)
