@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: qsearch.pl,v 1.4 1998/08/03 04:24:48 leif Exp $
+# $Id: qsearch.pl,v 1.5 1998/08/12 20:56:38 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -82,7 +82,7 @@ foreach $search (@srch)
 
   while($entry)
     {
-      Mozilla::LDAP::Utils::printEntry($entry);
+      $entry->printLDIF();
       $entry = $conn->entry;
     }
   print "\n";
