@@ -31,6 +31,7 @@ EmitHtmlHeader("administer tinderbox", "tree: $tree");
 
 &load_data;
 
+if (defined($tree)) {
 if( -r "$tree/mod.pl" ){
     require "$tree/mod.pl";
 }
@@ -64,7 +65,7 @@ shows 2 days history by default.  You can see more by clicking show all).
 <FORM method=post action=doadmin.cgi>
 <hr>
 "   ;
-
+}
 
 print "
 <FORM method=post action=doadmin.cgi>
@@ -87,6 +88,10 @@ print "
 </FORM>
 <FORM method=post action=doadmin.cgi>
 <hr>
+";
+
+if (defined($tree)) {
+print "
 <B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
 the build that is misbehaving and click the button.  You can still see all the
 builds even if some are disabled by adding the parameter <b><tt>&noignore=1</tt></b> to
@@ -111,6 +116,7 @@ print "
 </FORM>
 <hr>
 ";
+}
 
 
 
