@@ -20,7 +20,7 @@ public:
 class MSG_Master
 {
 public:
-	GetFolderTree(void) {;}
+        void GetFolderTree(void) {;}
 	MSG_NewsHost* FindHost(const char* name, XP_Bool isSecure, int32 port) {return NULL;}
 //	msg_HostTable* GetHostTable() {return m_hosttable;}
 
@@ -37,7 +37,7 @@ public:
 	MSG_Pane()	{;}
 	~MSG_Pane()	{;}
 
-	MSG_PaneCreate(MWContext* context, MSG_Master* master)	{;}
+	void MSG_PaneCreate(MWContext* context, MSG_Master* master)	{;}
 	MSG_Prefs* GetPrefs() {return m_prefs;}
 	PRInt32	GetCommandStatus(PRInt32 command,
 										 const unsigned long * indices,
