@@ -84,6 +84,7 @@
 #include "nsIPrefBranchInternal.h"
 
 #include "nsIObserverService.h"
+#include "nsITextToSubURI.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -182,9 +183,13 @@ public:
     method(aMethod, aMethod+aMethodLen)
   {
     MOZ_COUNT_CTOR(searchTerm);
-    // need to do UTF8-conversion/unescaping here, using
-    // nsITextToSubURI
-    text.AssignWithConversion(aText, aTextLen);
+    nsresult rv;
+    nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCAutoString temp(aText, aTextLen);
+      textToSubURI->UnEscapeAndConvert("UTF-8", temp.get(), getter_Copies(text));
+    }
   }
   ~searchTerm() {
     MOZ_COUNT_DTOR(searchTerm);
@@ -193,7 +198,7 @@ public:
   nsDependentSingleFragmentCSubstring datasource;  // should always be "history" ?
   nsDependentSingleFragmentCSubstring property;    // AgeInDays, Hostname, etc
   nsDependentSingleFragmentCSubstring method;      // is, isgreater, isless
-  nsAutoString text;            // text to match
+  nsXPIDLString text;          // text to match
   rowMatchCallback match;      // matching callback if needed
 };
 
@@ -339,7 +344,10 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   // this saves us from recalculating this stuff on every row
   if (!matchSearchTerm->haveClosure) {
     PRInt32 err;
-    matchSearchTerm->intValue = term->text.ToInteger(&err);
+    // nsXPIDLString doesn't have a ToInteger
+    // so convert it to an nsAutoString
+    nsAutoString temp(term->text);
+    matchSearchTerm->intValue =  temp.ToInteger(&err);
     matchSearchTerm->now = NormalizeTime(PR_Now());
     if (err != 0) return PR_FALSE;
     matchSearchTerm->haveClosure = PR_TRUE;
