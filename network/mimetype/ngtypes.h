@@ -24,6 +24,8 @@ desc=\"VCard\"                    icon=resource:/res/network/gopher-unknown.gif"
 desc=\"GIF Image\"		icon=resource:/res/network/gopher-image.gif",
 "exts=\"jpeg,jpg,jpe,jfif,pjpeg,pjp\" type=image/jpeg              \
 desc=\"JPEG Image\"               icon=resource:/res/network/gopher-image.gif",
+"exts=\"png\"                      type=image/png		           \
+desc=\"PNG Image\"		          icon=resource:/res/network/gopher-image.gif",
 "exts=\"tiff,tif\"                 type=image/tiff                 \
 desc=\"TIFF Image\"               icon=resource:/res/network/gopher-image.gif",
 "exts=\"ras\"                      type=image/x-cmu-raster         \
@@ -48,8 +50,7 @@ desc=\"RGB Image\"                icon=resource:/res/network/gopher-image.gif",
 desc=\"Windows Bitmap\"           icon=resource:/res/network/gopher-image.gif",
 "exts=\"pcd\"                      type=image/x-photo-cd		\
 desc=\"PhotoCD Image\"		icon=resource:/res/network/gopher-image.gif",
-"exts=\"png\"                      type=image/x-png		\
-desc=\"PNG Image\"		icon=resource:/res/network/gopher-image.gif",
+
 "exts=\"ief\"                      type=image/ief                  \
 desc=\"\"                         icon=resource:/res/network/gopher-image.gif",
 "exts=\"fif\"                      type=application/fractals       \
