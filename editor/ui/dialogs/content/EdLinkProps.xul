@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 
-<xul:window width="320" min-height="255" title="Link Properties"
+<xul:window class="dialog" title="Link Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -16,7 +16,6 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-  <div flex="100%">
   <table>
     <tr>
       <td>
@@ -42,5 +41,4 @@
       </td>
     </tr>
   </table>
-  </div>
 </xul:window>

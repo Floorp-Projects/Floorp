@@ -40,6 +40,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EdSpellCheck.js \
   $(srcdir)/EdNamedAnchorProps.xul \
   $(srcdir)/EdNamedAnchorProps.js  \
+  $(srcdir)/EdInsertTable.xul \
+  $(srcdir)/EdInsertTable.js \
 	$(NULL)
 
 install::

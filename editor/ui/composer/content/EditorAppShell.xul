@@ -193,7 +193,7 @@
       <menuitem name=".Target..." onclick=""/>
       <menuitem name="Image..." onclick="EditorInsertImage()"/>
       <menuitem name="Horizontal Line" onclick="EditorInsertHLine()"/>
-      <menuitem name=".Table" onclick=""/>
+      <menuitem name="Table" onclick="EditorInsertTable()"/>
       <menuitem name=".HTML Source" onclick="EditorInsertHTML()"/>
       <separator />
       <menuitem name=".Line Break" onclick=""/>
@@ -330,7 +330,8 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" value="Image" onclick="EditorInsertImage()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="bottom" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" value="H.Line" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" value="Spell" class="popup" onclick="CheckSpelling()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Table.gif" align="bottom" value="Table" onclick="EditorInsertTable()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" value="Spell" onclick="CheckSpelling()"/>
 		  <spring flex="100%"/>
 	  </toolbar>
       <toolbar id="FormatToolbar">
@@ -457,7 +458,7 @@
   </menu>
 </popup>
 
-<!-- Use these afer popup windows are working correctly -->
+<!-- This should have a select element so we have a scrolled list when too many fonts are added -->
 <popup id="FontFaceWindow">
    <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="40" height="40">
      <titledbutton value="Default Variable Width" onclick="opener.EditorSetFontFace(''); window.close();"/><html:br/>
@@ -469,13 +470,11 @@
 </popup>
 
 <popup id="AlignmentWindow" oncreate="OnCreateAlignmentPopup()">
-   <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" width="80" height="100">
-     <html:div flex="100%">
-     <titledbutton class="AlignButton" id="LeftAlign" value="Left" align="right" onclick="opener.EditorAlign('left'); window.close();"/><html:br/>
-     <titledbutton class="AlignButton" id="CenterAlign" value="Center" align="right" onclick="opener.EditorAlign('center'); window.close();"/><html:br/>
-     <titledbutton class="AlignButton" id="RightAlign" value="Right"  align="right" onclick="opener.EditorAlign('right'); window.close();"/><html:br/>
-     <titledbutton class="AlignButton" id="JustifyAlign" value="Justify"  align="right" onclick="opener.EditorAlign('justify'); window.close();"/><html:br/>
-     </html:div>
+   <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" flex="100%">
+     <html:button class="PopupButton" onclick="opener.EditorAlign('left'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Left.gif"/><html:div>Left</html:div></html:button><html:br/>
+     <html:button class="PopupButton" onclick="opener.EditorAlign('center'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Center.gif"/><html:div>Center</html:div></html:button><html:br/>
+     <html:button class="PopupButton" onclick="opener.EditorAlign('right'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Right.gif"/><html:div>Right</html:div></html:button><html:br/>
+     <html:button class="PopupButton" onclick="opener.EditorAlign('justify'); window.close();"><html:img align="middle" src="chrome://editor/skin/images/ED_Justify.gif"/><html:div>Justify</html:div></html:button>
    </window>
 </popup>
 

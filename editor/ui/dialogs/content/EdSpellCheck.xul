@@ -3,11 +3,10 @@
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
 <!-- dialog containing a control requiring initial setup -->
-<xul:window title="Check Spelling"
+<xul:window class="dialog" title="Check Spelling"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    width="380" height="265" 
     align="vertical" flex="100%">
 
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
@@ -16,7 +15,6 @@
   </script>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <xul:broadcaster id="args" value=""/>
-  <div flex="100%">
   <table>
     <tr>
       <td colspan="3">
@@ -96,5 +94,4 @@
       </td>
     </tr>
   </table>
-  </div>
 </xul:window>

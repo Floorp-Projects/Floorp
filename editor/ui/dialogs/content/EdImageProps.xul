@@ -4,11 +4,10 @@
 <!DOCTYPE window>
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window title="Image Properties"
+<xul:window class="dialog" title="Image Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    width="420" height="375"
     align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
@@ -18,7 +17,6 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-  <div flex="100%">
   <table>
     <tr>
       <td colspan="2">
@@ -175,7 +173,6 @@
       <td/>
     </tr>
   </table>
-  </div>
 
 <xul:popup id="PixelOrPercentMenu1">
   <xul:menu>

@@ -416,6 +416,13 @@ function EditorInsertImage()
   contentWindow.focus();
 }
 
+function EditorInsertTable()
+{
+  dump("Insert Table Dialog starting.\n");
+  window.openDialog("chrome://editordlgs/content/EdInsertTable.xul", "dlg", "chrome", "");
+  contentWindow.focus();
+}
+
 function EditorAlign(align)
 {
   dump("aligning\n");
