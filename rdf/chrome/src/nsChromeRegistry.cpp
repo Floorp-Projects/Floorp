@@ -975,7 +975,7 @@ NS_IMETHODIMP nsChromeRegistry::SelectSkin(const PRUnichar* aSkin,
 NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aLocale, aUseProfile, PR_TRUE);
+  return SetProvider("locale", mSelectedSkin, aLocale, aUseProfile, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
@@ -987,7 +987,7 @@ NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
 NS_IMETHODIMP nsChromeRegistry::DeselectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aLocale, aUseProfile, PR_FALSE);
+  return SetProvider("locale", mSelectedSkin, aLocale, aUseProfile, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCAutoString& aProvider,
@@ -1153,7 +1153,7 @@ NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const PRUnichar *aLocal
                                                     const PRUnichar *aPackageName,
                                                     PRBool aUseProfile)
 {
-  nsCAutoString provider("skin");
+  nsCAutoString provider("locale");
   return SelectProviderForPackage(provider, aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
