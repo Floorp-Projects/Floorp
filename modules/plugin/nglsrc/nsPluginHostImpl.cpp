@@ -1828,78 +1828,30 @@ NS_IMETHODIMP nsPluginHostImpl :: GetPluginFactory(const char *aMimeType, nsIPlu
 
 #ifdef XP_MAC
 
-#include <Processes.h>
-#include <Folders.h>
-
-static nsresult getApplicationDir(nsNativeFileSpec& outAppDir)
-{
-	// Use the process manager to get the application's FSSpec,
-	// then construct an nsNativeFileSpec that encapsulates it.
-	FSSpec spec;
-	ProcessInfoRec info;
-	info.processInfoLength = sizeof(info);
-	info.processName = NULL;
-	info.processAppSpec = &spec;
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	OSErr result = GetProcessInformation(&psn, &info);
-	nsNativeFileSpec appSpec(spec);
-	appSpec.GetParent(outAppDir);
-	return NS_OK;
-}
-
-nsPluginsDir::nsPluginsDir()
-{
-	// Use the folder manager to get location of Extensions folder, and
-	// build an FSSpec for "Netscape Plugins" within it.
-	FSSpec& pluginsDir = *this;
-	OSErr result = FindFolder(kOnSystemDisk,
-								 kExtensionFolderType,
-								 kDontCreateFolder,
-								&pluginsDir.vRefNum,
-								&pluginsDir.parID);
-	if (result == noErr) {
-		SetLeafName("Netscape Plugins");
-	}
-}
-
-nsPluginsDir::~nsPluginsDir() {}
-
-bool nsPluginsDir::IsPluginFile(const nsNativeFileSpec& fileSpec)
-{
-	return true;
-}
-
 // excuse me while I try to rewrite this using XP code...
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
 	do {
 		// 1. scan the plugins directory (where is it?) for eligible plugin libraries.
-#if 0
-		nsNativeFileSpec applicationDir;
-		if (getApplicationDir(applicationDir) != NS_OK)
-			break;
-		
-		nsPluginsDir pluginsDir = applicationDir + "plugins";
-		if (! pluginsDir.Valid())
-			break;
-#else
 		nsPluginsDir pluginsDir;
 		if (! pluginsDir.Valid())
 			break;
-#endif
 
 		for (nsDirectoryIterator iter(pluginsDir); iter; iter++) {
-			const nsNativeFileSpec& pluginFile = iter;
-			// see if the file is in fact a library.
-			PRLibrary* pluginLibrary = LoadPluginLibrary(pluginFile);
-			if (pluginLibrary != NULL) {
-				// create a tag describing this plugin.
-				nsPluginTag* pluginTag = new nsPluginTag();
-				pluginTag->mNext = mPlugins;
-				mPlugins = pluginTag;
-				// GetLeafName() returns a copy allocated with new.
-				pluginTag->mName = pluginFile.GetLeafName();
+			const nsNativeFileSpec& file = iter;
+			if (pluginsDir.IsPluginFile(file)) {
+				nsPluginFile pluginFile(file);
+				// load the plugin's library so we can ask it some questions.
+				PRLibrary* pluginLibrary = NULL;
+				if (pluginFile.LoadPlugin(pluginLibrary) == NS_OK && pluginLibrary != NULL) {
+					// create a tag describing this plugin.
+					nsPluginTag* pluginTag = new nsPluginTag();
+					pluginTag->mNext = mPlugins;
+					mPlugins = pluginTag;
+					// GetLeafName() returns a copy allocated with new.
+					pluginTag->mName = pluginFile.GetLeafName();
+				}
 			}
 		}
 
