@@ -24,6 +24,16 @@
   eventually be exported outside of RDF.DLL via the nsIRDFService
   interface.
 
+  TO DO
+
+  1) Create an nsIRDFContainerService and lump all the container
+     utilities there.
+
+  2) Move the anonymous resource stuff to nsIRDFService
+
+  3) All that's left is rdf_PossiblyMakeRelative() and
+     -Absolute(). Maybe those go on nsIRDFService, too.
+
  */
 
 #ifndef rdfutil_h__
@@ -80,52 +90,6 @@ rdf_IsSeq(nsIRDFDataSource* aDataSource,
 PR_EXTERN(PRBool)
 rdf_IsAlt(nsIRDFDataSource* aDataSource,
           nsIRDFResource* aResource);
-
-/**
- * Various utilities routines for making assertions in a data source
- */
-
-// 0. node, node, node
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFResource* subject,
-           nsIRDFResource* predicate,
-           nsIRDFNode* object);
-
-// 1. string, string, string
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           const nsString& subjectURI,
-           const nsString& predicateURI,
-           const nsString& objectURI);
-
-// 2. node, node, string
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFResource* subject,
-           nsIRDFResource* predicate,
-           const nsString& objectURI);
-
-// 3. node, string, string
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFResource* subject,
-           const nsString& predicateURI,
-           const nsString& objectURI);
-
-// 4. node, string, node
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFResource* subject,
-           const nsString& predicateURI,
-           nsIRDFNode* object);
-
-// 5. string, string, node
-PR_EXTERN(nsresult)
-rdf_Assert(nsIRDFDataSource* ds,
-           const nsString& subjectURI,
-           const nsString& predicateURI,
-           nsIRDFNode* object);
 
 /**
  * Construct a new, "anonymous" node; that is, a node with an internal

@@ -1340,10 +1340,9 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         return rv;
     }
 
-    if (NS_FAILED(rv = rdf_Assert(mDataSource, rdfResource, kRDF_type, tagResource))) {
-        NS_ERROR("unable to assert tag type");
-        return rv;
-    }
+    rv = mDataSource->Assert(rdfResource, kRDF_type, tagResource, PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to assert tag type");
+    if (NS_FAILED(rv)) return rv;
 
 	// Make arcs from us to all of our attribute values (with the attribute names
 	// as the labels of the arcs).
