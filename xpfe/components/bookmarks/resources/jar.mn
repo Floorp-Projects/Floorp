@@ -1,0 +1,46 @@
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+comm.jar:
+	content/communicator/bookmarks/addBookmark.xul
+	content/communicator/bookmarks/addBookmark.js
+	content/communicator/bookmarks/bm-find.js
+	content/communicator/bookmarks/bm-find.xul
+	content/communicator/bookmarks/bm-panel.js
+	content/communicator/bookmarks/bm-panel.xul
+	content/communicator/bookmarks/bm-props.js
+	content/communicator/bookmarks/bm-props.xul
+	content/communicator/bookmarks/bookmarksDD.js
+	content/communicator/bookmarks/bookmarks.xul
+	content/communicator/bookmarks/bookmarks.js
+	content/communicator/bookmarks/bookmarks-temp.js
+	content/communicator/bookmarks/bookmarksDD-temp.js
+	content/communicator/bookmarks/bookmarksTree.js
+	content/communicator/bookmarks/bookmarksOverlay.xul
+	content/communicator/bookmarks/bookmarksOverlay.js
+	content/communicator/bookmarks/pref-bookmarks.xul
+
+en-US.jar:
+	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
+	locale/en-US/communicator/bookmarks/bm-find.dtd             (locale/en-US/bm-find.dtd)
+	locale/en-US/communicator/bookmarks/bm-props.dtd            (locale/en-US/bm-props.dtd)
+	locale/en-US/communicator/bookmarks/bookmarks.dtd           (locale/en-US/bookmarks.dtd)
+	locale/en-US/communicator/bookmarks/bookmark.properties     (locale/en-US/bookmark.properties)
+	locale/en-US/communicator/bookmarks/bookmarksOverlay.dtd    (locale/en-US/bookmarksOverlay.dtd)
+	locale/en-US/communicator/bookmarks/pref-bookmarks.dtd	    (locale/en-US/pref-bookmarks.dtd)

@@ -1,13 +1,4 @@
 comm.jar:
-    content/communicator/bookmarks/bm-find.js                   (bookmarks/resources/bm-find.js)
-    content/communicator/bookmarks/bm-find.xul                  (bookmarks/resources/bm-find.xul)
-    content/communicator/bookmarks/bm-panel.js                  (bookmarks/resources/bm-panel.js)
-    content/communicator/bookmarks/bm-panel.xul                 (bookmarks/resources/bm-panel.xul)
-    content/communicator/bookmarks/bm-props.js                  (bookmarks/resources/bm-props.js)
-    content/communicator/bookmarks/bm-props.xul                 (bookmarks/resources/bm-props.xul)
-    content/communicator/bookmarks/bookmarks.js                 (bookmarks/resources/bookmarks.js)
-    content/communicator/bookmarks/bookmarksDD.js               (bookmarks/resources/bookmarksDD.js)
-    content/communicator/bookmarks/bookmarks.xul                (bookmarks/resources/bookmarks.xul)
     content/communicator/directory/directory.xul                (directory/directory.xul)
     content/communicator/directory/directory.js                 (directory/directory.js)
     content/communicator/history/history.xul                    (history/resources/history.xul)	
@@ -97,10 +88,6 @@ comm.jar:
     content/communicator/timebomb/expireText.xul                (timebomb/resources/content/expireText.xul)
 
 en-US.jar:
-    locale/en-US/communicator/bookmarks/bm-find.dtd             (bookmarks/resources/locale/en-US/bm-find.dtd)
-    locale/en-US/communicator/bookmarks/bm-props.dtd            (bookmarks/resources/locale/en-US/bm-props.dtd)
-    locale/en-US/communicator/bookmarks/bookmarks.dtd           (bookmarks/resources/locale/en-US/bookmarks.dtd)
-    locale/en-US/communicator/bookmarks/bookmark.properties     (bookmarks/resources/locale/en-US/bookmark.properties)
     locale/en-US/communicator/directory/directory.dtd           (directory/locale/en-US/directory.dtd)
     locale/en-US/communicator/history/history.dtd               (history/resources/locale/en-US/history.dtd)
     locale/en-US/communicator/history/historyTreeOverlay.dtd    (history/resources/locale/en-US/historyTreeOverlay.dtd)
