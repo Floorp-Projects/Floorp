@@ -2156,7 +2156,7 @@ nsAutoString2::nsAutoString2(PRUnichar aChar,eCharSize aCharSize) : nsString2(aC
  * @update	gess 1/4/99
  * @param   reference to a subsumeString
  */
-nsAutoString2::nsAutoString2( nsSubsumeStr& aSubsumeStr) :nsString2(aSubsumeStr.mMultibyte) {
+nsAutoString2::nsAutoString2( nsSubsumeStr& aSubsumeStr) :nsString2((eCharSize)aSubsumeStr.mMultibyte) {
   mAgent=0;
   Subsume(*this,aSubsumeStr);
 }
