@@ -330,17 +330,18 @@ nsCacheManager::NoteDormant(nsCachedNetData* aEntry)
     PRUint32 keyLength;
     char* key;
     nsCOMPtr<nsINetDataCacheRecord> record;
-    nsCachedNetData* deletedEntry;
+
+    NS_ASSERTION(gCacheManager, "Cache Manager used after shutdown!");
+    if (!gCacheManager) return NS_ERROR_UNEXPECTED;
 
     rv = aEntry->GetRecord(getter_AddRefs(record));
     if (NS_FAILED(rv)) return rv;
-    
+
     rv = record->GetKey(&keyLength, &key);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsCStringKey hashTableKey(key, keyLength);
-    deletedEntry = (nsCachedNetData*)gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
-//  NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
+    gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
     nsMemory::Free( key );
     return NS_OK;
 }
