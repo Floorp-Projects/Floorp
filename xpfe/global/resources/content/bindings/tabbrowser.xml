@@ -52,7 +52,7 @@
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
       <xul:tabbox flex="1"
-                  onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
+                  onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
