@@ -24,13 +24,14 @@
 var printEngineContractID      = "@mozilla.org/messenger/msgPrintEngine;1";
 var printEngineWindow;
 var printEngine;
+var printSettings;
 
 /* Functions related to startup */
 function OnLoadPrintEngine()
 {
   PrintEngineCreateGlobals();
 	InitPrintEngineWindow();
-  printEngine.StartPrintOperation();	
+  printEngine.StartPrintOperation(printSettings);	
 }
 
 function OnUnloadPrintEngine()
@@ -57,9 +58,10 @@ function InitPrintEngineWindow()
   {
     var numSelected = window.arguments[0];
     var uriArray = window.arguments[1];
-	var statusFeedback = window.arguments[2];
+    var statusFeedback = window.arguments[2];
+    printSettings = window.arguments[3].QueryInterface(Components.interfaces.nsIPrintSettings);
 
-	printEngine.SetStatusFeedback(statusFeedback);
+    printEngine.SetStatusFeedback(statusFeedback);
 
     if (numSelected > 0)
     {

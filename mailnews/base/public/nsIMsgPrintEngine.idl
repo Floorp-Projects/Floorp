@@ -39,6 +39,7 @@
 #include "nsIMsgStatusFeedback.idl"
 
 interface nsIDOMWindowInternal;
+interface nsIPrintSettings;
 
 
 [scriptable, uuid(91FD6B10-E0BC-11d3-8F97-000064657374)]
@@ -48,6 +49,6 @@ interface nsIMsgPrintEngine : nsISupports {
 	void SetStatusFeedback(in nsIMsgStatusFeedback feedback);
     void SetPrintURICount(in PRInt32 aCount);
     void AddPrintURI(in wstring aURI);
-    void StartPrintOperation();
+    void StartPrintOperation(in nsIPrintSettings aPS);
 };
 

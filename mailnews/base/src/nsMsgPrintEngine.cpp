@@ -278,8 +278,10 @@ nsMsgPrintEngine::SetPrintURICount(PRInt32 aCount)
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::StartPrintOperation()
+nsMsgPrintEngine::StartPrintOperation(nsIPrintSettings* aPS)
 {
+  mPrintSettings = aPS;
+
   // Load the about:blank on the tail end...
   nsresult rv = AddPrintURI(NS_LITERAL_STRING("about:blank").get()); 
   if (NS_FAILED(rv)) return rv; 

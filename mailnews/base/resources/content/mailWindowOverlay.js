@@ -31,6 +31,7 @@ var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+var gPrintSettings = null;
 
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
@@ -1157,6 +1158,36 @@ function MsgSendUnsentMsgs()
   }
 }
 
+function GetPrintSettings()
+{
+  var prevPS = gPrintSettings;
+
+  try {
+    if (gPrintSettings == null) {
+      var useGlobalPrintSettings = true;
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      if (pref) {
+        useGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings", false);
+      }
+
+      // I would rather be using nsIWebBrowserPrint API
+      // but I really don't have a document at this point
+      var printOptionsService = Components.classes["@mozilla.org/gfx/printoptions;1"]
+                                           .getService(Components.interfaces.nsIPrintOptions);
+      if (useGlobalPrintSettings) {
+        gPrintSettings = printOptionsService.globalPrintSettings;
+      } else {
+        gPrintSettings = printOptionsService.CreatePrintSettings();
+      }
+    }
+  } catch (e) {
+    dump("GetPrintSettings "+e);
+  }
+
+  return gPrintSettings;
+}
+
 function PrintEnginePrint()
 {
     var messageList = GetSelectedMessages();
@@ -1167,10 +1198,14 @@ function PrintEnginePrint()
         return false;
     }
 
+    if (gPrintSettings == null) {
+      gPrintSettings = GetPrintSettings();
+    }
+
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                           "",
                                           "chrome,dialog=no,all",
-                                          numMessages, messageList, statusFeedback);
+                                          numMessages, messageList, statusFeedback, gPrintSettings);
     return true;
 }
 
