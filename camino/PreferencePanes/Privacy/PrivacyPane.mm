@@ -8,7 +8,6 @@
 #include "nsIPermissionManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIPermission.h"
-#include "nsISupportsArray.h"
 #include "nsString.h"
 
 
@@ -19,6 +18,31 @@ static const char* const gAutoFillEnabledPref = "chimera.keychain_passwords_auto
 const int kPromptForCookiesTag = 99;
 const int kEnableAllCookies = 0;
 const int kDisableAllCookies = 2;
+
+// callbacks for sorting the permission list
+PR_STATIC_CALLBACK(int) compareHosts(nsIPermission* aPerm1, nsIPermission* aPerm2, void* aData)
+{
+  nsCAutoString host1;
+  NS_CONST_CAST(nsIPermission*, aPerm1)->GetHost(host1);
+  nsCAutoString host2;
+  NS_CONST_CAST(nsIPermission*, aPerm2)->GetHost(host2);
+  
+  return Compare(host1, host2);
+}
+
+PR_STATIC_CALLBACK(int) compareCapabilities(nsIPermission* aPerm1, nsIPermission* aPerm2, void* aData)
+{
+  PRUint32 cap1 = 0;
+  NS_CONST_CAST(nsIPermission*, aPerm1)->GetCapability(&cap1);
+  PRUint32 cap2 = 0;
+  NS_CONST_CAST(nsIPermission*, aPerm2)->GetCapability(&cap2);
+  
+  if(cap1 == cap2)
+    return compareHosts(aPerm1, aPerm2, aData);
+  
+  return (cap1 < cap2) ? -1 : 1;
+}
+
 
 @implementation OrgMozillaChimeraPreferencePrivacy
 
@@ -141,7 +165,7 @@ const int kDisableAllCookies = 2;
     mManager->GetEnumerator(getter_AddRefs(permEnum));
 
   // build parallel permission list for speed with a lot of blocked sites
-  NS_NewISupportsArray(&mCachedPermissions);     // ADDREFs
+  mCachedPermissions = new nsCOMArray<nsIPermission>;
   if ( mCachedPermissions && permEnum ) {
     PRBool hasMoreElements = PR_FALSE;
     permEnum->HasMoreElements(&hasMoreElements);
@@ -153,21 +177,25 @@ const int kDisableAllCookies = 2;
         nsCAutoString type;
         currPerm->GetType(type);
         if ( type.Equals(NS_LITERAL_CSTRING("cookie")) )
-          mCachedPermissions->AppendElement(curr);
+          mCachedPermissions->AppendObject(currPerm);
       }
       permEnum->HasMoreElements(&hasMoreElements);
     }
   }
+
+   mCachedPermissions->Sort(compareHosts, nsnull);
   
-	[NSApp beginSheet:mCookieSitePanel
-        modalForWindow:[mCookiesEnabled window]   // any old window accessor
-        modalDelegate:self
-        didEndSelector:@selector(editCookieSitesSheetDidEnd:returnCode:contextInfo:)
-        contextInfo:NULL];
+  [NSApp beginSheet:mCookieSitePanel
+    modalForWindow:[mCookiesEnabled window]   // any old window accessor
+    modalDelegate:self
+    didEndSelector:@selector(editCookieSitesSheetDidEnd:returnCode:contextInfo:)
+    contextInfo:NULL];
         
   // ensure a row is selected (cocoa doesn't do this for us, but will keep
   // us from unselecting a row once one is set; go figure).
   [mSiteTable selectRow:0 byExtendingSelection:NO];
+
+  [mSiteTable setHighlightedTableColumn:[mSiteTable tableColumnWithIdentifier:@"Website"]];
   
   // we shouldn't need to do this, but the scrollbar won't enable unless we
   // force the table to reload its data. Oddly it gets the number of rows correct,
@@ -182,7 +210,8 @@ const int kDisableAllCookies = 2;
   [mCookieSitePanel orderOut:self];
   [NSApp endSheet:mCookieSitePanel];
   
-	NS_IF_RELEASE(mCachedPermissions);
+  delete mCachedPermissions;
+  mCachedPermissions = nsnull;
 }
 
 - (void)editCookieSitesSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void  *)contextInfo
@@ -195,20 +224,19 @@ const int kDisableAllCookies = 2;
   if ( mCachedPermissions && mManager ) {
     // remove from parallel array and cookie permissions list
     int row = [mSiteTable selectedRow];
-    
+
     // remove from permission manager (which is done by host, not by row), then 
     // remove it from our parallel array (which is done by row). Since we keep a
     // parallel array, removing multiple items by row is very difficult since after 
     // deleting, the array is out of sync with the next cocoa row we're told to remove. Punt!
-    nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(row));
-    nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
-    if ( perm ) {
-      nsCAutoString host;
+    nsCAutoString host;
+    nsIPermission* perm = mCachedPermissions->ObjectAt(row);
+    if (perm) {
       perm->GetHost(host);
-      mManager->Remove(host, "cookie");           // could this api _be_ any worse? Come on!
-      
-      mCachedPermissions->RemoveElementAt(row);
+      mManager->Remove(host, "cookie");		// could this api _be_ any worse? Come on!
+      mCachedPermissions->RemoveObjectAt(row);
     }
+
     [mSiteTable reloadData];
   }
 }
@@ -222,7 +250,7 @@ const int kDisableAllCookies = 2;
 {
   PRUint32 numRows = 0;
   if ( mCachedPermissions )
-    mCachedPermissions->Count(&numRows);
+    numRows = mCachedPermissions->Count();
 
   return (int) numRows;
 }
@@ -231,28 +259,39 @@ const int kDisableAllCookies = 2;
 {
   NSString* retVal = nil;
   if ( mCachedPermissions ) {
-    nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(rowIndex));
-    nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
-    if ( perm ) {
-      if ( [[aTableColumn identifier] isEqualToString:@"Website"] ) {
+    if ( [[aTableColumn identifier] isEqualToString:@"Website"] ) {
         // website url column
         nsCAutoString host;
-        perm->GetHost(host);
+        mCachedPermissions->ObjectAt(rowIndex)->GetHost(host);
         retVal = [NSString stringWithCString:host.get()];
-      }
-      else {
+    } else {
         // allow/deny column
         PRUint32 capability = PR_FALSE;
-        perm->GetCapability(&capability);
+        mCachedPermissions->ObjectAt(rowIndex)->GetCapability(&capability);
         if ( capability == nsIPermissionManager::ALLOW_ACTION)
           retVal = [self getLocalizedString:@"Allow"];
         else
           retVal = [self getLocalizedString:@"Deny"];
-      }
     }
   }
   
   return retVal;
+}
+
+
+// NSTableView delegate methods
+
+- (void)tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn
+{
+  if( mCachedPermissions && aTableColumn != [aTableView highlightedTableColumn] ) {
+    if ( [[aTableColumn identifier] isEqualToString:@"Website"] )
+        mCachedPermissions->Sort(compareHosts, nsnull);
+    else
+        mCachedPermissions->Sort(compareCapabilities, nsnull);
+    
+    [aTableView setHighlightedTableColumn:aTableColumn];
+    [aTableView reloadData];
+  }
 }
 
 

@@ -1,11 +1,12 @@
 #import <Cocoa/Cocoa.h>
 #import <PreferencePanes/NSPreferencePane.h>
 #import "PreferencePaneBase.h"
+#include "nsCOMArray.h"
 
 class nsIPref;
 class nsIPermissionManager;
 class nsISimpleEnumerator;
-class nsISupportsArray;
+class nsIPermission;
 
 @interface OrgMozillaChimeraPreferencePrivacy : PreferencePaneBase
 {
@@ -20,7 +21,7 @@ class nsISupportsArray;
   
   IBOutlet NSTableView* mSiteTable;
   nsIPermissionManager* mManager;         // STRONG (should be nsCOMPtr)  
-  nsISupportsArray* mCachedPermissions;		// parallel list of permissions for speed, STRONG (should be nsCOMPtr)
+  nsCOMArray<nsIPermission>* mCachedPermissions;	// parallel list of permissions for speed
 }
 
 -(IBAction) clearCookies:(id)aSender;
@@ -32,6 +33,9 @@ class nsISupportsArray;
 // data source informal protocol (NSTableDataSource)
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView;
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex;
+
+// NSTableView delegate methods
+- (void)tableView:(NSTableView *)aTableView didClickTableColumn:(NSTableColumn *)aTableColumn;
 
 -(IBAction) clickEnableCookies:(id)sender;
 -(IBAction) clickAskAboutCookies:(id)sender;
