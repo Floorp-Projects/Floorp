@@ -178,7 +178,7 @@ const char requestString[] = {"GET /testfile HTTP/1.0\r\n\r\n" };
 SECStatus
 handle_connection(PRFileDesc *sslSocket, int connection)
 {
-	int	     countRead = 0;
+	int	countRead = 0;
 	PRInt32  numBytes;
 	char    *readBuffer;
 
@@ -210,7 +210,7 @@ handle_connection(PRFileDesc *sslSocket, int connection)
 		countRead += numBytes;
 	}
 
-	printSecurityInfo(sslSocket);
+	printSecurityInfo(stderr, sslSocket);
 	
 	PR_Free(readBuffer);
 	readBuffer = NULL;
@@ -224,6 +224,8 @@ handle_connection(PRFileDesc *sslSocket, int connection)
 	return SECSuccess;	/* success */
 }
 
+#define BYTE(n,i) (((i)>>((n)*8))&0xff)
+
 /* one copy of this function is launched in a separate thread for each
 ** connection to be made.
 */
@@ -236,6 +238,7 @@ do_connects(void *a, int connection)
 	char        buffer[PR_NETDB_BUF_SIZE];
 	PRStatus    prStatus;
 	PRIntn      hostenum;
+	PRInt32    ip;
 	SECStatus   secStatus;
 
 	/* Set up SSL secure socket. */
@@ -270,8 +273,11 @@ do_connects(void *a, int connection)
 		return SECFailure;
 	}
 
-/* printf("Connecting to host %s (addr %d.%d.%d.%d) on port %d\n",
-					host, hostEntry,port); */
+ 	ip = PR_ntohl(addr->inet.ip);
+	fprintf(stderr,
+	 	"Connecting to host %s (addr %d.%d.%d.%d) on port %d\n",
+			hostName, BYTE(3,ip), BYTE(2,ip), BYTE(1,ip), 
+			BYTE(0,ip), PR_ntohs(addr->inet.port)); 
 
 	prStatus = PR_Connect(sslSocket, addr, PR_INTERVAL_NO_TIMEOUT);
 	if (prStatus != PR_SUCCESS) {
@@ -300,7 +306,8 @@ do_connects(void *a, int connection)
 
 	secStatus = handle_connection(sslSocket, connection);
 	if (secStatus != SECSuccess) {
-		errWarn("handle_connection");
+		/* error already printed out in handle_connection */
+		/* errWarn("handle_connection"); */
 		return secStatus;
 	}
 
@@ -356,8 +363,9 @@ client_main(unsigned short      port,
 int
 main(int argc, char **argv)
 {
+	char *               certDir = NULL;
 	char *               progName     = NULL;
-	int					 connections  = 1;
+	int                  connections  = 1;
 	char *               cipherString = NULL;
 	SECStatus            secStatus;
 	PLOptState *         optstate;
@@ -374,7 +382,9 @@ main(int argc, char **argv)
 		switch(optstate->option) {
 		case 'C' : cipherString = PL_strdup(optstate->value); break;
 		case 'c' : connections = PORT_Atoi(optstate->value);  break;
+		case 'd' : certDir = PL_strdup(optstate->value);      break;
 		case 'p' : port = PORT_Atoi(optstate->value);         break;
+		case 'w' : password = PL_strdup(optstate->value);      break;
 		case '\0': hostName = PL_strdup(optstate->value);     break;
 		default  : Usage(progName);
 		}
@@ -391,20 +401,21 @@ main(int argc, char **argv)
 	PK11_SetPasswordFunc(myPasswd);
 
 	/* Initialize the NSS libraries. */
-	secStatus = NSS_NoDB_Init(NULL);
-	if (secStatus != SECSuccess) {
-		exitErr("Client Error NSS_Init");
-	}
+	if (certDir) {
+	    secStatus = NSS_Init(certDir);
+	} else {
+	    secStatus = NSS_NoDB_Init(NULL);
 
-	secStatus = SECMOD_AddNewModule("Builtins",
+	    /* load the builtins */
+	    SECMOD_AddNewModule("Builtins",
 				DLL_PREFIX"nssckbi."DLL_SUFFIX, 0, 0);
-#ifdef notdef
-        if (secStatus != SECSuccess) {
-		exitErr("Client Error accessing builtin roots");
 	}
-#endif
+	if (secStatus != SECSuccess) {
+		exitErr("NSS_Init");
+	}
 
-	/* All cipher suites except RSA_NULL_MD5 are enabled by Domestic Policy. */
+	/* All cipher suites except RSA_NULL_MD5 are enabled by 
+	 * Domestic Policy. */
 	NSS_SetDomesticPolicy();
 	SSL_CipherPrefSetDefault(SSL_RSA_WITH_NULL_MD5, PR_TRUE);
 
