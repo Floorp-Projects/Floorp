@@ -1,9 +1,10 @@
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
-<title> nsIWebBrowserPersist Test Case </title>
+<title> nsIWebBrowserPersist Interface Test</title>
 <!-- Descrpt: This Test Case tests saveDocument method.
      Author: dsirnapalli@netscape.com
      Revs: 10.03.01 - Created
+     Last Run On: 10.24.01.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
