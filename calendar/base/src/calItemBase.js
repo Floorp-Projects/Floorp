@@ -350,6 +350,8 @@ calItemBase.prototype = {
                 continue;
             }
 
+            ritem.icalProperty = recprop;
+
             if (!rec) {
                 rec = new CalRecurrenceInfo();
                 rec.initialize(this);
