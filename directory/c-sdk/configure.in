@@ -79,25 +79,21 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
 case "$target" in
-*-cygwin*)
+*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=
-    if test "$CC" = "cl" || test "$CXX" = "cl"; then
-        _WIN32_MSVC=1
-    elif test -z "$CC"; then
+    AC_CHECK_PROGS(CC, cl)
+    if test "$CC" = "cl"; then
         echo 'main() { return 0; }' > dummy.c
-        cl -o dummy dummy.c
+        ${CC} -o dummy dummy.c >/dev/null 2>&1
         if test $? = 0; then
             _WIN32_MSVC=1
+            CXX=$CC
+        else
+            AC_MSG_WARN([$(CC) test failed.  Using normal feature tests])
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
-    ;;
-*-msvc*)
-    _WIN32_MSVC=1
-    ;;
-*-mksnt*)
-    _WIN32_MSVC=1
     ;;
 esac
 
