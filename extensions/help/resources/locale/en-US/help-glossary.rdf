@@ -8,8 +8,10 @@
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> <rdf:Description nc:name="authentication" nc:link="glossary.html#998782"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="bookmark" nc:link="glossary.html#bookmark"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="CA" nc:link="glossary.html#1021395"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="CA certificate" nc:link="glossary.html#1017503"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="cache" nc:link="glossary.html#cache"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate" nc:link="glossary.html#1018895"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate authority (CA)" nc:link="glossary.html#1020903"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="certificate backup password" nc:link="glossary.html#1024655"/> </rdf:li>
@@ -24,6 +26,7 @@
         <rdf:li> <rdf:Description nc:name="client" nc:link="glossary.html#1029510"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client authentication" nc:link="glossary.html#1021054"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="client SSL certificate" nc:link="glossary.html#1014561"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="cookie" nc:link="glossary.html#cookie"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptographic algorithm" nc:link="glossary.html#1019976"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="cryptography" nc:link="glossary.html#1026002"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="decryption" nc:link="glossary.html#998999"/> </rdf:li>
@@ -35,8 +38,16 @@
         <rdf:li> <rdf:Description nc:name="encryption" nc:link="glossary.html#999078"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="encryption certificate" nc:link="glossary.html#1024953"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="encryption key" nc:link="glossary.html#1021254"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="File Transfer Protocol (FTP)" nc:link="glossary.html#File_Transfer_Protocol_(FTP)"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="fingerprint" nc:link="glossary.html#1020434"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="FIPS PUBS 140-1" nc:link="glossary.html#1025742"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="foreign cookie" nc:link="glossary.html#foreign_cookie"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="home page" nc:link="glossary.html#home_page"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Hypertext Markup Language (HTML)" nc:link="glossary.html#Hypertext_Markup_Language_(HTML)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Internet" nc:link="glossary.html#Internet"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Internet protocol address (IP address)" nc:link="glossary.html#Internet_protocol_address_(IP_address)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Java" nc:link="glossary.html#Java"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="JavaScript" nc:link="glossary.html#JavaScript"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="key" nc:link="glossary.html#999203"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Lightweight Directory Access Protocol (LDAP)" nc:link="glossary.html#1022286"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="master key" nc:link="glossary.html#1032598"/> </rdf:li>
@@ -49,11 +60,14 @@
         <rdf:li> <rdf:Description nc:name="password-based authentication" nc:link="glossary.html#1014123"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11" nc:link="glossary.html#1025194"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="PKCS #11 module" nc:link="glossary.html#1025197"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="plug-in" nc:link="glossary.html#plug-in"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="private key" nc:link="glossary.html#1015387"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="proxy" nc:link="glossary.html#proxy"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public key" nc:link="glossary.html#1019172"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public-key cryptography" nc:link="glossary.html#1019178"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="public-key infrastructure (PKI)" nc:link="glossary.html#999412"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="root CA" nc:link="glossary.html#1015631"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="search engine" nc:link="glossary.html#search_engine"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="Secure Sockets Layer (SSL)" nc:link="glossary.html#999463"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="security certificate" nc:link="glossary.html#1028900"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="security device" nc:link="glossary.html#1028962"/> </rdf:li>
@@ -76,7 +90,12 @@
         <rdf:li> <rdf:Description nc:name="tamper detection" nc:link="glossary.html#999618"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="TLS" nc:link="glossary.html#1027427"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="token" nc:link="glossary.html#1024528"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="TCP/IP (Transmission Control Protocol/Internet Protocol)" nc:link="glossary.html#tcp"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="trust" nc:link="glossary.html#1019748"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="Uniform Resource Locator (URL)" nc:link="glossary.html#Uniform_Resource_Locator_(URL)"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="web page" nc:link="glossary.html#web_page"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="web site" nc:link="glossary.html#web_site"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="World Wide Web" nc:link="glossary.html#World_Wide_Web"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
