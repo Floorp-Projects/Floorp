@@ -36,7 +36,6 @@ EXPORTS=nsui.h \
   nsIClipboard.h \
   nsIFileWidget.h            \
   nsITransferable.h \
-  nsIGenericTransferable.h \
   nsIDragService.h \
   nsIDragSession.h \
   nsIWidget.h \
