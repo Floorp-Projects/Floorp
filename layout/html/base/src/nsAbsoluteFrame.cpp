@@ -68,11 +68,13 @@ NS_IMETHODIMP nsAbsoluteFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Query for its nsIAbsoluteItems interface
     nsIAbsoluteItems* absoluteItemContainer;
-    containingBlock->QueryInterface(kIAbsoluteItemsIID, (void**)&absoluteItemContainer);
+    nsresult          rv;
+
+    rv = containingBlock->QueryInterface(kIAbsoluteItemsIID, (void**)&absoluteItemContainer);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "no nsIAbsoluteItems support");
 
     // Notify it that there's a new absolutely positioned frame, passing it the
     // anchor frame
-    NS_ASSERTION(nsnull != absoluteItemContainer, "no nsIAbsoluteItems support");
     absoluteItemContainer->AddAbsoluteItem(this);
   }
 
@@ -124,6 +126,14 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
     result->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
 
     if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+      // XXX This needs cleaning up...
+      // Make sure the frame supports the nsIAbsoluteItems interface. If not,
+      // walk the geometric parent hierarchy and find the nearest one that does...
+      nsIAbsoluteItems* interface;
+      while ((nsnull != result) &&
+             NS_FAILED(result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface))) {
+        result->GetGeometricParent(result);
+      }
       break;
     }
 
@@ -141,7 +151,7 @@ nsIFrame* nsAbsoluteFrame::GetContainingBlock() const
 
     while (nsnull != result) {
       nsIAbsoluteItems* interface;
-      if (NS_OK == result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface)) {
+      if (NS_SUCCEEDED(result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface))) {
         break;
       }
 
