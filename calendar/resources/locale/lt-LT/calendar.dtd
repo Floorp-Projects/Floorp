@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Pašalinti kalendorių">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Atnaujinti nuotolinius kalendorius">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Atnaujinti nuotolinius kalendorius">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publikuoti šį kalendorių">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Adresas:">
 <!ENTITY calendar.server.dialog.local.location.label "Vietinė byla">
 <!ENTITY calendar.server.dialog.browse.label        "Parinkti bylą...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Jei norite nurodyti katalogą ir vardą bylos, į kurią bus įrašytas kalendorius, spragtelėkite „Parinkti bylą“.">
 <!ENTITY calendar.server.dialog.help.label          "Surinkite kalendoriaus bylos URL (pvz., http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics) arba parinkite bylą iš kompiuterio disko.">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Jei norite nurodyti katalogą ir vardą bylos, į kurią bus įrašytas kalendorius, spragtelėkite „Parinkti bylą“.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Tolesni laukai yra nebūtinieji, juos reikia užpildyti publikuojant kalendorių tinkle:">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Spalva:">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Tolesni laukai yra nebūtinieji, juos reikia užpildyti publikuojant kalendorių tinkle:">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Kalendoriaus publikavimas">

@@ -398,8 +398,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Usuń kalendarz">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Odśwież zdalne kalendarze">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Odśwież zdalne kalendarze">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publikuj cały kalendarz">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -428,13 +428,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Położenie">
 <!ENTITY calendar.server.dialog.local.location.label "Lokalne położenie pliku">
 <!ENTITY calendar.server.dialog.browse.label        "Szukaj pliku lokalnie...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcjonalnie możesz wskazać miejsce gdzie kalendarz powinien zostać utowrzony.">
 <!ENTITY calendar.server.dialog.help.label          "Możesz wpisać lokalną lub zdalną ścieżkę do pliku np.: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Opcjonalnie możesz wskazać miejsce gdzie kalendarz powinien zostać utowrzony.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "następujące pola są opcjonalne i służą do publikacji kalendarza na zdalnym serwerze.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Kolor">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "następujące pola są opcjonalne i służą do publikacji kalendarza na zdalnym serwerze.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publikuj kalendarz">

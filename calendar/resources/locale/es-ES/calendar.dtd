@@ -428,13 +428,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Lugar">
 <!ENTITY calendar.server.dialog.local.location.label "Lugar del archivo local">
 <!ENTITY calendar.server.dialog.browse.label        "Examinar archivo local...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalmente, puede especificar un directorio para crear los archivos de calendario.">
 <!ENTITY calendar.server.dialog.help.label          "Puede introducir una ruta a un archivo local, o a un archivo remoto como http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalmente, puede especificar un directorio para crear los archivos de calendario.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Los siguientes campos son opcionales, y se usan para publicar el calendario en un sitio remoto.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Color">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Los siguientes campos son opcionales, y se usan para publicar el calendario en un sitio remoto.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publicar calendario">

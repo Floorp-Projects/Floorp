@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Dileu'r Calendr">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Adnewydddu'r Calendrau Pell">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Adnewydddu'r Calendrau Pell">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Cyhoeddi Calendr Gyfan">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Lleoliad (URL)">
 <!ENTITY calendar.server.dialog.local.location.label "Lleoliad Ffeil Lleol">
 <!ENTITY calendar.server.dialog.browse.label        "Pori am Ffeil Leol...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Yn ddewisol, gallwch bennu lleoliad ffeil lle ddylai'r calendr gael ei greu.">
 <!ENTITY calendar.server.dialog.help.label          "Gallwch roi llwybr ffeil lleol, neu lwybr ffeil pell, megis http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Yn ddewisol, gallwch bennu lleoliad ffeil lle ddylai'r calendr gael ei greu.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Mae'r meysydd canlynol yn ddewisol, ac maent ar gael ar gyfer cyhoeddi'r calendr i leoliad pell.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Lliw">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Mae'r meysydd canlynol yn ddewisol, ac maent ar gael ar gyfer cyhoeddi'r calendr i leoliad pell.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Cyhoeddi'r Calendr">

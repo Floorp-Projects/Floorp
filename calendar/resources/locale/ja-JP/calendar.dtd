@@ -405,8 +405,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "カレンダーを削除">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "サーバのカレンダーに反映">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "サーバのカレンダーに反映">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "すべてのカレンダーを公開">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -435,13 +435,13 @@
 <!ENTITY calendar.server.dialog.location.label      "ロケーション">
 <!ENTITY calendar.server.dialog.local.location.label "ローカルファイルのフォルダ">
 <!ENTITY calendar.server.dialog.browse.label        "ファイルをブラウズ...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "カレンダーファイルの作成フォルダを任意に指定することができます。">
 <!ENTITY calendar.server.dialog.help.label          "ローカルファイルパスを入力してください。 URL (例: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics) を入力することもできます。">
+<!ENTITY calendar.local.calendar.dialog.help.label  "カレンダーファイルの作成フォルダを任意に指定することができます。">
+<!ENTITY calendar.local.calendar.dialog.optional.label "次のフィールドはサーバーへカレンダーを公開するときに使用するオプションです。">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "配色">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "次のフィールドはサーバーへカレンダーを公開するときに使用するオプションです。">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "カレンダーを公開">

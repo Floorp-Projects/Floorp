@@ -403,8 +403,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Radera Kalender">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Uppdatera Länkade Kalendrar">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Uppdatera Länkade Kalendrar">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publicera Hela Kalendern">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -433,13 +433,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Plats">
 <!ENTITY calendar.server.dialog.local.location.label "Plats För Lokal Fil">
 <!ENTITY calendar.server.dialog.browse.label        "Välj Lokal Fil...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Om du vill kan du specificera ett filnamn som skall användas när kalendern skapas.">
 <!ENTITY calendar.server.dialog.help.label          "Du kan mata in ett lokalt filnamn, eller en länkad fil som http://www.mozilla.org/projects/calendar/caldata/SwedishHolidays2003-2006.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Om du vill kan du specificera ett filnamn som skall användas när kalendern skapas.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "De följande fälten är valfria och används för publicering av kalendern till en server.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Färg">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "De följande fälten är valfria och används för publicering av kalendern till en server.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publicera Kalender">

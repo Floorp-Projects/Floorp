@@ -403,8 +403,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Apagar Calend&#xE1;rio">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Atualizar Calend&#xE1;rios Remotos">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Atualizar Calend&#xE1;rios Remotos">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publicar Todo Calend&#xE1;rio">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -433,13 +433,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Local">
 <!ENTITY calendar.server.dialog.local.location.label "Localiza&#xE7;&#xE3;o do Arquivo Local">
 <!ENTITY calendar.server.dialog.browse.label        "Procurar por Arquivo Local...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Voc&#xEA; pode opcionalmente especificar um local onde o calend&#xE1;rio dever&#xE1; ser criado.">
 <!ENTITY calendar.server.dialog.help.label          "Voc&#xEA; pode entrar um caminho de um arquivo local, ou um caminho de arquivo remoto, como http://www.mozilla.org/projects/calendar/caldata/BrasilHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Voc&#xEA; pode opcionalmente especificar um local onde o calend&#xE1;rio dever&#xE1; ser criado.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Os seguintes campos s&#xE3;o opcionais, e s&#xE3;o utilizados para publicar o calend&#xE1;rio em um local remoto.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Cor">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Os seguintes campos s&#xE3;o opcionais, e s&#xE3;o utilizados para publicar o calend&#xE1;rio em um local remoto.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publicar Calend&#xE1;rio">

@@ -399,8 +399,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "e">
 <!ENTITY calendar.context.deleteserver.label           "Kalender löschen">
 <!ENTITY calendar.context.deleteserver.accesskey       "l">
-<!ENTITY calendar.context.refreshserver.label          "Externe Kalender neu laden">
-<!ENTITY calendar.context.refreshserver.accesskey      "e">
+<!ENTITY calendar.context.reloadserver.label           "Externe Kalender neu laden">
+<!ENTITY calendar.context.reloadserver.accesskey       "e">
 <!ENTITY calendar.context.publish.label                "Kompletten Kalender publizieren">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -429,13 +429,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Adresse">
 <!ENTITY calendar.server.dialog.local.location.label "Lokale Datei-Adresse">
 <!ENTITY calendar.server.dialog.browse.label        "Durchsuchen...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Sie können optional eine Datei-Adresse angeben, auf der der Kalender erstellt werden soll.">
 <!ENTITY calendar.server.dialog.help.label          "Sie können einen lokalen oder einen entfernten Dateipfad angeben. Wie: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Sie können optional eine Datei-Adresse angeben, auf der der Kalender erstellt werden soll.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Die folgenden Felder sind optional und werden zum Publizieren von Kalendern auf einer entfernten Adresse verwendet.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Farben">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Die folgenden Felder sind optional und werden zum Publizieren von Kalendern auf einer entfernten Adresse verwendet.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Kalender veröffentlichen">

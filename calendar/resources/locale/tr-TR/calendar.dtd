@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "e">
 <!ENTITY calendar.context.deleteserver.label           "Takvimleri silr">
 <!ENTITY calendar.context.deleteserver.accesskey       "l">
-<!ENTITY calendar.context.refreshserver.label          "Uzaktaki takvimleri tazele">
-<!ENTITY calendar.context.refreshserver.accesskey      "e">
+<!ENTITY calendar.context.reloadserver.label           "Uzaktaki takvimleri tazele">
+<!ENTITY calendar.context.reloadserver.accesskey       "e">
 <!ENTITY calendar.context.publish.label                "Bütün Takvimi yayınla">
 <!ENTITY calendar.context.publish.accesskey            "T">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Konum (Seçmeli)">
 <!ENTITY calendar.server.dialog.local.location.label "Yerel Dosya Adresi">
 <!ENTITY calendar.server.dialog.browse.label        "Yerel dosyaları görüntüle...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Takvim üstünde oluşturulacak dosya seçmeli adreslerini verebilrisiniz.">
 <!ENTITY calendar.server.dialog.help.label          "Yerel bir dosya kısayolu girin, veya http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics adresi gibi uzaktaki bir dosya URL adresi girin">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Takvim üstünde oluşturulacak dosya seçmeli adreslerini verebilrisiniz.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Aşağıdaki alanlar seçmelidir ve uzaktaki bir adresdeki takvimin yayınlanmasında kullanılır.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Renkler">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Aşağıdaki alanlar seçmelidir ve uzaktaki bir adresdeki takvimin yayınlanmasında kullanılır.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Takvim yayınla">

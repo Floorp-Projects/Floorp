@@ -404,8 +404,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "z">
 <!ENTITY calendar.context.deleteserver.label           "Naptár törlése">
 <!ENTITY calendar.context.deleteserver.accesskey       "t">
-<!ENTITY calendar.context.refreshserver.label          "Távoli naptárak frissítése">
-<!ENTITY calendar.context.refreshserver.accesskey      "f">
+<!ENTITY calendar.context.reloadserver.label           "Távoli naptárak frissítése">
+<!ENTITY calendar.context.reloadserver.accesskey       "f">
 <!ENTITY calendar.context.publish.label                "Teljes naptár közzététele">
 <!ENTITY calendar.context.publish.accesskey            "k">
 
@@ -434,13 +434,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Hely">
 <!ENTITY calendar.server.dialog.local.location.label "Helyi fájl helye">
 <!ENTITY calendar.server.dialog.browse.label        "Tallózás...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionálisan megadhat egy fájlelérési-helyet, ahol a naptár létrejön.">
 <!ENTITY calendar.server.dialog.help.label          "Megadhatja egy helyi fájl elérését, vagy egy távoli fájlelérési-útvonalat, például: http://www.mozilla.org/projects/calendar/caldata/HungarianHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionálisan megadhat egy fájlelérési-helyet, ahol a naptár létrejön.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "A következő mezők opcionálisak és a naptár távoli kiszolgálón való közzétételére használhatók.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Szín">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "A következő mezők opcionálisak és a naptár távoli kiszolgálón való közzétételére használhatók.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Naptár közzététele">

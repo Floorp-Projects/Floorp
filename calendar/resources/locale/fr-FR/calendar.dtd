@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "M">
 <!ENTITY calendar.context.deleteserver.label           "Supprimer le calendrier">
 <!ENTITY calendar.context.deleteserver.accesskey       "S">
-<!ENTITY calendar.context.refreshserver.label          "Rafraîchir les calendriers distants">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Rafraîchir les calendriers distants">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publier le calendrier en entier">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Adresse">
 <!ENTITY calendar.server.dialog.local.location.label "Adresse du fichier local">
 <!ENTITY calendar.server.dialog.browse.label        "Parcourir à la recherche du fichier local…">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Vous avez la possibilité de préciser une adresse de fichier où le calendrier devra être créé.">
 <!ENTITY calendar.server.dialog.help.label          "Vous pouvez entrer un chemin local, ou un chemin distant comme http://www.mozilla.org/projects/calendar/caldata/FranceHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Vous avez la possibilité de préciser une adresse de fichier où le calendrier devra être créé.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication du calendrier à une adresse distante.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Couleur">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Les options suivantes servent à la publication du calendrier à une adresse distante.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publier le calendrier">

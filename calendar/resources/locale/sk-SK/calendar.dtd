@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "U">
 <!ENTITY calendar.context.deleteserver.label           "Odstrániť kalendár">
 <!ENTITY calendar.context.deleteserver.accesskey       "d">
-<!ENTITY calendar.context.refreshserver.label          "Obnoviť vzdialené kalendáre">
-<!ENTITY calendar.context.refreshserver.accesskey      "b">
+<!ENTITY calendar.context.reloadserver.label           "Obnoviť vzdialené kalendáre">
+<!ENTITY calendar.context.reloadserver.accesskey       "b">
 <!ENTITY calendar.context.publish.label                "Publikovať celý kalendár">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Umiestnenie">
 <!ENTITY calendar.server.dialog.local.location.label "Umiestnenie súboru">
 <!ENTITY calendar.server.dialog.browse.label        "Prechádzať lokálne súbory...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Volitelne môžete zvoliť súbor, kde bude kalendár uložený.">
 <!ENTITY calendar.server.dialog.help.label          "Môžete vložiť cestu k lokálnemu, alebo vzdialenému súboru ako http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Volitelne môžete zvoliť súbor, kde bude kalendár uložený.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Nasledujúce položky sú doporučené, pokiaľ chcete publikovať kalendár na vzdialený počítač.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Farba">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Nasledujúce položky sú doporučené, pokiaľ chcete publikovať kalendár na vzdialený počítač.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publikovať kalendár">

@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Lokatie">
 <!ENTITY calendar.server.dialog.local.location.label "Lokale bestandslokatie">
 <!ENTITY calendar.server.dialog.browse.label        "Blader naar lokaal bestand...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "U kunt optioneel een bestandslokatie specificeren waar de kalender gecre&#xEB;erd zou moeten worden.">
 <!ENTITY calendar.server.dialog.help.label          "U kunt een lokaal bestandspad invoeren of een bestandspad op een andere computer, zoals http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "U kunt optioneel een bestandslokatie specificeren waar de kalender gecre&#xEB;erd zou moeten worden.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "De volgende velden zijn optioneel en worden gebruikt voor het publiceren van de kalender naar een andere lokatie.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Kleur">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "De volgende velden zijn optioneel en worden gebruikt voor het publiceren van de kalender naar een andere lokatie.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publiceer kalender">

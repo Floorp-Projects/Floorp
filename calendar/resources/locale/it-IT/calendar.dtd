@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "M">
 <!ENTITY calendar.context.deleteserver.label           "Elimina Calendario">
 <!ENTITY calendar.context.deleteserver.accesskey       "E">
-<!ENTITY calendar.context.refreshserver.label          "Aggiorna Calendari Remoti">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Aggiorna Calendari Remoti">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Pubblica intero Calendario">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Luogo">
 <!ENTITY calendar.server.dialog.local.location.label "Ubicazione del file locale">
 <!ENTITY calendar.server.dialog.browse.label        "Sfoglia per il file locale...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Puoi eventualmente specificare un percorso di file locale in cui creare il calendario.">
 <!ENTITY calendar.server.dialog.help.label          "Puoi indicare un percorso di file locale o un percorso remoto come http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Puoi eventualmente specificare un percorso di file locale in cui creare il calendario.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "I campi seguenti sono opzionali, e sono usati per pubblicare il calendario su una computer remoto.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Colore">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "I campi seguenti sono opzionali, e sono usati per pubblicare il calendario su una computer remoto.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Pubblica Calendario">

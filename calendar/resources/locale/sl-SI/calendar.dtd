@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Izbriši koledar">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Ponovno naloži zunanje koledarje">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Ponovno naloži zunanje koledarje">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Objavi celoten koledar">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Naslov">
 <!ENTITY calendar.server.dialog.local.location.label "Mesto lokalne datoteke">
 <!ENTITY calendar.server.dialog.browse.label        "Prebrskaj ...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Vnesete lahko neobvezno ime datoteke/naslov, kjer bo ustvarjen koledar.">
 <!ENTITY calendar.server.dialog.help.label          "Vnesete lahko lokalno ali oddaljeno pot do datoteke. Primer slednje: http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Vnesete lahko neobvezno ime datoteke/naslov, kjer bo ustvarjen koledar.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Sledeča polja so neobvezna in so namenjena objavi koledarja na oddaljenem naslovu.">
 
 <!-- Barve koledarja-->
 <!ENTITY calendar.server.dialog.color.label "Barva">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Sledeča polja so neobvezna in so namenjena objavi koledarja na oddaljenem naslovu.">
 
 <!-- Dialog objave koledarja-->
 <!ENTITY calendar.publish.dialog.title              "Objavi koledar">

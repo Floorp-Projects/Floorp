@@ -402,8 +402,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Suprimeix el calendari">
 <!ENTITY calendar.context.deleteserver.accesskey       "S">
-<!ENTITY calendar.context.refreshserver.label          "Actualitza els calendaris remots">
-<!ENTITY calendar.context.refreshserver.accesskey      "A">
+<!ENTITY calendar.context.reloadserver.label           "Actualitza els calendaris remots">
+<!ENTITY calendar.context.reloadserver.accesskey       "A">
 <!ENTITY calendar.context.publish.label                "Publica el calendari sencer">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -432,13 +432,13 @@
 <!ENTITY calendar.server.dialog.location.label      "Ubicació">
 <!ENTITY calendar.server.dialog.local.location.label "Ubicació del fitxer local">
 <!ENTITY calendar.server.dialog.browse.label        "Obre un fitxer local...">
-<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalment, podeu especificar la ubicació del fitxer on es va crear el calendari.">
 <!ENTITY calendar.server.dialog.help.label          "Podeu introduir un camí per a un fitxer local, o un camí per a un fitxer remot com http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
+<!ENTITY calendar.local.calendar.dialog.help.label  "Opcionalment, podeu especificar la ubicació del fitxer on es va crear el calendari.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Els camps següents són opcionals, i s'utilitzen per publicar el calendari en una ubicació remota.">
 
 <!-- Calendar Coloring -->
 <!ENTITY calendar.server.dialog.color.label "Color">
 
-<!ENTITY calendar.local.calendar.dialog.optional.label "Els camps següents són opcionals, i s'utilitzen per publicar el calendari en una ubicació remota.">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Publica el calendari">
