@@ -97,7 +97,7 @@ public:
                                         PRBool aAddCites,
                                         nsIDOMNode** aNodeInserted);
   NS_IMETHOD InsertAsCitedQuotation(const nsAString& aQuotedText, const nsAString& aCitation, 
-                                    PRBool aInsertHTML, const nsAString& aCharset, 
+                                    PRBool aInsertHTML,
                                     nsIDOMNode** aNodeInserted);
 
   NS_IMETHOD SetDocumentTitle(const nsAString& aTitle);

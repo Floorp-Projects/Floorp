@@ -189,19 +189,16 @@ public:
 
   NS_IMETHOD PasteNoFormatting(PRInt32 aSelectionType);
   NS_IMETHOD InsertHTML(const nsAString &aInputString);
-  NS_IMETHOD InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
-                                             const nsAString & aCharset,
-                                             const nsAString & aContextStr,
-                                             const nsAString & aInfoStr,
-                                             const nsAString & aFlavor,
-                                             nsIDOMDocument *aSourceDoc,
-                                             nsIDOMNode *aDestinationNode,
-                                             PRInt32 aDestinationOffset,
-                                             PRBool aDeleteSelection);
+  NS_IMETHOD InsertHTMLWithContext(const nsAString & aInputString,
+                                   const nsAString & aContextStr,
+                                   const nsAString & aInfoStr,
+                                   const nsAString & aFlavor,
+                                   nsIDOMDocument *aSourceDoc,
+                                   nsIDOMNode *aDestinationNode,
+                                   PRInt32 aDestinationOffset,
+                                   PRBool aDeleteSelection);
 
   NS_IMETHOD LoadHTML(const nsAString &aInputString);
-  NS_IMETHOD LoadHTMLWithCharset(const nsAString& aInputString,
-                                   const nsAString& aCharset);
   NS_IMETHOD RebuildDocumentFromSource(const nsAString& aSourceString);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   
@@ -273,7 +270,6 @@ public:
   NS_IMETHOD InsertAsCitedQuotation(const nsAString & aQuotedText,
                                     const nsAString & aCitation,
                                     PRBool aInsertHTML,
-                                    const nsAString & aCharset,
                                     nsIDOMNode **aNodeInserted);
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 

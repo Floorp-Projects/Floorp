@@ -444,7 +444,6 @@ NS_IMETHODIMP
 nsHTMLEditorLog::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                         const nsAString& aCitation,
                                         PRBool aInsertHTML,
-                                        const nsAString& aCharset,
                                         nsIDOMNode **aNodeInserted)
 {
   nsAutoHTMLEditorLogLock logLock(this);
@@ -458,14 +457,12 @@ nsHTMLEditorLog::InsertAsCitedQuotation(const nsAString& aQuotedText,
     PrintUnicode(aCitation);
     Write("\", ");
     Write(aInsertHTML ? "true" : "false");
-    Write(", \"");
-    PrintUnicode(aCharset);
     Write("\");\n");
     Flush();
   }
 
   return nsHTMLEditor::InsertAsCitedQuotation(aQuotedText, aCitation, aInsertHTML,
-                                              aCharset, aNodeInserted);
+                                              aNodeInserted);
 }
 
 NS_IMETHODIMP

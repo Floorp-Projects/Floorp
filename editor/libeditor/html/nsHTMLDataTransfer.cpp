@@ -166,15 +166,8 @@ static nsCOMPtr<nsIDOMNode> GetTableParent(nsIDOMNode* aNode)
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInString)
+NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
 {
-  nsAutoString charset;
-  return LoadHTMLWithCharset(aInString, charset);
-}
-
-NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAString & aInputString, const nsAString & aCharset)
-{
-  nsresult res = NS_OK;
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
   // force IME commit; set up rules sniffing and batching
@@ -184,7 +177,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAString & aInputString, 
   
   // Get selection
   nsCOMPtr<nsISelection>selection;
-  res = GetSelection(getter_AddRefs(selection));
+  nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   
   nsTextRulesInfo ruleInfo(nsTextEditRules::kLoadHTML);
@@ -247,22 +240,20 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAString & aInputString, 
 
 NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsAString & aInString)
 {
-  return InsertHTMLWithCharsetAndContext(aInString, nsString(), nsString(),
-                                         nsString(), nsString(),
-                                         nsnull, nsnull, 0, PR_TRUE);
+  return InsertHTMLWithContext(aInString, nsString(), nsString(), nsString(),
+                               nsnull,  nsnull, 0, PR_TRUE);
 }
 
 
 nsresult
-nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
-                                              const nsAString & aCharset,
-                                              const nsAString & aContextStr,
-                                              const nsAString & aInfoStr,
-                                              const nsAString & aFlavor,
-                                              nsIDOMDocument *aSourceDoc,
-                                              nsIDOMNode *aDestNode,
-                                              PRInt32 aDestOffset,
-                                              PRBool aDeleteSelection)
+nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
+                                    const nsAString & aContextStr,
+                                    const nsAString & aInfoStr,
+                                    const nsAString & aFlavor,
+                                    nsIDOMDocument *aSourceDoc,
+                                    nsIDOMNode *aDestNode,
+                                    PRInt32 aDestOffset,
+                                    PRBool aDeleteSelection)
 {
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
@@ -1040,11 +1031,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
           nsAutoEditBatch beginBatching(this);
-          rv = InsertHTMLWithCharsetAndContext(cffragment, nsString(),
-                                              cfcontext, cfselection, flavor,
-                                              aSourceDoc,
-                                              aDestinationNode, aDestOffset,
-                                              aDoDeleteSelection);
+          rv = InsertHTMLWithContext(cffragment,
+                                     cfcontext, cfselection, flavor,
+                                     aSourceDoc,
+                                     aDestinationNode, aDestOffset,
+                                     aDoDeleteSelection);
         }
       }
     }
@@ -1058,11 +1049,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign(text.get(), len / 2);
         nsAutoEditBatch beginBatching(this);
-        rv = InsertHTMLWithCharsetAndContext(stuffToPaste, nsString(),
-                                             aContextStr, aInfoStr, flavor,
-                                             aSourceDoc,
-                                             aDestinationNode, aDestOffset,
-                                             aDoDeleteSelection);
+        rv = InsertHTMLWithContext(stuffToPaste,
+                                   aContextStr, aInfoStr, flavor,
+                                   aSourceDoc,
+                                   aDestinationNode, aDestOffset,
+                                   aDoDeleteSelection);
       }
     }
     else if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
@@ -1126,11 +1117,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
               stuffToPaste.Append(NS_LITERAL_STRING("</A>"));
             }
             nsAutoEditBatch beginBatching(this);
-            rv = InsertHTMLWithCharsetAndContext(stuffToPaste, nsString(),
-                                                nsString(), nsString(), flavor, 
-                                                aSourceDoc,
-                                                aDestinationNode, aDestOffset,
-                                                aDoDeleteSelection);
+            rv = InsertHTMLWithContext(stuffToPaste,
+                                       nsString(), nsString(), flavor, 
+                                       aSourceDoc,
+                                       aDestinationNode, aDestOffset,
+                                       aDoDeleteSelection);
           }
         }
       }
@@ -1914,9 +1905,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAString & aQuotedText,
     return InsertAsPlaintextQuotation(aQuotedText, PR_TRUE, aNodeInserted);
 
   nsAutoString citation;
-  nsAutoString charset;
   return InsertAsCitedQuotation(aQuotedText, citation, PR_FALSE,
-                                charset, aNodeInserted);
+                                aNodeInserted);
 }
 
 // Insert plaintext as a quotation, with cite marks (e.g. "> ").
@@ -2031,7 +2021,6 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
                                      const nsAString & aCitation,
                                      PRBool aInsertHTML,
-                                     const nsAString & aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
   // Don't let anyone insert html into a "plaintext" editor:
@@ -2081,7 +2070,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
       }
 
       if (aInsertHTML)
-        res = LoadHTMLWithCharset(aQuotedText, aCharset);
+        res = LoadHTML(aQuotedText);
 
       else
         res = InsertText(aQuotedText);  // XXX ignore charset

@@ -518,7 +518,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
         mailEditor->InsertAsCitedQuotation(aBuf,
                                            mCiteReference,
                                            PR_TRUE,
-                                           NS_LITERAL_STRING("UTF-8"),
                                            getter_AddRefs(nodeInserted));
       else
         mailEditor->InsertAsQuotation(aBuf,
@@ -2331,7 +2330,6 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
         mailEditor->InsertAsCitedQuotation(mMsgBody,
                                            NS_LITERAL_STRING(""),
                                            PR_TRUE,
-                                           NS_LITERAL_STRING("UTF-8"),
                                            getter_AddRefs(nodeInserted));
       else
         mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));
