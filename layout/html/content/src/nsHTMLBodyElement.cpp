@@ -47,6 +47,10 @@
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
 
+#include "nsCOMPtr.h"
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
@@ -78,6 +82,8 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
@@ -103,6 +109,8 @@ public:
                           nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
   nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
   nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
@@ -380,6 +388,45 @@ BodyRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as BodyRule's size): 
+*    1) sizeof(*this)
+*
+*  Contained / Aggregated data (not reported as BodyRule's size):
+*    1) delegate to mSheet if it exists
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void BodyRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("BodyRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag, aSize);
+
+  if(mSheet){
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+
+  return;
+}
+
 //----------------------------------------------------------------------
 
 
@@ -536,6 +583,45 @@ BodyFixupRule::List(FILE* out, PRInt32 aIndent) const
  
   fputs("Special BODY tag fixup rule\n", out);
   return NS_OK;
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as BodyFixupRule's size): 
+*    1) sizeof(*this)
+*
+*  Contained / Aggregated data (not reported as BodyFixupRule's size):
+*    1) Delegates to the mSheet if it exists
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void BodyFixupRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("BodyFixupRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag, aSize);
+
+  if(mSheet){
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+
+  return;
 }
 
 //----------------------------------------------------------------------
@@ -863,5 +949,6 @@ nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLBodyElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
+  // XXX - self? Unique? (Content Size Dump)
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }

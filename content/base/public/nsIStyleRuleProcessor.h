@@ -27,6 +27,8 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 
+class nsISizeOfHandler;
+
 class nsIStyleSheet;
 class nsIStyleContext;
 class nsIPresContext;
@@ -67,6 +69,8 @@ public:
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
                                      nsIAtom* aMedium, 
                                      nsIContent*     aContent) = 0;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
 };
 
 #endif /* nsIStyleRuleProcessor_h___ */

@@ -28,7 +28,11 @@
 
 #include "nsStyleConsts.h"
 
-//#define DEBUG_REFS
+#include "nsCOMPtr.h"
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+
+// #define DEBUG_REFS
 
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
@@ -950,6 +954,8 @@ public:
   NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const;
 
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
   
   NS_IMETHOD Count(PRUint32* aCount);
   NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsString& aReturn);
@@ -993,7 +999,7 @@ CSSDeclarationImpl::CSSDeclarationImpl(void)
   NS_INIT_REFCNT();
 #ifdef DEBUG_REFS
   ++gInstanceCount;
-  fprintf(stdout, "%d + CSSDeclaration\n", gInstanceCount);
+  fprintf(stdout, "CSSDeclaration Instances (ctor): %ld\n", (long)gInstanceCount);
 #endif
 }
 
@@ -1016,6 +1022,11 @@ CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
   DECL_IF_COPY(Content);
   DECL_IF_COPY(UserInterface);
   DECL_IF_COPY(Aural);
+
+#ifdef DEBUG_REFS
+  ++gInstanceCount;
+  fprintf(stdout, "CSSDeclaration Instances (cp-ctor): %ld\n", (long)gInstanceCount);
+#endif
 
   if (aCopy.mImportant) {
     mImportant = new CSSDeclarationImpl(*(aCopy.mImportant));
@@ -1060,7 +1071,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
 
 #ifdef DEBUG_REFS
   --gInstanceCount;
-  fprintf(stdout, "%d - CSSDeclaration\n", gInstanceCount);
+  fprintf(stdout, "CSSDeclaration Instances (dtor): %ld\n", (long)gInstanceCount);
 #endif
 }
 
@@ -3179,7 +3190,23 @@ PRBool CSSDeclarationImpl::AppendValueToString(nsCSSProperty aProperty, const ns
     aResult.Append(buffer);
   }
   else if (eCSSUnit_Integer == unit) {
-    aResult.Append(aValue.GetIntValue(), 10);
+    switch (aProperty) {
+      case eCSSProperty_color:
+      case eCSSProperty_background_color: {
+        // we can lookup the property in the ColorTable and then
+        // get a string mapping the name
+        nsCString str;
+        if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
+          aResult.Append(str);
+        } else {
+          aResult.Append(aValue.GetIntValue(), 10);
+        }
+      }
+      break;
+
+      default:
+        aResult.Append(aValue.GetIntValue(), 10);
+    }
   }
   else if (eCSSUnit_Enumerated == unit) {
     if (eCSSProperty_text_decoration == aProperty) {
@@ -3735,6 +3762,80 @@ void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
     fputs(" ! important ", out);
     mImportant->List(out, 0);
   }
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSDeclarationImpl's size): 
+*    1) sizeof(*this) + the sizeof each non-null attribute
+*
+*  Contained / Aggregated data (not reported as CSSDeclarationImpl's size):
+*    none
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSDeclarationImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSDeclarationImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+
+  // now add in all of the contained objects, checking for duplicates on all of them
+  if(mFont && uniqueItems->AddItem(mFont)){
+    aSize += sizeof(*mFont);
+  }
+  if(mColor && uniqueItems->AddItem(mColor)){
+    aSize += sizeof(*mColor);
+  }
+  if(mText && uniqueItems->AddItem(mText)){
+    aSize += sizeof(*mText);
+  }
+  if(mMargin && uniqueItems->AddItem(mMargin)){
+    aSize += sizeof(*mMargin);
+  }
+  if(mPosition && uniqueItems->AddItem(mPosition)){
+    aSize += sizeof(*mPosition);
+  }
+  if(mList && uniqueItems->AddItem(mList)){
+    aSize += sizeof(*mList);
+  }
+  if(mDisplay && uniqueItems->AddItem(mDisplay)){
+    aSize += sizeof(*mDisplay);
+  }
+  if(mTable && uniqueItems->AddItem(mTable)){
+    aSize += sizeof(*mTable);
+  }
+  if(mBreaks && uniqueItems->AddItem(mBreaks)){
+    aSize += sizeof(*mBreaks);
+  }
+  if(mPage && uniqueItems->AddItem(mPage)){
+    aSize += sizeof(*mPage);
+  }
+  if(mContent && uniqueItems->AddItem(mContent)){
+    aSize += sizeof(*mContent);
+  }
+  if(mUserInterface && uniqueItems->AddItem(mUserInterface)){
+    aSize += sizeof(*mUserInterface);
+  }
+  if(mAural && uniqueItems->AddItem(mAural)){
+    aSize += sizeof(*mAural);
+  }
+  aSizeOfHandler->AddSize(tag, aSize);
 }
 
 NS_IMETHODIMP

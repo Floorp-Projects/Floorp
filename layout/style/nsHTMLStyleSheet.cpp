@@ -54,6 +54,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
 
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -77,6 +80,8 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
   nscolor             mColor;
   nsIHTMLStyleSheet*  mSheet;
 };
@@ -87,6 +92,8 @@ public:
   virtual ~HTMLDocumentColorRule();
 
   NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   nscolor mBackgroundColor;
   PRBool mForegroundSet;
@@ -158,6 +165,44 @@ HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as HTMLColorRule's size): 
+*    1) sizeof(*this) + 
+*
+*  Contained / Aggregated data (not reported as HTMLColorRule's size):
+*    1) delegate to the mSheet
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void HTMLColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLColorRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if(mSheet){
+    PRUint32 localSize=0;
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
 HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
   : HTMLColorRule(aSheet)
 {
@@ -186,6 +231,44 @@ HTMLDocumentColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresCon
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as HTMLDocumentColorRule's size): 
+*    1) sizeof(*this)
+*
+*  Contained / Aggregated data (not reported as HTMLDocumentColorRule's size):
+*    1) Delegate to the mSheet
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void HTMLDocumentColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLDocumentColorRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if(mSheet){
+    PRUint32 localSize;
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
 class GenericTableRule: public nsIStyleRule {
 public:
   GenericTableRule(nsIHTMLStyleSheet* aSheet);
@@ -206,6 +289,8 @@ public:
                           nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
@@ -269,6 +354,46 @@ GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
 }
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as GenericTableRule's size): 
+*    1) sizeof(*this) + 
+*
+*  Contained / Aggregated data (not reported as GenericTableRule's size):
+*    1) Delegate to the mSheet if it exists
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void GenericTableRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("GenericTableRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if(mSheet){
+    PRUint32 localSize;
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
+
 // -----------------------------------------------------------
 // this rule only applies in NavQuirks mode
 // -----------------------------------------------------------
@@ -307,10 +432,13 @@ TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresConte
       styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
     }
 
+// NOTE: Nav does not inherit the background image: this was over-zealous and mistaken
+#if 0
     if (!(parentStyleColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE)) {
       styleColor->mBackgroundImage = parentStyleColor->mBackgroundImage;
       styleColor->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
     }
+#endif
     NS_RELEASE(parentContext);
   }
 
@@ -520,6 +648,8 @@ public:
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+
 private: 
   // These are not supported and are not implemented! 
   HTMLStyleSheetImpl(const HTMLStyleSheetImpl& aCopy); 
@@ -541,6 +671,9 @@ protected:
   HTMLDocumentColorRule* mDocumentColorRule;
   TableBackgroundRule* mTableBackgroundRule;
   TableTHRule*         mTableTHRule;
+    // NOTE: if adding more rules, be sure to update 
+    // the SizeOf method to include them
+
   nsHashtable          mMappedAttrTable;
 };
 
@@ -1241,6 +1374,141 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     nsCRT::free(urlSpec);
   }
   fputs("\n", out);
+}
+
+
+struct MappedAttributeSizeEnumData {
+  MappedAttributeSizeEnumData(nsISizeOfHandler *aSizeOfHandler, 
+                              nsUniqueStyleItems *aUniqueStyleItem)
+
+  {
+    aHandler = aSizeOfHandler;
+    uniqueItems = aUniqueStyleItem;
+  }
+    // weak references all 'round
+
+  nsISizeOfHandler  *aHandler;
+  nsUniqueStyleItems *uniqueItems;
+};
+
+static
+PRBool MappedSizeAttributes(nsHashKey *aKey, void *aData, void* closure)
+{
+  MappedAttributeSizeEnumData *pData = (MappedAttributeSizeEnumData *)closure;
+  NS_ASSERTION(pData,"null closure is not supported");
+  nsIHTMLMappedAttributes* mapped = (nsIHTMLMappedAttributes*)aData;
+  NS_ASSERTION(mapped, "null item in enumeration fcn is not supported");
+  // if there is an attribute and it has not been counted, the get its size
+  if(mapped){
+    PRUint32 size=0;
+    mapped->SizeOf(pData->aHandler, size);
+  }  
+  return PR_TRUE;
+}
+
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as HTMLStyleSheetImpl's size): 
+*    1) sizeof(*this)
+*
+*  Contained / Aggregated data (not reported as HTMLStyleSheetImpl's size):
+*    1) Not really delegated, but counted seperately:
+*       - mLinkRule
+*       - mVisitedRule
+*       - mActiveRule
+*       - mDocumentColorRule
+*       - mTableBackgroundRule
+*       - mTableTHRule
+*       - mMappedAttrTable
+*    2) Delegates (really) to the MappedAttributes in the mMappedAttrTable
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this style sheet is lared accounted for
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLStyleSheet"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(HTMLStyleSheetImpl);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // now gather up the sizes of the data members
+  // - mLinkRule : sizeof object
+  // - mVisitedRule  : sizeof object
+  // - mActiveRule  : sizeof object
+  // - mDocumentColorRule  : sizeof object
+  // - mTableBackgroundRule  : sizeof object
+  // - mTableTHRule : sizeof object
+  // - mMappedAttrTable
+
+  if(mLinkRule && uniqueItems->AddItem((void*)mLinkRule)){
+    localSize = sizeof(*mLinkRule);
+    tag = getter_AddRefs(NS_NewAtom("LinkRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mVisitedRule && uniqueItems->AddItem((void*)mVisitedRule)){
+    localSize = sizeof(*mVisitedRule);
+    tag = getter_AddRefs(NS_NewAtom("VisitedRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mActiveRule && uniqueItems->AddItem((void*)mActiveRule)){
+    localSize = sizeof(*mActiveRule);
+    tag = getter_AddRefs(NS_NewAtom("ActiveRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mDocumentColorRule && uniqueItems->AddItem((void*)mDocumentColorRule)){
+    localSize = sizeof(*mDocumentColorRule);
+    tag = getter_AddRefs(NS_NewAtom("DocumentColorRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mTableBackgroundRule && uniqueItems->AddItem((void*)mTableBackgroundRule)){
+    localSize = sizeof(*mTableBackgroundRule);
+    tag = getter_AddRefs(NS_NewAtom("TableBackgroundRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mTableTHRule && uniqueItems->AddItem((void*)mTableTHRule)){
+    localSize = sizeof(*mTableTHRule);
+    tag = getter_AddRefs(NS_NewAtom("TableTHRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  
+  // for the AttrTable it is kindof sleezy: 
+  //  We want the hash table overhead as well as the entries it contains
+  //
+  //  we get the overall size of the hashtable, and if there are entries,
+  //  we calculate a rough overhead estimate as:
+  //   number of entries X sizeof each hash-entry 
+  //   + the size of a hash table (see plhash.h and nsHashTable.h)
+  //  then we add up the size of each unique attribute
+  localSize = sizeof(mMappedAttrTable);
+  if(mMappedAttrTable.Count() >0){
+    localSize += sizeof(PLHashTable);
+    localSize += mMappedAttrTable.Count() * sizeof(PLHashEntry);
+  }
+  tag = getter_AddRefs(NS_NewAtom("MappedAttrTable"));
+  aSizeOfHandler->AddSize(tag,localSize);
+
+  // now get each unique attribute
+  MappedAttributeSizeEnumData sizeEnumData(aSizeOfHandler, uniqueItems);
+  mMappedAttrTable.Enumerate(MappedSizeAttributes, &sizeEnumData);
+
+  // that's it
 }
 
 

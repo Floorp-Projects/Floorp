@@ -33,6 +33,8 @@
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
 
+class nsISizeOfHandler;
+
 class nsIFrame;
 class nsIPresContext;
 class nsISupportsArray;
@@ -403,6 +405,8 @@ public:
 
   // debugging
   virtual void  List(FILE* out, PRInt32 aIndent) = 0;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 
   // -------------------------------------------------------------
   // DEPRECATED METHODS - these are all going away, stop using them

@@ -31,6 +31,7 @@
 #include "nsCSSValue.h"
 #include "nsCSSProps.h"
 
+class nsISizeOfHandler;
 
 struct nsCSSStruct {
   virtual const nsID& GetID(void) = 0;
@@ -412,6 +413,8 @@ public:
   NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 };
 
 extern NS_HTML nsresult

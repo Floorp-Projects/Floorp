@@ -670,8 +670,7 @@ const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
   -1,-1
 };
 
-static const nsCString&
-SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
+static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = 1;
   for (;;) {
@@ -679,14 +678,23 @@ SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
       break;
     }
     if (aValue == aTable[i]) {
-      return nsCSSKeywords::GetStringValue(nsCSSKeyword(aTable[i-1]));
+      return PRInt32(aTable[i-1]);
     }
     i += 2;
   }
-  return *kNullStr;
+  return -1;
 }
 
-
+static const nsCString&
+SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
+{
+  PRInt32 i = SearchKeywordTableInt(aValue, aTable);
+  if (i < 0) {
+    return *kNullStr;
+  } else {
+    return nsCSSKeywords::GetStringValue(nsCSSKeyword(i));
+  }
+}
 
 const nsCString& 
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
@@ -1042,6 +1050,23 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   return *kNullStr;
 }
 
+PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
+{
+  PRBool rv = PR_FALSE;
+  PRInt32 keyword = -1;
+
+  // first get the keyword corresponding to the property Value from the color table
+  keyword = SearchKeywordTableInt(aPropValue, kColorKTable);
+
+  // next get the name as a string from the keywords table
+  if (keyword >= 0) {
+    nsCSSKeywords::AddRefTable();
+    aStr = nsCSSKeywords::GetStringValue((nsCSSKeyword)keyword);
+    nsCSSKeywords::ReleaseTable();
+    rv = PR_TRUE;
+  }  
+  return rv;
+}
 
 // define array of all CSS property hints
 #define CSS_PROP(_prop, _hint) NS_STYLE_HINT_##_hint,

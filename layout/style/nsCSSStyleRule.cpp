@@ -52,6 +52,11 @@
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+
+// #define DEBUG_REFS
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
@@ -138,6 +143,10 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
 
 MOZ_DECL_CTOR_COUNTER(nsAttrSelector);
 
+#ifdef DEBUG_REFS
+PRUint32 gAttrSelectorCount=0;
+#endif
+
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   : mNameSpace(aNameSpace),
     mAttr(nsnull),
@@ -147,6 +156,12 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
+
+#ifdef DEBUG_REFS
+  gAttrSelectorCount++;
+  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
+#endif
+
   mAttr = NS_NewAtom(aAttr);
 }
 
@@ -160,6 +175,12 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
+
+#ifdef DEBUG_REFS
+  gAttrSelectorCount++;
+  printf( "nsAttrSelector Instances (ctor): %ld\n", (long)gAttrSelectorCount);
+#endif
+
   mAttr = NS_NewAtom(aAttr);
 }
 
@@ -172,6 +193,12 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsAttrSelector);
+
+#ifdef DEBUG_REFS
+  gAttrSelectorCount++;
+  printf( "nsAttrSelector Instances (cp-ctor): %ld\n", (long)gAttrSelectorCount);
+#endif
+
   NS_IF_ADDREF(mAttr);
   NS_IF_COPY(mNext, aCopy.mNext, nsAttrSelector);
 }
@@ -179,6 +206,12 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
 nsAttrSelector::~nsAttrSelector(void)
 {
   MOZ_COUNT_DTOR(nsAttrSelector);
+
+#ifdef DEBUG_REFS
+  gAttrSelectorCount--;
+  printf( "nsAttrSelector Instances (dtor): %ld\n", (long)gAttrSelectorCount);
+#endif
+
   NS_IF_RELEASE(mAttr);
   NS_IF_DELETE(mNext);
 }
@@ -203,7 +236,55 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   return PR_FALSE;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as nsAttrSelector's size): 
+*    1) sizeof(*this) + the size of mAttr atom (if it exists and is unique)
+*
+*  Contained / Aggregated data (not reported as nsAttrSelector's size):
+*    none
+*
+*  Children / siblings / parents:
+*    1) Recurses to the mMext instance which is reported as a seperate instance
+*    
+******************************************************************************/
+void nsAttrSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("nsAttrSelector"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+
+  // add in the mAttr atom
+  if (mAttr && uniqueItems->AddItem(mAttr)){
+    mAttr->SizeOf(aSizeOfHandler, &localSize);
+    aSize += localSize;
+  }
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // recurse to the next one...
+  if(mNext){
+    mNext->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
 MOZ_DECL_CTOR_COUNTER(nsCSSSelector);
+
+#ifdef DEBUG_REFS
+PRUint32 gSelectorCount=0;
+#endif
 
 nsCSSSelector::nsCSSSelector(void)
   : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
@@ -215,6 +296,11 @@ nsCSSSelector::nsCSSSelector(void)
     mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
+
+#ifdef DEBUG_REFS
+  gSelectorCount++;
+  printf( "nsCSSSelector Instances (ctor): %ld\n", (long)gSelectorCount);
+#endif
 }
 
 nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy) 
@@ -232,12 +318,22 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
   NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
   NS_IF_COPY(mPseudoClassList, aCopy.mPseudoClassList, nsAtomList);
   NS_IF_COPY(mAttrList, aCopy.mAttrList, nsAttrSelector);
+
+#ifdef DEBUG_REFS
+  gSelectorCount++;
+  printf( "nsCSSSelector Instances (cp-ctor): %ld\n", (long)gSelectorCount);
+#endif
 }
 
 nsCSSSelector::~nsCSSSelector(void)  
 {
   MOZ_COUNT_DTOR(nsCSSSelector);
   Reset();
+
+#ifdef DEBUG_REFS
+  gSelectorCount--;
+  printf( "nsCSSSelector Instances (dtor): %ld\n", (long)gSelectorCount);
+#endif
 }
 
 nsCSSSelector& nsCSSSelector::operator=(const nsCSSSelector& aCopy)
@@ -429,6 +525,90 @@ PRInt32 nsCSSSelector::CalcWeight(void) const
   return weight;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as nsCSSSelector's size): 
+*    1) sizeof(*this) + the size of the mTag and mID atoms (if unique) 
+*       + the size of the mClassList and mPseudoClassList unique items
+*
+*  Contained / Aggregated data (not reported as nsCSSSelector's size):
+*    1) AttributeList is called out to seperately if it exists
+*
+*  Children / siblings / parents:
+*    1) Recurses to mNext which is counted as it's own instance
+*    
+******************************************************************************/
+void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("nsCSSSelector"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  
+  // now get the member-atoms and add them in
+  if(mTag && uniqueItems->AddItem(mTag)){
+    localSize = 0;
+    mTag->SizeOf(aSizeOfHandler, &localSize);
+    aSize += localSize;
+  }
+  if(mID && uniqueItems->AddItem(mID)){
+    localSize = 0;
+    mID->SizeOf(aSizeOfHandler, &localSize);
+    aSize += localSize;
+  }
+  // a couple of simple atom lists
+  if(mClassList && uniqueItems->AddItem(mClassList)){
+    aSize += sizeof(*mClassList);
+    nsAtomList *pNext = nsnull;
+    pNext = mClassList;    
+    while(pNext){
+      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
+        localSize = 0;
+        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
+        aSize += localSize;
+      }
+      pNext = pNext->mNext;
+    }
+  }
+  if(mPseudoClassList && uniqueItems->AddItem(mPseudoClassList)){
+    nsAtomList *pNext = nsnull;
+    pNext = mPseudoClassList;    
+    while(pNext){
+      if(pNext->mAtom && uniqueItems->AddItem(pNext->mAtom)){
+        localSize = 0;
+        pNext->mAtom->SizeOf(aSizeOfHandler, &localSize);
+        aSize += localSize;
+      }
+      pNext = pNext->mNext;
+    }
+  }
+  // done with undelegated sizes 
+  aSizeOfHandler->AddSize(tag, aSize);
+
+  // the AttributeList gets its own delegation-call
+  if(mAttrList){
+    localSize = 0;
+    mAttrList->SizeOf(aSizeOfHandler, localSize);
+  }
+  // finally chain to the next...
+  if(mNext){
+    localSize = 0;
+    mNext->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
 // -- CSSImportantRule -------------------------------
 
 static nscoord CalcLength(const nsCSSValue& aValue, const nsFont& aFont, 
@@ -466,6 +646,8 @@ public:
   NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
 protected:
   virtual ~CSSImportantRule(void);
@@ -553,6 +735,48 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 
   return NS_OK;
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSImportantRule's size): 
+*    1) sizeof(*this) 
+*
+*  Contained / Aggregated data (not reported as CSSImportantRule's size):
+*    1) mDeclaration is sized seperately
+*    2) mSheet is sized seperately
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSImportantRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSImportantRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(CSSImportantRule);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // now dump the mDeclaration and mSheet
+  if(mDeclaration){
+    mDeclaration->SizeOf(aSizeOfHandler, localSize);
+  }
+  if(mSheet){
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
 }
 
 // -- nsDOMStyleRuleDeclaration -------------------------------
@@ -729,6 +953,8 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
   // nsIDOMCSSRule interface
   NS_IMETHOD    GetType(PRUint16* aType);
   NS_IMETHOD    GetCssText(nsString& aCssText);
@@ -762,6 +988,10 @@ protected:
   void*                   mScriptObject;                           
 };
 
+#ifdef DEBUG_REFS
+PRUint32 gStyleRuleCount=0;
+#endif
+
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   : nsCSSRule(),
     mSelector(aSelector), mSelectorText(), mDeclaration(nsnull), 
@@ -769,6 +999,10 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
     mDOMDeclaration(nsnull),
     mScriptObject(nsnull)
 {
+#ifdef DEBUG_REFS
+  gStyleRuleCount++;
+  printf( "CSSStyleRuleImpl Instances (ctor): %ld\n", (long)gStyleRuleCount);
+#endif
 }
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
@@ -781,6 +1015,11 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
     mDOMDeclaration(nsnull),
     mScriptObject(nsnull)
 {
+#ifdef DEBUG_REFS
+  gStyleRuleCount++;
+  printf( "CSSStyleRuleImpl Instances (cp-ctor): %ld\n", (long)gStyleRuleCount);
+#endif
+
   nsCSSSelector* copySel = aCopy.mSelector.mNext;
   nsCSSSelector* ourSel = &mSelector;
 
@@ -799,6 +1038,11 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
 {
+#ifdef DEBUG_REFS
+  gStyleRuleCount--;
+  printf( "CSSStyleRuleImpl Instances (dtor): %ld\n", (long)gStyleRuleCount);
+#endif
+
   nsCSSSelector*  next = mSelector.mNext;
 
   while (nsnull != next) {
@@ -2856,6 +3100,64 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSStyleRuleImpl's size): 
+*    1) sizeof(*this) + size of the mSelectorText 
+*       + sizeof the DOMDeclaration if it exists and is unique
+*
+*  Contained / Aggregated data (not reported as CSSStyleRuleImpl's size):
+*    1) mDeclaration if it exists
+*    2) mImportantRule if it exists
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSStyleRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSStyleRuleImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  // remove the sizeof the mSelector's class since we count it seperately below
+  aSize -= sizeof(mSelector);
+
+  // add in the length of the selectorText
+  mSelectorText.SizeOf(aSizeOfHandler, &localSize);
+  aSize += localSize;
+  aSize -= sizeof(mSelectorText); // counted in sizeof(*this) and nsString.SizeOf()
+
+  // and add the size of the DOMDeclaration
+  // XXX - investigate the size and quantity of these
+  if(mDOMDeclaration && uniqueItems->AddItem(mDOMDeclaration)){
+    aSize += sizeof(DOMCSSDeclarationImpl);
+  }
+  aSizeOfHandler->AddSize(tag,aSize);
+  
+  // now delegate to the Selector, Declaration, and ImportantRule
+  mSelector.SizeOf(aSizeOfHandler, localSize);
+
+  if(mDeclaration){
+    mDeclaration->SizeOf(aSizeOfHandler, localSize);
+  }
+  if(mImportantRule){
+    mImportantRule->SizeOf(aSizeOfHandler, localSize);
+  }
+}
+
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetType(PRUint16* aType)
 {
@@ -2970,6 +3272,5 @@ NS_HTML nsresult
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
   return it->QueryInterface(kICSSStyleRuleIID, (void **) aInstancePtrResult);
 }

@@ -113,6 +113,8 @@
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
 
+#include "nsISizeOfHandler.h"
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
@@ -4219,6 +4221,13 @@ nsXULElement::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPr
     }
         
     return NS_OK;
+}
+
+void nsXULElement::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  // XXX - implement this if you want the sizes of XUL style rules 
+  //       dumped during StyleSize dump
+  return;
 }
 
 PRBool

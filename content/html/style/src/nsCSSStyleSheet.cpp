@@ -62,7 +62,12 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsITextContent.h"
 #include "prlog.h"
 
+#include "nsCOMPtr.h"
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
+
 //#define DEBUG_RULES
+//#define EVENT_DEBUG
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -407,6 +412,8 @@ public:
                                     nsIAtom* aMedium, 
                                     nsIContent* aContent);
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+
 protected:
   RuleCascadeData* GetRuleCascade(nsIAtom* aMedium);
 
@@ -432,6 +439,8 @@ public:
   virtual void RemoveSheet(nsICSSStyleSheet* aParentSheet);
 
   virtual void RebuildNameSpaces(void);
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   nsVoidArray           mSheets;
 
@@ -520,6 +529,8 @@ public:
   nsresult  EnsureUniqueInner(void);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   // nsIDOMStyleSheet interface
   NS_IMETHOD    GetType(nsString& aType);
@@ -1044,6 +1055,80 @@ CSSStyleSheetInner::RebuildNameSpaces(void)
     NS_RELEASE(nameSpaceMgr);
     if (mOrderedRules) {
       mOrderedRules->EnumerateForwards(CreateNameSpace, &mNameSpace);
+    }
+  }
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSStyleSheetInner's size): 
+*    1) sizeof(*this) + sizeof mSheets array (not contents though)
+*       + size of the mOrderedRules array (not the contents though)
+*
+*  Contained / Aggregated data (not reported as CSSStyleSheetInner's size):
+*    1) mSheets: each style sheet is sized seperately
+*    2) mOrderedRules: each fule is sized seperately
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this style sheet is lared accounted for
+    return;
+  }
+
+  PRUint32 localSize=0;
+  PRBool rulesCounted=PR_FALSE;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSStyleSheetInner"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(CSSStyleSheetInner);
+
+  // add in the size of the mSheets array itself
+  mSheets.SizeOf(aSizeOfHandler,&localSize);
+  aSize += localSize;
+
+  // and the mOrderedRules array (if there is one)
+  if(mOrderedRules && uniqueItems->AddItem(mOrderedRules)){
+    rulesCounted=PR_TRUE;
+    // no SizeOf method so we just get the basic object size
+    aSize += sizeof(*mOrderedRules);
+  }
+  aSizeOfHandler->AddSize(tag,aSize);
+
+
+  // delegate to the contained containers
+  // mSheets : nsVoidArray
+  {
+    PRUint32 sheetCount, sheetCur;
+    sheetCount = mSheets.Count();
+    for(sheetCur=0; sheetCur < sheetCount; sheetCur++){
+      nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mSheets.ElementAt(sheetCur);
+      if(sheet){
+        sheet->SizeOf(aSizeOfHandler, localSize);
+      }
+    }
+  }
+  // mOrderedRules : nsISupportsArray*
+  if(mOrderedRules && rulesCounted){
+    PRUint32 ruleCount, ruleCur;
+    mOrderedRules->Count(&ruleCount);
+    for(ruleCur=0; ruleCur < ruleCount; ruleCur++){
+      nsICSSRule* rule = (nsICSSRule*)mOrderedRules->ElementAt(ruleCur);
+      if(rule){
+        rule->SizeOf(aSizeOfHandler, localSize);
+        NS_IF_RELEASE(rule);
+      }
     }
   }
 }
@@ -1837,6 +1922,59 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   ListRules(mInner->mOrderedRules, out, aIndent);
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSStyleSheetImpl's size): 
+*    1) sizeof(*this) + sizeof the mImportsCollection + sizeof mCuleCollection)
+*
+*  Contained / Aggregated data (not reported as CSSStyleSheetImpl's size):
+*    1) mInner is delegated to be counted seperately
+*
+*  Children / siblings / parents:
+*    1) Recurse to mFirstChild
+*    
+******************************************************************************/
+void CSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this style sheet is already accounted for
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSStyleSheet"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(CSSStyleSheetImpl);
+
+  // add up the contained objects we won't delegate to: 
+  // NOTE that we just add the sizeof the objects
+  // since the style data they contain is accounted for elsewhere
+  // - mImportsCollection
+  // - mRuleCollection
+  aSize += sizeof(mImportsCollection);
+  aSize += sizeof(mRuleCollection);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // size the inner
+  if(mInner){
+    mInner->SizeOf(aSizeOfHandler, localSize);
+  }
+
+  // now travers the children (recursively, I'm sorry to say)
+  if(mFirstChild){
+    PRUint32 childSize=0;
+    mFirstChild->SizeOf(aSizeOfHandler, childSize);
+  }
+}
+
 static PRBool
 EnumClearRuleCascades(void* aProcessor, void* aData)
 {
@@ -2308,6 +2446,29 @@ static PRBool IsLinkPseudo(nsIAtom* aAtom)
                  (nsCSSAtoms::visitedPseudo == aAtom));
 }
 
+static PRBool IsEventSensitive(nsIAtom *aPseudo, nsIAtom *aContentTag, PRBool aSelectorIsGlobal)
+{
+  // if the selector is global, meaning it is not tied to a tag, then
+  // we restrict the application of the event pseudo to the following tags
+  if (aSelectorIsGlobal) {
+    return PRBool ((nsHTMLAtoms::a == aContentTag)      ||
+                   (nsHTMLAtoms::button == aContentTag) ||
+                   (nsHTMLAtoms::img == aContentTag)    ||
+                   (nsHTMLAtoms::input == aContentTag)  ||
+                   (nsHTMLAtoms::li == aContentTag)     ||
+                   (nsHTMLAtoms::label == aContentTag)  ||
+                   (nsHTMLAtoms::select == aContentTag) ||
+                   (nsHTMLAtoms::textarea == aContentTag) ||
+                   (nsHTMLAtoms::textPseudo == aContentTag) ||
+                   // We require a Layout Atom too
+                   (nsLayoutAtoms::textTagName == aContentTag)
+                  );
+  } else {
+    // selector is not global, so apply the event pseudo to everything except HTML and BODY
+    return PRBool ((nsHTMLAtoms::html != aContentTag) && 
+                   (nsHTMLAtoms::body != aContentTag));
+  }
+}
 static PRBool SelectorMatches(nsIPresContext* aPresContext,
                               nsCSSSelector* aSelector, nsIContent* aContent,
                               PRBool aTestState)
@@ -2488,12 +2649,49 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           result = PR_FALSE;
         }
         else if (IsEventPseudo(pseudoClass->mAtom)) {
-          if (aTestState) {
+          // check if the element is event-sensitive
+          if (!contentTag) {
+            if (aContent) {
+              aContent->GetTag(contentTag);
+            }
+          }
+
+#ifdef EVENT_DEBUG
+          nsAutoString strTag;
+          // easier to watch the string value than the ATOM
+          if (contentTag) {
+            contentTag->ToString(strTag);
+          }
+#endif
+          // Quirk Mode: check to see if the element is event-sensitive
+          //  - see if the selector applies to event pseudo classes
+          // NOTE: we distinguish between global and subjected selectors so
+          //       pass that information on to the determining routine
+          nsCompatibility quirkMode = eCompatibility_Standard;
+          aPresContext->GetCompatibilityMode(&quirkMode);
+          PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
+          if ((eCompatibility_NavQuirks == quirkMode) &&
+              (!IsEventSensitive(pseudoClass->mAtom, contentTag, isSelectorGlobal))){
+            result = PR_FALSE;
+          } else if (aTestState) {
             if (! eventStateManager) {
               aPresContext->GetEventStateManager(&eventStateManager);
-              if (eventStateManager) {
-                eventStateManager->GetContentState(aContent, eventState);
+            }
+            if (eventStateManager) {
+              eventStateManager->GetContentState(aContent, eventState);
+
+#ifdef EVENT_DEBUG
+              nsAutoString strPseudo, strTag;
+              pseudoClass->mAtom->ToString(strPseudo);
+              if (!contentTag) {
+                if (aContent) aContent->GetTag(contentTag);
               }
+              if (contentTag) {
+                contentTag->ToString(strTag);
+              }
+              printf("Tag: %s PseudoClass: %s EventState: %d\n", 
+                     strTag.ToNewCString(), strPseudo.ToNewCString(), (int)eventState);
+#endif
             }
             if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
               result = PRBool(0 != (eventState & NS_EVENT_STATE_ACTIVE));
@@ -2507,14 +2705,14 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
               result = PRBool(0 != (eventState & NS_EVENT_STATE_DRAGOVER));
             }
-          }
+          } 
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
           // XXX xml link too
-          if(!tagset) {
-            tagset=PR_TRUE;
-            aContent->GetTag(contentTag);
-          }
+	        if(!tagset) {
+	          tagset=PR_TRUE;
+	          aContent->GetTag(contentTag);
+	        }
           if (nsHTMLAtoms::a == contentTag) {
             // make sure this anchor has a link even if we are not testing state
             // if there is no link, then this anchor is not really a linkpseudo.
@@ -2886,6 +3084,159 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
   }
 
   return ((isStateful) ? NS_OK : NS_COMFALSE);
+}
+
+
+struct CascadeSizeEnumData {
+
+  CascadeSizeEnumData(nsISizeOfHandler *aSizeOfHandler, 
+                      nsUniqueStyleItems *aUniqueStyleItem,
+                      nsIAtom *aTag)
+  {
+    handler = aSizeOfHandler;
+    uniqueItems = aUniqueStyleItem;
+    tag = aTag;
+  }
+    // weak references all 'round
+
+  nsISizeOfHandler    *handler;
+  nsUniqueStyleItems  *uniqueItems;
+  nsIAtom             *tag;
+};
+
+static 
+PRBool StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
+{
+  nsCSSSelector* selector = (nsCSSSelector*)aSelector;
+  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
+  NS_ASSERTION(selector && pData, "null arguments not supported");
+
+  if(! pData->uniqueItems->AddItem((void*)selector)){
+    return PR_TRUE;
+  }
+
+  // pass the call to the selector
+  PRUint32 localSize = 0;
+  selector->SizeOf(pData->handler, localSize);
+
+  return PR_TRUE;
+}
+
+static 
+PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
+{
+  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
+  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
+  NS_ASSERTION(rule && pData, "null arguments not supported");
+
+  if(! pData->uniqueItems->AddItem((void*)rule)){
+    return PR_TRUE;
+  }
+
+  PRUint32 localSize=0;
+
+  // pass the call to the rule
+  rule->SizeOf(pData->handler, localSize);
+
+  return PR_TRUE;
+}
+
+static 
+PRBool CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aData)
+{
+  RuleCascadeData* cascade = (RuleCascadeData *)  aCascade;
+  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
+  NS_ASSERTION(cascade && pData, "null arguments not supported");
+
+  // see if the cascade has already been counted
+  if(!(pData->uniqueItems->AddItem(cascade))){
+    return PR_TRUE;
+  }
+  // record the size of the cascade data itself
+  PRUint32 localSize = sizeof(RuleCascadeData);
+  pData->handler->AddSize(pData->tag, localSize);
+
+  // next add up the selectors and the weighted rules for the cascade
+  nsCOMPtr<nsIAtom> stateSelectorSizeTag;
+  stateSelectorSizeTag = getter_AddRefs(NS_NewAtom("CascadeStateSelectors"));
+  CascadeSizeEnumData stateData(pData->handler,pData->uniqueItems,stateSelectorSizeTag);
+  cascade->mStateSelectors.EnumerateForwards(StateSelectorsSizeEnumFunc, &stateData);
+  
+  if(cascade->mWeightedRules){
+    nsCOMPtr<nsIAtom> weightedRulesSizeTag;
+    weightedRulesSizeTag = getter_AddRefs(NS_NewAtom("CascadeWeightedRules"));
+    CascadeSizeEnumData stateData(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
+    cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData);
+  }
+  return PR_TRUE;
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSRuleProcessor's size): 
+*    1) sizeof(*this) + mMediumCascadeTable hashtable overhead
+*
+*  Contained / Aggregated data (not reported as CSSRuleProcessor's size):
+*    1) Delegate to the StyleSheets in the mSheets collection
+*    2) Delegate to the Rules in the CascadeTable
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSRuleProcessor"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(CSSRuleProcessor);
+
+  // collect sizes for the data
+  // - mSheets
+  // - mMediumCascadeTable  
+
+  // sheets first
+  if(mSheets && uniqueItems->AddItem(mSheets)){
+    PRUint32 sheetCount, curSheet, localSize;
+    mSheets->Count(&sheetCount);
+    for(curSheet=0; curSheet < sheetCount; curSheet++){
+      nsICSSStyleSheet *pSheet = (nsICSSStyleSheet *)mSheets->ElementAt(curSheet);
+      if(pSheet && uniqueItems->AddItem((void*)pSheet)){
+        pSheet->SizeOf(aSizeOfHandler, localSize);
+        // XXX aSize += localSize;
+      }
+    }
+  }
+
+  // and for the medium cascade table we account for the hash table overhead,
+  // and then compute the sizeof each rule-cascade in the table
+  if(mMediumCascadeTable){
+    PRUint32 count;
+    count = mMediumCascadeTable->Count();
+    localSize = sizeof(PLHashTable);
+    if(count > 0){
+      aSize += sizeof(PLHashEntry) * count;
+      // now go ghrough each RuleCascade in the table
+      nsCOMPtr<nsIAtom> tag = getter_AddRefs(NS_NewAtom("RuleCascade"));
+      CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag);
+      mMediumCascadeTable->Enumerate(CascadeSizeEnumFunc, &data);
+    }
+  }
+  
+  // now add the size of the RuleProcessor
+  aSizeOfHandler->AddSize(tag,aSize);
 }
 
 static PRBool DeleteRuleCascade(nsHashKey* aKey, void* aValue, void* closure)

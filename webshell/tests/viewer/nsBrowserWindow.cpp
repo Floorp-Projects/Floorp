@@ -3369,10 +3369,49 @@ nsBrowserWindow::ShowContentSize(FILE* out)
 
 //----------------------------------------------------------------------
 
-void
-nsBrowserWindow::ShowStyleSize()
+static void
+GatherStyleDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
 {
-  // XXX not yet implemented
+  if (nsnull != aDocShell) {
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
+    if (nsnull != shell) {
+      nsIStyleSet *styleSet;
+      shell->GetStyleSet(&styleSet);
+      if(styleSet){
+        PRUint32 ssSize;
+        styleSet->ResetUniqueStyleItems();
+        // size of the style set
+        styleSet->SizeOf(aHandler, ssSize);
+        NS_RELEASE(styleSet);
+      }
+      nsIFrame* root;
+      shell->GetRootFrame(&root);
+      if (nsnull == root) {
+        puts("null root frame\n");
+      } else {
+        nsIStyleContext* rootContext;
+        root->GetStyleContext(&rootContext);
+        if (nsnull != rootContext) {
+          PRUint32 contextSize;
+          // get the sizes from the root context
+          rootContext->SizeOf(aHandler, contextSize);
+          NS_RELEASE(rootContext);
+        }
+      }
+      NS_RELEASE(shell);
+    }
+  }
+}
+
+void
+nsBrowserWindow::ShowStyleSize(FILE* out)
+{
+  nsCOMPtr<nsISizeOfHandler> handler;
+  nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
+  if (NS_SUCCEEDED(rv) && handler) {
+    GatherStyleDataSizes(handler, mDocShell);
+    ShowReport(out, handler);
+  }
 }
 
 void

@@ -30,7 +30,6 @@ class nsIAtom;
 class nsISupportsArray;
 class nsIHTMLStyleSheet;
 
-
 // IID for the nsIHTMLAttributes interface {a18f85f0-c058-11d1-8031-006008159b5a}
 #define NS_IHTML_ATTRIBUTES_IID     \
 {0xa18f85f0, 0xc058, 0x11d1,        \
@@ -94,7 +93,7 @@ public:
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
+  virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult) = 0;
 };
 
 class nsIHTMLMappedAttributes : public nsISupports {
@@ -112,6 +111,8 @@ public:
   NS_IMETHOD SetUniqued(PRBool aUniqued) = 0;
   NS_IMETHOD GetUniqued(PRBool& aUniqued) = 0;
   NS_IMETHOD DropStyleSheetReference(void) = 0;
+
+  virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult) = 0;
 };
 
 extern NS_HTML nsresult

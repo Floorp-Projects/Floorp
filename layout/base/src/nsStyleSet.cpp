@@ -46,9 +46,12 @@
   #define STYLESET_STOP_TIMER(a) ((void)0)
 #endif
 
+#include "nsISizeOfHandler.h"
+
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
+// #ifdef DEBUG_SC_SHARING
 
 class StyleSetImpl : public nsIStyleSet 
 #ifdef MOZ_PERF_METRICS
@@ -175,6 +178,15 @@ public:
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0);
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+  virtual void ResetUniqueStyleItems(void);
+
+#ifdef DEBUG_SC_SHARING
+  // add and remove from the cache of all contexts
+  NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext);
+  NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext);
+#endif
+
 #ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
 #endif
@@ -207,6 +219,11 @@ protected:
 
   nsIStyleFrameConstruction* mFrameConstructor;
 
+#ifdef DEBUG_SC_SHARING
+  nsVoidArray       mStyleContextCache; // a cache of all style contexts for faster searching
+                                        // when we want to find style contexts in GetContext
+#endif
+
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 
 #ifdef MOZ_PERF_METRICS
@@ -222,6 +239,9 @@ StyleSetImpl::StyleSetImpl()
     mRuleProcessors(nsnull),
     mRecycler(nsnull),
     mFrameConstructor(nsnull)
+#ifdef DEBUG_SC_SHARING
+    ,mStyleContextCache(0)
+#endif
 #ifdef MOZ_PERF_METRICS
     ,mTimerEnabled(PR_FALSE)
 #endif
@@ -237,6 +257,9 @@ StyleSetImpl::~StyleSetImpl()
   NS_IF_RELEASE(mRuleProcessors);
   NS_IF_RELEASE(mFrameConstructor);
   NS_IF_RELEASE(mRecycler);
+#ifdef DEBUG_SC_SHARING
+  NS_ASSERTION( mStyleContextCache.Count() == 0, "StyleContextCache is not empty: leaking style context?");
+#endif
 }
 
 #ifndef MOZ_PERF_METRICS
@@ -565,6 +588,10 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
   return PR_TRUE;
 }
 
+#ifdef DEBUG_SC_SHARING
+  static int gNewCount=0;
+  static int gSharedCount=0;
+#endif
 
 nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, 
                                           nsIStyleContext* aParentContext, nsIAtom* aPseudoTag, 
@@ -572,11 +599,41 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
                                           PRBool aForceUnique, PRBool& aUsedRules)
 {
   nsIStyleContext* result = nsnull;
-
   aUsedRules = PR_FALSE;
+
+#ifdef DEBUG_SC_SHARING
+  static PRBool bCheckCache = PR_FALSE;  // DEBUGGING: set to true or false in debugger...
+
+  if ((PR_FALSE == aForceUnique) && (aParentContext != nsnull)) {
+    aParentContext->FindChildWithRules(aPseudoTag, aRules, result);
+  }
+  if (result == nsnull && bCheckCache) {
+    // check the context cache for another context to search...
+    if (PR_FALSE == aForceUnique) {
+      PRInt32 count = mStyleContextCache.Count();
+      PRInt32 i;
+      for (i=0; i<count;i++) {
+        nsIStyleContext *pContext = (nsIStyleContext *)mStyleContextCache.ElementAt(i);
+        if (pContext && pContext != aParentContext) {
+          // NOTE: addref and release the context to make sure it does not get removed while using it
+          //       (paranois factor 10+)
+          pContext->AddRef();
+          pContext->FindChildWithRules(aPseudoTag, aRules, result);
+          pContext->Release();
+          if (result != nsnull) {
+            printf( "StyleContext with matching rules found: %d of %d\n", (int)i, (int)count);
+            break;
+          }
+        }
+      }
+    }
+  }
+#else
   if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
     aParentContext->FindChildWithRules(aPseudoTag, aRules, result);
   }
+#endif
+
   if (nsnull == result) {
     if (NS_OK == NS_NewStyleContext(&result, aParentContext, aPseudoTag, aRules, aPresContext)) {
       if (PR_TRUE == aForceUnique) {
@@ -584,11 +641,16 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
       }
       aUsedRules = PRBool(nsnull != aRules);
     }
-//fprintf(stdout, "+");
+#ifdef DEBUG_SC_SHARING
+    fprintf(stdout, "+++ NewSC %d +++\n", ++gNewCount);
+#endif
   }
+#ifdef DEBUG_SC_SHARING
   else {
-//fprintf(stdout, "-");
+    fprintf(stdout, "--- SharedSC %d ---\n", ++gSharedCount);
   }
+#endif
+
   return result;
 }
 
@@ -842,8 +904,8 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext** aNewStyleContext)
 {
   NS_ASSERTION(aPresContext, "must have pres context");
-  NS_ASSERTION(aPresContext, "must have pres context");
-  NS_ASSERTION(aPresContext, "must have pres context");
+  NS_ASSERTION(aStyleContext, "must have style context");
+  NS_ASSERTION(aNewStyleContext, "must have new style context");
 
   nsresult result = NS_ERROR_NULL_POINTER;
 
@@ -1241,3 +1303,177 @@ StyleSetImpl::PrintTimer(PRUint32 aTimerID)
 
 #endif
 
+//-----------------------------------------------------------------------------
+
+#ifdef DEBUG_SC_SHARING
+NS_IMETHODIMP
+StyleSetImpl::AddStyleContext(nsIStyleContext *aNewStyleContext)
+{
+  nsresult rv = NS_OK;
+
+#ifdef DEBUG
+  // ASSERT the input is valid
+  NS_ASSERTION(aNewStyleContext != nsnull, "NULL style context not allowed in AddStyleContext");
+  // ASSERT it is not already in the collection
+  NS_ASSERTION((mStyleContextCache.IndexOf(aNewStyleContext) == -1), "StyleContext added in AddStyleContext is already in cache");
+  if (aNewStyleContext) {
+    rv = mStyleContextCache.AppendElement(aNewStyleContext);
+    // printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
+  }
+#endif
+  return rv;
+}
+
+NS_IMETHODIMP
+StyleSetImpl::RemoveStyleContext(nsIStyleContext *aNewStyleContext)
+{
+  nsresult rv = NS_OK;
+
+#ifdef DEBUG
+  // ASSERT the input is valid
+  NS_ASSERTION(aNewStyleContext != nsnull, "NULL style context not allowed in RemoveStyleContext");
+  // ASSERT it is not already in the collection
+  NS_ASSERTION((mStyleContextCache.IndexOf(aNewStyleContext) != -1), "StyleContext removed in AddStyleContext is not in cache");
+  if (aNewStyleContext) {
+    rv = mStyleContextCache.RemoveElement(aNewStyleContext);
+    // printf( "StyleContextCount: %ld\n", (long)mStyleContextCache.Count());
+  }
+#endif
+  return rv;
+}
+#endif // DEBUG_SC_SHARING
+
+//-----------------------------------------------------------------------------
+
+// static 
+nsUniqueStyleItems *nsUniqueStyleItems ::mInstance = nsnull;
+
+void StyleSetImpl::ResetUniqueStyleItems(void)
+{
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  uniqueItems->Clear();  
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as StyleSetImpl's size): 
+*    1) sizeof(*this) + sizeof (overhead only) each collection that exists
+*       and the FrameConstructor overhead
+*
+*  Contained / Aggregated data (not reported as StyleSetImpl's size):
+*    1) Override Sheets, DocSheets, BackstopSheets, RuleProcessors, Recycler
+*       are all delegated to.
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    NS_ASSERTION(0, "StyleSet has already been conted in SizeOf operation");
+    // styleset has already been accounted for
+    return;
+  }
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("StyleSet"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(StyleSetImpl);
+
+  // Next get the size of the OVERHEAD of objects we will delegate to:
+  if (mOverrideSheets && uniqueItems->AddItem(mOverrideSheets)){
+    aSize += sizeof(*mOverrideSheets);
+  }
+  if (mDocSheets && uniqueItems->AddItem(mDocSheets)){
+    aSize += sizeof(*mDocSheets);
+  }
+  if (mBackstopSheets && uniqueItems->AddItem(mBackstopSheets)){
+    aSize += sizeof(*mBackstopSheets);
+  }
+  if (mRuleProcessors && uniqueItems->AddItem(mRuleProcessors)){
+    aSize += sizeof(*mRuleProcessors);
+  }
+  if (mRecycler && uniqueItems->AddItem(mRecycler)){
+    aSize += sizeof(*mRecycler);
+  }
+    ///////////////////////////////////////////////
+  // now the FrameConstructor
+  if(mFrameConstructor && uniqueItems->AddItem((void*)mFrameConstructor)){
+    aSize += sizeof(mFrameConstructor);
+  }
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  ///////////////////////////////////////////////
+  // Now travers the collections and delegate
+  PRInt32 numSheets, curSheet;
+  PRUint32 localSize=0;
+  numSheets = GetNumberOfOverrideStyleSheets();
+  for(curSheet=0; curSheet < numSheets; curSheet++){
+    nsIStyleSheet* pSheet = GetOverrideStyleSheetAt(curSheet); //addref
+    if(pSheet){
+      localSize=0;
+      pSheet->SizeOf(aSizeOfHandler, localSize);
+    }
+    NS_IF_RELEASE(pSheet);
+  }
+
+  numSheets = GetNumberOfDocStyleSheets();
+  for(curSheet=0; curSheet < numSheets; curSheet++){
+    nsIStyleSheet* pSheet = GetDocStyleSheetAt(curSheet);
+    if(pSheet){
+      localSize=0;
+      pSheet->SizeOf(aSizeOfHandler, localSize);
+    }
+    NS_IF_RELEASE(pSheet);
+  }
+
+  numSheets = GetNumberOfBackstopStyleSheets();
+  for(curSheet=0; curSheet < numSheets; curSheet++){
+    nsIStyleSheet* pSheet = GetBackstopStyleSheetAt(curSheet);
+    if(pSheet){
+      localSize=0;
+      pSheet->SizeOf(aSizeOfHandler, localSize);
+    }
+    NS_IF_RELEASE(pSheet);
+  }
+  ///////////////////////////////////////////////
+  // rule processors
+  PRUint32 numRuleProcessors,curRuleProcessor;
+  if(mRuleProcessors){
+    mRuleProcessors->Count(&numRuleProcessors);
+    for(curRuleProcessor=0; curRuleProcessor < numRuleProcessors; curRuleProcessor++){
+      nsIStyleRuleProcessor* processor = 
+        (nsIStyleRuleProcessor* )mRuleProcessors->ElementAt(curRuleProcessor);
+      if(processor){
+        localSize=0;
+        processor->SizeOf(aSizeOfHandler, localSize);
+      }
+      NS_IF_RELEASE(processor);
+    }
+  }
+  
+  ///////////////////////////////////////////////
+  // and the recycled ones too
+  if(mRecycler){
+    mRecycler->Count(&numRuleProcessors);
+    for(curRuleProcessor=0; curRuleProcessor < numRuleProcessors; curRuleProcessor++){
+      nsIStyleRuleProcessor* processor = 
+        (nsIStyleRuleProcessor* )mRecycler->ElementAt(curRuleProcessor);
+      if(processor && uniqueItems->AddItem((void*)processor)){
+        localSize=0;
+        processor->SizeOf(aSizeOfHandler, localSize);
+      }
+      NS_IF_RELEASE(processor);
+    }
+  }
+  
+  // now delegate the sizeof to the larger or more complex aggregated objects
+  // - none
+}

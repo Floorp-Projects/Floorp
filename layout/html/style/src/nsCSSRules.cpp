@@ -33,6 +33,9 @@
 #include "nsLayoutAtoms.h"
 #include "nsICSSStyleSheet.h"
 
+#include "nsCOMPtr.h"
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -81,6 +84,8 @@ public:
 
   // nsIStyleRule methods
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -167,6 +172,43 @@ CSSCharsetRuleImpl::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSCharSetRuleImpl's size): 
+*    1) sizeof(*this) + the size of the mEncoding string
+*
+*  Contained / Aggregated data (not reported as CSSCharsetRuleImpl's size):
+*    none
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSCharsetRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSCharsetRuleImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  // add the string for encoding value
+  mEncoding.SizeOf(aSizeOfHandler, &localSize);
+  aSize += localSize;
+  aSize -= sizeof(mEncoding); // counted in sizeof(*this) and nsString->SizeOf()
+  aSizeOfHandler->AddSize(tag,aSize);
+}
+
 NS_IMETHODIMP
 CSSCharsetRuleImpl::GetType(PRInt32& aType) const
 {
@@ -228,6 +270,8 @@ public:
 
   // nsIStyleRule methods
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -317,6 +361,49 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSImportRuleImpl's size): 
+*    1) sizeof(*this) + the size of the mURLSpec string + 
+*       the size of the mMedia string
+*
+*  Contained / Aggregated data (not reported as CSSImportRuleImpl's size):
+*    none
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSImportRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSImportRuleImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+
+  // add the strings for the URLSpec and the Media
+  mURLSpec.SizeOf(aSizeOfHandler, &localSize);
+  aSize += localSize;
+  aSize -= sizeof(mURLSpec); // counted in sizeof(*this) and nsString->SizeOf()
+  mMedia.SizeOf(aSizeOfHandler, &localSize);
+  aSize += localSize;
+  aSize -= sizeof(mMedia); // counted in sizeof(*this) and nsString->SizeOf()
+  aSizeOfHandler->AddSize(tag,aSize);
+
+}
+
 NS_IMETHODIMP
 CSSImportRuleImpl::GetType(PRInt32& aType) const
 {
@@ -400,6 +487,8 @@ public:
 
   // nsIStyleRule methods
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
@@ -563,6 +652,67 @@ CSSMediaRuleImpl::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSMediaRuleImpl's size): 
+*    1) sizeof(*this) + the size of each unique atom in the mMedia collection
+*
+*  Contained / Aggregated data (not reported as CSSMediaRuleImpl's size):
+*    1) Delegate to the rules in the mRules collection to report theri own size
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSMediaRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSMediaRuleImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+
+  if (mMedia) {
+    // get the sizes of the media atoms (if unique)
+    PRUint32 index = 0;
+    PRUint32 count;
+    mMedia->Count(&count);
+    while (index < count) {
+      nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
+      if(medium && uniqueItems->AddItem(medium)){
+        medium->SizeOf(aSizeOfHandler, &localSize);
+        aSize += localSize;
+      }
+      NS_IF_RELEASE(medium);
+    }
+  }
+  // we are done with the size we report for ourself
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if (mRules) {
+    // delegate to the rules themselves (do not sum into our size)
+    PRUint32 index = 0;
+    PRUint32 count;
+    mRules->Count(&count);
+    while (index < count) {
+      nsICSSRule* rule = (nsICSSRule*)mRules->ElementAt(index++);
+      rule->SizeOf(aSizeOfHandler, localSize);
+      NS_RELEASE(rule);
+    }
+  }
+}
+
 NS_IMETHODIMP
 CSSMediaRuleImpl::GetType(PRInt32& aType) const
 {
@@ -693,6 +843,8 @@ public:
   // nsIStyleRule methods
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
+
   // nsICSSRule methods
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
@@ -786,6 +938,50 @@ CSSNameSpaceRuleImpl::List(FILE* out, PRInt32 aIndent) const
   fputs(mURLSpec, out);
   fputs(")\n", out);
   return NS_OK;
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSNamespaceRuleImpl's size): 
+*    1) sizeof(*this) + the size of the mURLSpec string +
+*       the sizeof the mPrefix atom (if it ieists)
+*
+*  Contained / Aggregated data (not reported as CSSNamespaceRuleImpl's size):
+*    none
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSNameSpaceRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSNameSpaceRuleImpl"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  
+  // get the member data as part of this dump
+  mURLSpec.SizeOf(aSizeOfHandler, &localSize);
+  aSize += localSize;
+  aSize -= sizeof(mURLSpec); // counted in sizeof(*this) and nsString->SizeOf()
+
+  if(mPrefix && uniqueItems->AddItem(mPrefix)){
+    mPrefix->SizeOf(aSizeOfHandler, &localSize);
+    aSize += localSize;
+  }
+  aSizeOfHandler->AddSize(tag, aSize);
 }
 
 NS_IMETHODIMP

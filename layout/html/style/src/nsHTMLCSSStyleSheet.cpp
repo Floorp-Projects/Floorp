@@ -38,6 +38,10 @@
 #include "nsIMutableStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
+#include "nsCOMPtr.h"
+
+#include "nsIStyleSet.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID, NS_IHTML_CSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -60,6 +64,8 @@ public:
   NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext,
                               nsIPresContext* aPresContext);
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
   nsIHTMLCSSStyleSheet*  mSheet;
 };
@@ -186,6 +192,44 @@ NS_IMETHODIMP
 CSSFirstLineRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
+}
+
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as CSSFirstLineRule's size): 
+*    1) sizeof(*this) 
+*
+*  Contained / Aggregated data (not reported as CSSFirstLineRule's size):
+*    1) Delegate to mSheet if it exists
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void CSSFirstLineRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+
+  if(! uniqueItems->AddItem((void*)this) ){
+    // object has already been accounted for
+    return;
+  }
+
+  // get or create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("CSSFirstLine-LetterRule"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(*this);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  if(mSheet){
+    PRUint32 localSize=0;
+    mSheet->SizeOf(aSizeOfHandler, localSize);
+  }
 }
 
 // -----------------------------------------------------------
@@ -320,6 +364,8 @@ public:
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
 private: 
   // These are not supported and are not implemented! 
@@ -666,6 +712,56 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 }
 
+/******************************************************************************
+* SizeOf method:
+*
+*  Self (reported as HTMLCSSStyleSheetImpl's size): 
+*    1) sizeof(*this) 
+*
+*  Contained / Aggregated data (not reported as HTMLCSSStyleSheetImpl's size):
+*    1) We don't really delegate but count seperately the FirstLineRule and 
+*       the FirstLetterRule if the exist and are unique instances
+*
+*  Children / siblings / parents:
+*    none
+*    
+******************************************************************************/
+void HTMLCSSStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
+{
+  NS_ASSERTION(aSizeOfHandler != nsnull, "SizeOf handler cannot be null");
+
+  // first get the unique items collection
+  UNIQUE_STYLE_ITEMS(uniqueItems);
+  if(! uniqueItems->AddItem((void*)this)){
+    // this style sheet is lared accounted for
+    return;
+  }
+
+  PRUint32 localSize=0;
+
+  // create a tag for this instance
+  nsCOMPtr<nsIAtom> tag;
+  tag = getter_AddRefs(NS_NewAtom("HTMLCSSStyleSheet"));
+  // get the size of an empty instance and add to the sizeof handler
+  aSize = sizeof(HTMLCSSStyleSheetImpl);
+  aSizeOfHandler->AddSize(tag,aSize);
+
+  // Now the associated rules (if they exist)
+  // - mFirstLineRule
+  // - mFirstLetterRule
+  if(mFirstLineRule && uniqueItems->AddItem((void*)mFirstLineRule)){
+    localSize = sizeof(*mFirstLineRule);
+    aSize += localSize;
+    tag = getter_AddRefs(NS_NewAtom("FirstLineRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+  if(mFirstLetterRule && uniqueItems->AddItem((void*)mFirstLetterRule)){
+    localSize = sizeof(*mFirstLetterRule);
+    aSize += localSize;
+    tag = getter_AddRefs(NS_NewAtom("FirstLetterRule"));
+    aSizeOfHandler->AddSize(tag,localSize);
+  }
+}
 
 // XXX For backwards compatibility and convenience
 NS_HTML nsresult
