@@ -22,7 +22,7 @@
  *  Should only be built for the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: editordialogs.c,v 3.3 1998/09/01 19:09:27 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: editordialogs.c,v 3.4 1998/09/02 01:39:39 akkana%netscape.com Exp $"
  */
 
 #include "mozilla.h"
@@ -11558,31 +11558,23 @@ fe_HintDialog(MWContext* context, char* message)
 	return FALSE;
 }
 
-ED_CharsetEncode FE_EncodingDialog(MWContext* pContext)
+ED_CharsetEncode FE_EncodingDialog(MWContext* context)
 {
-    char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
-#if 1
-    XP_Bool bDoIt = FE_Confirm(pContext, pMessage);
-    if (bDoIt)
-        return ED_ENDCODE_CHANGE_CHARSET;
-    else
-        return ED_ENCODE_CANCEL;
-
-#else
-    ED_CharsetEncode retval;
-    struct fe_confirm_data data;
+    ED_CharsetEncode retval = ED_ENCODE_CANCEL;
+    int done;
     Widget mainw = CONTEXT_WIDGET (context);
-    Widget dialog, toggle_row, toggle_button;
+    Widget dialog, toggle_radio, toggle_button;
     Arg av [20];
     int ac;
     Visual *v = 0;
     Colormap cmap = 0;
     Cardinal depth = 0;
+    XmString xm_message;
+    char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
 
     XtVaGetValues (mainw, XtNvisual, &v, XtNcolormap, &cmap,
                    XtNdepth, &depth, 0);
-    xm_message = XmStringCreateLocalized(message);
-
+    xm_message = XmStringCreateLocalized(pMessage);
     ac = 0;
     XtSetArg(av[ac], XmNvisual, v); ac++;
     XtSetArg(av[ac], XmNdepth, depth); ac++;
@@ -11590,52 +11582,52 @@ ED_CharsetEncode FE_EncodingDialog(MWContext* pContext)
     XtSetArg(av[ac], XmNtransientFor, mainw); ac++;
     XtSetArg(av[ac], XmNdefaultButtonType, XmDIALOG_OK_BUTTON); ac++;
     XtSetArg(av[ac], XmNmessageString, xm_message); ac++;
-    dialog = XmCreateInformationDialog(mainw, "changeEncoding", av, ac);
+    dialog = XmCreateQuestionDialog(mainw, "changeEncoding", av, ac);
+    XmStringFree(xm_message);
 
     ac = 0;
-    toggle_radio = XmCreateRadioBox(dialog, "_radio", ac, av);
+    XtSetArg(av[ac], XmNorientation, XmHORIZONTAL); ac++;
+    toggle_radio = XmCreateRadioBox(dialog, "_radio", av, ac);
     XtManageChild(toggle_radio);
 
     ac = 0;
-    XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;
+    /*XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;*/
     toggle_button = XmCreateToggleButtonGadget(toggle_radio, "encodeContent",
-                                               args, n);
+                                               av, ac);
     XtManageChild(toggle_button);
+    XmToggleButtonSetState(toggle_button, TRUE, FALSE);
     toggle_button = XmCreateToggleButtonGadget(toggle_radio,
-                                               "dontEncodeContent", args, n);
+                                               "dontEncodeContent", av, ac);
     XtManageChild(toggle_button);
 
-    fe_UnmanageChild_safe(XmSelectionBoxGetChild(dialog,
-                                                 XmDIALOG_APPLY_BUTTON));
 #ifdef NO_HELP
-    fe_UnmanageChild_safe (XmSelectionBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
+    fe_UnmanageChild_safe (XmMessageBoxGetChild (dialog, XmDIALOG_HELP_BUTTON));
 #endif
+
+    XtAddCallback(dialog, XmNokCallback, fe_hrule_ok_cb, &done);
+    XtAddCallback(dialog, XmNcancelCallback, fe_hrule_cancel_cb, &done);
 
     XtManageChild (dialog);
 
-    XtAddCallback(dialog, XmNokCallback, fe_hrule_ok_cb, &done);
-    XtAddCallback(dialog, XmNdestroyCallback, fe_hrule_destroy_cb, &done);
-
-    data.context = context;
-    data.widget = dialog;
-    data.answer = Answer_Invalid;
-
-    while (data.answer == Answer_Invalid)
+    done = XmDIALOG_NONE;
+    while (done == XmDIALOG_NONE) {
         fe_EventLoop();
-
-    if (data.answer == Answer_Cancel || data.answer == Answer_Destroy)
-        return ED_ENCODE_CANCEL;
-    else if (data.answer == Answer_OK)
-    {
-        if (XmToggleButtonGetState(toggle_button))
-            retval = ED_ENCODE_CHANGE_METATAG;
-        else
-            retval = ED_ENDCODE_CHANGE_CHARSET;
-        XtDestroyWidget(dialog);
-        return retval;
     }
-#endif
-}
 
+    if (done != XmDIALOG_OK_BUTTON)
+    {
+        retval = ED_ENCODE_CANCEL;
+    }
+    else if (XmToggleButtonGetState(toggle_button))
+    {
+        retval = ED_ENCODE_CHANGE_METATAG;
+    }
+    else
+    {
+        retval = ED_ENDCODE_CHANGE_CHARSET;
+    }
+    XtDestroyWidget(dialog);
+    return retval;
+}
 
 #endif
