@@ -1574,8 +1574,8 @@ nsGenericHTMLElement::ToHTML(FILE* out) const
 
 // XXX i18n: this is wrong (?) because we need to know the outgoing
 // character set (I think)
-static void
-QuoteForHTML(const nsString& aValue, nsString& aResult)
+void
+NS_QuoteForHTML(const nsString& aValue, nsString& aResult)
 {
   aResult.Truncate();
   const PRUnichar* cp = aValue.GetUnicode();
@@ -1630,7 +1630,7 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
         GetAttribute(name, value);
         if (value.Length() > 0) {
           aBuf.Append('=');
-          QuoteForHTML(value, quotedValue);
+          NS_QuoteForHTML(value, quotedValue);
           aBuf.Append(quotedValue);
         }
       }
@@ -1645,13 +1645,6 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 //----------------------------------------------------------------------
 
 // XXX this is REALLY temporary code
-
-extern nsresult NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aNewFrame);
-extern nsresult NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aNewFrame);
-extern nsresult NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                                  nsIFrame*& aNewFrame);
 
 nsresult
 nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
@@ -1690,6 +1683,7 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
   else if (mTag == nsHTMLAtoms::wbr) {
     rv = NS_NewWBRFrame(mContent, aParentFrame, frame);
   }
+
   if (NS_OK != rv) {
     return rv;
   }
