@@ -118,7 +118,6 @@ sub LoadConfig {
 
 sub SetupEnv {
   umask 0;
-  #$ENV{CVSROOT} = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
   $ENV{LD_LIBRARY_PATH} = "$BaseDir/$DirName/mozilla/${ObjDir}dist/bin:/usr/lib/png:"
      ."/usr/local/lib:$BaseDir/$DirName/mozilla/dist/bin";
   $ENV{DISPLAY} = $DisplayServer;
