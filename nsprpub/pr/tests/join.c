@@ -67,7 +67,7 @@ extern void SetupMacPrintfLog(char *logFile);
 ***********************************************************************/
 
 
-static Test_Result (int result)
+static void Test_Result (int result)
 {
     if (result == PASS)
         printf ("PASS\n");
