@@ -42,6 +42,7 @@
 const __cz_version   = "0.9.65";
 const __cz_condition = "green";
 const __cz_suffix    = "";
+const __cz_guid      = "59c81df5-4b7a-477b-912d-4e0fdf64e5f2";
 
 var warn;
 var ASSERT;
@@ -3510,18 +3511,11 @@ function __display(message, msgtype, sourceObj, destObj)
         }
         catch (ex)
         {
-            this.displayHere(getMsg(MSG_LOGFILE_WRITE_ERROR, this.logFile.path),
-                             "ERROR");
-            try
-            {
-                // Close log file, and stop logging.
-                this.logFile.close();
-                this.prefs["log"] = false;
-            }
-            catch(ex)
-            {
-                // can't do much here.
-            }
+            // Stop logging before showing any messages!
+            this.prefs["log"] = false;
+            dd("Log file write error: " + formatException(ex));
+            this.displayHere(getMsg(MSG_LOGFILE_WRITE_ERROR,
+                             this.prefs["logFileName"]), "ERROR");
         }
     }
 }
@@ -3745,26 +3739,34 @@ function gettabmatch_usr (line, wordStart, wordEnd, word, cursorPos)
 client.openLogFile =
 function cli_startlog (view)
 {
+    const NORMAL_FILE_TYPE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
+
     try
     {
-        view.logFile = fopen(view.prefs["logFileName"], ">>");
+        var file = new LocalFile(view.prefs["logFileName"]);
+        if (!file.localFile.exists())
+        {
+            // futils.umask may be 0022. Result is 0644.
+            file.localFile.create(NORMAL_FILE_TYPE, 0666 & ~futils.umask);
+        }
+        view.logFile = fopen(file.localFile, ">>");
     }
     catch (ex)
     {
-        view.displayHere(getMsg(MSG_LOGFILE_ERROR, view.logFile), MT_ERROR);
-        view.logFile = null;
         view.prefs["log"] = false;
+        dd("Log file open error: " + formatException(ex));
+        view.displayHere(getMsg(MSG_LOGFILE_ERROR,
+                                view.prefs["logFileName"]), MT_ERROR);
         return;
     }
 
-    view.displayHere(getMsg(MSG_LOGFILE_OPENED,
-                            getURLSpecFromFile(view.logFile.path)));
+    view.displayHere(getMsg(MSG_LOGFILE_OPENED, view.prefs["logFileName"]));
 }
 
 client.closeLogFile =
 function cli_stoplog (view)
 {
-    view.displayHere(MSG_LOGFILE_CLOSING);
+    view.displayHere(getMsg(MSG_LOGFILE_CLOSING, view.prefs["logFileName"]));
 
     if (view.logFile)
     {

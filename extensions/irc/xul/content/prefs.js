@@ -41,6 +41,11 @@ const DEFAULT_NICK = "IRCMonkey"
 
 function initPrefs()
 {
+    function makeLogNameClient()
+    {
+        return makeLogName(client, "client");
+    };
+
     client.prefManager = new PrefManager("extensions.irc.",
                                          client.defaultBundle);
     client.prefManagers = [client.prefManager];
@@ -105,8 +110,14 @@ function initPrefs()
          ["initialURLs",        [],       "startup.initialURLs"],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)],
                                           "startup.initialScripts"],
-         ["log",                false,    ".log"],
-         ["logFileName",        logDefault.path, ".log"],
+         ["log",                false,                                  ".log"],
+         ["logFileName",        makeLogNameClient,                      ".log"],
+         ["logFile.client",     "client.$y-$m-$d.log",                  ".log"],
+         ["logFile.network",    "$(network)/$network).$y-$m-$d.log",     ".log"],
+         ["logFile.channel",    "$(network)/channels/$(channel).$y-$m-$d.log",
+                                                                        ".log"],
+         ["logFile.user",       "$(network)/users/$(user).$y-$m-$d.log",  ".log"],
+         ["logFolder",          getURLSpecFromFile(logPath.path), ".log"],
          ["messages.click",     "goto-url",          "global.links"],
          ["messages.ctrlClick", "goto-url-newwin",   "global.links"],
          ["messages.metaClick", "goto-url-newtab",   "global.links"],
@@ -192,6 +203,90 @@ function initPrefs()
     initAliases();
 }
 
+function makeLogName(obj, type)
+{
+    // We like some control on the number of digits.
+    function formatTimeNumber(num, digits)
+    {
+        var rv = num.toString();
+        while (rv.length < digits)
+            rv = "0" + rv;
+        return rv;
+    };
+
+    /*  /\$\(([^)])\)|\$(\w)/g   *
+     *       <---->     <-->     *
+     *      longName  shortName  *
+     */
+    function replaceParam(match, longName, shortName)
+    {
+        if (typeof longName != "undefined" && longName)
+        {
+            // Remember to encode these, don't want some dodgy # breaking stuff.
+            if (longName in longCodes)
+                return encodeURIComponent(longCodes[longName]);
+            dd("Unknown long code: " + longName);
+            return;
+        }
+        else if (typeof shortName != "undefined" && shortName)
+        {
+            if (shortName in shortCodes)
+                return encodeURIComponent(shortCodes[shortName]);
+            dd("Unknown short code: " + shortName);
+            return;
+        }
+        dd("Unknown match: " + match);
+    };
+
+    var base = client.prefs["logFolder"];
+    var specific = client.prefs["logFile." + type];
+
+    // Make sure we got ourselves a slash, or we'll be in trouble with the
+    // concatenation.
+    if (!base.match(/\/$/))
+        base = base + "/";
+    var file = base + specific;
+
+    // Get details for $-replacement variables.
+    var info = getObjectDetails(obj);
+
+    // Three longs codes: $(network), $(channel) and $(user).
+    // Each is available only if appropriate for the object.
+    var longCodes = new Object();
+    if (info.network)
+        longCodes["network"] = info.network.unicodeName;
+    if (info.channel)
+        longCodes["channel"] = info.channel.unicodeName;
+    if (info.user)
+        longCodes["user"] = info.user.unicodeName;
+
+    // Six short codes: $y, $m, $d, $h, $n, $s.
+    // These are time codes, each replaced with a fixed-length number.
+    var d = new Date();
+    var shortCodes = { y: formatTimeNumber(d.getFullYear(), 4),
+                       m: formatTimeNumber(d.getMonth() + 1, 2),
+                       d: formatTimeNumber(d.getDate(), 2),
+                       h: formatTimeNumber(d.getHours(), 2),
+                       n: formatTimeNumber(d.getMinutes(), 2),
+                       s: formatTimeNumber(d.getSeconds(), 2)
+                     };
+
+    // Replace all $-variables in one go.
+    file = file.replace(/\$\(([^)])\)|\$(\w)/g, replaceParam);
+
+    // Convert from file: URL to local OS format.
+    try
+    {
+        file = getFileFromURLSpec(file).path;
+    }
+    catch(ex)
+    {
+        dd("Error converting '" + base + specific + "' to a local file path.");
+    }
+
+    return file;
+}
+
 function pref_mungeName(name)
 {
     var safeName = name.replace(/\./g, "-").replace(/:/g, "_").toLowerCase();
@@ -203,6 +298,11 @@ function getNetworkPrefManager(network)
     function defer(prefName)
     {
         return client.prefs[prefName];
+    };
+
+    function makeLogNameNetwork()
+    {
+        return makeLogName(network, "network");
     };
 
     function onPrefChanged(prefName, newValue, oldValue)
@@ -227,7 +327,7 @@ function getNetworkPrefManager(network)
          ["font.size",        defer, "appearance.misc"],
          ["hasPrefs",         false, "hidden"],
          ["log",              client.prefs["networkLog"], ".log"],
-         ["logFileName",      logDefault.path, ".log"],
+         ["logFileName",      makeLogNameNetwork,         ".log"],
          ["motif.current",    defer, "appearance.motif"],
          ["nickname",         defer, ".ident"],
          ["notifyList",       [],    "lists.notifyList"],
@@ -280,6 +380,11 @@ function getChannelPrefManager(channel)
         return network.prefs[prefName];
     };
 
+    function makeLogNameChannel()
+    {
+        return makeLogName(channel, "channel");
+    };
+
     function onPrefChanged(prefName, newValue, oldValue)
     {
         onChannelPrefChanged (channel, prefName, newValue, oldValue);
@@ -302,7 +407,7 @@ function getChannelPrefManager(channel)
          ["font.size",        defer, "appearance.misc"],
          ["hasPrefs",         false, "hidden"],
          ["log",              client.prefs["channelLog"], ".log"],
-         ["logFileName",      logDefault.path, ".log"],
+         ["logFileName",      makeLogNameChannel,         ".log"],
          ["motif.current",    defer, "appearance.motif"],
          ["timestamps",       defer, "appearance.timestamps"],
          ["timestampFormat",  defer, "appearance.timestamps"],
@@ -330,6 +435,11 @@ function getUserPrefManager(user)
         return network.prefs[prefName];
     };
 
+    function makeLogNameUser()
+    {
+        return makeLogName(user, "user");
+    };
+
     function onPrefChanged(prefName, newValue, oldValue)
     {
         onUserPrefChanged (user, prefName, newValue, oldValue);
@@ -351,7 +461,7 @@ function getUserPrefManager(user)
          ["motif.current",    defer, "appearance.motif"],
          ["outputWindowURL",  defer, "appearance.misc"],
          ["log",              client.prefs["userLog"], ".log"],
-         ["logFileName",      logDefault.path, ".log"],
+         ["logFileName",      makeLogNameUser,         ".log"],
          ["timestamps",       defer, "appearance.timestamps"],
          ["timestampFormat",  defer, "appearance.timestamps"]
         ];
