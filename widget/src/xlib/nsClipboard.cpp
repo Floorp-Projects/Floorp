@@ -373,6 +373,8 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
     mBlocking = PR_FALSE;
 
     // Place the data in the transferable
+    PRInt32 length = 0;
+    PRUnichar *testing = nsnull;
     const char *constData = "";
     if (data)
        constData = (char*) data;
