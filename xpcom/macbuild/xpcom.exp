@@ -111,6 +111,7 @@ Destroy__13nsTraceRefcntFPvPCci
 Create__13nsTraceRefcntFPvPCcPCci
 Release__13nsTraceRefcntFPvUlPCci
 AddRef__13nsTraceRefcntFPvUlPCci
+NS_MeanAndStdDev
 
 # nsCOMPtr
 begin_assignment__13nsCOMPtr_baseFv
