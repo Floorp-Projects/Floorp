@@ -972,6 +972,9 @@ NS_IMETHODIMP nsTextEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   if (!diskDoc)
     return NS_ERROR_NO_INTERFACE;
   
+  // this should really call out to the appcore for the display of the put file
+  // dialog.
+  
   // find out if the doc already has a fileSpec associated with it.
   nsFileSpec		docFileSpec;
   PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
@@ -1040,6 +1043,21 @@ NS_IMETHODIMP nsTextEditor::Insert(nsString& aInputString)
   printf("nsTextEditor::Insert not yet implemented\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
+{
+  if (! aWrapColumn)
+    return NS_ERROR_NULL_POINTER;
+   
+  
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
+{
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}  
 
 NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
 {

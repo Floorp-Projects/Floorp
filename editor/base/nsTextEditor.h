@@ -108,6 +108,9 @@ public:
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
   NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
 
+// Plain text wrapping control
+  NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
+  NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
 // End of methods implemented in nsEditor
 //=============================================================
 
