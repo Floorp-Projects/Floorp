@@ -35,8 +35,6 @@ public:
 
   friend nsresult NS_NewToolbarItemFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 

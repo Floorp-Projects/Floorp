@@ -39,14 +39,28 @@
 #ifndef nsToolbarFrame_h__
 #define nsToolbarFrame_h__
 
+#define TOOLBARITEM_MIME "moz/toolbaritem"
+#define TOOLBAR_MIME     "moz/toolbar"
 
+
+#include "nsCOMPtr.h"
 #include "nsBoxFrame.h"
 
+#ifdef TOOLBAR_DD
+class nsToolbarDragListener;
+class nsToolbarMouseMotionListener;
+#endif
 
 class nsToolbarFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewToolbarFrame(nsIFrame** aNewFrame);
+
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        asPrevInFlow);
 
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
@@ -64,6 +78,15 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);
 
+	virtual void ReResolveStyles(nsIPresContext& aPresContext,
+                               PRInt32 aParentChange,
+                               nsStyleChangeList* aChangeList,
+                               PRInt32* aLocalChange);
+
+#ifdef TOOLBAR_DD
+  void SetDropfeedbackLocation(nscoord aX)  { mXDropLoc = aX; }
+#endif
+
 protected:
   nsToolbarFrame();
   virtual ~nsToolbarFrame();
@@ -73,6 +96,12 @@ protected:
   nsToolbarFrame ( const nsToolbarFrame& aFrame ) ;	            // DO NOT IMPLEMENT
   nsToolbarFrame& operator= ( const nsToolbarFrame& aFrame ) ;  // DO NOT IMPLEMENT
   
+#ifdef TOOLBAR_DD
+  nsToolbarDragListener        * mDragListener;
+  PRInt32 mXDropLoc;
+	nsCOMPtr<nsIStyleContext> mMarkerStyle;
+#endif
+
 }; // class nsToolbarFrame
 
 #endif

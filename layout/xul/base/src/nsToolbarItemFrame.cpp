@@ -198,33 +198,8 @@ nsToolbarItemFrame::HandleEvent(nsIPresContext& aPresContext,
     } 
     nsServiceManager::ReleaseService(kCDragServiceCID, dragService); 
   } */
-
+  printf("ToolbarItem %d\n", aEvent->message);
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
-}
-
-
-
-
-
-/**
- * We can be a nsIBox
- */
-NS_IMETHODIMP 
-nsToolbarItemFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIBoxIID)) {                                         
-    *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
 

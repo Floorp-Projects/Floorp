@@ -28,7 +28,12 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 
-
+#include "nsToolbarDragListener.h"
+#include "nsIDOMDragListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIContent.h"
+#include "nsIPresContext.h"
 //
 // NS_NewToolbarFrame
 //
@@ -60,6 +65,9 @@ NS_NewToolbarFrame ( nsIFrame** aNewFrame )
 nsToolbarFrame :: nsToolbarFrame ( )
 {
 	//*** anything?
+#ifdef TOOLBAR_DD
+  mXDropLoc = -1;
+#endif
 }
 
 
@@ -75,6 +83,43 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
 #endif
 }
 
+NS_IMETHODIMP
+nsToolbarFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+#ifdef TOOLBAR_DD
+  //nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+
+  mDragListener = new nsToolbarDragListener();
+  mDragListener->SetToolbar(this);
+
+  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID())) {
+    //printf("Toolbar registered as Drag Listener\n");
+  }
+
+  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID())) {
+    //printf("Toolbar registered as Mouse Listener\n");
+  }
+
+  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID())) {
+    //printf("Toolbar registered as MouseMotion Listener\n");
+  }
+
+  //      nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
+  //      AddEventListener("mousedown", eventListener, PR_FALSE, PR_FALSE);  
+#endif
+
+  return rv;
+}
 
 //
 // Paint
@@ -114,12 +159,38 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
   // override the visibility property and display even if their parent is
   // hidden
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+
   return NS_OK;
 
 #endif
 
-  return nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
-    
+  nsresult res =  nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+
+#ifdef TOOLBAR_DD
+  if (mXDropLoc != -1) {
+    //printf("mXDropLoc: %d\n", mXDropLoc);
+    // XXX this is temporary
+    if (!mMarkerStyle) {
+      nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
+      aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+										    PR_FALSE,
+										    getter_AddRefs(mMarkerStyle));
+    }
+    nscolor color;
+    if (mMarkerStyle) {
+      const nsStyleColor* styleColor = (const nsStyleColor*)mMarkerStyle->GetStyleData(eStyleStruct_Color);
+      color = styleColor->mColor;
+    } else {
+      color = NS_RGB(0,0,0);
+    }
+    //printf("paint %d\n", mXDropLoc);
+    aRenderingContext.SetColor(color);
+    aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
+  }
+#endif
+  return res;
+  
 } // Paint
 
 
@@ -175,19 +246,34 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
                                    nsGUIEvent*     aEvent, 
                                    nsEventStatus&  aEventStatus) 
 { 
+#ifdef TOOLBAR_DD
+  mDragListener->SetPresContext(&aPresContext); // not ref counted
+#endif;
+
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
 
   switch (aEvent->message) { 
     case NS_DRAGDROP_ENTER: 
-      // show drop feedback 
+
+#ifdef TOOLBAR_DD
+      if (!mMarkerStyle) {
+        nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
+        aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+										      PR_FALSE,
+										      getter_AddRefs(mMarkerStyle));
+      }
+#endif
       break; 
 
     case NS_DRAGDROP_OVER: 
       break; 
 
     case NS_DRAGDROP_EXIT: 
+#ifdef TOOLBAR_DD
+      mMarkerStyle = do_QueryInterface(nsnull);
       // remove drop feedback 
+#endif
       break; 
 
     case NS_DRAGDROP_DROP: 
@@ -199,3 +285,29 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus); 
   
 } // HandleEvent
+
+/**
+ * Call this when styles change
+ */
+void 
+nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
+                                       PRInt32 aParentChange,
+                                       nsStyleChangeList* aChangeList,
+                                       PRInt32* aLocalChange)
+{
+
+  // style that draw an Marker around the button
+
+  // see if the Marker has changed.
+  /*nsCOMPtr<nsIStyleContext> oldMarker = mMarkerStyle;
+
+	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-marker")) );
+	aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+										  PR_FALSE,
+										  getter_AddRefs(mMarkerStyle));
+  if ((mMarkerStyle && oldMarker) && (mMarkerStyle != oldMarker)) {
+    nsFrame::CaptureStyleChangeFor(this, oldMarker, mMarkerStyle, 
+                              aParentChange, aChangeList, aLocalChange);
+  }*/
+
+}
