@@ -32,20 +32,24 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.3 $ $Date: 2001/09/19 21:47:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.4 $ $Date: 2001/10/08 20:19:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
 #include "pkit.h"
 #endif /* PKIT_H */
 
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
+#ifndef DEV_H
+#include "dev.h"
+#endif /* DEV_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11.h"
+#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef CKHELPER_H
 #include "ckhelper.h"
@@ -83,7 +87,7 @@ nssCKObject_GetAttributes
   CK_ULONG count,
   NSSArena *arenaOpt,
   nssSession *session,
-  NSSSlot  *slot
+  NSSSlot *slot
 )
 {
    nssArenaMark *mark;
@@ -92,18 +96,18 @@ nssCKObject_GetAttributes
    CK_RV ckrv;
    PRStatus nssrv;
    hSession = session->handle; 
-#ifdef arena_mark_bug_fixed
    if (arenaOpt) {
-	mark = nssArenaMark(arenaOpt);
+	mark = nssArena_Mark(arenaOpt);
 	if (!mark) {
 	    goto loser;
 	}
    }
-#endif
    /* Get the storage size needed for each attribute */
+   nssSession_EnterMonitor(session);
    ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
                                            object, obj_template, count);
    if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
 	/* set an error here */
 	goto loser;
    }
@@ -112,31 +116,29 @@ nssCKObject_GetAttributes
 	obj_template[i].pValue = nss_ZAlloc(arenaOpt, 
 	                                    obj_template[i].ulValueLen);
 	if (!obj_template[i].pValue) {
+	    nssSession_ExitMonitor(session);
 	    goto loser;
 	}
    }
    /* Obtain the actual attribute values. */
    ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
                                            object, obj_template, count);
+   nssSession_ExitMonitor(session);
    if (ckrv != CKR_OK) {
 	/* set an error here */
 	goto loser;
    }
-#ifdef arena_mark_bug_fixed
    if (arenaOpt) {
 	nssrv = nssArena_Unmark(arenaOpt, mark);
 	if (nssrv != PR_SUCCESS) {
 	    goto loser;
 	}
    }
-#endif
    return PR_SUCCESS;
 loser:
    if (arenaOpt) {
 	/* release all arena memory allocated before the failure. */
-#ifdef arena_mark_bug_fixed
 	(void)nssArena_Release(arenaOpt, mark);
-#endif
    } else {
 	CK_ULONG j;
 	/* free each heap object that was allocated before the failure. */
@@ -146,3 +148,52 @@ loser:
    }
    return PR_FAILURE;
 }
+
+NSS_IMPLEMENT PRStatus
+nssCKObject_GetAttributeItem
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_TYPE attribute,
+  NSSArena *arenaOpt,
+  nssSession *session,
+  NSSSlot *slot,
+  NSSItem *rvItem
+)
+{
+    CK_ATTRIBUTE attr = { 0, NULL, 0 };
+    PRStatus nssrv;
+    attr.type = attribute;
+    nssrv = nssCKObject_GetAttributes(object, &attr, 1, 
+                                      arenaOpt, session, slot);
+    if (nssrv != PR_SUCCESS) {
+	return nssrv;
+    }
+    rvItem->data = (void *)attr.pValue;
+    rvItem->size = (PRUint32)attr.ulValueLen;
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRBool
+nssCKObject_IsAttributeTrue
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_TYPE attribute,
+  NSSArena *arenaOpt,
+  nssSession *session,
+  NSSSlot *slot,
+  PRStatus *rvStatus
+)
+{
+    CK_ATTRIBUTE attr = { attribute, g_ck_true.data, g_ck_true.size };
+    CK_RV ckrv;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(slot)->C_GetAttributeValue(session->handle, object, &attr, 1);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	*rvStatus = PR_FAILURE;
+	return PR_FALSE;
+    }
+    *rvStatus = PR_SUCCESS;
+    return (PRBool)(*((CK_BBOOL *)attr.pValue) == CK_TRUE);
+}
+

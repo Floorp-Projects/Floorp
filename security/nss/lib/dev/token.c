@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 20:38:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.7 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -43,9 +43,13 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.6 $ $Date:
 #include "devm.h"
 #endif /* DEVM_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11.h"
+#else
 #ifndef NSSCKEPV_H
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef NSSPKI_H
 #include "nsspki.h"
@@ -81,17 +85,16 @@ nssToken_Create
     NSSUTF8 *tokenName = NULL;
     PRUint32 length;
     PRBool newArena;
+    PRBool readWrite;
     PRStatus nssrv;
     CK_TOKEN_INFO tokenInfo;
     CK_RV ckrv;
     if (arenaOpt) {
 	arena = arenaOpt;
-#ifdef arena_mark_bug_fixed
 	mark = nssArena_Mark(arena);
 	if (!mark) {
-	    return PR_FAILURE;
+	    return (NSSToken *)NULL;
 	}
-#endif
 	newArena = PR_FALSE;
     } else {
 	arena = NSSArena_Create();
@@ -120,7 +123,13 @@ nssToken_Create
 	}
     }
     /* Open a default session handle for the token. */
-    session = nssSlot_CreateSession(parent, arena, PR_FALSE);
+    if (tokenInfo.ulMaxSessionCount == 1) {
+	/* if the token can only handle one session, it must be RW. */
+	readWrite = PR_TRUE;
+    } else {
+	readWrite = PR_FALSE;
+    }
+    session = nssSlot_CreateSession(parent, arena, readWrite);
     if (session == NULL) {
 	goto loser;
     }
@@ -137,12 +146,10 @@ nssToken_Create
     rvToken->name = tokenName;
     rvToken->ckFlags = tokenInfo.flags;
     rvToken->defaultSession = session;
-#ifdef arena_mark_bug_fixed
     nssrv = nssArena_Unmark(arena, mark);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
-#endif
     return rvToken;
 loser:
     if (session) {
@@ -151,11 +158,9 @@ loser:
     if (newArena) {
 	nssArena_Destroy(arena);
     } else {
-#ifdef arena_mark_bug_fixed
 	if (mark) {
 	    nssArena_Release(arena, mark);
 	}
-#endif
     }
     return (NSSToken *)NULL;
 }
@@ -171,6 +176,60 @@ nssToken_Destroy
 	    nssSession_Destroy(tok->defaultSession);
 	}
 	return NSSArena_Destroy(tok->arena);
+    }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT NSSToken *
+nssToken_AddRef
+(
+  NSSToken *tok
+)
+{
+    ++tok->refCount;
+    return tok;
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_DeleteStoredObject
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  CK_OBJECT_HANDLE object
+)
+{
+    nssSession *session;
+    CK_RV ckrv;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok->slot)->C_DestroyObject(session->handle, object);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_ImportObject
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  CK_ATTRIBUTE_PTR objectTemplate,
+  CK_ULONG otsize,
+  CK_OBJECT_HANDLE_PTR phObject
+)
+{
+    nssSession *session;
+    CK_RV ckrv;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok->slot)->C_CreateObject(session->handle, 
+                                            objectTemplate, otsize,
+                                            phObject);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	return PR_FAILURE;
     }
     return PR_SUCCESS;
 }
@@ -230,7 +289,8 @@ collect_certs_callback(NSSToken *t, nssSession *session,
     if (!cert) {
 	goto loser;
     }
-    nssList_AddElement(ca->list, (void *)cert);
+    /* addref */
+    nssList_Add(ca->list, (void *)cert);
     if (ca->maximum > 0 && nssList_Count(ca->list) >= ca->maximum) {
 	/* signal the end of collection) */
 	nss_SetError(NSS_ERROR_MAXIMUM_FOUND);
@@ -324,6 +384,37 @@ nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
+  CK_ATTRIBUTE_PTR cktemplate,
+  CK_ULONG ctsize,
+  PRStatus (*callback)(NSSToken *t, nssSession *session,
+                       CK_OBJECT_HANDLE h, void *arg),
+  void *arg
+)
+{
+    PRStatus *rvstack;
+    nssSession *session;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    /* this isn't really traversal, it's find by template ... */
+    rvstack = nsstoken_TraverseObjects(tok, session, 
+                                       cktemplate, ctsize, 
+                                       callback, arg);
+    nssSession_ExitMonitor(session);
+    if (rvstack) {
+	/* examine the errors */
+	goto loser;
+    }
+    return PR_SUCCESS;
+loser:
+    return PR_FAILURE;
+}
+
+#if 0
+NSS_IMPLEMENT PRStatus
+nssToken_FindCertificatesByTemplate
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
   nssList *certList,
   PRUint32 maximumOpt,
   NSSArena *arenaOpt,
@@ -332,15 +423,14 @@ nssToken_FindCertificatesByTemplate
 )
 {
     PRStatus *rvstack;
-    PRStatus nssrv;
     nssSession *session;
-    PRUint32 count;
     struct collect_arg_str collectArgs;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
     collectArgs.arena = arenaOpt;
     collectArgs.list = certList;
     collectArgs.maximum = maximumOpt;
     nssSession_EnterMonitor(session);
+    /* this isn't really traversal, it's find by template ... */
     rvstack = nsstoken_TraverseObjects(tok, session, cktemplate, ctsize,
                                        collect_certs_callback,
                                        (void *)&collectArgs);
@@ -353,4 +443,5 @@ nssToken_FindCertificatesByTemplate
 loser:
     return PR_FAILURE;
 }
+#endif
 

@@ -35,16 +35,20 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.6 $ $Date: 2001/09/20 20:38:07 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.7 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
 #include "devt.h"
 #endif /* DEVT_H */
 
+#ifdef NSS_3_4_CODE
+#include "pkcs11t.h"
+#else
 #ifndef NSSCKT_H
 #include "nssckt.h"
 #endif /* NSSCKT_H */
+#endif /* NSS_3_4_CODE */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
@@ -93,6 +97,12 @@ nssModule_Destroy
   NSSModule *mod
 );
 
+NSS_EXTERN NSSModule *
+nssModule_AddRef
+(
+  NSSModule *mod
+);
+
 NSS_EXTERN PRStatus
 nssModule_Load
 (
@@ -124,6 +134,13 @@ nssModule_FindSlotByName
   NSSUTF8 *slotName
 );
 
+NSS_EXTERN NSSToken *
+nssModule_FindTokenByName
+(
+  NSSModule *mod,
+  NSSUTF8 *tokenName
+);
+
 /* This descends from NSSTrustDomain_TraverseCertificates, a questionable
  * function.  Do we want NSS to have access to this at the module level?
  */
@@ -149,6 +166,12 @@ nssSlot_Destroy
   NSSSlot *slot
 );
 
+NSS_EXTERN NSSSlot *
+nssSlot_AddRef
+(
+  NSSSlot *slot
+);
+
 NSS_EXTERN NSSUTF8 *
 nssSlot_GetName
 (
@@ -161,7 +184,7 @@ nssSlot_Login
 (
   NSSSlot *slot,
   PRBool asSO,
-  NSSCallback pwcb
+  NSSCallback *pwcb
 );
 extern const NSSError NSS_ERROR_INVALID_PASSWORD;
 extern const NSSError NSS_ERROR_USER_CANCELED;
@@ -186,7 +209,7 @@ NSS_EXTERN PRStatus
 nssSlot_SetPassword
 (
   NSSSlot *slot,
-  NSSCallback pwcb
+  NSSCallback *pwcb
 );
 extern const NSSError NSS_ERROR_INVALID_PASSWORD;
 extern const NSSError NSS_ERROR_USER_CANCELED;
@@ -217,40 +240,23 @@ nssToken_Destroy
   NSSToken *tok
 );
 
+NSS_EXTERN NSSToken *
+nssToken_AddRef
+(
+  NSSToken *tok
+);
+
 /* Given a raw attribute template, import an object 
  * (certificate, public key, private key, symmetric key)
- * Return the object as an NSS type.
  */
-NSS_EXTERN NSSCertificate *
-nssToken_ImportCertificate
+NSS_EXTERN PRStatus
+nssToken_ImportObject
 (
   NSSToken *tok,
   nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate
-);
-
-NSS_EXTERN NSSPublicKey *
-nssToken_ImportPublicKey
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate
-);
-
-NSS_EXTERN NSSPrivateKey *
-nssToken_ImportPrivateKey
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate
-);
-
-NSS_EXTERN NSSSymmetricKey *
-nssToken_ImportSymmetricKey
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  CK_ATTRIBUTE_PTR cktemplate
+  CK_ATTRIBUTE_PTR objectTemplate,
+  CK_ULONG otsize,
+  CK_OBJECT_HANDLE_PTR phObject
 );
 
 NSS_EXTERN NSSPublicKey *
@@ -278,6 +284,19 @@ nssToken_DeleteStoredObject
   CK_OBJECT_HANDLE object
 );
 
+NSS_IMPLEMENT PRStatus
+nssToken_FindCertificatesByTemplate
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  CK_ATTRIBUTE_PTR cktemplate,
+  CK_ULONG ctsize,
+  PRStatus (*callback)(NSSToken *t, nssSession *session,
+                       CK_OBJECT_HANDLE h, void *arg),
+  void *arg
+);
+
+#if 0
 NSS_EXTERN PRStatus
 nssToken_FindCertificatesByTemplate
 (
@@ -289,6 +308,7 @@ nssToken_FindCertificatesByTemplate
   CK_ATTRIBUTE_PTR cktemplate,
   CK_ULONG ctsize
 );
+#endif
 
 /* again, a questionable function.  maybe some tokens allow this? */
 NSS_EXTERN PRStatus *
@@ -316,6 +336,13 @@ nssSession_EnterMonitor
 /* would like to inline */
 NSS_EXTERN PRStatus
 nssSession_ExitMonitor
+(
+  nssSession *s
+);
+
+/* would like to inline */
+NSS_EXTERN PRBool
+nssSession_IsReadWrite
 (
   nssSession *s
 );
