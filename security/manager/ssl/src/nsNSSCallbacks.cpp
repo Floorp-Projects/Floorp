@@ -19,9 +19,12 @@
  *
  * Contributor(s):
  *  Brian Ryner <bryner@netscape.com>
+ *  Terry Hayes <thayes@netscape.com>
 */
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCallbacks.h"
+#include "nsNSSCertificate.h"
+#include "nsISSLStatus.h"
 #include "nsNSSIOLayer.h" // for nsNSSSocketInfo
 #include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"
@@ -38,6 +41,78 @@
 
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+/* Implementation of nsISSLStatus */
+class nsSSLStatus
+  : public nsISSLStatus
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISSLSTATUS
+
+  nsSSLStatus();
+  virtual ~nsSSLStatus();
+
+  /* public for initilization in this file */
+  nsCOMPtr<nsIX509Cert> mServerCert;
+  PRUint32 mKeyLength;
+  PRUint32 mSecretKeyLength;
+  nsXPIDLCString mCipherName;
+};
+
+NS_IMETHODIMP
+nsSSLStatus::GetServerCert(nsIX509Cert** _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mServerCert;
+  NS_IF_ADDREF(*_result);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSSLStatus::GetKeyLength(PRUint32* _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mKeyLength;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSSLStatus::GetSecretKeyLength(PRUint32* _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mSecretKeyLength;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSSLStatus::GetCipherName(char** _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = PL_strdup(mCipherName.get());
+
+  return NS_OK;
+}
+
+nsSSLStatus::nsSSLStatus()
+: mKeyLength(0), mSecretKeyLength(0)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSSLStatus, nsISSLStatus);
+
+nsSSLStatus::~nsSSLStatus()
+{
+}
+
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsresult rv = NS_OK;
@@ -113,10 +188,12 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   PRInt32 sslStatus;
   char* signer = nsnull;
+  char* cipherName = nsnull;
+  PRInt32 keyLength;
   nsresult rv;
   PRInt32 encryptBits;
 
-  if (SECSuccess == SSL_SecurityStatus(fd, &sslStatus, nsnull, nsnull,
+  if (SECSuccess == SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
                                        &encryptBits, &signer, nsnull))
     {
       PRInt32 secStatus;
@@ -155,9 +232,22 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       infoObject->SetSecurityState(secStatus);
       infoObject->SetShortSecurityDescription((const PRUnichar*)shortDesc);
 
+      /* Set the SSL Status information */
+      nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();
+
+      CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+      if (serverCert) status->mServerCert = new nsNSSCertificate(serverCert);
+
+      status->mKeyLength = keyLength;
+      status->mSecretKeyLength = encryptBits;
+      status->mCipherName = cipherName;
+
+      infoObject->SetSSLStatus(status);
+
       PR_Free(caName);
       CERT_DestroyName(certName);
       PR_Free(signer);
+      PR_Free(cipherName);
     }
 }
 
