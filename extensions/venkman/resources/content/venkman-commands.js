@@ -1132,7 +1132,7 @@ function cmdOpenDialog (e)
 function cmdOpenURL (e)
 {
     var url = prompt (MSG_OPEN_URL, "http://");
-    if (url)
+    if (url && url != "http://")
         return dispatch ("find-url", { url: url });
 
     return null;

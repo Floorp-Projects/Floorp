@@ -33,8 +33,8 @@
  *
  */
 
-const __vnk_version        = "0.9.46";
-const __vnk_requiredLocale = "0.9.42+";
+const __vnk_version        = "0.9.48";
+const __vnk_requiredLocale = "0.9.47+";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 
@@ -944,6 +944,22 @@ function SourceText (scriptInstance)
     this.shortName = abbreviateWord(getFileFromPath (this.url), 30);
 }
 
+SourceText.prototype.noteFutureBreakpoint =
+function st_notefbreak(line, state)
+{
+    if (!ASSERT(!("scriptInstance" in this),
+                "Don't call noteFutureBreakpoint on a SourceText with a " +
+                "scriptInstance, use the scriptManager instead."))
+    {
+        return;
+    }
+    
+    if (state)
+        arrayOrFlag (this.lineMap, line - 1, LINE_FBREAK);
+    else
+        arrayAndFlag (this.lineMap, line - 1, ~LINE_FBREAK);
+}
+
 SourceText.prototype.onMarginClick =
 function st_marginclick (e, line)
 {
@@ -951,7 +967,15 @@ function st_marginclick (e, line)
     
     if (!("scriptInstance" in this))
     {
-        dispatch ("fbreak", { url: this.url, line: line });
+        if (getFutureBreakpoint(this.url, line))
+        {
+            clearFutureBreakpoint(this.url, line);
+        }
+        else
+        {
+            setFutureBreakpoint(this.url, line);
+            //dispatch ("fbreak", { urlPattern: this.url, lineNumber: line });
+        }
     }
     else
     {
@@ -1052,6 +1076,16 @@ function st_oncomplete (data, url, status)
     {
         this.scriptInstance.guessFunctionNames(sourceText);
         this.lineMap = this.scriptInstance.lineMap;
+    }
+    else
+    {
+        this.lineMap = new Array();
+        for (var fbp in console.fbreaks)
+        {
+            var fbreak = console.fbreaks[fbp];
+            if (fbreak.url == this.url)
+                arrayOrFlag (this.lineMap, fbreak.lineNumber - 1, LINE_FBREAK);
+        }
     }
 
     this.isLoaded = true;

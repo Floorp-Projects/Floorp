@@ -221,6 +221,47 @@ function safeHTML(str)
     return String(str).replace(/[<>&]/g, replaceChars);
 }
 
+function alert(msg, parent, title)
+{
+    var PROMPT_CTRID = "@mozilla.org/embedcomp/prompt-service;1";
+    var nsIPromptService = Components.interfaces.nsIPromptService;
+    var ps = Components.classes[PROMPT_CTRID].createInstance(nsIPromptService);
+    if (!parent)
+        parent = window;
+    if (!title)
+        title = MSG_ALERT;
+    ps.alert (parent, title, msg);
+}
+
+function confirm(msg, parent, title)
+{
+    var PROMPT_CTRID = "@mozilla.org/embedcomp/prompt-service;1";
+    var nsIPromptService = Components.interfaces.nsIPromptService;
+    var ps = Components.classes[PROMPT_CTRID].createInstance(nsIPromptService);
+    if (!parent)
+        parent = window;
+    if (!title)
+        title = MSG_CONFIRM;
+    return ps.confirm (parent, title, msg);
+}
+
+function prompt(msg, initial, parent, title)
+{
+    var PROMPT_CTRID = "@mozilla.org/embedcomp/prompt-service;1";
+    var nsIPromptService = Components.interfaces.nsIPromptService;
+    var ps = Components.classes[PROMPT_CTRID].createInstance(nsIPromptService);
+    if (!parent)
+        parent = window;
+    if (!title)
+        title = MSG_PROMPT;
+    rv = { value: initial };
+
+    if (!ps.prompt (parent, title, msg, rv, null, {value: null}))
+        return null;
+
+    return rv.value
+}
+
 function getChildById (element, id)
 {
     var nl = element.getElementsByAttribute("id", id);

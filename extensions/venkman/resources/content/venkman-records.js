@@ -189,8 +189,9 @@ function WindowRecord (win, baseURL)
     else
     {
         this.baseURL = getPathFromURL(this.url);
+        if (this.baseURL.indexOf("file:///") == 0)
+            this.baseURL = "file:/" + this.baseURL.substr(8)
     }
-    
     
     this.reserveChildren(true);
     this.shortName = getFileFromPath (this.url);

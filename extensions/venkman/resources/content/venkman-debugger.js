@@ -1833,10 +1833,18 @@ function setFutureBreakpoint (urlPattern, lineNumber)
     if (key in console.fbreaks)
         return false;
     
-    for (var url in console.scriptManagers)
+    var url;
+    
+    for (url in console.scriptManagers)
     {
         if (url == urlPattern)
             console.scriptManagers[url].noteFutureBreakpoint(lineNumber, true);
+    }    
+
+    for (url in console.files)
+    {
+        if (url == urlPattern)
+            console.files[url].noteFutureBreakpoint(lineNumber, true);
     }    
 
     var fbreak = new FutureBreakpoint (urlPattern, lineNumber);
@@ -1863,10 +1871,18 @@ function clearFutureBreakpoint (urlPattern, lineNumber)
     for (i in fbreak.childrenBP)
         fbreak.childrenBP[i].parentBP = null;
 
-    for (var url in console.scriptManagers)
+    var url;
+    
+    for (url in console.scriptManagers)
     {
         if (url.search(urlPattern) != -1)
             console.scriptManagers[url].noteFutureBreakpoint(lineNumber, false);
+    }
+
+    for (url in console.files)
+    {
+        if (url == urlPattern)
+            console.files[url].noteFutureBreakpoint(lineNumber, false);
     }    
 
     dispatch ("hook-fbreak-clear", { fbreak: fbreak });

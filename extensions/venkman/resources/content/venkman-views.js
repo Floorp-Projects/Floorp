@@ -2325,8 +2325,8 @@ function s2v_getcontext (cx)
             cx.lineNumber = parseInt(target.childNodes[1].firstChild.data);
 
             var row = cx.lineNumber - 1;
-        
-            if (sourceText.lineMap[row] & LINE_BREAKABLE)
+
+            if (sourceText.lineMap && sourceText.lineMap[row] & LINE_BREAKABLE)
             {
                 cx.lineIsExecutable = true;
                 if ("scriptInstance" in sourceText)
@@ -2352,7 +2352,7 @@ function s2v_getcontext (cx)
                 }
             }
             
-            if (sourceText.lineMap[row] & LINE_BREAK)
+            if (sourceText.lineMap && sourceText.lineMap[row] & LINE_BREAK)
             {
                 cx.hasBreak = true;
                 if ("scriptInstance" in sourceText)
@@ -2369,7 +2369,7 @@ function s2v_getcontext (cx)
                 if ("breakWrapper" in cx && cx.breakWrapper.parentBP)
                     cx.hasFBreak = true;
             }
-            else if (sourceText.lineMap[row] & LINE_FBREAK)
+            else if (sourceText.lineMap && sourceText.lineMap[row] & LINE_FBREAK)
             {
                 cx.hasFBreak = true;
                 cx.breakWrapper = getFutureBreakpoint(cx.url, cx.lineNumber);
@@ -3832,6 +3832,7 @@ function wv_init()
         getContext: this.getContext,
         items:
         [
+         ["watch-expr"],
          ["remove-watch"],
          ["set-eval-obj", {type: "checkbox",
                            checkedif: "has('jsdValue') && " +
@@ -3998,17 +3999,34 @@ function cmdUnwatch (e)
 
 function cmdWatchExpr (e)
 {
+    var watches = console.views.watches;
+    
     if (!e.expression)
     {
-        var watches = console.views.watches.childData;
-        var len = watches.length;
-        display (getMsg(MSN_WATCH_HEADER, len));
-        for (var i = 0; i < len; ++i)
+        if (e.isInteractive)
         {
-            display (getMsg(MSN_FMT_WATCH_ITEM, [i, watches[i].displayName,
-                                                 watches[i].displayValue]));
+            var watchData = console.views.watches.childData;
+            var len = watchData.length;
+            display (getMsg(MSN_WATCH_HEADER, len));
+            for (var i = 0; i < len; ++i)
+            {
+                display (getMsg(MSN_FMT_WATCH_ITEM,
+                                [i, watchData[i].displayName,
+                                 watchData[i].displayValue]));
+            }
+            return null;
         }
-        return null;
+
+        var parent;
+            
+        if (watches.currentContent)
+            parent = watches.currentContent.ownerWindow;
+        else
+            parent = window;
+            
+        e.expression = prompt(MSG_ENTER_WATCH, "", parent);
+        if (!e.expression)
+            return null;
     }
     
     var refresher;
@@ -4051,8 +4069,8 @@ function cmdWatchExpr (e)
     var rec = new ValueRecord(console.jsds.wrapValue(null), e.expression, 0);
     rec.onPreRefresh = refresher;
     rec.refresh();
-    console.views.watches.childData.appendChild(rec);
-    console.views.watches.refresh();
+    watches.childData.appendChild(rec);
+    watches.refresh();
     return rec;
 }
 
