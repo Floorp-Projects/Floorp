@@ -1940,9 +1940,14 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
   aPresContext->IsRenderingOnlySelection(&isRenderingOnlySelection);
 
   (*aSelectionController)->GetDisplaySelection(&aSelectionValue);
-  //if greater than hidden then we display some kind of selection
-  aDisplayingSelection = (aSelectionValue > nsISelectionController::SELECTION_HIDDEN) || 
-                         (aIsPaginated && isRenderingOnlySelection);
+
+  if(aIsPaginated){
+    aDisplayingSelection = isRenderingOnlySelection;
+  } else {
+    //if greater than hidden then we display some kind of selection
+    aDisplayingSelection = (aSelectionValue > nsISelectionController::SELECTION_HIDDEN);
+  }
+
 
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and text text wasn't
