@@ -75,6 +75,12 @@ public:
     // this will be called when an AckSyncDone is recieved from the Conduit
     nsresult Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPalmRecIDListCount = 0, unsigned long * aPalmRecordIDList = nsnull);
 
+    // this will upate AB with new category id and mod time.
+    nsresult UpdateSyncInfo(unsigned long aCategoryId);
+
+    // this will delete an AB
+    nsresult DeleteAB(unsigned long aCategoryId, PRUnichar * aAbName, char * aABUrl);
+
 protected:
 
     PRBool mIsPalmDataUnicode;

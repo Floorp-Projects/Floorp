@@ -258,7 +258,10 @@ long MozABHHManager::DeleteCategory(DWORD dwCategory, BOOL bMoveToUnfiled)
     BYTE sCategory = LOBYTE(LOWORD(dwCategory));
 
     if (!bMoveToUnfiled)
+    {
         retval = SyncPurgeAllRecsInCategory(m_hhDB, sCategory);
+        m_pCatMgr->DeleteByIndex(dwCategory); // delete category itself
+    }
     else 
         retval = SyncChangeCategory(m_hhDB, sCategory, 0);
     return retval;
@@ -396,6 +399,8 @@ long MozABHHManager::LoadUpdatedRecords(DWORD catIndex, CPalmRecord ***ppRecordL
     memset(palmRecordList, 0, sizeof(CPalmRecord *) * dwRecCount);
     *ppRecordList = palmRecordList;
 
+    // SyncReadNextModifiedRecInCategory() does not seem to be returning
+    // deleted palm records, so SyncReadNextModifiedRec() is used instead.
     CPalmRecord *pPalmRec;
     *pListSize = 0;
     while ((!retval) && (*pListSize < dwRecCount))  {
@@ -403,13 +408,10 @@ long MozABHHManager::LoadUpdatedRecords(DWORD catIndex, CPalmRecord ***ppRecordL
         if(retval)
             break;
         m_rInfo.m_RecIndex = 0;
-        if(catIndex >= 0) {
-            m_rInfo.m_CatId = catIndex;
-            retval = SyncReadNextModifiedRecInCategory(m_rInfo);
-        }
-        else
-            retval = SyncReadNextModifiedRec(m_rInfo);
-        if (!retval) {
+        retval = SyncReadNextModifiedRec(m_rInfo);
+        // Does it belong to the category we care about?
+        if (!retval && m_rInfo.m_CatId == catIndex)
+        {
             pPalmRec = new CPalmRecord(m_rInfo);
             if (pPalmRec) {
                 *palmRecordList = pPalmRec;
@@ -723,3 +725,7 @@ long MozABHHManager::DeleteARecord(CPalmRecord & palmRec)
     return retval;
 }
 
+long MozABHHManager::PurgeDeletedRecs(void)
+{
+    return (SyncPurgeDeletedRecs(m_hhDB));
+}

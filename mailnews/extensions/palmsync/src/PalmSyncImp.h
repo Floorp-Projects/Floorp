@@ -81,6 +81,10 @@ public :
                             int * aMozRecCount, lpnsABCOMCardStruct * aMozRecList);
 
     STDMETHODIMP nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRecCount, unsigned long * aNewPalmRecIDList);
+
+    STDMETHODIMP nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName);
+
+    STDMETHODIMP nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl);
  
 private :
     PRInt32 m_cRef;

@@ -52,7 +52,7 @@ public:
 
 	// this will return the list of ABs in Mozilla and if they were synced before
     long GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdList, 
-                        CPString *** pCategoryNameList, BOOL ** pIsFirstTimeSyncList);
+                        CPString *** pCategoryNameList, CPString *** pCategoryURLList, BOOL ** pIsFirstTimeSyncList);
 	// this will update a Mozilla AB with updated Palm records and 
 	// return updated records in a Mozilla AB after the last sync
     // this will take care of first time sync also in which case 
@@ -67,7 +67,12 @@ public:
     // this load all records in an Moz AB
 	long LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, CPalmRecord *** pPCRecList);
 
-    long NotifySyncDone(BOOL success, DWORD catID=-1, DWORD newRecCount=0, DWORD * newRecIDList=NULL);
+  long NotifySyncDone(BOOL success, DWORD catID=-1, DWORD newRecCount=0, DWORD * newRecIDList=NULL);
+
+  // Update/Reset category id and mod time in an Moz AB
+  long UpdatePCABSyncInfo(DWORD categoryId, CPString & categoryName);
+  // Delete an Moz AB
+  long DeletePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl);
 
 private:
   	// this will initiate the communication with Mozilla

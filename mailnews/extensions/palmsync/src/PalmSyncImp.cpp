@@ -140,24 +140,37 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
         // server->description is represented in UTF8, we need to do some conversion...
         if(aIsUnicode) {
             // convert to Unicode
-            nsAutoString abName;
+            nsAutoString abName, abUrl;
             rv = ConvertToUnicode("UTF-8", server->description, abName);
             if (NS_FAILED(rv))
                 break;
+            rv = ConvertToUnicode("UTF-8", server->uri, abUrl);
+            if (NS_FAILED(rv))
+                break;
             // add to the list
-            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abName.Length()+1));
-            wcscpy(m_ServerDescList->lpszABDesc, abName.get());
+            m_ServerDescList->lpszABName = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abName.Length()+1));
+            wcscpy(m_ServerDescList->lpszABName, abName.get());
+            m_ServerDescList->lpszABUrl = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abUrl.Length()+1));
+            wcscpy(m_ServerDescList->lpszABUrl, abUrl.get());
         }
         else {
             // we need to convert the description from UTF-8 to Unicode and then to ASCII
-            nsAutoString abUName;
+            nsAutoString abUName, abUUrl;
             rv = ConvertToUnicode("UTF-8", server->description, abUName);
             if (NS_FAILED(rv))
                 break;
             nsCAutoString abName = NS_LossyConvertUCS2toASCII(abUName);
 
-            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abName.Length()+1));
-            strcpy((char*)m_ServerDescList->lpszABDesc, abName.get());
+            rv = ConvertToUnicode("UTF-8", server->uri, abUUrl);
+            if (NS_FAILED(rv))
+                break;
+            nsCAutoString abUrl = NS_LossyConvertUCS2toASCII(abUUrl);
+
+            m_ServerDescList->lpszABName = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abName.Length()+1));
+            strcpy((char*)m_ServerDescList->lpszABName, abName.get());
+
+            m_ServerDescList->lpszABUrl = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (abUrl.Length()+1));
+            strcpy((char*)m_ServerDescList->lpszABUrl, abUrl.get());
         }
         m_ServerDescList++;
 
@@ -255,5 +268,42 @@ STDMETHODIMP CPalmSyncImp::nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRe
 
     return S_OK;
 }
+
+// Update the category id and mod tiem for the Address Book in Mozilla
+STDMETHODIMP CPalmSyncImp::nsUpdateABSyncInfo(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName)
+{
+  nsresult rv;
+  if(m_PalmHotSync)
+    rv = ((nsAbPalmHotSync *)m_PalmHotSync)->UpdateSyncInfo(aCategoryId);
+  else
+  {
+    // Launch another ABpalmHotSync session.
+    nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+    rv = palmHotSync.Initialize();
+    if (NS_SUCCEEDED(rv))
+      rv = palmHotSync.UpdateSyncInfo(aCategoryId);
+  }
+
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  return S_OK;
+}
+
+// Delete an Address Book in Mozilla
+STDMETHODIMP CPalmSyncImp::nsDeleteAB(BOOL aIsUnicode, unsigned long aCategoryId, LPTSTR aABName, LPTSTR aABUrl)
+{
+  // This is an independent operation so use a local nsAbPalmHotSync var
+  // (ie the callers don't need to call AckSyncdone after this is done).
+  nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (char*)aABName, aCategoryId);
+
+  nsresult rv = palmHotSync.DeleteAB(aCategoryId, aABName, (char*)aABUrl);;
+
+  if (NS_FAILED(rv))
+      return E_FAIL;
+
+  return S_OK;
+}
+
 
 

@@ -86,7 +86,7 @@ BOOL MozABPCManager::InitMozPalmSyncInstance(IPalmSync **aRetValue)
 }
 
 // this function allocates the list as well as the strings, caller should free list and delete strings
-long MozABPCManager::GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdList, CPString *** pCategoryNameList, BOOL ** pIsFirstTimeSyncList)
+long MozABPCManager::GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdList, CPString *** pCategoryNameList, CPString *** pCategoryUrlList, BOOL ** pIsFirstTimeSyncList)
 {
     lpnsMozABDesc mozABNameList=NULL;
 
@@ -116,16 +116,31 @@ long MozABPCManager::GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdLis
     memset(abNameList, 0, sizeof(CPString *) * dwMozABCount);
     *pCategoryNameList = abNameList;
 
+    CPString ** abUrlList = (CPString **) malloc(sizeof(CPString *) * dwMozABCount);
+    if (!abUrlList) {
+        free(mozABNameList);
+        free(abNameList);
+        return GEN_ERR_LOW_MEMORY;
+    }
+    memset(abUrlList, 0, sizeof(CPString *) * dwMozABCount);
+    *pCategoryUrlList = abUrlList;
+
     for (int i=0; i < dwMozABCount; i++) {
-        CPString * pABName = new CPString((LPCTSTR) mozABNameList[i].lpszABDesc);
-        if (pABName) {
+        CPString * pABName = new CPString((LPCTSTR) mozABNameList[i].lpszABName);
+        if (pABName)
             *abNameList = pABName;
-            abNameList++;
-        }
-        else {
+        else
             return GEN_ERR_LOW_MEMORY;
-        }
-        CoTaskMemFree(mozABNameList[i].lpszABDesc);
+        CoTaskMemFree(mozABNameList[i].lpszABName);
+        abNameList++;
+
+        CPString * pABUrl = new CPString((LPCTSTR) mozABNameList[i].lpszABUrl);
+        if (pABUrl)
+            *abUrlList = pABUrl;
+        else
+            return GEN_ERR_LOW_MEMORY;
+        CoTaskMemFree(mozABNameList[i].lpszABUrl);
+        abUrlList++;
     }
     
     CoTaskMemFree(mozABNameList);
@@ -300,3 +315,28 @@ long MozABPCManager::NotifySyncDone(BOOL success, DWORD catID, DWORD newRecCount
     return retval;
 }
 
+long MozABPCManager::UpdatePCABSyncInfo(DWORD categoryId, CPString & categoryName)
+{
+    IPalmSync     *pNsPalmSync = NULL;
+    // get the interface 
+    if (!InitMozPalmSyncInstance(&pNsPalmSync))
+        return GEN_ERR_NOT_SUPPORTED;
+
+    HRESULT hres = pNsPalmSync->nsUpdateABSyncInfo(FALSE, categoryId, categoryName);
+    long retval = (long) hres;
+
+    return retval;
+}
+
+long MozABPCManager::DeletePCAB(DWORD categoryId, CPString & categoryName, CPString & categoryUrl)
+{
+    IPalmSync     *pNsPalmSync = NULL;
+    // get the interface 
+    if (!InitMozPalmSyncInstance(&pNsPalmSync))
+        return GEN_ERR_NOT_SUPPORTED;
+
+    HRESULT hres = pNsPalmSync->nsDeleteAB(FALSE, categoryId, categoryName, categoryUrl);
+    long retval = (long) hres;
+
+    return retval;
+}

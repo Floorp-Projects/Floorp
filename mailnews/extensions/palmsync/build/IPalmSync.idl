@@ -42,7 +42,8 @@ import "unknwn.idl";
 // this is defined so that we can return an array of strings(i.e array of AB Description strings)
 typedef struct
 {
-	LPTSTR lpszABDesc;
+	LPTSTR lpszABName;
+  LPTSTR lpszABUrl;
 }nsMozABDesc, *lpnsMozABDesc;
 
 // This structure defines the data fields for MozAB based on "nsIAbCard.idl"
@@ -144,5 +145,10 @@ interface IPalmSync : IUnknown
     // Send an ack for done and update the palm rec id for new records added
     HRESULT nsAckSyncDone([in] BOOL aIsSuccess, [in] int aCatID, [in] int aNewRecCount, [in, size_is(aNewRecCount)] unsigned long * aNewPalmRecIDList);
 
+    // Update the Address Book's category id and mod time.
+    HRESULT nsUpdateABSyncInfo([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName);
+
+    // Delete an addressbook
+    HRESULT nsDeleteAB([in] BOOL aIsUnicode, [in] unsigned long aCategoryId, [in] LPTSTR aABName, [in] LPTSTR aABUrl);
 };
 

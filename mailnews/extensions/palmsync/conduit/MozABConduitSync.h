@@ -45,6 +45,27 @@
 #include "MozABHHManager.h"
 #include "MozABPCManager.h"
 
+#define PERSONAL_ADDRBOOK_URL   "moz-abmdbdirectory://abook.mab"
+#define COLLECTED_ADDRBOOK_URL  "moz-abmdbdirectory://history.mab"
+
+#define ENV_VAR_CONDUTI_LOG "MOZ_CONDUIT_LOG"
+
+#define CONDUIT_LOG0(fd, format) \
+  if (fd) \
+    fprintf(fd, format);
+#define CONDUIT_LOG1(fd, format, arg1) \
+  if (fd) \
+    fprintf(fd, format, arg1);
+#define CONDUIT_LOG2(fd, format, arg1, arg2) \
+  if (fd) \
+    fprintf(fd, format, arg1, arg2);
+#define CONDUIT_LOG3(fd, format, arg1, arg2, arg3) \
+  if (fd) \
+    fprintf(fd, format, arg1, arg2, arg3);
+#define CONDUIT_LOG4(fd, format, arg1, arg2, arg3, arg4) \
+  if (fd) \
+    fprintf(fd, format, arg1, arg2, arg3, arg4);
+
 class CMozABConduitSync
 {
 public:

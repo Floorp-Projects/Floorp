@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+#include "nsRDFResource.h"
 #include "nsAbPalmSync.h"
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
@@ -195,7 +195,7 @@ nsresult nsAbPalmHotSync::Initialize()
         if(NS_FAILED(rv)) return rv ;
 
         // if Palm category is not already assigned check the AB name
-        if(abName.Find(mAbName) != kNotFound)
+        if(abName == mAbName)
             break;
 
         server = nsnull;
@@ -219,7 +219,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStru
     nsAutoString fileName(mAbName.get());
     fileName.AppendWithConversion(".mab");
     fileName.StripWhitespace();
-    nsresult rv = DIR_AddNewAddressBook(mAbName.get(), NS_ConvertUCS2toUTF8(fileName).get(),
+    nsresult rv = DIR_AddNewAddressBook(mAbName.get(), nsnull /*let filename be generated*/,
                                             PR_FALSE, MAPIDirectory, &server);
     if(NS_FAILED(rv))
         return rv;
@@ -238,7 +238,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStru
 
     // new DB here so no need to backup
     rv = UpdateMozABWithPalmRecords();
-
+ 
     rv = mABDB->Close(NS_SUCCEEDED(rv));
 
     if(NS_SUCCEEDED(rv)) {
@@ -771,13 +771,13 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
         rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_PALMID, recordIDBuf,
                                              PR_FALSE, getter_AddRefs(existingCard));
         if(NS_SUCCEEDED(rv) && existingCard) {
-            if(palmRec->dwStatus == ATTR_DELETED) {
+            if(palmRec->dwStatus & ATTR_DELETED) {
                 mABDB->DeleteCard(existingCard, PR_FALSE);
                 continue;
             }
-            if(palmRec->dwStatus == ATTR_NEW)
+            if(palmRec->dwStatus & ATTR_NEW)
                 continue;
-            if(palmRec->dwStatus == ATTR_MODIFIED) {
+            if(palmRec->dwStatus & ATTR_MODIFIED) {
                 PRBool isEqual=PR_FALSE;
                 ipcCard.Equals(existingCard, &isEqual);
                 if(isEqual)
@@ -881,4 +881,64 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatID, PRUint32 aPa
     }
     
     return rv;
+}
+
+nsresult nsAbPalmHotSync::UpdateSyncInfo(unsigned long aCategoryId)
+{
+  if (!mDirServerInfo)
+    return NS_ERROR_FAILURE;
+
+  // aCategoryId = -1 means that callers want to reset the mod time as well. 
+  mDBOpen = PR_FALSE;
+  PRUint32 modTimeInSec;
+  nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+  if (aCategoryId >= 0)
+    mDirServerInfo->PalmSyncTimeStamp = modTimeInSec;
+  else
+    mDirServerInfo->PalmSyncTimeStamp = 0;  // Reset mod time.
+  mDirServerInfo->PalmCategoryId = aCategoryId;
+  DIR_SavePrefsForOneServer(mDirServerInfo);
+
+  return NS_OK;
+}
+
+nsresult nsAbPalmHotSync::DeleteAB(unsigned long aCategoryId, PRUnichar * aAbName, char * aABUrl)
+{
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> parentArray(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID));
+  nsCOMPtr<nsISupportsArray> selectedArray(do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID));
+
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService (NS_RDF_CONTRACTID "/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Parent nsIABDirectory: like "moz-abdirectory://".
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource("moz-abdirectory://", getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIAbDirectory> parentDirectory = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  parentArray->AppendElement(parentDirectory);
+
+  // Selected folder nsIABDirectory: like "moz-abmdbdirectory://abook-1.mab"
+  nsCOMPtr <nsIRDFResource> childResource;
+  rv = rdfService->GetResource(aABUrl, getter_AddRefs(childResource));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr <nsIAbDirectory> selectedDirectory = do_QueryInterface(childResource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  selectedArray->AppendElement(selectedDirectory);
+
+  nsCOMPtr<nsIRDFDataSource> ds;
+  rv = rdfService->GetDataSource("rdf:addressdirectory", getter_AddRefs(ds));
+  if (NS_FAILED(rv) || !ds)
+    return rv;
+
+  nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(NS_ADDRESSBOOK_CONTRACTID, &rv);
+  if (NS_FAILED(rv) || !ab)
+    return rv;
+
+  return(ab->DeleteAddressBooks(ds, parentArray, selectedArray));
 }

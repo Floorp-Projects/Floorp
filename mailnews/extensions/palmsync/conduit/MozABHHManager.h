@@ -78,6 +78,7 @@ public:
     long AddARecord(CPalmRecord & palmRec);
     long DeleteARecord(CPalmRecord & palmRec);
     long UpdateARecord(CPalmRecord & palmRec);
+    long PurgeDeletedRecs(void);
 
 protected:
     char  m_szName[SYNC_DB_NAMELEN];
