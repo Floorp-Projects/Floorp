@@ -3,8 +3,8 @@
 #
 
 
-# $Revision: 1.2 $ 
-# $Date: 2002/05/02 22:57:29 $ 
+# $Revision: 1.3 $ 
+# $Date: 2002/05/03 20:17:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/binary_runs,v $ 
 # $Name:  $ 
@@ -48,7 +48,6 @@ print "$0: Success! @Binary is still running. Killing.\n";
 
 
 # try to kill 3 times, then try a kill -9
-my ($status);
 for ($i=0 ; $i<3 ; $i++) {
   kill 'TERM',$pid;
 
