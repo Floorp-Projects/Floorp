@@ -60,7 +60,7 @@ interface nsIPrefBranchInternal : nsIPrefBranch
    * will receive the notification via their |Observe| method. The following
    * arguments will be passed to the |Observe| method:
    *   aSubject - The nsIPrefBranch object (this)
-   *   aTopic   - The string defined by NS_PREFBRANCH_PREFCHANGE_OBSERVER_ID
+   *   aTopic   - The string defined by NS_PREFBRANCH_PREFCHANGE_TOPIC_ID
    *   aData    - The preference which has changed
    *
    * @param aDomain   The preference on which to listen for changes.
