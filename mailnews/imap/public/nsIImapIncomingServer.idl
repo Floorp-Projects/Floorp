@@ -105,7 +105,6 @@ interface nsIImapIncomingServer : nsISupports {
                                         in boolean forceAllFolders,
                                         in boolean performingBiff);
   attribute boolean doingLsub;
-
   void allowFolderConversion(out boolean allowConversion);
   void convertFolderName(in string originalName, out wstring convertedName);
   void hideFolderName(in string originalName, out boolean hideFolder);

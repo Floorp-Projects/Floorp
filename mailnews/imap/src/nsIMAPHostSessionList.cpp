@@ -713,24 +713,24 @@ NS_IMETHODIMP nsIMAPHostSessionList::FlushUncommittedNamespacesForHost(const cha
 // Returns NULL if there is no personal namespace on the given host
 NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineInboxPathForHost(const char *serverKey, nsString &result)
 {
-	PR_EnterMonitor(gCachedHostInfoMonitor);
-	nsIMAPHostInfo *host = FindHost(serverKey);
-	if (host)
-	{
-		nsIMAPNamespace *ns = NULL;
-		ns = host->fNamespaceList->GetDefaultNamespaceOfType(kPersonalNamespace);
-		if (ns)
-		{
-			result.AssignWithConversion(ns->GetPrefix());
-            result.Append(NS_LITERAL_STRING("INBOX"));
-		}
-	}
-	else
-	{
-		result.SetLength(0);
-	}
-	PR_ExitMonitor(gCachedHostInfoMonitor);
-	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+  PR_EnterMonitor(gCachedHostInfoMonitor);
+  nsIMAPHostInfo *host = FindHost(serverKey);
+  if (host)
+  {
+    nsIMAPNamespace *ns = NULL;
+    ns = host->fNamespaceList->GetDefaultNamespaceOfType(kPersonalNamespace);
+    if (ns)
+    {
+      result.AssignWithConversion(ns->GetPrefix());
+      result.Append(NS_LITERAL_STRING("INBOX"));
+    }
+  }
+  else
+  {
+    result.SetLength(0);
+  }
+  PR_ExitMonitor(gCachedHostInfoMonitor);
+  return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetShouldAlwaysListInboxForHost(const char* /*serverKey*/, PRBool &result)

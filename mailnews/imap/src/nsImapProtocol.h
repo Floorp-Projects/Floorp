@@ -231,6 +231,7 @@ public:
     PRUint32 downloadSize,
     PRBool tryChunking);
   virtual void PipelinedFetchMessageParts(nsCString &uid, nsIMAPMessagePartIDArray *parts);
+  void FallbackToFetchWholeMsg(const char *messageId, PRUint32 messageSize);
   
   // used when streaming a message fetch
   virtual nsresult BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body

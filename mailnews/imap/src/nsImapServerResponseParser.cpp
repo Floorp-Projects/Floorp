@@ -182,7 +182,7 @@ void nsImapServerResponseParser::IncrementNumberOfTaggedResponsesExpected(const 
 void nsImapServerResponseParser::InitializeState()
 {
   fProcessingTaggedResponse = PR_FALSE;
-  fCurrentCommandFailed 	  = PR_FALSE;
+  fCurrentCommandFailed = PR_FALSE;
 }
 
 void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses)
@@ -2461,10 +2461,10 @@ void nsImapServerResponseParser::acl_data()
 
 void nsImapServerResponseParser::mime_data()
 {
-	if (PL_strstr(fNextToken, "MIME"))
-		mime_header_data();
-	else
-		mime_part_data();
+  if (PL_strstr(fNextToken, "MIME"))
+    mime_header_data();
+  else
+    mime_part_data();
 }
 
 // mime_header_data should not be streamed out;  rather, it should be
@@ -2474,103 +2474,103 @@ void nsImapServerResponseParser::mime_data()
 // we can construct the final output stream.
 void nsImapServerResponseParser::mime_header_data()
 {
-	char *partNumber = PL_strdup(fNextToken);
-	if (partNumber)
-	{
-		char *start = partNumber+5, *end = partNumber+5;	// 5 == nsCRT::strlen("BODY[")
-		while (ContinueParse() && end && *end != 'M' && *end != 'm')
-		{
-			end++;
-		}
-		if (end && (*end == 'M' || *end == 'm'))
-		{
-			*(end-1) = 0;
-			fNextToken = GetNextToken();
-			char *mimeHeaderData = CreateAstring();	// is it really this simple?
-			fNextToken = GetNextToken();
-			if (m_shell)
-			{
-				m_shell->AdoptMimeHeader(start, mimeHeaderData);
-			}
-		}
-		else
-		{
-			SetSyntaxError(PR_TRUE);
-		}
-		PR_Free(partNumber);	// partNumber is not adopted by the body shell.
-	}
-	else
-	{
-		HandleMemoryFailure();
-	}
+  char *partNumber = PL_strdup(fNextToken);
+  if (partNumber)
+  {
+    char *start = partNumber+5, *end = partNumber+5;	// 5 == nsCRT::strlen("BODY[")
+    while (ContinueParse() && end && *end != 'M' && *end != 'm')
+    {
+      end++;
+    }
+    if (end && (*end == 'M' || *end == 'm'))
+    {
+      *(end-1) = 0;
+      fNextToken = GetNextToken();
+      char *mimeHeaderData = CreateAstring();	// is it really this simple?
+      fNextToken = GetNextToken();
+      if (m_shell)
+      {
+        m_shell->AdoptMimeHeader(start, mimeHeaderData);
+      }
+    }
+    else
+    {
+      SetSyntaxError(PR_TRUE);
+    }
+    PR_Free(partNumber);	// partNumber is not adopted by the body shell.
+  }
+  else
+  {
+    HandleMemoryFailure();
+  }
 }
 
 // Actual mime parts are filled in on demand (either from shell generation
 // or from explicit user download), so we need to stream these out.
 void nsImapServerResponseParser::mime_part_data()
 {
-	char *checkOriginToken = PL_strdup(fNextToken);
-	if (checkOriginToken)
-	{
-		PRUint32 origin = 0;
-		PRBool originFound = PR_FALSE;
-		char *whereStart = PL_strchr(checkOriginToken, '<');
-		if (whereStart)
-		{
-			char *whereEnd = PL_strchr(whereStart, '>');
-			if (whereEnd)
-			{
-				*whereEnd = 0;
-				whereStart++;
-				origin = atoi(whereStart);
-				originFound = PR_TRUE;
-			}
-		}
-		PR_Free(checkOriginToken);
-		fNextToken = GetNextToken();
-		msg_fetch_content(originFound, origin, MESSAGE_RFC822);	// keep content type as message/rfc822, even though the
-																// MIME part might not be, because then libmime will
-																// still handle and decode it.
-	}
-	else
-		HandleMemoryFailure();
+  char *checkOriginToken = PL_strdup(fNextToken);
+  if (checkOriginToken)
+  {
+    PRUint32 origin = 0;
+    PRBool originFound = PR_FALSE;
+    char *whereStart = PL_strchr(checkOriginToken, '<');
+    if (whereStart)
+    {
+      char *whereEnd = PL_strchr(whereStart, '>');
+      if (whereEnd)
+      {
+        *whereEnd = 0;
+        whereStart++;
+        origin = atoi(whereStart);
+        originFound = PR_TRUE;
+      }
+    }
+    PR_Free(checkOriginToken);
+    fNextToken = GetNextToken();
+    msg_fetch_content(originFound, origin, MESSAGE_RFC822);	// keep content type as message/rfc822, even though the
+    // MIME part might not be, because then libmime will
+    // still handle and decode it.
+  }
+  else
+    HandleMemoryFailure();
 }
 
 // FETCH BODYSTRUCTURE parser
 // After exit, set fNextToken and fCurrentLine to the right things
 void nsImapServerResponseParser::bodystructure_data()
 {
-	fNextToken = GetNextToken();
-
-	// separate it out first
-	if (fNextToken && *fNextToken == '(')	// It has to start with an open paren.
-	{
-		char *buf = CreateParenGroup();
-
-		if (ContinueParse())
-		{
-			if (!buf)
-				HandleMemoryFailure();
-			else
-			{
-				// Looks like we have what might be a valid BODYSTRUCTURE response.
-				// Try building the shell from it here.
-				m_shell = new nsIMAPBodyShell(&fServerConnection, buf, CurrentResponseUID(), GetSelectedMailboxName());
-				/*
-				if (m_shell)
-				{
-					if (!m_shell->GetIsValid())
-					{
-						SetSyntaxError(PR_TRUE);
-					}
-				}
-				*/
-				PR_Free(buf);
-			}
-		}
-	}
-	else
-		SetSyntaxError(PR_TRUE);
+  fNextToken = GetNextToken();
+  
+  // separate it out first
+  if (fNextToken && *fNextToken == '(')	// It has to start with an open paren.
+  {
+    char *buf = CreateParenGroup();
+    
+    if (ContinueParse())
+    {
+      if (!buf)
+        HandleMemoryFailure();
+      else
+      {
+        // Looks like we have what might be a valid BODYSTRUCTURE response.
+        // Try building the shell from it here.
+        m_shell = new nsIMAPBodyShell(&fServerConnection, buf, CurrentResponseUID(), GetSelectedMailboxName());
+        /*
+        if (m_shell)
+        {
+        if (!m_shell->GetIsValid())
+        {
+        SetSyntaxError(PR_TRUE);
+        }
+        }
+        */
+        PR_Free(buf);
+      }
+    }
+  }
+  else
+    SetSyntaxError(PR_TRUE);
 }
 
 void nsImapServerResponseParser::quota_data()

@@ -88,6 +88,7 @@ nsImapUrl::nsImapUrl()
   m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
   m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
   m_msgLoadingFromCache = PR_FALSE;
+  m_shouldStoreMsgOffline = PR_FALSE;
   m_externalLinkUrl = PR_TRUE; // we'll start this at true, and set it false in nsImapService::CreateStartOfImapUrl
   m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
   m_validUrl = PR_TRUE;	// assume the best.
@@ -346,10 +347,10 @@ NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(char ** aResult)
 {
   // this method should only be called from the imap thread...
   // o.t. add lock protection..
-	if (nsnull == aResult || !m_searchCriteriaString) 
-		return  NS_ERROR_NULL_POINTER;
+  if (nsnull == aResult || !m_searchCriteriaString) 
+    return  NS_ERROR_NULL_POINTER;
   *aResult = nsCRT::strdup(m_searchCriteriaString);
-	return NS_OK;
+  return NS_OK;
 }
 
 // this method gets called from the UI thread and the imap thread
@@ -357,30 +358,30 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
 {
   nsAutoCMonitor mon(this);
   nsCAutoString newStr;
-	if (nsnull == aResult || !m_listOfMessageIds) 
-		return  NS_ERROR_NULL_POINTER;
-
+  if (nsnull == aResult || !m_listOfMessageIds) 
+    return  NS_ERROR_NULL_POINTER;
+  
   PRInt32 bytesToCopy = strlen(m_listOfMessageIds);
-
-	// mime may have glommed a "&part=" for a part download
-	// we return the entire message and let mime extract
-	// the part. Pop and news work this way also.
-	// this algorithm truncates the "&part" string.
-	char *currentChar = m_listOfMessageIds;
-	while (*currentChar && (*currentChar != '?'))
-		currentChar++;
-	if (*currentChar == '?')
-		bytesToCopy = currentChar - m_listOfMessageIds;
-
-	// we should also strip off anything after "/;section="
-	// since that can specify an IMAP MIME part
-	char *wherePart = PL_strstr(m_listOfMessageIds, "/;section=");
-	if (wherePart)
-		bytesToCopy = PR_MIN(bytesToCopy, wherePart - m_listOfMessageIds);
-
-	newStr.Assign(m_listOfMessageIds, bytesToCopy);
+  
+  // mime may have glommed a "&part=" for a part download
+  // we return the entire message and let mime extract
+  // the part. Pop and news work this way also.
+  // this algorithm truncates the "&part" string.
+  char *currentChar = m_listOfMessageIds;
+  while (*currentChar && (*currentChar != '?'))
+    currentChar++;
+  if (*currentChar == '?')
+    bytesToCopy = currentChar - m_listOfMessageIds;
+  
+  // we should also strip off anything after "/;section="
+  // since that can specify an IMAP MIME part
+  char *wherePart = PL_strstr(m_listOfMessageIds, "/;section=");
+  if (wherePart)
+    bytesToCopy = PR_MIN(bytesToCopy, wherePart - m_listOfMessageIds);
+  
+  newStr.Assign(m_listOfMessageIds, bytesToCopy);
   *aResult = ToNewCString(newStr);
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetCommand(char **result)
@@ -1132,7 +1133,7 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 
 NS_IMETHODIMP nsImapUrl::SetContentModified(nsImapContentModifiedType contentModified)
 {
-	m_contentModified = contentModified;
+  m_contentModified = contentModified;
   nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
   nsresult res = GetMemCacheEntry(getter_AddRefs(cacheEntry));
   if (NS_SUCCEEDED(res) && cacheEntry)
@@ -1612,3 +1613,15 @@ NS_IMETHODIMP nsImapUrl::SetCharsetOverRide(const char * aCharacterSet)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::GetShouldStoreMsgOffline(PRBool *aShouldStoreMsgOffline)
+{
+  NS_ENSURE_ARG_POINTER(aShouldStoreMsgOffline);
+  *aShouldStoreMsgOffline = m_shouldStoreMsgOffline;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::SetShouldStoreMsgOffline(PRBool aShouldStoreMsgOffline)
+{
+  m_shouldStoreMsgOffline = aShouldStoreMsgOffline;
+  return NS_OK;
+}

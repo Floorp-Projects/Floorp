@@ -125,6 +125,7 @@ protected:
   PRPackedBool m_fetchPartsOnDemand; // if PR_TRUE, we should fetch leave parts on server.
   PRPackedBool m_msgLoadingFromCache; // if PR_TRUE, we might need to mark read on server
   PRPackedBool m_externalLinkUrl; // if PR_TRUE, we're running this url because the user
+  PRPackedBool m_shouldStoreMsgOffline;
   nsImapContentModifiedType	m_contentModified;
   PRInt32 m_discoveryDepth;
 

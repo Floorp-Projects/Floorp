@@ -113,7 +113,8 @@ interface nsIImapUrl : nsISupports
   attribute nsISupports copyState;
   attribute nsIFileSpec msgFileSpec;
   attribute nsIImapMockChannel mockChannel;
-
+  attribute boolean shouldStoreMsgOffline; // set to true if we should store the msg for offline use if we can,
+                                           // i.e., we're not doing mime parts on demand.
   void addChannelToLoadGroup();
   void removeChannel(in nsresult aStatus);
   

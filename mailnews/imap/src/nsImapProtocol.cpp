@@ -2751,6 +2751,18 @@ void nsImapProtocol::FetchMsgAttribute(const char * messageIds, const char *attr
 // this routine is used to fetch a message or messages, or headers for a
 // message...
 
+void nsImapProtocol::FallbackToFetchWholeMsg(const char *messageId, PRUint32 messageSize)
+{
+  if (m_imapMessageSink && m_runningUrl)
+  {
+    PRBool shouldStoreMsgOffline;
+    m_runningUrl->GetShouldStoreMsgOffline(&shouldStoreMsgOffline);
+    if (shouldStoreMsgOffline)
+      m_imapMessageSink->SetNotifyDownloadedLines(PR_TRUE);
+  }
+  FetchTryChunking(messageId, kEveryThingRFC822, PR_TRUE, NULL, messageSize, PR_TRUE);
+}
+
 void
 nsImapProtocol::FetchMessage(const char * messageIds, 
                              nsIMAPeFetchFields whatToFetch,
