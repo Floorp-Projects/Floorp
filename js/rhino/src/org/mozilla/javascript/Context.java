@@ -1564,11 +1564,21 @@ public class Context {
     public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
     
     /**
+     * if hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) returns true,
+     * allow 'function <MemberExpression>(...) { ... }' to be syntax sugar for 
+     * '<MemberExpression> = function(...) { ... }', when <MemberExpression> 
+     * is not simply identifier. 
+     * See Ecma-262, section 11.2 for definition of <MemberExpression>
+     */
+    public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
+    
+    /**
      * Controls certain aspects of script semantics. 
      * Should be overwritten to alter default behavior.
      * @param featureIndex feature index to check
      * @return true if the <code>featureIndex</code> feature is turned on
      * @see #FEATURE_NON_ECMA_GET_YEAR
+     * @see #FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME
      */
     public boolean hasFeature(int featureIndex) {
         if (featureIndex == FEATURE_NON_ECMA_GET_YEAR) {
@@ -1587,7 +1597,12 @@ public class Context {
                     || version == Context.VERSION_1_1
                     || version == Context.VERSION_1_2);
         }
-        throw new RuntimeException("Bad feature index: " + featureIndex);
+        else if (featureIndex == FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME) {
+            return false;
+        }
+        // Unreachable code
+        if (Context.check) Context.codeBug();
+        return false;
     }
 
     /**
