@@ -138,6 +138,7 @@ var signonsOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
@@ -258,6 +259,7 @@ var rejectsOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
@@ -339,6 +341,7 @@ var nopreviewsOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
@@ -423,6 +426,7 @@ var nocapturesOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},

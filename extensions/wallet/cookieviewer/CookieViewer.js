@@ -103,6 +103,7 @@ var cookiesOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
@@ -253,6 +254,7 @@ var permissionsOutlinerView = {
     return rv;
   },
   isSeparator : function(index) {return false;},
+  isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(aColId, aElt) {},
   getRowProperties : function(row,column,prop){},
