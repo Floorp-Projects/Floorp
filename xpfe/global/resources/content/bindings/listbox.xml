@@ -102,7 +102,7 @@
         <body>
         <![CDATA[
           me._fireOnSelect();
-          this._selectTimeout = null;
+          me._selectTimeout = null;
         ]]>
         </body>
       </method>      
@@ -619,6 +619,13 @@
          this.selectItem(this.getItemAtIndex(count-1));
         ]]>
       </handler>
+
+      <handler event="keypress" key=" ">
+      <![CDATA[
+        if (this.currentItem && this.currentItem.getAttribute("type") == "checkbox")
+          this.currentItem.checked = !this.currentItem.checked;
+      ]]>
+      </handler>
     </handlers>    
   </binding>
 
@@ -800,6 +807,30 @@
     </content>
   </binding>
   
+  <binding id="listitem-checkbox"
+           extends="chrome://global/content/bindings/listbox.xml#listitem">
+    <content>
+      <children>
+        <xul:listcell type="checkbox" inherits="label,image,crop,checked"/>
+      </children>
+    </content>
+
+    <implementation>
+      <property name="checked"
+                onget="return this.getAttribute('checked') == 'true';"
+                onset="if (val) this.setAttribute('checked', 'true'); else this.removeAttribute('checked'); return val;"/>
+    </implementation>
+  </binding>
+  
+  <binding id="listitem-checkbox-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
+    <content>
+      <children>
+        <xul:listcell type="checkbox" class="listcell-iconic" inherits="label,image,crop,checked"/>
+      </children>
+    </content>
+  </binding>
+  
   <binding id="listcell"
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
     <content>
@@ -810,9 +841,34 @@
   </binding>
 
   <binding id="listcell-iconic"
-           extends="chrome://global/content/bindings/listbox.xml#listbox-base">
+           extends="chrome://global/content/bindings/listbox.xml#listcell">
     <content>
       <children>
+        <xul:image class="listcell-icon" inherits="src=image"/>
+        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+      </children>
+    </content>
+  </binding>
+
+  <binding id="listcell-checkbox"
+           extends="chrome://global/content/bindings/listbox.xml#listcell">
+    <content>
+      <children>
+        <xul:image class="listcell-check" inherits="checked"/>
+        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+      </children>
+    </content>
+    
+    <handlers>
+      <handler event="mousedown" action="parentNode.checked = !parentNode.checked;"/>
+    </handlers>
+  </binding>
+
+  <binding id="listcell-checkbox-iconic"
+           extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
+    <content>
+      <children>
+        <xul:image class="listcell-check" inherits="checked"/>
         <xul:image class="listcell-icon" inherits="src=image"/>
         <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
       </children>
