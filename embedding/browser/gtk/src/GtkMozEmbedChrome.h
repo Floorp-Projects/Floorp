@@ -44,6 +44,7 @@
 #include "nsICommonDialogs.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsITooltipListener.h"
+#include "nsIBaseWindow.h"
 
 // utility classes
 #include "nsXPIDLString.h"
@@ -60,6 +61,7 @@ class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor,
                           public nsIPrompt,
+                          public nsIBaseWindow,
                           public nsITooltipListener
 
 {
@@ -96,6 +98,21 @@ public:
   NS_DECL_NSIPROMPT
 
   NS_DECL_NSITOOLTIPLISTENER
+
+  // missing methods for nsIBaseWindow
+  NS_IMETHOD InitWindow(nativeWindow parentNativeWindow,
+			nsIWidget * parentWidget,
+			PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy);
+  NS_IMETHOD Create(void);
+  NS_IMETHOD Repaint(PRBool force);
+  NS_IMETHOD GetParentWidget(nsIWidget * *aParentWidget);
+  NS_IMETHOD SetParentWidget(nsIWidget * aParentWidget);
+  NS_IMETHOD GetParentNativeWindow(nativeWindow *aParentNativeWindow);
+  NS_IMETHOD SetParentNativeWindow(nativeWindow aParentNativeWindow);
+  NS_IMETHOD GetVisibility(PRBool *aVisibility);
+  NS_IMETHOD SetVisibility(PRBool aVisibility);
+  NS_IMETHOD GetMainWidget(nsIWidget * *aMainWidget);
+  NS_IMETHOD FocusAvailable(nsIBaseWindow *aCurrentFocus, PRBool *aTookFocus);
 
 private:
   GtkWidget                 *mOwningGtkWidget;
