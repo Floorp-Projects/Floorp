@@ -676,7 +676,20 @@ static void myPLstrncpy(Str255 dst, const char* src, int inMax)
     memcpy(&dst[1], src, srcLength);
 }
 
-static const char* TruncNodeName(const char *aNode, char *outBuf)
+/*
+    NS_TruncNodeName
+    
+    Utility routine to do a mid-trunc on a potential file name so that it is
+    no longer than 31 characters.  Until we move to the HFS+ APIs we need this
+    to come up with legal Mac file names.
+
+    Entry:  aNode = initial file name
+            outBuf = scratch buffer for the truncated name (MUST be >= 32 characters)
+
+    Exit:   function result = pointer to truncated name.  Will be either aNode or outBuf.
+
+*/
+const char* NS_TruncNodeName(const char *aNode, char *outBuf)
 {
     PRUint32 nodeLen;
     if ((nodeLen = strlen(aNode)) > 31)
@@ -721,7 +734,7 @@ static const char* TruncNodeName(const char *aNode, char *outBuf)
         memcpy(outBuf + srcPos, sEllipsisTokenStr, sEllipsisTokenLen);
         destPos = srcPos + sEllipsisTokenLen;
         
-        for (; srcPos <= nodeLen - halfLen; srcPos += charSize)
+        for (; srcPos < nodeLen - halfLen; srcPos += charSize)
             charSize = sTable[aNode[srcPos]] ? 2 : 1;
             
         memcpy(outBuf + destPos, aNode + srcPos, nodeLen - srcPos);
@@ -1491,7 +1504,7 @@ nsLocalFile::AppendNative(const nsACString &aNode)
     MakeDirty();
     
     char truncBuffer[32];
-    const char *node = TruncNodeName(PromiseFlatCString(aNode).get(), truncBuffer);
+    const char *node = NS_TruncNodeName(PromiseFlatCString(aNode).get(), truncBuffer);
     
     if (!mAppendedPath.Length())
     {
@@ -1639,7 +1652,7 @@ nsLocalFile::SetNativeLeafName(const nsACString &aLeafName)
     MakeDirty();
 
     char truncBuffer[32];
-    const char *leafName = TruncNodeName(PromiseFlatCString(aLeafName).get(), truncBuffer);
+    const char *leafName = NS_TruncNodeName(PromiseFlatCString(aLeafName).get(), truncBuffer);
 
     if (mAppendedPath.Length())
     {   // Lop off the end of the appended path and replace it with the new leaf name
