@@ -26,6 +26,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
 
 ConnectToDatabase();
 
@@ -49,32 +50,8 @@ if (defined ($::FORM{'id'})) {
 # End Data/Security Validation
 ######################################################################
 
-print "Content-type: text/html\n";
-print "\n";
-
-if (!defined $::FORM{'id'}) {
-    PutHeader("Search by bug number");
-    print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
-    print "You may find a single bug by entering its bug id here: \n";
-    print "<INPUT NAME=id>\n";
-    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
-    print "</FORM>\n";
-    PutFooter();
-    exit;
-}
-
 GetVersionTable();
 
-# Get the bug's summary (short description) and display it as
-# the page title.
-SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $::FORM{'id'}");
-my ($summary) = FetchSQLData();
-$summary = html_quote($summary);
-PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary, "", navigation_links() );
+print "Content-type: text/html\n\n";
 
-navigation_header();
-
-print "<HR>\n";
-
-$! = 0;
-do "bug_form.pl" || die "Error doing bug_form.pl: $!";
+show_bug();

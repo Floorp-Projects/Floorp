@@ -27,15 +27,7 @@
 use diagnostics;
 use strict;
 
-use vars qw(
-  $template
-  $vars
-);
-
 package Attachment;
-
-my $template = $::template;
-my $vars = $::vars;
 
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
@@ -44,11 +36,11 @@ my $vars = $::vars;
 # Functions
 ############################################################################
 
-sub list
+sub query
 {
-  # Displays a table of attachments for a given bug along with links for
-  # viewing, editing, or making requests for each attachment.
-
+  # Retrieves and returns an array of attachment records for a given bug. 
+  # This data should be given to attachment/list.atml in an
+  # "attachments" variable.
   my ($bugid) = @_;
 
   my $in_editbugs = &::UserInGroup("editbugs");
@@ -98,14 +90,8 @@ sub list
                      $in_editbugs);
     push @attachments, \%a;
   }
-
-  $vars->{'bugid'} = $bugid;
-  $vars->{'attachments'} = \@attachments;
-
-  $template->process("attachment/list.atml", $vars)
-    || &::DisplayError("Template process failed: " . $template->error())
-    && exit;
-
+  
+  return \@attachments;  
 }
 
 1;

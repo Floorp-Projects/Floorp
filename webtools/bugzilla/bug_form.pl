@@ -28,604 +28,293 @@ use RelationSet;
 # Use the Attachment module to display attachments for the bug.
 use Attachment;
 
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
+sub show_bug {    
+    # Shut up misguided -w warnings about "used only once".  For some reason,
+    # "use vars" chokes on me when I try it here.
+    sub bug_form_pl_sillyness {
+        my $zz;
+        $zz = %::FORM;
+        $zz = %::proddesc;
+        $zz = %::prodmaxvotes;
+        $zz = @::enterable_products;                                            
+        $zz = @::settable_resolution;
+        $zz = $::unconfirmedstate;
+        $zz = $::milestoneurl;
+        $zz = $::template;
+        $zz = $::vars;
+        $zz = @::legal_priority;
+        $zz = @::legal_platform;
+        $zz = @::legal_severity;
+        $zz = @::legal_bug_status;
+        $zz = @::target_milestone;
+        $zz = @::components;
+        $zz = @::legal_keywords;
+        $zz = @::versions;
+        $zz = @::legal_opsys;
+    }
 
-sub bug_form_pl_sillyness {
-    my $zz;
-    $zz = %::FORM;
-    $zz = %::components;
-    $zz = %::proddesc;
-    $zz = %::prodmaxvotes;
-    $zz = %::versions;
-    $zz = @::enterable_products;
-    $zz = @::legal_keywords;
-    $zz = @::legal_opsys;
-    $zz = @::legal_platform;
-    $zz = @::legal_priority;
-    $zz = @::settable_resolution;
-    $zz = @::legal_severity;
-    $zz = %::target_milestone;
-}
+    # Use templates
+    my $template = $::template;
+    my $vars = $::vars;
+    
+    $vars->{'GetBugLink'} = \&GetBugLink;
+    $vars->{'quoteUrls'} = \&quoteUrls,
+    $vars->{'lsearch'} = \&lsearch,
+    $vars->{'header_done'} = (@_),
 
-my $loginok = quietly_check_login();
+    quietly_check_login();
 
-my $id = $::FORM{'id'};
+    my $id = $::FORM{'id'};
+    
+    if (!defined($id)) {
+      $template->process("show/choose_bug.html.tmpl", $vars)
+        || DisplayError("Template process failed: " . $template->error());
+      exit;
+    }
+    
+    my %user;
+    my %bug;
 
-my $query = "
-select
-        bugs.bug_id,
-        product,
-        version,
-        rep_platform,
-        op_sys,
-        bug_status,
-        resolution,
-        priority,
-        bug_severity,
-        component,
-        assigned_to,
-        reporter,
-        bug_file_loc,
-        short_desc,
-        target_milestone,
-        qa_contact,
-        status_whiteboard,
+    # Populate the bug hash with the info we get directly from the DB.
+    my $query = "
+    SELECT bugs.bug_id, product, version, rep_platform, 
+        op_sys, bug_status, resolution, priority, 
+        bug_severity, component, assigned_to, reporter, 
+        bug_file_loc, short_desc, target_milestone, 
+        qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        groupset,
-        delta_ts,
-        sum(votes.count)
-from bugs left join votes using(bug_id)
-where bugs.bug_id = $id
-group by bugs.bug_id";
+        groupset, delta_ts, sum(votes.count)
+    FROM bugs LEFT JOIN votes USING(bug_id)
+    WHERE bugs.bug_id = $id
+    GROUP BY bugs.bug_id";
 
-SendSQL($query);
-my %bug;
-my @row;
-@row = FetchSQLData();
-my $count = 0;
-foreach my $field ("bug_id", "product", "version", "rep_platform",
-                   "op_sys", "bug_status", "resolution", "priority",
-                   "bug_severity", "component", "assigned_to", "reporter",
-                   "bug_file_loc", "short_desc", "target_milestone",
-                   "qa_contact", "status_whiteboard", "creation_ts",
-                   "groupset", "delta_ts", "votes") {
-    $bug{$field} = shift @row;
-    if (!defined $bug{$field}) {
-        $bug{$field} = "";
-    }
-    $count++;
-}
+    SendSQL($query);
 
-my $assignedtoid = $bug{'assigned_to'};
-my $reporterid = $bug{'reporter'};
-my $qacontactid =  $bug{'qa_contact'};
-
-$bug{'assigned_to_email'} = DBID_to_name($assignedtoid);
-$bug{'assigned_to'} = DBID_to_real_or_loginname($bug{'assigned_to'});
-$bug{'reporter'} = DBID_to_real_or_loginname($bug{'reporter'});
-
-print qq{<FORM NAME="changeform" METHOD="POST" ACTION="process_bug.cgi">\n};
-
-#  foreach my $i (sort(keys(%bug))) {
-#      my $q = value_quote($bug{$i});
-#      print qq{<INPUT TYPE="HIDDEN" NAME="orig-$i" VALUE="$q">\n};
-#  }
-
-$bug{'long_desc'} = GetLongDescriptionAsHTML($id);
-my $longdesclength = length($bug{'long_desc'});
-
-GetVersionTable();
-
-
-
-#
-# These should be read from the database ...
-#
-
-my $platform_popup = make_options(\@::legal_platform, $bug{'rep_platform'});
-my $priority_popup = make_options(\@::legal_priority, $bug{'priority'});
-my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
-
-
-my $component_popup = make_options($::components{$bug{'product'}},
-                                   $bug{'component'});
-
-my $ccSet = new RelationSet;
-$ccSet->mergeFromDB("select who from cc where bug_id=$id");
-my @ccList = $ccSet->toArrayOfStrings();
-my $cc_element = "<INPUT TYPE=HIDDEN NAME=cc VALUE=\"\">";
-if (scalar(@ccList) > 0) {
-  $cc_element = "<SELECT NAME=cc MULTIPLE SIZE=5>\n";
-  foreach my $ccName ( @ccList ) {
-    $cc_element .= "<OPTION VALUE=\"$ccName\">$ccName\n";
-  }
-  $cc_element .= "</SELECT><BR>\n" .
-        "<INPUT TYPE=CHECKBOX NAME=removecc>Remove selected CCs<br>\n";
-}
-
-my $URL = value_quote($bug{'bug_file_loc'});
-
-if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
-    $URL = "<B><A HREF=\"$URL\">URL:</A></B>";
-} else {
-    $URL = "<B>URL:</B>";
-}
-
-#
-# Make a list of products the user has access to
-#
-
-my (@prodlist, $product_popup);
-my $seen_currProd = 0;
-
-foreach my $p (@::enterable_products) {
-    if ($p eq $bug{'product'}) {
-        # if it's the product the bug is already in, it's ALWAYS in
-        # the popup, period, whether the user can see it or not, and
-        # regardless of the disallownew setting.
-        $seen_currProd = 1;
-        push(@prodlist, $p);
-        next;
-    }
-    if(Param("usebuggroupsentry")
-        && GroupExists($p)
-        && !UserInGroup($p))
+    my $value;
+    my @row = FetchSQLData();
+    foreach my $field ("bug_id", "product", "version", "rep_platform",
+                       "op_sys", "bug_status", "resolution", "priority",
+                       "bug_severity", "component", "assigned_to", "reporter",
+                       "bug_file_loc", "short_desc", "target_milestone",
+                       "qa_contact", "status_whiteboard", "creation_ts",
+                       "groupset", "delta_ts", "votes") 
     {
-        # If we're using bug groups to restrict entry on products, and
-        # this product has a bug group, and the user is not in that
-        # group, we don't want to include that product in this list.
-        next;
+        $value = shift(@row);
+        $bug{$field} = defined($value) ? $value : "";
     }
-    push(@prodlist, $p);
-}
 
-# The current product is part of the popup, even if new bugs are no longer
-# allowed for that product
-if (!$seen_currProd) {
-    push (@prodlist, $bug{'product'});
-    @prodlist = sort @prodlist;
-}
+    # General arrays of info about the database state
+    GetVersionTable();
 
-# If the user has access to multiple products, display a popup, otherwise 
-# display the current product.
+    # Fiddle the product list.
+    my $seen_curr_prod;
+    my @prodlist;
+    
+    foreach my $product (@::enterable_products) {
+        if ($product eq $bug{'product'}) {
+            # if it's the product the bug is already in, it's ALWAYS in
+            # the popup, period, whether the user can see it or not, and
+            # regardless of the disallownew setting.
+            $seen_curr_prod = 1;
+            push(@prodlist, $product);
+            next;
+        }
 
-if (1 < @prodlist) {
-    $product_popup = "<SELECT NAME=product>" .
-        make_options(\@prodlist, $bug{'product'}) .
-        "</SELECT>";
-}
-else {
-    $product_popup = $bug{'product'} .
-        "<INPUT TYPE=\"HIDDEN\" NAME=\"product\" VALUE=\"$bug{'product'}\">";
-}
+        if (Param("usebuggroupsentry")
+          && GroupExists($product)
+          && !UserInGroup($product))
+        {
+            # If we're using bug groups to restrict entry on products, and
+            # this product has a bug group, and the user is not in that
+            # group, we don't want to include that product in this list.
+            next;
+        }
 
-print "
-<INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
-<INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
-<INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
-  <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
-    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"" . Param('urlbase') . "show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
-    <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B>Reporter:</B></TD><TD>$bug{'reporter'}</TD>
-</TR><TR>
-    <TD ALIGN=RIGHT><B>Product:</B></TD>
-    <TD>$product_popup</TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B>OS:</B></TD>
-    <TD><SELECT NAME=op_sys>" .
-    make_options(\@::legal_opsys, $bug{'op_sys'}) .
-    "</SELECT></TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT NOWRAP><b>Add CC:</b></TD>
-    <TD><INPUT NAME=newcc SIZE=30 VALUE=\"\"></TD>
-</TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"describecomponents.cgi?product=" .
-    url_quote($bug{'product'}) . "\">Component:</A></B></TD>
-      <TD><SELECT NAME=component>$component_popup</SELECT></TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B>Version:</B></TD>
-    <TD><SELECT NAME=version>" .
-    make_options($::versions{$bug{'product'}}, $bug{'version'}) .
-    "</SELECT></TD>
-  <TD>&nbsp;</TD>
-    <TD ROWSPAN=4 ALIGN=RIGHT VALIGN=TOP><B>CC:</B></TD>
-    <TD ROWSPAN=4 VALIGN=TOP> $cc_element </TD>
-</TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Status:</A></B></TD>
-      <TD>$bug{'bug_status'}</TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#priority\">Priority:</A></B></TD>
-      <TD><SELECT NAME=priority>$priority_popup</SELECT></TD>
-  <TD>&nbsp;</TD>
-</TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html\">Resolution:</A></B></TD>
-      <TD>$bug{'resolution'}</TD>
-  <TD>&nbsp;</TD>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#severity\">Severity:</A></B></TD>
-      <TD><SELECT NAME=bug_severity>$sev_popup</SELECT></TD>
-  <TD>&nbsp;</TD>
-</TR><TR>
-    <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned&nbsp;To:
-        </A></B></TD>
-      <TD>$bug{'assigned_to'}</TD>
-  <TD>&nbsp;</TD>";
-
-if (Param("usetargetmilestone")) {
-    my $url = "";
-    if (defined $::milestoneurl{$bug{'product'}}) {
-        $url = $::milestoneurl{$bug{'product'}};
+        push(@prodlist, $product);
     }
-    if ($url eq "") {
-        $url = "notargetmilestone.html";
+
+    # The current product is part of the popup, even if new bugs are no longer
+    # allowed for that product
+    if (!$seen_curr_prod) {
+        push (@prodlist, $bug{'product'});
+        @prodlist = sort @prodlist;
     }
-    if ($bug{'target_milestone'} eq "") {
-        $bug{'target_milestone'} = " ";
-    }
-    print "
-<TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
-<TD><SELECT NAME=target_milestone>" .
-    make_options($::target_milestone{$bug{'product'}},
-                 $bug{'target_milestone'}) .
-                     "</SELECT></TD>
-  <TD>&nbsp;</TD>";
-} else { print "<TD></TD><TD></TD><TD>&nbsp;</TD>"; }
 
-print "
-</TR>";
+    $vars->{'product'} = \@prodlist;
+    $vars->{'rep_platform'} = \@::legal_platform;
+    $vars->{'priority'} = \@::legal_priority;
+    $vars->{'bug_severity'} = \@::legal_severity;
+    $vars->{'op_sys'} = \@::legal_opsys;
+    $vars->{'bug_status'} = \@::legal_bug_status;
 
-if (Param("useqacontact")) {
-    my $name = $bug{'qa_contact'} > 0 ? DBID_to_name($bug{'qa_contact'}) : "";
-    print "
-  <TR>
-    <TD ALIGN=\"RIGHT\"><B>QA Contact:</B>
-    <TD COLSPAN=7>
-      <INPUT NAME=qa_contact VALUE=\"" .
-    value_quote($name) .
-    "\" SIZE=60></TD>
-  </TR>";
-}
+    # Hack - this array contains "" for some reason. See bug 106589.
+    shift @::settable_resolution; 
+    $vars->{'resolution'} = \@::settable_resolution;
 
+    $vars->{'component_'} = $::components{$bug{'product'}};
+    $vars->{'version'} = $::versions{$bug{'product'}};
+    $vars->{'target_milestone'} = $::target_milestone{$bug{'product'}};
+    $bug{'milestoneurl'} = $::milestoneurl{$bug{'product'}} || 
+                           "notargetmilestone.html";
 
-print "
-  <TR>
-    <TD ALIGN=\"RIGHT\">$URL
-    <TD COLSPAN=7>
-      <INPUT NAME=bug_file_loc VALUE=\"" . value_quote($bug{'bug_file_loc'}) . "\" SIZE=60></TD>
-  </TR><TR>
-    <TD ALIGN=\"RIGHT\"><B>Summary:</B>
-    <TD COLSPAN=7>
-      <INPUT NAME=short_desc VALUE=\"" .
-    value_quote($bug{'short_desc'}) .
-    "\" SIZE=60></TD>
-  </TR>";
+    $vars->{'use_votes'} = $::prodmaxvotes{$bug{'product'}};
 
-if (Param("usestatuswhiteboard")) {
-    print "
-  <TR>
-    <TD ALIGN=\"RIGHT\"><B>Status Whiteboard:</B>
-    <TD COLSPAN=7>
-      <INPUT NAME=status_whiteboard VALUE=\"" .
-    value_quote($bug{'status_whiteboard'}) .
-    "\" SIZE=60></TD>
-  </TR>";
-}
+    # Add additional, calculated fields to the bug hash
+    if (@::legal_keywords) {
+        $vars->{'use_keywords'} = 1;
 
-if (@::legal_keywords) {
-    SendSQL("SELECT keyworddefs.name 
-             FROM keyworddefs, keywords
-             WHERE keywords.bug_id = $id AND keyworddefs.id = keywords.keywordid
-             ORDER BY keyworddefs.name");
+        SendSQL("SELECT keyworddefs.name 
+                 FROM keyworddefs, keywords
+                 WHERE keywords.bug_id = $id 
+                 AND keyworddefs.id = keywords.keywordid
+                 ORDER BY keyworddefs.name");
+        my @keywords;
+        while (MoreSQLData()) {
+            push(@keywords, FetchOneColumn());
+        }
+
+        $bug{'keywords'} = \@keywords;
+    }    
+
+    # Attachments
+    $bug{'attachments'} = Attachment::query($id);
+
+    # Dependencies
     my @list;
+    SendSQL("SELECT dependson FROM dependencies WHERE  
+             blocked = $id ORDER BY dependson");
     while (MoreSQLData()) {
-        push(@list, FetchOneColumn());
-    }
-    my $value = value_quote(join(', ', @list));
-    print qq{
-<TR>
-<TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords:</A></B>
-<TD COLSPAN=7><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
-</TR>
-};
-}
-
-print "</TABLE>\n";
-
-# Display attachments for this bug (if any).
-&Attachment::list($id);
-
-sub EmitDependList {
-    my ($desc, $myfield, $targetfield) = (@_);
-    print "<th align=right>$desc:</th><td>";
-    my @list;
-    SendSQL("select $targetfield from dependencies where  
-             $myfield = $id order by $targetfield");
-    while (MoreSQLData()) {
-        my ($i) = (FetchSQLData());
+        my ($i) = FetchSQLData();
         push(@list, $i);
-        print GetBugLink($i, $i);
-        print " ";
     }
-    print "</td><td><input name=$targetfield value=\"" .
-        join(',', @list) . "\"></td>\n";
-}
 
-if (Param("usedependencies")) {
-    print "<table><tr>\n";
-    EmitDependList("Bug $id depends on", "blocked", "dependson");
-    print qq{
-<td rowspan=2><a href="showdependencytree.cgi?id=$id">Show dependency tree</a>
-};
-    if (Param("webdotbase") ne "") {
-        print qq{
-<br><a href="showdependencygraph.cgi?id=$id">Show dependency graph</a>
-};
-    }
-    print "</td></tr><tr>";
-    EmitDependList("Bug $id blocks", "dependson", "blocked");
-    print "</tr></table>\n";
-}
+    $bug{'dependson'} = \@list;
 
-if ($::prodmaxvotes{$bug{'product'}}) {
-    print qq{
-<table><tr>
-<th><a href="votehelp.html">Votes:</a></th>
-<td>
-$bug{'votes'}&nbsp;&nbsp;&nbsp;
-<a href="showvotes.cgi?bug_id=$id">Show votes for this bug</a>&nbsp;&nbsp;&nbsp;
-<a href="showvotes.cgi?voteon=$id">Vote for this bug</a>
-</td>
-</tr></table>
-};
-}
-
-print "
-<br>
-<B>Additional Comments:</B>
-<BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA><BR>";
-
-
-if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {
-    SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0), " .
-            "(bit & $::usergroupset != 0) from groups where isbuggroup != 0 " .
-            # Include active groups as well as inactive groups to which
-            # the bug already belongs.  This way the bug can be removed
-            # from an inactive group but can only be added to active ones.
-            "and ((isactive = 1 and (bit & $::usergroupset != 0)) or " .
-            "(bit & $bug{'groupset'} != 0)) " . 
-            "order by description");
-    # We only print out a header bit for this section if there are any
-    # results.
-    my $groupFound = 0;
-    my $inAllGroups = 1;
+    my @list2;
+    SendSQL("SELECT blocked FROM dependencies WHERE  
+             dependson = $id ORDER BY blocked");
     while (MoreSQLData()) {
-      my ($bit, $name, $description, $ison, $ingroup) = (FetchSQLData());
-      # For product groups, we only want to display the checkbox if either
-      # (1) The bit is already set, or
-      # (2) The user is in the group, but either:
-      #     (a) The group is a product group for the current product, or
-      #     (b) The group name isn't a product name
-      # This measns that all product groups will be skipped, but non-product
-      # bug groups will still be displayed.
-      if($ison || ($ingroup && (($name eq $bug{'product'}) ||
-                                (!defined $::proddesc{$name})))) {
-        if(!$groupFound) {
-          print "<br><b>Only users in the selected groups can view this bug:</b><br>\n";
-          print "<font size=\"-1\">(Unchecking all boxes makes this a public bug.)</font><br><br>\n";
-          $groupFound = 1;
-        }
-        if(!$ingroup) {
-            $inAllGroups = 0;
-        }
-        # Modifying this to use checkboxes instead
-        my $checked = $ison ? " CHECKED" : "";
-        my $disabled = $ingroup ? "" : " DISABLED=\"disabled\"";
-        # indent these a bit
-        print "&nbsp;&nbsp;&nbsp;&nbsp;";
-        print "<input type=checkbox name=\"bit-$bit\" value=1$checked$disabled>\n";
-        print "$description<br>\n";
-      }
-    }
-    if (!$inAllGroups) {
-        print "<b>Only members of a group can change the visibility of a bug for that group</b><br>";
+        my ($i) = FetchSQLData();
+        push(@list2, $i);
     }
 
-    # If the bug is restricted to a group, display checkboxes that allow
-    # the user to set whether or not the reporter
-    # and cc list can see the bug even if they are not members of all 
-    # groups to which the bug is restricted.
-    if ( $bug{'groupset'} != 0 ) {
-        # Determine whether or not the bug is always accessible by the reporter,
-        # QA contact, and/or users on the cc: list.
-        SendSQL("SELECT  reporter_accessible, cclist_accessible
-                 FROM    bugs
-                 WHERE   bug_id = $id
-                ");
-        my ($reporter_accessible, $cclist_accessible) = FetchSQLData();
+    $bug{'blocked'} = \@list2;
 
-        # Convert boolean data about which roles always have access to the bug
-        # into "checked" attributes for the HTML checkboxes by which users
-        # set and change these values.
-        my $reporter_checked = $reporter_accessible ? " checked" : "";
-        my $cclist_checked = $cclist_accessible ? " checked" : "";
+    # Groups
+    if ($::usergroupset ne '0' || $bug{'groupset'} ne '0') {      
+        my $bug_groupset = $bug{'groupset'};
 
-        # Display interface for changing the values.
-        print qq|
-            <p>
-            <b>But users in the roles selected below can always view this bug:</b><br>
-            <small>(The assignee
-        |;
-        if (Param('useqacontact')) {
-            print " and qa contact";
-        }
-        print qq| can always see a bug, and this does not take effect unless the bug is restricted to at least one group.)</small>
-            </p>
+        SendSQL("SELECT bit, name, description, (bit & $bug_groupset != 0),
+                 (bit & $::usergroupset != 0) FROM groups 
+                 WHERE isbuggroup != 0 " .
+                 # Include active groups as well as inactive groups to which
+                 # the bug already belongs.  This way the bug can be removed
+                 # from an inactive group but can only be added to active ones.
+                "AND ((isactive = 1 AND (bit & $::usergroupset != 0)) OR
+                 (bit & $bug_groupset != 0))");
 
-            <p>
-            <input type="checkbox" name="reporter_accessible" value="1" $reporter_checked>Reporter
-            <input type="checkbox" name="cclist_accessible" value="1" $cclist_checked>CC List
-            </p>
-        |;
-    }
-}
+        my @groups;
+        $user{'inallgroups'} = 1;
 
+        while (MoreSQLData()) {
+            my ($bit, $name, $description, $ison, $ingroup) = FetchSQLData();
+            # For product groups, we only want to display the checkbox if either
+            # (1) The bit is already set, or
+            # (2) The user is in the group, but either:
+            #     (a) The group is a product group for the current product, or
+            #     (b) The group name isn't a product name
+            # This means that all product groups will be skipped, but 
+            # non-product bug groups will still be displayed.
+            if($ison || 
+               ($ingroup && (($name eq $bug{'product'}) ||
+                             (!defined $::proddesc{$name}))))
+            {
+                $user{'inallgroups'} &= $ingroup;
 
-
-
-
-print "<br>
-<INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>";
-
-
-# knum is which knob number we're generating, in javascript terms.
-
-my $knum = 1;
-
-my $status = $bug{'bug_status'};
-
-# In the below, if the person hasn't logged in ($::userid == 0), then
-# we treat them as if they can do anything.  That's because we don't
-# know why they haven't logged in; it may just be because they don't
-# use cookies.  Display everything as if they have all the permissions
-# in the world; their permissions will get checked when they log in
-# and actually try to make the change.
-
-my $canedit = UserInGroup("editbugs") || ($::userid == 0);
-my $canconfirm;
-
-if ($status eq $::unconfirmedstate) {
-    $canconfirm = UserInGroup("canconfirm") || ($::userid == 0);
-    if ($canedit || $canconfirm) {
-        print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
-        print "Confirm bug (change status to <b>NEW</b>)<br>";
-        $knum++;
-    }
-}
-
-my $movers = Param("movers");
-$movers =~ s/\s?,\s?/|/g;
-$movers =~ s/@/\@/g;
-
-if ($canedit || $::userid == $assignedtoid ||
-      $::userid == $reporterid || $::userid == $qacontactid) {
-    if (IsOpenedState($status)) {
-        if ($status ne "ASSIGNED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
-            my $extra = "";
-            if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
-                $extra = "confirm bug, ";
+                push (@groups, { "bit" => $bit,
+                                 "ison" => $ison,
+                                 "ingroup" => $ingroup,
+                                 "description" => $description });            
             }
-            print "Accept bug (${extra}change status to <b>ASSIGNED</b>)<br>";
-            $knum++;
         }
-        if ($bug{'resolution'} ne "") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n";
-            print "Clear the resolution (remove the current resolution of\n";
-            print "<b>$bug{'resolution'}</b>)<br>\n";
-            $knum++;
-        }
-        my $resolution_popup = make_options(\@::settable_resolution,
-                                            $bug{'resolution'});
-        print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
-        Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
-        <SELECT NAME=resolution
-          ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>\n";
-        $knum++;
-        print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
-        Resolve bug, mark it as duplicate of bug # 
-        <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"if (this.value != '') {document.changeform.knob\[$knum\].checked=true}\"><br>\n";
-        $knum++;
-        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"if ((this.value != ".SqlQuote($bug{'assigned_to_email'}) .") && (this.value != '')) { document.changeform.knob\[$knum\].checked=true; }\" VALUE=\"$bug{'assigned_to_email'}\">";
 
-        print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
-          <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
-          $assign_element
-        <br>\n";
-        if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
-            print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=andconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
+        # If the bug is restricted to a group, display checkboxes that allow
+        # the user to set whether or not the reporter 
+        # and cc list can see the bug even if they are not members of all 
+        # groups to which the bug is restricted.
+        if ($bug{'groupset'} != 0) {
+            $bug{'inagroup'} = 1;
+
+            # Determine whether or not the bug is always accessible by the
+            # reporter, QA contact, and/or users on the cc: list.
+            SendSQL("SELECT reporter_accessible, cclist_accessible
+                     FROM   bugs
+                     WHERE  bug_id = $id
+                    ");
+            ($bug{'reporter_accessible'}, 
+             $bug{'cclist_accessible'}) = FetchSQLData();        
         }
-        $knum++;
-        print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bug to owner ";
-        if (Param("useqacontact")) { print "and QA contact "; }
-        print "of selected component<br>\n";
-        if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
-            print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=compconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
-        }
-        $knum++;
-    } elsif ( Param("move-enabled") && ($bug{'resolution'} eq "MOVED") ) {
-        if ( (defined $::COOKIE{"Bugzilla_login"}) 
-             && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
-          print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
-          $knum++;
-          if ($status eq "RESOLVED") {
-              print "<INPUT TYPE=radio NAME=knob VALUE=verify>
-          Mark bug as <b>VERIFIED</b><br>\n";
-              $knum++;
-          }
-          if ($status ne "CLOSED") {
-              print "<INPUT TYPE=radio NAME=knob VALUE=close>
-          Mark bug as <b>CLOSED</b><br>\n";
-              $knum++;
-          }
-        }
-    } else {
-        print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
-        $knum++;
-        if ($status eq "RESOLVED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=verify>
-        Mark bug as <b>VERIFIED</b><br>\n";
-            $knum++;
-        }
-        if ($status ne "CLOSED") {
-            print "<INPUT TYPE=radio NAME=knob VALUE=close>
-        Mark bug as <b>CLOSED</b><br>\n";
-            $knum++;
-        }
+        
+        $vars->{'groups'} = \@groups;
     }
+
+    my $movers = Param("movers");
+    $user{'canmove'} = Param("move-enabled") 
+                       && (defined $::COOKIE{"Bugzilla_login"}) 
+                       && ($::COOKIE{"Bugzilla_login"} =~ /\Q$movers\E/);
+
+    # User permissions
+
+    # In the below, if the person hasn't logged in ($::userid == 0), then
+    # we treat them as if they can do anything.  That's because we don't
+    # know why they haven't logged in; it may just be because they don't
+    # use cookies.  Display everything as if they have all the permissions
+    # in the world; their permissions will get checked when they log in
+    # and actually try to make the change.
+    $user{'canedit'} = $::userid == 0
+                       || $::userid == $bug{'reporter'}
+                       || $::userid == $bug{'qa_contact'}
+                       || $::userid == $bug{'assigned_to'}
+                       || UserInGroup("editbugs");                   
+    $user{'canconfirm'} = ($::userid == 0) || UserInGroup("canconfirm");
+
+    # Bug states
+    $bug{'isunconfirmed'} = ($bug{'bug_status'} eq $::unconfirmedstate);
+    $bug{'isopened'} = IsOpenedState($bug{'bug_status'});
+
+    # People involved with the bug
+    $bug{'assigned_to_email'} = DBID_to_name($bug{'assigned_to'});
+    $bug{'assigned_to'} = DBID_to_real_or_loginname($bug{'assigned_to'});
+    $bug{'reporter'} = DBID_to_real_or_loginname($bug{'reporter'});
+    $bug{'qa_contact'} = $bug{'qa_contact'} > 0 ? 
+                                          DBID_to_name($bug{'qa_contact'}) : "";
+
+    my $ccset = new RelationSet;
+    $ccset->mergeFromDB("SELECT who FROM cc WHERE bug_id=$id");
+    
+    my @cc = $ccset->toArrayOfStrings();
+    $bug{'cc'} = \@cc if $cc[0];
+
+    # Next bug in list (if there is one)
+    if ($::COOKIE{"BUGLIST"} && $id) 
+    {
+        my @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+        $vars->{'bug_list'} = \@bug_list;
+    }
+
+    $bug{'comments'} = GetComments($bug{'bug_id'});
+
+    # This is length in number of comments
+    $bug{'longdesclength'} = scalar(@{$bug{'comments'}});
+
+    # Add the bug and user hashes to the variables
+    $vars->{'bug'} = \%bug;
+    $vars->{'user'} = \%user;
+
+    # Generate and return the UI (HTML page) from the appropriate template.
+    $template->process("show/show_bug.html.tmpl", $vars)
+      || DisplayError("Template process failed: " . $template->error())
+      && exit;
 }
  
-print "
-<INPUT TYPE=\"submit\" VALUE=\"Commit\">
-<INPUT TYPE=\"reset\" VALUE=\"Reset\">
-<INPUT TYPE=\"hidden\" name=\"form_name\" VALUE=\"process_bug\">
-<P>
-<FONT size=\"+1\"><B>
- <A HREF=\"show_activity.cgi?id=$id\">View Bug Activity</A>
- &nbsp; | &nbsp;
- <A HREF=\"long_list.cgi?buglist=$id\">Format For Printing</A>
-</B></FONT>
-";
-
-if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKIE{"Bugzilla_login"} =~ /($movers)/) ){
-  print "&nbsp; <FONT size=\"+1\"><B> | </B></FONT> &nbsp;"
-       ."<INPUT TYPE=\"SUBMIT\" NAME=\"action\" VALUE=\"" 
-       . Param("move-button-text") . "\">\n";
-}
-
-print "<BR></FORM>";
-
-print qq|
-<table><tr><td align=left><B><a name="c0" href="#c0">Description:</a></B></td>
-<td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
-<HR>
-|;
-print $bug{'long_desc'};
-print "
-<HR>\n";
-
-# To add back option of editing the long description, insert after the above
-# long_list.cgi line:
-#  <A HREF=\"edit_desc.cgi?id=$id\">Edit Long Description</A>
-
-navigation_header();
-
-PutFooter();
-
 1;

@@ -1,0 +1,527 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[% UNLESS header_done %]
+  [% INCLUDE global/header 
+    title = "Bug $bug.bug_id - $bug.short_desc"
+    h1 = "Bugzilla Bug $bug.bug_id"
+    h2 = bug.short_desc
+    extra = navigation_links()
+  %]
+[% END %]
+
+[% PROCESS show/navigate.html.tmpl %]
+
+<hr>
+
+<form name="changeform" method="post" action="process_bug.cgi">
+
+  <input type="hidden" name="delta_ts" value="[% bug.delta_ts %]">
+  <input type="hidden" name="longdesclength" value="[% bug.longdesclength %]">
+  <input type="hidden" name="id" value="[% bug.bug_id %]">
+
+[%# *** Platform Reporter Product OS AddCC *** %]
+
+  <table cellspacing="1" cellpadding="1" border="0">
+    <tr>      
+      <td align="right">
+        <b>Bug#:</b>
+      </td>
+      <td>
+        <a href="[% urlbase %]show_bug.cgi?id=[% bug.bug_id %]">
+          [% bug.bug_id %]</a>
+      </td>
+      
+      <td>&nbsp;</td>
+
+      <td align="right">
+        <b>Platform:</b>
+      </td>
+      [% PROCESS select selname = "rep_platform" %]
+      
+      <td align="right">
+        <b>Reporter:</b>
+      </td>
+      <td>
+        [% bug.reporter %]
+      </td>    
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>Product:</b>
+      </td>
+      [% PROCESS select selname => "product" %]
+      
+      <td align="right">
+        <b>OS:</b>
+      </td>
+      [% PROCESS select selname => "op_sys" %]
+
+      <td align="right">
+        <b>Add&nbsp;CC:</b>
+      </td>
+      <td>
+        <input name="newcc" size="30" value="">
+      </td>
+    </tr>
+
+[%# *** Component Version CC Priority Severity AssignedTo Milestone *** %]    
+
+    <tr>
+      <td align="right">
+        <b>
+          <a href="describecomponents.cgi?product=[% bug.product %]">
+            Component</a>:
+        </b>
+      </td>
+      <td>
+        <select name="component">
+          [% FOREACH x = component_ %]
+            <option value="[% x %]"
+              [% " selected" IF x == bug.component_ %]>[% x %]</option>
+          [% END %]
+        </select>
+      </td>
+
+      <td>&nbsp;</td>
+      
+      <td align="right">
+        <b>Version:</b>
+      </td>
+      [% PROCESS select selname => "version"  %]
+      
+      <td rowspan="4" align="right" valign="top">
+        <b>CC:</b>
+      </td>
+      <td rowspan="4" valign="top"> 
+      [% IF bug.cc %]
+        <select name="cc" multiple size="5">
+        [% FOREACH c = bug.cc %]
+          <option value="[% c %]">[% c %]</option>
+        [% END %]
+        </select>
+        <br>
+        <input type="checkbox" name="removecc">Remove selected CCs
+        <br>
+      [% ELSE %]
+        <input type="hidden" name="cc" value="">
+      [% END %]
+      </td>
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="bug_status.html">Status</a>:
+        </b>
+      </td>
+      <td>[% bug.bug_status %]</td>      
+      <td>&nbsp;</td>
+      
+      <td align="right">
+        <b><a href="bug_status.html#priority">Priority</a>:</b>
+      </td>
+      [% PROCESS select selname => "priority" %]
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="bug_status.html">Resolution</a>:
+        </b>
+      </td>
+      <td>[% bug.resolution %]</td>      
+      <td>&nbsp;</td>
+      
+      <td align="right">
+        <b><a href="bug_status.html#severity">Severity</a>:</b>
+      </td>
+      [% PROCESS select selname = "bug_severity" %]
+      
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="bug_status.html#assigned_to">Assigned&nbsp;To</a>:
+        </b>
+      </td>
+      <td>[% bug.assigned_to %]</td>
+      <td>&nbsp;</td>
+ 
+      [% IF Param("usetargetmilestone") && bug.target_milestone %]
+        <td align="right">
+          <b>
+            <a href="[% bug.milestoneurl %]">Target Milestone</a>:
+          </b>
+        </td>
+        [% PROCESS select selname = "target_milestone" %]
+      [% ELSE %]
+        <td colspan="3">&nbsp;</td>
+      [% END %]
+    </tr>
+
+[%# *** QAContact URL Summary Whiteboard Keywords *** %]
+
+   [% IF Param('useqacontact') %]
+     <tr>
+       <td align="right">
+       <b>QA Contact:</b>
+       </td>
+       <td colspan="7">
+         <input name="qa_contact" value="[% bug.qa_contact %]" size="60">
+       </td>
+     </tr>
+   [% END %]
+
+  <tr>
+    <td align="right">
+      <b>
+      [% IF bug.url %]
+        <a href="[% bug.url FILTER url %]">URL:</a>
+      [% ELSE %]
+        URL:
+      [% END %]
+    </td>
+    <td colspan="7">
+      <input name="bug_file_loc" value="[% bug.bug_file_loc %]" size="60">
+    </td>
+  </tr>
+  
+  <tr>
+    <td align="right">
+      <b>Summary:</b>
+    </td>
+    <td colspan="7">
+      <input name="short_desc" value="[% bug.short_desc %]" size="60">
+    </td>
+  </tr>
+
+  [% IF Param('usestatuswhiteboard') %] 
+    <tr>
+      <td align="right">
+        <b>Status Whiteboard:</b>
+      </td>
+      <td colspan="7">
+        <input name="status_whiteboard" value="[% bug.status_whiteboard %]" 
+               size="60">
+      </td>
+    </tr>
+  [% END %]
+
+  [% IF use_keywords %]
+    <tr>
+      <td ALIGN="right">
+        <b>
+          <A HREF="describekeywords.cgi">Keywords:</A>
+        </b>
+      <td colspan="7">
+        <input name="keywords" value="[% bug.keywords.join(', ') %]" 
+               size="60">
+      </td>
+    </tr> 
+  [% END %]
+  </table>
+  
+[%# *** Attachments *** %]
+
+  [% INCLUDE attachment/list.atml 
+     attachments = bug.attachments %]
+
+[%# *** Dependencies Votes *** %]
+
+  [% IF Param('usedependencies') %]
+  <table>
+    <tr>
+    [% PROCESS dependencies 
+       dep = { title => "depends on", fieldname => "dependson" } %]
+      <td rowspan="2">
+        <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show 
+        dependency tree</a>  
+
+        [% IF Param('webdotbase') %]  
+          <br>
+          <a href="showdependencygraph.cgi?id=[% bug.bug_id %]">Show 
+          dependency graph</a>
+        [% END %]
+      </td>
+    </tr>
+
+    <tr>
+    [% PROCESS dependencies 
+       dep = { title => "blocks", fieldname => "blocked" } %]
+    </tr>
+  </table>
+  [% END %]
+
+  [% IF use_votes %]
+  <table>
+    <tr>
+      <th>
+        <a href="votehelp.html">Votes:</a>
+      </th>
+      <td>
+        [% bug.votes %]&nbsp;&nbsp;&nbsp;
+        <a href="showvotes.cgi?bug_id=[% bug.bug_id %]">Show votes for this 
+          bug</a>&nbsp;&nbsp;&nbsp;
+        <a href="showvotes.cgi?voteon=[% bug.bug_id %]">Vote for this bug</a>
+      </td>
+    </tr>
+  </table>
+  [% END %]
+
+[%# *** Comments Groups *** %]
+
+  <br>
+  <b>Additional Comments:</b>
+  <br>
+  <textarea wrap="hard" name="comment" rows="10" cols="80"
+            accesskey="c"></textarea>
+  <br>
+
+  [% IF groups %]
+    <br>
+    <b>Only users in the selected groups can view this bug:</b>
+    <br>
+    <font size="-1">(Unchecking all boxes makes this a public bug.)</font>
+    <br>
+    <br>
+
+    [% FOREACH group = groups %]
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <input type="checkbox" name="bit-[% group.bit %]" value="1" 
+        [% " checked='checked'" IF group.ison %]
+        [% " disabled='disabled'" IF NOT group.ingroup %]>
+      [% group.description %]
+      <br>
+    [% END %]
+
+    [% IF NOT user.inallgroups %]
+      <b>
+        Only members of a group can change the visibility of a bug for 
+        that group
+      </b>
+    <br>
+    [% END %]
+
+    [% IF bug.inagroup %]
+      <p>
+        <b>But users in the roles selected below can always view this bug:</b>
+        <br>
+        <small>
+          (The assignee                                                
+          [% IF (Param('useqacontact')) %]
+             and qa contact
+          [% END %]
+          can always see a bug, and this section does not take effect unless 
+          the bug is restricted to at least one group.)
+        </small>
+      </p>
+
+      <p>
+        <input type="checkbox" name="reporter_accessible" value="1"
+          [% " checked" IF bug.reporter_accessible %]>Reporter
+        <input type="checkbox" name="cclist_accessible" value="1"
+          [% " checked" IF bug.cclist_accessible %]>CC List
+      </p>  
+    [% END %]
+  [% END %]
+
+[%# *** Knob *** %]
+
+  <br>
+  <input type="radio" name="knob" value="none" checked>
+  Leave as <b>[% bug.bug_status %]&nbsp;[% bug.resolution %]</b>
+  <br>
+
+  [% knum = 1 %]
+
+  [% IF bug.bug_status == "UNCONFIRMED" && 
+        (user.canedit || user.canconfirm) %]
+    <input type="radio" name="knob" value="confirm">
+    Confirm bug (change status to <b>NEW</b>)
+    <br>
+    [% knum = knum + 1 %]
+  [% END %]
+
+  [% IF user.canedit %]
+    [% IF bug.isopened %]
+      [% IF bug.bug_status != "ASSIGNED" %]
+        <input type="radio" name="knob" value="accept">
+        Accept bug (
+        [% "confirm bug, " IF bug.isunconfirmed %]change
+        status to <b>ASSIGNED</b>)
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+
+      [% IF bug.resolution %]
+        <input type="radio" name="knob" value="clearresolution">
+        Clear the resolution (remove the current resolution of
+        <b>[% bug.resolution %]</b>)<br>      
+        [% knum = knum + 1 %]
+      [% END %]
+
+      <input type="radio" name="knob" value="resolve">
+      Resolve bug, changing <A HREF="bug_status.html">resolution</A> to
+      <select name="resolution" 
+              onchange="document.changeform.knob[[% knum %]].checked=true">
+      [% FOREACH r = resolution %]
+        <option value="[% r %]">[% r %]</option>
+      [% END %]
+      </select>
+      <br>
+      [% knum = knum + 1 %]
+
+      <input type="radio" name="knob" value="duplicate">
+      Resolve bug, mark it as duplicate of bug # 
+      <input name="dup_id" size="6" 
+             onchange="if (this.value != '')
+                       {document.changeform.knob[[% knum %]].checked=true}">
+      <br>
+      [% knum = knum + 1 %]
+
+      <input type="radio" name="knob" value="reassign"> 
+      <a href="bug_status.html#assigned_to">Reassign</A> bug to
+      <input name="assigned_to" size="32" 
+             onchange="if ((this.value != "[% bug.assigned_to_email %]") && 
+                            (this.value != '')) {
+                         document.changeform.knob[[% knum %]].checked=true; 
+                       }"  
+             value="[% bug.assigned_to_email %]">
+      <br>
+      [% IF bug.isunconfirmed %]
+        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
+        and confirm bug (change status to <b>NEW</b>)
+        <br>
+      [% END %]
+      [% knum = knum + 1 %]
+
+      <input type="radio" name="knob" value="reassignbycomponent">
+      Reassign bug to owner
+      [% "and QA contact" IF useqacontact %]
+      of selected component
+      <br>
+      [% IF bug.isunconfirmed %]
+        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
+        and confirm bug (change status to <b>NEW</b>)
+        <br>
+      [% END %]
+      [% knum = knum + 1 %]
+    [% ELSE %]
+      [% IF bug.resolution != "MOVED" ||
+           (bug.resolution == "MOVED" && user.canmove) %]  
+        <input type="radio" name="knob" value="reopen"> Reopen bug
+        <br>
+        [% knum = knum + 1 %]
+      [% END %]
+      [% IF bug.bug_status == "RESOLVED" %]
+        <input type="radio" name="knob" value="verify">
+        Mark bug as <b>VERIFIED</b><br>
+        [% knum = knum + 1 %]
+      [% END %]
+      [% IF bug.bug_status != "CLOSED" %]
+        <input type="radio" name="knob" value="close">
+        Mark bug as <b>CLOSED</b><br>
+        [% knum = knum + 1 %]
+      [% END %]
+    [% END %]
+  [% END %]  
+  
+  <input type="submit" value="Commit">
+  <input type="hidden" name="form_name" value="process_bug">
+  <p>
+    <font size="+1">
+      <b>
+        <A HREF="show_activity.cgi?id=[% bug.bug_id %]">View Bug Activity</A>
+        &nbsp; | &nbsp;
+        <A HREF="long_list.cgi?buglist=[% bug.bug_id %]">Format For Printing</A>
+      </b>
+    </font>
+
+    [% IF user.canmove %]
+      &nbsp; <font size="+1"><b> | </b></font> &nbsp;
+      <input type="submit" name="action" 
+             value="[% Param("move-button-text") %]">
+    [% END %]
+  </p>  
+</form>
+
+[%# *** Additional Comments *** %]
+
+<table>
+  <tr>
+    <td align="left">
+      <b>
+        <a name="c0" href="#c0">Description</a>:
+      </b>
+    </td>
+    <td align="right" width="100%">
+      Opened: [% bug.creation_ts %]
+    </td>
+  </tr>
+</table>
+<hr>
+
+[% PROCESS show/comments.tmpl %]
+  
+<hr>
+
+[% PROCESS show/navigate.html.tmpl %]
+
+<br>
+
+[% INCLUDE global/footer %]
+
+
+[%############################################################################%]
+[%# Block for dependencies                                                   #%]
+[%############################################################################%]
+
+[% BLOCK dependencies %]
+  <th align="right">Bug [% bug.bug_id %] [%+ dep.title %]:</th>
+  <td>
+  [% FOREACH depbug = bug.${dep.fieldname} %]
+    [% GetBugLink(depbug, depbug) %][% " " %]
+  [% END %]
+  </td>
+  <td>
+    <input name="[% dep.fieldname %]" 
+           value="[% bug.${dep.fieldname}.join(', ') %]">
+  </td>
+[% END %]
+
+
+[%############################################################################%]
+[%# Block for SELECT fields                                                  #%]
+[%############################################################################%]
+
+[% BLOCK select %]  
+  <td>
+    <select name="[% selname %]">
+      [% FOREACH x = ${selname} %]
+        <option value="[% x %]"
+          [% " selected" IF x == bug.${selname} %]>[% x %]</option>
+      [% END %]
+    </select>
+  </td>
+  <td>&nbsp;</td>
+[% END %]

@@ -32,22 +32,25 @@ my $UserInCanConfirmGroupSet = -1;
 use lib qw(.);
 
 require "CGI.pl";
+require "bug_form.pl";
+
 use RelationSet;
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars %::versions,
-    %::components,
-    %::COOKIE,
-    %::MFORM,
-    %::legal_keywords,
-    %::legal_opsys,
-    %::legal_platform,
-    %::legal_priority,
-    %::settable_resolution,
-    %::target_milestone,
-    %::legal_severity,
-    %::superusergroupset;
+use vars qw(%versions
+          %components
+          %COOKIE
+          %MFORM
+          %legal_keywords
+          %legal_opsys
+          %legal_platform
+          %legal_priority
+          %settable_resolution
+          %target_milestone
+          %legal_severity
+          %superusergroupset
+          $next_bug);
 
 my $whoid = confirm_login();
 
@@ -466,22 +469,8 @@ if ($action eq Param("move-button-text")) {
 # the common updates to all bugs in @idlist start here
 #
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
-if (defined $::FORM{'id'}) {
-    navigation_header();
-    if (defined $::next_bug) {
-        # If there is another bug, then we're going to display it,
-        # so check that its a legal bug
-        # We need to check that its a number first
-        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
-            # This isn't OK
-            # Rather than error out (which could validly happen if there
-            # was a bug in the list whose group was changed in the meantime)
-            # just remove references to it
-            undef $::next_bug;
-        }
-    }
-}
 print "<HR>\n";
+
 $::query = "update bugs\nset";
 $::comma = "";
 umask(0);
@@ -973,13 +962,20 @@ The changes made were:
 <p>
 ";
         DumpBugActivity($id, $::FORM{'delta_ts'});
-        my $longdesc = GetLongDescriptionAsHTML($id);
+        my $comments = GetComments($id);
         my $longchanged = 0;
 
-        if (length($longdesc) > $::FORM{'longdesclength'}) {
+        if (scalar(@$comments) > $::FORM{'longdesclength'}) {
             $longchanged = 1;
             print "<P>Added text to the long description:<blockquote>";
-            print substr($longdesc, $::FORM{'longdesclength'});
+            use vars qw($template $vars);
+            $vars->{'start_at'} = $::FORM{'longdesclength'};
+            $vars->{'comments'} = $comments;   
+            $vars->{'quoteUrls'} = \&quoteUrls;        
+            $template->process("show/comments.tmpl", $vars)
+              || DisplayError("Template process failed: " . $template->error())
+              && exit;
+            
             print "</blockquote>\n";
         }
         SendSQL("unlock tables");
@@ -1394,14 +1390,29 @@ The changes made were:
 
 }
 
-if (defined $::next_bug) {
-    print("<P>The next bug in your list is:\n");
-    $::FORM{'id'} = $::next_bug;
-    print "<HR>\n";
+# Show next bug, if it exists.
+if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
+    my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
+    my $cur = lsearch(\@bugs, $::FORM{"id"});
+    if ($cur >= 0 && $cur < $#bugs) {
+        my $next_bug = $bugs[$cur + 1];
+        if (detaint_natural($next_bug) && CanSeeBug($next_bug)) {
 
-    navigation_header();
-    do "bug_form.pl";
-} else {
-    navigation_header();
-    PutFooter();
+            print "<hr>\n";
+            print("<p>The next bug in your list is bug ");
+            print("<a href='show_bug.cgi?id=$next_bug'>$next_bug</a>:</p>\n");
+            $::FORM{'id'} = $next_bug;
+
+            show_bug("header is already done");
+
+            exit;
+        }
+        else {
+            # Need this until the navigation_header() fn. goes away totally.
+            undef $::next_bug;
+        }
+    }
 }
+
+navigation_header();
+PutFooter();

@@ -1,0 +1,53 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+  
+[% IF bug_list.size > 0 %]
+  [% this_bug_idx = lsearch(bug_list, bug.bug_id) %]
+  <b>Bug List:</b>
+  [% IF this_bug_idx != -1 %]
+    ([% this_bug_idx + 1 %] of [% bug_list.size %])
+  [% END %]
+  
+  <a href="show_bug.cgi?id=[% bug_list.first %]">First</a>
+  <a href="show_bug.cgi?id=[% bug_list.last %]">Last</a>
+
+  [% IF this_bug_idx != -1 %]
+    [% IF this_bug_idx > 0 %]
+      [% prev_bug = this_bug_idx - 1 %]
+      <a href="show_bug.cgi?id=[% bug_list.$prev_bug %]">Prev</a>
+    [% ELSE %]
+      <i><font color="#777777">Prev</font></i>
+    [% END %]
+
+    [% IF this_bug_idx + 1 < bug_list.size %]
+      [% next_bug = this_bug_idx + 1 %]
+      <a href="show_bug.cgi?id=[% bug_list.$next_bug %]">Next</a>
+    [% ELSE %]
+      <i><font color="#777777">Next</font></i>
+    [% END %]
+  [% ELSE %]
+    (This bug is not in your list)
+  [% END %]
+  
+  &nbsp;&nbsp;<a href="buglist.cgi?regetlastlist=1">Show list</a>
+[% END %]
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="query.cgi">Query page</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="enter_bug.cgi">Enter new bug</a>
