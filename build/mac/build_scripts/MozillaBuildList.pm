@@ -540,6 +540,8 @@ sub BuildClientDist()
 
     #UNICHARUTIL
     InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST",               "$distdirectory:unicharutil");
+    InstallFromManifest(":mozilla:intl:unicharutil:util:MANIFEST",
+    "$distdirectory:unicharutil");
 #   InstallFromManifest(":mozilla:intl:unicharutil:public:MANIFEST_IDL",           "$distdirectory:idl:");
 
     #LOCALE
