@@ -695,8 +695,9 @@ public class IRFactory {
      */
     public Object createUnary(int nodeType, Object child) {
         Node childNode = (Node) child;
-        if (nodeType == Token.DELPROP) {
-            int childType = childNode.getType();
+        int childType = childNode.getType();
+        switch (nodeType) {
+          case Token.DELPROP: {
             Node left;
             Node right;
             if (childType == Token.NAME) {
@@ -716,12 +717,43 @@ public class IRFactory {
                 return new Node(Token.TRUE);
             }
             return new Node(nodeType, left, right);
-
-        } else if (nodeType == Token.TYPEOF) {
-            if (childNode.getType() == Token.NAME) {
+          }
+          case Token.TYPEOF:
+            if (childType == Token.NAME) {
                 childNode.setType(Token.TYPEOFNAME);
                 return childNode;
             }
+            break;
+          case Token.BITNOT:
+            if (childType == Token.NUMBER) {
+                int value = ScriptRuntime.toInt32(childNode.getDouble());
+                childNode.setDouble(~value);
+                return childNode;
+            }
+            break;
+          case Token.NEG:
+            if (childType == Token.NUMBER) {
+                childNode.setDouble(-childNode.getDouble());
+                return childNode;
+            }
+            break;
+          case Token.NOT: {
+            int status = isAlwaysDefinedBoolean(childNode);
+            if (status != 0) {
+                int type;
+                if (status == ALWAYS_TRUE_BOOLEAN) {
+                    type = Token.FALSE;
+                } else {
+                    type = Token.TRUE;
+                }
+                if (childType == Token.TRUE || childType == Token.FALSE) {
+                    childNode.setType(type);
+                    return childNode;
+                }
+                return new Node(type);
+            }
+            break;
+          }
         }
         return new Node(nodeType, childNode);
     }
@@ -1043,17 +1075,14 @@ public class IRFactory {
             return ALWAYS_FALSE_BOOLEAN;
           case Token.TRUE:
             return ALWAYS_TRUE_BOOLEAN;
-          case Token.NUMBER:
+          case Token.NUMBER: {
             double num = node.getDouble();
-            if (num == 0) {
-                // Is it neccessary to check for -0.0 here?
-                if (1 / num > 0) {
-                    return ALWAYS_FALSE_BOOLEAN;
-                }
-            }
-            else {
+            if (num == num && num != 0.0) {
                 return ALWAYS_TRUE_BOOLEAN;
+            } else {
+                return ALWAYS_FALSE_BOOLEAN;
             }
+          }
         }
         return 0;
     }
