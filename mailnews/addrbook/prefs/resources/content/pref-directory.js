@@ -33,19 +33,19 @@ function enableAutocomplete()
   var directoriesList =  document.getElementById("directoriesList"); 
   var directoriesListPopup = document.getElementById("directoriesListPopup");
   var editButton = document.getElementById("editButton");
-  var autocompleteSkipDirectory = document.getElementById("autocompleteSkipDirectory");
+//  var autocompleteSkipDirectory = document.getElementById("autocompleteSkipDirectory");
 
   if (autocompleteLDAP.checked) {
     directoriesList.removeAttribute("disabled");
     directoriesListPopup.removeAttribute("disabled");
     editButton.removeAttribute("disabled");
-    autocompleteSkipDirectory.removeAttribute("disabled");
+//    autocompleteSkipDirectory.removeAttribute("disabled");
   }
   else {
     directoriesList.setAttribute("disabled", true);
     directoriesListPopup.setAttribute("disabled", true);
     editButton.setAttribute("disabled", true);
-    autocompleteSkipDirectory.setAttribute("disabled", true);
+//    autocompleteSkipDirectory.setAttribute("disabled", true);
   }
   gFromGlobalPref = true;
   LoadDirectories(directoriesListPopup);

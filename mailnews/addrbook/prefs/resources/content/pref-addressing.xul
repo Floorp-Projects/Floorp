@@ -83,6 +83,7 @@
                prefattribute="disabled"
                oncommand="onEditDirectories();"/>
      </box>
+     <!--
      <html class="small-margin">&matchText.label;</html>
      <box autostretch="never">
        <checkbox class="small-margin" id="autocompleteSkipDirectory"
@@ -91,5 +92,6 @@
                  prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"
                  prefattribute="checked"/>    
      </box>
+     -->
    </titledbox>
 </window>
