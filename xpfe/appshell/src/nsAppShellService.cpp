@@ -499,8 +499,10 @@ nsAppShellService::Quit(PRUint32 aFerocity)
   /* eForceQuit doesn't actually work; it can cause a subtle crash if
      there are windows open which have unload handlers which open
      new windows. Use eAttemptQuit for now. */
-  if (aFerocity == eForceQuit)
-    return NS_ERROR_FAILURE;
+  if (aFerocity == eForceQuit) {
+    NS_WARNING("attempted to force quit");
+    // it will be treated the same as eAttemptQuit, below
+  }
 
   mShuttingDown = PR_TRUE;
 
@@ -583,9 +585,21 @@ nsAppShellService::Quit(PRUint32 aFerocity)
         mWindowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
         if (windowEnumerator) {
           PRBool more;
-          if (NS_SUCCEEDED(windowEnumerator->HasMoreElements(&more)) && more) {
+          while (windowEnumerator->HasMoreElements(&more), more) {
+            /* we can't quit immediately. we'll try again as the last window
+               finally closes. */
             aFerocity = eAttemptQuit;
-            rv = NS_ERROR_FAILURE;
+            nsCOMPtr<nsISupports> window;
+            windowEnumerator->GetNext(getter_AddRefs(window));
+            nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(window));
+            if (domWindow) {
+              PRBool closed = PR_FALSE;
+              domWindow->GetClosed(&closed);
+              if (!closed) {
+                rv = NS_ERROR_FAILURE;
+                break;
+              }
+            }
           }
         }
       }
