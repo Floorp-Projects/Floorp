@@ -44,3 +44,12 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile);
 
 extern "C"
 nsresult NS_COM XPCOMGlueShutdown();
+
+
+// Default GRE startup and shutdown
+
+extern "C"
+nsresult NS_COM GRE_Startup();
+
+extern "C"
+nsresult NS_COM GRE_Shutdown();

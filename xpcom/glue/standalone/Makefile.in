@@ -65,13 +65,15 @@ CPPSRCS		= \
 		$(STRING_LCSRCS)             \
 		nsXPCOMGlue.cpp              \
 		nsEmbedString.cpp	     \
+		nsGREDirServiceProvider.cpp  \
+		nsDebugGlue.cpp		     \
 		$(NULL)
 
 EXPORTS		= \
-		nsXPCOMGlue.h \
 		$(NULL)
 
 SDK_HEADERS     = \
+		nsXPCOMGlue.h \
 		nsEmbedString.h \
 		$(NULL)
 
@@ -96,6 +98,8 @@ endif
 SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+=  -DMOZILLA_VERSION=\"$(MOZILLA_VERSION)\"
 
 export:: $(XPCOM_GLUE_SRC_CSRCS) $(STRING_CSRCS)
 	$(INSTALL) $^ .
