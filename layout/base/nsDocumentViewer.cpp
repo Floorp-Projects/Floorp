@@ -1287,7 +1287,14 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
   // 2) Replace the current pres shell with a new shell for the new document
 
+  nsCOMPtr<nsILinkHandler> linkHandler;
   if (mPresShell) {
+    if (mPresContext) {
+      // Save the linkhandler (nsPresShell::Destroy removes it from
+      // mPresContext).
+      linkHandler = mPresContext->GetLinkHandler();
+    }
+
     mPresShell->EndObservingDocument();
     mPresShell->Destroy();
 
@@ -1296,6 +1303,11 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
   // And if we're already given a prescontext...
   if (mPresContext) {
+    // If we had a linkHandler and it got removed, put it back.
+    if (linkHandler) {
+      mPresContext->SetLinkHandler(linkHandler);
+    }
+
     // 3) Create a new style set for the document
 
     nsStyleSet *styleSet;
