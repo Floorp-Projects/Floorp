@@ -71,6 +71,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_TextForeground: 
         aColor = NS_RGB(0x00,0x00,0x00);
         break;
+    case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
         GrafPtr thePort;
         ::GetPort(&thePort);
@@ -88,6 +89,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
        	else
         	aColor = NS_RGB(0x00,0x00,0x00);
         break;
+    case eColor_highlighttext:  // CSS2 color
     case eColor_TextSelectForeground:
     		GetColor(eColor_TextSelectBackground, aColor);
     		if (aColor == 0xffffff)
@@ -96,37 +98,64 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	        aColor = NS_RGB(0xff,0xff,0xff);
         break;
 
+    //
+    // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
+    //
+    // Right now, the majority of these colors are just guesses since they are
+    // modeled word for word after the win32 system colors and don't have any 
+    // real counterparts in the Mac world. I'm sure we'll be tweaking these for 
+    // years to come.
+    //
+    
     case eColor_activeborder:
-    case eColor_activecaption:
-    case eColor_appworkspace:
-    case eColor_background:
-    case eColor_buttonface:
-    case eColor_buttonhighlight:
-    case eColor_buttonshadow:
-    case eColor_buttontext:
-    case eColor_captiontext:
-    case eColor_graytext:
-    case eColor_highlight:
-    case eColor_highlighttext:
     case eColor_inactiveborder:
-    case eColor_inactivecaption:
-    case eColor_inactivecaptiontext:
-    case eColor_infobackground:
-    case eColor_infotext:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eColor_activecaption:
+        aColor = NS_RGB(0x0,0x0,0x0);
+        break;
+    case eColor_appworkspace:
+        // NOTE: this is an MDI color and does not exist on macOS.
+        aColor = NS_RGB(0x0,0x0,0x0);
+        break;
+    case eColor_background:
+        // NOTE: chances are good this is a pattern, not a pure color. What do we do?
+        aColor = NS_RGB(0x0,0x0,0x0);
+        break;
     case eColor_menu:
-    case eColor_menutext:
-    case eColor_scrollbar:
-    case eColor_threeddarkshadow:
+    case eColor_buttonface:
+    case eColor_infobackground:
     case eColor_threedface:
-    case eColor_threedhighlight:
-    case eColor_threedlightshadow:
-    case eColor_threedshadow:
     case eColor_window:
     case eColor_windowframe:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eColor_threedhighlight:
+    case eColor_buttonhighlight:
+        aColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eColor_threedlightshadow:
+    case eColor_buttonshadow:
+        aColor = NS_RGB(0x40,0x40,0x40);
+        break;
+    case eColor_buttontext:
+    case eColor_captiontext:
+    case eColor_menutext:
+    case eColor_infotext:
     case eColor_windowtext:
-        NS_NOTYETIMPLEMENTED("Native system colors not yet implemented");
-        aColor = NS_RGB(0xff,0xff,0xff);
-        res = NS_ERROR_FAILURE;
+        aColor = NS_RGB(0x0,0x0,0x0);
+        break;
+    case eColor_inactivecaption:
+    case eColor_inactivecaptiontext:
+    case eColor_graytext:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eColor_scrollbar:
+        aColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eColor_threeddarkshadow:
+    case eColor_threedshadow:
+        aColor = NS_RGB(0x40,0x40,0x40);
         break;
 
     default:
