@@ -220,6 +220,10 @@ namespace JSClasses {
             return gc_base::operator new(n);
         }
         
+#if !defined(XP_MAC)
+        void operator delete(void* /*ptr*/, JSClass* thisClass) {}
+#endif
+        
         JSInstance(JSClass* thisClass)
         {
             mType = thisClass;
