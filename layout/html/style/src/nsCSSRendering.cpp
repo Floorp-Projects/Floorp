@@ -1587,15 +1587,25 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   if (0 == border.bottom) aSkipSides |= (1 << NS_SIDE_BOTTOM);
   if (0 == border.left) aSkipSides |= (1 << NS_SIDE_LEFT);
 
-  // XXX These are misnamed. Why is it that 'outside' is inside of
-  // 'inside' (it's produced by deflating)?
-  nsRect inside(aBorderArea);
-  nsRect outside(inside);
-  outside.Deflate(border);
+  // get the inside and outside parts of the border
+  nsRect outerRect(aBorderArea);
+  nsRect innerRect(outerRect);
+  innerRect.Deflate(border);
+
+  if (border.left + border.right > aBorderArea.width) {
+    innerRect.x = outerRect.x;
+    innerRect.width = outerRect.width;
+  }
+  if (border.top + border.bottom > aBorderArea.height) {
+    innerRect.y = outerRect.y;
+    innerRect.height = outerRect.height;
+  }
+
+
 
   // If the dirty rect is completely inside the border area (e.g., only the
   // content is being painted), then we can skip out now
-  if (outside.Contains(aDirtyRect)) {
+  if (innerRect.Contains(aDirtyRect)) {
     return;
   }
  
@@ -1608,7 +1618,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   }
   if (cnt < 4) {
     DrawDashedSides(cnt, aRenderingContext,aDirtyRect,&aBorderStyle,nsnull, PR_FALSE,
-                    inside, outside, aSkipSides, aGap);
+                    outerRect, innerRect, aSkipSides, aGap);
   }
 
   // Draw all the other sides
@@ -1629,7 +1639,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM)) ? 
                 mozBGColor->mBackgroundColor :
                 bgColor->mBackgroundColor,
-               inside,outside, aSkipSides,
+               outerRect,innerRect, aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1641,7 +1651,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_LEFT)) ? 
                 mozBGColor->mBackgroundColor :
                 bgColor->mBackgroundColor,
-               inside, outside,aSkipSides,
+               outerRect, innerRect,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1653,7 +1663,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_TOP)) ? 
                 mozBGColor->mBackgroundColor :
                 bgColor->mBackgroundColor,
-               inside, outside,aSkipSides,
+               outerRect, innerRect,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1665,7 +1675,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                MOZ_BG_BORDER(aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT)) ? 
                 mozBGColor->mBackgroundColor :
                 bgColor->mBackgroundColor,
-               inside, outside,aSkipSides,
+               outerRect, innerRect,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
