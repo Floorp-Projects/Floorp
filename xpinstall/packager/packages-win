@@ -87,7 +87,7 @@ bin\components\chardetc.dll
 bin\components\chrome.dll
 bin\components\chrome.xpt
 bin\components\cookie.dll
-bin\components\cookieviewer.xpt
+bin\components\cookie.xpt
 bin\components\docshell.dll
 bin\components\docshell_base.xpt
 bin\components\dom.xpt
