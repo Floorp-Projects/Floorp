@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.19 $ $Date: 2002/12/12 06:05:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.20 $ $Date: 2003/05/10 14:19:04 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -626,7 +626,9 @@ nssTokenObjectCache_Clear
 )
 {
     if (cache) {
+	PZ_Lock(cache->lock);
 	clear_cache(cache);
+	PZ_Unlock(cache->lock);
     }
 }
 
