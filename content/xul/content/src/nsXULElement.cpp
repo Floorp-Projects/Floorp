@@ -957,6 +957,13 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     }
 }
 
+PRBool
+nsXULElement::IsNativeAnonymous() const
+{
+    // XXX Workarond for bug 280541
+    return PR_FALSE;
+}
+
 PRUint32
 nsXULElement::GetChildCount() const
 {
@@ -1948,7 +1955,8 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                     // on the target image.
 
     // Find out whether we're anonymous.
-    if (IsNativeAnonymous()) {
+    // XXX Workaround bug 280541 without regressing bug 251197
+    if (nsGenericElement::IsNativeAnonymous()) {
         retarget = PR_TRUE;
     } else {
         nsIContent* parent = GetParent();
