@@ -43,7 +43,7 @@ public:
   typedef enum {
      kPlatformCharsetSel_PlainTextInClipboard = 0,
      kPlatformCharsetSel_FileName = 1,
-     kPlatformCharsetSel_Menu = 2,
+     kPlatformCharsetSel_Menu = 2
   } nsPlatformCharsetSel;
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult) = 0;
