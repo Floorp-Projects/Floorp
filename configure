@@ -5285,7 +5285,7 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
 else
   echo "$ac_t""no" 1>&6
 echo libIDL will be required starting the week of 12-APR-1999.
-  echo Get yourself an RPM our source package from ftp://ftp.mozilla.org/
+  echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/
   echo before your tree is HOSED.
   echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.
   sleep 3
