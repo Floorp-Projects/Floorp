@@ -64,7 +64,7 @@ var folderListener = {
 
     //if we don't have a folder loaded, don't bother.
     if (currentURI) {
-      if (property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages") {
+      if (property.toString() == "TotalMessages" || property.toString() == "TotalUnreadMessages") {
         var folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (folder) {
           var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource); 
@@ -83,7 +83,7 @@ var folderListener = {
   OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
   OnItemEvent: function(folder, event) {
-    var eventType = event.GetUnicode();
+    var eventType = event.toString();
 
     if (eventType == "DeleteOrMoveMsgCompleted")
       HandleDeleteOrMoveMsgCompleted(folder);

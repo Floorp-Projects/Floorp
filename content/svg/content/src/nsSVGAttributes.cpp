@@ -768,9 +768,10 @@ nsSVGAttributes::NormalizeAttrString(const nsAString& aStr,
                                      nsINodeInfo*& aNodeInfo)
 {
   PRInt32 indx, count = Count();
+  NS_ConvertUCS2toUTF8 utf8String(aStr);
   for (indx = 0; indx < count; indx++) {
     nsSVGAttribute* attr = ElementAt(indx);
-    if (attr->GetNodeInfo()->QualifiedNameEquals(aStr)) {
+    if (attr->GetNodeInfo()->QualifiedNameEquals(utf8String)) {
       aNodeInfo = attr->GetNodeInfo();
       NS_ADDREF(aNodeInfo);
       

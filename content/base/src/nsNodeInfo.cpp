@@ -107,8 +107,8 @@ nsNodeInfo::GetQualifiedName(nsAString& aQualifiedName) const
     aQualifiedName.Truncate();
   }
 
-  const PRUnichar *name;
-  mInner.mName->GetUnicode(&name);
+  nsAutoString name;
+  mInner.mName->ToString(name);
 
   aQualifiedName.Append(name);
 
@@ -183,20 +183,14 @@ nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager) const
 NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(const nsAString& aName) const
 {
-  const PRUnichar *name;
-  mInner.mName->GetUnicode(&name);
-
-  return aName.Equals(name);
+  return mInner.mName->Equals(aName);
 }
 
 
 NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
 {
-  const PRUnichar *name;
-  mInner.mName->GetUnicode(&name);
-
-  if (!aName.Equals(name)) {
+  if (!mInner.mName->Equals(aName)) {
     return PR_FALSE;
   }
 
@@ -204,19 +198,15 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
     return aPrefix.IsEmpty();
   }
 
-  mInner.mPrefix->GetUnicode(&name);
-
-  return aPrefix.Equals(name);
+  return mInner.mPrefix->Equals(aPrefix);
 }
 
 
 NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(const nsAString& aName, PRInt32 aNamespaceID) const
 {
-  const PRUnichar *name;
-  mInner.mName->GetUnicode(&name);
-
-  return aName.Equals(name) && (mInner.mNamespaceID == aNamespaceID);
+  return mInner.mNamespaceID == aNamespaceID &&
+    mInner.mName->Equals(aName);
 }
 
 
@@ -225,15 +215,13 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
                    PRInt32 aNamespaceID) const
 {
   PRUnichar nullChar = '\0';
-  const PRUnichar *name, *prefix = &nullChar;
-  mInner.mName->GetUnicode(&name);
 
-  if (mInner.mPrefix) {
-    mInner.mPrefix->GetUnicode(&prefix);
-  }
+  if (!mInner.mNamespaceID == aNamespaceID ||
+      !mInner.mName->Equals(aName))
+    return PR_FALSE;
 
-  return ((mInner.mNamespaceID == aNamespaceID) && aName.Equals(name) &&
-          aPrefix.Equals(prefix));
+  return mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) :
+    aPrefix.IsEmpty();
 }
 
 
@@ -246,26 +234,22 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
   return nsINodeInfo::NamespaceEquals(nsid);
 }
 
-
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::QualifiedNameEquals(const nsAString& aQualifiedName) const
+nsNodeInfo::QualifiedNameEquals(const nsACString& aQualifiedName) const
 {
-  const PRUnichar *name;
-  mInner.mName->GetUnicode(&name);
+  
+  if (!mInner.mPrefix)
+    return mInner.mName->EqualsUTF8(aQualifiedName);
 
-  if (!mInner.mPrefix) {
-    return aQualifiedName.Equals(name);
-  }
-
-  nsAString::const_iterator start;
+  nsACString::const_iterator start;
   aQualifiedName.BeginReading(start);
 
-  nsAString::const_iterator colon(start);
+  nsACString::const_iterator colon(start);
 
-  const PRUnichar *prefix;
-  mInner.mPrefix->GetUnicode(&prefix);
+  const char* prefix;
+  mInner.mPrefix->GetUTF8String(&prefix);
 
-  PRUint32 len = nsCRT::strlen(prefix);
+  PRUint32 len = strlen(prefix);
 
   if (len >= aQualifiedName.Length()) {
     return PR_FALSE;
@@ -280,18 +264,17 @@ nsNodeInfo::QualifiedNameEquals(const nsAString& aQualifiedName) const
   }
 
   // Compare the prefix to the string from the start to the colon
-  if (!Substring(start, colon).Equals(prefix)) {
+  if (!mInner.mPrefix->EqualsUTF8(Substring(start, colon)))
     return PR_FALSE;
-  }
 
   ++colon; // Skip the ':'
 
-  nsAString::const_iterator end;
+  nsACString::const_iterator end;
   aQualifiedName.EndReading(end);
 
   // Compare the local name to the string between the colon and the
   // end of aQualifiedName
-  return Substring(colon, end).Equals(name);
+  return mInner.mName->EqualsUTF8(Substring(colon, end));
 }
 
 NS_IMETHODIMP

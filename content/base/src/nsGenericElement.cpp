@@ -2971,7 +2971,7 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aBaseURL,
                               const nsAString& aURLSpec,
-                              const nsAFlatString& aTargetSpec,
+                              const nsAString& aTargetSpec,
                               PRBool aClick)
 {
   nsCOMPtr<nsILinkHandler> handler;
@@ -3006,10 +3006,10 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
       handler->OnLinkClick(this, aVerb, targetURI,
-                           aTargetSpec.get());
+                           PromiseFlatString(aTargetSpec).get());
   } else {
     handler->OnOverLink(this, targetURI,
-                        aTargetSpec.get());
+                        PromiseFlatString(aTargetSpec).get());
   }
   return rv;
 }
@@ -3086,11 +3086,13 @@ struct nsGenericAttribute
     : mNodeInfo(aNodeInfo),
       mValue(aValue)
   {
+    MOZ_COUNT_CTOR(nsGenericAttribute);
     NS_IF_ADDREF(mNodeInfo);
   }
 
   ~nsGenericAttribute(void)
   {
+    MOZ_COUNT_DTOR(nsGenericAttribute);
     NS_IF_RELEASE(mNodeInfo);
   }
 
@@ -3125,11 +3127,12 @@ nsGenericContainerElement::~nsGenericContainerElement()
 nsresult
 nsGenericContainerElement::NormalizeAttrString(const nsAString& aStr, nsINodeInfo*& aNodeInfo)
 {
+  NS_ConvertUCS2toUTF8 utf8String(aStr);
   if (mAttributes) {
     PRInt32 indx, count = mAttributes->Count();
     for (indx = 0; indx < count; indx++) {
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(indx);
-      if (attr->mNodeInfo->QualifiedNameEquals(aStr)) {
+      if (attr->mNodeInfo->QualifiedNameEquals(utf8String)) {
         aNodeInfo = attr->mNodeInfo;
         NS_ADDREF(aNodeInfo);
 

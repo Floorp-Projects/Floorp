@@ -44,11 +44,10 @@ NS_IMPL_ISUPPORTS1(nsParserService, nsIParserService)
 NS_IMETHODIMP
 nsParserService::HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const
 {
-  const PRUnichar *tagName = nsnull;
-  aAtom->GetUnicode(&tagName);
-  NS_ASSERTION(tagName, "Null string in atom!");
+  nsAutoString tagName;
+  aAtom->ToString(tagName);
 
-  *aId = nsHTMLTags::LookupTag(nsDependentString(tagName));
+  *aId = nsHTMLTags::LookupTag(tagName);
 
   return NS_OK;
 }
@@ -57,11 +56,10 @@ NS_IMETHODIMP
 nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
                                               PRInt32* aId) const
 {
-  const PRUnichar *tagName = nsnull;
-  aAtom->GetUnicode(&tagName);
-  NS_ASSERTION(tagName, "Null string in atom!");
+  nsAutoString tagName;
+  aAtom->ToString(tagName);
 
-  *aId = nsHTMLTags::CaseSensitiveLookupTag(tagName);
+  *aId = nsHTMLTags::CaseSensitiveLookupTag(tagName.get());
 
   return NS_OK;
 }

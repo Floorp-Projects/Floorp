@@ -73,9 +73,7 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
  */
 static PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
 {
-  const PRUnichar* atom;
-  aAtom->GetUnicode(&atom);
-  return aString.Equals(atom);
+  return aAtom->Equals(aString);
 };
 
 #endif // txStringUtils_h__

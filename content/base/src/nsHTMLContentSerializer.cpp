@@ -63,8 +63,7 @@
 #define kGreaterThan NS_LITERAL_STRING(">")
 #define kEndTag NS_LITERAL_STRING("</")
 
-static const PRUnichar kMozStr[] = {'m', 'o', 'z', 0};
-static const PRInt32 kMozStrLength = 3;
+static const char kMozStr[] = "moz";
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -256,9 +255,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
 
 
   if (mCharSet && !uri.IsASCII()) {
-    const PRUnichar *charset;
-    mCharSet->GetUnicode(&charset);
-    documentCharset.Adopt(ToNewUTF8String(nsDependentString(charset)));
+    mCharSet->ToUTF8String(documentCharset);
     textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -316,6 +313,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
   aContent->GetAttrCount(count);
 
+  NS_NAMED_LITERAL_STRING(mozStr1, "_moz");
+  
   for (index = 0; index < count; index++) {
     aContent->GetAttrNameAt(index, 
                             namespaceID,
@@ -323,13 +322,12 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                             *getter_AddRefs(attrPrefix));
 
     // Filter out any attribute starting with [-|_]moz
-    const PRUnichar* sharedName;
-    attrName->GetUnicode(&sharedName);
+    const char* sharedName;
+    attrName->GetUTF8String(&sharedName);
     if ((('_' == *sharedName) || ('-' == *sharedName)) &&
-        !nsCRT::strncmp(sharedName+1, kMozStr, kMozStrLength)) {
+        !nsCRT::strncmp(sharedName+1, kMozStr, sizeof(kMozStr)-1)) {
       continue;
     }
-
     aContent->GetAttr(namespaceID, attrName, valueStr);
 
     // 
@@ -338,8 +336,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     //
     if ((aTagName == nsHTMLAtoms::br) &&
         (attrName.get() == nsHTMLAtoms::type) &&
-        !valueStr.IsEmpty() && ('_' == valueStr[0]) &&
-        !nsCRT::strncmp(valueStr.get()+1, kMozStr, kMozStrLength)) {
+        (mozStr1.Equals(Substring(valueStr, 0, mozStr1.Length())))) {
       continue;
     }
     
@@ -457,9 +454,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   AppendToString(kLessThan, aStr);
 
-  const PRUnichar* sharedName;
-  name->GetUnicode(&sharedName);
-  AppendToString(sharedName, -1, aStr);
+  nsAutoString nameStr;
+  name->ToString(nameStr);
+  AppendToString(nameStr.get(), -1, aStr);
 
   // Need to keep track of OL and LI elements in order to get ordinal number 
   // for the LI.
@@ -554,13 +551,12 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     }
   }
   
-  const PRUnichar* sharedName;
-  name->GetUnicode(&sharedName);
+  nsAutoString nameStr;
+  name->ToString(nameStr);
 
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
   if (parserService && (name.get() != nsHTMLAtoms::style)) {
-    nsAutoString nameStr(sharedName);
     PRBool isContainer;
     PRInt32 id;
 
@@ -582,7 +578,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   EndIndentation(name, hasDirtyAttr, aStr);
 
   AppendToString(kEndTag, aStr);
-  AppendToString(sharedName, -1, aStr);
+  AppendToString(nameStr.get(), -1, aStr);
   AppendToString(kGreaterThan, aStr);
 
   if (LineBreakAfterClose(name, hasDirtyAttr)) {

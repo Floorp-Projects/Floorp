@@ -2388,11 +2388,13 @@ nsXULElement::NormalizeAttrString(const nsAString& aStr,
                                   nsINodeInfo*& aNodeInfo)
 {
     PRInt32 i, count = Attributes() ? Attributes()->Count() : 0;
+    NS_ConvertUCS2toUTF8 utf8String(aStr);
+    
     for (i = 0; i < count; i++) {
         nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*,
                                                    Attributes()->ElementAt(i));
         nsINodeInfo *ni = attr->GetNodeInfo();
-        if (ni->QualifiedNameEquals(aStr)) {
+        if (ni->QualifiedNameEquals(utf8String)) {
             aNodeInfo = ni;
             NS_ADDREF(aNodeInfo);
 
@@ -2405,7 +2407,7 @@ nsXULElement::NormalizeAttrString(const nsAString& aStr,
         nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
 
         nsINodeInfo *ni = attr->mNodeInfo;
-        if (ni->QualifiedNameEquals(aStr)) {
+        if (ni->QualifiedNameEquals(utf8String)) {
             aNodeInfo = ni;
             NS_ADDREF(aNodeInfo);
 

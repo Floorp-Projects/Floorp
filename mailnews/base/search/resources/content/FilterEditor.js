@@ -201,7 +201,7 @@ var gFolderListener = {
     OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
     OnItemEvent: function(folder, event) {
-        var eventType = event.GetUnicode();
+        var eventType = event.toString();
 
         if (eventType == "FolderCreateCompleted") {
             SetFolderPicker(folder.URI, gActionTargetElement.id);

@@ -1569,9 +1569,10 @@ static PRBool IsTreePseudoElement(const nsString& aPseudo)
 
 static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
 {
-  nsAutoString str;
-  aPseudo->ToString(str);
-  return Substring(str, 0, 11).Equals(NS_LITERAL_STRING(":-moz-tree-"));
+  const char* str;
+  aPseudo->GetUTF8String(&str);
+  static const char moz_tree[] = ":-moz-tree-";
+  return nsCRT::strncmp(str, moz_tree, PRInt32(sizeof(moz_tree)-1)) == 0;
 }
 #endif
 
