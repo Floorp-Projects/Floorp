@@ -39,6 +39,7 @@ bin/libmozjs.so
 bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
+bin/libxpcom_core.so
 bin/libxpistub.so
 bin/libnspr4.so
 bin/components/libxpinstall.so
