@@ -46,6 +46,7 @@ CPPSRCS =  \
 	   bcJavaStubsAndProxies.cpp \
 	   bcIIDJava.cpp \
 	   org_mozilla_xpcom_Utilities.cpp \
+	   org_mozilla_xpcom_Debug.cpp \
 	   $(NULL)
 
 JDKINCLUDE= -I$(JDKHOME)/include

@@ -30,6 +30,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "bcJavaMarshalToolkit.h"
 #include "ctype.h"
+#include "bcJavaGlobal.h"
 
 /*
  * Class:     org_mozilla_xpcom_Utilities
@@ -42,7 +43,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     bcIORB * orb = (bcIORB*) _orb;
     bcOID oid = (bcOID)_oid;
     nsIID iid;
-    printf("--[c++] jni Java_org_mozilla_xpcom_Utilities_callMethodByIndex %d\n",(int)mid);
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] jni Java_org_mozilla_xpcom_Utilities_callMethodByIndex %d\n",(int)mid));
     const char * str = NULL;
     str = env->GetStringUTFChars(jiid,NULL);
     iid.Parse(str);
@@ -66,11 +68,10 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     mt->Marshal(m);
     orb->SendReceive(call);
     bcIUnMarshaler * um = call->GetUnMarshaler();
-//      mt->UnMarshal(um);
     jobject retval;
     mt->UnMarshal(um, &retval);
-    delete m; delete um; delete mt;
-//      return NULL;
+    delete call; delete m; delete um; delete mt;
+    
     return retval;
 }
 

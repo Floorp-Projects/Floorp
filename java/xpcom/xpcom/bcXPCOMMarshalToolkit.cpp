@@ -26,6 +26,7 @@
 #include "bcORB.h"
 #include "bcXPCOMStubsAndProxies.h"
 #include "nsCRT.h"
+#include "bcXPCOMLog.h"
 
 static NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
@@ -86,7 +87,8 @@ private:
 
 
 nsresult bcXPCOMMarshalToolkit::Marshal(bcIMarshaler *m) {
-    //printf("--bcXPCOMMarshalToolkit::Marshal\n");
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--bcXPCOMMarshalToolkit::Marshal\n"));
     nsresult r = NS_OK;
     PRUint32 paramCount = info->GetParamCount();
     for (unsigned int i = 0; (i < paramCount) && NS_SUCCEEDED(r); i++) {
@@ -225,7 +227,8 @@ bcXPType bcXPCOMMarshalToolkit::XPTType2bcXPType(uint8 type) {
 
 nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXPTParamInfo * param, 
                                                uint8 type, uint8 ind) {
-    //printf("--bcXPCOMMarshalToolkit::MarshalElement ind=%d\n",ind);
+    PRLogModuleInfo * log = bcXPCOMLog::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--bcXPCOMMarshalToolkit::MarshalElement ind=%d\n",ind));
     nsresult r = NS_OK;
     switch(type) {
         case nsXPTType::T_IID    :
@@ -252,8 +255,13 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                 size_t length = 0;
                 if (type == nsXPTType::T_WCHAR_STR) {
                     length = nsCRT::strlen((const PRUnichar*)data);
-                    length *= sizeof(PRUnichar);
+                    PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR length=%d\n",length));
+                    length *= 2;
                     length +=2;
+                    for (int i = 0; i < length && type == nsXPTType::T_WCHAR_STR; i++) {
+                        char c = ((char*)data)[i];
+                        PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMMarshalToolkit::MarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                    }
                 } else {
                     length = nsCRT::strlen((const char*)data);                
                     length+=1;
@@ -286,7 +294,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                             iid = (nsID*)params[argnum].val.p;
                     }
                 }
-                //printf("--[c++]XPCOMMarshallToolkit INTERFACE iid=%s\n",iid->ToString());
+                PR_LOG(log, PR_LOG_DEBUG, ("--[c++]XPCOMMarshallToolkit INTERFACE iid=%s\n",iid->ToString()));
                 bcOID oid = 0;
                 if (*(char**)data != NULL) {
                     NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
@@ -311,8 +319,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
             }
         case nsXPTType::T_PSTRING_SIZE_IS: 
         case nsXPTType::T_PWSTRING_SIZE_IS:
-        case nsXPTType::T_ARRAY:
-            //nb array of interfaces [to do]
+        case nsXPTType::T_ARRAY:             //nb array of interfaces [to do]
             {
                 PRUint32 arraySize;
                 if (!GetArraySizeFromParam(interfaceInfo,info, *param,methodIndex,
@@ -325,7 +332,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                         return NS_ERROR_FAILURE;
                     }
                     m->WriteSimple(&arraySize,bc_T_U32);
-                    PRInt16 elemSize = GetSimpleSize(type);
+                    PRInt16 elemSize = GetSimpleSize(datumType);
                     char *current = *(char**)data;
                     for (unsigned int i = 0; i < arraySize; i++, current+=elemSize) {
                         MarshalElement(m,current,param,datumType.TagPart(),0);
@@ -349,6 +356,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
 
 nsresult 
 bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTParamInfo * param, uint8 type, bcIAllocator * allocator) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     nsresult r = NS_OK;
     switch(type) {
         case nsXPTType::T_IID    :
@@ -368,6 +376,7 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
         case nsXPTType::T_CHAR   :         
         case nsXPTType::T_WCHAR  : 
             um->ReadSimple(data,XPTType2bcXPType(type));
+            PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMMarshalToolkit::UnMarshalElement %c\n",*(char*)data));
             break;
         case nsXPTType::T_PSTRING_SIZE_IS: 
         case nsXPTType::T_PWSTRING_SIZE_IS:
@@ -375,14 +384,21 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
         case nsXPTType::T_WCHAR_STR :      
             size_t size;
             um->ReadString(data,&size,allocator);
+            {
+                char *str = *(char**)data;
+                for (int i = 0; i < size && type == nsXPTType::T_WCHAR_STR; i++) {
+                    char c = str[i];
+                    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMMarshalToolkit::UnMarshalElement T_WCHAR_STR [%d] = %d %c\n",i,(int)c,c));
+                }
+            }
             break;
         case nsXPTType::T_INTERFACE :      	    
         case nsXPTType::T_INTERFACE_IS :      	    
                 {
-                    printf("--[c++] we have an interface\n");
+                    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] we have an interface\n"));
                     bcOID oid;
                     um->ReadSimple(&oid,XPTType2bcXPType(type));
-                    printf("%d oid\n",(int) oid);
+                    PR_LOG(log, PR_LOG_DEBUG, ("%d oid\n",(int) oid));
                     nsIID iid;
                     um->ReadSimple(&iid,bc_T_IID);
                     nsISupports *proxy = NULL;

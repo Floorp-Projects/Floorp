@@ -19,29 +19,14 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __bcJavaGlobal_h_
-#define __bcJavaGlobal_h_
-#include "nscore.h"
-#include "jni.h"
-#include "prlog.h"
 
+#include "bcXPCOMLog.h"
 
-#define LOG_MODULE "blackConnect"
-#define EXCEPTION_CHECKING(env) \
-    do {                                     \
-        if ((env)->ExceptionOccurred()) {    \
-            (env)->ExceptionDescribe();      \
-	}                                    \
-    } while (0);
-   
+PRLogModuleInfo * bcXPCOMLog::log = NULL;
 
-class bcJavaGlobal {
- public:
-    static JNIEnv * GetJNIEnv(void);
-    static PRLogModuleInfo * GetLog();
- private:
-    static PRLogModuleInfo* log;
-    static JavaVM *jvm;
-    static void StartJVM(void);
-};
-#endif
+PRLogModuleInfo * bcXPCOMLog::GetLog() {
+    if (log == NULL) {
+        log = PR_NewLogModule(LOG_MODULE);
+    }
+    return log;
+}

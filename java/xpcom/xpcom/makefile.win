@@ -35,6 +35,7 @@ OBJS= \
 	.\$(OBJDIR)\bcXPCOMStub.obj \
 	.\$(OBJDIR)\bcXPCOMMarshalToolkit.obj \
 	.\$(OBJDIR)\bcXPCOMStubsAndProxies.obj \
+	.\$(OBJDIR)\bcXPCOMLog.obj \	
 	$(NULL)
 
 EXPORTS = \

@@ -68,7 +68,8 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetStub(jobject obj, bcIStub **stub) {
 }
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb,  jobject *proxy) {
-    printf("--[c++] bcJavaStubsAndProxies::GetProxy\n");
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--[c++] bcJavaStubsAndProxies::GetProxy\n"));
     if (!componentLoader) {
         Init();
     }
@@ -80,7 +81,8 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIOR
 }
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetInterface(const nsIID &iid,  jclass *clazz) {
-    printf("--[c++] bcJavaStubsAndProxies::GetInterface\n");
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--[c++] bcJavaStubsAndProxies::GetInterface\n"));
     if (!componentLoader) {
         Init();
     }
@@ -98,7 +100,8 @@ NS_IMETHODIMP  bcJavaStubsAndProxies::GetOID(jobject object, bcIORB *orb, bcOID 
 }
 
 NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) { 
-    printf("--bcJavaStubsAndProxies::GetOID %s\n",location);
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStubsAndProxies::GetOID %s\n",location));
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     nsresult result;
     
@@ -112,7 +115,7 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     bcIStub *stub = new bcJavaStub(object);
     NS_WITH_SERVICE(bcORB,_orb,kORBCIID,&result);
     if (NS_FAILED(result)) {
-        printf("--bcJavaStubsAndProxies::GetOID failed\n");
+        PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStubsAndProxies::GetOID failed\n"));
         return result;
     }
     bcIORB *orb;
@@ -122,13 +125,14 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
 }
 
 void bcJavaStubsAndProxies::Init(void) {
-    printf("--[c++]bcJavaStubsAndProxies::Init\n");
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG,("--[c++]bcJavaStubsAndProxies::Init\n"));
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     componentLoader = env->FindClass("org/mozilla/xpcom/ComponentLoader");
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         componentLoader = 0;
-        printf("--Did you set CLASSPATH correctly\n");
+        PR_LOG(log,PR_LOG_ALWAYS,("--Did you set CLASSPATH correctly\n"));
         return;
     }
     componentLoader = (jclass)env->NewGlobalRef(componentLoader);

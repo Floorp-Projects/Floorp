@@ -100,6 +100,19 @@ NS_IMETHODIMP bcJavaSample::Test5(nsIComponentManager *cm) {
     return NS_OK;
 }
 
+/* void test6 (in PRUint32 count, [array, size_is (count)] in string valueArray); */
+NS_IMETHODIMP bcJavaSample::Test6(PRUint32 count, const char **valueArray) {
+    printf("--[c++] bcJavaSample.test6 coutn %d\n",count);
+    for(unsigned int i = 0; i < count; i++) {
+        printf("--[c++] valueArray[%d]=%s\n",i,valueArray[i]);
+    }
+    return NS_OK;
+}
+
+/* void test7 (in PRUint32 count, [array, size_is (count)] out char valueArray); */
+NS_IMETHODIMP bcJavaSample::Test7(PRUint32 *count, char **valueArray) {
+    return NS_OK;
+}
 void test() {
     printf("--BlackConnect test start\n");
     nsresult r;
@@ -151,6 +164,25 @@ void test() {
         }
         printf("--[c++] bcJavaSample after test->Test5(cm)\n");
     }
+    {
+        const char ** valueArray = (const char **)malloc(sizeof(char*)*4);
+        valueArray[0] = "hi";
+        valueArray[1] = "there";
+        valueArray[2] = "a";
+        valueArray[3] = "b";
+        test->Test6(4,valueArray);
+    }
+    {
+        printf("--[c++]about to test7\n");
+        PRUint32 count; 
+        char *charArray;
+        test->Test7(&count,&charArray);
+        for (int i = 0; i < count; i++) {
+            printf("--[c++] charArray[%d]=%c\n",i,charArray[i]);
+        }
+        printf("--[c++]end of test7\n");
+    }
+
     printf("--BlackConnect test end\n");
 }
 

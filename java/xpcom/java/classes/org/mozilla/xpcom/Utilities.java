@@ -24,35 +24,54 @@ package org.mozilla.xpcom;
 import java.lang.reflect.*;
 
 public class Utilities {
-    
+    static Class objectArrayClass = (new Object[1]).getClass();
     static Object callMethodByIndex(Object obj, IID iid, int mid, Object[] args) {
-        System.out.println("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
+        Debug.log("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
         Object retObject = null;
         for (int i = 0; i < args.length; i++) {
-            System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
+            Debug.log("--[java]callMethodByIndex args["+i+"] = "+args[i]);
         }
         Method method = InterfaceRegistry.getMethodByIndex(mid,iid);
-        System.out.println("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
+        Debug.log("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
         try {
+            
             if (method != null) {
+                for (int i = 0 ; i < args.length; i++) { 
+                    /* this is hack. at the time we are doing holders for [out] interfaces 
+                       we might do not know the expected type and we are producing Object[] insted of
+                       nsISupports[] for example. Here we are taking care about it.
+                       If args[i] is Object[] of size 1 we are checking with expected type from method.
+                       In case it is not expeceted type we are creating object[] of expected type.
+                    */  
+
+                    if (objectArrayClass.equals(args[i].getClass()) 
+                        && ((Object[])args[i]).length == 1) {
+                        Class[] parameterTypes = method.getParameterTypes();
+                        if (!objectArrayClass.equals(parameterTypes[i])
+                            && parameterTypes[i].isArray()) {
+                            Class componentType = parameterTypes[i].getComponentType();
+                            args[i] = java.lang.reflect.Array.newInstance(componentType,1);
+                        }
+                    }
+                }
                 retObject = method.invoke(obj,args); 
-                System.out.println("--[java] Utilities.callMethodByIndex: retObject = " + retObject);
+                Debug.log("--[java] Utilities.callMethodByIndex: retObject = " + retObject);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("--[java] Utilities.callMethodByIndex method finished"+method);
+        Debug.log("--[java] Utilities.callMethodByIndex method finished"+method);
         return retObject;
     }
 
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
-        System.out.println("--[java]Utilities.callMethod "+method);
+        Debug.log("--[java]Utilities.callMethod "+method);
         int mid = InterfaceRegistry.getIndexByMethod(method, iid);
         if (mid < 0) {
-            System.out.println("--[java]Utilities.callMethod we do not have implementation for "+method);
+            Debug.log("--[java]Utilities.callMethod we do not have implementation for "+method);
             return null;
         }
-        System.out.println("--[java]Utilities.callMethod "+mid);
+        Debug.log("--[java]Utilities.callMethod "+mid);
         return callMethodByIndex(oid,mid,iid.getString(), orb, args);
     }
 

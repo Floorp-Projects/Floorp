@@ -197,7 +197,7 @@ public class InterfaceRegistry {
     
     private static void printMethod(Method m) {
         if (m == null) {
-            System.out.println("<null>");
+            Debug.log("<null>");
             return;
         }
         Class retType = m.getReturnType();
@@ -210,12 +210,12 @@ public class InterfaceRegistry {
             if (j > 0) System.out.print(", ");
             System.out.print(paramTypes[j].getName());
         }
-        System.out.println(");");
+        Debug.log(");");
     }    
     
     private static void debug(String str) {
         if (debug) {
-            System.out.println(str);
+            Debug.log(str);
         }
     }
 

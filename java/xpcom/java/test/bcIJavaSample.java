@@ -4,14 +4,15 @@
  * This file was automatically generated from bcIJavaSample.idl.
  */
 
+
 import org.mozilla.xpcom.*;
+
 
 /**
  * Interface bcIJavaSample
  *
  * IID: 0xca1e2656-1dd1-11b2-9c4e-f49ea557abde
  */
-
 
 public interface bcIJavaSample extends nsISupports
 {
@@ -36,6 +37,12 @@ public interface bcIJavaSample extends nsISupports
 
     /* void test5 (in nsIComponentManager cm); */
     public void test5(nsIComponentManager cm);
+
+    /* void test6 (in PRUint32 count, [array, size_is (count)] in string valueArray); */
+    public void test6(int count, String[] valueArray);
+
+    /* void test7 (out PRUint32 count, [array, size_is (count)] out char valueArray); */
+    public void test7(int[] count, char[][] valueArray);
 
 }
 

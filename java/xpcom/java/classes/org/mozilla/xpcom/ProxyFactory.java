@@ -48,13 +48,13 @@ class ProxyKey {
 
 public class ProxyFactory {
     public static Class getInterface(IID iid) {
-        System.out.println("--[java] ProxyFactory.getInterface "+iid);
+        Debug.log("--[java] ProxyFactory.getInterface "+iid);
         return InterfaceRegistry.getInterface(iid);
     }
 
     public static Object getProxy(long oid, IID iid, long orb) {
         try {
-        System.out.println("--[java] ProxyFactory.getProxy "+iid);
+        Debug.log("--[java] ProxyFactory.getProxy "+iid);
         ProxyKey key = new ProxyKey(oid, iid);
         Object obj = null;
         Object result = null;
@@ -70,17 +70,17 @@ public class ProxyFactory {
         if (result == null) {
             Class inter = getInterface(iid);
             if (inter == null) {
-                System.out.println("--[java] ProxyFactory.getProxy we did not find interface for iid="+iid+"returing null");
+                Debug.log("--[java] ProxyFactory.getProxy we did not find interface for iid="+iid+"returing null");
                 return null;
             }
             InvocationHandler handler = new ProxyHandler(oid, iid, orb);
             result = Proxy.newProxyInstance(inter.getClassLoader(), new Class[] {inter},handler);
             proxies.put(new WeakReference(result), key);
         }
-        System.out.println("--[java] ProxyFactory.getProxy we got proxy "+result);
+        Debug.log("--[java] ProxyFactory.getProxy we got proxy "+result);
         return result;
         } catch (Exception e) {
-            System.out.println("--[java] ProxyFactory.getProxy we got exception "+e);
+            Debug.log("--[java] ProxyFactory.getProxy we got exception "+e);
         }
         return null;
     }

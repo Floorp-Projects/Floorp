@@ -32,7 +32,7 @@ class ProxyHandler implements InvocationHandler {
     public Object invoke(Object proxy,
 			 Method method,
 			 Object[] args) throws Throwable {
-        System.out.println("--[java]ProxyHandler.invoke "+method);
+        Debug.log("--[java]ProxyHandler.invoke "+method);
         String str = method.getName();
         if (str.equals("toString")) {
             return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";

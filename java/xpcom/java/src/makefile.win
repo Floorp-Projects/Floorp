@@ -40,6 +40,7 @@ OBJS= \
 	.\$(OBJDIR)\bcJavaStubsAndProxies.obj \
 	.\$(OBJDIR)\bcIIDJava.obj \
 	.\$(OBJDIR)\org_mozilla_xpcom_Utilities.obj \
+	.\$(OBJDIR)\org_mozilla_xpcom_Debug.obj \
 	$(NULL)
 
 LINCS=-I$(JDKHOME)\include -I$(JDKHOME)\include\win32

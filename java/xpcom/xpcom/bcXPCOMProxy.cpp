@@ -26,17 +26,19 @@
 #include "bcXPCOMProxy.h"
 #include "bcXPCOMMarshalToolkit.h"
 
-#include "signal.h"
+//#include "signal.h"
 //NS_IMPL_ISUPPORTS(bcXPCOMProxy, NS_GET_IID(bcXPCOMProxy));
+#include "bcXPCOMLog.h"
 
 
 bcXPCOMProxy::bcXPCOMProxy(bcOID _oid, const nsIID &_iid, bcIORB *_orb) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     NS_INIT_REFCNT();
     oid = _oid;
     iid = _iid;
     orb = _orb;
     interfaceInfo = NULL;
-    printf("--[c++] bcXPCOMProxy::bcXPCOMProxy this: %p iid: %s\n",this, iid.ToString());
+    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMProxy::bcXPCOMProxy this: %p iid: %s\n",this, iid.ToString()));
 }
 
 bcXPCOMProxy::~bcXPCOMProxy() {
@@ -45,7 +47,8 @@ bcXPCOMProxy::~bcXPCOMProxy() {
  
 
 NS_IMETHODIMP bcXPCOMProxy::GetInterfaceInfo(nsIInterfaceInfo** info) {
-    printf("--[c++] bcXPCOMProxy::GetInterfaceInfo iid=%s\n",iid.ToString());
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcXPCOMProxy::GetInterfaceInfo iid=%s\n",iid.ToString()));
     if(!info) {
         return NS_ERROR_FAILURE;
     }
@@ -53,7 +56,7 @@ NS_IMETHODIMP bcXPCOMProxy::GetInterfaceInfo(nsIInterfaceInfo** info) {
         nsIInterfaceInfoManager* iimgr;
         if((iimgr = XPTI_GetInterfaceInfoManager())) {
             if (NS_FAILED(iimgr->GetInfoForIID(&iid, &interfaceInfo))) {
-                printf("--bcXPCOMProxy::GetInterfaceInfo failed\n");
+                PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMProxy::GetInterfaceInfo failed\n"));
                 return NS_ERROR_FAILURE;
             }
             NS_RELEASE(iimgr);
@@ -69,7 +72,8 @@ NS_IMETHODIMP bcXPCOMProxy::GetInterfaceInfo(nsIInterfaceInfo** info) {
 NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
                                            const nsXPTMethodInfo* info,
                                            nsXPTCMiniVariant* params) {
-    printf("--bcXPCOMProxy::CallMethod %s [%d]\n",info->GetName(),methodIndex);
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMProxy::CallMethod %s [%d]\n",info->GetName(),methodIndex));
     bcICall *call = orb->CreateCall(&iid, &oid, methodIndex);
     bcIMarshaler *marshaler = call->GetMarshaler();
     bcXPCOMMarshalToolkit * mt = new bcXPCOMMarshalToolkit(methodIndex, interfaceInfo, params);
@@ -82,14 +86,16 @@ NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
 }
 
 nsrefcnt bcXPCOMProxy::AddRef(void) { 
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
-    printf("--[c++] bcXPCOMProxy::AddRef %d\n",(unsigned)cnt);
+    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMProxy::AddRef %d\n",(unsigned)cnt));
     return cnt;
 }
 
 nsrefcnt bcXPCOMProxy::Release(void) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
-    printf("--[c++] bcXPCOMProxy::Release %d\n",(unsigned)cnt);
+    PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMProxy::Release %d\n",(unsigned)cnt));
     if(0 == cnt) {  
         delete this;
     }
@@ -98,6 +104,7 @@ nsrefcnt bcXPCOMProxy::Release(void) {
 
 
 NS_IMETHODIMP bcXPCOMProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     PRUint16 methodIndex = 0;
     const nsXPTMethodInfo *info;
     nsIInterfaceInfo *inInfo;
@@ -111,10 +118,10 @@ NS_IMETHODIMP bcXPCOMProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
     params[1].val.p = aInstancePtr;
     nsresult r = CallMethod(methodIndex,info,params);
     if (*aInstancePtr == NULL) {
-        printf("--bcXPCOMProxy.QueryInterface nointerface %s\n",aIID.ToString());
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMProxy.QueryInterface nointerface %s\n",aIID.ToString()));
         r = NS_NOINTERFACE;
     }
-    printf("--bcXPCOMProxy.QueryInterface we got interface %s\n",aIID.ToString());
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMProxy.QueryInterface we got interface %s\n",aIID.ToString()));
     return r;
 }
 

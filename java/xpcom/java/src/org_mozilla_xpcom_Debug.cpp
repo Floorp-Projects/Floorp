@@ -19,29 +19,20 @@
  * Contributor(s):
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __bcJavaGlobal_h_
-#define __bcJavaGlobal_h_
-#include "nscore.h"
-#include "jni.h"
-#include "prlog.h"
 
+#include "org_mozilla_xpcom_Debug.h"
+#include "bcJavaGlobal.h"
+/*
+ * Class:     org_mozilla_xpcom_Debug
+ * Method:    log
+ * Signature: (Ljava/lang/String;)V
+ */
 
-#define LOG_MODULE "blackConnect"
-#define EXCEPTION_CHECKING(env) \
-    do {                                     \
-        if ((env)->ExceptionOccurred()) {    \
-            (env)->ExceptionDescribe();      \
-	}                                    \
-    } while (0);
-   
-
-class bcJavaGlobal {
- public:
-    static JNIEnv * GetJNIEnv(void);
-    static PRLogModuleInfo * GetLog();
- private:
-    static PRLogModuleInfo* log;
-    static JavaVM *jvm;
-    static void StartJVM(void);
-};
-#endif
+JNIEXPORT void JNICALL Java_org_mozilla_xpcom_Debug_log
+(JNIEnv *env, jclass, jstring jstr) {
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    char * str = NULL;
+    str = (char*)env->GetStringUTFChars(jstr,NULL);
+    PR_LOG(log, PR_LOG_DEBUG, ("%s\n",str));
+    env->ReleaseStringUTFChars(jstr,str);
+}

@@ -27,6 +27,7 @@
 #include "bcJavaStubsAndProxies.h"
 #include "nsIServiceManager.h"
 #include "bcJavaGlobal.h"
+#include <string.h>
 
 jclass bcJavaMarshalToolkit::objectClass = NULL;
 jclass bcJavaMarshalToolkit::objectArrayClass = NULL;
@@ -164,7 +165,8 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um, jobject *retval) {
 }
 
 nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
-    printf("--nsresult bcJavaMarshalToolkit::UnMarshal\n");
+    PRLogModuleInfo * log = bcJavaGlobal::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG,("--nsresult bcJavaMarshalToolkit::UnMarshal\n"));
     bcIAllocator * allocator = new javaAllocator(nsAllocator::GetGlobalAllocator());
     PRUint32 paramCount = info->GetParamCount();
     retV = NULL;
@@ -174,8 +176,8 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
         PRBool isOut = param.IsOut();
         nsXPTType type = param.GetType();
         if (param.IsRetval() && callSide == onServer) {
-            printf("** bcJavaMarshalToolkit::UnMarshal skipping retval\n");            
-            printf("**unmarshall: call side: %d\n", callSide);
+            PR_LOG(log,PR_LOG_DEBUG,("** bcJavaMarshalToolkit::UnMarshal skipping retval\n"));            
+            PR_LOG(log,PR_LOG_DEBUG,("**unmarshall: call side: %d\n", callSide));
             continue;
         }
         if ( (callSide == onServer && !param.IsIn()
@@ -235,6 +237,7 @@ nsresult
 bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isOut, nsXPTParamInfo * param,
                                      bcXPType type, uint8 ind, ArrayModifier modifier) {
     nsresult r = NS_OK;
+    PRLogModuleInfo * log = bcJavaGlobal::GetLog();
 
     switch(type) {
         case  bc_T_I8:
@@ -298,23 +301,36 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                     EXCEPTION_CHECKING(env);
                 }                                                                                           
                 char * str = NULL;
+                char * tmpStr = NULL;
                 if (data) {
                     size_t length = 0;
                     if (type == bc_T_CHAR_STR) {
                         str = (char*)env->GetStringUTFChars((jstring)data,NULL);
                         length = strlen(str)+1;
+                        tmpStr = str;
                     } else {
                         str = (char*)env->GetStringChars((jstring)data,NULL);
                         length = env->GetStringLength((jstring)data);
-                        length *= sizeof(jchar);
+                        length *= 2; //nb
                         length += 2;
+                        tmpStr = new char[length];
+                        memcpy(tmpStr,str,length-2);
+                        tmpStr[length-1] = tmpStr[length-2] = 0;
+                        {
+                            for (int i = 0; i < length && type == bc_T_WCHAR_STR; i++) {
+                                char c = tmpStr[i];
+                                PR_LOG(log,PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::MarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                            }
+                        }
+
                     }
                     EXCEPTION_CHECKING(env);
-                    m->WriteString(str,length);
+                    m->WriteString(tmpStr,length);
                     if (type == bc_T_CHAR_STR) {
                         env->ReleaseStringUTFChars(data,str);
                     } else {
                         env->ReleaseStringChars(data,(const jchar*)str);
+                        delete[] tmpStr;
                     }
                     EXCEPTION_CHECKING(env);
                 } else {
@@ -344,7 +360,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
             {
                 int indexInArray;
                 jobject data = NULL;
-                printf("--marshalElement we got interface\n");
+                PR_LOG(log,PR_LOG_DEBUG,("--marshalElement we got interface\n"));
                 bcOID oid = 0;
                 nsIID *iid;
                 if (! isOut
@@ -409,7 +425,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                 break;
             }
 	    default:
-                printf("--it should not happend\n");
+                PR_LOG(log,PR_LOG_DEBUG,("--it should not happend\n"));
             ;
     }
     return r;
@@ -450,6 +466,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
 nsresult
 bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler *um, int isOut, nsXPTParamInfo * param,
                                        bcXPType type, bcIAllocator *allocator, ArrayModifier modifier) {
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     switch(type) {
         case  bc_T_I8:
         case  bc_T_U8:
@@ -505,9 +522,16 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 jstring data = NULL;
                 if (um) {
                     um->ReadString(&data,&size,allocator);
+                    {
+                        for (int i = 0; i < size && type == bc_T_WCHAR_STR; i++) {
+                            char c = ((char*)data)[i];
+                            PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::UnMarshalElement T_WCHAR_STR [%d] = %d %c\n",i,c,c));
+                        }
+                    }
                     if (type == bc_T_CHAR_STR) {
                         data = env->NewStringUTF((const char*)data);
                     } else {
+                        size-=2; size/=2;
                         data = env->NewString((const jchar*)data,size);
                     }
                     EXCEPTION_CHECKING(env);
@@ -568,7 +592,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
 
         case bc_T_INTERFACE:
             {
-                printf("--[c++] bcJavaMarshalToolkit::UnMarshalElement we have an interface\n");
+                PR_LOG(log, PR_LOG_DEBUG,("--[c++] bcJavaMarshalToolkit::UnMarshalElement we have an interface\n"));
                 int indexInArray = 0;
                 jobject data = NULL;
                 bcOID oid = 0;
@@ -578,7 +602,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 if (um) {
                     um->ReadSimple(&oid,type);
                     um->ReadSimple(&iid,bc_T_IID);
-                    printf("%d oid\n",(int) oid);
+                    PR_LOG(log,PR_LOG_DEBUG,("%d oid\n",(int) oid));
                     NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
                     if (NS_FAILED(r)) {
                         return NS_ERROR_FAILURE;
@@ -877,6 +901,7 @@ void bcJavaMarshalToolkit::InitializeStatic() {
 }
 
 void bcJavaMarshalToolkit::DeInitializeStatic() {     //nb need to do
-    printf("--[c++]void bcJavaMarshalToolkit::DeInitializeStatic() - boomer \n");
+    PRLogModuleInfo * log = bcJavaGlobal::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG,("--[c++]void bcJavaMarshalToolkit::DeInitializeStatic() - boomer \n"));
 }
 

@@ -10,4 +10,6 @@ interface bcIJavaSample : nsISupports
     void test3(in PRUint32 count,[array, size_is(count)] in long valueArray);
     void test4(in PRUint32 count,[array, size_is(count)] inout string valueArray);
     void test5(in nsIComponentManager cm);
+    void test6(in PRUint32 count,[array, size_is(count)] in string valueArray);
+    void test7(out PRUint32 count,[array, size_is(count)] out char valueArray);
 };

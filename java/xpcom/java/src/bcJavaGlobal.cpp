@@ -24,7 +24,7 @@
 
 
 JavaVM *bcJavaGlobal::jvm = NULL;
-
+PRLogModuleInfo* bcJavaGlobal::log = NULL;
 #ifdef XP_PC
 #define PATH_SEPARATOR ';'
 #else
@@ -51,12 +51,13 @@ JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
 
 
 void bcJavaGlobal::StartJVM() {
-    printf("--bcJavaGlobal::StartJVM begin\n");
+    PRLogModuleInfo * l = GetLog();
+    PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::StartJVM begin\n"));
     JNIEnv *env = NULL;
     jint res;
     jsize jvmCount;
     JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
-    printf("--bcJavaGlobal::StartJVM after GetCreatedJavaVMs\n");
+    PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::StartJVM after GetCreatedJavaVMs\n"));
     if (jvmCount) {
         return;
     }
@@ -64,12 +65,12 @@ void bcJavaGlobal::StartJVM() {
     JDK1_1InitArgs vm_args;
     char classpath[1024];
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
-    printf("--[c++] version %d",(int)vm_args.version);
+    PR_LOG(l,PR_LOG_DEBUG,("--[c++] version %d",(int)vm_args.version));
     vm_args.version = 0x00010001;
     /* Append USER_CLASSPATH to the default system class path */
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
-    printf("--[c++] classpath %s\n",classpath);
+    PR_LOG(l,PR_LOG_DEBUG,("--[c++] classpath %s\n",classpath));
     char **props = new char*[2];
     props[0]="java.compiler=NONE";
     props[1]=0;
@@ -82,7 +83,7 @@ void bcJavaGlobal::StartJVM() {
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
     sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
-    printf("--[c++] classpath %s\n",classpath);
+    PR_LOG(l,PR_LOG_DEBUG,("--[c++] classpath %s\n",classpath));
     options[0].optionString = classpath;
     options[1].optionString=""; //-Djava.compiler=NONE";
     vm_args.version = 0x00010002;
@@ -92,9 +93,17 @@ void bcJavaGlobal::StartJVM() {
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
 #endif
-    printf("--bcJavaGlobal::StartJVM jvm started res %d\n",res);
+    
+    PR_LOG(l,PR_LOG_DEBUG,("--bcJavaGlobal::StartJVM jvm started res %d\n",res));
 }
 
+
+PRLogModuleInfo* bcJavaGlobal::GetLog() {
+    if (log == NULL) {
+        log = PR_NewLogModule(LOG_MODULE);
+    }
+    return log;
+}
 
 
 

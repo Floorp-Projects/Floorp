@@ -27,6 +27,6 @@ srcdir          = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS= 	src  loader  classes  test 
+DIRS= 	src  loader  classes
 
 include $(topsrcdir)/config/rules.mk

@@ -54,6 +54,10 @@ public class bcJavaSample implements bcIJavaSample {
             o.test2(this);
             int[] array={3,2,1};
             o.test3(3,array);
+            { 
+                String[] strings = {"4","3","2","1"};
+                o.test6(4, strings);
+            }
         } else {
             System.out.println("--[java]bcJavaSample.test2 o = null");
         }
@@ -70,7 +74,7 @@ public class bcJavaSample implements bcIJavaSample {
         System.out.println("--[java]bcJavaSample.test4");
         String[] array = valueArray[0];
         for (int i = 0; i < array.length; i++) {
-            System.out.println("--[java]callMethodByIndex args["+i+"] = "+array[i]);
+            System.out.println("--[java]bcJavaSample.test4 valueArray["+i+"] = "+array[i]);
         }
         String[] returnArray = {"4","3","2","1"};
         valueArray[0] = returnArray;
@@ -103,6 +107,22 @@ public class bcJavaSample implements bcIJavaSample {
         } catch (Exception e) {
             System.out.println(e);
         }
+
+    }
+    public void test6(int count, String[]  valueArray) {
+        System.out.println("--[java]bcJavaSample.test6");
+        String[] array = valueArray;
+        for (int i = 0; i < array.length; i++) {
+            System.out.println("--[java]bcJavaSample.test6 valueArray["+i+"] = "+array[i]);
+        }
+    }
+
+    /* void test7 (out PRUint32 count, [array, size_is (count)] out char valueArray); */
+    public void test7(int[] count, char[][] valueArray) {
+        System.out.println("--[java]bcJavaSample.test7");
+        char [] retValue = {'1','b','c','d'};
+        count[0] = retValue.length;
+        valueArray[0] = retValue;
     }
 
     static IID bcIJavaSampleIID = new IID(bcIJavaSample.IID);

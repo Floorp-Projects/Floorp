@@ -24,6 +24,7 @@
 #include "bcXPCOMStubsAndProxies.h"
 #include "bcXPCOMStub.h"
 #include "bcXPCOMProxy.h"
+#include "bcXPCOMLog.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcXPCOMStubsAndProxies);
 
@@ -58,7 +59,8 @@ NS_IMETHODIMP bcXPCOMStubsAndProxies::GetStub(nsISupports *obj, bcIStub **stub) 
 }
 
 NS_IMETHODIMP bcXPCOMStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy) {
-    printf("--bcXPCOMStubsAndProxies::GetProxy iid=%s\n",iid.ToString());
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetProxy iid=%s\n",iid.ToString()));
     if (!proxy) {
         printf("--bcXPCOMStubsAndProxies::GetProxy failed\n");
         return NS_ERROR_NULL_POINTER;

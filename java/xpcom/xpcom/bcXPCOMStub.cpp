@@ -26,6 +26,7 @@
 #include "xptcall.h"
 #include "bcXPCOMMarshalToolkit.h"
 #include "bcXPCOMStub.h"
+#include "bcXPCOMLog.h"
 
 bcXPCOMStub::bcXPCOMStub(nsISupports *o) {
     object = o;
@@ -37,7 +38,7 @@ bcXPCOMStub::~bcXPCOMStub() {
 }
 
 void bcXPCOMStub::Dispatch(bcICall *call) {
-    
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     bcIID iid; bcOID oid; bcMID mid;
     call->GetParams(&iid, &oid, &mid);
     nsIInterfaceInfo *interfaceInfo;
@@ -56,7 +57,7 @@ void bcXPCOMStub::Dispatch(bcICall *call) {
     int paramCount = info->GetParamCount();
     bcXPCOMMarshalToolkit * mt = NULL;
     if (paramCount > 0) {
-        printf("--[c++]bcXPCOMStub paramCount %d\n",paramCount);
+        PR_LOG(log, PR_LOG_DEBUG, ("--[c++]bcXPCOMStub paramCount %d\n",paramCount));
         params = (nsXPTCVariant *)  PR_Malloc(sizeof(nsXPTCVariant)*paramCount);
         mt = new bcXPCOMMarshalToolkit(mid, interfaceInfo, params);
         bcIUnMarshaler * um = call->GetUnMarshaler();

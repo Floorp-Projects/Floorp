@@ -35,9 +35,10 @@ jclass bcJavaStub::utilitiesClass = NULL;
 jmethodID bcJavaStub::callMethodByIndexMID = NULL;
 
 bcJavaStub::bcJavaStub(jobject obj) {
-    printf("--bcJavaStub::bcJavaStub \n");
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
+    PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStub::bcJavaStub \n"));
     if (!obj) {
-        printf("--bcJavaStub::bcJavaStub obj== 0\n");
+        PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStub::bcJavaStub obj== 0\n"));
         return;
     }
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
@@ -51,6 +52,7 @@ bcJavaStub::~bcJavaStub() {
 
 void bcJavaStub::Dispatch(bcICall *call) {
     //sigsend(P_PID, getpid(),SIGINT);
+    PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     bcIID iid; bcOID oid; bcMID mid;
     jobjectArray args;
@@ -74,7 +76,7 @@ void bcJavaStub::Dispatch(bcICall *call) {
     nsXPTMethodInfo* info;
     interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
     PRUint32 paramCount = info->GetParamCount();
-    printf("\n**[c++]hasRetval: %d\n", HasRetval(paramCount, info));
+    PR_LOG(log, PR_LOG_DEBUG,("\n**[c++]hasRetval: %d\n", HasRetval(paramCount, info)));
     if (HasRetval(paramCount, info))
         // do not pass retval param
         paramCount--;
@@ -86,7 +88,6 @@ void bcJavaStub::Dispatch(bcICall *call) {
     jobject retval = bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
     //nb return value; excepion handling
     bcIMarshaler * m = call->GetMarshaler(); 
-//      mt->Marshal(m);
     mt->Marshal(m, retval);
     //nb memory deallocation
     delete m; delete um; delete mt;

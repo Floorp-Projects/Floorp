@@ -35,7 +35,11 @@ include $(topsrcdir)/config/config.mk
 
 CXXFLAGS        +=  -I$(CONNECT_SRC)/public
 CPPSRCS =  \
-     bcXPCOMProxy.cpp   bcXPCOMStub.cpp bcXPCOMMarshalToolkit.cpp bcXPCOMStubsAndProxies.cpp \
+     bcXPCOMProxy.cpp   \
+     bcXPCOMStub.cpp \
+     bcXPCOMMarshalToolkit.cpp \
+     bcXPCOMStubsAndProxies.cpp \
+     bcXPCOMLog.cpp \
      $(NULL)
      
 EXPORTS = \
