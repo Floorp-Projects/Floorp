@@ -84,7 +84,7 @@ ifeq ($(MOZ_GFX_TOOLKIT),os2)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
 endif
 
-ifneq (,$(filter gtk gtk2 xlib beos qt, $(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 xlib beos photon qt, $(MOZ_WIDGET_TOOLKIT)))
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/unixshared 
 endif
 
