@@ -114,6 +114,11 @@ nsGfxListControlFrame::nsGfxListControlFrame()
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
+
+  mCacheSize.width             = -1;
+  mCacheSize.height            = -1;
+  mCachedMaxElementSize.width  = -1;
+  mCachedMaxElementSize.height = -1;
 }
 
 //---------------------------------------------------------
@@ -327,6 +332,25 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         rv = shell->AppendReflowCommand(cmd);
         // must do this next line regardless of result of AppendReflowCommand
         shell->ExitReflowLock(PR_TRUE, PR_TRUE);
+      }
+    }
+
+#if 1
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                                         aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
+  }
+#endif
+    // XXX So this may do it too often
+    // the side effect of this is if the user has scrolled to some other place in the list and
+    // an incremental reflow comes through the list gets scrolled to the first selected item
+    // I haven't been able to make it do it, but it will do it
+    // basically the real solution is to know when all the reframes are there.
+    if (aReflowState.reason == eReflowReason_Incremental) {
+      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+      if (content) {
+        ScrollToFrame(content);
       }
     }
 
@@ -606,6 +630,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+
   return NS_OK;
 }
 
@@ -872,10 +898,6 @@ nsGfxListControlFrame::SingleSelection()
       }
         // Display the new selection
       SetContentSelected(mSelectedIndex, PR_TRUE);
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-      if (content) {
-        ScrollToFrame(content);
-      }
     } else {
       // Selecting the currently selected item so do nothing.
     }
@@ -1435,6 +1457,11 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
   if (nsnull != content) {
     if (aSelected) {
       DisplaySelected(content);
+      // Now that it is selected scroll to it
+      nsCOMPtr<nsIContent> content(do_QueryInterface(content));
+      if (content) {
+        ScrollToFrame(content);
+      }
     } else {
       DisplayDeselected(content);
     }
@@ -1540,7 +1567,11 @@ nsGfxListControlFrame::Reset(nsIPresContext* aPresContext)
   PRUint32 numOptions;
   options->GetLength(&numOptions);
 
-  mSelectedIndex = kNothingSelected;
+  mSelectedIndex      = kNothingSelected;
+  mStartExtendedIndex = kNothingSelected;
+  mEndExtendedIndex   = kNothingSelected;
+  PRBool multiple;
+  GetMultiple(&multiple);
 
   Deselect();
   PRUint32 i;
@@ -1553,10 +1584,11 @@ nsGfxListControlFrame::Reset(nsIPresContext* aPresContext)
         mSelectedIndex = i;
         SetContentSelected(i, PR_TRUE);
 
-        // Now that it is selected scroll to it
-        nsCOMPtr<nsIContent> content(do_QueryInterface(option));
-        if (content) {
-          ScrollToFrame(content);
+        if (multiple) {
+          mStartExtendedIndex = i;
+          if (mEndExtendedIndex == kNothingSelected) {
+            mEndExtendedIndex = i;
+          }
         }
         if (mComboboxFrame) {
           mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // don't dispatch event
