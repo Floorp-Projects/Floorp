@@ -57,6 +57,7 @@
 /* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
 /* *             - changed definition of mng_handle (again)                 * */
 /* *             - swapped refresh parameters                               * */
+/* *             - added inclusion of stdlib.h for abs()                    * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -106,8 +107,8 @@
 #include "jpeglib.h"                   /* all that for JPEG support  :-) */
 #endif /* MNG_INCLUDE_IJG6B */
 
-#ifdef MNG_INTERNAL_MEMMNGMT
-#include <stdlib.h>                    /* "calloc" & "free" */
+#if defined(MNG_INTERNAL_MEMMNGMT) || defined(MNG_INCLUDE_FILTERS)
+#include <stdlib.h>                    /* "calloc" & "free" & "abs" */
 #endif
 
 #include <limits.h>                    /* get proper integer widths */
@@ -171,7 +172,7 @@
 /* ************************************************************************** */
 
 #if USHRT_MAX == 0xffffffffU                     /* get the proper 32-bit width !!! */
-typedef unsigned short mng_uint32;               
+typedef unsigned short mng_uint32;
 typedef signed   short mng_int32;
 #elif UINT_MAX == 0xffffffffU
 typedef unsigned int   mng_uint32;

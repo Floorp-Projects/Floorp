@@ -25,6 +25,8 @@
 /* *             - added tracing of JPEG calls                              * */
 /* *             0.5.3 - 06/24/2000 - G.Juyn                                * */
 /* *             - fixed inclusion of IJG read/write code                   * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - fixed some 64-bit warnings                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -86,7 +88,7 @@ void mng_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
                                        /* problem scenario ? */
     if (pSrc->bytes_in_buffer < (size_t)num_bytes)
     {                                  /* tell the boss we need to skip some data! */
-      pData->iJPEGtoskip = (size_t)num_bytes - pSrc->bytes_in_buffer;
+      pData->iJPEGtoskip = (mng_uint32)((size_t)num_bytes - pSrc->bytes_in_buffer);
 
       pSrc->bytes_in_buffer = 0;       /* let the JPEG lib suspend */
       pSrc->next_input_byte = MNG_NULL;
@@ -434,7 +436,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
       }
 
       pData->pJPEGcurrent   = (mng_uint8p)pData->pJPEGdinfo->src->next_input_byte;
-      pData->iJPEGbufremain = pData->pJPEGdinfo->src->bytes_in_buffer;
+      pData->iJPEGbufremain = (mng_uint32)pData->pJPEGdinfo->src->bytes_in_buffer;
     }
                                        /* decompress not started ? */
     if ((pData->bJPEGhasheader) && (!pData->bJPEGdecostarted))
@@ -453,7 +455,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
         pData->bJPEGdecostarted = MNG_TRUE;
 
       pData->pJPEGcurrent   = (mng_uint8p)pData->pJPEGdinfo->src->next_input_byte;
-      pData->iJPEGbufremain = pData->pJPEGdinfo->src->bytes_in_buffer;
+      pData->iJPEGbufremain = (mng_uint32)pData->pJPEGdinfo->src->bytes_in_buffer;
     }
                                        /* process some scanlines ? */
     if ((pData->bJPEGhasheader) && (pData->bJPEGdecostarted) &&
@@ -473,7 +475,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
              (pData->pJPEGdinfo->output_scanline >= pData->pJPEGdinfo->output_height)))
         {
           pData->bJPEGscanstarted = MNG_TRUE;
-          
+
           /* adjust output decompression parameters if required */
           /* nop */
 
@@ -496,7 +498,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
           iLines = jpeg_read_scanlines (pData->pJPEGdinfo, (JSAMPARRAY)&pRow, 1);
 
           pData->pJPEGcurrent   = (mng_uint8p)pData->pJPEGdinfo->src->next_input_byte;
-          pData->iJPEGbufremain = pData->pJPEGdinfo->src->bytes_in_buffer;
+          pData->iJPEGbufremain = (mng_uint32)pData->pJPEGdinfo->src->bytes_in_buffer;
 
           if (iLines > 0)              /* got something ? */
           {
@@ -541,7 +543,7 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
         pData->bJPEGhasheader   = MNG_FALSE;
         pData->bJPEGdecostarted = MNG_FALSE;
         pData->pJPEGcurrent     = (mng_uint8p)pData->pJPEGdinfo->src->next_input_byte;
-        pData->iJPEGbufremain   = pData->pJPEGdinfo->src->bytes_in_buffer;
+        pData->iJPEGbufremain   = (mng_uint32)pData->pJPEGdinfo->src->bytes_in_buffer;
                                        /* remaining fluff is an error ! */
         if ((pData->iJPEGbufremain > 0) || (iRemain > 0))
           MNG_ERROR (pData, MNG_TOOMUCHJDAT)
