@@ -31,7 +31,9 @@ in this Software without prior written authorization from the X Consortium.
 #ifdef WIN32
 #include <X11/Xw32defs.h>
 #endif
+#ifndef SUNOS4
 #include <X11/Xfuncproto.h>
+#endif /* SUNOS4 */
 #endif /* NO_X11 */
 
 #include <stdio.h>
