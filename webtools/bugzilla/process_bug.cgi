@@ -1272,8 +1272,8 @@ foreach my $id (@idlist) {
             if ($::FORM{'work_time'}) {
                 LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
                                  $whoid, $timestamp);
-                $bug_changed = 1;
             }
+            $bug_changed = 1;
         }
     }
 
@@ -1377,9 +1377,11 @@ foreach my $id (@idlist) {
     my $groupDelNames = join(',', @groupDelNames);
     my $groupAddNames = join(',', @groupAddNames);
 
-    LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames,
-                     $whoid, $timestamp); 
-    $bug_changed = 1;
+    if ($groupDelNames ne $groupAddNames) {
+        LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames,
+                         $whoid, $timestamp); 
+        $bug_changed = 1;
+    }
 
     my @ccRemoved = (); 
     if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
