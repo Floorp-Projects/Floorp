@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.8 $ $Date: 2001/10/19 18:10:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifdef NSS_3_4_CODE
@@ -74,6 +74,11 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
 #define NSS_CK_SET_ATTRIBUTE_VAR(cktemplate, index, var)  \
     (cktemplate)[index].pValue = (CK_VOID_PTR)&var;       \
     (cktemplate)[index].ulValueLen = (CK_ULONG)sizeof(var)
+
+/* so, nssUTF8_Size or nssUTF8_Length?  \0 or no? */
+#define NSS_CK_SET_ATTRIBUTE_UTF8(cktemplate, index, utf8)  \
+    (cktemplate)[index].pValue = (CK_VOID_PTR)utf8;         \
+    (cktemplate)[index].ulValueLen = (CK_ULONG)nssUTF8_Size(utf8, NULL);
 
 #define NSS_CK_SET_ATTRIBUTE_ITEM(cktemplate, index, item)  \
     (cktemplate)[index].pValue = (CK_VOID_PTR)(item)->data; \
@@ -134,6 +139,16 @@ nssCKObject_IsAttributeTrue
   nssSession *session,
   NSSSlot *slot,
   PRStatus *rvStatus
+);
+
+NSS_EXTERN PRStatus 
+nssCKObject_SetAttributes
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_PTR obj_template,
+  CK_ULONG count,
+  nssSession *session,
+  NSSSlot  *slot
 );
 
 PR_END_EXTERN_C
