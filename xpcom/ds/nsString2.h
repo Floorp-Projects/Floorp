@@ -17,26 +17,11 @@
  */
 
 
-/***********************************************************************
-  GENERAL STRING ISSUES:
-
-    1. nsStrings and nsAutoString are always null terminated. 
-    2. If you try to set a null char (via SetChar()) a new length is set
-    3. nsCStrings can be upsampled into nsString without data loss
-    4. Char searching is faster than string searching. Use char interfaces
-       if your needs will allow it.
-    5. It's easy to use the stack for nsAutostring buffer storage (fast too!).
-       See the CBufDescriptor class in nsStr.h
-    6. It's ONLY ok to provide non-null-terminated buffers to Append() and Insert()
-       provided you specify a 0<n value for the optional count argument.
-    7. Downsampling from nsString to nsCString is lossy -- don't do it!
-
- ***********************************************************************/
-
-
 
 /***********************************************************************
   MODULE NOTES:
+
+  See nsStr.h for a more general description of string classes.
 
   This version of the nsString class offers many improvements over the
   original version:
@@ -44,7 +29,6 @@
     2. Allocators
     3. Much smarter autostrings
     4. Subsumable strings
-    5. Memory pools and recycling
  ***********************************************************************/
 
 
@@ -54,10 +38,10 @@
 #include "prtypes.h"
 #include "nscore.h"
 #include <stdio.h>
-#include "nsCRT.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsStr.h"
+#include "nsCRT.h"
 
 class nsISizeOfHandler;
 
@@ -72,10 +56,7 @@ class NS_COM nsString : public nsStr {
   public: 
 
 /**
- * Default constructor. Note that we actually allocate a small buffer
- * to begin with. This is because the "philosophy" of the string class
- * was to allow developers direct access to the underlying buffer for
- * performance reasons. 
+ * Default constructor. 
  */
 nsString(eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAgent=0);
 
@@ -90,7 +71,7 @@ nsString(const char* aCString,eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgen
  * This constructor accepts a unichar string
  * @param   aCString is a ptr to a 2-byte cstr
  */
-nsString(const PRUnichar* aString,eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAgent=0);
+nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent=0);
 
 /**
  * This is a copy constructor that accepts an nsStr
@@ -145,6 +126,7 @@ void SetLength(PRUint32 aLength) {
  * @return  nada
  */
 void SetCapacity(PRUint32 aLength);
+
 /**
  * This method truncates this string to given length.
  *
@@ -211,20 +193,20 @@ PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
 /**
  * Create a new string by appending given string to this
  * @param   aString -- 2nd string to be appended
- * @return  new string
+ * @return  new subsumable string
  */
 nsSubsumeStr operator+(const nsStr& aString);
 nsSubsumeStr operator+(const nsString& aString);
 
 /**
- * create a new string by adding this to the given buffer.
+ * create a new string by adding this to the given cstring
  * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
 nsSubsumeStr operator+(const char* aCString);
 
 /**
- * create a new string by adding this to the given wide buffer.
+ * create a new string by adding this to the given prunichar*.
  * @param   aString is a ptr to UC-string to be added to this
  * @return  newly created string
  */
@@ -343,26 +325,28 @@ nsString& CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,PRBool aEliminate
  *********************************************************************/
 
 /**
- * This method constructs a new nsString on the stack that is a copy
- * of this string.
+ * This method constructs a new nsString is a clone of this string.
  * 
  */
 nsString* ToNewString() const;
 
 /**
  * Creates an ISOLatin1 clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
  * @return  ptr to new isolatin1 string
  */
 char* ToNewCString() const;
 
 /**
  * Creates a unicode clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
  * @return  ptr to new unicode string
  */
 PRUnichar* ToNewUnicode() const;
 
 /**
  * Copies data from internal buffer onto given char* buffer
+ * NOTE: This only copies as many chars as will fit in given buffer (clips)
  * @param aBuf is the buffer where data is stored
  * @param aBuflength is the max # of chars to move to buffer
  * @return ptr to given buffer
@@ -433,8 +417,8 @@ nsString& operator=(nsSubsumeStr& aSubsumeString);
 #endif
 
 /**
- * Here's a bunch of append mehtods for varying types...
- * @param   aString : string to be appended to this
+ * Here's a bunch of methods that append varying types...
+ * @param   various...
  * @return  this
  */
 nsString& operator+=(const nsStr& aString){return Append(aString,aString.mLength);}
@@ -567,6 +551,8 @@ PRInt32 BinarySearch(PRUnichar aChar) const;
  *  Search for given substring within this string
  *  
  *  @param   aString is substring to be sought in this
+ *  @param   aIgnoreCase selects case sensitivity
+ *  @param   anOffset tells us where in this strig to start searching
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 Find(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
@@ -583,12 +569,12 @@ PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffs
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 Find(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
+//PRInt32 Find(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
  * This method searches this string for the first character
- * found in the given string
+ * found in the given charset
  * @param aString contains set of chars to be found
  * @param anOffset tells us where to start searching in this
  * @return -1 if not found, else the offset in this
@@ -618,7 +604,7 @@ PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOff
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 RFind(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
+//PRInt32 RFind(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
@@ -787,19 +773,19 @@ extern NS_COM int fputs(const nsString& aString, FILE* out);
 class NS_COM nsAutoString : public nsString {
 public: 
 
-    nsAutoString(eCharSize aCharSize=kDefaultCharSize);
-    nsAutoString(const char* aCString,eCharSize aCharSize=kDefaultCharSize,PRInt32 aLength=-1);
-    nsAutoString(const PRUnichar* aString,eCharSize aCharSize=kDefaultCharSize,PRInt32 aLength=-1);
+    nsAutoString(eCharSize aCharSize=eTwoByte);
+    nsAutoString(const char* aCString,PRInt32 aLength=-1);
+    nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
 
     nsAutoString(CBufDescriptor& aBuffer);    
-    nsAutoString(const nsStr& aString,eCharSize aCharSize=kDefaultCharSize);
-    nsAutoString(const nsAutoString& aString,eCharSize aCharSize=kDefaultCharSize);
+    nsAutoString(const nsStr& aString);
+    nsAutoString(const nsAutoString& aString);
 #ifdef AIX
     nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX requires a const
 #else
     nsAutoString(nsSubsumeStr& aSubsumeStr);
 #endif // AIX
-    nsAutoString(PRUnichar aChar,eCharSize aCharSize=kDefaultCharSize);
+    nsAutoString(PRUnichar aChar);
     virtual ~nsAutoString();
 
     nsAutoString& operator=(const nsStr& aString) {nsString::Assign(aString); return *this;}
@@ -815,7 +801,7 @@ public:
      */
     virtual void SizeOf(nsISizeOfHandler* aHandler) const;
     
-    char mBuffer[32];
+    char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
 

@@ -23,7 +23,6 @@
 #include "nsDebug.h"
 #include "nsDeque.h"
 
-
 #ifndef RICKG_TESTBED
 #include "prdtoa.h"
 #include "nsISizeOfHandler.h"
@@ -56,10 +55,7 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
 
 
 /**
- * Default constructor. Note that we actually allocate a small buffer
- * to begin with. This is because the "philosophy" of the string class
- * was to allow developers direct access to the underlying buffer for
- * performance reasons. 
+ * Default constructor. 
  */
 nsString::nsString(eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
   nsStr::Initialize(*this,aCharSize);
@@ -69,27 +65,28 @@ nsString::nsString(eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent
  * This constructor accepts an ascii string
  * @update	gess 1/4/99
  * @param   aCString is a ptr to a 1-byte cstr
+ * @param   aLength tells us how many chars to copy from given CString
  */
 nsString::nsString(const char* aCString,eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
   nsStr::Initialize(*this,aCharSize);
   Assign(aCString);
-
 }
 
 /**
- * This constructor accepts an ascii string
+ * This constructor accepts a unicode string
  * @update	gess 1/4/99
- * @param   aCString is a ptr to a 1-byte cstr
+ * @param   aString is a ptr to a unichar string
+ * @param   aLength tells us how many chars to copy from given aString
  */
-nsString::nsString(const PRUnichar* aString,eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
-  nsStr::Initialize(*this,aCharSize);
+nsString::nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {  
+  nsStr::Initialize(*this,eTwoByte);
   Assign(aString);
 }
 
 /**
- * This is our copy constructor 
+ * This constructor works for all other nsSTr derivatives
  * @update	gess 1/4/99
- * @param   reference to another nsString
+ * @param   reference to another nsCString
  */
 nsString::nsString(const nsStr &aString,eCharSize aCharSize,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
   nsStr::Initialize(*this,aCharSize);
@@ -102,12 +99,12 @@ nsString::nsString(const nsStr &aString,eCharSize aCharSize,nsIMemoryAgent* anAg
  * @param   reference to another nsString
  */
 nsString::nsString(const nsString& aString) :mAgent(aString.mAgent) {
-  nsStr::Initialize(*this,aString.mCharSize);
+  nsStr::Initialize(*this,eTwoByte);
   nsStr::Assign(*this,aString,0,aString.mLength,mAgent);
 }
 
 /**
- * construct off a subsumeable string
+ * construct from subsumeable string
  * @update	gess 1/4/99
  * @param   reference to a subsumeString
  */
@@ -218,18 +215,33 @@ PRUnichar nsString::operator[](PRUint32 anIndex) const {
   return GetCharAt(*this,anIndex);
 }
 
+/**
+ * Get nth character.
+ */
 PRUnichar nsString::CharAt(PRUint32 anIndex) const {
   return GetCharAt(*this,anIndex);
 }
 
+/**
+ * Get 1st character.
+ */
 PRUnichar nsString::First(void) const{
   return GetCharAt(*this,0);
 }
 
+/**
+ * Get last character.
+ */
 PRUnichar nsString::Last(void) const{
   return GetCharAt(*this,mLength-1);
 }
 
+/**
+ * set a char inside this string at given index
+ * @param aChar is the char you want to write into this string
+ * @param anIndex is the ofs where you want to write the given char
+ * @return TRUE if successful
+ */
 PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   PRBool result=PR_FALSE;
   if(anIndex<mLength){
@@ -253,7 +265,7 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  * Create a new string by appending given string to this
  * @update	gess 01/04/99
  * @param   aString -- 2nd string to be appended
- * @return  new string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(const nsStr& aString){
   nsString temp(*this); //make a temp string the same size as this...
@@ -265,7 +277,7 @@ nsSubsumeStr nsString::operator+(const nsStr& aString){
  * Create a new string by appending given string to this
  * @update	gess 01/04/99
  * @param   aString -- 2nd string to be appended
- * @return  new string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(const nsString& aString){
   nsString temp(*this); //make a temp string the same size as this...
@@ -277,7 +289,7 @@ nsSubsumeStr nsString::operator+(const nsString& aString){
  * create a new string by adding this to the given buffer.
  * @update	gess 01/04/99
  * @param   aCString is a ptr to cstring to be added to this
- * @return  newly created string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(const char* aCString) {
   nsString temp(*this);
@@ -290,7 +302,7 @@ nsSubsumeStr nsString::operator+(const char* aCString) {
  * create a new string by adding this to the given char.
  * @update	gess 01/04/99
  * @param   aChar is a char to be added to this
- * @return  newly created string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(char aChar) {
   nsString temp(*this);
@@ -302,7 +314,7 @@ nsSubsumeStr nsString::operator+(char aChar) {
  * create a new string by adding this to the given buffer.
  * @update	gess 01/04/99
  * @param   aString is a ptr to unistring to be added to this
- * @return  newly created string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(const PRUnichar* aString) {
   nsString temp(*this);
@@ -315,7 +327,7 @@ nsSubsumeStr nsString::operator+(const PRUnichar* aString) {
  * create a new string by adding this to the given char.
  * @update	gess 01/04/99
  * @param   aChar is a unichar to be added to this
- * @return  newly created string
+ * @return  new subsumeable string (this makes things faster by reducing copying)
  */
 nsSubsumeStr nsString::operator+(PRUnichar aChar) {
   nsString temp(*this);
@@ -344,7 +356,7 @@ void nsString::ToUpperCase() {
 }
 
 /**
- * Converts chars in this to lowercase, and
+ * Converts chars in this to uppercase, and
  * stores them in aString
  * @update	gess 01/04/99
  * @param   aOut is a string to contain result
@@ -355,7 +367,7 @@ void nsString::ToLowerCase(nsString& aString) const {
 }
 
 /**
- * Converts chars in this to lowercase, and
+ * Converts chars in this to uppercase, and
  * stores them in a given output string
  * @update	gess 01/04/99
  * @param   aOut is a string to contain result
@@ -370,7 +382,7 @@ void nsString::ToUpperCase(nsString& aString) const {
  *  characters found in aSet from this string.
  *  
  *  @update gess 01/04/99
- *  @param  aSet -- characters to be cut from this
+ *  @param  aChar -- char to be stripped
  *  @return *this 
  */
 nsString& nsString::StripChar(PRUnichar aChar){
@@ -498,8 +510,8 @@ nsString& nsString::Trim(const char* aTrimSet, PRBool aEliminateLeading,PRBool a
 }
 
 /**
- *  This method strips whitespace from string.
- *  You can control whether whitespace is yanked from
+ *  This method strips chars in given set from string.
+ *  You can control whether chars are yanked from
  *  start and end of string as well.
  *  
  *  @update  gess 3/31/98
@@ -549,6 +561,7 @@ nsString* nsString::ToNewString() const {
 
 /**
  * Creates an ascii clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
  * @update	gess 01/04/99
  * @return  ptr to new ascii string
  */
@@ -569,6 +582,7 @@ char* nsString::ToNewCString() const {
 
 /**
  * Creates an ascii clone of this string
+ * Note that calls to this method should be matched with calls to Recycle().
  * @update	gess 01/04/99
  * @return  ptr to new ascii string
  */
@@ -593,15 +607,23 @@ PRUnichar* nsString::ToNewUnicode() const {
 
 /**
  * Copies contents of this string into he given buffer
+ * Note that if you provide me a buffer that is smaller than the length of
+ * this string, only the number of bytes that will fit are copied. 
+ *
  * @update	gess 01/04/99
- * @param 
+ * @param   aBuf
+ * @param   aBufLength -- size of your external buffer (including null)
+ * @param   anOffset -- THIS IS NOT USED AT THIS TIME!
  * @return
  */
 char* nsString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) const{
   if(aBuf) {
-    CBufDescriptor theSB(aBuf,PR_TRUE,aBufLength,0);
-    nsCAutoString temp(theSB);
-    temp.Assign(*this);
+
+    // NS_ASSERTION(mLength<=aBufLength,"buffer smaller than string");
+
+    CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
+    nsCAutoString temp(theDescr);
+    temp.Assign(*this,aBufLength-1);
     temp.mStr=0;
   }
   return aBuf;
@@ -639,7 +661,7 @@ float nsString::ToFloat(PRInt32* aErrorCode) const {
  * @param   aRadix tells us what base to expect the string in.
  * @return  int rep of string value
  */
-PRInt32 _ToInteger(nsString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
+static PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   PRInt32 result=0;
@@ -695,7 +717,7 @@ PRInt32 _ToInteger(nsString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
  * @param   aRadix (an out parm) tells the caller what base we think the string is in.
  * @return  non-zero error code if this string is non-numeric
  */
-PRInt32 GetNumericSubstring(nsString& aString,PRUint32& aRadix) {
+static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
 
   aString.ToUpperCase();
 
@@ -756,7 +778,7 @@ PRInt32 GetNumericSubstring(nsString& aString,PRUint32& aRadix) {
 PRUint32 nsString::DetermineRadix(void) {
   PRUint32 result=kRadixUnknown;
   if(0<mLength) {
-    nsAutoString theString(*this,eOneByte);
+    nsCAutoString theString(*this);
     if(NS_OK!=GetNumericSubstring(theString,result))
       result=kRadixUnknown;
   }
@@ -775,7 +797,7 @@ PRUint32 nsString::DetermineRadix(void) {
 PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
-  nsAutoString theString(*this,eOneByte);
+  nsCAutoString theString(*this);
   PRUint32  theRadix=aRadix;
   PRInt32   result=0;
   
@@ -796,9 +818,9 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
 
 /**
- * assign given string to this one
+ * assign given nsStr (or derivative) to this one
  * @update	gess 01/04/99
- * @param   aString: string to be added to this
+ * @param   aString: nsStr to be appended
  * @return  this
  */
 nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
@@ -855,7 +877,7 @@ nsString& nsString::Assign(char aChar) {
 }
 
 /**
- * assign given char to this string
+ * assign given unichar to this string
  * @update	gess 01/04/99
  * @param   aChar: char to be assignd to this
  * @return  this
@@ -886,7 +908,7 @@ nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
 
 
 /**
- * append given string to this string
+ * append given string to this string; 
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
  * @return  this
@@ -905,6 +927,7 @@ nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
 
 /**
  * append given string to this string
+ * I don't think we need this method now that we have the previous one.
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
  * @return  this
@@ -919,7 +942,7 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
 }
 
 /**
- * append given string to this string
+ * append given c-string to this string
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
  * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
@@ -949,7 +972,7 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
 }
 
 /**
- * append given string to this string
+ * append given unicode string to this 
  * @update	gess 01/04/99
  * @param   aString : string to be appended to this
  * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
@@ -979,9 +1002,9 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
 }
 
 /**
- * append given string to this string
+ * append given char to this string
  * @update	gess 01/04/99
- * @param   aString : string to be appended to this
+ * @param   aChar: char to be appended 
  * @return  this
  */
 nsString& nsString::Append(char aChar) {
@@ -997,9 +1020,9 @@ nsString& nsString::Append(char aChar) {
 }
 
 /**
- * append given string to this string
+ * append given unichar to this string
  * @update	gess 01/04/99
- * @param   aString : string to be appended to this
+ * @param   aChar: char to be appended to this
  * @return  this
  */
 nsString& nsString::Append(PRUnichar aChar) {
@@ -1015,9 +1038,10 @@ nsString& nsString::Append(PRUnichar aChar) {
 }
 
 /**
- * 
+ * Append the given integer to this string 
  * @update	gess 01/04/99
- * @param 
+ * @param   aInteger:
+ * @param   aRadix:
  * @return
  */
 nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
@@ -1036,9 +1060,9 @@ nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
 
 
 /**
- * 
+ * Append the given float to this string 
  * @update	gess 01/04/99
- * @param 
+ * @param   aFloat:
  * @return
  */
 nsString& nsString::Append(float aFloat){
@@ -1052,12 +1076,10 @@ nsString& nsString::Append(float aFloat){
 
 
 /*
- *  Copies n characters from this string to given string,
- *  starting at the leftmost offset.
- *  
+ *  Copies n characters from this left of this string to given string,
  *  
  *  @update  gess 4/1/98
- *  @param   aCopy -- Receiving string
+ *  @param   aDest -- Receiving string
  *  @param   aCount -- number of chars to copy
  *  @return  number of chars copied
  */
@@ -1072,14 +1094,12 @@ PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
 }
 
 /*
- *  Copies n characters from this string to given string,
- *  starting at the given offset.
- *  
+ *  Copies n characters from this string to from given offset
  *  
  *  @update  gess 4/1/98
  *  @param   aDest -- Receiving string
+ *  @param   anOffset -- where copying should begin
  *  @param   aCount -- number of chars to copy
- *  @param   anOffset -- position where copying begins
  *  @return  number of chars copied
  */
 PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
@@ -1092,18 +1112,16 @@ PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
 }
 
 /*
- *  Copies n characters from this string to given string,
- *  starting at rightmost char.
- *  
+ *  Copies last n characters from this string to given string,
  *  
  *  @update gess 4/1/98
- *  @param  aCopy -- Receiving string
+ *  @param  aDest -- Receiving string
  *  @param  aCount -- number of chars to copy
  *  @return number of chars copied
  */
-PRUint32 nsString::Right(nsString& aCopy,PRInt32 aCount) const{
+PRUint32 nsString::Right(nsString& aDest,PRInt32 aCount) const{
   PRInt32 offset=MaxInt(mLength-aCount,0);
-  return Mid(aCopy,offset,aCount);
+  return Mid(aDest,offset,aCount);
 }
 
 
@@ -1112,10 +1130,10 @@ PRUint32 nsString::Right(nsString& aCopy,PRInt32 aCount) const{
  *  string at str[anOffset].
  *  
  *  @update gess 4/1/98
- *  @param  aCopy -- String to be inserted into this
+ *  @param  aString -- source String to be inserted into this
  *  @param  anOffset -- insertion position within this str
  *  @param  aCount -- number of chars to be copied from aCopy
- *  @return number of chars inserted into this.
+ *  @return this
  */
 nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
   nsStr::Insert(*this,anOffset,aCopy,0,aCount,mAgent);
@@ -1123,14 +1141,13 @@ nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCoun
 }
 
 /**
- * Insert a single unicode char into this string at
- * a specified offset.
+ * Insert a char* into this string at a specified offset.
  *
  * @update	gess4/22/98
- * @param   aChar char to be inserted into this string
+ * @param   char* aCString to be inserted into this string
  * @param   anOffset is insert pos in str 
  * @param   aCounttells us how many chars to insert
- * @return  the number of chars inserted into this string
+ * @return  this
  */
 nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
   if(aCString && aCount){
@@ -1158,13 +1175,12 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
 
 
 /**
- * Insert a unicode* into this string at
- * a specified offset.
+ * Insert a unicode* into this string at a specified offset.
  *
  * @update	gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
- * @return  the number of chars inserted into this string
+ * @return  this
  */
 nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
   if(aString && aCount){
@@ -1198,7 +1214,7 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
  * @update	gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
- * @return  the number of chars inserted into this string
+ * @return  this
  */
 nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
   PRUnichar theBuffer[2]={0,0};
@@ -1257,10 +1273,10 @@ PRInt32 nsString::BinarySearch(PRUnichar aChar) const{
 }
 
 /**
- *  Search for given buffer within this string
+ *  Search for given cstr within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aCStringBuf - charstr to be found
+ *  @param   aCString - substr to be found
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1277,11 +1293,11 @@ PRInt32 nsString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset)
   return result;
 }
 
-/** 
- *  Search for given buffer within this string
+/**
+ *  Search for given unichar* within this string
  *  
  *  @update  gess 3/25/98
- *  @param   aCStringBuf - charstr to be found
+ *  @param   aString - substr to be found
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1299,10 +1315,10 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOff
 }
 
 /**
- *  Search for given buffer within this string
+ *  Search for given nsSTr within this string
  *  
  *  @update  gess 3/25/98
- *  @param   nsString -- buffer to be found
+ *  @param   aString - substr to be found
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1311,10 +1327,10 @@ PRInt32 nsString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset)
 }
 
 /**
- *  Search for given buffer within this string
+ *  Search for given string within this string
  *  
  *  @update  gess 3/25/98
- *  @param   nsString -- buffer to be found
+ *  @param   aString - substr to be found
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1326,19 +1342,23 @@ PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffs
  *  Search for a given char, starting at given offset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aChar
  *  @return  offset of found char, or -1 (kNotFound)
  */
+#if 0
 PRInt32 nsString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
+#endif
 
 /**
  *  Search for a given char, starting at given offset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aChar is the unichar to be sought
+ *  @param   anOffset
+ *  @param   aIgnoreCase
  *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1347,10 +1367,12 @@ PRInt32 nsString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset) 
 }
 
 /**
- *  
+ *  This method finds the offset of the first char in this string that is
+ *  a member of the given charset, starting the search at anOffset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aCStringSet
+ *  @param   anOffset -- where in this string to start searching
  *  @return  
  */
 PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
@@ -1368,10 +1390,12 @@ PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
 }
 
 /**
- *  
+ *  This method finds the offset of the first char in this string that is
+ *  a member of the given charset, starting the search at anOffset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aCStringSet
+ *  @param   anOffset -- where in this string to start searching
  *  @return  
  */
 PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) const{
@@ -1389,10 +1413,12 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
 }
 
 /**
- *  
+ *  This method finds the offset of the first char in this string that is
+ *  a member of the given charset, starting the search at anOffset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aCStringSet
+ *  @param   anOffset -- where in this string to start searching
  *  @return  
  */
 PRInt32 nsString::FindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
@@ -1414,11 +1440,13 @@ PRInt32 nsString::RFind(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset
 }
 
 /**
- *  
+ *  Reverse search for substring
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return  
+ *  @param   aString
+ *  @param   aIgnoreCase
+ *  @param   anOffset - tells us where to begin the search
+ *  @return  offset of substring or -1
  */
 PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
   PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,anOffset);
@@ -1426,11 +1454,13 @@ PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOff
 }
 
 /**
- *  
+ *  Reverse search for substring
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return  
+ *  @param   aString
+ *  @param   aIgnoreCase
+ *  @param   anOffset - tells us where to begin the search
+ *  @return  offset of substring or -1
  */
 PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aString,kNullPointerError);
@@ -1448,22 +1478,28 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset)
 
 
 /**
- *  Search for a given char, starting at given offset
+ *  Reverse search for char
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return  offset of found char, or -1 (kNotFound)
+ *  @param   achar
+ *  @param   aIgnoreCase
+ *  @param   anOffset - tells us where to begin the search
+ *  @return  offset of substring or -1
  */
+#if 0
 PRInt32 nsString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
   PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
+#endif
  
 /**
- *  Search for a given char, starting at given offset
+ *  Reverse search for a given char, starting at given offset
  *  
  *  @update  gess 3/25/98
- *  @param   
+ *  @param   aChar
+ *  @param   aIgnoreCase
+ *  @param   anOffset
  *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset) const{
@@ -1472,11 +1508,12 @@ PRInt32 nsString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset)
 }
 
 /**
- *  
+ *  Reverse search for char in this string that is also a member of given charset
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return   
+ *  @param   aCStringSet
+ *  @param   anOffset
+ *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aCStringSet,kNullPointerError);
@@ -1493,11 +1530,14 @@ PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
 }
 
 /**
- *  
+ *  Reverse search for a first char in this string that is a
+ *  member of the given char set
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return   
+ *  @param   aSet
+ *  @param   aIgnoreCase
+ *  @param   anOffset
+ *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
   PRInt32 result=nsStr::RFindCharInSet(*this,aSet,PR_FALSE,anOffset);
@@ -1505,11 +1545,14 @@ PRInt32 nsString::RFindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
 }
 
 /**
- *  
+ *  Reverse search for a first char in this string that is a
+ *  member of the given char set
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return   
+ *  @param   aSet
+ *  @param   aIgnoreCase
+ *  @param   anOffset
+ *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) const{
   NS_ASSERTION(0!=aStringSet,kNullPointerError);
@@ -1599,6 +1642,9 @@ PRInt32 nsString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount
   return nsStr::Compare(*this,aString,aCount,aIgnoreCase);
 }
 
+/**
+ *  Here come a whole bunch of operator functions that are self-explanatory...
+ */
 
 PRBool nsString::operator==(const nsString& S) const {return Equals(S);}      
 PRBool nsString::operator==(const nsStr& S) const {return Equals(S);}      
@@ -1980,49 +2026,44 @@ NS_COM int fputs(const nsString& aString, FILE* out)
 
 
 /**
- * Special case constructor, that allows the consumer to provide
- * an underlying buffer for performance reasons.
- * @param   aBuffer points to your buffer
- * @param   aBufSize defines the size of your buffer
- * @param   aCurrentLength tells us the current length of the buffer
+ * Default constructor
+ *
  */
-nsAutoString::nsAutoString(eCharSize aCharSize) : nsString(aCharSize){
+nsAutoString::nsAutoString(eCharSize aCharSize) : nsString(aCharSize) {
   nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
-
 }
 
 /**
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
+ * @param   aLength tells us how many chars to copy from aCString
  */
-nsAutoString::nsAutoString(const char* aCString,eCharSize aCharSize,PRInt32 aLength) : nsString(aCharSize) {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   mAgent=0;
   AddNullTerminator(*this);
   Append(aCString,aLength);
-  
-
 }
 
 /**
  * Copy construct from uni-string
  * @param   aString is a ptr to a unistr
+ * @param   aLength tells us how many chars to copy from aString
  */
-nsAutoString::nsAutoString(const PRUnichar* aString,eCharSize aCharSize,PRInt32 aLength) : nsString(aCharSize) {
+nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString() {
   mAgent=0;
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString,aLength);
-  
 }
 
 /**
- * Copy construct from uni-string
- * @param   aString is a ptr to a unistr
+ * constructor that uses external buffer
+ * @param   aBuffer describes the external buffer
  */
-nsAutoString::nsAutoString(CBufDescriptor& aBuffer) : nsString(eTwoByte) {
+nsAutoString::nsAutoString(CBufDescriptor& aBuffer) : nsString() {
   mAgent=0;
   if(!aBuffer.mBuffer) {
     nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
@@ -2035,40 +2076,36 @@ nsAutoString::nsAutoString(CBufDescriptor& aBuffer) : nsString(eTwoByte) {
 
 
 /**
- * Copy construct from an nsString
+ * Copy construct from an nsStr
  * @param   
  */
-nsAutoString::nsAutoString(const nsStr& aString,eCharSize aCharSize) : nsString(aCharSize) {
+nsAutoString::nsAutoString(const nsStr& aString) : nsString() {
   mAgent=0;
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
-  
 }
 
 /**
- * Copy construct from an nsString
- * @param   
+ * Default copy constructor
  */
-nsAutoString::nsAutoString(const nsAutoString& aString,eCharSize aCharSize) : nsString(aCharSize) {
+nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
   mAgent=0;
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
-  
 }
 
 
 /**
- * Copy construct from an nsString
+ * Copy construct from a unichar
  * @param   
  */
-nsAutoString::nsAutoString(PRUnichar aChar,eCharSize aCharSize) : nsString(aCharSize){
+nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
   mAgent=0;
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>aCharSize)-1,0,aCharSize,PR_FALSE);
+  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aChar);
-  
 }
 
 /**
