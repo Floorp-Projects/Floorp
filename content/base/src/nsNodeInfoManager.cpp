@@ -111,8 +111,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsNodeInfoManager,
-                             NS_GET_IID(nsINodeInfoManager));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfoManager, nsINodeInfoManager);
 
 
 // nsINodeInfoManager

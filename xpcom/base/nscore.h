@@ -22,124 +22,118 @@
 #ifndef nscore_h___
 #define nscore_h___
 
-#ifdef _WIN32
-#define NS_WIN32 1
-#endif
-
-#if defined(__unix)
-#define NS_UNIX 1
-#endif
-
-#if defined(XP_OS2)
-#define NS_OS2 1
-#endif
-
+/**
+ * Incorporate the core NSPR data types which XPCOM uses.
+ */
 #include "prtypes.h"
 
-#ifdef __cplusplus
-#include "nsDebug.h"
+
+/* Core XPCOM declarations. */
+
+/**
+ * Macros defining the target platform...
+ */
+#ifdef _WIN32
+#define NS_WIN32 1
+
+#elif defined(__unix)
+#define NS_UNIX 1
+
+#elif defined(XP_OS2)
+#define NS_OS2 1
 #endif
-
-/* The preferred symbol for null. */
-#define nsnull 0
-
-/* Define brackets for protecting C code from C++ */
-#ifdef __cplusplus
-#define NS_BEGIN_EXTERN_C extern "C" {
-#define NS_END_EXTERN_C }
-#else
-#define NS_BEGIN_EXTERN_C
-#define NS_END_EXTERN_C
-#endif
-
 /*----------------------------------------------------------------------*/
 /* Import/export defines */
 
 #ifdef NS_WIN32
+
 #define NS_IMPORT _declspec(dllimport)
 #define NS_IMPORT_(type) type _declspec(dllimport) __stdcall
 #define NS_EXPORT _declspec(dllexport)
-/* XXX NS_EXPORT_ defined in nsCOm.h (xpcom) differs in where the __declspec
-   is placed. It needs to be done this way to make the 4.x compiler happy... */
-#undef NS_EXPORT_
 #define NS_EXPORT_(type) type _declspec(dllexport) __stdcall
+#define NS_IMETHOD_(type) virtual type __stdcall
+#define NS_IMETHODIMP_(type) type __stdcall
+#define NS_METHOD_(type) type __stdcall
+#define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
+
 #elif defined(XP_MAC)
 
 #define NS_IMPORT
 #define NS_IMPORT_(type) type
-
-/* XXX NS_EXPORT_ defined in nsCom.h actually does an export. Here it's just sugar. */
-#undef NS_EXPORT
-#undef NS_EXPORT_
-
 #define NS_EXPORT __declspec(export)
 #define NS_EXPORT_(type) __declspec(export) type
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHODIMP_(type) type
+#define NS_METHOD_(type) type
+#define NS_CALLBACK_(_type, _name) _type (* _name)
 
-#else
-/* XXX do something useful? */
+#elif defined(XP_OS2)
+
 #define NS_IMPORT
 #define NS_IMPORT_(type) type
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHODIMP_(type) type
+#define NS_METHOD_(type) type
+#define NS_CALLBACK_(_type, _name) _type ( _System * _name)
+
+#else
+
+#define NS_IMPORT
+#define NS_IMPORT_(type) type
+#define NS_EXPORT
+#define NS_EXPORT_(type) type
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHODIMP_(type) type
+#define NS_METHOD_(type) type
+#define NS_CALLBACK_(_type, _name) _type (* _name)
 #endif
 
-#ifdef _IMPL_NS_BASE
-#define NS_BASE NS_EXPORT
+/**
+ * Generic API modifiers which return the standard XPCOM nsresult type
+ */
+#define NS_IMETHOD          NS_IMETHOD_(nsresult)
+#define NS_IMETHODIMP       NS_IMETHODIMP_(nsresult)
+#define NS_METHOD           NS_METHOD_(nsresult)
+#define NS_CALLBACK(_name)  NS_CALLBACK_(nsresult, _name)
+
+/**
+ * Import/Export macros for XPCOM APIs
+ */
+
+#ifdef _IMPL_NS_COM
+#define NS_COM NS_EXPORT
 #else
-#define NS_BASE NS_IMPORT
+#define NS_COM NS_IMPORT
 #endif
 
-#ifdef _IMPL_NS_NET
-#define NS_NET NS_EXPORT
+/**
+ * NS_NO_VTABLE is emitted by xpidl in interface declarations whenever
+ * xpidl can determine that the interface can't contain a constructor.
+ * This results in some space savings and possible runtime savings -
+ * see bug 49416.  We undefine it first, as xpidl-generated headers
+ * define it for IDL uses that don't include this file.
+ */
+#ifdef NS_NO_VTABLE
+#undef NS_NO_VTABLE
+#endif
+#if defined(_MSC_VER) && _MSC_VER >= 1100
+#define NS_NO_VTABLE __declspec(novtable)
 #else
-#define NS_NET NS_IMPORT
+#define NS_NO_VTABLE
 #endif
 
-#ifdef _IMPL_NS_DOM
-#define NS_DOM NS_EXPORT
-#else
-#define NS_DOM NS_IMPORT
-#endif
 
-#ifdef _IMPL_NS_WIDGET
-#define NS_WIDGET NS_EXPORT
-#else
-#define NS_WIDGET NS_IMPORT
-#endif
+/**
+ * Generic XPCOM result data type
+ */
+typedef PRUint32 nsresult;
 
-#ifdef _IMPL_NS_VIEW
-#define NS_VIEW NS_EXPORT
-#else
-#define NS_VIEW NS_IMPORT
-#endif
-
-#ifdef _IMPL_NS_GFXNONXP
-#define NS_GFXNONXP NS_EXPORT
-#define NS_GFXNONXP_(type) NS_EXPORT_(type)
-#else
-#define NS_GFXNONXP NS_IMPORT
-#define NS_GFXNONXP_(type) NS_IMPORT_(type)
-#endif
-
-#ifdef _IMPL_NS_GFX
-#define NS_GFX NS_EXPORT
-#define NS_GFX_(type) NS_EXPORT_(type)
-#else
-#define NS_GFX NS_IMPORT
-#define NS_GFX_(type) NS_IMPORT_(type)
-#endif
-
-#ifdef _IMPL_NS_PLUGIN
-#define NS_PLUGIN NS_EXPORT
-#else
-#define NS_PLUGIN NS_IMPORT
-#endif
-
-#ifdef _IMPL_NS_APPSHELL
-#define NS_APPSHELL NS_EXPORT
-#else
-#define NS_APPSHELL NS_IMPORT
-#endif
+/**
+ * The preferred symbol for null.
+ */
+#define nsnull 0
 
 
 /* ------------------------------------------------------------------------ */
@@ -207,7 +201,7 @@
    * commercial build.  When this is fixed there will be no need for the
    * |NS_REINTERPRET_CAST| in nsLiteralString.h either.
    */
-  #if defined(HAVE_CPP_2BYTE_WCHAR_T) && (defined(XP_WIN) || defined(XP_MAC))
+  #if defined(HAVE_CPP_2BYTE_WCHAR_T) && (defined(NS_WIN32) || defined(XP_MAC))
     typedef wchar_t PRUnichar;
   #else
     typedef PRUint16 PRUnichar;
@@ -283,7 +277,7 @@
     "straight", no macro.
   */
 #endif
-
+ 
 /* 
  * Use these macros to do 64bit safe pointer conversions.
  */
@@ -291,4 +285,11 @@
 #define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
 
+/* Include depricated APIs... */
+
+#ifndef nsComObsolete_h__
+#include "nsComObsolete.h"
+#endif
+
 #endif /* nscore_h___ */
+

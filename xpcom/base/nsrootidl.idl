@@ -21,7 +21,10 @@
  *   Dan Rosen <dr@netscape.com>
  */
 
-/* Root idl declarations to be used by all. */
+/**
+ * Root idl declarations to be used by all.
+ * @status FROZEN
+ */
 
 %{C++
 

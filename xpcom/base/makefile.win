@@ -35,12 +35,16 @@ EXPORTS =                  \
         nsMemory.h         \
         nsCOMPtr.h         \
         nsCom.h            \
+	nsComObsolete.h  \
         nsCWeakReference.h \
         nsDebug.h          \
         nsError.h          \
         nsID.h             \
         nsIID.h            \
         nsIPtr.h           \
+        nsISupportsBase.h  \
+	nsISupportsImpl.h  \
+        nsISupportsObsolete.h  \
         nsISupportsUtils.h \
         nsTraceRefcnt.h    \
         nsWeakReference.h  \

@@ -23,8 +23,13 @@
 #ifndef nsDebug_h___
 #define nsDebug_h___
 
-#include "nsCom.h"
-#include "prtypes.h"
+#ifndef nscore_h___
+#include "nscore.h"
+#endif
+
+#ifndef nsError_h__
+#include "nsError.h"
+#endif 
 
 #ifdef DEBUG
 #define NS_DEBUG
@@ -299,4 +304,56 @@ if (!(expr))                       \
 
 #endif /* ! NS_DEBUG */
 #endif /* __cplusplus */
+
+// Macros for checking the trueness of an expression passed in within an 
+// interface implementation.  These need to be compiled regardless of the 
+// NS_DEBUG flag
+///////////////////////////////////////////////////////////////////////////////
+
+#define NS_ENSURE_TRUE(x, ret)                                                \
+  PR_BEGIN_MACRO                                                              \
+   if(NS_WARN_IF_FALSE(x, "NS_ENSURE_TRUE(" #x ") failed"))                   \
+     return ret;                                                              \
+  PR_END_MACRO
+
+#define NS_ENSURE_FALSE(x, ret) \
+  NS_ENSURE_TRUE(!(x), ret)
+
+///////////////////////////////////////////////////////////////////////////////
+// Macros for checking results
+///////////////////////////////////////////////////////////////////////////////
+
+#define NS_ENSURE_SUCCESS(res, ret) \
+  NS_ENSURE_TRUE(NS_SUCCEEDED(res), ret)
+
+///////////////////////////////////////////////////////////////////////////////
+// Macros for checking state and arguments upon entering interface boundaries
+///////////////////////////////////////////////////////////////////////////////
+
+#define NS_ENSURE_ARG(arg) \
+  NS_ENSURE_TRUE(arg, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_POINTER(arg) \
+  NS_ENSURE_TRUE(arg, NS_ERROR_INVALID_POINTER)
+
+#define NS_ENSURE_ARG_MIN(arg, min) \
+  NS_ENSURE_TRUE((arg) >= min, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_MAX(arg, max) \
+  NS_ENSURE_TRUE((arg) <= max, NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_ARG_RANGE(arg, min, max) \
+  NS_ENSURE_TRUE(((arg) >= min) && ((arg) <= max), NS_ERROR_INVALID_ARG)
+
+#define NS_ENSURE_STATE(state) \
+  NS_ENSURE_TRUE(state, NS_ERROR_UNEXPECTED)
+
+#define NS_ENSURE_NO_AGGREGATION(outer) \
+  NS_ENSURE_FALSE(outer, NS_ERROR_NO_AGGREGATION)
+
+#define NS_ENSURE_PROPER_AGGREGATION(outer, iid) \
+  NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
+
+///////////////////////////////////////////////////////////////////////////////
+
 #endif /* nsDebug_h___ */

@@ -40,17 +40,17 @@
 
 
   // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
-#ifndef nsDebug_h___
-#include "nsDebug.h"
-  // for |NS_PRECONDITION|
-#endif
-
 #ifndef nsISupports_h___
 #include "nsISupports.h"
   // for |nsresult|, |NS_ADDREF|, |NS_GET_IID| et al
 #endif
 
-#ifndef nscore_h__
+#ifndef nsDebug_h___
+#include "nsDebug.h"
+  // for |NS_PRECONDITION|
+#endif
+
+#ifndef nscore_h___
 #include "nscore.h"
   // for |NS_..._CAST|, |NS_EXPORT|
 #endif
