@@ -3013,7 +3013,11 @@ wallet_ClearStopwatch();
 
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
+#ifdef	XP_MAC
+#define MAX_ARRAY_SIZE 50
+#else
 #define MAX_ARRAY_SIZE 500
+#endif
 
 extern void
 SINGSIGN_RememberSignonData

@@ -143,7 +143,7 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(webshellwindow));
   PRInt32 selectedIndex;
   PRBool rtnValue;
-  rv = prompter->Select( NULL, szMessage, *pCount, (const PRUnichar **)pList, &selectedIndex, &rtnValue );
+  rv = prompter->Select( NULL, szMessage, *pCount, (const char **)pList, &selectedIndex, &rtnValue );
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
   return rtnValue;  
@@ -1247,8 +1247,8 @@ si_PutData(char * URLName, si_FormSubmitData * submit, PRBool save) {
 
   /* discard this if the password is empty */
   for (PRInt32 i=0; i<submit->value_cnt; i++) {
-    if ((((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD) &&
-        (((submit->value_array)) [i]).Length == 0 ) {
+    if (((uint8*)submit->type_array)[i] == FORM_TYPE_PASSWORD)
+      if (((submit->value_array) [i]).Length() == 0 ) {
       return;
     }
   }
@@ -1505,7 +1505,12 @@ extern PRUnichar
 Wallet_UTF8Get(nsInputFileStream strm);
 
 #define BUFFER_SIZE 4096
+
+#ifdef	XP_MAC
+#define MAX_ARRAY_SIZE 50
+#else
 #define MAX_ARRAY_SIZE 500
+#endif
 
 /*
  * get a line from a file
