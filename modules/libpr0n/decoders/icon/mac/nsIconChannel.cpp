@@ -279,7 +279,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     if (NS_FAILED(rv))  return(rv);
 
     FSSpec spec;
-    if (NS_FAILED(localFileMac->GetResolvedFSSpec(&spec)))
+    if (NS_FAILED(localFileMac->GetFSSpec(&spec)))
       return(NS_ERROR_FAILURE);
 
     SInt16  label;

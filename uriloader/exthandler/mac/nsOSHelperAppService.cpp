@@ -62,7 +62,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   	  nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
   	  if (NS_FAILED(rv)) return rv;
   	
-  	  rv = app->LaunchAppWithDoc(docToLoad, PR_FALSE); 
+  	  rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
     }
   }
   return rv;

@@ -77,7 +77,11 @@ NS_IMETHODIMP nsAppleFileDecoder::Initialize(nsIOutputStream *outputStream, nsIF
   m_output = outputStream;
   
   nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(outputFile);
-  macFile->GetTargetFSSpec(&m_fsFileSpec);
+  PRBool saveFollowLinks;
+  macFile->GetFollowLinks(&saveFollowLinks);
+  macFile->SetFollowLinks(PR_TRUE);
+  macFile->GetFSSpec(&m_fsFileSpec);
+  macFile->SetFollowLinks(saveFollowLinks);
 
   m_offset = 0;
   m_dataForkOffset = 0;

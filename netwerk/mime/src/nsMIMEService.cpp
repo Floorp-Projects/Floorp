@@ -212,7 +212,8 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
 		if ( NS_SUCCEEDED( rv ) )
 		{
 				PRUint32 type, creator;
-				macFile->GetFileTypeAndCreator( (OSType*)&type,(OSType*) &creator );    			
+				macFile->GetFileType( (OSType*)&type );
+				macFile->GetFileCreator( (OSType*) &creator );    			
 				if( !mXML || NS_FAILED (rv = mXML->GetFromTypeCreator( type, creator, fileExt.get(), getter_AddRefs(info) ) ) )
 				{
 					if ( mNative )

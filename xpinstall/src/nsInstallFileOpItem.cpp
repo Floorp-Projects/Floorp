@@ -1369,49 +1369,26 @@ nsInstallFileOpItem::NativeFileOpMacAliasPrepare()
   nsCOMPtr<nsILocalFileMac> targetFile = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> sourceFile = do_QueryInterface(mSrc);
 
-  FSSpec        fsSource, fsAlias, fsAliasParent, fsCheckSource;
   nsresult      rv;
-  OSErr         err;  
-  long          aliasDirID;
-  Boolean       isDir;
-  char          *aliasLeaf;  
+  PRBool        exists;  
    
-  rv = sourceFile->GetResolvedFSSpec(&fsSource);
-  if (NS_FAILED(rv)) return rv;
-  rv = targetFile->GetFSSpec(&fsAliasParent); 
-  if (NS_FAILED(rv)) return rv;
-  rv = targetFile->GetAppendedPath(&aliasLeaf);
-  if (NS_FAILED(rv)) return rv;
-
   // check if source file exists
-  err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);
-  if (err != noErr)
-    return err;
-    
-  // construct target alias FSSpec using parent and leaf path
-  err = FSpGetDirectoryID(&fsAliasParent, &aliasDirID, &isDir);
-  if (err != noErr) 
-  {
-    if (aliasLeaf)
-      nsMemory::Free(aliasLeaf);
-    return err;
-  }
-  c2pstr(aliasLeaf);
+  rv = sourceFile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists)
+    return nsInstall::SOURCE_DOES_NOT_EXIST;
+
+  // check if alias file already exists at target
+  targetFile->SetFollowLinks(PR_FALSE);
+  rv = targetFile->Exists(&exists);
+  if (NS_FAILED(rv))
+    return nsInstall::INVALID_PATH_ERR;
   
-  // check if file/folder already exists at target
-  err = FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
-  p2cstr((unsigned char *)aliasLeaf);
-  if (aliasLeaf)
-    nsMemory::Free(aliasLeaf);
-  
-  // file already exists: delete it before creating an updated alias
-  if (err == noErr)
-  {
-    err = FSpDelete(&fsAlias);
-    if (err != noErr)
-        return err;
-  }      
-    
+  // if file already exists: delete it before creating an updated alias
+  if (exists) {
+    rv = targetFile->Remove(PR_TRUE);
+    if (NS_FAILED(rv))
+        return nsInstall::FILENAME_ALREADY_USED;
+  }    
 #endif /* XP_MAC */
 
     return nsInstall::SUCCESS;
@@ -1427,50 +1404,36 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   nsCOMPtr<nsILocalFileMac> localFileMacTarget = do_QueryInterface(mTarget);
   nsCOMPtr<nsILocalFileMac> localFileMacSrc = do_QueryInterface(mSrc);
   
-  FSSpec        fsSource, fsAliasParent, fsAlias, fsCheckSource;
+  FSSpec        fsSource, fsAlias;
+  PRBool        exists;
   AliasHandle   aliasH;
   FInfo         info;
   OSErr         err = noErr;
   nsresult      rv = NS_OK;
-  long          aliasDirID;
-  Boolean       isDir;
-  char          *aliasLeaf;  
-  
-  // nsIFile sucks so we have to do special hackery here
-  rv = localFileMacSrc->GetResolvedFSSpec(&fsSource);
-  if (NS_FAILED(rv)) return rv;
-  rv = localFileMacTarget->GetFSSpec(&fsAliasParent); 
-  if (NS_FAILED(rv)) return rv;
-  rv = localFileMacTarget->GetAppendedPath(&aliasLeaf);
-  if (NS_FAILED(rv)) return rv;
   
   // check if source file exists
-  err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);
-  if (err != noErr)
-    return err;
-    
-  // construct target alias FSSpec using parent and leaf path
-  err = FSpGetDirectoryID(&fsAliasParent, &aliasDirID, &isDir);
-  if (err != noErr) 
-  {
-    if (aliasLeaf)
-      nsMemory::Free(aliasLeaf);
-    return err;
-  }
-  c2pstr(aliasLeaf);
-  err = FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
-  p2cstr((unsigned char *)aliasLeaf);
-  if (aliasLeaf)
-    nsMemory::Free(aliasLeaf);
+  rv = localFileMacSrc->Exists(&exists);
+  if (NS_FAILED(rv) || !exists)
+    return nsInstall::SOURCE_DOES_NOT_EXIST;
+      
+  // check if file/folder already exists at target
+  localFileMacTarget->SetFollowLinks(PR_FALSE);
+  rv = localFileMacTarget->Exists(&exists);
+  if (NS_FAILED(rv))
+    return nsInstall::INVALID_PATH_ERR;
   
-  // file already exists: delete it before creating an updated alias
-  if (err == noErr)
-  {
-    err = FSpDelete(&fsAlias);
-    if (err != noErr)
-        return err;
-  }
-  
+  // if file already exists: delete it before creating an updated alias
+  if (exists) {
+    rv = localFileMacTarget->Remove(PR_TRUE);
+    if (NS_FAILED(rv))
+        return nsInstall::FILENAME_ALREADY_USED;
+  }    
+
+  rv = localFileMacSrc->GetFSSpec(&fsSource);
+  if (!NS_SUCCEEDED(rv)) return rv;
+  rv = localFileMacTarget->GetFSSpec(&fsAlias); 
+  if (!NS_SUCCEEDED(rv)) return rv;
+
   err = NewAliasMinimal( &fsSource, &aliasH );
   if (err != noErr)  // bubble up Alias Manager error
   	return err;
