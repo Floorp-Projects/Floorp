@@ -47,6 +47,9 @@
 #include "ProfileMgr.h"
 #include "BrowserImpl.h"
 #include "nsIWindowWatcher.h"
+#include "plstr.h"
+#include <io.h>
+#include <fcntl.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -72,6 +75,88 @@ CMfcEmbedApp::CMfcEmbedApp() :
 
 CMfcEmbedApp theApp;
 
+BOOL CMfcEmbedApp::IsCmdLineSwitch(const char *pSwitch, BOOL bRemove)
+{
+    //  Search for the switch in the command line.
+    //  Don't take it out of m_lpCmdLine by default
+    char *pFound = PL_strcasestr(m_lpCmdLine, pSwitch);
+    if(pFound == NULL ||
+        // Switch must be at beginning of command line
+        // or have a space in front of it to avoid
+        // mangling filenames
+        ( (pFound != m_lpCmdLine) &&
+          *(pFound-1) != ' ' ) ) 
+    {
+        return(FALSE);
+    }
+
+    if (bRemove) 
+    {
+        // remove the flag from the command line
+        char *pTravEnd = pFound + strlen(pSwitch);
+        char *pTraverse = pFound;
+
+        *pTraverse = *pTravEnd;
+        while(*pTraverse != '\0')   
+        {
+            pTraverse++;
+            pTravEnd++;
+            *pTraverse = *pTravEnd;
+        }
+    }
+
+    return(TRUE);
+}
+
+void CMfcEmbedApp::ParseCmdLine()
+{
+    // Show Debug Console?
+    if(IsCmdLineSwitch("-console"))
+        ShowDebugConsole();
+}
+
+void CMfcEmbedApp::ShowDebugConsole()
+{
+#ifdef _DEBUG
+    // Show console only in debug mode
+
+    if(! AllocConsole())
+        return;
+
+    // Redirect stdout to the console
+    int hCrtOut = _open_osfhandle(
+                (long) GetStdHandle(STD_OUTPUT_HANDLE),
+                _O_TEXT);
+    if(hCrtOut == -1)
+        return;
+
+    FILE *hfOut = _fdopen(hCrtOut, "w");
+    if(hfOut != NULL)
+    {
+        // Setup for unbuffered I/O so the console 
+        // output shows up right away
+        *stdout = *hfOut;
+        setvbuf(stdout, NULL, _IONBF, 0); 
+    }
+
+    // Redirect stderr to the console
+    int hCrtErr = _open_osfhandle(
+                (long) GetStdHandle(STD_ERROR_HANDLE),
+                _O_TEXT);
+    if(hCrtErr == -1)
+        return;
+
+    FILE *hfErr = _fdopen(hCrtErr, "w");
+    if(hfErr != NULL)
+    {
+        // Setup for unbuffered I/O so the console 
+        // output shows up right away
+        *stderr = *hfErr;
+        setvbuf(stderr, NULL, _IONBF, 0); 
+    }
+#endif
+}
+
 // Initialize our MFC application and also init
 // the Gecko embedding APIs
 // Note that we're also init'ng the profile switching
@@ -81,6 +166,8 @@ CMfcEmbedApp theApp;
 //
 BOOL CMfcEmbedApp::InitInstance()
 {
+    ParseCmdLine();
+
 	Enable3dControls();
 
 	// Take a look at 
