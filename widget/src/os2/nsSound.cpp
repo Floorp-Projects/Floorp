@@ -75,7 +75,6 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
 #ifdef DEBUG // XXX Shouldn't this |#ifdef| be around more code?
                 printf("Failed to load %s\n", uriSpec.get());
 #endif
-                CRTFREEIF(uriSpec);
             }
         }
       }
