@@ -41,7 +41,7 @@
 #include "prmem.h"
 #include "prbit.h"
 #include "nsString.h"
-#include "nsIHTMLStylesheet.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
