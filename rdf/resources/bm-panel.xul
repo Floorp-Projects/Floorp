@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="bookmarks.css" type="text/css"?>
+
+<xul:window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="bookmarks.js"/>
+
+<tree datasources="rdf:bookmarks" id="bookmarksTree" ondblclick="return OpenURL(event,event.target.parentNode);">
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <treehead>
+    <treeitem>
+      <treecell onclick="return doSort('NameColumn');">
+	<xul:observes element="NameColumn" attribute="sortActive"/>
+	<xul:observes element="NameColumn" attribute="sortDirection"/>
+      Name</treecell>
+      <treecell onclick="return doSort('URLColumn');">
+	<xul:observes element="URLColumn" attribute="sortActive"/>
+	<xul:observes element="URLColumn" attribute="sortDirection"/>
+      URL</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody id="NC:BookmarksRoot">
+  </treebody>
+</tree>
+
+</xul:window>
+
