@@ -1200,12 +1200,14 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     { // set readonly
       flags |= nsIHTMLEditor::eEditorReadonlyMask;
-      selCon->SetCaretEnabled(PR_FALSE);
+      if (selCon)
+        selCon->SetCaretEnabled(PR_FALSE);
     }
     else 
     { // unset readonly
       flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
-      selCon->SetCaretEnabled(PR_TRUE);
+      if (selCon)
+        selCon->SetCaretEnabled(PR_TRUE);
     }    
     mEditor->SetFlags(flags);
   }
@@ -1223,21 +1225,13 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     { // set readonly
       flags |= nsIHTMLEditor::eEditorDisabledMask;
       selCon->SetCaretEnabled(PR_FALSE);
-      nsCOMPtr<nsIDocument> doc; 
-      presShell->GetDocument(getter_AddRefs(doc));
-      NS_ASSERTION(doc, "null document");
-      if (!doc) { return NS_ERROR_NULL_POINTER; }
-      doc->SetDisplaySelection(nsIDocument::SELECTION_OFF);
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
     }
     else 
     { // unset readonly
       flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
       selCon->SetCaretEnabled(PR_TRUE);
-      nsCOMPtr<nsIDocument> doc; 
-      presShell->GetDocument(getter_AddRefs(doc));
-      NS_ASSERTION(doc, "null document");
-      if (!doc) { return NS_ERROR_NULL_POINTER; }
-      doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
     }    
     mEditor->SetFlags(flags);
   }
@@ -3004,7 +2998,9 @@ nsGfxTextControlFrame::InstallEditor()
       editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
       
     // initialize the editor
-    result = mEditor->Init(mDoc, presShell, editorFlags);
+    nsCOMPtr<nsISelectionController> selCon;
+    selCon = do_QueryInterface(presShell);
+    result = mEditor->Init(mDoc, presShell,selCon, editorFlags);
     if (NS_FAILED(result)) { return result; }
 
     nsCOMPtr<nsIPresShell> framePresShell;
@@ -3424,10 +3420,9 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
       {
         flags |= nsIHTMLEditor::eEditorDisabledMask;
         if (selCon)
+        {
           selCon->SetCaretEnabled(PR_FALSE);
-        nsCOMPtr<nsIDocument>doc = do_QueryInterface(aDoc);
-        if (doc) {
-          doc->SetDisplaySelection(nsIDocument::SELECTION_OFF);
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
         }
       }
     }

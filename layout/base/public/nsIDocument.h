@@ -315,10 +315,6 @@ public:
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const = 0;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const = 0;
 
-  enum{SELECTION_OFF = 0, SELECTION_ON = 1, SELECTION_DISABLED = 2 };
-  virtual void SetDisplaySelection(PRInt8 aToggle) = 0;
-  virtual PRInt8 GetDisplaySelection() const = 0;
-
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,

@@ -402,8 +402,6 @@ public:
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
-  virtual void SetDisplaySelection(PRInt8 aToggle);
-  virtual PRInt8 GetDisplaySelection() const;
 
   // nsIJSScriptObject interface
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 

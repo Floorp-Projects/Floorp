@@ -1796,33 +1796,24 @@ nsDocViewerFocusListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> shell;
   if(!mDocViewer)
     return NS_ERROR_FAILURE;
 
-  nsresult result = mDocViewer->GetDocument(*getter_AddRefs(doc));//deref once cause it take a ptr ref
-  if(NS_FAILED(result) || !doc)
+  nsresult result = mDocViewer->GetPresShell(*getter_AddRefs(shell));//deref once cause it take a ptr ref
+  if(NS_FAILED(result) || !shell)
     return result?result:NS_ERROR_FAILURE;
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(shell);
+  PRInt16 selectionStatus;
+  selCon->GetDisplaySelection( &selectionStatus);
 
-  PRInt8 selectionStatus;
-  selectionStatus = doc->GetDisplaySelection();
-
-  //if selection was nsIDocument::SELECTION_OFF, do nothing
+  //if selection was nsISelectionController::SELECTION_OFF, do nothing
   //otherwise re-enable it.
-  if(selectionStatus == nsIDocument::SELECTION_DISABLED)
+  if(selectionStatus == nsISelectionController::SELECTION_DISABLED)
   {
-    doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
-
-    nsCOMPtr<nsIPresShell> ps;
-    result = mDocViewer->GetPresShell(*getter_AddRefs(ps));
-    if(NS_FAILED(result) || !ps)
-      return result?result:NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISelectionController> selcon;
-    selcon = do_QueryInterface(ps,&result);
-    if(NS_FAILED(result) || !selcon)
-      return result?result:NS_ERROR_FAILURE;
-    selcon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   }
   return result;
 }
@@ -1830,33 +1821,24 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> shell;
   if(!mDocViewer)
     return NS_ERROR_FAILURE;
 
-  nsresult result = mDocViewer->GetDocument(*getter_AddRefs(doc));//deref once cause it take a ptr ref
-  if(NS_FAILED(result) || !doc)
+  nsresult result = mDocViewer->GetPresShell(*getter_AddRefs(shell));//deref once cause it take a ptr ref
+  if(NS_FAILED(result) || !shell)
     return result?result:NS_ERROR_FAILURE;
-
-  PRInt8 selectionStatus;
-  selectionStatus = doc->GetDisplaySelection();
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(shell);
+  PRInt16 selectionStatus;
+  selCon->GetDisplaySelection(&selectionStatus);
  
-  //if selection was nsIDocument::SELECTION_OFF, do nothing
+  //if selection was nsISelectionController::SELECTION_OFF, do nothing
   //otherwise re-enable it.
-  if(selectionStatus == nsIDocument::SELECTION_ON)
+  if(selectionStatus == nsISelectionController::SELECTION_ON)
   {
-    doc->SetDisplaySelection(nsIDocument::SELECTION_DISABLED);
-
-    nsCOMPtr<nsIPresShell> ps;
-    result = mDocViewer->GetPresShell(*getter_AddRefs(ps));//deref once cause it take a ptr ref
-    if(NS_FAILED(result) || !ps)
-      return result?result:NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISelectionController> selcon;
-    selcon = do_QueryInterface(ps,&result);
-    if(NS_FAILED(result) || !selcon)
-      return result?result:NS_ERROR_FAILURE;
-    selcon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
+    selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
+    selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
   }
   return result;
 }

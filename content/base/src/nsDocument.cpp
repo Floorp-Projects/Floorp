@@ -3396,13 +3396,4 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
   return result;
 }
 
-void nsDocument::SetDisplaySelection(PRInt8 aToggle)
-{
-  mDisplaySelection = aToggle;
-}
-
-PRInt8 nsDocument::GetDisplaySelection() const
-{
-  return mDisplaySelection;
-}
 

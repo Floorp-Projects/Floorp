@@ -552,6 +552,8 @@ public:
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
 
+  NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
+  NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(SelectionType aType);
@@ -1110,7 +1112,7 @@ PresShell::Init(nsIDocument* aDocument,
       result = docShell->GetItemType(&docShellType);
       if (NS_SUCCEEDED(result)){
         if (nsIDocShellTreeItem::typeContent == docShellType){
-          mDocument->SetDisplaySelection(nsIDocument::SELECTION_ON);
+          SetDisplaySelection(nsISelectionController::SELECTION_ON);
         }
       }      
     }
@@ -1320,6 +1322,18 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetDisplaySelection(PRInt16 aToggle)
+{
+  return mSelection->SetDisplaySelection(aToggle);
+}
+
+NS_IMETHODIMP
+PresShell::GetDisplaySelection(PRInt16 *aToggle)
+{
+  return mSelection->GetDisplaySelection(aToggle);
 }
 
 NS_IMETHODIMP

@@ -579,15 +579,15 @@ NS_IMETHODIMP nsFrame::FirstChild(nsIPresContext* aPresContext,
 PRBool
 nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 {
-  PRBool result = PR_FALSE;
+  PRInt16 result = PR_FALSE;
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
-    nsCOMPtr<nsIDocument> doc;
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(rv) && doc) {
-      result = doc->GetDisplaySelection();
+    nsCOMPtr<nsISelectionController> selCon;
+    selCon = do_QueryInterface(shell, &rv);
+    if (NS_SUCCEEDED(rv) && selCon) {
+      selCon->GetDisplaySelection(&result);
 		  if (result) {
 				// check whether style allows selection
 		    const nsStyleUserInterface* userinterface;
@@ -606,7 +606,7 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 		    }
 		  }
       if (isOkToTurnOn && !result) {
-        doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
+        selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
         result = PR_TRUE;
       }
     }
@@ -658,22 +658,23 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_FAILED(result))
       return result;
 
-    PRBool displaySelection = PR_TRUE;
-    result = shell->GetDisplayNonTextSelection(&displaySelection);
+    PRBool displyNonTextSelection = PR_TRUE;
+    result = shell->GetDisplayNonTextSelection(&displyNonTextSelection);
     if (NS_FAILED(result))
       return result;
+    PRInt16 displaySelection = displyNonTextSelection;
     if (!displaySelection)
       return NS_OK;
     if (mContent) {
       result = mContent->GetDocument(*getter_AddRefs(doc));
     }
-    if (!doc || NS_FAILED(result)) {
-      if (NS_SUCCEEDED(result) && shell) {
-        result = shell->GetDocument(getter_AddRefs(doc));
-      }
-    }
 
-    displaySelection = doc->GetDisplaySelection();
+    nsCOMPtr<nsISelectionController> selCon;
+    selCon = do_QueryInterface(shell, &result);
+    if (NS_FAILED(result) || !selCon)
+      return result? result:NS_ERROR_FAILURE;
+
+    selCon->GetDisplaySelection(&displaySelection);
     nsFrameState  frameState;
     PRBool        isSelected;
     GetFrameState(&frameState);
