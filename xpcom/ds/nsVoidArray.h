@@ -271,7 +271,7 @@ public:
     return nsVoidArray::Count();
   }
 
-  void CStringAt(PRInt32 aIndex, nsCString& aCString) const;
+  void CStringAt(PRInt32 aIndex, nsACString& aCString) const;
   nsCString* CStringAt(PRInt32 aIndex) const;
   nsCString* operator[](PRInt32 aIndex) const { return CStringAt(aIndex); }
 
