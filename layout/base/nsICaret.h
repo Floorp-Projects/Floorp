@@ -76,6 +76,10 @@ public:
    *  This is called to tell the caret that that frame is going away.
    */
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
+  /** Erase Caret
+   *  this will erase the caret if its drawn and reset drawn status
+   */
+  NS_IMETHOD EraseCaret() = 0;
 
 };
 
