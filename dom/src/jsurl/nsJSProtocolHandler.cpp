@@ -401,9 +401,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 
     rv = compMgr->RegisterComponent(kJSProtocolHandlerCID,
                                     "JavaScript Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "mocha",
                                     aPath, PR_TRUE, PR_TRUE);
-
 
     return rv;
 }
