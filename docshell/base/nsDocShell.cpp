@@ -677,6 +677,14 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
    mChildren.AppendElement(aChild);
    NS_ADDREF(aChild);
 
+   PRInt32 childType = ~mItemType; // Set it to not us in case the get fails
+   aChild->GetItemType(&childType);
+   if(childType != mItemType)
+      return NS_OK;    
+   // Everything below here is only done when the child is the same type.
+
+   aChild->SetTreeOwner(mTreeOwner);
+
    nsCOMPtr<nsIDocShell> childAsDocShell(do_QueryInterface(aChild));
    if(!childAsDocShell)
       return NS_OK;
@@ -718,7 +726,8 @@ NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShellTreeItem *aChild)
 
    if(mChildren.RemoveElement(aChild))
       {
-      NS_ENSURE_SUCCESS(aChild->SetParent(nsnull), NS_ERROR_FAILURE);
+      aChild->SetParent(nsnull);
+      aChild->SetTreeOwner(nsnull);
       NS_RELEASE(aChild);
       }
    else
@@ -841,28 +850,10 @@ NS_IMETHODIMP nsDocShell::SetPosition(PRInt32 x, PRInt32 y)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetPosition(PRInt32* x, PRInt32* y)
+NS_IMETHODIMP nsDocShell::GetPosition(PRInt32* aX, PRInt32* aY)
 {
-   NS_ENSURE_ARG_POINTER(x && y);
-
-   if(mContentViewer)
-      {
-      nsRect bounds;
-
-      NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
-
-      *x = bounds.x;
-      *y = bounds.y;
-      }
-   else if(InitInfo())
-      {
-      *x = mInitInfo->x;
-      *y = mInitInfo->y;
-      }
-   else
-      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
-
-   return NS_OK;
+   PRInt32 dummyHolder;
+   return GetPositionAndSize(aX, aY, &dummyHolder, &dummyHolder);
 }
 
 NS_IMETHODIMP nsDocShell::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
@@ -890,28 +881,10 @@ NS_IMETHODIMP nsDocShell::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::GetSize(PRInt32* cx, PRInt32* cy)
+NS_IMETHODIMP nsDocShell::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   NS_ENSURE_ARG_POINTER(cx && cy);
-
-   if(mContentViewer)
-      {
-      nsRect   bounds;
-
-      NS_ENSURE_SUCCESS(mContentViewer->GetBounds(bounds), NS_ERROR_FAILURE);
-
-      *cx = bounds.width;
-      *cy = bounds.height;
-      }
-   else if(InitInfo())
-      {
-      *cx = mInitInfo->cx;
-      *cy = mInitInfo->cy;
-      }
-   else
-      NS_ENSURE_TRUE(PR_FALSE, NS_ERROR_FAILURE);
-
-   return NS_OK;
+   PRInt32 dummyHolder;
+   return GetPositionAndSize(&dummyHolder, &dummyHolder, aCX, aCY);
 }
 
 NS_IMETHODIMP nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
