@@ -25,6 +25,8 @@
 
 #include "nsIEventListenerManager.h"
 #include "jsapi.h"
+#include "nsCOMPtr.h"
+#include "nsIPrincipal.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -97,6 +99,9 @@ public:
 
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
 
+  virtual nsresult SetPrincipal(nsIPrincipal *aListenedToPrincipal);
+  virtual nsresult GetPrincipal(nsIPrincipal **aListenedToPrincipal);
+
   static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
 
 protected:
@@ -121,10 +126,11 @@ protected:
   nsVoidArray* mTextListeners;
   nsVoidArray* mCompositionListeners;
   nsVoidArray* mMenuListeners;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
-//Set of defines for distinguishing event hanlders within listener groupings
+//Set of defines for distinguishing event handlers within listener groupings
 //XXX Current usage allows no more than 7 types per listener grouping
 
 #define NS_EVENT_BITS_NONE    0x00

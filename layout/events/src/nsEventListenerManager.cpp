@@ -50,6 +50,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -235,6 +237,15 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
   NS_IF_RELEASE(sel);
 
   if (!found) {
+    // Check to see if we can add a new listener.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+    rv = securityManager->CheckCanListenTo(mPrincipal);
+    if (NS_FAILED(rv))
+      return rv;
     ls = PR_NEW(nsListenerStruct);
     if (ls) {
       ls->mListener = aListener;
@@ -1414,6 +1425,20 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   ReleaseListeners(&mCompositionListeners, aScriptOnly);
 
   return NS_OK;
+}
+
+nsresult nsEventListenerManager::GetPrincipal(nsIPrincipal **aListenedToPrincipal)
+{
+    *aListenedToPrincipal = mPrincipal;
+    if (*aListenedToPrincipal)
+        NS_ADDREF(*aListenedToPrincipal);
+    return NS_OK;
+}
+
+nsresult nsEventListenerManager::SetPrincipal(nsIPrincipal *aListenedToPrincipal)
+{
+    mPrincipal = aListenedToPrincipal;
+    return NS_OK;
 }
 
 NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult) 

@@ -147,6 +147,10 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
         *result = PR_TRUE;
         return NS_OK;
     }
+    if (other == nsnull) {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
     nsCOMPtr<nsICodebasePrincipal> otherCodebase;
     if (NS_FAILED(other->QueryInterface(
             NS_GET_IID(nsICodebasePrincipal),

@@ -35,6 +35,7 @@ DEPTH=..\..\..
 IDLSRCS= \
 	AppCoresManager.idl \
 	BaseAppCore.idl     \
+	BrowserAppCore.idl     \
 	ToolkitCore.idl
 !endif
 

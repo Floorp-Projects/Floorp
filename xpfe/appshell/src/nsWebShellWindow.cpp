@@ -68,6 +68,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // For JS Execution
 #include "nsIScriptContextOwner.h"
+#include "nsIJSContextStack.h"
 
 #include "nsIEventQueueService.h"
 #include "plevent.h"
@@ -1554,14 +1555,25 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     PRBool locked = PR_FALSE;
     nsresult looprv = NS_OK;
     newWindow->GetLockedState(locked);
-    while (NS_SUCCEEDED(looprv) && locked) {
-      void      *data;
-      PRBool    isRealEvent;
-    
-      looprv = subshell->GetNativeEvent(isRealEvent, data);
-      subshell->DispatchNativeEvent(isRealEvent, data);
 
-      newWindow->GetLockedState(locked);
+    // Push nsnull onto the JSContext stack before we dispatch a native event.
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &rv);
+    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(stack->Push(nsnull))) {
+
+      while (NS_SUCCEEDED(looprv) && locked) {
+        void      *data;
+        PRBool    isRealEvent;
+    
+        looprv = subshell->GetNativeEvent(isRealEvent, data);
+        subshell->DispatchNativeEvent(isRealEvent, data);
+
+        newWindow->GetLockedState(locked);
+      }
+
+      JSContext *cx;
+      stack->Pop(&cx);
+      NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
     }
 
     subshell->Spindown();
@@ -1737,17 +1749,28 @@ nsWebShellWindow::ShowModalInternal()
   window->SetModal(PR_TRUE);
   NS_ADDREF(window);
   mContinueModalLoop = PR_TRUE;
-  while (NS_SUCCEEDED(rv) && mContinueModalLoop) {
-    void      *data;
-    PRBool    isRealEvent,
-              processEvent;
 
-    rv = subshell->GetNativeEvent(isRealEvent, data);
-    if (NS_SUCCEEDED(rv)) {
-      window->ModalEventFilter(isRealEvent, data, &processEvent);
-      if (processEvent)
-        subshell->DispatchNativeEvent(isRealEvent, data);
+  // Push nsnull onto the JSContext stack before we dispatch a native event.
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                  &rv);
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(stack->Push(nsnull))) {
+
+    while (NS_SUCCEEDED(rv) && mContinueModalLoop) {
+      void      *data;
+      PRBool    isRealEvent,
+                processEvent;
+
+      rv = subshell->GetNativeEvent(isRealEvent, data);
+      if (NS_SUCCEEDED(rv)) {
+        window->ModalEventFilter(isRealEvent, data, &processEvent);
+        if (processEvent)
+          subshell->DispatchNativeEvent(isRealEvent, data);
+      }
     }
+
+    JSContext *cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
   }
 
   window->SetModal(PR_FALSE);

@@ -2334,9 +2334,9 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
   if (nsnull != mListenerManager) {
-    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
+    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);
   }
-  if (NS_OK == NS_NewEventListenerManager(aInstancePtrResult)) {
+  if (NS_OK == GetNewListenerManager(aInstancePtrResult)) {
     mListenerManager = *aInstancePtrResult;
     NS_ADDREF(mListenerManager);
     return NS_OK;
@@ -2346,7 +2346,15 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
 
 nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
-  return NS_NewEventListenerManager(aInstancePtrResult);
+  nsresult rv = NS_NewEventListenerManager(aInstancePtrResult);
+  if (NS_FAILED(rv))
+    return rv;
+  nsIPrincipal *principal = GetDocumentPrincipal();
+  if (principal) {
+    (*aInstancePtrResult)->SetPrincipal(principal);
+    NS_RELEASE(principal);
+  }
+  return NS_OK;
 } 
 
 nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, 
