@@ -19,6 +19,7 @@
  * Created: Jamie Zawinski <jwz@netscape.com>, 28 Aug 1997.
  *
  * Contributors: Edwin Woudt <edwin@woudt.nl>
+ *               harning@cbs.dk
  */
 
 package grendel.mime.encoder;
@@ -98,9 +99,9 @@ public final class MimeBase64Encoder extends MimeEncoder {
       if (buf_bytes == 0)
         buf = (buf & 0x00FFFF) | (inb[i] << 16);
       else if (buf_bytes == 1)
-        buf = (buf & 0xFF00FF) | (inb[i] << 8);
+        buf = (buf & 0xFF00FF) | ((inb[i] << 8) & 0x00FF00);
       else
-        buf = (buf & 0xFFFF00) | (inb[i]);
+        buf = (buf & 0xFFFF00) | ((inb[i]) & 0x0000FF);
 
       if ((++buf_bytes) == 3) {
         encode_token();
