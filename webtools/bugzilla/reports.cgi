@@ -133,7 +133,11 @@ $product_popup
 <td align=center>
 <select name="output">
 <option value="most_doomed">Bug Counts
-<option value="most_doomed_for_milestone">Most Doomed
+FIN
+        if (Param('usetargetmilestone')) {
+            print "<option value=\"most_doomed_for_milestone\">Most Doomed";
+            }
+	print <<FIN;
 $charts
 </select>
 <tr>
@@ -572,7 +576,7 @@ FIN
         my $bugtotal = 0;
         foreach $person (@people)
                 {
-                SendSQL ("select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\";");
+                SendSQL ("select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"");
 	        my $bugcount = FetchSQLData();
                 $bugsperperson{$person} = $bugcount;
                 $bugtotal += $bugcount;
@@ -594,7 +598,7 @@ FIN
                 {
                 $person = pop @people;
                 print "<TR><TD>\n";
-                SendSQL("select login_name from profiles where userid=$person;");
+                SendSQL("select login_name from profiles where userid=$person");
                 my $login_name= FetchSQLData();
                 print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=M9&assigned_to=$login_name\">\n");
                 print("$bugsperperson{$person}  bugs and features");
@@ -607,7 +611,7 @@ FIN
 
                 $person = pop @people;
                 if ($person) {
-                    SendSQL("select login_name from profiles where userid=$person;");
+                    SendSQL("select login_name from profiles where userid=$person");
                     my $login_name= FetchSQLData();
                     print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=M9&assigned_to=$login_name\">\n");
                     print("$bugsperperson{$person}  bugs and features");
