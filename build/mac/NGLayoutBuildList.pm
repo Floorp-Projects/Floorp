@@ -409,6 +409,7 @@ sub BuildClientDist()
 
 	#PROFILE
     _InstallFromManifest(":mozilla:profile:public:MANIFEST",							"$distdirectory:profile:");
+    _InstallFromManifest(":mozilla:profile:idlservices:MANIFEST",								"$distdirectory:idl:");
 
 	#LIBIMAGE
     _InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",						"$distdirectory:libimg:");
@@ -767,6 +768,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 							"dom");
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
+	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp",				"profileservices");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:xpinstall:macbuild:xpinstallIDL.mcp",            		"xpinstall");
@@ -778,7 +780,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
-
+	
 	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
 	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
 	BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
@@ -945,6 +947,7 @@ sub BuildCommonProjects()
 	}
 
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:profile:macbuild:profileservices.mcp",					"profileservices$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
