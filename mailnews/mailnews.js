@@ -213,7 +213,7 @@ pref("mailnews.wraplength",                 72);
 pref("mailnews.nicknames_only",             false);
 pref("mailnews.nav_crosses_folders",        1); // 0=do it, don't prompt 1=prompt, 2=don't do it, don't prompt
 
-pref("mailnews.reply_on_top",               1); // 0=bottom 1=top 2=select+bottom 3=select+top
+pref("mailnews.reply_on_top",               0); // 0=bottom 1=top 2=select+bottom 3=select+top
 pref("mailnews.reply_with_extra_lines",     2);
 
 pref("mailnews.force_ascii_search",         true);

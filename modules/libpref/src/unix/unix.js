@@ -40,7 +40,6 @@ pref("browser.installcmap", false);
 pref("mail.signature_file", "~/.signature");
 pref("mail.default_fcc", "~/nsmail/Sent");
 pref("news.default_fcc", "~/nsmail/Sent");
-pref("mailnews.reply_on_top", 0);
 pref("mailnews.reply_with_extra_lines", 0);
 pref("browser.startup.default_window", 0);
 pref("security.warn_accept_cookie", false);
