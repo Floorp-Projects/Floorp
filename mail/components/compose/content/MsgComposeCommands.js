@@ -2315,7 +2315,19 @@ function AddAttachment(attachment)
       item.setAttribute("tooltiptext", attachment.url);
     }
     item.setAttribute("class", "listitem-iconic");
-    item.setAttribute("image", "moz-icon:" + attachment.url);
+
+    var url = gIOService.newURI(attachment.url, null, null);
+    url = url.QueryInterface( Components.interfaces.nsIURL );
+    
+    // for local file urls, we are better off using the full file url because moz-icon will
+    // actually resolve the file url and get the right icon from the file url. All other urls, we should
+    // try to extract the file name from them. This fixes issues were an icon wasn't showing up if you dragged
+    // a web url that had a query or reference string after the file name and for mailnews urls were the filename
+    // is hidden in the url as a &filename= part.
+    if (url.fileName && !url.schemeIs("file")) 
+      item.setAttribute("image", "moz-icon://" + url.fileName);
+    else      
+      item.setAttribute("image", "moz-icon:" + attachment.url);
     bucket.appendChild(item);
   }
 }
