@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.10 2001/06/19 05:29:55 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.11 2001/06/19 05:34:47 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -72,10 +72,10 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 #define PIP_PKCS12_USER_CANCELED 3
 
 // constructor
-nsPKCS12Blob::nsPKCS12Blob():mTmpFile(nsnull),
+nsPKCS12Blob::nsPKCS12Blob():mCertArray(0),
+                             mTmpFile(nsnull),
                              mTmpFilePath(nsnull),
-                             mTokenSet(PR_FALSE),
-                             mCertArray(0)
+                             mTokenSet(PR_FALSE)
 {
   mUIContext = new PipUIContext();
 }
