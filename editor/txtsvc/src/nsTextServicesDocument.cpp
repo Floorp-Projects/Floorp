@@ -3677,7 +3677,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
     if (!found)
     {
-      if (entry->mNode == p1 &&
+      if (entry->mNode == p1.get() &&
           entry->mNodeOffset <= o1 && o1 <= (entry->mNodeOffset + entry->mLength))
       {
         *aSelOffset = entry->mStrOffset + (o1 - entry->mNodeOffset);
@@ -3704,7 +3704,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
     }
     else // found
     {
-      if (entry->mNode == p2 &&
+      if (entry->mNode == p2.get() &&
           entry->mNodeOffset <= o2 && o2 <= (entry->mNodeOffset + entry->mLength))
       {
         // We found the end of the range. Calculate the length of the
