@@ -1886,8 +1886,9 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb);
   PrepareUnicodeText(tx,
-                                             ip,
-                                             paintBuf, textLength, width);
+                     ip,
+                     paintBuf, textLength, width);
+  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   if (inOffset > mContentLength){
     NS_ASSERTION(0, "invalid offset passed to GetPointFromOffset");
     inOffset = mContentLength;
@@ -1918,7 +1919,7 @@ TextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFr
   if (contentOffset != -1) //-1 signified the end of the current content
     contentOffset = inContentOffset - mContentOffset;
 
-  if (contentOffset >= mContentLength)
+  if (contentOffset > mContentLength)
   {
     //this is not the frame we are looking for.
     nsIFrame *nextInFlow = GetNextInFlow();

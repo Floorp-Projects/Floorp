@@ -1514,7 +1514,7 @@ nsFrame::SetSelected(nsSelectionStruct *aSelStruct)
     nsRect    rect;
     GetRect(rect);
     ForceDrawFrame(this);//invalidate does not work in all cases.
-    //Invalidate(rect,PR_FALSE); //false is for not immediate
+    //Invalidate(rect,PR_TRUE); //false is for not immediate
   }
   return NS_OK;
 }
