@@ -25,7 +25,7 @@
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
 
-#include "nsFileSpec.h"
+#include "nsIFileSpec.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -383,8 +383,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetFileLocation(
-      PRUint32 aType, // NOTE: actually nsSpecialFileSpec:Type, see nsFileLocations.h
-      nsFileSpec* outSpec);
+      PRUint32 aType,
+      	// NOTE: actually either nsSpecialFileSpec:Type, see nsFileLocations.h
+      	// or nsSpecialSystemDirectory::SystemDirectories, see nsSpecialSystemDirectory.h
+      nsIFileSpec** outSpec);
 
   NS_IMETHOD ForgetProfileDir();
 
@@ -412,12 +414,13 @@ NS_IMPL_ISUPPORTS(nsFileLocator, kIFileLocatorIID);
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileLocator::GetFileLocation(
       PRUint32 aType,
-      nsFileSpec* outSpec)
+      nsIFileSpec** outSpec)
 //----------------------------------------------------------------------------------------
 {
     if (!outSpec)
         return NS_ERROR_NULL_POINTER;
 
+   nsFileSpec spec;
    if (aType < nsSpecialFileSpec::App_DirectoryBase)
    {
        *(nsSpecialSystemDirectory*)outSpec
@@ -425,7 +428,7 @@ NS_IMETHODIMP nsFileLocator::GetFileLocation(
        return NS_OK;
    }
    *(nsSpecialFileSpec*)outSpec = (nsSpecialFileSpec::Type)aType;
-   return NS_OK;
+   return NS_NewFileSpecWithSpec(spec, outSpec);
 }
 
 //----------------------------------------------------------------------------------------
