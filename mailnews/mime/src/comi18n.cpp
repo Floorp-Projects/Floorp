@@ -1477,23 +1477,26 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
   // If no MIME encoded then do nothing otherwise decode the input.
   if (*header != '\0' && intlmime_is_mime_part2_header(header)) {
 	  result = intl_decode_mime_part2_str(header, charset);
-	  if (eatContinuations)
-		  result = MIME_StripContinuations(result);
   }
-  else if (*charset == '\0') {
-    // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
-    // and dup the input (later change the caller to avoid the duplication)
-    unsigned char *cp = (unsigned char *) header;
-    PL_strcpy(charset, "us-ascii");
-    while (*cp) {
-      if (*cp > 127) {
-        PL_strcpy(charset, "ISO-8859-1");
-        break;
+  else
+  {
+    if (*charset == '\0') {
+      // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
+      // and dup the input (later change the caller to avoid the duplication)
+      unsigned char *cp = (unsigned char *) header;
+      PL_strcpy(charset, "us-ascii");
+      while (*cp) {
+        if (*cp > 127) {
+          PL_strcpy(charset, "ISO-8859-1");
+          break;
+        }
+        cp++;
       }
-      cp++;
     }
-    return nsCRT::strdup(header); 
+    result = nsCRT::strdup(header);
   }
+  if (eatContinuations)
+    result = MIME_StripContinuations(result);
 
   return result;
 }

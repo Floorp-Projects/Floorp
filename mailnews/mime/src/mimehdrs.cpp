@@ -850,7 +850,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
 HG99401
 #endif /* MOZ_SECURITY */
 
-/* Strip CR+LF+<whitespace> runs within (original).
+/* Strip CR+LF runs within (original).
    Since the string at (original) can only shrink,
    this conversion is done in place. (original)
    is returned. */
@@ -867,22 +867,13 @@ MIME_StripContinuations(char *original)
 
 	while(*p2)
 	{
-		/* p2 runs ahead at (CR and/or LF) + <space> */
+		/* p2 runs ahead at (CR and/or LF) */
 		if ((p2[0] == CR) || (p2[0] == LF))
 		{
-			/* move past (CR and/or LF) + whitespace following */	
-			do
-			{
-				p2++;
-			}
-			while((*p2 == CR) || (*p2 == LF) || nsCRT::IsAsciiSpace(*p2));
-
-			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
-		}
-
-		/* Copy the next non-linebreaking char */
-		*p1 = *p2;
-		p1++; p2++;
+            p2++;
+		} else {
+            *p1++ = *p2++;
+        }
 	}
 	*p1 = '\0';
 
