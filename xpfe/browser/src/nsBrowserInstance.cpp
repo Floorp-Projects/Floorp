@@ -74,7 +74,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsFileSpec.h"  // needed for nsAutoCString
 
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
@@ -1254,7 +1253,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to Content WebShell [%s]\n", (const char *)nsAutoCString(str));
+      printf("Attaching to Content WebShell [%s]\n", (const char *)nsCAutoString(str));
     }
   }
 
@@ -1291,7 +1290,7 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
     nsAutoString str(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to WebShellWindow[%s]\n", (const char *)nsAutoCString(str));
+      printf("Attaching to WebShellWindow[%s]\n", (const char *)nsCAutoString(str));
     }
 
     nsIWebShellContainer * webShellContainer;
@@ -2118,7 +2117,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
     PRBool isUndefined = PR_FALSE;
     nsString rVal;
     if (APP_DEBUG) {
-      printf("Executing [%s]\n", (const char *)nsAutoCString(aScript));
+      printf("Executing [%s]\n", (const char *)nsCAutoString(aScript));
     }
     aContext->EvaluateString(aScript, url, 0, nsnull, rVal, &isUndefined);
   } 
