@@ -2863,10 +2863,16 @@ extern int SI_LoadSignonData(PRBool fullLoad);
 PUBLIC
 void WLLT_ChangePassword() {
 
-  /* do nothing if password was never set */
   if (Wallet_KeySize() < 0) {
-    PRUnichar * message = Wallet_Localize("noPasswordToChange");
-    Wallet_Alert(message);
+
+    /* have user create database key if one was never created */
+    PRUnichar * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    while (!Wallet_SetKey(PR_FALSE)) {
+      if (Wallet_CancelKey() || (Wallet_KeySize() < 0) || !Wallet_Confirm(message)) {
+        Recycle(message);
+        return;
+      }
+    }
     Recycle(message);
     return;
   }
