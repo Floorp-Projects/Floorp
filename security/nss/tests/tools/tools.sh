@@ -151,22 +151,40 @@ liz@moz.org
 SIGNSCRIPT
   html_msg $? 0 "Create objsign cert (signtool -G)"
 
-  echo "$SCRIPTNAME: Signing a set of files ----------------------------"
+  echo "$SCRIPTNAME: Signing a jar of files ----------------------------"
   echo "signtool -Z nojs.jar -d ${P_R_ALICEDIR} -p \"nss\" -k objsigner \\"
   echo "         ${R_TOOLSDIR}/html"
   signtool -Z nojs.jar -d ${P_R_ALICEDIR} -p "nss" -k objsigner \
            ${R_TOOLSDIR}/html
-  html_msg $? 0 "Signing a set of files (signtool -Z)"
+  html_msg $? 0 "Signing a jar of files (signtool -Z)"
 
   echo "$SCRIPTNAME: Listing signed files in jar ----------------------"
   echo "signtool -v nojs.jar -d ${P_R_ALICEDIR} -p nss -k objsigner"
   signtool -v nojs.jar -d ${P_R_ALICEDIR} -p nss -k objsigner
   html_msg $? 0 "Listing signed files in jar (signtool -v)"
-  
+
   echo "$SCRIPTNAME: Show who signed jar ------------------------------"
   echo "signtool -w nojs.jar -d ${P_R_ALICEDIR}"
   signtool -w nojs.jar -d ${P_R_ALICEDIR}
   html_msg $? 0 "Show who signed jar (signtool -w)"
+
+  echo "$SCRIPTNAME: Signing a xpi of files ----------------------------"
+  echo "signtool -Z nojs.xpi -X -d ${P_R_ALICEDIR} -p \"nss\" -k objsigner \\"
+  echo "         ${R_TOOLSDIR}/html"
+  signtool -Z nojs.xpi -X -d ${P_R_ALICEDIR} -p "nss" -k objsigner \
+           ${R_TOOLSDIR}/html
+  html_msg $? 0 "Signing a xpi of files (signtool -Z -X)"
+
+  echo "$SCRIPTNAME: Listing signed files in xpi ----------------------"
+  echo "signtool -v nojs.xpi -d ${P_R_ALICEDIR} -p nss -k objsigner"
+  signtool -v nojs.xpi -d ${P_R_ALICEDIR} -p nss -k objsigner
+  html_msg $? 0 "Listing signed files in xpi (signtool -v)"
+
+  echo "$SCRIPTNAME: Show who signed xpi ------------------------------"
+  echo "signtool -w nojs.xpi -d ${P_R_ALICEDIR}"
+  signtool -w nojs.xpi -d ${P_R_ALICEDIR}
+  html_msg $? 0 "Show who signed xpi (signtool -w)"
+
 }
 
 ############################## tools_cleanup ###########################

@@ -67,6 +67,7 @@ JzipOpen(char *filename, char *comment)
 					(prtime.tm_min<<5)     |
 					(prtime.tm_sec&0x3f);
 
+	zipfile->fp = NULL;
 	if (filename  &&
 		(zipfile->fp = PR_Open(filename,
 		  PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 0777)) == NULL) {
@@ -174,6 +175,8 @@ JzipAdd(char *fullname, char *filename, ZIPfile *zipfile, int compression_level)
 	}
 
 	zipfp = zipfile->fp;
+	if (!zipfp)
+		return -1;
 
 
 	if( (readfp = PR_Open(fullname, PR_RDONLY, 0777)) == NULL) {
