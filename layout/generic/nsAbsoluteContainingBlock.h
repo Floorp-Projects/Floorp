@@ -82,7 +82,13 @@ public:
                        nsIPresShell&   aPresShell,
                        nsIAtom*        aListName,
                        nsIFrame*       aOldFrame);
-  
+  nsresult ReplaceFrame(nsIFrame*       aDelegatingFrame,
+                        nsIPresContext* aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aOldFrame,
+                        nsIFrame*       aNewFrame);
+
   // Called by the delegating frame after it has done its reflow first. This
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has

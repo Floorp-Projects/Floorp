@@ -224,6 +224,11 @@ public:
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+                          nsIPresShell& aPresShell,
+                          nsIAtom* aListName,
+                          nsIFrame* aOldFrame,
+                          nsIFrame* aNewFrame);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;

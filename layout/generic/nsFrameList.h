@@ -100,14 +100,11 @@ public:
     aFrameList.mFirstChild = nsnull;
   }
 
-  PRBool ReplaceFrame(nsIFrame* aParent,
+  PRBool ReplaceFrame(nsIPresContext* aPresContext,
+                      nsIFrame* aParent,
                       nsIFrame* aOldFrame,
-                      nsIFrame* aNewFrame);
-
-  PRBool ReplaceAndDestroyFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParent,
-                                nsIFrame* aOldFrame,
-                                nsIFrame* aNewFrame);
+                      nsIFrame* aNewFrame,
+                      PRBool aDestroy);
 
   PRBool Split(nsIFrame* aAfterFrame, nsIFrame** aNextFrameResult);
 
@@ -155,6 +152,11 @@ public:
   void List(nsIPresContext* aPresContext, FILE* out) const;
 #endif
 
+private:
+  PRBool DoReplaceFrame(nsIFrame* aParent,
+                        nsIFrame* aOldFrame,
+                        nsIFrame* aNewFrame);
+  
 protected:
   nsIFrame* mFirstChild;
 };
