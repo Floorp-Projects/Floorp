@@ -258,12 +258,19 @@
     if (!url)
       return false;
     url = getShortcutOrURI(url);
-    if (!url)
-      return false;
 
     // On ctrl-middleclick, open in new window or tab.  Do not send referrer.
-    if (event.ctrlKey)
+    if (event.ctrlKey) {
+      // fix up our pasted URI in case it is malformed.
+      const nsIURIFixup = Components.interfaces.nsIURIFixup;
+      if (!gURIFixup)
+        gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                              .getService(nsIURIFixup);
+
+      url = gURIFixup.createFixupURI(url, nsIURIFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI).spec;
+
       return openNewTabOrWindow(event, url, false);
+    }
 
     // If ctrl wasn't down, then just load the url in the current win/tab.
     if (url != "about:blank") {
