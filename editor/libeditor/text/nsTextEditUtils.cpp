@@ -52,20 +52,24 @@
 ///////////////////////////////////////////////////////////////////////////
 // IsBody: true if node an html body node
 //                  
+// Would use NodeIsType and the corresponding atom, but
+// the atom list isn't generationed in a plaintext-only
+// configured build.
 PRBool 
 nsTextEditUtils::IsBody(nsIDOMNode *node)
 {
-  return nsEditor::NodeIsType(node, nsEditProperty::body);
+  return nsEditor::NodeIsTypeString(node, NS_LITERAL_STRING("body"));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // IsBreak: true if node an html break node
 //                  
+// See previous comment regarding NodeisType
 PRBool 
 nsTextEditUtils::IsBreak(nsIDOMNode *node)
 {
-  return nsEditor::NodeIsType(node, nsEditProperty::br);
+  return nsEditor::NodeIsTypeString(node, NS_LITERAL_STRING("br"));
 }
 
 
