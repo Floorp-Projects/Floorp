@@ -27,6 +27,11 @@
 }
 
 div.title {
+  font: 6mm tahoma,arial,helvetica,sans-serif;
+  margin: 2px;
+}
+
+div.subtitle {
   font: 4mm tahoma,arial,helvetica,sans-serif;
   margin: 2px;
 }
@@ -62,3 +67,7 @@ titledbutton.down[disabled="true"] {
   list-style-image:url(chrome://sidebar/skin/list-down-dis.gif);
 }
 
+tree#other-panels {
+  width:  15em;
+  height: 15em;
+}
