@@ -280,9 +280,9 @@
           
 # If we're not a browser, use the external protocol service to load the URI.
 #ifndef MOZ_PHOENIX
-        var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                            .createInstance(Components.interfaces.nsIURI);
-        uri.spec = this.getAttribute("href");
+        var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService)
+                            .newURI(this.getAttribute("href"), null, null);
 
         var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                                     .getService(Components.interfaces.nsIExternalProtocolService);

@@ -301,9 +301,9 @@ function showFolder()
     // if nsILocalFile::Reveal failed (ie it currently just returns an
     // error on unix), send the directory to the system file: handler
 
-    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-      .createInstance(Components.interfaces.nsIURI);
-    uri.spec = "file:///" + folder.path;
+    var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService)
+                        .newFileURI(folder);
 
     var protocolSvc = Components.classes
       ["@mozilla.org/uriloader/external-protocol-service;1"]

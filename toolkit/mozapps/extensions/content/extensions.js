@@ -94,9 +94,9 @@ function openURL(aURL)
 {
 # If we're not a browser, use the external protocol service to load the URI.
 #ifndef MOZ_PHOENIX
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                      .createInstance(Components.interfaces.nsIURI);
-  uri.spec = aURL;
+  var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService)
+                      .newURI(aURL, null, null);
 
   var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
                               .getService(Components.interfaces.nsIExternalProtocolService);
@@ -637,9 +637,11 @@ var gExtensionsDNDObserver =
       var data = { }, length = { };
       xfer.getTransferData("text/x-moz-url", data, length);
       var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data.split("\n")[0];
-      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI);
-      uri.spec = fileURL;
+
+      var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService)
+                          .newURI(fileURL, null, null);
+
       var url = uri.QueryInterface(Components.interfaces.nsIURL);
       if (url.fileExtension == "xpi") {
         xpinstallObj[url.fileName] = fileURL;
