@@ -93,6 +93,7 @@ public:
   NS_DECL_ISUPPORTS
   
   // nsIMessenger
+  NS_IMETHOD GetTransactionManager(nsITransactionManager * *aTxnMgr);
   NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
@@ -825,4 +826,16 @@ nsMessenger::Redo()
       mTxnMgr->Redo();
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
+{
+  if (!mTxnMgr || !aTxnMgr)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTxnMgr = mTxnMgr;
+  NS_ADDREF(*aTxnMgr);
+
+  return NS_OK;
 }
