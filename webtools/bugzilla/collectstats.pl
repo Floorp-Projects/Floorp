@@ -103,7 +103,7 @@ CollectSeriesData();
     my $headers_done = 0;
     while (<CGI>) {
         print RDF if $headers_done;
-        $headers_done = 1 if $_ eq "\n";
+        $headers_done = 1 if $_ eq "\r\n";
     }
     close CGI;
     close RDF;
