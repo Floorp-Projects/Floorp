@@ -2698,69 +2698,49 @@ nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIBox* aChild)
   PRUint32 ord;
   aChild->GetOrdinal(aState, ord);
   
-  PRUint32 ordCmp;
-  nsIFrame *firstChild = mFrames.FirstChild();
-  nsIBox* box = firstChild;
-  nsIBox* newPrevSib = firstChild;
-  
-  box->GetOrdinal(aState, ordCmp);
-  if (ord < ordCmp) {
-    // new ordinal is lower than the lowest current ordinal, so it will not
-    // have a previous sibling
-    newPrevSib = nsnull;
-  } else {  
-    // search for the box after which we will insert this box
-    while (box) {
-      box->GetOrdinal(aState, ordCmp);
-      if (newPrevSib && ordCmp > ord)
-        break;
-      
-      newPrevSib = box;
-      box->GetNextBox(&box);
-    }
+  nsIFrame *child = mFrames.FirstChild();
+  nsIFrame *curPrevSib = nsnull, *newPrevSib = nsnull;
+  PRBool foundPrevSib = PR_FALSE, foundNewPrevSib = PR_FALSE;
+
+  while (child) {
+    if (child == aChild)
+      foundPrevSib = PR_TRUE;
+    else if (!foundPrevSib)
+      curPrevSib = child;
+
+    PRUint32 ordCmp;
+    child->GetOrdinal(aState, ordCmp);
+    if (ord < ordCmp)
+      foundNewPrevSib = PR_TRUE;
+    else if (!foundNewPrevSib)
+      newPrevSib = child;
+
+    child->GetNextBox(&child);
   }
-    
-  // look for the previous sibling of |aChild|
-  nsIBox* oldPrevSib = firstChild;
-  while (oldPrevSib) {
-    nsIBox* me;
-    oldPrevSib->GetNextBox(&me);
-    if (aChild == me) {
-      break;
-    }
-    oldPrevSib = me;
+
+  NS_ASSERTION(foundPrevSib, "aChild not in frame list?");
+
+  if (curPrevSib == newPrevSib) {
+    // This box is not moving.
+    return NS_OK;
   }
-  
-  // if we are moving |mFirstChild|, we'll have to update the |mFirstChild| 
-  // value later on
-  PRBool firstChildMoved = PR_FALSE;
-  if (aChild == firstChild)
-    firstChildMoved = PR_TRUE;
+
+  // Take aChild out of its old position in the child list.
+  if (curPrevSib)
+    curPrevSib->SetNextSibling(aChild->GetNextSibling());
 
   nsIBox* newNextSib;
   if (newPrevSib) {
     // insert |aChild| between |newPrevSib| and its next sibling
-    newPrevSib->GetNextBox(&newNextSib);
-    newPrevSib->SetNextBox(aChild);
+    newNextSib = newPrevSib->GetNextSibling();
+    newPrevSib->SetNextSibling(aChild);
   } else {
     // no |newPrevSib| found, so this box will become |mFirstChild|
-    newNextSib = firstChild;
-    firstChild = aChild;
+    newNextSib = mFrames.FirstChild();
+    mFrames.SetFrames(aChild);
   }
-  
-  // link up our new next sibling
-  nsIBox* oldNextSib;
-  aChild->GetNextBox(&oldNextSib);
-  aChild->SetNextBox(newNextSib);
 
-  // link |oldPrevSib| with |oldNextSib| to fill the gap left behind
-  if (oldPrevSib)
-    oldPrevSib->SetNextBox(oldNextSib);
-  
-  if (firstChildMoved)
-    firstChild = oldNextSib;
-
-  mFrames.SetFrames(firstChild);
+  aChild->SetNextSibling(newNextSib);
 
   return NS_OK;
 }
