@@ -65,7 +65,6 @@ TweakTimestamps();
 ChangeMOTD();
 EditEmailMessage();
 RebuildHook();
-RebuildTags();
 RebuildHistory();
 ChangePasswd();
 
@@ -207,30 +206,6 @@ usually only need to do this to populate a new Bonsai branch.
 <INPUT NAME=startfrom VALUE=\"$lg_timestamp\">
 <br>
 <INPUT TYPE=SUBMIT VALUE=\"Rebuild the hook\">
-</FORM>
-<hr>
-
-);
-}
-
-
-sub RebuildTags {
-     print qq(
-
-<FORM method=get action=\"rebuildtaginfo.cgi\">
-<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
-<B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
-<INPUT TYPE=HIDDEN NAME=command VALUE=rebuildtaginfo>
-Recreate the entire table of tags for the $::TreeInfo{$::TreeID}{repository}
-repository from scratch.
-<p>
-<font color=red size=+2>This can take a very, very long time.</font>  You
-should
-usually only need to do this when first introducing an entire CVS repository
-into Bonsai.  (And, in fact, nothing right now ever even uses that info, so
-don't bother unless you know what you're doing.)
-<br>
-<INPUT TYPE=SUBMIT VALUE=\"Rebuild tag information\">
 </FORM>
 <hr>
 
