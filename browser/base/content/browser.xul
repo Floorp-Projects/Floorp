@@ -390,7 +390,6 @@
                  autocompletepopup="PopupAutoComplete"
                  autocompletesearch="form-history"
                  tabscrolling="true"
-                 ontextentered="return this.onTextEntered(param);"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
