@@ -838,13 +838,19 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags,
                                              nsEventStatus &aStatus)
 {
+PRInt32						offX,offY;
+nsIWidget 				*win;
+nsIDeviceContext  *dx;
+float							p2t;
+
+
+
   switch (aEvent->message)
   {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
-      nsIWidget *win;
       GetWidget(win);
 
       if (nsnull != win) 
@@ -887,7 +893,6 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
         case NS_VK_DOWN : 
         case NS_VK_UP   : {
           nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
-          nsIWidget     *win;
           mVScrollBarView->GetWidget(win);
 
           if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv))
@@ -916,26 +921,38 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
     case NS_MOUSE_MOVE:
     {
-      nsRect  trect;
+      nsRect  brect;
       nscoord lx, ly;
 
-      GetBounds(trect);
-
-      lx = aEvent->point.x - trect.x;
-      ly = aEvent->point.y - trect.y;
+      GetWidget(win);
+		
+      GetBounds(brect);
+      
+      // get the offset for this view, since we are not 0,0 based on the mac
+      
+      mViewManager->GetDeviceContext(dx);
+      dx->GetDevUnitsToAppUnits(p2t);
+      offX = offY = 0;
+      win->ConvertToDeviceCoordinates(offX,offY);
+      offX = NSIntPixelsToTwips(offX, p2t);
+      offY = NSIntPixelsToTwips(offY, p2t);
+			
+			
+      lx = aEvent->point.x - (brect.x+offX);
+      ly = aEvent->point.y - (brect.y+offY);
 
       //nscoord         xoff, yoff;
       //GetScrolledView()->GetScrollOffset(&xoff, &yoff);
       //printf("%d %d   %d\n", trect.y, trect.height, yoff);
       //printf("mouse %d %d \n", aEvent->point.x, aEvent->point.y);
 
-      if (!trect.Contains(lx, ly))
+      if (!brect.Contains(lx, ly))
       {
         if (mScrollingTimer == nsnull)
         {
           if (nsnull != mClientData)
           {
-            if (ly < 0 || ly > trect.y)
+            if (ly < 0 || ly > brect.y)
             {
               mScrollingDelta = ly < 0 ? -100 : 100;
               NS_NewTimer(&mScrollingTimer);
@@ -968,8 +985,16 @@ NS_IMETHODIMP nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
 
       GetBounds(trect);
 
-      lx = aEvent->point.x - trect.x;
-      ly = aEvent->point.y - trect.y;
+      GetWidget(win);
+      mViewManager->GetDeviceContext(dx);
+      dx->GetDevUnitsToAppUnits(p2t);
+      offX = offY = 0;
+      win->ConvertToDeviceCoordinates(offX,offY);
+      offX = NSIntPixelsToTwips(offX, p2t);
+      offY = NSIntPixelsToTwips(offY, p2t);
+
+      lx = aEvent->point.x - (trect.x+offX);
+      ly = aEvent->point.y - (trect.y+offY);
 
       if (!trect.Contains(lx, ly))
       {
