@@ -140,7 +140,14 @@ function onLoad() {
     else
         wizardManager.LoadPage("accounttype", false);
     
-    gDefaultAccount = accountm.defaultAccount;
+    try {
+      gDefaultAccount = accountm.defaultAccount;
+    }
+    catch (ex) {
+      // no default account, this is expected the first time you launch mail
+      // on a new profile
+      gDefaultAccount = null;
+    }
 }
 
     
