@@ -10,7 +10,9 @@
 
 <a NAME="cert_dialog_help_first"></a>
 <h1>Certificate Information and Decisions</h1>
-<p><b>[intro text]</b></p>
+<p>This section describes how to use various windows displayed at different times by Certificate Manager. The additional information given here appears when you click the Help button in one of those windows. </P></A>
+
+</p>
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -26,58 +28,57 @@
 </tr>
 </table>
 
-<p><b>[text to come</b>
 
 <p>&nbsp;</p>
 <a NAME="Certificate_Details"></a>
 <h2>Certificate Details</h2>
 
 
-<p>The Certificate Details window displays information about the certificate you selected in one of the Certificate Manager tabs. You can also click <b>[what? where?]</b> to see a complete text version of the certificate (normally of interest to IS professionals only).</P>
+<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. 
 
-<p>The Certificate Details window shows the following information about the selected certificate: </P>
+<p>The top panel of the Certificate Details window displays the certificate chain, with the certificate you originally selected at the bottom. A certificate chain is a hierarchical series of certificates signed by successive certificate authorities. A CA certificate identifies a <a href="glossary.html#1020903">certificate authority (CA)</a> and is used to sign certificates issued by that authority. A CA certificate can in turn be signed by the CA certificate of a parent CA and so on up to a <a href="glossary.html#1015631">root CA</a>. 
+
+<p>To examine information for any certificate in the certificate chain, click the its name in the top panel. The corresponding information is displayed in the bottom panel.
+
+
+The bottom panel shows the following information about the selected certificate: </P>
 
 <ul><LI>Whether the certificate has been verified, and if so for what uses. See <a href="glossary.html#certificate verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following: </LI>
 
 <ul>
-<LI><B>SSL Client.</B> Certificate used to identify you to web sites.</LI>
+<LI><B>SSL Client Certificate.</B> Certificate used to identify you to web sites.</LI>
 
-<LI><B>SSL Server.</B> Certificate used to identify a web site server to browsers.</LI>
+<LI><B>SSL Server Certificate.</B> Certificate used to identify a web site server to browsers.</LI>
 
-<LI><B>Email Signer.</B> Certificate used to identify you for the purposes of digitally signing email messages.</LI>
+<LI><B>Email Signer Certificate.</B> Certificate used to identify you for the purposes of digitally signing email messages.</LI>
 
-<LI><B>Email Recipient.</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI>
+<LI><B>Email Recipient Certificate.</B> Certificate used to identify someone else, for example so you can send that person encrypted email.</LI>
 
-<LI><B>Status Responder.</B> Certificate used to identify an on-line status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
+<LI><B>Status Responder Certificate.</B> Certificate used to identify an on-line status responder that uses the Online Certificate Status Protocol (OCSP) to check the validity of certificates. For more information about OCSP, see <a href="validation_help.html">Validation Settings</a>.</LI>
 
-<LI><B>Certificate Authority.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI></ul>
+<LI><B>Certificate Authority Certificate.</B> Certificate used to identify a certificate authority&#151;that is, a service that issues certificates for use as identification over computer networks.</LI></ul>
 
-<LI><p><B>Name.</B> The name of the person or other entity that the certificate identifies.</LI>
+<LI><p><B>Common Name.</B> The name of the person or other entity that the certificate identifies.</LI>
 
-<LI><B>Issued Under.</B> The name of the organization that issued the certificate. You can click this name to view the issuer's certificate (if it is available to Personal Security Manager) in a new View Security Certificate window. By clicking the "Issued Under" name in successive View Security Certificate windows, you can view each certificate in the original certificate's <a href="glossary.html#certificate chain">certificate chain</a>.</LI>
+<LI><p><B>Organization.</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
+
+<LI><p><B>Organizational Unit.</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
+
+<LI><B>Issuer Name.</B> The name of the organization that issued the certificate.</LI>
 
 <LI><B>Serial Number.</B> The certificate's serial number.</LI>
 
-<LI><B>Validity.</B> The period of time during which the certificate can be used.</LI>
+<LI><B>RSA Public Modulus.</B></LI>
 
-<LI><B>Fingerprint.</B> A unique number associated with a certificate. The number is produced by applying a mathematical function to the contents of the certificate. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.</LI></ul>
+<LI><B>SHA1 Fingerprint.</B>A fingerprint is a unique number associated with a certificate. In this case the number is produced by applying a mathematical function based on the Secure Hash Algorithm (SHA1)to the contents of the certificate. A certificate's fingerprint can be used to verify that the certificate has not been tampered with.</LI>
 
-<p><b>[Next two Certificate Details sections are placeholders--not yet sure how UI will look for this.]</b>
+<LI><B>MD5 Fingerprint.</B>A fingerprint produced by applying a mathematical function based on the Message Digest Algorithm (MD5)to the contents of the certificate.</LI>
 
-<p><A NAME="View_Certificate_Details">
-<b>
-View Certificate Details</b></A></p>
+</ul>
 
-<p>When you click View More Info in the upper-right corner of the View Security Certificate window, a View Certificate Details window opens that displays the complete contents of the certificate. This information is normally of interest to IS professionals only. </P>
+<p>The Details tab of the Certifiate Details window displays the complete contents of the selected certificate. This information is normally of interest to IS professionals only. </P>
 
-<p>Certificate Manager displays basic ANSI types in human-readable form wherever possible. For fields whose contents it cannot interpret, Personal Security Manager simply displays the actual values contained in the certificate.</P>
-
-
-<A NAME="View Security Certificate&#151;Issuer Not Found">
-<p><b>View Security Certificate&#151;Issuer Not Found</b></p></A>
-
-<p>When you click the name of a certificate's issuer (labeled "Issued Under:") in the View Security Certificate window, a new View Security Certificate window opens with information about the issuer's certificate&#151;unless Certificate Manager does not have that certificate on file. In this case, the new window informs you that the issuer's certificate could not be found.</P></A>
-
+<p>Certificate Manager displays basic ANSI types in human-readable form wherever possible. For fields whose contents it cannot interpret, Certificate Manager simply displays the actual values contained in the certificate.</P>
 
 
 <p>&nbsp;</p>
@@ -140,7 +141,7 @@ View Certificate Details</b></A></p>
 
 <p>Like a credit card, a driver's license, and many other forms of identification, a certificate is valid for a specified period of time. When a certificate expires, you need to get a new one&#151;unless you have decided that you don't need that certificate anymore. </P>
 
-<p>Certificate Manager displays the Certificate Renewal window when it detects that one of your certificates is about to expire. Information about the certificate is displayed at the top of the window. The information provided includes the name of the CA that issued the certificate (labeled "Issued Under").</P>
+<p>Certifocate Manager displays the Certificate Renewal window when it detects that one of your certificates is about to expire. Information about the certificate is displayed at the top of the window. The information provided includes the name of the CA that issued the certificate (labeled "Issued Under").</P>
 
 <p>The Certificate Renewal window allows you to make one of two decisions:</P>
 
@@ -183,7 +184,7 @@ View Certificate Details</b></A></p>
 <ul>
 	<LI><B>New Certificate Authority: Step 1.</B> Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures and are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides.</LI></A><P><A NAME="1039965"><LI><B>New Certificate Authority: Step 2.</B> At this stage, you need to decide what kinds of certificates issued by this CA you want to trust. You can select any of the following options:</LI></A><ul>
 <P><A NAME="1040097"><LI><B>Trust this CA to identify web sites. </B>As noted above, web site certificates for some sites, such as those that handle financial transactions, can be extremely important, and inappropriate or false identification can have negative consequences.</LI></A><P><A NAME="1040098"><LI><B>Trust this CA to identify email users. </B>If you intend to send email users confidential information in encrypted form, or if accurate identification of email users is important to you for any other reason, you should consider carefully the CA's procedures for identifying prospective certificate owners and whether they are appropriate for your purposes before selecting this option.</LI></A><P><A NAME="1052784"><LI><B>Trust this CA to identify software developers.</B> Selecting this option means that you trust the CA to issue certificates that identify the origin of Java applets and JavaScript scripts requesting special access to your computer, such as the ability to change files. Since such access privileges can be misused, for example to destroy data stored on your hard disk, be very careful about selecting this option unless you are certain that you trust the CA for this purpose.</LI></A></ul>
-</ul><
+</ul>
 
 <p>&nbsp;</p>
 <a NAME="Web_Site_Certificates"></a>
@@ -207,13 +208,13 @@ View Certificate Details</b></A></p>
 <h3>New Web Site Certificate</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Personal Security Manager doesn't recognize the <a href="glossary.html#certificate authority (CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays the following windows:</P>
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate authority (CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays the following windows:</P>
 
 <p><b>[following needs updating for new UI</b>
 
 <ul><P><A NAME="1040184"><LI><B>New Web Site Certificate: Step 1.</B> To examine the certificate, click View. If you believe that this web site is the site the certificate says it is, click Next. If you suspect that the web site is not what it claims to be, you can either click Cancel (in which case you will not connect to the web site) or click Next to go to Step 2.</LI></A><P><A NAME="1040198"><LI><B>New Web Site Certificate: Step 2.</B> If you clicked Next in Step 1, you now have to decide how long you are willing to trust this certificate, if at all:</LI></A><ul>
-<P><A NAME="1040219"><LI><B>Accept this certificate permanently</B> means that Personal Security Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI></A><P><A NAME="1040237"><LI><B>Accept this certificate temporarily for this session</B> means that Personal Security Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Personal Security Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI></A><P><A NAME="1040288"><LI><B>Do not accept this certificate and do not connect to the web site</B> means that Personal Security Manager will not accept this certificate. If you select this option, Personal Security Manager will not connect with this web site this time and will display the New Web Site Certificate window again the next time you visit the web site.</LI></A></ul>
-</ul><A NAME="1049516">
+<P><A NAME="1040219"><LI><B>Accept this certificate permanently</B> means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI></A><P><A NAME="1040237"><LI><B>Accept this certificate temporarily for this session</B> means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI></A><P><A NAME="1040288"><LI><B>Do not accept this certificate and do not connect to the web site</B> means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the New Web Site Certificate window again the next time you visit the web site.</LI></A></ul>
+</ul>
 
 <p>&nbsp;</p>
 <a NAME="Expired_Web_Site_Certificate"></a>
@@ -247,7 +248,7 @@ View Certificate Details</b></A></p>
 
 <p>If you believe the certificate's expiration is an inadvertent error, you may want to accept the certificate anyway for this session and let the webmaster for the site know about the problem. </P>
 
-<p>If you suspect that there may be a more significant problem, either accept the certificate and be cautious about any actions you take while you are visiting the site, or do not accept the certificate (in which case Personal Security Manager will not connect you to the site).</P></A>
+<p>If you suspect that there may be a more significant problem, either accept the certificate and be cautious about any actions you take while you are visiting the site, or do not accept the certificate (in which case Certificate Manager will not connect you to the site).</P></A>
 
 <p>&nbsp;</p>
 <a NAME="Unexpected_Certificate_Name"></a>
@@ -264,7 +265,7 @@ View Certificate Details</b></A></p>
 
 
 <hr>
-<p><i>3/21/2001</i></p>
+<p><i>5/10/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>

@@ -10,7 +10,10 @@
 
 <a NAME="cert_dialog_help_first"></a>
 <h1>SSL Page Info</h1>
-<p><b>[intro text]</b></p>
+
+<p>When you choose Page Info from the View menu, you see information about authentication and encryption for the web page you are viewing. 
+
+<p>Click the Help button in the Page Info window to see the additional information given here about each combination you may encounter. </P></A>
 
 <table cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
 <tr>
@@ -25,10 +28,129 @@
 </tr>
 </table>
 
-<p><b>[text to come]</b>
+
+
+<p>&nbsp;</p>
+<a NAME="Not_Verified_Not Encrypted"></a>
+<h2>Web Site Identity Not Verified&#151;<br>Connection Not Encrypted</h2>
+
+<p>
+
+<ul>
+
+	<LI><B>Web Site Identity Not Verified.</B> The web site you are viewing does not support certificate-based authentication. Therefore, Certificate Manager cannot verify its identity. It is possible, though unlikely, that the web site is not what it claims to be.</LI>
+
+	<LI><B>Connection Not Encrypted.</B> It is possible, though unlikely, that other people can view information sent from your computer to the web site or information sent by the web site to your computer. This should be of concern only if you are sending or viewing confidential information, such as your credit card number.</LI>
+</ul>
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
+
+<p>&nbsp;</p>
+<a NAME="Verified_Encrypted"></a>
+<h2>Web Site Identity Verified&#151;<br>Connection Encrypted</h2>
+
+
+<p>
+<ul>
+	<LI><B>Web Site Identity Verified.</B> The certificate that Certificate Manager has used to verify this web site's identity was issued by a certificate authority (CA) marked as one that you trust. You can be reasonably confident that the web site is what it claims to be.</LI>
+	<LI><B>Connection Encrypted.</B> In general, the strength of an encrypted connection depends on the length of the keys use for encryption, measured in bits. The longer the key, the stronger the encryption&#151;that is, the harder it is to for an unauthorized person to unscramble the encrypted information.</LI>
+
+<p>The Page Info window describes encryption strength in one of three ways:</P>
+
+<ul>
+
+	<LI><B>High-grade encryption.</B> Strongest encryption available, using 128-bit keys at a minimum.</LI>
+	<LI><B>Medium-grade encryption.</B> Somewhat stronger than low-grade encryption, using 56- or 64-bit keys.</LI>
+	<LI><B>Low-grade encryption.</B> Weakest encryption available, using 40-bit keys.</LI>
+</ul>
+</ul>
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
+
+<p>&nbsp;</p>
+<a NAME="Conditionally_Verified_Encrypted"></a>
+<h2>Web Site Identity Conditionally Verified&#151;<br>Connection Encrypted</h2>
+
+
+<p>
+
+<ul>
+	<LI><B>Web Site Identity Conditionally Verified. </B>The web site you are viewing has presented a certificate that is invalid, but that you have decided to accept anyway. </LI>
+
+<p>The Page Info window has listed one or both of the following reasons 
+why the web site's certificate is invalid:
+
+</A></P>
+<ul>
+	<LI>The identity of this web site has been verified by a certificate authority that you have not designated as trusted for this purpose. If you wish to trust this certificate authority to identify web sites in the future, click the Edit button and select "This certificate can certify web sites that support encryption."</LI>
+	<LI>The certificate used to identify the web site belongs to a web site with a URL that's different from the URL specified in the certificate. If Personal Security Manager informs you of this discrepancy, you should be cautious about using the web site, since it appears to be misrepresenting itself. </LI>
+
+</ul>
+
+
+<LI><B>Connection Encrypted. </B>In general, the strength of an encrypted connection depends on the length of the keys use for encryption, measured in bits. The longer the key, the stronger the encryption&#151;that is, the harder it is to for an unauthorized person to unscramble the encrypted information.</LI>
+</ul>
+<p>The Page Info window describes encryption strength in one of three ways:
+
+</P>
+<ul>
+
+	<LI><B>High-grade encryption.</B> Strongest encryption available, using 128-bit keys at a minimum.</LI>
+	<LI><B>Medium-grade encryption.</B> Somewhat stronger than low-grade encryption, using 56- or 64-bit keys.</LI>
+	<LI><B>Low-grade encryption.</B> Weakest encryption available, using 40-bit keys.</LI>
+</ul>
+</ul>
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
+
+
+
+
+<p>&nbsp;</p>
+<a NAME="Verified_Not Encrypted"></a>
+<h2>Web Site Identity Verified&#151;<br>Connection Not Encrypted</h2>
+
+
+<p>
+<ul>
+	<LI><B>Web Site Identity Verified.</B> The certificate that Personal Security Manager has used to verify this web site's identity was issued by a certificate authority (CA) designated in your <a href="glossary.htm#1023462">certificate store</a> as one that is trusted for the purpose of identifying web sites. You can be reasonably confident that the web site is what it claims to be.</LI>
+	<LI><B>Connection Not Encrypted.</B> It is possible, though unlikely, that other people can view information sent from your computer to the web site or information sent by the web site to your computer. This should be of concern only if you are sending or viewing confidential information, such as your credit card number.</LI>
+</ul>
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
+
+
+
+<p>&nbsp;</p>
+<a NAME="Conditionally_Verified_Not_Encrypted"></a>
+<h2>Web Site Conditionally Verified&#151;<br>Connection Not Encrypted</h2>
+
+
+<p>
+<ul>
+	<LI><B>Web Site Identity Conditionally Verified. </B>The web site you are viewing has presented a certificate that is invalid, but that you have decided to accept anyway. To view the certificate, click the View button. </LI>
+
+
+<p>The Page Info window may list one or both of the following reasons 
+why the web site's certificate is invalid:
+
+
+<ul>
+	<LI>The identity of this web site has been verified by a certificate authority that you have not designated as trusted for this purpose. If you wish to trust this certificate authority to identify web sites in the future, click the Edit button and select the check box labeled "This certificate can certify web sites that support encryption."</LI></A><P><A NAME="1037480">
+	<LI>The certificate used to identify the web site belongs to a web site with a URL that's different from the URL specified in the certificate. If the Page Info window informs you of this discrepancy, you should be cautious about using the web site, since it appears to be misrepresenting itself. </LI>
+</ul>
+	<LI><B>Connection Not Encrypted.</B> It is possible, though unlikely, that other people can view information sent from your computer to the web site or information sent by the web site to your computer. This should be of concern only if you are sending or viewing confidential information, such as your credit card number.</LI>
+</ul>
+
+
+<p>For short definitions, click <a href="glossary.html#authentication">authentication</a>, <a href="glossary.html#encryption">encryption</a>, or <a href="glossary.html#certificate">certificate</a>.</P>
+
+
+
+
 
 <hr>
-<p><i>2/5/2001</i></p>
+<p><i>5/9/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
