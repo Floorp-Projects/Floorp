@@ -14,7 +14,7 @@
                                 onblur="this.parentNode.parentNode.parentNode.parentNode.update(new DateFormater().parseShortDate(this.value),true);"/>
 			
 			<xul:menu class="datepicker-button">
-				<xul:menupopup popupanchor="bottomright" popupalign="topright" oncreate="this.parentNode.parentNode.parentNode.parentNode.openPopup()">
+				<xul:menupopup popupanchor="bottomright" popupalign="topright" onpopupshowing="this.parentNode.parentNode.parentNode.openPopup()">
 					<xul:calendar onchange="this.parentNode.hidePopup(); this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value),true); "/>
 				</xul:menupopup>
 			</xul:menu>
@@ -83,8 +83,7 @@
 
 		<method name="openPopup">
 			<body><![CDATA[
-				var cal = this.mPopup.childNodes[0];
-				cal.update( this.mValue );
+                            this.calendar.update( this.mValue );
 			]]></body>
 		</method>
 
