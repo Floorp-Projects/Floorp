@@ -52,9 +52,6 @@ interface nsIDOMNSHTMLInputElement : nsISupports
            attribute long             selectionStart;
            attribute long             selectionEnd;
 
-
-  /* XXX The nsIDOMEventListener arg should be flagged as function */
-
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,
                                               in long selectionEnd);
