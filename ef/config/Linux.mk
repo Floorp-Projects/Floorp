@@ -43,8 +43,10 @@ WARNING_CFLAG	= -Wall
 
 # used by mkdepend
 X11INCLUDES             =   -I/usr/X11R6/include
-INCLUDES		+=  -I$(subst libgcc.a,include, \
+SYS_INCLUDES		=   -I$(subst libgcc.a,include, \
                                       $(shell $(CC) -print-libgcc-file-name))
+SYS_INCLUDES		+=  -I$(subst libgcc.a,include, \
+                                      $(shell $(CCC) -print-libgcc-file-name))
 ifeq ($(CPU_ARCH),x86)
 DEPENDFLAGS		+= -D__i386__
 endif

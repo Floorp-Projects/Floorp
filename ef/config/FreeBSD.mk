@@ -20,6 +20,13 @@
 
 include $(DEPTH)/config/UNIX.mk
 
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPU_ARCH		:= x86
+else
+CPU_ARCH		:= $(OS_TEST)
+endif
+CPU_ARCH_TAG		= _$(CPU_ARCH)
+
 DEFAULT_COMPILER		= gcc
 CC				= gcc
 CXX				= g++
@@ -32,8 +39,10 @@ WARNING_CFLAG	= -Wall
 
 # used by mkdepend
 X11INCLUDES		=   -I/usr/X11R6/include
-INCLUDES		+=  -I$(subst libgcc.a,include, \
+SYS_INCLUDES		=   -I$(subst libgcc.a,include, \
                                       $(shell $(CC) -print-libgcc-file-name))
+SYS_INCLUDES		+=  -I$(subst libgcc.a,include, \
+                                      $(shell $(CCC) -print-libgcc-file-name))
 
 ifeq ($(CPU_ARCH),x86)
 DEPENDFLAGS		+= -D__i386__
