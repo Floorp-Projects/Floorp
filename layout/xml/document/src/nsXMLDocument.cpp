@@ -283,6 +283,9 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                   Recycle(hintCharset);
                   charsetSource = hintSource;
                 }
+				        if(kCharsetUninitialized != hintSource) {
+				            muCV->SetHintCharacterSetSource((PRInt32)(kCharsetUninitialized));
+				  			}
               }
             }
           }
