@@ -232,9 +232,9 @@ struct Mutex {
 #endif
             mState = WaitForSingleObject( mHandle, timeout );
 #if MOZ_DEBUG_DDE
-            printf( "...wait complete, result = 0x%08X\n", (int)mState );
+            printf( "...wait complete, result = 0x%08X, GetLastError=0x%08X\n", (int)mState, (int)::GetLastError() );
 #endif
-            return mState == WAIT_OBJECT_0;
+            return mState == WAIT_OBJECT_0 || mState == WAIT_ABANDONED;
         } else {
             return FALSE;
         }
@@ -399,6 +399,7 @@ private:
     static char *mAppName;
     static nsIDOMWindow *mInitialWindow;
     static PRBool mForceProfileStartup;
+    static char mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -747,6 +748,8 @@ NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0 };
 HMENU nsNativeAppSupportWin::mTrayIconMenu = 0;
 
+char nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
+
 
 // Message window encapsulation.
 struct MessageWindow {
@@ -997,9 +1000,8 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
     }
 
     // Build mutex name from app name.
-    char mutexName[128];
-    ::_snprintf( mutexName, sizeof mutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
-    Mutex startupLock = Mutex( mutexName );
+    ::_snprintf( mMutexName, sizeof mMutexName, "%s%s", nameBuffer, MOZ_STARTUP_MUTEX_NAME );
+    Mutex startupLock = Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
 
@@ -1091,7 +1093,7 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
     nsresult rv = NS_OK;
     *aResult = PR_TRUE;
 
-    Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
+    Mutex ddeLock( mMutexName );
 
     if ( ddeLock.Lock( MOZ_DDE_STOP_TIMEOUT ) ) {
         if ( mConversations == 0 ) {
@@ -2345,9 +2347,6 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         }
     }
 
-    // Finally!  If we haven't already, and the user hasn't told us not
-    // to bother them, inform the user that Mozilla will still be alive
-    // and kicking.
     if ( !mShownTurboDialog ) {
         PRBool showDialog = PR_TRUE;
         if ( NS_SUCCEEDED( rv ) )
@@ -2356,6 +2355,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         if ( showDialog && domWindowInt ) {
             nsCOMPtr<nsIDOMWindow> newWindow;
             mShownTurboDialog = PR_TRUE;
+            mLastWindowIsConfirmation = PR_TRUE;
             domWindowInt->OpenDialog( NS_LITERAL_STRING( "chrome://navigator/content/turboDialog.xul" ),
                                       NS_LITERAL_STRING( "_blank" ),
                                       NS_LITERAL_STRING( "chrome,modal,titlebar,centerscreen,dialog" ),
@@ -2363,11 +2363,51 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         }
     }
 
-    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
-    if (NS_FAILED(rv)) return rv;
-    observerService->NotifyObservers(nsnull, "session-logout", nsnull);
+    nsCOMPtr<nsIAppShellService> appShell =
+        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Instead of staying alive, launch a new instance of the application and then
+        // terminate for real.  We take steps to ensure that the new instance will run
+        // as a "server process" and not try to pawn off its request back on this
+        // instance.
 
-    mForceProfileStartup = PR_TRUE;
+        // Grab mutex.  Process termination will release it.
+        Mutex mutexLock = Mutex(mMutexName);
+        NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE );
 
+        // Turn off MessageWindow so the other process can't see us.
+        DWORD rc = ::DestroyWindow( (HWND)MessageWindow() );
+    
+        // Launch another instance.
+        char buffer[ _MAX_PATH ];
+        // Same application as this one.
+        ::GetModuleFileName( 0, buffer, sizeof buffer );
+        // Clean up name so we don't have to worry about enclosing it in quotes.
+        ::GetShortPathName( buffer, buffer, sizeof buffer );
+        nsCAutoString cmdLine( buffer );
+        // The new process must run in turbo mode (no splash screen, no window, etc.).
+        cmdLine.Append( " -turbo" );
+    
+        // Now do the Win32 stuff...
+        STARTUPINFO startupInfo;
+        ::GetStartupInfo( &startupInfo );
+        PROCESS_INFORMATION processInfo;
+        rc = ::CreateProcess( 0,
+                              (LPTSTR)cmdLine.get(),
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              0,
+                              &startupInfo,
+                              &processInfo );
+    
+        // Turn off turbo mode and quit the application.
+        SetIsServerMode( PR_FALSE );
+        appShell->Quit();
+
+        // Done.  This app will now commence shutdown.
+    }
     return NS_OK;
 }
