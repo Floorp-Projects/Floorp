@@ -26,8 +26,8 @@
 [scriptable, uuid(6c1034f0-1dd2-11b2-aa14-e6657ed7bb0b)]
 interface nsIUserInfo : nsISupports
 {
-    /* the system may know our username */
-    readonly attribute string username;
+    /* the system may know our user's fullname*/
+    readonly attribute string fullname;
 };
 
 %{C++
