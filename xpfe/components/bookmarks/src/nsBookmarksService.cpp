@@ -3079,25 +3079,26 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
     // (which is either a bookmark or a bookmark folder, since everything
     // else is annotated)
     PRBool isContainer = PR_FALSE;
+    PRBool isBookmarkedFlag = PR_FALSE;
     (void)gRDFC->IsSeq(mInner, aNode, &isContainer);
 
     if (isContainer)
     {
       *aType =  kNC_Folder;
     }
+    else if (NS_SUCCEEDED(rv = IsBookmarkedInternal(aNode,
+      &isBookmarkedFlag)) && (isBookmarkedFlag == PR_TRUE))
+    {
+      *aType = kNC_Bookmark;
+    }
+#ifdef XP_BEOS
     else
     {
-#ifdef XP_BEOS
       //solution for BeOS - bookmarks are stored as file attributes. 
-      PRBool isBookmarkedFlag = PR_FALSE;
-      rv = IsBookmarkedInternal(aNode, &isBookmarkedFlag);
-      if (!isBookmarkedFlag || NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))
-        *aType = kNC_URL;
-      else
-#endif
-       *aType = kNC_Bookmark;	
+      *aType = kNC_URL;
     }
-    NS_ADDREF(*aType);
+#endif
+    NS_IF_ADDREF(*aType);
   }
   return(NS_OK);
 }
