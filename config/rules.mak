@@ -471,7 +471,9 @@ export::
 !endif # defined(META_COMPONENT)
 
 libs:: $(LIBRARY)
+!ifndef NO_DIST_INSTALL
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+!endif
 
 clobber::
         $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
@@ -483,7 +485,9 @@ clobber::
 # it!
 
 libs:: $(DLL)
+!ifndef NO_DIST_INSTALL
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+!endif
 
 clobber::
         $(RM) $(DIST)\bin\components\$(DLL)
@@ -519,7 +523,9 @@ export::
 !endif # defined(META_COMPONENT)
 
 libs:: $(LIBRARY)
+!ifndef NO_DIST_INSTALL
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+!endif
 
 clobber::
         $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
@@ -530,8 +536,10 @@ clobber::
 # library in this case, because people may link against it.
 
 libs:: $(DLL) $(OBJDIR)\$(LIBRARY_NAME).lib
+!ifndef NO_DIST_INSTALL
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin
         $(MAKE_INSTALL) $(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
+!endif
 
 clobber::
         $(RM) $(DIST)\bin\$(DLL)
@@ -549,7 +557,9 @@ clobber::
 !if defined(LIBRARY)
 
 libs:: $(LIBRARY)
+!ifndef NO_DIST_INSTALL
         $(MAKE_INSTALL) $(LIBRARY) $(DIST)/lib
+!endif
 
 clobber::
         rm -f $(DIST)/lib/$(LIBRARY_NAME).lib
@@ -746,9 +756,11 @@ include <$(DEPTH)/config/java.inc>
 !if "$(EXPORTS)" != "$(NULL)"
 
 export:: $(EXPORTS)
+!ifndef NO_DIST_INSTALL
     @echo +++ make: exporting headers
  	$(MAKE_INSTALL:/=\) $(MKCPYFLAGS) $(EXPORTS) $(PUBLIC)
 	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(PUBLIC)/.headerlist $(EXPORTS)
+!endif
 
 #// don't delete exported stuff on a local clobber, use clobber_all
 #clobber::
@@ -849,18 +861,24 @@ $(XPDIST)\idl:
         -mkdir $(XPDIST)\idl
 
 export:: $(XPDIST)\idl
+!ifndef NO_DIST_INSTALL
         @echo +++ make: exporting IDL files
         $(MAKE_INSTALL) $(XPIDLSRCS:/=\) $(XPDIST)\idl
+!endif
 
 export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
+!ifndef NO_DIST_INSTALL
         @echo +++ make: exporting generated XPIDL header files
         $(MAKE_INSTALL) $(XPIDL_HEADERS:/=\) $(PUBLIC)
 	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(PUBLIC)/.headerlist $(XPIDL_HEADERS)
+!endif
 
 !ifndef NO_GEN_XPT
 libs:: $(XPIDL_GEN_DIR) $(TYPELIB)
+!ifndef NO_DIST_INSTALL
         @echo +++ make: installing typelib '$(TYPELIB)' to components directory
         $(MAKE_INSTALL) $(TYPELIB) $(DIST)\bin\components
+!endif
 !endif
 
 clobber::
@@ -992,7 +1010,9 @@ chrome:: $(CHROME_CONTENT:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install content files.
 $(CHROME_CONTENT:.\=INSTALL\.\):
+!ifndef NO_DIST_INSTALL
     $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)
+!endif
 
 # Clobber content files.
 clobber_all:: $(CHROME_CONTENT:.\=CLOBBER\.\)
@@ -1018,7 +1038,9 @@ chrome:: $(CHROME_SKIN:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install chrome files.
 $(CHROME_SKIN:.\=INSTALL\.\):
+!ifndef NO_DIST_INSTALL
     $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)
+!endif
 
 # Clobber content files.
 clobber_all:: $(CHROME_SKIN:.\=CLOBBER\.\)
@@ -1044,7 +1066,9 @@ chrome:: $(CHROME_L10N:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install l10n files.
 $(CHROME_L10N:.\=INSTALL\.\):
+!ifndef NO_DIST_INSTALL
     $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)
+!endif
 
 # Clobber l10n files.
 clobber_all:: $(CHROME_L10N:.\=CLOBBER\.\)
@@ -1070,7 +1094,9 @@ chrome:: $(CHROME_MISC:.\=INSTALL\.\)
 
 # Pseudo-target specifying how to install misc files.
 $(CHROME_MISC:.\=INSTALL\.\):
+!ifndef NO_DIST_INSTALL
     $(MAKE_INSTALL) $(@:INSTALL\.=.) $(CHROME_DIST)\$(CHROME_MISC_DIR)
+!endif
 
 # Clobber misc files.
 clobber_all:: $(CHROME_MISC:.\=CLOBBER\.\)

@@ -634,6 +634,7 @@ endif # LIBRARY_NAME
 
 ##############################################
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
+ifndef NO_DIST_INSTALL
 ifneq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 ifdef LIBRARY
 ifeq ($(OS_ARCH),OS2)
@@ -690,6 +691,7 @@ endif
 ifdef HOST_LIBRARY
 	$(INSTALL) $(IFLAGS1) $(HOST_LIBRARY) $(DIST)/host/lib
 endif
+endif # !NO_DIST_INSTALL
 	+$(LOOP_OVER_DIRS)
 
 checkout:
@@ -806,7 +808,9 @@ ifeq ($(CPP_PROG_LINK),1)
 else
 	$(PURIFY) $(CC) -o $^.pure $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS2) $^.pure $(DIST)/bin
+endif
 
 quantify: $(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
@@ -814,7 +818,9 @@ ifeq ($(CPP_PROG_LINK),1)
 else
 	$(QUANTIFY) $(CC) -o $^.quantify $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS2) $^.quantify $(DIST)/bin
+endif
 
 ifneq ($(OS_ARCH),OS2)
 #
@@ -1224,7 +1230,9 @@ JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT
 # problem because the source isn't in the current directory:
 #
 export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
+ifndef NO_DIST_INSTALL
 	$(NSINSTALL) -t $(IFLAGS1) $(JMC_EXPORT_FILES) $(JMCSRCDIR)
+endif
 endif # JAVA_OR_NSJVM
 endif
 
@@ -1267,8 +1275,10 @@ endif
 
 ifneq ($(EXPORTS),)
 export:: $(EXPORTS) $(PUBLIC)
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+endif
 endif 
 
 ################################################################################
@@ -1279,7 +1289,9 @@ $(DIST)/bin/defaults/pref::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
+endif
 endif 
 ################################################################################
 # Copy each element of AUTOCFG_JS_EXPORTS to $(DIST)/bin/defaults/autoconfig
@@ -1289,7 +1301,9 @@ $(DIST)/bin/defaults/autoconfig::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(AUTOCFG_JS_EXPORTS) $(DIST)/bin/defaults/autoconfig
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
+endif
 endif 
 ################################################################################
 # Export the elements of $(XPIDLSRCS), generating .h and .xpt files and
@@ -1315,7 +1329,9 @@ $(DIST)/idl::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 export:: $(XPIDLSRCS) $(DIST)/idl
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
+endif
 
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
 # warn against overriding existing .h file. 
@@ -1333,8 +1349,10 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
+endif
 
 ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
@@ -1347,7 +1365,9 @@ $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $^
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(DIST)/bin/$(COMPONENTS_PATH)
+endif
 
 endif
 
