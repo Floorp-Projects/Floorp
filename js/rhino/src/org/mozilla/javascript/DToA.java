@@ -64,9 +64,9 @@ class DToA {
  * which occurs when printing -5e-324 in binary.  We could compute a better estimate of the size of
  * the output string and malloc fewer bytes depending on d and base, but why bother? */
 
-    static final int DTOBASESTR_BUFFER_SIZE = 1078;
+    private static final int DTOBASESTR_BUFFER_SIZE = 1078;
 
-    static char BASEDIGIT(int digit) {
+    private static char BASEDIGIT(int digit) {
         return (char)((digit >= 10) ? 'a' - 10 + digit : '0' + digit);
     }
 
@@ -78,36 +78,42 @@ class DToA {
         DTOSTR_PRECISION = 4;             /* Either fixed or exponential format; <precision> significant digits */
 
 
-    static final int Frac_mask = 0xfffff;
-    static final int Exp_shift = 20;
-    static final int Exp_msk1 = 0x100000;
-    static final int Bias = 1023;
-    static final int P = 53;
+    private static final int Frac_mask = 0xfffff;
+    private static final int Exp_shift = 20;
+    private static final int Exp_msk1 = 0x100000;
 
-    static final int Exp_shift1 = 20;
-    static final int Exp_mask  = 0x7ff00000;
-    static final int Bndry_mask  = 0xfffff;
-    static final int Log2P = 1;
+    private static final long Frac_maskL = 0xfffffffffffffL;
+    private static final int Exp_shiftL = 52;
+    private static final long Exp_msk1L = 0x10000000000000L;
 
-    static final int Sign_bit = 0x80000000;
-    static final int Exp_11  = 0x3ff00000;
-    static final int Ten_pmax = 22;
-    static final int Quick_max = 14;
-    static final int Bletch = 0x10;
-    static final int Frac_mask1 = 0xfffff;
-    static final int Int_max = 14;
-    static final int n_bigtens = 5;
+    private static final int Bias = 1023;
+    private static final int P = 53;
+
+    private static final int Exp_shift1 = 20;
+    private static final int Exp_mask  = 0x7ff00000;
+    private static final int Exp_mask_shifted = 0x7ff;
+    private static final int Bndry_mask  = 0xfffff;
+    private static final int Log2P = 1;
+
+    private static final int Sign_bit = 0x80000000;
+    private static final int Exp_11  = 0x3ff00000;
+    private static final int Ten_pmax = 22;
+    private static final int Quick_max = 14;
+    private static final int Bletch = 0x10;
+    private static final int Frac_mask1 = 0xfffff;
+    private static final int Int_max = 14;
+    private static final int n_bigtens = 5;
 
 
-    static final double tens[] = {
+    private static final double tens[] = {
         1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9,
         1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
         1e20, 1e21, 1e22
     };
 
-    static final double bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
+    private static final double bigtens[] = { 1e16, 1e32, 1e64, 1e128, 1e256 };
 
-    static int lo0bits(int y)
+    private static int lo0bits(int y)
     {
         int k;
         int x = y;
@@ -147,7 +153,7 @@ class DToA {
     }
 
     /* Return the number (0 through 32) of most significant zero bits in x. */
-    static int hi0bits(int x)
+    private static int hi0bits(int x)
     {
         int k = 0;
 
@@ -175,7 +181,7 @@ class DToA {
         return k;
     }
 
-    static void stuffBits(byte bits[], int offset, int val)
+    private static void stuffBits(byte bits[], int offset, int val)
     {
         bits[offset] = (byte)(val >> 24);
         bits[offset + 1] = (byte)(val >> 16);
@@ -186,7 +192,7 @@ class DToA {
     /* Convert d into the form b*2^e, where b is an odd integer.  b is the returned
      * Bigint and e is the returned binary exponent.  Return the number of significant
      * bits in b in bits.  d must be finite and nonzero. */
-    static BigInteger d2b(double d, int[] e, int[] bits)
+    private static BigInteger d2b(double d, int[] e, int[] bits)
     {
         byte dbl_bits[];
         int i, k, y, z, de;
@@ -233,46 +239,76 @@ class DToA {
         return new BigInteger(dbl_bits);
     }
 
-    public static String JS_dtobasestr(int base, double d)
+    static String JS_dtobasestr(int base, double d)
     {
-        char[] buffer;       /* The output string */
-        int p;               /* index to current position in the buffer */
-        int pInt;            /* index to the beginning of the integer part of the string */
+        if (!(2 <= base && base <= 36))
+            throw new IllegalArgumentException("Bad base: "+base);
 
-        int q;
-        int digit;
-        double di;           /* d truncated to an integer */
-        double df;           /* The fractional part of d */
-
-//        JS_ASSERT(base >= 2 && base <= 36);
-
-        buffer = new char[DTOBASESTR_BUFFER_SIZE];
-
-        p = 0;
-        if (d < 0.0) {
-            buffer[p++] = '-';
+        /* Check for Infinity and NaN */
+        if (Double.isNaN(d)) {
+            return "NaN";
+        } else if (Double.isInfinite(d)) {
+            return (d > 0.0) ? "Infinity" : "-Infinity";
+        } else if (d == 0) {
+            // ALERT: should it distinguish -0.0 from +0.0 ?
+            return "0";
+        }
+        
+        boolean negative;
+        if (d >= 0.0) {
+            negative = false;
+        } else {
+            negative = true;
             d = -d;
         }
 
-        /* Check for Infinity and NaN */
-        if (Double.isNaN(d))
-            return "NaN";
-        else
-            if (Double.isInfinite(d))
-                return "Infinity";
-
-        /* Output the integer part of d with the digits in reverse order. */
-        pInt = p;
-        di = (int)d;
-        BigInteger b = BigInteger.valueOf((int)di);
-        String intDigits = b.toString(base);
-        intDigits.getChars(0, intDigits.length(), buffer, p);
-        p += intDigits.length();
-
-        df = d - di;
-        if (df != 0.0) {
+        /* Get the integer part of d including '-' sign. */
+        String intDigits;
+        
+        double dfloor = Math.floor(d);
+        long lfloor = (long)dfloor;
+        if (lfloor == dfloor) {
+            // int part fits long
+            intDigits = Long.toString((negative) ? -lfloor : lfloor, base);
+        } else {
+            // BigInteger should be used
+            long floorBits = Double.doubleToLongBits(dfloor);
+            int exp = (int)(floorBits >> Exp_shiftL) & Exp_mask_shifted;
+            long mantissa;
+            if (exp == 0) {
+                mantissa = (floorBits & Frac_maskL) << 1;
+            } else {
+                mantissa = (floorBits & Frac_maskL) | Exp_msk1L;
+            }
+            if (negative) {
+                mantissa = -mantissa;
+            }
+            exp -= 1075;
+            BigInteger x = BigInteger.valueOf(mantissa);
+            if (exp > 0) {
+                x = x.shiftLeft(exp);
+            } else if (exp < 0) {
+                x = x.shiftRight(-exp);
+            }
+            intDigits = x.toString(base);
+        }
+        
+        if (d == dfloor) {
+            // No fraction part
+            return intDigits;
+        } else {
             /* We have a fraction. */
-            buffer[p++] = '.';
+
+            char[] buffer;       /* The output string */
+            int p;               /* index to current position in the buffer */
+            int q;
+            int digit;
+            double df;           /* The fractional part of d */
+            BigInteger b;
+            
+            buffer = new char[DTOBASESTR_BUFFER_SIZE];
+            p = 0;
+            df = d - dfloor;
 
             long dBits = Double.doubleToLongBits(d);
             int word0 = (int)(dBits >> 32);
@@ -353,9 +389,14 @@ class DToA {
 //                JS_ASSERT(digit < (uint32)base);
                 buffer[p++] = BASEDIGIT(digit);
             } while (!done);
+            
+            StringBuffer sb = new StringBuffer(intDigits.length() + 1 + p);
+            sb.append(intDigits);
+            sb.append('.');
+            sb.append(buffer, 0, p);
+            return sb.toString();
         }
 
-        return new String(buffer, 0, p);
     }
 
     /* dtoa for IEEE arithmetic (dmg): convert double to ASCII string.
