@@ -912,107 +912,70 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
                                              nsRect& aAbsoluteTwipsRect, 
                                              nsRect& aAbsolutePixelRect)
 {
-  //XXX: This code needs to take the view's offset into account when calculating
-  //the absolute coordinate of the frame.
   nsresult rv = NS_OK;
  
   aFrame->GetRect(aAbsoluteTwipsRect);
   // zero these out, 
   // because the GetOffsetFromView figures them out
+  // XXXbz why do we need to do this, really?  Will we ever fail to
+  // get a containing view?
   aAbsoluteTwipsRect.x = 0;
   aAbsoluteTwipsRect.y = 0;
 
-    // Get conversions between twips and pixels
+  // Get conversions between twips and pixels
   float t2p;
   float p2t;
   aPresContext->GetTwipsToPixels(&t2p);
   aPresContext->GetPixelsToTwips(&p2t);
 
-   // Add in frame's offset from it it's containing view
-  nsIView *containingView = nsnull;
-  nsPoint offset;
-  rv = aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
+  // Start with frame's offset from it it's containing view
+  nsIView *view = nsnull;
+  nsPoint frameOffset;
+  rv = aFrame->GetOffsetFromView(aPresContext, frameOffset, &view);
 
-  if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
-    aAbsoluteTwipsRect.x += offset.x;
-    aAbsoluteTwipsRect.y += offset.y;
+  if (NS_SUCCEEDED(rv) && view) {
+    aAbsoluteTwipsRect.MoveTo(frameOffset);
 
-    nsPoint viewOffset;
-    containingView->GetPosition(&viewOffset.x, &viewOffset.y);
+    nsCOMPtr<nsIWidget> widget;
+    // Walk up the views, looking for a widget
+    do { 
+      // add in the offset of the view from its parent.
+      nsPoint viewPosition;
+      view->GetPosition(&viewPosition.x, &viewPosition.y);
+      aAbsoluteTwipsRect += viewPosition;
 
-    nsIView * parent;
-    containingView->GetParent(parent);
+      view->GetWidget(*getter_AddRefs(widget));
+      if (widget) {
+        // account for space above and to the left of the view origin.
+        // the widget is aligned with view's bounds, not its origin
+        
+        nsRect bounds;
+        view->GetBounds(bounds);
+        aAbsoluteTwipsRect.x -= bounds.x;
+        aAbsoluteTwipsRect.y -= bounds.y;
 
-    // if we don't have a parent view then 
-    // check to see if we have a widget and adjust our offset for the widget
-    if (parent == nsnull) {
-      // account for space above and to the left of the containingView origin.
-      // the widget is aligned with containingView's bounds, not its origin
-      nsRect bounds;
-      containingView->GetBounds(bounds);
-      aAbsoluteTwipsRect.x += viewOffset.x - bounds.x;
-      aAbsoluteTwipsRect.y += viewOffset.y - bounds.y;
-
-      nsIWidget * widget;
-      containingView->GetWidget(widget);
-      if (nsnull != widget) {
         // Add in the absolute offset of the widget.
         nsRect absBounds;
-        nsRect lc;
-        widget->WidgetToScreen(lc, absBounds);
-        // Convert widget coordinates to twips   
+        nsRect zeroRect;
+        // XXX a twip version of this would be really nice here!
+        widget->WidgetToScreen(zeroRect, absBounds);
+          // Convert widget coordinates to twips   
         aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
         aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-        NS_RELEASE(widget);
+        break;
       }
-      rv = NS_OK;
-    } else {
-      while (nsnull != parent) {
-        nsPoint po;
-        parent->GetPosition(&po.x, &po.y);
-        viewOffset.x += po.x;
-        viewOffset.y += po.y;
-        nsIScrollableView * scrollView;
-        if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
-          nscoord x;
-          nscoord y;
-          scrollView->GetScrollPosition(x, y);
-          viewOffset.x -= x;
-          viewOffset.y -= y;
-        }
-        nsIWidget * widget;
-        parent->GetWidget(widget);
-        if (nsnull != widget) {
-          // account for space above and to the left of the containingView origin.
-          // the widget is aligned with containingView's bounds, not its origin
-          nsRect bounds;
-          parent->GetBounds(bounds);
-          aAbsoluteTwipsRect.x += po.x - bounds.x;
-          aAbsoluteTwipsRect.y += po.y - bounds.y;
 
-          // Add in the absolute offset of the widget.
-          nsRect absBounds;
-          nsRect lc;
-          widget->WidgetToScreen(lc, absBounds);
-          // Convert widget coordinates to twips   
-          aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
-          aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-          NS_RELEASE(widget);
-          break;
-        }
-        parent->GetParent(parent);
-      }
-      aAbsoluteTwipsRect.x += viewOffset.x;
-      aAbsoluteTwipsRect.y += viewOffset.y;
-    }
+      view->GetParent(view);
+    } while (view);
   }
-
-   // convert to pixel coordinates
+  
+  // convert to pixel coordinates
   if (NS_SUCCEEDED(rv)) {
-   aAbsolutePixelRect.x = NSTwipsToIntPixels(aAbsoluteTwipsRect.x, t2p);
-   aAbsolutePixelRect.y = NSTwipsToIntPixels(aAbsoluteTwipsRect.y, t2p);
-   aAbsolutePixelRect.width = NSTwipsToIntPixels(aAbsoluteTwipsRect.width, t2p);
-   aAbsolutePixelRect.height = NSTwipsToIntPixels(aAbsoluteTwipsRect.height, t2p);
+    aAbsolutePixelRect.x = NSTwipsToIntPixels(aAbsoluteTwipsRect.x, t2p);
+    aAbsolutePixelRect.y = NSTwipsToIntPixels(aAbsoluteTwipsRect.y, t2p);
+
+    aAbsolutePixelRect.width = NSTwipsToIntPixels(aAbsoluteTwipsRect.width, t2p);
+    aAbsolutePixelRect.height = NSTwipsToIntPixels(aAbsoluteTwipsRect.height, t2p);
   }
 
   return rv;
