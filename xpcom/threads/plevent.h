@@ -199,7 +199,7 @@ typedef struct PLEventQueue PLEventQueue;
 ** Creates a new event queue. Returns NULL on failure.
 */
 PR_EXTERN(PLEventQueue*)
-PL_CreateEventQueue(char* name, PRThread* handlerThread);
+PL_CreateEventQueue(const char* name, PRThread* handlerThread);
 
 
 /* -----------------------------------------------------------------------
@@ -232,7 +232,7 @@ PL_CreateEventQueue(char* name, PRThread* handlerThread);
 */
 PR_EXTERN(PLEventQueue *) 
     PL_CreateNativeEventQueue(
-        char *name, 
+        const char *name, 
         PRThread *handlerThread
     );
 
@@ -261,7 +261,7 @@ PR_EXTERN(PLEventQueue *)
 */
 PR_EXTERN(PLEventQueue *) 
     PL_CreateMonitoredEventQueue(
-        char *name,
+        const char *name,
         PRThread *handlerThread
     );
 
