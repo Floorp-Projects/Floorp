@@ -96,10 +96,6 @@ public:
 
     static nsDNSService *   gService;
 
-    // helper method to check for non-Ascii hostnames (should really be in
-    // nsCRT or something)
-    static PRBool           IsAsciiString(const char *s);
-
 private:
     nsresult                LateInit();
     nsresult                InstallPrefObserver();

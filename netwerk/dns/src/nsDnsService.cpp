@@ -1125,16 +1125,6 @@ nsDNSService::ExpirationInterval()
     return 0;
 }
 
-
-PRBool
-nsDNSService::IsAsciiString(const char *s)
-{
-    for (const char *c = s; *c; c++) {
-        if (!nsCRT::IsAscii(*c)) return PR_FALSE;
-    }
-    return PR_TRUE;
-}
-
 #define NETWORK_DNS_CACHE_ENTRIES       "network.dnsCacheEntries"
 #define NETWORK_DNS_CACHE_EXPIRATION    "network.dnsCacheExpiration"
 #define NETWORK_ENABLEIDN               "network.enableIDN"
@@ -1395,7 +1385,7 @@ nsDNSService::Lookup(const char*     hostName,
 
         nsDNSLookup *lookup = nsnull;
         // IDN handling
-        if (mIDNConverter && !IsAsciiString(hostName)) {
+        if (mIDNConverter && !nsCRT::IsAscii(hostName)) {
             nsXPIDLCString hostNameACE;
             rv = mIDNConverter->UTF8ToIDNHostName(hostName, getter_Copies(hostNameACE));
             if (!hostNameACE.get()) return NS_ERROR_OUT_OF_MEMORY;
