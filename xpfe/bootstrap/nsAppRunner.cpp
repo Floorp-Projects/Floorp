@@ -43,6 +43,8 @@
 
 // header file for profile manager
 #include "nsIProfile.h"
+// Uncomment this line to skip the profile code compilation
+//#include "profileSwitch.h"
 
 #if defined(XP_MAC)
 #include "macstdlibextras.h"
@@ -131,6 +133,7 @@ int main(int argc, char* argv[])
 #if defined(NS_USING_PROFILES)
 	nsFileSpec currProfileDirSpec;
 	PRBool profileDirSet = PR_FALSE;
+	PRBool runProfMgr = PR_FALSE;
 	nsIProfile *profileService = nsnull;
 #endif // defined(NS_USING_PROFILES)
 
@@ -269,6 +272,16 @@ int main(int argc, char* argv[])
 			
 		}
     }
+
+	// Start Profile Manager
+	rv = cmdLineArgs->GetCmdLineValue("-ProfileManager", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+    {		
+		if (cmdResult) {
+			runProfMgr = PR_TRUE;
+			urlstr = "resource:/res/profile/profileManagerContainer.xul"; 
+		}
+    }
 #endif // defined(NS_USING_PROFILES)
     
     rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
@@ -346,11 +359,14 @@ int main(int argc, char* argv[])
     goto done;
   }
  
-#if 0 // defined(NS_USING_PROFILES) 
+#if defined (NS_USING_PROFILES)
   /* 
    * If default profile is current, launch CreateProfile Wizard. 
    */ 
-  { 
+  
+	if (!runProfMgr)
+	{
+
       int numProfiles = 0; 
 
       profileService->GetProfileCount(&numProfiles); 
@@ -361,11 +377,15 @@ int main(int argc, char* argv[])
           char* profileName = nsnull;
           profileService->GetCurrentProfile(&profileName);
           if (profileName && strcmp(profileName, "default") == 0)
+		  {
               urlstr = "resource:/res/profile/cpw.xul"; 
+		  }
       }
-  } 
+	}
+
 
 #endif
+
  
   /*
    * Post an event to the shell instance to load the AppShell 
