@@ -55,7 +55,7 @@ CONFIG_FILES	+= \
 		  $(NULL)
 endif
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 CONFIG_FILES	+= \
 		  init/security.js \
 		  $(NULL)
