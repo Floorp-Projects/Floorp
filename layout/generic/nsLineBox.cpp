@@ -53,7 +53,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
     nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aFloaters->ElementAt(i);
     if (nsnull != ph) {
       fprintf(out, "placeholder@%p ", ph);
-      nsIFrame* frame = ph->GetAnchoredItem();
+      nsIFrame* frame = ph->GetOutOfFlowFrame();
       if (nsnull != frame) {
         frame->GetFrameName(frameName);
         fputs(frameName, out);

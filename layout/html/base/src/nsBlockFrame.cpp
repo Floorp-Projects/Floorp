@@ -1623,7 +1623,7 @@ nsBlockFrame::FindLineFor(nsIFrame* aFrame,
       PRInt32 i, n = a.Count();
       for (i = 0; i < n; i++) {
         nsPlaceholderFrame* ph = (nsPlaceholderFrame*) a[i];
-        if (aFrame == ph->GetAnchoredItem()) {
+        if (aFrame == ph->GetOutOfFlowFrame()) {
           isFloater = PR_TRUE;
           goto done;
         }
@@ -2138,7 +2138,7 @@ nsBlockFrame::SlideFloaters(nsIPresContext* aPresContext,
     PRInt32 i, n = floaters->Count();
     for (i = 0; i < n; i++) {
       nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-      nsIFrame* floater = ph->GetAnchoredItem();
+      nsIFrame* floater = ph->GetOutOfFlowFrame();
       floater->GetRect(r);
       r.y += aDY;
       floater->SetRect(r);
@@ -2162,7 +2162,7 @@ ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
       PRInt32 i, n = floaters->Count();
       for (i = 0; i < n; i++) {
         nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-        nsIFrame* floater = ph->GetAnchoredItem();
+        nsIFrame* floater = ph->GetOutOfFlowFrame();
         aSpaceManager->OffsetRegion(floater, aDeltaX, aDeltaY);
 #if 0
 ((nsFrame*)kid)->ListTag(stdout); printf(": offset=%d,%d\n", aDeltaX, aDeltaY);
@@ -3912,11 +3912,11 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
         PRInt32 i, count = floaters->Count();
         for (i = 0; i < count; i++) {
           nsPlaceholderFrame* ph = (nsPlaceholderFrame*)floaters->ElementAt(i);
-          if (ph->GetAnchoredItem() == aOldFrame) {
+          if (ph->GetOutOfFlowFrame() == aOldFrame) {
             // Note: the placeholder is part of the line's child list
             // and will be removed later.
             // XXX stop storing pointers to the placeholder in the line list???
-            ph->SetAnchoredItem(nsnull);
+            ph->SetOutOfFlowFrame(nsnull);
             floaters->RemoveElementAt(i);
             aOldFrame->DeleteFrame(aPresContext);
             goto found_it;
@@ -4296,7 +4296,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   // unbounded height. Floaters with an auto width are sized to zero
   // according to the css2 spec.
   nsRect availSpace(0, 0, aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
-  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
   PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
 
   // Setup block reflow state to reflow the floater
@@ -4333,7 +4333,7 @@ void
 nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 {
   // Set the geometric parent of the floater
-  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
   floater->SetParent(mBlock);
 
   // Then add the floater to the current line and place it when
@@ -4553,7 +4553,7 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // placement are for the floater only, not for any non-floating
   // content.
   nscoord saveY = mY;
-  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
 
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
@@ -4869,11 +4869,11 @@ nsBlockFrame::PaintFloaters(nsIPresContext& aPresContext,
     for (i = 0; i < n; i++) {
       nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_BACKGROUND);
+                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_BACKGROUND);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_FLOATERS);
+                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_FLOATERS);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect,
-                 ph->GetAnchoredItem(), NS_FRAME_PAINT_LAYER_FOREGROUND);
+                 ph->GetOutOfFlowFrame(), NS_FRAME_PAINT_LAYER_FOREGROUND);
     }
   }
 }
@@ -5235,7 +5235,7 @@ nsBlockFrame::BuildFloaterList()
       PRInt32 i, n = array.Count();
       for (i = 0; i < n; i++) {
         nsPlaceholderFrame* ph = (nsPlaceholderFrame*) array[i];
-        nsIFrame* floater = ph->GetAnchoredItem();
+        nsIFrame* floater = ph->GetOutOfFlowFrame();
         if (nsnull == head) {
           current = head = floater;
         }
@@ -5414,7 +5414,7 @@ nsAnonymousBlockFrame::RemoveFirstFrame()
           }
 
           // Remove the floater from the block frames mFloaters list too
-          mFloaters.RemoveFrame(placeholderFrame->GetAnchoredItem());
+          mFloaters.RemoveFrame(placeholderFrame->GetOutOfFlowFrame());
           break;
         }
       }
