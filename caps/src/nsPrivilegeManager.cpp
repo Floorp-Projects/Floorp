@@ -1110,6 +1110,9 @@ nsPrivilegeManager::checkPrivilegeEnabled(void *context,
   PRInt32 noOfTargets;
   PRInt32 idx;
   char *errMsg = NULL; 
+  nsPrincipal *principal;
+  PRInt32 noOfPrincipals;
+  PRBool saw_dangerous_code = PR_FALSE;
 
   if (targetArray == NULL) {
     return "internal error - null target array";
@@ -1144,7 +1147,29 @@ nsPrivilegeManager::checkPrivilegeEnabled(void *context,
               (nsPrivilegeTable *) (*nsCapsGetAnnotationCallback)(wrapper);
             prinArray = 
               (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
-            /*
+            
+			/* 
+			 * When the Registration Mode flag is enabled, we allow secure
+			 * operations if and only iff the principal codebase is 'file:'.
+			 * That means we load files only after recognizing that they
+			 * reside on local harddrive. Any other code is considered as
+			 * dangerous and an exception will be thrown in such cases.
+			 */
+			if ((nsCapsGetRegistrationModeFlag()) && (prinArray != NULL)){
+				noOfPrincipals = prinArray->GetSize();
+
+				for (idx=0; idx < noOfPrincipals; idx++){
+					principal = (nsPrincipal *) prinArray->Get(idx);
+
+					if (!(principal->isFileCodeBase())){
+						saw_dangerous_code = PR_TRUE;
+						errMsg = "access to target Forbidden - Illegal url code base is detected";
+						goto done;
+					}
+				}
+			}
+
+			/*
              * frame->annotation holds a PrivilegeTable, describing
              * the scope privileges of this frame.  We'll check
              * if it permits the target, and if so, we just return.
@@ -1219,6 +1244,13 @@ nsPrivilegeManager::checkPrivilegeEnabled(void *context,
     errMsg =  "access to target forbidden. Target was not enabled on stack (stack included only system code)";
     
 done:
+	/* 
+     * If the Registration Mode flag is set and principals have
+     * 'file:' code base, we set the error message to NULL.
+     */
+    if ((nsCapsGetRegistrationModeFlag()) && !(saw_dangerous_code)){
+		errMsg = NULL;
+	}
     (*nsCapsFreeNSJSJavaFrameWrapperCallback)(wrapper);
     return errMsg;
 }

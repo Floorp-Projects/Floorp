@@ -62,8 +62,16 @@ nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
   PRBool isCert = (prin->isCodebase()) ? PR_FALSE : PR_TRUE;
   nsPermState permState = nsPermState_AllowedSession;
 
-  /* set displayUI to TRUE, to enable UI */
-  if (displayUI) {
+  /* 
+   * Check Registration Mode flag and the url code base 
+   * to set permission state 
+   */
+  if ((nsCapsGetRegistrationModeFlag()) && (prin != NULL)) {
+	  if (prin->isFileCodeBase()) {
+		permState = nsPermState_AllowedSession;
+	  }
+  } else if (displayUI) {
+	/* set displayUI to TRUE, to enable UI */
     nsCaps_lock();
     permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert); 
     nsCaps_unlock();
