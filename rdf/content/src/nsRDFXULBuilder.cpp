@@ -1246,10 +1246,9 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
             return rv;
         }
 
-        if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-            NS_ERROR("unable to assert new property value");
-            return rv;
-        }
+        rv = mDB->Assert(resource, property, value, PR_TRUE);
+        NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new property value");
+        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -1951,6 +1950,18 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
                                                     (void**) getter_AddRefs(db)))) {
         NS_ERROR("unable to construct new composite data source");
         return rv;
+    }
+
+    // Add the local store as the first data source in the db.
+    {
+        nsCOMPtr<nsIRDFDataSource> localstore;
+        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get local store");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = db->AddDataSource(localstore);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
+        if (NS_FAILED(rv)) return rv;
     }
 
     // Parse datasources: they are assumed to be a whitespace
