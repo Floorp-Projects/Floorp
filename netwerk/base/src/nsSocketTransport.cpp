@@ -657,8 +657,7 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
   nsresult rv = NS_OK;
 
   if (eSocketOperation_None != mOperation) {
-    // XXX: This should be NS_ERROR_IN_PROGRESS...
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_IN_PROGRESS;
   }
 
   if (NS_SUCCEEDED(rv) && !mReadStream) {
@@ -678,7 +677,7 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_Read;
 
-    mService->AddToWorkQ(this);
+    rv = mService->AddToWorkQ(this);
   }
 
   return rv;
@@ -694,8 +693,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   nsresult rv = NS_OK;
 
   if (eSocketOperation_None != mOperation) {
-    // XXX: This should be NS_ERROR_IN_PROGRESS...
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_IN_PROGRESS;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -716,7 +714,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_Write;
-    mService->AddToWorkQ(this);
+    rv = mService->AddToWorkQ(this);
   }
 
   return rv;
@@ -729,8 +727,7 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
   nsresult rv = NS_OK;
 
   if (eSocketOperation_None != mOperation) {
-    // XXX: This should be NS_ERROR_IN_PROGRESS...
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_IN_PROGRESS;
   }
 
   if (NS_SUCCEEDED(rv) && !mReadStream) {
@@ -749,14 +746,12 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_Read;
 
-    mService->AddToWorkQ(this);
+    rv = mService->AddToWorkQ(this);
   }
 
   return rv;
 }
 
-
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 
 NS_IMETHODIMP
 nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
@@ -764,11 +759,17 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
   nsresult rv = NS_OK;
 
   if (eSocketOperation_None != mOperation) {
-    // XXX: This should be NS_ERROR_IN_PROGRESS...
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_IN_PROGRESS;
   }
 
-  if (NS_SUCCEEDED(rv) && !mWriteStream) {
+  // If we don't have a write stream at this point, get one!
+  if (!mWriteStream) {
+	// We want a pipe here so the caller can "write" into one end
+	// and the other end (aWriteStream) gets the data. This data
+	// is then written to the underlying socket when nsSocketTransport::doWrite()
+	// is called.
+
+    // XXX not sure if this should be blocking (PR_TRUE) or non-blocking.
     rv = NS_NewPipe(&mWriteStream,
            result,
            PR_FALSE, MAX_IO_BUFFER_SIZE);
@@ -776,9 +777,9 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_Write;
-    mService->AddToWorkQ(this);
+    // Start the crank.
+    rv = mService->AddToWorkQ(this);
   }
-
   return rv;
 }
 
