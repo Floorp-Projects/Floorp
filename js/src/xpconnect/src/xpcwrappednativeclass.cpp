@@ -339,7 +339,7 @@ nsXPCWrappedNativeClass::HandlePossibleNameCaseError(JSContext* cx, jsid id)
             const char* badName = JS_GetStringBytes(oldJSStr);
             char* locationStr = nsnull;
 
-            nsCOMPtr<nsXPCException> e =
+            nsCOMPtr<nsIXPCException> e =
                 dont_AddRef(nsXPCException::NewException("", NS_OK, 
                                                          nsnull, nsnull));
 

@@ -71,15 +71,31 @@ JSValIsInterfaceOfType(JSContext *cx, jsval v, REFNSIID iid)
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+static char* CloneAllAccess()
+{
+    static const char allAccess[] = "AllAccess";
+    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));        
+}
+#endif
+
 /***************************************************************************/
 
-class nsXPCComponents_Interfaces : public nsIXPCComponents_Interfaces, public nsIXPCScriptable
+class nsXPCComponents_Interfaces : 
+            public nsIXPCComponents_Interfaces, 
+            public nsIXPCScriptable
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+          , public nsISecurityCheckedComponent
+#endif
 {
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS_INTERFACES
     XPC_DECLARE_IXPCSCRIPTABLE
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
 
 public:
     nsXPCComponents_Interfaces();
@@ -109,7 +125,16 @@ nsXPCComponents_Interfaces::~nsXPCComponents_Interfaces()
     // empty
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Interfaces, nsIXPCComponents_Interfaces, nsIXPCScriptable)
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPCComponents_Interfaces, 
+                              nsIXPCComponents_Interfaces, 
+                              nsIXPCScriptable,
+                              nsISecurityCheckedComponent)
+#else
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents_Interfaces, 
+                              nsIXPCComponents_Interfaces, 
+                              nsIXPCScriptable)
+#endif
 
 XPC_IMPLEMENT_IGNORE_CREATE(nsXPCComponents_Interfaces)
 // XPC_IMPLEMENT_IGNORE_GETFLAGS(nsXPCComponents_Interfaces)
@@ -315,6 +340,43 @@ nsXPCComponents_Interfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
     }
 }
 
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP 
+nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP 
+nsXPCComponents_Interfaces::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCComponents_Interfaces::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+#endif
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -1775,7 +1837,16 @@ nsXPCComponents_Constructor::HasInstance(JSContext *cx, JSObject *obj,
 // XXXjband We ought to cache the wrapper in the object's slots rather than
 // re-wrapping on demand
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents, nsIXPCComponents, nsIXPCScriptable)
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsXPCComponents, 
+                              nsIXPCComponents, 
+                              nsIXPCScriptable, 
+                              nsISecurityCheckedComponent)
+#else
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCComponents, 
+                              nsIXPCComponents, 
+                              nsIXPCScriptable)
+#endif
 
 nsXPCComponents::nsXPCComponents()
     :   mInterfaces(nsnull),
@@ -1998,3 +2069,43 @@ done:
     return success;
 }
 
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP 
+nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP 
+nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    static const PRUnichar* interfaces = NS_LITERAL_STRING("interfaces");
+    if(!nsCRT::strcmp(propertyName, interfaces))
+        *_retval = CloneAllAccess();
+    else
+        *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCComponents::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+#endif

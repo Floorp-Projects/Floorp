@@ -100,7 +100,13 @@ nsXPCException::IterateNSResults(nsresult* rv,
 
 /***************************************************************************/
 
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsXPCException, 
+                              nsIXPCException, 
+                              nsISecurityCheckedComponent)
+#else
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCException, nsIXPCException)
+#endif
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
@@ -359,3 +365,58 @@ nsXPCException::NewException(const char *aMessage,
     }
     return e;
 }
+
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+static char* CloneAllAccess()
+{
+    static const char allAccess[] = "AllAccess";
+    return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));        
+}
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP 
+nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP 
+nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    static const PRUnichar* toString = NS_LITERAL_STRING("toString");
+    if(!nsCRT::strcmp(methodName, toString))
+        *_retval = CloneAllAccess();
+    else
+        *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    static const PRUnichar* message  = NS_LITERAL_STRING("message");
+    static const PRUnichar* result   = NS_LITERAL_STRING("result");
+    static const PRUnichar* name     = NS_LITERAL_STRING("name");
+    
+    if(!nsCRT::strcmp(propertyName, message) ||
+       !nsCRT::strcmp(propertyName, result) ||
+       !nsCRT::strcmp(propertyName, name))
+        *_retval = CloneAllAccess();
+    else
+        *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXPCException::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+#endif
