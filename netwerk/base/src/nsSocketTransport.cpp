@@ -1920,6 +1920,8 @@ nsSocketBOS::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aBytesWritten)
 
 tryWrite:
     total = PR_Write(mSock, aBuf, aCount);
+    LOG(("nsSocketBOS PR_Write [this=%x] wrote %d\n", this, total));
+
     if (total < 0) {
         if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
             //
@@ -1933,6 +1935,7 @@ tryWrite:
             LOG(("nsSocketBOS::Write [this=%x] Poll succeeded; looping back to PR_Write\n", this));
             goto tryWrite;
         }
+        LOG(("nsSocketBOS::Write [this=%x] Write Failed  [rv=%x]\n", this, PR_GetError()));
         return NS_ERROR_FAILURE;
     }
     /*
