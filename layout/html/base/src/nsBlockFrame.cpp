@@ -900,11 +900,14 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  nsLineLayout lineLayout(aPresContext, aReflowState.spaceManager,
+  nsLineLayout* lineLayout = new nsLineLayout(aPresContext, aReflowState.spaceManager,
                           &aReflowState, nsnull != aMetrics.maxElementSize);
+	if (! lineLayout) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
-                           &lineLayout);
-  lineLayout.Init(&state);
+                           lineLayout);
+  lineLayout->Init(&state);
   if (NS_BLOCK_MARGIN_ROOT & mFlags) {
     state.mIsMarginRoot = PR_TRUE;
   }
@@ -988,6 +991,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
          aMetrics.width, aMetrics.height,
          aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 #endif
+  delete lineLayout;
   return rv;
 }
 
