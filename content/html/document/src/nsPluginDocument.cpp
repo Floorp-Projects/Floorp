@@ -175,9 +175,9 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewHTMLSharedElement(getter_AddRefs(mPluginContent), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
+  mPluginContent = NS_NewHTMLSharedElement(nodeInfo);
+  if (!mPluginContent) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   mPluginContent->SetDocument(this, PR_FALSE, PR_TRUE);
 

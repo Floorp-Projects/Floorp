@@ -312,10 +312,11 @@ nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
                                          kNameSpaceID_None,
                                          getter_AddRefs(nodeInfo));
   if(NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIHTMLContent> content=nsnull;
-    result = NS_NewHTMLTitleElement(getter_AddRefs(content), nodeInfo);
+    nsCOMPtr<nsIHTMLContent> content = NS_NewHTMLTitleElement(nodeInfo);
 
-    if (NS_SUCCEEDED(result)) {
+    if (!content) {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    } else {
       nsIContent *parent = GetCurrentContent();
 
       if (nsnull == parent) {

@@ -1049,13 +1049,14 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     }
   } else if (aLength) {
     // This violates the W3C DOM but we do this for backwards compatibility
-    nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
     mNodeInfo->NameChanged(nsHTMLAtoms::option, getter_AddRefs(nodeInfo));
 
-    rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nodeInfo);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIHTMLContent> element = NS_NewHTMLOptionElement(nodeInfo);
+    if (!element) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsCOMPtr<nsITextContent> text;
     rv = NS_NewTextNode(getter_AddRefs(text));

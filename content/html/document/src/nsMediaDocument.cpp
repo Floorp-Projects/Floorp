@@ -239,10 +239,9 @@ nsMediaDocument::CreateSyntheticDocument()
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> root;
-  rv = NS_NewHTMLHtmlElement(getter_AddRefs(root), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIHTMLContent> root = NS_NewHTMLHtmlElement(nodeInfo);
+  if (!root) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   root->SetDocument(this, PR_FALSE, PR_TRUE);
   SetRootContent(root);
@@ -252,10 +251,9 @@ nsMediaDocument::CreateSyntheticDocument()
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> body;
-  rv = NS_NewHTMLBodyElement(getter_AddRefs(body), nodeInfo);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIHTMLContent> body = NS_NewHTMLBodyElement(nodeInfo);
+  if (!body) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   body->SetDocument(this, PR_FALSE, PR_TRUE);
   mBodyContent = do_QueryInterface(body);

@@ -342,22 +342,22 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
       nsCOMPtr<nsINodeInfo> htmlNodeInfo;
 
       // generate an html html element
-      nsCOMPtr<nsIHTMLContent> htmlElement;
       nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
                       getter_AddRefs(htmlNodeInfo));
-      NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), htmlNodeInfo);
+      nsCOMPtr<nsIHTMLContent> htmlElement
+        = NS_NewHTMLHtmlElement(htmlNodeInfo);
 
       // generate an html head element
-      nsCOMPtr<nsIHTMLContent> headElement;
       nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
                       getter_AddRefs(htmlNodeInfo));
-      NS_NewHTMLHeadElement(getter_AddRefs(headElement), htmlNodeInfo);
+      nsCOMPtr<nsIHTMLContent> headElement
+        = NS_NewHTMLHeadElement(htmlNodeInfo);
 
       // generate an html body element
-      nsCOMPtr<nsIHTMLContent> bodyElement;
       nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
                       getter_AddRefs(htmlNodeInfo));
-      NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), htmlNodeInfo);
+      nsCOMPtr<nsIHTMLContent> bodyElement
+        = NS_NewHTMLBodyElement(htmlNodeInfo);
 
       // blat in the structure
       if (htmlElement && headElement && bodyElement) {

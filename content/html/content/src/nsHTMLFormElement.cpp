@@ -397,28 +397,23 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 // nsHTMLFormElement implementation
 
 // construction, destruction
-nsresult
-NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
-                      nsINodeInfo *aNodeInfo, PRBool aFromParser)
+nsIHTMLContent*
+NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);
   if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
   }
 
   nsresult rv = it->Init();
 
   if (NS_FAILED(rv)) {
     delete it;
-
-    return rv;
+    return nsnull;
   }
 
-  NS_ADDREF(*aInstancePtrResult = it);
-
-  return rv;
+  return it;
 }
-
 
 nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),

@@ -151,9 +151,8 @@ protected:
   PRPackedBool mIsSelected;
 };
 
-nsresult
-NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
-                        PRBool aFromParser)
+nsIHTMLContent*
+NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   /*
    * nsHTMLOptionElement's will be created without a nsINodeInfo passed in
@@ -165,27 +164,19 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   if (!nodeInfo) {
     nsCOMPtr<nsIDocument> doc =
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(doc, nsnull);
 
     nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(nodeInfoManager, nsnull);
 
     rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::option, nsnull,
                                       kNameSpaceID_None,
                                       getter_AddRefs(nodeInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
-  nsIHTMLContent* it = new nsHTMLOptionElement(nodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult = it);
-
-  return NS_OK;
+  return new nsHTMLOptionElement(nodeInfo);
 }
-
 
 nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
