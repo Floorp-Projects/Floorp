@@ -2993,7 +2993,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   // wasn't transformed, then we can skip this step. If we're displaying the
   // selection and the text is selected, then we need to do this step so we
   // can create the index buffer
-  PRInt32     textLength;
+  PRInt32     textLength = 0;
   const char* text;
   char        paintBufMem[TEXT_BUF_SIZE];
   char*       paintBuf = paintBufMem;
@@ -3025,7 +3025,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 
     text = paintBuf;
 
-  } else {
+  }
+  else if (mContentOffset + mContentLength <= frag->GetLength()) {
     text = frag->Get1b() + mContentOffset;
     textLength = mContentLength;
 
@@ -3042,6 +3043,12 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       textLength--;
     }
     NS_ASSERTION(textLength >= 0, "bad text length");
+  }
+  else {
+    // This might happen if a paint event beats the reflow; e.g., as
+    // is the case in bug 73291. Not a big deal, because the reflow
+    // will schedule another invalidate.
+    NS_WARNING("content length exceeds fragment length");
   }
 
   nscoord width = mRect.width;
