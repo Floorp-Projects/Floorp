@@ -259,7 +259,8 @@ public:
     nsresult    HandleScriptToken(const nsIParserNode *aNode);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
-
+    nsresult    BuildNeglectedTarget(eHTMLTags aTarget, eHTMLTokenTypes aType,
+                                     nsIParser* aParser, nsIContentSink* aSink);
 
     //*************************************************
     //these cover methods mimic the sink, and are used
