@@ -718,12 +718,7 @@ nsAppShellService::RegisterTopLevelWindow(nsIWebShellWindow* aWindow)
 NS_IMETHODIMP
 nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 {
-  nsIWindowMediator* service;
-	if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
-	{
-		service->UnregisterWindow( aWindow );
-		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
-	}
+  
 
 	if (mDeleteCalled) {
 		// return an error code in order to:
@@ -733,6 +728,13 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 		return NS_ERROR_FAILURE;
 	}
   
+  nsIWindowMediator* service;
+  if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+  {
+	service->UnregisterWindow( aWindow );
+	nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+  }
+	
   nsresult rv;
 
   nsIWebShellContainer* wsc;
