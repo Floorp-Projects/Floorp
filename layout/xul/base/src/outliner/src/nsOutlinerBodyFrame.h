@@ -317,7 +317,7 @@ protected:
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(nsIStyleContext* aStyleContext);
+  nsRect GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, nsIStyleContext* aStyleContext);
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
