@@ -6,25 +6,37 @@
 
 void main()
 {
-  /*
-  Test code for Pure Mozilla Objects
+  nsXMLDocument* DocTestElem = new nsXMLDocument();
 
-  nsXMLDocument* nsxmlDocument = new nsXMLDocument();
+  nsIDOMElement* nsDocElem = NULL;
+  nsIDOMElement* returnElem = NULL;
+ 
+  MozillaString tag, tag2;
 
-  nsIDOMElement* nsElem1 = NULL;
-  nsIDOMNode* returnElem = NULL;
-  nsIDOMElement* docElem = NULL;
-  MozillaString tag;
+  nsresult res;
 
-  nsxmlDocument->CreateElement("TestFirstElement", &nsElem1);
-  nsxmlDocument->AppendChild(nsElem1, &returnElem);
+  DocTestElem->CreateElement("Document-Element", &nsDocElem);
 
-  if (!returnElem)
+  if (DocTestElem->AppendChild(nsDocElem, &((nsIDOMNode*)returnElem)) != NS_OK)
     cout << "The AppendChild did not work" << endl; 
-
-  nsElem1->GetTagName(tag.getNSString());
-
-  cout << tag << endl; */
+  else
+    {
+      cout << "Element Inserted" << endl;
+      returnElem->GetTagName(tag.getNSString());
+      cout << tag << endl;
+    }
+  
+  res=DocTestElem->GetDocumentElement(&returnElem);
+  if (res == NS_OK)
+    {
+      cout << "Document's Element = ";
+      returnElem->GetTagName(tag2.getNSString());
+      cout << tag << endl;
+    }
+  else
+    {
+      cout << "ERROR!  Could not retrieve the document's element (" << hex << res << ")" << endl << endl;;
+    }
   
 
   nsXMLDocument* nsxmlDocument = new nsXMLDocument();
