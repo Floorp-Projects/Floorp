@@ -50,7 +50,7 @@ class nsIDOMNode;
   IBOutlet id mSidebarTabView;
   IBOutlet id mSidebarSourceTabView;
   IBOutlet id mLocationToolbarView;
-  IBOutlet id mURLBar;
+  IBOutlet NSTextField* mURLBar;
   IBOutlet id mStatus;
   IBOutlet id mProgress;
   IBOutlet id mLocationSheetWindow;
