@@ -42,6 +42,11 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMSelectionListener.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMRange.h"
+#include "nsLayoutCID.h"
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
@@ -70,7 +75,6 @@
 #include "nsIEventQueue.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 #ifdef NS_DEBUG
 #undef NOISY_VIEWER
@@ -82,7 +86,8 @@ class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
-                           public nsIImageGroupObserver
+                           public nsIImageGroupObserver,
+                           public nsIDOMSelectionListener
 {
 public:
   DocumentViewerImpl();
@@ -128,10 +133,13 @@ public:
   // nsIMarkupDocumentViewer
   NS_DECL_NSIMARKUPDOCUMENTVIEWER
 
-  // nsIImageGroupObserver interface...
+  // nsIImageGroupObserver interface
   virtual void Notify(nsIImageGroup *aImageGroup,
                       nsImageGroupNotification aNotificationType);
 
+  // nsIDOMSelectionListerner interface
+  NS_DECL_IDOMSELECTIONLISTENER
+  
 protected:
   virtual ~DocumentViewerImpl();
 
@@ -141,6 +149,8 @@ private:
   nsresult MakeWindow(nsNativeWidget aNativeParent,
                       const nsRect& aBounds,
                       nsScrollPreference aScrolling);
+
+  nsresult GetDocumentSelection(nsIDOMSelection **aSelection);
 
   //
   // The following three methods are used for printing...
@@ -203,17 +213,6 @@ static NS_DEFINE_CID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
-// Interface IDs
-static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIViewManagerIID,      NS_IVIEWMANAGER_IID);
-static NS_DEFINE_IID(kIViewIID,             NS_IVIEW_IID);
-static NS_DEFINE_IID(kScrollViewIID,        NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIContentViewerIID,    NS_ICONTENT_VIEWER_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID,   NS_IDOCUMENT_VIEWER_IID);
-static NS_DEFINE_IID(kILinkHandlerIID,      NS_ILINKHANDLER_IID);
-
 nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 {
@@ -226,7 +225,7 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
     *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDocumentViewerIID, (void**) aResult);
+  return it->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) aResult);
 }
 
 // Note: operator new zeros our memory
@@ -261,37 +260,43 @@ DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kIContentViewerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIContentViewer))) {
     nsIContentViewer* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDocumentViewerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocumentViewer))) {
     nsIDocumentViewer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIMarkupDocumentViewer::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMarkupDocumentViewer))) {
     nsIMarkupDocumentViewer* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIContentViewerFile::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIContentViewerFile))) {
     nsIContentViewerFile* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIContentViewerEdit::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIContentViewerEdit))) {
     nsIContentViewerEdit* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
+    nsIDOMSelectionListener* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIContentViewer* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*) tmp2;
@@ -306,10 +311,10 @@ DocumentViewerImpl::~DocumentViewerImpl()
   if (mDocument) {
     // Break global object circular reference on the document created
     // in the DocViewer Init
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-    if (global) {
-      global->SetNewDocument(nsnull);
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      globalObject->SetNewDocument(nsnull);
     }
     // out of band cleanup of webshell
     mDocument->SetScriptGlobalObject(nsnull);
@@ -383,9 +388,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
   if (!mPresContext) {
     // Create presentation context
     rv = NS_NewGalleyContext(getter_AddRefs(mPresContext));
-    if (NS_OK != rv) {
-      return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     mPresContext->Init(aDeviceContext, aPrefs); 
     makeCX = PR_TRUE;
@@ -417,17 +420,20 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
   }
 
   // Create the ViewManager and Root View...
-  MakeWindow(aNativeParent, aBounds, aScrolling);
+  rv = MakeWindow(aNativeParent, aBounds, aScrolling);
+  if (NS_FAILED(rv)) return rv;
 
   // Create the style set...
   nsIStyleSet* styleSet;
   rv = CreateStyleSet(mDocument, &styleSet);
-  if (NS_OK == rv) {
+  if (NS_FAILED(rv)) return rv;
+
     // Now make the shell for the document
     rv = mDocument->CreateShell(mPresContext, mViewManager, styleSet,
                                 getter_AddRefs(mPresShell));
     NS_RELEASE(styleSet);
-    if (NS_OK == rv) {
+  if (NS_FAILED(rv)) return rv;
+  
       // Initialize our view manager
       nsRect bounds;
       mWindow->GetBounds(bounds);
@@ -454,8 +460,20 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
           mViewManager->EnableRefresh();
         }
       }
-    }
-  }
+
+#if 0
+  // enable this when we resolve the ref cycle issues.
+  // now register ourselves as a selection listener, so that we get called
+  // when the selection changes in the window
+  nsCOMPtr<nsIDOMSelection> selection;
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = selection->AddSelectionListener(this);		// this creates a circular ref, causing leaks. Fix this.
+  if (NS_FAILED(rv)) return rv;
+  
+  // we need to RemoveSelectionListener somewhere too
+#endif
 
   return rv;
 }
@@ -602,7 +620,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
     mPresContext->GetCompatibilityMode(&mode);
     cx->SetCompatibilityMode(mode);
     cx->SetContainer(aParent);
-
+    
     CreateStyleSet(mDocument, getter_AddRefs(ss));
 
     nsCOMPtr<nsIPresShell> ps;
@@ -613,7 +631,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
 
     rv = nsComponentManager::CreateInstance(kViewManagerCID,
                                             nsnull,
-                                            kIViewManagerIID,
+                                            NS_GET_IID(nsIViewManager),
                                             (void **)getter_AddRefs(vm));
     if (NS_FAILED(rv)) {
       return rv;
@@ -626,7 +644,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
     nsRect tbounds = nsRect(0, 0, width, height);
 
     // Create a child window of the parent that is our "root view/window"
-    rv = nsComponentManager::CreateInstance(kViewCID,nsnull,kIViewIID,(void **)&view);
+    rv = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -792,7 +810,7 @@ DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
   rv = nsComponentManager::CreateInstance(kViewManagerCID, 
                                           nsnull, 
-                                          kIViewManagerIID, 
+                                          NS_GET_IID(nsIViewManager), 
                                           getter_AddRefs(mViewManager));
 
   nsCOMPtr<nsIDeviceContext> dx;
@@ -811,7 +829,7 @@ DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
   // Create a view
   rv = nsComponentManager::CreateInstance(kViewCID, 
                                           nsnull, 
-                                          kIViewIID, 
+                                          NS_GET_IID(nsIView), 
                                           (void**)&mView);
   if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
                                              tbounds,
@@ -838,6 +856,14 @@ DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
   // mWindow->SetFocus();
 
   return rv;
+}
+
+nsresult DocumentViewerImpl::GetDocumentSelection(nsIDOMSelection **aSelection)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  
+  return mPresShell->GetSelection(SELECTION_NORMAL, aSelection);  
 }
 
 NS_IMETHODIMP
@@ -928,8 +954,12 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
   }
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 /* ========================================================================================
- * nsIContentViewerFile
+ * nsIContentViewerEdit
  * ======================================================================================== */
 
 NS_IMETHODIMP DocumentViewerImpl::Search()
@@ -952,20 +982,66 @@ NS_IMETHODIMP DocumentViewerImpl::ClearSelection()
 
 NS_IMETHODIMP DocumentViewerImpl::SelectAll()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX this is a temporary implementation copied from nsWebShell
+  // for now. I think nsDocument and friends should have some helper
+  // functions to make this easier.
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult rv;
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMNode> bodyNode;
+  
+  if (htmldoc)
+  {
+    nsCOMPtr<nsIDOMHTMLElement>bodyElement;
+    rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
+    if (NS_FAILED(rv) || !bodyElement) return rv;
+
+    bodyNode = do_QueryInterface(bodyElement);
+  }
+  else if (mDocument)
+  {
+    nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+    bodyNode = do_QueryInterface(rootContent);
+  }
+  if (!bodyNode) return NS_ERROR_FAILURE; 
+  
+  rv = selection->ClearSelection();
+  if (NS_FAILED(rv)) return rv;
+
+  static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
+  nsCOMPtr<nsIDOMRange> range;
+  rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
+                                          NS_GET_IID(nsIDOMRange),
+                                          getter_AddRefs(range));
+
+  rv = range->SelectNodeContents(bodyNode);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = selection->AddRange(range);
+  return rv;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::CopySelection()
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mPresShell) return NS_ERROR_NOT_INITIALIZED;
+  return mPresShell->DoCopy();
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult rv;
+  rv = GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+  
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+  
+  *aCopyable = PR_TRUE;	// !isCollapsed;  because of current focus bugs, lie for now.
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::CutSelection()
@@ -976,8 +1052,8 @@ NS_IMETHODIMP DocumentViewerImpl::CutSelection()
 
 NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCutable = PR_FALSE;  // mm, will this ever be called for an editable document?
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentViewerImpl::Paste()
@@ -988,12 +1064,16 @@ NS_IMETHODIMP DocumentViewerImpl::Paste()
 
 NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
 {
-  NS_ASSERTION(0, "NOT IMPLEMENTED");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aPasteable = PR_FALSE;
+  return NS_OK;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 /* ========================================================================================
- * nsIContentViewerEdit
+ * nsIContentViewerFile
  * ======================================================================================== */
 NS_IMETHODIMP
 DocumentViewerImpl::Save()
@@ -1068,7 +1148,7 @@ nsCOMPtr<nsIPref>                     prefs;
             return rv;
           }
           
-          rv = nsComponentManager::CreateInstance(kViewManagerCID,nsnull,kIViewManagerIID,(void**)&mPrintVM);
+          rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull, NS_GET_IID(nsIViewManager),(void**)&mPrintVM);
           if(NS_FAILED(rv)) {
             return rv;
           }
@@ -1078,7 +1158,7 @@ nsCOMPtr<nsIPref>                     prefs;
             return rv;
           }
 
-          rv = nsComponentManager::CreateInstance(kViewCID,nsnull,kIViewIID,(void**)&mPrintView);
+          rv = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),(void**)&mPrintView);
           if(NS_FAILED(rv)) {
             return rv;
           }
@@ -1182,6 +1262,9 @@ DocumentViewerImpl::GetPrintable(PRBool *aPrintable)
   return NS_OK;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //*****************************************************************************
 // nsIMarkupDocumentViewer
@@ -1516,4 +1599,11 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 
 #endif
 
+}
+// nsIDOMSelectionListener interface
+NS_IMETHODIMP DocumentViewerImpl::NotifySelectionChanged(void)
+{
+  // we need to do an UpdateCommands here, but there is no way to get
+  // to the right nsIDOMXULCommandDispatcher yet.
+  return NS_OK;
 }
