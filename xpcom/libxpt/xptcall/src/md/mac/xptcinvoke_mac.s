@@ -8,7 +8,7 @@
 		import	.invoke_copy_to_stack
 		import	.__ptr_glue
 
-.XPTC_InvokeByIndex:
+._XPTC_InvokeByIndex:
 		mflr	r0
 		stw	r31,-4(sp)
 #
@@ -83,8 +83,8 @@
 
 		csect	DATA
         import	TOC
-		export 	.XPTC_InvokeByIndex
+		export 	._XPTC_InvokeByIndex
 		
-		dc.l	.XPTC_InvokeByIndex
+		dc.l	._XPTC_InvokeByIndex
 		dc.l	TOC
 		
