@@ -1610,9 +1610,12 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               nsCOMPtr<nsISupports> currentControlSupports;
               nsCOMPtr<nsIFormControl> currentControl;
               PRBool hasMoreElements;
-              while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
-                     hasMoreElements) {
-                formControls->GetNext(getter_AddRefs(currentControlSupports));
+              rv = formControls->HasMoreElements(&hasMoreElements);
+              NS_ENSURE_SUCCESS(rv, rv);
+              while (hasMoreElements) {
+                rv = formControls->GetNext(getter_AddRefs(currentControlSupports));
+                NS_ENSURE_SUCCESS(rv, rv);
+
                 currentControl = do_QueryInterface(currentControlSupports);
                 if (currentControl) {
                   PRInt32 type;
@@ -1631,6 +1634,9 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                     numTextControlsFound++;
                   }
                 }
+
+                rv = formControls->HasMoreElements(&hasMoreElements);
+                NS_ENSURE_SUCCESS(rv, rv);
               }
             
               nsCOMPtr<nsIPresShell> shell;
