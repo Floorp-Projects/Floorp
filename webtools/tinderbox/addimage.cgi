@@ -144,6 +144,8 @@ servers.
 nicely before someone causes a stink.  Be sure to include the URL of
 the image.  Remember, we don't screen these submissions and may not
 have even seen it.
+
+<p><ul><B>P.S. Please, no more pictures of Bill Gates.</B></UL>
 </ul>
 
 <p><form action='addimage.cgi' METHOD='get'>
