@@ -109,7 +109,7 @@ private:
   PRInt32 m_lastFindServerPort;
   nsCString m_lastFindServerType;
 
-  nsresult SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const PRInt32 port, const const char *type);
+  nsresult SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const PRInt32 port, const char *type);
 
   /* internal creation routines - updates m_identities and m_incomingServers */
   nsresult createKeyedAccount(const char* key,
