@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.14 1999/11/06 03:31:27 dmose%mozilla.org Exp $
+ * $Id: if.h,v 3.15 1999/11/13 22:37:41 cls%seawood.org Exp $
  */
 
 #ifndef _if_h
@@ -137,8 +137,8 @@ typedef enum _IL_ConversionType {
     IL_GreyToGrey     = 0x24
 } IL_ConversionType;
 
-typedef void (*il_converter)(il_container *ic, const uint8 *mask, 
-                             const uint8 *sp, int x_offset,
+typedef void (*il_converter)(il_container *ic, const PRUint8 *mask, 
+                             const PRUint8 *sp, int x_offset,
                              int num, void XP_HUGE *out);
 
 enum icstate {
@@ -185,8 +185,8 @@ struct il_container_struct {
     ilIURL *url;
     char *url_address;          /* Same as url->address if there is no redirection*/
 
-    uint32 hash;
-    uint32 urlhash;
+    PRUint32 hash;
+    PRUint32 urlhash;
     
     enum icstate state;
     int sized;
@@ -206,7 +206,7 @@ struct il_container_struct {
     int update_start_row;       /* Scanline range to send to FE */
     int update_end_row;
 
-    uint32 bytes_consumed;      /* Bytes read from the stream so far */
+    PRUint32 bytes_consumed;      /* Bytes read from the stream so far */
 
     NI_PixmapHeader *src_header; /* Source image header information. */
     IL_Pixmap *image;           /* Destination image pixmap structure. */
@@ -222,14 +222,14 @@ struct il_container_struct {
     class ImgDCallbk *imgdcb;
 
     void *row_output_timeout;
-    uint8 *scalerow;
+    PRUint8 *scalerow;
     int pass;                   /* pass (scan #) of a multi-pass image.
                                    Used for interlaced GIFs & p-JPEGs */
 
     int forced;
-    uint32 content_length;
+    PRUint32 content_length;
 
-    uint32 dest_width, dest_height; /* Target dimensions of the image */
+    PRUint32 dest_width, dest_height; /* Target dimensions of the image */
     PRPackedBool natural_size;  /* True if the image is decoded to its natural
                                    size. */
     PRPackedBool aspect_distorted; /* True if the image undergoes aspect ratio
@@ -358,7 +358,7 @@ struct _IL_ImageReq {
 #endif
 
 extern int il_debug;
-extern uint8 il_identity_index_map[];
+extern PRUint8 il_identity_index_map[];
 
 extern void il_delete_container(il_container *ic);
 extern il_container *il_removefromcache(il_container *ic);
@@ -400,13 +400,13 @@ extern int  il_setup_quantize(void);
 extern int  il_init_quantize(il_container *ic);
 extern void il_free_quantize(il_container *ic);
 extern void il_quantize_fs_dither(il_container * ic,
-                                  const uint8* mask,
-                                  const uint8 *samp_in,
+                                  const PRUint8* mask,
+                                  const PRUint8 *samp_in,
                                   int x_offset,
-                                  uint8 XP_HUGE *samp_out,
+                                  PRUint8 XP_HUGE *samp_out,
                                   int width);
 
-extern PRBool il_emit_row(il_container *ic, uint8 *buf, uint8 *rgbbuf,
+extern PRBool il_emit_row(il_container *ic, PRUint8 *buf, PRUint8 *rgbbuf,
                         int start_column, int len, int row, int row_count,
                         il_draw_mode draw_mode, int ipass);
 
@@ -421,7 +421,7 @@ extern int  il_set_color_palette(MWContext *cx, il_container *ic);
 
 extern PRBool il_reset_palette(il_container *ic);
 
-extern void il_reverse_bits(uint8 *buf, int n);
+extern void il_reverse_bits(PRUint8 *buf, int n);
 extern void il_reconnect(il_container *cx);
 extern void il_abort_reconnect(void);
 
@@ -441,7 +441,7 @@ extern il_container
 extern void
 il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap);
 
-extern uint32 il_hash(const char *ubuf);
+extern PRUint32 il_hash(const char *ubuf);
 
 extern void il_partial(il_container *ic, int row, int row_count, int pass);
 extern void il_scour_container(il_container *ic);
@@ -450,7 +450,7 @@ extern PRBool il_add_client(IL_GroupContext *img_cx, il_container *ic,
                             IL_ImageReq *image_req, int is_view_image);
 extern PRBool il_delete_client(il_container *ic, IL_ImageReq *image_req);
 
-extern void il_reduce_image_cache_size_to(uint32 new_size);
+extern void il_reduce_image_cache_size_to(PRUint32 new_size);
 
 
 /************************ Image observer notifiers ***************************/

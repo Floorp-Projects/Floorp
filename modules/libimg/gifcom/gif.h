@@ -24,7 +24,7 @@
 /* gif.h */
 
 extern PRBool  il_gif_init(il_container *ic);
-extern int  il_gif_write(il_container *, const uint8 *, int32);
+extern int  il_gif_write(il_container *, const PRUint8 *, int32);
 extern void il_gif_complete(il_container *ic);
 extern PRUint8 il_gif_write_ready(il_container *ic);
 extern void il_gif_abort(il_container *ic);

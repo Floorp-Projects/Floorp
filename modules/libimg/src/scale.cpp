@@ -53,8 +53,8 @@
 
 /* for png */
 typedef struct _IL_IRGBGA {
-     uint8 index;
-    uint8 red, green, blue, gray, alpha;
+     PRUint8 index;
+    PRUint8 red, green, blue, gray, alpha;
 } IL_IRGBGA;
 
 static void
@@ -74,7 +74,7 @@ il_timeout_callback(void *closure)
      * will take place when the entire image is decoded.
      */
     if (ic->multi &&
-        ((uint32)img_header->height * img_header->width < 100000)) {
+        ((PRUint32)img_header->height * img_header->width < 100000)) {
         return;
     }
     
@@ -139,7 +139,7 @@ il_partial(
          * will take place when the entire image is decoded.
         */
         if (ic->multi &&
-            ((uint32)img_header->height * img_header->width < 100000)) {
+            ((PRUint32)img_header->height * img_header->width < 100000)) {
             return;
         }
     
@@ -232,12 +232,12 @@ il_flush_image_data(il_container *ic)
  *---------------------------------------------------------------------------*/
 static void
 il_scale_RGB_row(
-    uint8 XP_HUGE *src, /* Source row of packed RGB pixels */
+    PRUint8 XP_HUGE *src, /* Source row of packed RGB pixels */
     int src_len,        /* Number of pixels in source row  */
-    uint8 *dest,        /* Destination, packed RGB pixels */
+    PRUint8 *dest,        /* Destination, packed RGB pixels */
     int dest_len)       /* Length of target row, in pixels */
 {
-    uint8 *dest_end = dest + (3 * dest_len);
+    PRUint8 *dest_end = dest + (3 * dest_len);
     int n = 0;
     
     PR_ASSERT(dest);
@@ -280,15 +280,15 @@ il_scale_RGB_row(
  *---------------------------------------------------------------------------*/
 static void
 il_scale_CI_row(
-    uint8 XP_HUGE *src, /* Source row of packed RGB pixels */
+    PRUint8 XP_HUGE *src, /* Source row of packed RGB pixels */
     int src_len,        /* Number of pixels in source row  */
-    uint8 *dest,        /* Destination, packed RGB pixels */
+    PRUint8 *dest,        /* Destination, packed RGB pixels */
     int dest_len,       /* Length of target row, in pixels */
-    uint8* indirect_map,/* image-to-FE color mapping */
+    PRUint8* indirect_map,/* image-to-FE color mapping */
     int transparent_pixel_color)
 {
     int src_pixel, mapped_src_pixel;
-    uint8 *dest_end = dest + dest_len;
+    PRUint8 *dest_end = dest + dest_len;
     int n = 0;
     
     PR_ASSERT(dest);
@@ -331,20 +331,20 @@ il_scale_CI_row(
 
 /* Convert row coordinate from image space to display space. */
 #define SCALE_YCOORD(ih, sh, y)                        \
-    ((int)((uint32)(y) * (ih)->height / (sh)->height))
+    ((int)((PRUint32)(y) * (ih)->height / (sh)->height))
 
 #define SCALE_XCOORD(ih, sh, x)                        \
-    ((int)((uint32)(x) * (ih)->width / (sh)->width))
+    ((int)((PRUint32)(x) * (ih)->width / (sh)->width))
 
 /* Add a bit to the row of mask bits.  Flush accumulator to memory if full. */
 #define SHIFT_IMAGE_MASK(not_transparent_flag)			  \
     {																		  \
-        fgmask32 |=  ((uint32)not_transparent_flag    ) << M32(mask_bit);     \
-        bgmask32 |=  ((uint32)not_transparent_flag ^ 1) << M32(mask_bit);     \
+        fgmask32 |=  ((PRUint32)not_transparent_flag    ) << M32(mask_bit);     \
+        bgmask32 |=  ((PRUint32)not_transparent_flag ^ 1) << M32(mask_bit);     \
 																			  \
         /* Filled up 32-bit mask word.  Write it to memory. */		  \
         if (mask_bit-- == 0) {                                                \
-            uint32 mtmp = *m;                                                 \
+            PRUint32 mtmp = *m;                                                 \
             mtmp |= fgmask32;                                                 \
          	if (draw_mode == ilErase)                                     \
                 mtmp &= ~bgmask32;                                            \
@@ -362,22 +362,22 @@ il_scale_CI_row(
  *---------------------------------------------------------------------------*/
 static void
 il_alpha_mask(
-    uint8 *src,                 /* RGBa, input data */
+    PRUint8 *src,                 /* RGBa, input data */
     int src_len,                /* Number of pixels in source row */
     int x_offset,               /* Destination offset from left edge */
-    uint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
+    PRUint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
     int mask_len,               /* Number of pixels in output row */
     il_draw_mode draw_mode)     /* ilOverlay or ilErase */
 {
     int not_transparent,n =0;
     int output_bits_remaining = mask_len;
 
-    uint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
-    uint32 fgmask32 = 0;
+    PRUint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
+    PRUint32 fgmask32 = 0;
 
     int mask_bit;               /* next bit to write in setmask32 */
     
-    uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
+    PRUint32 *m = ((PRUint32*)maskp) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f;
 
     PR_ASSERT(mask_len);
@@ -424,7 +424,7 @@ il_alpha_mask(
     
     /* End of scan line. Write out any remaining mask bits. */ 
     if (mask_bit < 31) {
-        uint32 mtmp = *m;
+        PRUint32 mtmp = *m;
         mtmp |= fgmask32;
         if (draw_mode == ilErase)
             mtmp &= ~bgmask32; 
@@ -440,10 +440,10 @@ il_alpha_mask(
 static void
 il_generate_scaled_transparency_mask(
     IL_IRGB *transparent_pixel,  /* The transparent pixel */
-    uint8 *src,                 /* Row of pixels, 8-bit pseudocolor data */
+    PRUint8 *src,                 /* Row of pixels, 8-bit pseudocolor data */
     int src_len,                /* Number of pixels in source row */
     int x_offset,               /* Destination offset from left edge */
-    uint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
+    PRUint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
     int mask_len,               /* Number of pixels in output row */
     il_draw_mode draw_mode)     /* ilOverlay or ilErase */
 {
@@ -452,12 +452,12 @@ il_generate_scaled_transparency_mask(
         transparent_pixel ? transparent_pixel->index : -1;
     int output_bits_remaining = mask_len;
 
-    uint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
-    uint32 fgmask32 = 0;
+    PRUint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
+    PRUint32 fgmask32 = 0;
 
     int mask_bit;               /* next bit to write in setmask32 */
 
-    uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
+    PRUint32 *m = ((PRUint32*)maskp) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f;
 
     PR_ASSERT(maskp);
@@ -503,7 +503,7 @@ il_generate_scaled_transparency_mask(
     
     /* End of scan line. Write out any remaining mask bits. */ 
     if (mask_bit < 31) {
-        uint32 mtmp = *m;
+        PRUint32 mtmp = *m;
         mtmp |= fgmask32;
         if (draw_mode == ilErase)
             mtmp &= ~bgmask32; 
@@ -520,10 +520,10 @@ il_generate_scaled_transparency_mask(
   *---------------------------------------------------------------------------*/
  static void
  il_scale_mask(
-     uint8 *src,                 /* input mask data */
+     PRUint8 *src,                 /* input mask data */
      int src_len,                /* Number of pixels in source row */
      int x_offset,               /* Destination offset from left edge */
-     uint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
+     PRUint8 XP_HUGE *maskp,       /* Output pointer, left-justified bitmask */
      int mask_len,               /* Number of pixels in output row */
      il_draw_mode draw_mode)     /* ilOverlay or ilErase */
  {
@@ -531,13 +531,13 @@ il_generate_scaled_transparency_mask(
      int not_transparent,n = 0;
      int output_bits_remaining = mask_len;
  
-     uint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
-     uint32 fgmask32 = 0;
+     PRUint32 bgmask32 = 0;        /* 32-bit temporary mask accumulators */
+     PRUint32 fgmask32 = 0;
  
-     uint8 src_bit;              /* next bit to read in setmask32 */
+     PRUint8 src_bit;              /* next bit to read in setmask32 */
      int mask_bit;               /* next bit to write in setmask32 */
      
-     uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
+     PRUint32 *m = ((PRUint32*)maskp) + (x_offset >> 5);
      mask_bit = ~x_offset & 0x1f;
  
      src_bit = 0x07;
@@ -556,7 +556,7 @@ il_generate_scaled_transparency_mask(
   if (src_len >= mask_len)     /* Scaling down */   
   {      
       while (output_bits_remaining ) {
- 			   not_transparent = ((*src & ((uint8)1 << src_bit)) != 0);
+ 			   not_transparent = ((*src & ((PRUint8)1 << src_bit)) != 0);
  
          SHIFT_IMAGE_MASK(not_transparent);
          n += src_len;
@@ -573,7 +573,7 @@ il_generate_scaled_transparency_mask(
   {
      while (output_bits_remaining){
         n += mask_len;
- 			  not_transparent = ((*src & ((uint8)1 << src_bit)) != 0);
+ 			  not_transparent = ((*src & ((PRUint8)1 << src_bit)) != 0);
  
         while (n >= src_len){
  				   SHIFT_IMAGE_MASK(not_transparent);
@@ -588,7 +588,7 @@ il_generate_scaled_transparency_mask(
   }
      /* End of scan line. Write out any remaining mask bits. */ 
   if (mask_bit < 31){
-         uint32 mtmp = *m;
+         PRUint32 mtmp = *m;
          mtmp |= fgmask32;
          if (draw_mode == ilErase)
              mtmp &= ~bgmask32; 
@@ -610,13 +610,13 @@ il_generate_scaled_transparency_mask(
 static void
 il_reset_background_pixels(
     il_container *ic,    /* The image container */
-    uint8 *src,          /* Row of pixels, 8-bit pseudocolor data */
+    PRUint8 *src,          /* Row of pixels, 8-bit pseudocolor data */
     int src_len,         /* Number of pixels in row */
-    uint8 XP_HUGE *dest, /* Output pointer, 8-bit pseudocolor data */
+    PRUint8 XP_HUGE *dest, /* Output pointer, 8-bit pseudocolor data */
     int dest_len)        /* Width of output pixel row */
 {
     int is_transparent, n = 0;
-    uint8 XP_HUGE *dest_end = dest + dest_len;
+    PRUint8 XP_HUGE *dest_end = dest + dest_len;
     NI_PixmapHeader *img_header = &ic->image->header;
     int src_trans_pixel_index = ic->src_header->transparent_pixel->index;
     int img_trans_pixel_index = img_header->transparent_pixel->index;
@@ -665,13 +665,13 @@ il_reset_background_pixels(
 static void
 il_generate_byte_mask(
     il_container *ic,    /* The image container */
-    uint8 *src,          /* Row of pixels, 8-bit pseudocolor data */
+    PRUint8 *src,          /* Row of pixels, 8-bit pseudocolor data */
     int src_len,         /* Number of pixels in row */
-    uint8 *dest,         /* Output pointer, 8-bit pseudocolor data */
+    PRUint8 *dest,         /* Output pointer, 8-bit pseudocolor data */
     int dest_len)        /* Width of output pixel row */
 {
     int is_transparent, n = 0;
-    uint8 XP_HUGE *dest_end = dest + dest_len;
+    PRUint8 XP_HUGE *dest_end = dest + dest_len;
     int src_trans_pixel_index = ic->src_header->transparent_pixel->index;
 
     /* Two cases */
@@ -702,7 +702,7 @@ il_generate_byte_mask(
                 }
             else
                 while (n >= src_len) {
-                    *dest++ = (uint8)-1;
+                    *dest++ = (PRUint8)-1;
                     n -= src_len;
                 }
         }
@@ -710,13 +710,13 @@ il_generate_byte_mask(
 }
 
 static void
-il_overlay(uint8 *src, uint8 *dest, uint8 *byte_mask, int num_cols,
+il_overlay(PRUint8 *src, PRUint8 *dest, PRUint8 *byte_mask, int num_cols,
            int bytes_per_pixel)
 {
     int i, col;
 #if 0
-    uint8 *s = src;
-    uint8 *s_end = src + (num_cols * bytes_per_pixel);
+    PRUint8 *s = src;
+    PRUint8 *s_end = src + (num_cols * bytes_per_pixel);
 #endif
     for (col = num_cols; col > 0; col--) {
         if (*byte_mask++) {
@@ -736,12 +736,12 @@ il_overlay(uint8 *src, uint8 *dest, uint8 *byte_mask, int num_cols,
 
 static void
 il_scale_alpha8(
-    uint8 XP_HUGE *src, /* Source row of packed RGB pixels */
+    PRUint8 XP_HUGE *src, /* Source row of packed RGB pixels */
     int src_len,        /* Number of pixels in source row  */
-    uint8 *dest,        /* Destination, packed RGB pixels */
+    PRUint8 *dest,        /* Destination, packed RGB pixels */
     int dest_len)       /* Length of target row, in pixels */
 {
-    uint8 *dest_end = dest + dest_len;
+    PRUint8 *dest_end = dest + dest_len;
     int n = 0;
     
     PR_ASSERT(dest);
@@ -777,7 +777,7 @@ il_scale_alpha8(
     }
 }
 
-static uint8 il_tmpbuf[MAX_IMAGE_WIDTH];
+static PRUint8 il_tmpbuf[MAX_IMAGE_WIDTH];
     
 /*-----------------------------------------------------------------------------
  *  Emit a complete row of pixel data into the image.  This routine
@@ -791,9 +791,9 @@ static uint8 il_tmpbuf[MAX_IMAGE_WIDTH];
 PRBool
 il_emit_row(
     il_container *ic,   /* The image container */
-    uint8 *cbuf,        /* Color index data source, or NULL if source
+    PRUint8 *cbuf,        /* Color index data source, or NULL if source
                            is RGB data */
-    uint8 *rgbbuf,      /* Packed RGBa data or RGBa workspace if <cbuf> != NULL */
+    PRUint8 *rgbbuf,      /* Packed RGBa data or RGBa workspace if <cbuf> != NULL */
     int x_offset,       /* First column to write data into */
     int len,            /* Width of source image, in pixels */
     int row,            /* Starting row of image */
@@ -811,15 +811,15 @@ il_emit_row(
     NI_PixmapHeader *mask_header = NULL;
     NI_ColorSpace *src_color_space = src_header->color_space;
     NI_ColorSpace *img_color_space = img_header->color_space;
-	  uint8 XP_HUGE *out;
-    uint8 XP_HUGE *dp;
-    uint8 XP_HUGE *mp;
-	  uint8 XP_HUGE *maskp = NULL;
-    uint8 XP_HUGE *alphabits, *alphabitstart = NULL;
-    uint8 *byte_mask = NULL;
-	  uint8 XP_HUGE *srcbuf = rgbbuf;
-    uint8 *p = cbuf;
-    uint8 *pl = cbuf+len;
+	  PRUint8 XP_HUGE *out;
+    PRUint8 XP_HUGE *dp;
+    PRUint8 XP_HUGE *mp;
+	  PRUint8 XP_HUGE *maskp = NULL;
+    PRUint8 XP_HUGE *alphabits, *alphabitstart = NULL;
+    PRUint8 *byte_mask = NULL;
+	  PRUint8 XP_HUGE *srcbuf = rgbbuf;
+    PRUint8 *p = cbuf;
+    PRUint8 *pl = cbuf+len;
 	int drow_start, drow_end, row_count, color_index, dup, do_dither;
     int dcolumn_start, dcolumn_end, column_count, offset, src_len, dest_len;
    
@@ -914,10 +914,10 @@ il_emit_row(
       //                                    IL_LOCK_BITS);
 
 #ifdef _USD
-        alphabitstart = maskp = (uint8 XP_HUGE *)mask->bits + 
+        alphabitstart = maskp = (PRUint8 XP_HUGE *)mask->bits + 
             (mask_header->height - drow_start - 1) * mask_header->widthBytes;
 #else
-        alphabitstart = maskp = (uint8 XP_HUGE *)mask->bits +
+        alphabitstart = maskp = (PRUint8 XP_HUGE *)mask->bits +
             drow_start * mask_header->widthBytes;
 #endif
        if(img_header->alpha_bits == 1)
@@ -926,7 +926,7 @@ il_emit_row(
          il_alpha_mask(rgbbuf, (int)len, dcolumn_start, 
                 alphabitstart, column_count, draw_mode);  
 
-         uint8 *tmpbuf, *rgbbuf_p;
+         PRUint8 *tmpbuf, *rgbbuf_p;
          int i;
 
          rgbbuf_p = tmpbuf = rgbbuf;
@@ -939,7 +939,7 @@ il_emit_row(
        }
        else{ /* alpha_bits=8*/
 
-          uint8 *tmpbuf, *rgbbuf_p;
+          PRUint8 *tmpbuf, *rgbbuf_p;
           int i;
           unsigned char *scalemask;
 
@@ -980,10 +980,10 @@ il_emit_row(
        // img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
        //                                   IL_LOCK_BITS);
 #ifdef _USD
-		maskp = (uint8 XP_HUGE *)mask->bits + 
+		maskp = (PRUint8 XP_HUGE *)mask->bits + 
             (mask_header->height - drow_start - 1) * mask_header->widthBytes;
 #else
-		maskp = (uint8 XP_HUGE *)mask->bits +
+		maskp = (PRUint8 XP_HUGE *)mask->bits +
             drow_start * mask_header->widthBytes;
 #endif
 
@@ -1020,8 +1020,8 @@ il_emit_row(
 #ifdef M12N
         int i;
         int src_trans_pixel_index;
-        uint8 XP_HUGE * dest;
-        uint8 *indirect_map = src_color_space->cmap.index;
+        PRUint8 XP_HUGE * dest;
+        PRUint8 *indirect_map = src_color_space->cmap.index;
 
         PR_ASSERT(image->haveBits);
 
@@ -1039,10 +1039,10 @@ il_emit_row(
 
 		/* No converter, image is already rendered in pseudocolor. */
 #ifdef _USD
-		out = (uint8 XP_HUGE *)image->bits +
+		out = (PRUint8 XP_HUGE *)image->bits +
             (img_header->height - drow_start - 1) * img_header->widthBytes;
 #else
-		out = (uint8 XP_HUGE *)image->bits +
+		out = (PRUint8 XP_HUGE *)image->bits +
             drow_start * img_header->widthBytes;
 #endif
 
@@ -1067,7 +1067,7 @@ il_emit_row(
 
         /* Generate the output row in RGB space, regardless of screen depth. */
 		if (cbuf) {
-			uint8 *r = rgbbuf;
+			PRUint8 *r = rgbbuf;
 			IL_RGB *map = src_color_space->cmap.map, *entry;
 
 			if (!src_header->transparent_pixel) {
@@ -1132,8 +1132,8 @@ il_emit_row(
         src_len = len;
         dest_len = column_count;
 		if (src_len != dest_len) {
-			uint8 XP_HUGE *src = rgbbuf;
-			uint8 *dest = ic->scalerow;
+			PRUint8 XP_HUGE *src = rgbbuf;
+			PRUint8 *dest = ic->scalerow;
 			srcbuf = dest;
 
 			/* Scale the pixel data (mask data already scaled) */
@@ -1145,10 +1145,10 @@ il_emit_row(
                                           IL_LOCK_BITS);
 
 #ifdef _USD
-		out = (uint8 XP_HUGE *)image->bits +
-            (img_header->height-drow_start-1) * (uint32)img_header->widthBytes;
+		out = (PRUint8 XP_HUGE *)image->bits +
+            (img_header->height-drow_start-1) * (PRUint32)img_header->widthBytes;
 #else
-		out = (uint8 XP_HUGE *)image->bits +
+		out = (PRUint8 XP_HUGE *)image->bits +
             drow_start * img_header->widthBytes;
 #endif
 

@@ -131,7 +131,7 @@ time_t Mactime(time_t *timer)
 
 
 NS_EXPORT void*
-IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
+IL_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUint32 msecs)
 {
     return il_ss->SetTimeout((ilTimeoutCallbackFunction)func,
                              closure, msecs);

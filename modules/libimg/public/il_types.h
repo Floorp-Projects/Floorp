@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_types.h --- Image library data types and structures.
- *  $Id: il_types.h,v 3.4 1999/11/06 03:31:20 dmose%mozilla.org Exp $
+ *  $Id: il_types.h,v 3.5 1999/11/13 22:37:34 cls%seawood.org Exp $
  */
 
 
@@ -54,10 +54,10 @@
 
 /* A rectangle structure. */
 typedef struct _IL_Rect {
-  uint16 x_origin;
-  uint16 y_origin;
-  uint16 width;
-  uint16 height;
+  PRUint16 x_origin;
+  PRUint16 y_origin;
+  PRUint16 width;
+  PRUint16 height;
 } IL_Rect;
 
 /* Pixmap control messages issued by the imagelib to indicate that it
@@ -85,17 +85,17 @@ typedef void IL_ColorSpace;     /* Colorspace. */
 
 /* An indexed RGB triplet. */
 typedef struct _IL_IRGB {
-    uint8 index;
-    uint8 red, green, blue;
+    PRUint8 index;
+    PRUint8 red, green, blue;
 } IL_IRGB;
 
 /* A RGB triplet representing a single pixel in the image's colormap
    (if present.) */
 typedef struct _IL_RGB
 {
-    uint8 red, green, blue, pad; /* Windows requires the fourth byte &
+    PRUint8 red, green, blue, pad; /* Windows requires the fourth byte &
                                     many compilers pad it anyway. */
-    uint16 hist_count;           /* Histogram frequency count. */
+    PRUint16 hist_count;           /* Histogram frequency count. */
 } IL_RGB;
 
 #else  /* Image Library and Front Ends. */
@@ -202,15 +202,15 @@ typedef struct {
                                    with a percent_progress value of 100. */
 
     /* Data for IL_DIMENSIONS message. */
-    uint16 width;               /* Image width. */
-    uint16 height;              /* Image height. */
+    PRUint16 width;               /* Image width. */
+    PRUint16 height;              /* Image height. */
 
     /* Data for IL_INTERNAL_IMAGE message, or for error messages which require
        an icon to be displayed: IL_ERROR_NO_DATA, IL_ERROR_IMAGE_DATA_CORRUPT,
        IL_ERROR_IMAGE_DATA_TRUNCATED, IL_ERROR_IMAGE_DATA_ILLEGAL or
        IL_ERROR_INTERNAL. */
-    uint16 icon_width;               /* Icon width. */
-    uint16 icon_height;              /* Icon height. */
+    PRUint16 icon_width;               /* Icon width. */
+    PRUint16 icon_height;              /* Icon height. */
     int32 icon_number;               /* Icon number. */
 
 } IL_MessageData;

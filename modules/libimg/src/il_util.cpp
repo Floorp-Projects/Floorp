@@ -23,7 +23,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.6 1999/11/06 03:31:28 dmose%mozilla.org Exp $
+ *   $Id: il_util.cpp,v 3.7 1999/11/13 22:37:41 cls%seawood.org Exp $
  */
 
 
@@ -46,14 +46,14 @@
    Note: the lookup table used here is of the form we will use when dithering
    to an arbitrary palette. */
 static IL_ColorMap *
-il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
-                uint32 base_offset)
+il_NewColorCube(PRUint32 red_size, PRUint32 green_size, PRUint32 blue_size,
+                PRUint32 base_offset)
 {
-    uint8 r, g, b, map_index;
-    uint32 i, j, k, size, red_offset, green_offset, dmax_val;
-    uint32 trm1, tgm1, tbm1, dtrm1, dtgm1, dtbm1;
-    uint32 crm1, cgm1, cbm1, dcrm1, dcgm1, dcbm1;
-    uint8 *lookup_table, *ptr, *done;
+    PRUint8 r, g, b, map_index;
+    PRUint32 i, j, k, size, red_offset, green_offset, dmax_val;
+    PRUint32 trm1, tgm1, tbm1, dtrm1, dtgm1, dtbm1;
+    PRUint32 crm1, cgm1, cbm1, dcrm1, dcgm1, dcbm1;
+    PRUint8 *lookup_table, *ptr, *done;
     IL_RGB *map;
     IL_ColorMap *cmap;
 
@@ -83,11 +83,11 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
     if (!map)
         return PR_FALSE;
 
-    lookup_table = (uint8 *)PR_Calloc(LOOKUP_TABLE_SIZE, 1);
+    lookup_table = (PRUint8 *)PR_Calloc(LOOKUP_TABLE_SIZE, 1);
     if (!lookup_table)
         return PR_FALSE;
 
-    done = (uint8 *)PR_Calloc(size, 1);
+    done = (PRUint8 *)PR_Calloc(size, 1);
     if (!done)
         return PR_FALSE;
     
@@ -96,12 +96,12 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
         for (j = 0; j < LOOKUP_TABLE_GREEN; j++)
             for (k = 0; k < LOOKUP_TABLE_BLUE; k++) {
                 /* Scale indices down to cube coordinates. */
-                r = (uint8) (CUBE_SCALE(i, dcrm1, trm1, dtrm1));
-                g = (uint8) (CUBE_SCALE(j, dcgm1, tgm1, dtgm1));
-                b = (uint8) (CUBE_SCALE(k, dcbm1, tbm1, dtbm1));
+                r = (PRUint8) (CUBE_SCALE(i, dcrm1, trm1, dtrm1));
+                g = (PRUint8) (CUBE_SCALE(j, dcgm1, tgm1, dtgm1));
+                b = (PRUint8) (CUBE_SCALE(k, dcbm1, tbm1, dtbm1));
 
                 /* Compute the colormap index. */
-                map_index =(uint8)( r * red_offset + g * green_offset + b +
+                map_index =(PRUint8)( r * red_offset + g * green_offset + b +
                     base_offset);
 
                 /* Fill out the colormap entry for this index if we haven't
@@ -109,11 +109,11 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
                 if (!done[map_index]) {
                     /* Scale from cube coordinates up to 8-bit RGB values. */
                     map[map_index].red =
-                        (uint8) (CUBE_SCALE(r, dmax_val, crm1, dcrm1));
+                        (PRUint8) (CUBE_SCALE(r, dmax_val, crm1, dcrm1));
                     map[map_index].green = 
-                        (uint8) (CUBE_SCALE(g, dmax_val, cgm1, dcgm1));
+                        (PRUint8) (CUBE_SCALE(g, dmax_val, cgm1, dcgm1));
                     map[map_index].blue =
-                        (uint8) (CUBE_SCALE(b, dmax_val, cbm1, dcbm1));
+                        (PRUint8) (CUBE_SCALE(b, dmax_val, cbm1, dcbm1));
 
                     /* Mark as done. */
                     done[map_index] = 1;
@@ -206,8 +206,8 @@ select_ncolors(int Ncolors[],
    be replaced when the Image Library has the capability to dither to an
    arbitrary palette. */
 IL_IMPLEMENT(IL_ColorMap *)
-IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
-                   uint16 num_colors)
+IL_NewCubeColorMap(IL_RGB *reserved_colors, PRUint16 num_reserved_colors,
+                   PRUint16 num_colors)
 {
     int i;
     IL_RGB *map;
@@ -239,8 +239,8 @@ IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
 /* Create an optimal fixed palette of the specified size, starting with
    the given set of reserved colors. */
 IL_IMPLEMENT(IL_ColorMap *)
-IL_NewOptimalColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
-                      uint16 num_colors)
+IL_NewOptimalColorMap(IL_RGB *reserved_colors, PRUint16 num_reserved_colors,
+                      PRUint16 num_colors)
 {
     /* XXXM12N Implement me. */
     return NULL;
@@ -325,7 +325,7 @@ IL_DestroyColorMap (IL_ColorMap *cmap)
 /* Reorder the entries in a colormap.  new_order is an array mapping the old
    indices to the new indices. */
 IL_IMPLEMENT(void)
-IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order)
+IL_ReorderColorMap(IL_ColorMap *cmap, PRUint16 *new_order)
 {
 }
 
@@ -339,7 +339,7 @@ IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order)
    contents of the IL_RGBBits structure will be copied, so they need not be
    preserved after the call to IL_CreateTrueColorSpace. */
 IL_IMPLEMENT(IL_ColorSpace *)
-IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
+IL_CreateTrueColorSpace(IL_RGBBits *rgb, PRUint8 pixmap_depth)
 {
     IL_ColorSpace *color_space;
 
@@ -377,8 +377,8 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
    IL_ColorSpace.  Memory associated with the colormap will be freed by
    IL_ReleaseColorSpace when the reference count reaches zero. */
 IL_IMPLEMENT(IL_ColorSpace *)
-IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
-                          uint8 pixmap_depth)
+IL_CreatePseudoColorSpace(IL_ColorMap *cmap, PRUint8 index_depth,
+                          PRUint8 pixmap_depth)
 {
     IL_ColorSpace *color_space;
 
@@ -411,7 +411,7 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
 PRBool
-IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth, IL_ColorSpace **color_space_ptr)
+IL_CreateGreyScaleColorSpace(PRUint8 index_depth, PRUint8 pixmap_depth, IL_ColorSpace **color_space_ptr)
 {
     IL_ColorSpace *color_space;
 

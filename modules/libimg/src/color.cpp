@@ -25,7 +25,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.13 1999/11/06 03:31:25 dmose%mozilla.org Exp $
+   $Id: color.cpp,v 3.14 1999/11/13 22:37:39 cls%seawood.org Exp $
 */
 
 
@@ -37,7 +37,7 @@
 #pragma profile on
 #endif
 
-uint8 il_identity_index_map[] = { 0, 1, 2, 3, 4, 5, 6, 7, 
+PRUint8 il_identity_index_map[] = { 0, 1, 2, 3, 4, 5, 6, 7, 
 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
@@ -58,18 +58,18 @@ uint8 il_identity_index_map[] = { 0, 1, 2, 3, 4, 5, 6, 7,
 
 static void
 ConvertRGBToCI(il_container *ic,
-               const uint8 *mask,
-               const uint8 *sp,
+               const PRUint8 *mask,
+               const PRUint8 *sp,
                int x_offset,
                int num,
                void XP_HUGE *vout)
 {
-    uint8 red, green, blue, map_index;
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + x_offset;
-    const uint8 *end = sp + 3*num;
+    PRUint8 red, green, blue, map_index;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *) vout + x_offset;
+    const PRUint8 *end = sp + 3*num;
     IL_ColorMap *cmap = &ic->image->header.color_space->cmap;
-    uint8 *lookup_table = (uint8 *)cmap->table;
-    uint8 *index_map = cmap->index;
+    PRUint8 *lookup_table = (PRUint8 *)cmap->table;
+    PRUint8 *index_map = cmap->index;
 
 	if (index_map == NULL) 
 	{
@@ -108,22 +108,22 @@ ConvertRGBToCI(il_container *ic,
 
 static void
 DitherConvertRGBToCI(il_container *ic,
-                     const uint8 *mask,
-                     const uint8 *sp,
+                     const PRUint8 *mask,
+                     const PRUint8 *sp,
                      int x_offset,
                      int num,
                      void XP_HUGE *vout)
 {
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + x_offset;
-    const uint8 XP_HUGE *end = out + num;
-    uint8 *index_map = ic->image->header.color_space->cmap.index;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *) vout + x_offset;
+    const PRUint8 XP_HUGE *end = out + num;
+    PRUint8 *index_map = ic->image->header.color_space->cmap.index;
 
 	if (index_map == NULL) 
 	{
 	    index_map = il_identity_index_map;
 	}
 
-    il_quantize_fs_dither(ic, mask, sp, x_offset, (uint8 XP_HUGE *) vout, num);
+    il_quantize_fs_dither(ic, mask, sp, x_offset, (PRUint8 XP_HUGE *) vout, num);
     if (mask) {
         while (out < end) {
             if (*mask++)
@@ -142,8 +142,8 @@ struct fs_data {
     long* err1;
     long* err2;
     long* err3;
-    uint8 *greypixels;
-    uint8 *bwpixels;
+    PRUint8 *greypixels;
+    PRUint8 *bwpixels;
 	int width;
     int direction;
     long threshval, sum;
@@ -162,8 +162,8 @@ init_fs_dither(il_container *ic)
 	fs->direction = 1;
 	fs->err1 = (long*) PR_Calloc(fs->width+2, sizeof(long));
 	fs->err2 = (long*) PR_Calloc(fs->width+2, sizeof(long));
-	fs->greypixels = (uint8 *)PR_Calloc(fs->width+7, 1);
-	fs->bwpixels = (uint8 *)PR_Calloc(fs->width+7, 1);
+	fs->greypixels = (PRUint8 *)PR_Calloc(fs->width+7, 1);
+	fs->bwpixels = (PRUint8 *)PR_Calloc(fs->width+7, 1);
 #ifdef XP_UNIX
     {
         int i;
@@ -181,18 +181,18 @@ init_fs_dither(il_container *ic)
 
 static void
 ConvertRGBToBW(il_container *ic,
-               const uint8 *mask,
-               const uint8 *sp,
+               const PRUint8 *mask,
+               const PRUint8 *sp,
                int x_offset,
                int num,
                void XP_HUGE *vout)
 {
-    uint32 fgmask32, bgmask32;
-    uint32 *m;
+    PRUint32 fgmask32, bgmask32;
+    PRUint32 *m;
     int mask_bit;
 	struct fs_data *fs = (struct fs_data *)ic->quantize;
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *)vout;
-	uint8 *gp, *bp;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *)vout;
+	PRUint8 *gp, *bp;
 	int col, limitcol;
 	long grey;
 	long sum;
@@ -208,14 +208,14 @@ ConvertRGBToBW(il_container *ic,
 	for(col=0; col<fs->width; col++)
 	{
         /* CCIR 709 */
-		uint8 r = *sp++;
-		uint8 g = *sp++;
-		uint8 b = *sp++;
-        grey = ((uint)(0.299 * 4096) * r +
-                (uint)(0.587 * 4096) * g +
-                (uint)(0.114 * 4096) * b) / 4096;
+		PRUint8 r = *sp++;
+		PRUint8 g = *sp++;
+		PRUint8 b = *sp++;
+        grey = ((PRUintn)(0.299 * 4096) * r +
+                (PRUintn)(0.587 * 4096) * g +
+                (PRUintn)(0.114 * 4096) * b) / 4096;
 
-		*gp++ = (uint8)grey;
+		*gp++ = (PRUint8)grey;
 	}
 
 #if 0
@@ -291,18 +291,18 @@ ConvertRGBToBW(il_container *ic,
     bgmask32 = 0;        /* 32-bit temporary mask accumulators */
     fgmask32 = 0;
 
-    m = ((uint32*)out) + (x_offset >> 5);
+    m = ((PRUint32*)out) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f; /* next bit to write in 32-bit mask */
 
 /* Add a bit to the row of mask bits.  Flush accumulator to memory if full. */
 #define SHIFT_IMAGE_MASK(opaqueness, pixel)					  		          \
     {																		  \
-        fgmask32 |=  ((uint32)pixel & opaqueness) << M32(mask_bit);           \
-        bgmask32 |=  ((uint32)((pixel ^ 1) & opaqueness)) << M32(mask_bit);   \
+        fgmask32 |=  ((PRUint32)pixel & opaqueness) << M32(mask_bit);           \
+        bgmask32 |=  ((PRUint32)((pixel ^ 1) & opaqueness)) << M32(mask_bit);   \
 																			  \
         /* Filled up 32-bit mask word.  Write it to memory. */				  \
         if (mask_bit-- == 0) {                                                \
-            uint32 mtmp = *m;                                                 \
+            PRUint32 mtmp = *m;                                                 \
             mtmp |= fgmask32;                                                 \
             mtmp &= ~bgmask32;                                                \
             *m++ = mtmp;                                                      \
@@ -324,7 +324,7 @@ ConvertRGBToBW(il_container *ic,
 
     /* End of scan line. Write out any remaining mask bits. */ 
     if (mask_bit < 31) {
-        uint32 mtmp = *m;
+        PRUint32 mtmp = *m;
         mtmp |= fgmask32;
         mtmp &= ~bgmask32; 
         *m = mtmp; 
@@ -333,16 +333,16 @@ ConvertRGBToBW(il_container *ic,
 
 static void
 ConvertRGBToGrey8(il_container *ic,
-                  const uint8 *mask,
-                  const uint8 *sp,
+                  const PRUint8 *mask,
+                  const PRUint8 *sp,
                   int x_offset,
                   int num,
                   void XP_HUGE *vout)
 {
-    uint r, g, b;
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *)vout + x_offset;
-    const uint8 *end = sp + num*3;
-    uint32 grey;
+    PRUintn r, g, b;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *)vout + x_offset;
+    const PRUint8 *end = sp + num*3;
+    PRUint32 grey;
 
     if (!mask)
     {
@@ -352,11 +352,11 @@ ConvertRGBToGrey8(il_container *ic,
             r = sp[0];
             g = sp[1];
             b = sp[2];
-            grey = ((uint)(0.299 * 4096) * r +
-                    (uint)(0.587 * 4096) * g +
-                    (uint)(0.114 * 4096) * b) / 4096;
+            grey = ((PRUintn)(0.299 * 4096) * r +
+                    (PRUintn)(0.587 * 4096) * g +
+                    (PRUintn)(0.114 * 4096) * b) / 4096;
 
-            *out = (uint8)grey;
+            *out = (PRUint8)grey;
             out++;
             sp += 3;
         }
@@ -372,10 +372,10 @@ ConvertRGBToGrey8(il_container *ic,
                 r = sp[0];
                 g = sp[1];
                 b = sp[2];
-                grey = ((uint)(0.299 * 4096) * r +
-                        (uint)(0.587 * 4096) * g +
-                        (uint)(0.114 * 4096) * b) / 4096;
-                *out = (uint8)grey;
+                grey = ((PRUintn)(0.299 * 4096) * r +
+                        (PRUintn)(0.587 * 4096) * g +
+                        (PRUintn)(0.114 * 4096) * b) / 4096;
+                *out = (PRUint8)grey;
             }
             out++;
             sp += 3;
@@ -385,20 +385,20 @@ ConvertRGBToGrey8(il_container *ic,
 
 static void
 ConvertRGBToRGB8(il_container *ic,
-                 const uint8 *mask,
-                 const uint8 *sp,
+                 const PRUint8 *mask,
+                 const PRUint8 *sp,
                  int x_offset,
                  int num,
                  void XP_HUGE *vout)
 {
-    uint r, g, b, pixel;
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + x_offset;
-    const uint8 *end = sp + num*3;
+    PRUintn r, g, b, pixel;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *) vout + x_offset;
+    const PRUint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
         (il_ColorSpaceData *)ic->image->header.color_space->private_data;
-    uint8 *rm = (uint8*)private_data->r8torgbn;
-    uint8 *gm = (uint8*)private_data->g8torgbn;
-    uint8 *bm = (uint8*)private_data->b8torgbn;
+    PRUint8 *rm = (PRUint8*)private_data->r8torgbn;
+    PRUint8 *gm = (PRUint8*)private_data->g8torgbn;
+    PRUint8 *bm = (PRUint8*)private_data->b8torgbn;
     if (!mask)
     {
         while (sp < end) 
@@ -431,20 +431,20 @@ ConvertRGBToRGB8(il_container *ic,
 
 static void
 ConvertRGBToRGB16(il_container *ic,
-                  const uint8 *mask,
-                  const uint8 *sp,
+                  const PRUint8 *mask,
+                  const PRUint8 *sp,
                   int x_offset,
                   int num,
                   void XP_HUGE *vout)
 {
-    uint r, g, b, pixel;
-    uint16 XP_HUGE *out = (uint16 XP_HUGE *) vout + x_offset;
-    const uint8 *end = sp + num*3;
+    PRUintn r, g, b, pixel;
+    PRUint16 XP_HUGE *out = (PRUint16 XP_HUGE *) vout + x_offset;
+    const PRUint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
         (il_ColorSpaceData *)ic->image->header.color_space->private_data;
-    uint16 *rm = (uint16*)private_data->r8torgbn;
-    uint16 *gm = (uint16*)private_data->g8torgbn;
-    uint16 *bm = (uint16*)private_data->b8torgbn;
+    PRUint16 *rm = (PRUint16*)private_data->r8torgbn;
+    PRUint16 *gm = (PRUint16*)private_data->g8torgbn;
+    PRUint16 *bm = (PRUint16*)private_data->b8torgbn;
 
     if (!mask)
     {
@@ -478,14 +478,14 @@ ConvertRGBToRGB16(il_container *ic,
 
 static void
 ConvertRGBToRGB24(il_container *ic,
-                  const uint8 *mask,
-                  const uint8 *sp,
+                  const PRUint8 *mask,
+                  const PRUint8 *sp,
                   int x_offset,
                   int num,
                   void XP_HUGE *vout)
 {
-    uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + (3 * x_offset);
-    const uint8 *end = sp + num*3;
+    PRUint8 XP_HUGE *out = (PRUint8 XP_HUGE *) vout + (3 * x_offset);
+    const PRUint8 *end = sp + num*3;
 	/* XXX this is a hack because it ignores the shifts */
 
     // The XP_UNIX define down here is needed because the unix gtk
@@ -539,20 +539,20 @@ ConvertRGBToRGB24(il_container *ic,
 
 static void
 ConvertRGBToRGB32(il_container *ic,
-                  const uint8 *mask,
-                  const uint8 *sp,
+                  const PRUint8 *mask,
+                  const PRUint8 *sp,
                   int x_offset,
                   int num,
                   void XP_HUGE *vout)
 {
-    uint r, g, b, pixel;
-    uint32 XP_HUGE *out = (uint32 XP_HUGE *) vout + x_offset;
-    const uint8 *end = sp + num*3;
+    PRUintn r, g, b, pixel;
+    PRUint32 XP_HUGE *out = (PRUint32 XP_HUGE *) vout + x_offset;
+    const PRUint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
         (il_ColorSpaceData *)ic->image->header.color_space->private_data;
-    uint32 *rm = (uint32*)private_data->r8torgbn;
-    uint32 *gm = (uint32*)private_data->g8torgbn;
-    uint32 *bm = (uint32*)private_data->b8torgbn;
+    PRUint32 *rm = (PRUint32*)private_data->r8torgbn;
+    PRUint32 *gm = (PRUint32*)private_data->g8torgbn;
+    PRUint32 *bm = (PRUint32*)private_data->b8torgbn;
 
     if (!mask)
     {
@@ -585,10 +585,10 @@ ConvertRGBToRGB32(il_container *ic,
 }
 
 /* Sorting predicate for NS_QuickSort() */
-int compare_uint32(const void *a, const void *b, void *unused)
+int compare_PRUint32(const void *a, const void *b, void *unused)
 {
-    uint32 a1 = *(uint32*)a;
-    uint32 b1 = *(uint32*)b;
+    PRUint32 a1 = *(PRUint32*)a;
+    PRUint32 b1 = *(PRUint32*)b;
     
     return (a1 < b1) ? -1 : ((a1 > b1) ? 1 : 0);
 }
@@ -597,12 +597,12 @@ int compare_uint32(const void *a, const void *b, void *unused)
 static void
 unique_map_colors(NI_ColorMap *cmap)
 {
-    uint i;
-    uint32 ind[256];
+    PRUintn i;
+    PRUint32 ind[256];
     int32 num_colors = cmap->num_colors;
     IL_RGB *map = cmap->map;
-    uint max_colors;
-    uint unique_colors = 1;
+    PRUintn max_colors;
+    PRUintn unique_colors = 1;
     
     /* A -ve value for cmap->num_colors indicates that the colors may be
        non-unique. */
@@ -620,7 +620,7 @@ unique_map_colors(NI_ColorMap *cmap)
     }
 
     /* Sort by color, so identical colors will be grouped together. */
-    NS_QuickSort(ind, max_colors, sizeof(*ind), compare_uint32, NULL);
+    NS_QuickSort(ind, max_colors, sizeof(*ind), compare_PRUint32, NULL);
 
     /* Look for adjacent colors with different values */
     for (i = 0; i < max_colors-1; i++)
@@ -639,8 +639,8 @@ unique_map_colors(NI_ColorMap *cmap)
 static int32
 il_init_rgb_depth_tables(IL_ColorSpace *color_space)
 {
-    register uint8 red_bits, green_bits, blue_bits;
-    register uint8 red_shift, green_shift, blue_shift;
+    register PRUint8 red_bits, green_bits, blue_bits;
+    register PRUint8 red_shift, green_shift, blue_shift;
     int32 j, k;
     int32 pixmap_depth = color_space->pixmap_depth;
     IL_RGBBits *rgb = &color_space->bit_alloc.rgb;
@@ -663,7 +663,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     switch(pixmap_depth) {
     case 8:                     /* 8-bit TrueColor. */
     {
-        uint8 *tmp_map;         /* Array type corresponds to pixmap depth. */
+        PRUint8 *tmp_map;         /* Array type corresponds to pixmap depth. */
 
         private_data->r8torgbn = PR_MALLOC(256);
         private_data->g8torgbn = PR_MALLOC(256);
@@ -677,20 +677,20 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
         }
 
         /* XXXM12N These could be optimized. */
-        tmp_map = (uint8*)private_data->r8torgbn;
+        tmp_map = (PRUint8*)private_data->r8torgbn;
 		for (j = 0; j < (1 << red_bits); j++) 
 			for (k = 0; k < (1 << (8 - red_bits)); k++) 
-				*tmp_map++ = (uint8)(j << red_shift);
+				*tmp_map++ = (PRUint8)(j << red_shift);
 
-		tmp_map = (uint8*)private_data->g8torgbn;
+		tmp_map = (PRUint8*)private_data->g8torgbn;
 		for (j = 0; j < (1 << green_bits); j++)
 			for (k = 0; k < (1 << (8 - green_bits)); k++)
-				*tmp_map++ = (uint8)(j << green_shift);
+				*tmp_map++ = (PRUint8)(j << green_shift);
 
-		tmp_map = (uint8*)private_data->b8torgbn;
+		tmp_map = (PRUint8*)private_data->b8torgbn;
 		for (j = 0; j < (1 << blue_bits); j++)
 			for (k = 0; k < (1 << (8 - blue_bits)); k++)
-				*tmp_map++ = (uint8)(j << blue_shift);
+				*tmp_map++ = (PRUint8)(j << blue_shift);
 
         break;
 	} 
@@ -699,11 +699,11 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     {
         PRBool win95_rounding;  /* True if Win95 color quatization bug is
                                    present. */
-        uint16 *tmp_map;        /* Array type corresponds to pixmap depth. */
+        PRUint16 *tmp_map;        /* Array type corresponds to pixmap depth. */
         
-        private_data->r8torgbn = PR_MALLOC(sizeof(uint16) * 256);
-        private_data->g8torgbn = PR_MALLOC(sizeof(uint16) * 256);
-        private_data->b8torgbn = PR_MALLOC(sizeof(uint16) * 256);
+        private_data->r8torgbn = PR_MALLOC(sizeof(PRUint16) * 256);
+        private_data->g8torgbn = PR_MALLOC(sizeof(PRUint16) * 256);
+        private_data->b8torgbn = PR_MALLOC(sizeof(PRUint16) * 256);
         
         if (!(private_data->r8torgbn &&
               private_data->g8torgbn &&
@@ -721,19 +721,19 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
 #define ROUND(v, b)       (win95_rounding ? WACKY(v, b) : (v))
 
         /* XXXM12N These could be optimized. */
-        tmp_map = (uint16*)private_data->r8torgbn;
+        tmp_map = (PRUint16*)private_data->r8torgbn;
         for (j = 0; j < 256; j++)
-            *tmp_map++ = (uint16)(ROUND(j, red_bits) >> (8 - red_bits) <<
+            *tmp_map++ = (PRUint16)(ROUND(j, red_bits) >> (8 - red_bits) <<
                                   red_shift);
             
-        tmp_map = (uint16*)private_data->g8torgbn;
+        tmp_map = (PRUint16*)private_data->g8torgbn;
         for (j = 0; j < 256; j++)
-            *tmp_map++ = (uint16)(ROUND(j, green_bits) >> (8 - green_bits) <<
+            *tmp_map++ = (PRUint16)(ROUND(j, green_bits) >> (8 - green_bits) <<
                                   green_shift);
 
-        tmp_map = (uint16*)private_data->b8torgbn;
+        tmp_map = (PRUint16*)private_data->b8torgbn;
         for (j = 0; j < 256; j++)
-            *tmp_map++ = (uint16)(ROUND(j, blue_bits) >> (8 - blue_bits) <<
+            *tmp_map++ = (PRUint16)(ROUND(j, blue_bits) >> (8 - blue_bits) <<
                                   blue_shift);
 
 #undef _W1
@@ -745,11 +745,11 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     case 32:                    /* Typically 24-bit TrueColor with an 8-bit
                                    (leading) pad. */
     {
-        uint32 *tmp_map;        /* Array type corresponds to pixmap depth. */
+        PRUint32 *tmp_map;        /* Array type corresponds to pixmap depth. */
 
-        private_data->r8torgbn = PR_MALLOC(sizeof(uint32) * 256);
-        private_data->g8torgbn = PR_MALLOC(sizeof(uint32) * 256);
-        private_data->b8torgbn = PR_MALLOC(sizeof(uint32) * 256);
+        private_data->r8torgbn = PR_MALLOC(sizeof(PRUint32) * 256);
+        private_data->g8torgbn = PR_MALLOC(sizeof(PRUint32) * 256);
+        private_data->b8torgbn = PR_MALLOC(sizeof(PRUint32) * 256);
         
         if (!(private_data->r8torgbn &&
               private_data->g8torgbn &&
@@ -758,15 +758,15 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
             return FALSE;
         }
 
-        tmp_map = (uint32*)private_data->r8torgbn;
+        tmp_map = (PRUint32*)private_data->r8torgbn;
         for (j = 0; j < (1 << red_bits); j++)
             *tmp_map++ = j << red_shift;
 
-		tmp_map = (uint32*)private_data->g8torgbn;
+		tmp_map = (PRUint32*)private_data->g8torgbn;
         for (j = 0; j < (1 << green_bits); j++)
             *tmp_map++ = j << green_shift;
 
-		tmp_map = (uint32*)private_data->b8torgbn;
+		tmp_map = (PRUint32*)private_data->b8torgbn;
         for (j = 0; j < (1 << blue_bits); j++)
             *tmp_map++ = j << blue_shift;
 
@@ -795,7 +795,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
 PRBool
 il_setup_color_space_converter(il_container *ic)
 {
-    uint8 conversion_type;
+    PRUint8 conversion_type;
     IL_GroupContext *img_cx = ic->img_cx;
     IL_DitherMode dither_mode = img_cx->dither_mode;
     il_converter converter = NULL;

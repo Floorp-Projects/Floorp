@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.10 1999/11/06 03:31:12 dmose%mozilla.org Exp $
+ *    $Id: jpeg.cpp,v 1.11 1999/11/13 22:37:31 cls%seawood.org Exp $
  */
 
 
@@ -58,7 +58,7 @@ PR_END_EXTERN_C
 #endif
 
 /* Normal JFIF markers can't have more bytes than this. */
-#define MAX_JPEG_MARKER_LENGTH  (((uint32)1 << 16) - 1)
+#define MAX_JPEG_MARKER_LENGTH  (((PRUint32)1 << 16) - 1)
 
 /*
  * States that the jpeg decoder might be in
@@ -123,7 +123,7 @@ typedef struct {
     enum data_source_state state;
 
     JOCTET *netlib_buffer;        /* next buffer for fill_input_buffer */
-    uint32 netlib_buflen;
+    PRUint32 netlib_buflen;
 
     /*
      * Buffer of "remaining" characters left over after a call to 
@@ -206,7 +206,7 @@ fill_input_buffer (j_decompress_ptr jd)
 {
     il_source_mgr *src = (il_source_mgr *)jd->src;
     enum data_source_state src_state = src->state;
-    uint32 bytesToSkip, new_backtrack_buflen, new_buflen, roundup_buflen;
+    PRUint32 bytesToSkip, new_backtrack_buflen, new_buflen, roundup_buflen;
     unsigned char *new_buffer;
 
     ILTRACE(5,("il:jpeg: fill, state=%d, nib=0x%x, bib=%d", src_state,
@@ -448,7 +448,7 @@ setup_jpeg_src (j_decompress_ptr jd, jpeg_struct *js)
 boolean PR_CALLBACK
 il_jpeg_COM_handler (j_decompress_ptr cinfo)
 {
-    uint length;
+    PRUintn length;
     char *comment;
     unsigned int ch;
 
@@ -586,7 +586,7 @@ output_jpeg_scanlines(il_container *ic, int num_scanlines)
     int pass;
     
 #ifdef DEBUG
-    uint start_scanline = jd->output_scanline;
+    PRUintn start_scanline = jd->output_scanline;
 #endif
 
     if (js->state == JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT)
@@ -660,7 +660,7 @@ output_jpeg_scanlines(il_container *ic, int num_scanlines)
 static void
 jpeg_timeout_callback(void *closure)
 {
-    uint32 delay;
+    PRUint32 delay;
     jpeg_struct *js = (jpeg_struct *)closure;
     j_decompress_ptr jd = &js->jd;
 
@@ -753,7 +753,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
 
     /* Register new buffer contents with data source manager. */
     src->netlib_buffer = (JOCTET*)buf;
-    src->netlib_buflen = (uint32)len;
+    src->netlib_buflen = (PRUint32)len;
 
     input_exhausted = 0;
     while (! input_exhausted) {
@@ -857,7 +857,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
              * instead.  Thus, the decoder adapts to the data arrival rate.
              */
             if (js->timeout == NULL) {
-                uint32 delay;
+                PRUint32 delay;
 
                 /*
                  * First time around, display the scan a little
