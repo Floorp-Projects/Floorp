@@ -332,8 +332,8 @@ pref("mime.table.allow_remove", true);
 pref("netcenter.register", false);
 
 pref("security.checkuri", true);
-pref("security.checkdomprops", true);
-pref("security.checkxpconnect", true);
+pref("security.checkdomprops", false);
+pref("security.checkxpconnect", false);
 
 pref("signed.applets.codebase_principal_support", false);
 
@@ -419,13 +419,17 @@ pref("security.policy.default.node.removechild", "sameOrigin");
 pref("security.policy.default.node.replacechild", "sameOrigin");
 
 /* 0=lines, 1=pages, 2=history */
-pref("mousewheel.withnokey",0);	
+pref("mousewheel.withnokey.action",0);
 pref("mousewheel.withnokey.numlines",1);	
-pref("mousewheel.withcontrolkey",1);	
-pref("mousewheel.withcontrolkey.numlines",1);	
-pref("mousewheel.withshiftkey",2);	
-pref("mousewheel.withshiftkey.numlines",1);	
-pref("mousewheel.withaltkey",0);	
-pref("mousewheel.withaltkey.numlines",10);	
+pref("mousewheel.withnokey.sysnumlines",true);
+pref("mousewheel.withcontrolkey.action",1);
+pref("mousewheel.withcontrolkey.numlines",1);
+pref("mousewheel.withcontrolkey.sysnumlines",false);
+pref("mousewheel.withshiftkey.action",0);
+pref("mousewheel.withshiftkey.numlines",1);
+pref("mousewheel.withshiftkey.sysnumlines",false);
+pref("mousewheel.withaltkey.action",2);
+pref("mousewheel.withaltkey.numlines",1);
+pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
