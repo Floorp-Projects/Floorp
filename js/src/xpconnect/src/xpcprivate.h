@@ -2355,6 +2355,8 @@ public:
 
     static XPCReadableJSStringWrapper *JSStringToReadable(JSString *str);
 
+    static void ShutdownDOMStringFinalizer();
+
 private:
     XPCStringConvert();         // not implemented
 };
