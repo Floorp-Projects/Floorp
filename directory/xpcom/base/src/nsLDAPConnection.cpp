@@ -561,7 +561,7 @@ nsLDAPConnectionLoop::Run(void)
     LDAPMessage *msgHandle;
     nsCOMPtr<nsILDAPMessage> msg;
     struct timeval timeout = { 1, 0 }; 
-    PRIntervalTime sleepTime = PR_MillisecondsToInterval(10);
+    PRIntervalTime sleepTime = PR_MillisecondsToInterval(40);
 
     PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
            ("nsLDAPConnection::Run() entered\n"));
@@ -644,10 +644,19 @@ nsLDAPConnectionLoop::Run(void)
 
             lderrno = ldap_get_lderrno(rawConn->mConnectionHandle, 0, 0);
 
+            // Sleep briefly, to avoid a very busy loop again.
+            //
+            PR_Sleep(sleepTime);
+
             switch (lderrno) {
 
             case LDAP_SERVER_DOWN:
-                // XXXreconnect or fail  ?
+                // We might want to shutdown the thread here, but it has
+                // implications to the user of the nsLDAPConnection, so
+                // for now we just ignore it. It's up to the owner of
+                // the nsLDAPConnection to detect the error, and then
+                // create a new connection.
+                //
                 break;
 
             case LDAP_DECODING_ERROR:
