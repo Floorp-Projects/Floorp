@@ -22,10 +22,42 @@
 DEPTH=..\..\..\..\..\..
 include <$(DEPTH)\config\config.mak>
 
+MODULE = npsimple
+
+XPIDLSRCS = 				      \
+	.\nsISimplePlugin.idl    \
+	$(NULL)
+
+MAKE_OBJ_TYPE	= DLL
+DLLNAME = npsimple
+RESFILE = npsimple.res
+DEFFILE = npsimple.def
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+CFLAGS = $(CFLAGS) -I..\include -I..\..\include
+
+OBJS = \
+  .\$(OBJDIR)\plugin.obj \
+  .\$(OBJDIR)\nsScriptablePeer.obj \
+  $(NULL)
+
+LLIBS = \
+  ..\common\$(OBJDIR)\plugingate.lib \
+  $(NULL)
+
+WIN_LIBS = version.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-#libs:: $(DLL)
+# don't forget to remove files exported by default
+libs:: $(DLL)
+  $(RM) $(XPDIST)\idl\nsISimplePlugin.idl 
+  $(RM) $(XPDIST)\include\nsISimplePlugin.h 
+  $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
 
 clobber::
-	rm -f *.sbr
+	$(RM) *.sbr
+  $(RM) $(XPDIST)\idl\nsISimplePlugin.idl 
+  $(RM) $(XPDIST)\include\nsISimplePlugin.h 
+  $(RM) $(DIST)\bin\components\$(DLLNAME).xpt 
+  $(RM) $(DIST)\bin\plugins\$(DLLNAME).dll 
