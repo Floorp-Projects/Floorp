@@ -85,7 +85,7 @@ class nsJAR : public nsIZipReader
 
     //-- Private functions
     nsresult CreateInputStream(const char* aFilename, nsIInputStream** is);
-    nsresult LoadEntry(const char* aFilename, const char** aBuf, 
+    nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
     nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType,
