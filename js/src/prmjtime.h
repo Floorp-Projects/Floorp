@@ -73,7 +73,7 @@ extern JSInt64
 PRMJ_Now(void);
 
 /* get the difference between this time zone and  gmt timezone in seconds */
-extern time_t
+extern JSInt32
 PRMJ_LocalGMTDifference(void);
 
 /* Format a time value into a buffer. Same semantics as strftime() */
