@@ -1075,16 +1075,15 @@ nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
 
   nameAtom = dont_AddRef(NS_NewAtom(aTagname));
 
-  nsContentList* list = new nsContentList(mDocument,
-                                          nameAtom,
-                                          kNameSpaceID_Unknown,
-                                          this);
+  nsCOMPtr<nsIContentList> list;
+  NS_GetContentList(mDocument, nameAtom, kNameSpaceID_Unknown, this,
+                    getter_AddRefs(list));
 
   if (!list) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
+  return CallQueryInterface(list, aReturn);
 }
 
 nsresult
@@ -1224,7 +1223,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(aLocalName)));
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-  nsContentList* list = nsnull;
+  nsCOMPtr<nsIContentList> list;
 
   if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -1238,18 +1237,20 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsmgr->GetNameSpaceID(aNamespaceURI, nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
-      // Unkonwn namespace means no matches, we create an empty list...
-      list = new nsContentList(mDocument, nsnull, kNameSpaceID_None);
+      // Unknown namespace means no matches, we create an empty list...
+      NS_GetContentList(mDocument, nsnull, kNameSpaceID_None, nsnull,
+                        getter_AddRefs(list));
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     }
   }
 
   if (!list) {
-    list = new nsContentList(mDocument, nameAtom, nameSpaceId, this);
+    NS_GetContentList(mDocument, nameAtom, nameSpaceId, this,
+                      getter_AddRefs(list));
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
+  return CallQueryInterface(list, aReturn);
 }
 
 nsresult
