@@ -507,7 +507,7 @@ END of Deprecated -->
 			</progressmeter>
 			<spring flex="100%"/>
 		</box>
-		<button id="statusText" align="right" flex="100%" value="Document: Done"/>
+		<button id="statusText" align="right" flex="100%" value="&defaultStatusText.label;"/>
     </box>
 
 <!-- /box -->
