@@ -142,8 +142,7 @@ protected:
   PRBool OnCreate() ;
   
   void LoadMenuItem( nsIMenu * pParentMenu, nsIDOMElement * menuitemElement,
-                      nsIDOMNode * menuitemNode, unsigned short menuitemIndex,
-                      nsIWebShell * aWebShell);  
+                      nsIDOMNode * menuitemNode, nsIWebShell * aWebShell);  
   void LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMNode * menuNode);  
   nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                                     void* menuNode, void* aWebShell);
