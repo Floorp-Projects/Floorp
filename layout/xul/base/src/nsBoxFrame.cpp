@@ -389,6 +389,12 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     if (hunit == eStyleUnit_Coord)  
         desiredSize.height = position->mHeight.GetCoordValue();
 
+    if (NS_INTRINSICSIZE == desiredSize.width)
+         desiredSize.width = 0;
+
+    if (NS_INTRINSICSIZE == desiredSize.height)
+         desiredSize.height = 0;
+
     if (mHorizontal)
         springs[count].preferredSize = desiredSize.width;
     else
