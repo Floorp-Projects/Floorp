@@ -47,7 +47,7 @@ public:
     virtual PRUint32  GetCaretPosition();
     virtual LPCTSTR   WindowClass();
     virtual DWORD     WindowStyle();
-    virtual void      PreCreateWidget(void *aInitData);
+    virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
     virtual PRBool    AutoErase();
 
 protected:

@@ -26,6 +26,15 @@
 #define NS_ILISTBOX_IID \
 { 0xf8030014, 0xc342, 0x11d1, { 0x97, 0xf0, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } };
 
+
+/**
+ * Initialize list box data
+ */
+
+struct nsListBoxInitData : public nsWidgetInitData {
+  PRBool mMultiSelect;
+};
+
 /**
  * Single or multi selection list of items.
  * Unlike a nsIWidget, The the list widget must automatically clear 

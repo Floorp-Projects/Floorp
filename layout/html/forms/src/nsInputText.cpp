@@ -39,7 +39,7 @@ public:
   nsInputTextFrame(nsIContent* aContent,
                    nsIFrame* aParentFrame);
 
-  virtual nsInputWidgetData* GetWidgetInitData();
+  virtual nsWidgetInitData* GetWidgetInitData();
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
@@ -155,17 +155,17 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }
 
-nsInputWidgetData*
+nsWidgetInitData*
 nsInputTextFrame::GetWidgetInitData()
 {
   static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
 
-  nsInputWidgetData* data = nsnull;
+  nsTextWidgetInitData* data = nsnull;
   nsInputText* content;
   GetContent((nsIContent *&) content);
   if (kInputTextPassword == content->GetTextType()) {
-    data = new nsInputWidgetData();
-    data->arg1 = 1;
+    data = new nsTextWidgetInitData();
+    data->mIsPassword = PR_TRUE;
   }
   NS_RELEASE(content);
 

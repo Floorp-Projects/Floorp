@@ -57,12 +57,17 @@ public:
     PRInt32   GetSelectedIndex();
     void      SelectItem(PRInt32 aPosition);
     void      Deselect() ;
+    void      PreCreateWidget(nsWidgetInitData *aInitData);
 
 protected:
 
+      // Modify the height passed to create and resize to be 
+      // the combo box drop down list height.
+    PRInt32 GetHeight(PRInt32 aProposedHeight);    
     LPCTSTR WindowClass();
     DWORD   WindowStyle();
     DWORD   WindowExStyle();
+    PRInt32 mDropDownHeight;
 
 };
 

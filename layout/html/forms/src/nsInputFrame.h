@@ -29,13 +29,6 @@ class nsIView;
 class nsIPresContext;
 class nsStyleCoord;
 
-struct nsInputWidgetData {
-  PRInt32 arg1;
-  PRInt32 arg2;
-  PRInt32 arg3;
-  PRInt32 arg4;
-};
-
 /**
   * Enumeration of possible mouse states used to detect mouse clicks
   */
@@ -165,7 +158,7 @@ public:
     * Perform opertations before the widget associated with this frame has been
     * created.
     */
-  virtual nsInputWidgetData* GetWidgetInitData();  
+  virtual nsWidgetInitData* GetWidgetInitData();  
 
   static nscoord GetTextSize(nsIPresContext& aContext, nsIFrame* aFrame,
                              const nsString& aString, nsSize& aSize);

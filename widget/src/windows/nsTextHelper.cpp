@@ -25,11 +25,11 @@
 #include <windows.h>
 
 
-void nsTextHelper::PreCreateWidget(void *aInitData)
+void nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
-    nsWidgetInitData* data = (nsWidgetInitData *) aInitData;
-    mIsPassword = (0 == data->arg1) ? PR_FALSE : PR_TRUE;
+    nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
+    mIsPassword = data->mIsPassword;
   }
 }
 

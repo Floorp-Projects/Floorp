@@ -35,15 +35,6 @@
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
-
-// data passed in and used before the widget's create method is called
-struct nsWidgetInitData {
-  DWORD arg1;
-  DWORD arg2;
-  DWORD arg3;
-  DWORD arg4;
-};
-
 /**
  * Native WIN32 window wrapper. 
  */
@@ -62,20 +53,20 @@ public:
 
     virtual nsresult        QueryObject(const nsIID& aIID, void** aInstancePtr);
 
-    virtual void            PreCreateWidget(void *aWidgetInitData) {}
+    virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
     virtual void            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
-                                     void *aInitData = nsnull);
+                                     nsWidgetInitData *aInitData = nsnull);
     virtual void            Create(nsNativeWindow aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIToolkit *aToolkit = nsnull,
-                                     void *aInitData = nsnull);
+                                     nsWidgetInitData *aInitData = nsnull);
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
     virtual nsIEnumerator*  GetChildren();
@@ -132,6 +123,9 @@ protected:
 
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
 
+     // Allow Derived classes to modify the height that is passed
+     // when the window is created or resized.
+    virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
     virtual LPCTSTR         WindowClass();
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
@@ -247,7 +241,7 @@ protected:
                     EVENT_CALLBACK aHandleEventFunction, \
                     nsIDeviceContext *aContext, \
                     nsIToolkit *aToolkit = nsnull, \
-                    void *aInitData = nsnull) \
+                    nsWidgetInitData *aInitData = nsnull) \
     { \
         nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
     } \
@@ -258,7 +252,7 @@ protected:
                  EVENT_CALLBACK aHandleEventFunction, \
                  nsIDeviceContext *aContext, \
                  nsIToolkit *aToolkit = nsnull, \
-                 void *aInitData = nsnull) \
+                 nsWidgetInitData *aInitData = nsnull) \
     { \
         nsWindow::Create(aParent, aRect, aHandleEventFunction, aContext, aToolkit, aInitData); \
     } \

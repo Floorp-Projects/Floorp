@@ -35,11 +35,11 @@ void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
   mMultiSelect = aMultipleSelections;
 }
 
-void nsListBox::PreCreateWidget(void *aInitData)
+void nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
-    nsWidgetInitData* data = (nsWidgetInitData *) aInitData;
-    mMultiSelect = (0 == data->arg1) ? PR_FALSE : PR_TRUE;
+    nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
+    mMultiSelect = data->mMultiSelect;
   }
 }
 

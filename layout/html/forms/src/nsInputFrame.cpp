@@ -249,7 +249,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  parWithView->GetView(parView);
 
 	  const nsIID& id = GetCID();
-    nsInputWidgetData* initData = GetWidgetInitData(); // needs to be deleted
+    nsWidgetInitData* initData = GetWidgetInitData(); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
                         nsnull, 0, nsnull,
@@ -304,7 +304,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-nsInputWidgetData* 
+nsWidgetInitData* 
 nsInputFrame::GetWidgetInitData()
 {
   return nsnull;

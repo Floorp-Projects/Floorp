@@ -41,6 +41,16 @@ extern HINSTANCE g_hinst;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
+//-------------------------------------------------------------------------
+//
+// Default for height modification is to do nothing
+//
+//-------------------------------------------------------------------------
+
+PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
+{
+  return(aProposedHeight);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -377,7 +387,7 @@ void nsWindow::Create(nsIWidget *aParent,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
                       nsIToolkit *aToolkit,
-                      void *aInitData)
+                      nsWidgetInitData *aInitData)
 {
     if (NULL == mToolkit) {
         if (NULL != aToolkit) {
@@ -447,7 +457,7 @@ void nsWindow::Create(nsIWidget *aParent,
                             aRect.x,
                             aRect.y,
                             aRect.width,
-                            aRect.height,
+                            GetHeight(aRect.height),
                             (aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW):
                                         (HWND)NULL,
                             NULL,
@@ -480,7 +490,7 @@ void nsWindow::Create(nsNativeWindow aParent,
                          EVENT_CALLBACK aHandleEventFunction,
                          nsIDeviceContext *aContext,
                          nsIToolkit *aToolkit,
-                         void *aInitData)
+                         nsWidgetInitData *aInitData)
 {
 
     if (NULL == mToolkit) {
@@ -544,7 +554,7 @@ void nsWindow::Create(nsNativeWindow aParent,
                             aRect.x,
                             aRect.y,
                             aRect.width,
-                            aRect.height,
+                            GetHeight(aRect.height),
                             aParent,
                             NULL,
                             nsToolkit::mDllInstance,
@@ -734,11 +744,11 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
         }
 
         if (NULL != deferrer) {
-            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, aHeight, 
+            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
                                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
         }
         else {
-            VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, aHeight, 
+            VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
                                   SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
         }
     }
@@ -762,11 +772,11 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
         }
 
         if (NULL != deferrer) {
-            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, aHeight, 
+            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
                                     SWP_NOZORDER | SWP_NOACTIVATE));
         }
         else {
-            VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, aHeight, 
+            VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
                                   SWP_NOZORDER | SWP_NOACTIVATE));
         }
     }
@@ -1165,7 +1175,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
                         (nsIToolkit*)(info->args[4]),
-                        (void*)(info->args[5]));
+                        (nsWidgetInitData*)(info->args[5]));
             break;
 
         case nsWindow::CREATE_NATIVE:
@@ -1175,7 +1185,7 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
                         (EVENT_CALLBACK)(info->args[2]), 
                         (nsIDeviceContext*)(info->args[3]),
                         (nsIToolkit*)(info->args[4]),
-                        (void*)(info->args[5]));
+                        (nsWidgetInitData*)(info->args[5]));
             return TRUE;
 
         case nsWindow::DESTROY:

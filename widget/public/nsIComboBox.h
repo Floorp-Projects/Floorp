@@ -26,12 +26,22 @@
 #define NS_ICOMBOBOX_IID \
 { 0x961085f6, 0xbd28, 0x11d1, { 0x97, 0xef, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } };
 
+
+/**
+ * Initialize combobox data
+ */
+
+struct nsComboBoxInitData : public nsWidgetInitData {
+  PRUint32 mDropDownHeight; // in pixels
+};
+
 /**
  * Single selection drop down list. See nsIListWidget for capabilities 
  */
 
 class nsIComboBox : public nsIListWidget {
 };
+
 
 #endif // nsIComboBox_h__
 
