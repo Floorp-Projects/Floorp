@@ -703,6 +703,7 @@ PK11_ImportCRL;
 PK11_ImportDERCert;
 PK11_PubUnwrapSymKeyWithFlags;
 PK11_SaveContextAlloc;
+PK11_TokenKeyGen;
 SEC_QuickDERDecodeItem;
 SECKEY_CopyPublicKey;
 ;+    local:
