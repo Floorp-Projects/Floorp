@@ -1399,11 +1399,11 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	// User didn't provide any information.
 	// No Netcenter info is available.
 	// User will hit the Preg info screens on the next run.
-	if ((userProfileName.mLength == 0) && (userServiceDenial.mLength == 0))
+	if ((userProfileName.Length() == 0) && (userServiceDenial.Length()== 0))
 		return NS_ERROR_FAILURE;
 
 	// If user denies registration, ignore the information entered.
-	if (userServiceDenial.mLength > 0)
+	if (userServiceDenial.Length() > 0)
 		userProfileName.Assign("");
 
 	char *curProfile = nsnull;
@@ -1414,7 +1414,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
     rv = GetProfileDir(curProfile, &dirSpec);
     if (NS_FAILED(rv)) return rv;
 
-	if (userProfileName.mLength > 0)
+	if (userProfileName.Length() > 0)
 	{
 		rv = CloneProfile(userProfileName.ToNewCString());
         if (NS_FAILED(rv)) return rv;
@@ -1441,7 +1441,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
         
 		prefs->SetCharPref(ACTIVATION_AIM_PREF, aProfile->NCProfileName);
 		
-		if (userEmailAddress.mLength > 0)
+		if (userEmailAddress.Length() > 0)
 		{
 			aProfile->NCEmailAddress = nsCRT::strdup(userEmailAddress.ToNewCString());
 
@@ -1524,7 +1524,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		gProfileDataAccess->SetCurrentProfile(userProfileName.ToNewCString());
 		FreeProfileStruct(aProfile);
 	}
-	else if (userServiceDenial.mLength > 0)
+	else if (userServiceDenial.Length() > 0)
 	{
 		ProfileStruct*	aProfile;
 
