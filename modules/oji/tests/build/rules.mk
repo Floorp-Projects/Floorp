@@ -61,6 +61,7 @@ link:
 		$(CC) $(LD_FLAGS_GCC) $(LIBS) $(OBJS) $(LD_PATH) -o $(OBJ_DIR)/lib$(DLL).so; \
 	fi;
 	@cp obj/lib$(DLL).so $(TOP_DIR)/build/bin/.
+	@cp obj/lib$(DLL).so $(TOP_DIR)/../../../dist/bin/components/.
 
 
 
