@@ -312,151 +312,53 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
       parentNode = temp;
     }
 
-    // build up list of parents of first node in lst that are either:
-    // lists, or tables.  
-    nsCOMPtr<nsISupports> isup = dont_AddRef(nodeList->ElementAt(0));
-    nsCOMPtr<nsIDOMNode>  pNode( do_QueryInterface(isup) );
-    nsCOMPtr<nsISupportsArray> listAndTableArray;
-    res = NS_NewISupportsArray(getter_AddRefs(listAndTableArray));
+    // build up list of parents of first node in list that are either
+    // lists or tables.  First examine front of paste node list.
+    nsCOMPtr<nsISupportsArray> startListAndTableArray;
+    res = GetListAndTableParents(PR_FALSE, nodeList, address_of(startListAndTableArray));
     NS_ENSURE_SUCCESS(res, res);
-    while (pNode)
-    {
-      if (nsHTMLEditUtils::IsList(pNode) || nsHTMLEditUtils::IsTable(pNode))
-      {
-        isup = do_QueryInterface(pNode);
-        listAndTableArray->AppendElement(isup);
-      }
-      nsCOMPtr<nsIDOMNode> parent;
-      pNode->GetParentNode(getter_AddRefs(parent));
-      pNode = parent;
-    }
     
     // remember number of lists and tables above us
-    PRUint32 listAndTableParents;
     PRInt32 highWaterMark = -1;
-    listAndTableArray->Count(&listAndTableParents);
-    
-    PRUint32 listCount, j;
-    if (listAndTableParents)
+    if (startListAndTableArray->ElementAt(0))
     {
-      // scan insertion list for table elements (other than table).  
-      nodeList->Count(&listCount);
-      for (j=0; j<listCount; j++)
-      {
-        nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(j));
-        nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
-
-        NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
-        if (nsHTMLEditUtils::IsTableElement(curNode) && !nsHTMLEditUtils::IsTable(curNode))
-        {
-          nsCOMPtr<nsIDOMNode> theTable = GetTableParent(curNode);
-          if (theTable)
-          {
-            nsCOMPtr<nsISupports> isupTable(do_QueryInterface(theTable));
-            PRInt32 indexT = listAndTableArray->IndexOf(isupTable);
-            if (indexT >= 0)
-            {
-              highWaterMark = indexT;
-              if ((PRUint32)highWaterMark == listAndTableParents-1) break;
-            }
-            else
-            {
-              break;
-            }
-          }
-        }
-        if (nsHTMLEditUtils::IsListItem(curNode))
-        {
-          nsCOMPtr<nsIDOMNode> theList = GetListParent(curNode);
-          if (theList)
-          {
-            nsCOMPtr<nsISupports> isupList(do_QueryInterface(theList));
-            PRInt32 indexL = listAndTableArray->IndexOf(isupList);
-            if (indexL >= 0)
-            {
-              highWaterMark = indexL;
-              if ((PRUint32)highWaterMark == listAndTableParents-1) break;
-            }
-            else
-            {
-              break;
-            }
-          }
-        }
-      }
+      res = DiscoverPartialListsAndTables(nodeList, startListAndTableArray, &highWaterMark);
+      NS_ENSURE_SUCCESS(res, res);
     }
+
     // if we have pieces of tables or lists to be inserted, let's force the paste 
     // to deal with table elements right away, so that it doesn't orphan some 
     // table or list contents outside the table or list.
     if (highWaterMark >= 0)
     {
-      nsCOMPtr<nsISupports> isupports = dont_AddRef(listAndTableArray->ElementAt(highWaterMark));
-      nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
-      nsCOMPtr<nsIDOMNode> replaceNode, tmp;
-      if (nsHTMLEditUtils::IsTable(curNode))
-      {
-        // look upward from curNode for a piece of this table
-        isup  = dont_AddRef(nodeList->ElementAt(0));
-        pNode = do_QueryInterface(isup);
-        while (pNode)
-        {
-          if (nsHTMLEditUtils::IsTableElement(pNode) && !nsHTMLEditUtils::IsTable(pNode))
-          {
-            nsCOMPtr<nsIDOMNode> tableP = GetTableParent(pNode);
-            if (tableP == curNode)
-            {
-              replaceNode = pNode;
-              break;
-            }
-          }
-          nsCOMPtr<nsIDOMNode> parent;
-          pNode->GetParentNode(getter_AddRefs(parent));
-          pNode = parent;
-        }
-      }
-      else // list case
-      {
-        // look upward from curNode for a piece of this list
-        isup  = dont_AddRef(nodeList->ElementAt(0));
-        pNode = do_QueryInterface(isup);
-        while (pNode)
-        {
-          if (nsHTMLEditUtils::IsListItem(pNode))
-          {
-            nsCOMPtr<nsIDOMNode> listP = GetListParent(pNode);
-            if (listP == curNode)
-            {
-              replaceNode = pNode;
-              break;
-            }
-          }
-          nsCOMPtr<nsIDOMNode> parent;
-          pNode->GetParentNode(getter_AddRefs(parent));
-          pNode = parent;
-        }
-      }
-      
-      if (replaceNode)
-      {
-        isupports = do_QueryInterface(replaceNode);
-        nodeList->ReplaceElementAt(isupports, 0);
-        // postprocess list to remove any descendants of this node
-        // so that we dont insert them twice.
-        do
-        {
-          isupports = dont_AddRef(nodeList->ElementAt(1));
-          tmp = do_QueryInterface(isupports);
-          if (tmp && nsHTMLEditUtils::IsDescendantOf(tmp, replaceNode))
-            nodeList->RemoveElementAt(1);
-          else
-            break;
-        } while(tmp);
-      }
+      res = ReplaceOrphanedStructure(PR_FALSE, nodeList, startListAndTableArray, highWaterMark);
+      NS_ENSURE_SUCCESS(res, res);
     }
     
+    // Now go through the same process again for the end of the paste node list.
+    nsCOMPtr<nsISupportsArray> endListAndTableArray;
+    res = GetListAndTableParents(PR_TRUE, nodeList, address_of(endListAndTableArray));
+    NS_ENSURE_SUCCESS(res, res);
+    highWaterMark = -1;
+   
+    // remember number of lists and tables above us
+    if (endListAndTableArray->ElementAt(0))
+    {
+      res = DiscoverPartialListsAndTables(nodeList, endListAndTableArray, &highWaterMark);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    
+    // don't orphan partial list or table structure
+    if (highWaterMark >= 0)
+    {
+      res = ReplaceOrphanedStructure(PR_TRUE, nodeList, endListAndTableArray, highWaterMark);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+
     // Loop over the node list and paste the nodes:
     PRBool bDidInsert = PR_FALSE;
     nsCOMPtr<nsIDOMNode> lastInsertNode, insertedContextParent;
+    PRUint32 listCount, j;
     nodeList->Count(&listCount);
     for (j=0; j<listCount; j++)
     {
@@ -485,12 +387,40 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
         curNode->GetFirstChild(getter_AddRefs(child));
         while (child)
         {
-          InsertNodeAtPoint(child, parentNode, offsetOfNewNode, PR_TRUE);
+          res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
           if (NS_SUCCEEDED(res)) 
           {
             bDidInsert = PR_TRUE;
-            lastInsertNode = curNode;
+            lastInsertNode = child;
             offsetOfNewNode++;
+          }
+          curNode->GetFirstChild(getter_AddRefs(child));
+        }
+      }
+      // give the user a hand on list insertion.  if they have
+      // a list on the clipboard, and are trying to insert
+      // into a list or list item, insert the appropriate children instead,
+      // ie, merge the lists instead of pasting in a sublist.
+      else if (nsHTMLEditUtils::IsList(curNode) && 
+              (nsHTMLEditUtils::IsList(parentNode)  || nsHTMLEditUtils::IsListItem(parentNode)) )
+      {
+        nsCOMPtr<nsIDOMNode> child, tmp;
+        curNode->GetFirstChild(getter_AddRefs(child));
+        while (child)
+        {
+          if (nsHTMLEditUtils::IsListItem(child) || nsHTMLEditUtils::IsList(child))
+          {
+            res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
+            if (NS_SUCCEEDED(res)) 
+            {
+              bDidInsert = PR_TRUE;
+              lastInsertNode = child;
+              offsetOfNewNode++;
+            }
+          }
+          else
+          {
+            curNode->RemoveChild(child, getter_AddRefs(tmp));
           }
           curNode->GetFirstChild(getter_AddRefs(child));
         }
@@ -498,7 +428,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
       else
       {
         // try to insert
-        res = InsertNodeAtPoint(curNode, parentNode, offsetOfNewNode, PR_TRUE);
+        res = InsertNodeAtPoint(curNode, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
         if (NS_SUCCEEDED(res)) 
         {
           bDidInsert = PR_TRUE;
@@ -513,7 +443,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
           curNode->GetParentNode(getter_AddRefs(parent));
           if (parent && !nsTextEditUtils::IsBody(parent))
           {
-            res = InsertNodeAtPoint(parent, parentNode, offsetOfNewNode, PR_TRUE);
+            res = InsertNodeAtPoint(parent, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
             if (NS_SUCCEEDED(res)) 
             {
               bDidInsert = PR_TRUE;
@@ -1611,4 +1541,205 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
   return res;
 }
 
+nsresult 
+nsHTMLEditor::GetListAndTableParents(PRBool aEnd, 
+                                     nsISupportsArray *aListOfNodes,
+                                     nsCOMPtr<nsISupportsArray> *outArray)
+{
+  NS_ENSURE_TRUE(aListOfNodes, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(outArray, NS_ERROR_NULL_POINTER);
+  
+  PRUint32 listCount;
+  aListOfNodes->Count(&listCount);
+  if (listCount <= 0)
+    return NS_ERROR_FAILURE;  // no empty lists, please
+    
+  // build up list of parents of first (or last) node in list 
+  // that are either lists, or tables.  
+  PRUint32 idx = 0;
+  if (aEnd) idx = listCount-1;
+  
+  nsCOMPtr<nsISupports> isup = dont_AddRef(aListOfNodes->ElementAt(idx));
+  nsCOMPtr<nsIDOMNode>  pNode( do_QueryInterface(isup) );
+  nsCOMPtr<nsISupportsArray> listAndTableArray;
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(listAndTableArray));
+  NS_ENSURE_SUCCESS(res, res);
+  while (pNode)
+  {
+    if (nsHTMLEditUtils::IsList(pNode) || nsHTMLEditUtils::IsTable(pNode))
+    {
+      isup = do_QueryInterface(pNode);
+      listAndTableArray->AppendElement(isup);
+    }
+    nsCOMPtr<nsIDOMNode> parent;
+    pNode->GetParentNode(getter_AddRefs(parent));
+    pNode = parent;
+  }
+  *outArray = listAndTableArray;
+  return NS_OK;
+}
 
+nsresult
+nsHTMLEditor::DiscoverPartialListsAndTables(nsISupportsArray *aPasteNodes,
+                                            nsISupportsArray *aListsAndTables,
+                                            PRInt32 *outHighWaterMark)
+{
+  NS_ENSURE_TRUE(aPasteNodes, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aListsAndTables, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(outHighWaterMark, NS_ERROR_NULL_POINTER);
+  
+  *outHighWaterMark = -1;
+  PRUint32 listAndTableParents;
+  aListsAndTables->Count(&listAndTableParents);
+  
+  // scan insertion list for table elements (other than table).
+  PRUint32 listCount, j;  
+  aPasteNodes->Count(&listCount);
+  for (j=0; j<listCount; j++)
+  {
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(aPasteNodes->ElementAt(j));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+
+    NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
+    if (nsHTMLEditUtils::IsTableElement(curNode) && !nsHTMLEditUtils::IsTable(curNode))
+    {
+      nsCOMPtr<nsIDOMNode> theTable = GetTableParent(curNode);
+      if (theTable)
+      {
+        nsCOMPtr<nsISupports> isupTable(do_QueryInterface(theTable));
+        PRInt32 indexT = aListsAndTables->IndexOf(isupTable);
+        if (indexT >= 0)
+        {
+          *outHighWaterMark = indexT;
+          if ((PRUint32)*outHighWaterMark == listAndTableParents-1) break;
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+    if (nsHTMLEditUtils::IsListItem(curNode))
+    {
+      nsCOMPtr<nsIDOMNode> theList = GetListParent(curNode);
+      if (theList)
+      {
+        nsCOMPtr<nsISupports> isupList(do_QueryInterface(theList));
+        PRInt32 indexL = aListsAndTables->IndexOf(isupList);
+        if (indexL >= 0)
+        {
+          *outHighWaterMark = indexL;
+          if ((PRUint32)*outHighWaterMark == listAndTableParents-1) break;
+        }
+        else
+        {
+          break;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsHTMLEditor::ScanForListAndTableStructure( PRBool aEnd,
+                                            nsISupportsArray *aNodes,
+                                            nsIDOMNode *aListOrTable,
+                                            nsCOMPtr<nsIDOMNode> *outReplaceNode)
+{
+  NS_ENSURE_TRUE(aNodes, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aListOrTable, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(outReplaceNode, NS_ERROR_NULL_POINTER);
+
+  *outReplaceNode = 0;
+  
+  // look upward from first/last paste node for a piece of this list/table
+  PRUint32 listCount, idx = 0;
+  aNodes->Count(&listCount);
+  if (aEnd) idx = listCount-1;
+  PRBool bList = nsHTMLEditUtils::IsList(aListOrTable);
+  
+  nsCOMPtr<nsISupports> isup  = dont_AddRef(aNodes->ElementAt(idx));
+  nsCOMPtr<nsIDOMNode>  pNode = do_QueryInterface(isup);
+  nsCOMPtr<nsIDOMNode>  originalNode = pNode;
+  while (pNode)
+  {
+    if ( (bList && nsHTMLEditUtils::IsListItem(pNode)) ||
+         (!bList && (nsHTMLEditUtils::IsTableElement(pNode) && !nsHTMLEditUtils::IsTable(pNode))) )
+    {
+      nsCOMPtr<nsIDOMNode> structureNode;
+      if (bList) structureNode = GetListParent(pNode);
+      else structureNode = GetTableParent(pNode);
+      if (structureNode == aListOrTable)
+      {
+        if (pNode == originalNode)
+          break;  // we are starting right off with a list item of the list
+        *outReplaceNode = pNode;
+        break;
+      }
+    }
+    nsCOMPtr<nsIDOMNode> parent;
+    pNode->GetParentNode(getter_AddRefs(parent));
+    pNode = parent;
+  }
+  return NS_OK;
+}    
+
+nsresult
+nsHTMLEditor::ReplaceOrphanedStructure(PRBool aEnd,
+                                       nsISupportsArray *aNodeArray,
+                                       nsISupportsArray *aListAndTableArray,
+                                       PRInt32 aHighWaterMark)
+{
+  NS_ENSURE_TRUE(aNodeArray, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aListAndTableArray, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsISupports> isupports = dont_AddRef(aListAndTableArray->ElementAt(aHighWaterMark));
+  nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+  NS_ENSURE_TRUE(curNode, NS_ERROR_NULL_POINTER);
+  
+  nsCOMPtr<nsIDOMNode> replaceNode, originalNode, tmp;
+  
+  // find substructure of list or table that must be included in paste.
+  nsresult res = ScanForListAndTableStructure(aEnd, aNodeArray, 
+                                 curNode, address_of(replaceNode));
+  NS_ENSURE_SUCCESS(res, res);
+  
+  // if we found substructure, paste it instead of it's descendants
+  if (replaceNode)
+  {
+    // postprocess list to remove any descendants of this node
+    // so that we dont insert them twice.
+    do
+    {
+      isupports = GetArrayEndpoint(aEnd, aNodeArray);
+      if (!isupports) break;
+      tmp = do_QueryInterface(isupports);
+      if (tmp && nsHTMLEditUtils::IsDescendantOf(tmp, replaceNode))
+        aNodeArray->RemoveElement(isupports);
+      else
+        break;
+    } while(tmp);
+    
+    // now replace the removed nodes with the structural parent
+    isupports = do_QueryInterface(replaceNode);
+    if (aEnd) aNodeArray->AppendElement(isupports);
+    else aNodeArray->InsertElementAt(isupports, 0);
+  }
+  return NS_OK;
+}
+
+nsISupports* nsHTMLEditor::GetArrayEndpoint(PRBool aEnd, nsISupportsArray *aNodeArray)
+{
+  if (aEnd)
+  {
+    PRUint32 listCount;
+    aNodeArray->Count(&listCount);
+    if (listCount <= 0) return nsnull;
+    else return aNodeArray->ElementAt(listCount-1);
+  }
+  else
+  {
+    return aNodeArray->ElementAt(0);
+  }
+}

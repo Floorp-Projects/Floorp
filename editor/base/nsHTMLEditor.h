@@ -351,10 +351,10 @@ public:
 
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD TypedText(const nsAReadableString& aString, PRInt32 aAction);
-  nsresult InsertNodeAtPoint(nsIDOMNode *aNode, 
-                                nsIDOMNode *aParent, 
-                                PRInt32 aOffset, 
-                                PRBool aNoEmptyNodes);
+  nsresult InsertNodeAtPoint( nsIDOMNode *aNode, 
+                              nsCOMPtr<nsIDOMNode> *ioParent, 
+                              PRInt32 *ioOffset, 
+                              PRBool aNoEmptyNodes);
                                 
 
   /** returns the absolute position of the end points of aSelection
@@ -568,6 +568,21 @@ protected:
                                       nsCOMPtr<nsISupportsArray> *outNodeList,
                                       PRInt32 aRangeStartHint,
                                       PRInt32 aRangeEndHint);
+  nsresult GetListAndTableParents( PRBool aEnd, 
+                                   nsISupportsArray *aListOfNodes,
+                                   nsCOMPtr<nsISupportsArray> *outArray);
+  nsresult DiscoverPartialListsAndTables( nsISupportsArray *aPasteNodes,
+                                          nsISupportsArray *aListsAndTables,
+                                          PRInt32 *outHighWaterMark);
+  nsresult ScanForListAndTableStructure(PRBool aEnd,
+                                        nsISupportsArray *aNodes,
+                                        nsIDOMNode *aListOrTable,
+                                        nsCOMPtr<nsIDOMNode> *outReplaceNode);
+  nsresult ReplaceOrphanedStructure( PRBool aEnd,
+                                     nsISupportsArray *aNodeArray,
+                                     nsISupportsArray *aListAndTableArray,
+                                     PRInt32 aHighWaterMark);
+  nsISupports* GetArrayEndpoint(PRBool aEnd, nsISupportsArray *aNodeArray);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
