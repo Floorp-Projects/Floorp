@@ -103,6 +103,62 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
 }
 
 void
+nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
+{
+    char *p = PL_strchr(line, ':'), *p2;
+
+    // the header is malformed... but, there are malformed headers in the
+    // world.  search for ' ' and '\t' to simulate 4.x/IE behavior.
+    if (!p) {
+        p = PL_strchr(line, ' ');
+        if (!p) {
+            p = PL_strchr(line, '\t');
+            if (!p) {
+                // some broken cgi scripts even use '=' as a delimiter!!
+                p = PL_strchr(line, '=');
+            }
+        }
+    }
+
+    if (p) {
+        // ignore whitespace between header name and colon
+        p2 = p;
+        while (--p2 >= line && ((*p2 == ' ') || (*p2 == '\t')))
+            ;
+        *++p2= 0; // overwrite first char after header name
+
+        nsHttpAtom atom = nsHttp::ResolveAtom(line);
+        if (atom) {
+            // skip over whitespace
+            do {
+                ++p;
+            } while ((*p == ' ') || (*p == '\t'));
+
+            // trim trailing whitespace - bug 86608
+            p2 = p + PL_strlen(p);
+            do {
+                --p2;
+            } while (p2 >= p && ((*p2 == ' ') || (*p2 == '\t')));
+            *++p2 = 0;
+
+            // assign return values
+            if (hdr) *hdr = atom;
+            if (val) *val = p;
+
+            // assign response header
+            SetHeader(atom, p);
+        }
+        else
+            LOG(("unknown header; skipping\n"));
+    }
+    else
+        LOG(("malformed header\n"));
+
+    // We ignore mal-formed headers in the hope that we'll still be able
+    // to do something useful with the response.
+}
+
+void
 nsHttpHeaderArray::Flatten(nsACString &buf)
 {
     PRInt32 i, count = mHeaders.Count();

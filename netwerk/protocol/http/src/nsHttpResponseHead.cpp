@@ -169,59 +169,16 @@ nsHttpResponseHead::ParseStatusLine(char *line)
 void
 nsHttpResponseHead::ParseHeaderLine(char *line)
 {
-    char *p = PL_strchr(line, ':'), *p2;
+    nsHttpAtom hdr;
+    char *val;
 
-    // the header is malformed... but, there are malformed headers in the
-    // world.  search for ' ' and '\t' to simulate 4.x/IE behavior.
-    if (!p) {
-        p = PL_strchr(line, ' ');
-        if (!p) {
-            p = PL_strchr(line, '\t');
-            if (!p) {
-                // some broken cgi scripts even use '=' as a delimiter!!
-                p = PL_strchr(line, '=');
-            }
-        }
-    }
+    mHeaders.ParseHeaderLine(line, &hdr, &val);
 
-    if (p) {
-        // ignore whitespace between header name and colon
-        p2 = p;
-        while (--p2 >= line && ((*p2 == ' ') || (*p2 == '\t')))
-            ;
-        *++p2= 0; // overwrite first char after header name
-
-        nsHttpAtom atom = nsHttp::ResolveAtom(line);
-        if (atom) {
-            // skip over whitespace
-            do {
-                ++p;
-            } while ((*p == ' ') || (*p == '\t'));
-
-            // trim trailing whitespace - bug 86608
-            p2 = p + PL_strlen(p);
-            do {
-                --p2;
-            } while (p2 >= p && ((*p2 == ' ') || (*p2 == '\t')));
-            *++p2 = 0;
-
-            // assign response header
-            mHeaders.SetHeader(atom, p);
-
-            // handle some special case headers...
-            if (atom == nsHttp::Content_Length)
-                mContentLength = atoi(p);
-            else if (atom == nsHttp::Content_Type)
-                ParseContentType(p);
-        }
-        else
-            LOG(("unknown header; skipping\n"));
-    }
-    else
-        LOG(("malformed header\n"));
-
-    // We ignore mal-formed headers in the hope that we'll still be able
-    // to do something useful with the response.
+    // handle some special case headers...
+    if (hdr == nsHttp::Content_Length)
+        mContentLength = atoi(val);
+    else if (hdr == nsHttp::Content_Type)
+        ParseContentType(val);
 }
 
 // From section 13.2.3 of RFC2616, we compute the current age of a cached

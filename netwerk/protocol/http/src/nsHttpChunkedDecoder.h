@@ -26,28 +26,41 @@
 
 #include "nsError.h"
 #include "nsString.h"
+#include "nsHttpHeaderArray.h"
 
 class nsHttpChunkedDecoder
 {
 public:
-    nsHttpChunkedDecoder() : mChunkRemaining(0), mReachedEOF(0) {}
-   ~nsHttpChunkedDecoder() {}
+    nsHttpChunkedDecoder() : mTrailers(nsnull)
+                           , mChunkRemaining(0)
+                           , mReachedEOF(PR_FALSE)
+                           , mWaitEOF(PR_FALSE) {}
+   ~nsHttpChunkedDecoder() { delete mTrailers; }
 
     PRBool ReachedEOF() { return mReachedEOF; }
 
-    // Called by the transaction to handle chunked content.
+    // called by the transaction to handle chunked content.
     nsresult HandleChunkedContent(char *buf,
                                   PRUint32 count,
                                   PRUint32 *countRead);
+
+    nsHttpHeaderArray *Trailers() { return mTrailers; }
+
+    nsHttpHeaderArray *TakeTrailers() { nsHttpHeaderArray *h = mTrailers;
+                                        mTrailers = nsnull;
+                                        return h; }
+
 private:
     nsresult ParseChunkRemaining(char *buf,
                                  PRUint32 count,
                                  PRUint32 *countRead);
 
 private:
-    PRUint32     mChunkRemaining;
-    nsCString    mLineBuf; // may hold a partial line
-    PRPackedBool mReachedEOF;
+    nsHttpHeaderArray *mTrailers;
+    PRUint32           mChunkRemaining;
+    nsCString          mLineBuf; // may hold a partial line
+    PRPackedBool       mReachedEOF;
+    PRPackedBool       mWaitEOF;
 };
 
 #endif
