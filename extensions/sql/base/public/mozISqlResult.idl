@@ -51,6 +51,11 @@ interface mozISqlInputStream;
 interface mozISqlResult : nsISupports
 {
   /**
+   * By default, this value is false.
+   */
+  attribute boolean displayNullAsText;
+
+  /**
    * The connection used to execute the query
    */
   readonly attribute mozISqlConnection connection;

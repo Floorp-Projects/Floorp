@@ -301,6 +301,8 @@ class mozSqlResult : public mozISqlResult,
     NS_DECL_ISUPPORTS
 
     //NS_DECL_MOZISQLRESULT
+    NS_IMETHOD GetDisplayNullAsText(PRBool *aDisplayNullAsText);
+    NS_IMETHOD SetDisplayNullAsText(PRBool aDisplayNullAsText);
     NS_IMETHOD GetConnection(mozISqlConnection * *aConnection);
     NS_IMETHOD GetQuery(nsAString & aQuery);
     NS_IMETHOD GetTableName(nsAString & aTableName);
@@ -357,9 +359,11 @@ class mozSqlResult : public mozISqlResult,
     static nsIRDFResource*              kSQL_ResultRoot;
     static nsIRDFResource*              kNC_Child;
     static nsIRDFLiteral*               kNullLiteral;
+    static nsIRDFLiteral*               kEmptyLiteral;
     static nsIRDFLiteral*               kTrueLiteral;
     static nsIRDFLiteral*               kFalseLiteral;
 
+    PRBool                              mDisplayNullAsText;
     nsCOMPtr<mozISqlConnection>         mConnection;
     nsString                            mErrorMessage;
     nsString                            mQuery;

@@ -55,12 +55,14 @@ nsIDateTimeFormat*      mozSqlResult::gFormat;
 nsIRDFResource*         mozSqlResult::kSQL_ResultRoot;
 nsIRDFResource*         mozSqlResult::kNC_Child;
 nsIRDFLiteral*          mozSqlResult::kNullLiteral;
+nsIRDFLiteral*          mozSqlResult::kEmptyLiteral;
 nsIRDFLiteral*          mozSqlResult::kTrueLiteral;
 nsIRDFLiteral*          mozSqlResult::kFalseLiteral;
 
 mozSqlResult::mozSqlResult(mozISqlConnection* aConnection,
                          const nsAString& aQuery)
-  : mConnection(aConnection),
+  : mDisplayNullAsText(PR_FALSE),
+    mConnection(aConnection),
     mQuery(aQuery),
     mSources(nsnull, nsnull, nsnull, nsnull),
     mCanInsert(-1),
@@ -93,6 +95,8 @@ mozSqlResult::Init()
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDFService->GetLiteral(NS_LITERAL_STRING("null").get(), &kNullLiteral);
+    if (NS_FAILED(rv)) return rv;
+    rv = gRDFService->GetLiteral(NS_LITERAL_STRING("").get(), &kEmptyLiteral);
     if (NS_FAILED(rv)) return rv;
     rv = gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;
@@ -138,6 +142,7 @@ mozSqlResult::~mozSqlResult()
   if (--gRefCnt == 0) {
     NS_IF_RELEASE(kFalseLiteral);
     NS_IF_RELEASE(kTrueLiteral);
+    NS_IF_RELEASE(kEmptyLiteral);
     NS_IF_RELEASE(kNullLiteral);
     NS_IF_RELEASE(kNC_Child);
     NS_IF_RELEASE(kSQL_ResultRoot);
@@ -155,6 +160,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(mozSqlResult,
                               nsIRDFDataSource,
                               nsIRDFRemoteDataSource,
                               nsITreeView);
+
+NS_IMETHODIMP
+mozSqlResult::GetDisplayNullAsText(PRBool* aDisplayNullAsText)
+{
+  *aDisplayNullAsText = mDisplayNullAsText;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::SetDisplayNullAsText(PRBool aDisplayNullAsText)
+{
+  mDisplayNullAsText = aDisplayNullAsText;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 mozSqlResult::GetConnection(mozISqlConnection** aConnection)
@@ -421,7 +440,10 @@ mozSqlResult::GetTarget(nsIRDFResource* aSource,
 
   Cell* cell = row->mCells[columnIndex];
   if (cell->IsNull())
-    node = kNullLiteral;
+    if (mDisplayNullAsText)
+      node = kNullLiteral;
+    else
+      node = kEmptyLiteral;
   else {
     PRInt32 type = cell->GetType();
     if (type == mozISqlResult::TYPE_STRING) {
@@ -820,7 +842,11 @@ mozSqlResult::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString & _retval)
   col->GetIndex(&columnIndex);
 
   Cell* cell = ((Row*)mRows[row])->mCells[columnIndex];
-  if (! cell->IsNull()) {
+  if (cell->IsNull()) {
+    if (mDisplayNullAsText)
+      _retval.Assign(NS_LITERAL_STRING("null"));
+  }
+  else {
     PRInt32 type = cell->GetType();
     if (type == mozISqlResult::TYPE_STRING)
       _retval.Assign(cell->mString);
@@ -1383,7 +1409,10 @@ mozSqlResult::UpdateRow(PRInt32 aRowIndex, Row* aSrcRow, PRInt32* _retval)
 
     Cell* cell = row->mCells[i];
     if (cell->IsNull())
-      newNode = kNullLiteral;
+      if (mDisplayNullAsText)
+        newNode = kNullLiteral;
+      else
+        newNode = kEmptyLiteral;
     else {
       PRInt32 type = cell->GetType();
       if (type == mozISqlResult::TYPE_STRING) {
