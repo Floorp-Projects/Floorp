@@ -36,7 +36,6 @@
 #
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
-# also,
 #   MOZ_CO_BRANCH        - Branch tag to use for checkout (default: HEAD)
 #   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
 #   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyEditor)
@@ -77,7 +76,7 @@ endif
 CVS_ROOT_IN_TREE  := $(shell cat $(TOPSRCDIR)/CVS/Root 2>/dev/null)
 ifneq ($(CVS_ROOT_IN_TREE),)
 ifneq ($(CVS_ROOT_IN_TREE),$(CVSROOT))
-  CVS_FLAGS := $(CVS_ROOT_IN_TREE)
+  CVS_FLAGS := -d $(CVS_ROOT_IN_TREE)
 endif
 endif
 
@@ -118,11 +117,11 @@ else
 endif
 
 ifdef MOZ_CO_BRANCH
-  CVSCO := $(CVSCO) -r $(MOZ_CO_BRANCH)
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -r $(MOZ_CO_BRANCH)
 endif
 
 ifdef MOZ_CO_DATE
-  CVSCO := $(CVSCO) -D "$(MOZ_CO_DATE)"
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "$(MOZ_CO_DATE)"
 endif
 
 ifndef MOZ_CO_MODULE
