@@ -1,0 +1,101 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Browser code.
+#
+# The Initial Developer of the Original Code is
+# IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Brian Ryner <bryner@brianryner.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+NO_GECKO_SDK=1
+
+NO_PKG_FILES = \
+	TestGtkEmbed \
+	bloaturls.txt \
+	codesighs* \
+	elf-dynstr-gc \
+	firefox-config \
+	mangle* \
+	maptsv* \
+	mfc* \
+	mkdepend* \
+	msdump* \
+	msmap* \
+	nm2tsv* \
+	nsinstall* \
+	rebasedlls* \
+	regchrome* \
+	regxpcom* \
+	res/samples \
+	res/throbber \
+	shlibsign* \
+	winEmbed.exe \
+	xpcshell* \
+	xpidl* \
+	xpt_dump* \
+	xpt_link* \
+	chrome/chrome.rdf \
+	$(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+
+ifeq ($(OS_ARCH), Darwin)
+MOZ_PKG_APPNAME = Sunbird
+endif
+
+include $(DEPTH)/xpinstall/packager/Makefile
+
+# Rename the archive after it's created, so that we can differentiate between
+# the gtk1 and gtk2 packages on ftp, and so the Windows package has a
+# friendlier name.
+
+ifeq ($(OS_ARCH)_$(TARGET_CPU)_$(MOZ_WIDGET_TOOLKIT)_$(MOZ_ENABLE_XFT), Linux_i686_gtk2_1)
+PACKAGE_NAME = sunbird-i686-linux-gtk2+xft.tar.gz
+else
+ifeq ($(OS_ARCH), WINNT)
+PACKAGE_NAME = Sunbird-win32.zip
+else
+ifeq ($(OS_ARCH), Darwin)
+PACKAGE_NAME = Sunbird-mac.dmg.gz
+endif
+endif
+endif
+
+ifdef PACKAGE_NAME
+libs:: $(PACKAGE)
+	@rm -f $(DIST)/$(PACKAGE_NAME)
+	@mv $(DIST)/$(PACKAGE) $(DIST)/$(PACKAGE_NAME)
+endif
