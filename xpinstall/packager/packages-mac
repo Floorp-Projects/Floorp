@@ -176,7 +176,6 @@ viewer:Components:Necko.shlb
 viewer:Components:Necko2.shlb 
 viewer:Components:necko.xpt 
 
-viewer:chrome:locales:*
 viewer:chrome:packages:core:*
 viewer:chrome:packages:widget-toolkit:*
 viewer:chrome:skins:*
