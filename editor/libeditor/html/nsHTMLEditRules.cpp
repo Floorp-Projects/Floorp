@@ -3286,7 +3286,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
       
       // now attempt to adjust selection to a text node.
       // if we fail, then that means we need toinsert a break
-      res = AdjustSelection(aSelection, nsIEditor::nsIEditor::eDeleteNext);
+      res = AdjustSelection(aSelection, nsIEditor::eDeleteNext);
       if (NS_FAILED(res)) return res;
 	  // get the selection location
 	  nsCOMPtr<nsIDOMNode> selNode;
