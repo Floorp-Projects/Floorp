@@ -56,6 +56,8 @@ push @workload, \%params;
 # Get the lists discribing the data we process
 do 'protoconf.pl' || die "$@\n";
 
+%includedFiles = ();		# array of included files
+
 # Utility functions
 # Create a unique hash array. Programming Perl, 2nd edition, p291 (p217?)
 package ArrayInstance;
@@ -476,6 +478,7 @@ sub readWorkloadFile {
     open($fh, "<$filename") ||
 	open($fh, "gunzip -c $filename.gz |") ||
 	    die "readWorkloadFile Couldn't open testbed $filename: $!";
+    $includedFiles{$filename} = 1; # mark file as included
 
     my $sparm=0;
     my $conline = "";
@@ -496,19 +499,27 @@ sub readWorkloadFile {
 	    s/^\s*//;		# strip initial white space
 	    m/^$/o &&  next;	# continue if blank line
 
-	    # handle include statement
-	    if (m/^<include\s+(\S+)\s*>/io) {
+	    # handle include and includeOnce statements
+	    if ((m/^<(include)\s+(\S+)\s*>/i)
+		|| (m/^<(includeonce)\s+(\S+)\s*>/i)) {
+		my $incfile = $2;
+		if (($1 =~ m/^includeonce/i) && ($includedFiles{$incfile})) {
+		    ($params{DEBUG})
+			&& print "readWorkloadFile:includeOnce $incfile already read.\n";
+		    next;
+		}
 		($params{DEBUG})
-		    && print "readWorkloadFile include $1 from $filename.\n";
+		    && print "readWorkloadFile include $incfile from $filename.\n";
+		$includedFiles{$incfile} = 1; # mark file
 		push @handles, $fh; # push current handle on to stack
 		if ($level++ > 99) { # check recursion and make handles unique
 		    die "readWorkloadFile: include level too deep: $filename $level\n";
 		}
-		$fh = "$1$level";
-		open($fh, "<$1") ||
-		    open($fh, "gunzip -c $1.gz |") ||
-			die "readWorkloadFile Couldn't open testbed file $1: $!";
-		$filename = $1;	# for error messages
+		$fh = "$incfile$level";
+		open($fh, "<$incfile") ||
+		    open($fh, "gunzip -c $incfile.gz |") ||
+			die "readWorkloadFile Couldn't open testbed file $incfile: $!";
+		$filename = $incfile;	# for error messages
 		next;
 	    }
 

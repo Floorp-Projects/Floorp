@@ -3,7 +3,7 @@
 # This can measure delivery rates for a specified message type.
 # This also fills the store for POP or IMAP tests
 
-<include conf/general.wld>
+<includeOnce conf/general.wld>
 
 <CONFIG>	# test specific config
   title		SMTP message deliveries

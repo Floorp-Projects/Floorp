@@ -6,12 +6,18 @@ Updated:
 ======================================================================
 Minor improvements
 
-IncludeOnce
-	Variant on the current include that will include the specified
-file only once.  This will allow test workloads to be used either as a
-stand alone test (which requires including general.wld) or as part of
-another test (which has allready included general.wld).
+Data reduction at each testbed client
 
+Test message generator (plain and MIME styles)
+
+More graphs for multiple runs
+
+Option to drop a fraction of connections
+
+Cache multiple DNS lookups
+	Right now we cache one DNS lookup.  With virtual hosts, we may
+need more than one.  Having one host cached and the rest not could
+skew results.
 
 IMAP delete without reading
 	Just get the message list and delete everything.  This could
