@@ -38,7 +38,7 @@ const CLINE_SERVICE_CTRID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=venkman";
 const CATMAN_CTRID = "@mozilla.org/categorymanager;1";
 const CLINE_SERVICE_CID =
-    Components.ID("{38a95514-1dd2-11b2-97e7-9da958640f2c}");
+    Components.ID("{18269616-1dd2-11b2-afa8-b612439bda27}");
 
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
