@@ -203,8 +203,8 @@ NS_COM PRBool RFindInReadable( const nsAReadableCString& aPattern, nsReadingIter
    * point to the match.  If no match was found, returns |PR_FALSE| and 
    * makes |aSearchStart == aSearchEnd|.
    */
-NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
-NS_COM PRBool FindCharInReadable( char aChar, nsReadingIterator<char>&, nsReadingIterator<char>& );
+NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, const nsReadingIterator<PRUnichar>& aSearchEnd );
+NS_COM PRBool FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, const nsReadingIterator<char>& aSearchEnd );
 
     /**
     * Finds the number of occurences of |aChar| in the string |aStr|

@@ -518,7 +518,7 @@ inline // probably wishful thinking
 PRBool
 FindCharInReadable_Impl( CharT aChar,
                          nsReadingIterator<CharT>& aSearchStart,
-                         nsReadingIterator<CharT>& aSearchEnd )
+                         const nsReadingIterator<CharT>& aSearchEnd )
   {
     while ( aSearchStart != aSearchEnd )
       {
@@ -543,14 +543,14 @@ FindCharInReadable_Impl( CharT aChar,
 
 NS_COM 
 PRBool 
-FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, const nsReadingIterator<PRUnichar>& aSearchEnd )
   {
     return FindCharInReadable_Impl(aChar, aSearchStart, aSearchEnd);
   }
 
 NS_COM 
 PRBool 
-FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, const nsReadingIterator<char>& aSearchEnd )
   {
     return FindCharInReadable_Impl(aChar, aSearchStart, aSearchEnd);
   } 
