@@ -54,9 +54,9 @@
   rickg   04.24.01    added code to get/set "tuning" settings from registry
   rickg   04.24.01    added accelerators to menu, and changed tooltip    
   rickg   04.24.01    moved more strings to resource file
-  rickg   04.24.01    hooked up "tuning" config settings for modulepercent and gFrequencyPercent
-
-  NOTE: I've not hooked up the gEntryPercent setting.
+  rickg   04.24.01    hooked up "tuning" config settings for gModulePercent and gFrequencyPercent
+  rickg   04.27.01    hooked up "tuning" config settings for gEntryPercent
+  rickg   04.27.01    added a new config setting that specifies which browser instance to preload
 
  ****************************************************************************/
 
@@ -145,12 +145,14 @@ static bool  gUseFullModuleList = false;
 
 
 //this enum distinguishes version of netscape (and mozilla).
-enum eAppVersion {eNetscape65, eNetscape60, eMozilla, eNetscapePre60, eUserPath,eUnknown};
+enum eAppVersion {eNetscape65, eNetscape60, eMozilla, eNetscapePre60, eUserPath,eUnknownVersion,eAutoDetect};
 
+static eAppVersion  gAppVersion=eNetscape65;
 
 //Constants for my DLL loader to use...
 static char gMozPath[2048]= {0};
 static char gUserPath[2048]= {0};
+static int  gPreloadJava = 1;
 
 static char gMozModuleList[4096] = {0};
 static char* gModuleCP = gMozModuleList;
@@ -289,6 +291,7 @@ int Get65ModuleList(char *&aModuleList) {
   "components\\gkplugin;" \
   "components\\gkview;" \
   "gkwidget;" \
+  "gfx2;" \
   "components\\jar50;" \
   "components\\lwbrk;" \
   "components\\necko;" \
@@ -403,7 +406,7 @@ void GetPathFromRegistry(eAppVersion aVersion, const char *&aKey, const char *&a
 
       break;
 
-    case eUnknown:
+    case eUnknownVersion:
       break;
   }
 }
@@ -411,21 +414,21 @@ void GetPathFromRegistry(eAppVersion aVersion, const char *&aKey, const char *&a
 /*********************************************************
   Get the path to the netscape6 browser via the registry...
  *********************************************************/
-void GetMozillaRegistryInfo(eAppVersion aVersion) {
+bool GetMozillaRegistryInfo(eAppVersion &aVersion) {
 
   //first we try to get the registry info based on the command line settings.
   //if that fails, we try others.
 
+  bool found=false;
   LONG theOpenResult = 1; //any non-zero will do to initialize this...
   
-  while(ERROR_SUCCESS!=theOpenResult) {
+  while((ERROR_SUCCESS!=theOpenResult) && (aVersion<eUnknownVersion)) {
      
     GetPathFromRegistry(aVersion,gRegKey,gRegSubKey,gModuleCP,gModuleCount);
-    theOpenResult=ERROR_SUCCESS;
 
     CRegKey theRegKey;
 
-    if(eUserPath!=aVersion) {
+    if((eUserPath!=aVersion) && (gRegKey)) {
       theOpenResult=theRegKey.Open(HKEY_LOCAL_MACHINE,gRegKey,KEY_QUERY_VALUE);
 
       if(ERROR_SUCCESS==theOpenResult) {
@@ -449,6 +452,7 @@ void GetMozillaRegistryInfo(eAppVersion aVersion) {
           }
         }
 
+        found=true;
         break;
       }
     }
@@ -459,6 +463,7 @@ void GetMozillaRegistryInfo(eAppVersion aVersion) {
   gMozPathLen=strlen(gMozPath);
   gModuleCP = gMozModuleList;
 
+  return found;
 }
 
 
@@ -498,21 +503,54 @@ void GetNextModuleName(char* aName) {
   we can write up calls entry points in each module.
  ****************************************************************/
 
-const  int        gMaxProcIndex=256;
-static HINSTANCE  gInstances[256];
-static long*      gFuncTable[256][gMaxProcIndex];
+const  int        gMaxDLLCount=256;
+const  int        gMaxProcCount=512;
+static HINSTANCE  gInstances[gMaxDLLCount];
+static long*      gFuncTable[gMaxDLLCount][gMaxProcCount];
 static int        gDLLCount=0;
+static int        gMaxEntryIndex=0;
 
-struct nsIID; 
-typedef const nsIID& (*GetIIDFunc)(void);
+
+/****************************************************************
+  This helper function is called by LoadModule. We separated this
+  stuff out so we can use the same code to load java modules 
+  that aren't in the mozilla directory. 
+ ****************************************************************/
+HINSTANCE LoadModuleFromPath(const char* aPath) {
+ 
+  HINSTANCE theInstance=gInstances[gDLLCount++]=LoadLibrary(aPath);
+
+    //we'll constrain the steprate to the range 1..20.
+  static double kPercent=(100-gEntryPercent)/100.0;
+  static const int kEntryStepRate=1+int(20*kPercent);
+  int theEntryCount=0;
+
+  if(theInstance) {
+    //let's get addresses throughout the module, skipping by the rate of kEntryStepRate.
+    for(int theEntryPoint=0;theEntryPoint<gMaxProcCount;theEntryPoint++){
+      long *entry=(long*)::GetProcAddress(theInstance,MAKEINTRESOURCE(1+(kEntryStepRate*theEntryPoint)));
+      if(entry) {
+        gFuncTable[gDLLCount-1][theEntryCount++]=entry;
+      }
+      else {
+        break;
+      }
+    }
+    if(theEntryCount>gMaxEntryIndex)
+      gMaxEntryIndex=theEntryCount; //we track the highest index we find.
+  }
+
+  return theInstance;
+}
 
 
 /****************************************************************
   Call this once for each module you want to preload.
+  We use gEntryPercent to determine what percentage of entry 
+  p oints to acquire (we will always get at least 1, and we'll
+  skip at most 20 entry points at a time).
  ****************************************************************/
 HINSTANCE LoadModule(const char* aName) {
-
-  //gModulePercent
 
   //we operate on gMozPath directly to avoid an unnecessary string copy.
   //when we're done with this method, we reset gMozpath to it's original value for reuse.
@@ -520,22 +558,7 @@ HINSTANCE LoadModule(const char* aName) {
   strcat(gMozPath,aName);
   strcat(gMozPath,".dll");
 
-  gFuncTable[gDLLCount][0]=0; //make sure the table looks empty by default.
-  
-  HINSTANCE theInstance=gInstances[gDLLCount++]=LoadLibrary(gMozPath);
-
-  int theEntryCount=0;
-
-  if(theInstance) {
-    //let's get addresses throughout the module, skipping over every 20.
-    for(int theEntryPoint=0;theEntryPoint<64;theEntryPoint++){
-      long *entry=(long*)::GetProcAddress(theInstance,MAKEINTRESOURCE(1+(20*theEntryPoint)));
-      if(entry) {
-        gFuncTable[gDLLCount-1][theEntryCount++]=entry;
-        gFuncTable[gDLLCount][theEntryCount]=0; //always add a null to the end
-      }
-    }
-  }
+  HINSTANCE theInstance = LoadModuleFromPath(gMozPath);
 
   gMozPath[gMozPathLen]=0;
   return theInstance;
@@ -555,17 +578,28 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam ) {
 
 /****************************************************************
   Call this to detect whether the browser is running.
+  We cache the result to speed up this function (by preventing
+  subsuquent searches of top level windows).
  ****************************************************************/
 bool BrowserIsRunning() {
-  if(!EnumWindows(EnumWindowsProc,0)) {
-    return true;
+  static bool gBrowserIsRunning=false;
+  
+  if(!gBrowserIsRunning) {
+    if(!EnumWindows(EnumWindowsProc,0)) {
+      gBrowserIsRunning=true;
+    }
   }
-  return false;
+
+  return gBrowserIsRunning;
 }
 
 /****************************************************************
   This function get's called repeatedly to call on a timer,
   and it calls GetProcAddr() to keep modules from paging.
+
+  NOTE: This method uses gFrequencyPercent to determine how much
+  work to do each time it gets called.
+
  ****************************************************************/
 VOID CALLBACK KeepAliveTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime  ) {
 
@@ -583,26 +617,50 @@ VOID CALLBACK KeepAliveTimerProc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTim
   if(!theTimerIsRunning) { //ignore other timer calls till we're done.
     theTimerIsRunning=true;
 
-    const int modulesPerStep=40; //how many modules to "touch" each time...
+      //constrain the step to 1..gDLLCount
+    static const double kPercent=gFrequencyPercent/100.0;
+    static const int kMaxSteps=1+int(3*gDLLCount*kPercent);
 
-    int theCount=0;
+    int count=0;
 
-    for(int theSteps=0;theSteps<modulesPerStep;theSteps++) {
+    //this version iterates the entry points in each module before moving to the next module
 
-      volatile long *p=(long*)gFuncTable[theCurrentModule++][theCurrentProc];
-      if (p && (*p)){  
+    while(count<kMaxSteps) {
+
+        //should these be marked volatile?
+      long *p=(long*)gFuncTable[theCurrentModule][theCurrentProc];
+      if (p) {
+        count++;
+        if (*p && p){  
         //don't actually invoke it, just cause it to load into memory...
         //note that modules have different number of entry points.
         //so not all modules have an entry point at theCurrentProc index.
-      }
-     
-      if(theCurrentModule>=gDLLCount) {
-        theCurrentModule=0; //loop back around to top of module list...
-        theCurrentProc++;
-        if(theCurrentProc>=gMaxProcIndex){
-          theCurrentProc=0; //reset this too!
+          int x=10;
         }
       }
+
+#define _DEPTH_FIRST
+#ifdef _DEPTH_FIRST
+      
+      if(theCurrentModule >= gDLLCount) {
+        theCurrentModule = 0;
+        theCurrentProc = (theCurrentProc>=gMaxEntryIndex) ? 0 : theCurrentProc+1;
+      }
+      else {
+        theCurrentModule++;
+      }
+
+#else //breadth first...
+
+      if(theCurrentProc >= gMaxEntryIndex) {
+        theCurrentProc=0;
+        theCurrentModule = (theCurrentModule>=gDLLCount) ? 0 : theCurrentModule+1;
+      }
+      else {
+        theCurrentProc++;
+      }
+
+#endif
 
     }
 
@@ -631,38 +689,93 @@ VOID CALLBACK LoadModuleTimerProc(HWND hwnd, UINT uMsg, UINT idEvent,DWORD dwTim
       //gModuleCount is the total number of modules we know about
       //gModulePercent is the total % of modules we're being asked to load (config setting)
 
-    if(gDLLCount/gModuleCount<gModulePercent) {
+    double theMaxPercentToLoad=gModulePercent/100.0;
 
-        //we'll only load more modules if haven't loaded the max percentage of modules
-        //based on the configuration UI (stored in gModulePercent).
+      //we'll only load more modules if haven't loaded the max percentage of modules
+      //based on the configuration UI (stored in gModulePercent).
 
-      const int theModulePerCallCount = 2; // specifies how many modules to load per timer callback.
+    const int theModulePerCallCount = 3; // specifies how many modules to load per timer callback.
+    bool  done=false;
 
-      for(int theModuleIndex=0;theModuleIndex<theModulePerCallCount;theModuleIndex++) {
+    for(int theModuleIndex=0;theModuleIndex<theModulePerCallCount;theModuleIndex++) {
 
-        SetTrayIcon(gCheckIcons[gTrayIconIndex]);
+      SetTrayIcon(gCheckIcons[gTrayIconIndex]);
 
-        gTrayIconIndex = (gTrayIconIndex==1) ? 0 : gTrayIconIndex+1; //this toggles the preloader icon to show activity...
+      gTrayIconIndex = (gTrayIconIndex==1) ? 0 : gTrayIconIndex+1; //this toggles the preloader icon to show activity...
 
-        char theDLLName[512];
-        GetNextModuleName(theDLLName);
+      char theDLLName[512];
+      GetNextModuleName(theDLLName);
 
-        if(theDLLName[0]) {
+      if(theDLLName[0]) {
+        if(gDLLCount/(gModuleCount*1.0)<=theMaxPercentToLoad) {
           HINSTANCE theInstance=LoadModule(theDLLName);
         }
-        else {
-          KillTimer(gMainWindow,kLoadTimerID);     
-          SetTrayIcon(gCheckIcons[1]);
-      
-          //now make a new timer that calls GetProcAddr()...
-          //we take gFrequencyPercent into account. We assume a timer range (min..max) of ~200ms.
+        else done=true;
+      }
+      else done=true;
 
-          int theFreq=10+(100-gFrequencyPercent)*2;
+      if(done) {
 
-          UINT result=SetTimer(gMainWindow,kPingModuleTimerID,theFreq,KeepAliveTimerProc);
-          return; //bail out
-      
+          //if they've asked us to preload java, then do so here...
+        if(gPreloadJava) {
+
+          char kJavaRegStr[512] = {0};
+          if(LoadString(gMainInst,IDS_JAVAREGSTR,kJavaRegStr,sizeof(kJavaRegStr))){
+
+            CRegKey theRegKey;
+
+            LONG theOpenResult=theRegKey.Open(HKEY_LOCAL_MACHINE,kJavaRegStr,KEY_QUERY_VALUE);
+            if(ERROR_SUCCESS==theOpenResult) {
+
+              char kJavaRegPath[128] = {0};
+              if(LoadString(gMainInst,IDS_JAVAREGPATH,kJavaRegPath,sizeof(kJavaRegPath))){
+
+                char thePath[1024] = {0};
+                DWORD theSize=sizeof(thePath);
+                theRegKey.QueryValue(thePath,kJavaRegPath,&theSize);
+
+                if(thePath) {
+                  //here we go; let's load java and awt...
+                  char theTempPath[1024]={0};
+
+                  sprintf(theTempPath,"%s\\hotspot\\jvm.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\verify.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\jpins32.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\jpishare.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\NPOJI600.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\java.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                  sprintf(theTempPath,"%s\\awt.dll",thePath);
+                  LoadModuleFromPath(theTempPath);
+
+                }
+              }
+            }
+          }
+
         }
+
+        KillTimer(gMainWindow,kLoadTimerID);     
+        SetTrayIcon(gCheckIcons[1]);
+    
+        //now make a new timer that calls GetProcAddr()...
+        //we take gFrequencyPercent into account. We assume a timer range (min..max) of ~1second.
+
+        int theFreq=50+(100-gFrequencyPercent)*10;
+
+        UINT result=SetTimer(gMainWindow,kPingModuleTimerID,theFreq,KeepAliveTimerProc);
+        return; //bail out    
       }
     }
 
@@ -681,8 +794,6 @@ void ParseArgs(LPSTR &CmdLineArgs,eAppVersion &anAppVersion) {
 
   const char* cp=CmdLineArgs;
   
-  anAppVersion = eNetscape65; //by default.
-
   while(*cp) {
     char theChar=*cp;
     if(('-'==theChar) || ('/'==theChar)){
@@ -720,7 +831,7 @@ void ParseArgs(LPSTR &CmdLineArgs,eAppVersion &anAppVersion) {
           }
             //now eat the path
           gMozPathLen=gUserPathLen=0;
-          if('"'==*cp) { // path is either "a b" or ab
+          if('"'==*cp) { // Allow spaces in the path ie "C:\Program Files"
             cp++; // skip the "
             while(*cp) {
               if('"'!=*cp) {
@@ -818,6 +929,49 @@ BOOL CALLBACK ConfigureDialogProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
         int w=cr2.right-cr2.left;
         int h=cr2.bottom-cr2.top;
 
+
+        /*---------------------------------------------------------------
+          Add members to our list control...
+         ---------------------------------------------------------------*/
+
+        HWND theListCtrl=GetDlgItem(hwnd,IDC_PRELOAD);
+
+        SendMessage(theListCtrl, CB_RESETCONTENT, 0, 0);
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"Auto"); 
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"Mozilla"); 
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"Netscape-6.0"); 
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"Netscape-6.5"); 
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"Pre-Netscape-6.0"); 
+        SendMessage(theListCtrl, CB_ADDSTRING, 0, (LPARAM)"User-defined"); 
+        
+        int theSel=0;
+        switch(gAppVersion) {
+          case eNetscape65: theSel=3; break;
+          case eNetscape60: theSel=2; break;
+          case eMozilla:    theSel=1; break;
+          case eNetscapePre60:  theSel=4; break;
+          case eUserPath:   theSel=5; break;
+          default:
+            break;
+        }
+        
+        SendMessage(theListCtrl, CB_SETCURSEL, (WPARAM)theSel, 0);
+
+        /*---------------------------------------------------------------
+          Set the text of our edit control...
+         ---------------------------------------------------------------*/
+
+        HWND theEditCtrl=GetDlgItem(hwnd,IDC_EDIT1);
+        SendMessage(theEditCtrl, WM_CLEAR, 0, 0); 
+        SendMessage(theEditCtrl, EM_REPLACESEL, 0, (LPARAM)gMozPath); 
+
+        /*---------------------------------------------------------------
+          Set the state of our JAVA checkbox...
+         ---------------------------------------------------------------*/
+
+        HWND theJavaCheckBox =GetDlgItem(hwnd,IDC_JAVA);
+        SendMessage(theJavaCheckBox, BM_SETCHECK, gPreloadJava, 0); 
+
         /*---------------------------------------------------------------
           add code here to set the range of our sliders...
          ---------------------------------------------------------------*/
@@ -850,6 +1004,9 @@ BOOL CALLBACK ConfigureDialogProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             theSlider=GetDlgItem(hwnd,IDC_FREQUENCY);
             gFrequencyPercent = SendMessage(theSlider, TBM_GETPOS, 0, 0); 
 
+            theSlider=GetDlgItem(hwnd,IDC_JAVA);
+            gPreloadJava = (int)SendMessage(theSlider, BM_GETCHECK, 0, 0); 
+
             EndDialog(hwnd,1);
 
             //and now, let's save the configuration settings...
@@ -862,7 +1019,7 @@ BOOL CALLBACK ConfigureDialogProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             }
 
             char theSettings[128];
-            sprintf(theSettings,"%i %i %i",gModulePercent,gEntryPercent,gFrequencyPercent);
+            sprintf(theSettings,"%i %i %i %i %s",gModulePercent,gEntryPercent,gFrequencyPercent,gPreloadJava,gUserPath);
             theRegKey.SetValue( HKEY_LOCAL_MACHINE, gRegKey, theSettings, "Settings");
           }
           
@@ -1110,6 +1267,8 @@ LRESULT CALLBACK WindowFunc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam) {
  *********************************************************/
 int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpszArgs,int nWinMode){
 
+  memset(gFuncTable,0,sizeof(gFuncTable)); //init this to empty ptr's for good housekeeping...
+   
   ::CreateMutex(NULL, FALSE, "YourMutexName");
   if (GetLastError()  == ERROR_ALREADY_EXISTS ) {
     //Bail out if we already have one instance running.
@@ -1164,52 +1323,73 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpszArgs,in
 
   bool useDebugModuleList=false;
   
-  eAppVersion theAppVersion;
+  ParseArgs(lpszArgs,gAppVersion);
 
-  ParseArgs(lpszArgs,theAppVersion);
-  GetMozillaRegistryInfo(theAppVersion); 
+  if(GetMozillaRegistryInfo(gAppVersion)) {
 
-  SetTrayIcon(gBrowserRunningIcon); //by default.
+    SetTrayIcon(gBrowserRunningIcon); //by default.
 
-  //---------------------------------------------------------------
-  //  Now let's grab the config settings (if they happen to exist)
-  //---------------------------------------------------------------
+    //---------------------------------------------------------------
+    //  Now let's grab the config settings (if they happen to exist)
+    //---------------------------------------------------------------
 
-  CRegKey theRegKey;
+    CRegKey theRegKey;
 
-  LONG theOpenResult=theRegKey.Open(HKEY_LOCAL_MACHINE,gRegKey,KEY_QUERY_VALUE);
-  if(ERROR_SUCCESS==theOpenResult) {
-
-    const int theSize=1024;
-    DWORD size=theSize;
-    char theSettings[theSize] = {0};
-
-    theOpenResult=theRegKey.QueryValue(theSettings,"Settings",&size);
+    LONG theOpenResult=theRegKey.Open(HKEY_LOCAL_MACHINE,gRegKey,KEY_QUERY_VALUE);
     if(ERROR_SUCCESS==theOpenResult) {
-      //now let's decode the settings from the string
-      char *cp=theSettings;
+
+      const int theSize=1024;
+      DWORD size=theSize;
+      char theSettings[theSize] = {0};
+
+      theOpenResult=theRegKey.QueryValue(theSettings,"Settings",&size);
+      if(ERROR_SUCCESS==theOpenResult) {
+        //now let's decode the settings from the string
+        char *cp=theSettings;
         
-      gModulePercent = atoi(cp);
-      cp=strchr(cp,' '); //skip ahead to the next space...
-      cp++; //and step over it
+        gModulePercent = atoi(cp);
+        cp=strchr(cp,' '); //skip ahead to the next space...
+        cp++; //and step over it
 
-      gEntryPercent = atoi(cp);
-      cp=strchr(cp,' '); //skip ahead to the next space...
-      cp++; //and step over it
+        gEntryPercent = atoi(cp);
 
-      gFrequencyPercent = atoi(cp);
+        cp=strchr(cp,' '); //skip ahead to the next space...
+        if(cp) {
+          cp++; //and step over it
+          gFrequencyPercent = atoi(cp);
+        }
 
+        cp=strchr(cp,' '); //skip ahead to the next space...
+        if(cp) {
+          cp++; //and step over it
+          gPreloadJava = atoi(cp);
+        }
+
+
+        if(!gUserPath[0]) { //dont override something they provide at the 
+          if(cp){
+            cp=strchr(cp,'['); //seek to the seperator for the pathname (optional)
+            if(cp && *cp) {
+              char *endcp=strchr(cp,']'); //now grab the (optional) user defined path...
+              if(endcp) {
+                strcpy(gUserPath,cp);
+              }
+            }
+          }
+        }
+      }
     }
+
+    //---------------------------------------------------------------
+    //  And start the timer...
+    //---------------------------------------------------------------
+
+    if(!BrowserIsRunning()) {
+      SetTimer(hwnd,kLoadTimerID,50,LoadModuleTimerProc); //don't bother with the preloader if the browser is already up...
+    }
+
   }
 
-  //---------------------------------------------------------------
-  //  And start the timer...
-  //---------------------------------------------------------------
-
-  if(!BrowserIsRunning()) {
-    SetTimer(hwnd,kLoadTimerID,50,LoadModuleTimerProc); //don't bother with the preloader if the browser is already up...
-  }
-  
   //start message pump
   MSG WinMsg;
   while(GetMessage(&WinMsg, NULL, 0, 0)) {

@@ -17,6 +17,8 @@
 #define IDS_SUBKEY_PATH                 13
 #define IDS_NS_WINDOWNAME               14
 #define IDS_MOZ_WINDOWNAME              15
+#define IDS_JAVAREGSTR                  16
+#define IDS_JAVAREGPATH                 17
 #define DISABLE                         101
 #define TRYMERICK                       101
 #define IDD_DIALOG1                     102
@@ -31,6 +33,9 @@
 #define IDC_ENTRIES                     1001
 #define IDC_SLIDER3                     1002
 #define IDC_FREQUENCY                   1002
+#define IDC_EDIT1                       1005
+#define IDC_PRELOAD                     1007
+#define IDC_JAVA                        1008
 #define IDM_CONFIGURE                   40007
 #define IDM_EXIT                        40011
 #define IDM_CHANGE                      40012
@@ -41,9 +46,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        111
+#define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40008
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
