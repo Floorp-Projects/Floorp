@@ -940,7 +940,7 @@ nsEditorShell::ScrollSelectionIntoView()
   if (!selCon)
     return NS_ERROR_UNEXPECTED;
   return selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                            nsISelectionController::SELECTION_FOCUS_REGION);
+                                            nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 
 NS_IMETHODIMP

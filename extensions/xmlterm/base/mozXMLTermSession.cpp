@@ -1140,7 +1140,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       return NS_ERROR_FAILURE;
 
     selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                    nsISelectionController::SELECTION_FOCUS_REGION);
+                                    nsISelectionController::SELECTION_FOCUS_REGION,
+                                    PR_TRUE);
 
   }
 
@@ -1304,7 +1305,8 @@ NS_IMETHODIMP mozXMLTermSession::Abort(mozILineTermAux* lineTermAux,
       selection->Collapse(textNode, errMsg.Length());
       if (NS_SUCCEEDED(result)) {
         selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                            nsISelectionController::SELECTION_FOCUS_REGION);
+                                        nsISelectionController::SELECTION_FOCUS_REGION,
+                                        PR_TRUE);
       }
     }
   }
@@ -3523,7 +3525,8 @@ NS_IMETHODIMP mozXMLTermSession::NewScreen(void)
       return NS_ERROR_FAILURE;
 
     result = selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                                 nsISelectionController::SELECTION_FOCUS_REGION);
+                                             nsISelectionController::SELECTION_FOCUS_REGION,
+                                             PR_TRUE);
   }
 
   return NS_OK;

@@ -1886,8 +1886,9 @@ NS_IMETHODIMP
 nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
   NS_ASSERTION(aTextRangeList, "null ptr");
-  if(nsnull == aTextRangeList)
-        return NS_ERROR_NULL_POINTER;
+  if (nsnull == aTextRangeList)
+    return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsICaret>  caretP;
   
   // workaround for windows ime bug 23558: we get every ime event twice. 
@@ -1905,6 +1906,36 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
 
   mIMETextRangeList = aTextRangeList;
 
+  if (!mPresShellWeak) 
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) 
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // XXX_kin: BEGIN HACK! HACK! HACK!
+  // XXX_kin:
+  // XXX_kin: This is lame! The IME stuff needs caret coordinates
+  // XXX_kin: synchronously, but the editor could be using async
+  // XXX_kin: updates (reflows and paints) for performance reasons.
+  // XXX_kin: In order to give IME what it needs, we have to temporarily
+  // XXX_kin: switch to sync updating during this call so that the
+  // XXX_kin: nsAutoPlaceHolderBatch can force sync reflows, paints,
+  // XXX_kin: and selection scrolling, so that we get back accurate
+  // XXX_kin: caret coordinates.
+
+  PRUint32 flags = 0;
+  PRBool restoreFlags = PR_FALSE;
+
+  if (NS_SUCCEEDED(GetFlags(&flags)) &&
+     (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))
+  {
+    if (NS_SUCCEEDED(SetFlags(flags & (~nsIPlaintextEditor::eEditorUseAsyncUpdatesMask))))
+       restoreFlags = PR_TRUE;
+  }
+
+  // XXX_kin: END HACK! HACK! HACK!
+
   // we need the nsAutoPlaceHolderBatch destructor called before hitting
   // GetCaretCoordinates so the states in Frame system sync with content
   // therefore, we put the nsAutoPlaceHolderBatch into a inner block
@@ -1915,11 +1946,6 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
 
     mIMEBufferLength = aCompositionString.Length();
 
-    if (!mPresShellWeak) 
-      return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    if (!ps) 
-      return NS_ERROR_NOT_INITIALIZED;
     ps->GetCaret(getter_AddRefs(caretP));
     caretP->SetCaretDOMSelection(selection);
 
@@ -1929,6 +1955,15 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
       mIMETextNode = nsnull;
     }
   }
+
+  // XXX_kin: BEGIN HACK! HACK! HACK!
+  // XXX_kin:
+  // XXX_kin: Restore the previous set of flags!
+
+  if (restoreFlags)
+    SetFlags(flags);
+
+  // XXX_kin: END HACK! HACK! HACK!
 
   result = caretP->GetCaretCoordinates(nsICaret::eIMECoordinates, selection,
             &(aReply->mCursorPosition), &(aReply->mCursorIsCollapsed));
