@@ -68,7 +68,7 @@ struct NS_COM nsDiscriminatedUnion
             PRUnichar*   mWStringValue;
             PRUint32     mWStringLength;
         } wstr;
-    };
+    } u;
     PRUint16       mType;
 };
 

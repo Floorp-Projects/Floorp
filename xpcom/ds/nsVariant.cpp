@@ -66,7 +66,7 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
 
 #define CASE__NUMBER_INT32(type_, member_)                                    \
     case nsIDataType :: type_ :                                               \
-        outData->mInt32Value = inData. member_ ;                              \
+        outData->u.mInt32Value = inData.u. member_ ;                          \
         outData->mType = nsIDataType::VTYPE_INT32;                            \
         return NS_OK;
 
@@ -84,7 +84,7 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
     // This group results in a PRUint32...
     
     case nsIDataType::VTYPE_UINT32:
-        outData->mInt32Value = inData.mUint32Value;
+        outData->u.mInt32Value = inData.u.mUint32Value;
         outData->mType = nsIDataType::VTYPE_INT32;
         return NS_OK;
                
@@ -94,34 +94,34 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
     case nsIDataType::VTYPE_UINT64:
         // XXX Need boundary checking here. 
         // We may need to return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
-        LL_L2D(outData->mDoubleValue, inData.mInt64Value);
+        LL_L2D(outData->u.mDoubleValue, inData.u.mInt64Value);
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_FLOAT:        
-        outData->mDoubleValue = inData.mFloatValue;
+        outData->u.mDoubleValue = inData.u.mFloatValue;
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_DOUBLE:        
-        outData->mDoubleValue = inData.mDoubleValue;
+        outData->u.mDoubleValue = inData.u.mDoubleValue;
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        rv = String2Double(inData.str.mStringValue, &outData->mDoubleValue);
+        rv = String2Double(inData.u.str.mStringValue, &outData->u.mDoubleValue);
         if(NS_FAILED(rv))
             return rv;
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_ASTRING:
-        rv = AString2Double(*inData.mAStringValue, &outData->mDoubleValue);
+        rv = AString2Double(*inData.u.mAStringValue, &outData->u.mDoubleValue);
         if(NS_FAILED(rv))
             return rv;
         outData->mType = nsIDataType::VTYPE_DOUBLE;
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        tempString.Assign(inData.wstr.mWStringValue);
-        rv = AString2Double(tempString, &outData->mDoubleValue);
+        tempString.Assign(inData.u.wstr.mWStringValue);
+        rv = AString2Double(tempString, &outData->u.mDoubleValue);
         if(NS_FAILED(rv))
             return rv;
         outData->mType = nsIDataType::VTYPE_DOUBLE;
@@ -146,14 +146,14 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
 static void FreeArray(nsDiscriminatedUnion* data)
 {
     NS_ASSERTION(data->mType == nsIDataType::VTYPE_ARRAY, "bad FreeArray call");
-    NS_ASSERTION(data->array.mArrayValue, "bad array");
-    NS_ASSERTION(data->array.mArrayCount, "bad array count");
+    NS_ASSERTION(data->u.array.mArrayValue, "bad array");
+    NS_ASSERTION(data->u.array.mArrayCount, "bad array count");
 
 #define CASE__FREE_ARRAY_PTR(type_, ctype_)                                   \
         case nsIDataType:: type_ :                                            \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) data->array.mArrayValue;                \
-            for(PRUint32 i = data->array.mArrayCount; i > 0; p++, i--)        \
+            ctype_ ** p = (ctype_ **) data->u.array.mArrayValue;              \
+            for(PRUint32 i = data->u.array.mArrayCount; i > 0; p++, i--)      \
                 if(*p)                                                        \
                     nsMemory::Free((char*)*p);                                \
             break;                                                            \
@@ -162,14 +162,14 @@ static void FreeArray(nsDiscriminatedUnion* data)
 #define CASE__FREE_ARRAY_IFACE(type_, ctype_)                                 \
         case nsIDataType:: type_ :                                            \
         {                                                                     \
-            ctype_ ** p = (ctype_ **) data->array.mArrayValue;                \
-            for(PRUint32 i = data->array.mArrayCount; i > 0; p++, i--)        \
+            ctype_ ** p = (ctype_ **) data->u.array.mArrayValue;              \
+            for(PRUint32 i = data->u.array.mArrayCount; i > 0; p++, i--)      \
                 if(*p)                                                        \
                     (*p)->Release();                                          \
             break;                                                            \
         }
     
-    switch(data->array.mArrayType)
+    switch(data->u.array.mArrayType)
     {
         case nsIDataType::VTYPE_INT8:        
         case nsIDataType::VTYPE_INT16:        
@@ -206,7 +206,7 @@ static void FreeArray(nsDiscriminatedUnion* data)
     }
     
     // Free the array memory.
-    nsMemory::Free((char*)data->array.mArrayValue);
+    nsMemory::Free((char*)data->u.array.mArrayValue);
 
 #undef CASE__FREE_ARRAY_PTR
 #undef CASE__FREE_ARRAY_IFACE
@@ -227,7 +227,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
     nsresult rv = NS_OK;
     PRUint32 i;
 
-    // First we figure out the size of the elements for the new array.
+    // First we figure out the size of the elements for the new u.array.
     
     size_t elementSize;
     size_t allocSize;
@@ -296,7 +296,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
     }
 
     
-    // Alloc the array.
+    // Alloc the u.array.
 
     allocSize = inCount * elementSize;
     *outValue = nsMemory::Alloc(allocSize);
@@ -433,7 +433,7 @@ bad:
 
 #define TRIVIAL_DATA_CONVERTER(type_, data_, member_, retval_)                \
     if(data_.mType == nsIDataType :: type_) {                                 \
-        *retval_ = data_.member_;                                             \
+        *retval_ = data_.u.member_;                                           \
         return NS_OK;                                                         \
     }
 
@@ -458,13 +458,13 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 
 #define CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(Ctype_)                      \
     case nsIDataType::VTYPE_INT32:                                            \
-        *_retval = ( Ctype_ ) tempData.mInt32Value;                           \
+        *_retval = ( Ctype_ ) tempData.u.mInt32Value;                         \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_INT32_MIN_MAX(Ctype_, min_, max_)            \
     case nsIDataType::VTYPE_INT32:                                            \
     {                                                                         \
-        PRInt32 value = tempData.mInt32Value;                                 \
+        PRInt32 value = tempData.u.mInt32Value;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *_retval = ( Ctype_ ) value;                                          \
@@ -473,13 +473,13 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 
 #define CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(Ctype_)                     \
     case nsIDataType::VTYPE_UINT32:                                           \
-        *_retval = ( Ctype_ ) tempData.mUint32Value;                          \
+        *_retval = ( Ctype_ ) tempData.u.mUint32Value;                        \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_UINT32_MAX(Ctype_, max_)                     \
     case nsIDataType::VTYPE_UINT32:                                           \
     {                                                                         \
-        PRUint32 value = tempData.mUint32Value;                               \
+        PRUint32 value = tempData.u.mUint32Value;                             \
         if(value > max_)                                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *_retval = ( Ctype_ ) value;                                          \
@@ -488,13 +488,13 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(Ctype_)                     \
     case nsIDataType::VTYPE_DOUBLE:                                           \
-        *_retval = ( Ctype_ ) tempData.mDoubleValue;                          \
+        *_retval = ( Ctype_ ) tempData.u.mDoubleValue;                        \
         return rv;
 
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_)           \
     case nsIDataType::VTYPE_DOUBLE:                                           \
     {                                                                         \
-        double value = tempData.mDoubleValue;                                 \
+        double value = tempData.u.mDoubleValue;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *_retval = ( Ctype_ ) value;                                          \
@@ -504,7 +504,7 @@ nsVariant::ConvertTo##name_ (const nsDiscriminatedUnion& data,                \
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
     case nsIDataType::VTYPE_DOUBLE:                                           \
     {                                                                         \
-        double value = tempData.mDoubleValue;                                 \
+        double value = tempData.u.mDoubleValue;                               \
         if(value < min_ || value > max_)                                      \
             return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                         \
         *_retval = ( Ctype_ ) value;                                          \
@@ -623,14 +623,14 @@ nsVariant::ConvertToInt64(const nsDiscriminatedUnion& data, PRInt64 *_retval)
     switch(tempData.mType)
     {
     case nsIDataType::VTYPE_INT32:
-        LL_I2L(*_retval, tempData.mInt32Value);
+        LL_I2L(*_retval, tempData.u.mInt32Value);
         return rv;
     case nsIDataType::VTYPE_UINT32:
-        LL_UI2L(*_retval, tempData.mUint32Value);
+        LL_UI2L(*_retval, tempData.u.mUint32Value);
         return rv;
     case nsIDataType::VTYPE_DOUBLE:
         // XXX should check for data loss here!
-        LL_D2L(*_retval, tempData.mDoubleValue);
+        LL_D2L(*_retval, tempData.u.mDoubleValue);
         return rv;
     default:
         NS_ERROR("bad type returned from ToManageableNumber");
@@ -655,13 +655,13 @@ static PRBool String2ID(const nsDiscriminatedUnion& data, nsID* pid)
     {
         case nsIDataType::VTYPE_CHAR_STR:
         case nsIDataType::VTYPE_STRING_SIZE_IS:
-            return pid->Parse(data.str.mStringValue);
+            return pid->Parse(data.u.str.mStringValue);
         case nsIDataType::VTYPE_ASTRING:
-            pString = data.mAStringValue;
+            pString = data.u.mAStringValue;
             break;
         case nsIDataType::VTYPE_WCHAR_STR:
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-            tempString.Assign(data.wstr.mWStringValue);
+            tempString.Assign(data.u.wstr.mWStringValue);
             pString = &tempString;
             break;
         default:
@@ -685,13 +685,13 @@ nsVariant::ConvertToID(const nsDiscriminatedUnion& data, nsID * _retval)
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ID:
-        *_retval = data.mIDValue;
+        *_retval = data.u.mIDValue;
         return NS_OK;
     case nsIDataType::VTYPE_INTERFACE:
         *_retval = NS_GET_IID(nsISupports);
         return NS_OK;
     case nsIDataType::VTYPE_INTERFACE_IS:
-        *_retval = data.iface.mInterfaceID;
+        *_retval = data.u.iface.mInterfaceID;
         return NS_OK;
     case nsIDataType::VTYPE_ASTRING:
     case nsIDataType::VTYPE_CHAR_STR:
@@ -739,7 +739,7 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
     // nsID has its own text formater.
 
     case nsIDataType::VTYPE_ID:        
-        ptr = data.mIDValue.ToString();
+        ptr = data.u.mIDValue.ToString();
         if(!ptr)
             return NS_ERROR_OUT_OF_MEMORY;
         outString.Assign(ptr);
@@ -750,7 +750,7 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
 
 #define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)                 \
     case nsIDataType :: type_ :                                               \
-        ptr = PR_smprintf( format_ , (cast_) data . member_ );                \
+        ptr = PR_smprintf( format_ , (cast_) data.u. member_ );               \
         break;
 
     CASE__SMPRINTF_NUMBER(VTYPE_INT8,   "%d",   int,      mInt8Value)
@@ -790,24 +790,24 @@ nsVariant::ConvertToAString(const nsDiscriminatedUnion& data, nsAWritableString 
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
-        _retval.Assign(*data.mAStringValue);
+        _retval.Assign(*data.u.mAStringValue);
         return NS_OK;
     case nsIDataType::VTYPE_CHAR_STR:
-        tempCString.Assign(data.str.mStringValue);
+        tempCString.Assign(data.u.str.mStringValue);
         CopyASCIItoUCS2(tempCString, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR_STR:
-        _retval.Assign(data.wstr.mWStringValue);
+        _retval.Assign(data.u.wstr.mWStringValue);
         return NS_OK;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        tempCString.Assign(data.str.mStringValue, data.str.mStringLength);
+        tempCString.Assign(data.u.str.mStringValue, data.u.str.mStringLength);
         CopyASCIItoUCS2(tempCString, _retval);
         return NS_OK;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        _retval.Assign(data.wstr.mWStringValue, data.wstr.mWStringLength);
+        _retval.Assign(data.u.wstr.mWStringValue, data.u.wstr.mWStringLength);
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR:        
-        _retval.Assign(data.mWCharValue);
+        _retval.Assign(data.u.mWCharValue);
         return NS_OK;
     default:
         rv = ToString(data, tempCString);
@@ -841,31 +841,31 @@ nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *s
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
-        *size = data.mAStringValue->Length();
-        *str = ToNewCString(*data.mAStringValue);
+        *size = data.u.mAStringValue->Length();
+        *str = ToNewCString(*data.u.mAStringValue);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_CHAR_STR:
-        tempCString.Assign(data.str.mStringValue);
+        tempCString.Assign(data.u.str.mStringValue);
         *size = tempCString.Length();
         *str = ToNewCString(tempCString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WCHAR_STR:
-        tempString.Assign(data.wstr.mWStringValue);
+        tempString.Assign(data.u.wstr.mWStringValue);
         *size = tempString.Length();
         *str = ToNewCString(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        tempCString.Assign(data.str.mStringValue, data.str.mStringLength);
+        tempCString.Assign(data.u.str.mStringValue, data.u.str.mStringLength);
         *size = tempCString.Length();
         *str = ToNewCString(tempCString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        tempString.Assign(data.wstr.mWStringValue, data.wstr.mWStringLength);
+        tempString.Assign(data.u.wstr.mWStringValue, data.u.wstr.mWStringLength);
         *size = tempString.Length();
         *str = ToNewCString(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WCHAR:        
-        tempString.Assign(data.mWCharValue);
+        tempString.Assign(data.u.mWCharValue);
         *size = tempString.Length();
         *str = ToNewCString(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -888,31 +888,31 @@ nsVariant::ConvertToWStringWithSize(const nsDiscriminatedUnion& data, PRUint32 *
     switch(data.mType)
     {
     case nsIDataType::VTYPE_ASTRING:
-        *size = data.mAStringValue->Length();
-        *str = ToNewUnicode(*data.mAStringValue);
+        *size = data.u.mAStringValue->Length();
+        *str = ToNewUnicode(*data.u.mAStringValue);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_CHAR_STR:
-        tempCString.Assign(data.str.mStringValue);
+        tempCString.Assign(data.u.str.mStringValue);
         *size = tempCString.Length();
         *str = ToNewUnicode(tempCString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WCHAR_STR:
-        tempString.Assign(data.wstr.mWStringValue);
+        tempString.Assign(data.u.wstr.mWStringValue);
         *size = tempString.Length();
         *str = ToNewUnicode(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-        tempCString.Assign(data.str.mStringValue, data.str.mStringLength);
+        tempCString.Assign(data.u.str.mStringValue, data.u.str.mStringLength);
         *size = tempCString.Length();
         *str = ToNewUnicode(tempCString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-        tempString.Assign(data.wstr.mWStringValue, data.wstr.mWStringLength);
+        tempString.Assign(data.u.wstr.mWStringValue, data.u.wstr.mWStringLength);
         *size = tempString.Length();
         *str = ToNewUnicode(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     case nsIDataType::VTYPE_WCHAR:        
-        tempString.Assign(data.mWCharValue);
+        tempString.Assign(data.u.mWCharValue);
         *size = tempString.Length();
         *str = ToNewUnicode(tempString);
         return *str ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -933,7 +933,7 @@ nsVariant::ConvertToISupports(const nsDiscriminatedUnion& data, nsISupports **_r
     {
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
-        return data.iface.mInterfaceValue->
+        return data.u.iface.mInterfaceValue->
                     QueryInterface(NS_GET_IID(nsISupports), (void**)_retval);
     default:
         return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -951,7 +951,7 @@ nsVariant::ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, vo
         piid = &NS_GET_IID(nsISupports);
         break;
     case nsIDataType::VTYPE_INTERFACE_IS:
-        piid = &data.iface.mInterfaceID;
+        piid = &data.u.iface.mInterfaceID;
         break;
     default:
         return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -960,7 +960,7 @@ nsVariant::ConvertToInterface(const nsDiscriminatedUnion& data, nsIID * *iid, vo
     *iid = (nsIID*) nsMemory::Clone(piid, sizeof(nsIID));
     if(!*iid)
         return NS_ERROR_OUT_OF_MEMORY;
-    return data.iface.mInterfaceValue->QueryInterface(*piid, iface);
+    return data.u.iface.mInterfaceValue->QueryInterface(*piid, iface);
 }
 
 /* static */ nsresult 
@@ -971,8 +971,8 @@ nsVariant::ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsII
     // CloneArray to do this if we want to support this.
 
     if(data.mType == nsIDataType::VTYPE_ARRAY)
-        return CloneArray(data.array.mArrayType, &data.array.mArrayInterfaceID, 
-                          data.array.mArrayCount, data.array.mArrayValue,
+        return CloneArray(data.u.array.mArrayType, &data.u.array.mArrayInterfaceID, 
+                          data.u.array.mArrayCount, data.u.array.mArrayValue,
                           type, iid, count, ptr);
     return NS_ERROR_CANNOT_CONVERT_DATA;
 }
@@ -989,12 +989,12 @@ nsVariant::ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsII
 
 #define DATA_SETTER(data_, type_, member_, value_)                            \
     DATA_SETTER_PROLOGUE(data_)                                               \
-    data_->member_ = value_;                                                  \
+    data_->u.member_ = value_;                                                \
     DATA_SETTER_EPILOGUE(data_, type_)
 
 #define DATA_SETTER_WITH_CAST(data_, type_, member_, cast_, value_)           \
     DATA_SETTER_PROLOGUE(data_)                                               \
-    data_->member_ = cast_ value_;                                            \
+    data_->u.member_ = cast_ value_;                                          \
     DATA_SETTER_EPILOGUE(data_, type_)
 
 
@@ -1004,10 +1004,10 @@ nsVariant::ConvertToArray(const nsDiscriminatedUnion& data, PRUint16 *type, nsII
     {                                                                         \
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER(member_, name_)                  \
-        rv = aValue->GetAs##name_ (&(data-> member_ ));
+        rv = aValue->GetAs##name_ (&(data->u. member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE__GETTER_CAST(cast_, member_, name_)      \
-        rv = aValue->GetAs##name_ ( cast_ &(data-> member_ ));
+        rv = aValue->GetAs##name_ ( cast_ &(data->u. member_ ));
 
 #define CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(type_)                          \
         if(NS_SUCCEEDED(rv))                                                  \
@@ -1061,19 +1061,19 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue)
         case nsIDataType::VTYPE_WCHAR_STR:        
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
             CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_ASTRING);
-            data->mAStringValue = new nsString();
-            if(!data->mAStringValue)
+            data->u.mAStringValue = new nsString();
+            if(!data->u.mAStringValue)
                 return NS_ERROR_OUT_OF_MEMORY; 
-            rv = aValue->GetAsAString(*data->mAStringValue);
+            rv = aValue->GetAsAString(*data->u.mAStringValue);
             if(NS_FAILED(rv))
-                delete data->mAStringValue;
+                delete data->u.mAStringValue;
             CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_ASTRING)
 
         case nsIDataType::VTYPE_CHAR_STR:        
         case nsIDataType::VTYPE_STRING_SIZE_IS:
             CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_STRING_SIZE_IS);
-            rv = aValue->GetAsStringWithSize(&data->str.mStringLength,
-                                             &data->str.mStringValue);
+            rv = aValue->GetAsStringWithSize(&data->u.str.mStringLength,
+                                             &data->u.str.mStringValue);
             CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_STRING_SIZE_IS)
         
         case nsIDataType::VTYPE_INTERFACE:
@@ -1081,20 +1081,20 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue)
             CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_INTERFACE_IS);
             // XXX This iid handling is ugly!
             nsIID* iid;
-            rv = aValue->GetAsInterface(&iid, (void**)&data->iface.mInterfaceValue);
+            rv = aValue->GetAsInterface(&iid, (void**)&data->u.iface.mInterfaceValue);
             if(NS_SUCCEEDED(rv))
             {
-                data->iface.mInterfaceID = *iid;
+                data->u.iface.mInterfaceID = *iid;
                 nsMemory::Free((char*)iid);
             }
             CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_INTERFACE_IS)
 
         case nsIDataType::VTYPE_ARRAY:
             CASE__SET_FROM_VARIANT_VTYPE_PROLOGUE(VTYPE_ARRAY);
-            rv = aValue->GetAsArray(&data->array.mArrayType,
-                                    &data->array.mArrayInterfaceID,
-                                    &data->array.mArrayCount,
-                                    &data->array.mArrayValue);
+            rv = aValue->GetAsArray(&data->u.array.mArrayType,
+                                    &data->u.array.mArrayInterfaceID,
+                                    &data->u.array.mArrayCount,
+                                    &data->u.array.mArrayValue);
             CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_ARRAY)
 
         case nsIDataType::VTYPE_VOID:
@@ -1185,7 +1185,7 @@ nsVariant::SetFromID(nsDiscriminatedUnion* data, const nsID & aValue)
 nsVariant::SetFromAString(nsDiscriminatedUnion* data, const nsAReadableString & aValue)
 {
     DATA_SETTER_PROLOGUE(data);
-    if(!(data->mAStringValue = new nsString(aValue)))
+    if(!(data->u.mAStringValue = new nsString(aValue)))
         return NS_ERROR_OUT_OF_MEMORY;
     DATA_SETTER_EPILOGUE(data, VTYPE_ASTRING);
 }
@@ -1217,8 +1217,8 @@ nsVariant::SetFromInterface(nsDiscriminatedUnion* data, const nsIID& iid, nsISup
     if(!aValue) 
         return NS_ERROR_NULL_POINTER;
     NS_ADDREF(aValue);
-    data->iface.mInterfaceValue = aValue;
-    data->iface.mInterfaceID = iid;
+    data->u.iface.mInterfaceValue = aValue;
+    data->u.iface.mInterfaceID = iid;
     DATA_SETTER_EPILOGUE(data, VTYPE_INTERFACE_IS);
 }
 /* static */ nsresult 
@@ -1229,10 +1229,10 @@ nsVariant::SetFromArray(nsDiscriminatedUnion* data, PRUint16 type, const nsIID* 
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv = CloneArray(type, iid, count, aValue,
-                             &data->array.mArrayType,
-                             &data->array.mArrayInterfaceID,
-                             &data->array.mArrayCount, 
-                             &data->array.mArrayValue);
+                             &data->u.array.mArrayType,
+                             &data->u.array.mArrayInterfaceID,
+                             &data->u.array.mArrayCount, 
+                             &data->u.array.mArrayValue);
     if(NS_FAILED(rv))
         return rv;
     DATA_SETTER_EPILOGUE(data, VTYPE_ARRAY);
@@ -1243,10 +1243,10 @@ nsVariant::SetFromStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, cons
     DATA_SETTER_PROLOGUE(data);
     if(!aValue) 
         return NS_ERROR_NULL_POINTER;
-    if(!(data->str.mStringValue = 
+    if(!(data->u.str.mStringValue = 
          (char*) nsMemory::Clone(aValue, (size+1)*sizeof(char))))
         return NS_ERROR_OUT_OF_MEMORY;
-    data->str.mStringLength = size;
+    data->u.str.mStringLength = size;
     DATA_SETTER_EPILOGUE(data, VTYPE_STRING_SIZE_IS);
 }
 /* static */ nsresult 
@@ -1255,10 +1255,10 @@ nsVariant::SetFromWStringWithSize(nsDiscriminatedUnion* data, PRUint32 size, con
     DATA_SETTER_PROLOGUE(data);
     if(!aValue) 
         return NS_ERROR_NULL_POINTER;
-    if(!(data->wstr.mWStringValue = 
+    if(!(data->u.wstr.mWStringValue = 
          (PRUnichar*) nsMemory::Clone(aValue, (size+1)*sizeof(PRUnichar))))
         return NS_ERROR_OUT_OF_MEMORY;
-    data->wstr.mWStringLength = size;
+    data->u.wstr.mWStringLength = size;
     DATA_SETTER_EPILOGUE(data, VTYPE_WSTRING_SIZE_IS);
 }
 /* static */ nsresult 
@@ -1305,19 +1305,19 @@ nsVariant::Cleanup(nsDiscriminatedUnion* data)
         case nsIDataType::VTYPE_ID:        
             break;
         case nsIDataType::VTYPE_ASTRING:        
-            delete data->mAStringValue;
+            delete data->u.mAStringValue;
             break;
         case nsIDataType::VTYPE_CHAR_STR:        
         case nsIDataType::VTYPE_STRING_SIZE_IS:        
-            nsMemory::Free((char*)data->str.mStringValue);
+            nsMemory::Free((char*)data->u.str.mStringValue);
             break;
         case nsIDataType::VTYPE_WCHAR_STR:        
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
-            nsMemory::Free((char*)data->wstr.mWStringValue);
+            nsMemory::Free((char*)data->u.wstr.mWStringValue);
             break;
         case nsIDataType::VTYPE_INTERFACE:        
         case nsIDataType::VTYPE_INTERFACE_IS:        
-            NS_IF_RELEASE(data->iface.mInterfaceValue);
+            NS_IF_RELEASE(data->u.iface.mInterfaceValue);
             break;
         case nsIDataType::VTYPE_ARRAY:
             FreeArray(data);

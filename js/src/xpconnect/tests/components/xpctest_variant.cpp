@@ -73,15 +73,15 @@ NS_IMETHODIMP nsTestVariant::ReturnVariantType(nsIVariant *value, PRUint16 *_ret
 }
 
 #define MEMBER_COPY(type_)                                                    \
-    rv = inVar->GetAs##type_(&u.m##type_##Value);                             \
+    rv = inVar->GetAs##type_(&du.u.m##type_##Value);                          \
     if(NS_FAILED(rv)) return rv;                                              \
-    rv = outVar->SetAs##type_(u.m##type_##Value);                             \
+    rv = outVar->SetAs##type_(du.u.m##type_##Value);                          \
     NS_ENSURE_SUCCESS(rv,rv);
 
 #define MEMBER_COPY_CAST(type_, cast_)                                        \
-    rv = inVar->GetAs##type_( (cast_*) &u.m##type_##Value);                   \
+    rv = inVar->GetAs##type_( (cast_*) &du.u.m##type_##Value);                \
     if(NS_FAILED(rv)) return rv;                                              \
-    rv = outVar->SetAs##type_( (cast_) u.m##type_##Value);                    \
+    rv = outVar->SetAs##type_( (cast_) du.u.m##type_##Value);                 \
     NS_ENSURE_SUCCESS(rv,rv);
 
 static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVariant **_retval)
@@ -98,8 +98,8 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
     if(NS_FAILED(rv))
         return rv;
 
-    nsDiscriminatedUnion u;
-    nsVariant::Initialize(&u);
+    nsDiscriminatedUnion du;
+    nsVariant::Initialize(&du);
 
     switch(type)
     {
@@ -238,7 +238,7 @@ static nsresult ConvertAndCopyVariant(nsIVariant *inVar, PRUint16 type, nsIVaria
         break;
     }
 
-    nsVariant::Cleanup(&u);
+    nsVariant::Cleanup(&du);
     *_retval = outVar;
     NS_IF_ADDREF(*_retval);
     return NS_OK;
