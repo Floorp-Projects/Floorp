@@ -37,6 +37,8 @@ sub BuildPlatformInstaller
     rename ("$instRoot/mozilla-installer", "$instRoot/$mainExe-installer");
     rename ("$instRoot/mozilla-installer-bin", "$instRoot/$mainExe-installer-bin");
 
+    system ("strip $instRoot/$mainExe-installer-bin");
+
     system ("cd $gDirDistInstall/sea && tar -zcv --owner=0 --group=0 --numeric-owner --mode='go-w' -f $seiFileNameSpecific.tar.gz $mainExe-installer");
     return 0;
 }
