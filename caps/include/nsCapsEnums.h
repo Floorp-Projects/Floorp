@@ -19,53 +19,6 @@
 #ifndef _NS_CAPS_ENUMS_H_
 #define _NS_CAPS_ENUMS_H_
 
-typedef enum nsSetComparisonType {
-  nsSetComparisonType_ProperSubset=-1,
-  nsSetComparisonType_Equal=0,
-  nsSetComparisonType_NoSubset=1
-} nsSetComparisonType;
-
-/**
- * number of possible permissions (allowed, forbidden, or blank)
- *
- * The code in nsPrivilegeInitialize assumes that nsPermissionState 
- * are ordered sequentially from 0 to N.
- *
- */
-typedef enum nsPermissionState {
-    nsPermissionState_Forbidden = 0, 
-    nsPermissionState_Allowed,
-    nsPermissionState_Blank,
-    nsPermissionState_NumberOfPermissions
-} nsPermissionState;
-
-/**
- * number of possible durations (scope, session, or forever)
- *
- * The code in nsPrivilegeInitialize assumes that nsDurationState 
- * are ordered sequentially from 0 to N.
- *
- */
-typedef enum nsDurationState {
-    nsDurationState_Scope=0, 
-    nsDurationState_Session,
-    nsDurationState_Forever, 
-    nsDurationState_NumberOfDurations
-} nsDurationState;
-
-
-/* The following should match what is in nsJVM plugin's java security code */
-typedef enum nsPrincipalType {
-  nsPrincipalType_Unknown=-1, 
-  nsPrincipalType_CodebaseExact=10,
-  nsPrincipalType_CodebaseRegexp,
-  nsPrincipalType_Cert,
-  nsPrincipalType_CertFingerPrint,
-  nsPrincipalType_CertKey,
-  /* CertChain principal is being added for Javasoft's JVM. They will pass the 
-   * whole chain to the nsPrincipal constructor. 
-   */
-  nsPrincipalType_CertChain
-} nsPrincipalType;
+#include "nsCapsPublicEnums.h"
 
 #endif /* _NS_CAPS_ENUMS_H_ */

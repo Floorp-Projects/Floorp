@@ -51,6 +51,8 @@ public:
     // from nsCCodebasePrincipal:
 
     nsCCodebasePrincipal(const char *codebaseURL, nsresult *result);
+    nsCCodebasePrincipal(nsPrincipal *pNSPrincipal);
+
     virtual ~nsCCodebasePrincipal(void);
     nsPrincipal *GetPeer(void);
 

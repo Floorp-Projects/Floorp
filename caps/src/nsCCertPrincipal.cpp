@@ -193,6 +193,11 @@ nsCCertPrincipal::nsCCertPrincipal(const unsigned char **certChain,
    *result = NS_OK;
 }
 
+nsCCertPrincipal::nsCCertPrincipal(nsPrincipal *pNSPrincipal)
+{
+   m_pNSPrincipal = pNSPrincipal;
+}
+
 nsCCertPrincipal::~nsCCertPrincipal(void)
 {
    delete m_pNSPrincipal;

@@ -33,7 +33,8 @@ EXPORTS= \
  nsICodebasePrincipal.h   \
  nsICertPrincipal.h       \
  nsICapsManager.h         \
- nsICodeSourcePrincipal.h
+ nsICodeSourcePrincipal.h \
+ nsCapsPublicEnums.h      
 
 
 include <$(DEPTH)/config/rules.mak>
