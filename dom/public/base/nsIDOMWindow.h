@@ -137,6 +137,8 @@ public:
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
 
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
+
+  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 };
 
 
@@ -196,6 +198,7 @@ public:
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
+  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
 
 
 
@@ -255,6 +258,7 @@ public:
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetTimeout(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetInterval(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);

@@ -1379,6 +1379,40 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method OpenDialog
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMWindow* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->OpenDialog(cx, argv+0, argc-0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function openDialog requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method CaptureEvent
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1657,6 +1691,7 @@ static JSFunctionSpec WindowMethods[] =
   {"setTimeout",          WindowSetTimeout,     0},
   {"setInterval",          WindowSetInterval,     0},
   {"open",          WindowOpen,     0},
+  {"openDialog",          WindowOpenDialog,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
   {"releaseEvent",          EventCapturerReleaseEvent,     1},
   {"addEventListener",          EventTargetAddEventListener,     4},
