@@ -180,6 +180,8 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 15);
 pref("font.size.fixed.zh-TW", 16);
 
+pref("browser.urlbar.clickAtEndSelects", false);
+
 // Tab focus model bit field:
 // 1 focuses text controls, 2 focuses other form elements, 4 adds links.
 pref("accessibility.tabfocus", 1);

@@ -164,6 +164,8 @@ pref("browser.search.powermode", 0);
 pref("browser.search.basic.min_ver", "0.0");
 pref("browser.urlbar.autocomplete.enabled", true);
 pref("browser.urlbar.clickSelectsAll", true);
+// when clickSelectsAll=true, does it also apply when the click is past end of text?
+pref("browser.urlbar.clickAtEndSelects", true);
 
 pref("browser.history_expire_days", 9);
 pref("browser.history.grouping", "day");
