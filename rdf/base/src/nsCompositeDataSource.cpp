@@ -535,11 +535,13 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 {
     NS_INIT_REFCNT();
 
-    static size_t kBucketSizes[] = {
+    static const size_t kBucketSizes[] = {
         sizeof(CompositeAssertionEnumeratorImpl),
         sizeof(CompositeArcsInOutEnumeratorImpl) };
 
-    mAllocator.Init("nsCompositeDataSource", kBucketSizes, 2,
+    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+
+    mAllocator.Init("nsCompositeDataSource", kBucketSizes, kNumBuckets,
                     NS_SIZE_IN_HEAP(sizeof(CompositeArcsInOutEnumeratorImpl))
                     + NS_SIZE_IN_HEAP(sizeof(CompositeAssertionEnumeratorImpl)));
 
