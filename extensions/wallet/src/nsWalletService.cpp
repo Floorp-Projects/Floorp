@@ -309,7 +309,7 @@ ExpireMasterPasswordPrefChanged(const char * newpref, void * data) {
   }
   if (expireMasterPassword) {
       PRBool status;
-      WLLT_ExpirePassword(&status);
+      WLLT_ExpirePasswordOnly(&status);
   }
   return 0;
 }
@@ -495,7 +495,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
           }
           if (expireMasterPassword) {
             PRBool status;
-            WLLT_ExpirePassword(&status);
+            WLLT_ExpirePasswordOnly(&status);
           }
         }
     }

@@ -771,6 +771,15 @@ PUBLIC void
 WLLT_ExpirePassword(PRBool* status) {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
+    rv = gSecretDecoderRing->LogoutAndTeardown();
+  }
+  *status = NS_SUCCEEDED(rv);
+}
+
+PUBLIC void
+WLLT_ExpirePasswordOnly(PRBool* status) {
+  nsresult rv = wallet_CryptSetup();
+  if (NS_SUCCEEDED(rv)) {
     rv = gSecretDecoderRing->Logout();
   }
   *status = NS_SUCCEEDED(rv);

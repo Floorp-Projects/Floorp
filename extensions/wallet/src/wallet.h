@@ -115,6 +115,9 @@ extern void
 WLLT_ExpirePassword(PRBool* status);
 
 extern void
+WLLT_ExpirePasswordOnly(PRBool* status);
+
+extern void
 WLLT_InitReencryptCallback(nsIDOMWindowInternal* window);
 
 extern nsresult
