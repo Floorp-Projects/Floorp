@@ -1011,6 +1011,10 @@ public:
 
   static void Initialize(CElement& anElement,eHTMLTags aTag){
     CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
+
+    static eHTMLTags kHeadKids[]={eHTMLTag_isindex,eHTMLTag_unknown};
+
+    anElement.mIncludeKids=kHeadKids;
   }
 
   CHeadElement(eHTMLTags aTag) : CElement(aTag) {
@@ -1758,7 +1762,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_colgroup].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_colgroup].mIncludeKids=kColgroupKids;
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_dd],         eHTMLTag_dd,  CListElement::GetGroup(),   CFlowElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_dd],         eHTMLTag_dd,  CElement::GetEmptyGroup(),   CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_dd].mAutoClose=kAutoCloseDD;
   mDfltElements[eHTMLTag_dd].mContainsGroups.mBits.mSelf=0;
 
@@ -1777,7 +1781,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_dl].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_dl].mIncludeKids=kDLKids;
 
-  CElement::Initialize(             mDfltElements[eHTMLTag_dt],         eHTMLTag_dt, CListElement::GetGroup(), CInlineElement::GetContainedGroups());
+  CElement::Initialize(             mDfltElements[eHTMLTag_dt],         eHTMLTag_dt, CElement::GetEmptyGroup(), CInlineElement::GetContainedGroups());
   mDfltElements[eHTMLTag_dt].mContainsGroups.mBits.mLeaf=1;
   mDfltElements[eHTMLTag_dt].mAutoClose=kAutoCloseDD;
   
@@ -1789,7 +1793,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_fieldset].mIncludeKids=kFieldsetKids;
 
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_font],       eHTMLTag_font);
-  CElement::Initialize(             mDfltElements[eHTMLTag_form],       eHTMLTag_form, CFormControlElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
+  CElement::Initialize(             mDfltElements[eHTMLTag_form],       eHTMLTag_form, CBlockElement::GetGroup(), CBlockElement::GetBlockGroupMembers());
   mDfltElements[eHTMLTag_form].mIncludeKids=kFormKids;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_frame],      eHTMLTag_frame, CFrameElement::GetGroup(), CLeafElement::GetContainedGroups());
@@ -1821,7 +1825,7 @@ void CElementTable::InitializeElements() {
   CElement::Initialize(             mDfltElements[eHTMLTag_ins],        eHTMLTag_ins,       CPhraseElement::GetGroup(),  CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_ins].mGroup.mBits.mBlock=1;  //make this a member of the block group.
 
-  CElement::InitializeLeaf(         mDfltElements[eHTMLTag_isindex],    eHTMLTag_isindex,   CHeadElement::GetMiscGroup(), CLeafElement::GetContainedGroups());
+  CElement::InitializeLeaf(         mDfltElements[eHTMLTag_isindex],    eHTMLTag_isindex,   CBlockElement::GetGroup(), CLeafElement::GetContainedGroups());
 
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_kbd],        eHTMLTag_kbd);
   CDeprecatedElement::Initialize(   mDfltElements[eHTMLTag_keygen],     eHTMLTag_keygen);
@@ -2205,7 +2209,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
 
         //Ok, so we have a start token that is misplaced. Before handing this off
         //to a default container (parent), let's check the autoclose condition.
-        if(ListContainsTag(theElement->mAutoClose,theElement->mTag)) {
+        if(ListContainsTag(mAutoClose,theElement->mTag)) {
           if(HasOptionalEndTag(theElement)) {
             //aha! We have a case where this tag is autoclosed by anElement.
             //Let's close this container, then try to open theElement.
