@@ -699,12 +699,28 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         HandlePtr handle = NS_AllocateContiguousHandleWithData(HandlePtr(0), NS_STATIC_CAST(PRUint32, unicodeLength+1), StrPtr(0));
         PRUnichar *ustr = (PRUnichar *)handle->DataStart();
         
-        rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
-                                     &unicodeLength);
-        
-        if (NS_SUCCEEDED(rv)) {
-          handle->DataEnd(handle->DataStart() + unicodeLength);
-        }
+        PRInt32 consumedLength = 0;
+        PRInt32 originalLength = stringLen;
+        PRInt32 convertedLength = 0;
+        PRInt32 bufferLength = unicodeLength;
+        do {
+          rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
+                                       &unicodeLength);
+          if (NS_FAILED(rv)) {
+            // if we failed, we consume one byte, replace it with U+FFFD
+            // and try the conversion again.
+            ustr[unicodeLength++] = (PRUnichar)0xFFFD;
+            ustr += unicodeLength;
+
+            unicodeDecoder->Reset();
+          }
+          string += ++stringLen;
+          consumedLength += stringLen;
+          stringLen = originalLength - consumedLength;
+          convertedLength += unicodeLength;
+          unicodeLength = bufferLength - convertedLength;
+        } while (NS_FAILED(rv) && (originalLength > consumedLength) && (bufferLength > convertedLength));
+        handle->DataEnd(handle->DataStart() + convertedLength);
         nsSharableString tempStr(handle);
         request->mScriptText = tempStr;
       }
