@@ -44,6 +44,8 @@
 struct IActiveIMMApp;
 
 #include "nsWindowAPI.h"
+#include "nsITimer.h"
+#include "nsCOMPtr.h"
 
 struct MethodInfo;
 class nsIEventQueue;
@@ -165,6 +167,7 @@ public:
     static  void           SetCaptureWindow(nsWindow * aNSWin);
     static  void           IgnoreNextCycle() { gIgnoreNextCycle = PR_TRUE; } 
 
+    static  void           TimerProc(nsITimer* aTimer, void* aClosure);
 
 private:
       /// Global nsToolkit Instance
@@ -173,22 +176,10 @@ private:
 public:
                             ~MouseTrailer();
 
-            UINT            CreateTimer();
+            nsresult        CreateTimer();
             void            DestroyTimer();
 
 private:
-      /**
-       * Handle timer events
-       * @param hWnd handle to window
-       * @param msg  Win32 message
-       * @param event Win32 event
-       * @param time time of the event
-       */
-    static  void            CALLBACK TimerProc(HWND hWnd, 
-                                                UINT msg, 
-                                                UINT event, 
-                                                DWORD time);
-
                             MouseTrailer();
 
 private:
@@ -199,8 +190,8 @@ private:
     static nsWindow* mHoldMouse;
     static nsWindow* mCaptureWindow;
     static PRBool    mIsInCaptureMode;
-      /// timer ID
-    UINT   mTimerId;
+    /// timer
+    nsCOMPtr<nsITimer> mTimer;
     static PRBool gIgnoreNextCycle;
     //@}
 

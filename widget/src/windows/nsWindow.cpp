@@ -5501,6 +5501,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
       if (!mIsInMouseCapture) {
 #ifndef WINCE
         MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+        mouseTrailer->TimerProc(nsnull, nsnull);
         MouseTrailer::SetMouseTrailerWindow(this);
         mouseTrailer->CreateTimer();
 #endif
@@ -5534,6 +5535,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         if (nsnull != someWindow) {
 #ifndef WINCE
           MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+          mouseTrailer->TimerProc(nsnull, nsnull);
           MouseTrailer::SetMouseTrailerWindow(someWindow);
           mouseTrailer->CreateTimer();
 #endif
