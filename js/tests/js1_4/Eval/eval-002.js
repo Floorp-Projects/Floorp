@@ -20,8 +20,8 @@
  * 
  */
 /**
- *  File Name:          eval-002.js
- *  Description:
+ *  File Name:   eval-002.js
+ *  Description:  (SEE REVISED DESCRIPTION FURTHER BELOW)
  *
  *  The global eval function may not be accessed indirectly and then called.
  *  This feature will continue to work in JavaScript 1.3 but will result in an
@@ -30,13 +30,28 @@
  *
  *  http://scopus.mcom.com/bugsplat/show_bug.cgi?id=324451
  *
- *  Author:             christine@netscape.com
+ *  Author:          christine@netscape.com
  *  Date:               11 August 1998
+ *
+ *
+ *  REVISION:    05  February 2001
+ *  Author:          pschwartau@netscape.com
+ *  
+ *  Indirect eval IS NOT ILLEGAL per ECMA3!!!  See
+ *
+ *  http://bugzilla.mozilla.org/show_bug.cgi?id=38512
+ *
+ *  ------- Additional Comments From Brendan Eich 2001-01-30 17:12 ------- 
+ * ECMA-262 Edition 3 doesn't require implementations to throw EvalError, 
+ * see the short, section-less Chapter 16.  It does say an implementation that
+ * doesn't throw EvalError must allow assignment to eval and indirect calls 
+ * of the evalnative method.
+ *
  */
-    var SECTION = "eval-001.js";
+    var SECTION = "eval-002.js";
     var VERSION = "JS1_4";
-    var TITLE   = "Calling eval indirectly should fail in version 140";
-    var BUGNUMBER="324451";
+    var TITLE   = "Calling eval indirectly should NOT fail in version 140";
+    var BUGNUMBER="38512";
 
     startTest();
     writeHeaderToLog( SECTION + " "+ TITLE);
@@ -44,25 +59,22 @@
     var testcases = new Array();
 
     var MY_EVAL = eval;
-    var RESULT = "Failed:  No error was thrown";
-    var EXPECT = "Passed!  indirect call to eval threw an error that was caught."
+    var RESULT = "";
+    var EXPECT = 1 + "testString"
 
     EvalTest();
 
     test();
 
-function EvalTest() {
-    try {
-        MY_EVAL( "RESULT = \"Failed:  indirect call to eval was successful; should be an error\"" );
-    } catch ( e ) {
-        RESULT = EXPECT;
-    }
 
+function EvalTest() 
+{    
+   MY_EVAL( "RESULT = EXPECT" );
+ 
     testcases[tc++] = new TestCase(
         SECTION,
         "Call eval indirectly",
         EXPECT,
         RESULT );
-
 }
 
