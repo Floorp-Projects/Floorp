@@ -389,7 +389,7 @@ function onAdvancedEdit()
     window.AdvancedEditOK = false;
     // Open the AdvancedEdit dialog, passing in the element to be edited
     //  (the copy named "globalElement")
-    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal", "", globalElement);
+    window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", globalElement);
     if (window.AdvancedEditOK) {
       // Copy edited attributes to the dialog widgets:
       //  to setup for validation
