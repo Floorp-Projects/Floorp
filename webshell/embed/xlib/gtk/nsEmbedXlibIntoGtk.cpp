@@ -53,6 +53,8 @@ static GdkFilterReturn test_filter (GdkXEvent *gdk_xevent,
 				    GdkEvent  *event,
 				    gpointer   data);
 
+void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
+
 static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition)
@@ -223,8 +225,14 @@ int main(int argc, char **argv)
 
   sgWebShell->SetPrefs(sgPrefs);
   sgWebShell->Show();
+
+  // attach the size_allocate signal to the main window
+  gtk_signal_connect_after(GTK_OBJECT(main_window),
+                           "size_allocate",
+                           GTK_SIGNAL_FUNC(handle_size_allocate),
+                           sgWebShell);
   
-  char *url = "http://www.slashdot.org/";
+  char *url = "http://www.mozilla.org/unix/xlib.html";
 
   nsString URL(url);
   PRUnichar *u_url = URL.ToNewUnicode();
@@ -251,3 +259,12 @@ static GdkFilterReturn test_filter (GdkXEvent *gdk_xevent,
   return GDK_FILTER_REMOVE;
 }
 
+// this will pick up size changes in the main window and resize
+// the web shell window accordingly
+
+void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
+{
+  printf("handling size allocate\n");
+  nsIWebShell *moz_widget = (nsIWebShell *)p;
+  moz_widget->SetBounds(0, 0, alloc->width, alloc->height);
+}
