@@ -45,6 +45,9 @@ POINTER IDC_COPY           res\copy.ptr
 POINTER IDC_ALIAS          res\aliasb.ptr
 POINTER IDC_ZOOMIN         res\zoom_in.ptr
 POINTER IDC_ZOOMOUT        res\zoom_out.ptr
+POINTER IDC_COLRESIZE      res\col_resize.ptr
+POINTER IDC_ROWRESIZE      res\row_resize.ptr
+POINTER IDC_VERTICALTEXT   res\vertical_text.ptr
 
 POINTER IDC_ARROWWAIT      res\arrow_wait.ptr
 POINTER IDC_CROSS          res\crosshair.ptr
