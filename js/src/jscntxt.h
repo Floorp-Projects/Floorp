@@ -215,6 +215,11 @@ struct JSRuntime {
     PRLock              *scriptFilenameTableLock;
 #endif
 
+    /* Number localization, used by jsnum.c */
+    const char          *thousandsSeparator;
+    const char          *decimalSeparator;
+    const char          *numGrouping;
+
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;

@@ -45,6 +45,8 @@
 #if defined(XP_WIN) || defined(XP_OS2)
 #include <float.h>
 #endif
+#include <locale.h>
+#include <limits.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -292,13 +294,92 @@ static JSBool
 num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
                    jsval *argv, jsval *rval)
 {
-/*
- *  For now, forcibly ignore the first (or any) argument and return toString().
- *  ECMA allows this, although it doesn't 'encourage it'.
- *  [The first argument is being reserved by ECMA and we don't want it confused
- *  with a radix]
- */
-    return num_toString(cx, obj, 0, argv, rval);
+    char thousandsLength, decimalLength;
+    const char *numGrouping, *tmpGroup;
+    JSRuntime *rt;
+    JSString *numStr, *str;
+    char *num, *buf, *dec, *end, *tmpSrc, *tmpDest;
+    int digits, size, remainder, nrepeat;
+
+    /*
+     * Create the string, move back to bytes to make string twiddling
+     * a bit easier and so we can insert platform charset seperators.
+     */
+    if (!num_toString(cx, obj, 0, argv, rval))
+        return JS_FALSE;
+    JS_ASSERT(JSVAL_IS_STRING(*rval));
+    numStr = JSVAL_TO_STRING(*rval);
+    num = js_GetStringBytes(numStr);
+
+    /* Find bit before the decimal. */
+    dec = strchr(num, '.');
+    digits = dec ? dec - num : (int)strlen(num);
+    end = num + digits;
+
+    rt = cx->runtime;
+    thousandsLength = strlen(rt->thousandsSeparator);
+    decimalLength = strlen(rt->decimalSeparator);
+
+    /* Figure out how long resulting string will be. */
+    size = digits + (dec ? decimalLength + strlen(dec + 1) : 0);
+    
+    tmpGroup = rt->numGrouping;
+    remainder = digits;
+    if (*num == '-')
+        remainder--;
+
+    while (*tmpGroup != CHAR_MAX && *tmpGroup != '\0') {
+        if (*tmpGroup >= remainder)
+            break;
+        size += thousandsLength;
+        remainder -= *tmpGroup;
+        tmpGroup++;
+    }
+    if (*tmpGroup == '\0' && *rt->numGrouping != '\0') {
+        nrepeat = (remainder - 1) / tmpGroup[-1];
+        size += thousandsLength * nrepeat;
+        remainder -= nrepeat * tmpGroup[-1];
+    } else {
+        nrepeat = 0;
+    }
+    tmpGroup--;
+
+    buf = (char *)JS_malloc(cx, size + 1);
+    if (!buf)
+        return JS_FALSE;
+
+    tmpDest = buf;
+    tmpSrc = num;
+
+    while (*tmpSrc == '-' || remainder--)
+        *tmpDest++ = *tmpSrc++;
+    while (tmpSrc < end) {
+        strcpy(tmpDest, rt->thousandsSeparator);
+        tmpDest += thousandsLength;
+        memcpy(tmpDest, tmpSrc, *tmpGroup);
+        tmpDest += *tmpGroup;
+        tmpSrc += *tmpGroup;
+        if (--nrepeat < 0)
+            tmpGroup--;
+    }
+    
+    if (dec) {
+        strcpy(tmpDest, rt->decimalSeparator);
+        tmpDest += decimalLength;
+        strcpy(tmpDest, dec + 1);
+    } else {
+        *tmpDest++ = '\0';
+    }
+
+    str = JS_NewString(cx, buf, size);
+    if (!str) {
+        JS_free(cx, buf);
+        return JS_FALSE;
+    }
+
+    *rval = STRING_TO_JSVAL(str);
+
+    return JS_TRUE;
 }
 
 static JSBool
@@ -446,6 +527,7 @@ js_InitRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt;
     jsdpun u;
+    struct lconv *locale;
 
     rt = cx->runtime;
     JS_ASSERT(!rt->jsNaN);
@@ -481,7 +563,15 @@ js_InitRuntimeNumberState(JSContext *cx)
     u.s.lo = 1;
     number_constants[NC_MIN_VALUE].dval = u.d;
 
-    return JS_TRUE;
+    locale = localeconv();
+    rt->thousandsSeparator = 
+        JS_strdup(cx, locale->thousands_sep ? locale->thousands_sep : "'");
+    rt->decimalSeparator =
+        JS_strdup(cx, locale->decimal_point ? locale->decimal_point : ".");
+    rt->numGrouping =
+        JS_strdup(cx, locale->grouping ? locale->grouping : "\3\0");
+
+    return rt->thousandsSeparator && rt->decimalSeparator && rt->numGrouping;
 }
 
 void
@@ -496,6 +586,11 @@ js_FinishRuntimeNumberState(JSContext *cx)
     rt->jsNaN = NULL;
     rt->jsNegativeInfinity = NULL;
     rt->jsPositiveInfinity = NULL;
+
+    JS_free(cx, (void *)rt->thousandsSeparator);
+    JS_free(cx, (void *)rt->decimalSeparator);
+    JS_free(cx, (void *)rt->numGrouping);
+    rt->thousandsSeparator = rt->decimalSeparator = rt->numGrouping = NULL;
 }
 
 JSObject *
