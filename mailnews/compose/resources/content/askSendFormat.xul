@@ -22,23 +22,15 @@
     <box align="horizontal">
         <spring style="width:10px"/>
         <box align="vertical">
-            <html:div style="width:40em"> &question.label; </html:div>
+            <text value="&question.label;" />
             
             <spring style="height:1em"/>
-        	<html:div>
-        		<html:input id="SendPlainTextAndHtml" class="indent" name="sendFormat" type="radio"/>
-        		<html:label for="SendPlainTextAndHtml">&plainTextAndHtml.label;</html:label>
-        	</html:div>
 
-        	<html:div>
-        		<html:input id="SendPlainTextOnly" class="indent" name="sendFormat" type="radio"/>
-        		<html:label for="SendPlainTextOnly">&plainTextOnly.label;</html:label>
-        	</html:div>
-
-        	<html:div>
-        		<html:input id="SendHtmlOnly" class="indent" name="sendFormat" type="radio"/>
-        		<html:label for="SendHtmlOnly">&htmlOnly.label;</html:label>
-        	</html:div>
+			<radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
+				<radio id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
+				<radio id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
+				<radio id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
+			</radiogroup>
         </box>
         <spring style="width:10px"/>
     </box>

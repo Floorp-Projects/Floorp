@@ -3,8 +3,6 @@ var param = null;
 
 function Startup()
 {
-	/* dump("Startup()\n"); */
-
 	if (window.arguments && window.arguments[0] && window.arguments[0])
     {
 		param = window.arguments[0];
@@ -12,9 +10,11 @@ function Startup()
 		if (param.action)
 		{
 		    //Set the default radio array value
+		    var group = document.getElementById("mailDefaultHTMLAction");
 		    var element = document.getElementById("SendPlainTextAndHtml");
-		    element.checked = true;
-		    
+			group.selectedItem= element;
+			group.data = element.data;
+
 		    //change the button label
 		    labels = document.getElementById("okCancelButtons");
 		    element = document.getElementById("ok");
@@ -47,12 +47,12 @@ function Send()
 {
     if (param)
     {
-        if (document.getElementById("SendPlainTextAndHtml").checked)
-            param.action = msgCompSendFormat.Both;
-        else if (document.getElementById("SendPlainTextOnly").checked)
-            param.action = msgCompSendFormat.PlainText;
-        else if (document.getElementById("SendHtmlOnly").checked)
-            param.action = msgCompSendFormat.HTML;
+		switch (document.getElementById("mailDefaultHTMLAction").data)
+		{
+			case "0": param.action = msgCompSendFormat.Both;		break;
+			case "1": param.action = msgCompSendFormat.PlainText;	break;
+			case "2": param.action = msgCompSendFormat.HTML;		break;
+		}
         param.abort = false;
     }
     return true;
