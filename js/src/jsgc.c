@@ -175,7 +175,7 @@ gc_new_arena(JSArenaPool *pool)
     JSArena *a;
     JSGCThing *thing;
     JSGCPageInfo *pi;
-    
+
     /* Use JS_ArenaAllocate to grab another 9K-net-size hunk of space. */
     flagp = (uint8 *) JS_ArenaAllocate(pool, GC_ARENA_SIZE);
     if (!flagp)
@@ -337,9 +337,10 @@ js_FinishGC(JSRuntime *rt)
     JS_FinishArenaPool(&rt->gcArenaPool);
     JS_ArenaFinish();
 
-#ifdef DEBUG        
+#ifdef DEBUG
     {
         uint32 leakedroots = 0;
+
         /* Warn (but don't assert) debug builds of any remaining roots. */
         JS_HashTableEnumerateEntries(rt->gcRootsHash, js_root_printer,
                                      &leakedroots);
@@ -807,6 +808,11 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
     if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
 	obj = (JSObject *) thing;
 	vp = obj->slots;
+        if (!vp) {
+            /* If obj->slots is null, obj must be a newborn. */
+            JS_ASSERT(!obj->map);
+            goto out;
+        }
         nslots = (obj->map->ops->mark)
                  ? obj->map->ops->mark(cx, obj, arg)
                  : obj->map->freeslot;
@@ -868,6 +874,8 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
             }
         }
     }
+
+out:
     METER(rt->gcStats.depth--);
 }
 
@@ -902,11 +910,11 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
             }
         }
         if (!root_points_to_gcArenaPool && he->value) {
-            fprintf(stderr, 
+            fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
 "invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.\n"
 "The root's name is \"%s\".\n",
-                    (const char *) he->value); 
+                    (const char *) he->value);
         }
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
@@ -972,12 +980,12 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Avoid deadlock. */
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
-    
+
     /* Don't run gc if it is disabled (unless this is the last context). */
     if (rt->gcDisabled && !(gcflags & GC_LAST_CONTEXT))
         return;
 
-    /* 
+    /*
      * Let the API user decide to defer a GC if it wants to (unless this
      * is the last context). Call the callback regardless.
      */
