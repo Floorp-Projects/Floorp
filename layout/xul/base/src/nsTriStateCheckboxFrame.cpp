@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+// pinkerton - this should be removed when the onload handler is called at
+//  the correct time so that changes to content in there notify the frames.
+#define ONLOAD_CALLED_TOO_EARLY 1
+
 #include "nsTriStateCheckboxFrame.h"
 
 #include "nsFormControlHelper.h"
@@ -31,6 +35,19 @@
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 
+
+//
+// GetDepressAtom [static]
+//
+// Use a lazily instantiated static initialization scheme to create an atom that
+// represents the attribute set when the button is depressed.
+//
+void
+nsTriStateCheckboxFrame :: GetDepressAtom ( nsCOMPtr<nsIAtom>* outAtom )
+{
+  static nsCOMPtr<nsIAtom> depressAtom = dont_QueryInterface(NS_NewAtom("depress"));
+  *outAtom = depressAtom;
+}
 
 
 //
@@ -52,11 +69,8 @@ NS_NewTriStateCheckboxFrame(nsIFrame*& aResult)
 // nsTriStateCheckboxFrame cntr
 //
 nsTriStateCheckboxFrame::nsTriStateCheckboxFrame()
-  : mMouseDownOnCheckbox(PR_FALSE), nsLeafFrame()
+  : mMouseDownOnCheckbox(PR_FALSE), mHasOnceBeenInMixedState(PR_FALSE)
 {
-  // create an atom for the "depress" attribute if it hasn't yet been created.
-//  if ( !sDepressAtom )
-//    sDepressAtom = dont_QueryInterface(NS_NewAtom("depress"));
 
 } // cntr
 
@@ -76,7 +90,13 @@ nsTriStateCheckboxFrame::GetCurrentCheckState()
   if ( res == NS_CONTENT_ATTR_HAS_VALUE )
     outState = StringToCheckState(value);  
 
-printf("getting value, it is %s\n", value.ToNewCString());
+#if ONLOAD_CALLED_TOO_EARLY
+// this code really belongs in AttributeChanged, but is needed here because
+// setting the value in onload doesn't trip the AttributeChanged method on the frame
+  if ( outState == eMixed )
+    mHasOnceBeenInMixedState = PR_TRUE;
+#endif
+   
   return outState;
 } // GetCurrentCheckState
 
@@ -91,13 +111,7 @@ nsTriStateCheckboxFrame::SetCurrentCheckState(CheckState aState)
 {
   nsString valueAsString;
   CheckStateToString ( aState, valueAsString );
-printf("setting value, it is %s\n", valueAsString.ToNewCString());
-  if ( NS_SUCCEEDED(mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, valueAsString, PR_TRUE)) )
-    Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
-  #ifdef NS_DEBUG
-  else
-    printf("nsTriStateCheckboxFrame::SetCurrentCheckState -- SetAttribute failed\n");
-  #endif
+  mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, valueAsString, PR_TRUE);
   
 } // SetCurrentCheckState
 
@@ -111,31 +125,24 @@ printf("setting value, it is %s\n", valueAsString.ToNewCString());
 void 
 nsTriStateCheckboxFrame::MouseClicked ( const nsIPresContext & aPresContext) 
 {
-printf("MouseClicked\n");
   mMouseDownOnCheckbox = PR_FALSE;
   CheckState oldState = GetCurrentCheckState();
   CheckState newState = eOn;
   switch ( oldState ) {
     case eOn:
-    case eMixed:
       newState = eOff;
       break;
+      
+    case eMixed:
+      newState = eOn;
+      break;
+    
+    case eOff:
+      newState = mHasOnceBeenInMixedState ? eMixed: eOn;
   }
   SetCurrentCheckState(newState);
 }
 
-
-// 
-// GetMaxNumValues
-//
-// Because we have a mixed state, we go up to two.
-//
-PRInt32 
-nsTriStateCheckboxFrame::GetMaxNumValues()
-{
-  return 2;
-}
-  
 
 //
 // PaintCheckBox
@@ -153,24 +160,76 @@ nsTriStateCheckboxFrame::PaintCheckBox(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
 
-    // Get current checked state through content model.
-    // XXX: This is very inefficient, but it is necessary in the case of printing.
-    // During printing the Paint is called but the actual state of the checkbox
-    // is in a frame in presentation shell 0.
+  // Get current checked state through content model.
   CheckState checked = GetCurrentCheckState();
-  if ( checked == eOn ) {
-      // Draw check mark
-    const nsStyleColor* color = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-    aRenderingContext.SetColor(color->mColor);
-printf("painting checkbox\n");
-    nsFormControlHelper::PaintCheckMark(aRenderingContext,
-                         p2t, mRect.width, mRect.height);
-   
-  }
+  switch ( checked ) {   
+    case eOn:
+    {
+      const nsStyleColor* color = (const nsStyleColor*)
+                                      mStyleContext->GetStyleData(eStyleStruct_Color);
+      aRenderingContext.SetColor(color->mColor);
+      nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, mRect.width, mRect.height);
+      break;
+    }
+    
+    case eMixed:
+    {
+      const nsStyleColor* color = (const nsStyleColor*)
+                                      mStyleContext->GetStyleData(eStyleStruct_Color);
+      aRenderingContext.SetColor(color->mColor);
+      PaintMixedMark(aRenderingContext, p2t, mRect.width, mRect.height);
+      break;
+    }
+  
+  } // case of value of checkbox
+  
   PRBool clip;
   aRenderingContext.PopState(clip);
 }
+
+
+//
+// PaintMixedMark
+//
+// Like nsFormControlHelper::PaintCheckMark(), but paints the horizontal "mixed"
+// bar inside the box.
+//
+void
+nsTriStateCheckboxFrame::PaintMixedMark(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
+{
+  const PRUint32 checkpoints = 4;
+  const PRUint32 checksize   = 6; //This is value is determined by added 2 units to the end
+                                //of the 7X& pixel rectangle below to provide some white space
+                                //around the checkmark when it is rendered.
+
+  // Points come from the coordinates on a 7X7 pixels 
+  // box with 0,0 at the lower left. 
+  nscoord checkedPolygonDef[] = { 1,2,  5,2,  5,4, 1,4 };
+  // Location of the center point of the checkmark
+  const PRUint32 centerx = 3;
+  const PRUint32 centery = 3;
+  
+  nsPoint checkedPolygon[checkpoints];
+  PRUint32 defIndex = 0;
+  PRUint32 polyIndex = 0;
+
+   // Scale the checkmark based on the smallest dimension
+  PRUint32 size = aWidth / checksize;
+  if (aHeight < aWidth)
+   size = aHeight / checksize;
+  
+  // Center and offset each point in the polygon definition.
+  for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
+    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aWidth / 2));
+    defIndex++;
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aHeight / 2));
+    polyIndex++;
+  }
+  
+  aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
+
+} // PaintMixedMark
 
 
 //
@@ -219,23 +278,35 @@ nsTriStateCheckboxFrame::HandleEvent(nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_LEFT_BUTTON_DOWN:
+    {
       // set "depressed" state so CSS redraws us
-//      if ( NS_SUCCEEDED(mContent->SetAttribute(kNameSpaceID_None, sDepressAtom, NS_STRING_TRUE, PR_TRUE)) )
-//        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
+      DisplayDepressed();
       mMouseDownOnCheckbox = PR_TRUE;
       break;
+    }
 
     case NS_MOUSE_EXIT:
+    {
       // clear "depressed" state so css redraws us
-//      if ( NS_SUCCEEDED(mContent->UnsetAttribute(kNameSpaceID_None, sDepressAtom, PR_TRUE)) )
-//        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
+      if ( mMouseDownOnCheckbox )
+        DisplayNormal();
       mMouseDownOnCheckbox = PR_FALSE;
       break;
+    }
+    
+    case NS_MOUSE_ENTER:
+    {
+      // if the mouse is down, reset the depressed attribute so CSS redraws.
+      if ( mMouseDownOnCheckbox )
+        DisplayDepressed();
+      break;
+    }
 
     case NS_MOUSE_LEFT_CLICK:
     case NS_MOUSE_LEFT_BUTTON_UP:
       if ( mMouseDownOnCheckbox )
         MouseClicked(aPresContext);
+      DisplayNormal();
       break;
       
     default:
@@ -246,6 +317,38 @@ nsTriStateCheckboxFrame::HandleEvent(nsIPresContext& aPresContext,
   
   return retVal;
 }
+
+
+//
+// DisplayDepressed
+//
+// Tickle the right attributes so that CSS draws us in a depressed state. Used
+// when doing mouse tracking
+//
+void
+nsTriStateCheckboxFrame :: DisplayDepressed ( )
+{
+  nsCOMPtr<nsIAtom> depressAtom;
+  GetDepressAtom(&depressAtom);
+  mContent->SetAttribute(kNameSpaceID_None, depressAtom, NS_STRING_TRUE, PR_TRUE);
+
+} // DisplayDepressed
+
+
+//
+// DisplayNormal
+//
+// Tickle the right attributes so that CSS draws us in a normal state. Used
+// when doing mouse tracking to reset us when the mouse leaves or at the end.
+//
+void
+nsTriStateCheckboxFrame :: DisplayNormal ( )
+{
+  nsCOMPtr<nsIAtom> depressAtom;
+  GetDepressAtom(&depressAtom);
+  mContent->UnsetAttribute(kNameSpaceID_None, depressAtom, PR_TRUE);
+
+} // DisplayNormal
 
 
 //
@@ -322,3 +425,35 @@ nsTriStateCheckboxFrame :: GetDesiredSize(nsIPresContext* aPresContext,
 
 } // GetDesiredSize
 
+
+//
+// AttributeChanged
+//
+// We only want to show the mixed state if the button has ever been in that 
+// state in the past. That means that we need to trap all changes to the "value"
+// attribute and see if we ever get set to "mixed"
+//
+NS_IMETHODIMP
+nsTriStateCheckboxFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                           nsIContent*     aChild,
+                                           nsIAtom*        aAttribute,
+                                           PRInt32         aHint)
+{
+  nsresult result = NS_OK;
+#if !ONLOAD_CALLED_TOO_EARLY
+// onload handlers are called to early, so we have to do this code
+// elsewhere. It really belongs HERE.
+  if ( aAttribute == nsHTMLAtoms::value ) {
+    CheckState newState = GetCurrentCheckState();
+    if ( newState == eMixed ) {
+      mHasOnceBeenInMixedState = PR_TRUE;
+    }
+  }
+#endif
+
+  // process normally regardless.
+  result = nsLeafFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    
+  return result;
+  
+} // AttributeChanged

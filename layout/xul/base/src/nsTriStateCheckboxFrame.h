@@ -32,10 +32,21 @@
 // Clicking the control when it is mixed would uncheck the control, as if
 // it is totally off. In the above example, the entire selection would be
 // unbolded. Clicking it again would check the control and bold the entire
-// selection. Note that there is no way to get back to the mixed state. This
-// is by design. It just doesn't make any sense. What that action really means
-// would be satisfied by "Cancel" or "Undo" which is beyond the scope of
-// the control.
+// selection. Clicking a third time would get back into the mixed state.
+//
+// Note that the user can only get into the mixed state when the control
+// has been in that state at some previous time during its lifetime. That
+// means that it must be explicitly set to "mixed" at some point in order
+// for the user to get there by clicking. This is done by setting the "value"
+// attribute to "2". If this is not done, this checkbox behaves just like
+// the normal checkbox.
+//
+// The only DOM APIs that this checkbox supports are the generic XML DOM APIs.
+// This is mainly a result of the fact that our content node is a XUL content
+// node, and we (read: hyatt) would have to go off and implement these
+// extra HTMLInputElement APIs to match the API set of the normal checkbox.
+// We're not going to do that, so you're just going to have to live with
+// getting and setting the "value" attribute ;)
 //
 
 #ifndef nsTriStateCheckboxFrame_h__
@@ -60,23 +71,21 @@ class nsTriStateCheckboxFrame : public nsLeafFrame
 public:
   nsTriStateCheckboxFrame();
 
+    // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("TriStateCheckboxFrame", aResult);
   }
-
-
-  virtual PRInt32 GetMaxNumValues();
-
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aHint) ;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
-
-  //End of GFX-rendering methods
   
 protected:
 
@@ -95,17 +104,22 @@ protected:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer);
+  virtual void PaintMixedMark(nsIRenderingContext& aRenderingContext,
+                              float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight) ;
+
+  void DisplayDepressed ( ) ;
+  void DisplayNormal ( ) ;
 
     // utility routine for converting from DOM values to internal enum
   void CheckStateToString ( CheckState inState, nsString& outStateAsString ) ;
   CheckState StringToCheckState ( const nsString & aStateAsString ) ;
 
-    //GFX-rendered state variables
-  PRBool mMouseDownOnCheckbox;
+  PRBool mMouseDownOnCheckbox;       // for tracking clicks
+  PRBool mHasOnceBeenInMixedState;   // since we only want to show the 
   
     // atom for the "depress" attribute. We will have a CSS rule that
     // when this is set, draws the button depressed.
-  //static nsCOMPtr<nsIAtom> sDepressAtom;
+  static void GetDepressAtom(nsCOMPtr<nsIAtom>* outAtom) ;
 
 }; // class nsTriStateCheckboxFrame
 
