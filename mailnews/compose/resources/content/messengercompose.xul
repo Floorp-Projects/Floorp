@@ -220,7 +220,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			</menu>
 			<menuitem value="&showParagraphMarksCmd.label;" disabled="true" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
-			<menuitem value="&pageSourceCmd.label;" disabled="true" accesskey="&pageSourceCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
 			<menu value="&dcharMenu.label;">
@@ -263,35 +262,12 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	
 	<!-- menu items come from editorOverlay -->
 	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
-    <menupopup id="formatMenuPopup"/> <!--TEMPORARY UNTIL I CAN CHECKIN MODIFICATION IN EDITOROVERLAY.XUL-->
-	<!--menupopup>
-	    <menu id="fontFaceMenu"/>
-	    <menu id="fontSizeMenu"/>
-	    <menu id="fontStyleMenu"/>
-	    
-	    --><!-- TODO: REPLACE WITH COLORPICKER --><!--
-	    <menu id="fontColorMenu"/>
-	    <menu id="backgroundColorMenu"/>
-    	<menuseparator/>
-
-    	<menuitem id="removeAllStylesMenuitem"/>
-    	<menuitem id="removeLinksMenuitem"/>
-    	<menuseparator/>
-    	
-	    <menu id="headingMenu"/>
-	    <menu id="paragraphMenu"/>
-	    <menuitem id="listProps"/>
-    	<menu id="alignMenu"/>
-		<menu id="tableMenu"/>
-    	<menuseparator/>
-
-	    <menuitem id="increaseIndent"/>
-	    <menuitem id="decreaseIndent"/>
-	    <menuseparator/>
-
-	    <menuitem id="objectProperties"/>
-	    <menuitem id="colorsAndBackground"/>
-    </menupopup-->
+    <menupopup id="formatMenuPopup">
+  		<menu id="tableMenu"/>
+     	<menuseparator/>
+      <menuitem id="objectProperties"/>
+      <menuitem id="colorsAndBackground"/>
+    </menupopup>
 	</menu>
 	
 
