@@ -48,7 +48,7 @@ CPPSRCS		= \
 
 RES_FILE	= $(srcdir)/libprint.res
 
-EXTRA_DSO_LIBS	= nggfx img_s mozutil_s
+EXTRA_DSO_LIBS	= gkgfx img_s mozutil_s
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
