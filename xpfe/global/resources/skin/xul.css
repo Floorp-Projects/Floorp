@@ -14,7 +14,7 @@
 }
 
 *[collapsed="true"] {
-  visibility: collapsed;
+  visibility: collapse;
 }
 
 *[hidden="true"] {
