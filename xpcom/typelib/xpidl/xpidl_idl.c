@@ -410,7 +410,7 @@ FindSpecial(struct input_callback_data *data, char **startp, int *lenp) {
 
     /* magic sequences are:
      * "%{"               raw block
-     * "/*"               comment
+     * "/\*"               comment
      * "#include \""      include
      * The first and last want a newline [\r\n] before, or the start of the
      * file.
@@ -527,12 +527,12 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          * Now we scan for sequences which require special attention:
          *   \n#include                   begins an include statement
          *   \n%{                         begins a raw-source block
-         *   /*                           begins a comment
+         *   /\*                           begins a comment
          * 
          * We used to be fancier here, so make sure that we sent the most
          * data possible at any given time.  To that end, we skipped over
          * \n%{ raw \n%} blocks and then _continued_ the search for special
-         * sequences like \n#include or /* comments .
+         * sequences like \n#include or /\* comments .
          * 
          * It was really ugly, though -- liberal use of goto!  lots of implicit
          * state!  what fun! -- so now we just do this:
@@ -552,7 +552,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          * include processing or when a comment/raw follows another
          * immediately, etc.)
          *
-         * XXX we don't handle the case where the \n#include or /* or \n%{
+         * XXX we don't handle the case where the \n#include or /\* or \n%{
          * sequence straddles a block boundary.  We should really fix that.
          *
          * XXX we don't handle doc-comments correctly (correct would be sending
@@ -563,11 +563,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
          *
          * XXX our line counts are pretty much always wrong (bugzilla #5872)
          *
-         * XXX const string foo = "/*" will just screw us horribly.
+         * XXX const string foo = "/\*" will just screw us horribly.
          */
 
         /*
-         * Order is important, so that you can have /* comments and
+         * Order is important, so that you can have /\* comments and
          * #includes within raw sections, and so that you can comment out
          * #includes.
          */
