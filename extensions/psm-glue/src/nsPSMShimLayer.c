@@ -30,7 +30,7 @@
 #include <unistd.h>
 #endif
 
-#define PSM_TIMEOUT_IN_SEC 30
+#define PSM_TIMEOUT_IN_SEC 300
 
 #define NSPSMSHIMMAXFD 50
 
@@ -106,6 +106,8 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
     CMTStatus   rv = CMTSuccess;
     PRStatus    err;
     PRErrorCode errcode;
+    PRSocketOptionData   sockopt;
+    PRBool      nonBlocking;
     CMSocket    *cmSock = (CMSocket *)sock;
     
     if (!sock) return CMTFailure;
@@ -137,7 +139,20 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
         cmSock->netAddr.inet.port   = PR_htons(port);
         cmSock->netAddr.inet.ip     = PR_htonl(PR_INADDR_LOOPBACK);
     }
-    
+
+    /* Save non-blocking status */
+    sockopt.option = PR_SockOpt_Nonblocking;
+    err = PR_GetSocketOption(cmSock->fd, &sockopt);
+    PR_ASSERT(PR_SUCCESS == err);
+
+    nonBlocking = sockopt.value.non_blocking;
+
+    /* make connect blocking for now */
+    sockopt.option = PR_SockOpt_Nonblocking;
+    sockopt.value.non_blocking = PR_FALSE;   
+    err = PR_SetSocketOption(cmSock->fd, &sockopt);
+    PR_ASSERT(PR_SUCCESS == err);
+
     err = PR_Connect( cmSock->fd, &cmSock->netAddr, PR_INTERVAL_MAX );
     
     if (err == PR_FAILURE)    
@@ -148,6 +163,14 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
             rv = CMTFailure;
     }    
     
+    /* restore nonblock status */
+    if (nonBlocking) {
+      sockopt.option = PR_SockOpt_Nonblocking;
+      sockopt.value.non_blocking = nonBlocking;  
+      err = PR_SetSocketOption(cmSock->fd, &sockopt);
+      PR_ASSERT(PR_SUCCESS == err);
+    }
+
     return rv;
 }
 
