@@ -428,7 +428,7 @@ nsEventStateManager::ShiftFocus()
     if (nsnull == mDocument) {
       nsCOMPtr<nsIPresShell> presShell;
       mPresContext->GetShell(getter_AddRefs(presShell));
-      if (nsnull != presShell) {
+      if (presShell) {
         presShell->GetDocument(&mDocument);
         if (nsnull == mDocument) {
           return;

@@ -1169,7 +1169,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         if (eCSSUnit_String == ourFont->mFamily.GetUnit()) {
           nsCOMPtr<nsIDeviceContext> dc;
           aPresContext->GetDeviceContext(getter_AddRefs(dc));
-          if (nsnull != dc) {
+          if (dc) {
             nsAutoString  familyList;
 
             ourFont->mFamily.GetStringValue(familyList);

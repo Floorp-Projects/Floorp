@@ -451,7 +451,7 @@ nsInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
   }
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+  if (NS_SUCCEEDED(rv) && shell) {
     rv = AppendFrames(aPresContext, *shell, aFrameList, PR_FALSE);
   }
   return rv;

@@ -1460,10 +1460,10 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
-    if (nsnull != shell) {
+    if (shell) {
       nsCOMPtr<nsIViewManager> vm;
       nsresult rv = shell->GetViewManager(getter_AddRefs(vm));
-      if(NS_SUCCEEDED(rv) && (nsnull != vm)) {
+      if(NS_SUCCEEDED(rv) && vm) {
         vm->SetQuality(nsContentQuality(aQualityLevel));
       }
     }
@@ -1972,7 +1972,7 @@ HTMLContentSink::StartLayout()
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
-    if (nsnull != shell) {
+    if (shell) {
       // Make shell an observer for next time
       shell->BeginObservingDocument();
 
@@ -1986,7 +1986,7 @@ HTMLContentSink::StartLayout()
       // Now trigger a refresh
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
-      if (nsnull != vm) {
+      if (vm) {
         vm->EnableRefresh();
       }
     }
@@ -2008,10 +2008,10 @@ HTMLContentSink::StartLayout()
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
-      if (nsnull != shell) {
+      if (shell) {
         nsCOMPtr<nsIViewManager> vm;
         shell->GetViewManager(getter_AddRefs(vm));
-        if (nsnull != vm) {
+        if (vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
           if (nsnull != rootView) {
@@ -2039,13 +2039,13 @@ HTMLContentSink::ScrollToRef()
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
       nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
-      if (nsnull != shell) {
+      if (shell) {
         nsIFrame* frame;
         shell->GetPrimaryFrameFor(mRefContent, &frame);
         if (nsnull != frame) {
           nsCOMPtr<nsIViewManager> vm;
           shell->GetViewManager(getter_AddRefs(vm));
-          if (nsnull != vm) {
+          if (vm) {
             nsIView* viewportView = nsnull;
             vm->GetRootView(viewportView);
             if (nsnull != viewportView) {

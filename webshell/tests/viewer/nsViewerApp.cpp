@@ -967,7 +967,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
     if (nsnull != shell) {
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
-      if (nsnull!=doc) {
+      if (doc) {
         const char * str;
         nsresult rv = doc->GetDocumentURL()->GetSpec(&str);
         if (NS_FAILED(rv)) {

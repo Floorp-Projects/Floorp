@@ -1145,7 +1145,7 @@ XULDocumentImpl::AddStyleSheet(nsIStyleSheet* aSheet)
             nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[index]);
             nsCOMPtr<nsIStyleSet> set;
             shell->GetStyleSet(getter_AddRefs(set));
-            if (nsnull != set) {
+            if (set) {
                 set->AddDocStyleSheet(aSheet, this);
             }
         }
@@ -1174,7 +1174,7 @@ XULDocumentImpl::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
             nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
             nsCOMPtr<nsIStyleSet> set;
             shell->GetStyleSet(getter_AddRefs(set));
-            if (nsnull != set) {
+            if (set) {
                 if (aDisabled) {
                     set->RemoveDocStyleSheet(aSheet);
                 }
@@ -2150,7 +2150,7 @@ XULDocumentImpl::StartLayout(void)
         // Now trigger a refresh
         nsCOMPtr<nsIViewManager> vm;
         shell->GetViewManager(getter_AddRefs(vm));
-        if (nsnull != vm) {
+        if (vm) {
             vm->EnableRefresh();
         }
 

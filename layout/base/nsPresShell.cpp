@@ -1160,7 +1160,7 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
 
   nsIRenderingContext* result = nsnull;
   rv = mPresContext->GetDeviceContext(getter_AddRefs(dx));
-  if (NS_SUCCEEDED(rv) && (nsnull != dx)) {
+  if (NS_SUCCEEDED(rv) && dx) {
     if (nsnull != view) {
       rv = dx->CreateRenderingContext(view, result);
     }

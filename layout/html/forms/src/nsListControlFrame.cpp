@@ -841,7 +841,7 @@ nsListControlFrame::GetScrollBarDimensions(nsIPresContext& aPresContext,
   float   scale;
   nsCOMPtr<nsIDeviceContext> dx;
   aPresContext.GetDeviceContext(getter_AddRefs(dx));
-  if (nsnull != dx) { 
+  if (dx) { 
     float sbWidth;
     float sbHeight;
     dx->GetCanonicalPixelScale(scale);

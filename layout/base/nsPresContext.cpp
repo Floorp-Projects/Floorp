@@ -242,8 +242,8 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   if (nsnull != mShell) {
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
-      NS_ASSERTION(nsnull != doc, "expect document here");
-      if (nsnull != doc) {
+      NS_ASSERTION(doc, "expect document here");
+      if (doc) {
         doc->GetBaseURL(mBaseURL);
       }
     }
@@ -320,7 +320,7 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull != set) {
+    if (set) {
       result = set->ResolveStyleFor(this, aContent, aParentContext,
                                     aForceUnique);
       if (nsnull == result) {
@@ -348,7 +348,7 @@ nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull != set) {
+    if (set) {
       result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
                                           aParentContext, aForceUnique);
       if (nsnull == result) {
@@ -376,7 +376,7 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull != set) {
+    if (set) {
       result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
                                         aParentContext, aForceUnique);
     }

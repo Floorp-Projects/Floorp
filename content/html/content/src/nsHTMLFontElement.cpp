@@ -211,7 +211,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
       nsCOMPtr<nsIDeviceContext> dc;
       aPresContext->GetDeviceContext(getter_AddRefs(dc));
-      if (nsnull != dc) {
+      if (dc) {
         nsAutoString  familyList;
 
         value.GetStringValue(familyList);

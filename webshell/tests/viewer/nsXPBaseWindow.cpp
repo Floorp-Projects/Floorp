@@ -271,7 +271,7 @@ void nsXPBaseWindow::ForceRefresh()
   if (nsnull != shell) {
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
-    if (nsnull != vm) {
+    if (vm) {
       nsIView* root;
       vm->GetRootView(root);
       if (nsnull != root) {
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsXPBaseWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* a
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       mContentRoot = doc->GetRootContent();
       mDocIsLoaded = PR_TRUE;
       if (nsnull != mWindowListener) {
@@ -515,7 +515,7 @@ NS_IMETHODIMP nsXPBaseWindow::GetDocument(nsIDOMHTMLDocument *& aDocument)
   if (nsnull != shell) {
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
-    if (nsnull != doc) {
+    if (doc) {
       doc->QueryInterface(kIDOMHTMLDocumentIID,(void **)&htmlDoc);
     }
     NS_RELEASE(shell);

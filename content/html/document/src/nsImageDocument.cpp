@@ -221,7 +221,7 @@ nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
   if (nsnull != shell) {
     nsCOMPtr<nsIPresContext> cx;
     shell->GetPresContext(getter_AddRefs(cx));
-    if (nsnull != cx) {
+    if (cx) {
       nsIImageGroup* group = nsnull;
       cx->GetImageGroup(&group);
       if (nsnull != group) {
@@ -327,7 +327,7 @@ nsImageDocument::StartLayout()
       // XXX It's unfortunate that this has to be here
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
-      if (nsnull != vm) {
+      if (vm) {
         vm->EnableRefresh();
       }
 

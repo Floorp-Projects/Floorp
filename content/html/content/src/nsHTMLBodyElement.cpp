@@ -653,10 +653,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
-    if (nsnull != presShell) {
+    if (presShell) {
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
-      if (nsnull != doc) {
+      if (doc) {
         nsIHTMLContentContainer*  htmlContainer;
         if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
                                          (void**)&htmlContainer)) {

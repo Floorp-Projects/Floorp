@@ -363,7 +363,7 @@ nsFrame::DeleteFrame(nsIPresContext& aPresContext)
   if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+    if (NS_SUCCEEDED(rv) && shell) {
       shell->ClearFrameRefs(this);
     }
   }
@@ -594,10 +594,10 @@ nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+  if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_SUCCEEDED(rv) && (nsnull != doc)) {
+    if (NS_SUCCEEDED(rv) && doc) {
       result = doc->GetDisplaySelection();
       if (isOkToTurnOn && !result) {
         doc->SetDisplaySelection(PR_TRUE);
@@ -705,7 +705,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   mDidDrag        = PR_FALSE;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+  if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)){
@@ -923,7 +923,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   mDidDrag        = PR_FALSE;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+  if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)) {
@@ -1348,7 +1348,7 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+  if (NS_SUCCEEDED(rv) && shell) {
     nsIReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  nsIReflowCommand::ContentChanged);
