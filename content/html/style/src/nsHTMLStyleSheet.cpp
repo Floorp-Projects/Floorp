@@ -353,6 +353,7 @@ TableTHRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPre
       styleText->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign)
                               ? NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
     }
+    NS_RELEASE(parentContext);
   }
 
   return NS_OK;
