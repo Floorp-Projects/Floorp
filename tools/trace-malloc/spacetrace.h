@@ -86,6 +86,8 @@
 #define ST_WEIGHT   0 /* size * timeval */
 #define ST_SIZE     1
 #define ST_TIMEVAL  2
+#define ST_COUNT    3
+#define ST_HEAPCOST 4
 
 /*
 ** Callsite loop direction flags.
@@ -123,6 +125,12 @@
 #define ST_TIMEVAL_PRINTABLE64(timeval) ((PRFloat64)((PRInt64)(timeval)) / (PRFloat64)ST_TIMEVAL_RESOLUTION)
 #define ST_TIMEVAL_MAX ((PRUint32)-1 - ((PRUint32)-1 % ST_TIMEVAL_RESOLUTION))
 
+#define ST_MICROVAL_RESOLUTION 1000000
+#define ST_MICROVAL_FORMAT "%.6f"
+#define ST_MICROVAL_PRINTABLE(timeval) ((PRFloat64)(timeval) / (PRFloat64)ST_MICROVAL_RESOLUTION)
+#define ST_MICROVAL_PRINTABLE64(timeval) ((PRFloat64)((PRInt64)(timeval)) / (PRFloat64)ST_MICROVAL_RESOLUTION)
+#define ST_MICROVAL_MAX ((PRUint32)-1 - ((PRUint32)-1 % ST_MICROVAL_RESOLUTION))
+
 /*
 ** STAllocEvent
 **
@@ -131,17 +139,17 @@
 typedef struct __struct_STAllocEvent
 {
         /*
+        ** The type of allocation event.
+        ** This maps directly to the trace malloc events (i.e. TM_EVENT_MALLOC)
+        */
+        char mEventType;
+        
+        /*
         ** Each event, foremost, has a chronologically increasing ID in
         **  relation to other allocation events.  This is a time stamp
         **  of sorts.
         */
         PRUint32 mTimeval;
-        
-        /*
-        ** The type of allocation event.
-        ** This maps directly to the trace malloc events (i.e. TM_EVENT_MALLOC)
-        */
-        char mEventType;
         
         /*
         ** Every event has a heap ID (pointer).
@@ -156,7 +164,7 @@ typedef struct __struct_STAllocEvent
         ** In th event of a free, this is the previous size.
         */
         PRUint32 mHeapSize;
-        
+
         /*
         ** Every event has a callsite/stack backtrace.
         ** In the event of a realloc, this is the new callsite.
@@ -192,6 +200,14 @@ typedef struct __struct_STAllocation
         ** Index of this allocation in the global run.
         */
         PRUint32 mRunIndex;
+
+        /*
+        ** The runtime cost of heap events in this allocation.
+        ** The cost is defined as the number of time units recorded as being
+        **  spent in heap code (time of malloc, free, et al.).
+        ** We do not track individual event cost in order to save space.
+        */
+        PRUint32 mHeapRuntimeCost;
 } STAllocation;
 
 /*
@@ -201,12 +217,6 @@ typedef struct __struct_STAllocation
 */
 typedef struct __struct_STCallsiteStats
 {
-        /*
-        ** Sum size of the allocations.
-        ** Callsite runs total all allocations below the callsite.
-        */
-        PRUint32 mSize;
-
         /*
         ** Sum timeval of the allocations.
         ** Callsite runs total all allocations below the callsite.
@@ -220,11 +230,31 @@ typedef struct __struct_STCallsiteStats
         PRUint64 mWeight64;
 
         /*
+        ** Sum size of the allocations.
+        ** Callsite runs total all allocations below the callsite.
+        */
+        PRUint32 mSize;
+
+        /*
         ** A stamp, indicated the relevance of the run.
         ** If the stamp does not match the origin value, the
         **  data contained here-in is considered invalid.
         */
         PRUint32 mStamp;
+
+        /*
+        ** A sum total of allocations (note, not sizes)  below the callsite.
+        ** This is NOT the same as STRun::mAllocationCount which
+        **  tracks the STRun::mAllocations array size.
+        */
+        PRUint32 mCompositeCount;
+
+        /*
+        ** A sum total runtime cost of heap operations below the calliste.
+        ** The cost is defined as the number of time units recorded as being
+        **  spent in heap code (time of malloc, free, et al.).
+        */
+        PRUint32 mHeapRuntimeCost;
 } STCallsiteStats;
 
 /*

@@ -40,6 +40,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBS		+= \
 		$(NSPR_LIBS) \
+		-lxpcomds_s \
 		tmreader.o \
 		$(NULL)
 
