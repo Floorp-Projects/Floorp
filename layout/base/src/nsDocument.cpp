@@ -831,7 +831,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     owner->QueryInterface(nsIPrincipal::GetIID(), (void**)&mPrincipal);
 
   mDocumentLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
-  NS_ASSERTION(aLoadGroup, "Should have a load group now on construction.");
+  // there was an assertion here that aLoadGroup was not null.  This is no longer valid
+  // nsWebShell::SetDocument does not create a load group, and it works just fine.
 
   if (NS_OK == rv) {
     rv = NS_NewNameSpaceManager(&mNameSpaceManager);
