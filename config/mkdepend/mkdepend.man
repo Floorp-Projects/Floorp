@@ -1,12 +1,11 @@
-.\" $XConsortium: mkdepend.man,v 1.15 94/04/17 20:10:37 gildea Exp $
-.\" Copyright (c) 1993, 1994  X Consortium
+.\" $Xorg: mkdepend.man,v 1.5 2001/02/09 02:03:16 xorgcvs Exp $
+.\" Copyright (c) 1993, 1994, 1998 The Open Group
 .\" 
-.\" Permission is hereby granted, free of charge, to any person obtaining a
-.\" copy of this software and associated documentation files (the "Software"), 
-.\" to deal in the Software without restriction, including without limitation 
-.\" the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-.\" and/or sell copies of the Software, and to permit persons to whom the 
-.\" Software furnished to do so, subject to the following conditions:
+.\" Permission to use, copy, modify, distribute, and sell this software and its
+.\" documentation for any purpose is hereby granted without fee, provided that
+.\" the above copyright notice appear in all copies and that both that
+.\" copyright notice and this permission notice appear in supporting
+.\" documentation.
 .\" 
 .\" The above copyright notice and this permission notice shall be included in
 .\" all copies or substantial portions of the Software.
@@ -14,55 +13,57 @@
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 .\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 .\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-.\" THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+.\" THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
 .\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
 .\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
 .\" SOFTWARE.
 .\" 
-.\" Except as contained in this notice, the name of the X Consortium shall not 
+.\" Except as contained in this notice, the name of The Open Group shall not 
 .\" be used in advertising or otherwise to promote the sale, use or other 
-.\" dealing in this Software without prior written authorization from the 
-.\" X Consortium.
-.TH MAKEDEPEND 1 "Release 6" "X Version 11"
+.\" dealing in this Software without prior written authorization from The
+.\" Open Group.
+.TH MAKEDEPEND 1 "Release 6.4" "X Version 11"
 .UC 4
 .SH NAME
 makedepend \- create dependencies in makefiles
 .SH SYNOPSIS
 .B makedepend
 [
-.B \-Dname=def
+.BI \-D name\fB=\fPdef
 ] [
-.B \-Dname
+.BI \-D name
 ] [
-.B \-Iincludedir
+.BI \-I includedir
 ] [
-.B \-Yincludedir
+.BI \-Y includedir
 ] [
 .B \-a
 ] [
-.B \-fmakefile
+.BI \-f makefile
 ] [
-.B \-oobjsuffix
+.BI \-o objsuffix
 ] [
-.B \-pobjprefix
+.BI \-p objprefix
 ] [
-.B \-sstring
+.BI \-s string
 ] [
-.B \-wwidth
+.BI \-w width
 ] [
 .B \-v
 ] [
 .B \-m
 ] [
 \-\^\-
-.B otheroptions
+.I otheroptions
 \-\^\-
 ]
-sourcefile .\|.\|.
+.I sourcefile
+\&.\|.\|.
 .br
 .SH DESCRIPTION
-.B Makedepend
-reads each
+The
+.B makedepend
+program reads each
 .I sourcefile
 in sequence and parses it like a C-preprocessor,
 processing all
@@ -72,7 +73,8 @@ processing all
 .I #ifdef,
 .I #ifndef,
 .I #endif,
-.I #if
+.I #if,
+.I #elif
 and
 .I #else
 directives so that it can correctly tell which
@@ -90,7 +92,7 @@ includes,
 directly or indirectly,
 is what
 .B makedepend
-calls a "dependency".
+calls a \fIdependency.\fP
 These dependencies are then written to a
 .I makefile
 in such a way that
@@ -129,9 +131,9 @@ puts lines in the makefile of the form
 .sp
      sourcefile.o:\0dfile .\|.\|.
 .sp
-Where "sourcefile.o" is the name from the command
-line with its suffix replaced with ".o",
-and "dfile" is a dependency discovered in a
+Where \fIsourcefile.o\fP is the name from the command
+line with its suffix replaced with ``.o'',
+and \fIdfile\fP is a dependency discovered in a
 .I #include
 directive while parsing
 .I sourcefile
@@ -139,7 +141,7 @@ or one of the files it included.
 .SH EXAMPLE
 Normally,
 .B makedepend
-will be used in a makefile target so that typing "make depend" will
+will be used in a makefile target so that typing ``make depend'' will
 bring the dependencies up to date for the makefile.
 For example,
 .nf
@@ -149,12 +151,12 @@ For example,
             makedepend\0\-\^\-\0$(CFLAGS)\0\-\^\-\0$(SRCS)
 .fi
 .SH OPTIONS
-.B Makedepend
+The program
 will ignore any option that it does not understand so that you may use
 the same arguments that you would for
 .B cc(1).
 .TP 5
-.B \-Dname=def or \-Dname
+.B \-D\fIname\fP=\fIdef\fP \fRor\fP \-D\fIname\fP
 Define.
 This places a definition for
 .I name
@@ -162,10 +164,10 @@ in
 .B makedepend's
 symbol table.
 Without 
-.I =def
-the symbol becomes defined as "1".
+.I =def\|
+the symbol becomes defined as ``1''.
 .TP 5
-.B \-Iincludedir
+.B \-I\fIincludedir\fP
 Include directory.
 This option tells
 .B makedepend
@@ -180,7 +182,7 @@ By default,
 only searches the standard include directories (usually /usr/include
 and possibly a compiler-dependent directory).
 .TP 5
-.B \-Yincludedir
+.B \-Y\fIincludedir\fP
 Replace all of the standard include directories with the single specified
 include directory; you can omit the
 .I includedir
@@ -189,38 +191,40 @@ to simply prevent searching the standard include directories.
 .B \-a
 Append the dependencies to the end of the file instead of replacing them. 
 .TP 5
-.B \-fmakefile
+.B \-f\fImakefile\fP
 Filename.
 This allows you to specify an alternate makefile in which
 .B makedepend
 can place its output.
+Specifying ``\-'' as the file name (i.e., \fB\-f\-\fP) sends the
+output to standard output instead of modifying an existing file.
 .TP 5
-.B \-oobjsuffix
+.B \-o\fIobjsuffix\fP
 Object file suffix.
 Some systems may have object files whose suffix is something other
-than ".o".
+than ``.o''.
 This option allows you to specify another suffix, such as
-".b" with
-.I -o.b
-or ":obj"
+``.b'' with
+.I \-o.b
+or ``:obj''
 with
-.I -o:obj
+.I \-o:obj
 and so forth.
 .TP 5
-.B \-pobjprefix
+.B \-p\fIobjprefix\fP
 Object file prefix.
 The prefix is prepended to the name of the object file. This is
 usually used to designate a different directory for the object file.
 The default is the empty string.
 .TP 5
-.B \-sstring
+.B \-s\fIstring\fP
 Starting string delimiter.
 This option permits you to specify
 a different string for
 .B makedepend
 to look for in the makefile.
 .TP 5
-.B \-wwidth
+.B \-w\fIwidth\fP
 Line width.
 Normally,
 .B makedepend
@@ -232,7 +236,7 @@ This option enables you to change this width.
 Verbose operation.
 This option causes 
 .B makedepend
-to emit the list of files included by each input file on standard output.
+to emit the list of files included by each input file.
 .TP 5
 .B \-m
 Warn about multiple inclusion.
@@ -247,7 +251,7 @@ inclusion to be an error.  This option is provided for backward
 compatibility, and to aid in debugging problems related to multiple
 inclusion.
 .TP 5
-.B "\-\^\- options \-\^\-"
+.B "\-\^\- \fIoptions\fP \-\^\-"
 If
 .B makedepend
 encounters a double hyphen (\-\^\-) in the argument list,
@@ -268,13 +272,13 @@ recognizes and appear between the pair of double hyphens
 are processed normally.
 .SH ALGORITHM
 The approach used in this program enables it to run an order of magnitude
-faster than any other "dependency generator" I have ever seen.
+faster than any other ``dependency generator'' I have ever seen.
 Central to this performance are two assumptions:
 that all files compiled by a single
 makefile will be compiled with roughly the same
-.I -I
+.I \-I
 and
-.I -D
+.I \-D
 options;
 and that most files in a single directory will include largely the
 same files.
@@ -289,7 +293,7 @@ file exactly once, maintaining an internal symbol table
 for each.
 Thus, the first file on the command line will take an amount of time
 proportional to the amount of time that a normal C preprocessor takes.
-But on subsequent files, if it encounter's an include file
+But on subsequent files, if it encounters an include file
 that it has already parsed, it does not parse it again.
 .PP
 For example,

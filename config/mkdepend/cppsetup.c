@@ -1,14 +1,13 @@
-/* $XConsortium: cppsetup.c,v 1.13 94/04/17 20:10:32 gildea Exp $ */
+/* $Xorg: cppsetup.c,v 1.5 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
-Copyright (c) 1993, 1994  X Consortium
+Copyright (c) 1993, 1994, 1998  The Open Group
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -16,13 +15,13 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of the X Consortium shall not be
+Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
+in this Software without prior written authorization from The Open Group.
 
 */
 
@@ -95,16 +94,16 @@ cppsetup(line, filep, inc)
 	return(value);
 }
 
-struct symtab *lookup(symbol)
+struct symtab **lookup(symbol)
 	char	*symbol;
 {
-	static struct symtab    undefined;
-	struct symtab   *sp;
+	static struct symtab    *undefined;
+	struct symtab   **sp;
 
 	sp = isdefined(symbol, currentinc, NULL);
 	if (sp == NULL) {
 		sp = &undefined;
-		sp->s_value = NULL;
+		(*sp)->s_value = NULL;
 	}
 	return (sp);
 }
@@ -128,19 +127,19 @@ yyerror(s)
 struct _parse_data {
     struct filepointer *filep;
     struct inclist *inc;
+    char *filename;
     const char *line;
 };
 
 static const char *
-_my_if_errors (ip, cp, expecting)
+my_if_errors (ip, cp, expecting)
     IfParser *ip;
     const char *cp;
     const char *expecting;
 {
-#ifdef DEBUG_MKDEPEND
     struct _parse_data *pd = (struct _parse_data *) ip->data;
     int lineno = pd->filep->f_line;
-    char *filename = pd->inc->i_file;
+    char *filename = pd->filename;
     char prefix[300];
     int prefixlen;
     int i;
@@ -156,15 +155,14 @@ _my_if_errors (ip, cp, expecting)
 	putc (' ', stderr);
     }
     fprintf (stderr, "^--- expecting %s\n", expecting);
-#endif /* DEBUG_MKDEPEND */
     return NULL;
 }
 
 
 #define MAXNAMELEN 256
 
-static struct symtab *
-_lookup_variable (ip, var, len)
+static struct symtab **
+lookup_variable (ip, var, len)
     IfParser *ip;
     const char *var;
     int len;
@@ -182,12 +180,12 @@ _lookup_variable (ip, var, len)
 
 
 static int
-_my_eval_defined (ip, var, len)
+my_eval_defined (ip, var, len)
     IfParser *ip;
     const char *var;
     int len;
 {
-    if (_lookup_variable (ip, var, len))
+    if (lookup_variable (ip, var, len))
 	return 1;
     else
 	return 0;
@@ -195,43 +193,45 @@ _my_eval_defined (ip, var, len)
 
 #define isvarfirstletter(ccc) (isalpha(ccc) || (ccc) == '_')
 
-static int
-_my_eval_variable (ip, var, len)
+static long
+my_eval_variable (ip, var, len)
     IfParser *ip;
     const char *var;
     int len;
 {
-    struct symtab *s;
+    struct symtab **s;
 
-    s = _lookup_variable (ip, var, len);
+    s = lookup_variable (ip, var, len);
     if (!s)
 	return 0;
     do {
-	var = s->s_value;
+	var = (*s)->s_value;
 	if (!isvarfirstletter(*var))
 	    break;
-	s = _lookup_variable (ip, var, strlen(var));
+	s = lookup_variable (ip, var, strlen(var));
     } while (s);
 
-    return atoi(var);
+    return strtol(var, NULL, 0);
 }
 
 
-cppsetup(line, filep, inc)
+cppsetup(filename, line, filep, inc)
+	register char	*filename;
 	register char	*line;
 	register struct filepointer	*filep;
 	register struct inclist		*inc;
 {
     IfParser ip;
     struct _parse_data pd;
-    int val = 0;
+    long val = 0;
 
     pd.filep = filep;
     pd.inc = inc;
     pd.line = line;
-    ip.funcs.handle_error = _my_if_errors;
-    ip.funcs.eval_defined = _my_eval_defined;
-    ip.funcs.eval_variable = _my_eval_variable;
+    pd.filename = filename;
+    ip.funcs.handle_error = my_if_errors;
+    ip.funcs.eval_defined = my_eval_defined;
+    ip.funcs.eval_variable = my_eval_variable;
     ip.data = (char *) &pd;
 
     (void) ParseIfExpression (&ip, line, &val);

@@ -47,5 +47,10 @@ CSRCS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
+DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\"
+
+ifdef GNU_CC
+_GCCDIR		= $(shell $(CC) -print-file-name=include)
+DEFINES		+= -DPREINCDIR=\"$(_GCCDIR)\"
+endif
 
