@@ -426,7 +426,7 @@ nsOnDataAvailableEvent::HandleEvent()
                                    mIStream, mSourceOffset, mLength);
   }
   else {
-	  NS_WARNING("not calling OnDataAvailable");
+    NS_WARNING("not calling OnDataAvailable");
   }
   return rv;
 }

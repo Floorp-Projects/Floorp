@@ -489,7 +489,7 @@ nsIOService::SetOffline(PRBool offline)
     nsresult rv;
     if (offline) {
         NS_NAMED_LITERAL_STRING(offlineString, "offline");
-    	mOffline = PR_TRUE; // indicate we're trying to shutdown
+        mOffline = PR_TRUE; // indicate we're trying to shutdown
 
         // don't care if notification fails
         // this allows users to attempt a little cleanup before dns and socket transport are shut down.

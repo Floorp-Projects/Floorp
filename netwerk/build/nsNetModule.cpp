@@ -797,12 +797,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsBinHexDecoderConstructor
     },
 #endif
-	// This is not a real stream converter, it's just
-	// registering it's cid factory here.
-	{ "HACK-TXTToHTMLConverter", 
-  	  MOZITXTTOHTMLCONV_CID,
-	  MOZ_TXTTOHTMLCONV_CONTRACTID, 
-	  CreateNewTXTToHTMLConvFactory
+    // This is not a real stream converter, it's just
+    // registering its cid factory here.
+    { "HACK-TXTToHTMLConverter", 
+      MOZITXTTOHTMLCONV_CID,
+      MOZ_TXTTOHTMLCONV_CONTRACTID, 
+      CreateNewTXTToHTMLConvFactory
     },
 
     { "Directory Index",

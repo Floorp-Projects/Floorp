@@ -351,7 +351,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
         PRInt64 fileSize = LL_Zero();
         current->GetFileSize( &fileSize );
-				 
+
         PROffset32 fileInfoSize;
         LL_L2I( fileInfoSize,fileSize );
         

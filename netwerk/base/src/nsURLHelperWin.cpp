@@ -117,9 +117,9 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 
     if (!directory.IsEmpty()) {
         NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
-		if (path.Length() > 2 && path.CharAt(2) == '|')
-			path.SetCharAt(':', 2);
-		path.ReplaceChar('/', '\\');
+        if (path.Length() > 2 && path.CharAt(2) == '|')
+            path.SetCharAt(':', 2);
+        path.ReplaceChar('/', '\\');
     }    
     if (!fileBaseName.IsEmpty())
         NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);

@@ -919,11 +919,11 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     }
 
     if (!entry) {
-		if (! (request->AccessRequested() & nsICache::ACCESS_WRITE)) {
-			// this is a READ-ONLY request
-		    rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
-			goto error;
-		}
+        if (! (request->AccessRequested() & nsICache::ACCESS_WRITE)) {
+            // this is a READ-ONLY request
+            rv = NS_ERROR_CACHE_KEY_NOT_FOUND;
+            goto error;
+        }
 
         entry = new nsCacheEntry(request->mKey,
                                  request->IsStreamBased(),
@@ -1243,8 +1243,8 @@ nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
  * If browser.cache.memory.capacity is negative or not present, we use a
  * formula that grows less than linearly with the amount of system memory.
  *
- * RAM	Cache
- * ---	-----
+ *   RAM   Cache
+ *   ---   -----
  *   32 Mb   2 Mb
  *   64 Mb   4 Mb
  *  128 Mb   8 Mb
