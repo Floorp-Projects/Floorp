@@ -134,6 +134,8 @@ public:
   NS_IMETHOD Save();
   NS_IMETHOD SaveAs(PRBool aSavingCopy);
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
+  NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);
+  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;
@@ -618,6 +620,9 @@ protected:
   nsCOMPtr<nsIDTD> mDTD;
   // Services are not nsCOMPtr friendly
   nsIPref* mPrefs;
+
+  //Document 'SaveAs' charset
+  nsString						mDocCharset;
 
 #ifdef ENABLE_JS_EDITOR_LOG
   nsJSEditorLog *mJSEditorLog;

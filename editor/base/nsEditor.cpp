@@ -155,6 +155,7 @@ nsEditor::nsEditor()
 ,  mDocDirtyState(-1)
 ,  mDoc(nsnull)
 ,  mPrefs(nsnull)
+,  mDocCharset("ISO-8859-1")
 #ifdef ENABLE_JS_EDITOR_LOG
 ,  mJSEditorLog(nsnull)
 ,  mJSTxnLog(nsnull)
@@ -430,8 +431,7 @@ NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   	}
   }
 
-  nsAutoString  charsetStr("");
-  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML, charsetStr);
+  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML, mDocCharset);
   
   if (NS_FAILED(rv))
   {
@@ -803,6 +803,24 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 
   *outDocModified = (modCount != 0);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::GetDocumentCharacterSet(PRUnichar** characterSet)
+{
+	*characterSet = mDocCharset.ToNewUnicode();
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
+{
+	if (characterSet!=NULL) {
+		mDocCharset = characterSet;
+		return NS_OK;
+	}
+
+	return NS_ERROR_FAILURE;
 }
 
 /*

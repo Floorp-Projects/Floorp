@@ -263,7 +263,7 @@ function EditorShowClipboard()
 function EditorSetDocumentCharacterSet(aCharset)
 {
   dump(aCharset);
-  editorShell.editorDocument.SetDocumentCharacterSet(aCharset);
+  editorShell.SetDocumentCharacterSet(aCharset);
 }
 
 
