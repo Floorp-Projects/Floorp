@@ -94,8 +94,6 @@ mIsActive(PR_FALSE), mTarget(nsnull)
 
 nsMenuBarFrame::~nsMenuBarFrame()
 {
-  mIsActive = PR_FALSE; // force RemoveKeyboardNavigator to do something
-  RemoveKeyboardNavigator();
 }
 
 NS_IMETHODIMP
