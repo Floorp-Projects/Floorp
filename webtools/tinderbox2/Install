@@ -4,6 +4,19 @@ are not really comfortable coding in perl I suggest you wait until
 more people are using it and we get the minor kinks worked out of the
 code and documentation.
 
+Documentation:
+
+*) Every directory has a README file which tells about all the files
+in that directory.
+
+*) Every executable can be run with --help so that you can see what
+the program does and what its arguments are.  If you have trouble
+running the file just look at the file in a text editor and find
+the string "usage".
+
+*) The code has lots of documentation so you can read the code if you
+need more details about how something works.
+
 
 To install:
 
@@ -30,12 +43,36 @@ A quick overview of the files:
 	FileStructure.pm: filesystem (storage) and global/per-project 
 		settings. Most users will not have to change this.
 
+
+In particular you will need a TinderConfig.pm and a TreeData.pm which
+discribes your local setup.  You may need to make local versions of
+the other files depending on how you wish to have Tinderbox configured.
+
+
 *) Run ./configure. When configure is done you will have a Makefile
 and a config.out.  Although Tinderbox consists entirely of perl
 scripts we must substitute some values into the source code to make it
-executable.  You may wish to change the default directories in configure
-for some of the makefile variables.  Please read config.out and make
-any changes which need to be made for your system.
+executable.  You may wish to change the default directories in
+configure for some of the makefile variables.  Please read config.out
+and make any changes which need to be made for your system. Configure
+also excepts command line options to change some default variables.
+Please look at the configure source code for variable details, but the
+most common changes are:
+
+	prefix: the directory for most of the tinderbox files,
+		defaults to /home/tinderbox2
+
+	cgibin_prefix: The directory where cgi scripts will be
+		run. This depends on how your webserver is configured.  
+		For security you may wish to ensure that this
+		directory is disjoint from the prefix directory.  This
+		defaults to /var/www/cgi-bin/tinderbox.
+
+	htmldir: The directory where html files should be
+		written. This depends on how your webserver is configured. 
+		This is where the webserver will pick up tinderbox2
+		output.  This defaults to /home/httpd/html/tinderbox.
+
 
 *) run 'make' to create executable versions of the source code in the
 ./build directory.
@@ -43,8 +80,10 @@ any changes which need to be made for your system.
 *) run 'make compile_bin_code' to ensure that the code will compile when
 it is installed.
 
-*) run the test programs as described in /build/test/ReadMe to ensure
-that you have configured the program correctly.
+*) If you wish run the test programs as described in
+/build/test/ReadMe to ensure that you have configured the program
+correctly. This will require a TinderConfig.pm file in your local_conf
+directory.
 
 *) run make install, to install Tinderbox on your system.  You may
 wish to run this with a different 'prefix'
@@ -57,10 +96,12 @@ can copy the *.cgi files to another directory if this is not the case.
 
 
 *) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
-	every five minutes.
+	every five minutes.  This generates the static tinderbox pages
+	which users see.
    set up a cron job to run $prefix/bin/rmlogs at least once a day.
      six am is a good time to run this as the machine load is usually light
-      and will avoids any day light savings problems.
+      and will avoids any day light savings problems.  This keeps the
+	archive of compressed build logs from growing without limit.
 
 *) set up the $prefix/bin/processmail* programs to receive the
 incoming tinderbox mail.  The process id which receives and process
@@ -72,6 +113,16 @@ file) or via a .forward file (each account gets the same user id but a
 different home directory, each home directory gets a .forward to cause
 incomming mail to be delivered through the correct tinderbox mail
 processing program).  
+
+I have used the following configurations for the mail server Postfix.
+The postfix aliases file /etc/postfix/aliases contains the following
+lines.  This file must be processed with a /usr/sbin/postalias command
+which must be run by the same id which will run the tinderbox cgi scripts.
+
+	tinderbox_builds: |/home/tinderbox2/bin/processmail_builds
+	tinderbox_bugzilla: |/home/tinderbox2/bin/processmail_bugs
+
+
 
 If it is not possible to have mail delivery on your web machine and to
 have your web machine deliver specific mail through a program then I
@@ -119,7 +170,8 @@ a success, which error parsers to use on the log file and what build
 this is.  Run 'processmail_builds --help' to learn about how the mail
 processing system works and what the mail messages are expected to
 look like.  There is an example mail in the test directory called
-samplelog.
+samplelog.  The clientbin directory contains code which can be used on
+the buildmachine.  See the README to help setup your buildmachine.
 
 
 *) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
@@ -127,9 +179,15 @@ the webserver machine whenever a Bug ticket changes state. It is not
 interesting to see which tickets are being worked on, so restrict
 mailing to changes in ticket state not updates (edit) of a ticket.
 
-
 *) Check that the time on your webserver, your version control
 machine, your bug tracking machine and your build machines are all in
 sync.  Check that mail if build mail bounces on any of the above
 machines that it will be recieved by someone who can act on it.
 
+
+
+
+I keep my email up to date in the source code.  If you have trouble
+with these instructions please drop me a line.  
+
+Ken Estes.
