@@ -5068,70 +5068,71 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     nsCOMPtr<nsIContent> childElement;
     xblService->GetContentList(aParent, getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
     
-    if (!anonymousItems)
-      return NS_OK;
-
-    // See if we have to move our explicit content.
-    nsFrameItems explicitItems;
-    if (childElement) {
-      // First, remove all of the kids from the frame list and put them
-      // in a new frame list.
-      explicitItems.childList = aChildItems.childList;
-      explicitItems.lastChild = aChildItems.lastChild;
-      aChildItems.childList = aChildItems.lastChild = nsnull;
-    }
-
-    // Build the frames for the anonymous content.
-    PRUint32 count = 0;
-    anonymousItems->Count(&count);
-
-    for (PRUint32 i=0; i < count; i++)
+    if (anonymousItems)
     {
-      // get our child's content and set its parent to our content
-      nsCOMPtr<nsISupports> node;
-      anonymousItems->GetElementAt(i,getter_AddRefs(node));
 
-      nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+      // See if we have to move our explicit content.
+      nsFrameItems explicitItems;
+      if (childElement) {
+        // First, remove all of the kids from the frame list and put them
+        // in a new frame list.
+        explicitItems.childList = aChildItems.childList;
+        explicitItems.lastChild = aChildItems.lastChild;
+        aChildItems.childList = aChildItems.lastChild = nsnull;
+      }
+
+      // Build the frames for the anonymous content.
+      PRUint32 count = 0;
+      anonymousItems->Count(&count);
+
+      for (PRUint32 i=0; i < count; i++)
+      {
+        // get our child's content and set its parent to our content
+        nsCOMPtr<nsISupports> node;
+        anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
       
-      // create the frame and attach it to our frame
-      ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
-    }
-
-    if (childElement) {
-      // Now append the explicit frames 
-      // All our explicit content that we built must be reparented.
-      nsIFrame* frame = nsnull;
-      nsIFrame* currFrame = aChildItems.childList;
-      while (currFrame) {
-        LocateAnonymousFrame(aPresContext,
-                             currFrame,
-                             childElement,
-                             &frame);
-        if (frame)
-          break;
-        currFrame->GetNextSibling(&currFrame);
+        // create the frame and attach it to our frame
+        ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
       }
 
-      nsCOMPtr<nsIFrameManager> frameManager;
-      aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+      if (childElement) {
+        // Now append the explicit frames 
+        // All our explicit content that we built must be reparented.
+        nsIFrame* frame = nsnull;
+        nsIFrame* currFrame = aChildItems.childList;
+        while (currFrame) {
+          LocateAnonymousFrame(aPresContext,
+                               currFrame,
+                               childElement,
+                               &frame);
+          if (frame)
+            break;
+          currFrame->GetNextSibling(&currFrame);
+        }
+
+        nsCOMPtr<nsIFrameManager> frameManager;
+        aPresShell->GetFrameManager(getter_AddRefs(frameManager));
       
-      if (frameManager && frame && explicitItems.childList) {
-        frameManager->AppendFrames(aPresContext, *aPresShell, frame,
-                                   nsnull, explicitItems.childList);
+        if (frameManager && frame && explicitItems.childList) {
+          frameManager->AppendFrames(aPresContext, *aPresShell, frame,
+                                     nsnull, explicitItems.childList);
+        }
+
+        if (frame) {
+          // XXX Eventually generalize to HTML as well. For now,
+          // leave this on nsIBox.
+          nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
+          box->SetInsertionPoint(frame);
+        }
       }
 
-      if (frame) {
-        // XXX Eventually generalize to HTML as well. For now,
-        // leave this on nsIBox.
-        nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
-        box->SetInsertionPoint(frame);
-      }
+      return NS_OK;
     }
-
-    return NS_OK;
   }
-
-   // only these tags types can have anonymous content. We do this check for performance
+  // if we have no anonymous content from XBL see if we have some from these tags.
+  // only these tags types can have anonymous content. We do this check for performance
   // reasons. If we did a query interface on every tag it would be very inefficient.
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::combobox &&
