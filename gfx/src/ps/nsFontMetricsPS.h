@@ -458,7 +458,7 @@ public:
   nsString *GetSubset();
 
   // 256 (PS type 1 encoding vector size) - 1 (1 is for mandatory /.notdef)
-  const static PRUint16 kSubFontSize = 255; 
+  const static PRUint16 kSubFontSize; 
 
 protected:
   // XXX To support non-BMP characters, we may have to use 
