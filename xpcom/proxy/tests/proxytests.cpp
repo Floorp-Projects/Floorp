@@ -38,6 +38,7 @@
 
 #include <stdio.h>
 
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -53,14 +54,6 @@
 #include "nsIEventQueueService.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-/***************************************************************************/
-extern "C" void
-NS_SetupRegistry()
-{
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup, NULL /* default */);
-}
-
 
 /***************************************************************************/
 /* nsTestXPCFoo                                                            */
@@ -503,7 +496,9 @@ main(int argc, char **argv)
     if (argc > 1)
         numberOfThreads = atoi(argv[1]);
 
-    NS_SetupRegistry();
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                     NULL /* default */);
 
 
     static PRThread** threads = (PRThread**) calloc(sizeof(PRThread*), numberOfThreads);

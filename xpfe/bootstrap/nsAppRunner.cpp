@@ -356,8 +356,6 @@ static int TranslateReturnValue(nsresult aResult)
 #include "nsCommandLineServiceMac.h"
 #endif
 
-extern "C" void NS_SetupRegistry_1(PRBool aNeedAutoreg);
-
 static void
 PrintUsage(void)
 {
@@ -1110,10 +1108,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   needAutoReg = PR_TRUE;
 #endif
 
-  NS_SetupRegistry_1(needAutoReg);
-
-  if (needAutoReg)  // XXX ...and autoreg was successful?
+  if (needAutoReg) {
+    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                     NULL /* default */);
+    // XXX ...and autoreg was successful?
     NS_SoftwareUpdateDidAutoReg();
+  }
   NS_TIMELINE_LEAVE("setup registry");
 
   // remove the nativeApp as an XPCOM autoreg observer

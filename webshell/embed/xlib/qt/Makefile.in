@@ -40,7 +40,6 @@ CPPSRCS		= \
 		QMozillaContainer.cpp \
 		nsEmbedXlibIntoQt.cpp \
 		nsQtEventProcessor.cpp \
-		nsSetupRegistry.cpp \
 		$(NULL)
 
 LIBS		= \

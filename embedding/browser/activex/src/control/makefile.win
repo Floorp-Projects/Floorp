@@ -86,6 +86,8 @@ OBJS =                                 \
     $(NULL)
 
 # most of these have to be here for nsSetupRegistry.cpp...
+# ... and since nsSetupRegistry.cpp is no longer used, many could now be
+# removed.
 
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \

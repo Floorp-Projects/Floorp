@@ -114,7 +114,6 @@
 #endif
 
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
-extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
@@ -253,22 +252,11 @@ NS_METHOD nsTestFormProcessor::ProvideContent(const nsString& aFormType,
 
 
 nsresult
-nsViewerApp::AutoregisterComponents()
-{
-  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                                 NULL /* default */);
-
-  return rv;
-}
-
-
-nsresult
 nsViewerApp::SetupRegistry()
 {
   nsresult rv;
-  AutoregisterComponents();
-
-  NS_SetupRegistry();
+  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                   NULL /* default */);
 
   // Register our browser window factory
   nsIFactory* bwf;

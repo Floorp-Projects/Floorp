@@ -39,6 +39,7 @@
 #ifndef XPCOM_STANDALONE
 #define NS_IMPL_IDS
 
+#include "nsXPCOM.h"
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
@@ -53,63 +54,13 @@
 
 #include "nsSpecialSystemDirectory.h"
 
-#ifdef XP_PC
-#include "plevent.h"
-#endif
-
 #define TEST_URL "resource:/res/test.properties"
-
-#ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
-#define RAPTORBASE_DLL "raptorbase.dll"
-#define XPCOM_DLL "xpcom32.dll"
-#else
-#ifdef XP_MAC
-#define NETLIB_DLL "NETLIB_DLL"
-#define RAPTORBASE_DLL "base.shlb"
-#define XPCOM_DLL "XPCOM_DLL"
-#else
-#define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
-#define RAPTORBASE_DLL "libraptorbase"MOZ_DLL_SUFFIX
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 /***************************************************************************/
-extern "C" void
-NS_SetupRegistry()
-{
-  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                   NULL /* default */);
-
-	// startup netlib:	
-	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-    // Create the Event Queue for this thread...
-    nsIEventQueueService* pEventQService;
-    
-	pEventQService = nsnull;
-    nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                                   NS_GET_IID(nsIEventQueueService),
-                                                   (nsISupports **)&pEventQService);
-    if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
-
-	nsComponentManager::RegisterComponent(kPersistentPropertiesCID, 
- 										 NULL,
- 										 NULL, 
-										 RAPTORBASE_DLL, 
-										 PR_FALSE, 
-										 PR_FALSE);
-}
-
 
 #endif
 int
@@ -118,7 +69,16 @@ main(int argc, char* argv[])
 #ifndef XPCOM_STANDALONE
   nsresult ret;
 
-  NS_SetupRegistry(); 
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
+                                   NULL /* default */);
+
+  // Create the Event Queue for this thread...
+  nsCOMPtr<nsIEventQueueService> pEventQService =
+      do_GetService(kEventQueueServiceCID);
+  if (pEventQService)
+    // XXX: What if this fails?
+    pEventQService->CreateThreadEventQueue();
 
   nsIInputStream* in = nsnull;
 

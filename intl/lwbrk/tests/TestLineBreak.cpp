@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <iostream.h>
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -386,21 +387,6 @@ PRBool TestWordBreaker()
    return ok;
 }
 
-#ifdef XP_PC
-#define LWBRK_DLL "lwbrk.dll"
-#else
-#ifdef XP_MAC
-#define LWBRK_DLL "LWBRK_DLL"
-#else
-#endif
-#define LWBRK_DLL "liblwbrk"MOZ_DLL_SUFFIX
-#endif
-
-extern "C" void NS_SetupRegistry()
-{
-   nsComponentManager::RegisterComponent(kLWBrkCID,  NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
-}
-
 void   SamplePrintWordWithBreak();
 void   SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset);
 // Sample Code
@@ -581,9 +567,9 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 // Main
 
 int main(int argc, char** argv) {
-   
-   NS_SetupRegistry();
 
+   NS_InitXPCOM2(nsnull, nsnull, nsnull);
+   
    // --------------------------------------------
    cout << "Test Line Break\n";
 

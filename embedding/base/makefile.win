@@ -48,7 +48,6 @@ XPIDLSRCS = \
 CPP_OBJS=											\
     .\$(OBJDIR)\nsEmbedAPI.obj \
     .\$(OBJDIR)\nsEmbedWin32.obj \
-    .\$(OBJDIR)\nsSetupRegistry.obj \
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

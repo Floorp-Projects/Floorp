@@ -80,11 +80,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 ////////////////////////////////////////////////////////////////////////
-// To get the registry initialized!
-
-#include "../../../webshell/tests/viewer/nsSetupRegistry.cpp"
-
-////////////////////////////////////////////////////////////////////////
 
 class ConsoleOutputStreamImpl : public nsIOutputStream
 {
@@ -164,7 +159,7 @@ main(int argc, char** argv)
         return 1;
     }
 
-    NS_SetupRegistry();
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
     // Get netlib off the floor...
     nsCOMPtr<nsIEventQueueService> theEventQueueService = 

@@ -43,6 +43,7 @@ extern "C" {
 #include <gdk/gdkx.h>
 }
 
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsIEventQueueService.h"
@@ -67,8 +68,6 @@ static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
-
-extern "C" void NS_SetupRegistry();
 
 static GdkFilterReturn test_filter (GdkXEvent *gdk_xevent,
 				    GdkEvent  *event,
@@ -129,14 +128,11 @@ int main(int argc, char **argv)
   gtk_widget_realize(main_window);
 
 
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
+
+
   //////////////////////////////////////////////////////////////////////
-  //
   // Toolkit Service setup
-  // 
-  // Note: This must happend before NS_SetupRegistry() is called so
-  //       that the toolkit specific xpcom components can be registered
-  //       as needed.
-  //
   //////////////////////////////////////////////////////////////////////
   nsIUnixToolkitService * unixToolkitService = nsnull;
     
@@ -159,13 +155,6 @@ int main(int argc, char **argv)
   // End toolkit service setup
   //////////////////////////////////////////////////////////////////////
 
-
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Setup the registry
-  //
-  //////////////////////////////////////////////////////////////////////
-  NS_SetupRegistry();
 
   printf("Creating event queue.\n");
     

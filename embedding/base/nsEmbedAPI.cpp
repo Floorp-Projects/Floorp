@@ -65,8 +65,6 @@ static PRBool sXPCOMInitializedFlag = PR_FALSE;
 static XPCOMCleanupHack sXPCOMCleanupHack;
 #endif
 
-extern "C" void NS_SetupRegistry();
-
 
 nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
                           nsIDirectoryServiceProvider *appFileLocProvider)
@@ -108,9 +106,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     // Register components
     if (!sRegistryInitializedFlag)
     {
-        // XXX hack method
-        NS_SetupRegistry();
-        
         rv = nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
                                               NULL /* default */);
         if (NS_FAILED(rv))

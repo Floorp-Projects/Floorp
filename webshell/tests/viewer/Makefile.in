@@ -67,7 +67,6 @@ CPPSRCS			= \
 			nsPrintSetupDialog.cpp \
 			nsBrowserWindow.cpp \
 			nsEditorMode.cpp \
-			nsSetupRegistry.cpp \
 			nsThrobber.cpp \
 			nsViewerApp.cpp \
 			nsWebCrawler.cpp \
