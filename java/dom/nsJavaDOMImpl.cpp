@@ -43,6 +43,7 @@ static char* strip_whitespace(const PRUnichar* input, int length);
 static const char* describe_type(int type);
 #endif
 
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -238,15 +239,18 @@ PRBool nsJavaDOMImpl::Cleanup()
 
 nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 {
-  nsIWebShell* container = nsnull;
+  nsIWebShell* webshell = nsnull;
+  nsISupports* container = nsnull;
   nsIContentViewer* contentv = nsnull;
   nsIDocumentViewer* docv = nsnull;
   nsIDocument* document = nsnull;
   nsIDOMDocument* domDoc = nsnull;
 
-  nsresult rv = loader->GetContainer((nsISupports**)&container);
+  nsresult rv = loader->GetContainer(&container);
   if (NS_SUCCEEDED(rv) && container)
-    rv = container->GetContentViewer(&contentv);
+    rv = container->QueryInterface(kIWebShellIID, (void**) &webshell);
+      if (NS_SUCCEEDED(rv) && webshell) 
+        rv = webshell->GetContentViewer(&contentv);
 
   if (NS_SUCCEEDED(rv) && contentv) {
     rv = contentv->QueryInterface(kIDocumentViewerIID,
@@ -263,11 +267,16 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 
   fprintf(stderr, 
 	  "nsJavaDOMImpl::GetDocument: failed: "
-	  "container=%x, contentViewer=%x, documentViewer=%x, document=%x, "
+	  "container=%x, webshell=%x, contentViewer=%x, "
+	  "documentViewer=%x, document=%x, "
 	  "domDocument=%x, error=%x\n", 
-	  (unsigned) (void*) container, (unsigned) (void*) contentv, 
-	  (unsigned) (void*) docv, (unsigned) (void*) document, 
-	  (unsigned) (void*) domDoc, rv);
+	  (unsigned) (void*) container, 
+	  (unsigned) (void*) webshell, 
+	  (unsigned) (void*) contentv, 
+	  (unsigned) (void*) docv, 
+	  (unsigned) (void*) document, 
+	  (unsigned) (void*) domDoc, 
+	  rv);
   return NULL;
 }
 
