@@ -167,12 +167,19 @@ NS_IMETHODIMP EditAggregateTxn::GetCount(PRInt32 *aCount)
 
 NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
 {
+  // preconditions
+  NS_PRECONDITION(aTxn, "null out param");
+  NS_PRECONDITION(mChildren, "bad internal state");
+
   if (!aTxn) {
     return NS_ERROR_NULL_POINTER;
   }
+  *aTxn = nsnull; // initialize out param as soon as we know it's a valid pointer
   if (!mChildren) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  // get the transaction at aIndex
   const PRInt32 txnCount = mChildren->Count();
   if (0>aIndex || txnCount<=aIndex) {
     return NS_ERROR_UNEXPECTED;
