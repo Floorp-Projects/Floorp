@@ -20,6 +20,9 @@
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
+extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
+extern "C" void NS_ProcessTimeouts(void);
+
 extern "C" gint nsTimerExpired(gpointer aCallData);
 
 void nsTimerGtk::FireTimeout()
@@ -156,4 +159,10 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
     }
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+}
+
+int NS_TimeToNextTimeout(struct timeval *aTimer) {
+  return 0;
+}
+void NS_ProcessTimeouts(void) {
 }
