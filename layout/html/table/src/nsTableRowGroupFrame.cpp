@@ -814,10 +814,14 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aPresContex
   for (aKidFrame->GetNextSibling(&kidFrame); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Update the max element size
     if (aMaxElementSize) {
-      nsSize kidMaxElementSize;
-      ((nsTableRowFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
-      
-      aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
+      const nsStyleDisplay *display;
+      aKidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+      if (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) {
+        nsSize kidMaxElementSize;
+        ((nsTableRowFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
+        
+        aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
+      }
     }
 
     // Move the frame if we need to
@@ -828,7 +832,6 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext*      aPresContex
       kidFrame->GetOrigin(origin);
       origin.y += aDeltaY;
   
-      kidFrame->WillReflow(aPresContext);
       kidFrame->MoveTo(aPresContext, origin.x, origin.y);
     }
 
@@ -924,6 +927,11 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
 
       } else {
         // See whether the row frame has cells that span into it
+        const nsStyleDisplay *display;
+        rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+        if (NS_STYLE_DISPLAY_TABLE_ROW != display->mDisplay) {
+          NS_ASSERTION(PR_FALSE, "uh oh, not a row frame...");
+        }
         PRInt32           rowIndex = ((nsTableRowFrame*)rowFrame)->GetRowIndex();
         PRInt32           colCount = aTableFrame->GetColCount();
         nsTableCellFrame* prevCellFrame = nsnull;
@@ -1389,15 +1397,19 @@ nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
 
     // Update the maximum element size
     if (aMaxElementSize) {
-      // Get the row frame's cached max element size
-      nsSize kidMaxElementSize;
-      ((nsTableRowFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
-    
-      if (aReflowState.firstRow) {
-        aMaxElementSize->width = kidMaxElementSize.width;
-        aMaxElementSize->height = kidMaxElementSize.height;
-      } else {
-        aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
+      const nsStyleDisplay *display;
+      frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+      if (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) {
+        // Get the row frame's cached max element size
+        nsSize kidMaxElementSize;
+        ((nsTableRowFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
+      
+        if (aReflowState.firstRow) {
+          aMaxElementSize->width = kidMaxElementSize.width;
+          aMaxElementSize->height = kidMaxElementSize.height;
+        } else {
+          aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
+        }
       }
     }
 
