@@ -293,7 +293,6 @@ this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "
     QueryInterface: function (iid) {
         if (!iid.equals(Components.interfaces.nsIProgressDialog) &&
             !iid.equals(Components.interfaces.nsIWebProgressListener) &&
-            !iid.equals(Components.interfaces.nsISupportsWeakReference) &&
             !iid.equals(Components.interfaces.nsIObserver) &&
             !iid.equals(Components.interfaces.nsISupports)) {
             throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -452,8 +451,8 @@ this.dump( "nsProgressDialog::onStatusChange, status=" + this.hex( aStatus ) + "
         var title = this.saving ? this.getString( "savingTitle" ) : this.getString( "openingTitle" );
 
         // Use file name as insert 1.
-        var fname = this.target.unicodePath;
-        var n = this.target.unicodePath.lastIndexOf( "\\" );
+        var fname = this.target? this.target.unicodePath : " ";
+        var n = fname.lastIndexOf( "\\" );
         title = this.replaceInsert( title, 1, fname.substring( n + 1 ) );
 
         // Use percentage as insert 2.
