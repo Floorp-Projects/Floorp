@@ -86,7 +86,8 @@ if($inRedirIniURL eq "")
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
-$seiFileNameSpecificStub  = "mozilla-win32-stub-installer.exe";
+$seiStubRootName = "mozilla-win32-stub-installer";
+$seiFileNameSpecificStub  = "$seiStubRootName.exe";
 $seuFileNameSpecific  = "MozillaUninstall.exe";
 $seuzFileNameSpecific = "mozillauninstall.zip";
 
@@ -249,6 +250,38 @@ else
 if(system("copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\stub"))
 {
   die "\n Error: copy $inDistPath\\$seiFileNameSpecificStub $inDistPath\\stub\n";
+}
+
+# create the xpi for launching the stub installer
+print "\n**********************************\n";
+print "*                                  *\n";
+print "*  creating stub installer xpi...  *\n";
+print "*                                  *\n";
+print "************************************\n";
+if(-d "$inStagePath\\$seiStubRootName")
+{
+  unlink <$inStagePath\\$seiStubRootName\\*>;
+}
+else
+{
+  mkdir ("$inStagePath\\$seiStubRootName",0775);
+}
+if(system("copy $inDistPath\\stub\\$seiFileNameSpecificStub $gLocalTmpStage\\$seiStubRootName"))
+{
+  die "\n Error: copy $inDistPath\\stub\\$seiFileNameSpecificStub $gLocalTmpStage\\$seiStubRootName\n";
+}
+
+# Make .js files
+if(MakeJsFile($seiStubRootName))
+{
+  return(1);
+}
+
+# Make .xpi file
+if(system("perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath\\xpi"))
+{
+  print "\n Error: perl makexpi.pl $seiStubRootName $gLocalTmpStage $inDistPath\\xpi\n";
+  return(1);
 }
 
 # group files for CD
