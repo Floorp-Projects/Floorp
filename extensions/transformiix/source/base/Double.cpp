@@ -43,9 +43,6 @@
 #include <float.h>
 #endif
 #include "prdtoa.h"
-#ifdef TX_EXE
-#include <stdio.h>
-#endif
 
 /*
  * Utility class for doubles
@@ -268,8 +265,6 @@ void Double::toString(double aValue, nsAString& aDest)
         return;
     }
 
-#ifndef TX_EXE
-
     PRIntn intDigits, sign;
     char* endp;
     PR_dtoa(aValue, 0, 0, &intDigits, &sign, &endp, buf, bufsize-1);
@@ -287,36 +282,5 @@ void Double::toString(double aValue, nsAString& aDest)
     for (; i < intDigits; i++)
         aDest.Append(PRUnichar('0'));
 
-#else
-
-    sprintf(buf, "%1.10f", aValue);
-
-    MBool deciPassed = MB_FALSE;
-    MBool printDeci = MB_FALSE;
-    int zeros=0;
-    int i;
-    for (i = 0; buf[i]; i++) {
-        if (buf[i] == '.') {
-            deciPassed = MB_TRUE;
-            printDeci = MB_TRUE;
-        }
-        else if (deciPassed && buf[i] == '0') {
-            zeros++;
-        }
-        else {
-            if (printDeci) {
-                aDest.Append(PRUnichar('.'));
-                printDeci = MB_FALSE;
-            }
-
-            for ( ;zeros ;zeros--)
-                aDest.Append(PRUnichar('0'));
-
-            aDest.Append(PRUnichar(buf[i]));
-        }
-    }
-
-#endif
-    
     delete [] buf;
 }
