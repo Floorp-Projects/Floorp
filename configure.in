@@ -80,18 +80,19 @@ then
   # Check for a couple representative files in the source tree
   for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
     if test -f $file; then
-      echo 2>&1
-      echo "Error: Your source tree contains the file," 2>&1
-      echo "          $file" 2>&1
-      echo 2>&1
-      echo "       This is an indication that you have built in the source tree." 2>&1
-      echo "       The files that were built in the source tree can mess up the" 2>&1
-      echo "       separate objdir build in strange and mysterious ways." 2>&1
-      echo 2>&1
-      echo "       You can clean up the source tree with the following steps:" 2>&1
-      echo "         1. cd $_topsrcdir" 2>&1
-      echo "         2. gmake realclean; build/autoconf/clean-config.sh" 2>&1
-      echo 2>&1
+      cat 1>&2 <<-EOF
+	Error: Your source tree contains the file,
+	          $file
+	
+	       This is an indication that you previously built in the source
+	       tree. Files built in the source tree can confuse the separate
+	       objdir build.
+	
+	       You can clean up the source tree with the following steps:
+	         1. cd $_topsrcdir
+	         2. gmake realclean; build/autoconf/clean-config.sh
+	
+	EOF
       exit 1
       break
     fi
@@ -128,10 +129,12 @@ AC_PATH_XTRA
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
 
-if [ test "$GCC" = "yes" ]; then
+GNU_CC=
+GNU_CXX=
+if test "$GCC" = "yes"; then
     GNU_CC=1
 fi
-if [ test "$GXX" = "yes" ]; then
+if test "$GXX" = "yes"; then
     GNU_CXX=1
 fi
 
@@ -159,7 +162,7 @@ dnl MKSHLIB_FORCE_ALL is used to force the linker to include all object
 dnl files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker to
 dnl normal behavior.
 dnl ========================================================
-if [ test "$GNU_CC" = 1]; then
+if test "$GNU_CC"; then
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
     MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
     MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
@@ -169,12 +172,22 @@ if [ test "$GNU_CC" = 1]; then
     # Turn on GNU specific features
     _WARNINGS_CFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     #_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
+
+    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+else
+    _DEFINES_CFLAGS='$(ACDEFINES)'
 fi
 
-if [ test "$GNU_CXX" = 1]; then
+if test "$GNU_CXX"; then
     # Turn on GNU specific features
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     #_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
+
+    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
+    _USE_CPP_INCLUDE_FLAG=1
+else
+    _DEFINES_CXXFLAGS='$(ACDEFINES)'
 fi
 
 dnl now the exceptions
@@ -184,7 +197,7 @@ case "$target" in
 	DLL_SUFFIX="so"
 	MKSHLIB_FORCE_ALL=''
 	MKSHLIB_UNFORCE_ALL=''
-	if [ test "$GNU_CC" != 1 ]; then
+	if test ! "$GNU_CC"; then
 		DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
 		DSO_CFLAGS='-DPIC -brtl -O -qnortti -qflag=w:w'
 	fi
@@ -194,7 +207,7 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
-    if test -z "$GNU_CC"; then
+    if test ! "$GNU_CC"; then
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
@@ -245,7 +258,7 @@ alpha*-*-linux*)
     ;;
 
 alpha*-*-osf*)
-    if [ test "$GNU_CC" = 1 ]; then
+    if test "$GNU_CC"; then
         DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
@@ -271,7 +284,7 @@ alpha*-*-osf*)
 	DLL_SUFFIX="so.1.0"
 	DSO_LDOPTS="-shared"
     fi
-    if test -z "$GNU_CC"; then
+    if test ! "$GNU_CC"; then
 	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi ;; 
 
@@ -280,10 +293,10 @@ alpha*-*-osf*)
     DSO_CFLAGS='-fPIC'
     DSO_LDOPTS='-Wl,-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
-    if test -z "`$CC -E - -dM </dev/null | grep __ELF__`"; then
+    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable"
     fi
-    if test -n "$LIBRUNPATH"; then
+    if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
     fi
     ;;
@@ -293,16 +306,16 @@ alpha*-*-osf*)
     DSO_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    if test -z "`$CC -E - -dM </dev/null | grep __ELF__`"; then
+    if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
 	DSO_LDOPTS="-Bshareable /usr/lib/c++rt0.o"
     fi
-    if test -n "$LIBRUNPATH"; then
+    if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
     fi
     ;;
 
 *-hpux*)
-    if test -z "$GNU_CC"; then
+    if test ! "$GNU_CC"; then
 	DSO_CFLAGS="+Z"
     fi
     DLL_SUFFIX="sl"
@@ -316,12 +329,12 @@ alpha*-*-osf*)
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
     MKSHLIB_FORCE_ALL='-all'
     MKSHLIB_UNFORCE_ALL=
-    if test "$GCC"x != "yesx"; then
-       CFLAGS="$CFLAGS -woff 3262"
-    CXXFLAGS="$CXXFLAGS -woff 3262"
-    else
+    if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL=-Wl,-all
        MKSHLIB_UNFORCE_ALL=-Wl,-none
+    else
+       CFLAGS="$CFLAGS -woff 3262"
+       CXXFLAGS="$CXXFLAGS -woff 3262"
     fi
     ;;
 
@@ -347,10 +360,9 @@ AC_CACHE_VAL(ac_cv_int16_t,
  [AC_TRY_COMPILE([#include <stdio.h>
                   #include <sys/types.h>],
                  [int16_t foo = 0;],
-                 [ac_int16_t=true],
-                 [ac_int16_t=false])
-  ac_cv_int16_t=$ac_int16_t])
-if test "$ac_int16_t" = true ; then
+                 [ac_cv_int16_t=true],
+                 [ac_cv_int16_t=false])])
+if test "$ac_cv_int16_t" = true ; then
   AC_DEFINE(HAVE_INT16_T)
   AC_MSG_RESULT(yes)
 else
@@ -361,10 +373,9 @@ AC_CACHE_VAL(ac_cv_int32_t,
  [AC_TRY_COMPILE([#include <stdio.h>
                   #include <sys/types.h>],
                  [int32_t foo = 0;],
-                 [ac_int32_t=true],
-                 [ac_int32_t=false])
-  ac_cv_int32_t=$ac_int32_t])
-if test "$ac_int32_t" = true ; then
+                 [ac_cv_int32_t=true],
+                 [ac_cv_int32_t=false])])
+if test "$ac_cv_int32_t" = true ; then
   AC_DEFINE(HAVE_INT32_T)
   AC_MSG_RESULT(yes)
 else
@@ -375,10 +386,9 @@ AC_CACHE_VAL(ac_cv_uint16_t,
  [AC_TRY_COMPILE([#include <stdio.h>
                   #include <sys/types.h>],
                  [uint16_t foo = 0;],
-                 [ac_uint16_t=true],
-                 [ac_uint16_t=false])
-  ac_cv_uint16_t=$ac_uint16_t])
-if test "$ac_uint16_t" = true ; then
+                 [ac_cv_uint16_t=true],
+                 [ac_cv_uint16_t=false])])
+if test "$ac_cv_uint16_t" = true ; then
   AC_DEFINE(HAVE_UINT16_T)
   AC_MSG_RESULT(yes)
 else
@@ -409,7 +419,7 @@ AC_CHECK_LIB(c_r, gethostbyname_r,,
     AC_CHECK_LIB(c, strcpy))
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
-if [ test -z "$GNU_CXX" ]; then
+if test ! "$GNU_CXX"; then
     AC_CHECK_LIB(C, demangle)
 fi
 AC_CHECK_LIB(resolv, res_gethostbyaddr)
@@ -477,18 +487,16 @@ AC_CACHE_VAL(ac_cv_gettimeofday_args,
                   #include <sys/time.h>],
                  [struct timeval tv; struct timezone tzp;
                   gettimeofday(&tv, &tzp);],
-                 [ac_gettimeofday_args=2],
+                 [ac_cv_gettimeofday_args=2],
                  [AC_TRY_COMPILE([#include <stdlib.h>
                                   #include <sys/time.h>],
                                  [struct timeval tv; gettimeofday(&tv);],
-                                 [ac_gettimeofday_args=1],
-                                 [ac_gettimeofday_args=0])])
-  ac_cv_gettimeofday_args=$ac_gettimeofday_args])
-ac_gettimeofday_args=$ac_cv_gettimeofday_args
-if test $ac_gettimeofday_args = 1 ; then
+                                 [ac_cv_gettimeofday_args=1],
+                                 [ac_cv_gettimeofday_args=0])])])
+if test "$ac_cv_gettimeofday_args" = 1 ; then
   AC_DEFINE(HAVE_GETTIMEOFDAY)
   AC_MSG_RESULT(one argument)
-elif test $ac_gettimeofday_args = 2 ; then
+elif test "$ac_cv_gettimeofday_args" = 2 ; then
   AC_DEFINE(HAVE_GETTIMEOFDAY)
   AC_DEFINE(GETTIMEOFDAY_TWO_ARGS)
   AC_MSG_RESULT(two arguments)
@@ -502,11 +510,9 @@ AC_CACHE_VAL(ac_cv_syserrlist,
  [AC_TRY_COMPILE([#include <stdio.h>
                   #include <errno.h>],
                  [char *foo = sys_errlist[sys_nerr-1];],
-                 [ac_syserrlist=true],
-                 [ac_syserrlist=false])
-  ac_cv_syserrlist=$ac_syserrlist])
-ac_syserrlist=$ac_cv_syserrlist
-if test $ac_syserrlist = true ; then
+                 [ac_cv_syserrlist=true],
+                 [ac_cv_syserrlist=false])])
+if test "$ac_cv_syserrlist" = true ; then
   AC_DEFINE(HAVE_SYSERRLIST)
   AC_MSG_RESULT(yes)
 else
@@ -515,21 +521,23 @@ fi
 
 dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
-if [ test -n "$GNU_CXX" ]; then
+if test "$GNU_CXX"; then
 
   _MOZ_RTTI_FLAGS=-fno-rtti
 
   AC_MSG_CHECKING(for C++ exceptions flag)
 
-dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
+  dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
   AC_CACHE_VAL(ac_cv_cxx_exceptions_flags,
   [echo "int main() { return 0; }" | cat > conftest.C
 
-  _tmp_output="g++-output-$$"
+  dnl configure runs "rm -f conftest*" later so we know _tmp_output
+  dnl will get removed even if this test is interupted.
+  _tmp_output="conftest.out"
 
   ${CXX-g++} -fno-handle-exceptions conftest.C > $_tmp_output 2>&1
 
-  if egrep "warning.*renamed" $_tmp_output >/dev/null 2>&1; then
+  if egrep "warning.*renamed" $_tmp_output >/dev/null; then
     ac_cv_cxx_exceptions_flags=-fno-exceptions
   else
     ac_cv_cxx_exceptions_flags=-fno-handle-exceptions
@@ -552,11 +560,9 @@ AC_CACHE_VAL(ac_cv_ios_binary,
 	         [#include <fstream.h>],
                  [char *buffer = "config.log";
 		  fstream *mFileStream=new fstream(buffer, ios::binary);],
-                 [ac_ios_binary=true],
-                 [ac_ios_binary=false])
-  ac_cv_ios_binary=$ac_ios_binary])
-ac_ios_binary=$ac_cv_ios_binary
-if test $ac_ios_binary = true ; then
+                 [ac_cv_ios_binary=true],
+                 [ac_cv_ios_binary=false])])
+if test "$ac_cv_ios_binary" = true ; then
   AC_DEFINE(HAVE_IOS_BINARY)
   AC_MSG_RESULT(yes)
 else
@@ -570,11 +576,9 @@ AC_CACHE_VAL(ac_cv_ios_bin,
                [#include <fstream.h>],
                  [char *buffer = "config.log";
                 fstream *mFileStream=new fstream(buffer, ios::bin);],
-                 [ac_ios_bin=true],
-                 [ac_ios_bin=false])
-  ac_cv_ios_bin=$ac_ios_bin])
-ac_ios_bin=$ac_cv_ios_bin
-if test $ac_ios_bin = true ; then
+                 [ac_cv_ios_bin=true],
+                 [ac_cv_ios_bin=false])])
+if test "$ac_cv_ios_bin" = true ; then
   AC_DEFINE(HAVE_IOS_BIN)
   AC_MSG_RESULT(yes)
 else
@@ -587,7 +591,7 @@ AC_CACHE_CHECK(for namespaces,
                                using namespace X;,
                                ac_cv_cpp_namespaces=yes,
                                ac_cv_cpp_namespaces=no)])
-if test $ac_cv_cpp_namespaces = yes ; then
+if test "$ac_cv_cpp_namespaces" = yes ; then
    AC_DEFINE(HAVE_CPP_NAMESPACES)
 fi
 
@@ -598,7 +602,7 @@ AC_CACHE_CHECK(for C++ \"bool\" keyword,
                                b = true;,
                                ac_cv_cpp_bool=yes,
                                ac_cv_cpp_bool=no)])
-if test $ac_cv_cpp_bool = no ; then
+if test "$ac_cv_cpp_bool" = no ; then
    AC_DEFINE(NEEDS_bool)
 fi
 
@@ -612,7 +616,7 @@ AC_CACHE_CHECK(for C++ \"explicit\" keyword,
                                X x(3);,
                                ac_cv_cpp_explicit=yes,
                                ac_cv_cpp_explicit=no)])
-if test $ac_cv_cpp_explicit = yes ; then
+if test "$ac_cv_cpp_explicit" = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
@@ -644,7 +648,7 @@ AC_CACHE_CHECK(for C++ \"using\" keyword,
                                X x; Y y;,
                                ac_cv_cpp_using=yes,
                                ac_cv_cpp_using=no)])
-if test $ac_cv_cpp_using = yes ; then
+if test "$ac_cv_cpp_using" = yes ; then
    AC_DEFINE(HAVE_CPP_USING)
 fi
 
@@ -655,7 +659,7 @@ AC_CACHE_CHECK(for C++ reinterpret_cast,
                                X x; X*const z = &x;Y*y = reinterpret_cast<Y*>(z);,
                                ac_cv_cpp_reinterpret_cast=yes,
                                ac_cv_cpp_reinterpret_cast=no)])
-if test $ac_cv_cpp_reinterpret_cast = yes ; then
+if test "$ac_cv_cpp_reinterpret_cast" = yes ; then
    AC_DEFINE(HAVE_CPP_NEW_CASTS)
 fi
 
@@ -667,7 +671,7 @@ AC_CACHE_CHECK(if C++ requires implementation of unused methods,
                                X x;,
                                ac_cv_cpp_unused_required=no,
                                ac_cv_cpp_unused_required=yes)])
-if test $ac_cv_cpp_unused_required = yes ; then
+if test "$ac_cv_cpp_unused_required" = yes ; then
    AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
 fi
     
@@ -675,64 +679,6 @@ CC=$_SAVE_CC
 ac_ext=c
 
 dnl End of C++ language/feature checks
-
-dnl Check cc for '-include' flag support (command-line include files)
-dnl =================================================================
-dnl This is a GNU feature, but not all GNU compilers support it.
-dnl For instance, BSD/OS 3.1 uses shlicc2 to compile. It sets $GNU_CC,
-dnl but it does not understand the '-include' flag. Therefore, we must
-dnl test for support.
-dnl =================================================================
-
-if test "$GNU_CC" = 1; then
-  AC_MSG_CHECKING($CC for \"-include <file>\" option)
-
-  AC_CACHE_VAL(ac_cv_cc_include_flag,
-   [_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -include conftest.h"
-    echo "#define HELLO 01134;" > conftest.h
-    AC_TRY_COMPILE([],
-                   [int salutation = HELLO;],
-                   [ac_cv_cc_include_flag=true],
-                   [ac_cv_cc_include_flag=false]);
-    rm -f conftest.h
-    CFLAGS=$_SAVE_CFLAGS])
-
-  if test "$ac_cv_cc_include_flag" = true ; then
-    AC_MSG_RESULT(yes)
-    _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
-    _USE_CPP_INCLUDE_FLAG=1
-  else
-    AC_MSG_RESULT(no)
-    _DEFINES_CFLAGS='$(ACDEFINES)'
-  fi  
-fi
-if test "$GNU_CXX" = 1; then
-  AC_MSG_CHECKING($CXX for \"-include <file>\" option)
-
-  if test "$CC" = "$CXX"; then
-    ac_cv_cxx_include_flag=$ac_cv_cc_include_flag;
-  else
-    AC_CACHE_VAL(ac_cv_cxx_include_flag,
-     [_SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -include conftest.h"
-      _SAVE_CC=$CC         ; CC=$CXX
-      echo "#define FAST 299792458" > conftest.h
-      AC_TRY_COMPILE([],
-                     [int how_fast = FAST;],
-                     [ac_cv_cxx_include_flag=true],
-                     [ac_cv_cxx_include_flag=false]);
-      rm -f conftest.h
-      CC=$_SAVE_CC
-      CFLAGS=$_SAVE_CFLAGS])
-  fi
-  if test "$ac_cv_cxx_include_flag" = true ; then
-    AC_MSG_RESULT(yes)
-    _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
-    _USE_CPP_INCLUDE_FLAG=1
-  else
-    AC_MSG_RESULT(no)
-    _DEFINES_CXXFLAGS='$(ACDEFINES)'
-  fi  
-fi
 
 dnl Mozilla specific options
 dnl ========================================================
@@ -792,30 +738,23 @@ MOZ_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          Enable test stubs],
   ENABLE_TESTS=1)
 
-dnl nglayout only supports building with one toolkit
-dnl so ignore everything after the first,
-dnl nglayout only supports building with one toolkit
-dnl so ignore everything after the first ,
+useRhapsody=`echo $target_os | egrep "^Rhapsody"`
 MOZ_ARG_ENABLE_STRING(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
-dnl [Toolkit must be either "gtk" or "Motif" (except on Rhapsody.)],
-[ 
-  res=`echo $target_os| grep -c "^Rhapsody"`;
-  if test "$enableval" != "motif" && test "$enableval" != "gtk" && test $res = 0; then
-    AC_MSG_ERROR(Toolkit must be either gtk or motif.)
-  else
-    MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*//g" `
-  fi], 
-MOZ_TOOLKIT=USE_DEFAULT)
-
-if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
-  res=`echo $target_os| grep -c "^Rhapsody"`
-  if test $res != 0; then
-    MOZ_TOOLKIT="rhapsody"
-  else
-    MOZ_TOOLKIT="gtk"
-  fi
-fi
+  [if test "$enableval" = "motif" \
+        -o "$enableval" = "gtk" \
+        -o "$useRhapsody" ; then
+     dnl nglayout only supports building with one toolkit,
+     dnl so ignore everything after the first comma (",").
+     MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
+   else
+     AC_MSG_ERROR(Toolkit must be either gtk or motif.)
+   fi], 
+  [if test "$useRhapsody" ; then
+     MOZ_TOOLKIT="rhapsody"
+   else
+     MOZ_TOOLKIT="gtk"
+   fi])
 
 dnl ========================================================
 dnl =
@@ -834,12 +773,21 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
-MOZ_ARG_ENABLE_BOOL(md,
-[  --enable-md             Use compiler-based dependencies ],
-    [  COMPILER_DEPEND=1
-       MDDEPDIR='.deps'
-       _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)' ]
-)
+_cpp_md_flag=
+MOZ_ARG_DISABLE_BOOL(md,
+[  --disable-md            Use compiler-based dependencies ],
+  [],
+  [_cpp_md_flag=1],
+  [dnl Default is to turn on -MD if using GNU-compatible compilers
+   if test "$GNU_CC" -a "$GNU_CXX"; then
+     _cpp_md_flag=1
+   fi])
+if test "$_cpp_md_flag"; then
+  COMPILER_DEPEND=1
+  MDDEPDIR='.deps'
+  _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+fi
+AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
@@ -896,7 +844,7 @@ MOZ_ARG_ENABLE_BOOL(profile,
 
 MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 [  --enable-wrap-malloc    Wrap malloc calls (gnu linker only) (default=no) ],
-  [ if test "$GNU_CC" = 1; then
+  [ if test "$GNU_CC"; then
       WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
       MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS)'
     fi])
@@ -916,8 +864,7 @@ MOZ_ARG_HEADER(Misc. Options)
 MOZ_ARG_ENABLE_STRING(homedir,
 [  --enable-homedir=\$val   Set the homedir to \$val],
 dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
-  [res=`echo $enableval | grep -c "\/"`
-  if [ test $res != 0 ]; then
+  [if echo "$enableval" | grep "\/" >/dev/null; then
     AC_MSG_ERROR("Homedir must be single relative path.")
   else 
     AC_DEFINE(MOZ_USER_DIR,"$enableval")
@@ -1008,7 +955,6 @@ AC_SUBST(MOZ_DOM)
 AC_SUBST(MOZ_MAIL_COMPOSE)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
-AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(BUILD_XPIDL)
 AC_SUBST(BUILD_IDLC)
 
@@ -1017,7 +963,7 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if [ test "$no_x" != "yes" ]; then
+if test "$no_x" != "yes"; then
 _SAVE_LDFLAGS="$LDFLAGS"
 LDFLAGS="$XLDFLAGS $LDFLAGS"
 AC_CHECK_LIB(X11, XDrawLines, [XLIBS="-lX11 $XLIBS"],
@@ -1034,32 +980,32 @@ LDFLAGS="$_SAVE_LDFLAGS"
 
 dnl Check for toolkit libs
 dnl ========================================================
-res=`echo :$MOZ_TOOLKIT | grep -c "motif"`
-if [ test $res != 0 ]; then
-if [ test "$no_x" != "yes" ]; then
-    if [ test ! -z "$x_includes" ]; then
+if echo ":$MOZ_TOOLKIT" | grep "motif" >/dev/null; then
+if test "$no_x" != "yes"; then
+    if test "$x_includes"; then
 	MOTIF_XINCS="-xif -I$x_includes"
     fi
 
-    MOTIF_VERSION=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS`
-    MOTIF_INCLUDES=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -if`
-    MOTIF_STATIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -sf`
-    MOTIF_DYNAMIC_FLAGS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -df`
-    MOTIF_DYNAMIC_PATHS=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -dp`
-    MOTIF_REQUIRES_XPM=`${srcdir}/config/mkdetect/detect_motif.sh -cc "$CC" $MOTIF_XINCS -xpm`
+    $_detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc '$CC' $MOTIF_XINCS"
+    MOTIF_VERSION=`      $_detect_motif`
+    MOTIF_INCLUDES=`     $_detect_motif -if`
+    MOTIF_STATIC_FLAGS=` $_detect_motif -sf`
+    MOTIF_DYNAMIC_FLAGS=`$_detect_motif -df`
+    MOTIF_DYNAMIC_PATHS=`$_detect_motif -dp`
+    MOTIF_REQUIRES_XPM=` $_detect_motif -xpm`
 
     ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
 
-    if [ test "$MOTIF_REQUIRES_XPM" = "True" || test "$MOTIF_VERSION" = "2.1" ]; then
+    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"; then
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
-	if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
+	if test "$MOTIF_REQUIRES_XPM" = "True"; then
 	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
 		TK_LIBS="-lXpm $TK_LIBS", 
 		[MISSING_MOTIF="-lXpm $MISSING_MOTIF"], $XLIBS)
 	fi
-	if [ test "$MOTIF_VERSION" = "2.1" ]; then
+	if test "$MOTIF_VERSION" = "2.1"; then
 	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
 		TK_LIBS="-lXp $TK_LIBS",
 		[MISSING_MOTIF="-lXp $MISSING_MOTIF"], $XLIBS)
@@ -1068,7 +1014,8 @@ fi
 	LDFLAGS="$_SAVE_LDFLAGS"
     fi
 
-    if [ test "$MOTIF_STATIC_LIB" = "unknown" && test "$MOTIF_DYNAMIC_LIB" = "unknown" ]; then
+    if test "$MOTIF_STATIC_LIB" = "unknown" \
+         -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
 	AC_ERROR("Cannot find neither dynamic nor static motif libraries.")
     fi
 
@@ -1093,7 +1040,7 @@ fi
     [  --with-static-motif     link motif statically if possible],
 	sysstaticmotif=$withval)
 
-    if [ test "$sysstaticmotif" != "yes" ]; then
+    if test "$sysstaticmotif" != "yes"; then
 	_SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
     	AC_CHECK_LIB(Xm, XmStringCreate, 
@@ -1111,8 +1058,7 @@ fi
     TK_CFLAGS="$MOTIF_INCLUDES"
 fi
 
-res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
-if [ test $res != 0 ]; then
+if echo ":$MOZ_TOOLKIT" | grep "gtk" >/dev/null; then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
@@ -1120,7 +1066,7 @@ if [ test $res != 0 ]; then
     [  --with-static-gtk       link gtk statically if possible],
 	sysstaticgtk=$withval)
 
-    if [ test "$sysstaticgtk" != "yes" ]; then
+    if test "$sysstaticgtk" != "yes"; then
        TK_LIBS=$GTK_LIBS
     else
        changequote(,)
@@ -1132,7 +1078,7 @@ if [ test $res != 0 ]; then
        GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
 
        GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
-       if test -z "$GLIB_STATIC_LOC" ; then
+       if test ! "$GLIB_STATIC_LOC" ; then
          GLIB_STATIC_LOC=$GTK_STATIC_LOC
        fi
        GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
@@ -1180,7 +1126,7 @@ else
     AC_CHECK_LIB(jpeg, jpeg_destroy_compress, [SYSTEM_JPEG=1 JPEG_LIBS="-ljpeg $JPEG_LIBS"], SYSTEM_JPEG=, $JPEG_LIBS)
 fi
 
-if [ test "$SYSTEM_JPEG" = 1 ]; then
+if test "$SYSTEM_JPEG" = 1; then
     LIBS="$JPEG_LIBS $LIBS"
     AC_TRY_RUN( 
 	#include <stdio.h>
@@ -1200,7 +1146,7 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if [ test -n "${JPEG_DIR}" && test -d "${JPEG_DIR}"  && test "$SYSTEM_JPEG" = 1]; then
+if test -n "${JPEG_DIR}" -a -d "${JPEG_DIR}" -a "$SYSTEM_JPEG" = 1; then
     JPEG_CFLAGS="-I${JPEG_DIR}/include"
     JPEG_LIBS="-L${JPEG_DIR}/lib ${JPEG_LIBS}"
 fi
@@ -1224,14 +1170,14 @@ else
 	[result="no" SYSTEM_ZLIB=])
     AC_MSG_RESULT("$result")
 fi
-if [ test "$SYSTEM_ZLIB" = 1 ]; then
+if test "$SYSTEM_ZLIB" = 1; then
     AC_CHECK_LIB(z, gzread, [SYSTEM_ZLIB=1 ZLIB_LIBS="-lz $ZLIB_LIBS"], 
 	[SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=], $ZLIB_LIBS)
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 
-if [ test -n "${ZLIB_DIR}" && test -d "${ZLIB_DIR}" && test "$SYSTEM_ZLIB" = 1 ]; then
+if test "${ZLIB_DIR}" -a -d "${ZLIB_DIR}" -a "$SYSTEM_ZLIB" = 1; then
     ZLIB_CFLAGS="-I${ZLIB_DIR}/include"
     ZLIB_LIBS="-L${ZLIB_DIR}/lib ${ZLIB_LIBS}"
 fi
@@ -1250,9 +1196,10 @@ LDFLAGS="-L${PNG_DIR}/lib $ZLIB_LIBS -lz $LDFLAGS"
 if test "$PNG_DIR" = no; then
     SYSTEM_PNG=
 else
-    AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"], SYSTEM_PNG=, $PNG_LIBS)
+    AC_CHECK_LIB(png, png_get_valid, [SYSTEM_PNG=1 PNG_LIBS="-lpng $PNG_LIBS"],
+                 SYSTEM_PNG=, $PNG_LIBS)
 fi
-if [ test "$SYSTEM_PNG" = 1 ]; then
+if test "$SYSTEM_PNG" = 1; then
     LIBS="$PNG_LIBS $LIBS"
     AC_TRY_RUN(
 	#include <stdio.h>
@@ -1272,7 +1219,7 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if [ test -n "${PNG_DIR}" && test -d "${PNG_DIR}" && test "$SYSTEM_PNG" = 1 ]; then
+if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_CFLAGS="-I${PNG_DIR}/include"
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
@@ -1312,7 +1259,7 @@ CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
-if [ test -n "$MISSING_FULLCIRCLE" ]; then
+if test "$MISSING_FULLCIRCLE"; then
     AC_MSG_ERROR([Could not find FullCircle Library]);
 fi
 
@@ -1333,7 +1280,7 @@ AC_ARG_WITH(pthreads,
             *-*-linux*) 
                 AC_DEFINE(_REENTRANT) ;;
             alpha*-*-osf*)
-                if [ test "$GNU_CC" = 1 ]; then
+                if test "$GNU_CC"; then
                     AC_DEFINE(_REENTRANT)
                 else
                     CFLAGS="$CFLAGS -pthread" 
@@ -1354,7 +1301,7 @@ _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
 CFLAGS="$CFLAGS -I${NSPR_DIR}/include"
-if [ test "$NSPR_LIBDIR"x = "x" ]; then
+if test "$NSPR_LIBDIR"x = x; then
    LDFLAGS="$LDFLAGS -L${NSPR_DIR}/lib $NSPR_LIBS"
 else
    LDFLAGS="$LDFLAGS -L${NSPR_LIBDIR} $NSPR_LIBS"
@@ -1376,7 +1323,7 @@ rm -f core
 AC_MSG_RESULT("$result")
 
 dnl XXX - Is this really the best way to do this check? - cls
-if [ test "$_NSPR_NEEDS_THREAD_LIB" = 1 ]; then
+if test "$_NSPR_NEEDS_THREAD_LIB" = 1; then
 
 LIBS=$_SAVE_LIBS
 case "$target" in
@@ -1415,9 +1362,9 @@ AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds3 $NSPR_LIBS",
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
-if [ test -n "${NSPR_DIR}" && test -d "${NSPR_DIR}" ]; then
+if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
     NSPR_CFLAGS="-I${NSPR_DIR}/include"
-    if [ test "$NSPR_LIBDIR"x != "x" ]; then
+    if test "$NSPR_LIBDIR"x != x; then
         NSPR_LIBS="-L${NSPR_LIBDIR} ${NSPR_LIBS}"
     else
         NSPR_LIBS="-L${NSPR_DIR}/lib ${NSPR_LIBS}"
@@ -1503,20 +1450,20 @@ fi
 
 dnl Check for missing components
 if test "$no_x" != "yes"; then
-if test -n "$MISSING_X"; then
+if test "$MISSING_X"; then
    AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
 fi
 
-if test -n "$MISSING_GTK"; then
+if test "$MISSING_GTK"; then
    AC_MSG_ERROR([ Could not link sample program with the following gtk libraries: $MISSING_GTK ])
 fi
 
-if test -n "$MISSING_MOTIF"; then
+if test "$MISSING_MOTIF"; then
    AC_MSG_ERROR([ Could not find the following motif libraries: $MISSING_MOTIF ]);
 fi
 fi # $no_x
 
-if test -n "$MISSING_NSPR"; then
+if test "$MISSING_NSPR"; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
 
@@ -1598,8 +1545,8 @@ EOF
 fi
 
 dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
-for d in lib modules modules/security; do
-   if [ test ! -d $d ]; then rm -f $d; mkdir $d; fi
+for dir in lib modules modules/security; do
+   if test ! -d $dir; then rm -f $dir; mkdir $dir; fi
 done
 
 # Load the list of Makefiles to generate.
