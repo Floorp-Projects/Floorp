@@ -977,8 +977,7 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
 
       which can limit connections by ip-address. You may download this module
       at 
-      <ulink url="http://www.snert.com/Software/Throttle/">
-      http://www.snert.com/Software/Throttle/</ulink>. 
+      <ulink url="http://www.snert.com/Software/mod_throttle/"/>
       Follow the instructions to install into your Apache install. 
       <emphasis>This module only functions with the Apache web
       server!</emphasis>
@@ -986,7 +985,7 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
       <command>ThrottleClientIP</command>
 
       command provided by this module to accomplish this goal. See the 
-      <ulink url="http://www.snert.com/Software/Throttle/">Module
+      <ulink url="http://www.snert.com/Software/mod_throttle/">Module
       Instructions</ulink>
       for more information.</para>
     </section>
