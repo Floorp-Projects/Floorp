@@ -1,0 +1,178 @@
+# -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
+#
+# This file is MPL/GPL dual-licensed under the following terms:
+# 
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and
+# limitations under the License.
+#
+# The Original Code is PLIF 1.0.
+# The Initial Developer of the Original Code is Ian Hickson.
+#
+# Alternatively, the contents of this file may be used under the terms
+# of the GNU General Public License Version 2 or later (the "GPL"), in
+# which case the provisions of the GPL are applicable instead of those
+# above. If you wish to allow use of your version of this file only
+# under the terms of the GPL and not to allow others to use your
+# version of this file under the MPL, indicate your decision by
+# deleting the provisions above and replace them with the notice and
+# other provisions required by the GPL. If you do not delete the
+# provisions above, a recipient may use your version of this file
+# under either the MPL or the GPL.
+
+package PLIF::DataSource::Strings;
+use strict;
+use vars qw(@ISA);
+use PLIF::DataSource;
+use HTTP::Negotiate; # DEPENDENCY
+use HTTP::Headers; # DEPENDENCY
+@ISA = qw(PLIF::DataSource);
+1;
+
+sub provides {
+    my $class = shift;
+    my($service) = @_;
+    return ($service eq 'dataSource.strings' or $service eq 'setup.install' or $class->SUPER::provides($service));
+}
+
+sub init {
+    my $self = shift;
+    $self->SUPER::init(@_);
+    $self->variantsCache({});
+}
+
+sub databaseName {
+    return 'default';
+}
+
+sub get {
+    my $self = shift;
+    my($app, $session, $protocol, $string) = @_;
+    # error handling makes code ugly :-)
+    my $variant;
+    if (defined($session)) {
+        $variant = $session->selectVariant($app, $protocol);
+    }
+    if (not defined($variant)) {
+        # default session or $session didn't care, get stuff from
+        # $app->input instead
+        $variant = $self->selectVariant($app, $protocol);
+    }
+    my $result;
+    eval {
+        $self->getString($app, $variant, $string);
+    };
+    if ($@) {
+        # ok, so, er, it seems that didn't go to well
+        # XXX do we want to do an error here or something?
+        $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
+    }
+    if (not defined($result)) {
+        $result = $self->getDefaultString($app, $protocol, $string);
+        $self->assert($result, 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+    }
+    return $result;
+}
+
+sub selectVariant {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    # Find list of options from DB.
+    my $variants = $self->variants($app, $protocol);
+    # Initialize the fake header
+    my $request = new HTTP::Headers;
+    foreach my $header (['Accept', $self->acceptType($app, $protocol)], 
+                        ['Accept-Encoding', $self->acceptEncoding($app, $protocol)], 
+                        ['Accept-Charset', $self->acceptCharset($app, $protocol)], 
+                        ['Accept-Language', $self->acceptLanguage($app, $protocol)]) {
+        # only add headers that exist -- HTTP::Negotiate isn't very bullet-proof :-)
+        if ($header->[1]) {
+            $request->header(@$header);
+        }
+    }
+    # Do Content Negotiation :-D
+    my $choice;
+    if (scalar(@$variants) > 0) {
+        # $HTTP::Negotiate::DEBUG = 1; # enable debugging
+        $choice = choose($variants, $request); 
+    }
+    if (not defined($choice)) {
+        $choice = 0; # XXX we could maybe not hard code the default variant some how... ;-)
+    }
+    return $choice;
+}
+
+# Variants returns an arrayref or arrayrefs, typically to be passed to
+# HTTP::Negotiate, containing:
+#    variant id, quality, content type, encoding, character set,
+#    language, size
+# Note that we don't support 'size', since doing so would require the
+# unbelivably slow operation of calculating the length of the every
+# possible string for everyone. No thanks. ;-)
+sub variants {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    if (not defined($self->variantsCache->{$protocol})) {
+        eval {
+            $self->variantsCache->{$protocol} = $self->getVariants($app, $protocol);
+        };
+        if ($@) {
+            # ok, so, er, it seems that didn't go to well
+            # XXX do we want to do an error here or something?
+            $self->warn(4, "Just so you know, I'm going to silently ignore the fact that I completely failed to get any variants... For what it's worth, the error was: $@");
+            return []; # no variants here, no sir!
+        }
+    }
+    return $self->variantsCache->{$protocol};
+}
+
+sub acceptType {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    return $app->input->acceptType;
+}
+
+sub acceptEncoding {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    return $app->input->acceptEncoding;
+}
+
+sub acceptCharset {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    return $app->input->acceptCharset;
+}
+
+sub acceptLanguage {
+    my $self = shift;
+    my($app, $protocol) = @_;
+    return $app->input->acceptLanguage;
+}
+
+sub getString {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+sub getDefaultString {
+    my $self = shift;
+    my($app, $protocol, $string) = @_;
+    return $app->getSelectingServiceList('dataSource.strings.default')->get($app, $protocol, $string);
+}
+
+sub getVariants {
+    my $self = shift;
+    $self->notImplemented();
+}
+
+sub setupInstall {
+    my $self = shift;
+    $self->notImplemented();
+}
