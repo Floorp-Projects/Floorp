@@ -103,6 +103,6 @@ function onAccept()
 
 function doHelpButton()
 {
-  openHelp('validation_prefs');
+  openHelp("validation-crl-import");
 }
 
