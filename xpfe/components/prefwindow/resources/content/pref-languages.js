@@ -48,7 +48,7 @@ function GetBundles()
   if (!regionsBundle)    regionsBundle   = srGetStrBundle("chrome://global/locale/regionNames.properties");
   if (!languagesBundle)  languagesBundle = srGetStrBundle("chrome://global/locale/languageNames.properties");
   if (!prefLangBundle)  prefLangBundle = srGetStrBundle("chrome://communicator/locale/pref/pref-languages.properties");
-  if (!acceptedBundle)   acceptedBundle  = srGetStrBundle("resource:/res/language.properties");
+  if (!acceptedBundle)   acceptedBundle  = srGetStrBundle("resource://gre/res/language.properties");
 }
 
 
