@@ -41,8 +41,8 @@ interface nsIMsgSearchTerm : nsISupports {
     attribute string arbitraryHeader;
 
     boolean matchRfc822String(in string aString, in string charset);
-    boolean matchString(in string aString, in string charset,
-                        in boolean isBody);
+    boolean matchRfc2047String(in string aString, in string charset);
+    boolean matchString(in string aString, in string charset);
     boolean matchDate(in PRTime aTime);
     boolean matchStatus(in unsigned long aStatus);
     boolean matchPriority(in nsMsgPriorityValue priority);

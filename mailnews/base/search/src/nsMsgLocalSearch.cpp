@@ -554,7 +554,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
-            err = pTerm->MatchString (matchString, charset, PR_FALSE, &result);
+            err = pTerm->MatchRfc2047String (matchString, charset, &result);
 			}
             break;
         case nsMsgSearchAttrib::ToOrCC:

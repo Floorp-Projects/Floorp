@@ -36,6 +36,7 @@
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchNews.h"
 #include "nsMsgSearchValue.h"
+#include "nsMsgI18N.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -650,7 +651,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsIMsgSearchScopeTerm *scope,
 				if (headerValue < buf_end && *headerValue) // make sure buf has info besides just the header
 				{
 					PRBool result2;
-					err = MatchString(headerValue, charset, PR_FALSE, &result2);  // match value with the other info...
+					err = MatchRfc2047String(headerValue, charset, &result2);  // match value with the other info...
 					if (result != result2) // if we found a match
 					{
 						searchingHeaders = PR_FALSE;   // then stop examining the headers
@@ -748,11 +749,13 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 					}
 #endif
 				}
-				char startChar = (char) compare.CharAt(0);
-				if (startChar != CR && startChar != LF)
-				{
-					err = MatchString (compare, nsnull, PR_TRUE, &result);
-					lines++; 
+				if (compare.Length() > 0) {
+					char startChar = (char) compare.CharAt(0);
+					if (startChar != CR && startChar != LF)
+					{
+						err = MatchString (compare, nsnull, &result);
+						lines++; 
+					}
 				}
 			}
 			else 
@@ -772,10 +775,40 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
 }
 
 
+
+// *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
+nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
+                                       const char *charset,
+                                       PRBool *pResult)
+{
+	if (!pResult || !rfc2047string)
+		return NS_ERROR_NULL_POINTER;
+
+	PRBool mimedecode = PR_FALSE;
+	nsString decodedString, encodedString, cs;
+	const char *stringToMatch;
+	encodedString.AssignWithConversion(rfc2047string, -1);
+	nsresult res = nsMsgI18NDecodeMimePartIIStr(encodedString, cs, decodedString, PR_FALSE);
+
+	if (NS_SUCCEEDED(res)) {
+		stringToMatch = decodedString.ToNewUTF8String();
+		mimedecode = PR_TRUE;
+	}
+	else
+		stringToMatch = rfc2047string; // Try to match anyway
+
+	res = MatchString(stringToMatch, charset, pResult);
+
+	if (mimedecode == PR_TRUE)
+		nsString::Recycle(&decodedString);
+
+	return res;
+}
+
 // *pResult is PR_FALSE when strings don't match, PR_TRUE if they do.
 nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
                                        const char *charset,
-                                       PRBool body, PRBool *pResult)
+                                       PRBool *pResult)
 {
 	if (!pResult)
 		return NS_ERROR_NULL_POINTER;
@@ -786,19 +819,8 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	const char* n_header = nsnull;
 	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
-#ifdef DO_I18N
-		n_str = INTL_GetNormalizeStr(csid , (unsigned char*)m_value.string);	// Always new buffer unless not enough memory
-		if (!body)
-			n_header = INTL_GetNormalizeStrFromRFC1522(csid , stringToMatch);	// Always new buffer unless not enough memory
-		else
-			n_header = INTL_GetNormalizeStr(csid , stringToMatch);	// Always new buffer unless not enough memory
-
-		NS_ASSERTION(n_str, "failed get normalized string");
-		NS_ASSERTION(n_header, "failed get normalized header");
-#else
 		n_header = stringToMatch;
 		n_str = m_value.string;
-#endif // DO_I18N
 	}
 	switch (m_operator)
 	{
@@ -916,9 +938,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		PRInt32 addressPos = 0;
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
-			err = MatchString (walkNames, charset, PR_FALSE, &result);
+			err = MatchRfc2047String (walkNames, charset, &result);
 			if (boolContinueLoop == result)
-				err = MatchString (walkAddresses, charset, PR_FALSE, &result);
+				err = MatchRfc2047String (walkAddresses, charset, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;
