@@ -15,7 +15,7 @@
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
- * (C) 1999 Keith Visco. All Rights Reserved.
+ * (C) 1999, 2000 Keith Visco. All Rights Reserved.
  *
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.19 2000/07/10 12:08:00 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.20 2000/07/23 07:43:37 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.19 $ $Date: 2000/07/10 12:08:00 $
+ * @version $Revision: 1.20 $ $Date: 2000/07/23 07:43:37 $
 **/
 
 /**
@@ -74,7 +74,7 @@ XSLTProcessor::XSLTProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20000523]");
+    appVersion.append("1.0 [beta v20000722]");
 
 
     //-- create XSL element types
