@@ -783,7 +783,7 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source)
 				nsCOMPtr<nsIRDFLiteral>	lastLit = do_QueryInterface(lastTarget);
 				if (lastLit)
 				{
-					PRUnichar	*lastUni = nsnull;
+					const PRUnichar	*lastUni = nsnull;
 					lastLit->GetValueConst(&lastUni);
 					nsAutoString	lastStr(lastUni);
 					char *lastC = lastStr.ToNewCString();
