@@ -1338,7 +1338,7 @@ void LTableHeader::WriteColumnState( LStream * inStream)
 	*inStream << mSortedColumn;
 	*inStream << (HeaderFlagsT) flags;			// pad
 	
-	UInt32	dataSize = mColumnCount * sizeof(SColumnData);
+	SInt32	dataSize = mColumnCount * sizeof(SColumnData);
 	
 	StHandleLocker locker((Handle)mColumnData);
 	
@@ -1370,7 +1370,7 @@ void LTableHeader::ReadColumnState( LStream * inStream, Boolean inMoveHeaders)
 		CheckLegal(mLastVisibleColumn);
 		CheckLegalHigh(mSortedColumn);
 
-		UInt32	dataSize = mColumnCount * sizeof(SColumnData);
+		SInt32	dataSize = mColumnCount * sizeof(SColumnData);
 	
 		if (mColumnData != NULL) ::DisposeHandle((Handle)mColumnData);
 		mColumnData = (SColumnData **) ::NewHandle(dataSize);
