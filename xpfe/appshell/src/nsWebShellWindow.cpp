@@ -1730,7 +1730,14 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
    }
 #endif
 
+  PR_Lock(mSPTimerLock);
+  if (mSPTimer) {
+    mSPTimer->Cancel();
+    mSPTimer = nsnull;
+    StoreBoundsToXUL(mSPTimerPosition, mSPTimerSize, PR_FALSE);
+  }
+  PR_Unlock(mSPTimerLock);
 
-   return nsXULWindow::Destroy();
+  return nsXULWindow::Destroy();
 }
 
