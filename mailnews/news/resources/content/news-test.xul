@@ -11,13 +11,17 @@
 
 <html:b>news tests</html:b>
 <html:hr/>
-<html:div>Newsgroups: can be a comma seperated list of these:
+<html:div>Newsgroups: can be a comma seperated list of these:</html:div>
 <html:ul>
-<html:li/>news://host/group
-<html:li/>news://group
-<html:li/>host/group
-<html:li/>group
-<html:ul/>
+<html:li/>
+news://host/group
+<html:li/>
+news://group
+<html:li/>
+host/group
+<html:li/>
+group
+</html:ul>
 we are not going to allow the user to cross post to multiple hosts.
 if we detect that, we stop and return error.    
 <html:hr/>
