@@ -75,6 +75,8 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 #
 $::opt_rev = "";
 $::opt_rev = $::FORM{'rev'} if defined $::FORM{'rev'} && $::FORM{'rev'} !~ m/^(HEAD|MAIN)$/;
+my $revstr = '';
+$revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
@@ -219,7 +221,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsblame.cgi?file=$filename">blame</A>&nbsp;
+         <A HREF="cvsblame.cgi?file=$filename$revstr">blame</A>&nbsp;
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>

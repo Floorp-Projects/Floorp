@@ -201,7 +201,7 @@ $split = int(@files/4)+1;
 
 for $_ (@files){
     $_ =~ s/\,v//;
-    print qq{<a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir"}
+    print qq{<a href="$registryurl/file.cgi?cvsroot=$CVS_ROOT&file=$_&dir=$dir$revstr"}
           . " onclick=\"return js_file_menu('$dir','$_','$rev','$CVS_ROOT',event)\">\n";
     print "<dt>$_</a>\n";
     if( $j % $split == 0 ){

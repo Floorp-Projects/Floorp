@@ -105,6 +105,8 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 #
 $::opt_rev = '';
 $::opt_rev = $::FORM{rev} if defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
+my $revstr = '';
+$revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
 my $revision = '';
@@ -261,7 +263,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
+         <A HREF="cvslog.cgi?file=$filename$revstr">Full Change Log</A>
         </TD>
 $graph_cell
        </TR>
