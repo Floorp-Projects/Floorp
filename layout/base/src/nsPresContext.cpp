@@ -209,15 +209,8 @@ nsPresContext::~nsPresContext()
 {
   mImageLoaders.Enumerate(destroy_loads);
 
-  if (mShell) {
-    nsCOMPtr<nsIDocument> doc;
-    mShell->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      doc->RemoveCharSetObserver(this);
-    }
-  }
-
-  mShell = nsnull;
+  NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
+  SetShell(nsnull);
 
   if (mEventManager)
     mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
@@ -663,8 +656,19 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 NS_IMETHODIMP
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
+  if (mShell) {
+    // Remove ourselves as the charset observer from the shell's doc, because
+    // this shell may be going away for good.
+    nsCOMPtr<nsIDocument> doc;
+    mShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      doc->RemoveCharSetObserver(this);
+    }
+  }    
+
   mShell = aShell;
-  if (nsnull != mShell) {
+
+  if (mShell) {
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
