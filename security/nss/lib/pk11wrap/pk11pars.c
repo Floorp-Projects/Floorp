@@ -202,7 +202,7 @@ pk11_freeModuleSpecList(char **moduleSpecList)
     char ** index;
 
     for(index = moduleSpecList; *index; index++) {
-	PORT_Free(index);
+	PORT_Free(*index);
     }
     PORT_Free(moduleSpecList);
 }
