@@ -1140,7 +1140,7 @@ CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
 	rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
 	if (NS_FAILED(rv)) return(rv);
 
-	for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i)
+	for (PRInt32 i = 0; i < mDataSources.Count(); i++)
 	{
 		nsIRDFDataSource		*ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
 		nsCOMPtr<nsISimpleEnumerator>	dsCmds;
