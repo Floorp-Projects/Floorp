@@ -4,21 +4,11 @@
 
    <!-- mapi items for mailnews preferences -->
    <RDF:Seq about="urn:mozilla:overlays">
-    <RDF:li resource="chrome://messenger/content/pref-mailnews.xul"/>
-    <RDF:li resource="chrome://messenger/content/messenger.xul"/>
-    <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
+     <RDF:li resource="chrome://messenger/content/pref-mailnews.xul"/>
    </RDF:Seq>
 
    <RDF:Seq about="chrome://messenger/content/pref-mailnews.xul">
      <RDF:li>chrome://messenger/content/pref-mailnewsOverlay.xul</RDF:li>
-   </RDF:Seq>
-
-   <RDF:Seq about="chrome://messenger/content/messenger.xul">
-     <RDF:li>chrome://messenger/content/mailIntegrationOverlay.xul</RDF:li>
-   </RDF:Seq>
-   
-   <RDF:Seq about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
-     <RDF:li>chrome://messenger/content/mailIntegrationOverlay.xul</RDF:li>
    </RDF:Seq>
 
 </RDF:RDF>
