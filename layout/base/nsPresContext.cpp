@@ -388,6 +388,49 @@ nsPresContext::GetFontPreferences()
 }
 
 void
+nsPresContext::GetDocumentColorPreferences()
+{
+  PRBool usePrefColors = PR_TRUE;
+  PRBool boolPref;
+  nsXPIDLCString colorStr;
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  if (docShell) {
+    PRInt32 docShellType;
+    docShell->GetItemType(&docShellType);
+    if (nsIDocShellTreeItem::typeChrome == docShellType)
+      usePrefColors = PR_FALSE;
+  }
+  if (usePrefColors) {
+    if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
+      usePrefColors = !boolPref;
+    }
+  }
+  if (usePrefColors) {
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.foreground_color", getter_Copies(colorStr)))) {
+      mDefaultColor = MakeColorPref(colorStr);
+    }
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.background_color", getter_Copies(colorStr)))) {
+      mDefaultBackgroundColor = MakeColorPref(colorStr);
+    }
+  }
+  else {
+    // Without this here, checking the "use system colors" checkbox
+    // has no affect until the constructor is called again
+    mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
+    mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
+    nsCOMPtr<nsILookAndFeel> look;
+    if (NS_SUCCEEDED(GetLookAndFeel(getter_AddRefs(look))) && look) {
+      look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
+      look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
+    }
+  }
+
+  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
+    mUseDocumentColors = boolPref;
+  }
+}
+
+void
 nsPresContext::GetUserPreferences()
 {
   PRInt32 prefInt;
@@ -422,36 +465,11 @@ nsPresContext::GetUserPreferences()
   }
 
   // * document colors
-  PRBool usePrefColors = PR_TRUE;
+  GetDocumentColorPreferences();
+
+  // * link colors
   PRBool boolPref;
   nsXPIDLCString colorStr;
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
-    usePrefColors = !boolPref;
-  }
-  if (usePrefColors) {
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.foreground_color", getter_Copies(colorStr)))) {
-      mDefaultColor = MakeColorPref(colorStr);
-    }
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.background_color", getter_Copies(colorStr)))) {
-      mDefaultBackgroundColor = MakeColorPref(colorStr);
-    }
-  }
-  else {
-    // Without this here, checking the "use system colors" checkbox
-    // has no affect until the constructor is called again
-    mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
-    mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-    nsCOMPtr<nsILookAndFeel> look;
-    if (NS_SUCCEEDED(GetLookAndFeel(getter_AddRefs(look))) && look) {
-      look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
-      look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
-    }
-  }
-
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
-    mUseDocumentColors = boolPref;
-  }
-  // * link colors
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.underline_anchors", &boolPref))) {
     mUnderlineLinks = boolPref;
   }
@@ -1425,6 +1443,9 @@ NS_IMETHODIMP
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
   mContainer = aHandler;
+  if (mContainer) {
+    GetDocumentColorPreferences();
+  }
   return NS_OK;
 }
 

@@ -269,6 +269,7 @@ protected:
 protected:
   void   GetUserPreferences();
   void   GetFontPreferences();
+  void   GetDocumentColorPreferences();
   void   UpdateCharSet(const PRUnichar* aCharSet);
 
 private:
