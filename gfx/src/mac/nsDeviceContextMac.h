@@ -35,8 +35,7 @@ public:
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
-  virtual float   GetScrollBarWidth() const;
-  virtual float   GetScrollBarHeight() const;
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
 	void SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);

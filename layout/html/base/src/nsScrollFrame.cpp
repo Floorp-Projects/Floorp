@@ -167,8 +167,8 @@ nsScrollBodyFrame::Reflow(nsIPresContext&      aPresContext,
           // Place and size the page. If the page is narrower than our
           // max width then center it horizontally
           nsIDeviceContext *dx = aPresContext.GetDeviceContext();
-          float             sbWidth;
-          dx->GetScrollBarWidth(sbWidth);
+          float             sbWidth, sbHeight;
+          dx->GetScrollBarDimensions(sbWidth, sbHeight);
           nscoord extra = aReflowState.maxSize.width - kidSize.width -
                           NSToCoordRound(sbWidth);
           NS_RELEASE(dx);
@@ -380,8 +380,8 @@ nsScrollInnerFrame::Reflow(nsIPresContext&      aPresContext,
   // scroll bar width), and as high as it wants to be.
   nsSize        maxSize;
   nsIDeviceContext* dc = aPresContext.GetDeviceContext();
-  float             sbWidth;
-  dc->GetScrollBarWidth(sbWidth);
+  float             sbWidth, sbHeight;
+  dc->GetScrollBarDimensions(sbWidth, sbHeight);
   maxSize.width = aReflowState.maxSize.width - NSToCoordRound(sbWidth);
   NS_RELEASE(dc);
   maxSize.height = NS_UNCONSTRAINEDSIZE;

@@ -88,8 +88,8 @@ public:
   virtual float GetAppUnitsToDevUnits() const = 0;
   virtual float GetDevUnitsToAppUnits() const = 0;
 
-  NS_IMETHOD  GetScrollBarWidth(float &aWidth) const = 0;
-  NS_IMETHOD  GetScrollBarHeight(float &aHeight) const = 0;
+  //returns the scrollbar dimensions in app units
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const = 0;
 
   //be sure to Relase() after you are done with the Get()
   virtual nsIFontCache * GetFontCache() = 0;

@@ -498,17 +498,16 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
                       aBorderPadding.right;
       if (! aPresContext->IsPaginated()) {
         nsIDeviceContext* dc = aPresContext->GetDeviceContext();
-        float             sbWidth;
+        float sbWidth, sbHeight;
 
-        dc->GetScrollBarWidth(sbWidth);
+        dc->GetScrollBarDimensions(sbWidth, sbHeight);
         result.width -= NSToCoordRound(sbWidth);
         NS_RELEASE(dc);
       }
     }
     // If our height is constrained then subtract for the border/padding
     if (aMaxSize.height != NS_UNCONSTRAINEDSIZE) {
-      result.height -= aBorderPadding.top +
-                       aBorderPadding.bottom;
+      result.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
   }
 

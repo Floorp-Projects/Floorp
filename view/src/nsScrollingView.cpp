@@ -408,8 +408,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect trect;
       float  sbWidth, sbHeight;
 
-      dx->GetScrollBarWidth(sbWidth);
-      dx->GetScrollBarHeight(sbHeight);
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
       trect.width = NSToCoordRound(sbWidth);
       trect.x = aBounds.x + aBounds.XMost() - trect.width;
       trect.height = NSToCoordRound(sbHeight);
@@ -429,8 +428,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect  trect = aBounds;
       float   sbWidth, sbHeight;
 
-      dx->GetScrollBarWidth(sbWidth);
-      dx->GetScrollBarHeight(sbHeight);
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
       trect.width = NSToCoordRound(sbWidth);
       trect.x += aBounds.XMost() - trect.width;
       trect.height -= NSToCoordRound(sbHeight);
@@ -451,8 +449,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
       nsRect  trect = aBounds;
       float   sbWidth, sbHeight;
 
-      dx->GetScrollBarWidth(sbWidth);
-      dx->GetScrollBarHeight(sbHeight);
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
       trect.height = NSToCoordRound(sbHeight);
       trect.y += aBounds.YMost() - trect.height;
       trect.width -= NSToCoordRound(sbWidth);
@@ -478,8 +475,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
   nsIDeviceContext  *dx = cx->GetDeviceContext();
   nscoord           showHorz = 0, showVert = 0;
   float             scrollWidthFloat, scrollHeightFloat;
-  dx->GetScrollBarWidth(scrollWidthFloat);
-  dx->GetScrollBarHeight(scrollHeightFloat);
+  dx->GetScrollBarDimensions(scrollWidthFloat, scrollHeightFloat);
   nscoord           scrollWidth = NSToCoordRound(scrollWidthFloat);
   nscoord           scrollHeight = NSToCoordRound(scrollHeightFloat);
 

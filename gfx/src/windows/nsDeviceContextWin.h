@@ -29,8 +29,7 @@ public:
 
   NS_IMETHOD    Init(nsNativeWidget aWidget);
 
-  NS_IMETHOD    GetScrollBarWidth(float &aWidth) const;
-  NS_IMETHOD    GetScrollBarHeight(float &aHeight) const;
+  NS_IMETHOD    GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
