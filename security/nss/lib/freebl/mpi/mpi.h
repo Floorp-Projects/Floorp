@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.7 2000/08/04 19:57:24 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.8 2000/08/22 01:57:33 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -68,7 +68,7 @@
 #define  MP_UNDEF        -5 /* answer is undefined   */
 #define  MP_LAST_CODE    MP_UNDEF
 
-typedef char              mp_sign;
+typedef unsigned int      mp_sign;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
@@ -244,6 +244,9 @@ int    mp_unsigned_octet_size(const mp_int *mp);
 mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
 mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
 mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size len);
+
+#define MP_CHECKOK(x)  if (MP_OKAY > (res = (x))) goto CLEANUP
+#define MP_CHECKERR(x) if (MP_OKAY > (res = (x))) goto CLEANUP
 
 #if defined(MP_API_COMPATIBLE)
 #define NEG             MP_NEG

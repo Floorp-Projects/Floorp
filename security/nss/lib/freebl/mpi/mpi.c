@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.18 2000/08/11 01:58:20 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.19 2000/08/22 01:57:34 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -81,8 +81,8 @@ static const char *s_dmap_1 =
 
 unsigned long mp_allocs;
 unsigned long mp_frees;
+unsigned long mp_copies;
 
-#define MP_CHECKOK(x) if (MP_OKAY > (res = (x))) goto CLEANUP
 
 /* {{{ Default precision manipulation */
 
@@ -200,6 +200,7 @@ mp_err mp_copy(const mp_int *from, mp_int *to)
   if(from == to)
     return MP_OKAY;
 
+  ++mp_copies;
   { /* copy */
     mp_digit   *tmp;
 
@@ -702,38 +703,22 @@ mp_err mp_neg(const mp_int *a, mp_int *b)
 
 mp_err mp_add(const mp_int *a, const mp_int *b, mp_int *c)
 {
-  mp_int  tmp;
   mp_err  res;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
-  MP_DIGITS(&tmp) = 0;
-  if (c == a) {
-    MP_CHECKOK( mp_init_copy(&tmp, a) );
-    a = &tmp;
-    if (c == b)
-      b = &tmp;
-  } else if (c == b) {
-    MP_CHECKOK( mp_init_copy(&tmp, b) );
-    b = &tmp;
-  }
-
   if(SIGN(a) == SIGN(b)) { /* same sign:  add values, keep sign */
-    MP_CHECKOK( mp_copy(a, c)  );
-    MP_CHECKOK( s_mp_add(c, b) );
+    MP_CHECKOK( s_mp_add_3arg(a, b, c) );
   } else if(s_mp_cmp(a, b) >= 0) {  /* different sign: a >= b   */
-    MP_CHECKOK( mp_copy(a, c)  );
-    MP_CHECKOK( s_mp_sub(c, b) );
+    MP_CHECKOK( s_mp_sub_3arg(a, b, c) );
   } else {                          /* different sign: a < b    */
-    MP_CHECKOK( mp_copy(b, c)  );
-    MP_CHECKOK( s_mp_sub(c, a) );
+    MP_CHECKOK( s_mp_sub_3arg(b, a, c) );
   }
 
   if (s_mp_cmp_d(c, 0) == MP_EQ)
     SIGN(c) = ZPOS;
 
 CLEANUP:
-  mp_clear(&tmp);
   return res;
 
 } /* end mp_add() */
@@ -750,37 +735,25 @@ CLEANUP:
 
 mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 {
-  mp_int  tmp;
   mp_err  res;
-  int     diffSign;
+  int     magDiff;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
-  MP_DIGITS(&tmp) = 0;
   if (a == b) {
     mp_zero(c);
     return MP_OKAY;
   }
-  if (c == a) {
-    MP_CHECKOK( mp_init_copy(&tmp, a) );
-    a = &tmp;
-  } else if (c == b) {
-    MP_CHECKOK( mp_init_copy(&tmp, b) );
-    b = &tmp;
-  }
 
   if (MP_SIGN(a) != MP_SIGN(b)) {
-    MP_CHECKOK( mp_copy(a, c)  );
-    MP_CHECKOK( s_mp_add(c, b) );
-  } else if (!(diffSign = s_mp_cmp(a, b))) {
+    MP_CHECKOK( s_mp_add_3arg(a, b, c) );
+  } else if (!(magDiff = s_mp_cmp(a, b))) {
     mp_zero(c);
     res = MP_OKAY;
-  } else if (diffSign > 0) {
-    MP_CHECKOK( mp_copy(a, c)  );
-    MP_CHECKOK( s_mp_sub(c, b) );
+  } else if (magDiff > 0) {
+    MP_CHECKOK( s_mp_sub_3arg(a, b, c) );
   } else {
-    MP_CHECKOK( mp_copy(b, c)  );
-    MP_CHECKOK( s_mp_sub(c, a) );
+    MP_CHECKOK( s_mp_sub_3arg(b, a, c) );
     MP_SIGN(c) = !MP_SIGN(a);
   }
 
@@ -788,7 +761,6 @@ mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
     MP_SIGN(c) = MP_ZPOS;
 
 CLEANUP:
-  mp_clear(&tmp);
   return res;
 
 } /* end mp_sub() */
@@ -808,6 +780,7 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
   mp_int   tmp;
   mp_err   res;
   mp_size  ib;
+  mp_size  useda, usedb;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -831,21 +804,24 @@ mp_err   mp_mul(const mp_int *a, const mp_int *b, mp_int * c)
     a = xch;
   }
 
-  /* This has the effect of left-padding with zeroes... */
   MP_USED(c) = 1; MP_DIGIT(c, 0) = 0;
   if((res = s_mp_pad(c, USED(a) + USED(b))) != MP_OKAY)
     goto CLEANUP;
 
   pb = MP_DIGITS(b);
+  s_mpv_mul_d(MP_DIGITS(a), MP_USED(a), *pb++, MP_DIGITS(c));
+
   /* Outer loop:  Digits of b */
-  for(ib = 0; ib < USED(b); ib++) {
+  useda = MP_USED(a);
+  usedb = MP_USED(b);
+  for (ib = 1; ib < usedb; ib++) {
     mp_digit b_i    = *pb++;
 
-    if(b_i == 0)
-      continue;
-
     /* Inner product:  Digits of a */
-    s_mp_mul_d_add_offset(a, b_i, c, ib);
+    if (b_i)
+      s_mpv_mul_d_add(MP_DIGITS(a), useda, b_i, MP_DIGITS(c) + ib);
+    else
+      MP_DIGIT(c, ib + useda) = b_i;
   }
 
   s_mp_clamp(c);
@@ -876,12 +852,13 @@ CLEANUP:
 /* sqr = a^2;   Caller provides both a and tmp; */
 mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
 {
-  mp_digit *pa, *ps, *alim;
+  mp_digit *pa, *ps;
   mp_word  w; 
-  mp_digit d, k;
+  mp_digit d;
   mp_err   res;
   mp_size  ix;
   mp_int   tmp;
+  int      count;
 
   ARGCHK(a != NULL && sqr != NULL, MP_BADARG);
 
@@ -893,56 +870,32 @@ mp_err   mp_sqr(const mp_int *a, mp_int *sqr)
     DIGITS(&tmp) = 0;
   }
 
-  /* Left-pad with zeroes */
-  MP_USED(sqr) = 1; MP_DIGIT(sqr, 0) = 0;
-  if((res = s_mp_pad(sqr, 2 * USED(a))) != MP_OKAY)
-    goto CLEANUP;
-
-  /*
-    The inner product is computed as:
-       (C, S) = t[i,j] + 2 a[i] a[j] + C
-   */
+  ix = 2 * MP_USED(a);
+  if (ix > MP_ALLOC(sqr)) {
+    MP_USED(sqr) = 1; 
+    MP_CHECKOK( s_mp_grow(sqr, ix) );
+  } 
+  MP_USED(sqr) = ix;
+  MP_DIGIT(sqr, 0) = 0;
 
   pa = MP_DIGITS(a);
-  alim = pa + MP_USED(a);
-  for (ix = 0; pa < alim; ++ix) {
+  count = MP_USED(a) - 1;
+  if (count > 0) {
     d = *pa++;
-    ps = MP_DIGITS(sqr) + 1 + (ix << 1);
-    s_mp_mul_add(pa, alim - pa, d, ps);
-  } /* for(ix ...) */
+    s_mpv_mul_d(pa, count, d, MP_DIGITS(sqr) + 1);
+    for (ix = 3; --count > 0; ix += 2) {
+      d = *pa++;
+      s_mpv_mul_d_add(pa, count, d, MP_DIGITS(sqr) + ix);
+    } /* for(ix ...) */
+    MP_DIGIT(sqr, MP_USED(sqr)-1) = 0; /* above loop stopped short of this. */
 
-  /* now sqr *= 2 */
-  ps = MP_DIGITS(sqr);
-  k = 0;
-#define SHIFT_1_BIT(n) \
-    d = ps[n]; ps[n] = (d << 1) | k; k = d >> (DIGIT_BIT - 1)
-  for (ix = MP_USED(sqr); ix >= 8; ix -= 8) {
-    SHIFT_1_BIT(0);
-    SHIFT_1_BIT(1);
-    SHIFT_1_BIT(2);
-    SHIFT_1_BIT(3);
-    SHIFT_1_BIT(4);
-    SHIFT_1_BIT(5);
-    SHIFT_1_BIT(6);
-    SHIFT_1_BIT(7);
-    ps += 8;
-  }
-  if (ix) {
-    ps += ix;
-    switch (ix) {  /* all fallthru */
-    case 7: SHIFT_1_BIT(-7); /* FALLTHRU */
-    case 6: SHIFT_1_BIT(-6); /* FALLTHRU */
-    case 5: SHIFT_1_BIT(-5); /* FALLTHRU */
-    case 4: SHIFT_1_BIT(-4); /* FALLTHRU */
-    case 3: SHIFT_1_BIT(-3); /* FALLTHRU */
-    case 2: SHIFT_1_BIT(-2); /* FALLTHRU */
-    case 1: SHIFT_1_BIT(-1); /* FALLTHRU */
-    case 0: break;
-    }
+    /* now sqr *= 2 */
+    s_mp_mul_2(sqr);
+  } else {
+    MP_DIGIT(sqr, 1) = 0;
   }
 
   pa = MP_DIGITS(a);
-  alim = pa + MP_USED(a);
   ps = MP_DIGITS(sqr);
   w  = 0;
 #define ADD_SQUARE(n) \
@@ -2544,7 +2497,7 @@ mp_err   s_mp_pad(mp_int *mp, mp_size min)
       if ((res = s_mp_grow(mp, min)) != MP_OKAY)
 	return res;
     } else {
-      s_mp_setz(DIGITS(mp) + USED(mp), min - USED(mp));
+/*    s_mp_setz(DIGITS(mp) + USED(mp), min - USED(mp)); */
     }
 
     /* Increase precision; should already be 0-filled */
@@ -2770,12 +2723,15 @@ void     s_mp_rshd(mp_int *mp, mp_size p)
   for (ix = USED(mp) - p; ix > 0; ix--)
     *dst++ = *src++;
 
+  MP_USED(mp) -= p;
   /* Fill the top digits with zeroes */
   while (p-- > 0)
     *dst++ = 0;
 
+#if 0
   /* Strip off any leading zeroes    */
   s_mp_clamp(mp);
+#endif
 
 } /* end s_mp_rshd() */
 
@@ -2796,21 +2752,23 @@ void     s_mp_div_2(mp_int *mp)
 
 mp_err s_mp_mul_2(mp_int *mp)
 {
-  int      ix;
-  mp_digit kin = 0, kout;
-  mp_err   res;
+  mp_digit *pd;
+  int      ix, used;
+  mp_digit kin = 0;
 
   /* Shift digits leftward by 1 bit */
-  for(ix = 0; ix < USED(mp); ix++) {
-    kout = (DIGIT(mp, ix) >> (DIGIT_BIT - 1)) & 1;
-    DIGIT(mp, ix) = (DIGIT(mp, ix) << 1) | kin;
-
-    kin = kout;
+  used = MP_USED(mp);
+  pd = MP_DIGITS(mp);
+  for (ix = 0; ix < used; ix++) {
+    mp_digit d = *pd;
+    *pd++ = (d << 1) | kin;
+    kin = (d >> (DIGIT_BIT - 1));
   }
 
   /* Deal with rollover from last digit */
-  if(kin) {
-    if(ix >= ALLOC(mp)) {
+  if (kin) {
+    if (ix >= ALLOC(mp)) {
+      mp_err res;
       if((res = s_mp_grow(mp, ALLOC(mp) + 1)) != MP_OKAY)
 	return res;
     }
@@ -3139,8 +3097,10 @@ mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r)
 /* Compute a = |a| + |b|                                                  */
 mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
 {
-  mp_word   w, k = 0;
+  mp_digit *pa, *pb;
+  mp_word   w = 0;
   mp_size   ix;
+  mp_size   used;
   mp_err    res;
 
   /* Make sure a has enough precision for the output value */
@@ -3154,19 +3114,23 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
     less precision, we'll have to make sure the carry out is duly
     propagated upward among the higher-order digits of the sum.
    */
-  for(ix = 0; ix < USED(b); ix++) {
-    w = (mp_word)DIGIT(a, ix) + DIGIT(b, ix) + k;
-    DIGIT(a, ix) = ACCUM(w);
-    k = CARRYOUT(w);
+  pa = MP_DIGITS(a);
+  pb = MP_DIGITS(b);
+  used = MP_USED(b);
+  for(ix = 0; ix < used; ix++) {
+    w = w + *pa + *pb++;
+    *pa++ = ACCUM(w);
+    w = CARRYOUT(w);
   }
 
   /* If we run out of 'b' digits before we're actually done, make
      sure the carries get propagated upward...  
    */
-  while(k && ix < USED(a)) {
-    w = (mp_word)DIGIT(a, ix) + k;
-    DIGIT(a, ix) = ACCUM(w);
-    k = CARRYOUT(w);
+  used = MP_USED(a);
+  while (w && ix < used) {
+    w = w + *pa;
+    *pa++ = ACCUM(w);
+    w = CARRYOUT(w);
     ++ix;
   }
 
@@ -3174,11 +3138,11 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
      it.  We could have done this initially, but why touch the memory
      allocator unless we're sure we have to?
    */
-  if(k) {
+  if (w) {
     if((res = s_mp_pad(a, USED(a) + 1)) != MP_OKAY)
       return res;
 
-    DIGIT(a, ix) = (mp_digit)k;
+    DIGIT(a, ix) = (mp_digit)w;
   }
 
   return MP_OKAY;
@@ -3187,6 +3151,69 @@ mp_err   s_mp_add(mp_int *a, const mp_int *b)  /* magnitude addition      */
 
 /* }}} */
 
+/* Compute c = |a| + |b|         */ /* magnitude addition      */
+mp_err   s_mp_add_3arg(const mp_int *a, const mp_int *b, mp_int *c)  
+{
+  mp_digit *pa, *pb, *pc;
+  mp_word   w = 0;
+  mp_size   ix;
+  mp_size   used;
+  mp_err    res;
+
+  MP_SIGN(c) = MP_SIGN(a);
+  if (MP_USED(a) < MP_USED(b)) {
+    const mp_int *xch = a;
+    a = b;
+    b = xch;
+  }
+
+  /* Make sure a has enough precision for the output value */
+  if (MP_OKAY != (res = s_mp_pad(c, MP_USED(a))))
+    return res;
+
+  /*
+    Add up all digits up to the precision of b.  If b had initially
+    the same precision as a, or greater, we took care of it by the
+    exchange step above, so there is no problem.  If b had initially
+    less precision, we'll have to make sure the carry out is duly
+    propagated upward among the higher-order digits of the sum.
+   */
+  pa = MP_DIGITS(a);
+  pb = MP_DIGITS(b);
+  pc = MP_DIGITS(c);
+  used = MP_USED(b);
+  for (ix = 0; ix < used; ix++) {
+    w = w + *pa++ + *pb++;
+    *pc++ = ACCUM(w);
+    w = CARRYOUT(w);
+  }
+
+  /* If we run out of 'b' digits before we're actually done, make
+     sure the carries get propagated upward...  
+   */
+  used = MP_USED(a);
+  while (ix < used) {
+    w = w + *pa++;
+    *pc++ = ACCUM(w);
+    w = CARRYOUT(w);
+    ++ix;
+  }
+
+  /* If there's an overall carry out, increase precision and include
+     it.  We could have done this initially, but why touch the memory
+     allocator unless we're sure we have to?
+   */
+  if (w) {
+    if((res = s_mp_pad(c, ix + 1)) != MP_OKAY)
+      return res;
+
+    DIGIT(c, ix) = (mp_digit)w;
+    ++ix;
+  }
+  MP_USED(c) = ix;
+  return MP_OKAY;
+
+}
 /* {{{ s_mp_add_offset(a, b, offset) */
 
 /* Compute a = |a| + ( |b| * (RADIX ** offset) )             */
@@ -3288,6 +3315,52 @@ mp_err   s_mp_sub(mp_int *a, const mp_int *b)  /* magnitude subtract      */
 
 /* }}} */
 
+/* Compute c = |a| - |b|, assumes |a| >= |b| */ /* magnitude subtract      */
+mp_err   s_mp_sub_3arg(const mp_int *a, const mp_int *b, mp_int *c)  
+{
+  mp_digit *pa, *pb, *pc;
+  mp_sword  w = 0;
+  int       ix, limit;
+  mp_err    res;
+
+  MP_SIGN(c) = MP_SIGN(a);
+
+  /* Make sure a has enough precision for the output value */
+  if (MP_OKAY != (res = s_mp_pad(c, MP_USED(a))))
+    return res;
+
+  /*
+    Subtract and propagate borrow.  Up to the precision of b, this
+    accounts for the digits of b; after that, we just make sure the
+    carries get to the right place.  This saves having to pad b out to
+    the precision of a just to make the loops work right...
+   */
+  pa = MP_DIGITS(a);
+  pb = MP_DIGITS(b);
+  pc = MP_DIGITS(c);
+  limit = MP_USED(b);
+  for (ix = 0; ix < limit; ++ix) {
+    w = w + *pa++ - *pb++;
+    *pc++ = ACCUM(w);
+    w >>= MP_DIGIT_BIT;
+  }
+  for (limit = MP_USED(a); ix < limit; ++ix) {
+    w = w + *pa++;
+    *pc++ = ACCUM(w);
+    w >>= MP_DIGIT_BIT;
+  }
+
+  /* Clobber any leading zeroes we created    */
+  MP_USED(c) = ix;
+  s_mp_clamp(c);
+
+  /* 
+     If there was a borrow out, then |b| > |a| in violation
+     of our input invariant.  We've already done the work,
+     but we'll at least complain about it...
+   */
+  return w ? MP_RANGE : MP_OKAY;
+}
 /* {{{ s_mp_mul(a, b) */
 
 /* Compute a = |a| * |b|                                                  */
@@ -3298,24 +3371,55 @@ mp_err   s_mp_mul(mp_int *a, const mp_int *b)
 
 /* }}} */
 
-/* c += a * b */
-void s_mp_mul_add(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
+#if !defined(MP_ASSEMBLY_MULTIPLY)
+/* c = a * b */
+void s_mpv_mul_d(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
 {
-  mp_word   w = 0;
+  mp_digit   d = 0;
 
   /* Inner product:  Digits of a */
   while (a_len--) {
-    w += ((mp_word)b * *a++) + *c;
+    mp_word w = ((mp_word)b * *a++) + d;
     *c++ = ACCUM(w);
-    w = CARRYOUT(w);
+    d = CARRYOUT(w);
+  }
+  *c = d;
+}
+
+/* c += a * b */
+void s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b, 
+			      mp_digit *c)
+{
+  mp_digit   d = 0;
+
+  /* Inner product:  Digits of a */
+  while (a_len--) {
+    mp_word w = ((mp_word)b * *a++) + *c + d;
+    *c++ = ACCUM(w);
+    d = CARRYOUT(w);
+  }
+  *c = d;
+}
+
+/* c += a * b */
+void s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, mp_digit *c)
+{
+  mp_digit   d = 0;
+
+  /* Inner product:  Digits of a */
+  while (a_len--) {
+    mp_word w = ((mp_word)b * *a++) + *c + d;
+    *c++ = ACCUM(w);
+    d = CARRYOUT(w);
   }
 
-  while (w) {
-    w += *c;
+  while (d) {
+    mp_word w = (mp_word)*c + d;
     *c++ = ACCUM(w);
-    w = CARRYOUT(w);
+    d = CARRYOUT(w);
   }
 }
+#endif
 
 #if MP_SQUARE
 /* {{{ s_mp_sqr(a) */
