@@ -8,7 +8,7 @@
 <BODY>
 
 <center>
-<h2> Example XPConnect Scriptable Debug Plug-in Regression Page</h1>
+<h2> Example XPConnect Scriptable Debug Plug-in Regression Page</h2>
 </center>
 
 <embed type="application/debug-plugin" width=1 height=1 hidden="true"><br>
@@ -23,74 +23,162 @@ var verExt;
 var baseDir;
 var verDir;
 var testType;
-var compare;
+var changed = false;
+var lb,mb,pb,sb,stb,tb;
+var origLeft;
+var origTop;
+var origWidth;
+var origHeight;
+var dirType;
+var curIndex;
 
-function CompareFiles(baseDir,verDir,baselineFile,verFile)
+
+var myArray = new Array(9);
+  myArray[0] = "file:///S|/mozilla/layout/html/tests/table/dom";
+  myArray[1] = "s:/regressiontests/";
+  myArray[2] = "s:/regressiontests/";
+
+  myArray[3] = "file:///S|/mozilla/layout/html/tests/table/core";
+  myArray[4] = "s:/regressiontests/";
+  myArray[5] = "s:/regressiontests/";
+
+  myArray[6] = "file:///S|/mozilla/layout/html/tests/table/images";
+  myArray[7] = "s:/regressiontests/";
+  myArray[8] = "s:/regressiontests/";
+
+
+
+//=============================================================================
+
+
+function CompareFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile)
 {
-  err = embed.CompareLayoutFiles(baseDir,verDir,baselineFile,verFile,1);
+  err = embed.CompareLayoutFiles(aBaseDir,aVerDir,aBaselineFile,aVerFile,1);
 
   if(err == 0) {
-    WriteOutput(baselineFile,false,true);
+    WriteOutput("File \" "+aVerFile + "\" PASSED",false,"success",true,true );
   } else {
-    WriteOutput(baselineFile + " FAILED ",false,false);
+    WriteOutput("File \" "+aVerFile + "\" FAILED ",false,"failure",true,true );
   }
 }
 
+//=============================================================================
 
-function WriteOutput( Text, Replace, Success )
+function ClearOutput()
+{
+  textarea = document.getElementById('output');
+  textarea.innerHTML = "";
+}
+
+//=============================================================================
+
+function WriteOutput( aText, aReplace, aTextColor,aToStatus, aToOutPut )
 {
 
   textarea = document.getElementById('output');
   statusarea = document.getElementById('status'); 
 
-  if(Success){
-    statusarea.innerHTML = "<font color=green>" + Text +"</font>";
-  } else {
-    statusarea.innerHTML = "<font color=red>" + Text + "</font>";
+  thecolor = "<font color=black>";
+  if(aTextColor == "failure")
+    thecolor = "<font color=red>";
+  if(aTextColor == "success")
+    thecolor = "<font color=green>";
+
+  if ( aToStatus ) {
+    statusarea.innerHTML = thecolor + aText +"</font>";
   }
 
-
-  if( Replace ) {
-    if(Success){
-      textarea.innerHTML = "<font color=green>" + Text +"</font>";
+  if (aToOutPut) {
+    if( aReplace ) {
+      textarea.innerHTML = thecolor + aText +"</font>";
     } else {
-      textarea.innerHTML = "<font color=red>" + Text + "</font>";
-    }
-  } else {
-    if(Success){
-      textarea.innerHTML = "<font color=green>" + textarea.innerHTML + "<br>" + Text+"</font>";
-    } else {
-      textarea.innerHTML = "<font color=red>" + textarea.innerHTML + "<br>" + Text + "</font>";
+      textarea.innerHTML = thecolor + textarea.innerHTML + "<br>" + aText +"</font>";
     }
   }
 }
 
-function  placeWindows(outputWindow,newWindow)
+//=============================================================================
+
+function RestoreWindow()
 {
 
-  height = window.screen.availHeight/2;
-  width = window.screen.availWidth;
-  top = window.screen.availTop;
-  left = window.screen.availLeft;
+  if (changed) {
+    window.moveTo(origLeft,origTop);
+    window.resizeTo(origWidth,origHeight);
+    window.locationbar.visible = lb;
+    window.menubar.visible = mb;
+    window.personalbar.visible = pb;
+    window.scrollbars.visible = sb;
+    window.statusbar.visible = stb;
+    window.toolbar.visible = tb;
+    outputWindow.moveTo(origLeft,origTop);
+    outputWindow.resizeTo(origWidth,origHeight);
 
-  outputWindow.focus();
-  outputWindow.moveTo(left,top);
-  outputWindow.resizeTo(width,height);
-
-  newWindow.resizeTo(width,height);
-  newWindow.moveTo(left,height);
-
-
-  outputWindow.focus();
-  yamount = outputWindow.pageYOffset;
-  xamount = outputWindow.pageXOffset;
-
-  outputWindow.scroll(-xamount,-yamount);
-
+    changed = false;
+  }
 }
 
+//=============================================================================
 
-function DumpFrames1(firstTime,lastFile)
+function  placeWindows(aOutputWindow,aTestWindow)
+{
+  // save old values, get rid of chrome and move and resize the windows
+  if ( changed == false ) {
+    lb = aOutputWindow.locationbar.visible;
+    mb = aOutputWindow.menubar.visible;
+    pb = aOutputWindow.personalbar.visible;
+    sb = aOutputWindow.scrollbars.visible;
+    stb = aOutputWindow.statusbar.visible;
+    tb = aOutputWindow.toolbar.visible;
+    aOutputWindow.focus();
+    origLeft = aOutputWindow.screen.left;
+    origTop = aOutputWindow.screen.top;
+    origWidth = aOutputWindow.outerWidth;
+    origHeight = aOutputWindow.outerHeight;
+    changed = true;
+  }
+
+  aOutputWindow.locationbar.visible = false;
+  aOutputWindow.menubar.visible = false;
+  aOutputWindow.personalbar.visible = false;
+  aOutputWindow.scrollbars.visible = false;
+  aOutputWindow.statusbar.visible = false;
+  aOutputWindow.toolbar.visible = false;
+  aTestWindow.locationbar.visible = false;
+  aTestWindow.menubar.visible = false;
+  aTestWindow.personalbar.visible = false;
+  aTestWindow.scrollbars.visible = false;
+  aTestWindow.statusbar.visible = false;
+  aTestWindow.toolbar.visible = false;
+
+
+  top = window.screen.availTop;
+  left = window.screen.availLeft;
+  height = window.screen.availHeight;
+  width = window.screen.availWidth;
+  if (height > 1000) {
+    height = 800;
+  } else {
+    height = height - 200;
+  }
+  if (width > 800) {
+    width = 800;
+  }
+
+  // size the window to the largest possible
+  aTestWindow.moveTo(left,200);
+  aTestWindow.resizeTo(width,height);
+
+  aOutputWindow.focus();
+
+  aOutputWindow.moveTo(left,top);
+  aOutputWindow.resizeTo(width,200);
+  aOutputWindow.scroll(0,1000);
+}
+
+//=============================================================================
+
+function DumpFrames1(aFirstTime,aLastFile)
 {
 
   outputWindow = window;
@@ -98,36 +186,68 @@ function DumpFrames1(firstTime,lastFile)
   placeWindows(outputWindow,newWindow);
 
 
+WriteOutput( "Starting Tests",true,"normal",true,false );
+WriteOutput( "1",false,"normal",false,true );
+WriteOutput( "2",false,"normal" ,false,true );
+WriteOutput( "3",false,"failure" ,false,true );
+WriteOutput( "4",false,"success" ,false,true );
+WriteOutput( "5",false,"normal" ,false,true );
+WriteOutput( "6",false,"success" ,false,true );
+WriteOutput( "7",false,"success" ,false,true );
+WriteOutput( "asf",false,"normal" ,false,true );
+WriteOutput( "7",false,"failure" ,false,true );
+WriteOutput( "asdf",false,"success" ,false,true );
+WriteOutput( "wre",false,"normal" ,false,true );
+WriteOutput( "wfw",false,"success" ,false,true );
+WriteOutput( "jhgj",false,"success" ,false,true );
+WriteOutput( "gjghj",false,"normal" ,false,true );
+WriteOutput( "rtj",false,"failure" ,false,true );
 
-
-
-
-WriteOutput( "Starting Tests",true,true );
-WriteOutput( "1",false,true );
-WriteOutput( "2",false,true );
-WriteOutput( "3",false,false );
-WriteOutput( "4",false,true );
-WriteOutput( "5",false,false );
-WriteOutput( "6",false,true );
-WriteOutput( "7",false,true );
-WriteOutput( "asf",false,false );
-WriteOutput( "7",false,true );
-WriteOutput( "asdf",false,false );
-WriteOutput( "wre",false,true );
-WriteOutput( "wfw",false,true );
-WriteOutput( "jhgj",false,false );
-WriteOutput( "gjghj",false,true );
-WriteOutput( "rtj",false,false );
+RestoreWindow();
 
 }
 
+//=============================================================================
 
-function DumpFrames(firstTime,lastFile)
+function ShowDirectories()
 {
-var loadingFlag;
 
-  if (firstTime == true) {
-    WriteOutput( "Starting Tests",true,true );
+  for(i=0;i<(myArray.length);i+=3){
+    WriteOutput( myArray[i], false, "normal" ,false,true );
+  }
+
+}
+
+//=============================================================================
+
+function runTests()
+{
+
+  if (document.getElementById('sd').checked ) {
+    // single directory
+    dirType = 1;
+  } else {
+    // directory list
+    dirType = 2;
+  }
+
+  // three buttons we use to check the kind of test we run  (rb rv rvc)
+  if (document.getElementById('rb').checked ) {
+    // baseline
+    testType = 1;
+  } else if (document.getElementById('rv').checked ) {
+    // verify
+    testType = 2;
+  } else if (document.getElementById('rvc').checked ) {
+    // verify and compare
+    testType = 3;
+  } else if (document.getElementById('rc').checked ) {
+    testType = 4;
+  }
+
+  if ( dirType == 1 ) {
+    ClearOutput();
+    WriteOutput( "Starting Single Directory Tests",true,"normal",true,false );
 
     // first verify all the fields are set up correctly
     fileDirectory = document.TestForm.RegTestDir.value;
@@ -135,22 +255,55 @@ var loadingFlag;
     verExt = document.TestForm.verExt.value;
     baseDir = document.TestForm.baseDir.value;
     verDir = document.TestForm.verDir.value;
-    testType = document.getElementById('bl').checked;
-    if(testType){
-      // never compare if doing baseline
-      compare = false;
-    } else {
-      // get the checkbox value
-      compare = document.getElementById('comp').checked;
-    }
 
-    //var filedirectory = "file:///S|/mozilla/layout/html/tests/table/dom";
+    DumpFrames(true,0,testType);
+  } else if (dirType == 2) {
+    ClearOutput();
+    WriteOutput( "Starting Directory Tests",true,"normal",true,false );
+    curIndex = 0;
+    DumpDirectoryies(testType,0);
+  }
+}
+
+//=============================================================================
+
+function DumpDirectoryies(aTestType)
+{
+
+  if ( curIndex == 0) {
+    WriteOutput( "Starting Tests",true,"normal",true,false );
+  }
+  
+  if ( curIndex < myArray.length ) {
+    fileDirectory = myArray[curIndex];
+    baseDir = myArray[curIndex+1];
+    verDir = myArray[curIndex+2];
+    baseExt = document.TestForm.baseExt.value;
+    verExt = document.TestForm.verExt.value;
+    WriteOutput( "New Directory" , false, "normal" ,true, true );
+    DumpFrames(true,0,aTestType);
+  } else {
+    // all completed
+    theWindow.close();
+    RestoreWindow();
+  }
+}
+
+//=============================================================================
+
+function DumpFrames(firstTime,lastFile,aTestType)
+{
+var loadingFlag;
+
+  if (firstTime == true) {
+    ClearOutput();
+    WriteOutput( "Starting Tests",true,"normal",true,false );
+
     embed.StartDirectorySearch(fileDirectory);
     filename=embed.GetNextFileInDirectory();
-    if( filename != null) {
+    if ( filename != null) {
       outputWindow = window;
-      theWindow = window.open(filename);
-      outputWindow = window;
+      theWindow = window.open(filename,0);
       placeWindows(outputWindow,theWindow);
     }
     started = true;
@@ -163,117 +316,168 @@ var loadingFlag;
     var startindex = filename.lastIndexOf("/");
     var outputfilename = filename.slice(startindex+1,filename.length);
 
-    if (testType) {
-      // if checked..since we check the baseline radio button.. this is baseline
+    if (aTestType==1) {
+      // baseline
       outputfilename = outputfilename.replace (".html",baseExt);
-      loading = embed.DumpLayout(theWindow,baseDir,outputfilename);
-    } else {
+      loading = embed.DumpLayout(theWindow,baseDir,outputfilename,0);
+    } else if ((aTestType==2)|| (aTestType==3) ) {
+      // verify
       outputfilename = outputfilename.replace (".html",verExt);
-      loading = embed.DumpLayout(theWindow,verDir,outputfilename);
+      loading = embed.DumpLayout(theWindow,verDir,outputfilename,0);
+    } else if (aTestType==4) {
+      // just compare
+      outputfilename = outputfilename.replace (".html",verExt);
+      loading = 0;
     }
 
     if (loading != 0) {
-      setTimeout("DumpFrames(false,filename)",1000);
+      testtype = aTestType;
+      setTimeout("DumpFrames(false,filename,testtype)",1000);
       break;
     } else {
-      if(compare){
+      if ( aTestType<4 ){
+        WriteOutput("Writing File " + "\""+outputfilename+"\"",false,"success",true,true );
+      }
+
+      if ( (aTestType==3) || (aTestType==4) ){
         baseline = outputfilename.replace (verExt,baseExt);
         CompareFiles(baseDir,verDir,baseline,outputfilename);
       }
 
       filename=embed.GetNextFileInDirectory();
-      if( filename != null) {
+      if ( filename != null) {
         theWindow.location = filename;
       } else {
         // all complete
-        theWindow.close();
+        if (dirType == 1) {
+          theWindow.close();
+          RestoreWindow();
+        } else {
+          curIndex+=3;
+          DumpDirectoryies(aTestType);
+        }
       }
     }
   }
 }
 
+//=============================================================================
+
+
 </script>
 
 <center>
-<h3 id="status">  OUTPUT IDLE </h3>
-<div id="output" align="left" style="overflow:auto; width:600; height:100; border:solid red">
-</div>
-<br>
 <form name="TestForm">
+
 <table>
-<tr>
+  <tr>
   <td>
-    Regression Directory 
+    <table bgcolor="#FFECFE" width=800>
+      <tr>
+        <td colspan="4" border>
+          <input id="sd" type="radio" name="dirTypes" value="runSingleDir" checked >
+          Run Regression on a Single Directory
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Regression Directory 
+        </td>
+        <td>
+          <input type="text" name="RegTestDir" value="file:///S|/mozilla/layout/html/tests/table/dom" size=50>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          BaseLine Extension
+        </td>
+        <td>
+          <input type="text" name="baseExt" value=".bas">
+        </td>
+        <td>
+          Verify Extension 
+        </td>
+        <td>
+          <input type="text" name="verExt" value=".ver">
+        </td>
+      </tr>
+      <tr>
+        <td>
+          BaseLine Output Directory
+        </td>
+        <td>
+          <input type="text" name="baseDir" value = "s:/regressiontests/">
+        </td>
+        <td>
+          Verify Output Directory
+        </td>
+        <td>
+          <input type="text" name="verDir" value = "s:/regressiontests/">
+        </td>
+      </tr>
+    </table>
   </td>
-  <td>
-    <input type="text" name="RegTestDir" value="file:///S|/mozilla/layout/html/tests/table/dom" size=50>
-  </td>
-</tr>
-<tr>
-  <td>
-    BaseLine Extension
-  </td>
-  <td>
-    <input type="text" name="baseExt" value=".bas">
-  </td>
-  <td>
-    Verify Extension 
-  </td>
-  <td>
-    <input type="text" name="verExt" value=".ver">
-  </td>
+  </tr>
 
+  <tr>
+  <td>
+    <table bgcolor="#FDFEDA" width=800>
+      <tr>
+        <td colspan="4">
+          <input id="dl" type="radio" name="dirTypes" value="runDirList" >
+          Run Regression using the directory list
+        </td>
+        <td>
+          <input type=button value="ShowDirectories" onclick='ShowDirectories()'>
+        </td>
+      </tr>
+    </table>
+  </td>
+  </tr>
+  
+  <tr>
+    <td>
+      <table width=800>
+      <tr>
+        <td>
+          Run Baseline 
+          <input id="rb" type="radio" name="testType" value="runbaseline" checked >
+        </td>
+        <td>
+          Run Verify
+          <input id="rv" type="radio" name="testType" value="runverify" >
+        </td>
+        <td>
+          Run Verify with Compare
+          <input id="rvc" type="radio" name="testType" value="runvercomp" >    
+        </td)
+        <td>
+          Run Compare
+          <input id="rc" type="radio" name="testType" value="runvercomp" >    
+        </td)
+      </tr>
 
-</tr>
-<tr>
-  <td>
-    BaseLine Output Directory
-  </td>
-  <td>
-    <input type="text" name="baseDir" value = "s:/tests/">
-  </td>
-  <td>
-    Verify Output Directory
-  </td>
-  <td>
-    <input type="text" name="verDir" value = "s:/tests/">
-  </td>
-</tr>
-<tr>
-  <td>
-    Run Baseline
-  </td>
-  <td>
-    <input id="bl" type="radio" name="testType" value="runbaseline" checked >
-  </td>
-</tr>
-<tr>
-  <td>
-    Run Verify
-  </td>
-  <td>
-    <input id="vf" type="radio" name="testType" value="runverify" >
-  </td>
-  <td>
-    Compare Now
-  <td>
-  <td>
-    <input id="comp" type="checkbox" name="compare" checked >    
-  </td)
-</tr>
-
-
-<tr>
-  <td>
-    <input type=button value="DumpFrames" onclick='DumpFrames(true,0)'>
-  </td>
-</tr>
-
-</table>
+      <tr>
+        <td>
+          <input type=button value="Run Tests" onclick='runTests()'>
+        </td>
+        <td>
+          <input type=button value="RestoreBars" onclick='RestoreWindow()'>
+        </td>
+      </tr>
+      </table>
+    </td>
+  </tr>
+  
+<table>
 </form>
+
 
 </center>
 
+<h3 id="status">  OUTPUT IDLE </h3>
+<div id="output" align="left" style="overflow:auto; width:700; height:100; border:solid red">
+</div>
 
 
 </BODY>

@@ -117,13 +117,14 @@ NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aResult)
+NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, 
+                                           PRUint32 aFlags, PRInt32 *aResult)
 {
 nsresult  rv = NS_OK;
 PRBool    retVal;
 
   if (mPlugin){
-    mPlugin->OutPutLayoutFrames(aWindow,aFilePath,aFileName,&retVal);
+    mPlugin->OutPutLayoutFrames(aWindow,aFilePath,aFileName,aFlags,&retVal);
     if (retVal == NS_OK) {
       *aResult= 0;
     } else {

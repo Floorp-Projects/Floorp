@@ -48,7 +48,7 @@ interface nsIDebugObject : nsISupports
    * @param 
    * @param 
    */
-  void DumpContent(in nsISupports aUrlToDump,in wstring aFilePath,in wstring aFileName);
+  void DumpContent(in nsISupports aUrlToDump,in wstring aFilePath,in wstring aFileName, in unsigned long aFlags);
 
   /**
    * Compares the contents of frame model files

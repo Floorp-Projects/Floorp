@@ -67,7 +67,7 @@ static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
- *	@update 6/21/00 dwc
+ *	@update 5/16/02 dwc
  */
 nsDebugObject::nsDebugObject() 
 {
@@ -76,7 +76,7 @@ nsDebugObject::nsDebugObject()
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
- *	@update 6/21/00 dwc
+ *	@update 5/16/02 dwc
  */
 nsDebugObject::~nsDebugObject() 
 {
@@ -85,10 +85,10 @@ nsDebugObject::~nsDebugObject()
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
- *	@update 6/21/00 dwc
+ *	@update 5/16/02 dwc
  */
 NS_IMETHODIMP
-nsDebugObject::DumpContent(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName) 
+nsDebugObject::DumpContent(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags) 
 {
 nsresult    result = NS_ERROR_NOT_AVAILABLE;
 PRUint32    busyFlags;
@@ -96,7 +96,6 @@ PRBool      stillLoading;
 
   nsCOMPtr<nsIDOMWindowInternal> theInternWindow(do_QueryInterface(aWindow));
   if (theInternWindow) {
-
     nsCOMPtr<nsIPresShell> presShell;
     if (theInternWindow != nsnull) {
       nsIFrameDebug*  fdbg;
@@ -121,11 +120,17 @@ PRBool      stillLoading;
           outputPath.AssignWithConversion(aFilePath);
           outputPath.AppendWithConversion(aFileName);
           char* filePath = ToNewCString(outputPath);
+          PRBool  dumpStyle=PR_FALSE;
+
+          if(aFlags){
+            dumpStyle = PR_TRUE;
+          }
 
           FILE* fp = fopen(filePath, "wt");
 
           presShell->GetPresContext(&thePC);
-          fdbg->DumpRegressionData(thePC, fp, 0, PR_TRUE);
+          
+          fdbg->DumpRegressionData(thePC, fp, 0, dumpStyle);
           fclose(fp);
           delete filePath;
           result = NS_OK;    // the document is now loaded, and the frames are dumped.
@@ -139,7 +144,7 @@ PRBool      stillLoading;
 
 /** ---------------------------------------------------
  *  See documentation in nsDebugObject.h
- *	@update 6/21/00 dwc
+ *	@update 5/16/02 dwc
  */
 NS_IMETHODIMP
 nsDebugObject::CompareFrameModels(const PRUnichar *aBasePath, const PRUnichar *aVerifyPath,
