@@ -73,7 +73,7 @@ inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx) {
 }
 
 inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   *aDecoded++ = 0; // Mac needs this padding byte
 #endif
 #ifdef USE_RGBA1
@@ -334,7 +334,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     // Increment mPos to avoid reprocessing the info header.
     if (mPos == (mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       mPos++;
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
       mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*4];
 #else
       mDecodedBuffer = new PRUint8[mDirEntry.mHeight*mDirEntry.mWidth*3];
@@ -358,7 +358,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             mRowBytes += toCopy;
         }
         if ((rowSize - mRowBytes) == 0) {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*4);
 #else
             PRUint8* decoded = mDecodedBuffer+((mCurLine-1)*mDirEntry.mWidth*3);
