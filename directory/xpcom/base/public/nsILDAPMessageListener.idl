@@ -46,25 +46,25 @@ interface nsILDAPMessageListener : nsISupports
 
     // return value = LDAP_RES_SEARCH_ENTRY 
     // 
-    void OnLDAPSearchEntry(in nsILDAPMessage aMessage);
+    void onLDAPSearchEntry(in nsILDAPMessage aMessage);
 
     // return value = LDAP_RES_SEARCH_REFERENCE
     //
-    void OnLDAPSearchReference(in nsILDAPMessage aMessage);
+    void onLDAPSearchReference(in nsILDAPMessage aMessage);
 
     // return value = LDAP_RES_SEARCH_RESULT
     //
-    void OnLDAPSearchResult(in nsILDAPMessage aMessage);
+    void onLDAPSearchResult(in nsILDAPMessage aMessage);
 
     // return value of -1
     //
     // XXX should have an arg?
     //
-    void OnLDAPError();
+    void onLDAPError();
 
     // return value of 0
     //	
-    void OnLDAPTimeout();
+    void onLDAPTimeout();
 
     // XXX need to add other possible ldap_result return values 
 };
