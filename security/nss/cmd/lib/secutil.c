@@ -658,7 +658,7 @@ SECU_ReadDERFromFile(SECItem *der, PRFileDesc *inFile, PRBool ascii)
 	    PORT_Free(filedata.data);
 	    return SECFailure;
 	}
-	PORT_Free(asc);
+
 	PORT_Free(filedata.data);
     } else {
 	/* Read in binary der */
