@@ -273,3 +273,30 @@ function setupNotifyUI()
     if (locked)
       broadcaster.setAttribute("disabled","true");
 }
+
+function BrowseForNewsrc()
+{
+  var newsrcTextBox = document.getElementById("nntp.newsrcFilePath");
+  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+  fp.init(window, 
+          document.getElementById("browseForNewsrc").getAttribute("filepickertitle"),
+          nsIFilePicker.modeSave);
+
+  var currentNewsrcFile;
+  try {
+    currentNewsrcFile = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+    currentNewsrcFile.initWithPath(newsrcTextBox.value);
+  } catch (e) {
+    dump("Failed to create nsILocalFile instance for the current newsrc file.\n");
+  }
+
+  if (currentNewsrcFile) {
+    fp.displayDirectory = currentNewsrcFile.parent;
+    fp.defaultString = currentNewsrcFile.leafName;
+  }
+
+  fp.appendFilters(nsIFilePicker.filterAll);
+
+  if (fp.show() != nsIFilePicker.returnCancel)
+    newsrcTextBox.value = fp.file.path;
+}

@@ -269,9 +269,13 @@
   <vbox hidefor="imap,pop3,movemail">
     <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"
            accesskey="&newsrcFilePath.accesskey;"/>
-    <textbox wsm_persist="true" id="nntp.newsrcFilePath"
+    <hbox align="center">
+      <textbox readonly="true" wsm_persist="true" flex="1" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"
                prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
+      <button id="browseForNewsrc" label="&browseNewsrc.label;" filepickertitle="&newsrcPicker.label;"
+              accesskey="&browseNewsrc.accesskey;" oncommand="BrowseForNewsrc()"/>
+    </hbox>
   </vbox>
 
   </vbox>

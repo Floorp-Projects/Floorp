@@ -76,3 +76,6 @@
 <!ENTITY localFolderPicker.label "Select Local Directory">
 <!ENTITY browseFolder.label "Browse...">
 <!ENTITY browseFolder.accesskey "B">
+<!ENTITY newsrcPicker.label "Select newsrc File">
+<!ENTITY browseNewsrc.label "Browse...">
+<!ENTITY browseNewsrc.accesskey "e">
