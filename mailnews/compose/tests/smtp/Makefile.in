@@ -26,14 +26,14 @@ PROGRAM		= smtpTest
 
 CPPSRCS		= smtpTest.cpp
 
-LIBS = \
-	-lxpcom	\
-	-lmozjs	\
-	$(MOZ_TIMER_LIBS) \
-	$(DIST)/lib/librdfbase_s.a \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
+LIBS		= \
+		-lxpcom \
+		-lmozjs \
+		$(MOZ_TIMER_LIBS) \
+		$(DIST)/lib/librdfbase_s.a \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

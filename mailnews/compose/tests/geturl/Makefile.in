@@ -29,15 +29,8 @@ CPPSRCS		= \
 		nsURLFetcher.cpp \
 		$(NULL)
 
-BASE_LIBS	= \
-		-lmozjs \
-		$(NULL)
-
-GECKO_LIBS	= \
+LIBS		= \
 		-lraptorplugin \
-		$(NULL)
-
-NETLIB_LIBS	= \
 		-labouturl \
 		-lfileurl \
 		-lftpurl \
@@ -51,13 +44,8 @@ NETLIB_LIBS	= \
 		-lnetlib \
 		-lnetwork \
 		-lpwcac \
-		$(NULL)
-
-LIBS		= \
-		$(GECKO_LIBS) \
-		$(NETLIB_LIBS) \
 		$(MOZ_TIMER_LIBS) \
-		$(BASE_LIBS) \
+		-lmozjs \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)

@@ -13,66 +13,67 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=msgcompose
-LIBRARY_NAME=msgcompose_s
+MODULE		= msgcompose
+LIBRARY_NAME	= msgcompose_s
 
-EXPORTS = \
-	nsSmtpUrl.h	\
-	nsSmtpProtocol.h \
-	nsSmtpService.h \
-	nsMsgZapIt.h \
-	nsMsgCreate.h \
-	nsMsgCopy.h \
-	nsMsgSendLater.h \
-	nsMsgDeliveryListener.h \
-	nsMsgComposeStringBundle.h \
-	nsMsgEncoders.h \
-	nsMsgCompUtils.h \
-	nsMsgComposeService.h \
-	nsMsgCompose.h \
-	nsMsgCompFields.h \
-	nsMsgI18N.h \
-	nsMsgAttachmentHandler.h \
-	nsMsgPrompts.h \
-	nsMsgTransition.h \
-	nsMsgQuote.h \
-	nsURLFetcher.h \
-	nsMsgSend.h \
-	nsSmtpServer.h	\
-	$(NULL)
+CPPSRCS		= \
+		nsMsgCompFields.cpp \
+		nsSmtpUrl.cpp \
+		nsSmtpProtocol.cpp \
+		nsMsgSend.cpp \
+		nsMsgSendPart.cpp \
+		nsSmtpService.cpp \
+		nsMsgZapIt.cpp \
+		nsMsgCreate.cpp \
+		nsMsgCopy.cpp \
+		nsMsgSendLater.cpp \
+		nsMsgDeliveryListener.cpp \
+		nsMsgComposeStringBundle.cpp \
+		nsMsgEncoders.cpp \
+		nsMsgCompUtils.cpp \
+		nsMsgI18N.cpp \
+		nsMsgAttachmentHandler.cpp \
+		nsMsgPrompts.cpp \
+		nsMsgComposeService.cpp \
+		nsMsgCompose.cpp \
+		nsMsgQuote.cpp \
+		nsURLFetcher.cpp \
+		nsSmtpServer.cpp \
+		$(NULL)
 
-CPPSRCS = \
-	nsMsgCompFields.cpp	\
-	nsSmtpUrl.cpp \
-	nsSmtpProtocol.cpp \
-	nsMsgSend.cpp \
-	nsMsgSendPart.cpp \
-	nsSmtpService.cpp \
-	nsMsgZapIt.cpp	\
-	nsMsgCreate.cpp	\
-	nsMsgCopy.cpp \
-	nsMsgSendLater.cpp \
-	nsMsgDeliveryListener.cpp \
-	nsMsgComposeStringBundle.cpp \
-	nsMsgEncoders.cpp \
-	nsMsgCompUtils.cpp \
-	nsMsgI18N.cpp \
-	nsMsgAttachmentHandler.cpp \
-	nsMsgPrompts.cpp \
-	nsMsgComposeService.cpp \
-	nsMsgCompose.cpp \
-	nsMsgQuote.cpp \
-	nsURLFetcher.cpp \
-	nsSmtpServer.cpp	\
-	$(NULL)
+EXPORTS		= \
+		nsSmtpUrl.h \
+		nsSmtpProtocol.h \
+		nsSmtpService.h \
+		nsMsgZapIt.h \
+		nsMsgCreate.h \
+		nsMsgCopy.h \
+		nsMsgSendLater.h \
+		nsMsgDeliveryListener.h \
+		nsMsgComposeStringBundle.h \
+		nsMsgEncoders.h \
+		nsMsgCompUtils.h \
+		nsMsgComposeService.h \
+		nsMsgCompose.h \
+		nsMsgCompFields.h \
+		nsMsgI18N.h \
+		nsMsgAttachmentHandler.h \
+		nsMsgPrompts.h \
+		nsMsgTransition.h \
+		nsMsgQuote.h \
+		nsURLFetcher.h \
+		nsMsgSend.h \
+		nsSmtpServer.h \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
@@ -81,5 +82,6 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH), Linux)
-DEFINES += -D_BSD_SOURCE
+DEFINES		+= -D_BSD_SOURCE
 endif
+
