@@ -36,6 +36,12 @@
 <script src="pippki.js" />
 <script src="clientauthask.js" />
 
+<keyset id="keys">
+  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
+  <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
+  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
+</keyset>
+
 <vbox style="margin: 5px;" flex="1">
     <groupbox orient="vertical">
     <html>&clientAuthAsk.message1;</html>

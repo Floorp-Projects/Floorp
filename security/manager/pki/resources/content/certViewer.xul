@@ -45,6 +45,10 @@
 <script src="pippki.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
+<keyset id="keys">
+  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close()"/>
+</keyset>
+
   <grid flex="1">
     <column flex="1"/>
     <rows autostretch="always" >

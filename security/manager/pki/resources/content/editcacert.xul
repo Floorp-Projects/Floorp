@@ -52,6 +52,13 @@
       <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
        id="trustObjSign"/>
     </vbox>
+
+    <keyset id="keys">
+      <key id="enter-key"  keycode="VK_ENTER"  oncommand="doSSLOK();"/>
+      <key id="return-key" keycode="VK_RETURN" oncommand="doSSLOK();"/>
+      <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
+    </keyset>
+
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
            style="width: 8ex" oncommand="doOK();"/> 

@@ -43,6 +43,12 @@
 <script src="choosetoken.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
+<keyset id="keys">
+  <key id="enter-key"  keycode="VK_ENTER"  oncommand="if (!document.getElementById('ok-button').disabled) doOK();"/>
+  <key id="return-key" keycode="VK_RETURN" oncommand="if (!document.getElementById('ok-button').disabled) doOK();"/>
+  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel();"/>
+</keyset>
+
 <vbox style="margin: 5px;" flex="1">
     <groupbox orient="vertical">
     <html>&chooseToken.message1;</html>
