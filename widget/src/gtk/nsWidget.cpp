@@ -348,6 +348,11 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
         newCursor = gdk_cursor_new(GDK_LEFT_PTR);
         break;
 
+      case eCursor_sizeWE:
+      case eCursor_sizeNS:
+        newCursor = gdk_cursor_new(GDK_TCROSS);
+        break;
+
       case eCursor_arrow_south:
       case eCursor_arrow_south_plus:
         newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
