@@ -187,7 +187,6 @@
           selection.item       = [RDF.GetResource(item)];
           selection.parent     = [RDF.GetResource(parent)];
           selection.isExpanded = [isExpanded];
-          selection.isRef      = false;
           selection.length     = selection.item.length;
           BookmarksUtils.checkSelection(selection);
           return selection;
@@ -223,17 +222,16 @@
           }
 
           parent = RDF.GetResource(parent);
-          if (item && aOrientation != BookmarksUtils.DROP_ON) {
-            item = RDF.GetResource(item.id);
-            RDFC.Init(BMDS, parent);
-            index = RDFC.IndexOf(item);
-            if (aOrientation == BookmarksUtils.DROP_AFTER)
-              ++index;
-          } else
-            index = parseInt(BookmarksUtils.getProperty(parent, RDF_NS+"nextVal"));
+          if (aOrientation == BookmarksUtils.DROP_ON)
+            return BookmarksUtils.getTargetFromFolder(parent);
 
-          var target = { parent: parent, index: index };
-          return target;
+          item = RDF.GetResource(item.id);
+          RDFC.Init(BMDS, parent);
+          index = RDFC.IndexOf(item);
+          if (aOrientation == BookmarksUtils.DROP_AFTER)
+            ++index;
+
+          return { parent: parent, index: index };
         ]]></body>
       </method>
 

@@ -225,7 +225,7 @@ function onOK()
   // In Select Folder Mode, do nothing but tell our caller what
   // folder was selected. 
   if (window.arguments.length > 4 && window.arguments[4] == "selectFolder")
-    window.arguments[5].selectedFolder = gCreateInFolder;
+    window.arguments[5].target = BookmarksUtils.getTargetFromFolder(bookmarkView.treeBuilder.getResourceAtIndex(currentIndex));
   else {
     // Otherwise add a bookmark to the selected folder. 
     var rFolder = RDF.GetResource(gCreateInFolder);
@@ -258,10 +258,8 @@ function onOK()
         window.arguments[5].newBookmark = rSource;
       }
     }
-    var selection, target;
-    selection = BookmarksUtils.getSelectionFromResource(rSource);
-    target    = BookmarksUtils.getSelectionFromResource(rFolder);
-    target    = BookmarksUtils.getTargetFromSelection(target);
+    var selection = BookmarksUtils.getSelectionFromResource(rSource);
+    var target    = BookmarksUtils.getTargetFromFolder(rFolder);
     BookmarksUtils.insertSelection("newbookmark", selection, target);
   }
 }

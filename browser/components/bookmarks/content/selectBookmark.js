@@ -38,34 +38,54 @@
 
 var gBookmarkTree;
 var gOK;
+var gUrls;
+var gTimer;
 
 function Startup()
 {
   initServices();
   initBMService();
+  gOK = document.documentElement.getButton("accept");
   gBookmarkTree = document.getElementById("bookmarks-view");  
   gBookmarkTree.treeBoxObject.selection.select(0);
   gBookmarkTree.tree.focus();
-  gOK = document.documentElement.getButton("accept");
-}
-
-function onDblClick()
-{
-  if (!gOK.disabled)
-    document.documentElement.acceptDialog();
-
 }
 
 function updateOK()
 {
   var selection = gBookmarkTree._selection;
-  gOK.disabled = selection.length != 1 || 
-                (selection.type[0] != "Bookmark" && selection.type[0] != "")
+  var ds = gBookmarkTree.tree.database;
+  var url;
+  gUrls = [];
+  for (var i=0; i<selection.length; ++i) {
+    var type     = selection.type[i];
+    var protocol = selection.protocol[i];
+    if ((type == "Bookmark" || type == "") && 
+        protocol != "find" && protocol != "javascript") {
+      url = BookmarksUtils.getProperty(selection.item[i], NC_NS+"URL", ds)
+      if (url)
+        gUrls.push(url);
+    } else if (type == "Folder" || type == "PersonalToolbarFolder" ||
+               type == "FolderGroup") {
+      RDFC.Init(ds, selection.item[i]);
+      var children = RDFC.GetElements();
+      while (children.hasMoreElements()) {
+        var child = children.getNext().QueryInterface(kRDFRSCIID);
+        type      = BookmarksUtils.getProperty(child, RDF_NS+"type", ds);
+        protocol  = child.Value.split(":")[0];
+        if (type == NC_NS+"Bookmark" && protocol != "find" && 
+            protocol != "javascript") {
+          url = BookmarksUtils.getProperty(child, NC_NS+"URL", ds);
+          if (url)
+            gUrls.push(url);
+        }
+      }
+    }
+  }
+  gOK.disabled = gUrls.length == 0;
 }
 
 function onOK(aEvent)
 {
-  var selection = gBookmarkTree._selection;
-  var url = BookmarksUtils.getProperty(selection.item[0], NC_NS+"URL", gBookmarkTree.tree.database);
-  window.arguments[0].url = url;
+  window.arguments[0].url = gUrls.join("|");
 }
