@@ -108,12 +108,12 @@ ifeq ($(OS_ARCH),WINNT)
 	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
 		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); \
 		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)"; \
-		config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER); \
+		$(topsrcdir)/config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER); \
 	fi
 	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); then \
 		rm -rf $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
 		echo "making directory $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)"; \
-		config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER)\\$(RELEASE_OBJDIR_NAME); \
+		$(topsrcdir)/config/prmkdir.bat $(MDIST_DOS)\\$(MOD_NAME)\\$(BUILD_NUMBER)\\$(RELEASE_OBJDIR_NAME); \
 	fi
 else
 	@if test ! -d $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER); then \
