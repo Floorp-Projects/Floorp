@@ -21,6 +21,7 @@ modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/navigator-region/region.p
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/editor-region/region-ns.properties,editor.throbber.url,%AnimatedLogoURL%)
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/aim-region/region.properties,aim.throbber.url,%AnimatedLogoURL%)
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/messenger-region/region-ns.properties,messenger.throbber.url,%AnimatedLogoURL%)
+modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/messenger-region/region-ns.properties,compose.throbber.url,%AnimatedLogoURL%)
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/messenger-region/region-ns.properties,addressbook.throbber.url,%AnimatedLogoURL%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/aim/App.dtd,throbber.tooltip,%AnimatedLogoURL%)
 modifyDTD(langenus.xpi,bin/chrome/en-US.jar,locale/en-US/aim/chatContent.dtd,throbber.tooltip,%AnimatedLogoURL%)
