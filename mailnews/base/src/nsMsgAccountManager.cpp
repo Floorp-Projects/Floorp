@@ -60,7 +60,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-#if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_alecf_) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
