@@ -83,7 +83,8 @@ class GlobalWindowImpl :   public nsIScriptGlobalObject,
                            public nsIDOMEventReceiver,
                            public nsPIDOMWindow, 
                            public nsIDOMViewCSS,
-                           public nsSupportsWeakReference
+                           public nsSupportsWeakReference,
+                           public nsIDOMWindowEventOwner
 {
 public:
    // nsISupports
