@@ -117,6 +117,10 @@ nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
   NS_IF_ADDREF(mContent);
   mParent = aParent;
 
+  if (mContent) {
+    mContent->SetMayHaveFrame(PR_TRUE);
+  }
+  
   Init();
   
   SetStyleContext(aPresContext, aContext);
