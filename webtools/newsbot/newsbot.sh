@@ -23,13 +23,22 @@ then
     echo "rebuilding newsbot file"
     /opt/newsbot/newsbot.pl /var/mail/newsbot /opt/newsbot/newsbot.rdf.tmp > /opt/newsbot/newsbot.html
 
+    # copy the rdf file into file used by web site
+    cp /opt/newsbot/newsbot.rdf.tmp /opt/newsbot/newsbot.rdf
+
+fi
+
+# Do this separately in case wrapnews failed the last time this script ran. 
+# Sometimes it fails because this script runs at the same time the staging
+# area is being rebuilt and the wrapper scripts are missing.
+if [ \( /opt/newsbot/newsbot.html -nt /opt/newsbot/index.html \) -a \
+     \( -e "/e/stage-docs/mozilla-org/tools/wrap.pl" \) -a \
+     \( -e "/e/stage-docs/mozilla-org/html/template.html" \) ]
+then
+    echo "wrapping newsbot file"
     # wrap file and place in newsbot directory
     /opt/newsbot/wrapnews.pl
 
     # copy the wrappped file into file used by web site.
     cp /opt/newsbot/wrapped.html /opt/newsbot/index.html
-
-    # copy the rdf file into file used by web site
-    cp /opt/newsbot/newsbot.rdf.tmp /opt/newsbot/newsbot.rdf
-
 fi
