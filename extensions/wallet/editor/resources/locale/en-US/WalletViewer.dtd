@@ -1,5 +1,5 @@
 <!-- WalletViewer.xul-->
-<!ENTITY windowtitle.label "Form Manager">
+<!ENTITY windowtitle.label "Form Manager: Editor">
 
 <!-- WalletTree.xul-->
 <!--LOCALIZATION NOTE : lists wallet categories that appear on the left of the wallet viewer dialog -->
