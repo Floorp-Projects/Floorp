@@ -1205,13 +1205,13 @@ PRUint32
 nsMsgComposeAndSend::GetMultipartRelatedCount(void)
 {
   nsresult                  rv = NS_OK;
-  nsISupportsArray          *aNodeList = nsnull;
+  nsCOMPtr<nsISupportsArray> aNodeList;
   PRUint32                  count;
 
   if (!mEditor)
     return 0;
 
-  rv = mEditor->GetEmbeddedObjects(&aNodeList);
+  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
   if ((NS_FAILED(rv) || (!aNodeList)))
     return 0;
 
@@ -1386,7 +1386,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
 {
   PRUint32                  multipartCount = GetMultipartRelatedCount();
   nsresult                  rv = NS_OK;
-  nsISupportsArray          *aNodeList = nsnull;
+  nsCOMPtr<nsISupportsArray> aNodeList;
   PRUint32                  i; 
   PRInt32                   j = -1;
   domSaveStruct             *domSaveArray = nsnull;
@@ -1403,7 +1403,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
   }
   
-  rv = mEditor->GetEmbeddedObjects(&aNodeList);
+  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
   if ((NS_FAILED(rv) || (!aNodeList))) {
     return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
   }
