@@ -49,7 +49,8 @@
 typedef enum {
   eNoAnswerYet = 0,
   eBestAnswer,
-  eSureAnswer
+  eSureAnswer,
+  eNoAnswerMatch
 } nsDetectionConfident;
 
 #endif /* nsDetetctionConfident_h__ */
