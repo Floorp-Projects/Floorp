@@ -163,7 +163,16 @@ public:
 
     PRBool              IsNew()      { return mState == LOOKUP_NEW; }
     PRBool              IsComplete() { return mState == LOOKUP_COMPLETE; }
-    PRBool              IsNotCacheable() { return !mCacheable; }
+    
+    PRBool              IsNotProcessing()   { return mProcessingRequests == 0; }
+    
+    PRBool              IsNotCacheable()    { return (mFlags & eCacheableMask) == 0; }
+    void                MarkNotCacheable()  { mFlags &= ~eCacheableMask; }
+    void                MarkCacheable()     { mFlags |=  eCacheableMask; }
+    
+    PRBool              IsNotEvicted()      { return (mFlags & eEvictedMask) == 0; }
+    void                MarkEvicted()       { mFlags |=  eEvictedMask; }
+        
     PRBool              IsExpired();
     
     nsresult            Status()     { return mStatus; }
@@ -199,10 +208,14 @@ private:
         LOOKUP_COMPLETE = 2
 
     };
-
     
+    PRUint32            mProcessingRequests;
+    PRUint32            mFlags;
+    enum {
+        eCacheableMask      = 0x000001,
+        eEvictedMask        = 0x000010
+    };
 
-	PRBool              mCacheable;
     nsTime              mExpires;    
 
     // Platform specific portions
@@ -483,7 +496,8 @@ nsDNSLookup::nsDNSLookup()
     : mHostName(nsnull)
     , mStatus(NS_OK)
     , mState(LOOKUP_NEW)
-    , mCacheable(PR_TRUE)
+    , mProcessingRequests(0)
+    , mFlags(eCacheableMask)
     , mExpires(0)
 {
 	NS_INIT_REFCNT();
@@ -652,7 +666,7 @@ nsDNSLookup::HostnameIsIPAddress()
     mHostEntry.hostEnt.h_addr_list[1] = nsnull;
 
     MarkComplete(NS_OK);
-    mCacheable = PR_FALSE;  // no need to cache ip address strings
+    MarkNotCacheable();  // no need to cache ip address strings
 
     nsMemory::Free(netAddr);
     return PR_TRUE;
@@ -718,7 +732,7 @@ nsDNSLookup::MarkComplete(nsresult status)
 {
     mStatus = status;
     mState  = LOOKUP_COMPLETE;
-    if (NS_FAILED(status))  mCacheable = PR_FALSE;
+    if (NS_FAILED(status))  MarkNotCacheable();
 }
 
 
@@ -755,7 +769,7 @@ nsDNSLookup::ProcessRequests()
 {
     // mDNSServiceLock must be held, this method releases & reaquires it.
     // must guarantee lookup will not be deallocated for duration of method
-    
+    ++mProcessingRequests;
     nsDNSRequest * request = (nsDNSRequest *)PR_LIST_HEAD(&mRequestQ);
     while (request != &mRequestQ) {
         PR_REMOVE_AND_INIT_LINK(request);
@@ -766,6 +780,7 @@ nsDNSLookup::ProcessRequests()
         nsDNSService::Lock();
         request = (nsDNSRequest *)PR_LIST_HEAD(&mRequestQ);
     }
+    --mProcessingRequests;
 }
 
 	
@@ -1203,6 +1218,7 @@ nsDNSService::Run()
         nsDNSLookup * lookup;
         while ((lookup = DequeuePendingQ())) {
 
+            NS_ADDREF(lookup);
             if (NS_SUCCEEDED(lookup->Status())) {
                 // convert InetHostInfo to nsHostEnt
                 lookup->ConvertHostEntry();
@@ -1213,6 +1229,7 @@ nsDNSService::Run()
             } else {
                 AddToEvictionQ(lookup);
             }
+            NS_RELEASE(lookup);
         }
         
         PR_Unlock(mDNSServiceLock);
@@ -1234,6 +1251,7 @@ nsDNSService::Run()
         nsDNSLookup * lookup = DequeuePendingQ();
         if (lookup) {
             // Got a request!!
+            NS_ADDREF(lookup);      // keep the lookup while we process it
             lookup->DoSyncLookup();
             lookup->ProcessRequests();
             if (lookup->IsNotCacheable()) {
@@ -1241,6 +1259,7 @@ nsDNSService::Run()
             } else {
                 AddToEvictionQ(lookup);
             }
+            NS_RELEASE(lookup);
         } else {
             // Woken up without a request --> shutdown
             NS_ASSERTION(mState == DNS_SHUTTING_DOWN, "bad DNS shutdown state");
@@ -1378,7 +1397,7 @@ nsDNSService::FindOrCreateLookup(const char* hostName)
     hashEntry = PL_DHashTableOperate(&mHashTable, hostName, PL_DHASH_LOOKUP);
     if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
         lookup = ((DNSHashTableEntry *)hashEntry)->mLookup;
-        if (lookup->IsComplete() && lookup->IsExpired()) {
+        if (lookup->IsComplete() && lookup->IsExpired() && lookup->IsNotProcessing()) {
             lookup->Reset();
             PR_REMOVE_AND_INIT_LINK(lookup);  // remove us from eviction queue
             --mEvictionQCount;
@@ -1447,9 +1466,12 @@ nsDNSService::DequeuePendingQ()
 void
 nsDNSService::EvictLookup(nsDNSLookup * lookup)
 {
-    // remove from hashtable
-    (void) PL_DHashTableOperate(&mHashTable, lookup->HostName(), PL_DHASH_REMOVE);
-    NS_RELEASE(lookup);
+    if (lookup->IsNotEvicted()) {
+        // remove from hashtable
+        lookup->MarkEvicted();
+        (void) PL_DHashTableOperate(&mHashTable, lookup->HostName(), PL_DHASH_REMOVE);
+        NS_RELEASE(lookup);
+    }
 }
 
 
@@ -1672,8 +1694,7 @@ nsDNSService::Shutdown()
     PR_Lock(mDNSServiceLock);
     AbortLookups();
 
-    rv = RemovePrefObserver();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failure to remove DNS pref observer");
+    (void) RemovePrefObserver();
 
     // reset hashtable
     // XXX assert hashtable is empty
@@ -1718,7 +1739,7 @@ nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code,
     	case T_DNRSTRINGTOADDRCOMPLETE:
                 // mark lookup complete and wake dns thread
                 nsresult rv = (result == kOTNoError) ? NS_OK : NS_ERROR_UNKNOWN_HOST;
-                if (NS_FAILED(rv))  lookup->mCacheable = PR_FALSE;
+                if (NS_FAILED(rv))  lookup->MarkNotCacheable();
                 lookup->mStatus = rv;
                 lookup->mStringToAddrComplete = PR_TRUE;
                 if (thread)  PR_Mac_PostAsyncNotify(thread);
@@ -1787,7 +1808,7 @@ nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     if (lookup == &mPendingQ)  return -1;   // XXX right result?
     
-    
+    NS_ADDREF(lookup);  // keep the lookup while we process it
     int error = WSAGETASYNCERROR(lParam);
     lookup->MarkComplete(error ? NS_ERROR_UNKNOWN_HOST : NS_OK);
     FreeMsgID(lookup->mMsgID);
@@ -1799,6 +1820,7 @@ nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     } else {
         AddToEvictionQ(lookup);
     }
+    NS_RELEASE(lookup);
 
     return error ? -1 : 0;
 }
