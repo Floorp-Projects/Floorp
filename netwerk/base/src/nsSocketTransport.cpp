@@ -227,7 +227,7 @@ nsSocketTransport::~nsSocketTransport()
     CRTFREEIF (mSocketType);
 
     if (mMonitor) {
-        PR_DestroyMonitor(mMonitor);
+        nsAutoMonitor::DestroyMonitor(mMonitor);
         mMonitor = nsnull;
     }
     
@@ -289,7 +289,7 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     //
     if (NS_SUCCEEDED(rv))
     {
-        mMonitor = PR_NewMonitor();
+        mMonitor = nsAutoMonitor::NewMonitor("nsSocketTransport");
         if (!mMonitor)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
