@@ -5103,9 +5103,35 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Compute the available width. By default, assume the width of the
   // containing block.
-  nscoord availWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)
-                        ? NS_UNCONSTRAINEDSIZE
-                        : aState.mContentArea.width;
+  nscoord availWidth;
+  if(aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)){
+    availWidth = NS_UNCONSTRAINEDSIZE;
+  }else{
+    const nsStyleDisplay* floaterDisplay;
+    floater->GetStyleData(eStyleStruct_Display,
+                          (const nsStyleStruct*&)floaterDisplay);
+    nsCompatibility mode;
+    aState.mPresContext->GetCompatibilityMode(&mode);
+
+    if (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay ||
+         eCompatibility_NavQuirks != mode ) {
+      availWidth = aState.mContentArea.width;
+    }else{
+      // give tables only the available space
+      // if they can shrink we may not be constrained to place
+      // them in the next line
+      availWidth = aState.mAvailSpaceRect.width;
+      // round down to twips per pixel so that we fit
+      // needed when prev. floater has procentage width
+      // (maybe is a table flaw that makes table chose to round up
+      // but i don't want to change that, too risky)
+      nscoord twp;
+      float p2t;
+      aState.mPresContext->GetScaledPixelsToTwips(&p2t);
+      twp = NSIntPixelsToTwips(1,p2t);
+      availWidth -=  availWidth % twp;
+    }
+  }
 
   // If the floater's width is automatic, we can't let the floater's
   // width shrink below its maxElementSize.
