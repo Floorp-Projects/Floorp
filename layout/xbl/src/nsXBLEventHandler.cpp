@@ -423,7 +423,7 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, keyCodeStr);
   mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, charCodeStr);
   
-  if (key.IsEmpty() && keyCodeStr.IsEmpty() && charCodeStr.IsEmpty())
+  if (key.IsEmpty() && keyCodeStr.IsEmpty() && charCodeStr.IsEmpty() && mKeyMask == 0)
     return PR_TRUE;
 
   if (!key.IsEmpty())
@@ -455,7 +455,7 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, clickCountStr);
   mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, buttonStr);
   
-  if (buttonStr.IsEmpty() && clickCountStr.IsEmpty())
+  if (buttonStr.IsEmpty() && clickCountStr.IsEmpty() && mKeyMask == 0)
     return PR_TRUE;
 
   if (!clickCountStr.IsEmpty()) {
