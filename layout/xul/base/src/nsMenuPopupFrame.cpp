@@ -1040,6 +1040,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
   PRInt32 screenViewLocY = NSIntPixelsToTwips(screenParentWidgetRect.y,p2t) + (ypos - parentPos.y);
 
+  nsCOMPtr<nsIContent> parentContent;
+  aFrame->GetContent(getter_AddRefs(parentContent));
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
+  PRBool sizedToPopup = (tag.get() != nsXULAtoms::tooltip)
+    && (nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE));
+
   if ( anchoredToParent ) {
     
     //
@@ -1054,6 +1061,25 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     parentViewWidget->WidgetToScreen ( screenParentFrameRect, screenParentFrameRect );
     screenParentFrameRect.x = NSIntPixelsToTwips(screenParentFrameRect.x, p2t);
     screenParentFrameRect.y = NSIntPixelsToTwips(screenParentFrameRect.y, p2t);
+
+    // If we stick to our parent's width, set it here before we move the
+    // window around, because moving is done with respect to the width...
+    if (sizedToPopup) {
+      mRect.width = screenParentFrameRect.width;
+    }
+
+    // Neither let it spill off the screen to the top...
+    if (screenViewLocY < screenTopTwips) {
+      PRInt32 moveDist = screenTopTwips - screenViewLocY;
+      screenViewLocY = screenTopTwips;
+      ypos += moveDist;
+    }
+    // ... nor to the left.
+    if (screenViewLocX < screenLeftTwips) {
+      PRInt32 moveDist = screenLeftTwips - screenViewLocX;
+      screenViewLocX = screenLeftTwips;
+      xpos += moveDist;
+    }
     
     // if it doesn't fit on the screen, do our magic.
     if ( (screenViewLocX + mRect.width) > screenRightTwips ||
@@ -1166,12 +1192,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   frameOrigin -= offsetToView;
   nsBoxFrame::MoveTo(aPresContext, frameOrigin.x, frameOrigin.y);
 
-  nsCOMPtr<nsIContent> parentContent;
-  aFrame->GetContent(getter_AddRefs(parentContent));
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() != nsXULAtoms::tooltip &&
-      nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE)) {
+  if (sizedToPopup) {
       nsBoxLayoutState state(mPresContext);
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
   }
