@@ -58,7 +58,7 @@ var expect= '';
 var expectedvalues = [];
 
 
-var str = 'abc';
+str = 'ABC abc';
 var re = /z/ig;
 
 status = inSection(1);
@@ -139,8 +139,6 @@ addThis();
  *
  * Reference: http://bugzilla.mozilla.org/show_bug.cgi?id=179524#c10
  */
-str = 'ABC abc';
-
 status = inSection(13);
 actual = str.match('a').toString();
 expect = str.match(/a/).toString();
@@ -206,8 +204,6 @@ catch (e)
  *
  * Reference: http://bugzilla.mozilla.org/show_bug.cgi?id=179524#c16
  */
-str = 'ABC abc';
-
 status = inSection(21);
 actual = str.search('a');
 expect = str.search(/a/);
@@ -275,8 +271,6 @@ catch (e)
  * http://bugzilla.mozilla.org/show_bug.cgi?id=179524#c16
  * http://bugzilla.mozilla.org/show_bug.cgi?id=83293#c21
  */
-str = 'ABC abc';
-
 status = inSection(29);
 actual = str.replace('a', 'Z');
 expect = str.replace(/a/, 'Z');
