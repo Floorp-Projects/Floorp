@@ -84,12 +84,14 @@ interface nsIMsgMessageService : nsISupports {
      /////////////////////////////////////////////////////////////////////
      //  OpenAttachment: When you want an attachment downloaded
      //  aContentType --> we need to know the content type of the attachment
+	 //	 aFileName --> the name of the attachment.
 	 //	 aUrl --> string representation of the original url associated with the msg.
 	 //  aMessageUri --> RDF resource that describes the message
 	 //	 aMsgWindow --> message window
      ///////////////////////////////////////////////////////////////////
 
 	void openAttachment(in string aContentType, 
+						in string aFileName, 
 						in string aUrl,
 						in string aMessageUri, 
 						in nsISupports aDisplayConsumer, 

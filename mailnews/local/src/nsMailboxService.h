@@ -62,6 +62,7 @@ protected:
                         nsISupports * aDisplayConsumer, 
                         nsIMsgWindow * aMsgWindow,
 										    nsIUrlListener * aUrlListener,
+                        const char * aFileName, /* only used by open attachment */
                         nsMailboxAction mailboxAction,
                         const PRUnichar * aCharsetOverride,
                         nsIURI ** aURL);

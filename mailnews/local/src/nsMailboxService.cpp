@@ -105,7 +105,7 @@ nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
     nsMailboxAction mailboxAction = nsIMailboxUrl::ActionMoveMessage;
     if (!moveMessage)
         mailboxAction = nsIMailboxUrl::ActionCopyMessage;
-  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, mailboxAction, nsnull, aURL);
+  return FetchMessage(aSrcMailboxURI, aMailboxCopyHandler, nsnull, aUrlListener, nsnull, mailboxAction, nsnull, aURL);
 }
 
 nsresult nsMailboxService::CopyMessages(nsMsgKeyArray *msgKeys,
@@ -123,6 +123,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
                                         nsISupports * aDisplayConsumer, 
                                         nsIMsgWindow * aMsgWindow,
 										                    nsIUrlListener * aUrlListener,
+                                        const char * aFileName, /* only used by open attachment... */
                                         nsMailboxAction mailboxAction,
                                         const PRUnichar * aCharsetOverride,
                                         nsIURI ** aURL)
@@ -143,6 +144,9 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
     msgUrl->SetMsgWindow(aMsgWindow);
     nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
     i18nurl->SetCharsetOverRide(aCharsetOverride);
+
+    if (aFileName)
+      msgUrl->SetFileName(aFileName);
 
 		// instead of running the mailbox url like we used to, let's try to run the url in the docshell...
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
@@ -179,15 +183,17 @@ nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
                                           nsIURI ** aURL)
 {
   return FetchMessage(aMessageURI, aDisplayConsumer,
-                      aMsgWindow,aUrlListener,
+                      aMsgWindow,aUrlListener, nsnull,
                       nsIMailboxUrl::ActionDisplayMessage, aCharsetOveride, aURL);
 }
 
-NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, const char *aUrl, 
-                                            const char *aMessageUri, 
-                                            nsISupports *aDisplayConsumer, 
-                                            nsIMsgWindow *aMsgWindow, 
-                                            nsIUrlListener *aUrlListener)
+NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, 
+                                               const char *aFileName,
+                                               const char *aUrl, 
+                                               const char *aMessageUri, 
+                                               nsISupports *aDisplayConsumer, 
+                                               nsIMsgWindow *aMsgWindow, 
+                                               nsIUrlListener *aUrlListener)
 {
   nsCAutoString partMsgUrl = aMessageUri;
   
@@ -198,7 +204,7 @@ NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, const c
   partMsgUrl += "&type=";
   partMsgUrl += aContentType;
   return FetchMessage(partMsgUrl, aDisplayConsumer,
-                      aMsgWindow,aUrlListener,
+                      aMsgWindow,aUrlListener, aFileName,
                       nsIMailboxUrl::ActionOpenAttachment, nsnull, nsnull);
 
 }
@@ -223,9 +229,9 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
     nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(mailboxurl);
     if (msgUrl)
     {
-		msgUrl->SetMessageFile(aFile);
-        msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
-        msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
+		  msgUrl->SetMessageFile(aFile);
+      msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+      msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
     }
 		
     nsCOMPtr<nsIURI> url = do_QueryInterface(mailboxurl);
@@ -414,7 +420,7 @@ nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
                                                       nsIURI ** aURL)
 {
   mPrintingOperation = PR_TRUE;
-  nsresult rv = FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, 
+  nsresult rv = FetchMessage(aMessageURI, aDisplayConsumer, aMsgWindow,aUrlListener, nsnull, 
                       nsIMailboxUrl::ActionDisplayMessage, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;

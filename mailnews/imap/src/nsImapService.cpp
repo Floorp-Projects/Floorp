@@ -292,7 +292,9 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   return rv;
 }
 
-NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType, const char *aUrl, 
+NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType, 
+                                            const char *aFileName,
+                                            const char *aUrl, 
                                             const char *aMessageUri, 
                                             nsISupports *aDisplayConsumer, 
                                             nsIMsgWindow *aMsgWindow, 
@@ -350,6 +352,9 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType, const char
         return rv;
       if (uriMimePart)
       {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailUrl (do_QueryInterface(imapUrl));
+        if (mailUrl)
+          mailUrl->SetFileName(aFileName);
         rv =  FetchMimePart(imapUrl, nsIImapUrl::nsImapOpenMimePart, folder, imapMessageSink,
                         nsnull, aDisplayConsumer, msgKey, uriMimePart);
       }

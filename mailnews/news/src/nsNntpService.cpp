@@ -214,7 +214,9 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
 }
 
 
-NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType, const char *aUrl, 
+NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType, 
+                                            const char *aFileName,
+                                            const char *aUrl, 
                                             const char *aMessageUri, 
                                             nsISupports *aDisplayConsumer, 
                                             nsIMsgWindow *aMsgWindow, 
