@@ -824,9 +824,9 @@ int main(int argc, char* argv[])
   for (i=1; i<argc; i++) {
     if ((PL_strcasecmp(argv[i], "-h") == 0)
         || (PL_strcasecmp(argv[i], "-help") == 0) 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--help") == 0)
-#endif /* XP_UNIX */
+#endif /* XP_UNIX || XP_BEOS*/
 #ifdef XP_PC
         || (PL_strcasecmp(argv[i], "/h") == 0)
         || (PL_strcasecmp(argv[i], "/help") == 0)
@@ -838,9 +838,9 @@ int main(int argc, char* argv[])
     }
     if ((PL_strcasecmp(argv[i], "-v") == 0)
         || (PL_strcasecmp(argv[i], "-version") == 0) 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--version") == 0)
-#endif /* XP_UNIX */
+#endif /* XP_UNIX || XP_BEOS */
 #ifdef XP_PC
         || (PL_strcasecmp(argv[i], "/v") == 0)
         || (PL_strcasecmp(argv[i], "/version") == 0)
@@ -950,8 +950,15 @@ int main(int argc, char* argv[])
   PRBool dosplash = PR_TRUE;
   for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-nosplash") == 0)
-        || (PL_strcasecmp(argv[i], "/nosplash") == 0))
+#ifdef XP_BEOS
+		|| (PL_strcasecmp(argv[i], "--nosplash") == 0)
+#endif /* XP_BEOS */
+#ifdef XP_PC
+        || (PL_strcasecmp(argv[i], "/nosplash") == 0)
+#endif /* XP_PC */
+	) {
       dosplash = PR_FALSE;
+	}
 #endif
   if (dosplash) {
       rv = NS_CreateSplashScreen( &splash );
