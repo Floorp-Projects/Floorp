@@ -179,7 +179,10 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
 
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(!desc || !desc->IsMethod())
+    {
+        HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
         return JS_FALSE;
+    }
 
     return clazz->CallWrappedMethod(cx, wrapper, desc,
                                     nsXPCWrappedNativeClass::CALL_METHOD,
@@ -246,6 +249,11 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                             wrapper, as, &retval)))
                 return retval;
         }
+        else
+        {
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+        }
+
         // XXX silently fail when property not found or call fails?
         *vp = JSVAL_VOID;
         return JS_TRUE;
@@ -285,6 +293,10 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                                             wrapper, as, &retval)))
                 return retval;
         }
+        else
+        {
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
+        }
         // fail silently
         return JS_TRUE;
     }
@@ -319,6 +331,10 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
             if(NS_SUCCEEDED(ds->LookupProperty(cx, obj, id, objp, propp,
                                                wrapper, as, &retval)))
                 return retval;
+        }
+        else
+        {
+            HANDLE_POSSIBLE_NAME_CASE_ERROR(clazz,id);
         }
     }
 

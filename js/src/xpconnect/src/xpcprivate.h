@@ -79,9 +79,14 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 
+#ifdef DEBUG
+#define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS 1
+#endif
+
 extern const char XPC_VAL_STR[];        // 'value' property name for out params
 extern const char XPC_COMPONENTS_STR[]; // 'Components' property name
 extern const char XPC_ARG_FORMATTER_FORMAT_STR[]; // format string
+extern const char XPC_QUERY_INTERFACE_STR[]; // 'QueryInterface' method name
 
 /***************************************************************************/
 // useful macros...
@@ -281,11 +286,12 @@ public:
     // To add a new string: add to this list and to XPCContext::mStrings
     // at the top of xpccontext.cpp
     enum {
-        IDX_CONSTRUCTOR     = 0 ,
-        IDX_TO_STRING       ,
-        IDX_LAST_RESULT     ,
-        IDX_RETURN_CODE     ,
-        IDX_VAL_STRING      ,
+        IDX_CONSTRUCTOR             = 0 ,
+        IDX_TO_STRING               ,
+        IDX_LAST_RESULT             ,
+        IDX_RETURN_CODE             ,
+        IDX_VAL_STRING              ,
+        IDX_QUERY_INTERFACE_STRING  ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -455,7 +461,7 @@ private:
     JSContext* GetJSContext() const
         {return mXPCContext ? mXPCContext->GetJSContext() : nsnull;}
     JSObject*  CreateIIDJSObject(REFNSIID aIID);
-    JSObject*  NewOutObject();
+    JSObject*  NewOutObject(JSContext* cx);
 
     JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
 
@@ -655,6 +661,19 @@ public:
     }
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
+
+#ifdef XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
+    // This will try to find a member that is of the form "camelCased"
+    // but was accessed from JS using "CamelCased". This is here to catch
+    // mistakes caused by the confusion magnet that JS methods are by 
+    // convention 'foo' while C++ members are by convention 'Foo'.
+    void HandlePossibleNameCaseError(jsid id);
+
+#define  HANDLE_POSSIBLE_NAME_CASE_ERROR(_clazz,_id) \
+                    _clazz->HandlePossibleNameCaseError(_id)
+#else
+#define  HANDLE_POSSIBLE_NAME_CASE_ERROR(_clazz,_id) ((void)0)
+#endif
 
     static JSBool GetConstantAsJSVal(JSContext *cx,
                                      nsIInterfaceInfo* iinfo,
@@ -1054,7 +1073,7 @@ public:
 };
 
 /***************************************************************************/
-// a class to put on the stack when we are entering xpconnect from an entry
+// A class to put on the stack when we are entering xpconnect from an entry
 // point where the JSContext is known. This pushs and pops the given context
 // with the nsThreadJSContextStack service as this object goes into and out
 // of scope. It is optimized to not push/pop the cx if it is already on top
@@ -1077,6 +1096,36 @@ private:
 
 #define AUTO_PUSH_JSCONTEXT(cx) AutoPushJSContext _AutoPushJSContext(cx)
 #define AUTO_PUSH_JSCONTEXT2(cx,xpc) AutoPushJSContext _AutoPushJSContext(cx,xpc)
+
+/***************************************************************************/
+// A class to put on the stack when we are entering xpconnect from an entry
+// point where we need to use a JSContext that is 'compatible' with the one 
+// indicated. 'Compatible' means that the JSContext is from the same JSRuntime
+// and is either already the top JSContext in the nsThreadJSContextStack or
+// is a JSContext that xpconnect manages on a per thread basis for use when
+// the nsThreadJSContextStack is empty. If the top JSContext on the 
+// nsThreadJSContextStack hails from a JSRuntime that is different from the 
+// JSRuntime of the indicated JSContext then the JSContext returned from
+// AutoPushCompatibleJSContext::GetJSContext() will be nsnull to indicate 
+// failure.
+// 
+// In practice this class is used when we will be calling to a wrapped JS 
+// object.
+
+class AutoPushCompatibleJSContext
+{
+public:
+    AutoPushCompatibleJSContext(JSContext *cx, nsXPConnect* xpc = nsnull);
+    ~AutoPushCompatibleJSContext();
+    JSContext* GetJSContext() const {return mCX;}
+
+private:
+    AutoPushCompatibleJSContext();    // no implementation
+
+private:
+    nsIJSContextStack* mContextStack;
+    JSContext* mCX;
+};
 
 /***************************************************************************/
 #define NS_JS_RUNTIME_SERVICE_CID \

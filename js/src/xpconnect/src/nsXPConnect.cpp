@@ -59,12 +59,16 @@ public:
     nsIXPCException* GetException();
     void             SetException(nsIXPCException* aException);
 
+    JSContext*       GetJSContext();
+
 private:
     nsIXPCException* mException;
+    JSContext* mCX;
 };
 
 xpcPerThreadData::xpcPerThreadData()
-    :   mException(nsnull)
+    :   mException(nsnull),
+        mCX(nsnull)
 {
     // empty...
 }
@@ -72,6 +76,14 @@ xpcPerThreadData::xpcPerThreadData()
 xpcPerThreadData::~xpcPerThreadData()
 {
     NS_IF_RELEASE(mException);
+    if(mCX)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+        if(NS_SUCCEEDED(rv))
+            xpc->AbandonJSContext(mCX);
+        JS_DestroyContext(mCX);
+    }
 }
 
 nsIXPCException*
@@ -88,6 +100,44 @@ xpcPerThreadData::SetException(nsIXPCException* aException)
     NS_IF_RELEASE(mException);
     mException = aException;
 }
+
+static JSClass global_class = {
+    "globalForDefaultXPConnectJSContext", 0,
+    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+};
+
+JSContext*
+xpcPerThreadData::GetJSContext()
+{
+    if(!mCX)
+    {
+        JSRuntime *rt;
+        nsresult rv;
+        NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+        if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
+        {
+            NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+            if(NS_SUCCEEDED(rv))
+            {
+                mCX = JS_NewContext(rt, 8192);
+                if(mCX)
+                {
+                    JSObject *glob;
+                    glob = JS_NewObject(mCX, &global_class, NULL, NULL);
+                    if(!glob || 
+                       !JS_InitStandardClasses(mCX, glob) ||
+                       NS_FAILED(xpc->InitJSContext(mCX, glob, JS_TRUE)))
+                    {
+                        JS_DestroyContext(mCX);
+                        mCX = nsnull;
+                    }
+                }
+            }
+        }
+    }
+    return mCX;
+}        
 
 /*************************************************/
 
@@ -134,6 +184,68 @@ GetPerThreadData()
     return data;
 }
 
+/***************************************************************************/
+
+AutoPushCompatibleJSContext::AutoPushCompatibleJSContext(JSContext *cx, nsXPConnect* xpc /*= nsnull*/)
+    : mCX(nsnull)
+{
+    NS_ASSERTION(cx, "pushing null cx");
+    mContextStack = nsXPConnect::GetContextStack(xpc);
+    if(mContextStack)
+    {
+        JSContext* current;
+
+        if(NS_SUCCEEDED(mContextStack->Peek(&current)))
+        {
+            // Is the current runtime compatible?
+            if(current == cx || 
+               (current && JS_GetRuntime(current) == JS_GetRuntime(cx)))
+            {
+                mCX = current;                            
+            }
+            else
+            {
+                // The stack is either empty or the context is of the wrong 
+                // runtime. Either way we need to *get* a compatible runtime
+                // and push it on the stack. xpconnect's per thread data will
+                // give us a JSContext.
+    
+                xpcPerThreadData* data = GetPerThreadData();
+                if(data)
+                {
+                    JSContext* ourCX = data->GetJSContext();
+                    if(ourCX && 
+                       JS_GetRuntime(ourCX) == JS_GetRuntime(cx) && 
+                       NS_SUCCEEDED(mContextStack->Push(ourCX)))
+                    {
+                        mCX = ourCX;
+                        // Leave the reference to the mContextStack to
+                        // indicate that we need to pop it in out dtor.
+                        return;                                                
+                    }
+                }
+            }
+        }
+        // Release and clear the mContextStack pointer to indicate that 
+        // nothing needs to be popped from it when we cleanup in our dtor.
+        NS_RELEASE(mContextStack);
+    }
+}
+
+AutoPushCompatibleJSContext::~AutoPushCompatibleJSContext()
+{
+    if(mContextStack)
+    {
+#ifdef DEBUG
+        JSContext* cx;
+        nsresult rv = mContextStack->Pop(&cx);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mCX, "unbalanced stack usage");
+#else
+        mContextStack->Pop(nsnull);
+#endif
+        NS_RELEASE(mContextStack);
+    }
+}
 
 /***************************************************************************/
 

@@ -57,6 +57,7 @@
 #include "nsSpecialSystemDirectory.h"	// For exe dir
 
 #include "nsIJSContextStack.h"
+#include "nsIJSRuntimeService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
@@ -723,13 +724,20 @@ int main()
     JSRuntime *rt;
     JSContext *jscontext;
     JSObject *glob;
+    nsresult rv;
 
     gErrFile = stderr;
     gOutFile = stdout;
 
     SetupRegistry();
 
-    rt = JS_NewRuntime(8L * 1024L * 1024L);
+    NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
+    // get the JSRuntime from the runtime svc, if possible
+    if (NS_FAILED(rv) ||
+        NS_FAILED(rtsvc->GetRuntime(&rt))) {
+        rtsvc = NULL;
+        rt = JS_NewRuntime(8L * 1024L * 1024L);
+    }
     if (!rt)
         return 1;
     jscontext = JS_NewContext(rt, 8192);
@@ -745,7 +753,6 @@ int main()
         return 1;
     }
 
-    nsresult rv;
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
     if(NS_FAILED(rv))
     {
@@ -1224,8 +1231,12 @@ sm_test_done:
     xpc->AbandonJSContext(jscontext);
     JS_DestroyContext(jscontext);
     NS_RELEASE(xpc);
-    JS_DestroyRuntime(rt);
-    JS_ShutDown();
+
+    if (!rtsvc) {
+        /* no runtime service, so we have to handle shutdown */
+        JS_DestroyRuntime(rt);
+        JS_ShutDown();
+    }
 
 #if 0
 // a fun test...
