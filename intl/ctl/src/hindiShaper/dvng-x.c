@@ -30,6 +30,64 @@
 #define MAX_CLUSTER_CHRS  256
 #define MAX_GLYPHS        256
 
+/*************************************************************************
+ *         CHARACTER TYPE CONSTANTS - What they represent                *
+ *         -----------------------------------------------               *
+ *                                                                       *
+ * _NP : Vowel-Modifier Visarg(U+0903) (Displayed to the right).         *
+ * _UP : Vowel-Modifer Chandrabindu(U+0901) and Anuswar (U+0902).        *
+ *       Displayed above the Consonant/Vowel                             *
+ * _IV : Independant Vowels                                              *
+ * _CN : All consonants except _CK and _RC below                         *
+ * _CK : Consonants that can be followed by a Nukta(U+093C). Characters  *
+ *       (U+0958-U+095F). No clue why Unicode imposed it on Devanagari.  *
+ * _RC : Consonant Ra - Needs to handle 'Reph'                           *
+ * _NM : Handle special case of Matras when followed by a Chandrabindu/  *
+ *       Anuswar.                                                        *
+ * _IM : Choti I Matra (U+093F). Needs to handle re-ordering.            *
+ * _HL : Halant (U+094D)                                                 *
+ * _NK : Nukta (U+093C)                                                  *
+ * _VD : For Vedic extension characters (U+0951 - U+0954)                *
+ * _HD : Hindu Numerals written in Devanagari                            *
+ * _MS : For Matras such U+0941, U+0942 which need to be attached to the *
+ *       holding consonant at the Stem.                                  *
+ * _RM : A cluster of Ra+Halant at the begining would be represented by  *
+ *       a Reph (placed in sun.unicode.india-0 at 0xF812). Reph is       *
+ *       typically attached on top of the last consonant.                *
+ * _II_M, _EY_M, _AI_M, _OW1_M, _OW2_M, _AYE_M, _EE_M, _AWE_M, _O_M,     * 
+ *     : Separate glyphs are provided which combine matra with a reph.   *
+ *       Matras which need to use this are represented by the above.     *
+ *************************************************************************/
+ 
+/*************************************************************************
+ *                          CLUSTERING LOGIC                             *
+ *                          ----------------                             *
+ *                                                                       *
+ * Notations used to describe Devanagari Script Generic Info:            *
+ * D : Vowel-Modifiers (U+0901 - U+0903)                                 *
+ * V : Vowels (U+0905 - U+0913) & (U+0960, U+0961)                       *
+ * C : Consonants (U+0915 - U+0939)                                      *
+ * M : Matras (U+093E - U+094C) & (U+0962, U+0963)                       *
+ * H : Halant (U+094D)                                                   *
+ * N : Nukta (U+093C)                                                    *
+ *                                                                       *
+ * RULES:-                                                               *
+ * -------                                                               *
+ * Syllable/Cluster types                                                *
+ *                                                                       *
+ * 1] Vowel Syllable ::- V[D]                                            *
+ * 2] Cons - Vowel Syllable ::- [Cons-Syllable] Full- Cons [M] [D]       *
+ * 3] Cons-Syllable  ::- [Pure-Cons][Pure-Cons] Pure-Cons                *
+ * 4] Pure-Cons  ::- Full-Cons H                                         *
+ * 5] Full-Cons  ::- C[N]                                                *
+ *                                                                       *
+ * Notes:                                                                *
+ * 1] Nukta (N) can come after only those consonants with which it can   *
+ *    combine, ie U+0915-U+0917, U+091C, U+0921, U+0922, U+092B & U+092F *
+ * 2] Worst case Vowel cluster - V D                                     *
+ * 3] A worst case Consonant cluster: C N H C N H C N H C N M D          *
+ *************************************************************************/
+
 /*
  * Devanagari character classes
  */
@@ -996,7 +1054,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     }
     else {
       gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF7C0);
-      GetBaseConsGlyphs(cluster, nChars, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
     }
     break;
 
@@ -1005,14 +1063,14 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     case St4:
     case St5:
     case St6:
-      GetBaseConsGlyphs(cluster, nChars, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
       break;
       
     case St7:
       if (IsDvngCharCls(cluster[nChars - 1], _UP)) {
 
         if (IsDvngCharCls(cluster[nChars - 2], _RM))
-          GetBaseConsGlyphs(cluster, nChars - 2, &gLst[nGlyphs], &nGlyphs);
+          GetBaseConsGlyphs(cluster, nChars - 2,gLst, &nGlyphs);
 
         if (IsDvngCharCls(cluster[nChars - 2], _RM)) {
 
@@ -1056,11 +1114,11 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
         }
       }
       else
-        GetBaseConsGlyphs(cluster, nChars, &gLst[nGlyphs], &nGlyphs);
+        GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
       break;
 
     case St8:
-      GetBaseConsGlyphs(cluster, nChars - 1, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster, nChars - 1, gLst, &nGlyphs);
       if (IsKern(gLst[nGlyphs - 1])) {
         dummy = gLst[nGlyphs - 1];
         gLst[nGlyphs - 1] = PANGO_MOZ_MAKE_GLYPH(cluster[nChars - 1]);
@@ -1076,7 +1134,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
       else
         gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF817);        
 
-      GetBaseConsGlyphs(cluster, nChars - 1, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster, nChars - 1, gLst, &nGlyphs);
       break;
 
   case St10:
@@ -1085,11 +1143,11 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     else
       gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF818);
 
-    GetBaseConsGlyphs(cluster, nChars - 2, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster, nChars - 2, gLst, &nGlyphs);
     break;
     
   case St11:
-    GetBaseConsGlyphs(cluster, nChars, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster, nChars, gLst, &nGlyphs);
     break;
     
   case St12:
@@ -1104,7 +1162,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     break;
     
   case St14:    
-    GetBaseConsGlyphs(cluster+2, nChars - 2, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster+2, nChars - 2, gLst, &nGlyphs);
     if (IsKern(gLst[nGlyphs - 1])) {
       dummy = gLst[nGlyphs - 1];
       gLst[nGlyphs - 1] = PANGO_MOZ_MAKE_GLYPH(0xF812);
@@ -1115,7 +1173,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     break;
     
   case St15:    
-    GetBaseConsGlyphs(cluster+2, nChars - 3, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster+2, nChars - 3, gLst, &nGlyphs);
     if (IsKern(gLst[nGlyphs - 1])) {      
       dummy = gLst[nGlyphs - 2];
       gLst[nGlyphs - 2] = PANGO_MOZ_MAKE_GLYPH(0xF812);
@@ -1130,9 +1188,9 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     
   case St16:
     if (IsDvngCharCls(cluster[nChars - 1], _RM))
-      GetBaseConsGlyphs(cluster+2, nChars - 3, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster+2, nChars - 3, gLst, &nGlyphs);
     else
-      GetBaseConsGlyphs(cluster+2, nChars - 2, &gLst[nGlyphs], &nGlyphs);
+      GetBaseConsGlyphs(cluster+2, nChars - 2, gLst, &nGlyphs);
 
     if (IsDvngCharCls(cluster[nChars - 1], ~(_RM))){
 
@@ -1171,9 +1229,9 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     if (IsDvngCharCls(cluster[nChars - 1], _UP)) {
 
       if (IsDvngCharCls(cluster[nChars - 2], _RM))
-        GetBaseConsGlyphs(cluster+2, nChars - 4, &gLst[nGlyphs], &nGlyphs);
+        GetBaseConsGlyphs(cluster+2, nChars - 4, gLst, &nGlyphs);
       else
-        GetBaseConsGlyphs(cluster+2, nChars - 3, &gLst[nGlyphs], &nGlyphs);
+        GetBaseConsGlyphs(cluster+2, nChars - 3, gLst, &nGlyphs);
 
       if (IsDvngCharCls(cluster[nChars - 2], ~(_RM))) {
 
@@ -1207,7 +1265,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     break;
     
   case St18:
-    GetBaseConsGlyphs(cluster-2, nChars-3, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster-2, nChars-3, gLst, &nGlyphs);
     if (IsKern(gLst[nGlyphs - 1])) {
       dummy = gLst[nGlyphs - 1];
       gLst[nGlyphs - 1] = PANGO_MOZ_MAKE_GLYPH(0xF813);
@@ -1223,7 +1281,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     else
       gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF819);
 
-    GetBaseConsGlyphs(cluster+2, nChars-3, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster+2, nChars-3, gLst, &nGlyphs);
     break;
     
   case St20:
@@ -1232,7 +1290,7 @@ get_adjusted_glyphs_list(DvngFontInfo *fontInfo,
     else
       gLst[nGlyphs++] = PANGO_MOZ_MAKE_GLYPH(0xF81A);
 
-    GetBaseConsGlyphs(cluster+2, nChars - 4, &gLst[nGlyphs], &nGlyphs);
+    GetBaseConsGlyphs(cluster+2, nChars - 4, gLst, &nGlyphs);
     break;
     }
   }
@@ -1328,6 +1386,7 @@ dvng_engine_shape(const char       *fontCharset,
   p = text;
   while (p < text + length) {
     log_cluster = p;
+    aSt = St0;
     p = get_next_cluster(p, text + length - p, cluster, &num_chrs, &aSt);
     add_cluster(fontInfo, glyphs, log_cluster-text, cluster, num_chrs, &aSt);
   }
