@@ -64,6 +64,7 @@
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -98,6 +99,24 @@ public:
     void WaitForComplete();
 };
 
+class SimpleDirectoryProvider :
+    public nsIDirectoryServiceProvider
+{
+public:
+    SimpleDirectoryProvider();
+    BOOL IsValid() const;
+
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+
+protected:
+    virtual ~SimpleDirectoryProvider();
+
+    nsCOMPtr<nsILocalFile> mApplicationRegistryDir;
+    nsCOMPtr<nsILocalFile> mApplicationRegistryFile;
+    nsCOMPtr<nsILocalFile> mUserProfileDir;
+};
 
 // Prefs
 
@@ -106,6 +125,7 @@ static const char *c_szDefaultPage   = "data:text/html,<html><body bgcolor=\"#00
 // Registry keys and values
 
 static const TCHAR *c_szIEHelperObjectKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+
 
 // Some recent SDKs define these IOleCommandTarget groups, so they're
 // postfixed with _Moz to prevent linker errors.
@@ -949,17 +969,21 @@ HRESULT CMozillaBrowser::Initialize()
         return E_FAIL;
     }
 
-    nsresult rv;
+    // Create a simple directory provider. If this fails because the directories are
+    // invalid or whatever then the control will fallback on the default directory
+    // provider.
 
-    // Create a directory file loc object
-    nsCOMPtr<nsIDirectoryServiceProvider> provider; // nsnull for the moment
-    // TODO put alternative directory service provider here at some point
+    nsCOMPtr<nsIDirectoryServiceProvider> directoryProvider;
+    SimpleDirectoryProvider *pDirectoryProvider = new SimpleDirectoryProvider;
+    if (pDirectoryProvider->IsValid())
+        directoryProvider = do_QueryInterface(pDirectoryProvider);
 
     // Create an object to represent the path
+    nsresult rv;
     nsCOMPtr<nsILocalFile> binDir;
     USES_CONVERSION;
     NS_NewNativeLocalFile(nsDependentCString(T2A(szBinDirPath)), TRUE, getter_AddRefs(binDir));
-    rv = NS_InitEmbedding(binDir, provider);
+    rv = NS_InitEmbedding(binDir, directoryProvider);
 
     // Load preferences service
     mPrefs = do_GetService(kPrefCID, &rv);
@@ -1061,6 +1085,7 @@ HRESULT CMozillaBrowser::Terminate()
 
     return S_OK;
 }
+
 
 // Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateBrowser() 
@@ -1867,6 +1892,139 @@ HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, con
 {
     pThis->OnEditorCommand(nCmdID);
     return S_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SimpleDirectoryProvider implementation
+
+SimpleDirectoryProvider::SimpleDirectoryProvider()
+{
+    NS_INIT_ISUPPORTS();
+
+    nsCOMPtr<nsILocalFile> appDataDir;
+
+    // Attempt to fill appDataDir with a meaningful value. Any error in the process
+    // will cause the constructor to return and IsValid() to return FALSE,
+
+    CComPtr<IMalloc> shellMalloc;
+    SHGetMalloc(&shellMalloc);
+    if (shellMalloc)
+    {
+        LPITEMIDLIST pitemidList = NULL;
+        SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pitemidList);
+        if (pitemidList)
+        {
+            TCHAR szBuffer[MAX_PATH + 1];
+            if (SUCCEEDED(SHGetPathFromIDList(pitemidList, szBuffer)))
+            {
+                szBuffer[MAX_PATH] = TCHAR('\0');
+                USES_CONVERSION;
+                NS_NewNativeLocalFile(nsDependentCString(T2A(szBuffer)), TRUE, getter_AddRefs(appDataDir));
+            }
+            shellMalloc->Free(pitemidList);
+        }
+    }
+    if (!appDataDir)
+    {
+        return;
+    }
+
+    // Mozilla control paths are
+    // App data     - {Application Data}/MozillaControl
+    // App registry - {Application Data}/MozillaControl/registry.dat
+    // Profiles     - {Application Data}/MozillaControl/profiles
+
+    nsresult rv;
+
+    // Create the root directory
+    PRBool exists;
+    rv = appDataDir->Exists(&exists);
+    if (NS_FAILED(rv) || !exists) return;
+
+    // MozillaControl application data
+    rv = appDataDir->AppendRelativePath(NS_LITERAL_STRING("MozillaControl"));
+    if (NS_FAILED(rv)) return;
+    rv = appDataDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = appDataDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return;
+
+    // Registry.dat file
+    nsCOMPtr<nsIFile> appDataRegAsFile;
+    rv = appDataDir->Clone(getter_AddRefs(appDataRegAsFile));
+    if (NS_FAILED(rv)) return;
+    nsCOMPtr<nsILocalFile> appDataRegistry = do_QueryInterface(appDataRegAsFile, &rv);
+    if (NS_FAILED(rv)) return;
+    appDataRegistry->AppendRelativePath(NS_LITERAL_STRING("registry.dat"));
+
+    // Profiles directory
+    nsCOMPtr<nsIFile> profileDirAsFile;
+    rv = appDataDir->Clone(getter_AddRefs(profileDirAsFile));
+    if (NS_FAILED(rv)) return;
+    nsCOMPtr<nsILocalFile> profileDir = do_QueryInterface(profileDirAsFile, &rv);
+    if (NS_FAILED(rv)) return;
+    profileDir->AppendRelativePath(NS_LITERAL_STRING("profiles"));
+    rv = profileDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return;
+
+    // Store the member values
+    mApplicationRegistryDir = appDataDir;
+    mApplicationRegistryFile = appDataRegistry;
+    mUserProfileDir = profileDir;
+}
+
+SimpleDirectoryProvider::~SimpleDirectoryProvider()
+{
+}
+
+BOOL
+SimpleDirectoryProvider::IsValid() const
+{
+    return (mApplicationRegistryDir && mApplicationRegistryFile && mUserProfileDir) ?
+        TRUE : FALSE;
+}
+
+NS_IMPL_ISUPPORTS1(SimpleDirectoryProvider, nsIDirectoryServiceProvider)
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIDirectoryServiceProvider
+
+/* nsIFile getFile (in string prop, out PRBool persistent); */
+NS_IMETHODIMP SimpleDirectoryProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
+{
+    NS_ENSURE_ARG_POINTER(prop);
+    NS_ENSURE_ARG_POINTER(persistent);
+    NS_ENSURE_ARG_POINTER(_retval);
+
+	*_retval = nsnull;
+	*persistent = PR_TRUE;
+
+    // Only need to support NS_APP_APPLICATION_REGISTRY_DIR, NS_APP_APPLICATION_REGISTRY_FILE, and
+    // NS_APP_USER_PROFILES_ROOT_DIR. Unsupported keys fallback to the default service provider
+    
+    nsCOMPtr<nsILocalFile> localFile;
+	nsresult rv = NS_ERROR_FAILURE;
+
+    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    {
+        localFile = mApplicationRegistryDir;
+    }
+    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    {
+        localFile = mApplicationRegistryFile;
+    }
+    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
+    {
+        localFile = mUserProfileDir;
+    }
+    
+	if (localFile)
+		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**) _retval);
+		
+	return rv;
 }
 
 
