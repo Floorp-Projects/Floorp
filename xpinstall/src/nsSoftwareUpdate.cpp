@@ -314,17 +314,17 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
 
     // -- grab a proxied Chrome Registry now while we can
     nsresult rv;
-    nsIChromeRegistry* chromeReg = nsnull;
-    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry,
+    nsIXULChromeRegistry* chromeRegistry = nsnull;
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
                                     tmpReg,
                                     kChromeRegistryCID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_SUCCEEDED(rv))
-        chromeReg = tmpReg;
+        chromeRegistry = tmpReg;
 
     // we want to call this with or without a chrome registry
     nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments,
-                                             flags, aListener, chromeReg );
+                                             flags, aListener, chromeRegistry );
 
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -347,8 +347,8 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                  nsIXPIListener* aListener)
 {
     nsresult rv;
-    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry,
-                                    chromeReg,
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
+                                    chromeRegistry,
                                     kChromeRegistryCID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv))
@@ -360,7 +360,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                              aName,
                                              (PRUint32)aSelect,
                                              aListener,
-                                             chromeReg);
+                                             chromeRegistry);
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
 

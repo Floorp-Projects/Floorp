@@ -64,39 +64,88 @@ interface nsIChromeRegistry : nsISupports
    */
   string convertChromeURL(in nsIURI aChromeURL);
 
-  nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
+  /**
+   * get the style sheets for a specific chrome URL
+   */
   nsISupportsArray getStyleSheets(in nsIURI aChromeURL);
 
-  /* Should be called when locales change to reload all chrome (including XUL). */
-	void reloadChrome();
+  /**
+   * get the user-specified style sheets
+   */
+  nsISupportsArray getUserSheets(in boolean useChromeSheets);
 
-  /* Should be called when skins change. Reloads only stylesheets. */
-	void refreshSkins();
-	
+  /**
+   * get the style sheets required for a specific running docshell
+   */
+  nsISupportsArray getAgentSheets(in nsIDocShell docShell);
+
+  /**
+   * refresh the chrome list at runtime, looking for new packages/etc
+   */
+  void checkForNewChrome();
+};
+
+[scriptable, uuid(a9f92623-5982-4afe-9d90-619cf5b0c39f)]
+interface nsIXULChromeRegistry : nsIChromeRegistry {
+
   /* Applies a skin or locale to all possible packages */
   void selectSkin(in wstring skinName, in boolean useProfile);
   void selectLocale(in wstring localeName, in boolean useProfile);
-	void deselectSkin(in wstring skinName, in boolean useProfile);
+  void deselectSkin(in wstring skinName, in boolean useProfile);
   void deselectLocale(in wstring localeName, in boolean useProfile);
   PRInt32 isSkinSelected(in wstring skinName, in boolean useProfile);
   PRInt32 isLocaleSelected(in wstring localeName, in boolean useProfile);
  
-  /* Apply skin/locale to a specific package */
-	void selectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
-	void selectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
-  void deselectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
-	void deselectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
-  boolean isSkinSelectedForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
-  boolean isLocaleSelectedForPackage(in wstring localeName, in wstring packageName, in boolean useProfile);
-
  // Special additional APIs for locales only.
   void selectLocaleForProfile(in wstring localeName, in wstring profilePath);
-  wstring getSelectedLocale(in wstring packageName);
+  
+  /* Should be called when locales change to reload all chrome (including XUL). */
+  void reloadChrome();
+  
   /* runtimeProvider == true: don't assert the runtime change */
   void setRuntimeProvider(in boolean runtimeProvider); 
 
+  boolean checkThemeVersion(in wstring skinName);
+  boolean checkLocaleVersion(in wstring localeName);
+
+  /* Apply skin/locale to a specific package */
+  void selectSkinForPackage(in wstring skinName,
+                            in wstring packageName,
+                            in boolean useProfile);
+  
+  void selectLocaleForPackage(in wstring localeName,
+                              in wstring packageName,
+                              in boolean useProfile);
+  
+  void deselectSkinForPackage(in wstring skinName,
+                              in wstring packageName,
+                              in boolean useProfile);
+  
+  void deselectLocaleForPackage(in wstring localeName,
+                                in wstring packageName,
+                                in boolean useProfile);
+  
+  boolean isSkinSelectedForPackage(in wstring skinName,
+                                   in wstring packageName,
+                                   in boolean useProfile);
+  
+  boolean isLocaleSelectedForPackage(in wstring localeName,
+                                     in wstring packageName,
+                                     in boolean useProfile);
+
+  wstring getSelectedLocale(in wstring packageName);
+  nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
+  
+  /* Should be called when skins change. Reloads only stylesheets. */
+  void refreshSkins();
+
+  boolean allowScriptsForSkin(in nsIURI url);
+
   /* Installation APIs */
-  void installSkin(in string baseURL, in boolean useProfile, in boolean allowScripts);
+  void installSkin(in string baseURL,
+                   in boolean useProfile,
+                   in boolean allowScripts);
+  
   void uninstallSkin(in wstring skinName, in boolean useProfile);
 
   void installLocale(in string baseURL, in boolean useProfile);
@@ -104,20 +153,7 @@ interface nsIChromeRegistry : nsISupports
 
   void installPackage(in string baseURL, in boolean useProfile);
   void uninstallPackage(in wstring packageName, in boolean useProfile);
-
-  void getAgentSheets(in nsIDocShell docShell, out nsISupportsArray styleSheets);
-  void getUserSheets(in boolean useChromeSheets, out nsISupportsArray styleSheets);
-
-  boolean allowScriptsForSkin(in nsIURI url);
-
-  void checkForNewChrome();
-
-  boolean checkThemeVersion(in wstring skinName);
-
-  boolean checkLocaleVersion(in wstring localeName);
-
 };
-
 
 %{ C++
 

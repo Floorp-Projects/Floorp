@@ -242,7 +242,7 @@ PRInt32 nsRegisterItem::Complete()
     nsresult rv;
     PRInt32 result = nsInstall::SUCCESS;
     PRBool  isProfile = mChromeType & CHROME_PROFILE;
-    nsIChromeRegistry* reg = mInstall->GetChromeRegistry();
+    nsIXULChromeRegistry* reg = mInstall->GetChromeRegistry();
 
     if ( reg && !(mChromeType & CHROME_DELAYED) )
     {

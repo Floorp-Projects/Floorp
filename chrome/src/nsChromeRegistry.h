@@ -54,7 +54,7 @@ class nsIDocument;
 #include "nsWeakReference.h"
 #include "nsString.h"
 
-class nsChromeRegistry : public nsIChromeRegistry,
+class nsChromeRegistry : public nsIXULChromeRegistry,
                          public nsIObserver,
                          public nsSupportsWeakReference
 {
@@ -63,6 +63,7 @@ public:
 
   // nsIChromeRegistry methods:
   NS_DECL_NSICHROMEREGISTRY
+  NS_DECL_NSIXULCHROMEREGISTRY
 
   NS_DECL_NSIOBSERVER
 
@@ -93,7 +94,7 @@ protected:
   NS_IMETHOD WriteInfoToDataSource(const char *aDocURI, const PRUnichar *aOverlayURI,
                                    PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
  
-  nsresult LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
+  nsresult LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsACString & aURL);
   nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
   
   nsresult GetUserSheetURL(PRBool aIsChrome, nsCString & aURL);
@@ -122,66 +123,66 @@ private:
   NS_IMETHOD GetBaseURL(const nsCString& aPackage, const nsCString& aProvider, 
                              nsCString& aBaseURL);
 
-  NS_IMETHOD FindProvider(const nsCString& aPackage,
-                          const nsCString& aProvider,
+  NS_IMETHOD FindProvider(const nsACString& aPackage,
+                          const nsACString& aProvider,
                           nsIRDFResource *aArc,
                           nsIRDFNode **aSelectedProvider);
 
   NS_IMETHOD SelectPackageInProvider(nsIRDFResource *aPackageList,
-                                   const nsCString& aPackage,
-                                   const nsCString& aProvider,
+                                   const nsACString& aPackage,
+                                   const nsACString& aProvider,
                                    const nsCString& aProviderName,
                                    nsIRDFResource *aArc,
                                    nsIRDFNode **aSelectedProvider);
 
-  NS_IMETHOD SetProvider(const nsCString& aProvider,
+  NS_IMETHOD SetProvider(const nsACString& aProvider,
                          nsIRDFResource* aSelectionArc,
                          const PRUnichar* aProviderName,
                          PRBool aAllUsers, 
                          const char *aProfilePath, 
                          PRBool aIsAdding);
 
-  NS_IMETHOD SetProviderForPackage(const nsCString& aProvider,
+  NS_IMETHOD SetProviderForPackage(const nsACString& aProvider,
                                    nsIRDFResource* aPackageResource, 
                                    nsIRDFResource* aProviderPackageResource, 
                                    nsIRDFResource* aSelectionArc, 
                                    PRBool aAllUsers, const char *aProfilePath, 
                                    PRBool aIsAdding);
 
-  NS_IMETHOD SelectProviderForPackage(const nsCString& aProviderType,
+  NS_IMETHOD SelectProviderForPackage(const nsACString& aProviderType,
                                         const PRUnichar *aProviderName, 
                                         const PRUnichar *aPackageName, 
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding);
 
-  NS_IMETHOD CheckProviderVersion (const nsCString& aProviderType,
+  NS_IMETHOD CheckProviderVersion (const nsACString& aProviderType,
                                       const PRUnichar* aProviderName,
                                       nsIRDFResource* aSelectionArc,
                                       PRBool *aCompatible);
 
-  NS_IMETHOD IsProviderSelected(const nsCString& aProvider,
+  NS_IMETHOD IsProviderSelected(const nsACString& aProvider,
                                 const PRUnichar* aProviderName,
                                 nsIRDFResource* aSelectionArc,
                                 PRBool aUseProfile, PRInt32* aResult);
-  NS_IMETHOD IsProviderSelectedForPackage(const nsCString& aProviderType,
+  NS_IMETHOD IsProviderSelectedForPackage(const nsACString& aProviderType,
                                           const PRUnichar *aProviderName, 
                                           const PRUnichar *aPackageName, 
                                           nsIRDFResource* aSelectionArc, 
                                           PRBool aUseProfile, PRBool* aResult);
-  NS_IMETHOD IsProviderSetForPackage(const nsCString& aProvider,
+  NS_IMETHOD IsProviderSetForPackage(const nsACString& aProvider,
                                      nsIRDFResource* aPackageResource, 
                                      nsIRDFResource* aProviderPackageResource, 
                                      nsIRDFResource* aSelectionArc, 
                                      PRBool aUseProfile, PRBool* aResult);
 
-  NS_IMETHOD InstallProvider(const nsCString& aProviderType,
-                             const nsCString& aBaseURL,
+  NS_IMETHOD InstallProvider(const nsACString& aProviderType,
+                             const nsACString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
-  NS_IMETHOD UninstallProvider(const nsCString& aProviderType, const PRUnichar* aProviderName, PRBool aUseProfile);
+  NS_IMETHOD UninstallProvider(const nsACString& aProviderType, const PRUnichar* aProviderName, PRBool aUseProfile);
 
   nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
-  PRBool GetProviderCount(const nsCString& aProviderType, nsIRDFDataSource* aDataSource);
+  PRBool GetProviderCount(const nsACString& aProviderType, nsIRDFDataSource* aDataSource);
 
 protected:
   PRBool mInstallInitialized;

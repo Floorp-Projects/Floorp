@@ -30,7 +30,7 @@ function selectLocale(event)
     var langcode = node.getAttribute('value');
     if (langcode)
     {
-      var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
+      var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
       chromeRegistry.selectLocale(langcode, true);
       var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
       observerService.notifyObservers(null, "locale-selected", null);

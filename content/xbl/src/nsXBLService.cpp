@@ -79,7 +79,6 @@
 
 #include "nsIXBLPrototypeHandler.h"
 
-#include "nsIChromeRegistry.h"
 #include "nsIPref.h"
 
 #include "nsIPresShell.h"

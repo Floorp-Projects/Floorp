@@ -553,10 +553,11 @@ nsMsgMailSession::GetSelectedLocaleDataDir(nsIFile *defaultsDir)
   NS_ENSURE_SUCCESS(rv,rv);                                                   
 
   if (baseDirExists) {                                                        
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
+    nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
+      do_GetService("@mozilla.org/chrome/chrome-registry;1", &rv);
     if (NS_SUCCEEDED(rv)) {                                                 
       nsXPIDLString localeName;                                           
-      rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
+      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
 
       if (NS_SUCCEEDED(rv) && !localeName.IsEmpty()) {
         PRBool localeDirExists = PR_FALSE;                              

@@ -108,7 +108,7 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              const PRUnichar*   aArgs,
                              PRUint32           flags,
                              nsIXPIListener*    aListener,
-                             nsIChromeRegistry* aChromeReg)
+                             nsIXULChromeRegistry* aChromeRegistry)
 : mError(0),
   mType(aInstallType),
   mFlags(flags),
@@ -116,7 +116,7 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
   mArgs(aArgs),
   mFile(aFile),
   mListener(aListener),
-  mChromeReg(aChromeReg)
+  mChromeRegistry(aChromeRegistry)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
 }

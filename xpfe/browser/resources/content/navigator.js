@@ -1413,7 +1413,7 @@ function applyTheme(themeName)
     return;
 
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-    .getService(Components.interfaces.nsIChromeRegistry);
+    .getService(Components.interfaces.nsIXULChromeRegistry);
 
   var oldTheme = false;
   try {

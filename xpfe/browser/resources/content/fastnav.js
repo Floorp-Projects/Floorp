@@ -1254,7 +1254,7 @@ function stylesheetSwitchAll(frameset, title) {
 function applyTheme(themeName)
 {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                                 .getService(Components.interfaces.nsIChromeRegistry);
+                                 .getService(Components.interfaces.nsIXULChromeRegistry);
 
   chromeRegistry.selectSkin(themeName.getAttribute("name"), true);
   chromeRegistry.refreshSkins();
