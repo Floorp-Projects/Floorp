@@ -235,6 +235,11 @@ endif
 ifeq ($(OS_ARCH),OS2)
 ifdef BUILD_STATIC_LIBS
 EXE_DEF_FILE = mozilla.def
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libuls.lib libconv.lib
+else
+OS_LIBS += -llibuni -luconv
+endif
 endif
 endif
 
@@ -318,7 +323,8 @@ $(EXE_DEF_FILE):
 	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
 	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
 	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
-	@echo  	DaxOpenSave					= PMCTLS.295   >>$(EXE_DEF_FILE)
+	
+LDFLAGS += /NOE
 endif
 endif
 

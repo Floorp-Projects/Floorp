@@ -31,11 +31,7 @@ STATIC_REQUIRES += \
 	string \
 	$(NULL)
 
-ifeq ($(OS_ARCH),OS2)
-STATIC_EXTRA_DSO_LIBS += $(addprefix lib,$(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS)))
-STATIC_EXTRA_LIBS += libuls.lib libconv.lib unikbd.lib
-else
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 STATIC_EXTRA_LIBS += \
 	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) \
 	$(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS)))) \
@@ -43,8 +39,7 @@ STATIC_EXTRA_LIBS += \
 else
 STATIC_EXTRA_LIBS += -L$(DIST)/lib/components
 STATIC_EXTRA_DSO_LIBS += $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
-endif # WINNT
-endif # OS2
+endif # OS2 || WINNT
 
 STATIC_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 
