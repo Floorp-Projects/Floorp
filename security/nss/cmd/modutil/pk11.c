@@ -233,6 +233,8 @@ AddModule(char *moduleName, char *libFile, char *cipherString,
 	ciphers =
 		getFlagsFromString(cipherString, cipherStrings, numCipherStrings);
 
+        PR_SetErrorText(NULL,0);
+
 	status =
 		SECMOD_AddNewModule(moduleName, libFile,
 		  SECMOD_PubMechFlagstoInternal(mechanisms),
