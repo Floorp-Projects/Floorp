@@ -301,6 +301,7 @@ nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
     }
     case nsIDOMNode::CDATA_SECTION_NODE:
     {
+      NS_ERROR("aaa");
       nsCOMPtr<nsIDOMCDATASection> cdata = do_QueryInterface(node);
       mSerializer->AppendCDATASection(cdata, aStartOffset, aEndOffset, aStr);
       break;
@@ -1144,7 +1145,8 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   
   // also consider ourselves in a text widget if we can't find an html document
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-  if (!htmlDoc) mIsTextWidget = PR_TRUE;
+  if (!htmlDoc || mDocument->IsCaseSensitive())
+    mIsTextWidget = PR_TRUE;
   
   // normalize selection if we are not in a widget
   if (mIsTextWidget) 
