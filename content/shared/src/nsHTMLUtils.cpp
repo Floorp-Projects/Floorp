@@ -143,11 +143,12 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
             return NS_ERROR_OUT_OF_MEMORY;
 
           encoder->Convert(aSpec.get(), &len, p, &maxlen);
-          encoder->Finish(p, &len);
           p[maxlen] = 0;
-
           spec = p;
-
+          encoder->Finish(p, &len);
+          p[len] = 0;
+          spec += p;
+          
           if (p != buf)
             delete[] p;
         }
