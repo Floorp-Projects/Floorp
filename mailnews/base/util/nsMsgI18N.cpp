@@ -431,8 +431,11 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, co
     // plain text - charset conv then fallback to '?'
     char charset_buf[kMAX_CSNAME+1];
     if (bTEXT_HTML) {
+      // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
       res = aConv->Init(aCharset.ToCString(charset_buf, kMAX_CSNAME+1), 
-                        nsISaveAsCharset::attr_htmlTextDefault, 
+                        aCharset.EqualsIgnoreCase("ISO-8859-1") ?
+                          nsISaveAsCharset::attr_htmlTextDefault :
+                          nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
                         nsIEntityConverter::html40);
     }
     else {

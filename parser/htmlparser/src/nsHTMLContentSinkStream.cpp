@@ -232,8 +232,11 @@ nsHTMLContentSinkStream::InitEncoder()
     return res;
   // SaveAsCharset requires a const char* in its first argument:
   nsCAutoString charsetCString (charsetName);
+  // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
   res = mUnicodeEncoder->Init(charsetCString,
-                              nsISaveAsCharset::attr_htmlTextDefault,
+                              charsetName.EqualsIgnoreCase("ISO-8859-1") ?
+                                nsISaveAsCharset::attr_htmlTextDefault :
+                                nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR,
                               nsIEntityConverter::html40);
   return res;
 }
