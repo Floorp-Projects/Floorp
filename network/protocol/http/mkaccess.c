@@ -3831,7 +3831,7 @@ char *GetTrustLabelString(char *CookieName)
  *   int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
  *                       MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
  *                       MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
- *   int RecpIds[] = { 0, /* for special case of bit 0 */ MK_ACCESS_TL_RPH1, 
+ *   int RecpIds[] = { 0, MK_ACCESS_TL_RPH1, 
  *                     MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
 */
 
