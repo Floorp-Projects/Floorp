@@ -1,58 +1,48 @@
-# Netscape Search - Sherlock Plug-in for Navigator 6.0
-# Copyright (C)2000 Netscape Communications Corp.
+# Netscape Search Sherlock for Netscape 6
+# Copyright (c) 2000 Netscape Communications Corp.
+#
+# The BROWSER alsomatch= tags must be there or the GIF will not update!
+#
 
-<SEARCH
-	name="Netscape Search"
-	description = "Netscape Search"
-	method="GET"
-	action="http://info.netscape.com/fwd/sidb_ns/http://search.netscape.com/search.psp"
-	queryCharset="UTF-8"
->
+ <SEARCH
+   name            = "Netscape Search"
+   description     = "Netscape Search"
+   routeType       = "Internet"
+   method          = "GET"
+   action          = "http://info.netscape.com/fwd/clk61srsid/http://search.netscape.com/search.psp"
+   actionButton    = "http://info.netscape.com/fwd/clk61srurl1/http://search.netscape.com/search.psp?search="
+   actionBar       = "http://info.netscape.com/fwd/clk61srurl2/http://search.netscape.com/search.psp?search="
+ >
 
-<INPUT NAME="search" user>
+<INPUT NAME="search" USER>
 
-<INTERPRET
-	browserResultType = "result"
-	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
-	bannerEnd="<!--/AD_TAG-->"
-	resultListStart = "<!----**Netcenter**---->"
-	resultListEnd = "Groups of reviewed web sites related to your search term."
-	resultItemStart = "<LI>"
->
 
-<INTERPRET
-	browserResultType = "category"
-	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
-	bannerEnd="<!--/AD_TAG-->"
-	resultListStart = "Groups of reviewed web sites related to your search term."
-	resultListEnd = "Web sites reviewed and categorized by a team of editors."
-	resultItemStart = "<LI>"
-	nameStart = '">'
-	nameEnd = "</FONT>"
->
+# Search Results
 
 <INTERPRET
-	browserResultType = "result"
-	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
-	bannerEnd="<!--/AD_TAG-->"
-	resultListStart = "Web sites reviewed and categorized by a team of editors."
-	resultItemStart = "<LI>"
+  charset           = "ISO-8859-1"
+  browserResultType = "result"
+  bannerStart       = "<!-- START: AOL BANNER AD -->"
+  bannerEnd         = "<!-- END: AOL BANNER AD -->"
+  resultListStart   = "<!-- BEGIN SEARCH RESULTS-->"
+  resultListEnd     = "<!-- END SEARCH RESULTS -->"
+  resultItemStart   = "<li>"
+  resultItemEnd     = "<br>"
+  relevanceStart    = ""
+  relevanceEnd      = ""
+  resultItemSiteTag = ""
 >
 
-<INTERPRET
-	browserResultType = "result"
-	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
-	bannerEnd="<!--/AD_TAG-->"
-	resultListStart = "The Google search engine found these pages."
-	resultListEnd = "</TD>"
-	resultItemStart = "<LI>"
->
 
 </SEARCH>
 
+  
+
 <BROWSER
-      alsomatch="http://search.netscape.com/cgi-bin/search http://search.netscape.com/search.tmpl http://google.netscape.com/netscape"
-      update="http://search.netscape.com/sherlock/NetscapeSearch.src" 
-      updateIcon="http://search.netscape.com/sherlock/NetscapeSearch.gif" 
-      updateCheckDays="3"
+  alsomatch="http://search.netscape.com/search.psp http://search.netscape.com/cgi-bin/search http://search.netscape.com/search.tmpl http://search.netscape.com/google.tmpl"
+  update          = "http://search.netscape.com/sherlock/SBWeb_01.src" 
+  updateIcon      = "http://search.netscape.com/sherlock/SBWeb_01.gif" 
+  updateCheckDays = "1" 
+
 >
+
