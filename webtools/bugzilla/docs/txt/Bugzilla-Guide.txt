@@ -1,13 +1,13 @@
 
-The Bugzilla Guide
+The Bugzilla Guide - 2.17.4 Development Release
 
 Matthew P. Barnson
 
+Jacob Steenhagen
+
 The Bugzilla Team
 
-   2.17.3 Development Release Edition
-
-   2003-01-02
+   2003-02-16
 
    This is the documentation for Bugzilla, the mozilla.org bug-tracking
    system. Bugzilla is an enterprise-class piece of software that powers
@@ -166,7 +166,7 @@ Chapter 1. About This Guide
 
 1.3. New Versions
 
-   This is the 2.17.3 version of The Bugzilla Guide. It is so named to
+   This is the 2.17.4 version of The Bugzilla Guide. It is so named to
    match the current version of Bugzilla. This version of the guide, like
    its associated Bugzilla version is a development version. Information
    is subject to change between now and when 2.18 is released. If you are
@@ -196,32 +196,41 @@ Chapter 1. About This Guide
    efforts, numerous e-mail and IRC support sessions, and overall
    excellent contribution to the Bugzilla community:
 
-   Matthew P. Barnson for the Herculaean task of pulling together the
-   Bugzilla Guide and shepherding it to 2.14.
+   Matthew P. Barnson <mbarnson@sisna.com>
+          for the Herculaean task of pulling together the Bugzilla Guide
+          and shepherding it to 2.14.
 
-   Terry Weissman for initially writing Bugzilla and creating the README
-   upon which the UNIX installation documentation is largely based.
+   Terry Weissman <terry@mozilla.org>
+          for initially writing Bugzilla and creating the README upon
+          which the UNIX installation documentation is largely based.
 
-   Tara Hernandez for keeping Bugzilla development going strong after
-   Terry left mozilla.org
+   Tara Hernandez <tara@tequilarists.org>
+          for keeping Bugzilla development going strong after Terry left
+          mozilla.org and for running landfill.
 
-   Dave Lawrence for providing insight into the key differences between
-   Red Hat's customized Bugzilla, and being largely responsible for the
-   "Red Hat Bugzilla" appendix
+   Dave Lawrence <dkl@redhat.com>
+          for providing insight into the key differences between Red
+          Hat's customized Bugzilla, and being largely responsible for
+          Section D.1.
 
-   Dawn Endico for being a hacker extraordinaire and putting up with my
-   incessant questions and arguments on irc.mozilla.org in #mozwebtools
+   Dawn Endico <endico@mozilla.org>
+          for being a hacker extraordinaire and putting up with Matthew's
+          incessant questions and arguments on irc.mozilla.org in
+          #mozwebtools
+
+   Jacob Steenhagen <jake@bugzilla.org>
+          for taking over documentation during the 2.17 development
+          period.
 
    Last but not least, all the members of the
-   netscape.public.mozilla.webtools newsgroup. Without your discussions,
-   insight, suggestions, and patches, this could never have happened.
+   news://news.mozilla.org/netscape/public/mozilla/webtools newsgroup.
+   Without your discussions, insight, suggestions, and patches, this
+   could never have happened.
 
    Thanks also go to the following people for significant contributions
-   to this documentation (in no particular order):
-
-   Zach Liption, Andrew Pearson, Spencer Smith, Eric Hanson, Kevin
-   Brannen, Ron Teitelbaum, Jacob Steenhagen, Joe Robins, Gervase
-   Markham.
+   to this documentation (in alphabetical order): Andrew Pearson, Ben
+   FrantzDale, Eric Hanson, Gervase Markham, Joe Robins, Kevin Brannen,
+   Ron Teitelbaum, Spencer Smith, Zach Liption .
      _________________________________________________________________
 
 1.5. Document Conventions
@@ -951,7 +960,7 @@ Chapter 4. Installation
    to perl on your system inside /usr/bonsaitools/bin
 
 perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
-processmail syncshadowdb
+syncshadowdb
 
    Change /usr/bin/perl to match the location of Perl on your machine.
      _________________________________________________________________
@@ -1031,71 +1040,7 @@ processmail syncshadowdb
    Bugzilla.
      _________________________________________________________________
 
-4.1.10. Securing MySQL
-
-   If you followed the installation instructions for setting up your
-   "bugs" and "root" user in MySQL, much of this should not apply to you.
-   If you are upgrading an existing installation of Bugzilla, you should
-   pay close attention to this section.
-
-   Most MySQL installs have "interesting" default security parameters:
-
-   mysqld defaults to running as root
-   it defaults to allowing external network connections
-   it has a known port number, and is easy to detect
-   it defaults to no passwords whatsoever
-   it defaults to allowing "File_Priv"
-
-   This means anyone from anywhere on the Internet can not only drop the
-   database with one SQL command, and they can write as root to the
-   system.
-
-   To see your permissions do:
-
-   bash# mysql -u root -p
-   mysql> use mysql;
-   mysql> show tables;
-   mysql> select * from user;
-   mysql> select * from db;
-
-   To fix the gaping holes:
-
-   DELETE FROM user WHERE User='';
-   UPDATE user SET Password=PASSWORD('new_password') WHERE user='root';
-   FLUSH PRIVILEGES;
-
-   If you're not running "mit-pthreads" you can use:
-
-   GRANT USAGE ON *.* TO bugs@localhost;
-   GRANT ALL ON bugs.* TO bugs@localhost;
-   REVOKE DROP ON bugs.* FROM bugs@localhost;
-   FLUSH PRIVILEGES;
-
-   With "mit-pthreads" you'll need to modify the "globals.pl"
-   Mysql->Connect line to specify a specific host name instead of
-   "localhost", and accept external connections:
-
-   GRANT USAGE ON *.* TO bugs@bounce.hop.com;
-   GRANT ALL ON bugs.* TO bugs@bounce.hop.com;
-   REVOKE DROP ON bugs.* FROM bugs@bounce.hop.com;
-   FLUSH PRIVILEGES;
-
-   Consider also:
-
-    1. Turning off external networking with "--skip-networking", unless
-       you have "mit-pthreads", in which case you can't. Without
-       networking, MySQL connects with a Unix domain socket.
-    2. using the --user= option to mysqld to run it as an unprivileged
-       user.
-    3. running MySQL in a chroot jail
-    4. running the httpd in a chroot jail
-    5. making sure the MySQL passwords are different from the OS
-       passwords (MySQL "root" has nothing to do with system "root").
-    6. running MySQL on a separate untrusted machine
-    7. making backups ;-)
-     _________________________________________________________________
-
-4.1.11. Configuring Bugzilla
+4.1.10. Configuring Bugzilla
 
    You should run through the parameters on the Edit Parameters page
    (link in the footer) and set them all to appropriate values. They key
@@ -1255,45 +1200,7 @@ set=ISO-8859-1/i" *.cgi *.pl
    making bugzilla charset aware by default.
      _________________________________________________________________
 
-4.2.6. .htaccess files and security
-
-   To enhance the security of your Bugzilla installation, Bugzilla's
-   checksetup.pl script will generate .htaccess files which the Apache
-   webserver can use to restrict access to the bugzilla data files. These
-   .htaccess files will not work with Apache 1.2.x - but this has
-   security holes, so you shouldn't be using it anyway.
-
-   Note
-
-   If you are using an alternate provider of webdot services for graphing
-   (as described when viewing editparams.cgi in your web browser), you
-   will need to change the ip address in data/webdot/.htaccess to the ip
-   address of the webdot server that you are using.
-
-   The default .htaccess file may not provide adequate access
-   restrictions, depending on your web server configuration. Be sure to
-   check the <Directory> entries for your Bugzilla directory so that the
-   .htaccess file is allowed to override web server defaults. For
-   instance, let's assume your installation of Bugzilla is installed to
-   /usr/local/bugzilla . You should have this <Directory> entry in your
-   httpd.conf file:
-
-<Directory /usr/local/bugzilla/>
-  Options +FollowSymLinks +Indexes +Includes +ExecCGI
-  AllowOverride All
-</Directory>
-
-   The important part above is "AllowOverride All" . Without that, the
-   .htaccess file created by checksetup.pl will not have sufficient
-   permissions to protect your Bugzilla installation.
-
-   If you are using Internet Information Server (IIS) or another web
-   server which does not observe .htaccess conventions, you can disable
-   their creation by editing localconfig and setting the $create_htaccess
-   variable to 0.
-     _________________________________________________________________
-
-4.2.7. directoryindex for the Bugzilla default page.
+4.2.6. directoryindex for the Bugzilla default page.
 
    You should modify the <DirectoryIndex> parameter for the Apache
    virtual host running your Bugzilla installation to allow index.cgi as
@@ -1301,13 +1208,13 @@ set=ISO-8859-1/i" *.cgi *.pl
    index.htm, and so forth.
      _________________________________________________________________
 
-4.2.8. Bugzilla and mod_perl
+4.2.7. Bugzilla and mod_perl
 
    Bugzilla is unsupported under mod_perl. Effort is underway to make it
    work cleanly in a mod_perl environment, but it is slow going.
      _________________________________________________________________
 
-4.2.9. mod_throttle and Security
+4.2.8. mod_throttle and Security
 
    It is possible for a user, by mistake or on purpose, to access the
    database many times in a row which can result in very slow access
@@ -1369,7 +1276,7 @@ C:\perl> ppm <module name>
    Template Toolkit. The Template Toolkit website suggests using the
    instructions on OpenInteract's website.
 
-   Note
+   Tip
 
    A complete list of modules that can be installed using ppm can be
    found at http://www.activestate.com/PPMPackages/5.6plus.
@@ -1400,33 +1307,30 @@ my $webservergid = getgrnam($my_webservergroup)
 my $webservergid = '8'
      _________________________________________________________________
 
-4.3.1.3.2. Making mail work
-
-   The easiest way to get mail working is to use the mail patches on bug
-   124174. With any luck, this patch will receive the required reviews
-   and integrated into the main Bugzilla distribution very soon. Until
-   that happens, there's at least one report of this patch working well
-   on Windows.
-     _________________________________________________________________
-
-4.3.1.3.3. System Calls
+4.3.1.3.2. System Calls
 
    In order to get system calls to work on win32's perl, you need to tell
    the windows shell what interpreter to use. This is done by changing
    the system calls. You will need to search all of Bugzilla's code for
    system calls. To tell perl your interpreter, it needs to be the first
    argument to the system call. For example, you'll need to change:
-system("./processmail", $id, $exporter);
+system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
 
    with
-system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
-
-   Notice that the ./ is also removed.
+system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filen
+ame");
 
    Tip
 
    The grep command is very helpful in finding these system calls,
    assuming you have the cygwin utilities.
+
+   Note
+
+   It appears that the only system call remaining in the Bugzilla
+   codebase is in showdependencygraph.cgi. Not changing this file will
+   only cause dependency graphs to not function if the webdotbase
+   paramater points to a local installation of GraphViz.
      _________________________________________________________________
 
 4.3.1.4. Serving the web pages
@@ -1434,7 +1338,7 @@ system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
    As is the case on Unix based systems, any web server should be able to
    handle Bugzilla; however, the Bugzilla Team still recommends Apache
    whenever asked. No matter what web server you choose, be sure to pay
-   attention to the security notes in Section 5.6. More information on
+   attention to the security notes in Section 5.6.4. More information on
    configuring specific web servers can be found in Section 4.4.
 
    Note
@@ -1492,7 +1396,7 @@ system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
    web server that can be configured to run CGI scripts should be able to
    handle Bugzilla. No matter what web server you choose, but especially
    if you choose something other than Apache, you should be sure to read
-   Section 5.6.
+   Section 5.6.4.
 
    The plan for this section is to eventually document the specifics of
    how to lock down permissions on individual web servers.
@@ -1535,7 +1439,7 @@ AllowOverride Limit
 
    $BUGZILLA_HOME/.htaccess
 # don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
+<FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$>
   deny from all
 </FilesMatch>
 <FilesMatch ^(localconfig.js|localconfig.rdf)$>
@@ -1591,7 +1495,7 @@ deny from all
 
    Also, and this can't be stressed enough, make sure that files such as
    localconfig and your data directory are secured as described in
-   Section 5.6.
+   Section 5.6.4.
      _________________________________________________________________
 
 4.4.3. AOL Server
@@ -1609,11 +1513,14 @@ deny from all
    with the following contents (change /bugzilla/ to the web-based path
    to your Bugzilla installation):
 ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
 ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-ns_register_filter preauth GET /bugzilla/processmail filter_deny
 ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
 ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
+ns_register_filter preauth GET /bugzilla/data/* filter_deny
+ns_register_filter preauth GET /bugzilla/template/* filter_deny
+
 
 proc filter_deny { why } {
     ns_log Notice "filter_deny"
@@ -1622,11 +1529,19 @@ proc filter_deny { why } {
 
    Warning
 
-   This doesn't appear to account for everything mentioned in Section
-   5.6. In particular, it doesn't block access to the data or template
-   directories. It also doesn't account for the editor backup files that
-   were the topic of bug 186383, Bugtraq ID 6501, and a partial cause for
-   the 2.16.2 release.
+   This probably doesn't account for all possible editor backup files so
+   you may wish to add some additional variations of localconfig. For
+   more information, see bug 186383 or Bugtraq ID 6501.
+
+   Note
+
+   If you are using webdot from research.att.com (the default
+   configuration for the webdotbase paramater), you will need to allow
+   access to data/webdot/*.dot for the reasearch.att.com machine.
+
+   If you are using a local installation of GraphViz, you will need to
+   allow everybody to access *.png, *.gif, *.jpg, and *.map in the
+   data/webdot directory.
      _________________________________________________________________
 
 4.5. Troubleshooting
@@ -2124,87 +2039,133 @@ Chapter 5. Administering Bugzilla
 
    These instructions must, of necessity, be somewhat vague since
    Bugzilla runs on so many different platforms. If you have refinements
-   of these directions for specific platforms, please submit them to
-   mozilla-webtools@mozilla.org
+   of these directions, please submit a bug to Bugzilla Documentation.
 
-   To secure your installation:
+   Warning
 
-    1. There is no substitute for understanding the tools on your system!
-       Read The MySQL Privilege System until you can recite it from
-       memory!
-    2. Lock down /etc/inetd.conf. Heck, disable inet entirely on this
-       box. It should only listen to port 25 for Sendmail and port 80 for
-       Apache.
-    3. Do not run Apache as "nobody" . This will require very lax
-       permissions in your Bugzilla directories. Run it, instead, as a
-       user with a name, set via your httpd.conf file.
+   This is not meant to be a comprehensive list of every possible
+   security issue regarding the tools mentioned in this section. There is
+   no subsitute for reading the information written by the authors of any
+   software running on your system.
+     _________________________________________________________________
+
+5.6.1. TCP/IP Ports
+
+   TCP/IP defines 65,000 some ports for trafic. Of those, Bugzilla only
+   needs 1... 2 if you need to use features that require e-mail such as
+   bug moving or the e-mail interface from contrib. You should audit your
+   server and make sure that you aren't listening on any ports you don't
+   need to be. You may also wish to use some kind of firewall software to
+   be sure that trafic can only be recieved on ports you specify.
+     _________________________________________________________________
+
+5.6.2. MySQL
+
+   MySQL ships by default with many settings that should be changed. By
+   defaults it allows anybody to connect from localhost without a
+   password and have full administrative capabilities. It also defaults
+   to not have a root password (this is not the same as the system root).
+   Also, many installations default to running mysqld as the system root.
+
+    1. Consult the documentation that came with your system for
+       information on making mysqld run as an unprivleged user.
+    2. You should also be sure to disable the anonymous user account and
+       set a password for the root user. This is accomplished using the
+       following commands:
+
+bash$ mysql mysql
+mysql> DELETE FROM user WHERE user = '';
+mysql> UPDATE user SET password = password('new_password') WHERE user = 'root';
+mysql> FLUSH PRIVILEGES;
+
+
+       From this point forward you will need to use mysql -u root -p and
+       enter new_password when prompted when using the mysql client.
+    3. If you run MySQL on the same machine as your httpd server, you
+       should consider disabling networking from within MySQL by adding
+       the following to your /etc/my.conf:
+
+[myslqd]
+# Prevent network access to MySQL.
+skip-networking
+
+
+    4. You may also consider running MySQL, or even all of Bugzilla in a
+       chroot jail; however, instructions for doing that are beyond the
+       scope of this document.
+     _________________________________________________________________
+
+5.6.3. Daemon Accounts
+
+   Many daemons, such as Apache's httpd and MySQL's mysqld default to
+   running as either "root" or "nobody". Running as "root" introduces
+   obvious security problems, but the problems introduced by running
+   everything as "nobody" may not be so obvious. Basically, if you're
+   running every daemon as "nobody" and one of them gets comprimised,
+   they all get comprimised. For this reason it is recommended that you
+   create a user account for each daemon.
 
    Note
 
-   "nobody" is a real user on UNIX systems. Having a process run as user
-   id "nobody" is absolutely no protection against system crackers versus
-   using any other user account. As a general security measure, I
-   recommend you create unique user ID's for each daemon running on your
-   system and, if possible, use "chroot" to jail that process away from
-   the rest of your system.
-    4. Ensure you have adequate access controls for the
-       $BUGZILLA_HOME/data/ directory, as well as the
-       $BUGZILLA_HOME/localconfig file. The localconfig file stores your
-       "bugs" database account password. In addition, some files under
-       $BUGZILLA_HOME/data/ store sensitive information.
-       Also, beware that some text editors create backup files in the
-       current working directory so you need to also secure files like
-       localconfig~.
+   You will need to set the webservergroup to the group you created for
+   your webserver to run as in localconfig. This will allow
+   ./checksetup.pl to better adjust the file permissions on your Bugzilla
+   install so as to not require making anything world-writable.
+     _________________________________________________________________
 
-   Note
+5.6.4. Web Server Access Controls
 
-   Simply blocking .*localconfig.* won't work because the QuickSearch
-   feature requires the web browser to be able to retrieve localconfig.js
-   and others may be introduced in the future (see bug 186383 for more
-   information.
-       Bugzilla provides default .htaccess files to protect the most
-       common Apache installations. However, you should verify these are
-       adequate according to the site-wide security policy of your web
-       server, and ensure that the .htaccess files are allowed to
-       "override" default permissions set in your Apache configuration
-       files. Covering Apache security is beyond the scope of this Guide;
-       please consult the Apache documentation for details.
-       If you are using a web server that does not support the .htaccess
-       control method, you are at risk! After installing, check to see if
-       you can view the file localconfig in your web browser (e.g.:
-       http://bugzilla.mozilla.org/localconfig ). If you can read the
-       contents of this file, your web server has not secured your
-       bugzilla directory properly and you must fix this problem before
-       deploying Bugzilla. If, however, it gives you a "Forbidden" error,
-       then it probably respects the .htaccess conventions and you are
-       good to go.
-    5. When you run checksetup.pl, the script will attempt to modify
-       various permissions on files which Bugzilla uses. If you do not
-       have a webservergroup set in the localconfig file, then Bugzilla
-       will have to make certain files world readable and/or writable.
-       THIS IS INSECURE! . This means that anyone who can get access to
-       your system can do whatever they want to your Bugzilla
-       installation.
+   There are many files that are placed in the Bugzilla directory area
+   that should not be accessable from the web. Because of the way
+   Bugzilla is currently layed out, the list of what should and should
+   not be accessible is rather complicated. A new installation method is
+   currently in the works which should solve this by allowing files that
+   shouldn't be accessible from the web to be placed in directory outside
+   the webroot. See bug 44659 for more information.
 
-   Note
+     * In the main Bugzilla directory, you should:
+          + Block: *.pl, *localconfig*, runtests.sh
+          + But allow: localconfig.js, localconfig.rdf
+     * In data:
+          + Block everything
+          + But allow: duplicates.rdf
+     * In data/webdot:
+          + If you use a remote webdot server:
+               o Block everything
+               o But allow *.dot only for the remote webdot server
+          + Otherwise, if you use a local GraphViz:
+               o Block everything
+               o But allow: *.png, *.gif, *.jpg, *.map
+          + And if you don't use any dot:
+               o Block everything
+     * In Bugzilla:
+          + Block everything
+     * In template:
+          + Block everything
 
-   This also means that if your webserver runs all cgi scripts as the
-   same user/group, anyone on the system who can run cgi scripts will be
-   able to take control of your Bugzilla installation.
-       On Apache, you can use .htaccess files to protect access to these
-       directories, as outlined in Bugs 57161 and 186383 for the
-       localconfig file, and Bug 65572 for adequate protection in your
-       data/ directory. Also, don't forget about the template/ and
-       Bugzilla/ directories and to allow access to the data/webdot
-       directory for the 192.20.225.10 IP address if you are using webdot
-       from research.att.com. The easiest way to accomplish this is to
-       set $create_htaccess to 1 in localconfig. However, the information
-       below is provided for those that want to know exactly what is
-       created.
-       FIX ME BEFORE RELEASE!!!!! Note the instructions which follow are
-       Apache-specific. If you use IIS, Netscape, or other non-Apache web
-       servers, please consult your system documentation for how to
-       secure these files from being transmitted to curious users.
+   Tip
+
+   Bugzilla ships with the ability to generate .htaccess files
+   instructing Apache which files should and should not be accessible.
+   For more information, see Section 4.4.1.
+
+   You should test to make sure that the files mentioned above are not
+   accessible from the Internet, especially your localconfig file which
+   contains your database password. To test, simply point your web
+   browser at the file; for example, to test mozilla.org's installation,
+   we'd try to access http://bugzilla.mozilla.org/localconfig. You should
+   get a 403 Forbidden error.
+
+   Caution
+
+   Not following the instructions in this section, including testing, may
+   result in sensitive information being globally accessible.
+
+   Tip
+
+   You should check Section 4.4 to see if instructions have been included
+   for your web server. You should also compare those instructions with
+   this list to make sure everything is properly accounted for.
      _________________________________________________________________
 
 5.7. Template Customization
@@ -3237,13 +3198,12 @@ Appendix A. The Bugzilla FAQ
    A.4.6. Email takes FOREVER to reach me from Bugzilla -- it's extremely
    slow. What gives?
 
-   If you are using an alternate Mail Transport Agent (MTA other than
-   sendmail), make sure the options given in the "processmail" and other
-   scripts for all instances of "sendmail" are correct for your MTA.
+   If you are using an alternate MTA, make sure the options given in
+   Bugzilla/BugMail.pm and any other place where sendmail is called from
+   are correct for your MTA. You should also ensure that the sendmailnow
+   param is set to on.
 
-   If you are using Sendmail, try enabling "sendmailnow" in
-   editparams.cgi. If you are using Postfix, you will also need to enable
-   "sendmailnow".
+   If you are using sendmail, try enabling sendmailnow in editparams.cgi.
 
    A.4.7. How come email from Bugzilla changes never reaches me?
 
@@ -3914,7 +3874,8 @@ D.3. Issuezilla
 
    Issuezilla was another fork from Bugzilla, made by collab.net and
    hosted at tigris.org. It is also dead; the primary focus of
-   bug-tracking at tigris.org is their Java-based bug-tracker, Scarab.
+   bug-tracking at tigris.org is their Java-based bug-tracker, Section
+   D.4.
 
    This section last updated 27 Jul 2002
      _________________________________________________________________
@@ -4417,12 +4378,21 @@ J
 
 M
 
-   mysqld
-          mysqld is the name of the daemon for the MySQL database. In
-          general, it is invoked automatically through the use of the
-          System V init scripts on GNU/Linux and AT&T System V-based
-          systems, such as Solaris and HP/UX, or through the RC scripts
-          on BSD-based systems.
+   Message Transport Agent (MTA)
+          A Message Transport Agent is used to control the flow of email
+          on a system. Many unix based systems use sendmail which is what
+          Bugzilla expects to find by default at /usr/sbin/sendmail. Many
+          other MTA's will work, but they all require that the
+          sendmailnow param be set to on.
+
+   MySQL
+          MySQL is currently the required RDBMS for Bugzilla. MySQL can
+          be downloaded from http://www.mysql.com. While you should
+          familiarize yourself with all of the documentation, some high
+          points are:
+
+          + MySQL Privilege System - Much more detailed information about
+            the suggestions in Section 5.6.2.
 
 P
 
@@ -4449,6 +4419,13 @@ Q
           shipping. This team will also generally want to track the
           progress of bugs over their life cycle, thus the need for the
           "QA Contact" field in a bug.
+
+R
+
+   Relational DataBase Managment System (RDBMS)
+          A relational database management system is a database system
+          that stores information in tables that are related to each
+          other.
 
 S
 

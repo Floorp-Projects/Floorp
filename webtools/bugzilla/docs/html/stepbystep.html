@@ -7,7 +7,7 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide"
+TITLE="The Bugzilla Guide - 2.17.4 Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
@@ -37,7 +37,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide</TH
+>The Bugzilla Guide - 2.17.4 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -863,7 +863,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN556"
+NAME="AEN586"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -878,7 +878,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN559"
+NAME="AEN589"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -892,7 +892,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN562"
+NAME="AEN592"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -918,7 +918,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN567"
+NAME="AEN597"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -934,7 +934,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN570"
+NAME="AEN600"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -989,7 +989,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN577"
+NAME="AEN607"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -1004,7 +1004,7 @@ CLASS="section"
 ><H3
 CLASS="section"
 ><A
-NAME="AEN580"
+NAME="AEN610"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
@@ -1073,7 +1073,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN590"
+NAME="AEN620"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -1223,7 +1223,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm processmail syncshadowdb
+>&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm syncshadowdb
         </PRE
 ></FONT
 ></TD
@@ -1243,7 +1243,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN615"
+NAME="AEN645"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -1416,7 +1416,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN651"
+NAME="AEN681"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -1569,287 +1569,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN683"
+NAME="AEN713"
 ></A
->4.1.10. Securing MySQL</H2
-><P
->If you followed the installation instructions for setting up your
-      "bugs" and "root" user in MySQL, much of this should not apply to you.
-      If you are upgrading an existing installation of Bugzilla, you should
-      pay close attention to this section.</P
-><P
->Most MySQL installs have "interesting" default security
-      parameters: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->mysqld defaults to running as root</TD
-></TR
-><TR
-><TD
->it defaults to allowing external network connections</TD
-></TR
-><TR
-><TD
->it has a known port number, and is easy to detect</TD
-></TR
-><TR
-><TD
->it defaults to no passwords whatsoever</TD
-></TR
-><TR
-><TD
->it defaults to allowing "File_Priv"</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->This means anyone from anywhere on the Internet can not only drop
-      the database with one SQL command, and they can write as root to the
-      system.</P
-><P
->To see your permissions do: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->mysql -u root -p</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->use mysql;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->show tables;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->select * from user;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->select * from db;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->To fix the gaping holes: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->DELETE FROM user WHERE User='';</TD
-></TR
-><TR
-><TD
->UPDATE user SET Password=PASSWORD('new_password') WHERE
-        user='root';</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->If you're not running "mit-pthreads" you can use: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->GRANT USAGE ON *.* TO bugs@localhost;</TD
-></TR
-><TR
-><TD
->GRANT ALL ON bugs.* TO bugs@localhost;</TD
-></TR
-><TR
-><TD
->REVOKE DROP ON bugs.* FROM bugs@localhost;</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->With "mit-pthreads" you'll need to modify the "globals.pl"
-      Mysql-&#62;Connect line to specify a specific host name instead of
-      "localhost", and accept external connections: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->GRANT USAGE ON *.* TO bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->GRANT ALL ON bugs.* TO bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->REVOKE DROP ON bugs.* FROM bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->Consider also: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->Turning off external networking with "--skip-networking",
-          unless you have "mit-pthreads", in which case you can't. Without
-          networking, MySQL connects with a Unix domain socket.</P
-></LI
-><LI
-><P
->using the --user= option to mysqld to run it as an
-          unprivileged user.</P
-></LI
-><LI
-><P
->running MySQL in a chroot jail</P
-></LI
-><LI
-><P
->running the httpd in a chroot jail</P
-></LI
-><LI
-><P
->making sure the MySQL passwords are different from the OS
-          passwords (MySQL "root" has nothing to do with system
-          "root").</P
-></LI
-><LI
-><P
->running MySQL on a separate untrusted machine</P
-></LI
-><LI
-><P
->making backups ;-)</P
-></LI
-></OL
->
-      </P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="AEN749"
-></A
->4.1.11. Configuring Bugzilla</H2
+>4.1.10. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 

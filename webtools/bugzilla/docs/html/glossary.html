@@ -7,7 +7,7 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide"
+TITLE="The Bugzilla Guide - 2.17.4 Development Release"
 HREF="index.html"><LINK
 REL="PREVIOUS"
 TITLE="How to use this License for your documents"
@@ -31,7 +31,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide</TH
+>The Bugzilla Guide - 2.17.4 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -70,7 +70,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2272"
+NAME="AEN2309"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -485,21 +485,78 @@ NAME="gloss-m"
 >M</H1
 ><DL
 ><DT
+><A
+NAME="gloss-mta"
+></A
 ><B
->mysqld</B
+>Message Transport Agent</B
+></DT
+> (MTA)<DD
+><P
+>A Message Transport Agent is used to control the flow of email
+        on a system. Many unix based systems use
+        <A
+HREF="http://www.sendmail.org"
+TARGET="_top"
+>sendmail</A
+> which is what
+        Bugzilla expects to find by default at <TT
+CLASS="filename"
+>/usr/sbin/sendmail</TT
+>.
+        Many other MTA's will work, but they all require that the
+        <TT
+CLASS="option"
+>sendmailnow</TT
+> param be set to <TT
+CLASS="literal"
+>on</TT
+>.
+        </P
+></DD
+><DT
+><A
+NAME="gloss-mysql"
+></A
+><B
+>MySQL</B
 ></DT
 ><DD
 ><P
->mysqld is the name of the 
-        <I
+>MySQL is currently the required
+        <A
+HREF="glossary.html#gloss-rdbms"
+><I
 CLASS="glossterm"
->daemon</I
->
-
-        for the MySQL database. In general, it is invoked automatically
-        through the use of the System V init scripts on GNU/Linux and
-        AT&#38;T System V-based systems, such as Solaris and HP/UX, or
-        through the RC scripts on BSD-based systems.</P
+>RDBMS</I
+></A
+> for Bugzilla. MySQL
+        can be downloaded from <A
+HREF="http://www.mysql.com"
+TARGET="_top"
+>http://www.mysql.com</A
+>. While you
+        should familiarize yourself with all of the documentation, some high
+        points are:
+        </P
+><P
+></P
+><UL
+><LI
+><P
+><A
+HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
+TARGET="_top"
+>MySQL
+            Privilege System</A
+> - Much more detailed information about
+            the suggestions in <A
+HREF="security.html#security-mysql"
+>Section 5.6.2</A
+>.
+            </P
+></LI
+></UL
 ></DD
 ></DL
 ></DIV
@@ -585,6 +642,30 @@ CLASS="QUOTE"
 >
 
         field in a bug.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="glossdiv"
+><H1
+CLASS="glossdiv"
+><A
+NAME="gloss-r"
+></A
+>R</H1
+><DL
+><DT
+><A
+NAME="gloss-rdbms"
+></A
+><B
+>Relational DataBase Managment System</B
+></DT
+> (RDBMS)<DD
+><P
+>A relational database management system is a database system
+        that stores information in tables that are related to each other.
+        </P
 ></DD
 ></DL
 ></DIV

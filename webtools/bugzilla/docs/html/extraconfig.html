@@ -7,7 +7,7 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide"
+TITLE="The Bugzilla Guide - 2.17.4 Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
@@ -37,7 +37,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide</TH
+>The Bugzilla Guide - 2.17.4 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -81,7 +81,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN755"
+NAME="AEN719"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -145,7 +145,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN770"
+NAME="AEN734"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -204,7 +204,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN783"
+NAME="AEN747"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -542,181 +542,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="htaccess"
-></A
->4.2.6. <TT
-CLASS="filename"
->.htaccess</TT
->
-      files and security</H2
-><P
->To enhance the security of your Bugzilla installation, Bugzilla's
-      <TT
-CLASS="filename"
->checksetup.pl</TT
-> script will generate 
-      <I
-CLASS="glossterm"
->&#13;        <TT
-CLASS="filename"
->.htaccess</TT
->
-      </I
->
-
-      files which the Apache webserver can use to restrict access to the
-      bugzilla data files. 
-      These .htaccess files will not work with Apache 1.2.x - but this
-      has security holes, so you shouldn't be using it anyway. 
-      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->If you are using an alternate provider of 
-        <SPAN
-CLASS="productname"
->webdot</SPAN
->
-
-        services for graphing (as described when viewing 
-        <TT
-CLASS="filename"
->editparams.cgi</TT
->
-
-        in your web browser), you will need to change the ip address in 
-        <TT
-CLASS="filename"
->data/webdot/.htaccess</TT
->
-
-        to the ip address of the webdot server that you are using.</P
-></TD
-></TR
-></TABLE
-></DIV
->
-      </P
-><P
->The default .htaccess file may not provide adequate access
-      restrictions, depending on your web server configuration. Be sure to
-      check the &#60;Directory&#62; entries for your Bugzilla directory so that
-      the 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-
-      file is allowed to override web server defaults. For instance, let's
-      assume your installation of Bugzilla is installed to 
-      <TT
-CLASS="filename"
->/usr/local/bugzilla</TT
->
-
-      . You should have this &#60;Directory&#62; entry in your 
-      <TT
-CLASS="filename"
->httpd.conf</TT
->
-
-      file:</P
-><P
->&#13;      
-<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;&#60;Directory /usr/local/bugzilla/&#62;
-  Options +FollowSymLinks +Indexes +Includes +ExecCGI
-  AllowOverride All
-&#60;/Directory&#62;
-</PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-
-      </P
-><P
->The important part above is 
-      <SPAN
-CLASS="QUOTE"
->"AllowOverride All"</SPAN
->
-
-      . Without that, the 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-
-      file created by 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->
-
-      will not have sufficient permissions to protect your Bugzilla
-      installation.</P
-><P
->If you are using Internet Information Server (IIS) or another 
-      web server which does not observe 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-      conventions, you can disable their creation by editing 
-      <TT
-CLASS="filename"
->localconfig</TT
->
-      and setting the 
-      <TT
-CLASS="varname"
->$create_htaccess</TT
->
-      variable to 
-      <TT
-CLASS="parameter"
-><I
->0</I
-></TT
->.
-      </P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
 NAME="directoryindex"
 ></A
->4.2.7. <TT
+>4.2.6. <TT
 CLASS="filename"
 >directoryindex</TT
 > for the Bugzilla default page.</H2
@@ -743,7 +571,7 @@ CLASS="section"
 ><A
 NAME="mod_perl"
 ></A
->4.2.8. Bugzilla and <TT
+>4.2.7. Bugzilla and <TT
 CLASS="filename"
 >mod_perl</TT
 ></H2
@@ -760,7 +588,7 @@ CLASS="section"
 ><A
 NAME="mod-throttle"
 ></A
->4.2.9. <TT
+>4.2.8. <TT
 CLASS="filename"
 >mod_throttle</TT
 >

@@ -7,7 +7,7 @@ NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
 "><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide"
+TITLE="The Bugzilla Guide - 2.17.4 Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
@@ -37,7 +37,7 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide</TH
+>The Bugzilla Guide - 2.17.4 Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -88,8 +88,8 @@ CLASS="glossterm"
     should be able to handle Bugzilla. No matter what web server you choose, but
     especially if you choose something other than Apache, you should be sure to read
     <A
-HREF="security.html"
->Section 5.6</A
+HREF="security.html#security-access"
+>Section 5.6.4</A
 >.
     </P
 ><P
@@ -262,7 +262,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;# don't allow people to retrieve non-cgi executable files or our private data
-&#60;FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$&#62;
+&#60;FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$&#62;
   deny from all
 &#60;/FilesMatch&#62;
 &#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
@@ -446,8 +446,8 @@ CLASS="filename"
 >data</TT
 >
       directory are secured as described in <A
-HREF="security.html"
->Section 5.6</A
+HREF="security.html#security-access"
+>Section 5.6.4</A
 >.
       </P
 ></DIV
@@ -509,12 +509,14 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
 ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-ns_register_filter preauth GET /bugzilla/processmail filter_deny
 ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
 ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
-
+ns_register_filter preauth GET /bugzilla/data/* filter_deny
+ns_register_filter preauth GET /bugzilla/template/* filter_deny
+                                                                                
 proc filter_deny { why } {
     ns_log Notice "filter_deny"
     return "filter_return"
@@ -545,31 +547,84 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->This doesn't appear to account for everything mentioned in
-        <A
-HREF="security.html"
->Section 5.6</A
->. In particular, it doesn't block access
-        to the <TT
-CLASS="filename"
->data</TT
-> or
+>This probably doesn't account for all possible editor backup
+        files so you may wish to add some additional variations of
         <TT
 CLASS="filename"
->template</TT
-> directories. It also
-        doesn't account for the editor backup files that were the topic of
+>localconfig</TT
+>. For more information, see
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
 TARGET="_top"
 >bug
         186383</A
->, <A
+> or <A
 HREF="http://online.securityfocus.com/bid/6501"
 TARGET="_top"
 >Bugtraq ID 6501</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using webdot from research.att.com (the default
+        configuration for the <TT
+CLASS="option"
+>webdotbase</TT
+> paramater), you
+        will need to allow access to <TT
+CLASS="filename"
+>data/webdot/*.dot</TT
+>
+        for the reasearch.att.com machine.
+        </P
+><P
+>If you are using a local installation of <A
+HREF="http://www.graphviz.org"
+TARGET="_top"
+>GraphViz</A
+>, you will need to allow
+        everybody to access <TT
+CLASS="filename"
+>*.png</TT
 >,
-        and a partial cause for the 2.16.2 release.
+        <TT
+CLASS="filename"
+>*.gif</TT
+>, <TT
+CLASS="filename"
+>*.jpg</TT
+>, and
+        <TT
+CLASS="filename"
+>*.map</TT
+> in the
+        <TT
+CLASS="filename"
+>data/webdot</TT
+> directory.
         </P
 ></TD
 ></TR

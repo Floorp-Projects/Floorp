@@ -1,7 +1,7 @@
 <HTML
 ><HEAD
 ><TITLE
->The Bugzilla Guide</TITLE
+>The Bugzilla Guide - 2.17.4 Development Release</TITLE
 ><META
 NAME="GENERATOR"
 CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
@@ -43,7 +43,7 @@ CLASS="title"
 ><A
 NAME="AEN2"
 ></A
->The Bugzilla Guide</H1
+>The Bugzilla Guide - 2.17.4 Development Release</H1
 ><H3
 CLASS="author"
 ><A
@@ -55,18 +55,18 @@ CLASS="author"
 ><A
 NAME="AEN9"
 ></A
+>Jacob Steenhagen</H3
+><H3
+CLASS="corpauthor"
 >The Bugzilla Team</H3
 ><P
-CLASS="edition"
->2.17.3 Development Release&nbsp;Edition </P
-><P
 CLASS="pubdate"
->2003-01-02<BR></P
+>2003-02-16<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
 ><A
-NAME="AEN15"
+NAME="AEN14"
 ></A
 ><P
 ></P
@@ -332,7 +332,7 @@ HREF="#variants"
 ><DL
 ><DT
 >D.1. <A
-HREF="#rhbugzilla"
+HREF="#variant-redhat"
 >Red Hat Bugzilla</A
 ></DT
 ><DT
@@ -487,7 +487,7 @@ NAME="copyright"
 ></A
 >1.1. Copyright Information</H1
 ><A
-NAME="AEN34"
+NAME="AEN33"
 ></A
 ><TABLE
 BORDER="0"
@@ -599,7 +599,7 @@ NAME="newversions"
 ></A
 >1.3. New Versions</H1
 ><P
->&#13;      This is the 2.17.3 version of The Bugzilla Guide. It is so named 
+>&#13;      This is the 2.17.4 version of The Bugzilla Guide. It is so named 
       to match the current version of Bugzilla. 
       
         This version of the guide, like its associated Bugzilla version is a
@@ -667,66 +667,115 @@ NAME="credits"
       contribution to the Bugzilla community:
     </P
 ><P
->&#13;      <A
-HREF="mailto://mbarnson@sisna.com"
-TARGET="_top"
->Matthew P. Barnson</A
->
-      for the Herculaean task of pulling together the Bugzilla Guide and
-      shepherding it to 2.14.
-    </P
+></P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+>Matthew P. Barnson <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:mbarnson@sisna.com"
+>mbarnson@sisna.com</A
+>&#62;</TT
+></DT
+><DD
 ><P
->&#13;      <A
-HREF="mailto://terry@mozilla.org"
-TARGET="_top"
->Terry Weissman</A
->
-      for initially writing Bugzilla and creating the
-      README upon which the UNIX installation documentation is largely based.
-    </P
+>for the Herculaean task of pulling together the Bugzilla Guide
+          and shepherding it to 2.14.
+          </P
+></DD
+><DT
+>Terry Weissman <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:terry@mozilla.org"
+>terry@mozilla.org</A
+>&#62;</TT
+></DT
+><DD
 ><P
->&#13;      <A
-HREF="mailto://tara@tequilarista.org"
-TARGET="_top"
->Tara Hernandez</A
->  
-      for keeping Bugzilla development going
-      strong after Terry left mozilla.org
-    </P
+>for initially writing Bugzilla and creating the README upon
+          which the UNIX installation documentation is largely based.
+          </P
+></DD
+><DT
+>Tara Hernandez <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:tara@tequilarists.org"
+>tara@tequilarists.org</A
+>&#62;</TT
+></DT
+><DD
 ><P
->&#13;      <A
-HREF="mailto://dkl@redhat.com"
-TARGET="_top"
->Dave Lawrence</A
-> 
-      for providing insight into the key differences between Red Hat's
-      customized Bugzilla, and being largely responsible for the "Red
-      Hat Bugzilla" appendix
-    </P
+>for keeping Bugzilla development going strong after Terry left
+          mozilla.org and for running landfill.
+          </P
+></DD
+><DT
+>Dave Lawrence <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:dkl@redhat.com"
+>dkl@redhat.com</A
+>&#62;</TT
+></DT
+><DD
 ><P
->&#13;      <A
-HREF="mailto://endico@mozilla.org"
-TARGET="_top"
->Dawn Endico</A
-> for
-      being a hacker extraordinaire and putting up with my incessant
-      questions and arguments on irc.mozilla.org in #mozwebtools
-    </P
+>for providing insight into the key differences between Red
+          Hat's customized Bugzilla, and being largely responsible for
+          <A
+HREF="#variant-redhat"
+>Section D.1</A
+>.
+          </P
+></DD
+><DT
+>Dawn Endico <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:endico@mozilla.org"
+>endico@mozilla.org</A
+>&#62;</TT
+></DT
+><DD
+><P
+>for being a hacker extraordinaire and putting up with Matthew's
+          incessant questions and arguments on irc.mozilla.org in #mozwebtools
+          </P
+></DD
+><DT
+>Jacob Steenhagen <TT
+CLASS="email"
+>&#60;<A
+HREF="mailto:jake@bugzilla.org"
+>jake@bugzilla.org</A
+>&#62;</TT
+></DT
+><DD
+><P
+>for taking over documentation during the 2.17 development
+          period.
+          </P
+></DD
+></DL
+></DIV
 ><P
 >&#13;      Last but not least, all the members of the 
       <A
 HREF="news://news.mozilla.org/netscape/public/mozilla/webtools"
 TARGET="_top"
-> netscape.public.mozilla.webtools</A
-> newsgroup.  Without your discussions, insight, suggestions, and patches, this could never have happened.
+>news://news.mozilla.org/netscape/public/mozilla/webtools</A
+>
+      newsgroup.  Without your discussions, insight, suggestions, and patches,
+      this could never have happened.
     </P
 ><P
 >&#13;      Thanks also go to the following people for significant contributions 
-      to this documentation (in no particular order):
-    </P
-><P
->&#13;      Zach Liption, Andrew Pearson, Spencer Smith, Eric Hanson, Kevin Brannen,
-      Ron Teitelbaum, Jacob Steenhagen, Joe Robins, Gervase Markham.
+      to this documentation (in alphabetical order):
+      Andrew Pearson, Ben FrantzDale, Eric Hanson, Gervase Markham, Joe Robins, Kevin Brannen, Ron Teitelbaum, Spencer Smith, Zach Liption
+      .
     </P
 ></DIV
 ><DIV
@@ -742,7 +791,7 @@ NAME="conventions"
 ><DIV
 CLASS="informaltable"
 ><A
-NAME="AEN80"
+NAME="AEN110"
 ></A
 ><P
 ></P
@@ -1809,7 +1858,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN340"
+NAME="AEN370"
 ></A
 >3.2.1. Autolinkification</H2
 ><P
@@ -1957,7 +2006,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN369"
+NAME="AEN399"
 ></A
 >3.2.5. Filing Bugs</H2
 ><P
@@ -2896,7 +2945,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN556"
+NAME="AEN586"
 ></A
 >4.1.5.1. DBI</H3
 ><P
@@ -2911,7 +2960,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN559"
+NAME="AEN589"
 ></A
 >4.1.5.2. Data::Dumper</H3
 ><P
@@ -2925,7 +2974,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN562"
+NAME="AEN592"
 ></A
 >4.1.5.3. MySQL-related modules</H3
 ><P
@@ -2951,7 +3000,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN567"
+NAME="AEN597"
 ></A
 >4.1.5.4. TimeDate modules</H3
 ><P
@@ -2967,7 +3016,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN570"
+NAME="AEN600"
 ></A
 >4.1.5.5. GD (optional)</H3
 ><P
@@ -3022,7 +3071,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN577"
+NAME="AEN607"
 ></A
 >4.1.5.6. Chart::Base (optional)</H3
 ><P
@@ -3037,7 +3086,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN580"
+NAME="AEN610"
 ></A
 >4.1.5.7. Template Toolkit</H3
 ><P
@@ -3106,7 +3155,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN590"
+NAME="AEN620"
 ></A
 >4.1.7. Bugzilla</H2
 ><P
@@ -3256,7 +3305,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm processmail syncshadowdb
+>&#13;perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm syncshadowdb
         </PRE
 ></FONT
 ></TD
@@ -3276,7 +3325,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN615"
+NAME="AEN645"
 ></A
 >4.1.8. Setting Up the MySQL Database</H2
 ><P
@@ -3449,7 +3498,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN651"
+NAME="AEN681"
 ></A
 >4.1.9. <TT
 CLASS="filename"
@@ -3602,287 +3651,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN683"
+NAME="AEN713"
 ></A
->4.1.10. Securing MySQL</H2
-><P
->If you followed the installation instructions for setting up your
-      "bugs" and "root" user in MySQL, much of this should not apply to you.
-      If you are upgrading an existing installation of Bugzilla, you should
-      pay close attention to this section.</P
-><P
->Most MySQL installs have "interesting" default security
-      parameters: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->mysqld defaults to running as root</TD
-></TR
-><TR
-><TD
->it defaults to allowing external network connections</TD
-></TR
-><TR
-><TD
->it has a known port number, and is easy to detect</TD
-></TR
-><TR
-><TD
->it defaults to no passwords whatsoever</TD
-></TR
-><TR
-><TD
->it defaults to allowing "File_Priv"</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->This means anyone from anywhere on the Internet can not only drop
-      the database with one SQL command, and they can write as root to the
-      system.</P
-><P
->To see your permissions do: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->bash#</TT
->
-
-            <B
-CLASS="command"
->mysql -u root -p</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->use mysql;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->show tables;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->select * from user;</B
->
-          </TT
->
-        </TD
-></TR
-><TR
-><TD
->&#13;          <TT
-CLASS="computeroutput"
->&#13;            <TT
-CLASS="prompt"
->mysql&#62;</TT
->
-
-            <B
-CLASS="command"
->select * from db;</B
->
-          </TT
->
-        </TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->To fix the gaping holes: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->DELETE FROM user WHERE User='';</TD
-></TR
-><TR
-><TD
->UPDATE user SET Password=PASSWORD('new_password') WHERE
-        user='root';</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->If you're not running "mit-pthreads" you can use: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->GRANT USAGE ON *.* TO bugs@localhost;</TD
-></TR
-><TR
-><TD
->GRANT ALL ON bugs.* TO bugs@localhost;</TD
-></TR
-><TR
-><TD
->REVOKE DROP ON bugs.* FROM bugs@localhost;</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->With "mit-pthreads" you'll need to modify the "globals.pl"
-      Mysql-&#62;Connect line to specify a specific host name instead of
-      "localhost", and accept external connections: 
-      <P
-></P
-><TABLE
-BORDER="0"
-><TBODY
-><TR
-><TD
->GRANT USAGE ON *.* TO bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->GRANT ALL ON bugs.* TO bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->REVOKE DROP ON bugs.* FROM bugs@bounce.hop.com;</TD
-></TR
-><TR
-><TD
->FLUSH PRIVILEGES;</TD
-></TR
-></TBODY
-></TABLE
-><P
-></P
->
-      </P
-><P
->Consider also: 
-      <P
-></P
-><OL
-TYPE="1"
-><LI
-><P
->Turning off external networking with "--skip-networking",
-          unless you have "mit-pthreads", in which case you can't. Without
-          networking, MySQL connects with a Unix domain socket.</P
-></LI
-><LI
-><P
->using the --user= option to mysqld to run it as an
-          unprivileged user.</P
-></LI
-><LI
-><P
->running MySQL in a chroot jail</P
-></LI
-><LI
-><P
->running the httpd in a chroot jail</P
-></LI
-><LI
-><P
->making sure the MySQL passwords are different from the OS
-          passwords (MySQL "root" has nothing to do with system
-          "root").</P
-></LI
-><LI
-><P
->running MySQL on a separate untrusted machine</P
-></LI
-><LI
-><P
->making backups ;-)</P
-></LI
-></OL
->
-      </P
-></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
-NAME="AEN749"
-></A
->4.1.11. Configuring Bugzilla</H2
+>4.1.10. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 
@@ -3906,7 +3677,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN755"
+NAME="AEN719"
 ></A
 >4.2.1. Dependency Charts</H2
 ><P
@@ -3970,7 +3741,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN770"
+NAME="AEN734"
 ></A
 >4.2.2. Bug Graphs</H2
 ><P
@@ -4029,7 +3800,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN783"
+NAME="AEN747"
 ></A
 >4.2.3. The Whining Cron</H2
 ><P
@@ -4367,181 +4138,9 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="htaccess"
-></A
->4.2.6. <TT
-CLASS="filename"
->.htaccess</TT
->
-      files and security</H2
-><P
->To enhance the security of your Bugzilla installation, Bugzilla's
-      <TT
-CLASS="filename"
->checksetup.pl</TT
-> script will generate 
-      <I
-CLASS="glossterm"
->&#13;        <TT
-CLASS="filename"
->.htaccess</TT
->
-      </I
->
-
-      files which the Apache webserver can use to restrict access to the
-      bugzilla data files. 
-      These .htaccess files will not work with Apache 1.2.x - but this
-      has security holes, so you shouldn't be using it anyway. 
-      <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->If you are using an alternate provider of 
-        <SPAN
-CLASS="productname"
->webdot</SPAN
->
-
-        services for graphing (as described when viewing 
-        <TT
-CLASS="filename"
->editparams.cgi</TT
->
-
-        in your web browser), you will need to change the ip address in 
-        <TT
-CLASS="filename"
->data/webdot/.htaccess</TT
->
-
-        to the ip address of the webdot server that you are using.</P
-></TD
-></TR
-></TABLE
-></DIV
->
-      </P
-><P
->The default .htaccess file may not provide adequate access
-      restrictions, depending on your web server configuration. Be sure to
-      check the &#60;Directory&#62; entries for your Bugzilla directory so that
-      the 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-
-      file is allowed to override web server defaults. For instance, let's
-      assume your installation of Bugzilla is installed to 
-      <TT
-CLASS="filename"
->/usr/local/bugzilla</TT
->
-
-      . You should have this &#60;Directory&#62; entry in your 
-      <TT
-CLASS="filename"
->httpd.conf</TT
->
-
-      file:</P
-><P
->&#13;      
-<TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;&#60;Directory /usr/local/bugzilla/&#62;
-  Options +FollowSymLinks +Indexes +Includes +ExecCGI
-  AllowOverride All
-&#60;/Directory&#62;
-</PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-
-      </P
-><P
->The important part above is 
-      <SPAN
-CLASS="QUOTE"
->"AllowOverride All"</SPAN
->
-
-      . Without that, the 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-
-      file created by 
-      <TT
-CLASS="filename"
->checksetup.pl</TT
->
-
-      will not have sufficient permissions to protect your Bugzilla
-      installation.</P
-><P
->If you are using Internet Information Server (IIS) or another 
-      web server which does not observe 
-      <TT
-CLASS="filename"
->.htaccess</TT
->
-      conventions, you can disable their creation by editing 
-      <TT
-CLASS="filename"
->localconfig</TT
->
-      and setting the 
-      <TT
-CLASS="varname"
->$create_htaccess</TT
->
-      variable to 
-      <TT
-CLASS="parameter"
-><I
->0</I
-></TT
->.
-      </P
-></DIV
-><DIV
-CLASS="section"
-><HR><H2
-CLASS="section"
-><A
 NAME="directoryindex"
 ></A
->4.2.7. <TT
+>4.2.6. <TT
 CLASS="filename"
 >directoryindex</TT
 > for the Bugzilla default page.</H2
@@ -4568,7 +4167,7 @@ CLASS="section"
 ><A
 NAME="mod_perl"
 ></A
->4.2.8. Bugzilla and <TT
+>4.2.7. Bugzilla and <TT
 CLASS="filename"
 >mod_perl</TT
 ></H2
@@ -4585,7 +4184,7 @@ CLASS="section"
 ><A
 NAME="mod-throttle"
 ></A
->4.2.9. <TT
+>4.2.8. <TT
 CLASS="filename"
 >mod_throttle</TT
 >
@@ -4775,11 +4374,11 @@ TARGET="_top"
 ></TABLE
 ></DIV
 ><DIV
-CLASS="note"
+CLASS="tip"
 ><P
 ></P
 ><TABLE
-CLASS="note"
+CLASS="tip"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -4788,9 +4387,9 @@ WIDTH="25"
 ALIGN="CENTER"
 VALIGN="TOP"
 ><IMG
-SRC="../images/note.gif"
+SRC="../images/tip.gif"
 HSPACE="5"
-ALT="Note"></TD
+ALT="Tip"></TD
 ><TD
 ALIGN="LEFT"
 VALIGN="TOP"
@@ -4919,30 +4518,9 @@ CLASS="section"
 ><HR><H4
 CLASS="section"
 ><A
-NAME="win32-code-mail"
+NAME="AEN863"
 ></A
->4.3.1.3.2. Making mail work</H4
-><P
->The easiest way to get mail working is to use the mail patches
-          on <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=124174"
-TARGET="_top"
->bug
-          124174</A
->. With any luck, this patch will receive the required
-          reviews and integrated into the main Bugzilla distribution very soon.
-          Until that happens, there's at least one report of this patch working
-          well on Windows.
-          </P
-></DIV
-><DIV
-CLASS="section"
-><HR><H4
-CLASS="section"
-><A
-NAME="AEN930"
-></A
->4.3.1.3.3. System Calls</H4
+>4.3.1.3.2. System Calls</H4
 ><P
 >In order to get system calls to work on win32's perl, you need
           to tell the windows shell what interpreter to use. This is done by
@@ -4971,7 +4549,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;system("./processmail", $id, $exporter);
+>&#13;system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
           </PRE
 ></FONT
 ></TD
@@ -4989,19 +4567,12 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
+>&#13;system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filename");
           </PRE
 ></FONT
 ></TD
 ></TR
 ></TABLE
-><P
->Notice that the <TT
-CLASS="computeroutput"
->./</TT
-> is also
-          removed.
-          </P
 ><DIV
 CLASS="tip"
 ><P
@@ -5040,6 +4611,51 @@ CLASS="productname"
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>It appears that the only <TT
+CLASS="function"
+>system</TT
+> call
+            remaining in the Bugzilla codebase is in
+            <TT
+CLASS="filename"
+>showdependencygraph.cgi</TT
+>. Not changing this
+            file will only cause dependency graphs to not function if the
+            <TT
+CLASS="option"
+>webdotbase</TT
+> paramater points to a local
+            installation of <A
+HREF="http://www.graphviz.org"
+TARGET="_top"
+>GraphViz</A
+>.
+            </P
+></TD
+></TR
+></TABLE
+></DIV
 ></DIV
 ></DIV
 ><DIV
@@ -5055,8 +4671,8 @@ NAME="win32-http"
         able to handle Bugzilla; however, the Bugzilla Team still recommends
         Apache whenever asked. No matter what web server you choose, be sure
         to pay attention to the security notes in <A
-HREF="#security"
->Section 5.6</A
+HREF="#security-access"
+>Section 5.6.4</A
 >.
         More information on configuring specific web servers can be found in
         <A
@@ -5256,8 +4872,8 @@ CLASS="glossterm"
     should be able to handle Bugzilla. No matter what web server you choose, but
     especially if you choose something other than Apache, you should be sure to read
     <A
-HREF="#security"
->Section 5.6</A
+HREF="#security-access"
+>Section 5.6.4</A
 >.
     </P
 ><P
@@ -5430,7 +5046,7 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;# don't allow people to retrieve non-cgi executable files or our private data
-&#60;FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$&#62;
+&#60;FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$&#62;
   deny from all
 &#60;/FilesMatch&#62;
 &#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
@@ -5614,8 +5230,8 @@ CLASS="filename"
 >data</TT
 >
       directory are secured as described in <A
-HREF="#security"
->Section 5.6</A
+HREF="#security-access"
+>Section 5.6.4</A
 >.
       </P
 ></DIV
@@ -5677,12 +5293,14 @@ COLOR="#000000"
 ><PRE
 CLASS="programlisting"
 >&#13;ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
+ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
 ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-ns_register_filter preauth GET /bugzilla/processmail filter_deny
 ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
 ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
-
+ns_register_filter preauth GET /bugzilla/data/* filter_deny
+ns_register_filter preauth GET /bugzilla/template/* filter_deny
+                                                                                
 proc filter_deny { why } {
     ns_log Notice "filter_deny"
     return "filter_return"
@@ -5713,31 +5331,84 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->This doesn't appear to account for everything mentioned in
-        <A
-HREF="#security"
->Section 5.6</A
->. In particular, it doesn't block access
-        to the <TT
-CLASS="filename"
->data</TT
-> or
+>This probably doesn't account for all possible editor backup
+        files so you may wish to add some additional variations of
         <TT
 CLASS="filename"
->template</TT
-> directories. It also
-        doesn't account for the editor backup files that were the topic of
+>localconfig</TT
+>. For more information, see
         <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
 TARGET="_top"
 >bug
         186383</A
->, <A
+> or <A
 HREF="http://online.securityfocus.com/bid/6501"
 TARGET="_top"
 >Bugtraq ID 6501</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If you are using webdot from research.att.com (the default
+        configuration for the <TT
+CLASS="option"
+>webdotbase</TT
+> paramater), you
+        will need to allow access to <TT
+CLASS="filename"
+>data/webdot/*.dot</TT
+>
+        for the reasearch.att.com machine.
+        </P
+><P
+>If you are using a local installation of <A
+HREF="http://www.graphviz.org"
+TARGET="_top"
+>GraphViz</A
+>, you will need to allow
+        everybody to access <TT
+CLASS="filename"
+>*.png</TT
 >,
-        and a partial cause for the 2.16.2 release.
+        <TT
+CLASS="filename"
+>*.gif</TT
+>, <TT
+CLASS="filename"
+>*.jpg</TT
+>, and
+        <TT
+CLASS="filename"
+>*.map</TT
+> in the
+        <TT
+CLASS="filename"
+>data/webdot</TT
+> directory.
         </P
 ></TD
 ></TR
@@ -5762,7 +5433,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1063"
+NAME="AEN1009"
 ></A
 >4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
@@ -5787,7 +5458,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1068"
+NAME="AEN1014"
 ></A
 >4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
@@ -7142,332 +6813,596 @@ VALIGN="TOP"
 ><P
 >These instructions must, of necessity, be somewhat vague since
       Bugzilla runs on so many different platforms. If you have refinements
-      of these directions for specific platforms, please submit them to 
-      <A
-HREF="mailto://mozilla-webtools@mozilla.org"
+      of these directions, please submit a bug to <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
 TARGET="_top"
->&#13;      mozilla-webtools@mozilla.org</A
->
+>Bugzilla Documentation</A
+>.
       </P
 ></TD
 ></TR
 ></TABLE
 ></DIV
+><DIV
+CLASS="warning"
 ><P
->To secure your installation:
-     
-    <P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This is not meant to be a comprehensive list of every possible
+      security issue regarding the tools mentioned in this section. There is
+      no subsitute for reading the information written by the authors of any
+      software running on your system.
+      </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="security-networking"
+></A
+>5.6.1. TCP/IP Ports</H2
+><P
+>TCP/IP defines 65,000 some ports for trafic. Of those, Bugzilla
+      only needs 1... 2 if you need to use features that require e-mail such
+      as bug moving or the e-mail interface from contrib. You should audit
+      your server and make sure that you aren't listening on any ports you
+      don't need to be. You may also wish to use some kind of firewall
+      software to be sure that trafic can only be recieved on ports you
+      specify.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="security-mysql"
+></A
+>5.6.2. MySQL</H2
+><P
+>MySQL ships by default with many settings that should be changed.
+      By defaults it allows anybody to connect from localhost without a
+      password and have full administrative capabilities. It also defaults to
+      not have a root password (this is <EM
+>not</EM
+> the same as
+      the system root). Also, many installations default to running
+      <SPAN
+CLASS="application"
+>mysqld</SPAN
+> as the system root.
+      </P
+><P
 ></P
 ><OL
 TYPE="1"
 ><LI
 ><P
->&#13;        <EM
->There is no substitute for understanding the tools on your
-        system!</EM
->
-
-        Read 
-        <A
-HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
-TARGET="_top"
->&#13;        The MySQL Privilege System</A
->
-        until you can recite it from memory!</P
-></LI
-><LI
-><P
->Lock down <TT
-CLASS="filename"
->/etc/inetd.conf</TT
->. Heck, disable
-        inet entirely on this box. It should only listen to port 25 for
-        Sendmail and port 80 for Apache.</P
-></LI
-><LI
-><P
->Do not run Apache as 
-        <SPAN
-CLASS="QUOTE"
->"nobody"</SPAN
->
-
-        . This will require very lax permissions in your Bugzilla
-        directories. Run it, instead, as a user with a name, set via your
-        httpd.conf file. 
-        <DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;          <SPAN
-CLASS="QUOTE"
->"nobody"</SPAN
->
-
-          is a real user on UNIX systems. Having a process run as user id 
-          <SPAN
-CLASS="QUOTE"
->"nobody"</SPAN
->
-
-          is absolutely no protection against system crackers versus using
-          any other user account. As a general security measure, I recommend
-          you create unique user ID's for each daemon running on your system
-          and, if possible, use "chroot" to jail that process away from the
-          rest of your system.</P
-></TD
-></TR
-></TABLE
-></DIV
->
-        </P
-></LI
-><LI
-><P
->Ensure you have adequate access controls for the
-        <TT
-CLASS="filename"
->$BUGZILLA_HOME/data/</TT
-> directory, as well as the
-        <TT
-CLASS="filename"
->$BUGZILLA_HOME/localconfig</TT
-> file.
-        The localconfig file stores your "bugs" database account password. 
-        In addition, some
-        files under <TT
-CLASS="filename"
->$BUGZILLA_HOME/data/</TT
-> store sensitive
-        information.
-        </P
-><P
->Also, beware that some text editors create backup files in the
-        current working directory so you need to also secure files like
-        <TT
-CLASS="filename"
->localconfig~</TT
->.
-        </P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Simply blocking <TT
-CLASS="computeroutput"
->.*localconfig.*</TT
->
-          won't work because the QuickSearch feature requires the web browser
-          to be able to retrieve <TT
-CLASS="filename"
->localconfig.js</TT
-> and
-          others may be introduced in the future (see 
-          <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
-TARGET="_top"
->bug
-          186383</A
-> for more information.
+>Consult the documentation that came with your system for
+          information on making <SPAN
+CLASS="application"
+>mysqld</SPAN
+> run as an
+          unprivleged user.
           </P
-></TD
-></TR
-></TABLE
-></DIV
-><P
->Bugzilla provides default <TT
-CLASS="filename"
->.htaccess</TT
-> files
-        to protect the most common Apache installations. However, you should
-        verify these are adequate according to the site-wide security policy
-        of your web server, and ensure that the <TT
-CLASS="filename"
->.htaccess</TT
->
-        files are allowed to <SPAN
-CLASS="QUOTE"
->"override"</SPAN
-> default permissions set
-        in your Apache configuration files. Covering Apache security is beyond
-        the scope of this Guide; please consult the Apache documentation for
-        details.
-        </P
-><P
->If you are using a web server that does not support the
-        <TT
-CLASS="filename"
->.htaccess</TT
-> control method, 
-        <EM
->you are at risk!</EM
->
-
-        After installing, check to see if you can view the file
-        <TT
-CLASS="filename"
->localconfig</TT
-> in your web browser (e.g.: 
-        <A
-HREF="http://bugzilla.mozilla.org/localconfig"
-TARGET="_top"
->&#13;        http://bugzilla.mozilla.org/localconfig</A
->
-
-        ). If you can read the contents of this file, your web server has
-        not secured your bugzilla directory properly and you must fix this
-        problem before deploying Bugzilla. If, however, it gives you a
-        "Forbidden" error, then it probably respects the .htaccess
-        conventions and you are good to go.</P
 ></LI
 ><LI
 ><P
->When you run checksetup.pl, the script will attempt to modify
-        various permissions on files which Bugzilla uses. If you do not have
-        a webservergroup set in the <TT
-CLASS="filename"
->localconfig</TT
-> file,
-        then Bugzilla will have to make certain files world readable and/or
-        writable. 
-        <EM
->THIS IS INSECURE!</EM
->
-
-        . This means that anyone who can get access to your system can do
-        whatever they want to your Bugzilla installation.</P
-><DIV
-CLASS="note"
-><P
-></P
+>You should also be sure to disable the anonymous user account
+          and set a password for the root user. This is accomplished using the
+          following commands:
+          </P
 ><TABLE
-CLASS="note"
-WIDTH="100%"
 BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
 ><TR
 ><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->This also means that if your webserver runs all cgi scripts
-          as the same user/group, anyone on the system who can run cgi
-          scripts will be able to take control of your Bugzilla
-          installation.</P
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;<TT
+CLASS="prompt"
+>bash$</TT
+> mysql mysql
+<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> DELETE FROM user WHERE user = '';
+<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> UPDATE user SET password = password('<TT
+CLASS="replaceable"
+><I
+>new_password</I
+></TT
+>') WHERE user = 'root';
+<TT
+CLASS="prompt"
+>mysql&#62;</TT
+> FLUSH PRIVILEGES;
+          </PRE
+></FONT
 ></TD
 ></TR
 ></TABLE
-></DIV
 ><P
->On Apache, you can use <TT
-CLASS="filename"
->.htaccess</TT
-> files to
-        protect access to these directories, as outlined in Bugs 
-        <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"
-TARGET="_top"
->&#13;        57161</A
-> and
-        <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
-TARGET="_top"
->&#13;        186383</A
->
-
-        for the <TT
-CLASS="filename"
->localconfig</TT
-> file, and 
-        <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=65572"
-TARGET="_top"
->Bug
-        65572</A
->
-
-        for adequate protection in your <TT
-CLASS="filename"
->data/</TT
-> directory.
-        Also, don't forget about the <TT
-CLASS="filename"
->template/</TT
-> and
-        <TT
-CLASS="filename"
->Bugzilla/</TT
-> directories and to allow access to the
-        <TT
-CLASS="filename"
->data/webdot</TT
-> directory for the
-        <TT
-CLASS="computeroutput"
->192.20.225.10</TT
-> IP address if you are
-        using webdot from research.att.com.  The easiest way to
-        accomplish this is to set <TT
-CLASS="function"
->$create_htaccess</TT
-> to 1
-        in <TT
-CLASS="filename"
->localconfig</TT
->.  However, the information below
-        is provided for those that want to know exactly what is created.
-        </P
+>From this point forward you will need to use
+          <B
+CLASS="command"
+>mysql -u root -p</B
+> and enter
+          <TT
+CLASS="replaceable"
+><I
+>new_password</I
+></TT
+> when prompted when using the
+          mysql client.
+          </P
+></LI
+><LI
 ><P
->FIX ME BEFORE RELEASE!!!!!
-        Note the instructions which follow are Apache-specific. If you
-        use IIS, Netscape, or other non-Apache web servers, please consult
-        your system documentation for how to secure these files from being
-        transmitted to curious users.</P
+>If you run MySQL on the same machine as your httpd server, you
+          should consider disabling networking from within MySQL by adding
+          the following to your <TT
+CLASS="filename"
+>/etc/my.conf</TT
+>:
+          </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;[myslqd]
+# Prevent network access to MySQL.
+skip-networking
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></LI
+><LI
+><P
+>You may also consider running MySQL, or even all of Bugzilla
+          in a chroot jail; however, instructions for doing that are beyond
+          the scope of this document.
+          </P
 ></LI
 ></OL
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="security-daemon"
+></A
+>5.6.3. Daemon Accounts</H2
+><P
+>Many daemons, such as Apache's httpd and MySQL's mysqld default to
+      running as either <SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> or <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+>. Running
+      as <SPAN
+CLASS="QUOTE"
+>"root"</SPAN
+> introduces obvious security problems, but the
+      problems introduced by running everything as <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+> may
+      not be so obvious. Basically, if you're running every daemon as
+      <SPAN
+CLASS="QUOTE"
+>"nobody"</SPAN
+> and one of them gets comprimised, they all get
+      comprimised. For this reason it is recommended that you create a user
+      account for each daemon.
+      </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>You will need to set the <TT
+CLASS="varname"
+>webservergroup</TT
+> to
+        the group you created for your webserver to run as in
+        <TT
+CLASS="filename"
+>localconfig</TT
+>. This will allow
+        <B
+CLASS="command"
+>./checksetup.pl</B
+> to better adjust the file
+        permissions on your Bugzilla install so as to not require making
+        anything world-writable.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><HR><H2
+CLASS="section"
+><A
+NAME="security-access"
+></A
+>5.6.4. Web Server Access Controls</H2
+><P
+>There are many files that are placed in the Bugzilla directory
+      area that should not be accessable from the web. Because of the way
+      Bugzilla is currently layed out, the list of what should and should
+      not be accessible is rather complicated. A new installation method
+      is currently in the works which should solve this by allowing files
+      that shouldn't be accessible from the web to be placed in directory
+      outside the webroot. See
+      <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=44659"
+TARGET="_top"
+>bug
+      44659</A
+> for more information.
+      </P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>In the main Bugzilla directory, you should:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block:
+              <TT
+CLASS="filename"
+>*.pl</TT
+>, <TT
+CLASS="filename"
+>*localconfig*</TT
+>, <TT
+CLASS="filename"
+>runtests.sh</TT
 >
-    </P
+              </P
+></LI
+><LI
+><P
+>But allow:
+              <TT
+CLASS="filename"
+>localconfig.js</TT
+>, <TT
+CLASS="filename"
+>localconfig.rdf</TT
+>
+              </P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>data</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow:
+              <TT
+CLASS="filename"
+>duplicates.rdf</TT
+>
+              </P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>data/webdot</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>If you use a remote webdot server:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow
+                  <TT
+CLASS="filename"
+>*.dot</TT
+>
+                  only for the remote webdot server</P
+></LI
+></UL
+></LI
+><LI
+><P
+>Otherwise, if you use a local GraphViz:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+><LI
+><P
+>But allow:
+                  <TT
+CLASS="filename"
+>*.png</TT
+>, <TT
+CLASS="filename"
+>*.gif</TT
+>, <TT
+CLASS="filename"
+>*.jpg</TT
+>, <TT
+CLASS="filename"
+>*.map</TT
+>
+                  </P
+></LI
+></UL
+></LI
+><LI
+><P
+>And if you don't use any dot:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>Bugzilla</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+><LI
+><P
+>In <TT
+CLASS="filename"
+>template</TT
+>:</P
+><P
+></P
+><UL
+COMPACT="COMPACT"
+><LI
+><P
+>Block everything</P
+></LI
+></UL
+></LI
+></UL
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Bugzilla ships with the ability to generate
+        <TT
+CLASS="filename"
+>.htaccess</TT
+> files instructing
+        <A
+HREF="#gloss-apache"
+><I
+CLASS="glossterm"
+>Apache</I
+></A
+> which files
+        should and should not be accessible. For more information, see
+        <A
+HREF="#http-apache"
+>Section 4.4.1</A
+>.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><P
+>You should test to make sure that the files mentioned above are
+      not accessible from the Internet, especially your
+      <TT
+CLASS="filename"
+>localconfig</TT
+> file which contains your database
+      password. To test, simply point your web browser at the file; for
+      example, to test mozilla.org's installation, we'd try to access
+      <A
+HREF="http://bugzilla.mozilla.org/localconfig"
+TARGET="_top"
+>http://bugzilla.mozilla.org/localconfig</A
+>. You should
+      get a <SPAN
+CLASS="errorcode"
+>403</SPAN
+> <SPAN
+CLASS="errorname"
+>Forbidden</SPAN
+>
+      error.
+      </P
+><DIV
+CLASS="caution"
+><P
+></P
+><TABLE
+CLASS="caution"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/caution.gif"
+HSPACE="5"
+ALT="Caution"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>Not following the instructions in this section, including
+        testing, may result in sensitive information being globally
+        accessible.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>You should check <A
+HREF="#http"
+>Section 4.4</A
+> to see if instructions
+        have been included for your web server. You should also compare those
+        instructions with this list to make sure everything is properly
+        accounted for.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -7500,7 +7435,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1413"
+NAME="AEN1443"
 ></A
 >5.7.1. What to Edit</H2
 ><P
@@ -7615,7 +7550,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1432"
+NAME="AEN1462"
 ></A
 >5.7.2. How To Edit Templates</H2
 ><P
@@ -7697,7 +7632,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1442"
+NAME="AEN1472"
 ></A
 >5.7.3. Template Formats</H2
 ><P
@@ -7759,7 +7694,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1455"
+NAME="AEN1485"
 ></A
 >5.7.4. Particular Templates</H2
 ><P
@@ -8761,64 +8696,64 @@ HREF="#faq-general"
 ><DL
 ><DT
 >A.1.1. <A
-HREF="#AEN1617"
+HREF="#faq-general-information"
 >&#13;	    Where can I find information about Bugzilla?</A
 ></DT
 ><DT
 >A.1.2. <A
-HREF="#AEN1623"
+HREF="#faq-general-license"
 >&#13;	    What license is Bugzilla distributed under?
 	  </A
 ></DT
 ><DT
 >A.1.3. <A
-HREF="#AEN1629"
+HREF="#faq-general-support"
 >&#13;	    How do I get commercial support for Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.4. <A
-HREF="#AEN1638"
+HREF="#faq-general-companies"
 >&#13;	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
 	  </A
 ></DT
 ><DT
 >A.1.5. <A
-HREF="#AEN1662"
+HREF="#faq-general-maintainers"
 >&#13;	    Who maintains Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.1.6. <A
-HREF="#AEN1668"
+HREF="#faq-general-compare"
 >&#13;	    How does Bugzilla stack up against other bug-tracking databases?
 	  </A
 ></DT
 ><DT
 >A.1.7. <A
-HREF="#AEN1674"
+HREF="#faq-general-bzmissing"
 >&#13;	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </A
 ></DT
 ><DT
 >A.1.8. <A
-HREF="#AEN1681"
+HREF="#faq-general-mysql"
 >&#13;	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 	  </A
 ></DT
 ><DT
 >A.1.9. <A
-HREF="#AEN1690"
+HREF="#faq-general-bonsaitools"
 >&#13;	    Why do the scripts say "/usr/bonsaitools/bin/perl" instead of
 	    "/usr/bin/perl" or something else?
 	  </A
 ></DT
 ><DT
 >A.1.10. <A
-HREF="#AEN1696"
+HREF="#faq-general-cookie"
 >&#13;	    Is there an easy way to change the Bugzilla cookie name?
 	  </A
 ></DT
@@ -8833,41 +8768,41 @@ HREF="#faq-phb"
 ><DL
 ><DT
 >A.2.1. <A
-HREF="#AEN1706"
+HREF="#faq-phb-client"
 >&#13;	    Is Bugzilla web-based, or do you have to have specific software or
 	    a specific operating system on your machine?
 	  </A
 ></DT
 ><DT
 >A.2.2. <A
-HREF="#AEN1711"
+HREF="#faq-phb-integration"
 >&#13;	    Can Bugzilla integrate with
 	    Perforce (SCM software)?
 	  </A
 ></DT
 ><DT
 >A.2.3. <A
-HREF="#AEN1716"
+HREF="#faq-phb-projects"
 >&#13;	    Does Bugzilla allow the user to track multiple projects?
 	  </A
 ></DT
 ><DT
 >A.2.4. <A
-HREF="#AEN1721"
+HREF="#faq-phb-sorting"
 >&#13;	    If I am on many projects, and search for all bugs assigned to me, will
 	    Bugzilla list them for me and allow me to sort by project, severity etc?
 	  </A
 ></DT
 ><DT
 >A.2.5. <A
-HREF="#AEN1726"
+HREF="#faq-phb-attachments"
 >&#13;	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
 	    are there any that are NOT allowed?
 	  </A
 ></DT
 ><DT
 >A.2.6. <A
-HREF="#AEN1731"
+HREF="#faq-phb-priorities"
 >&#13;	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
 	    the choice of acceptable values?
@@ -8875,35 +8810,35 @@ HREF="#AEN1731"
 ></DT
 ><DT
 >A.2.7. <A
-HREF="#AEN1738"
+HREF="#faq-phb-reporting"
 >&#13;	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
 	  </A
 ></DT
 ><DT
 >A.2.8. <A
-HREF="#AEN1745"
+HREF="#faq-phb-email"
 >&#13;	    Is there email notification and if so, what do you see when you get an
 	    email?
 	  </A
 ></DT
 ><DT
 >A.2.9. <A
-HREF="#AEN1750"
+HREF="#faq-phb-cclist"
 >&#13;	    Can email notification be set up to send to multiple
 	    people, some on the To List, CC List, BCC List etc?
 	  </A
 ></DT
 ><DT
 >A.2.10. <A
-HREF="#AEN1755"
+HREF="#faq-phb-emailapp"
 >&#13;	    Do users have to have any particular
 	    type of email application?
 	  </A
 ></DT
 ><DT
 >A.2.11. <A
-HREF="#AEN1762"
+HREF="#faq-phb-data"
 >&#13;	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
 	    imported into "matching" fields? If I wanted to take the results of a query
@@ -8912,28 +8847,28 @@ HREF="#AEN1762"
 ></DT
 ><DT
 >A.2.12. <A
-HREF="#AEN1774"
+HREF="#faq-phb-l10n"
 >&#13;	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
 	  </A
 ></DT
 ><DT
 >A.2.13. <A
-HREF="#AEN1781"
+HREF="#faq-phb-reports"
 >&#13;	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
 	  </A
 ></DT
 ><DT
 >A.2.14. <A
-HREF="#AEN1786"
+HREF="#faq-phb-searching"
 >&#13;	    Does Bugzilla have the ability to search by word, phrase, compound
 	    search?
 	  </A
 ></DT
 ><DT
 >A.2.15. <A
-HREF="#AEN1791"
+HREF="#faq-phb-midair"
 >&#13;	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
 	    or how are they notified?
@@ -8941,19 +8876,19 @@ HREF="#AEN1791"
 ></DT
 ><DT
 >A.2.16. <A
-HREF="#AEN1796"
+HREF="#faq-phb-backup"
 >&#13;	    Are there any backup features provided?
 	  </A
 ></DT
 ><DT
 >A.2.17. <A
-HREF="#AEN1802"
+HREF="#faq-phb-livebackup"
 >&#13;	    Can users be on the system while a backup is in progress?
 	  </A
 ></DT
 ><DT
 >A.2.18. <A
-HREF="#AEN1807"
+HREF="#faq-phb-maintenance"
 >&#13;	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
@@ -8963,7 +8898,7 @@ HREF="#AEN1807"
 ></DT
 ><DT
 >A.2.19. <A
-HREF="#AEN1813"
+HREF="#faq-phb-installtime"
 >&#13;	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
 	    install and a couple of hours per week to maintain and customize or is this
@@ -8973,7 +8908,7 @@ HREF="#AEN1813"
 ></DT
 ><DT
 >A.2.20. <A
-HREF="#AEN1818"
+HREF="#faq-phb-cost"
 >&#13;	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
 	  </A
@@ -8989,20 +8924,20 @@ HREF="#faq-security"
 ><DL
 ><DT
 >A.3.1. <A
-HREF="#AEN1825"
+HREF="#faq-security-mysql"
 >&#13;	    How do I completely disable MySQL security if it's giving me problems
 	    (I've followed the instructions in the installation section of this guide)?
 	  </A
 ></DT
 ><DT
 >A.3.2. <A
-HREF="#AEN1831"
+HREF="#faq-security-knownproblems"
 >&#13;	    Are there any security problems with Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.3.3. <A
-HREF="#AEN1836"
+HREF="#faq-security-mysqluser"
 >&#13;	    I've implemented the security fixes mentioned in Chris Yeh's security
 	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
 	    problems with MySQL no longer working correctly.
@@ -9019,48 +8954,48 @@ HREF="#faq-email"
 ><DL
 ><DT
 >A.4.1. <A
-HREF="#AEN1843"
+HREF="#faq-email-nomail"
 >&#13;	    I have a user who doesn't want to receive any more email from Bugzilla.
 	    How do I stop it entirely for this user?
 	  </A
 ></DT
 ><DT
 >A.4.2. <A
-HREF="#AEN1849"
+HREF="#faq-email-testing"
 >&#13;	    I'm evaluating/testing Bugzilla, and don't want it to send email to
 	    anyone but me. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.3. <A
-HREF="#AEN1854"
+HREF="#faq-email-whine"
 >&#13;	    I want whineatnews.pl to whine at something more, or other than, only new
 	    bugs. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.4. <A
-HREF="#AEN1860"
+HREF="#faq-email-procmail"
 >&#13;	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
 	    What alternatives do I have?
 	  </A
 ></DT
 ><DT
 >A.4.5. <A
-HREF="#AEN1867"
+HREF="#faq-email-mailif"
 >&#13;	    How do I set up the email interface to submit/change bugs via email?
 	  </A
 ></DT
 ><DT
 >A.4.6. <A
-HREF="#AEN1872"
+HREF="#faq-email-sendmailnow"
 >&#13;	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
 	  </A
 ></DT
 ><DT
 >A.4.7. <A
-HREF="#AEN1879"
+HREF="#faq-email-nonreceived"
 >&#13;	     How come email from Bugzilla changes never reaches me?
 	  </A
 ></DT
@@ -9075,33 +9010,33 @@ HREF="#faq-db"
 ><DL
 ><DT
 >A.5.1. <A
-HREF="#AEN1887"
+HREF="#faq-db-oracle"
 >&#13;	    I've heard Bugzilla can be used with Oracle?
 	  </A
 ></DT
 ><DT
 >A.5.2. <A
-HREF="#AEN1892"
+HREF="#faq-db-corrupted"
 >&#13;	    I think my database might be corrupted, or contain invalid entries. What
 	    do I do?
 	  </A
 ></DT
 ><DT
 >A.5.3. <A
-HREF="#AEN1900"
+HREF="#faq-db-manualedit"
 >&#13;	    I want to manually edit some entries in my database. How?
 	  </A
 ></DT
 ><DT
 >A.5.4. <A
-HREF="#AEN1908"
+HREF="#faq-db-permissions"
 >&#13;	    I think I've set up MySQL permissions correctly, but Bugzilla still can't
 	    connect.
 	  </A
 ></DT
 ><DT
 >A.5.5. <A
-HREF="#AEN1916"
+HREF="#faq-db-synchronize"
 >&#13;	    How do I synchronize bug information among multiple different Bugzilla
 	    databases?
 	  </A
@@ -9117,26 +9052,26 @@ HREF="#faq-nt"
 ><DL
 ><DT
 >A.6.1. <A
-HREF="#AEN1925"
+HREF="#faq-nt-easiest"
 >&#13;	    What is the easiest way to run Bugzilla on Win32 (Win98+/NT/2K)?
 	  </A
 ></DT
 ><DT
 >A.6.2. <A
-HREF="#AEN1930"
+HREF="#faq-nt-bundle"
 >&#13;	    Is there a "Bundle::Bugzilla" equivalent for Win32?
 	  </A
 ></DT
 ><DT
 >A.6.3. <A
-HREF="#AEN1935"
+HREF="#faq-nt-mappings"
 >&#13;	    CGI's are failing with a "something.cgi is not a valid Windows NT
 	    application" error. Why?
 	  </A
 ></DT
 ><DT
 >A.6.4. <A
-HREF="#AEN1943"
+HREF="#faq-nt-dbi"
 >&#13;	    I'm having trouble with the perl modules for NT not being able to talk to
 	    to the database.
 	  </A
@@ -9152,33 +9087,33 @@ HREF="#faq-use"
 ><DL
 ><DT
 >A.7.1. <A
-HREF="#AEN1964"
+HREF="#faq-use-changeaddress"
 >&#13;	    How do I change my user name (email address) in Bugzilla?
 	  </A
 ></DT
 ><DT
 >A.7.2. <A
-HREF="#AEN1969"
+HREF="#faq-use-query"
 >&#13;	    The query page is very confusing.  Isn't there a simpler way to query?
 	  </A
 ></DT
 ><DT
 >A.7.3. <A
-HREF="#AEN1974"
+HREF="#faq-use-accept"
 >&#13;	    I'm confused by the behavior of the "accept" button in the Show Bug form.
 	    Why doesn't it assign the bug to me when I accept it?
 	  </A
 ></DT
 ><DT
 >A.7.4. <A
-HREF="#AEN1984"
+HREF="#faq-use-attachment"
 >&#13;	    I can't upload anything into the database via the "Create Attachment"
 	    link.  What am I doing wrong?
 	  </A
 ></DT
 ><DT
 >A.7.5. <A
-HREF="#AEN1989"
+HREF="#faq-use-keyword"
 >&#13;	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </A
 ></DT
@@ -9193,26 +9128,26 @@ HREF="#faq-hacking"
 ><DL
 ><DT
 >A.8.1. <A
-HREF="#AEN1996"
+HREF="#faq-hacking-templatestyle"
 >&#13;	    What kind of style should I use for templatization?
 	  </A
 ></DT
 ><DT
 >A.8.2. <A
-HREF="#AEN2004"
+HREF="#faq-hacking-bugzillabugs"
 >&#13;	    What bugs are in Bugzilla right now?
 	  </A
 ></DT
 ><DT
 >A.8.3. <A
-HREF="#AEN2013"
+HREF="#faq-hacking-priority"
 >&#13;	    How can I change the default priority to a null value?  For instance, have the default
 	    priority be "---" instead of "P2"?
 	  </A
 ></DT
 ><DT
 >A.8.4. <A
-HREF="#AEN2019"
+HREF="#faq-hacking-patches"
 >&#13;	    What's the best way to submit patches?  What guidelines should I follow?
 	  </A
 ></DT
@@ -9232,7 +9167,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1617"
+NAME="faq-general-information"
 ></A
 ><B
 >A.1.1. </B
@@ -9260,7 +9195,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1623"
+NAME="faq-general-license"
 ></A
 ><B
 >A.1.2. </B
@@ -9289,7 +9224,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1629"
+NAME="faq-general-support"
 ></A
 ><B
 >A.1.3. </B
@@ -9335,7 +9270,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1638"
+NAME="faq-general-companies"
 ></A
 ><B
 >A.1.4. </B
@@ -9441,7 +9376,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1662"
+NAME="faq-general-maintainers"
 ></A
 ><B
 >A.1.5. </B
@@ -9471,7 +9406,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1668"
+NAME="faq-general-compare"
 ></A
 ><B
 >A.1.6. </B
@@ -9509,7 +9444,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1674"
+NAME="faq-general-bzmissing"
 ></A
 ><B
 >A.1.7. </B
@@ -9549,7 +9484,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1681"
+NAME="faq-general-mysql"
 ></A
 ><B
 >A.1.8. </B
@@ -9594,7 +9529,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1690"
+NAME="faq-general-bonsaitools"
 ></A
 ><B
 >A.1.9. </B
@@ -9627,7 +9562,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1696"
+NAME="faq-general-cookie"
 ></A
 ><B
 >A.1.10. </B
@@ -9689,7 +9624,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1706"
+NAME="faq-phb-client"
 ></A
 ><B
 >A.2.1. </B
@@ -9715,7 +9650,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1711"
+NAME="faq-phb-integration"
 ></A
 ><B
 >A.2.2. </B
@@ -9741,7 +9676,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1716"
+NAME="faq-phb-projects"
 ></A
 ><B
 >A.2.3. </B
@@ -9766,7 +9701,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1721"
+NAME="faq-phb-sorting"
 ></A
 ><B
 >A.2.4. </B
@@ -9791,7 +9726,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1726"
+NAME="faq-phb-attachments"
 ></A
 ><B
 >A.2.5. </B
@@ -9820,7 +9755,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1731"
+NAME="faq-phb-priorities"
 ></A
 ><B
 >A.2.6. </B
@@ -9857,7 +9792,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1738"
+NAME="faq-phb-reporting"
 ></A
 ><B
 >A.2.7. </B
@@ -9895,7 +9830,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1745"
+NAME="faq-phb-email"
 ></A
 ><B
 >A.2.8. </B
@@ -9922,7 +9857,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1750"
+NAME="faq-phb-cclist"
 ></A
 ><B
 >A.2.9. </B
@@ -9947,7 +9882,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1755"
+NAME="faq-phb-emailapp"
 ></A
 ><B
 >A.2.10. </B
@@ -10006,7 +9941,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1762"
+NAME="faq-phb-data"
 ></A
 ><B
 >A.2.11. </B
@@ -10068,7 +10003,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1774"
+NAME="faq-phb-l10n"
 ></A
 ><B
 >A.2.12. </B
@@ -10106,7 +10041,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1781"
+NAME="faq-phb-reports"
 ></A
 ><B
 >A.2.13. </B
@@ -10131,7 +10066,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1786"
+NAME="faq-phb-searching"
 ></A
 ><B
 >A.2.14. </B
@@ -10157,7 +10092,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1791"
+NAME="faq-phb-midair"
 ></A
 ><B
 >A.2.15. </B
@@ -10184,7 +10119,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1796"
+NAME="faq-phb-backup"
 ></A
 ><B
 >A.2.16. </B
@@ -10214,7 +10149,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1802"
+NAME="faq-phb-livebackup"
 ></A
 ><B
 >A.2.17. </B
@@ -10240,7 +10175,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1807"
+NAME="faq-phb-maintenance"
 ></A
 ><B
 >A.2.18. </B
@@ -10275,7 +10210,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1813"
+NAME="faq-phb-installtime"
 ></A
 ><B
 >A.2.19. </B
@@ -10308,7 +10243,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1818"
+NAME="faq-phb-cost"
 ></A
 ><B
 >A.2.20. </B
@@ -10342,7 +10277,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1825"
+NAME="faq-security-mysql"
 ></A
 ><B
 >A.3.1. </B
@@ -10371,7 +10306,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1831"
+NAME="faq-security-knownproblems"
 ></A
 ><B
 >A.3.2. </B
@@ -10399,7 +10334,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1836"
+NAME="faq-security-mysqluser"
 ></A
 ><B
 >A.3.3. </B
@@ -10435,7 +10370,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1843"
+NAME="faq-email-nomail"
 ></A
 ><B
 >A.4.1. </B
@@ -10465,7 +10400,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1849"
+NAME="faq-email-testing"
 ></A
 ><B
 >A.4.2. </B
@@ -10491,7 +10426,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1854"
+NAME="faq-email-whine"
 ></A
 ><B
 >A.4.3. </B
@@ -10523,7 +10458,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1860"
+NAME="faq-email-procmail"
 ></A
 ><B
 >A.4.4. </B
@@ -10541,7 +10476,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN1864"
+NAME="AEN1894"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10562,7 +10497,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1867"
+NAME="faq-email-mailif"
 ></A
 ><B
 >A.4.5. </B
@@ -10587,7 +10522,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1872"
+NAME="faq-email-sendmailnow"
 ></A
 ><B
 >A.4.6. </B
@@ -10602,17 +10537,43 @@ CLASS="answer"
 ><B
 > </B
 >
-	    If you are using an alternate Mail Transport Agent (MTA other than
-	    sendmail), make sure the options given in the "processmail" and other
-      scripts for all
-	    instances of "sendmail" are correct for your MTA.
+	    If you are using an alternate <A
+HREF="#gloss-mta"
+><I
+CLASS="glossterm"
+>MTA</I
+></A
+>,
+            make sure the options given in <TT
+CLASS="filename"
+>Bugzilla/BugMail.pm</TT
+>
+            and any other place where <SPAN
+CLASS="application"
+>sendmail</SPAN
+> is called from
+	    are correct for your MTA. You should also ensure that the
+            <TT
+CLASS="option"
+>sendmailnow</TT
+> param is set to <TT
+CLASS="literal"
+>on</TT
+>.
 	  </P
 ><P
->&#13;	    If you are using Sendmail, try enabling "sendmailnow" in editparams.cgi.
-            If you are using Postfix, you will also need to enable <SPAN
-CLASS="QUOTE"
->"sendmailnow"</SPAN
+>&#13;	    If you are using <SPAN
+CLASS="application"
+>sendmail</SPAN
+>, try enabling
+            <TT
+CLASS="option"
+>sendmailnow</TT
+> in <TT
+CLASS="filename"
+>editparams.cgi</TT
 >.
+            
 	  </P
 ></DIV
 ></DIV
@@ -10622,7 +10583,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1879"
+NAME="faq-email-nonreceived"
 ></A
 ><B
 >A.4.7. </B
@@ -10662,7 +10623,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1887"
+NAME="faq-db-oracle"
 ></A
 ><B
 >A.5.1. </B
@@ -10690,7 +10651,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1892"
+NAME="faq-db-corrupted"
 ></A
 ><B
 >A.5.2. </B
@@ -10737,7 +10698,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1900"
+NAME="faq-db-manualedit"
 ></A
 ><B
 >A.5.3. </B
@@ -10778,7 +10739,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1908"
+NAME="faq-db-permissions"
 ></A
 ><B
 >A.5.4. </B
@@ -10839,7 +10800,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1916"
+NAME="faq-db-synchronize"
 ></A
 ><B
 >A.5.5. </B
@@ -10885,7 +10846,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1925"
+NAME="faq-nt-easiest"
 ></A
 ><B
 >A.6.1. </B
@@ -10910,7 +10871,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1930"
+NAME="faq-nt-bundle"
 ></A
 ><B
 >A.6.2. </B
@@ -10936,7 +10897,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1935"
+NAME="faq-nt-mappings"
 ></A
 ><B
 >A.6.3. </B
@@ -10959,7 +10920,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN1940"
+NAME="AEN1977"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -10984,7 +10945,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1943"
+NAME="faq-nt-dbi"
 ></A
 ><B
 >A.6.4. </B
@@ -11061,7 +11022,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1964"
+NAME="faq-use-changeaddress"
 ></A
 ><B
 >A.7.1. </B
@@ -11086,7 +11047,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1969"
+NAME="faq-use-query"
 ></A
 ><B
 >A.7.2. </B
@@ -11112,7 +11073,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1974"
+NAME="faq-use-accept"
 ></A
 ><B
 >A.7.3. </B
@@ -11167,7 +11128,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1984"
+NAME="faq-use-attachment"
 ></A
 ><B
 >A.7.4. </B
@@ -11194,7 +11155,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1989"
+NAME="faq-use-keyword"
 ></A
 ><B
 >A.7.5. </B
@@ -11228,7 +11189,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN1996"
+NAME="faq-hacking-templatestyle"
 ></A
 ><B
 >A.8.1. </B
@@ -11287,7 +11248,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2004"
+NAME="faq-hacking-bugzillabugs"
 ></A
 ><B
 >A.8.2. </B
@@ -11333,7 +11294,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2013"
+NAME="faq-hacking-priority"
 ></A
 ><B
 >A.8.3. </B
@@ -11365,7 +11326,7 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="AEN2019"
+NAME="faq-hacking-patches"
 ></A
 ><B
 >A.8.4. </B
@@ -11589,7 +11550,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2062"
+NAME="AEN2099"
 ></A
 >B.2.1. Bugzilla Database Basics</H2
 ><P
@@ -11705,7 +11666,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2089"
+NAME="AEN2126"
 ></A
 >B.2.1.1. Bugzilla Database Tables</H3
 ><P
@@ -12125,7 +12086,7 @@ CLASS="section"
 ><HR><H1
 CLASS="section"
 ><A
-NAME="rhbugzilla"
+NAME="variant-redhat"
 ></A
 >D.1. Red Hat Bugzilla</H1
 ><P
@@ -12185,7 +12146,7 @@ NAME="variant-issuezilla"
     at tigris.org is their Java-based bug-tracker, 
     <A
 HREF="#variant-scarab"
->Scarab</A
+>Section D.4</A
 >.</P
 ><P
 >This section last updated 27 Jul 2002</P
@@ -12273,7 +12234,7 @@ NAME="gfdl"
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2177"
+NAME="AEN2214"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12738,7 +12699,7 @@ NAME="gfdl-howto"
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2267"
+NAME="AEN2304"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -12775,7 +12736,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2272"
+NAME="AEN2309"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -13190,21 +13151,78 @@ NAME="gloss-m"
 >M</H1
 ><DL
 ><DT
+><A
+NAME="gloss-mta"
+></A
 ><B
->mysqld</B
+>Message Transport Agent</B
+></DT
+> (MTA)<DD
+><P
+>A Message Transport Agent is used to control the flow of email
+        on a system. Many unix based systems use
+        <A
+HREF="http://www.sendmail.org"
+TARGET="_top"
+>sendmail</A
+> which is what
+        Bugzilla expects to find by default at <TT
+CLASS="filename"
+>/usr/sbin/sendmail</TT
+>.
+        Many other MTA's will work, but they all require that the
+        <TT
+CLASS="option"
+>sendmailnow</TT
+> param be set to <TT
+CLASS="literal"
+>on</TT
+>.
+        </P
+></DD
+><DT
+><A
+NAME="gloss-mysql"
+></A
+><B
+>MySQL</B
 ></DT
 ><DD
 ><P
->mysqld is the name of the 
-        <I
+>MySQL is currently the required
+        <A
+HREF="#gloss-rdbms"
+><I
 CLASS="glossterm"
->daemon</I
->
-
-        for the MySQL database. In general, it is invoked automatically
-        through the use of the System V init scripts on GNU/Linux and
-        AT&#38;T System V-based systems, such as Solaris and HP/UX, or
-        through the RC scripts on BSD-based systems.</P
+>RDBMS</I
+></A
+> for Bugzilla. MySQL
+        can be downloaded from <A
+HREF="http://www.mysql.com"
+TARGET="_top"
+>http://www.mysql.com</A
+>. While you
+        should familiarize yourself with all of the documentation, some high
+        points are:
+        </P
+><P
+></P
+><UL
+><LI
+><P
+><A
+HREF="http://www.mysql.com/doc/P/r/Privilege_system.html"
+TARGET="_top"
+>MySQL
+            Privilege System</A
+> - Much more detailed information about
+            the suggestions in <A
+HREF="#security-mysql"
+>Section 5.6.2</A
+>.
+            </P
+></LI
+></UL
 ></DD
 ></DL
 ></DIV
@@ -13290,6 +13308,30 @@ CLASS="QUOTE"
 >
 
         field in a bug.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="glossdiv"
+><H1
+CLASS="glossdiv"
+><A
+NAME="gloss-r"
+></A
+>R</H1
+><DL
+><DT
+><A
+NAME="gloss-rdbms"
+></A
+><B
+>Relational DataBase Managment System</B
+></DT
+> (RDBMS)<DD
+><P
+>A relational database management system is a database system
+        that stores information in tables that are related to each other.
+        </P
 ></DD
 ></DL
 ></DIV
