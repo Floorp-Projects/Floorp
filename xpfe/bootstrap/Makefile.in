@@ -47,8 +47,6 @@ LIBS		= \
 		-lnetlib \
 		-lpwcac \
 		$(NULL)
-else
-LIBS		= -lneckoutil_s
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
