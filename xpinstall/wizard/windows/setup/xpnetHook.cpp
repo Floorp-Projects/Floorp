@@ -57,6 +57,8 @@ const char kHTTP[8]      = "http://";
 const char kFTP[7]       = "ftp://";
 const char kLoclFile[7]  = "zzzFTP";
 
+static nsHTTPConn       *connHTTP = NULL;
+static nsFTPConn        *connFTP = NULL;
 static long             glLastBytesSoFar;
 static long             glAbsoluteBytesSoFar;
 static long             glBytesResumedFrom;
@@ -461,8 +463,14 @@ void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, DWORD *dwTotalEst
 int
 ProcessWndMsgCB()
 {
+  int iRv = nsFTPConn::OK;
+
 	ProcessWindowsMessages();
-	return 0;
+  if((gdwDownloadDialogStatus == CS_CANCEL) ||
+     (gdwDownloadDialogStatus == CS_PAUSE))
+    iRv = nsFTPConn::E_USER_CANCEL;
+
+	return(iRv);
 }
 
 /* Function used only to send the message stream error */
@@ -516,11 +524,10 @@ int WGet(char *szUrl,
   return(rv);
 }
 
-int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
+int DownloadViaProxyOpen(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
 {
   int  rv;
   char proxyURL[kProxySrvrLen];
-  char *file = NULL;
 
   if((!szUrl) || (*szUrl == '\0'))
     return nsHTTPConn::E_PARAM;
@@ -529,8 +536,8 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   memset(proxyURL, 0, kProxySrvrLen);
   wsprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
 
-  nsHTTPConn *conn = new nsHTTPConn(proxyURL, ProcessWndMsgCB);
-  if(conn == NULL)
+  connHTTP = new nsHTTPConn(proxyURL, ProcessWndMsgCB);
+  if(connHTTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
 
@@ -542,23 +549,97 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 
   if((szProxyUser != NULL) && (*szProxyUser != '\0') &&
      (szProxyPasswd != NULL) && (*szProxyPasswd != '\0'))
-    conn->SetProxyInfo(szUrl, szProxyUser, szProxyPasswd);
+    connHTTP->SetProxyInfo(szUrl, szProxyUser, szProxyPasswd);
   else
-    conn->SetProxyInfo(szUrl, NULL, NULL);
+    connHTTP->SetProxyInfo(szUrl, NULL, NULL);
 
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
+  rv = connHTTP->Open();
+  return(rv);
+}
+
+void DownloadViaProxyClose(void)
+{
+  if(connHTTP)
+  {
+    connHTTP->Close();
+    delete(connHTTP);
+    connHTTP = NULL;
+  }
+}
+
+int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
+{
+  int  rv;
+  char *file = NULL;
+
+  rv = nsHTTPConn::OK;
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  if(connHTTP == NULL)
+  {
+    rv = DownloadViaProxyOpen(szUrl,
+                              szProxyServer,
+                              szProxyPort,
+                              szProxyUser,
+                              szProxyPasswd);
+
+    if(rv != nsHTTPConn::OK)
+    {
+      DownloadViaProxyClose();
+      return(rv);
+    }
+  }
+
+  if(connHTTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
 
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
-  rv = conn->Get(ProgressCB, file); // use leaf from URL
-  conn->Close();
-
-  if(conn)
-    delete(conn);
-
+  rv = connHTTP->Get(ProgressCB, file); // use leaf from URL
+  DownloadViaProxyClose();
   return(rv);
+}
+
+int DownloadViaHTTPOpen(char *szUrl)
+{
+  int  rv;
+
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  rv = nsHTTPConn::OK;
+  connHTTP = new nsHTTPConn(szUrl, ProcessWndMsgCB);
+  if(connHTTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), gszConfigIniFile);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
+  
+  rv = connHTTP->Open();
+  return(rv);
+}
+
+void DownloadViaHTTPClose(void)
+{
+  if(connHTTP)
+  {
+    connHTTP->Close();
+    delete(connHTTP);
+    connHTTP = NULL;
+  }
 }
 
 int DownloadViaHTTP(char *szUrl)
@@ -569,9 +650,17 @@ int DownloadViaHTTP(char *szUrl)
   if((!szUrl) || (*szUrl == '\0'))
     return nsHTTPConn::E_PARAM;
 
-  rv = nsHTTPConn::OK;
-  nsHTTPConn *conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
-  if(conn == NULL)
+  if(connHTTP == NULL)
+  {
+    rv = DownloadViaHTTPOpen(szUrl);
+    if(rv != nsHTTPConn::OK)
+    {
+      DownloadViaHTTPClose();
+      return(rv);
+    }
+  }
+
+  if(connHTTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
 
@@ -581,19 +670,54 @@ int DownloadViaHTTP(char *szUrl)
     return(WIZ_OUT_OF_MEMORY);
   }
   
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
-
+  rv = nsHTTPConn::OK;
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
-  rv = conn->Get(ProgressCB, file);
-  conn->Close();
+  rv = connHTTP->Get(ProgressCB, file);
+  DownloadViaHTTPClose();
+  return(rv);
+}
 
-  if(conn)
-    delete(conn);
+int DownloadViaFTPOpen(char *szUrl)
+{
+  char *host = 0, *path = 0, *file = (char*) kLoclFile;
+  int port = 21;
+  int rv;
+
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsFTPConn::E_PARAM;
+
+  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
+
+  connFTP = new nsFTPConn(host, ProcessWndMsgCB);
+  if(connFTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
+
+  rv = connFTP->Open();
+  if(host)
+    free(host);
+  if(path)
+    free(path);
 
   return(rv);
+}
+
+void DownloadViaFTPClose(void)
+{
+  if(connFTP)
+  {
+    connFTP->Close();
+    delete(connFTP);
+    connFTP = NULL;
+  }
 }
 
 int DownloadViaFTP(char *szUrl)
@@ -605,10 +729,17 @@ int DownloadViaFTP(char *szUrl)
   if((!szUrl) || (*szUrl == '\0'))
     return nsFTPConn::E_PARAM;
 
-  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
+  if(connFTP == NULL)
+  {
+    rv = DownloadViaFTPOpen(szUrl);
+    if(rv != nsFTPConn::OK)
+    {
+      DownloadViaFTPClose();
+      return(rv);
+    }
+  }
 
-  nsFTPConn *conn = new nsFTPConn(host, ProcessWndMsgCB);
-  if(conn == NULL)
+  if(connFTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
 
@@ -618,21 +749,17 @@ int DownloadViaFTP(char *szUrl)
     return(WIZ_OUT_OF_MEMORY);
   }
 
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
+  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
 
   if(strrchr(path, '/') != (path + strlen(path)))
     file = strrchr(path, '/') + 1; // set to leaf name
 
-  rv = conn->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
-  conn->Close();
+  rv = connFTP->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
 
   if(host)
     free(host);
   if(path)
     free(path);
-  if(conn)
-    delete(conn);
 
   return(rv);
 }
@@ -650,6 +777,30 @@ void PauseTheDownload(int rv, int *iFileDownloadRetries)
     SleepEx(200, FALSE);
     ProcessWindowsMessages();
   }
+}
+
+void CloseSocket(char *szProxyServer, char *szProxyPort)
+{
+  DWORD dwSavedState = gdwDownloadDialogStatus;
+
+//  /* gdwDownloadDialogStatus needs to be not set before calling
+//   * CloseSocket(), or else the socket will not be properly closed */
+//  gdwDownloadDialogStatus = CS_NONE;
+
+  /* Close the socket connection from the first attempt. */
+  if((szProxyServer != NULL) && (szProxyPort != NULL) &&
+     (*szProxyServer != '\0') && (*szProxyPort != '\0'))
+      DownloadViaProxyClose();
+  else
+  {
+    /* is this an HTTP URL? */
+    if(strncmp(gszUrl, kHTTP, lstrlen(kHTTP)) == 0)
+      DownloadViaHTTPClose();
+    /* or is this an FTP URL? */
+    else if(strncmp(gszUrl, kFTP, lstrlen(kFTP)) == 0)
+      DownloadViaFTPClose();
+  }
+//  gdwDownloadDialogStatus = dwSavedState;
 }
 
 int DownloadFiles(char *szInputIniFile,
@@ -675,7 +826,12 @@ int DownloadFiles(char *szInputIniFile,
   int       iIgnoreFileNetworkError;
   DWORD     dwTotalEstDownloadSize;
   char      szPartiallyDownloadedFilename[MAX_BUF];
+  BOOL      bDownloadInitiated;
+  char      szTempURL[MAX_BUF];
+  char      szWorkingURLPathOnly[MAX_BUF];
 
+  ZeroMemory(szTempURL, sizeof(szTempURL));
+  ZeroMemory(szWorkingURLPathOnly, sizeof(szWorkingURLPathOnly));
   if(szInputIniFile == NULL)
     return(WIZ_ERROR_UNDEFINED);
 
@@ -698,6 +854,7 @@ int DownloadFiles(char *szInputIniFile,
   gdwDownloadDialogStatus   = CS_NONE;
   gbShowDownloadRetryMsg    = bShowRetryMsg;
   gszConfigIniFile          = szInputIniFile;
+  bDownloadInitiated        = FALSE;
 
   GetTotalArchivesToDownload(&giTotalArchivesToDownload,
                              &dwTotalEstDownloadSize);
@@ -718,11 +875,21 @@ int DownloadFiles(char *szInputIniFile,
     GetPrivateProfileString(szSection,
                             szKey,
                             "",
-                            gszUrl,
-                            sizeof(gszUrl),
+                            szTempURL,
+                            sizeof(szTempURL),
                             gszConfigIniFile);
-    if(*gszUrl == '\0')
+
+    if(*szTempURL == '\0')
       continue;
+
+    if(!bDownloadInitiated)
+    {
+      ParsePath(szTempURL,
+                szWorkingURLPathOnly,
+                sizeof(szWorkingURLPathOnly),
+                TRUE, //use '/' as the path delimiter
+                PP_PATH_ONLY);
+    }
 
     GetPrivateProfileString(szSection,
                             "desc",
@@ -736,11 +903,14 @@ int DownloadFiles(char *szInputIniFile,
                             gszConfigIniFile);
 
     /* save the file name to be downloaded */
-    ParsePath(gszUrl,
+    ParsePath(szTempURL,
               szCurrentFile,
               sizeof(szCurrentFile),
-              TRUE,
+              TRUE, //use '/' as the path delimiter
               PP_FILENAME_ONLY);
+
+    RemoveSlash(szWorkingURLPathOnly);
+    wsprintf(gszUrl, "%s/%s", szWorkingURLPathOnly, szCurrentFile);
 
     if((*szPartiallyDownloadedFilename != 0) &&
        (lstrcmpi(szPartiallyDownloadedFilename, szCurrentFile) == 0))
@@ -790,12 +960,15 @@ int DownloadFiles(char *szInputIniFile,
           rv = DownloadViaFTP(gszUrl);
       }
 
+      bDownloadInitiated = TRUE;
       if((rv == nsFTPConn::E_USER_CANCEL) ||
          (gdwDownloadDialogStatus == CS_PAUSE))
       {
         if(gdwDownloadDialogStatus == CS_PAUSE)
         {
+          CloseSocket(szProxyServer, szProxyPort);
           PauseTheDownload(rv, &iFileDownloadRetries);
+          bDownloadInitiated = FALSE; // restart the download using new socket connection
 
           /* rv needs to be set to something
            * other than E_USER_CANCEL or E_OK */
@@ -842,6 +1015,7 @@ int DownloadFiles(char *szInputIniFile,
                    szMsgDownloadPaused,
                    szTitle,
                    MB_ICONEXCLAMATION);
+        CloseSocket(szProxyServer, szProxyPort);
         PauseTheDownload(rv, &iFileDownloadRetries);
       }
 
@@ -857,16 +1031,25 @@ int DownloadFiles(char *szInputIniFile,
         GetPrivateProfileString(szSection,
                                 szKey,
                                 "",
-                                gszUrl,
-                                sizeof(gszUrl),
+                                szTempURL,
+                                sizeof(szTempURL),
                                 gszConfigIniFile);
-        if(*gszUrl != '\0')
+        if(*szTempURL != '\0')
         {
           /* Found more urls to download from for the current file.
            * Update the dialog to show the new url and reset the
            * file download retries to 0 since it's a new url. */
           gbUrlChanged = TRUE;
           iFileDownloadRetries = 0;
+          bDownloadInitiated = FALSE; // restart the download using new socket connection
+          CloseSocket(szProxyServer, szProxyPort);
+          ParsePath(szTempURL,
+                    szWorkingURLPathOnly,
+                    sizeof(szWorkingURLPathOnly),
+                    TRUE, //use '/' as the path delimiter
+                    PP_PATH_ONLY);
+          RemoveSlash(szWorkingURLPathOnly);
+          wsprintf(gszUrl, "%s/%s", szWorkingURLPathOnly, szCurrentFile);
           SetStatusUrl();
         }
       }
@@ -931,6 +1114,7 @@ int DownloadFiles(char *szInputIniFile,
     UnsetSetupCurrentDownloadFile();
   }
 
+  CloseSocket(szProxyServer, szProxyPort);
   DeInitDownloadDlg();
   SetCurrentDirectory(szSavedCwd);
   return(rv);

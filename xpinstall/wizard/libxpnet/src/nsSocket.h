@@ -42,6 +42,7 @@ public:
     enum
     {
         OK              = 0,
+        E_USER_CANCEL   = -813, /* user canceled the download */
         E_PARAM         = -1001,
         E_MEM           = -1002,
         E_INVALID_HOST  = -1003,
@@ -69,6 +70,7 @@ public:
     int SrvAccept(); // must be called after SrvOpen()
     int Send(unsigned char *aBuf, int *aBufSize);
     int Recv(unsigned char *aBuf, int *aBufSize);
+    int Recv(unsigned char *aBuf, int *aBufSize, int aTimeoutThresholdUsecs);
     int Close();
 
     int GetHostPortString(char **aHostPort); 

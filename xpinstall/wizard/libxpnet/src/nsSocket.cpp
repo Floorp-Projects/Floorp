@@ -27,6 +27,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <time.h>
 
 /* Platform-specific headers for socket functionality */
 #if defined(__unix) || defined(__unix__) || defined(macintosh)
@@ -53,12 +54,19 @@
 #define socklen_t int
 #endif
 
+#ifndef SHUT_RD
+#define SHUT_RD 0
+#endif
+#ifndef SHUT_WR
+#define SHUT_WR 1
+#endif
 #ifndef SHUT_RDWR
 #define SHUT_RDWR 2
 #endif
 
 const int kUsecsPerSec = 1000000;
-const int kTimeoutThresholdUsecs = 120 * kUsecsPerSec;
+const int kTimeoutThresholdSecs = 120;
+const int kTimeoutThresholdUsecs = kTimeoutThresholdSecs * kUsecsPerSec;
 const int kTimeoutSelectUsecs = 100000;
 const int kKilobyte = 1024;
 const int kUsecsPerKBFactor = (kUsecsPerSec/kKilobyte);
@@ -101,38 +109,33 @@ nsSocket::Open()
     WSADATA wsaData;
     WORD wVersionRequested;
     
-    if (!sbWinSockInited)
+    /* We don't care which version we get because we're not
+     * doing any specific to a particular winsock version. */
+    /* Request for version 2.2 */
+    wVersionRequested = MAKEWORD(2, 2);
+    err = WSAStartup(wVersionRequested, &wsaData);
+    if (err == WSAVERNOTSUPPORTED)
     {
-        /* We don't care which version we get because we're not
-         * doing any specific to a particular winsock version. */
-        /* Request for version 2.2 */
-        wVersionRequested = MAKEWORD(2, 2);
+        /* Request for version 1.1 */
+        wVersionRequested = MAKEWORD(1, 1);
         err = WSAStartup(wVersionRequested, &wsaData);
         if (err == WSAVERNOTSUPPORTED)
         {
-            /* Request for version 1.1 */
-            wVersionRequested = MAKEWORD(1, 1);
+            /* Request for version 1.0 */
+            wVersionRequested = MAKEWORD(0, 1);
             err = WSAStartup(wVersionRequested, &wsaData);
             if (err == WSAVERNOTSUPPORTED)
             {
-                /* Request for version 1.0 */
-                wVersionRequested = MAKEWORD(0, 1);
+                /* Request for version 0.4 */
+                wVersionRequested = MAKEWORD(4, 0);
                 err = WSAStartup(wVersionRequested, &wsaData);
-                if (err == WSAVERNOTSUPPORTED)
-                {
-                    /* Request for version 0.4 */
-                    wVersionRequested = MAKEWORD(4, 0);
-                    err = WSAStartup(wVersionRequested, &wsaData);
-                }
             }
         }
+    }
 
-        if (err != 0)
-        {
-            return E_WINSOCK;
-        }
-        else
-            sbWinSockInited = TRUE;
+    if (err != 0)
+    {
+        return E_WINSOCK;
     }
 #endif
 
@@ -248,6 +251,10 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
         seltime.tv_sec = 0;
         seltime.tv_usec = kTimeoutSelectUsecs;
 
+        if ( mEventPumpCB != NULL )
+            if (mEventPumpCB() == E_USER_CANCEL)
+                return E_USER_CANCEL;
+
         rv = select(mFd+1, NULL, &selset, NULL, &seltime);
         switch (rv)
         {
@@ -257,14 +264,13 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
                 timeout += kTimeoutSelectUsecs;
                 continue;
             default:            /* ready to write */
+                timeout = 0;    /* reset the time out counter */
                 break;
         }
 
         if (!FD_ISSET(mFd, &selset))
         {
             timeout += kTimeoutSelectUsecs;
-            if ( mEventPumpCB != NULL )
-                    mEventPumpCB();
             continue;           /* not ready to write; retry */
         }
         else
@@ -288,18 +294,26 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
 int
 nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
 {
+  return(Recv(aBuf, aBufSize, kTimeoutThresholdUsecs));
+}
+
+int
+nsSocket::Recv(unsigned char *aBuf, int *aBufSize, int aTimeoutThresholdUsecs)
+{
     int  rv = OK;
     unsigned char lbuf[kReadBufSize]; /* function local buffer */
     int bytesrd = 0;
     struct timeval seltime;
     fd_set selset;
     int bufsize;
+    int timeout;
 
     if (!aBuf || (aBufSize && (*aBufSize <= 0)) || mFd < 0)
         return E_PARAM;
     memset(aBuf, 0, *aBufSize);
 
-    for ( ; ; )
+    timeout = 0;
+    while (timeout < aTimeoutThresholdUsecs)
     {
         /* return if we anticipate overflowing caller's buffer */
         if (bytesrd >= *aBufSize)
@@ -312,21 +326,26 @@ nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
         seltime.tv_sec = 0;
         seltime.tv_usec = kTimeoutSelectUsecs;
 
+        if ( mEventPumpCB != NULL )
+            if (mEventPumpCB() == E_USER_CANCEL)
+                return E_USER_CANCEL;
+
         rv = select(mFd+1, &selset, NULL, NULL, &seltime);
         switch (rv)
         {
             case -1:            /* error occured! */
                 return errno;
             case 0:             /* timeout; retry */
+                timeout += kTimeoutSelectUsecs;
                 continue;
             default:            /* ready to read */
+                timeout = 0;    /* reset the time out counter */
                 break;
         }
 
-        // XXX TODO: prevent inf loop returning at kTimeoutThresholdUsecs
-        if (!FD_ISSET(mFd, &selset)) {
-            if ( mEventPumpCB != NULL )
-                    mEventPumpCB();
+        if (!FD_ISSET(mFd, &selset))
+        {
+            timeout += kTimeoutSelectUsecs;
             continue;           /* not ready to read; retry */
         }
 
@@ -369,6 +388,9 @@ nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
             break;
         }
     }
+    if (timeout >= aTimeoutThresholdUsecs)
+        return E_TIMEOUT;
+
     *aBufSize = bytesrd;
     return rv;
 }
@@ -378,23 +400,25 @@ nsSocket::Close()
 {
     int rv = OK, rv1 = OK, rv2 = OK;
 
-    rv1 = shutdown(mFd, SHUT_RDWR);
-    if (mListenFd > 0)
-        rv2 = shutdown(mListenFd, SHUT_RDWR);
-    
-    if (rv1 != 0 || rv2 != 0)
-       rv = E_SOCK_CLOSE; 
-
 /* funky windows shutdown of winsock */
 #ifdef _WINDOWS
-    if (sbWinSockInited)
-    {
-        int wsaErr = WSACleanup();
-        if (wsaErr != 0)
-            rv = wsaErr;
+    closesocket(mFd);
+    if (mListenFd > 0)
+        closesocket(mListenFd);
+    
+    if (rv1 != 0 || rv2 != 0)
+        rv = E_SOCK_CLOSE; 
 
-        sbWinSockInited = FALSE;
-    }
+    int wsaErr = WSACleanup();
+    if (wsaErr != 0)
+        rv = wsaErr;
+#else /* unix or mac */
+    rv1 = close(mFd);
+    if (mListenFd > 0)
+        rv2 = close(mListenFd);
+    
+    if (rv1 != 0 || rv2 != 0)
+        rv = E_SOCK_CLOSE; 
 #endif
 
     return rv;

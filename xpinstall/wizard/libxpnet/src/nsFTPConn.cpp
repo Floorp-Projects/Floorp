@@ -86,7 +86,7 @@ nsFTPConn::Open()
         return E_ALREADY_OPEN;
 
     /* open control connection on port 21 */
-    mCntlSock = new nsSocket(mHost, kCntlPort);
+    mCntlSock = new nsSocket(mHost, kCntlPort, mEventPumpCB);
     if (!mCntlSock)
         return E_MEM;
     ERR_CHECK(mCntlSock->Open());
@@ -108,15 +108,22 @@ nsFTPConn::Open()
 BAIL:
     if (mCntlSock)
     {
-        mCntlSock->Close();
-        delete mCntlSock;
-        mCntlSock = NULL;
+        /* issue QUIT command on control connection */
+        sprintf(cmd, "QUIT\r\n");
+        IssueCmd(cmd, resp, kRespBufSize, mCntlSock);
     }
     if (mDataSock)
     {
         mDataSock->Close();
         delete mDataSock;
         mDataSock = NULL;
+        FlushCntlSock(mCntlSock);
+    }
+    if (mCntlSock)
+    {
+        mCntlSock->Close();
+        delete mCntlSock;
+        mCntlSock = NULL;
     }
     return err;
 }
@@ -240,7 +247,7 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
         totBytesRd += respBufSize;
         if (err == nsSocket::E_READ_MORE && aCBFunc)
             if ((err = aCBFunc(totBytesRd, fileSize)) == E_USER_CANCEL)
-              goto BAIL;
+                goto BAIL;
             
         /* append to local file */
         wrote = fwrite((void *)resp, 1, respBufSize, loclfd);
@@ -249,8 +256,8 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aResumePos,
             err = E_WRITE;
             goto BAIL;
         }
-		if ( mEventPumpCB )
-			mEventPumpCB();
+        if ( mEventPumpCB )
+            mEventPumpCB();
     }
     while (err == nsSocket::E_READ_MORE || err == nsSocket::OK);
     if (err == nsSocket::E_EOF_FOUND)
@@ -267,6 +274,7 @@ BAIL:
         mDataSock->Close();
         delete mDataSock;
         mDataSock = NULL;
+        FlushCntlSock(mCntlSock);
     }
 
     mState = OPEN;
@@ -279,22 +287,74 @@ int
 nsFTPConn::Close()
 {
     int err = OK;
-
-    if (mState != OPEN)
-        return E_NOT_OPEN;
+    char cmd[kCmdBufSize], resp[kRespBufSize];
 
     /* close sockets */
     if (mCntlSock)
     {
-        ERR_CHECK(mCntlSock->Close());
-        delete mCntlSock;
-        mCntlSock = NULL;
+        /* issue QUIT command on control connection */
+        sprintf(cmd, "QUIT\r\n");
+        IssueCmd(cmd, resp, kRespBufSize, mCntlSock);
     }
     if (mDataSock)
     {
-        ERR_CHECK(mDataSock->Close());
+        mDataSock->Close();
         delete mDataSock;
         mDataSock = NULL;
+        FlushCntlSock(mCntlSock);
+    }
+    if (mCntlSock)
+    {
+        mCntlSock->Close();
+        delete mCntlSock;
+        mCntlSock = NULL;
+    }
+
+    return err;
+}
+
+int
+nsFTPConn::FlushCntlSock(nsSocket *aSock)
+{
+    int err = OK;
+    char resp[kRespBufSize];
+    int respSize;
+    int timeout = 300000; /* Time out value is in Usecs.  This should give us 3 tries */
+
+    /* param check */
+    if (!aSock)
+        return E_PARAM;
+
+    do
+    {
+        respSize = kRespBufSize;
+        err = aSock->Recv((unsigned char *)resp, &respSize, timeout);
+        if (err != nsSocket::OK && 
+            err != nsSocket::E_READ_MORE && 
+            err != nsSocket::E_EOF_FOUND)
+            goto BAIL;
+        DUMP(resp);
+        if ( mEventPumpCB )
+            if (mEventPumpCB() == E_USER_CANCEL)
+                return E_USER_CANCEL;
+    }
+    while (err == nsSocket::E_READ_MORE);
+
+    switch (*resp)
+    {
+        case '2':
+            break;
+        case '1':
+        case '3':
+            err = E_CMD_ERR;
+            break;
+        case '4':
+        case '5':
+            err = E_CMD_FAIL;
+            break;
+        default:
+            err = E_CMD_UNEXPECTED;
+            break;
     }
 
 BAIL:
@@ -306,6 +366,7 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
 {
     int err = OK;
     int len;
+    int respSize;
 
     /* param check */
     if (!aSock || !aCmd || !aResp || aRespSize <= 0)
@@ -319,15 +380,17 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
     /* receive response */
     do
     {
-        err = aSock->Recv((unsigned char *)aResp, &aRespSize);
+        respSize = aRespSize;
+        err = aSock->Recv((unsigned char *)aResp, &respSize);
         if (err != nsSocket::OK && 
             err != nsSocket::E_READ_MORE && 
             err != nsSocket::E_EOF_FOUND)
             goto BAIL;
         DUMP(aResp);
-    	if ( mEventPumpCB )
-			mEventPumpCB();
-	}
+        if ( mEventPumpCB )
+            if (mEventPumpCB() == E_USER_CANCEL)
+                return E_USER_CANCEL;
+    }
     while (err == nsSocket::E_READ_MORE);
 
     /* alternate interpretation of err codes */
@@ -376,6 +439,13 @@ nsFTPConn::IssueCmd(char *aCmd, char *aResp, int aRespSize, nsSocket *aSock)
                 err = E_CMD_UNEXPECTED;
                 break;
         }
+    }
+
+    /* quit command case */
+    else if (strncmp(aCmd, "QUIT", 4) == 0)
+    {
+        err = OK;
+        goto BAIL;
     }
 
     /* regular interpretation of err codes */
@@ -465,7 +535,7 @@ nsFTPConn::DataInit(char *aHost, int aPort, nsSocket **aSock)
     mPassive = TRUE;
 
     ERR_CHECK(ParseAddr(resp, &srvHost, &srvPort));
-    *aSock = new nsSocket(srvHost, srvPort);
+    *aSock = new nsSocket(srvHost, srvPort, mEventPumpCB);
     if (!*aSock)
     {
         err = E_MEM;
@@ -484,7 +554,7 @@ nsFTPConn::DataInit(char *aHost, int aPort, nsSocket **aSock)
 
 ACTIVE:
 
-    *aSock = new nsSocket(aHost, aPort);
+    *aSock = new nsSocket(aHost, aPort, mEventPumpCB);
     if (!*aSock)
     {
         err = E_MEM;

@@ -150,7 +150,7 @@ nsHTTPConn::Open()
         return E_MALFORMED_URL;
 
     // create socket
-    mSocket = new nsSocket(mHost, mPort);
+    mSocket = new nsSocket(mHost, mPort, mEventPumpCB);
     if (!mSocket)
         return E_MEM;
 
@@ -388,8 +388,10 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
         bufSize = kRespBufSize;
         
         rv = mSocket->Recv((unsigned char *) resp, &bufSize);
-        DUMP((resp));
         DUMP(("nsSocket::Recv returned: %d\t and recd: %d\n", rv, bufSize));
+
+        if(rv == nsSocket::E_EOF_FOUND)
+            break;
 
         if (bFirstIter)
         {
@@ -427,9 +429,9 @@ nsHTTPConn::Response(HTTPGetCB aCallback, char *aDestFile, int aResumePos)
               rv = E_USER_CANCEL; // we want to ignore all errors returned
                                   // from aCallback() except E_USER_CANCEL 
 
-    	if ( mEventPumpCB )
-			mEventPumpCB();
-	} while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
+        if ( mEventPumpCB )
+            mEventPumpCB();
+    } while (rv == nsSocket::E_READ_MORE || rv == nsSocket::OK);
 
     if (rv == nsSocket::E_EOF_FOUND)
     {
