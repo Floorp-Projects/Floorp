@@ -133,6 +133,8 @@ if ($bits eq "16") { $fileos="VOS__WINDOWS16"; }
 
 my $bufferstr="    ";
 
+my $MILESTONE_FILE = "$topsrcdir/config/milestone.txt";
+
 #Read module.ver file
 #Version file overrides for WIN32:
 #WIN32_MODULE_COMMENT
@@ -213,7 +215,7 @@ if ($official eq "1") {
         # dll/program, but I can't seem to get backticks working
         # properly in the makefiles =P
         if ($milestone eq "") {
-            $milestone = Moz::Milestone::getOfficialMilestone();
+            $milestone = Moz::Milestone::getOfficialMilestone($MILESTONE_FILE);
         }
 
 	if ($milestone ne "" && $milestone !~ /\+$/) {
