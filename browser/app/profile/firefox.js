@@ -72,7 +72,7 @@ pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensio
 // Automatically download and install updates to themes and extensions.
 pref("update.extensions.autoUpdate", false);
 
-pref("update.interval", 604800000); // every 7 days
+pref("update.interval", 86400000); // every 24 hrs
 pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
 pref("update.showSlidingNotification", true); // windows-only slide-up taskbar notification
 
