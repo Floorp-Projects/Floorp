@@ -179,8 +179,8 @@ function NewCardOKButton()
 		if ( editCard.card )
 		{
 			SetCardValues(editCard.card, document);
-		
 			editCard.card.addCardToDatabase(uri);
+  			CallSaveListeners();
 		}
 	}	
 	
@@ -192,6 +192,7 @@ function EditCardOKButton()
 	SetCardValues(editCard.card, document);
 	
 	editCard.card.editCardToDatabase(editCard.abURI);
+  	CallSaveListeners();
 	
 	// callback to allow caller to update
 	if ( editCard.okCallback )
@@ -304,7 +305,6 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.custom4 = doc.getElementById('Custom4').value;
 		cardproperty.notes = doc.getElementById('Notes').value;
 	}
-  CallSaveListeners();
 }
 
 function CleanUpWebPage(webPage)
