@@ -20,7 +20,7 @@
 DEPTH=..\..
 MODULE=uriloader
 
-LIBNAME = .\$(OBJDIR)\uriloader
+LIBNAME = .\$(OBJDIR)\urildr
 DLL = $(LIBNAME).dll
 
 ################################################################################
