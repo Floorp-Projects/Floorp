@@ -427,8 +427,8 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
   if (!aStr2.IsEmpty()) numStrs++;
   if (!aStr3.IsEmpty()) numStrs++;
 
-  nscoord strSpace = aRect.width / numStrs;
   if (numStrs == 0) return;
+  nscoord strSpace = aRect.width / numStrs;
 
   if (!aStr1.IsEmpty()) {
     DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustLeft, aStr1, aRect, aHeight, strSpace);
