@@ -485,10 +485,26 @@ endif
 	$(INSTALL) -m 555 $^.quantify $(DIST)/bin
 
 ifneq ($(OS_ARCH),OS2)
+
+#
+# This allows us to create static versions of the shared libraries
+# that are built using other static libraries.  Confused...?
+#
+ifdef SHARED_LIBRARY_LIBS
+AR_LIST		:= ar t
+AR_EXTRACT	:= ar x
+SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
+endif
+
 $(LIBRARY): $(OBJS) $(LOBJS) $(MAKE_DIRS)
 	rm -f $@
-	$(AR) $(OBJS) $(LOBJS)
+ifdef SHARED_LIBRARY_LIBS
+	@rm -f $(SUB_LOBJS)
+	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; done
+endif
+	$(AR) $(OBJS) $(LOBJS) $(SUB_LOBJS)
 	$(RANLIB) $@
+	@rm -f foodummyfilefoo $(SUB_LOBJS)
 else
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE) $(MAKE_DIRS)
