@@ -125,7 +125,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	{
 		mActiveWidget->ResetInputState();
 		mActiveWidget->RemoveDeleteObserver(this);
-		printf("nsMacEventDispatcher::SetFocus sends NS_LOSTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetFocus sends NS_LOSTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
 	}
 
@@ -135,7 +135,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		printf("nsMacEventDispatcher::SetFocus sends NS_GOTFOCUS\n");
+		//printf("nsMacEventDispatcher::SetFocus sends NS_GOTFOCUS\n");
 		DispatchGuiEvent(mActiveWidget, NS_GOTFOCUS);
 	}
 }
