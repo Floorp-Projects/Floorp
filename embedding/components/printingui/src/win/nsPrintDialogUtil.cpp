@@ -80,7 +80,6 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 
 #include "nsRect.h"
 
-#include "nsIPref.h"
 #include "nsCRT.h"
 #include "prenv.h" /* for PR_GetEnv */
 

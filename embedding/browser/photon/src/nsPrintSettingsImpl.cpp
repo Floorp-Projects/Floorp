@@ -41,8 +41,6 @@
 #include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
 
-// For Prefs
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 
 NS_IMPL_ISUPPORTS1(nsPrintSettings, nsIPrintSettings)
