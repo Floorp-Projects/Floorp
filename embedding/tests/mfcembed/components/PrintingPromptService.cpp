@@ -124,7 +124,6 @@ CPrintingPromptService::CPrintingPromptService() :
   mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID)),
   m_PPDlg(NULL)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CPrintingPromptService::~CPrintingPromptService() {
@@ -385,8 +384,6 @@ public:
 NS_IMPL_ISUPPORTS1(CPrintingPromptServiceFactory, nsIFactory)
 
 CPrintingPromptServiceFactory::CPrintingPromptServiceFactory() {
-
-  NS_INIT_ISUPPORTS();
 }
 
 CPrintingPromptServiceFactory::~CPrintingPromptServiceFactory() {

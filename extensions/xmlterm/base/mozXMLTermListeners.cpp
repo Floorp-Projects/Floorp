@@ -110,7 +110,6 @@ mozXMLTermKeyListener::mozXMLTermKeyListener() :
   mXMLTerminal(nsnull),
   mSuspend(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -435,7 +434,6 @@ mozXMLTermKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
 mozXMLTermTextListener::mozXMLTermTextListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -513,7 +511,6 @@ mozXMLTermTextListener::HandleText(nsIDOMEvent* aTextEvent)
 
 mozXMLTermMouseListener::mozXMLTermMouseListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -708,7 +705,6 @@ mozXMLTermMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
 mozXMLTermDragListener::mozXMLTermDragListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

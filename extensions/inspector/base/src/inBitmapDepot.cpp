@@ -46,7 +46,6 @@
 
 inBitmapDepot::inBitmapDepot()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inBitmapDepot::~inBitmapDepot()

@@ -216,7 +216,6 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
 nsDeviceContextSpecQT::nsDeviceContextSpecQT()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecQT::nsDeviceContextSpecQT()\n"));
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecQT::~nsDeviceContextSpecQT()

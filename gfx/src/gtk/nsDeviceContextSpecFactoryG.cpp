@@ -48,7 +48,6 @@
  */
 nsDeviceContextSpecFactoryGTK :: nsDeviceContextSpecFactoryGTK()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------

@@ -71,7 +71,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsFontCleanupObserver() { NS_INIT_ISUPPORTS(); }
+  nsFontCleanupObserver() { }
   virtual ~nsFontCleanupObserver() {}
 };
 

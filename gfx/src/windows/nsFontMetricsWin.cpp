@@ -246,7 +246,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsFontCleanupObserver() { NS_INIT_ISUPPORTS(); }
+  nsFontCleanupObserver() { }
   virtual ~nsFontCleanupObserver() {}
 };
 
@@ -401,7 +401,6 @@ static void CheckFontLangGroup(nsIAtom* lang1, nsIAtom* lang2, const char* lang3
 
 nsFontMetricsWin::nsFontMetricsWin()
 {
-  NS_INIT_ISUPPORTS();
 }
   
 nsFontMetricsWin::~nsFontMetricsWin()
@@ -5165,7 +5164,6 @@ nsFontMetricsWinA::ResolveBackwards(HDC                  aDC,
 
 nsFontEnumeratorWin::nsFontEnumeratorWin()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorWin,nsIFontEnumerator)

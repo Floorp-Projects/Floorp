@@ -46,7 +46,6 @@
 
 nsRegionMac::nsRegionMac()
 {
-	NS_INIT_ISUPPORTS();
 	mRegion = nsnull;
 	mRegionType = eRegionComplexity_empty;
 }

@@ -98,7 +98,6 @@ NS_IMPL_ISUPPORTS2(nsPrintingPromptService, nsIPrintingPromptService, nsIWebProg
 
 nsPrintingPromptService::nsPrintingPromptService() 
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsPrintingPromptService::~nsPrintingPromptService() 

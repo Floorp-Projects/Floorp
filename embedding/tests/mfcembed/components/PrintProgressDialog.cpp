@@ -46,7 +46,6 @@ NS_INTERFACE_MAP_END
 CDlgPrintListener::CDlgPrintListener(CPrintProgressDialog* aDlg) :
   m_PrintDlg(aDlg)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in nsresult aStatus); */

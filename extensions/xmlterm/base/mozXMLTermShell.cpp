@@ -121,7 +121,6 @@ mozXMLTermShell::mozXMLTermShell() :
   mContentAreaDocShell(nsnull),
   mXMLTerminal(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 mozXMLTermShell::~mozXMLTermShell()

@@ -26,7 +26,6 @@
 
 nsScriptableRegion::nsScriptableRegion(nsIRegion* region) : mRegion(nsnull)
 {
-	NS_INIT_ISUPPORTS();
 	mRegion = region;
 	NS_IF_ADDREF(mRegion);
 }

@@ -55,7 +55,6 @@
 
 nsQABrowserChrome::nsQABrowserChrome()
 {
-    NS_INIT_ISUPPORTS();
     mNativeWindow = nsnull;
     mSizeSet = PR_FALSE;
 }

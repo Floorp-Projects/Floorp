@@ -72,8 +72,6 @@ PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
 
 nsRenderingContextPh :: nsRenderingContextPh() 
 {
-	NS_INIT_ISUPPORTS();
-	
 	mGC               = nsnull;
 	mTranMatrix          = nsnull;
 	mClipRegion       = nsnull;

@@ -49,8 +49,6 @@ nsScreenPh :: nsScreenPh ( ) {
   PhRid_t           rid;
   PhRegion_t        region;
   
-  NS_INIT_ISUPPORTS();
-
 	/* Initialize the data members */
 	/* Get the Screen Size and Depth*/
 	p = getenv("PHIG");

@@ -47,7 +47,6 @@
 
 inPNGEncoder::inPNGEncoder()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inPNGEncoder::~inPNGEncoder()

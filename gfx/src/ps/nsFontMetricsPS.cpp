@@ -47,7 +47,6 @@
  */
 nsFontMetricsPS :: nsFontMetricsPS()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /** ---------------------------------------------------

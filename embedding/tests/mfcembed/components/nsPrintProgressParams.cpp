@@ -44,7 +44,6 @@ NS_IMPL_ISUPPORTS1(nsPrintProgressParams, nsIPrintProgressParams)
 
 nsPrintProgressParams::nsPrintProgressParams()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPrintProgressParams::~nsPrintProgressParams()

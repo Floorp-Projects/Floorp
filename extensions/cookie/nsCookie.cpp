@@ -53,7 +53,6 @@ nsCookie::nsCookie()
   cookiePath(0),
   cookieIsSecure(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCookie::nsCookie
@@ -73,8 +72,6 @@ nsCookie::nsCookie
   cookiePath(path),
   cookieIsSecure(isSecure)
 {
-  NS_INIT_ISUPPORTS();
-
   cookieExpires = expires;
   cookieStatus = status;
   cookiePolicy = policy;

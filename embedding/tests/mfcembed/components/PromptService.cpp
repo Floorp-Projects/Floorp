@@ -93,7 +93,6 @@ NS_IMPL_ISUPPORTS1(CPromptService, nsIPromptService)
 CPromptService::CPromptService() :
   mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID))
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CPromptService::~CPromptService() {
@@ -415,8 +414,6 @@ public:
 NS_IMPL_ISUPPORTS1(CPromptServiceFactory, nsIFactory)
 
 CPromptServiceFactory::CPromptServiceFactory() {
-
-  NS_INIT_ISUPPORTS();
 }
 
 CPromptServiceFactory::~CPromptServiceFactory() {

@@ -107,8 +107,6 @@ nsImageMac::nsImageMac()
 ,	mIsTopToBottom(PR_TRUE)
 
 {
-	NS_INIT_ISUPPORTS();
-	
 	::memset(&mImagePixmap, 0, sizeof(PixMap));
 	::memset(&mMaskPixmap, 0, sizeof(PixMap));
 	

@@ -233,7 +233,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWea
 
 ProfileChangeObserver::ProfileChangeObserver()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 // ---------------------------------------------------------------------------

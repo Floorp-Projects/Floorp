@@ -71,8 +71,6 @@ NS_IMPL_ISUPPORTS1(nsImageOS2, nsIImage)
 //------------------------------------------------------------
 nsImageOS2::nsImageOS2()
 {
-   NS_INIT_ISUPPORTS();
-    
    mInfo      = 0;
    mRowBytes  = 0;
    mImageBits = 0;

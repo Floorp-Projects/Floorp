@@ -57,7 +57,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsScriptablePeer::nsScriptablePeer(nsPluginInstance* aPlugin)
 {
-  NS_INIT_ISUPPORTS();
   mPlugin = aPlugin;
 
   mDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");

@@ -57,7 +57,6 @@ nsRegionQT::nsRegionQT() : mRegion()
   PR_LOG(gQTLogModule, QT_BASIC,
       ("nsRegionQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gRegionCount));
 #endif
-  NS_INIT_ISUPPORTS();
 }
 
 nsRegionQT::~nsRegionQT()

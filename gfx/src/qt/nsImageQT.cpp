@@ -61,7 +61,6 @@ nsImageQT::nsImageQT()
   PR_LOG(gQTLogModule, QT_BASIC,
       ("nsImageQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gImageCount));
 #endif
-  NS_INIT_ISUPPORTS();
   mImageBits = nsnull;
   mWidth = 0;
   mHeight = 0;

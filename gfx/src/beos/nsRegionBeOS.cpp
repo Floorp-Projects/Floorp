@@ -49,8 +49,6 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
 nsRegionBeOS :: nsRegionBeOS()
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef DEBUG_REGIONS 
   ++nRegions; 
   printf("REGIONS+ = %i\n", nRegions); 

@@ -57,7 +57,6 @@ inFileSearch::inFileSearch()
     mReturnRelativePaths(PR_FALSE),
     mSearchRecursive(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inFileSearch::~inFileSearch()

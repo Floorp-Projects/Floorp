@@ -58,7 +58,6 @@ inFlasher::inFlasher() :
   mThickness(0),
   mInvert(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 

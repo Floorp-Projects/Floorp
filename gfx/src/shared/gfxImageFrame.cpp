@@ -47,7 +47,6 @@ gfxImageFrame::gfxImageFrame() :
   mTransparentColor(0),
   mDisposalMethod(0)
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

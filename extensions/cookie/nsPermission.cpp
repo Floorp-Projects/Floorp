@@ -45,7 +45,6 @@
 NS_IMPL_ISUPPORTS2(nsPermission, nsIPermission, nsISupportsWeakReference);
 
 nsPermission::nsPermission() {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPermission::nsPermission
@@ -55,7 +54,6 @@ nsPermission::nsPermission
   permissionHost = host;
   permissionType = type;
   permissionCapability = capability;
-  NS_INIT_ISUPPORTS();
 }
 
 nsPermission::~nsPermission(void) {

@@ -46,8 +46,6 @@
  */
 nsBlender :: nsBlender()
 {
-  NS_INIT_ISUPPORTS();
-
   mContext = nsnull;
 }
 

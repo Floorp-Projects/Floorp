@@ -38,7 +38,6 @@ nsDrawingSurfaceOS2::nsDrawingSurfaceOS2()
                     : mNextID(2), mTopID(1), mPS(0),
                       mWidth (0), mHeight (0)
 {
-   NS_INIT_ISUPPORTS();
    mHTFonts = new nsHashtable;
 }
 

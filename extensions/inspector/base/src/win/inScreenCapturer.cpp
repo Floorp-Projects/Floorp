@@ -61,7 +61,6 @@ static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 inScreenCapturer::inScreenCapturer()
 {
-  NS_INIT_ISUPPORTS();
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 

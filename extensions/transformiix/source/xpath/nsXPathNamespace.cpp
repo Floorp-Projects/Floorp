@@ -51,7 +51,6 @@ NS_INTERFACE_MAP_END
 
 nsXPathNamespace::nsXPathNamespace()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPathNamespace::~nsXPathNamespace()

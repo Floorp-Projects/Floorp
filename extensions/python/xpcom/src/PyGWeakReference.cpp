@@ -33,7 +33,6 @@
 PyXPCOM_GatewayWeakReference::PyXPCOM_GatewayWeakReference( PyG_Base *base )
 {
 	m_pBase = base;
-	NS_INIT_ISUPPORTS();
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 	// bloat view uses 40 chars - stick "(WR)" at the end of this position.

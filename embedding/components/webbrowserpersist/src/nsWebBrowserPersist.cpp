@@ -206,7 +206,6 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mWrapColumn(72),
     mEncodingFlags(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsWebBrowserPersist::~nsWebBrowserPersist()
@@ -3386,7 +3385,6 @@ nsWebBrowserPersist::SetDocumentBase(
 
 nsEncoderNodeFixup::nsEncoderNodeFixup() : mWebBrowserPersist(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

@@ -58,7 +58,6 @@ nsLDAPSyncQuery::nsLDAPSyncQuery() :
     mFinished(PR_FALSE), // This is a control variable for event loop
     mAttrCount(0), mAttrs(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 // Destructor

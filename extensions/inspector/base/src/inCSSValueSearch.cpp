@@ -59,8 +59,6 @@ inCSSValueSearch::inCSSValueSearch()
     mReturnRelativeURLs(PR_TRUE),
     mNormalizeChromeURLs(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
   mProperties = new nsCSSProperty[100];
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }

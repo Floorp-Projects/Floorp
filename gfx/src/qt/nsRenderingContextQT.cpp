@@ -114,7 +114,6 @@ nsRenderingContextQT::nsRenderingContextQT()
   PR_LOG(gQTLogModule, QT_BASIC,
       ("nsRenderingContextQT CTOR (%p) ID: %d, Count: %d\n", this, mID, gRCCount));
 #endif
-  NS_INIT_ISUPPORTS();
 
   mFontMetrics        = nsnull;
   mContext            = nsnull;

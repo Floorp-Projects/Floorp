@@ -78,7 +78,6 @@ nsPrintSettings::nsPrintSettings() :
   mIsInitedFromPrinter(PR_FALSE),
   mIsInitedFromPrefs(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 
   /* member initializers and constructor code */
   nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
@@ -100,8 +99,6 @@ nsPrintSettings::nsPrintSettings() :
  */
 nsPrintSettings::nsPrintSettings(const nsPrintSettings& aPS)
 {
-  NS_INIT_ISUPPORTS();
-
   *this = aPS;
 }
 

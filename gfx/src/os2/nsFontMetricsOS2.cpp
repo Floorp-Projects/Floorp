@@ -287,7 +287,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsFontCleanupObserver() { NS_INIT_ISUPPORTS(); }
+  nsFontCleanupObserver() { }
   virtual ~nsFontCleanupObserver() {}
 };
 
@@ -417,8 +417,6 @@ InitGlobals(void)
 
 nsFontMetricsOS2::nsFontMetricsOS2()
 {
-  NS_INIT_ISUPPORTS();
-
   mTriedAllGenerics = 0;
 }
 
@@ -2033,7 +2031,6 @@ nsFontMetricsOS2::FindGlobalFont( HPS aPS )
 
 nsFontEnumeratorOS2::nsFontEnumeratorOS2()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorOS2, nsIFontEnumerator)

@@ -54,16 +54,12 @@ txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocument* aSourceDocument,
                                          nsIDOMDocument* aResultDocument,
                                          nsITransformObserver* aObserver)
 {
-    NS_INIT_ISUPPORTS();
-
     mObserver = do_GetWeakReference(aObserver);
     createResultDocument(aSourceDocument, aResultDocument);
 }
 
 txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocumentFragment* aDest)
 {
-    NS_INIT_ISUPPORTS();
-
     nsCOMPtr<nsIDOMDocument> doc;
     aDest->GetOwnerDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "unable to get ownerdocument");

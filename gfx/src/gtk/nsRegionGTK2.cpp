@@ -30,8 +30,6 @@ static int nRegions;
 
 nsRegionGTK::nsRegionGTK()
 {
-  NS_INIT_ISUPPORTS();
-
 #ifdef DEBUG_REGIONS
   ++nRegions;
   printf("REGIONS+ = %i\n", nRegions);

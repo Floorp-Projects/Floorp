@@ -78,7 +78,6 @@ nsDebugObject::nsDebugObject() :
   mRuntimeTestId(nsIDebugObject::PRT_RUNTIME_NONE),
   mFileName(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /** ---------------------------------------------------

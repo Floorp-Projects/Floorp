@@ -34,7 +34,6 @@
 
 inBitmapProtocolHandler::inBitmapProtocolHandler() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 inBitmapProtocolHandler::~inBitmapProtocolHandler() 

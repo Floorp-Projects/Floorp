@@ -47,7 +47,6 @@
 NS_IMPL_ISUPPORTS1(nsImageBeOS, nsIImage)
 
 nsImageBeOS::nsImageBeOS() {
-	NS_INIT_ISUPPORTS();
 	mImage = nsnull;
 	mImageBits = nsnull;
 	mWidth = 0;

@@ -65,7 +65,6 @@ static const char sPrefChangedTopic[] = NS_PREFBRANCH_PREFCHANGE_TOPIC_ID;
 nsPopupWindowManager::nsPopupWindowManager() :
   mPolicy(ALLOW_POPUP)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPopupWindowManager::~nsPopupWindowManager(void)

@@ -118,8 +118,6 @@ inDOMView::inDOMView() :
   mShowWhitespaceNodes(PR_TRUE),
   mFilters(PR_UINT16_MAX) // show all node types by default
 {
-  NS_INIT_ISUPPORTS();
-
   kAnonymousAtom = NS_NewAtom("anonymous");
   kElementNodeAtom = NS_NewAtom("ELEMENT_NODE");
   kAttributeNodeAtom = NS_NewAtom("ATTRIBUTE_NODE");

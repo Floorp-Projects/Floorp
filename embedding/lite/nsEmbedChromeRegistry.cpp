@@ -158,7 +158,6 @@ NS_IMPL_ISUPPORTS1(nsEmbedChromeRegistry, nsIChromeRegistry)
 
 nsEmbedChromeRegistry::nsEmbedChromeRegistry()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

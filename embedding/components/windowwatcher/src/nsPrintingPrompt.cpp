@@ -68,7 +68,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrintingPrompt, nsIPrintingPrompt)
 nsPrintingPrompt::nsPrintingPrompt(nsIDOMWindow *aParent)
   : mParent(aParent)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult

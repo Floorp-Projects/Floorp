@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
 
 nsImageGTK::nsImageGTK()
 {
-  NS_INIT_ISUPPORTS();
   mImageBits = nsnull;
   mWidth = 0;
   mHeight = 0;

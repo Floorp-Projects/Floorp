@@ -48,7 +48,6 @@
  */
 nsDeviceContextSpecFactoryBeOS :: nsDeviceContextSpecFactoryBeOS()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------
