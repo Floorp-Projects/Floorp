@@ -86,7 +86,7 @@ public:
 
 // Class:  CButtonToolbarWindow
 //
-// The window that resides within the Tabbed toolbar.  It holds the a CNSToolbar2
+// The window that resides within the Tabbed toolbar.  It MUST hold a CNSToolbar2.
 class CButtonToolbarWindow: public CToolbarWindow {
 
 public:
@@ -103,7 +103,7 @@ public:
 
 // Class:  // Class:  CControlBarToolbarWindow
 //
-// The window that resides within the Tabbed toolbar.  It holds the a CNSToolbar2
+// The window that resides within the Tabbed toolbar.  It does not hold a CNSToolbar2.
 class CControlBarToolbarWindow: public CToolbarWindow {
 
 public:
@@ -112,8 +112,6 @@ public:
 
 	virtual void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
 	virtual int GetHeight(void);
-
-	virtual CWnd* GetNSToolbar() { return GetToolbar(); }
 };
 
 
