@@ -6,10 +6,6 @@ function getFileOrFolderURL( aTitle, aFolder )
     var fileSpecWithUI = Components.classes["component://netscape/filespecwithui"].createInstance();
     if( fileSpecWithUI )
       fileSpecWithUI = fileSpecWithUI.QueryInterface( Components.interfaces.nsIFileSpecWithUI );
-/*
-    var fileSpec = Components.classes["component://netscape/filespec"].createInstance();
-    if( fileSpec )
-      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );*/
   }
   catch(e) {
     dump("*** failed to create fileSpecWithUI or fileSpec objects\n");
@@ -28,7 +24,7 @@ function getFileOrFolderURL( aTitle, aFolder )
     dump("Error: " + e + "\n");
     return -1;
   }
-  return fileSpecWithUI.nativePath;
+  return fileSpecWithUI.URLString;
 }
 
 function prefNavSelectFile(folderFieldId, stringId)
