@@ -19,13 +19,13 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
-[% is_new = (version == "new" ? 1 : 0) %]
+[% is_new = (file.version == "new" ? 1 : 0) %]
 [% wysiwyg = content.match("<\?doctor enable_wysiwyg_mode \?>") %]
 
 <html>
 
   <head>
-    <title>Doctor - [% is_new ? "create" : "edit" %] [%+ (file_url ? file_url : file) FILTER html %]</title>
+    <title>Doctor - [% is_new ? "create" : "edit" %] [%+ file.relative_spec FILTER html %]</title>
     [% IF wysiwyg %]
       <script type="text/javascript">
          _editor_url = "/htmlarea/";
@@ -48,21 +48,21 @@
   <body bgcolor="white" color="black" onload="onLoad();" class="[% "new" IF is_new %]">
 
     <form id="form" method="post" action="doctor.cgi" enctype="multipart/form-data">
-      <input id="file"          type="hidden" name="file"         value="[% file FILTER html %]">
+      <input id="file"          type="hidden" name="file"         value="[% file.spec FILTER html %]">
       <input id="version"       type="hidden" name="version"      value="[% version %]">
       <input id="line_endings"  type="hidden" name="line_endings" value="[% line_endings %]">
       <input id="is_new"        type="hidden" name="is_new"       value="[% is_new %]">
   
       <div id="bannernav">
         Doctor - [% is_new ? "create" : "edit" %]
-        [% IF file_url %]
-          <a href="[% file_url FILTER html %]">[% short_file FILTER html %]</a>
+        [%+ IF file.url %]
+          <a href="[% file.url FILTER html %]">[% file.relative_spec FILTER html %]</a>
         [% ELSE %]
-          [% short_file FILTER html %]
+          [% file.relative_spec FILTER html %]
         [% END %]
 
         [% IF !is_new %]
-          | <a href="doctor.cgi?file=[% file | uri | html %]&amp;action=download">download</a>
+          | <a href="doctor.cgi?file=[% file.relative_spec | uri | html %]&amp;action=download">download</a>
         [% END %]
         | <label for="content_file">upload:</label>
           <input id="content_file" type="file" name="content_file">
@@ -80,9 +80,9 @@
       
       <div id="panels">
         <div      id="editPanel"      class="panel">
-          <textarea id="content" name="content" rows="16" cols="100">[% content FILTER html %]</textarea><br>
+          <textarea id="content" name="content" rows="16" cols="100">[% file.content FILTER html %]</textarea><br>
         </div>
-        <iframe   id="originalPanel"  class="panel" src="doctor.cgi?file=[% file | uri | html %]&amp;action=display"></iframe>
+        <iframe   id="originalPanel"  class="panel" src="doctor.cgi?file=[% file.relative_spec | uri | html %]&amp;action=display"></iframe>
         <div      id="modifiedPanel"  class="panel"></div>
         <iframe   id="diffPanel"      class="panel" name="diffPanel"></iframe>
         <div      id="savePanel"      class="panel">

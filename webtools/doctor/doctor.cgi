@@ -40,63 +40,15 @@ my $request = new CGI;
 # Include the Perl library for creating and deleting directory hierarchies
 # and the one for creating temporary files and directories.
 use File::Path;
-use File::Temp qw/ tempfile tempdir /;
+use File::Temp qw(tempfile tempdir);
 
-# Use the Template Toolkit (http://www.template-toolkit.org/) to generate
-# the user interface using templates in the "template/" subdirectory.
-use Template;
+use Doctor qw($template $vars %CONFIG);
 
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to templates processed in this script.
-my $template = Template->new(
-  {
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "templates" ,
-    PRE_CHOMP => 1,
-    POST_CHOMP => 1,
-
-    FILTERS => 
-    {
-        linebreak => sub 
-        {
-          my ($var) = @_; 
-          $var =~ s/\\/\\\\/g;
-          $var =~ s/\n/\\n/g;
-          $var =~ s/\r/\\r/g;
-          return $var;
-        }
-    }
-  }
-);
-
-# Define the global variables and functions that will be passed to the UI
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-my $vars = {};
+use Doctor::File;
 
 ################################################################################
 # Script Configuration
 ################################################################################
-
-# Note: Look in the configuration file for descriptions of each parameter.
-
-# Use the AppConfig module for handling script configuration.
-use AppConfig qw(:expand :argcount);
-
-# Create an AppConfig object and populate it with parameters defined
-# in the configuration file.
-my $config = AppConfig->new(
-  { 
-    CASE    => 1,
-    CREATE  => 1 , 
-    GLOBAL  => {
-      ARGCOUNT => ARGCOUNT_ONE , 
-    }
-  }
-);
-$config->file("doctor.conf");
-my %CONFIG = $config->varlist(".*");
-$vars->{'config'} = \%CONFIG;
 
 # Store the home directory so we can get back to it after changing directories
 # in certain places in the code.
@@ -174,182 +126,130 @@ sub choose
     || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
-sub edit
-{
-  ValidateFile();
- 
-  my $file = $request->param('file');
-  
-  # Remove the base path from the beginning of the file to save space
-  # when displaying it.
-  $file =~ /^\Q$CONFIG{WEB_BASE_PATH}\E(.*)$/;
-  $vars->{'short_file'} = "/$1";
-  $vars->{'file'} = $file;
-
-  if ($request->param('content'))
-  {
-    ValidateContent();
-    $vars->{'content'} = $request->param('content');
-    $vars->{'version'} = $request->param('version');
-    $vars->{'line_endings'} = $request->param('line_endings');
-  }
-  else
-  {
-    ($vars->{'content'}, $vars->{'version'}, $vars->{'line_endings'}) 
-      = RetrieveFile($request->param('file'));
-  }
-
-  print $request->header;
-  $template->process("edit.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
+sub edit {
+    my $file = Doctor::File->new($request->param('file'));
+    
+    $file->retrieve();
+    $vars->{file} = $file;
+    
+    print $request->header;
+    $template->process("edit.tmpl", $vars)
+      || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
-sub retrieve
-{
-  ValidateFile();
- 
-  my $file = $request->param('file');
-  
-  # Separate the name of the file from its path.
-  $file =~ /^(.*)\/([^\/]+)$/;
-  my $path = $1;
-  my $filename = $2;
-
-  my ($content) = RetrieveFile($file);
-  my $filesize = length($content);
-
-  my $disposition = $action eq "download" ? "attachment" : "inline";
+sub retrieve {
+    my $file = Doctor::File->new($request->param('file'));
     
-  print $request->header(-type=>"text/html; name=\"$filename\"",
-                         -content_disposition=> "$disposition; filename=\"$filename\"",
-                         -content_length => $filesize);
-  print $content;
+    $file->retrieve();
+   
+    my $disposition = $action eq "download" ? "attachment" : "inline";
+      
+    my $length = length($file->content);
+  
+    print $request->header(
+        -type                   =>  qq|text/html; name="$file->name"|,
+        -content_disposition    =>  qq|$disposition; filename="$file->name"|,
+        -content_length         =>  $length );
+
+    print $file->content;
 }
 
-sub diff
-{
-  # Displays a diff between the version of a file in the repository
-  # and the version submitted by the user so the user can review the
-  # changes they are making to the file.  Offers the user the option
-  # to either commit their changes or edit the file some more.
-  
-  ValidateFile();
-  
-  ChangeToTempDir();
-  
-  # Check out the file from the repository.
-  my $file = $request->param('file');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
-  
-  ValidateVersions($oldversion, $newversion);
-  
-  # Replace the checked out file with the edited version, generate
-  # a diff between the edited file, and display it to the user.
-  ReplaceFile($file);
-  $vars->{'diff'} = DiffFile($file);
-  
-  $vars->{'file'} = $file;
-  $vars->{'content'} = $request->param('content');
-  $vars->{'version'} = $request->param('version');
-  $vars->{'line_endings'} = $request->param('line_endings');
+sub diff {
+    my $file = Doctor::File->new($request->param('file'));
+    ValidateVersions($request->param('version'), $file->version);
+    my $diff = $file->diff($request->param('content'))
+      || "There are no differences between the version in CVS and your revision.";
 
-  my $raw = $request->param('raw');
-  my $ctype = $raw ? "text/plain" : "text/html";
-  print $request->header(-type=>$ctype);
-  $raw ? print $vars->{diff}
-       : $template->process("review.tmpl", $vars)
-           || ThrowCodeError("Template Process Failed", $template->error());
+    print $request->header(-type=>"text/plain");
+    print $diff;
 }
 
-sub regurgitate
-{
-  # Returns the content that was submitted to it.  Useful for displaying
-  # the modified version of a document the user downloaded and edited locally,
-  # since for security reasons there's no way to get access to the file
-  # until the user uploads it to the server.  When the user clicks
-  # on the "modified" tab, client-side JS checks to see if there's a value
-  # in the file upload control, and if so it adds an iframe to the "modified"
-  # panel and posts the file to it with action=regurgitate, which then returns
-  # the content of the file to the user, who can then see his changes.
+sub regurgitate {
+    # Returns the content that was submitted to it.  Useful for displaying
+    # the modified version of a document the user downloaded and edited locally
+    # in the "View Edited" tab, since for security reasons there's no way
+    # to get access to a file being uploaded on the client side.  When the user
+    # clicks on the "View Edited" tab, client-side JS checks to see if there is
+    # a value in the file upload control, and if so it adds an iframe
+    # to the "View Edited" panel and posts the file to it with action=regurgitate.
 
-  ValidateFile();
- 
-  my $content = GetUploadedContent() || $request->param('content');
+    my $content = GetContent();
+    my $filename = $request->param('content_file')
+                   || $request->param('file')
+                   || "modified.html";
+    $filename =~ s/^(.*[\/\\])?([^\/\\]+)$/$2/;
 
-  my $file = $request->param('file');
-  
-  # Separate the name of the file from its path.
-  $file =~ /^(.*)\/([^\/]+)$/;
-  my $path = $1;
-  my $filename = $2;
-
-  my $filesize = length($content);
-    
-  print $request->header(-type=>"text/html; name=\"$filename\"",
-                         -content_disposition=> "inline; filename=\"$filename\"",
-                         -content_length => $filesize);
-  print $content;
+    print $request->header(
+        -type                   =>  qq|text/html; name="$filename"|,
+        -content_disposition    =>  qq|inline; filename="$filename"|,
+        -content_length         =>  length($content));
+    print $content;
 }
 
-sub queue
-{
-  # Sends the diff or new file to an editors mailing list for review.
-  
-  ThrowCodeError("The administrator has not enabled submission of patches for review.",
-                 "Review Not Enabled")
-    unless $CONFIG{EDITOR_EMAIL};
-
-  ValidateFile();
-  ValidateContent();
-  # XXX validate the version as well?
-  # XXX validate the user's email address
-  my $email = $request->param('email');
-  
-  my $file = $request->param('file');
-  my $comment = $request->param('comment');
-
-  my ($patch, $oldversion, $newversion);
-  if ($request->param('is_new')) {
-    $patch = $request->param('content');
-    $oldversion = "-new";
-  }
-  else {
-    ChangeToTempDir();
+sub queue {
+    # Sends the diff or new file to an editors mailing list for review.
     
-    # Check out the file from the repository.
-    $oldversion = $request->param('version');
-    $newversion = CheckOutFile($file);
+    if (!$CONFIG{EDITOR_EMAIL}) {
+        ThrowCodeError("The administrator has not enabled submission of patches
+                        for review.", "Review Not Enabled");
+    }
     
-    ValidateVersions();
-    
-    # Replace the checked out file with the edited version, and generate a patch
-    # that patches the checked out file to make it look like the edited version.
-    ReplaceFile($file);
-    $patch = DiffFile($file);
-  }
+    my $file = Doctor::File->new($request->param('file'));
+    my $comment = $request->param('comment') || "No comment.";
+    my $content = GetContent() || "";
 
-  eval {
-    use MIME::Entity;
-    my $mail = MIME::Entity->build(Type     =>"multipart/mixed",
-                                   From     => $email,
-                                   To       => $CONFIG{EDITOR_EMAIL},
-                                   Subject  => "patch: $file v$oldversion");
-    $mail->attach(Data        =>$comment,
-                  Encoding    => "quoted-printable");
-    $mail->attach(Data        => $patch,
-                  Encoding    => "quoted-printable",
-                  Disposition => "inline",
-                  Filename    => "patch.txt");
-    $mail->send();
-  };
-  if ($@) {
-    ThrowCodeError($@, "Mail Failure");
-  }
+    my $email;
+    use Email::Valid;
+    if (!($email = Email::Valid->address($request->param('email')))) {
+        ThrowUserError("address $email invalid: $Email::Valid::Details");
+    }
 
-  print $request->header;
-  $template->process("queued.tmpl", $vars)
-    || ThrowCodeError($template->error(), "Template Processing Failed");
+    # Prefer the name of the file being uploaded, if any; otherwise append
+    # ".diff" to the name of the file in CVS.
+    my $filename = $request->param('content_file') || $file->name . ".diff";
+    $filename =~ s/^(.*[\/\\])?([^\/\\]+)$/$2/;
+
+    my ($patch, $version);
+    if ($file->version eq "new") {
+        $patch = $content;
+        $version = "(new file)";
+    }
+    else {
+        ValidateVersions($request->param('version'), $file->version);
+        $patch = $file->diff($content);
+        if (!$patch) {
+            ThrowUserError("There are no differences between the version
+                            in CVS and your revision.", "No Differences Found");
+        }
+        $version = "v" . $file->version;
+    }
+
+    my $subject = "patch: " . $file->spec . " $version";
+
+    eval {
+        use MIME::Entity;
+        my $mail = MIME::Entity->build(Type     =>"multipart/mixed",
+                                       From     => $email,
+                                       To       => $CONFIG{EDITOR_EMAIL},
+                                       Subject  => $subject);
+        $mail->attach(Data        => \$comment,
+                      Encoding    => "quoted-printable");
+        $mail->attach(Data        => \$patch,
+                      Encoding    => "quoted-printable",
+                      Disposition => "inline",
+                      Filename    => $filename);
+        # Set the record separator because otherwise MIME::Entity seems
+        # to get stuck in an infinite loop.
+        $/ = "\n";
+        $mail->send();
+    };
+    if ($@) {
+        ThrowCodeError($@, "Mail Failure");
+    }
+
+    print $request->header;
+    $template->process("queued.tmpl", $vars)
+      || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
 sub create
@@ -602,56 +502,6 @@ sub ValidateVersions()
 # CVS Glue
 ################################################################################
 
-sub RetrieveFile
-{
-  my ($name) = @_;
-  
-  my @args = ("-d",
-              ":pserver:$CONFIG{READ_CVS_USERNAME}:$CONFIG{READ_CVS_PASSWORD}\@$CONFIG{READ_CVS_SERVER}", 
-              "checkout",
-              "-p", # write to STDOUT
-              $name);
-  
-  # Check out the file from the CVS repository, capturing the file content
-  # and any errors/notices.
-  my ($error_code, $output, $errors) = system_capture("cvs", @args);
-  
-  # If the CVS server returned an error, stop further processing and notify
-  # the user.  The only error we don't stop for is a "not found" error, 
-  # since in that case we want to give the user the option to create a new 
-  # file at this location.
-  if ($error_code != 0 && $errors !~ /cannot find/) 
-  {
-    # Include the command in the error message (but hide the username/password).
-    my $command = join(" ", "cvs", @args);
-    $command =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    $errors =~ s/\Q$CONFIG{READ_CVS_PASSWORD}\E/[password]/g;
-    
-    ThrowUserError("Doctor could not check out the file from the repository.",
-                   undef,
-                   $command,
-                   $error_code,
-                   $errors);
-  }
-  
-  my $version = "";
-  my $line_endings = "unix";
-  
-  # If the file doesn't exist, hack the version string to reflect that.
-  if ($error_code != 0 && $errors =~ /cannot find/) { $version = "new" }
-  
-  # Otherwise, try to determine the file's version and line-ending style 
-  # (unix, mac, or windows) from the "error" messages and content.
-  else {
-    if ($errors =~ /VERS:\s([0-9.]+)\s/) { $version = $1 }
-    
-    if ($output =~ /\r\n/s) { $line_endings = "windows" }
-    elsif ($output =~ /\r[^\n]/s) { $line_endings = "mac" }
-  }
-  
-  return ($output, $version, $line_endings);
-}
-
 sub CheckOutFile
 {
   # Checks out a file from the repository.
@@ -833,7 +683,7 @@ sub ReplaceFile
   
   my ($file) = @_;
   
-  my $content = GetUploadedContent() || $request->param('content');
+  my $content = GetContent();
   my $line_endings = $request->param('line_endings');
 
   # Replace the Windows-style line endings in which browsers send content
@@ -849,17 +699,17 @@ sub ReplaceFile
   close(DOC);
 }
 
-sub GetUploadedContent
-{
-  my $fh = $request->upload('content_file');
-
-  # enable 'slurp' mode
-  local $/;
-
-  if ($fh) {
-    my $content = <$fh>;
+sub GetContent {
+    my $fh = $request->upload('content_file');
+    my $content;
+    if ($fh) {
+        local $/; # enable 'slurp' mode
+        $content = <$fh>;
+    }
+    if (!$content) {
+        $content = $request->param('content');
+    }
     return $content;
-  }
 }
 
 sub ChangeToTempDir
@@ -868,50 +718,3 @@ sub ChangeToTempDir
   chdir $dir;
 }
 
-sub system_capture {
-  # Runs a command and captures its output and errors.  This should be using
-  # in-memory files, but they require that we close STDOUT and STDERR
-  # before reopening them on the in-memory files, and closing and reopening
-  # STDERR causes CVS to choke with return value 256.
-
-  my ($command, @args) = @_;
-
-  my ($rv, $output, $errors);
-
-  # Back up the original STDOUT and STDERR so we can restore them later.
-  open my $oldout, ">&STDOUT"     or die "Can't back up STDOUT to \$oldout: $!";
-  open OLDERR,     ">&", \*STDERR or die "Can't back up STDERR to OLDERR: $!";
-  use vars qw( $OLDERR ); # suppress "used only once" warnings
-
-  # Close and reopen STDOUT and STDERR to in-memory files, which are just
-  # scalars that take output and append it to their value.
-  # XXX Disabled in-memory files in favor of temp files until in-memory issues
-  # can be worked out.
-  #close STDOUT;
-  #close STDERR;
-  #open STDOUT, ">", \$output or die "Can't open STDOUT to output var: $!";
-  #open STDERR, ">", \$errors or die "Can't open STDERR to errors var: $!";
-  my $outtmpfile = tempfile();
-  my $errtmpfile = tempfile();
-  open STDOUT, ">&", $outtmpfile or die "Can't dupe STDOUT to output cache: $!";
-  open STDERR, ">&", $errtmpfile or die "Can't dupe STDERR to errors cache: $!";
-
-  # Run the command.
-  $rv = system($command, @args);
-
-  # Restore original STDOUT and STDERR.
-  close STDOUT;
-  close STDERR;
-  open STDOUT, ">&", $oldout or die "Can't restore STDOUT from \$oldout: $!";
-  open STDERR, ">&OLDERR"    or die "Can't restore STDERR from OLDERR: $!";
-
-  # Grab output and errors from the caches.
-  # XXX None of this would be necessary if in-memory files was working.
-  undef $/;
-  seek($outtmpfile, 0, 0);
-  seek($errtmpfile, 0, 0);
-  $output = <$outtmpfile>;
-  $errors = <$errtmpfile>;
-
-  return ($rv, $output, $errors);
-}
