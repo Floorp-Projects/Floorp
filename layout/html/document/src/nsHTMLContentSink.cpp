@@ -127,6 +127,11 @@ public:
   // Called for text, comments and so on...
   virtual PRBool AddLeaf(const nsIParserNode& aNode);
 
+  virtual void WillBuildModel(void);
+  virtual void DidBuildModel(void);
+  virtual void WillInterrupt(void);
+  virtual void WillResume(void);
+
 protected:
 
   void StartLayout();
@@ -1290,6 +1295,43 @@ nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
   }
   NS_RELEASE(atom);
   return rv;
+}
+
+ /**
+  * This method gets called when the parser begins the process
+  * of building the content model via the content sink.
+  *
+  * @update 5/7/98 gess
+ */     
+void HTMLContentSink::WillBuildModel(void){
+}
+
+ /**
+  * This method gets called when the parser concludes the process
+  * of building the content model via the content sink.
+  *
+  * @update 5/7/98 gess
+ */     
+void HTMLContentSink::DidBuildModel(void){
+}
+
+/**
+ * This method gets called when the parser gets i/o blocked,
+ * and wants to notify the sink that it may be a while before
+ * more data is available.
+ *
+ * @update 5/7/98 gess
+ */     
+void HTMLContentSink::WillInterrupt(void) {
+}
+
+/**
+ * This method gets called when the parser i/o gets unblocked,
+ * and we're about to start dumping content again to the sink.
+ *
+ * @update 5/7/98 gess
+ */     
+void HTMLContentSink::WillResume(void) {
 }
 
 //----------------------------------------------------------------------

@@ -115,6 +115,40 @@ class nsHTMLContentSink : public nsIHTMLContentSink {
     virtual PRBool    CloseTopmostContainer();
     virtual PRBool    AddLeaf(const nsIParserNode& aNode);
 
+   /**
+    * This method gets called when the parser begins the process
+    * of building the content model via the content sink.
+    *
+    * @update 5/7/98 gess
+   */     
+  virtual void WillBuildModel(void);
+
+   /**
+    * This method gets called when the parser concludes the process
+    * of building the content model via the content sink.
+    *
+    * @update 5/7/98 gess
+    */     
+  virtual void DidBuildModel(void);
+
+   /**
+    * This method gets called when the parser gets i/o blocked,
+    * and wants to notify the sink that it may be a while before
+    * more data is available.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void WillInterrupt(void);
+
+   /**
+    * This method gets called when the parser i/o gets unblocked,
+    * and we're about to start dumping content again to the sink.
+    *
+    * @update 5/7/98 gess
+    */     
+    virtual void WillResume(void);
+
+
             PRInt32   NodeAt(PRInt32 aPos) {return mNodeStack[aPos];}
             PRInt32   TopNode() {return mNodeStack[mNodeStackPos-1];}
             PRInt32   GetStackPos() {return mNodeStackPos;}

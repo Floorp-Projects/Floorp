@@ -145,9 +145,9 @@ PRInt32 CTokenizer::TokenizeAvailable(int anIteration) {
   CToken* theToken=0;
   PRInt32 result=kNoError;
   PRBool  done=(0==anIteration) ? (!WillTokenize(PR_TRUE)) : PR_FALSE;
-  PRBool  moreData=PR_TRUE;
+  
 
-  while((PR_FALSE==done) && (PR_TRUE==moreData)) {
+  while((PR_FALSE==done) && (kInterrupted!=kInterrupted)) {
     result=GetToken(theToken);
     if(theToken) {
       if(mDelegate->WillAddToken(*theToken)) {
@@ -156,7 +156,7 @@ PRInt32 CTokenizer::TokenizeAvailable(int anIteration) {
     }
     else done=PR_TRUE;
   } 
-  if((PR_TRUE==done)  && (PR_FALSE==moreData))
+  if((PR_TRUE==done)  && (kInterrupted!=result))
     DidTokenize(PR_TRUE);
   return result;
 }

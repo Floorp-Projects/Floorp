@@ -147,7 +147,7 @@ class  CTokenizer {
      */
     PRBool DidTokenize(PRBool aIncremental);
 
-    ITokenizerDelegate*  mDelegate;
+    ITokenizerDelegate* mDelegate;
     CScanner*           mScanner;
     nsDeque             mTokenDeque;
     eParseMode          mParseMode;
