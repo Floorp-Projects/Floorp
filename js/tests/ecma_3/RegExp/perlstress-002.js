@@ -548,6 +548,7 @@ expectedmatch = null;
 addThis();
 */
 
+/* ECMA doesn't support (?<
 status = inSection(68);
 pattern = /(?<=a)b/;
 string = 'cb';
@@ -568,7 +569,9 @@ string = 'cb';
 actualmatch = string.match(pattern);
 expectedmatch = null;
 addThis();
+*/
 
+/* ECMA doesn't support (?(condition)
 status = inSection(71);
 pattern = /(?:(?i)a)b/;
 string = 'aB';
@@ -666,7 +669,9 @@ string = 'B\nB';
 actualmatch = string.match(pattern);
 expectedmatch = null;
 addThis();
+*/
 
+/* ECMA doesn't support (?<
 status = inSection(85);
 pattern = /(?<![cd])b/;
 string = 'dbcb';
@@ -680,6 +685,7 @@ string = 'dbcb';
 actualmatch = string.match(pattern);
 expectedmatch = null;
 addThis();
+*/
 
 status = inSection(87);
 pattern = /^(?:a?b?)*$/;
