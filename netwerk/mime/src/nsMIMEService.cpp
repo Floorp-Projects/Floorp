@@ -28,6 +28,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIFileSpec.h"
 #include "nsIURL.h"
+#include "nsCOMPtr.h"
 
 PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
@@ -232,26 +233,27 @@ nsMIMEService::GetTypeFromExtension(const char *aFileExt, char **aContentType) {
 NS_IMETHODIMP
 nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     nsresult rv = NS_ERROR_FAILURE;
-    char *cStrSpec= nsnull;
-    nsAutoString specStr;
-
     // first try to get a url out of the uri so we can skip post
     // filename stuff (i.e. query string)
-    nsIURL *url = nsnull;
-    rv = aURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = url->GetFileName(&cStrSpec);
-        NS_RELEASE(url);
+        char *ext = nsnull;
+        rv = url->GetFileExtension(&ext);
         if (NS_FAILED(rv)) return rv;
-    } else {
-        // no url, let's give the raw spec a shot
-        rv = aURI->GetSpec(&cStrSpec);
-        if (NS_FAILED(rv)) return rv;
+        rv = GetTypeFromExtension(ext, aContentType);
+        nsAllocator::Free(ext);
+        return rv;
     }
 
-    // find the file extension (if any)
-    specStr.SetString(cStrSpec);
+    char *cStrSpec= nsnull;
+    // no url, let's give the raw spec a shot
+    rv = aURI->GetSpec(&cStrSpec);
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString specStr(cStrSpec);
     nsAllocator::Free(cStrSpec);
+
+    // find the file extension (if any)
     nsAutoString extStr;
     PRInt32 extLoc = specStr.RFindChar('.');
     if (-1 != extLoc) {
