@@ -319,12 +319,12 @@ of the product.</li>
 <li>If problem not listed:</li>
 
 <ul>
-<li>Go to the <a href="http://bugzilla.mozilla.org/query.cgi">Bugzilla Query/Search</a>
+<li>Go to the <a href="query.cgi">Bugzilla Query/Search</a>
 page to try and locate a similar bug that has already been written.</li>
 <li>If you find your bug in Bugzilla, feel free to comment with any new or
 additional data you may have.</li>
 <li>If you cannot find your problem already documented in Bugzilla, go to the
-<a href="http://www.mozilla.org/qualtiy/help/bug-form.html">Bugzilla Helper</a> and post a new bug.</li>
+<a href="http://www.mozilla.org/quality/help/bug-form.html">Bugzilla Helper</a> and post a new bug.</li>
 </ul>
 
 </ul>
