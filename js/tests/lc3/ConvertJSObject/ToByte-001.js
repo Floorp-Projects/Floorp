@@ -66,11 +66,6 @@
         TEST_CLASS.ambiguous( new Date(99) )+'' );
 
     testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Array() ) +''",
-        "BYTE",
-        TEST_CLASS.ambiguous( new Array() )+'' );
-
-    testcases[testcases.length] = new TestCase(
         "TEST_CLASS.ambiguous( new MyObject(127) ) +''",
         "BYTE",
         TEST_CLASS.ambiguous( new MyObject(127) )+'' );

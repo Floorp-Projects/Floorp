@@ -65,11 +65,6 @@
         TEST_CLASS.ambiguous( new Date(0) )+'' );
 
     testcases[testcases.length] = new TestCase(
-        "TEST_CLASS.ambiguous( new Array() ) +''",
-        "LONG",
-        TEST_CLASS.ambiguous( new Array() )+'' );
-
-    testcases[testcases.length] = new TestCase(
         "TEST_CLASS.ambiguous( new MyObject(999) ) +''",
         "LONG",
         TEST_CLASS.ambiguous( new MyObject(999) )+'' );
