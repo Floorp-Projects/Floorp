@@ -63,8 +63,8 @@ static SEC_ASN1Template template[] = {
 };
 
 static unsigned char keyID[] = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  0xF8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
 };
 
 static SECItem keyIDItem = {
@@ -168,9 +168,18 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
 
   /* Find the key to use */
   pKeyID = keyid;
-  if (pKeyID->len == 0) pKeyID = &keyIDItem;  /* Use default value */
+  if (pKeyID->len == 0) {
+	  pKeyID = &keyIDItem;  /* Use default value */
 
-  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
+	  /* Try to find the key */
+	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
+	  
+	  /* If the default key doesn't exist yet, try to create it */
+	  if (!key) key = PK11_GenDES3TokenKey(slot, pKeyID, cx);
+  } else {
+	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
+  }
+
   if (!key) { rv = SECFailure; goto loser; }
 
   params = PK11_GenerateNewParam(type, key);
