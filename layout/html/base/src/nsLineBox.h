@@ -254,7 +254,7 @@ public:
     return mBounds.height;
   }
 
-  static void DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine);
+  static void DeleteLineList(nsIPresContext* aPresContext, nsLineBox* aLine);
 
   static nsLineBox* LastLine(nsLineBox* aLine);
 
