@@ -170,31 +170,30 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
  protected:
   nsresult RealizeFont();
-  PRBool GetVectorSubstitute( const char* aFacename, PRBool aIsBold,
+  PRBool GetVectorSubstitute( HPS aPS, const char* aFacename, PRBool aIsBold,
                              PRBool aIsItalic, char* alias );
 
-   nsFont  *mFont;
-   nscoord  mSuperscriptYOffset;
-   nscoord  mSubscriptYOffset;
-   nscoord  mStrikeoutPosition;
-   nscoord  mStrikeoutSize;
-   nscoord  mUnderlinePosition;
-   nscoord  mUnderlineSize;
-   nscoord  mHeight;
-   nscoord  mLeading;
-   nscoord  mEmHeight;
-   nscoord  mEmAscent;
-   nscoord  mEmDescent;
-   nscoord  mMaxHeight;
-   nscoord  mMaxAscent;
-   nscoord  mMaxDescent;
-   nscoord  mMaxAdvance;
-   nscoord  mSpaceWidth;
-   nscoord  mXHeight;
-  nscoord             mAveCharWidth;
+  nsFont   *mFont;
+  nscoord  mSuperscriptYOffset;
+  nscoord  mSubscriptYOffset;
+  nscoord  mStrikeoutPosition;
+  nscoord  mStrikeoutSize;
+  nscoord  mUnderlinePosition;
+  nscoord  mUnderlineSize;
+  nscoord  mLeading;
+  nscoord  mEmHeight;
+  nscoord  mEmAscent;
+  nscoord  mEmDescent;
+  nscoord  mMaxHeight;
+  nscoord  mMaxAscent;
+  nscoord  mMaxDescent;
+  nscoord  mMaxAdvance;
+  nscoord  mSpaceWidth;
+  nscoord  mXHeight;
+  nscoord  mAveCharWidth;
 
-   nsFontHandleOS2    *mFontHandle;
-   nsDeviceContextOS2 *mDeviceContext;
+  nsFontHandleOS2    *mFontHandle;
+  nsDeviceContextOS2 *mDeviceContext;
 
   static PRBool       gSubstituteVectorFonts;
 
@@ -211,6 +210,7 @@ public:
   PRUint8 mTriedAllGenerics;
   PRUint8 mIsUserDefined;
   static nscoord      gDPI;
+  static long         gSystemRes;
 protected:
   static PLHashTable* InitializeFamilyNames(void);
   static PLHashTable* gFamilyNames;
