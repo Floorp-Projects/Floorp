@@ -116,12 +116,20 @@ endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+ifdef XP_OS2_VACPP
+EXTRA_SHARED_LIBS += \
+	$(DIST)/lib/plc4.lib \
+	$(DIST)/lib/plds4.lib \
+	$(DIST)/lib/nspr4.lib \
+	$(NULL)
+else
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib/ \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+endif
 endif
 
 else

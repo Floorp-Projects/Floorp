@@ -57,7 +57,7 @@ endif
 
 
 ifndef DLL_PREFIX
-	ifeq ($(OS_ARCH), WINNT)
+	ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		DLL_PREFIX = 
 	else
 		DLL_PREFIX = lib
