@@ -63,9 +63,6 @@ namespace Silverstone.Manticore.BrowserWindow
 
       // Set up UI
       InitializeComponent();
-
-      // Perform post-window show startup tasks
-      LayoutStartup();
     }
 
     public override void Dispose()
@@ -156,6 +153,15 @@ namespace Silverstone.Manticore.BrowserWindow
         break;
       case "file-open":
         browserWindow.Open();
+        break;
+      case "view-go-home":
+        browserWindow.webBrowser.GoHome();
+        break;
+      case "view-layout-gecko":
+        browserWindow.webBrowser.SwitchLayoutEngine("gecko");
+        break;
+      case "view-layout-ie":
+        browserWindow.webBrowser.SwitchLayoutEngine("trident");
         break;
       case "help-about":
         AboutDialog dlg = new AboutDialog(browserWindow);

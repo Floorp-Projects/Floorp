@@ -51,41 +51,57 @@ namespace Silverstone.Manticore.LayoutAbstraction
 
   public class WebBrowser : ContainerControl
   {
-    private IWebBrowser2 browser;
+    private AxWebBrowser trident;
+    private AxMozillaBrowser gecko;
 
     public WebBrowser()
     {
-      InitializeComponent();
+      this.Dock = DockStyle.Fill;
     }
 
-    private void InitializeComponent()
+    public void RealizeLayoutEngine()
     {
-      // XXX - remember this setting in a pref
-      SwitchLayoutEngine("gecko");
-
-      this.Dock = DockStyle.Fill;
+      if (gecko == null && trident == null)
+        SwitchLayoutEngine("gecko");
     }
 
     public void SwitchLayoutEngine(String id)
     {
-      AxHost host;
+      AxHost host = null;
       switch (id) {
       case "trident":
-        host = new AxWebBrowser() as AxHost;
+        if (gecko != null) {
+          this.Controls.Remove(gecko as AxHost);
+          gecko = null;
+        }
+
+        if (trident == null) {
+          trident = new AxWebBrowser();
+          host = trident as AxHost;
+        }
+
         break;
       default:
-        host = new AxMozillaBrowser() as AxHost; 
+        if (trident != null) {
+          this.Controls.Remove(trident as AxHost);
+          trident = null;
+        }
+
+        if (gecko == null) {
+          gecko = new AxMozillaBrowser(); 
+          host = gecko as AxHost;
+        }
         break;
       }
 
-      host.BeginInit();
-      host.Size = new Size(600, 200);
-      host.TabIndex = 1;
-      host.Dock = DockStyle.Fill;
-      host.EndInit();
-      this.Controls.Add(host);
-
-      browser = host as IWebBrowser2;
+      if (host != null) {
+        host.BeginInit();
+        host.Size = new Size(600, 200);
+        host.TabIndex = 1;
+        host.Dock = DockStyle.Fill;
+        host.EndInit();
+        this.Controls.Add(host);
+      }
     }
 
     public void LoadURL(String url, Boolean bypassCache)
@@ -95,14 +111,18 @@ namespace Silverstone.Manticore.LayoutAbstraction
       //       made to support ignore-cache and ignore-history.
       //       This will require modification to the ActiveX
       //       control.
+      RealizeLayoutEngine();
       Object o = null;
-//      browser.Navigate(url, ref o, ref o, ref o, ref o);
+      if (gecko != null)
+        gecko.Navigate(url, ref o, ref o, ref o, ref o);
+      else if (trident != null)
+        trident.Navigate(url, ref o, ref o, ref o, ref o);
     }
 
     public void GoHome()
     {
       // XXX - need to implement "Home" preference
-      browser.GoHome();
+      LoadURL("http://www.mozilla.org/", false);
     }
   }
   

@@ -82,7 +82,12 @@
     </menu>
     <menu label="Use Stylesheet" accesskey="y"/>
     <menuseparator/>
-    <menu label="Encoding" accesskey="e"/>       
+    <menu label="Encoding" accesskey="e"/>   
+    <menuseparator/>
+    <menu label="Select Layout Engine">
+      <menu label="Mozilla" command="view-layout-gecko"/>
+      <menu label="Internet Explorer" command="view-layout-ie"/>
+    </menu>    
   </menu>
   <menu label="Bookmarks" accesskey="b">
     <menu label="Add Bookmark" accesskey="a" command="bookmarks-add"/>
