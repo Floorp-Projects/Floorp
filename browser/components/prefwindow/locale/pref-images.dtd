@@ -1,0 +1,15 @@
+<!ENTITY animLoopingTitle.label         "Animated images should loop">
+<!ENTITY animLoopAsSpecified.label      "As many times as the image specifies">
+<!ENTITY animLoopAsSpecified.accesskey  "m">
+<!ENTITY animLoopOnce.label             "Once">
+<!ENTITY animLoopOnce.accesskey         "O">
+<!ENTITY animLoopNever.label            "Never">
+<!ENTITY animLoopNever.accesskey        "v">
+<!ENTITY title                          "Images">
+<!ENTITY general.label                  "General">
+<!ENTITY enableImages.label                "Enable images">
+<!ENTITY enableImages.accesskey            "i">
+<!ENTITY manageImages.label                "Manage Images...">
+<!ENTITY manageImages.accesskey            "n">
+<!ENTITY forOriginatingSiteOnly.label      "for the originating Web site only">
+<!ENTITY forOriginatingSiteOnly.accesskey  "W">
