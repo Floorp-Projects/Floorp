@@ -2352,21 +2352,21 @@ void htmlHeader(STRequest* inRequest, const char* aTitle)
                "</head>\n"
                "<body>\n"
                "<div class=spacetrace-header>\n"
-               "<table class=main>"
-               "<tr>"
-               "<td class=\"category-title header-text\">Category: <span class=\"current-category\">%s</span></td>\n"
-               , aTitle,
+               "<div class=navigate>\n"
+               "<span class=\"category-title header-text\">Category:</span>\n"
+               "<span class=\"current-category\">%s</span>\n",
+               aTitle,
                inRequest->mOptions.mCategoryName);
 
-    PR_fprintf(inRequest->mFD,"<td class=\"header-item\">");
+    PR_fprintf(inRequest->mFD,"<span class=\"header-item\">");
     htmlAnchor(inRequest, "index.html", "Index", NULL, "header-menuitem", &inRequest->mOptions);
-    PR_fprintf(inRequest->mFD,"</td>\n");
+    PR_fprintf(inRequest->mFD,"</span>\n");
 
-    PR_fprintf(inRequest->mFD,"<td class=\"header-item\">");
+    PR_fprintf(inRequest->mFD,"<span class=\"header-item\">");
     htmlAnchor(inRequest, "options.html", "Options", NULL, "header-menuitem", &inRequest->mOptions);
-    PR_fprintf(inRequest->mFD,"</td>\n");
+    PR_fprintf(inRequest->mFD,"</span>\n");
 
-    PR_fprintf(inRequest->mFD,"</tr></table>\n");
+    PR_fprintf(inRequest->mFD,"</div>\n");
 
     PR_fprintf(inRequest->mFD, "</div>\n<div class=\"header-separator\"></div>\n");
 }
@@ -2686,7 +2686,7 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
             STAllocation* current = NULL;
 
             PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-            PR_fprintf(inRequest->mFD, "<tr>\n");
+            PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
             PR_fprintf(inRequest->mFD, "<th>Rank</th>\n");
             PR_fprintf(inRequest->mFD, "<th>Index</th>\n");
             PR_fprintf(inRequest->mFD, "<th>Byte Size</th>\n");
@@ -2799,7 +2799,7 @@ int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
         STAllocation* current = NULL;
 
         PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-        PR_fprintf(inRequest->mFD, "<tr>\n");
+        PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
         PR_fprintf(inRequest->mFD, "<th>Rank</th>\n");
         PR_fprintf(inRequest->mFD, "<th>Index</th>\n");
         PR_fprintf(inRequest->mFD, "<th>Byte Size</th>\n");
@@ -2944,15 +2944,16 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
                     {
                         headerDisplayed = __LINE__;
 
-                        PR_fprintf(inRequest->mFD, "<table  class=\"data\">\n");
-                        PR_fprintf(inRequest->mFD, "<tr>\n");
-                        PR_fprintf(inRequest->mFD, "<th class=\"callsite\">Callsite</th>\n");
-                        PR_fprintf(inRequest->mFD, "<th>Composite Byte Size</th>\n");
-                        PR_fprintf(inRequest->mFD, "<th>Composite Seconds</th>\n");
-                        PR_fprintf(inRequest->mFD, "<th>Composite Weight</th>\n");
-                        PR_fprintf(inRequest->mFD, "<th>Heap Object Count</th>\n");
-                        PR_fprintf(inRequest->mFD, "<th>Composite Heap Operation Seconds</th>\n");
-                        PR_fprintf(inRequest->mFD, "</tr>\n");
+                        PR_fprintf(inRequest->mFD,
+                                   "<table  class=\"data\">\n"
+                                   "<tr class=\"row-header\">\n"
+                                   "<th class=\"callsite\">Callsite</th>\n"
+                                   "<th><abbr title=\"Composite Size\">C. Size</abbr></th>\n"
+                                   "<th><abbr title=\"Composite Seconds\">C. Seconds</abbr></th>\n"
+                                   "<th><abbr title=\"Composite Weight\">C. Weight</abbr></th>\n"
+                                   "<th><abbr title=\"Heap Object Count\">H.O. Count</abbr></th>\n"
+                                   "<th><abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr></th>\n"
+                                   "</tr>\n");
                     }
 
                     /*
@@ -3067,7 +3068,7 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
 
         PR_fprintf(inRequest->mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
 
-        PR_fprintf(inRequest->mFD, "<table class=\"data-header\">\n");
+        PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
         PR_fprintf(inRequest->mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
         PR_fprintf(inRequest->mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
         PR_fprintf(inRequest->mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
@@ -3362,17 +3363,17 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
                 {
                     headerDisplayed = __LINE__;
 
-                    PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
-
-                    PR_fprintf(inRequest->mFD, "<tr>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Rank</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th class=\"callsite\">Callsite</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Composite Size</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Composite Seconds</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Composite Weight</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Heap Object Count</th>\n");
-                    PR_fprintf(inRequest->mFD, "<th>Heap Operation Seconds</th>\n");
-                    PR_fprintf(inRequest->mFD, "</tr>\n");
+                    PR_fprintf(inRequest->mFD,
+                               "<table class=\"data\">\n"
+                               "<tr class=\"row-header\">\n"
+                               "<th>Rank</th>\n"
+                               "<th class=\"callsite\">Callsite</th>\n"
+                               "<th><abbr title=\"Composite Size\">C. Size</abbr></th>\n"
+                               "<th><abbr title=\"Composite Seconds\">C. Seconds</abbr></th>\n"
+                               "<th><abbr title=\"Composite Weight\">C. Weight</abbr></th>\n"
+                               "<th><abbr title=\"Heap Object Count\">H.O. Count</abbr></th>\n"
+                               "<th><abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr></th>\n"
+                               "</tr>\n");
                 }
 
                 displayed++;
@@ -3480,7 +3481,7 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
             PR_fprintf(inRequest->mFD, "<b>%s</b>+%u(%u) Callsite Details:<p>\n", tmmethodnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
         }
 
-        PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
+        PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
         PR_fprintf(inRequest->mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats[inRequest->mContext->mIndex].mSize);
         PR_fprintf(inRequest->mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats[inRequest->mContext->mIndex].mTimeval64));
         PR_fprintf(inRequest->mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats[inRequest->mContext->mIndex].mWeight64);
@@ -5659,7 +5660,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.40 2003/04/17 07:36:28 alecf%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.41 2003/04/21 07:26:05 alecf%netscape.com Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {

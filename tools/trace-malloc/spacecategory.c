@@ -921,7 +921,7 @@ int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth)
 {
     PR_fprintf(inRequest->mFD,
                "<table class=\"category-list data\">\n"
-               " <tr>\n"
+               " <tr class=\"row-header\">\n"
                "  <th>Category</th>\n"
                "  <th>Composite Byte Size</th>\n"
                "  <th>%% of Total Size</th>\n"
