@@ -97,7 +97,14 @@ sub FetchSQLData {
         undef $_fetchahead;
         return @result;
     }
-    return $_current_sth->fetchrow_array;
+
+    # This is really really ugly, but its what we get for not doing
+    # error checking for 5 years. See bug 189446.
+    my @ret;
+    eval {
+        @ret = $_current_sth->fetchrow_array;
+    };
+    return @ret;
 }
 
 sub FetchOneColumn {
