@@ -369,6 +369,7 @@ private:
 #ifdef NEW_PLUGIN_STREAM_API
   nsIPluginStreamListener *mPStreamListener;
   nsPluginStreamInfo	  *mPluginStreamInfo;
+  PRBool				  mSetUpListener;
 #else
   nsPluginStreamPeer      *mPeer;
   nsIPluginStream         *mStream;
@@ -384,7 +385,7 @@ private:
   PRUint32                mBufSize;
   nsIPluginHost           *mHost;
   PRBool                  mGotProgress;
-  PRBool				              mOnStartBinding;
+  PRBool				  mOnStartBinding;
 
 #ifdef USE_CACHE
   nsCacheObject*		  mCachedFile;
@@ -404,6 +405,7 @@ nsPluginStreamListenerPeer :: nsPluginStreamListenerPeer()
 #ifdef NEW_PLUGIN_STREAM_API
   mPStreamListener = nsnull;
   mPluginStreamInfo = nsnull;
+  mSetUpListener = PR_FALSE;
 #else
   mPeer = nsnull;
   mStream = nsnull;
@@ -677,7 +679,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStartBinding(nsIURL* aURL, const c
 #ifdef NEW_PLUGIN_STREAM_API
   // only set up the stream listener if we have both the mimetype and
   // have mLength set (as indicated by the mGotProgress bool)
-  if(mGotProgress == PR_TRUE)
+  if(mGotProgress == PR_TRUE && mSetUpListener == PR_FALSE)
 	   rv = SetUpStreamListener(aURL);
 #else
   if ((PR_TRUE == mGotProgress) && (nsnull == mPeer) && (nsnull != mInstance))
@@ -697,7 +699,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnProgress(nsIURL* aURL, PRUint32 aP
 
   mPluginStreamInfo->SetLength(aProgressMax);
   // if OnStartBinding already got called, 
-  if(mOnStartBinding == PR_TRUE)
+  if(mOnStartBinding == PR_TRUE && mSetUpListener == PR_FALSE)
 	rv = SetUpStreamListener(aURL);
 #else
 
@@ -825,8 +827,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult
 #ifdef NEW_PLUGIN_STREAM_API
 			const char* urlString;
 			aURL->GetSpec(&urlString);
-   if (mPStreamListener)
-			 mPStreamListener->OnFileAvailable(urlString, pathAndFilename);
+			if (mPStreamListener)
+			  mPStreamListener->OnFileAvailable(urlString, pathAndFilename);
 #else
 			mStream->AsFile(pathAndFilename);
 #endif // NEW_PLUGIN_STREAM_API
@@ -856,8 +858,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult
 #ifdef NEW_PLUGIN_STREAM_API
 			const char* urlString;
 			aURL->GetSpec(&urlString);
-   if (mPStreamListener)
-			 mPStreamListener->OnFileAvailable(urlString, buf);
+			if (mPStreamListener)
+			  mPStreamListener->OnFileAvailable(urlString, buf);
 #else
 			mStream->AsFile(buf);
 #endif // NEW_PLUGIN_STREAM_API
@@ -868,11 +870,11 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStopBinding(nsIURL* aURL, nsresult
 #ifdef NEW_PLUGIN_STREAM_API
 	const char* url;
 	aURL->GetSpec(&url);
- if (mPStreamListener)
- {
+	if (mPStreamListener)
+	{
 	  mPStreamListener->OnStopBinding(url, aStatus, (nsIPluginStreamInfo*)mPluginStreamInfo);
 	  mPStreamListener->OnNotify(url, aStatus);
- }
+	}
 #else
     nsIPluginInstance *instance = nsnull;
 
@@ -965,7 +967,7 @@ nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURL* aURL)
 
 nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURL* aURL)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // If we don't yet have a stream listener, we need to get one from the plugin.
   // NOTE: this should only happen when a stream was NOT created with GetURL or
@@ -979,6 +981,8 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIURL* aURL)
 
   if(mPStreamListener == nsnull)
     return NS_ERROR_NULL_POINTER;
+  
+  mSetUpListener = PR_TRUE;
 
   mPStreamListener->GetStreamType(&mStreamType);
   if ((mStreamType == nsPluginStreamType_AsFile) ||
@@ -1739,7 +1743,7 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
       PL_strcat(path, plugins->mName);
 
 	  // load the plugin
-      plugins->mLibrary = PR_LoadLibrary(path);
+      plugins->mLibrary = LoadPluginLibrary(mPluginPath, path);
     }
 
     if (nsnull != plugins->mLibrary)
@@ -1792,7 +1796,7 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
       }
     }
     else
-      return NS_ERROR_UNEXPECTED; // PR_LoadLibrary failure
+      return NS_ERROR_UNEXPECTED; // LoadPluginLibrary failure
 
     return NS_OK;
   }
@@ -1904,7 +1908,7 @@ NS_IMETHODIMP nsPluginHostImpl :: LoadPlugins(void)
           PL_strcpy(path, mPluginPath);
           PL_strcat(path, dent->name);
 
-          plugin = PR_LoadLibrary(path);
+          plugin = LoadPluginLibrary(mPluginPath, path);
 
           if (NULL != plugin)
           {
@@ -2168,7 +2172,33 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
 
 // private methods
 
+PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const char* pluginPath, const char* path)
+{
+#ifdef XP_PC
+	BOOL restoreOrigDir = FALSE;
+	char aOrigDir[MAX_PATH + 1];
+	DWORD dwCheck = ::GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
+	PR_ASSERT(dwCheck <= MAX_PATH + 1);
 
+	if (dwCheck <= MAX_PATH + 1)
+		{
+		restoreOrigDir = ::SetCurrentDirectory(pluginPath);
+		PR_ASSERT(restoreOrigDir);
+		}
+
+	PRLibrary* plugin = PR_LoadLibrary(path);
+
+	if (restoreOrigDir)
+		{
+		BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
+		PR_ASSERT(bCheck);
+		}
+
+	return plugin;
+#else
+	return NULL;
+#endif
+}
 
 /* Called by GetURL and PostURL */
 

@@ -211,6 +211,8 @@ private:
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
+  PRLibrary* LoadPluginLibrary(const char* pluginPath, const char* path);
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   nsIMalloc   *mMalloc;
