@@ -38,8 +38,11 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
 		composeAppCore = new ComposeAppCore();
 		if (composeAppCore)
 		{
-			var args = "name=" + composeAppCoreName + ",editorType=html";
 			composeAppCore.Init(composeAppCoreName);
+			//argument:
+			//	name=<name of the appcore>
+			//	editorType=[default | html | text]			; default means use the prefs value send_html
+			var args = "name=" + composeAppCoreName + ",editorType=default";
 			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, msgAppCore, type);
 			dump("Created a compose appcore from Messenger, " + args);
 		}
@@ -64,7 +67,6 @@ function GetNewMessages()
 		var appCore = FindMsgAppCore();
 		if (appCore != null) {
 			appCore.SetWindow(window);
-
 			appCore.GetNewMessages(folderTree.database, selectedFolder);
 		}
 	}
