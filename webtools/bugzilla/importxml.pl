@@ -581,7 +581,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     my $qa_contact;
     if ( (defined $bug_fields{'qa_contact'}) &&
          ($qa_contact  = DBname_to_id($bug_fields{'qa_contact'})) ){
-      push (@values, SqlQuote($qa_contact));
+      push (@values, $qa_contact);
       push (@query, "qa_contact");
     } else {
       SendSQL("SELECT initialqacontact FROM components, products " .
@@ -589,7 +589,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
               " AND products.name = " . SqlQuote($product[0]) .
               " AND components.name = " . SqlQuote($component[0]) );
       $qa_contact = FetchOneColumn();
-      push (@values, SqlQuote(DBname_to_id($qa_contact)) );
+      push (@values, $qa_contact);
       push (@query, "qa_contact");
       $err .= "Setting qa contact to the default for this product.\n";
       $err .= "   This bug either had no qa contact or an invalid one.\n";
