@@ -110,6 +110,7 @@ nsHttpHandler::nsHttpHandler()
     , mMaxConnections(24)
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
+    , mMaxPersistentConnectionsPerProxy(4)
     , mLastUniqueID(NowInSeconds())
     , mSessionStartTime(0)
     , mActiveConnections(0)
@@ -845,10 +846,14 @@ nsHttpHandler::AtActiveConnectionLimit(nsHttpConnectionInfo *ci, PRUint8 caps)
     LOG(("   total-count=%u, persistent-count=%u\n",
         PRUint32(totalCount), PRUint32(persistentCount)));
 
+    PRUint8 maxPersistentConnections =
+        ci->UsingHttpProxy() ? mMaxPersistentConnectionsPerProxy
+                             : mMaxPersistentConnectionsPerServer;
+
     // use >= just to be safe
     return (totalCount >= mMaxConnectionsPerServer) ||
                ((caps & NS_HTTP_ALLOW_KEEPALIVE) &&
-                (persistentCount >= mMaxPersistentConnectionsPerServer));
+                (persistentCount >= maxPersistentConnections));
 }
 
 void
@@ -1145,6 +1150,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxPersistentConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-proxy"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-proxy"), &val);
+        if (NS_SUCCEEDED(rv))
+            mMaxPersistentConnectionsPerProxy = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
