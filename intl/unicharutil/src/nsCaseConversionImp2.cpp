@@ -86,6 +86,7 @@ private:
 
 nsCompressedMap::nsCompressedMap(PRUnichar *aTable, PRUint32 aSize)
 {
+   MOZ_COUNT_CTOR(nsCompressedMap);
    mTable = aTable;
    mSize = aSize;
    mLastBase = 0;
@@ -96,6 +97,7 @@ nsCompressedMap::nsCompressedMap(PRUnichar *aTable, PRUint32 aSize)
 
 nsCompressedMap::~nsCompressedMap()
 {
+   MOZ_COUNT_DTOR(nsCompressedMap);
    delete[] mCache;
 }
 
