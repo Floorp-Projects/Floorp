@@ -888,7 +888,14 @@ endif
 # moving them to the appropriate places.
 
 ifneq ($(XPIDLSRCS),)
-ifneq ($(MODULE),) # we need $(MODULE) to make $(MODULE).xpt
+ifeq ($(MODULE),) # we need $(MODULE) to make $(MODULE).xpt
+export:: FORCE
+	@echo
+	@echo "Error processing XPIDLSRCS:"
+	@echo "Please define MODULE when defining XPIDLSRCS,"
+	@echo "so we have a module name to use when creating MODULE.xpt."
+	@echo; sleep 2; false
+else
 
 # export .idl files to $(XPDIST)/idl
 $(XPDIST)/idl::
@@ -897,13 +904,15 @@ $(XPDIST)/idl::
 export:: $(XPIDLSRCS) $(XPDIST)/idl
 	$(INSTALL) -m 444 $^
 
-# generate .h files from into $(XPIDL_GEN_DIR), then export to $(XPDIST)/include
+# generate .h files from into $(XPIDL_GEN_DIR), then export to $(XPDIST)/include;
+# warn against overriding existing .h file.
 $(XPIDL_GEN_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-# XXX add warning here for overriding existing .h file
 $(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
-	$(IDL_COMPILE) -m header -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+	$(XPIDL_COMPILE) -m header -w -I $(XPDIST)/idl -o $(XPIDL_GEN_DIR)/$* $<
+	@if test -e $(srcdir)/$*.h; \
+	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; fi
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
 	$(INSTALL) -m 444 $^
