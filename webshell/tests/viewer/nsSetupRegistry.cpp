@@ -68,7 +68,11 @@
     #define PREF_DLL   "xppref32.dll"
     #define PARSER_DLL "raptorhtmlpars.dll"
     #define DOM_DLL    "jsdom.dll"
+#ifdef NECKO
+    #define NECKO_DLL "necko.dll"
+#else
     #define NETLIB_DLL "netlib.dll"
+#endif // NECKO
     #define PLUGIN_DLL "raptorplugin.dll"
     #define CAPS_DLL   "caps.dll"
     #define LIVECONNECT_DLL    "jsj3250.dll"
@@ -81,7 +85,11 @@
     #define PREF_DLL        "PREF_DLL"
     #define PARSER_DLL    "PARSER_DLL"
     #define DOM_DLL        "DOM_DLL"
+#ifdef NECKO
+    #define NECKO_DLL "NECKO_DLL"
+#else
     #define NETLIB_DLL    "NETLIB_DLL"
+#endif // NECKO
     #define PLUGIN_DLL    "PLUGIN_DLL"
     #define CAPS_DLL    "CAPS_DLL"
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
@@ -102,7 +110,11 @@
     #define PREF_DLL   "libpref"MOZ_DLL_SUFFIX
     #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
+#ifdef NECKO
+    #define NECKO_DLL "libnecko"MOZ_DLL_SUFFIX
+#else
     #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#endif // NECKO
     #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
     #define LIVECONNECT_DLL "libliveconnect"MOZ_DLL_SUFFIX
@@ -262,7 +274,7 @@ NS_SetupRegistry()
 #ifndef NECKO
   nsComponentManager::RegisterComponentLib(kCNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 #else
-  nsComponentManager::RegisterComponentLib(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kIOServiceCID, NULL, NULL, NECKO_DLL, PR_FALSE, PR_FALSE);
 #endif // NECKO
 
   // PLUGIN
