@@ -213,7 +213,7 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       }                      
       else if (last == TSC_KSSA) {                      
         if (ch == UNI_VIRAMA) {
-          *dest++ = TSC_KSSA_DEAD;
+          *dest++ = (char) TSC_KSSA_DEAD;
           mBuffer = 0;                  
           ++src;                  
           continue;                  
@@ -246,14 +246,14 @@ nsUnicodeToTSCII::Convert(const PRUnichar * aSrc, PRInt32 * aSrcLength,
       else {
         NS_ASSERTION(last == 0xc38a, "No other value can be buffered");
         if (ch == UNI_VOWELSIGN_II) {                      
-          *dest++ = TSC_SRII_LIGA; 
+          *dest++ = (char) TSC_SRII_LIGA;
           mBuffer = 0;                  
           ++src;                  
           continue;                  
         }                      
         else {
           // put back TSC_SA_DEAD and TSC_RA
-          *dest++ = TSC_SA_DEAD;
+          *dest++ = (char) TSC_SA_DEAD;
           mBuffer = TSC_RA;
           ++src;                  
           continue;                  

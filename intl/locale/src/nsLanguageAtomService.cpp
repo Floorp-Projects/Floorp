@@ -126,8 +126,6 @@ nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
 already_AddRefed<nsIAtom>
 nsLanguageAtomService::LookupCharSet(const char *aCharSet, nsresult *aError)
 {
-  nsresult res;
-
   if (!mCharSets) {
     mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
     if (!mCharSets) {
