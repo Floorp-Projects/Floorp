@@ -554,10 +554,7 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
 {
     JSObject *parent;
 
-    if (thisp &&
-        !(OBJ_GET_CLASS(cx, thisp) == &js_CallClass &&
-          JS_GetPrivate(cx, thisp) != NULL))
-    {
+    if (thisp && OBJ_GET_CLASS(cx, thisp) != &js_CallClass) {
         /* Some objects (e.g., With) delegate 'this' to another object. */
         thisp = OBJ_THIS_OBJECT(cx, thisp);
         if (!thisp)
