@@ -91,7 +91,7 @@ hwaara@chello.se
 -->
   <box orient="horizontal" autostretch="never">
     <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"
-     oncommand="setupBiffUI(true)"/>
+     oncommand="setupBiffUI()"/>
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
     <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;"/>
   </box>

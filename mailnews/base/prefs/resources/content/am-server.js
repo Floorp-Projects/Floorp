@@ -18,6 +18,9 @@
  * Rights Reserved.
  * 
  * Contributors:
+ * alecf@netscape.com
+ * sspitzer@netscape.com
+ * racham@netscape.com
  * hwaara@chello.se
  */
 
@@ -28,7 +31,7 @@ function onInit()
     stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
     initServerType();
 
-    setupBiffUI(false);
+    setupBiffUI();
 }
 
 function onPreInit(account, accountValues)
@@ -178,27 +181,14 @@ function secureSelect() {
         document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
 }
 
-function setupBiffUI(fromOnCommand)
+function setupBiffUI()
 { 
     var parentCheckBox = document.getElementById('server.doBiff');
     var checkBox = document.getElementById('server.downloadOnBiff');
     var textField = document.getElementById('server.biffMinutes');
     var textLabel = document.getElementById('biffEnd');
 
-    var checked = parentCheckBox.getAttribute("checked");
-
-    if (checked == "true") {
-        checked = true;
-    }
-    else {
-        checked = false;
-    }
-
-    // if we are called from oncommand, reverse this, since the
-    // checked value is what the checkbox was before we clicked on it
-    if (fromOnCommand) {
-        checked = !checked;
-    }
+    var checked = parentCheckBox.checked;
 
     if (checked) {
       checkBox.removeAttribute("disabled");
