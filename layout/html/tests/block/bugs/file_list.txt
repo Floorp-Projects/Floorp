@@ -112,3 +112,6 @@ file:///s:/mozilla/layout/html/tests/block/bugs/43882-13.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-14.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-15.html
 file:///s:/mozilla/layout/html/tests/block/bugs/43882-16.html
+file:///s:/mozilla/layout/html/tests/block/bugs/44264-1.html
+file:///s:/mozilla/layout/html/tests/block/bugs/44264-2.html
+file:///s:/mozilla/layout/html/tests/block/bugs/44264-3.html
