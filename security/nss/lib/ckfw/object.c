@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.4 $ $Date: 2000/05/16 01:54:45 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.5 $ $Date: 2001/08/23 00:00:05 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -603,7 +603,7 @@ nssCKFWObject_GetAttribute
 )
 {
   NSSItem *rv = (NSSItem *)NULL;
-  NSSItem *mdItem;
+  const NSSItem *mdItem;
 
 #ifdef NSSDEBUG
   if( (CK_RV *)NULL == pError ) {
