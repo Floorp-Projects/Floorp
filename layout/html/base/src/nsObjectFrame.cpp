@@ -998,6 +998,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           // Create an absolute URL
           rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
         }
+        else
+          fullURL = baseURL;
+
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
                                pluginHost, "application/x-java-vm", fullURL);
       } else { // traditional plugin
