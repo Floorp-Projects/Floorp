@@ -29,7 +29,7 @@ class nsIOutputStream;
 class nsIRDFXMLSource : public nsISupports
 {
 public:
-    NS_IMETHOD Serialize(nsIOutputStream* stream) = 0;
+    NS_IMETHOD Serialize(nsIOutputStream* aStream) = 0;
 };
 
 #endif // nsIRDFXMLSource_h__

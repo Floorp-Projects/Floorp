@@ -32,25 +32,19 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
-                           nsIURL* aURL,
-                           nsINameSpaceManager* aNameSpaceManager)
+NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult)
 {
     NS_PRECONDITION(aResult, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    nsRDFSimpleContentSink* it;
-    NS_NEWXPCOM(it, nsRDFSimpleContentSink);
-    if (! it)
+    nsRDFSimpleContentSink* sink = new nsRDFSimpleContentSink();
+    if (! sink)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = it->Init(aURL, aNameSpaceManager);
-    if (NS_FAILED(rv)) {
-        delete it;
-        return rv;
-    }
-    return it->QueryInterface(kIRDFContentSinkIID, (void **)aResult);
+    *aResult = sink;
+    NS_ADDREF(sink);
+    return NS_OK;
 }
 
 

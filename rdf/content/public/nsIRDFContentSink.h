@@ -20,9 +20,11 @@
 #define nsIRDFContentSink_h___
 
 #include "nsIXMLContentSink.h"
+class nsIDocument;
 class nsIRDFDataSource;
 class nsINameSpaceManager;
 class nsIURL;
+class nsIWebShell;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
@@ -67,9 +69,7 @@ NS_NewRDFDocumentContentSink(nsIRDFContentSink** aResult,
  * document, say, to create a stand-alone in-memory graph.
  */
 nsresult
-NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
-                           nsIURL* aURL,
-                           nsINameSpaceManager* aNameSpaceManager);
+NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult);
 
 
 #endif // nsIRDFContentSink_h___

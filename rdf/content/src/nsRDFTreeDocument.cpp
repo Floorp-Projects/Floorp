@@ -21,7 +21,7 @@
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
@@ -354,10 +354,10 @@ RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
     nsIRDFResource* NC_Title  = nsnull;
     nsIRDFAssertionCursor* cursor  = nsnull;
 
-    if (NS_FAILED(rv = mResourceMgr->GetResource(kURINC_Column, &NC_Column)))
+    if (NS_FAILED(rv = mRDFService->GetResource(kURINC_Column, &NC_Column)))
         goto done;
 
-    if (NS_FAILED(rv = mResourceMgr->GetResource(kURINC_Title, &NC_Title)))
+    if (NS_FAILED(rv = mRDFService->GetResource(kURINC_Title, &NC_Title)))
         goto done;
 
     if (NS_FAILED(rv = NS_NewContainerCursor(mDB, columns, &cursor)))
@@ -495,7 +495,7 @@ RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
 {
     nsresult rv;
     
-    if (rdf_IsContainer(mResourceMgr, mDB, columns)) {
+    if (rdf_IsContainer(mRDFService, mDB, columns)) {
         rv = AddColumnsFromContainer(parent, columns);
     }
     else {
@@ -568,7 +568,7 @@ RDFTreeDocumentImpl::AddChild(nsIRDFContent* parent,
             NS_RELEASE(resource);
             return rv;
         }
-        else if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, resource)) {
+        else if (IsTreeProperty(property) || rdf_IsContainer(mRDFService, mDB, resource)) {
             rv = AddTreeChild(parent, property, resource);
 
             NS_RELEASE(resource);

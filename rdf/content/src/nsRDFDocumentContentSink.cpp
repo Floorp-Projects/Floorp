@@ -27,7 +27,7 @@
 #include "nsIRDFContent.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
 #include "nsLayoutCID.h"
@@ -399,7 +399,7 @@ nsRDFDocumentContentSink::OpenObject(const nsIParserNode& aNode)
             return rv;
 
         nsIRDFResource* resource;
-        if (NS_FAILED(rv = mResourceMgr->GetUnicodeResource(uri, &resource)))
+        if (NS_FAILED(rv = mRDFService->GetUnicodeResource(uri, &resource)))
             return rv;
 
         nsIRDFDocument* rdfDoc;

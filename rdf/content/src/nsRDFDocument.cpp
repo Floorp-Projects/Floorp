@@ -28,7 +28,7 @@
 #include "nsIRDFDataBase.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIPresShell.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
@@ -66,23 +66,23 @@ static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFDocumentIID,        NS_IRDFDOCUMENT_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextContentIID,        NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,        NS_IXMLDOCUMENT_IID);
 
-static NS_DEFINE_CID(kHTMLStyleSheetCID,      NS_HTMLSTYLESHEET_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID,    NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kParserCID,              NS_PARSER_IID); // XXX
-static NS_DEFINE_CID(kPresShellCID,           NS_PRESSHELL_CID);
-static NS_DEFINE_CID(kRDFMemoryDataSourceCID, NS_RDFMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
-static NS_DEFINE_CID(kRDFSimpleDataBaseCID,   NS_RDFSIMPLEDATABASE_CID);
-static NS_DEFINE_CID(kRangeListCID,           NS_RANGELIST_CID);
-static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID,       NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFDataBaseCID,           NS_RDFDATABASE_CID);
+static NS_DEFINE_CID(kRangeListCID,             NS_RANGELIST_CID);
+static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -99,7 +99,7 @@ nsRDFDocument::nsRDFDocument()
       mAttrStyleSheet(nsnull),
       mParser(nsnull),
       mDB(nsnull),
-      mResourceMgr(nsnull),
+      mRDFService(nsnull),
       mTreeProperties(nsnull)
 {
     NS_INIT_REFCNT();
@@ -120,9 +120,9 @@ nsRDFDocument::~nsRDFDocument()
 {
     NS_IF_RELEASE(mParser);
 
-    if (mResourceMgr) {
-        nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
-        mResourceMgr = nsnull;
+    if (mRDFService) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
+        mRDFService = nsnull;
     }
 
     // mParentDocument is never refcounted
@@ -230,7 +230,7 @@ nsRDFDocument::StartDocumentLoad(nsIURL *aURL,
 
     NS_RELEASE(webShell);
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFMemoryDataSourceCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &ds))) {
@@ -1033,15 +1033,15 @@ nsRDFDocument::Init(void)
     if (NS_FAILED(rv))
         return rv;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleDataBaseCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFDataBaseCID,
                                                     nsnull,
                                                     kIRDFDataBaseIID,
                                                     (void**) &mDB)))
         return rv;
 
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mResourceMgr)))
+    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
+                                                    kIRDFServiceIID,
+                                                    (nsISupports**) &mRDFService)))
         return rv;
 
     return NS_OK;
@@ -1087,8 +1087,8 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
     if (! mDB)
         return NS_ERROR_NOT_INITIALIZED;
 
-    NS_ASSERTION(mResourceMgr, "not initialized");
-    if (! mResourceMgr)
+    NS_ASSERTION(mRDFService, "not initialized");
+    if (! mRDFService)
         return NS_ERROR_NOT_INITIALIZED;
 
 
@@ -1105,7 +1105,7 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
     while (NS_SUCCEEDED(rv = properties->Advance())) {
         nsIRDFResource* property = nsnull;
 
-        if (NS_FAILED(rv = properties->GetPredicate(&property)))
+        if (NS_FAILED(rv = properties->GetValue((nsIRDFNode**)&property)))
             break;
 
         const char* s;
@@ -1126,7 +1126,7 @@ nsRDFDocument::CreateChildren(nsIRDFContent* element)
 
         while (NS_SUCCEEDED(rv = assertions->Advance())) {
             nsIRDFNode* value;
-            if (NS_SUCCEEDED(rv = assertions->GetObject(&value))) {
+            if (NS_SUCCEEDED(rv = assertions->GetValue((nsIRDFNode**)&value))) {
                 // At this point, the specific nsRDFDocument
                 // implementations will create an appropriate child
                 // element (or elements).
@@ -1230,7 +1230,7 @@ nsRDFDocument::IsTreeProperty(const nsIRDFResource* property) const
     const char* p;
     property->GetValue(&p);
     nsAutoString s(p);
-    if (s.Equals("http://home.netscape.com/NC-rdf#Bookmark") ||
+    if (s.Equals("http://home.netscape.com/NC-rdf#child") ||
         s.Equals("http://home.netscape.com/NC-rdf#Folder")) {
         return PR_TRUE;
     }

@@ -29,7 +29,7 @@
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFResourceManager.h"
+#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsISupportsArray.h"
@@ -175,7 +175,7 @@ RDFHTMLDocumentImpl::AddChild(nsIRDFContent* parent,
 
     nsIRDFResource* valueResource;
     if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &valueResource))) {
-        if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, valueResource)) {
+        if (IsTreeProperty(property) || rdf_IsContainer(mRDFService, mDB, valueResource)) {
             rv = AddTreeChild(parent, tag, property, valueResource);
             NS_RELEASE(valueResource);
             return rv;

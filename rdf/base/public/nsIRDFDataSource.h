@@ -39,7 +39,7 @@ class nsIRDFResource;
 
 class nsIRDFDataSource : public nsISupports {
 public:
-    // XXX I didn't make any of these methods "const" because it's
+    // XXX I didn't make some of these methods "const" because it's
     // probably pretty likely that many data sources will just make
     // stuff up at runtime to answer queries.
 
@@ -49,6 +49,11 @@ public:
      * data source registry.
      */
     NS_IMETHOD Init(const char* uri) = 0;
+
+    /**
+     * Retrieve the URI of the data source.
+     */
+    NS_IMETHOD GetURI(const char* *uri) const = 0;
 
     /**
      * Find an RDF resource that points to a given node over the

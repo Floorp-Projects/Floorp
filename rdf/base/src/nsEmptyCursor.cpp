@@ -81,6 +81,11 @@ public:
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
         return NS_ERROR_UNEXPECTED;
     }
+
+    NS_IMETHOD GetValue(nsIRDFNode** aValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
 };
 
 nsresult
@@ -143,6 +148,11 @@ public:
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
         return NS_ERROR_UNEXPECTED;
     }
+
+    NS_IMETHOD GetValue(nsIRDFNode** aValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
 };
 
 nsresult
@@ -205,6 +215,11 @@ public:
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) {
         return NS_ERROR_UNEXPECTED;
     }
+
+    NS_IMETHOD GetValue(nsIRDFNode** aValue) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
 };
 
 nsresult
