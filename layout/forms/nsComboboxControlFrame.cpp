@@ -2540,7 +2540,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
       PRBool clipEmpty;
       nsRect clipRect;
       mDisplayFrame->GetRect(clipRect);
-      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipEmpty);
+      aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipEmpty);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, 
                  mDisplayFrame, NS_FRAME_PAINT_LAYER_BACKGROUND);
       PaintChild(aPresContext, aRenderingContext, aDirtyRect, 
