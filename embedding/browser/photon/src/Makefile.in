@@ -44,11 +44,12 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  pref \
 		  windowwatcher \
-		  profdirserviceprovider \
+		  mpfilelocprovider \
 		  webbrowserpersist \
 		  find \
 		  exthandler \
 		  helperAppDlg \
+			profdirserviceprovider \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -63,6 +64,26 @@ CPPSRCS		= \
 		EmbedStream.cpp \
 		PromptService.cpp \
 		nsUnknownContentTypeHandler.cpp
+
+ifdef BUILD_STATIC_LIBS
+# Static build stuff
+DEFINES         += -D_BUILD_STATIC_BIN=1
+CPPSRCS		+= EmbedComponents.cpp
+
+XP_LIBS		+= \
+		$(PNG_LIBS) \
+		$(MNG_LIBS) \
+		$(JPEG_LIBS) \
+		$(ZLIB_LIBS) \
+		$(NULL)
+
+ifdef MOZ_PSM
+XP_LIBS		+= \
+		$(NSS_LIBS) \
+		$(NULL)
+endif
+
+endif
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
@@ -92,3 +113,61 @@ endif
 endif
 
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
+
+ifdef BUILD_STATIC_LIBS
+
+# This is so sick! We'll work backwards from the embedding manifest to
+# produce the set of components that we need to link in to a
+# ``minimal'' embedding harness.
+EMBED_MANIFEST=$(topsrcdir)/embedding/config/basebrowser-qnx
+
+ifdef MOZ_FAT_EMBED
+EMBED_LINK_COMPS=$(FINAL_LINK_COMPS)
+EMBED_LINK_COMP_NAMES=$(FINAL_LINK_COMP_NAMES)
+else
+EMBED_LINK_COMPS=embed-link-comps
+EMBED_LINK_COMP_NAMES=embed-link-comp-names
+endif
+
+# Create a map that we can use to go from library name to component
+# symbol. N.B. that this will break if the $(FINAL_LINK_COMP_NAMES)
+# and $(FINAL_LINK_COMPS) somehow get out-of-sync and aren't in
+# _exactly_ the same order. (Hey, this is a hack!)
+components: $(FINAL_LINK_COMPS) $(FINAL_LINK_COMP_NAMES)
+	cat $(FINAL_LINK_COMPS) $(FINAL_LINK_COMP_NAMES) | sort -k 1,1 > $@
+
+# Compute the embedding libs by extracting them from the embedding
+# manifest.
+#
+# We start by selecting anything that starts with `components/', as
+# these are the component libraries. We print the `first' field to
+# strip off any crap after the library name. Next, we select for files
+# ending with `.so' so we end up with only the libraries. We then rip
+# off the `components/lib' prefix and the `.so' suffix, leaving just
+# the library name. This list is sorted, and joined with the list of
+# components that were actually _built_ to cull out anything that's
+# included in the manifest, but wasn't built.
+embed-link-comps: $(EMBED_MANIFEST) components
+	grep '^components/' $< | \
+		awk '{ print $$1; }' | \
+		grep '\.so$$' | \
+		sed -e 's.^components/lib..' -e 's/\.so//' | \
+		sort | \
+		join -o 1.1 - components > $@
+
+# Compute the symbols we'll need for the ``minimal embedding client''
+# by joining the compoent list with the sorted list of embedding
+# components.
+embed-link-comp-names: embed-link-comps components
+	sort embed-link-comps | join -o 1.1 - components > $@
+	#sort embed-link-comps | join -o 2.2 - components > $@
+
+EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_COMP_NAMES)
+	cat $< | \
+	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(shell cat $(EMBED_LINK_COMP_NAMES)),DECL_NSGETMODULE($(m)))|" | \
+	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_NAMES)),MODULE($(m)),)|" \
+	> $@
+
+GARBAGE += EmbedComponents.cpp embed-link-comp-names embed-link-comps components
+endif
+

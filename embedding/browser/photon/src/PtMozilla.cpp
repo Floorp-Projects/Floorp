@@ -31,11 +31,15 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 
+// for profiles
+#include <nsProfileDirServiceProvider.h>
+
 #include "nsIDocumentLoaderFactory.h"
 #include "nsILoadGroup.h"
 #include "nsIHistoryEntry.h"
 
 #include "nsIWebBrowserPrint.h"
+#include "nsIPrintOptions.h"
 
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
@@ -44,7 +48,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
-#include "nsProfileDirServiceProvider.h"
 #include "nsIFocusController.h"
 #include <nsIWebBrowserFind.h>
 
@@ -72,7 +75,7 @@
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
 nsresult PR_CALLBACK
-apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+ph_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
 // Macro for converting from nscolor to PtColor_t
@@ -99,7 +102,7 @@ static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
 static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value );
 static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value );
-static void mozilla_set_default_pref( PtWidget_t *widget );
+static void fix_translation_string( char *string );
 
 PtWidgetClass_t *PtCreateMozillaClass( void );
 #ifndef _PHSLIB
@@ -134,9 +137,13 @@ MozSetPreference(PtWidget_t *widget, int type, char *pref, void *data)
 int MozSavePageAs(PtWidget_t *widget, char *fname, int type)
 {
 	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
-	if (!fname || !widget)
-		return (-1);
-	moz->EmbedRef->SaveAs(fname);
+	char dirname[1024];
+
+	if (!fname || !widget) return -1;
+
+	sprintf( dirname, "%s.dir", fname );
+	moz->EmbedRef->SaveAs( fname, dirname );
+
 	return (0);
 }
 
@@ -162,6 +169,9 @@ mozilla_defaults( PtWidget_t *widget )
 	moz->EmbedRef = new EmbedPrivate();
 	moz->EmbedRef->Init(widget);
 	moz->EmbedRef->Setup();
+//JPB
+	moz->disable_new_windows = 0;
+	moz->disable_exception_dlg = 0;
 
 	// widget related
 	basic->flags = Pt_ALL_OUTLINES | Pt_ALL_BEVELS | Pt_FLAT_FILL;
@@ -170,8 +180,6 @@ mozilla_defaults( PtWidget_t *widget )
 			Pt_BOTTOM_ANCHORED_TOP | Pt_RIGHT_ANCHORED_LEFT | Pt_ANCHORS_INVALID;
 
 	cntr->flags |= Pt_CHILD_GETTING_FOCUS;
-
-	mozilla_set_default_pref( widget );
 }
 
 // widget destroy function
@@ -228,15 +236,15 @@ mozilla_unrealized( PtWidget_t *widget )
 }
 
 static PpPrintContext_t *moz_construct_print_context( WWWRequest *pPageInfo ) {
-	PpPrintContext_t *pc;
+	PpPrintContext_t *pc = NULL;
 	int i;
 	char *tmp;
-
 	pc = PpPrintCreatePC();
 
 	i = 0;
 	while( pPageInfo->Print.data[i] == '\0' ) i++;
 	tmp = &pPageInfo->Print.data[i];
+
 
 	PpPrintSetPC( pc, INITIAL_PC, 0, Pp_PC_NAME, ( pPageInfo->Print.name != -1 ) ? &tmp[pPageInfo->Print.name]: NULL);
 
@@ -270,7 +278,6 @@ static PpPrintContext_t *moz_construct_print_context( WWWRequest *pPageInfo ) {
 	tmp = pc->control.tmp_target;
 	pc->control = pPageInfo->Print.control;
 	pc->control.tmp_target = tmp;
-
 	return pc;
 	}
 
@@ -347,8 +354,13 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 			mozilla_set_pref(widget, (char*)argt->len, (char*)argt->value);
 			break;
 
-		case Pt_ARG_MOZ_ENCODING: 
- 			pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2((char*)argt->value).get());
+		case Pt_ARG_MOZ_ENCODING: {
+			char translation[1024];
+			strcpy( translation, (char*)argt->value );
+			fix_translation_string( translation );
+ 			pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2( translation ).get());
+			pref->SavePrefFile( nsnull );
+			}
 			break;
 
 		case Pt_ARG_MOZ_COMMAND:
@@ -393,8 +405,8 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 
 		case Pt_ARG_MOZ_WEB_DATA_URL:
 #if 0
-				moz->MyBrowser->WebBrowserContainer->OpenStream( moz->MyBrowser->WebBrowser, "file://", "text/html" );
-				strcpy( moz->url, (char*)argt->value );
+//				moz->MyBrowser->WebBrowserContainer->OpenStream( moz->MyBrowser->WebBrowser, "file://", "text/html" );
+//				strcpy( moz->url, (char*)argt->value );
 #endif
 				break;
 
@@ -456,7 +468,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 							cbinfo.cbdata = &cb;
 							cb.type = WWW_DATA_BODY;
 							cb.length = 32768;
-							strcpy( cb.url, moz->url );
+							cb.url = moz->url;
 							PtInvokeCallbackList( moz->web_data_req_cb, (PtWidget_t *)moz, &cbinfo);
 							}
 						break;
@@ -475,7 +487,7 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 						cbinfo.cbdata = &cb;
 						cb.type = len ? WWW_DATA_BODY : WWW_DATA_CLOSE;
 						cb.length = 32768;
-						strcpy( cb.url, moz->url );
+						cb.url = moz->url;
 						PtInvokeCallbackList( moz->web_data_req_cb, (PtWidget_t *)moz, &cbinfo);
 						}
 						break;
@@ -555,7 +567,7 @@ mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 
 					nsCAutoString specString;
 					url->GetSpec(specString);
-					strcpy( HistoryReplyBuf[j].url, (char *) specString.get() );
+					REMOVE_WHEN_NEW_PT_WEB_strcpy( HistoryReplyBuf[j].url, (char *) specString.get() );
 				}
 			}
 			break;
@@ -564,11 +576,6 @@ mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 	return (Pt_CONTINUE);
 }
 
-#define VOYAGER_TEXTSIZE0					14
-#define VOYAGER_TEXTSIZE1					16
-#define VOYAGER_TEXTSIZE2					18
-#define VOYAGER_TEXTSIZE3					20
-#define VOYAGER_TEXTSIZE4					24
 
 static void 
 mozilla_set_pref( PtWidget_t *widget, char *option, char *value ) 
@@ -576,6 +583,7 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
 	nsIPref *pref = moz->EmbedRef->GetPrefs();
 	char buffer[1024];
+
 
 	mozilla_get_pref( widget, option, buffer );
 	if( buffer[0] && !strcmp( value, buffer ) ) 
@@ -678,7 +686,9 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 		int n = atoi( value ), moz_value=3;
 		if( n == 0 ) moz_value = 2; /* never */
 		else if( n == 1 ) moz_value = 0; /* once */
-		else moz_value = 1; /* always */
+		else if( n == 2 ) moz_value = 1; /* always */
+
+// mozilla wants: 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 		pref->SetIntPref( "browser.cache.check_doc_frequency", moz_value );
 		}
 	else if( !strcmp( option, "main_cache_dir" ) ) 		; /* not used */
@@ -710,8 +720,21 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	else if( !strcmp( option, "mono_form_font" ) )		; /* not used */
 	else if( !strcmp( option, "form_font" ) )		; /* not used */
 	else if( !strcmp( option, "frame_spacing" ) )		; /* not used */
-	else if( !strcmp( option, "disable_new_windows" ) )		; /* not used */
-	else if( !strcmp( option, "disable_exception_dlg" ) )		; /* not used */
+	else if( !strcmp( option, "disable_new_windows" ) ) /* disable new windows*/
+	{
+		if (strcmp(value, "TRUE") == 0)
+			moz->disable_new_windows = 1;
+		else
+			moz->disable_new_windows = 0;
+	}
+	else if( !strcmp( option, "disable_exception_dlg" ) ) /* disable exception dialogs */ 
+	{
+		if (strcmp(value, "TRUE") == 0)
+			moz->disable_exception_dlg = 1;
+		else
+			moz->disable_exception_dlg = 0;
+	}
+
 	else if( !strcmp( option, "bDisableHighlight" ) )		; /* not used */
 
 /* HTTP cookie options */
@@ -757,41 +780,9 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	else if( !strcmp( option, "Use_Anti_Alias" ) ) 		; /* not used */
 	else if( !strcmp( option, "Use_Explicit_Accept_Headers" ) ) 		; /* not used */
 	else if( !strcmp( option, "Visitation_Horizon" ) ) 		; /* not used */
+
+	pref->SavePrefFile( nsnull );
 	}
-
-
-static void mozilla_set_default_pref( PtWidget_t *widget ) 
-{
-	static int already_set = 0;
-	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
-	nsIPref *pref = moz->EmbedRef->GetPrefs();
-
-	if( already_set ) 
-		return;
-	already_set = 1;
-
-/* HTML Options */
-		pref->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUCS2("#008080").get() );
-		pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2("#0000ff").get() );
-		pref->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2("#000000").get() );
-		pref->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2("#ffffff").get() );
-
-		pref->SetBoolPref( "browser.display.use_document_colors", PR_TRUE );
-		pref->SetBoolPref( "browser.underline_anchors", PR_TRUE );
-		pref->SetIntPref( "font.size.variable.x-western", VOYAGER_TEXTSIZE2 );
-		pref->SetIntPref( "browser.history_expire_days", 4 );
-		pref->SetIntPref( "browser.sessionhistory.max_entries", 50 );
-		pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
-		pref->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );
-		pref->SetIntPref( "browser.cache.disk.capacity", 5000 );
-		pref->SetIntPref( "network.http.connect.timeout", 2400 );
-		pref->SetIntPref( "network.http.max-connections", 4 );
-		pref->SetCharPref( "network.proxy.http_port", "80" );
-		pref->SetCharPref( "network.proxy.ftp_port", "80" );
-		pref->SetCharPref( "network.proxy.gopher_port", "80" );
-	}
-
-
 
 static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
@@ -823,6 +814,14 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		pref->GetBoolPref( "browser.display.use_document_colors", &val );
 		sprintf( value, "%s", val == PR_TRUE ? "FALSE" : "TRUE" );
 		}
+//JPB
+	else if( !strcmp( option, "disable_new_windows" ) ) {
+		sprintf( value, "%s", (moz->disable_new_windows == 1) ? "TRUE" : "FALSE" );
+		}
+	else if( !strcmp( option, "disable_exception_dlg" ) ) {
+		sprintf( value, "%s", (moz->disable_exception_dlg == 1) ? "TRUE" : "FALSE" );
+		}
+//JPB
 	else if( !strcmp( option, "bUnderlineLinks" ) ) {
 		PRBool val;
 		pref->GetBoolPref( "browser.underline_anchors", &val );
@@ -904,7 +903,9 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		if( s ) strcpy( value, s );
 		}
   else if( !strcmp( option, "gopher_proxy_port" ) ) {
-    pref->SetCharPref( "gopher_proxy_port", value );
+		char *s = NULL;
+		pref->CopyCharPref( "gopher_proxy_port", &s );
+		if( s ) strcpy( value, s );
 		}
 
 /* TCP/IP options */
@@ -933,9 +934,11 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
   else if( !strcmp( option, "dcache_verify_policy" ) ) {
 		int n, voyager_value = 0;
 		pref->GetIntPref( "browser.cache.check_doc_frequency", &n );
-		if( n == 0 ) voyager_value = 1;
-		else if( n == 1 ) voyager_value = 2;
-		else if( n == 2 ) voyager_value = 0;
+// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
+		if( n == 0 ) voyager_value = 1; /* voyager: 1 = once per session */
+		else if( n == 1 ) voyager_value = 2; /* voyager: 2 = always */
+		else if( n == 2 ) voyager_value = 0; /* voyager: 0 = never */
+		else voyager_value = 1; /* mapp the when-appropriate/automatically to the once per session */
 		sprintf( value, "%d", voyager_value );
     }
 
@@ -950,6 +953,13 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 		pref->GetIntPref( "browser.sessionhistory.max_entries", &n );
 		sprintf( value, "%d", n );
 		}
+
+	else if( !strcmp( option, "clear_main_cache_on_exit" ) ) {
+		strcpy( value, "FALSE" ); /* even if not used, match this with the default value */
+		}
+	else if( !strcmp( option, "quantize_jpegs" ) ) {
+		strcpy( value, "FALSE" ); /* even if not used, match this with the default value */
+		}
 	else *value = 0;
 
 	}
@@ -958,34 +968,45 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
 static int
 StartupProfile(char *sProfileDir, char *sProfileName)
 {
-  // initialize profiles
-  if (sProfileDir && sProfileName) 
+  	// initialize profiles
+  	if (sProfileDir && sProfileName) 
 	{
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> profileDir;
-    NS_NewNativeLocalFile(nsDependentCString(sProfileDir), PR_TRUE,
-                          getter_AddRefs(profileDir));
-    if (!profileDir)
-      return NS_ERROR_FAILURE;
-    rv = profileDir->AppendNative(nsDependentCString(sProfileName));
-    if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
+		nsresult rv;
+		nsCOMPtr<nsILocalFile> profileDir;
+		PRBool exists = PR_FALSE;
+		PRBool isDir = PR_FALSE;
+		profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+		rv = profileDir->InitWithNativePath(nsDependentCString(sProfileDir));
+		if (NS_FAILED(rv))
+		  	return NS_ERROR_FAILURE;
+		profileDir->Exists(&exists);
+		profileDir->IsDirectory(&isDir);
+		// if it exists and it isn't a directory then give up now.
+		if (!exists) 
+		{
+		  	rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+		  	if NS_FAILED(rv)
+				return NS_ERROR_FAILURE;
+		}
+		else if (exists && !isDir)
+		  	return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsProfileDirServiceProvider> locProvider;
-    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
-    if (!locProvider)
-      return NS_ERROR_FAILURE;
-    
-    // Directory service holds an strong reference to any
-    // provider that is registered with it. Let it hold the
-    // only ref. locProvider won't die when we leave this scope.
-    rv = locProvider->Register();
-    if (NS_FAILED(rv))
-      return rv;
-    rv = locProvider->SetProfileDir(profileDir);
-    if (NS_FAILED(rv))
-      return rv;
-  }
+		nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+		NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+		if (!locProvider)
+		  return NS_ERROR_FAILURE;
+
+		// Directory service holds an strong reference to any
+		// provider that is registered with it. Let it hold the
+		// only ref. locProvider won't die when we leave this scope.
+		rv = locProvider->Register();
+		if (NS_FAILED(rv))
+		  return rv;
+		rv = locProvider->SetProfileDir(profileDir);
+		if (NS_FAILED(rv))
+		  return rv;
+
+  	}
   
 	return NS_OK;
 }
@@ -999,7 +1020,7 @@ StartupEmbedding()
 
 #ifdef _BUILD_STATIC_BIN
   // Initialize XPCOM's module info table
-  NSGetStaticModuleInfo = apprunner_getModuleInfo;
+  NSGetStaticModuleInfo = ph_getModuleInfo;
 #endif
     
     rv = NS_InitEmbedding(nsnull, nsnull);
@@ -1027,11 +1048,16 @@ StartupEmbedding()
 	return (0);
 }
 
+/* the translation string that is passed by voyager ( Pt_ARG_WEB_ENCODING ) ( taken from /usr/photon/translations/charsets ->mime field ) */
+/* is required to be in a different form by the mozilla browser */
+static void fix_translation_string( char *string ) {
+	/* for instance it has to be windows-1252 not Windows-1252 */
+	if( !strncmp( string, "Windows", 7 ) ) *string = 'w';
+	}
+
 // PtMozilla class creation function
 PtWidgetClass_t *PtCreateMozillaClass( void )
 {
-	nsresult rv;
-
 	static const PtResourceRec_t resources[] =
 	{
 		{ Pt_ARG_MOZ_GET_URL,           mozilla_modify, Pt_QUERY_PREVENT },
@@ -1090,7 +1116,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 	if (StartupEmbedding() == -1)
 		return (NULL);
 
-//	Init_nsUnknownContentTypeHandler_Factory( );
+	Init_nsUnknownContentTypeHandler_Factory( );
 
 	nsCOMPtr<nsIFactory> promptFactory;
 	NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));

@@ -72,6 +72,8 @@ PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
 
 nsRenderingContextPh :: nsRenderingContextPh() 
 {
+	NS_INIT_ISUPPORTS();
+	
 	mGC               = nsnull;
 	mTranMatrix          = nsnull;
 	mClipRegion       = nsnull;
@@ -527,11 +529,10 @@ NS_IMETHODIMP nsRenderingContextPh :: GetLineStyle( nsLineStyle &aLineStyle )
 }
 
 
-NS_IMETHODIMP nsRenderingContextPh :: SetFont( const nsFont& aFont, nsIAtom* aLangGroup ) 
+NS_IMETHODIMP nsRenderingContextPh :: SetFont( const nsFont& aFont, nsIAtom* aLangGroup )
 {
 	nsIFontMetrics* newMetrics;
-  nsresult rv = mContext->GetMetricsFor( aFont, aLangGroup, newMetrics );
-
+	nsresult rv = mContext->GetMetricsFor( aFont, aLangGroup, newMetrics );
 	if( NS_SUCCEEDED( rv ) ) {
 		rv = SetFont( newMetrics );
 		NS_RELEASE( newMetrics );
@@ -591,7 +592,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform( nsTransform2D *&aTran
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface ) 
+NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface( const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface ) 
 {
 	if( nsnull == mSurface ) {
 		aSurface = nsnull;
@@ -1064,6 +1065,84 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const PRUnichar* aString, PRUint3
 	return DrawString( p, strlen( p ), aX, aY, aSpacing );
 }
 
+NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY ) 
+{
+	nscoord width, height;
+	
+	// we have to do this here because we are doing a transform below
+	width = NSToCoordRound(mP2T * aImage->GetWidth());
+	height = NSToCoordRound(mP2T * aImage->GetHeight());
+	
+	return DrawImage( aImage, aX, aY, width, height );
+}
+
+NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& aRect ) 
+{
+	return DrawImage( aImage, aRect.x, aRect.y, aRect.width, aRect.height );
+}
+
+NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
+{
+	nscoord x, y, w, h;
+	
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+	mTranMatrix->TransformCoord(&x, &y, &w, &h);
+	return (aImage->Draw(*this, mSurface, x, y, w, h));
+}
+
+NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect ) 
+{
+	nsRect    sr,dr;
+	
+	sr = aSRect;
+	mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	sr.x -= mTranMatrix->GetXTranslationCoord();
+	sr.y -= mTranMatrix->GetYTranslationCoord();
+	
+	dr = aDRect;
+	mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+	
+	return aImage->Draw(*this, mSurface,
+						sr.x, sr.y,
+						sr.width, sr.height,
+						dr.x, dr.y,
+						dr.width, dr.height);
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1, nscoord aWidth,nscoord aHeight ) 
+{
+	mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX1,&aY1);
+	
+	nsRect srcRect (0, 0, aWidth,  aHeight);
+	nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
+	
+	((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextPh::DrawTile( nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset, const nsRect &aTileRect ) 
+{
+	nsRect tileRect( aTileRect );
+	nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
+	mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width, &srcRect.height);
+	mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y, &tileRect.width, &tileRect.height);
+	
+	if( tileRect.width > 0 && tileRect.height > 0 )
+		((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect.width, srcRect.height, tileRect);
+	else
+		NS_ASSERTION(aTileRect.width > 0 && aTileRect.height > 0,
+			   "You can't draw an image with a 0 width or height!");
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits( nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY, const nsRect &aDestBounds, PRUint32 aCopyFlags ) 
 {
 	PhArea_t              darea, sarea;
@@ -1137,12 +1216,10 @@ NS_IMETHODIMP nsRenderingContextPh::GetBoundingMetrics(const PRUnichar*   aStrin
 
 void nsRenderingContextPh::UpdateGC()
 {
-        nscolor acolor = mCurrentColor;
-
 	PgSetGC(mGC);	/* new */
-	PgSetStrokeColor(NS_TO_PH_RGB(acolor));
-	PgSetTextColor(NS_TO_PH_RGB(acolor));
-	PgSetFillColor(NS_TO_PH_RGB(acolor));
+	PgSetStrokeColor(NS_TO_PH_RGB(mCurrentColor));
+	PgSetTextColor(NS_TO_PH_RGB(mCurrentColor));
+	PgSetFillColor(NS_TO_PH_RGB(mCurrentColor));
 	PgSetStrokeDash(mLineStyle, strlen((char *)mLineStyle), 0x10000);
 	
 //	  valuesMask = GdkGCValuesMask(valuesMask | GDK_GC_FUNCTION);

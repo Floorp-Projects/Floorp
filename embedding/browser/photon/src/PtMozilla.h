@@ -29,7 +29,7 @@
 
 #include <photon/PtWebClient.h>
 #include <photon/PpProto.h>
-#include "EmbedPrivate.h"
+
 #if 0
 #include "nsIInputStream.h"
 #include "nsILoadGroup.h"
@@ -85,7 +85,21 @@ extern PtWidgetClassRef_t *PtMozilla;
 #define Pt_CB_MOZ_UNKNOWN						Pt_RESOURCE( 104,  39 )
 #define Pt_CB_MOZ_ERROR							Pt_RESOURCE( 104,  40 )
 
-#define MAX_URL_LENGTH		1024
+
+#define MAX_URL_LENGTH						1024
+
+/* this limmitation is removed from the new PtWebClient.h - a pointer is passed instead */
+#define REMOVE_WHEN_NEW_PT_WEB_strcpy( d, s ) \
+	{\
+	strncpy( (d), (s), MAX_URL_LENGTH-1 );\
+	(d)[MAX_URL_LENGTH-1] = 0;\
+	}
+
+#define VOYAGER_TEXTSIZE0         14
+#define VOYAGER_TEXTSIZE1         16
+#define VOYAGER_TEXTSIZE2         18
+#define VOYAGER_TEXTSIZE3         20
+#define VOYAGER_TEXTSIZE4         24
 
 typedef enum
 {
@@ -153,9 +167,10 @@ typedef struct mozilla_authenticate_t
 typedef struct mozilla_dialog_t
 {
 	int 	type;
+	PtWidget_t *parent;
 	char 	*title;
 	char 	*text;
-	char 	*message;
+	char 	*checkbox_message;
 	int 	ret_value;
 } PtMozillaDialogCb_t;
 
@@ -206,6 +221,7 @@ typedef struct mozilla_new_window_t
 {
 	PtWidget_t 		*widget;
 	unsigned int	window_flags;
+	PhDim_t				window_size;
 } PtMozillaNewWindowCb_t;
 
 typedef struct mozilla_prompt_t
@@ -248,7 +264,7 @@ typedef struct mozilla_context_t
 typedef struct mozilla_data_request_cb_t {
 	int type;
 	int length;
-	char url[MAX_URL_LENGTH];
+	char *url;
 } PtMozillaDataRequestCb_t;
 
 typedef struct {
@@ -302,6 +318,8 @@ typedef struct {
 	PtModalCtrl_t ctrl;
 	} PtMozillaAuthCtrl_t;
 
+class EmbedPrivate;
+
 typedef struct Pt_mozilla_client_widget 
 {
 	PtContainerWidget_t	container;
@@ -311,6 +329,8 @@ typedef struct Pt_mozilla_client_widget
 
 	char				url[MAX_URL_LENGTH];
 	int 				navigate_flags;
+	int 				disable_exception_dlg;
+	int 				disable_new_windows;
 
 	char				*rightClickUrl; /* keep the url the user clicked on, to provide it latter for Pt_ARG_WEB_GET_CONTEXT */
 	char				*download_dest;

@@ -62,7 +62,7 @@ class EmbedWindow : public nsIWebBrowserChrome,
   nsresult Init            (EmbedPrivate *aOwner);
   nsresult CreateWindow    (void);
   void     ReleaseChildren (void);
-  int 	   SaveAs(char *fname);
+  int 	   SaveAs(char *fname,char *dirname);
   int 	   SaveURI(nsIURI *uri, char *fname);
   void 	   CancelSaveURI();
 

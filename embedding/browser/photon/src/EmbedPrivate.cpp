@@ -24,6 +24,9 @@
 #include <nsIURI.h>
 #include <nsIWebProgress.h>
 #include <nsIURIFixup.h>
+#include <nsIDOMDocument.h>
+#include <nsIDOMNodeList.h>
+#include <nsISelection.h>
 #include "nsReadableUtils.h"
 #include "nsIWidget.h"
 
@@ -64,6 +67,7 @@
 #include <nsIFocusController.h>
 
 #include "nsIWebBrowserPrint.h"
+#include "nsIPrintOptions.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -78,6 +82,9 @@
 #include "PtMozilla.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
+static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
 nsIAppShell *EmbedPrivate::sAppShell    = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
@@ -106,6 +113,9 @@ EmbedPrivate::EmbedPrivate(void)
 EmbedPrivate::~EmbedPrivate()
 {
 }
+
+
+static void mozilla_set_default_pref( nsIPref *pref );
 
 nsresult
 EmbedPrivate::Init(PtWidget_t *aOwningWidget)
@@ -169,7 +179,7 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 		windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
 
 		// Attach it via the watcher service
-		nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+		nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(sWatcherContractID);
 		if (watcher)
       		watcher->SetWindowCreator(windowCreator);
   }
@@ -184,7 +194,8 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 			sPrefs = pref.get();
 			NS_ADDREF(sPrefs);
 			//sPrefs->ResetPrefs();
-			sPrefs->ReadUserPrefs(nsnull);
+			rv = sPrefs->ReadUserPrefs(nsnull);
+			if( ! NS_SUCCEEDED( rv ) ) mozilla_set_default_pref( pref );
 		}
 	}
 
@@ -236,8 +247,8 @@ EmbedPrivate::Setup()
 	webBrowser->SetParentURIContentListener(uriListener);
 
 	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
-	if (print)
-		print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings));
+//	if (print)
+//		print->GetNewPrintSettings(getter_AddRefs(m_PrintSettings));
 
 	return NS_OK;
 }
@@ -503,12 +514,53 @@ EmbedPrivate::Paste()
 	    clipboard->Paste();
 }
 
+#include <nsIWebShell.h>
 void
 EmbedPrivate::SelectAll()
 {
+/*
 	nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(mWindow->mWebBrowser));
 	if (clipboard)
 	    clipboard->SelectAll();
+*/
+
+	nsCOMPtr<nsIDOMWindow> domWindow;
+	mWindow->mWebBrowser->GetContentDOMWindow( getter_AddRefs( domWindow ) );
+	if( !domWindow ) {
+		NS_WARNING( "no dom window in content finished loading\n" );
+		return;
+		}
+
+	nsCOMPtr<nsIDOMDocument> domDocument;
+	domWindow->GetDocument( getter_AddRefs( domDocument ) );
+	if( !domDocument ) {
+		NS_WARNING( "no dom document\n" );
+		return;
+		}
+
+	nsCOMPtr<nsIDOMNodeList> list;
+	domDocument->GetElementsByTagName( NS_LITERAL_STRING( "body" ), getter_AddRefs( list ) );
+	if( !list ) {
+		NS_WARNING( "no list\n" );
+		return;
+		}
+
+	nsCOMPtr<nsIDOMNode> node;
+	list->Item( 0, getter_AddRefs( node ) );
+	if( !node ) {
+		NS_WARNING( "no node\n" );
+		return;
+		}
+
+	nsCOMPtr<nsISelection> selection;
+	domWindow->GetSelection( getter_AddRefs( selection ) );
+	if( !selection ) {
+		NS_WARNING( "no selection\n" );
+		return;
+		}
+
+	selection->SelectAllChildren( node );
+
 }
 
 void
@@ -522,12 +574,18 @@ EmbedPrivate::Clear()
 void
 EmbedPrivate::Print(PpPrintContext_t *pc)
 {
-  nsCOMPtr<nsIDOMWindow> window;
-  mWindow->mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
-  nsCOMPtr<nsIWebBrowserPrint> print( do_GetInterface( mWindow->mWebBrowser ) );
+    nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_GetInterface(mWindow->mWebBrowser);
+    NS_ASSERTION(browserAsPrint, "No nsIWebBrowserPrint!");
 
-  m_PrintSettings->SetEndPageRange((PRInt32) pc);
-  print->Print(m_PrintSettings, mPrint);
+    nsCOMPtr<nsIPrintSettings> printSettings;
+    browserAsPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+    if (printSettings) 
+    {
+        printSettings->SetPrintSilent(PR_TRUE);
+		printSettings->SetEndPageRange((PRInt32) pc);
+    }
+
+    browserAsPrint->Print(printSettings, mPrint);
 }
 
 nsresult
@@ -549,24 +607,35 @@ EmbedPrivate::OpenStream(const char *aBaseURI, const char *aContentType)
 }
 
 int
-EmbedPrivate::SaveAs(char *fname)
+EmbedPrivate::SaveAs(char *fname, char *dirname)
 {	
 	if (mWindow)
-		return (mWindow->SaveAs(fname));
+		return (mWindow->SaveAs(fname, dirname));
 	return (1);
 }
 
 int
 EmbedPrivate::SaveURI(char *aURI, char *fname)
-{	
+{
+/* ATENTIE it was */
+#if 0	
 	if (mWindow && mFixup)
 	{
 		nsIURI* uri;
 
 		nsCString   u(aURI);
-		nsresult rv = mFixup->CreateFixupURI(ToNewUnicode(u), 0, &(uri));
+		mFixup->CreateFixupURI(ToNewUnicode(u), 0, &(uri));
 		return (mWindow->SaveURI(uri, fname));
 	}
+#endif
+
+	if (mWindow && mFixup)
+	{
+		nsIURI* uri;
+		mFixup->CreateFixupURI( NS_LITERAL_STRING(aURI), 0, &(uri));
+		return (mWindow->SaveURI(uri, fname));
+	}
+
 	return (1);
 }
 
@@ -858,5 +927,39 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
 
   return NS_ERROR_FAILURE;
 
+}
+
+
+static void mozilla_set_default_pref( nsIPref *pref )
+{
+/*
+	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
+	nsIPref *pref = moz->EmbedRef->GetPrefs();
+*/
+
+	/* translation set = Western European (ISO 8859-1) */
+	pref->SetUnicharPref( "intl.charset.default", NS_ConvertASCIItoUCS2("iso8859-1").get());
+
+	/* HTML Options */
+	pref->SetUnicharPref( "browser.visited_color", NS_ConvertASCIItoUCS2("#008080").get() );
+	pref->SetUnicharPref( "browser.anchor_color", NS_ConvertASCIItoUCS2("#0000ff").get() );
+	pref->SetUnicharPref( "browser.display.foreground_color", NS_ConvertASCIItoUCS2("#000000").get() );
+	pref->SetUnicharPref( "browser.display.background_color", NS_ConvertASCIItoUCS2("#ffffff").get() );
+
+	pref->SetBoolPref( "browser.display.use_document_colors", PR_TRUE );
+	pref->SetBoolPref( "browser.underline_anchors", PR_TRUE );
+	pref->SetIntPref( "font.size.variable.x-western", VOYAGER_TEXTSIZE2 );
+	pref->SetIntPref( "browser.history_expire_days", 4 );
+	pref->SetIntPref( "browser.sessionhistory.max_entries", 50 );
+	pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
+	pref->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );
+	pref->SetIntPref( "browser.cache.disk.capacity", 5000 );
+	pref->SetIntPref( "network.http.connect.timeout", 2400 );
+	pref->SetIntPref( "network.http.max-connections", 4 );
+	pref->SetCharPref( "network.proxy.http_port", "80" );
+	pref->SetCharPref( "network.proxy.ftp_port", "80" );
+	pref->SetCharPref( "network.proxy.gopher_port", "80" );
+
+	pref->SavePrefFile( nsnull );
 }
 

@@ -47,11 +47,13 @@
 #include "nsIURI.h"
 #include "nsIFile.h"
 
+#include "EmbedPrivate.h"
 #include "PtMozilla.h"
 
 #include <photon/PtWebClient.h>
 
 nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
+	NS_INIT_ISUPPORTS();
 	}
 
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
@@ -118,7 +120,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	moz->EmbedRef->context = aContext;
 
 	strcpy( cb.content_type, mimeType );
-	strcpy( cb.url, url );
+	REMOVE_WHEN_NEW_PT_WEB_strcpy( cb.url, url );
 	cb.content_length = strlen( cb.url );
 	PtInvokeCallbackList( moz->web_unknown_cb, (PtWidget_t *)moz, &cbinfo);
 	return rv;
@@ -136,7 +138,7 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIWebBrowserChrome> chrome;
   PtWidget_t *val = 0;
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
   if (!wwatch) return nsnull;
 
   if( wwatch ) {
@@ -163,6 +165,7 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
 NS_IMPL_ISUPPORTS2(nsWebProgressListener, nsIWebProgressListener, nsISupportsWeakReference);
 
 nsWebProgressListener::nsWebProgressListener() {
+  NS_INIT_ISUPPORTS();
 	}
 
 nsWebProgressListener::~nsWebProgressListener() { }
@@ -177,7 +180,7 @@ NS_IMETHODIMP nsWebProgressListener::OnProgressChange(nsIWebProgress *aProgress,
 
 	return NS_OK;
 	}
-NS_IMETHODIMP nsWebProgressListener::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus) {
+NS_IMETHODIMP nsWebProgressListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus) {
 	return NS_OK;
 	}
 NS_IMETHODIMP nsWebProgressListener::OnLocationChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsIURI *location) {

@@ -306,6 +306,13 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemFont( nsSystemFontID aID, nsFont *aF
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface ) {
+	nsRect aRect;
+	GetClientRect( aRect );
+  aContext.CreateDrawingSurface(aRect, 0, aSurface);
+  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+	}
+
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect( nsRect &aRect ) {
 	nsresult rv = NS_OK;
 	if( mIsPrinting ) { //( mSpec )
@@ -446,18 +453,22 @@ int nsDeviceContextPh::prefChanged( const char *aPref, void *aClosure ) {
   return 0;
 	}
 
-NS_IMETHODIMP nsDeviceContextPh :: BeginDocument( PRUnichar *t, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage ) {
-  PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-  PpStartJob(pc);
-    mIsPrinting = 1;
-    mIsPrintingStart = 1;
-  return NS_OK;
-    }
+NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(PRUnichar *t, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage) {
+	if( mSpec ) {
+		PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+		PpStartJob(pc);
+		mIsPrinting = 1;
+		mIsPrintingStart = 1;
+		}
+	return NS_OK;
+	}
 
 NS_IMETHODIMP nsDeviceContextPh :: EndDocument( void ) {
-  PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-  PpEndJob(pc);
-	mIsPrinting = 0;
+	if( mSpec ) {
+  	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+  	PpEndJob(pc);
+		mIsPrinting = 0;
+		}
   return NS_OK;
 	}
 
@@ -466,18 +477,22 @@ NS_IMETHODIMP nsDeviceContextPh :: AbortDocument( void ) {
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage( void ) {
-	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-	if( !mIsPrintingStart ) PpPrintNewPage( pc );
-	PpContinueJob( pc );
-	mIsPrintingStart = 0;
+	if( mSpec ) {
+		PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+		if( !mIsPrintingStart ) PpPrintNewPage( pc );
+		PpContinueJob( pc );
+		mIsPrintingStart = 0;
+		}
 	return NS_OK;
-    }
+	}
 
 NS_IMETHODIMP nsDeviceContextPh :: EndPage( void ) {
-	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
-	PpSuspendJob(pc);
+	if( mSpec ) {
+		PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+		PpSuspendJob(pc);
+		}
 	return NS_OK;
-    }
+	}
 
 int nsDeviceContextPh :: IsPrinting( void ) { return mIsPrinting ? 1 : 0; }
 

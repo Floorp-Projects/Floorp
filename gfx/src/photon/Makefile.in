@@ -31,16 +31,16 @@ LIBRARY_NAME	= gfx_photon
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPhModule
-GRE_MODULE	= 1
-
 REQUIRES	= xpcom \
 		  string \
 		  widget \
 		  view \
 		  util \
+		  dom \
 		  pref \
 		  uconv \
 		  unicharutil \
+		  windowwatcher \
 		  locale \
 		  intl \
 		  $(NULL)
@@ -70,11 +70,15 @@ CFLAGS		+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		-lgfxshared_s \
 		$(NULL)
+
+DEFINES		+= -D_IMPL_NS_GFXNONXP
 
 INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
 		$(NULL)
 
 
