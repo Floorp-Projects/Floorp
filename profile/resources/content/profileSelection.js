@@ -74,13 +74,12 @@ function AddItem( aChildren, aProfileObject )
   var row     = document.createElement("treerow");
   var cell    = document.createElement("treecell");
   cell.setAttribute("value", aProfileObject.mName );
-  cell.setAttribute("align","left");
+  cell.setAttribute("rowMigrate",  aProfileObject.mMigrated );
   row.appendChild(cell);
   item.appendChild(row);
   item.setAttribute("profile_name", aProfileObject.mName );
   item.setAttribute("rowName", aProfileObject.mName );
   item.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
-  item.setAttribute("rowMigrate",  aProfileObject.mMigrated );
   item.setAttribute("directory", aProfileObject.mDir );
   // 23/10/99 - no roaming access yet!
   //  var roaming = document.getElementById("roamingitem");

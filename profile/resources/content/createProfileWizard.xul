@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/wizardOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -10,21 +11,21 @@
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onclose="onCancel();"
+  onclose="onCancel();"
 	onload="Startup('newProfile1_1','content');">
 
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-	<html:script language="javascript" src="chrome://communicator/content/profile/createProfileWizard.js" />
-	<html:script language="javascript" src="chrome://global/content/wizardOverlay.js" />
-	<html:script language="javascript" src="chrome://global/content/wizardHandlerSet.js" />
-	<html:script language="javascript" src="chrome://global/content/wizardManager.js" />
-	<html:script language="javascript" src="chrome://global/content/widgetStateManager.js" />
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
+	<script language="javascript" src="chrome://communicator/content/profile/createProfileWizard.js"></script>
+	<script language="javascript" src="chrome://global/content/wizardOverlay.js"></script>
+	<script language="javascript" src="chrome://global/content/wizardHandlerSet.js"></script>
+	<script language="javascript" src="chrome://global/content/wizardManager.js"></script>
+	<script language="javascript" src="chrome://global/content/widgetStateManager.js"></script>
 
-  <box type="largeheader" id="header" value="&profileWizard.title;"/>
+  <box class="box-header" id="header" value="&profileWizard.title;"/>
   <box id="contentarea" flex="1">
-  	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content" id="content" scrolling="none" flex="1"/>
+  	<iframe src="about:blank" style="width: 40em; overflow: auto;" name="content" id="content" flex="1"/>
   </box>
 	<box id="wizardButtons"/>
-  <box type="status" id="status" value="&window.title.label;" progress=""/>
+  <box class="box-status" id="status" value="&window.title.label;" progress=""/>
 
 </window>

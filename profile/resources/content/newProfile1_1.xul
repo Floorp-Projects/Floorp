@@ -21,6 +21,7 @@
 
 <!-- this is PAGE ONE of the Profile Creation Wizard -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/newProfile1_1.dtd" >

@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -9,16 +10,18 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   class="dialog"
   align="vertical"
-  style="width: 350px;"
+  style="width: 35em;"
   title="&title;"
   onload="Startup();">
 
-  <html:script language="javascript" src="chrome://communicator/content/profile/deleteProfile.js"/>
+  <script language="javascript" src="chrome://communicator/content/profile/deleteProfile.js"></script>
+
+  <keyset id="keyset"/>
   
   <box orient="vertical" flex="1">
     <html>&intro;</html> 
     <html>&question;</html> 
-    <separator class="groove" />
+    <separator class="groove"/>
     <box id="okCancelButtons" class="Button1"/>
   </box>
 
