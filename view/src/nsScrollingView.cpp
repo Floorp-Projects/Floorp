@@ -417,15 +417,15 @@ NS_IMETHODIMP nsScrollingView :: SetDimensions(nscoord width, nscoord height, PR
   clipRect.SetRect(0, 0, width - showVert, height - showHorz);
   clipRect.Deflate(mInsets);
 
-  // Size and position the clip view
-  if (nsnull != mClipView)
-    mClipView->SetBounds(clipRect, aPaint);
-
   //this will fix the size of the thumb when we resize the root window,
   //but unfortunately it will also cause scrollbar flashing. so long as
   //all resize operations happen through the viewmanager, this is not
   //an issue. we'll see. MMP
   ComputeContainerSize();
+
+  // Size and position the clip view
+  if (nsnull != mClipView)
+    mClipView->SetBounds(clipRect, aPaint);
 
   NS_RELEASE(dx);
   return NS_OK;
@@ -838,7 +838,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     // of 0.0f (completely transparent)
     // XXX The clip widget should be created on demand only...
     rv = mClipView->Init(mViewManager, mBounds, this);
-    mViewManager->InsertChild(this, mClipView, -1);
+    mViewManager->InsertChild(this, mClipView, 1);
     mViewManager->SetViewOpacity(mClipView, 0.0f);
     rv = mClipView->CreateWidget(kWidgetCID, nsnull,
                                  mWindow ? nsnull : aNative);
@@ -860,7 +860,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
 
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
-    mViewManager->InsertChild(this, mCornerView, -1);
+    mViewManager->InsertChild(this, mCornerView, 1);
   }
 
   // Create a view for a vertical scrollbar
@@ -879,7 +879,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
     rv = mVScrollBarView->Init(mViewManager, trect, this);
-    mViewManager->InsertChild(this, mVScrollBarView, -3);
+    mViewManager->InsertChild(this, mVScrollBarView, 3);
     rv = mVScrollBarView->CreateWidget(kCScrollbarIID, nsnull,
                                        mWindow ? nsnull : aNative);
   }
@@ -900,7 +900,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
     rv = mHScrollBarView->Init(mViewManager, trect, this);
-    mViewManager->InsertChild(this, mHScrollBarView, -3);
+    mViewManager->InsertChild(this, mHScrollBarView, 3);
     rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, nsnull,
                                        mWindow ? nsnull : aNative);
   }
