@@ -505,12 +505,15 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
        nsXPIDLCString aBodyPart;
        nsXPIDLCString aNewsgroup;
 
+       // we are explictly not allowing attachments to be specified in mailto: urls
+       // as it's a potential security problem.
+       // see bug #99055
        aMailtoUrl->GetMessageContents(getter_Copies(aToPart), getter_Copies(aCcPart), 
                                     getter_Copies(aBccPart), nsnull /* from part */,
                                     nsnull /* follow */, nsnull /* organization */, 
                                     nsnull /* reply to part */, getter_Copies(aSubjectPart),
                                     getter_Copies(aBodyPart), nsnull /* html part */, 
-                                    nsnull /* a ref part */, nsnull /* attachment part */,
+                                    nsnull /* a ref part */, nsnull /* attachment part, must always null, see #99055 */,
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
                                     &aHTMLBody);
 
