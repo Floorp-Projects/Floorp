@@ -23,6 +23,7 @@
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
+#include "nsILoadAttribs.h"
 
 class nsIFactory;
 class nsIPostData;
@@ -73,16 +74,6 @@ public:
 
   // Link traversing control
 };
-
-// Do not change the order of these. nsReload (normal/the first item) must
-// always be zero. If you add enumerations, change the range
-// check in nsNetService (OpenStream & OpenBlockingStream).
-typedef enum {
-  nsReload,
-  nsReloadBypassCache,
-  nsReloadBypassProxy,
-  nsReloadBypassCacheAndProxy
-} nsReloadType;
 
 // Return value from WillLoadURL
 #define NS_WEB_SHELL_CANCEL_URL_LOAD      0xC0E70000
@@ -152,10 +143,10 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-                     nsReloadType aType=nsReload,
+                     nsURLReloadType aType=nsURLReload,
                      const PRUint32 aLocalIP=0) = 0;
   NS_IMETHOD Stop(void) = 0;
-  NS_IMETHOD Reload(nsReloadType aType) = 0;
+  NS_IMETHOD Reload(nsURLReloadType aType) = 0;
   
   // History api's
   NS_IMETHOD Back() = 0;
