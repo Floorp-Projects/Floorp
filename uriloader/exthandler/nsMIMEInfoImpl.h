@@ -82,7 +82,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling);
 
     // nsMIMEInfoBase methods
-    nsMIMEInfoBase(const char *aMIMEType = "");
+    nsMIMEInfoBase(const char *aMIMEType = "") NS_HIDDEN;
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
 
     void SetDefaultDescription(const PRUnichar* aDesc) { mDefaultAppDescription = aDesc; }
@@ -141,8 +141,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
  */
 class nsMIMEInfoImpl : public nsMIMEInfoBase {
   public:
-    nsMIMEInfoImpl() : nsMIMEInfoBase() {}
-    nsMIMEInfoImpl(const char *aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
+    nsMIMEInfoImpl(const char *aMIMEType = "") : nsMIMEInfoBase(aMIMEType) {}
     virtual ~nsMIMEInfoImpl() {}
 
     // nsIMIMEInfo methods
