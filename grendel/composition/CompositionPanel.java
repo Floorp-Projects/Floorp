@@ -512,7 +512,7 @@ public class CompositionPanel extends GeneralPanel {
                   att.setText(new String(bs)); 
                   att.setHeader("Content-Type", mimeString);
                   att.setHeader("Content-Transfer-Encoding", encName);
-                  att.setFileName(attachments[i]);
+                  att.setFileName(new File(attachments[i]).getName());
                   att.setDisposition("Attachment");
                   multi.addBodyPart(att);
                 } catch (Exception e) {
