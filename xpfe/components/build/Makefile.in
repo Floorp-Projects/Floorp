@@ -45,10 +45,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  pref \
 		  docshell \
-      downloadmanager\
-      webbrowserpersist \
-      progressDlg \
-      uriloader \
 		  webshell \
 		  $(NULL)
 

@@ -39,7 +39,6 @@
 #include "nsCURILoader.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
-#include "nsIDownload.h"
 #include "nsReadableUtils.h"
 
 // used to manage our in memory data source of helper applications
@@ -1385,41 +1384,51 @@ nsresult nsExternalAppHandler::ShowProgressDialog()
 {
   // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
   // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsXPIDLString openWith(NS_LITERAL_STRING(""));  
-  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
-  mMimeInfo->GetPreferredAction(&action);
-  if (action != nsIMIMEInfo::saveToDisk)
+  nsCOMPtr<nsIProgressDialog> progressDlg = do_CreateInstance( "@mozilla.org/progressdialog;1", &rv );
+  if (progressDlg)
   {
-    // Opening with an application; use either description or application file name.
-    mMimeInfo->GetApplicationDescription(getter_Copies(openWith));
-    if (openWith.IsEmpty())
+    // Wire up this progress dialog.
+    progressDlg->SetSource( mSourceUrl );
+    progressDlg->SetStartTime( mTimeDownloadStarted );
+    progressDlg->SetObserver(this);
+    nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
+    progressDlg->SetTarget(local);
+
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+    mMimeInfo->GetPreferredAction(&action);
+    if (action != nsIMIMEInfo::saveToDisk)
     {
-      nsCOMPtr<nsIFile> appl;
-      mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(appl));
-      if (appl)
+      // Opening with an application; use either description or application file name.
+      nsXPIDLString openWith;
+      mMimeInfo->GetApplicationDescription(getter_Copies(openWith));
+      if (openWith.IsEmpty())
       {
-        nsCOMPtr<nsILocalFile> file = do_QueryInterface(appl);
-        if (file)
+        nsCOMPtr<nsIFile> appl;
+        mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(appl));
+        if (appl)
         {
-          file->GetUnicodeLeafName(getter_Copies(openWith));
+          nsCOMPtr<nsILocalFile> file = do_QueryInterface(appl);
+          if (file)
+          {
+            file->GetUnicodeLeafName(getter_Copies(openWith));
+          }
         }
       }
+      // Tell progress dialog what we're opening with.
+      progressDlg->SetOpeningWith(openWith);
+    }
+
+    // Open the dialog.
+    rv = progressDlg->Open(nsnull, nsnull);
+
+    if(NS_SUCCEEDED(rv))
+    {
+      // Send notifications to the dialog.
+      this->SetWebProgressListener(progressDlg);
     }
   }
-
-  rv = dl->Init(mSourceUrl, local, nsnull, openWith, mTimeDownloadStarted, nsnull);
-  if (NS_FAILED(rv)) return rv;
-
-  dl->SetObserver(this);
-  nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dl);
-  if (listener)
-    SetWebProgressListener(listener);
 
   return rv;
 }
