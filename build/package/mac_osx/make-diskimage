@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@netscape.com>
+#  Jean-Jacques Enser <jj@netscape.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,37 +42,50 @@
 # Usage: make-diskimage <image file> <folder> <volume name>
 #
 
-DISKIMAGE_DIRNAME=`dirname $1`
-DISKIMAGE_DIR=`cd $DISKIMAGE_DIRNAME; pwd`
-DISKIMAGE=`basename $1`
-FOLDER_DIRNAME=`dirname $2`
-FOLDER=`cd $FOLDER_DIRNAME; pwd`/`basename $2`
+SCRIPT_DIR=`pwd`/`dirname $0`
+
+DMG_DIRNAME=`dirname $1`
+DMG_DIR=`cd $DMG_DIRNAME; pwd`
+DMG_NAME=`basename $1`
+DMG_TEMP_NAME=${DMG_DIR}/rw.${DMG_NAME}
+SRC_FOLDER=`cd $2; pwd`
 VOLUME_NAME=$3
 
 # Find the size of the folder contents
-FOLDER_SIZE=`du -s $FOLDER|sed s/[^0-9].*//`
+FOLDER_SIZE=`du -s $SRC_FOLDER | sed s/[^0-9].*//`
 
 # Allow for partition table and other overhead (3%)
-IMAGE_SIZE=$(($FOLDER_SIZE + ($FOLDER_SIZE * 3 / 100) + 1))
+IMAGE_SIZE=$(($FOLDER_SIZE * 103/100))
+# minimum size for an HFS+ partition is 4Mb
+[ $IMAGE_SIZE -lt 8300 ] && IMAGE_SIZE=8300
+
 echo FOLDER_SIZE=$FOLDER_SIZE
 echo IMAGE_SIZE=$IMAGE_SIZE
 
 # Create the image
-cd $DISKIMAGE_DIR
-hdiutil create -sectors $IMAGE_SIZE rw.$DISKIMAGE
+echo "creating disk image"
+hdiutil create -sectors $IMAGE_SIZE -fs HFS+ $DMG_TEMP_NAME -volname $VOLUME_NAME
 
-# Determine a mount point
-IMAGE_DEV=`hdid -nomount rw.$DISKIMAGE | grep "^/dev/disk.s2" | sed -e "s?^/dev/??" -e "s/[^0-9a-z].*//"`
+# mount it
+echo "mounting disk image"
+# `hdid -nomount rw.$DMG_NAME | grep "^/dev/disk.s2" | sed -e "s?^/dev/??" -e "s/[^0-9a-z].*//"`
+DEV_NAME=`hdid $DMG_TEMP_NAME | sed 1q | awk '{print $1}'`
+MOUNT_DIR=`hdid $DMG_TEMP_NAME | grep Apple_HFS | awk '{print $3}'`
 
-# Initialize the volume
-/sbin/newfs_hfs -v $VOLUME_NAME /dev/r$IMAGE_DEV
-hdiutil eject $IMAGE_DEV
+# copy content
+echo "copying content to disk image"
+ditto -rsrcFork $SRC_FOLDER $MOUNT_DIR
+cp -p ${SCRIPT_DIR}/mozilla.dsstore ${MOUNT_DIR}/.DS_Store
+mkdir ${MOUNT_DIR}/.background
+cp -p ${SCRIPT_DIR}/mozilla13-banner.jpg ${MOUNT_DIR}/.background/
 
-# Mount it, copy the folder, then unmount it
-MOUNT_DIR=`hdid rw.$DISKIMAGE | grep "^/dev/disk.s2" | sed -e "s?^/dev/[^/]*??"`
-ditto -rsrcFork $FOLDER $MOUNT_DIR
-hdiutil eject $IMAGE_DEV
+# unmnount
+echo "unmounting disk image"
+hdiutil detach $DEV_NAME
 
-# Convert to a read-only image
-hdiutil convert rw.$DISKIMAGE -format UDRO -o $DISKIMAGE
-rm -f rw.$DISKIMAGE
+# convert to read-only image
+echo converting disk image to read-only
+hdiutil convert $DMG_TEMP_NAME -format UDRO -o ${DMG_DIR}/${DMG_NAME}
+rm -f $DMG_TEMP_NAME
+
+echo "disk image done"
