@@ -1118,7 +1118,7 @@ nsPrivilegeManager::checkPrivilegeEnabled(void *context,
     return "internal error - null target array";
   }
 
-  if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
+  if (nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
   wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
@@ -1272,7 +1272,7 @@ nsPrivilegeManager::getClassPrincipalsFromStack(void* context, PRInt32 callerDep
   if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
-  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
+  wrapper = (nsCapsNewNSJSJavaFrameWrapperCallback)(context);
   if (wrapper == NULL)
     return NULL;
 
@@ -1310,7 +1310,7 @@ nsPrivilegeManager::getPrivilegeTableFromStack(void *context, PRInt32 callerDept
   struct NSJSJavaFrameWrapper *wrapper = NULL;
   nsPrivilegeTable *annotation;
 
-  if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
+  if (nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
   wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
