@@ -176,11 +176,9 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
     }
   }
 
-#if 0
-  // XXX don't do this here... return an error from the stream listener?
+
   if (mChannel && mProcessing)
-    return mChannel->Cancel(status);
-#endif
+    mChannel->Cancel(NS_BINDING_ABORTED); // should prolly use status here
 
   return NS_OK;
 }
@@ -391,7 +389,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   if (!mChannel) {
     PR_LOG(gImgLog, PR_LOG_ALWAYS,
-           (" `->  Channel already canceled.\n"));
+           (" `->  Channel already stopped or no channel!?.\n"));
 
     return NS_ERROR_FAILURE;
   }
@@ -407,7 +405,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
       mStatus = imgIRequest::STATUS_ERROR;
       this->Cancel(NS_BINDING_ABORTED);
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
   }
 
@@ -421,12 +419,12 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
     this->Cancel(NS_BINDING_ABORTED);
 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 #if defined(PR_LOGGING)
- else {
+  else {
     PR_LOG(gImgLog, PR_LOG_DEBUG,
-           (" `->  Content type is %s\n", contentType.get()));
+           ("[this=%p] imgRequest::OnStartRequest -- Content type is %s\n", this, contentType.get()));
   }
 #endif
 
@@ -444,7 +442,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
     // XXX notify the person that owns us now that wants the gfxIImageContainer off of us?
 
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
@@ -465,11 +463,12 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   mChannel->GetOriginalURI(getter_AddRefs(mURI));
   mChannel = nsnull; // we no longer need the channel
 
-  if (!mDecoder) return NS_ERROR_FAILURE;
-
-  mDecoder->Close();
-
-  mDecoder = nsnull; // release the decoder so that it can rest peacefully ;)
+  if (mDecoder) {
+    mDecoder->Close();
+    mDecoder = nsnull; // release the decoder so that it can rest peacefully ;)
+  } else {
+    printf("foo\n");
+  }
 
   return NS_OK;
 }
@@ -485,14 +484,18 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnDataAvailable\n", this));
 
+  NS_ASSERTION(mChannel, "imgRequest::OnDataAvailable -- no channel!");
+
   if (!mChannel) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
-           (" `->  no channel\n"));
+           ("[this=%p] imgRequest::OnDataAvailable -- no channel?\n", this));
+    return NS_OK;
   }
+
   if (!mDecoder) {
     PR_LOG(gImgLog, PR_LOG_WARNING,
-           (" `->  no decoder\n"));
-    return NS_ERROR_FAILURE;
+           ("[this=%p] imgRequest::OnDataAvailable -- no decoder\n", this));
+    return NS_OK;
   }
 
   PRUint32 wrote;
