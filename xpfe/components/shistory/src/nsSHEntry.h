@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -49,14 +49,13 @@ private:
 		 NS_NewSHEntry(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 	 friend class nsSHEnumerator;
 	 
-
-	 nsIURI *          mURI;	 	 
-	 nsIDOMDocument *  mDocument;
-	 nsString *        mTitle;
-	 nsIInputStream *  mPostData;
+    nsCOMPtr<nsIURI>                mURI;
+	 nsCOMPtr<nsIDOMDocument>        mDocument;
+	 nsString                        mTitle;
+	 nsCOMPtr<nsIInputStream>        mPostData;
 	 nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
-	 nsVoidArray       mChildren;
-	 nsISHEntry *      mParent;   // weak reference to parent
+	 nsVoidArray                     mChildren;
+	 nsISHEntry *                    mParent;   // weak reference to parent
 	 
 };
 
