@@ -325,7 +325,9 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 
   nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
+#ifdef NS_DEBUG
     fflush(stdout);
+#endif
     rv = getMessageArcLabelsOut(message, getter_AddRefs(arcs));
   } else {
     // how to return an empty cursor?
