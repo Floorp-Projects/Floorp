@@ -25,6 +25,7 @@
 
 #include <nspr.h>
 #include <plhash.h>
+#include <prmem.h>
 #include "xpt_struct.h"
 
 typedef struct XPTState         XPTState;
@@ -39,6 +40,9 @@ XPT_DoIdentifier(XPTCursor *cursor, char **identp);
 
 PRBool
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
+
+PRBool
+XPT_Do64(XPTCursor *cursor, PRInt64 *u64p);
 
 PRBool
 XPT_Do32(XPTCursor *cursor, uint32 *u32p);
@@ -62,6 +66,8 @@ XPT_Do8(XPTCursor *cursor, uint8 *u8p);
 PRBool
 XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits);
 
+#define XPT_DO_BITS(curs, field, width, scr) (PR_TRUE)
+
 /* returns the number of bits skipped, which should be 0-7 */
 int
 XPT_FlushBits(XPTCursor *cursor);
@@ -78,27 +84,29 @@ typedef enum {
 
 struct XPTState {
     XPTMode          mode;
-    XPTDatapool      *pools[2];
+    uint32           data_offset;
+    XPTDatapool      *pool;
 };
 
 struct XPTDatapool {
     PLHashTable      *offset_map;
     char             *data;
     uint32           count;
-    uint8            bit;
     uint32           allocated;
 };
 
 struct XPTCursor {
     XPTState    *state;
-    XPTDatapool *pool;
+    XPTPool     pool;
     uint32      offset;
-    uint32      len;
     uint8       bits;
 };
 
 XPTState *
 XPT_NewXDRState(XPTMode mode, char *data, uint32 len);
+
+PRBool
+XPT_MakeCursor(XPTState *state, XPTPool pool, XPTCursor *cursor);
 
 void
 XPT_DestroyXDRState(XPTState *state);
@@ -106,24 +114,15 @@ XPT_DestroyXDRState(XPTState *state);
 void
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
 
-/*
- * On CreateCursor:
- * cursors are used to track position within the byte stream.
- * In encode/write mode, the cursor reserves an area of memory for a structure.
- * In decode/read mode, it simply tracks position.
- *
- * Usage will commonly be something like this (taken from XPT_DoString) for
- * out-of-line structures:
- * 
- *   // create my_cursor and reserve memory as required
- *   XPT_CreateCursor(parent_cursor, XPT_DATA, str->length + 2, &my_cursor);
- *   // write mode: store the offset for this structure in the parent cursor
- *   // read mode: adjust my_cursor to point to the write offset
- *   XPT_Do32(parent_cursor, &my_cursor->offset);
- */
+/* set or get the data offset for the state, depending on mode */
+void
+XPT_DataOffset(XPTState *state, uint32 *data_offsetp);
+
+void
+XPT_SetDataOffset(XPTState *state, uint32 data_offset);
 
 PRBool
-XPT_CreateCursor(XPTCursor *base, XPTPool pool, uint32 len, XPTCursor *cursor);
+XPT_MakeCursor(XPTState *state, XPTPool pool, XPTCursor *cursor);
 
 /* all data structures are big-endian */
 
@@ -188,7 +187,7 @@ XPT_CreateCursor(XPTCursor *base, XPTPool pool, uint32 len, XPTCursor *cursor);
 #define XPT_ERROR_HANDLE(free_it)                                             \
  error:                                                                       \
     if (cursor->state->mode == XPT_DECODE)                                    \
-    PR_FREE_IF(free_it);                                                      \
+    PR_FREEIF(free_it);                                                      \
     return PR_FALSE;
 
 
