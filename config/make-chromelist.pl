@@ -76,7 +76,7 @@ my $macos = ($^O =~ /MacOS|darwin/i)     ? 1 : 0;
 # $macos = 1; 
 # $unix = 0;
 
-my $chromelist = File::Spec->catfile("$chrome", "chromelist.txt");
+my $chromelist = File::Spec->catfile($chrome, "chromelist.txt");
 my $lockfile = $chromelist . ".lck";
 
 mozLock($lockfile) unless $nofilelocks;
@@ -93,6 +93,8 @@ if ($win32) { $stub =~ tr|\\|/|; }
 
 # Turn the absolute path into a relative path inside the CVS tree
 $stub =~ s|.*mozilla/?||;
+
+my $jarfilename = "";
   
 while (<JARFILE>)
 {
@@ -102,7 +104,6 @@ while (<JARFILE>)
   s/\s+$//;
 
   # There's loads of things we aren't interested in
-  next if m/:/;              # e.g. "comm.jar:"
   next if m/^\s*#/;          # Comments
   next if m/^$/;             # Blank lines
   next if m/\.gif\)\s*$/i;   # Graphics
@@ -112,19 +113,25 @@ while (<JARFILE>)
   next if ($stub =~ m|/unix/|) and !$unix; 
   next if ($stub =~ m|/mac/|)  and !$macos; 
 
-  # Split up the common format, which is:
-  # skin/fred/foo.xul (xpfe/barney/wilma/foo.xul)
+  if (m/\s*(.*)\.jar:/)      # e.g. "comm.jar:"
+  {
+    $jarfilename = $1;
+    next;
+  }
+         
+  # Split up the common format, which is e.g.:
+  # messenger/skin/fred/foo.xul (xpfe/barney/wilma/foo.xul)
   m/(.*)\s+\((.*)\)/;
-  my $chromefile = $1;
-  my $cvsfile = $2;
+  my $chromefile = File::Spec->canonpath("$jarfilename/$1");
+  my $cvsfile = File::Spec->canonpath($2);
 
   # Deal with those jar.mns which have just a single line,
   # implying that the file is in the current directory.
   if (!$1 || $1 eq "")
   {
-    $chromefile = $_;
+    $chromefile = File::Spec->canonpath("$jarfilename/$_");
     $_ =~ /.*\/(.*?)$/;
-    $cvsfile = $1;
+    $cvsfile = File::Spec->canonpath($1);
   }
 
   # Convert to platform-specific separator for the chrome version.
