@@ -1,0 +1,10 @@
+This directory contains contributed software related to Bugzilla.
+Things in here have not necessarily been tested or tried by anyone
+except the original contributor, so tred carefully.  But it may still
+be useful to you.
+
+This directory includes:
+
+        gnats2bz.pl -- a perl script to help import bugs from a GNATS 
+                        database into a Bugzilla database.  Contributed by
+                        Tom Schutter <tom@platte.com>
