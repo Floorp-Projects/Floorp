@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  */
 
+#ifndef _NS_CAIRODEVICECONTEXT_H_
+#define _NS_CAIRODEVICECONTEXT_H_
+
 #include "nsIScreenManager.h"
 
 #include "nsDeviceContext.h"
@@ -124,3 +127,6 @@ private:
 #endif
 
 };
+
+#endif /* _NS_CAIRODEVICECONTEXT_H_ */
+

@@ -76,6 +76,7 @@ CPPSRCS		= \
 		nsCairoScreenManager.cpp \
 		nsCairoDrawingSurface.cpp \
 		nsCairoGfxFactory.cpp \
+		nsCairoBlender.cpp \
 		$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx mozutil_s gfxshared_s
