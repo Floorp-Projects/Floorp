@@ -11,53 +11,58 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is mozilla.org configuration viewer.
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2003
+# Portions created by the Initial Developer are Copyright (C) 2002
 # the Initial Developer. All Rights Reserved.
 #
-# Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+# Contributors:
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
+# either the GNU General Public License Version 2 or later (the "GPL"), or 
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
+# use your version of this file under the terms of the NPL, indicate your
 # decision by deleting the provisions above and replace them with the notice
 # and other provisions required by the GPL or the LGPL. If you do not delete
 # the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
+# the terms of any one of the NPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-ifdef MOZ_THUNDERBIRD
-DIRS = console filepicker
-else
-DIRS = 		\
-	autocomplete \
-	console \
-	filepicker \
-	history \
-	passwordmgr \
-	printing \
-	satchel \
-	viewconfig \
-	viewsource \
-	build \
-	$(NULL)
-endif
-
-
-include $(topsrcdir)/config/rules.mk
+#
+<!ENTITY filterPrefs.label "Filter:">
+<!ENTITY filterPrefs.accesskey "I">
+<!ENTITY showAll.label "Show All">
+<!ENTITY showAll.accesskey "W">
+#
+# Columns
+<!ENTITY prefColumn.label "Preference Name">
+<!ENTITY lockColumn.label "Status">
+<!ENTITY typeColumn.label "Type">
+<!ENTITY valueColumn.label "Value">
+#
+# Tooltips
+<!ENTITY prefColumnHeader.tooltip "Click to sort"> 
+<!ENTITY columnChooser.tooltip "Click to select columns to display"> 
+#
+# Context Menu
+<!ENTITY copyName.label "Copy Name">
+<!ENTITY copyName.accesskey "C">
+<!ENTITY copyValue.label "Copy Value">
+<!ENTITY copyValue.accesskey "V">
+<!ENTITY modify.label "Modify">
+<!ENTITY modify.accesskey "M">
+<!ENTITY reset.label "Reset">
+<!ENTITY reset.accesskey "R">
+<!ENTITY new.label "New">
+<!ENTITY new.accesskey "N">
+<!ENTITY string.label "String">
+<!ENTITY string.accesskey "S">
+<!ENTITY integer.label "Integer">
+<!ENTITY integer.accesskey "I">
+<!ENTITY boolean.label "Boolean">
+<!ENTITY boolean.accesskey "B">

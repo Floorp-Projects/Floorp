@@ -44,6 +44,8 @@ toolkit.jar:
          content/global/widgets/autoscroll_h.png            (content/widgets/autoscroll_h.png)
          content/global/widgets/autoscroll_v.png            (content/widgets/autoscroll_v.png)
 +        content/global/buildconfig.html                    (content/buildconfig.html)
+*+       content/global/dialogOverlay.xul                   (obsolete/content/dialogOverlay.xul) 
+*+       content/global/dialogOverlay.js                    (obsolete/content/dialogOverlay.js) 
 
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
@@ -59,3 +61,4 @@ en-US.jar:
 +        locale/en-US/global/tabbrowser.dtd                 (locale/widgets/tabbrowser.dtd)
 +        locale/en-US/global/textcontext.dtd                (locale/widgets/textcontext.dtd)
 +        locale/en-US/global/build.dtd                      (locale/build.dtd)
+*+       locale/en-US/global/dialogOverlay.dtd              (obsolete/locale/dialogOverlay.dtd) 
