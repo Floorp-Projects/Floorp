@@ -154,10 +154,8 @@ all: checkout
 # CVS checkout
 #
 checkout:
-# Pull the core layout stuff.
-	$(CVSCO) $(DEPTH)/nglayout.mk
-	(cd $(SRCDIR); $(MAKE) -f nglayout.mk pull_all)
-
+# Build the client.
+	$(CVSCO) SeaMonkeyBrowser
 
 #
 # build it
@@ -183,6 +181,7 @@ nspr:	$(NSPR_INSTALL_DIR)/lib/libnspr21.so
 	@echo NSPR is ready and installed in $(NSPR_INSTALL_DIR)
 
 $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
+	$(CVSCO) NSPR
 	@-$(MKDIR) -p $(NSPR_INSTALL_DIR)
 	($(MAKE) -C $(SRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 
