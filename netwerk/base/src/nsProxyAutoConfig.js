@@ -59,7 +59,7 @@ var pac = null;
 //hold PAC's URL, used in evalAsCodebase()
 var pacURL;
 // ptr to eval'ed FindProxyForURL function
-var LocalFindProxyForURL=null;
+var LocalFindProxyForURL = null;
 // sendbox in which we eval loaded autoconfig js file
 var ProxySandBox = null;
 
@@ -73,6 +73,9 @@ nsProxyAutoConfig.prototype = {
         // between getProxyForURI and loadPACFromURI locks-up the
         // browser.
         if (!this.done)
+            return null;
+
+        if (!LocalFindProxyForURL)
             return null;
 
         // Call the original function-
