@@ -23,9 +23,19 @@
 #ifndef _MD_X86ASM_GAS_H_
 #define _MD_X86ASM_GAS_H_
 
+#ifdef GLOBALS_NEED_UNDERSCORE
+
+#define SYMBOL_NAME_STR(name) #name
+#define SYMBOL_NAME(name) CAT(_,name)
+#define SYMBOL_NAME_LABEL(name) CAT3(_,name,:)
+
+#else
+
 #define SYMBOL_NAME_STR(name) #name
 #define SYMBOL_NAME(name) name
 #define SYMBOL_NAME_LABEL(name) CAT(name,:)
+
+#endif
 
 #if !defined(__i486__) && !defined(__i586__)
 #define ALIGN .align 4,0x90
@@ -44,8 +54,8 @@
 	STATIC_ENTRY(name)
 
 #define END_ENTRY(name)					\
-	SYMBOL_NAME_LABEL(CAT(.L,name));	\
-	.size SYMBOL_NAME(name),SYMBOL_NAME(CAT(.L,name))-SYMBOL_NAME(name)
+	CAT(.L,name):;	\
+	.size SYMBOL_NAME(name),CAT(.L,name)-SYMBOL_NAME(name)
 
 #define TEXT_SEGMENT .text
 #define DATA_SEGMENT .data
