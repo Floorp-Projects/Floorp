@@ -173,6 +173,10 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS		= advapi32.lib wsock32.lib
 endif
 
+ifeq ($(OS_TARGET),MacOSX)
+OS_LIBS		= -framework CoreServices -framework CoreFoundation
+endif
+
 ifdef GC_LEAK_DETECTOR
 EXTRA_LIBS	= -L$(dist_libdir) -lboehm
 endif
