@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 cindent noexpandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -771,8 +772,18 @@ void CTests::OnToolsRemoveGHPage()
 		myGHistory->IsVisited(myDialog.m_urlfield, &theRetVal);
 		if (theRetVal)
 		{
-			rv = myHistory->RemovePage(myDialog.m_urlfield);
-			RvTestResult(rv, "RemovePage() test (url removal from GH file)", 2);
+			nsCOMPtr<nsIIOService> ios = do_GetIOService();
+			if (ios)
+			{
+				nsCOMPtr<nsIURI> uri;
+				ios->NewURI(nsDependentCString(myDialog.m_urlfield), nsnull, nsnull,
+							getter_AddRefs(uri));
+				if (uri)
+				{
+					rv = myHistory->RemovePage(uri);
+					RvTestResult(rv, "RemovePage() test (url removal from GH file)", 2);
+				}
+			}
 		}
 		else
 		{
