@@ -1,6 +1,0 @@
-This directory is obsolete.
-
-The nsTimer files that used to live here have been moved to ../motif
-in order to allow for multiple unix toolkits.
-
-ramiro@netscape.com 11-02-1998
