@@ -114,8 +114,8 @@ Contributor(s): ______________________________________. -->
     <popup id="aHTMLTooltip" class="tooltip" oncreate="return FillInHTMLTooltip(document.tooltipNode);" > 
       <vbox id="HTML_TOOLTIP_tooltipBox"/>
     </popup>
-    <popup id="backMenu" oncreate="BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
-    <popup id="forwardMenu" oncreate="BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="backMenu" oncreate="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+    <popup id="forwardMenu" oncreate="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="sidebarPopup"/>
 
     <popupset id="bookmarksPopupset"/>
@@ -177,11 +177,14 @@ Contributor(s): ______________________________________. -->
           </hbox>
         </hbox>
 
-        <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" label="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
-                  tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
+        <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" label="&goButton.label;"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL();" ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);" ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
 
         <button class="button-toolbar-3 chromeclass-location" persist="hidden" 
-                id="search-button" label="&searchButton.label;" 
+                id="search-button" label="&searchButton.label;"  ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);" ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
@@ -250,7 +253,7 @@ Contributor(s): ______________________________________. -->
             <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        ondraggesture="event.preventBubble(); return false;">
+                        ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup>
                 <menuitem label="&emptyItem.label;" disabled="true"/>
               </menupopup>
@@ -261,7 +264,7 @@ Contributor(s): ______________________________________. -->
             <menubutton class="button-toolbar bookmark-item" uri="rdf:*" editable="true" 
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        ondraggesture="event.preventBubble(); return false;">
+                        ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }">
               <menupopup ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"/>
             </menubutton>
           </rule>
