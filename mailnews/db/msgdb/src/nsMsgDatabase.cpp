@@ -1577,6 +1577,7 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	nsIMdbRow* row = msgHdr->GetMDBRow();
 	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), row);
 	row->CutAllColumns(GetEnv());
+        msgHdr->m_initedValues = 0; // invalidate cached values.
 	return ret;
 }
 
@@ -3319,6 +3320,46 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
       // find thread header for header whose message id we matched.
       thread = GetThreadForThreadId(key);
     }
+#ifdef DEBUG_bienvenu
+    else
+    {
+      nsresult	rv;
+      nsMsgThread *pThread;
+      
+      nsCOMPtr <nsIMdbPortTableCursor> tableCursor;
+      m_mdbStore->GetPortTableCursor(GetEnv(),   m_hdrRowScopeToken, m_threadTableKindToken,
+        getter_AddRefs(tableCursor));
+      
+      
+        nsIMdbTable *table;
+        
+        while (PR_TRUE) 
+        {
+          rv = tableCursor->NextTable(GetEnv(), &table);
+          if (!table) 
+            break;
+          if (NS_FAILED(rv)) 
+            break;
+          
+          pThread = new nsMsgThread(this, table);
+          if(pThread)
+          {
+            // thread object assumes ref for table.
+            NS_ADDREF(pThread);
+            nsXPIDLCString curSubject;
+            (void)pThread->GetSubject(getter_Copies(curSubject));
+            if (subject.Equals(curSubject))
+            {
+              NS_ASSERTION(PR_FALSE, "thread with subject exists, but FindRow didn't find it\n");
+              break;
+            }
+            NS_IF_RELEASE (pThread);
+          }
+          else
+            break;
+        }
+      }
+#endif
   }
   return thread;
 }
