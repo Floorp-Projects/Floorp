@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -493,8 +493,8 @@ array_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
     /*
-     *  Passing comma_space here as the separator. Need a way to get a 
-     *  locale specific version.
+     *  Passing comma_space here as the separator. Need a way to get a
+     *  locale-specific version.
      */
     return array_join_sub(cx, obj, &comma_space, JS_FALSE, rval, JS_TRUE);
 }
@@ -587,9 +587,6 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
 #endif
 
-
-
-
 	if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
 	    return JS_FALSE;
 	if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
@@ -608,41 +605,66 @@ typedef struct QSortArgs {
     void         *arg;
 } QSortArgs;
 
+static int
+sort_compare(const void *a, const void *b, void *arg);
+
 static void
 js_qsort_r(QSortArgs *qa, int lo, int hi)
 {
-    void *pivot, *a, *b;
-    int i, j;
+    void *pivot, *vec, *arg, *a, *b;
+    size_t elsize;
+    JSComparator cmp;
+    JSBool fastmove;
+    int i, j, lohi, hilo;
 
     pivot = qa->pivot;
+    vec = qa->vec;
+    elsize = qa->elsize;
+    cmp = qa->cmp;
+    arg = qa->arg;
+
+    fastmove = (cmp == sort_compare);
+#define MEMMOVE(p,q,n) \
+    (fastmove ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memmove(p, q, n))
+
     while (lo < hi) {
-	i = lo;
-	j = hi;
-	a = (char *)qa->vec + i * qa->elsize;
-	memmove(pivot, a, qa->elsize);
-	while (i < j) {
-	    do {
-		b = (char *)qa->vec + j * qa->elsize;
-		if ((*qa->cmp)(b, pivot, qa->arg) <= 0)
-		    break;
-		j--;
-	    } while (j > i);
-	    memmove(a, b, qa->elsize);
-	    while (i < j && (*qa->cmp)(a, pivot, qa->arg) <= 0) {
-		i++;
-		a = (char *)qa->vec + i * qa->elsize;
-	    }
-	    memmove(b, a, qa->elsize);
-	}
-	memmove(a, pivot, qa->elsize);
-	if (i - lo < hi - i) {
-	    js_qsort_r(qa, lo, i - 1);
-	    lo = i + 1;
-	} else {
-	    js_qsort_r(qa, i + 1, hi);
-	    hi = i - 1;
-	}
+        i = lo;
+        j = hi;
+        a = (char *)vec + i * elsize;
+        MEMMOVE(pivot, a, elsize);
+        while (i < j) {
+            b = (char *)vec + j * elsize;
+            if (cmp(b, pivot, arg) >= 0) {
+                j--;
+                continue;
+            }
+            MEMMOVE(a, b, elsize);
+            while (cmp(a, pivot, arg) <= 0) {
+                i++;
+                a = (char *)vec + i * elsize;
+                if (i == j)
+                    goto store_pivot;
+            }
+            MEMMOVE(b, a, elsize);
+        }
+        if (i > lo) {
+      store_pivot:
+            MEMMOVE(a, pivot, elsize);
+        }
+        if (i - lo < hi - i) {
+            lohi = i - 1;
+            if (lo < lohi)
+                js_qsort_r(qa, lo, lohi);
+            lo = i + 1;
+        } else {
+            hilo = i + 1;
+            if (hilo < hi)
+                js_qsort_r(qa, hilo, hi);
+            hi = i - 1;
+        }
     }
+
+#undef MEMMOVE
 }
 
 JSBool
