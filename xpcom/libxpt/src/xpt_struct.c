@@ -37,9 +37,14 @@ static char *strdup(const char *c)
 static PRBool
 DoInterfaceDirectoryEntry(XPTCursor *cursor,
                           XPTInterfaceDirectoryEntry *ide, PRUint16 index);
+
+#if 0
+/* currently unused */
 static PRBool
 DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
                                XPTInterfaceDirectoryEntry **idep);
+#endif
+
 static PRBool
 DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd);
 
@@ -486,9 +491,12 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
         goto error;
     }
     
-    if (mode == XPT_DECODE)
+    if (mode == XPT_DECODE && id->num_constants) {
         id->const_descriptors = XPT_CALLOC(id->num_constants * 
                                            sizeof(XPTConstDescriptor));
+        if (!id->const_descriptors)
+            goto error;
+    }
     
     for (i = 0; i < id->num_constants; i++) {
         if (!DoConstDescriptor(cursor, &id->const_descriptors[i])) {
