@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <windows.h>
+#include <unknwn.h>
 #include <iostream.h>
 #include "nsISupports.h"
 #include "nsIFactory.h"

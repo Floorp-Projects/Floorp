@@ -622,7 +622,7 @@ nsAutoArray<T, sz>::GetArray(PRInt32 aMinCount)
 
 typedef nsAutoArray<PRUint8, AUTO_FONTDATA_BUFFER_SIZE> nsAutoFontDataBuffer;
 typedef nsAutoArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
-typedef nsAutoArray<PRUint16, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
+typedef nsAutoArray<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 static PRUint16
 GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,

@@ -56,7 +56,7 @@
 #include "nsTraceRefcnt.h"
 #endif
 
-#if defined(linux) && defined(__i386)
+#if defined(__GNUC__) && defined(__i386)
 #  define DebugBreak() { asm("int $3"); }
 #else
 #  define DebugBreak()

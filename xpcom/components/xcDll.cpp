@@ -423,7 +423,7 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             // Put your breakpoint here
             fprintf(stderr, "...Loading module %s\n", nsprPath);
             // Break in the debugger here.
-#if defined(linux) && defined(__i386)
+#if defined(__i386) && defined(__GNUC__)
             asm("int $3");
 #elif defined(VMS)
             lib$signal(SS$_DEBUG);

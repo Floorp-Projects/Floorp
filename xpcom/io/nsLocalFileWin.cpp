@@ -66,7 +66,7 @@ public:
     virtual ~ShortcutResolver();
 
     nsresult Init();
-    nsresult Resolve(const unsigned short* in, char* out);
+    nsresult Resolve(const WCHAR* in, char* out);
 
 private:
     PRLock*       mLock;
@@ -125,7 +125,7 @@ ShortcutResolver::Init()
 
 // |out| must be an allocated buffer of size MAX_PATH
 nsresult 
-ShortcutResolver::Resolve(const unsigned short* in, char* out)
+ShortcutResolver::Resolve(const WCHAR* in, char* out)
 {
     nsAutoLock lock(mLock);
     

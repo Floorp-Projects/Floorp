@@ -32,7 +32,7 @@ BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
 void              PrintError(LPSTR szMsg, DWORD dwErrorCodeSH);
 void              FreeMemory(void **vPointer);
-void              *NS_GlobalReAlloc(HGLOBAL hgMemory,
+void              *NS_GlobalReAlloc(HGLOBAL *hgMemory,
                                     DWORD dwMemoryBufSize,
                                     DWORD dwNewSize);
 void              *NS_GlobalAlloc(DWORD dwMaxBuf);

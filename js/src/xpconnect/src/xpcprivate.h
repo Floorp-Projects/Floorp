@@ -235,7 +235,7 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 // Auto locking support class...
 
 // We PROMISE to never screw this up.
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(disable : 4355) // OK to pass "this" in member initializer
 #endif
 
@@ -246,7 +246,7 @@ static inline void xpc_Wait(XPCLock* lock)
         NS_ASSERTION(lock, "xpc_Wait called with null lock!");
 #ifdef DEBUG
         PRStatus result = 
-#endif    
+#endif
         PR_Wait(lock, PR_INTERVAL_NO_TIMEOUT);
         NS_ASSERTION(PR_SUCCESS == result, "bad result from PR_Wait!");
     }

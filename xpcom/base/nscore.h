@@ -69,6 +69,7 @@
 #define NS_IMETHODIMP_(type) type __stdcall
 #define NS_METHOD_(type) type __stdcall
 #define NS_CALLBACK_(_type, _name) _type (__stdcall * _name)
+#define NS_STDCALL __stdcall
 
 #elif defined(XP_MAC)
 
@@ -80,6 +81,7 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_STDCALL
 
 #elif defined(XP_OS2)
 
@@ -91,6 +93,7 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_STDCALL
 
 #else
 
@@ -102,6 +105,17 @@
 #define NS_IMETHODIMP_(type) type
 #define NS_METHOD_(type) type
 #define NS_CALLBACK_(_type, _name) _type (* _name)
+#define NS_STDCALL
+#endif
+
+/**
+ * Macro for creating function protoypes which use stdcall
+ */
+
+#ifdef __GNUC__
+#define NS_STDCALL_FUNCPROTO(func,args) (func) args NS_STDCALL
+#else
+#define NS_STDCALL_FUNCPROTO(func,args) (NS_STDCALL func) args
 #endif
 
 /**
@@ -243,7 +257,9 @@ typedef PRUint32 nsresult;
 
 /* unix and beos now determine this automatically */
 #if ! defined XP_UNIX && ! defined XP_BEOS && !defined(XP_OS2)
-#define HAVE_CPP_NEW_CASTS /* we'll be optimistic. */
+#ifndef HAVE_CPP_NEW_CASTS
+#define HAVE_CPP_NEW_CASTS 1 /* we'll be optimistic. */
+#endif
 #endif
 
 #if defined(HAVE_CPP_NEW_CASTS)
