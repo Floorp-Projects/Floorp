@@ -2375,7 +2375,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     nsRect              srcRect,destRect,vrect,tvrect;
     nscoord             x,y;
     PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
-    PRUint32            dsFlag = 0;
+    PRUint32            dsFlag = NS_CREATEDRAWINGSURFACE_SHORTLIVED;
     float               t2p,app2dev;
     PRBool              clip,hasMask;
     nsTransform2D       *theTransform;

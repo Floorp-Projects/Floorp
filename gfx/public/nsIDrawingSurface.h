@@ -140,6 +140,11 @@ public:
 //nsIBlender implementations.
 #define NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS  0x0001
 
+//flag to say that this drawing surface is shortlived,
+//which may affect how the OS allocates it. Used for
+//tiling, grouting etc.
+#define NS_CREATEDRAWINGSURFACE_SHORTLIVED        0x0002
+
 //when locking a drawing surface, use these flags to
 //control how the data in the surface should be accessed
 #define NS_LOCK_SURFACE_READ_ONLY       0x0001
