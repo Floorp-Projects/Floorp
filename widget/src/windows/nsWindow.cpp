@@ -623,21 +623,19 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
       }
       
       if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN ||
+        msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN || 
         msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
         // Rollup if the event is outside the popup
         if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
           gRollupListener->Rollup();
-        // return TRUE tells Windows that the event is consumed, 
-        // false allows the event to be dispacthed
-        //
-        // So if we are NOT suppose to be consuming events and it is a 
-        // non-client Mouse Button down, let it go through
-        if (!gRollupConsumeRollupEvent && msg == WM_NCLBUTTONDOWN) {
-          return FALSE;
-        } else {
-          return TRUE;
+          // return TRUE tells Windows that the event is consumed, 
+          // false allows the event to be dispatched
+          //
+          // So if we are NOT supposed to be consuming events, let it go through
+          if (gRollupConsumeRollupEvent) {
+            return TRUE;
+          } 
         }
-        } 
       }
 
       if ((msg == WM_MOUSEACTIVATE) && (nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget))) {
