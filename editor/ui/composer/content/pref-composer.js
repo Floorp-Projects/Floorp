@@ -84,7 +84,7 @@ function Startup()
 function GetColorAndUpdate(ColorWellID)
 {
   // Only allow selecting when in custom mode
-  if (!gDialog.CustomColorsRadio.checked) return;
+  if (!gDialog.CustomColorsRadio.selected) return;
 
   var colorObj = new Object;
   var colorWell = document.getElementById(ColorWellID);
