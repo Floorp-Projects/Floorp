@@ -35,16 +35,17 @@
 *
 *
 * Date:    03 June 2002
-* SUMMARY: Testing function parameters duplicating the name of a property
+* SUMMARY: Function param or local var with same name as a function property
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=137000
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=138708
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=150032
 *
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 137000;
-var summary = 'Testing function parameters duplicating the name of a property';
+var summary = 'Function param or local var with same name as a function prop';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -140,6 +141,37 @@ status = inSection(5);
 c1 = new ChildX('child1');
 actual = c1.id;
 expect = 'child1';
+addThis();
+
+
+
+/*
+ * From http://bugzilla.mozilla.org/show_bug.cgi?id=150032
+ *
+ * Here the same name is being used both for a local variable
+ * declared in g(), and as a property name for |g| as an object
+ */
+function g()
+{
+  var propA = g.propA;
+  var propB = g.propC;
+
+  this.getVarA = function() {return propA;}
+  this.getVarB = function() {return propB;}
+}
+g.propA = 'A';
+g.propB = 'B';
+g.propC = 'C';
+var obj = new g();
+
+status = inSection(6);
+actual = obj.getVarA(); // this one was returning 'undefined'
+expect = 'A';
+addThis();
+
+status = inSection(7); 
+actual = obj.getVarB(); // this one is easy; it never failed
+expect = 'C';
 addThis();
 
 
