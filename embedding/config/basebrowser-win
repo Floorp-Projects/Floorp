@@ -216,8 +216,6 @@ components\pipboot.dll
 components\pipboot.xpt
 components\pipnss.dll
 components\pipnss.xpt
-components\pippki.dll
-components\pippki.xpt
 nss3.dll
 smime3.dll
 softokn3.dll
