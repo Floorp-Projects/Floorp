@@ -39,6 +39,9 @@ LLIBS=\
  $(DIST)\lib\raptorgfxwin.lib    \
  $(DIST)\lib\netlib.lib          \
  $(DIST)\lib\libplc21.lib        \
+#if 0    # for HTML-in-XUL
+ $(DIST)\lib\raptorhtml.lib      \
+#endif
  $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)
