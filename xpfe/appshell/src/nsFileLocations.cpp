@@ -68,7 +68,7 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
 // to these. For now I am using these until the profile stuff picks up and
 // we know how to get the absolute fallback for all platforms
-// UNIX    : ~/.mozilla
+// UNIX    : ~/.mozilla/Users50
 // WIN    : Program Files\Netscape\Users50\  
 // Mac    : :Documents:Mozilla:Users50:
 //----------------------------------------------------------------------------------------
@@ -82,10 +82,15 @@ static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
     if (!cwd.Exists())
         cwd.CreateDir();
     cwd += "Default";
-#elif defined(XP_UNIX)
-        // ~/.mozilla
+#elif defined(XP_UNIX)  
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Unix_HomeDirectory);
     cwd += ".mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+    cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+    cwd += "Default";
 #else
     // set its directory an aunt of the executable.
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
