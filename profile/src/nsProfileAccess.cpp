@@ -1155,31 +1155,74 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
     return rv;
 }
 
-// Return the list of profiles, 4x and 5x.
+// Return the list of profiles, 4x, 5x, or both.
 // For 4x profiles text "- migrate" is appended
 // to inform the JavaScript about the migration status.
-void
-nsProfileAccess::GetProfileList(PRUnichar **profileListStr)
+nsresult
+nsProfileAccess::GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result)
 {
-    NS_ASSERTION(profileListStr, "Invalid profileListStr pointer");
+    NS_ENSURE_ARG_POINTER(length);
+    *length = 0;
+    NS_ENSURE_ARG_POINTER(result);
+    *result = nsnull;
 
-    nsAutoString profileList;
-
-    for (PRInt32 index=0; index < mCount; index++)
+    nsresult rv = NS_OK;    
+    PRInt32 count, localLength = 0;
+    PRUnichar **outArray, **next;
+    
+    switch (whichKind)
+    {
+        case nsIProfileInternal::LIST_ONLY_NEW:
+            count = mNumProfiles;
+            break;
+        case nsIProfileInternal::LIST_ONLY_OLD:
+            GetNum4xProfiles(&count);
+            break;
+        case nsIProfileInternal::LIST_ALL:
+            count = mCount;
+            break;
+        default:
+            NS_ASSERTION(PR_FALSE, "Bad parameter");
+            return NS_ERROR_INVALID_ARG;
+    }
+    
+    next = outArray = (PRUnichar **)nsMemory::Alloc(count * sizeof(PRUnichar *));
+    if (!outArray)
+        return NS_ERROR_OUT_OF_MEMORY;
+        
+    for (PRInt32 index=0; index < mCount && localLength < count; index++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+        PRBool isMigrated = profileItem->isMigrated.EqualsWithConversion(REGISTRY_YES_STRING);
+        
+        if (whichKind == nsIProfileInternal::LIST_ONLY_OLD && isMigrated)
+            continue;
+        else if (whichKind == nsIProfileInternal::LIST_ONLY_NEW && !isMigrated)
+            continue;
 
-        if (index != 0)
+        *next = profileItem->profileName.ToNewUnicode();
+        if (*next == nsnull)
         {
-            profileList.AppendWithConversion(",");
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            break;
         }
-        profileList += profileItem->profileName;
-
-        if (profileItem->isMigrated.EqualsWithConversion(REGISTRY_NO_STRING))
-            profileList.AppendWithConversion(" - migrate");
+        next++;
+        localLength++;
     }
-
-    *profileListStr = profileList.ToNewUnicode();
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        *result = outArray;
+        *length = localLength;
+    }
+    else
+    {
+        while (--next >= outArray)
+            nsMemory::Free(*next);
+        nsMemory::Free(outArray);
+    }
+    
+    return rv;
 }
 
 // Return a boolean based on the profile existence.

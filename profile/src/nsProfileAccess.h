@@ -112,7 +112,7 @@ public:
     PRInt32	 FindProfileIndex(const PRUnichar* profileName);
 
     nsresult UpdateRegistry(nsIFile* regName);
-    void GetProfileList(PRUnichar **profileListStr);
+    nsresult GetProfileList(PRInt32 whichKind, PRUint32 *length, PRUnichar ***result);
     PRBool ProfileExists(const PRUnichar *profileName);
     nsresult Get4xProfileInfo(const char *registryName);
     nsresult UpdateProfileArray();
