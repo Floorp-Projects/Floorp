@@ -26,6 +26,7 @@
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsILocalFile.h"
+#include <stdlib.h>		// for system()
 
 // this is a platform specific class that abstracts an application.
 // we treat this object as a cookie when we pass it to an external app handler..
@@ -80,17 +81,26 @@ nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
 
   if (!mAppRegistryName.IsEmpty() && aTempFile)
   {
+	nsCAutoString command;
     nsXPIDLCString path;
     aTempFile->GetPath(getter_Copies(path));
-    
-    // use the app registry name to launch a shell execute....
-    LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
-    if (r < 32) 
-    {
-			rv = NS_ERROR_FAILURE;
-		}
-		else
-			rv = NS_OK;
+ 
+	// build the command to run   
+	command =  (const char *)mAppRegistryName;
+	command += " ";
+	command += (const char *)path;
+
+#ifdef DEBUG_seth
+	printf("spawn this: %s\n",(const char *)command);
+#endif
+	int err = system((const char *)command);
+
+	if (err == 0) {
+		rv = NS_OK;
+	}
+	else {
+		rv = NS_ERROR_FAILURE;
+	}
   }
 
   return rv;
@@ -98,7 +108,7 @@ nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {
-  nsExternalHelperAppService::Init();
+ 	//nsExternalHelperAppService::Init();
 }
 
 nsOSHelperAppService::~nsOSHelperAppService()
@@ -121,8 +131,6 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
 NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
                                                     PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  nsresult rv = NS_OK;
-
   // look up the content type and get a platform specific handle to the app we want to use for this 
   // download...create a nsExternalAppHandler, bind the application token to it (as a nsIFile??) and return this
   // as the stream listener to use...
@@ -132,7 +140,26 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
 
   // now bind the handler to the application we want to launch when we the handler is done
   // receiving all the data...
-  *aStreamListener = nsnull;
+
+
+  printf("fix this hardcoding\n");
+
+  nsCAutoString fileExtension;
+  fileExtension = ".mp3";
+
+  // create an application that represents this app name...
+  nsExternalApplication * application = nsnull;
+  NS_NEWXPCOM(application, nsExternalApplication);
+
+  if (application)
+  	application->SetAppRegistryName("xmms");
+
+  nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);
+
+  // this code is incomplete and just here to get things started..
+  nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, fileExtension);
+  handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+
   return NS_OK;
 }
 
@@ -156,6 +183,5 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
-	nsresult rv = NS_OK;
   return NS_ERROR_FAILURE;
 }
