@@ -66,8 +66,6 @@ nsHttpAuthCache::GetCredentialsForPath(const char *host,
                                        nsACString &realm,
                                        nsACString &creds)
 {
-    NS_ENSURE_TRUE(mDB, NS_ERROR_NOT_INITIALIZED);
- 
     LOG(("nsHttpAuthCache::GetCredentialsForPath [host=%s:%d path=%s]\n",
         host, port, path));
 
@@ -85,8 +83,6 @@ nsHttpAuthCache::GetCredentialsForDomain(const char *host,
                                          const char *realm,
                                          nsACString &creds)
 {
-    NS_ENSURE_TRUE(mDB, NS_ERROR_NOT_INITIALIZED);
- 
     LOG(("nsHttpAuthCache::GetCredentialsForDomain [host=%s:%d realm=%s]\n",
         host, port, realm));
 
@@ -106,8 +102,6 @@ nsHttpAuthCache::SetCredentials(const char *host,
                                 const char *creds)
 {
     nsresult rv;
-
-    NS_ENSURE_TRUE(mDB, NS_ERROR_NOT_INITIALIZED);
 
     LOG(("nsHttpAuthCache::SetCredentials\n"));
 
