@@ -114,7 +114,7 @@ public:
 
     // Since the nsIComponentManagerObsolete and nsIComponentRegistrar share some of the
     // same interface function names, we have to manually define the functions here.
-    // the only fuction that is shared is UnregisterFactory
+    // the only function that is shared is UnregisterFactory
     NS_IMETHOD AutoRegister(nsIFile *aSpec); 
     NS_IMETHOD AutoUnregister(nsIFile *aSpec); 
     NS_IMETHOD RegisterFactory(const nsCID & aClass, const char *aClassName, const char *aContractID, nsIFactory *aFactory); 
@@ -164,17 +164,12 @@ public:
     nsFactoryEntry *GetFactoryEntry(const char *aContractID,
                                     PRUint32 aContractIDLen);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass);
-    nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey);
 
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
                             nsFactoryEntry *fe_ptr);
-    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
-                            const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
-    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
-                            const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
 
     void DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName);
     void DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory);

@@ -139,10 +139,6 @@ const static char XPCOM_GRECOMPONENT_PREFIX[] = "gre:";
 static const char gIDFormat[] =
   "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
 
-// Nonexistent factory entry
-// This is used to mark non-existent contractid mappings
-static nsFactoryEntry * const kNonExistentContractID = (nsFactoryEntry*) 1;
-
 
 #define NS_EMPTY_IID                                 \
 {                                                    \
@@ -332,8 +328,7 @@ PR_STATIC_CALLBACK(void)
 contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
-    if (entry->mFactoryEntry != kNonExistentContractID &&
-        entry->mFactoryEntry->mTypeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY &&
+    if (entry->mFactoryEntry->mTypeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY &&
         entry->mFactoryEntry->mCid.Equals(kEmptyCID)) {
         // this object is owned by the hash.
         // nsFactoryEntry is arena allocated. So we dont delete it.
@@ -1319,10 +1314,10 @@ ContractIDWriter(PLDHashTable *table,
     nsFactoryEntry *factoryEntry = ((nsContractIDTableEntry*)hdr)->mFactoryEntry;
 
     // for now, we only save out the top most parent.
-    while (factoryEntry != kNonExistentContractID && factoryEntry->mParent)
+    while (factoryEntry->mParent)
         factoryEntry = factoryEntry->mParent;
 
-    if (factoryEntry == kNonExistentContractID || factoryEntry->mTypeIndex < 0)
+    if (factoryEntry->mTypeIndex < 0)
         return PL_DHASH_NEXT;
 
     PRFileDesc* fd = ((PersistentWriterArgs*)arg)->mFD;
@@ -1514,45 +1509,6 @@ out:
 nsresult
 nsComponentManagerImpl::HashContractID(const char *aContractID,
                                        PRUint32 aContractIDLen,
-                                       const nsCID &aClass,
-                                       nsFactoryEntry **pfe)
-{
-    nsIDKey cidKey(aClass);
-    return HashContractID(aContractID, aContractIDLen, aClass, cidKey, pfe);
-}
-
-
-nsresult
-nsComponentManagerImpl::HashContractID(const char *aContractID,
-                                       PRUint32 aContractIDLen,
-                                       const nsCID &aClass,
-                                       nsIDKey &cidKey, nsFactoryEntry **pfe)
-{
-    if(!aContractID || !aContractIDLen)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Find the factory entry corresponding to the CID.
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, cidKey);
-    if (!entry) {
-        // Non existent. We use the special kNonExistentContractID to mark
-        // that this contractid does not have a mapping.
-        entry = kNonExistentContractID;
-    }
-
-    nsresult rv = HashContractID(aContractID, aContractIDLen, entry);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Fill the entry out parameter
-    if (pfe) *pfe = entry;
-    return NS_OK;
-}
-
-nsresult
-nsComponentManagerImpl::HashContractID(const char *aContractID,
-                                       PRUint32 aContractIDLen,
                                        nsFactoryEntry *fe)
 {
     if(!aContractID || !aContractIDLen)
@@ -1628,28 +1584,12 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
         }
     }   //exit monitor
 
-    // If no mapping found, add a special non-existent mapping
-    // so the next time around, we dont have to waste time doing the
-    // same mapping over and over again
-    if (!fe) {
-        fe = kNonExistentContractID;
-        HashContractID(aContractID, aContractIDLen, fe);
-    }
-
     return fe;
 }
 
 
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass)
-{
-    nsIDKey cidKey(aClass);
-    return GetFactoryEntry(aClass, cidKey);
-}
-
-
-nsFactoryEntry *
-nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey)
 {
     nsFactoryEntry *entry = nsnull;
     {
@@ -1702,7 +1642,7 @@ nsComponentManagerImpl::FindFactory(const char *contractID,
 
     nsFactoryEntry *entry = GetFactoryEntry(contractID, aContractIDLen);
 
-    if (!entry || entry == kNonExistentContractID)
+    if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     return entry->GetFactory(aFactory, this);
@@ -1795,7 +1735,7 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
     nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 
     nsFactoryEntry *fe = GetFactoryEntry(aContractID, strlen(aContractID));
-    if (fe && fe != kNonExistentContractID) {
+    if (fe) {
         *aClass = fe->mCid;
         rv = NS_OK;
     }
@@ -1914,7 +1854,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
 
     nsFactoryEntry *entry = GetFactoryEntry(aClass);
 
-    if (!entry || entry == kNonExistentContractID)
+    if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
@@ -1994,7 +1934,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
 
     nsFactoryEntry *entry = GetFactoryEntry(aContractID, strlen(aContractID));
 
-    if (!entry || entry == kNonExistentContractID)
+    if (!entry)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
@@ -2041,7 +1981,7 @@ FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
 {
     nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
 
-    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID)
+    if (!entry->mFactoryEntry)
         return PL_DHASH_NEXT;
 
     nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
@@ -2058,7 +1998,7 @@ FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
 {
     nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
 
-    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID)
+    if (!entry->mFactoryEntry)
         return PL_DHASH_NEXT;
 
     nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
@@ -2170,8 +2110,7 @@ nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aServi
     nsAutoMonitor mon(mMon);
 
     // check to see if we have a factory entry for the service
-    nsIDKey key(aClass);
-    nsFactoryEntry *entry = GetFactoryEntry(aClass, key);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass);
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
         void *mem;
@@ -2233,9 +2172,6 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
     // check to see if we have a factory entry for the service
     PRUint32 contractIDLen = strlen(aContractID);
     nsFactoryEntry *entry = GetFactoryEntry(aContractID, contractIDLen);
-
-    if (entry == kNonExistentContractID)
-        entry = nsnull;
 
     if (!entry) { // XXXdougt - should we require that all services register factories??  probably not.
         void *mem;
@@ -2353,7 +2289,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
         }
     }   // exit monitor
 
-    if (entry && entry != kNonExistentContractID && entry->mServiceObject) {
+    if (entry && entry->mServiceObject) {
         nsCOMPtr<nsISupports> service;
         rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
         *result = (service!=nsnull);
@@ -2379,7 +2315,7 @@ nsComponentManagerImpl::UnregisterService(const char* aContractID)
        entry = contractIDTableEntry->mFactoryEntry;
    }
 
-   if (entry == nsnull || entry == kNonExistentContractID || entry->mServiceObject == nsnull)
+   if (!entry || !entry->mServiceObject)
         return NS_ERROR_SERVICE_NOT_AVAILABLE;
 
    entry->mServiceObject = nsnull;
@@ -2418,7 +2354,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         entry = contractIDTableEntry->mFactoryEntry;
     }
 
-    if (entry && entry != kNonExistentContractID) {
+    if (entry) {
         if (entry->mServiceObject) {
             return entry->mServiceObject->QueryInterface(aIID, result);
         }
@@ -2440,7 +2376,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     mon.Enter();
 
 #ifdef XPCOM_CHECK_PENDING_CIDS 
-    if (entry && entry != kNonExistentContractID)
+    if (entry)
         RemovePendingCID(entry->mCid);
 #endif
 
@@ -3006,7 +2942,7 @@ DeleteFoundCIDs(PLDHashTable *aTable,
 {
     nsContractIDTableEntry* entry = NS_STATIC_CAST(nsContractIDTableEntry*, aHdr);
 
-    if (!entry->mFactoryEntry || entry->mFactoryEntry == kNonExistentContractID)
+    if (!entry->mFactoryEntry)
         return PL_DHASH_NEXT;
 
     UnregisterConditions* data = (UnregisterConditions*)aData;
@@ -3061,9 +2997,8 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
     DeleteContractIDEntriesByCID(&aClass, aFactory);
 
     // next check to see if there is a CID registered
-    nsIDKey key(aClass);
     nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-    old = GetFactoryEntry(aClass, key);
+    old = GetFactoryEntry(aClass);
 
     if (old && (old->mFactory.get() == aFactory))
     {
@@ -3100,8 +3035,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     DeleteContractIDEntriesByCID(&aClass, registryName);
 
     // next check to see if there is a CID registered
-    nsIDKey key(aClass);
-    old = GetFactoryEntry(aClass, key);
+    old = GetFactoryEntry(aClass);
     if (old && old->mLocation && !PL_strcasecmp(old->mLocation, registryName))
     {
         nsAutoMonitor mon(mMon);
@@ -3526,10 +3460,10 @@ nsComponentManagerImpl::IsContractIDRegistered(const char *aClass,
 {
     nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
 
-    if (!entry || entry == kNonExistentContractID)
-        *_retval = PR_FALSE;
-    else
+    if (entry)
         *_retval = PR_TRUE;
+    else
+        *_retval = PR_FALSE;
     return NS_OK;
 }
 
