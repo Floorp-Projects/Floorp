@@ -61,10 +61,15 @@ public:
 
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
 
+  virtual float GetGamma(void);
+  virtual void SetGamma(float aGamma);
+  virtual PRUint8 * GetGammaTable(void);
+
 protected:
   ~nsDeviceContextWin();
 
   nsresult CreateFontCache();
+  void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;
@@ -73,6 +78,8 @@ protected:
   nsIFontCache      *mFontCache;
   float             mZoom;
   HDC               mSurface;
+  float             mGammaValue;
+  PRUint8           *mGammaTable;
 };
 
 #endif /* nsDeviceContextWin_h___ */

@@ -39,6 +39,9 @@ nsDeviceContextWin :: nsDeviceContextWin()
   mDevUnitsToAppUnits = 1.0f;
   mAppUnitsToDevUnits = 1.0f;
 
+  mGammaValue = 1.0f;
+  mGammaTable = new PRUint8[256];
+
   mZoom = 1.0f;
 
   mSurface = NULL;
@@ -53,6 +56,12 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
     DeleteDC(mSurface);
     mSurface = NULL;
   }
+
+  if (nsnull != mGammaTable)
+  {
+    delete mGammaTable;
+    mGammaTable = nsnull;
+  }
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextWin, kDeviceContextIID)
@@ -61,6 +70,9 @@ NS_IMPL_RELEASE(nsDeviceContextWin)
 
 nsresult nsDeviceContextWin :: Init()
 {
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    mGammaTable[cnt] = cnt;
+
   return NS_OK;
 }
 
@@ -179,4 +191,39 @@ nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aC
     mSurface = aContext.CreateDrawingSurface(nsnull);
 
   return mSurface;
+}
+
+float nsDeviceContextWin :: GetGamma(void)
+{
+  return mGammaValue;
+}
+
+void nsDeviceContextWin :: SetGamma(float aGamma)
+{
+  if (aGamma != mGammaValue)
+  {
+    //we don't need to-recorrect existing images for this case
+    //so pass in 1.0 for the current gamma regardless of what it
+    //really happens to be. existing images will get a one time
+    //re-correction when they're rendered the next time. MMP
+
+    SetGammaTable(mGammaTable, 1.0f, aGamma);
+
+    mGammaValue = aGamma;
+  }
+}
+
+PRUint8 * nsDeviceContextWin :: GetGammaTable(void)
+{
+  //XXX we really need to ref count this somehow. MMP
+
+  return mGammaTable;
+}
+
+void nsDeviceContextWin :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
+{
+  float fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
+
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    aTable[cnt] = (PRUint8)(pow(cnt * (1. / 256.), fgval) * 255.99999999);
 }

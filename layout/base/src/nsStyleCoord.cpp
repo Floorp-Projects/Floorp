@@ -39,6 +39,8 @@ nsStyleCoord::nsStyleCoord(nscoord aValue)
 nsStyleCoord::nsStyleCoord(PRInt32 aValue, nsStyleUnit aUnit)
   : mUnit(aUnit)
 {
+  //if you want to pass in eStyleUnit_Coord, don't. instead, use the
+  //constructor just above this one... MMP
   NS_ASSERTION((aUnit == eStyleUnit_Proportional) ||
                (aUnit == eStyleUnit_Enumerated) ||
                (aUnit == eStyleUnit_Integer), "not an int value");

@@ -80,6 +80,13 @@ public:
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext) = 0;
+
+  //functions for handling gamma correction of output device
+  virtual float GetGamma(void) = 0;
+  virtual void SetGamma(float aGamma) = 0;
+
+  //XXX the return from this really needs to be ref counted somehow. MMP
+  virtual PRUint8 * GetGammaTable(void) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */

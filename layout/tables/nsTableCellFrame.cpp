@@ -440,8 +440,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   {
   
     PRInt32 value;
-    nsStyleCoord  padding(0, eStyleUnit_Coord);
-    nsStyleCoord  spacing(0, eStyleUnit_Coord);
+    nsStyleCoord  padding(0);
+    nsStyleCoord  spacing(0);
 
     if (padding_result == eContentAttr_HasValue && ConvertToIntValue(padding_value,0,value))
       padding.SetCoordValue((nscoord)(p2t*(float)value)); 
