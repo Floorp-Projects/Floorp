@@ -44,4 +44,3 @@ MKSHLIB :=
 include $(DEPTH)/config/rules.mk
 
 install::
-	$(INSTALL) broken-image.gif $(DIST)/bin/res/html
