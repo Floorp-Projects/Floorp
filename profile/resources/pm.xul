@@ -28,8 +28,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 	title="&windowtitle.label;"
 		width="500" height="500"> 
       
-<html:script language="javascript" src="pm.js">
-</html:script>
+<html:script language="javascript" src="pm.js"/>
 	    
 <html:div flex="100%" style="width: 100%; height: 100%;">
 <html:div style="width: 300px; margin: 5px;">&intro;</html:div>
