@@ -3992,10 +3992,11 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
           if (element)
           {
-            PRBool hasBackground = PR_FALSE;
-            if (NS_SUCCEEDED(element->HasAttribute(NS_LITERAL_STRING("background"), &hasBackground)))
-              if (hasBackground)
-                (*aNodeList)->AppendElement(node);
+            nsAutoString bgImageStr;
+
+            mHTMLCSSUtils->GetComputedProperty(element, nsEditProperty::cssBackgroundImage, bgImageStr);
+            if (!bgImageStr.Equals(NS_LITERAL_STRING("none"))) 
+              (*aNodeList)->AppendElement(node);
           }
         }
       }
