@@ -67,7 +67,7 @@ public class EventImpl implements Event {
      * whose <code>EventListener</code>s are currently being processed.  This 
      * is particularly  useful during capturing and bubbling. 
      */
-    public native Node getCurrentNode();
+    public native EventTarget getCurrentTarget();
 
     /**
      * The <code>eventPhase</code> property indicates which phase of event flow 

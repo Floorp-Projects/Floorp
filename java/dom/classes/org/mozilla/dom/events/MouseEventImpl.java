@@ -24,6 +24,7 @@ package org.mozilla.dom.events;
 import org.w3c.dom.Node;
 import org.w3c.dom.views.AbstractView;
 import org.w3c.dom.events.MouseEvent;
+import org.w3c.dom.events.EventTarget;
 
 /**
  * The <code>MouseEvent</code> interface provides specific contextual  
@@ -114,7 +115,7 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * <code>relatedNode</code> is used to identify a secondary node related to 
      * a UI event.
      */
-    public native Node getRelatedNode();
+    public native EventTarget getRelatedTarget();
     
     /**
      * 
@@ -154,6 +155,6 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
 				      boolean shiftKeyArg, 
 				      boolean metaKeyArg, 
 				      short buttonArg, 
-				      Node relatedNodeArg);
+				      EventTarget relatedTargetArg);
 }
 
