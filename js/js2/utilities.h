@@ -1405,6 +1405,7 @@ namespace JavaScript {
 
 		void requiredBreak();
 		void linearBreak(uint32 nSpaces) {conditionalBreak(nSpaces, Item::linearBreak);}
+		void linearBreak(uint32 nSpaces, bool required);
 		void fillBreak(uint32 nSpaces) {conditionalBreak(nSpaces, Item::fillBreak);}
 		
 		void end();
