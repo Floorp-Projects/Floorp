@@ -2115,13 +2115,13 @@ pk11_FindCertObjectByRecipientNew(PK11SlotInfo *slot, NSSCMSRecipient **recipien
 	    continue;
 	cert = PK11_FindCertByIssuerAndSNOnToken(slot, ri->id.issuerAndSN, 
 								pwarg);
-	/* this isn't our cert */
-	if ((cert->trust == NULL) ||
-       		((cert->trust->emailFlags & CERTDB_USER) != CERTDB_USER)) {
-	    CERT_DestroyCertificate(cert);
-	    continue;
-	}
 	if (cert) {
+	    /* this isn't our cert */
+	    if ((cert->trust == NULL) ||
+       		((cert->trust->emailFlags & CERTDB_USER) != CERTDB_USER)) {
+		 CERT_DestroyCertificate(cert);
+		continue;
+	    }
 	    ri->slot = PK11_ReferenceSlot(slot);
 	    *rlIndex = i;
 	    return cert;
@@ -2188,12 +2188,13 @@ pk11_FindCertObjectByRecipient(PK11SlotInfo *slot,
 
 	cert = PK11_FindCertByIssuerAndSNOnToken(slot, ri->issuerAndSN, 
 								pwarg);
-	if ((cert->trust == NULL) ||
-       		((cert->trust->emailFlags & CERTDB_USER) != CERTDB_USER)) {
-	    CERT_DestroyCertificate(cert);
-	    continue;
-	}
         if (cert) {
+	    /* this isn't our cert */
+	    if ((cert->trust == NULL) ||
+       		((cert->trust->emailFlags & CERTDB_USER) != CERTDB_USER)) {
+		 CERT_DestroyCertificate(cert);
+		continue;
+	    }
 	    *rip = ri;
 	    return cert;
 	}
