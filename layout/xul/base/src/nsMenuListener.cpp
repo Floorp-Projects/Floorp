@@ -145,16 +145,8 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 
   // Since a menu was open, eat the event to keep other event
   // listeners from becoming confused.
-
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-  if (nsevent) {
-    nsevent->PreventBubble();
-    nsevent->PreventCapture();
-  }
-
+  aKeyEvent->StopPropagation();
   aKeyEvent->PreventDefault();
-
   return NS_ERROR_BASE; // I am consuming event
 }
 
@@ -162,15 +154,10 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  // if event has already been handled, bail
-  nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
-  if ( uiEvent ) {
-    PRBool eventHandled = PR_FALSE;
-    uiEvent->GetPreventDefault ( &eventHandled );
-    if ( eventHandled )
-      return NS_OK;       // don't consume event
-  }
-  
+  // Don't check prevent default flag -- menus always get first shot at key events.
+  // When a menu is open, the prevent default flag on a keypress is always set, so
+  // that no one else uses the key event.
+
   //handlers shouldn't be triggered by non-trusted events.
   nsCOMPtr<nsIDOMNSEvent> domNSEvent = do_QueryInterface(aKeyEvent);
   PRBool trustedEvent = PR_FALSE;
@@ -229,15 +216,8 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
   }
 
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-  if (nsevent) {
-    nsevent->PreventBubble();
-    nsevent->PreventCapture();
-  }
-
+  aKeyEvent->StopPropagation();
   aKeyEvent->PreventDefault();
-
   return NS_ERROR_BASE; // I am consuming event
 }
 

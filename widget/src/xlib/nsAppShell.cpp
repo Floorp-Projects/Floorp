@@ -895,7 +895,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   //         event->xkey.keycode,
   //         keyEvent.keyCode);
 
-  focusWidget->DispatchKeyEvent(keyEvent);
+  PRBool noDefault = focusWidget->DispatchKeyEvent(keyEvent);
 
   nsKeyEvent pressEvent(NS_KEY_PRESS, focusWidget);
   pressEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
@@ -905,9 +905,11 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   pressEvent.isControl = (event->xkey.state & ControlMask) ? 1 : 0;
   pressEvent.isAlt = (event->xkey.state & Mod1Mask) ? 1 : 0;
   pressEvent.isMeta = (event->xkey.state & Mod1Mask) ? 1 : 0;
+  if (noDefault) {   // If default prevented on keydown, do same for keypress
+    pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
 
   focusWidget->DispatchKeyEvent(pressEvent);
-
 }
 
 void

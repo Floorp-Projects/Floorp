@@ -206,7 +206,8 @@ protected:
 	                                PRUint32 mod, 
 	                                PRUint32 bekeycode, 
 	                                int32 rawcode);
-	virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode, PRUint32 aKeyCode);
+	virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
+                                           PRUint32 aKeyCode, PRUint32 aFlags = 0);
 	virtual PRBool          DispatchFocus(PRUint32 aEventType);
 	virtual PRBool          OnScroll();
 	static PRBool           ConvertStatus(nsEventStatus aStatus);

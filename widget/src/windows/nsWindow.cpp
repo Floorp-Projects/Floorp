@@ -2987,13 +2987,15 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 // OnKey
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyData)
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, 
+                                  LPARAM aKeyData, PRUint32 aFlags)
 {
   nsKeyEvent event(aEventType, this);
   nsPoint point(0, 0);
 
   InitEvent(event, &point); // this add ref's event.widget
 
+  event.flags |= aFlags;
   event.charCode = aCharCode;
   event.keyCode  = aVirtualCharCode;
 
@@ -3060,7 +3062,7 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   //printf("In OnKeyDown virt: %d  scan: %d\n", virtualKeyCode, aScanCode);
 #endif
 
-  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, 0, virtualKeyCode, aKeyData);
+  BOOL noDefault = DispatchKeyEvent(NS_KEY_DOWN, 0, virtualKeyCode, aKeyData);
 
   // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress
   // for almost all keys
@@ -3070,8 +3072,10 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
     case NS_VK_ALT:
     case NS_VK_CAPS_LOCK:
     case NS_VK_NUM_LOCK:
-    case NS_VK_SCROLL_LOCK: return result;
+    case NS_VK_SCROLL_LOCK: return noDefault;
   }
+
+  PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
 
   MSG msg;
   BOOL gotMsg = ::PeekMessage(&msg, mWnd, WM_KEYFIRST, WM_KEYLAST, PM_NOREMOVE | PM_NOYIELD);
@@ -3123,7 +3127,9 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   }
   else if (gotMsg &&
            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
-    return result;
+    // If prevent default set for keydown, do same for keypress
+    ::GetMessage(&msg, mWnd, msg.message, msg.message);
+    return (msg.message == WM_DEADCHAR) ? PR_FALSE : OnChar(msg.wParam, extraFlags);
   }
 
   WORD asciiKey = 0;
@@ -3161,12 +3167,13 @@ BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
           asciiKey += 0x20;
       }
   }
-  if (asciiKey)
-    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData);
-  else
-    DispatchKeyEvent(NS_KEY_PRESS, 0, virtualKeyCode, aKeyData);
 
-  return result;
+  if (asciiKey)
+    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData, extraFlags);
+  else
+    DispatchKeyEvent(NS_KEY_PRESS, 0, virtualKeyCode, aKeyData, extraFlags);
+
+  return noDefault;
 }
 
 //-------------------------------------------------------------------------
@@ -3185,8 +3192,28 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnChar(UINT charCode)
+BOOL nsWindow::OnChar(UINT charCode, PRUint32 aFlags)
 {
+#ifdef KE_DEBUG
+  printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
+#endif
+  // These must be checked here too as a lone WM_CHAR could be received
+  // if a child window didn't handle it (for example Alt+Space in a content window)
+  mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
+  mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+  mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+
+  // ignore [shift+]alt+space so the OS can handle it
+  if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+    return FALSE;
+  }
+
+  // WM_CHAR with Control and Alt (== AltGr) down really means a normal character
+  PRBool saveIsAltDown = mIsAltDown;
+  PRBool saveIsControlDown = mIsControlDown;
+  if (mIsAltDown && mIsControlDown)
+    mIsAltDown = mIsControlDown = PR_FALSE;
+
   wchar_t uniChar;
 
   if (sIMEIsComposing) {
@@ -3228,6 +3255,8 @@ BOOL nsWindow::OnChar(UINT charCode)
             charToConvert[0] = LOBYTE(charCode);
             if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) {
               mLeadByte = charToConvert[0];
+              mIsAltDown = saveIsAltDown;
+              mIsControlDown = saveIsControlDown;
               return TRUE;
             }
             length = 1;
@@ -3246,7 +3275,11 @@ BOOL nsWindow::OnChar(UINT charCode)
       charCode = 0;
     }
   }
-  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0);
+
+  PRBool result = DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0, aFlags);
+  mIsAltDown = saveIsAltDown;
+  mIsControlDown = saveIsControlDown;
+  return result;
 }
 
 
@@ -3909,31 +3942,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_SYSCHAR:
     case WM_CHAR:
     {
-#ifdef KE_DEBUG
-      printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
-#endif
-      // These must be checked here too as a lone WM_CHAR could be received
-      // if a child window didn't handle it (for example Alt+Space in a content window)
-      mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-      mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-      mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-      // ignore [shift+]alt+space so the OS can handle it
-      if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
-        result = PR_FALSE;
-        break;
-      }
-
-      // WM_CHAR with Control and Alt (== AltGr) down really means a normal character
-      PRBool saveIsAltDown = mIsAltDown;
-      PRBool saveIsControlDown = mIsControlDown;
-      if (mIsAltDown && mIsControlDown)
-        mIsAltDown = mIsControlDown = PR_FALSE;
-
       result = OnChar(wParam);
-
-      mIsAltDown = saveIsAltDown;
-      mIsControlDown = saveIsControlDown;
     }
     break;
 

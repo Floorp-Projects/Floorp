@@ -2274,6 +2274,9 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // Now we need to dispatch a keypress event which has the unicode char.
 
    pressEvent.message = NS_KEY_PRESS;
+   if (rc) { // If keydown default was prevented, do same for keypress
+     pressEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
+   }
 
    if( usChar)
    {

@@ -2155,7 +2155,7 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
                            int32 numBytes, PRUint32 mod, PRUint32 bekeycode, int32 rawcode)
 {
 	PRUint32 aTranslatedKeyCode;
-	PRBool result = PR_FALSE;
+	PRBool noDefault = PR_FALSE;
 
 	mIsShiftDown   = (mod & B_SHIFT_KEY) ? PR_TRUE : PR_FALSE;
 	mIsControlDown = (mod & B_CONTROL_KEY) ? PR_TRUE : PR_FALSE;
@@ -2171,7 +2171,7 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 
 	if (numBytes <= 1)
 	{
-		result = DispatchKeyEvent(NS_KEY_DOWN, 0, aTranslatedKeyCode);
+		noDefault  = DispatchKeyEvent(NS_KEY_DOWN, 0, aTranslatedKeyCode);
 	} else {
 		//   non ASCII chars
 	}
@@ -2187,13 +2187,13 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 		aTranslatedKeyCode = 0;
 	} else {
 		if (numBytes == 0) // deal with unmapped key
-			return result;
+			return noDefault;
 
 		switch((unsigned char)bytes[0])
 		{
 		case 0xc8://System Request
 		case 0xca://Break
-			return result;// do not send 'KEY_PRESS' message
+			return noDefault;// do not send 'KEY_PRESS' message
 
 		case B_INSERT:
 		case B_ESCAPE:
@@ -2238,9 +2238,9 @@ PRBool nsWindow::OnKeyDown(PRUint32 aEventType, const char *bytes,
 		}
 	}
 
-	PRBool result2 = DispatchKeyEvent(NS_KEY_PRESS, uniChar, aTranslatedKeyCode);
-
-	return result && result2;
+	// If prevent default set for onkeydown, do the same for onkeypress
+	PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
+	return DispatchKeyEvent(NS_KEY_PRESS, uniChar, aTranslatedKeyCode, extraFlags) && noDefault;
 }
 
 //-------------------------------------------------------------------------
@@ -2273,7 +2273,7 @@ PRBool nsWindow::OnKeyUp(PRUint32 aEventType, const char *bytes,
 //-------------------------------------------------------------------------
 
 PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
-                                  PRUint32 aKeyCode)
+                                  PRUint32 aKeyCode, PRUint32 aFlags)
 {
 	nsKeyEvent event(aEventType, this);
 	nsPoint point;
@@ -2283,6 +2283,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
 
 	InitEvent(event, &point); // this add ref's event.widget
 
+	event.flags |= aFlags;
 	event.charCode = aCharCode;
 	event.keyCode  = aKeyCode;
 
