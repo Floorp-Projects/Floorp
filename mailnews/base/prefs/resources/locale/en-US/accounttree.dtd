@@ -1,0 +1,7 @@
+<!-- extracted from accounttree.xul -->
+
+<!ENTITY nameCol.label "Name">
+<!ENTITY duplicate.label "Duplicate">
+<!ENTITY delete.label "Delete">
+<!ENTITY newAccount.label "New Account">
+<!ENTITY setAsDefault.label "Set As Default">

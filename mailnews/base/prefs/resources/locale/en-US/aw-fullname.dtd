@@ -1,0 +1,6 @@
+<!-- extracted from aw-fullname.xul -->
+
+<!ENTITY fullnameTitle.label "Your Name:">
+<!ENTITY fullnameDesc.label "Enter your name as you would like it to appear in the From field of outgoing messages:">
+<!ENTITY fullnameExample.label "For example: Elmer Fudd">
+

@@ -27,6 +27,23 @@ install::
 	$(MAKE_INSTALL) pref-mailnews.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-receipts.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-winsetting.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-accname.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-accounttype.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-done.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-email.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-fullname.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-identity.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-login.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-mailtype.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) aw-server.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) AccountManager.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) AccountWizard.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) accounttree.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-advanced.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-server-pop3.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\custreceipt.dtd

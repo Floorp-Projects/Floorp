@@ -1,0 +1,10 @@
+<!-- extracted from am-advanced.xul -->
+
+<!ENTITY advancedSettings.label "Advanced Settings">
+<!ENTITY smtpServer.label "SMTP Server">
+<!ENTITY smtpDesc.label "Some email accounts require a unique outgoing mail server.">
+<!ENTITY smtpHostname.label "SMTP Server Hostname">
+<!ENTITY smtpUsername.label "SMTP Server Login">
+<!ENTITY mailFolderLoc.label "Mail Folder Location">
+<!ENTITY storeMailHere.label "Store mail in this folder">
+<!ENTITY chooseFolderButton.label "Choose Folder">

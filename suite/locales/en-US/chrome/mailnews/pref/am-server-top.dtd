@@ -1,0 +1,8 @@
+<!-- extracted from am-server-top.xul -->
+
+<!ENTITY serverSettings.label "Server Settings">
+<!ENTITY popServer.label "POP Mail server">
+<!ENTITY imapServer.label "IMAP Mail server">
+<!ENTITY newsServer.label "News Server">
+<!ENTITY webmail.label "Web mail account">
+

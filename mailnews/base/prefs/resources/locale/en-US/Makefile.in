@@ -34,6 +34,23 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/pref-mailnews.dtd \
 	$(srcdir)/pref-receipts.dtd \
 	$(srcdir)/pref-winsetting.dtd \
+    $(srcdir)/aw-accname.dtd	\
+    $(srcdir)/aw-accounttype.dtd	\
+    $(srcdir)/aw-done.dtd	\
+    $(srcdir)/aw-email.dtd	\
+    $(srcdir)/aw-fullname.dtd	\
+    $(srcdir)/aw-identity.dtd	\
+    $(srcdir)/aw-login.dtd	\
+    $(srcdir)/aw-mailtype.dtd	\
+    $(srcdir)/aw-server.dtd	\
+    $(srcdir)/AccountManager.dtd	\
+    $(srcdir)/AccountWizard.dtd	\
+    $(srcdir)/accounttree.dtd	\
+    $(srcdir)/am-advanced.dtd	\
+    $(srcdir)/am-copies.dtd	\
+    $(srcdir)/am-main.dtd	\
+    $(srcdir)/am-server-pop3.dtd	\
+    $(srcdir)/am-server-top.dtd	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

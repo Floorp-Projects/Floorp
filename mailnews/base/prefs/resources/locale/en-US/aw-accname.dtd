@@ -1,0 +1,6 @@
+<!-- extracted from aw-accname.xul -->
+
+<!ENTITY accnameTitle.label "Account Name">
+<!ENTITY accnameDesc.label "Enter the name by which you would like to refer to this account.">
+<!ENTITY accnameExample.label "For example, Work Account, Home Account or News Account">
+<!ENTITY accnameLabel.label "Account Name:">

@@ -1,0 +1,11 @@
+<!-- extracted from am-server-pop3.xul -->
+
+<!ENTITY savePassword.label "Save password.">
+<!ENTITY biffStart.label "Check for new messages every ">
+<!ENTITY biffEnd.label "minutes.">
+<!ENTITY leaveOnServer.label "Leave messages on server.">
+<!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
+<!ENTITY emptyTrashOnExit.label "Empty Trash on exit">
+<!ENTITY hostname.label "Server Hostname">
+<!ENTITY username.label "Your Login Name">
+<!ENTITY popServerTitle.label "POP Server Information">

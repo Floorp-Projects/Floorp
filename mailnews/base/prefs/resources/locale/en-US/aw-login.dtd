@@ -1,0 +1,14 @@
+<!-- extracted from aw-login.xul -->
+
+<!ENTITY loginTitle.label "Name and Password">
+<!ENTITY usernameDesc.label "Enter your user name given to you by your email provider.">
+<!ENTITY usernameExample.label "For example: jsmith">
+<!ENTITY usernameLabel.label "User Name:">
+
+<!ENTITY passwordTitle.label "Password Storage">
+<!ENTITY savePasswordDesc.label "Netscape Mail can save your password so that you are not asked for it each time you access this account. Your password is automatically sent to the server to which you are connecting. This is not recommended if other people have access to your computer.">
+<!ENTITY savePasswordLabel.label "If you want Netscape Mail to save your password, check the box below.">
+<!ENTITY savePasswordCheckbox.label "Save my password">
+
+<!ENTITY passwordDesc.label "Enter the password given to you by your email provider">
+<!ENTITY passwordLabel.label "Password:">

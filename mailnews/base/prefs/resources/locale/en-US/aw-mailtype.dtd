@@ -1,0 +1,6 @@
+<!-- extracted from aw-mailtype.xul -->
+
+<!ENTITY mailTypeTitle.label "Netscape WebMail or Other Mail:">
+<!ENTITY mailTypeDesc.label "Select a free Netscape WebMail account or other mail account, such as your ISP or company mail.">
+<!ENTITY mailTypeOtherMail.label "Other Mail">
+

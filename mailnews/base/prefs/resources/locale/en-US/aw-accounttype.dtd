@@ -1,0 +1,9 @@
+<!-- extracted from aw-accounttype.xul -->
+
+<!ENTITY accountTypeTitle.label "Welcome to the Account Setup Wizard">
+<!ENTITY accountTypeDesc.label "This wizard will collect the necessary information needed before you can use your new account. If you do not know the information requested, please contact your Internet Service Provider or System Administrator.">
+<!ENTITY accountTypeMail.label "Mail">
+<!ENTITY accountTypeNews.label "News">
+<!ENTITY accountTypeWebMail.label "Netscape WebMail">
+<!ENTITY webMailNew.label "New Account">
+<!ENTITY webMailExisting.label "Existing Account">

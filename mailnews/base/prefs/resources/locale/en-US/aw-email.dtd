@@ -1,0 +1,6 @@
+<!-- extracted from aw-email.xul -->
+
+<!ENTITY emailTitle.label "Your Email Address:">
+<!ENTITY emailDesc.label "Enter your email address; this is the address otherws will use to send email to you:">
+<!ENTITY emailExample.label "For example: elmer@netscape.net">
+
