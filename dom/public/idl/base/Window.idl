@@ -40,6 +40,7 @@ interface Window {
                  attribute  long pageYOffset;
         readonly attribute  long scrollX;
         readonly attribute  long scrollY;
+		readonly attribute  unsigned long length;
 
         void  dump(in wstring str);
         void  alert(/* ... */);
