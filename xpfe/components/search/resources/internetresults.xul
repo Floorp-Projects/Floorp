@@ -22,10 +22,12 @@
 	</box>
 
 	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch"
-		onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode); else doResultClick(event.target.parentNode.parentNode);">
+		onclick="if (event.clickCount == 2) return OpenURL(event, event.target.parentNode.parentNode); else return doResultClick(event.target.parentNode.parentNode);">
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
+		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+				sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
 		<treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Engine"/>
 
@@ -46,19 +48,13 @@
                                 <treechildren>
 				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
 					<treerow>
-						<treecell>
-							<titledbutton style="width: 100%;" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</treecell>
+						<treecell class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Name" />
 						<treecell>
 							<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
-							<titledbutton crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none; width: 100%;" />
+							<titledbutton crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
 						</treecell>
-						<treecell>
-							<titledbutton style="width: 100%;" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-						</treecell>
-						<treecell>
-							<titledbutton style="width: 100%;" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
-						</treecell>
+						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
+						<treecell class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
 					</treerow>
 				</treeitem>
                                 </treechildren>

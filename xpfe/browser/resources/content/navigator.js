@@ -474,7 +474,29 @@ function UpdateBookmarksLastVisitedDate(event)
 	}
 }
 
-  function createBrowserInstance() {
+
+
+function UpdateInternetSearchResults(event)
+{
+
+	if (window.content.location.href && window.content.location.href != "")
+	{
+		try
+		{
+			var search = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+			if (search)	search = search.QueryInterface(Components.interfaces.nsIInternetSearchService);
+			if (search)	search.FindInternetSearchResults(window.content.location.href);
+		}
+		catch(ex)
+		{
+		}
+	}
+}
+
+
+
+function createBrowserInstance()
+{
     appCore = Components
                 .classes[ "component://netscape/appshell/component/browser/instance" ]
                   .createInstance( Components.interfaces.nsIBrowserInstance );
@@ -514,6 +536,8 @@ function UpdateBookmarksLastVisitedDate(event)
     // be notified when onloads complete.
     window.addEventListener("load", UpdateHistory, true);
     window.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
+    window.addEventListener("load", UpdateInternetSearchResults, true);
+
 	 // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
         // Load it using yet another psuedo-onload handler.
