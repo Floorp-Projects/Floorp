@@ -1,0 +1,15 @@
+toolkit.jar:
+*+ content/global/printdialog.xul             (content/printdialog.xul)
+*+ content/global/printdialog.js              (content/printdialog.js)
+*+ content/global/printProgress.xul           (content/printProgress.xul)
+*+ content/global/printProgress.js            (content/printProgress.js)
+*+ content/global/printPreviewProgress.xul    (content/printPreviewProgress.xul)
+*+ content/global/printPreviewProgress.js     (content/printPreviewProgress.js)
+
+en-US.jar:
++  locale/global/printdialog.dtd              (locale/printdialog.dtd)
++  locale/global/printProgress.dtd            (locale/printProgress.dtd)
++  locale/global/printPreviewProgress.dtd     (locale/printPreviewProgress.dtd)
+
+en-unix.jar:
++  locale/global-platform/printjoboptions.dtd (locale/printjoboptions.dtd)

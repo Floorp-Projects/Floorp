@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+# -*- Mode: HTML -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org printing front-end.
+#
+# The Initial Developer of the Original Code is
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2002
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Masaki Katakai <katakai@japan.sun.com>
+#   Dan Rosen <dr@netscape.com>
+#   Jessica Blanco <jblanco@us.ibm.com>
+#   Asko Tontti <atontti@cc.hut.fi>
+#   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or 
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the NPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the NPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE dialog SYSTEM "chrome://global/locale/printdialog.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="onLoad();"
+  ondialogaccept="return onAccept();"
+  oncancel="return onCancel();"
+  title="&printDialog.title;"
+  persist="screenX screenY"
+  screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://global/content/printdialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
+  <groupbox>
+    <caption label="&printer.label;"/>
+
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+      </columns>
+
+      <rows>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label value="&printTo.label;"/>
+          </hbox>
+          <radiogroup id="destGroup" orient="horizontal">
+            <radio id="printerRadio" label="&printerRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(false);"/>
+            <radio id="fileRadio" label="&fileRadio.label;" oncommand="if (!this.disabled) doEnablePrintToFile(true);"/>
+          </radiogroup>
+        </row>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label id="printerLabel" value="&printerInput.label;"/>
+          </hbox>
+          <menulist id="printerList" flex="1" oncommand="setPrinterDefaultsForSelectedPrinter();">
+            <menupopup/>
+          </menulist>
+          <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
+        </row>
+        <row align="center">
+          <hbox align="center" pack="end">
+            <label id="fileLabel" control="fileInput" value="&fileInput.label;"/>
+          </hbox>
+          <textbox id="fileInput" flex="1" onblur="stripTrailingWhitespace(this)"/>
+          <button id="chooseFile" label="&chooseButton.label;" oncommand="onChooseFile()"/>
+        </row>
+      </rows>
+
+    </grid>
+  </groupbox>
+
+  <hbox>
+    <groupbox flex="1">
+      <caption label="&printrangeGroup.label;"/>
+
+      <radiogroup id="printrangeGroup">
+        <radio id="allpagesRadio" label="&allpagesRadio.label;" oncommand="doPrintRange(0)"/>
+        <hbox align="center">
+          <radio id="rangeRadio" label="&rangeRadio.label;" oncommand="doPrintRange(1)"/>
+          <label id="frompageLabel" control="frompageInput" value="&frompageInput.label;" />
+          <textbox id="frompageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+          <label id="topageLabel" control="topageInput" value="&topageInput.label;" />
+          <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+        </hbox>
+        <radio id="selectionRadio" label="&selectionRadio.label;" oncommand="doPrintRange(2)"/>
+      </radiogroup>
+    </groupbox>
+
+    <groupbox flex="1">
+      <caption label="&copies.label;"/>
+      <hbox align="center">
+        <label control="numCopiesInput" value="&numCopies.label;"/>  
+        <textbox id="numCopiesInput" style="width:5em;" onkeyup="checkInteger(this)"/>
+      </hbox>
+    </groupbox>
+  </hbox>
+
+  <groupbox flex="1">
+    <caption label="&printframeGroup.label;" id="printframeGroupLabel"/>
+    <radiogroup id="printframeGroup">
+      <radio id="aslaidoutRadio" label="&aslaidoutRadio.label;" />
+      <radio id="selectedframeRadio" label="&selectedframeRadio.label;" />
+      <radio id="eachframesepRadio" label="&eachframesepRadio.label;" />
+    </radiogroup>
+  </groupbox>
+
+  <!-- used to store titles and labels -->
+  <data style="display:none;" id="printButton" label="&printButton.label;"/>
+  <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
+
+</dialog>
+
