@@ -65,9 +65,11 @@ struct XPTHeader {
 struct XPTInterfaceDirectoryEntry {
     uint128                iid;
     char                   *name;
-    char                   *namespace;    
+    char                   *namespace;
     XPTInterfaceDescriptor *interface_descriptor;
 };
+
+#define XPT_IDE_SIZE (16 + 4 + 4 + 4)
 
 struct XPTInterfaceDescriptor {
     XPTInterfaceDescriptorEntry *parent_interface;
@@ -160,7 +162,7 @@ struct XPTTypeDescriptor {
 
 struct XPTString {
     uint16 length;
-    char   bytes[];
+    char   *bytes;
 };
 
 /*
