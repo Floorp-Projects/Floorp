@@ -540,8 +540,34 @@ nsScriptableInterfaceInfo::SetInterfaceID(const nsIID * aInterfaceID)
     mInfo = nsnull;
     iim->GetInfoForIID(aInterfaceID, getter_AddRefs(mInfo));
     
-    // XXX we want to look at additional managers here if not found!
-    
+    // If not found, then let's ask additional managers.
+
+    // This entire block assumes the additional manager support from:
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=103805
+    // Disable it by setting '#if 0'.
+#if 0
+    PRBool yes;
+    nsCOMPtr<nsISimpleEnumerator> list;
+    nsCOMPtr<nsIInterfaceInfoSuperManager> iism;
+
+    if(!mInfo && (nsnull != (iism = do_QueryInterface(iim))) &&
+       NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
+       NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
+       list)
+    {
+        PRBool more;
+        nsCOMPtr<nsIInterfaceInfoManager> current;
+
+        while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
+              NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current)
+        {
+            current->GetInfoForIID(aInterfaceID, getter_AddRefs(mInfo));
+            if(mInfo)
+                break;
+        }
+    }
+#endif    
+
     return mInfo ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 

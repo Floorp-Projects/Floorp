@@ -61,3 +61,6 @@ LLIBS=	$(LIBNSPR)	\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+libs:: $(DLL)
+		$(MAKE_INSTALL) nsInterfaceInfoToIDL.js $(DIST)\bin\components
