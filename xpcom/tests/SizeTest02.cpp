@@ -2,7 +2,7 @@
 
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
-#include "nsIPtr.h"
+#include "nsString.h"
 
 #ifdef __MWERKS__
 	#pragma exceptions off
@@ -12,8 +12,7 @@ NS_DEF_PTR(nsIDOMNode);
 
 	/*
 		This test file compares the generated code size of similar functions between raw
-		COM interface pointers (|AddRef|ing and |Release|ing by hand), |nsCOMPtr|s, and
-		the smart-pointer macro defined in "nsIPtr.h".
+                COM interface pointers (|AddRef|ing and |Release|ing by hand) and |nsCOMPtr|s.
 
 		Function size results were determined by examining dissassembly of the generated code.
 		mXXX is the size of the generated code on the Macintosh.  wXXX is the size on Windows.
@@ -21,7 +20,7 @@ NS_DEF_PTR(nsIDOMNode);
 		disabled (just as we build for release).
 
 		The tests in this file explore more complicated functionality: assigning a pointer
-		to be reference counted into a [raw, nsCOMPtr, nsIPtr] object using |QueryInterface|;
+                to be reference counted into a [raw, nsCOMPtr] object using |QueryInterface|;
 		ensuring that it is |AddRef|ed and |Release|d appropriately; calling through the pointer
 		to a function supplied by the underlying COM interface.  The tests in this file expand
 		on the tests in "Test01.cpp" by adding |QueryInterface|.
@@ -31,14 +30,11 @@ NS_DEF_PTR(nsIDOMNode);
 			nsCOMPtr							 63
 			raw										 66
 			nsCOMPtr*							 68
-			nsIPtr								 66 + 196
-			
 
 		Macintosh:
 			nsCOMPtr							120 	(1.0000)
 			Raw01									128		(1.1429)	i.e., 14.29% bigger than nsCOMPtr
 			Raw00									144		(1.2000)
-			nsIPtr								196 	(1.6333)
 	*/
 
 
@@ -72,7 +68,7 @@ Test02_Raw01( nsISupports* aDOMNode, nsString* aResult )
 //			return NS_ERROR_NULL_POINTER;
 
 		nsIDOMNode* node;
-		nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode(, (void**)&node);
+                nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
 		if ( NS_SUCCEEDED(status) )
 			{
 				node->GetNodeName(*aResult);
@@ -95,18 +91,3 @@ Test02_nsCOMPtr( nsISupports* aDOMNode, nsString* aResult )
 //		return status;
 	}
 
-void // nsresult
-Test02_nsIPtr( nsISupports* aDOMNode, nsString* aResult )
-		// m196, w66
-	{
-//		if ( !aDOMNode )
-//			return NS_ERROR_NULL_POINTER;
-
-		nsIDOMNodePtr node;
-		nsresult status = aDOMNode->QueryInterface(NS_GET_IID(nsIDOMNode), node.Query());
-
-		if ( NS_SUCCEEDED(status) )
-			node->GetNodeName(*aResult);
-
-//		return status;
-	}

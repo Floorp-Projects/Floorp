@@ -45,7 +45,6 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
-#include "nsIPtr.h"
 #include "prinrval.h"
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"

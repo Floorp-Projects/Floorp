@@ -56,7 +56,6 @@
 #include "prlog.h"
 #include "prprf.h"
 #include <stdarg.h>
-#include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFrameManager.h"
 #ifdef ACCESSIBILITY

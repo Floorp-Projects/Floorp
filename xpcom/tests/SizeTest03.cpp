@@ -2,7 +2,7 @@
 
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
-#include "nsIPtr.h"
+#include "nsString.h"
 
 #ifdef __MWERKS__
 	#pragma exceptions off
@@ -18,15 +18,11 @@ NS_DEF_PTR(nsIDOMNode);
 			nsCOMPtr																 54
 			nsCOMPtr*																 59
 			raw																			 62
-			nsIPtr_optimized												 45 + 196
-			nsIPtr																	 59 + 196
 
 		Macintosh:
 			nsCOMPtr_optimized		112					(1.0000)
 			raw_optimized					124 bytes		(1.1071)	i.e., 10.71% bigger than nsCOMPtr_optimized
-			raw, nsIPtr_optimized	140					(1.2500)
 			nsCOMPtr							144					(1.2857)
-			nsIPtr								192					(1.7143)
 	*/
 
 void // nsresult
@@ -103,37 +99,3 @@ Test03_nsCOMPtr_optimized( nsIDOMNode* aDOMNode, nsString* aResult )
 
 //		return status;
 	}
-
-void // nsresult
-Test03_nsIPtr( nsIDOMNode* aDOMNode, nsString* aResult )
-		// m192, w59
-	{
-//		if ( !aDOMNode || !aResult )
-//			return NS_ERROR_NULL_POINTER;
-
-		nsIDOMNodePtr parent;
-		nsresult status = aDOMNode->GetParentNode( parent.AssignPtr() );
-		if ( parent.IsNotNull() )
-			parent->GetNodeName(*aResult);
-
-//		return status;
-	}
-
-void // nsresult
-Test03_nsIPtr_optimized( nsIDOMNode* aDOMNode, nsString* aResult )
-		// m140, w45
-	{
-//		if ( !aDOMNode || !aResult )
-//			return NS_ERROR_NULL_POINTER;
-
-		nsIDOMNode* temp;
-		nsresult status = aDOMNode->GetParentNode(&temp);
-		nsIDOMNodePtr parent(temp);
-		if ( parent.IsNotNull() )
-			parent->GetNodeName(*aResult);
-
-//		return status;
-	}
-
-
-

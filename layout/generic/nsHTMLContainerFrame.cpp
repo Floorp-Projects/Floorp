@@ -49,7 +49,6 @@
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
-#include "nsIPtr.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
