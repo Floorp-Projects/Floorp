@@ -45,6 +45,10 @@ EXPORTS		= PIMGCB.h PPSIMGCB.h
 
 REQUIRES	= zlib nspr jpeg util img png xpcom
 
+ifdef NU_CACHE
+REQUIRES 	+= cache
+endif
+
 LOCAL_INCLUDES	= -I../png -I. -I$(DEPTH)/dist/public/zlib
 
 EXTRA_LIBS	= $(DIST)/lib/libzlib.a $(DIST)/lib/libpng.a $(DIST)/lib/libnspr21.a $(dist)/lib/libjpeg.a $(DIST)/lib/libplc21.a $(DIST)/lib/libutil.a

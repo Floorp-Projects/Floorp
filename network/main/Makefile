@@ -67,6 +67,10 @@ REQUIRES	= ldapurl imap4url jtools progress nspr2 dbm util js parse lay style pr
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
 	mimetype ldap net
 
+ifdef NU_CACHE
+REQUIRES += cache 
+endif
+
 ifdef MOZ_MAIL_NEWS
 REQUIRES += mailbxurl nntpurl pop3url
 endif

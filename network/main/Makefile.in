@@ -77,6 +77,10 @@ ifdef MOZ_MAIL_NEWS
 REQUIRES += mailbxurl nntpurl pop3url
 endif
 
+ifdef NU_CACHE
+REQUIRES += cache
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef ENABLE_TESTS

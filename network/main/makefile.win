@@ -106,7 +106,7 @@ LIBRARY_NAME=network
 EXTRA_LIBS=
 
 !ifdef NU_CACHE
-REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap imap4url ldapurl net progress cachelib
+REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap imap4url ldapurl net progress cache
 !else
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap imap4url ldapurl net progress 
 !endif
