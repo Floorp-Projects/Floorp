@@ -188,7 +188,6 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
       mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
       mAlphaWidth = aWidth;
       mAlphaHeight = aHeight;
-      g_print("TODO: want an 8bit mask for an image..\n");
       break;
   }
 
@@ -410,7 +409,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
     (!isLSB && ximage->byte_order == LSBFirst);
 
   // flip bytes
-  if (flipBytes && (ximage->bitmap_unit!=8)) {
+  if (flipBytes && (ximage->bits_per_pixel>=16)) {
     for (int row=0; row<ximage->height; row++) {
       unsigned char *ptr = 
         (unsigned char*)ximage->data + row*ximage->bytes_per_line;
@@ -429,14 +428,15 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
       
       for (int col=0; 
                col<ximage->bytes_per_line;
-               col+=(ximage->bitmap_unit/8)) {
+               col+=(ximage->bits_per_pixel/8)) {
         unsigned char tmp;
-        switch (ximage->bitmap_unit) {
+        switch (ximage->bits_per_pixel) {
         case 16:
           tmp = *ptr;
           *ptr = *(ptr+1);
           *(ptr+1) = tmp;
           ptr+=2;
+          break; 
         case 32:
           tmp = *ptr;
           *ptr = *(ptr+3);
@@ -445,6 +445,7 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
           *(ptr+1) = *(ptr+2);
           *(ptr+2) = tmp;
           ptr+=4;
+          break;
         }
       }
     }
