@@ -1042,6 +1042,10 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	}
 	server->SetType( "none");
 
+    // usually, servers of type none can't be deleted; this must be
+    // overridden
+    server->SetCanDelete(PR_TRUE);
+
 	// Let's get a reasonable "pretty name" that doesn't exist yet?
 	GetUniquePrettyName( accMgr, prettyName);
 	

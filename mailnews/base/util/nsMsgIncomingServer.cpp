@@ -1054,6 +1054,18 @@ nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgIncomingServer::GetCanDelete(PRBool* value)
+{
+    NS_ENSURE_ARG_POINTER(value);
+
+    return GetBoolValue("canDelete", value);
+}
+
+NS_IMETHODIMP nsMsgIncomingServer::SetCanDelete(PRBool value)
+{
+    return SetBoolValue("canDelete", value);
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");

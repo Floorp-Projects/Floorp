@@ -235,7 +235,11 @@ function onDeleteAccount(event) {
     var type = server.type; 
 
     var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-    if (!protocolinfo.canDelete) return;
+    var canDelete = protocolinfo.canDelete;
+    if (!canDelete) {
+        canDelete = server.canDelete;
+    }
+    if (!canDelete) return;
 
     var confirmDeleteAccount =
       Bundle.GetStringFromName("confirmDeleteAccount");
@@ -329,8 +333,10 @@ function updateButtons(tree,serverId) {
 
 	var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     canDuplicate = protocolinfo.canDuplicate;
-	canDelete = protocolinfo.canDelete;
-
+    canDelete = protocolinfo.canDelete;
+    if (!canDelete) {
+      canDelete = server.canDelete;
+    }
   }
   else {
 	// HACK

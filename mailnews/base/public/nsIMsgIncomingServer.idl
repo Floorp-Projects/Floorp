@@ -182,6 +182,13 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* used for comparing nsIMsgIncomingServers */
   boolean equals(in nsIMsgIncomingServer server);
+
+  /**
+   * can this server be removed from the account manager?  for
+   * instance, local mail is not removable, but an imported folder is 
+   */
+  attribute boolean canDelete;
+
 };
 
 %{C++

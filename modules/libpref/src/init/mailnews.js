@@ -409,6 +409,7 @@ pref("mail.server.default.empty_trash_on_exit", false);
 
 pref("mail.server.default.using_subscription", true);
 pref("mail.server.default.dual_use_folders", true);
+pref("mail.server.default.canDelete", false);
 
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
