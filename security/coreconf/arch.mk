@@ -211,7 +211,7 @@ ifeq ($(OS_ARCH), Windows_NT)
 	ifeq ($(OS_MINOR_RELEASE),00)
 		OS_MINOR_RELEASE = 0
 	endif
-	OS_RELEASE = $(OS_RELEASE).$(OS_MINOR_RELEASE)
+	OS_RELEASE := $(OS_RELEASE).$(OS_MINOR_RELEASE)
 	CPU_ARCH := $(shell uname -m)
 	#
 	# MKS's uname -m returns "586" on a Pentium machine.
