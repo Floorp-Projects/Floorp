@@ -1465,7 +1465,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   rv = nsGetMailboxRoot(root);
   if (NS_FAILED(rv)) return rv;
   
-  nsAutoString path((nsFilePath)root);
+  nsAutoString path((root));
   uri.Cut(0, nsCRT::strlen(rootURI));
 
   PRInt32 uriLen = uri.Length();
