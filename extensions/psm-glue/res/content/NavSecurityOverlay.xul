@@ -7,7 +7,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <?xml-stylesheet href="chrome://navigator/skin/NavSecurityOverlay.css" type="text/css"?> 
 <html:script language="JavaScript" src="chrome://navigator/content/NavSecurityUI.js" />
 
-<box id="state-box">
+<box id="status-bar">
     <titledbutton id="security-button" class="borderless" align="left" onclick="displayPageInfo()"/>    
 </box>
       
