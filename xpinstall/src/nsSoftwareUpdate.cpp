@@ -543,10 +543,6 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
     else if ( !aDir )
         return NS_ERROR_NULL_POINTER;
 
-    if (logName)
-        mLogName = PL_strdup(logName);
-    if (!mLogName)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     // only allow once, it could be a mess if we've already started installing
     mStubLockout = PR_TRUE;
@@ -559,6 +555,14 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
     rv = aDir->GetPath(getter_Copies(tempPath));
     if (NS_SUCCEEDED(rv))
         VR_SetRegDirectory( tempPath );
+
+    // Optionally set logfile leafname
+    if (logName)
+    {
+        mLogName = PL_strdup(logName);
+        if (!mLogName)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Create the logfile observer
     nsLoggingProgressListener *logger = new nsLoggingProgressListener();

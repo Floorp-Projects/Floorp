@@ -200,7 +200,10 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 #endif    
     
     if (hook && iDirSpec)
-        hook->StubInitialize( iDirSpec, aLogName );
+    {
+        rv = hook->StubInitialize( iDirSpec, aLogName );
+        if (NS_FAILED(rv)) return rv;
+    }
     else
         return NS_ERROR_NULL_POINTER;
 
