@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #include "nsBaseWidget.h"
@@ -927,7 +928,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 //////////////////////////////////////////////////////////////
-/* static */ int 
+/* static */ int PR_CALLBACK 
 debug_PrefChangedCallback(const char * name,void * closure)
 {
 
