@@ -371,7 +371,7 @@ sub InstallFromManifest($;$)
    close (BDATE);
    close (OUTPUT);
 
-   do ':mozilla:config:aboutime.pl :mozilla:l10n:us:xp:about-all.html :mozilla:config:build_number';
+   system ("perl :mozilla:config:aboutime.pl :mozilla:l10n:us:xp:about-all.html :mozilla:config:build_number");
 
  }
 
@@ -412,7 +412,7 @@ sub SetTimeBomb($$)
 {
   my ($warn_days, $bomb_days) = @_;
   
-  do ':mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days';
+  system("perl :mozilla:config:mac-set-timebomb.pl $warn_days $bomb_days");
 	
 }
 
