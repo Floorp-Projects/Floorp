@@ -17,6 +17,6 @@
 
 DEPTH=..\..
 
-DIRS= find
+DIRS= public find
 
 include <$(DEPTH)\config\rules.mak>
