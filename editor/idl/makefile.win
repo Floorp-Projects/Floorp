@@ -15,13 +15,18 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+IGNORE_MANIFEST=1
 
 DEPTH=..\..
-MODULE=editor
 
-XPIDLSRCS = nsIEditorShell.idl \
-						nsISpellCheck.idl  \
+EXPORTS=\
+						$(NULL)
+						
+MODULE=editor
+XPIDL_MODULE=editor
+
+XPIDLSRCS = .\nsIEditorShell.idl \
+						.\nsISpellCheck.idl  \
 						$(NULL)
 
-include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
