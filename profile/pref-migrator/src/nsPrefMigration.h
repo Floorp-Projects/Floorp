@@ -76,8 +76,8 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
                               nsIFileSpec* newProfilePath, 
                               const char* newDirName,
                               char* pref, 
-                              nsIFileSpec** newPath, 
-                              nsIFileSpec** oldPath);
+                              nsIFileSpec* newPath, 
+                              nsIFileSpec* oldPath);
 
       nsresult GetSizes(nsFileSpec inputPath,
                         PRBool readSubdirs,
