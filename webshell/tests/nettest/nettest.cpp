@@ -27,7 +27,10 @@
 
 #include "nsIStreamNotification.h"
 #include "nsIInputStream.h"
+#include "nsIURL.h"
 #include "nsINetService.h"
+
+#include "nsString.h"
 
 int urlLoaded;
 PRBool bTraceEnabled;
@@ -143,8 +146,10 @@ int main(int argc, char **argv)
 #ifdef XP_PC
     MSG msg;
 #endif
-    char *url_address;
+    nsString url_address;
     nsIStreamNotification *pConsumer;
+    nsIInputStream *pStream;
+    nsIURL *pURL;
     nsINetService *pNetlib;
     nsresult result;
 
@@ -177,8 +182,20 @@ int main(int argc, char **argv)
     pConsumer = new TestConsumer;
     pConsumer->AddRef();
 
+    // Create the URL object...
+    pURL = NULL;
+    result = NS_NewURL(&pURL, url_address);
+    if (NS_OK != result) {
+        return 1;
+    }
+
+
     // Start the URL load...
-    result = pNetlib->OpenStream(url_address, pConsumer);
+#if 1
+    result = pNetlib->OpenStream(pURL, pConsumer);
+#else
+    result = pNetlib->OpenBlockingStream(pURL, pConsumer, &pStream);
+#endif
 
     /* If the open failed, then do not drop into the message loop... */
     if (NS_OK != result) {
