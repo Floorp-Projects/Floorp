@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  gfx \
 		  xpconnect \
-		  content \
 		  layout \
 		  uriloader \
 		  docshell \

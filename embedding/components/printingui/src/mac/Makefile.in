@@ -50,7 +50,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  widget \
 		  gfx \
-		  content \
+		  layout \
 		  uriloader \
 		  webbrwsr \
 		  $(NULL)
