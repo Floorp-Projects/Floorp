@@ -91,7 +91,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
     if (nsnull == decodedCstr) {
       // no decode needed, set an input string
       charset.SetString("");
-      decodedString.SetString(header);
+      decodedString=header;
     }
     else {
       // convert to unicode
