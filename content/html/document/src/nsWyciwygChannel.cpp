@@ -36,8 +36,8 @@ PRLogModuleInfo * gWyciwygLog = nsnull;
 // nsWyciwygChannel methods 
 nsWyciwygChannel::nsWyciwygChannel()
     : mStatus(NS_OK),
-      mIsPending(PR_FALSE),
-      mLoadFlags(LOAD_NORMAL)
+      mLoadFlags(LOAD_NORMAL),
+      mIsPending(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -350,7 +350,7 @@ nsWyciwygChannel::WriteToCache(const char * aScript)
   if (!mCacheEntry)
     return NS_ERROR_FAILURE;
   PRUint32 len = nsCRT::strlen(aScript);
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   PRUint32 out;
 
   if (!mCacheTransport && !mCacheOutputStream) {
@@ -519,7 +519,7 @@ nsWyciwygChannel::OnProgress(nsIRequest *aRequest, nsISupports *aContext,
 nsresult
 nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAccessMode, PRBool * aDelayFlag )
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
   // Get cache service
   nsCOMPtr<nsICacheService>  cacheService(do_GetService(NS_CACHESERVICE_CONTRACTID, &rv));
 
@@ -560,7 +560,7 @@ nsWyciwygChannel::OpenCacheEntry(const char * aCacheKey, nsCacheAccessMode aAcce
 nsresult
 nsWyciwygChannel::Connect(PRBool aFirstTime)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
 
   LOG(("nsWyciwygChannel::Connect [this=%x]\n", this));
 
