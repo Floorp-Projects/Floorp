@@ -34,7 +34,8 @@
 
 
 
-        case ePlus: {
+    case eAdd: 
+        {
 	    js2val a = pop();
 	    js2val b = pop();
 	    a = toPrimitive(a);
@@ -55,3 +56,12 @@
         }
         break;
 
+    case eSubtract: 
+        {
+	    js2val a = pop();
+	    js2val b = pop();
+            float64 anum = toNumber(a);
+            float64 bnum = toNumber(b);
+            retval = pushNumber(anum - bnum);
+        }
+        break;

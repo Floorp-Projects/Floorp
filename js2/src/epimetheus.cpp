@@ -44,11 +44,6 @@
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
 
-#ifdef DEBUG
-#include "tracer.h"
-#include "collector.h"
-#endif
-
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
 #include <MacTypes.h>

@@ -49,23 +49,30 @@ namespace MetaData {
 
 
 enum JS2Op {
-    ePlus,
+    eAdd,
+    eSubtract,
     eTrue,
     eFalse,
     eNumber,
-    eString,            // <string pointer>
-    eObject,            // <named argument count>
-    eLexicalRead,
-    eLexicalWrite,
+    eString,            // <string pointer:u32>
+    eNewObject,         // <argCount:u16>
+    eLexicalRead,       // <multiname index:u16>
+    eLexicalWrite,      // <multiname index:u16>
+    eDotRead,           // <multiname index:u16>
+    eDotWrite,          // <multiname index:u16>
     eReturn,
     eReturnVoid,
-    eNewObject,         // <argCount:16>
-    eMultiname,         // <multiname index>
-    ePushFrame,         // <frame index>
-    ePopFrame
+    ePushFrame,         // <frame index:u16>
+    ePopFrame,
+    eToBoolean,
+    eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
+    eBranchTrue,        // <branch displacement:s32>
+    eBranch,            // <branch displacement:s32>
+    eNew
 };
 
 
+class JS2Object;
 class JS2Metadata;
 class BytecodeContainer;
 
@@ -89,14 +96,17 @@ public:
 
     void push(js2val x) { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
     js2val pop()        { ASSERT(sp > execStack); return *--sp; }
+    js2val top()        { return *(sp - 1); }
 
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
     float64 convertValueToDouble(js2val x);
+    bool convertValueToBoolean(js2val x);
 
     String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
+    bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
 
     uint8 *pc;
     BytecodeContainer *bCon;
@@ -118,6 +128,9 @@ public:
     js2val *execStack;
     js2val *sp;
     
+
+    static JS2Object *defaultConstructor(JS2Engine *engine);
+
 
     static int getStackEffect(JS2Op op);
 

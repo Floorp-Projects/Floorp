@@ -31,51 +31,53 @@
 * file under either the NPL or the GPL.
 */
 
-        // Get a multiname literal and add the currently open namespaces from the context
-        // Push the resulting multiname object
-        case eMultiname: 
-            {
-                Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-                pc += sizeof(short);
-                mn->addNamespace(meta->cxt);
-                push(OBJECT_TO_JS2VAL(mn));
-            }
-            break;
+    // Get a multiname literal and push the resulting multiname object
+    case eMultiname: 
+        {
+            push(OBJECT_TO_JS2VAL(mn));
+        }
+        break;
 
-        // Pop a multiname object and read it's value from the environment on to the stack.
-        case eLexicalRead: 
-            {
-                js2val mnVal = pop();
-                ASSERT(JS2VAL_IS_OBJECT(mnVal));
-                JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
-                Multiname *mn = checked_cast<Multiname *>(obj);
-                retval = meta->env.lexicalRead(meta, mn, phase);
-                push(retval);
-	    }
-            break;
+    case eDotRead:
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val baseVal = pop();
+            readProperty
+        }
+        break;
 
-        // Pop a value and a multiname. Write the value to the multiname in the environment, leave
-        // the value on the stack top.
-        case eLexicalWrite: 
-            {
-                retval = pop();
-                js2val mnVal = pop();
-                ASSERT(JS2VAL_IS_OBJECT(mnVal));
-                JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
-                Multiname *mn = checked_cast<Multiname *>(obj);
-                meta->env.lexicalWrite(meta, mn, retval, true, phase);
-                push(retval);
-	    }
-            break;
+    // Pop a multiname object and read it's value from the environment on to the stack.
+    case eLexicalRead: 
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            retval = meta->env.lexicalRead(meta, mn, phase);
+            push(retval);
+	}
+        break;
 
-        case ePushFrame: 
-            {
-                Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
-                pc += sizeof(short);
-            }
-            break;
+    // Pop a value and a multiname. Write the value to the multiname in the environment, leave
+    // the value on the stack top.
+    case eLexicalWrite: 
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            meta->env.lexicalWrite(meta, mn, retval, true, phase);
+            push(retval);
+	}
+        break;
 
-        case ePopFrame: 
-            {
-            }
-            break;
+    case ePushFrame: 
+        {
+            Frame *f = bCon->mFrameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            meta->env.addFrame(f);
+        }
+        break;
+
+    case ePopFrame: 
+        {
+            meta->env.removeTopFrame();
+        }
+        break;

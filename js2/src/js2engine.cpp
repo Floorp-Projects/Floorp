@@ -80,6 +80,7 @@ js2val JS2Engine::interpreterLoop()
 #include "js2op_invocation.cpp"
 #include "js2op_access.cpp"
 #include "js2op_literal.cpp"
+#include "js2op_flowcontrol.cpp"
         }
     }
     return retval;
@@ -200,6 +201,27 @@ float64 JS2Engine::convertValueToDouble(js2val x)
 
 }
 
+// x is not a bool
+bool JS2Engine::convertValueToBoolean(js2val x)
+{
+    if (JS2VAL_IS_UNDEFINED(x))
+        return false;
+    if (JS2VAL_IS_NULL(x))
+        return false;
+    if (JS2VAL_IS_INT(x))
+        return (JS2VAL_TO_INT(x) != 0);
+    if (JS2VAL_IS_DOUBLE(x)) {
+        float64 *xd = JS2VAL_TO_DOUBLE(x);
+        return ! (JSDOUBLE_IS_POSZERO(*xd) || JSDOUBLE_IS_NEGZERO(*xd) || JSDOUBLE_IS_NaN(*xd));
+    }
+    if (JS2VAL_IS_STRING(x)) {
+        String *str = JS2VAL_TO_STRING(x);
+        return (str->length() != 0);
+    }
+    return true;
+}
+
+
 #define INIT_STRINGATOM(n) n##_StringAtom(world.identifiers[#n])
 
 JS2Engine::JS2Engine(World &world)
@@ -226,28 +248,47 @@ int JS2Engine::getStackEffect(JS2Op op)
 {
     switch (op) {
     case eReturn:
-    case ePlus:
-        return -1;
+        return -1;  
+
+    case eAdd:          // pop two, push one
+    case eSubtract:
+        return -1;  
 
     case eString:
     case eTrue:
     case eFalse:
     case eNumber:
-        return 1;
+        return 1;       // push literal value
 
     case eLexicalRead:
-        return 0;       // consumes a multiname, pushes the value
+        return 1;       // push the value
     case eLexicalWrite:
-        return -2;      // consumes a multiname and the value
+        return -1;      // pop the value
+
+    case eDotRead:
+        return 0;       // pop a base, push the value
+    case eDotWrite:
+        return -2;      // pop a base and the value
 
     case eReturnVoid:
+    case eBranch:
+        return 0;
+
+    case eToBoolean:    // pop object, push boolean
         return 0;
 
     case eMultiname:
         return 1;       // push the multiname object
 
-    case ePushFrame:
-    case ePopFrame:
+    case ePushFrame:    // affect the frame stack...
+    case ePopFrame:     // ...not the exec stack
+        return 0;
+
+    case eBranchFalse:
+    case eBranchTrue:
+        return -1;      // pop the boolean condition
+
+    case eNew:          // pop the class or function, push the new instance
         return 0;
 
     default:
@@ -260,6 +301,23 @@ size_t JS2Engine::errorPos()
 {
     return bCon->getPosition(pc - bCon->getCodeStart()); 
 }
+
+JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine)
+{
+    js2val v = engine->pop();
+    ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
+    JS2Object *obj = JS2VAL_TO_OBJECT(v);
+    ASSERT(obj->kind == ClassKind);
+    JS2Class *c = checked_cast<JS2Class *>(obj);
+    if (c->dynamic)
+        return new DynamicInstance(c);
+    else
+        if (c->prototype)
+            return new PrototypeInstance(NULL);
+        else
+            return new FixedInstance(c);
+}
+
 
 }
 }

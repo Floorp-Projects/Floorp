@@ -47,6 +47,40 @@
 namespace JavaScript {
 namespace MetaData {
 
+class BytecodeContainer;
+    
+class Label {
+public:
+    
+    typedef enum { InternalLabel, NamedLabel, BreakLabel, ContinueLabel } LabelKind;
+
+    Label() : mKind(InternalLabel), mHasLocation(false) { }
+    Label(LabelStmtNode *lbl) : mKind(NamedLabel), mHasLocation(false), mLabelStmt(lbl) { }
+    Label(LabelKind kind) : mKind(kind), mHasLocation(false) { }
+
+    bool matches(const StringAtom *name)
+    {
+        return ((mKind == NamedLabel) && (mLabelStmt->name.compare(*name) == 0));
+    }
+
+    bool matches(LabelKind kind)
+    {
+        return (mKind == kind);
+    }
+
+    void addFixup(BytecodeContainer *bcg, uint32 branchLocation);        
+    void setLocation(BytecodeContainer *bcg, uint32 location);
+
+    std::vector<uint32> mFixupList;
+
+    LabelKind mKind;
+    bool mHasLocation;
+    LabelStmtNode *mLabelStmt;
+
+    uint32 mLocation;
+};
+
+
 
 class Multiname;
 class Frame;
@@ -54,22 +88,25 @@ class Frame;
 class BytecodeContainer {
 public:
     BytecodeContainer() : mStackTop(0), mStackMax(0) { }
-    BytecodeContainer::~BytecodeContainer() ;
+    BytecodeContainer::~BytecodeContainer()          { }
 
     
     uint8 *getCodeStart()                   { return mBuffer.begin(); }
 
     typedef std::pair<uint16, size_t> MapEntry;
     std::vector<MapEntry> pcMap;
+    typedef uint32 LabelID;
 
     size_t getPosition(uint16 pc);
 
-    void emitOp(JS2Op op, size_t pos)       { adjustStack(op); addByte((uint8)op); pcMap.push_back(MapEntry(mBuffer.size(), pos)); }
-    void emitOp(JS2Op op, size_t pos, int32 effect)     
-                                            { adjustStack(op, effect); addByte((uint8)op); pcMap.push_back(std::pair<uint16, size_t>(mBuffer.size(), pos)); }
+    void emitOp(JS2Op op, size_t pos);
+    void emitOp(JS2Op op, size_t pos, int32 effect);
+
+    void emitBranch(JS2Op op, LabelID tgt, size_t pos)
+                                            { emitOp(op, pos); addFixup(tgt); }
 
     void adjustStack(JS2Op op)              { adjustStack(op, JS2Engine::getStackEffect(op)); }
-    void adjustStack(JS2Op op, int32 effect){ mStackTop += effect; if (mStackTop > mStackMax) mStackMax = mStackTop; ASSERT(mStackTop >= 0); }
+    void adjustStack(JS2Op op, int32 effect);
 
     void addByte(uint8 v)                   { mBuffer.push_back(v); }
     
@@ -89,12 +126,15 @@ public:
 
     void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort(mFrameList.size() - 1); }
 
+    void addOffset(int32 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
+    void setOffset(uint32 index, int32 v)   { *((int32 *)(mBuffer.begin() + index)) = v; }
     
     void addString(const StringAtom &x, size_t pos)     { emitOp(eString, pos); addPointer(&x); }
     void addString(String &x, size_t pos)               { emitOp(eString, pos); addPointer(&x); }
     void addString(String *x, size_t pos)               { emitOp(eString, pos); addPointer(x); }
     static String *getString(void *pc)      { return (String *)getPointer(pc); }
-    // XXX We lose StringAtom here - is there anyway of stashing these in a bytecodecontainer?
+    // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
+    // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
     typedef std::vector<uint8> CodeBuffer;
 
@@ -102,9 +142,14 @@ public:
     std::vector<Multiname *> mMultinameList;      // gc tracking 
     std::vector<Frame *> mFrameList;              // gc tracking 
 
-    int32 mStackTop;                // keep these as signed so as to
-    int32 mStackMax;                // track if they go negative.
+    int32 mStackTop;                // keep these as signed so as to...
+    int32 mStackMax;                // ...track if they go negative.
 
+    std::vector<Label> mLabelList;
+
+    LabelID getLabel();
+    void addFixup(LabelID label);
+    void setLabel(LabelID label);
 };
 
 

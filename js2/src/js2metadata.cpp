@@ -102,6 +102,21 @@ namespace MetaData {
                 ValidateStmt(cxt, env, l->stmt);
             }
             break;
+        case StmtNode::If:
+            {
+                UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
+                ValidateExpression(cxt, env, i->expr);
+                ValidateStmt(cxt, env, i->stmt);
+            }
+            break;
+        case StmtNode::IfElse:
+            {
+                BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
+                ValidateExpression(cxt, env, i->expr);
+                ValidateStmt(cxt, env, i->stmt);
+                ValidateStmt(cxt, env, i->stmt2);
+            }
+            break;
         case StmtNode::Var:
         case StmtNode::Const:
             {
@@ -142,6 +157,28 @@ namespace MetaData {
                                 defineStaticMember(env, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, var, p->pos);
                                 // XXX - not done !!! XXX
                                 // the type and the value are 'future'
+                            }
+                            break;
+                        case Attribute::Abstract:
+                        case Attribute::Virtual:
+                        case Attribute::Final: 
+                            {
+                                JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
+                                InstanceMember *m = NULL;
+                                switch (memberMod) {
+                                case Attribute::Abstract:
+                                    if (v->initializer)
+                                        reportError(Exception::syntaxError, "Abstract member may not have initializer", p->pos);
+                                    m = new InstanceAccessor(NULL, false);
+                                    break;
+                                case Attribute::Virtual:
+                                    m = new InstanceVariable(immutable, false);
+                                    break;
+                                case Attribute::Final: 
+                                    m = new InstanceVariable(immutable, true);
+                                    break;
+                                }
+                                defineInstanceMember(c, cxt, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                             }
                             break;
                         }
@@ -230,7 +267,7 @@ namespace MetaData {
                     reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
                     break;
                 }
-                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->public_StringAtom), (a->dynamic || superClass->dynamic), final);
+                JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), final, classStmt->name);
                 classStmt->c = c;
                 Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
                 defineStaticMember(env, classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
@@ -289,6 +326,34 @@ namespace MetaData {
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
                 EvalStmt(env, phase, l->stmt);
+            }
+            break;
+        case StmtNode::If:
+            {
+                BytecodeContainer::LabelID skipOverStmt = bCon->getLabel();
+                UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
+                Reference *r = EvalExprNode(env, phase, i->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eToBoolean, p->pos);
+                bCon->emitBranch(eBranchFalse, skipOverStmt, p->pos);
+                EvalStmt(env, phase, i->stmt);
+                bCon->setLabel(skipOverStmt);
+            }
+            break;
+        case StmtNode::IfElse:
+            {
+                BytecodeContainer::LabelID falseStmt = bCon->getLabel();
+                BytecodeContainer::LabelID skipOverFalseStmt = bCon->getLabel();
+                BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
+                Reference *r = EvalExprNode(env, phase, i->expr);
+                if (r) r->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eToBoolean, p->pos);
+                bCon->emitBranch(eBranchFalse, falseStmt, p->pos);
+                EvalStmt(env, phase, i->stmt);
+                bCon->emitBranch(eBranch, skipOverFalseStmt, p->pos);
+                bCon->setLabel(falseStmt);
+                EvalStmt(env, phase, i->stmt2);
+                bCon->setLabel(skipOverFalseStmt);
             }
             break;
         case StmtNode::Var:
@@ -593,11 +658,15 @@ namespace MetaData {
             break;
         case ExprNode::dot:
             {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                ValidateExpression(cxt, env, b->op1);
+                ValidateExpression(cxt, env, b->op2);
             }
             break;
 
         case ExprNode::assignment:
         case ExprNode::add:
+        case ExprNode::subtract:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 ValidateExpression(cxt, env, b->op1);
@@ -608,6 +677,17 @@ namespace MetaData {
         case ExprNode::identifier:
             {
 //                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
+            }
+            break;
+        case ExprNode::New: 
+            {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                ValidateExpression(cxt, env, i->op);
+                ExprPairList *args = i->pairs;
+                while (args) {
+                    ValidateExpression(cxt, env, args->value);
+                    args = args->next;
+                }
             }
             break;
         default:
@@ -638,6 +718,7 @@ namespace MetaData {
     Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
     {
         Reference *returnRef = NULL;
+        JS2Op binaryOp;
 
         switch (p->getKind()) {
 
@@ -656,13 +737,19 @@ namespace MetaData {
             }
             break;
         case ExprNode::add:
+            binaryOp = eAdd;
+            goto doBinary;
+        case ExprNode::subtract:
+            binaryOp = eSubtract;
+            goto doBinary;
+doBinary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 Reference *lVal = EvalExprNode(env, phase, b->op1);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 Reference *rVal = EvalExprNode(env, phase, b->op2);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(ePlus, p->pos);
+                bCon->emitOp(binaryOp, p->pos);
             }
             break;
 
@@ -684,7 +771,7 @@ namespace MetaData {
         case ExprNode::qualify:
             {
                 QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
-                const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
+                const StringAtom &name = qe->name;
 
                 js2val av = EvalExpression(env, CompilePhase, qe->qualifier);
                 if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
@@ -695,6 +782,7 @@ namespace MetaData {
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
                 returnRef = new LexicalReference(name, ns, cxt.strict);
+                // Calling emitBindBytecode causes the multiname to get loaded onto the stack
                 ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
@@ -704,6 +792,27 @@ namespace MetaData {
                 returnRef = new LexicalReference(i->name, cxt.strict);
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
                 ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
+            }
+            break;
+        case ExprNode::dot:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                Reference *baseVal = EvalExprNode(env, phase, b->op1);
+                if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
+
+                if (b->op2->getKind() == ExprNode::identifier) {
+                    returnRef = new DotReference(i->name);
+                    ((DotReference *)returnRef)->emitBindBytecode(bCon, p->pos);
+                } 
+                else {
+                    if (b->op2->getKind() == ExprNode::qualify) {
+                        Reference *rVal = EvalExprNode(env, phase, b->op2);                        
+                        ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
+                        returnRef = new DotReference(((LexicalReference *)rVal)->variableMultiname);
+                        ((DotReference *)returnRef)->emitBindBytecode(bCon, p->pos);
+                    }
+                    // else bracketRef...
+                }
             }
             break;
         case ExprNode::boolean:
@@ -741,15 +850,19 @@ namespace MetaData {
                 bCon->addShort(argCount);
             }
             break;
-        case ExprNode::dot:
+        case ExprNode::New: 
             {
-                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                if (b->op2->getKind() == ExprNode::identifier) {
+                InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
+                Reference *rVal = EvalExprNode(env, phase, i->op);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                ExprPairList *args = i->pairs;
+                uint32 argCount = 0;
+                while (args) {
+                    EvalExprNode(env, phase, args->value);
+                    argCount++;
+                    args = args->next;
                 }
-                else {
-                if (b->op2->getKind() == ExprNode::qualify) {
-                }
-                }
+                bCon->emitOp(eNew, p->pos);
             }
             break;
         default:
@@ -787,7 +900,7 @@ namespace MetaData {
             prev = pf;
             pf = pf->nextFrame;
         }
-        if (pf->nextFrame && (pf->kind == ClassKind))
+        if ((pf != firstFrame) && (pf->kind == ClassKind))
             pf = prev;
         return pf;
     }
@@ -980,7 +1093,165 @@ namespace MetaData {
 
     }
 
-    
+    // Look through 'c' and all it's super classes for a identifier 
+    // matching the qualified name and access.
+    InstanceMember *JS2Metadata::findInstanceMember(JS2Class *c, QualifiedName *qname, Access access)
+    {
+        if (qname == NULL)
+            return NULL;
+        JS2Class *s = c;
+        while (s) {
+            if (access & ReadAccess) {
+                for (InstanceBindingIterator b = s->instanceReadBindings.lower_bound(qname->id),
+                        end = s->instanceReadBindings.upper_bound(qname->id); (b != end); b++) {
+                    if (*qname == b->second->qname)
+                        return b->second->content;
+                }
+            }        
+            if (access & WriteAccess) {
+                for (InstanceBindingIterator b = s->instanceWriteBindings.lower_bound(qname->id),
+                        end = s->instanceWriteBindings.upper_bound(qname->id); (b != end); b++) {
+                    if (*qname == b->second->qname)
+                        return b->second->content;
+                }
+            }
+            s = s->super;
+        }
+        return NULL;
+    }
+
+    // Examine class 'c' and find all instance members that would be overridden
+    // by 'id' in any of the given namespaces.
+    OverrideStatus *JS2Metadata::searchForOverrides(JS2Class *c, const StringAtom &id, NamespaceList *namespaces, Access access, size_t pos)
+    {
+        OverrideStatus *os = new OverrideStatus(NULL, id);
+        for (NamespaceListIterator ns = namespaces->begin(), end = namespaces->end(); (ns != end); ns++) {
+            QualifiedName qname(*ns, id);
+            InstanceMember *m = findInstanceMember(c, &qname, access);
+            if (m) {
+                os->multiname.addNamespace(*ns);
+                if (os->overriddenMember == NULL)
+                    os->overriddenMember = m;
+                else
+                    if (os->overriddenMember != m)  // different instance members by same id
+                        reportError(Exception::definitionError, "Illegal override", pos);
+            }
+        }
+        return os;
+    }
+
+    // Find the possible override conflicts that arise from the given id and namespaces
+    // Fall back on the currently open namespace list if no others are specified.
+    OverrideStatus *JS2Metadata::resolveOverrides(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos)
+    {
+        OverrideStatus *os = NULL;
+        if ((namespaces == NULL) || namespaces->empty()) {
+            os = searchForOverrides(c, id, &cxt->openNamespaces, access, pos);
+            if (os->overriddenMember == NULL) {
+                ASSERT(os->multiname.nsList.empty());
+                os->multiname.addNamespace(publicNamespace);
+            }
+        }
+        else {
+            OverrideStatus *os2 = searchForOverrides(c, id, namespaces, access, pos);
+            if (os2->overriddenMember == NULL) {
+                OverrideStatus *os3 = searchForOverrides(c, id, &cxt->openNamespaces, access, pos);
+                if (os3->overriddenMember == NULL) {
+                    os->multiname.addNamespace(namespaces);
+                }
+                else {
+                    os->potentialConflict = true;   // Didn't find the member with a specified namespace, but did with
+                                                    // the use'd ones. That'll be an error unless the override is 
+                                                    // disallowed (in defineInstanceMember below)
+                    os->multiname.addNamespace(namespaces);
+                }
+                delete os3;
+                delete os2;
+            }
+            else {
+                os = os2;
+                os->multiname.addNamespace(namespaces);
+            }
+        }
+        // For all the discovered possible overrides, make sure the member doesn't already exist in the class
+        for (NamespaceListIterator nli = os->multiname.nsList.begin(), nlend = os->multiname.nsList.end(); (nli != nlend); nli++) {
+            QualifiedName qname(*nli, id);
+            if (access & ReadAccess) {
+                for (InstanceBindingIterator b = c->instanceReadBindings.lower_bound(id),
+                        end = c->instanceReadBindings.upper_bound(id); (b != end); b++) {
+                    if (qname == b->second->qname)
+                        reportError(Exception::definitionError, "Illegal override", pos);
+                }
+            }        
+            if (access & WriteAccess) {
+                for (InstanceBindingIterator b = c->instanceWriteBindings.lower_bound(id),
+                        end = c->instanceWriteBindings.upper_bound(id); (b != end); b++) {
+                    if (qname == b->second->qname)
+                        reportError(Exception::definitionError, "Illegal override", pos);
+                }
+            }
+        }
+        // Make sure we're getting what we expected
+        if (expectMethod) {
+            if (os->overriddenMember && !os->potentialConflict && (os->overriddenMember->kind != InstanceMember::InstanceMethodKind))
+                reportError(Exception::definitionError, "Illegal override, expected method", pos);
+        }
+        else {
+            if (os->overriddenMember && !os->potentialConflict && (os->overriddenMember->kind == InstanceMember::InstanceMethodKind))
+                reportError(Exception::definitionError, "Illegal override, didn't expect method", pos);
+        }
+
+        return os;
+    }
+
+    OverrideStatusPair JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
+    {
+        OverrideStatus *readStatus;
+        OverrideStatus *writeStatus;
+        if (xplicit)
+            reportError(Exception::definitionError, "Illegal use of explicit", pos);
+
+        if (access & ReadAccess)
+            readStatus = resolveOverrides(c, cxt, id, namespaces, ReadAccess, (m->kind == InstanceMember::InstanceMethodKind), pos);
+        else
+            readStatus = new OverrideStatus(NULL, id);
+
+        if (access & WriteAccess)
+            writeStatus = resolveOverrides(c, cxt, id, namespaces, WriteAccess, (m->kind == InstanceMember::InstanceMethodKind), pos);
+        else
+            writeStatus = new OverrideStatus(NULL, id);
+
+        if ((!readStatus->potentialConflict && (readStatus->overriddenMember != NULL))
+                || (!writeStatus->potentialConflict && (writeStatus->overriddenMember != NULL))) {
+            if ((overrideMod != Attribute::DoOverride) && (overrideMod != Attribute::OverrideUndefined))
+                reportError(Exception::definitionError, "Illegal override", pos);
+        }
+        else {
+            if (readStatus->potentialConflict || writeStatus->potentialConflict) {
+                if ((overrideMod != Attribute::DontOverride) && (overrideMod != Attribute::OverrideUndefined))
+                    reportError(Exception::definitionError, "Illegal override", pos);
+            }
+        }
+
+        NamespaceListIterator nli, nlend;
+        for (nli = readStatus->multiname.nsList.begin(), nlend = readStatus->multiname.nsList.end(); (nli != nlend); nli++) {
+            QualifiedName qName(*nli, id);
+            InstanceBinding *ib = new InstanceBinding(qName, m);
+            const InstanceBindingMap::value_type e(id, ib);
+            c->instanceReadBindings.insert(e);
+        }
+        
+        for (nli = writeStatus->multiname.nsList.begin(), nlend = writeStatus->multiname.nsList.end(); (nli != nlend); nli++) {
+            QualifiedName qName(*nli, id);
+            InstanceBinding *ib = new InstanceBinding(qName, m);
+            const InstanceBindingMap::value_type e(id, ib);
+            c->instanceWriteBindings.insert(e);
+        }
+        
+        OverrideStatusPair osp(readStatus, writeStatus);
+        return osp;
+    }
+
     // Define a hoisted var in the current frame (either Global or a Function)
     void JS2Metadata::defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p)
     {
@@ -1042,6 +1313,9 @@ namespace MetaData {
     {
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
+
+        objectClass = new JS2Class(NULL, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), true, false, engine->object_StringAtom);
+        objectClass->complete = true;
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
@@ -1062,16 +1336,33 @@ namespace MetaData {
                 return stringClass;
         }
         ASSERT(JS2VAL_IS_OBJECT(obj));
-        return NULL;
-/*
-            NAMESPACE do return namespaceClass;
-            COMPOUNDATTRIBUTE do return attributeClass;
-            CLASS do return classClass;
-            METHODCLOSURE do return functionClass;
-            PROTOTYPE do return prototypeClass;
-            INSTANCE do return resolveAlias(o).type;
-            PACKAGE or GLOBAL do return packageClass
-*/
+        JS2Object *obj = JS2VAL_TO_OBJECT(obj);
+        switch (obj->kind) {
+        case AttributeObjectKind:
+            return attributeClass;
+        case MultinameKind:
+            return namespaceClass;
+        case ClassKind:
+            return classClass;
+        case PrototypeInstanceKind: 
+            return prototypeClass;
+
+        case FixedInstanceKind: 
+            return checked_cast<FixedInstance *>(obj)->type;
+        case DynamicInstanceKind:
+            return checked_cast<DynamicInstance *>(obj)->type;
+
+        case GlobalObjectKind: 
+        case PackageKind:
+            return packageClass;
+
+        case SystemKind:
+        case FunctionKind: 
+        case BlockKind: 
+        default:
+            ASSERT(false);
+            return NULL;
+        }
     }
 
     // Read the property from the container given by the public id in multiname - if that exists
@@ -1216,9 +1507,103 @@ namespace MetaData {
 
     // Read the value of a property in the container. Return true/false if that container has
     // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
+    bool JS2Metadata::readProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        return true;
+        bool isDynamicInstance = false;
+        if (JS2VAL_IS_PRIMITIVE(containerVal)) {
+readClassProperty:
+            JS2Class *c = objectType(containerVal);
+            InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, Phase phase);
+            if ((ib == NULL) && isDynamicInstance) 
+                return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
+            else 
+                // XXX passing a primitive here ???
+                return readInstanceMember(containerVal, c, (ib)? &ib->qname : NULL, phase, rval);
+        }
+        JS2Object *obj = JS2VAL_TO_OBJECT(containerVal);
+        switch (obj->kind) {
+        case AttributeObjectKind:
+        case MultinameKind:
+        case FixedInstanceKind: 
+            goto readClassProperty;
+        case DynamicInstanceKind:
+            isDynamicInstance = true;
+            goto readClassProperty;
+
+        case SystemKind:
+        case GlobalObjectKind: 
+        case PackageKind:
+        case FunctionKind: 
+        case BlockKind: 
+            {
+            }
+            break;
+        case ClassKind:
+            {
+            }
+            break;
+
+        case PrototypeInstanceKind: 
+            return readDynamicProperty(obj, multiname, lookupKind, phase, rval);
+        default:
+            ASSERT(false);
+            return false;
+        }
+    }
+/*
+m: INSTANCEMEMBEROPT ¨ findInstanceMember(c, qname, read);
+case m of
+{none} do return none;
+INSTANCEVARIABLE do
+if phase = compile and not m.immutable then throw compileExpressionError
+end if;
+v: OBJECTU ¨ findSlot(this, m).value;
+if v = uninitialised then throw uninitialisedError end if;
+return v;
+INSTANCEMETHOD do return METHODCLOSURE·this: this, method: mÒ;
+INSTANCEGETTER do return m.call(this, m.env, phase);
+INSTANCESETTER do
+m cannot be an INSTANCESETTER because these are only represented as write-only members.
+end case
+end proc;
+*/
+
+proc findSlot(o: OBJECT, id: INSTANCEVARIABLE): SLOT
+o must be an INSTANCE;
+matchingSlots: SLOT{} ¨ {s | "s Œ resolveAlias(o).slots such that s.id = id};
+return the one element of matchingSlots
+end proc;
+
+    JS2MetaData::findSlot(js2val thisObjVal, InstanceVariable *id)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisObjVal) 
+                    && ((JS2VAL_TO_OBJECT(thisObjVal)->kind == DynamicInstanceKind)
+                        || (JS2VAL_TO_OBJECT(thisObjVal)->kind == FixedInstanceKind)));
+        JS2Object *thisObj = JS2VAL_TO_OBJECT(thisObjVal);
+        Slots *s;
+        if (thisObj->kind == DynamicInstanceKind)
+            s = checked_cast<DynamicInstance *>(thisObj)->slots;
+        else
+            s = checked_cast<FixedInstance *>(thisObj)->slots;
+
+    }
+
+
+    bool JS2Metadata::readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval)
+    {
+        InstanceMember *m = findInstanceMember(c, qname, ReadAccess);
+        if (m == NULL) return false;
+        switch (m->kind) {
+        case InstanceVariableKind:
+            if ((phase == CompilePhase) && !checked_cast<InstanceVariable *>(m)->immutable)
+                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+            findSlot(containerVal, m);
+            
+
+        case InstanceMethodKind:
+        case InstanceAccessorKind:
+            break;
+        }
     }
 
     // Read the value of a property in the frame. Return true/false if that frame has
@@ -1444,7 +1829,8 @@ namespace MetaData {
  *
  ************************************************************************************/
 
-    JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final) 
+
+    JS2Class::JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name) 
         : Frame(ClassKind), 
             instanceInitOrder(NULL), 
             complete(false), 
@@ -1455,8 +1841,25 @@ namespace MetaData {
             primitive(false),
             final(final),
             call(NULL),
-            construct(NULL)
-    { }
+            construct(JS2Engine::defaultConstructor),
+            name(name)
+    { 
+    }
+
+    // examine the instancebinding map to determine the number of slots required
+    uint32 JS2Class::countSlots()
+    {
+        uint32 count = 0;
+        InstanceBindingIterator b, end;
+        for (b = instanceReadBindings.begin(), end = instanceReadBindings.end(); (b != end); b++) {
+                
+        }
+        for (b = instanceWriteBindings.begin(), end = instanceWriteBindings.end(); (b != end); b++) {
+        
+        }
+    }
+
+
 
  /************************************************************************************
  *

@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 *
 * The contents of this file are subject to the Netscape Public
@@ -32,43 +31,50 @@
 * file under either the NPL or the GPL.
 */
 
-
-    case eNewObject: // XXX in js2op_literal instead?
+    case eReturn: 
         {
-            uint16 argCount = BytecodeContainer::getShort(pc);
-            pc += sizeof(uint16);
-            PrototypeInstance *pInst = new PrototypeInstance(NULL); // XXX Object prototype object
-            for (uint16 i = 0; i < argCount; i++) {
-                js2val nameVal = pop();
-                ASSERT(JS2VAL_IS_STRING(nameVal));
-                String *name = JS2VAL_TO_STRING(nameVal);
-                const StringAtom &nameAtom = world.identifiers[*name];
-                js2val fieldVal = pop();
-                const DynamicPropertyMap::value_type e(nameAtom, fieldVal);
-                pInst->dynamicProperties.insert(e);
+            retval = pop();
+            return retval;
+	}
+        break;
+
+    case eReturnVoid: 
+        {
+            return retval;
+	}
+        break;
+
+    case eBranchTrue:
+        {
+            retval = pop();
+            ASSERT(JS2VAL_IS_BOOLEAN(retval));
+            bool b = JS2VAL_TO_BOOLEAN(retval);
+            if (b) {
+                int32 offset = BytecodeContainer::getShort(pc);
+                pc += offset;
             }
-            retval = OBJECT_TO_JS2VAL(pInst);
-            push(retval);
+            else 
+                pc += sizeof(int32);
         }
         break;
 
-    case eToBoolean:
+    case eBranchFalse:
         {
-            js2val v = pop();
-            bool b = toBoolean(v);
-            retval = BOOLEAN_TO_JS2VAL(b);
-            push(retval);
+            retval = pop();
+            ASSERT(JS2VAL_IS_BOOLEAN(retval));
+            bool b = JS2VAL_TO_BOOLEAN(retval);
+            if (!b) {
+                int32 offset = BytecodeContainer::getShort(pc);
+                pc += offset;
+            }
+            else 
+                pc += sizeof(int32);
         }
         break;
 
-    case eNew:
+    case eBranch:
         {
-            js2val v = top();
-            ASSERT(JS2VAL_IS_OBJECT(v) && !JS2VAL_IS_NULL(v));
-            JS2Object *obj = JS2VAL_TO_OBJECT(v);
-            ASSERT(obj->kind == ClassKind);
-            JS2Class *c = checked_cast<JS2Class *>(obj);
-            retval = OBJECT_TO_JS2VAL(c->construct(this));
-            push(retval);
+            int32 offset = BytecodeContainer::getShort(pc);
+            pc += offset;
         }
         break;

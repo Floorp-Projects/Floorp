@@ -60,14 +60,34 @@
 namespace JavaScript {
 namespace MetaData {
 
-
-
-    BytecodeContainer::~BytecodeContainer() 
-    { 
-	for (std::vector<Multiname *>::iterator i = mMultinameList.begin(), end = mMultinameList.end(); (i != end); i++)
-	    delete *i;
+    // Establish the label's location in a bytecode container
+    void Label::setLocation(BytecodeContainer *bCon, uint32 location)
+    {
+        mHasLocation = true;
+        mLocation = location;
+        for (std::vector<uint32>::iterator i = mFixupList.begin(), end = mFixupList.end(); 
+                        (i != end); i++)
+        {
+            uint32 branchLocation = *i;
+            bCon->setOffset(branchLocation, int32(mLocation - branchLocation)); 
+        }
     }
 
+    // Add a branch location to the list of fixups for this label
+    // (or resolve the branch if the location is known already)
+    void Label::addFixup(BytecodeContainer *bCon, uint32 branchLocation) 
+    { 
+        if (mHasLocation)
+            bCon->addOffset(int32(mLocation - branchLocation));
+        else {
+            mFixupList.push_back(branchLocation); 
+            bCon->addLong(0);
+        }
+    }
+
+
+
+    // Look up the pc and return a position from the map
     size_t BytecodeContainer::getPosition(uint16 pc)
     {
         for (std::vector<MapEntry>::iterator i = pcMap.begin(), end = pcMap.end(); (i != end); i++)
@@ -75,6 +95,57 @@ namespace MetaData {
                 return i->second;
         return 0;
     }
+
+
+    // insert the opcode, marking it's position in the pcmap and
+    // adjusting the stack as appropriate.
+    void BytecodeContainer::emitOp(JS2Op op, size_t pos)
+    { 
+        adjustStack(op); 
+        addByte((uint8)op); 
+        pcMap.push_back(MapEntry(mBuffer.size(), pos)); 
+    }
+
+    // insert the opcode, marking it's position in the pcmap and
+    // adjusting the stack as supplied.
+    void BytecodeContainer::emitOp(JS2Op op, size_t pos, int32 effect)     
+    {
+        adjustStack(op, effect); 
+        addByte((uint8)op); 
+        pcMap.push_back(std::pair<uint16, size_t>(mBuffer.size(), pos)); 
+    }
+
+    // Track the high-water mark for the stack 
+    // and watch for a bad negative stack
+    void BytecodeContainer::adjustStack(JS2Op op, int32 effect)
+    { 
+        mStackTop += effect; 
+        if (mStackTop > mStackMax) 
+            mStackMax = mStackTop; 
+        ASSERT(mStackTop >= 0); 
+    }
+
+    // get a new label
+    BytecodeContainer::LabelID BytecodeContainer::getLabel()
+    {
+        LabelID result = mLabelList.size();
+        mLabelList.push_back(Label());
+        return result;
+    }
+    // set the current pc as needing a fixup to a label
+    void BytecodeContainer::addFixup(LabelID label) 
+    { 
+        ASSERT(label < mLabelList.size());
+        mLabelList[label].addFixup(this, mBuffer.size()); 
+    }
+    // set the current pc as the position for a label
+    void BytecodeContainer::setLabel(LabelID label)
+    {
+        ASSERT(label < mLabelList.size());
+        mLabelList[label].setLocation(this, mBuffer.size()); 
+    }
+
+
 
 }
 }

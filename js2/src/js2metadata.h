@@ -54,7 +54,7 @@ class Pond;
 
 typedef void (Invokable)();
 typedef Invokable Callor;
-typedef JS2Object *(Constructor)();
+typedef JS2Object *(Constructor)(JS2Engine *engine);
 
 enum ObjectKind { 
     AttributeObjectKind, 
@@ -180,8 +180,6 @@ public:
     Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name) { }
     Multiname(const StringAtom &name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
 
-    void emitBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eMultiname, pos); bCon->addMultiname(this); }
-
     void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
@@ -294,37 +292,63 @@ public:
     StaticMember *content;      // The member to which this qualified name was bound
 };
 
-
 class InstanceMember {
 public:
+    enum InstanceMemberKind { InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
+
+    InstanceMember(InstanceMemberKind kind, bool final) : kind(kind), final(final) { }
+
+    InstanceMemberKind kind;
     bool final;             // true if this member may not be overridden in subclasses
+
+#ifdef DEBUG
+    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
+#endif
 };
 
 class InstanceVariable : public InstanceMember {
 public:
+    InstanceVariable(bool immutable, bool final) : InstanceMember(InstanceVariableKind, final), immutable(immutable) { }
     JS2Class *type;                 // Type of values that may be stored in this variable
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
     bool immutable;                 // true if this variable's value may not be changed once set
-    bool final;
 };
 
 class InstanceMethod : public InstanceMember {
 public:
+    InstanceMethod() : InstanceMember(InstanceMethodKind, false) { }
     Signature type;         // This method's signature
     Invokable *code;        // This method itself (a callable object); null if this method is abstract
 };
 
 class InstanceAccessor : public InstanceMember {
 public:
+    InstanceAccessor(Invokable *code, bool final) : InstanceMember(InstanceAccessorKind, final), code(code) { }
     JS2Class *type;         // The type of the value read from the getter or written into the setter
     Invokable *code;        // A callable object which does the read or write; null if this method is abstract
 };
 
 class InstanceBinding {
 public:
+    InstanceBinding(QualifiedName &qname, InstanceMember *content) : qname(qname), content(content) { }
+
     QualifiedName qname;         // The qualified name bound by this binding
     InstanceMember *content;     // The member to which this qualified name was bound
 };
+
+// Override status is used to resolve overriden definitions for instance members
+class OverrideStatus {
+public:
+    OverrideStatus(InstanceMember *overriddenMember, const StringAtom &name)
+        : overriddenMember(overriddenMember), potentialConflict(false), multiname(name) { }
+    
+    InstanceMember *overriddenMember;   // NULL for none
+    bool potentialConflict;
+    Multiname multiname;
+};
+typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
+
+
 
 
 // A StaticBindingMap maps names to a list of StaticBindings. Each StaticBinding in the list
@@ -353,9 +377,9 @@ public:
 
 class JS2Class : public Frame {
 public:
-    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final);
+    JS2Class(JS2Class *super, JS2Object *proto, Namespace *privateNamespace, bool dynamic, bool final, const StringAtom &name);
 
-    StringAtom &getName();
+    const StringAtom &getName()                 { return name; }
         
     InstanceBindingMap instanceReadBindings;    // Map of qualified names to readable instance members defined in this class    
     InstanceBindingMap instanceWriteBindings;   // Map of qualified names to writable instance members defined in this class    
@@ -375,6 +399,10 @@ public:
 
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
+
+    uint32 countSlots();
+
+    const StringAtom &name;
 
 };
 
@@ -397,13 +425,13 @@ public:
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
 class FixedInstance : public JS2Object {
 public:
-    FixedInstance() : JS2Object(FixedInstanceKind), typeofString(type->getName()) { }
+    FixedInstance(JS2Class *type) : JS2Object(FixedInstanceKind), type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName()) { }
 
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure
-    StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
 };
 
@@ -416,7 +444,7 @@ public:
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
     Environment *env;           // The environment to pass to the call or construct procedure
-    StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
+    const StringAtom  &typeofString;  // A string to return if typeof is invoked on this instance
     Slot        *slots;         // A set of slots that hold this instance's fixed property values
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
 };
@@ -438,7 +466,8 @@ public:
 
 
 // Base class for all references (lvalues)
-// References are generated during the eval stage (bytecode generation)
+// References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
+// XXX use an arena new/delete. (N.B. the contained multinames make it into the bytecode stream)
 class Reference {
 public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)              { ASSERT(false); }
@@ -460,10 +489,9 @@ public:
     Environment *env;               // The environment in which the reference was created.
     bool strict;                    // The strict setting from the context in effect at the point where the reference was created
     
-
-    void emitBindBytecode(BytecodeContainer *bCon, size_t pos)              { variableMultiname->emitBytecode(bCon, pos);  }
-    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); }
+    
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eLexicalRead, pos); bCon->addMultiname(variableMultiname); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eLexicalWrite, pos); bCon->addMultiname(variableMultiname); }
 };
 
 class DotReference : public Reference {
@@ -471,13 +499,18 @@ class DotReference : public Reference {
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    js2val base;                     // The object whose property was referenced (a in the examples above). The
+    DotReference(const StringAtom &name) : propertyMultiname(new Multiname(name)) { }
+    DotReference(Multiname *mn) : propertyMultiname(mn) { }
+
+    // js2val base;                 // The object whose property was referenced (a in the examples above). The
                                     // object may be a LIMITEDINSTANCE if a is a super expression, in which case
                                     // the property lookup will be restricted to members defined in proper ancestors
                                     // of base.limit.
-    Multiname propertyMultiname;    // A nonempty set of qualified names to which this reference can refer (b
+    Multiname *propertyMultiname;   // A nonempty set of qualified names to which this reference can refer (b
                                     // qualified with the namespace q or all currently open namespaces in the
                                     // example above)
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eDotRead, pos); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eDotWrite, pos); }
 };
 
 
@@ -646,12 +679,17 @@ public:
 
     void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
     void defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
+    OverrideStatusPair defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
+    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
+    OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom &id, NamespaceList *namespaces, Access access, size_t pos);
+    InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
 
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
+    bool readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval);
 
 
     bool writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase);
@@ -684,6 +722,9 @@ public:
     JS2Class *objectClass;
     JS2Class *namespaceClass;
     JS2Class *classClass;
+    JS2Class *packageClass;
+    JS2Class *prototypeClass;
+    JS2Class *attributeClass;
 
     Parser *mParser;                // used for error reporting
 
