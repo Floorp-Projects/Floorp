@@ -55,10 +55,11 @@ sub getDefaultString {
   MACRO debugDumpVarsEscape(key) BLOCK;
     IF key.search('[\\\\\\\\ \\\\\\.\\']');
       '\\'';
-       key.replace('\\\\\\\\', '\\\\\\\\')
-          .replace(' ',    '\\\\ ')
-          .replace('\\\\\\.', '\\\\.')
-          .replace('\\'',   '\\\\\\'');
+      key.replace('\\\\\\\\', '\\\\\\\\')
+         .replace(' ',    '\\\\ ')
+         .replace('\\\\\\.', '\\\\.')
+         .replace('\\n',   '\\\\n')
+         .replace('\\'',   '\\\\\\'');
       '\\'';
     ELSE;
       key;
@@ -88,22 +89,40 @@ sub getDefaultString {
    SET key = frame.0;
    SET variable = frame.1;
    IF (variable.ref == 'HASH');
-     FOREACH subkey = variable.keys;
-       SET name = key _ '.' _ debugDumpVarsEscape(subkey);
-       debugDumpVarsStack.push([name, variable.\$subkey]);
+     IF (variable.keys.size);
+       FOREACH subkey = variable.keys;
+         SET name = key _ '.' _ debugDumpVarsEscape(subkey);
+         debugDumpVarsStack.push([name, variable.\$subkey]);
+       END;
+     ELSE;
+       debugDumpVarsVariables.\${key} = 'empty hash';
      END;
    ELSIF (variable.ref == 'ARRAY');
-     SET index = variable.max;
-     FOREACH item = variable;
-       SET name = key _ '.' _ index;
-       debugDumpVarsStack.push([name, item]);
-       SET index = index + 1;
+     IF (variable.size);
+       SET index = variable.max;
+       FOREACH item = variable;
+         SET name = key _ '.' _ index;
+         debugDumpVarsStack.push([name, item]);
+         SET index = index + 1;
+       END;
+     ELSE;
+       debugDumpVarsVariables.\${key} = 'empty array';
      END;
    ELSE;
-     debugDumpVarsVariables.\${key} = variable;
-     IF key.length > debugDumpVarsMaxLength;
-       debugDumpVarsMaxLength = key.length;
+     IF (!variable.defined);
+       debugDumpVarsVariables.\${key} = 'undefined';
+     ELSIF (variable.search('^[0-9]+(?:\\\\.[0+9]+)?\$'));
+       debugDumpVarsVariables.\${key} = variable;
+     ELSE;
+       debugDumpVarsVariables.\${key} =
+         '\\'' _
+         variable.replace('\\\\\\\\', '\\\\\\\\')
+                 .replace('\\'',   '\\\\\\'') _
+         '\\'';
      END;
+   END;
+   IF key.length > debugDumpVarsMaxLength;
+     debugDumpVarsMaxLength = key.length;
    END;
   END;
 
