@@ -197,9 +197,8 @@ static PRBool EatClose(eHTMLTags aTag);
 static PRBool PermitWSAfterOpen(eHTMLTags aTag);
 static PRBool PermitWSBeforeClose(eHTMLTags aTag);
 static PRBool PermitWSAfterClose(eHTMLTags aTag);
-#endif // OBSOLETE
-
 static PRBool IgnoreWS(eHTMLTags aTag);
+#endif // OBSOLETE
 
 
 /**
@@ -367,6 +366,7 @@ nsHTMLContentSinkStream::nsHTMLContentSinkStream(nsIOutputStream* aOutStream,
   mUnicodeEncoder = nsnull;
   mStream = aOutStream;
   mString = aOutString;
+  mInBody = PR_FALSE;
   if (aCharsetOverride != nsnull)
     mCharsetOverride = *aCharsetOverride;
 }
@@ -870,6 +870,10 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   const nsString&   name = aNode.GetText();
   nsString          tagName;
 
+
+  if (tag == eHTMLTag_body)
+    mInBody = PR_TRUE;
+
   mHTMLTagStack[mHTMLStackPos++] = tag;
   tagName = name;
   
@@ -879,13 +883,13 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     tagName.ToUpperCase();
 
   
-  if (mColPos != 0 && BreakBeforeOpen(tag))
+  if ((mDoFormat || !mInBody) && mColPos != 0 && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
   }
 
-  if (PermitWSBeforeOpen(tag))
+  if ((mDoFormat || !mInBody) && PermitWSBeforeOpen(tag))
     AddIndent();
 
   EnsureBufferSize(tagName.Length());
@@ -896,7 +900,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   mColPos += 1 + tagName.Length();
 
-  if (tag == eHTMLTag_style)
+  if (mDoFormat && tag == eHTMLTag_style)
   {
     Write(">");
     Write(NS_LINEBREAK);
@@ -916,7 +920,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     mColPos += 1;
   }
 
-  if (BreakAfterOpen(tag))
+  if (mDoFormat && BreakAfterOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -935,9 +939,16 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 //  const nsString&   name = aNode.GetText();
   nsString          tagName;
 
+  if (tag == eHTMLTag_body)
+    mInBody = PR_FALSE;
+
   if (tag == eHTMLTag_unknown)
   {
     tagName = aNode.GetText();
+  }
+  else if (tag == eHTMLTag_comment)
+  {
+    tagName = "--";
   }
   else
   {
@@ -952,7 +963,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent--;
 
-  if (BreakBeforeClose(tag))
+  if (mDoFormat && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
@@ -964,15 +975,19 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 
   EnsureBufferSize(tagName.Length());
   tagName.ToCString(mBuffer,mBufferSize);
-  
-  Write(kLessThan);
-  Write(kForwardSlash);
+
+  if (tag != eHTMLTag_comment)
+  {
+    Write(kLessThan);
+    Write(kForwardSlash);
+    mColPos += 1 + 1;
+  }
   Write(mBuffer);
   Write(kGreaterThan);
 
-  mColPos += 1 + 1 + strlen(mBuffer) + 1;
+  mColPos += strlen(mBuffer) + 1;
   
-  if (BreakAfterClose(tag))
+  if ((mDoFormat || !mInBody) && BreakAfterClose(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -1029,7 +1044,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   else if (type == eHTMLTag_text)
   {
     const nsString& text = aNode.GetText();
-    if ((mDoFormat == PR_FALSE) || preformatted == PR_TRUE)
+    if (!mDoFormat || preformatted)
     {
       Write(text);
       mColPos += text.Length();
@@ -1093,7 +1108,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   }
   else if (type == eHTMLTag_whitespace)
   {
-    if ((mDoFormat == PR_FALSE) || preformatted || IgnoreWS(tag) == PR_FALSE)
+    if (!mDoFormat || preformatted)
     {
       const nsString& text = aNode.GetText();
       Write(text);
@@ -1102,7 +1117,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   }
   else if (type == eHTMLTag_newline)
   {
-    if ((mDoFormat == PR_FALSE) || preformatted)
+    if (!mDoFormat || preformatted)
     {
       const nsString& text = aNode.GetText();
       Write(text);
@@ -1149,6 +1164,8 @@ nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
+
+  Write("<!--");
 
   return NS_OK;
 }
@@ -1509,8 +1526,6 @@ PRBool PermitWSAfterClose(eHTMLTags aTag)  {
   return PR_TRUE;
 }
 
-#endif /* OBSOLETE */
-
 /** @see PermitWSBeforeOpen */
 PRBool IgnoreWS(eHTMLTags aTag)  {
   PRBool result = PR_FALSE;
@@ -1534,5 +1549,7 @@ PRBool IgnoreWS(eHTMLTags aTag)  {
 
   return result;
 }
+
+#endif /* OBSOLETE */
 
 

@@ -154,6 +154,7 @@ protected:
     PRInt32   mHTMLStackPos;
     eHTMLTags mHTMLTagStack[1024];  // warning: hard-coded nesting level
     PRInt32   mColPos;
+    PRBool    mInBody;
 
     PRBool    mDoFormat;
     PRBool    mDoHeader;
@@ -171,13 +172,13 @@ extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsIOutputStream* aOutStream,
                               const nsString* aCharsetOverride=nsnull,
-                              PRBool aDoFormat = PR_TRUE,
+                              PRBool aDoFormat = PR_FALSE,
                               PRBool aDoHeader = PR_TRUE);
 
 extern NS_HTMLPARS nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsString* aOutString, 
-                              PRBool aDoFormat = PR_TRUE,
+                              PRBool aDoFormat = PR_FALSE,
                               PRBool aDoHeader = PR_TRUE);
 
 

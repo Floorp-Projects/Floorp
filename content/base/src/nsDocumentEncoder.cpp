@@ -181,7 +181,8 @@ nsHTMLEncoder::EncodeToString(nsString& aOutputString)
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
 
-        rv = NS_New_HTML_ContentSinkStream(&sink,&aOutputString);
+        rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString,
+                                           PR_FALSE, PR_TRUE);
   
       	if (sink && NS_SUCCEEDED(rv)) {
 
@@ -241,7 +242,8 @@ nsHTMLEncoder::EncodeToStream(nsIOutputStream* aStream)
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
 
-        rv = NS_New_HTML_ContentSinkStream(&sink,aStream,charset);
+        rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset,
+                                           PR_FALSE, PR_TRUE);
   
       	if (sink && NS_SUCCEEDED(rv)) {
 
