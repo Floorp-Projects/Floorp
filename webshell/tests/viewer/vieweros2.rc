@@ -152,7 +152,6 @@ MENU IDM_VIEWERBAR
       MENUITEM  "Delete Row",     VIEWER_EDIT_DELETE_ROW    
       MENUITEM SEPARATOR
       MENUITEM  "Join with cell to right",     VIEWER_EDIT_JOIN_CELL_RIGHT
-      MENUITEM  "Join with cell below",        VIEWER_EDIT_JOIN_CELL_BELOW
     }
   }
 }

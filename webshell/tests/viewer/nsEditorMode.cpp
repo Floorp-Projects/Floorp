@@ -157,11 +157,8 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
         tableEditor->DeleteTableRow(1);
         break;    
       case VIEWER_EDIT_JOIN_CELL_RIGHT:
-        tableEditor->JoinTableCells();
+        tableEditor->JoinTableCells(PR_FALSE);
         break;    
-      case VIEWER_EDIT_JOIN_CELL_BELOW:
-        tableEditor->JoinTableCells();
-        break;
       case VIEWER_DISPLAYTEXT:
       case VIEWER_DISPLAYHTML:
         PrintEditorOutput(gEditor, aCommandID);
