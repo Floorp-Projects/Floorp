@@ -49,6 +49,7 @@ EXPORTS		= \
 		nsDateTimeFormatCID.h \
 		nsICollation.h \
 		nsIDateTimeFormat.h \
+		nsILanguageAtomService.h \
 		nsIMacLocale.h \
 		nsIPosixLocale.h \
 		nsIOS2Locale.h \

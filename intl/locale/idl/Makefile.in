@@ -46,8 +46,6 @@ MODULE		= locale
 GRE_MODULE	= 1
 
 XPIDLSRCS	= \
-		nsILanguageAtom.idl \
-		nsILanguageAtomService.idl \
 		nsIFontPackageService.idl \
 		nsIFontPackageProxy.idl \
 		nsIFontPackageHandler.idl \

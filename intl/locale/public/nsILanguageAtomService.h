@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Erik van der Poel
+ *   Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,28 +38,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIAtom.idl"
+#ifndef nsILanguageAtomService_h_
+#define nsILanguageAtomService_h_
 
 /*
- * The nsILanguageAtom interface encapsulates a language code (as used in
- * HTML LANG attributes, for example). This interface also provides access
- * to the corresponding "language group" atom, to be used in the font
- * engine with preferences, for example.
- *
- * The nsILanguageAtom interface is similar to nsIAtom, in the sense that
- * one can compare 2 pointers for equality. The nsILanguageAtomService
- * creates nsILanguageAtoms by first lower-casing the language (since it's
- * case-insensitive according to RFC 1766), and then looking up that
- * language in a set of existing nsILanguageAtom objects. If it already
- * exists, that object is returned. If not, a new one is created and added
- * to the set for future retrieval.
+ * The nsILanguageAtomService provides a mapping from languages or
+ * character sets to language groups.
  */
-[scriptable, uuid(a6cf911e-15b3-11d2-932e-00805f8add32)]
-interface nsILanguageAtom : nsISupports
-{
-  readonly attribute wstring language;
-  readonly attribute nsIAtom languageGroup;
 
-  boolean LanguageIs(in wstring aLanguage);
+#include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIAtom.h"
+
+#define NS_ILANGUAGEATOMSERVICE_IID \
+  {0x24b45737, 0x9e94, 0x4e40, \
+    { 0x9d, 0x59, 0x29, 0xcd, 0x62, 0x96, 0x3a, 0xdd }}
+
+#define NS_LANGUAGEATOMSERVICE_CONTRACTID \
+  "@mozilla.org/intl/nslanguageatomservice;1"
+
+class nsILanguageAtomService : public nsISupports
+{
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILANGUAGEATOMSERVICE_IID)
+
+  virtual nsIAtom* LookupLanguage(const nsAString &aLanguage,
+                                  nsresult *aError = nsnull) = 0;
+  virtual already_AddRefed<nsIAtom>
+  LookupCharSet(const char *aCharSet, nsresult *aError = nsnull) = 0;
+
+  virtual nsIAtom* GetLocaleLanguageGroup(nsresult *aError = nsnull) = 0;
 };
+
+#endif

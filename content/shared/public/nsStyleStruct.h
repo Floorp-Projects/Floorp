@@ -49,7 +49,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
-#include "nsILanguageAtom.h"
+#include "nsIAtom.h"
 #include "nsIURI.h"
 
 class nsIFrame;
@@ -684,7 +684,7 @@ struct nsStyleVisibility : public nsStyleStruct {
   
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
-  nsCOMPtr<nsILanguageAtom> mLanguage; // [inherited]
+  nsCOMPtr<nsIAtom> mLangGroup;        // [inherited]
  
   PRBool IsVisible() const {
 		return (mVisible == NS_STYLE_VISIBILITY_VISIBLE);

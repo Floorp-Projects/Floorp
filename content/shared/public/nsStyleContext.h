@@ -41,9 +41,9 @@
 #define _nsStyleContext_h_
 
 #include "nsRuleNode.h"
+#include "nsIAtom.h"
 
 class nsIPresContext;
-class nsIAtom;
 
 class nsStyleContext
 {

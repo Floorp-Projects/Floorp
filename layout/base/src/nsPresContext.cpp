@@ -231,7 +231,7 @@ nsPresContext::~nsPresContext()
 
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mLookAndFeel);
-  NS_IF_RELEASE(mLanguage);
+  NS_IF_RELEASE(mLangGroup);
 }
 
 NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
@@ -253,7 +253,7 @@ static const char* const kGenericFont[] = {
 void
 nsPresContext::GetFontPreferences()
 {
-  if (!mLanguage)
+  if (!mLangGroup)
     return;
 
   /* Fetch the font prefs to be used -- see bug 61883 for details.
@@ -277,10 +277,8 @@ nsPresContext::GetFontPreferences()
   mDefaultVariableFont.size = NSFloatPixelsToTwips((float)16, p2t);
   mDefaultFixedFont.size = NSFloatPixelsToTwips((float)13, p2t);
 
-  nsAutoString langGroup;
-  nsCOMPtr<nsIAtom> langGroupAtom;
-  mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
-  langGroupAtom->ToString(langGroup);
+  const char *langGroup;
+  mLangGroup->GetUTF8String(&langGroup);
 
   nsCAutoString pref;
 
@@ -307,7 +305,7 @@ nsPresContext::GetFontPreferences()
   // get font.minimum-size.[langGroup]
 
   pref.Assign("font.minimum-size.");
-  AppendUTF16toUTF8(langGroup, pref);
+  pref.Append(langGroup);
 
   PRInt32 size = nsContentUtils::GetIntPref(pref.get());
   if (size > 0) {
@@ -323,7 +321,7 @@ nsPresContext::GetFontPreferences()
   nsCAutoString generic_dot_langGroup;
   for (PRInt32 eType = eDefaultFont_Variable; eType < eDefaultFont_COUNT; ++eType) {
     generic_dot_langGroup.Assign(kGenericFont[eType]);
-    AppendUTF16toUTF8(langGroup, generic_dot_langGroup);
+    generic_dot_langGroup.Append(langGroup);
 
     nsFont* font;
     switch (eType) {
@@ -726,25 +724,20 @@ void
 nsPresContext::UpdateCharSet(const char* aCharSet)
 {
   if (mLangService) {
-    NS_IF_RELEASE(mLanguage);
-    mLangService->LookupCharSet(aCharSet, &mLanguage);  // addrefs
+    NS_IF_RELEASE(mLangGroup);
+    mLangGroup = mLangService->LookupCharSet(aCharSet).get();  // addrefs
     GetFontPreferences();
-    if (mLanguage) {
-      nsCOMPtr<nsIAtom> langGroupAtom;
-      mLanguage->GetLanguageGroup(getter_AddRefs(langGroupAtom));
-      NS_ASSERTION(langGroupAtom, "non-NULL language group atom expected");
-      if (langGroupAtom.get() == nsLayoutAtoms::Japanese) {
-        mLanguageSpecificTransformType =
+    if (mLangGroup == nsLayoutAtoms::Japanese) {
+      mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_Japanese;
-      }
-      else if (langGroupAtom.get() == nsLayoutAtoms::Korean) {
-        mLanguageSpecificTransformType =
+    }
+    else if (mLangGroup == nsLayoutAtoms::Korean) {
+      mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_Korean;
-      }
-      else {
-        mLanguageSpecificTransformType =
+    }
+    else {
+      mLanguageSpecificTransformType =
         eLanguageSpecificTransformType_None;
-      }
     }
   }
 #ifdef IBMBIDI
@@ -873,11 +866,7 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
   NS_PRECONDITION(aResult, "null out param");
 
   nsIFontMetrics* metrics = nsnull;
-  nsCOMPtr<nsIAtom> langGroup;
-  if (mLanguage) {
-    mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-  }
-  mDeviceContext->GetMetricsFor(aFont, langGroup, metrics);
+  mDeviceContext->GetMetricsFor(aFont, mLangGroup, metrics);
   *aResult = metrics;
   return NS_OK;
 }

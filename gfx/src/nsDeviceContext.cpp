@@ -285,7 +285,7 @@ DeviceContextImpl::GetLocaleLangGroup(void)
     nsCOMPtr<nsILanguageAtomService> langService;
     langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
     if (langService) {
-      langService->GetLocaleLanguageGroup(getter_AddRefs(mLocaleLangGroup));
+      mLocaleLangGroup = langService->GetLocaleLanguageGroup();
     }
     if (!mLocaleLangGroup) {
       mLocaleLangGroup = do_GetAtom("x-western");

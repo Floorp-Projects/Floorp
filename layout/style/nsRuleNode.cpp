@@ -2805,8 +2805,7 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
     if (gLangService) {
       nsAutoString lang;
       displayData.mLang.GetStringValue(lang);
-      gLangService->LookupLanguage(lang.get(),
-                        getter_AddRefs(visibility->mLanguage));
+      visibility->mLangGroup = gLangService->LookupLanguage(lang);
     }
   } 
 

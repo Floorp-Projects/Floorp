@@ -402,12 +402,7 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   const nsStyleFont* font = aSC->GetStyleFont();
   const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
 
-  nsCOMPtr<nsIAtom> langGroup;
-  if (visibility->mLanguage) {
-    visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-  }
-
-  aRC->SetFont(font->mFont, langGroup);
+  aRC->SetFont(font->mFont, visibility->mLangGroup);
 }
 
 nsresult
