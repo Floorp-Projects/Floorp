@@ -89,7 +89,7 @@ struct SelectorList {
   SelectorList(void);
   ~SelectorList(void);
 
-  void AddSelector(const nsCSSSelector& aSelector);
+  void AddSelector(nsCSSSelector* aSelector);
 
 #ifdef NS_DEBUG
   void Dump(void);
@@ -121,13 +121,13 @@ SelectorList::~SelectorList()
   }
 }
 
-void SelectorList::AddSelector(const nsCSSSelector& aSelector)
+// assumes ownership of the selector!
+// Do not add stack-based nsCSSSelector here!
+void SelectorList::AddSelector(nsCSSSelector* aSelector)
 { // prepend to list
-  nsCSSSelector* newSel = new nsCSSSelector(aSelector);
-  if (nsnull != newSel) {
-    newSel->mNext = mSelectors;
-    mSelectors = newSel;
-  }
+  NS_ASSERTION(aSelector->mNext == nsnull, "are you sure this is a fresh selector?");
+  aSelector->mNext = mSelectors;
+  mSelectors = aSelector;
 }
 
 
@@ -1619,8 +1619,12 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
   PRInt32       weight = 0;
   PRBool        havePseudoElement = PR_FALSE;
   for (;;) {
-    nsCSSSelector selector;
-    if (! ParseSelector(aErrorCode, selector)) {
+    nsCSSSelector* headSelector = new nsCSSSelector;
+    if (!headSelector) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return PR_FALSE;
+    }
+    if (! ParseSelector(aErrorCode, *headSelector)) {
       break;
     }
     if (nsnull == list) {
@@ -1630,52 +1634,66 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
         return PR_FALSE;
       }
     }
-    list->AddSelector(selector);
-    nsCSSSelector* listSel = list->mSelectors;
+
+    list->AddSelector(headSelector);
+
+    // from here on out, we maintain headSelector as the first
+    // non-pseudo element
 
     // pull out pseudo elements here
     nsAtomStringList* prevList = nsnull;
-    nsAtomStringList* pseudoClassList = listSel->mPseudoClassList;
+    nsAtomStringList* pseudoClassList = headSelector->mPseudoClassList;
     while (nsnull != pseudoClassList) {
       if (! IsPseudoClass(pseudoClassList->mAtom)) {
         havePseudoElement = PR_TRUE;
-        if (IsSinglePseudoClass(*listSel)) {  // convert to pseudo element selector
+        if (IsSinglePseudoClass(*headSelector)) {  // convert to pseudo element selector
           nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
           pseudoClassList->mAtom = nsnull;
-          listSel->Reset();
-          if (listSel->mNext) {// more to the selector
-            listSel->mOperator = PRUnichar('>');
-            nsCSSSelector empty;
-            list->AddSelector(empty); // leave a blank (universal) selector in the middle
-            listSel = list->mSelectors; // use the new one for the pseudo
+          headSelector->Reset();
+          if (headSelector->mNext) {// more to the selector
+            headSelector->mOperator = PRUnichar('>');
+            headSelector = new nsCSSSelector;
+            if (!headSelector) {
+              aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+              return PR_FALSE;
+            }
+            
+            // leave a blank (universal) selector in the middle
+            list->AddSelector(headSelector); 
           }
-          listSel->mTag = pseudoElement;
+          headSelector->mTag = pseudoElement;
         }
         else {  // append new pseudo element selector
-          selector.Reset();
-          selector.mTag = pseudoClassList->mAtom; // steal ref count
+          nsCSSSelector *pseudoElement = new nsCSSSelector;
+          if (!pseudoElement) {
+            aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+            return PR_FALSE;
+          }
+          pseudoElement->mTag = pseudoClassList->mAtom; // steal ref count
 #ifdef INCLUDE_XUL
-          if (IsTreePseudoElement(selector.mTag)) {
+          if (IsTreePseudoElement(pseudoElement->mTag)) {
             // Take the remaining "pseudoclasses" that we parsed
             // inside the tree pseudoelement's ()-list, and
             // make our new selector have these pseudoclasses
             // in its pseudoclass list.
-            selector.mPseudoClassList = pseudoClassList->mNext;
+            pseudoElement->mPseudoClassList = pseudoClassList->mNext;
             pseudoClassList->mNext = nsnull;
           }
 #endif
-          list->AddSelector(selector);
+          list->AddSelector(pseudoElement);
+          
+          // remember, headSelector is the first non-pseudo element
           pseudoClassList->mAtom = nsnull;
-          listSel->mOperator = PRUnichar('>');
+          headSelector->mOperator = PRUnichar('>');
           if (nsnull == prevList) { // delete list entry
-            listSel->mPseudoClassList = pseudoClassList->mNext;
+            headSelector->mPseudoClassList = pseudoClassList->mNext;
           }
           else {
             prevList->mNext = pseudoClassList->mNext;
           }
           pseudoClassList->mNext = nsnull;
           delete pseudoClassList;
-          weight += listSel->CalcWeight(); // capture weight from remainder
+          weight += headSelector->CalcWeight(); // capture weight from remainder
         }
         break;  // only one pseudo element per selector
       }
@@ -1699,7 +1717,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
       break;
     }
     else {
-      weight += selector.CalcWeight();
+      weight += headSelector->CalcWeight();
     }
   }
   if (!list) {
