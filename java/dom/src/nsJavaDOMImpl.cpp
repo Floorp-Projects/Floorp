@@ -34,11 +34,6 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-#ifdef JAVA_DOM_OJI_ENABLE
-#include "ProxyJNI.h"
-#include "nsIServiceManager.h"
-#endif
-
 #if defined(DEBUG)
 #include <stdio.h>
 #include "nsIDOMElement.h"
@@ -53,8 +48,15 @@ static const char* describe_type(int type);
 #endif
 
 #ifdef JAVA_DOM_OJI_ENABLE
+#include "ProxyJNI.h"
+#include "nsIServiceManager.h"
+nsJVMManager* nsJavaDOMImpl::jvmManager = NULL;
+JavaDOMSecurityContext* nsJavaDOMImpl::securityContext = NULL;
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
+#else
+JavaVM* nsJavaDOMImpl::jvm = NULL;
 #endif
+
 static NS_DEFINE_IID(kIDocShellIID, NS_IDOCSHELL_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
@@ -65,6 +67,14 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_I
 NS_IMPL_ADDREF(nsJavaDOMImpl);
 NS_IMPL_RELEASE(nsJavaDOMImpl);
 
+jclass nsJavaDOMImpl::domAccessorClass = NULL;
+
+jmethodID nsJavaDOMImpl::startURLLoadMID = NULL;
+jmethodID nsJavaDOMImpl::endURLLoadMID = NULL;
+jmethodID nsJavaDOMImpl::progressURLLoadMID = NULL;
+jmethodID nsJavaDOMImpl::statusURLLoadMID = NULL;
+jmethodID nsJavaDOMImpl::startDocumentLoadMID = NULL;
+jmethodID nsJavaDOMImpl::endDocumentLoadMID = NULL;
 
 #define NS_JAVADOM_PROGID \
 "component://netscape/blackwood/java-dom"
@@ -82,8 +92,6 @@ static  nsModuleComponentInfo components[] =
 };
 
 NS_IMPL_NSGETMODULE("JavaDOMModule",components);
-
-
 
 NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
 {
@@ -111,126 +119,77 @@ NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
   return NS_NOINTERFACE;
 }
 
-#ifdef JAVA_DOM_OJI_ENABLE
-nsJVMManager* nsJavaDOMImpl::jvmManager = NULL;
-JavaDOMSecurityContext* nsJavaDOMImpl::securityContext = NULL;
-#else
-JavaVM* nsJavaDOMImpl::jvm = NULL;
-#endif
-
-jclass nsJavaDOMImpl::domAccessorClass = NULL;
-jclass nsJavaDOMImpl::documentClass = NULL;
-jclass nsJavaDOMImpl::listenerClass = NULL;
-jclass nsJavaDOMImpl::gcClass = NULL;
-
-jobject nsJavaDOMImpl::docListener = NULL;
-
-jfieldID nsJavaDOMImpl::documentPtrFID = NULL;
-
-jmethodID nsJavaDOMImpl::documentInitID = NULL;
-jmethodID nsJavaDOMImpl::getInstanceMID = NULL;
-jmethodID nsJavaDOMImpl::startURLLoadMID = NULL;
-jmethodID nsJavaDOMImpl::endURLLoadMID = NULL;
-jmethodID nsJavaDOMImpl::progressURLLoadMID = NULL;
-jmethodID nsJavaDOMImpl::statusURLLoadMID = NULL;
-jmethodID nsJavaDOMImpl::startDocumentLoadMID = NULL;
-jmethodID nsJavaDOMImpl::endDocumentLoadMID = NULL;
-
-jmethodID nsJavaDOMImpl::gcMID = NULL;
-
 nsJavaDOMImpl::nsJavaDOMImpl() 
 {
   NS_INIT_ISUPPORTS();
+}
 
+PRBool nsJavaDOMImpl::Init(JNIEnv** jniEnv) {
   JNIEnv* env = GetJNIEnv();
+  if (!env) return PR_FALSE;
+  *jniEnv = env;
 
-  gcClass = env->FindClass("org/mozilla/dom/DOMGarbageCollector");
-  if (!gcClass) return;
-  gcClass = (jclass) env->NewGlobalRef(gcClass);
-  if (!gcClass) return;
+  if (!domAccessorClass) {
+    domAccessorClass = env->FindClass("org/mozilla/dom/DOMAccessor");
+    if (!domAccessorClass) return PR_FALSE;
+    domAccessorClass = (jclass) env->NewGlobalRef(domAccessorClass);
+    if (!domAccessorClass) return PR_FALSE;
 
-  gcMID = 
-    env->GetStaticMethodID(gcClass,
-			   "doGC",
-			   "()V");
-  if (!gcMID) return;
+    startURLLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			       "startURLLoad",
+			       "(Ljava/lang/String;Ljava/lang/String;J)V");
+    if (Cleanup(env) == PR_TRUE) {
+	domAccessorClass = NULL;
+	return PR_FALSE;
+    }
+    
+    endURLLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			       "endURLLoad",
+			       "(Ljava/lang/String;IJ)V");
+    if (Cleanup(env) == PR_TRUE) {
+      domAccessorClass = NULL;
+      return PR_FALSE;
+    }
 
-  domAccessorClass = env->FindClass("org/mozilla/dom/DOMAccessorImpl");
-  if (!domAccessorClass) return;
-  domAccessorClass = (jclass) env->NewGlobalRef(domAccessorClass);
-  if (!domAccessorClass) return;
+    progressURLLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			       "progressURLLoad",
+			       "(Ljava/lang/String;IIJ)V");
+    if (Cleanup(env) == PR_TRUE) {
+	domAccessorClass = NULL;
+      return PR_FALSE;
+    }
 
-  getInstanceMID = 
-    env->GetStaticMethodID(domAccessorClass, 
-			   "getInstance",
-			   "()Lorg/mozilla/dom/DOMAccessor;");
-  if (!getInstanceMID) return;
-
-  docListener = 
-    env->CallStaticObjectMethod(domAccessorClass, getInstanceMID);
-  if (!docListener) return;
-  docListener = (jclass) env->NewGlobalRef(docListener);
-  if (!docListener) return;
-
-  listenerClass = 
-    env->GetObjectClass(docListener);
-  if (!listenerClass) return;
-  listenerClass = (jclass) env->NewGlobalRef(listenerClass);
-  if (!listenerClass) return;
-
-  documentClass = 
-    env->FindClass("org/mozilla/dom/DocumentImpl");
-  if (!documentClass) return;
-  documentClass = (jclass) env->NewGlobalRef(documentClass);
-  if (!documentClass) return;
-
-  documentInitID =
-    env->GetMethodID(documentClass, "<init>", "(J)V");
-  if (!documentInitID) return;
-
-  documentPtrFID = 
-    env->GetFieldID(documentClass,
-		    "p_nsIDOMNode", 
-		    "J");
-  if (!documentPtrFID) return;
-
-  startURLLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "startURLLoad",
-		     "(Ljava/lang/String;Ljava/lang/String;Lorg/w3c/dom/Document;)V");
-  if (!startURLLoadMID) return;
-
-  endURLLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "endURLLoad",
-		     "(Ljava/lang/String;ILorg/w3c/dom/Document;)V");
-  if (!endURLLoadMID) return;
-
-  progressURLLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "progressURLLoad",
-		     "(Ljava/lang/String;IILorg/w3c/dom/Document;)V");
-  if (!progressURLLoadMID) return;
-
-  statusURLLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "statusURLLoad",
-		     "(Ljava/lang/String;Ljava/lang/String;Lorg/w3c/dom/Document;)V");
-  if (!statusURLLoadMID) return;
-
-  startDocumentLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "startDocumentLoad",
-		     "(Ljava/lang/String;)V");
-  if (!startDocumentLoadMID) return;
-
-  endDocumentLoadMID = 
-    env->GetMethodID(listenerClass,
-		     "endDocumentLoad",
-		     "(Ljava/lang/String;ILorg/w3c/dom/Document;)V");
-  if (!endDocumentLoadMID) return;
-
-  Cleanup(env);
+    statusURLLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			       "statusURLLoad",
+			       "(Ljava/lang/String;Ljava/lang/String;J)V");
+    if (Cleanup(env) == PR_TRUE) {
+	domAccessorClass = NULL;
+	return PR_FALSE;
+    }
+    
+    startDocumentLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			   "startDocumentLoad",
+			       "(Ljava/lang/String;)V");
+    if (Cleanup(env) == PR_TRUE) {
+      domAccessorClass = NULL;
+      return PR_FALSE;
+    }
+    
+    endDocumentLoadMID = 
+	env->GetStaticMethodID(domAccessorClass,
+			       "endDocumentLoad",
+			       "(Ljava/lang/String;IJ)V");
+    if (Cleanup(env) == PR_TRUE) {
+	domAccessorClass = NULL;
+	return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
 }
 
 nsJavaDOMImpl::~nsJavaDOMImpl()
@@ -243,7 +202,6 @@ PRBool nsJavaDOMImpl::Cleanup(JNIEnv* env)
     env->ExceptionDescribe();
     return PR_TRUE;
   }
-
   return PR_FALSE;
 }
 
@@ -290,43 +248,23 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
   return NULL;
 }
 
-// convert nsIDOMDocument to org.mozilla.dom.DocumentImpl
-jobject nsJavaDOMImpl::CaffienateDOMDocument(nsIDOMDocument* domDoc)
-{
-  if (!domDoc) return NULL;
-  JNIEnv* env = GetJNIEnv();
-
-//    jobject jdoc = env->AllocObject(documentClass);
-  jobject jdoc = env->NewObject(documentClass, 
-                                documentInitID, 
-                                (jlong) (void*) domDoc);
-  if (!jdoc) return NULL;
-//    env->SetLongField(jdoc, documentPtrFID, (jlong) (void*) domDoc);
-  if (Cleanup(env) == PR_TRUE) return NULL;
-
-  return jdoc;
-}
-
-/* nsIDocumentLoaderObserver methods */
-
 NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader, 
 						 nsIURI* aURL, 
 						 const char* aCommand)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   if (aURL)
     aURL->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  env->CallVoidMethod(docListener,
-		      startDocumentLoadMID,
-		      jURL);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    startDocumentLoadMID,
+			    jURL);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
@@ -334,7 +272,9 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 					       nsIChannel* channel, 
 					       nsresult aStatus)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -343,24 +283,21 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (!jURL) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
-  jobject jdoc = CaffienateDOMDocument(domDoc);
-
-  env->CallVoidMethod(docListener,
-		      endDocumentLoadMID,
-		      jURL,
-		      (jint) aStatus,
-		      jdoc);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    endDocumentLoadMID,
+			    jURL,
+			    (jint) aStatus,
+			    (jlong)domDoc);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
 					    nsIChannel* channel)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -377,17 +314,12 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
   if (!jContentType) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
-  jobject jdoc = CaffienateDOMDocument(domDoc);
-
-  env->CallVoidMethod(docListener,
-		      startURLLoadMID,
-		      jURL,
-		      jContentType,
-		      jdoc);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    startURLLoadMID,
+			    jURL,
+			    jContentType,
+			    (jlong)domDoc);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
@@ -396,7 +328,9 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
 					       PRUint32 aProgress, 
 					       PRUint32 aProgressMax)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -405,18 +339,13 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
   if (!jURL) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
-  jobject jdoc = CaffienateDOMDocument(domDoc);
-
-  env->CallVoidMethod(docListener,
-		      progressURLLoadMID,
-		      jURL,
-		      (jint) aProgress,
-		      (jint) aProgressMax,
-		      jdoc);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    progressURLLoadMID,
+			    jURL,
+			    (jint) aProgress,
+			    (jint) aProgressMax,
+			    (jlong)domDoc);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
@@ -424,7 +353,9 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
 					     nsIChannel* channel, 
 					     nsString& aMsg)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -437,17 +368,12 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
   if (!jMessage) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
-  jobject jdoc = CaffienateDOMDocument(domDoc);
-
-  env->CallVoidMethod(docListener,
-		      statusURLLoadMID,
-		      jURL,
-		      jMessage,
-		      jdoc);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    statusURLLoadMID,
+			    jURL,
+			    jMessage,
+			    (jlong)domDoc);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
@@ -455,7 +381,9 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
 					  nsIChannel* channel, 
 					  nsresult aStatus)
 {
-  JNIEnv* env = GetJNIEnv();
+  JNIEnv* env = NULL;
+  if (Init(&env) == PR_FALSE) return NS_ERROR_FAILURE;
+
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -464,21 +392,15 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
   if (!jURL) return NS_ERROR_FAILURE;
 
   nsIDOMDocument* domDoc = GetDocument(loader);
-  jobject jdoc = CaffienateDOMDocument(domDoc);
-
 #if defined(DEBUG)
   dump_document(domDoc, urlSpec);
 #endif
-
-  env->CallVoidMethod(docListener,
-		      endURLLoadMID,
-		      jURL,
-		      (jint) aStatus,
-		      jdoc);
+  env->CallStaticVoidMethod(domAccessorClass,
+			    endURLLoadMID,
+			    jURL,
+			    (jint) aStatus,
+			    (jlong)domDoc);
   if (Cleanup(env) == PR_TRUE) return NS_ERROR_FAILURE;
-
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
 
@@ -487,12 +409,8 @@ NS_IMETHODIMP nsJavaDOMImpl::HandleUnknownContentType(nsIDocumentLoader* loader,
 						      const char *aContentType,
 						      const char *aCommand)
 {
-  JNIEnv* env = GetJNIEnv();
-  env->CallStaticVoidMethod(gcClass, gcMID);
-  Cleanup(env);
   return NS_OK;
 }
-
 
 JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
    JNIEnv* env;
@@ -511,7 +429,7 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
 //     if (!securityContext) {
 //         securityContext = new JavaDOMSecurityContext();
 //     }
-   //   SetSecurityContext(env,securityContext);
+//     SetSecurityContext(env, securityContext);
    SetSecurityContext(env, new JavaDOMSecurityContext());
 #else  /* JAVA_DOM_OJI_ENABLE */
    if (!jvm) {

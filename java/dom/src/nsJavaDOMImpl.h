@@ -58,16 +58,7 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 #endif
 
   static jclass		domAccessorClass;
-  static jclass		documentClass;
-  static jclass		listenerClass;
-  static jclass		gcClass;
 
-  static jobject	docListener;
-
-  static jfieldID	documentPtrFID;
-  static jmethodID      documentInitID;
-
-  static jmethodID	getInstanceMID;
   static jmethodID	startURLLoadMID;
   static jmethodID	endURLLoadMID;
   static jmethodID	progressURLLoadMID;
@@ -75,14 +66,12 @@ class nsJavaDOMImpl : public nsIJavaDOM {
   static jmethodID	startDocumentLoadMID;
   static jmethodID	endDocumentLoadMID;
 
-  static jmethodID	gcMID;
-
-  // cleanup after a JNI method invocation
-  static PRBool Cleanup(JNIEnv* env);
   static JNIEnv* GetJNIEnv(void);
   static void StartJVM(void);
+  static PRBool Init(JNIEnv**);
+  // cleanup after a JNI method invocation
+  static PRBool Cleanup(JNIEnv* env);
   nsIDOMDocument* GetDocument(nsIDocumentLoader* loader);  
-  jobject CaffienateDOMDocument(nsIDOMDocument* domDoc);
 };
 
 #endif /* __nsJavaDOMImpl_h__ */

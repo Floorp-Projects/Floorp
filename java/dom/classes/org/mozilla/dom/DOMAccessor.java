@@ -21,15 +21,124 @@
 
 package org.mozilla.dom;
 
-public interface DOMAccessor {
-    public void addDocumentLoadListener(DocumentLoadListener listener);
-    public void removeDocumentLoadListener(DocumentLoadListener listener);
+import java.util.Vector;
+import java.util.Enumeration;
 
-    /**
-     * The getInstance method is available, it is not declared because
-     * it is a static method and the Java Language Spec does not allow
-     * us to declare a static method in an interface. 
-     * 
-     * public static synchronized DOMAccessor getInstance();
-     */
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import java.security.AccessController;
+
+public final class DOMAccessor {
+
+    private static Vector documentLoadListeners = new Vector();
+    private static JavaDOMPermission permission = new JavaDOMPermission("JavaDOM");
+
+    static {
+	System.loadLibrary("javadomjni");
+    }
+
+    private void DOMAccessorImpl() {}
+
+    private static native void register();
+    private static native void unregister();
+    private static native Node getNodeByHandle(long p);
+    private static native void doGC();
+
+    public static synchronized void 
+	addDocumentLoadListener(DocumentLoadListener listener) {
+	if (documentLoadListeners.size() == 0) {
+	    register();
+	}
+	documentLoadListeners.addElement(listener);
+    }
+
+    public static synchronized void 
+	removeDocumentLoadListener(DocumentLoadListener listener) {
+
+	documentLoadListeners.removeElement(listener);
+	if (documentLoadListeners.size() == 0) {
+	  unregister();
+	}
+    }
+
+    public static synchronized void 
+        startURLLoad(String url, String contentType, long p_doc) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.startURLLoad(url, contentType, (Document)getNodeByHandle(p_doc));
+	}
+	doGC();
+    }
+
+    public static synchronized void 
+	endURLLoad(String url, int status, long p_doc) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.endURLLoad(url, status, (Document)getNodeByHandle(p_doc));
+	}
+	doGC();
+    }
+
+    public static synchronized void 
+	progressURLLoad(String url, int progress, int progressMax, 
+			long p_doc) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.progressURLLoad(url, progress, progressMax, (Document)getNodeByHandle(p_doc));
+	}
+	doGC();
+    }
+
+    public static synchronized void 
+        statusURLLoad(String url, String message, long p_doc) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.statusURLLoad(url, message, (Document)getNodeByHandle(p_doc));
+	}
+	doGC();
+    }
+
+
+    public static synchronized void 
+        startDocumentLoad(String url) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.startDocumentLoad(url);
+	}
+	doGC();
+    }
+
+    public static synchronized void 
+        endDocumentLoad(String url, int status, long p_doc) {
+
+	AccessController.checkPermission(permission);
+	for (Enumeration e = documentLoadListeners.elements();
+	     e.hasMoreElements();) {
+	    DocumentLoadListener listener = 
+		(DocumentLoadListener) e.nextElement();
+	    listener.endDocumentLoad(url, status, (Document)getNodeByHandle(p_doc));
+	}
+	doGC();
+    }
 }

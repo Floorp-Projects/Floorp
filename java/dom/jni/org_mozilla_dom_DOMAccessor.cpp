@@ -7,17 +7,17 @@
 #include "nsCURILoader.h"
 
 #include "nsIJavaDOM.h"
-#include "org_mozilla_dom_DOMAccessorImpl.h"
+#include "org_mozilla_dom_DOMAccessor.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 
 /*
- * Class:     org_mozilla_dom_DOMAccessorImpl
+ * Class:     org_mozilla_dom_DOMAccessor
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
   (JNIEnv *env, jclass jthis)
 {
   if (!JavaDOMGlobals::log) {
@@ -47,11 +47,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
 }
 
 /*
- * Class:     org_mozilla_dom_DOMAccessorImpl
+ * Class:     org_mozilla_dom_DOMAccessor
  * Method:    unregister
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
   (JNIEnv *, jclass jthis)
 {
   PR_LOG(JavaDOMGlobals::log, PR_LOG_DEBUG, 
@@ -81,11 +81,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
 }
 
 /*
- * Class:     org_mozilla_dom_DOMAccessorImpl
+ * Class:     org_mozilla_dom_DOMAccessor
  * Method:    createElement
  * Signature: (J)Lorg/w3c/dom/Element;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessorImpl_getElementByHandle
+JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessor_getNodeByHandle
   (JNIEnv *env, jclass jthis, jlong p)
 { 
   if (!JavaDOMGlobals::log) {
@@ -94,3 +94,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DOMAccessorImpl_getElementByHandl
   nsIDOMNode *node = (nsIDOMNode*)p;
   return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
+
+/*
+ * Class:     org_mozilla_dom_DOMAccessor
+ * Method:    doGC
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_doGC
+  (JNIEnv *, jclass)
+{
+  JavaDOMGlobals::TakeOutGarbage();
+}
+
+

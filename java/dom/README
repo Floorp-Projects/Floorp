@@ -1,57 +1,90 @@
+
+Sources
+=======
+
+The sources are located in mozilla/java/dom.
+Subdirectories 
+
+    classes
+    jni
+    src
+    tests
+
+contain Java sources, Java native methods implementation, 
+native c++ code and Java DOM API tests respectively.
+
+Building
+========
+
+   Requirenments:
+   --------------
+     Current mozilla build
+     JDK1.2 or JDK1.3 
+     Perl 5 must be in your path
+     JDKHOME environment variable set to your JDK dir
+     CLASSPATH environment cvariable set to contain 
+        org.w3c.dom classes. The sources can be found at	
+        http://www.w3.org/TR/WD-DOM-Level-2/java-binding.zip
+
+     Solaris specific
+     ----------------
+	Add following directories to LD_LIBRARY_PATH environment variable:
+          $MOZILLA_FIVE_HOME
+          $JDKHOME/jre/lib/$HOSTTYPE/native_threads
+          $JDKHOME/jre/lib/$HOSTTYPE/classic
+          $JDKHOME/jre/lib/$HOSTTYPE/
+
+	goto mozilla/java/dom directory and type "gmake"
+        
+
+     Windows NT specific
+     -------------------
+	To enable OJI usage set environment variable JAVA_DOM_OJI_ENABLE=1
+	Add following directories to PATH environment variable:
+	  %MOZILLA_FIVE_HOME%
+	  %JDKHOME%\jre\bin\classic (only in case you don't use OJI)
+
+	goto mozilla/java/dom directory and type "nmake /f makefile.win"
+        
+
 Using the Java DOM API
-----------------------
+======================
 
 A Java component obtains a org.w3c.dom.Document by registering for
 Document load notifications. The Document is passed in along with the
 notifications. The preferred way for a Java component to register for
-Document load notifications is to register via the DOMAccessor
-class. However if OJI is not use to obtain JNIEnv one has to apply
-two patches
+Document load notifications is to register via the DOMAccessor class.
 
-  webshell/src/nsWebShell.cpp.patch
-  java/dom/jni/DocumentImpl.java.patch
+However, this is possible only if OJI usage is enabled. This works
+on Windows NT platform.
 
-The first one inits nsJavaDOM component and starts jvm. The second one 
-registers a document load listener via DOMAccessor. 
+On Solaris currently the nsJavaDOM component instantiates its own JVM.
+When an OJI-compatible JVM is available, we will move over to using it.
+So, one has to apply two patches to
+
+  mozilla/webshell/src/nsWebShell.cpp
+  mozilla/java/dom/classes/org/mozilla/dom/DOMAccessor.java
+
+They can be found at mozilla/java/dom directory.
+The first one inits nsJavaDOM component and adds it as a
+document load observer listener.
+
+The second one registers a document load listener via DOMAccessor. 
 Note:
   any class that implements the DocumentLoadListener interface may
-  stand for TestDocLoadListener.
-See the section on Building for instructions on how to apply the patches.
+  stand for GenericDocLoadListener.
 
-To enable OJI usage on win nt add -DJAVA_DOM_OJI_ENABLE to the
-DEFINES variable in makefile.win and also set an environment 
-variable JAVA_DOM_OJI_ENABLE=true
+After applying a patch to nsWebShell.cpp edit 
+mozilla/webshell/src/Makefile.in to add -DJAVA_DOM to the list of 
+defines. Then do a gmake in this directory.
 
+After applying a patch to DOMAccessor.java go to mozilla/java/dom/classes
+and do a gmake. No changes in makefiles are needed.
 
-Makefiles
----------
+You can find examples of Java DOM API usage in 
 
-You may have to set DEPTH to point to the mozilla CVS workspace root
-in Makefile and jni/Makefile. Since this stuff is not part of the
-regular SeaMonkeyBuild, Makefiles are not generated from Makefile.in,
-so just go ahead and hack the Makefile. 
-
-Building
---------
-
-After having done a configure at the top level of SeaMonkey, do a make
-in the dom and the dom/jni directories. This will copy over a few
-header files that are needed by the patch to nsWebShell. You can then
-apply the patch to nsWebShell.cpp by executing 
-
-`patch nsWebShell.cpp <nsWebShell.cpp.patch` 
-
-Edit Makefile.in to add -DJAVA_DOM to the list of defines. Then do a
-gmake in this directory.
-
-Similarly apply the DocumetnImpl.java patch. Then recompile the
-DocumentImpl class. No changes in makefiles are needed.
-
-Define JDKHOME so that $JDKHOME/bin points to javac.
-
-You will also need to get the w3c DOM level 2 interfaces from
-http://www.w3.org/TR/WD-DOM-Level-2/java-binding.zip
-and put the class files in your CLASSPATH.
+   mozilla/java/dom/classes/org/mozilla/dom/util
+   mozilla/java/dom/classes/org/mozilla/dom/tests
 
 
 DOM2 events
@@ -76,8 +109,6 @@ The basic implementation architecture is following:
    - javaDOMEventsGlobals class is used much like javaDOMGlobals for caching
      (this code may be moved to javaDOMGlobals) 
      
-
-
 NSPR Logging
 ------------
 
@@ -94,13 +125,6 @@ creates two files in the current working directory, dom-java.txt and
 dom-cpp.txt, which are simple dumps of the DOM, as printed from C++
 and from Java. The two should be identical. The code to write these
 files is, essentially, my regression test. Feel free to add to it.
-
-
-OJI
----
-
-Currently the nsJavaDOM component instantiates its own JVM. When an
-OJI-compatible JVM is available, we will move over to using it.
 
 
 Dependencies

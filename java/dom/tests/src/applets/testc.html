@@ -1,13 +1,18 @@
 <html>
-<body name="test_dom_accessor">
+<body>
+<head>
+<title>
+DOM tree dumper
+</title>
+</head>
 <pre>
-This should run DOMAccessor test.
-TestDOMAccessorApplet1 registers itself
+This should run DOMTreeDumper test.
+DOMTreeDumperApplet registers itself
 as a DocumentLoadListener via DOMAccessor
-and dumps load notifications and document 
-source into the java plugin console.
+and dumps document source into the 
+java plugin console.
 <pre>
-<applet code="org.mozilla.dom.tests.TestDOMAccessorApplet1"
+<applet code="org.mozilla.dom.tests.DOMTreeDumperApplet"
         width=0
         height=0
         alt="Your browser understands the &lt;APPLET&gt; tag but isn't running the applet, for some reason.">

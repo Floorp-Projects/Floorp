@@ -1,28 +1,25 @@
 Index: nsWebShell.cpp
 ===================================================================
 RCS file: /cvsroot/mozilla/webshell/src/nsWebShell.cpp,v
-retrieving revision 1.377
-diff -r1.377 nsWebShell.cpp
-70a71
-> 
-97a99,106
+retrieving revision 1.429
+diff -r1.429 nsWebShell.cpp
+111a112,116
 > #ifdef JAVA_DOM
 > #include "nsIJavaDOM.h"
 > static NS_DEFINE_IID(kJavaDOMCID, NS_JAVADOM_CID);
 > static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 > #endif // JAVA_DOM
+3107a3113,3125
 > 
-> 
-> 
-566a576
-> 
-984a995,1003
 > #ifdef JAVA_DOM
 >      nsresult jrv = NS_OK;
->      NS_WITH_SERVICE(nsISupports, javaDOM, kJavaDOMCID, &jrv);
+>      NS_WITH_SERVICE(nsIDocumentLoaderObserver, javaDOM, kJavaDOMCID, &jrv);
 >      if (NS_FAILED(jrv) || !javaDOM) {
 >        fprintf(stderr, 
 >                "nsWebShell::Init: GetService of JavaDOM failed (error %x)\n", 
 >                jrv);
+>      } else {
+>        printf("\n webshell: added JAVADOM as observer...\n");
+>        mDocLoader->AddObserver(javaDOM);
 >      }
 > #endif // JAVA_DOM

@@ -22,21 +22,29 @@
 package org.mozilla.dom.tests;
 
 import java.applet.Applet;
+import org.w3c.dom.Document;
 import org.mozilla.dom.DOMAccessor;
-import org.mozilla.dom.DOMAccessorImpl;
-import org.mozilla.dom.tests.TestDocLoadListener;
+import org.mozilla.dom.util.DOMTreeDumper;
+import org.mozilla.dom.util.GenericDocLoadListener;
 
-public class TestDOMAccessorApplet extends java.applet.Applet
+public class DOMTreeDumperApplet extends Applet
 {
     private DOMAccessor accessor;
-
+    private final String name = "DOMTreeDumperApplet";
+    
     public void init()
     {
-        accessor = DOMAccessorImpl.getInstance();
-	accessor.addDocumentLoadListener(
-	    new TestDocLoadListener("TestDOMAccessorApplet"));
-	System.out.println("inited......");
-	System.out.println("accsessor: " + accessor);
+        DOMAccessor.addDocumentLoadListener(new DOMTreeDumperListener(name));
+	System.out.println(name + " init...");
+    }
+
+    class DOMTreeDumperListener extends GenericDocLoadListener {
+	public DOMTreeDumperListener(String name) {
+	    super(name);
+	}
+	public void endDocumentLoad(String url, int status, Document doc) {
+	    new DOMTreeDumper(name).dumpToStream(System.out, doc);
+	}
     }
 }
 

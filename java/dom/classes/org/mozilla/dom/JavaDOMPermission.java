@@ -19,16 +19,18 @@
  Contributor(s): 
 */
 
-#include "org_mozilla_dom_DOMGarbageCollector.h"
-#include "javaDOMGlobals.h"
+package org.mozilla.dom;
 
-/*
- * Class:     org_mozilla_dom_DOMGarbageCollector
- * Method:    doGC
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMGarbageCollector_doGC
-  (JNIEnv *, jclass)
-{
-  JavaDOMGlobals::TakeOutGarbage();
+import java.security.BasicPermission;
+
+public final class JavaDOMPermission extends BasicPermission {
+    public JavaDOMPermission(String name)
+    {
+	super(name);
+    }
+
+    public JavaDOMPermission(String name, String actions)
+    {
+	super(name);
+    }
 }

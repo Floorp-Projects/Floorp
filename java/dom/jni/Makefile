@@ -32,8 +32,7 @@ CPPSRCS		= \
 	javaDOMGlobals.cpp \
 	javaDOMEventsGlobals.cpp \
 	nativeDOMProxyListener.cpp \
-	org_mozilla_dom_DOMGarbageCollector.cpp \
-	org_mozilla_dom_DOMAccessorImpl.cpp \
+	org_mozilla_dom_DOMAccessor.cpp \
 	org_mozilla_dom_AttrImpl.cpp \
 	org_mozilla_dom_CharacterDataImpl.cpp \
 	org_mozilla_dom_DocumentImpl.cpp \

@@ -19,10 +19,20 @@
  Contributor(s): 
 */
 
-package org.mozilla.dom;
+package org.mozilla.dom.tests;
 
-public class DOMGarbageCollector {
+import java.applet.Applet;
+import org.mozilla.dom.DOMAccessor;
+import org.mozilla.dom.util.GenericDocLoadListener;
 
-    //    private static native void doGC();
-    public static native void doGC();
+public class TestDOMAccessorApplet extends java.applet.Applet
+{
+    private final String name = "TestDOMAccessorApplet";
+    
+    public void init()
+    {
+	DOMAccessor.addDocumentLoadListener(new GenericDocLoadListener(name));
+	System.out.println(name + " init...");
+    }
 }
+
