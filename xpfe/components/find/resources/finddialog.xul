@@ -23,6 +23,7 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
                 Simon Fraser <sfraser@netscape.com>
                 Bill Law <law@netscape.com>
                 Ben Goodger <rgoodger@ihug.co.nz>
+                Blake Ross <BlakeR1234@aol.com>
 -->
 
 <?xml-stylesheet href="chrome://navigator/skin/navigator.css" type="text/css"?>
@@ -55,7 +56,7 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
     </box>
     
     <box orient="vertical">
-      <textfield id="dialog.findKey" onkeyup="onTyping(event.which)"/>
+      <textfield id="dialog.findKey" oninput="return onTyping();"/>
       <box orient="vertical" autostretch="never">
         <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
         <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>

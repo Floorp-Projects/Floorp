@@ -125,7 +125,7 @@
             return true;
         }
 
-        function onTyping( key )
+        function onTyping()
         {
                 if ( dialog.enabled ) {
                     // Disable OK if they delete all the text.
