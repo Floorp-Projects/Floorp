@@ -1272,11 +1272,14 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsHTMLAtoms::top ||
         aAttribute == nsXULAtoms::flex ||
         aAttribute == nsXULAtoms::orient ||
+        aAttribute == nsXULAtoms::pack ||
         aAttribute == nsXULAtoms::dir ||
         aAttribute == nsXULAtoms::equalsize ||
         aAttribute == nsXULAtoms::autostretch) {
 
-       if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::dir || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
+       if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::dir || 
+           aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || 
+           aAttribute == nsHTMLAtoms::valign || aAttribute == nsXULAtoms::pack) {
           mInner->mValign = nsBoxFrame::vAlign_Top;
           mInner->mHalign = nsBoxFrame::hAlign_Left;
 
