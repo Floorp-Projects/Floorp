@@ -66,17 +66,14 @@ nsLDAPService::Init(void)
 
   NS_ASSERTION(!mThread, "nsLDAPService already initialized!");
 
-  // XXX check params
-  //
   rv = NS_NewThread(getter_AddRefs(mThread),
-		    this, 0, PR_JOINABLE_THREAD, 
-		    PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD);
+		    this, 0, PR_JOINABLE_THREAD);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
-// for nsIRunnable
+// for nsIRunnable.  all the processing work happens here.
 //
 NS_IMETHODIMP
 nsLDAPService::Run(void)
@@ -84,6 +81,12 @@ nsLDAPService::Run(void)
 #ifdef DEBUG_dmose  
   PR_fprintf(PR_STDERR, "nsLDAPService::Run() entered!\n");
 #endif
+
+  // XXX - should use mThreadRunning here
+  //	
+  while (1) {
+
+  }
 
   return NS_OK;
 }

@@ -66,6 +66,7 @@ class nsLDAPService : public nsIRunnable
 
  protected:
   nsCOMPtr<nsIThread> mThread;
+  PRBool mThreadRunning;
 
 };
 
