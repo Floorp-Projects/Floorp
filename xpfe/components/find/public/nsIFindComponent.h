@@ -20,7 +20,7 @@
 
 #include "nsIAppShellComponent.h"
 
-class nsIDocument;
+class nsIWebShell;
 
 // a6cf90ee-15b3-11d2-932e-00805f8add32
 #define NS_IFINDCOMPONENT_IID \
@@ -47,7 +47,9 @@ class nsIDocument;
 | in this manner:                                                              |
 |   1. Hold a reference to the singleton "find component".                     |
 |   2. On initial search, ask that component to create a search "context."     |
-|   3. Reset the context whenever the underlying document changes.             |
+|   3. Reset the context whenever the underlying web shell changes (but since  |
+|      a browser will usually reuse a single web shell, this won't be of       |
+|      concern except in obscure cases).                                       |
 |   4. Forward "find" and "find next" requests to the component, along         |
 |      with the appropriate search context object.                             |
 |   5. Release() the search context object and the find component when the     |
@@ -59,7 +61,7 @@ struct nsIFindComponent : public nsIAppShellComponent {
     /*---------------------------- CreateContext -------------------------------
     | Create a "search context" for the given document.  Subsequent Find and   |
     | FindNext requests that provide the returned search context will find     |
-    | the appropriate search string in aDocument.                              |
+    | the appropriate search string in aWebShell.                              |
     |                                                                          |
     | The result is of the xpcom equivalent of an opaque type.  It's true type |
     | is defined by the implementation of this interface.  Clients ought never |
@@ -67,7 +69,7 @@ struct nsIFindComponent : public nsIAppShellComponent {
     | Clients do have to call Release() when they're no longer interested in   |
     | this search context.                                                     |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD CreateContext( nsIDocument *aDocument,
+    NS_IMETHOD CreateContext( nsIWebShell *aWebShell,
                               nsISupports **aResult ) = 0;
 
     /*--------------------------------- Find -----------------------------------
@@ -93,20 +95,21 @@ struct nsIFindComponent : public nsIAppShellComponent {
     NS_IMETHOD FindNext( nsISupports *aContext ) = 0;
 
     /*----------------------------- ResetContext -------------------------------
-    | Reset the given search context to search a new document.  This is        |
-    | intended to be called when the user goes to a new page.                  |
+    | Reset the given search context to search a new web shell.  Generally,    |
+    | this will be the equivalent of calling Release() on the old context and  |
+    | then creating a new one for aNewWebShell.                                |
     --------------------------------------------------------------------------*/
     NS_IMETHOD ResetContext( nsISupports *aContext,
-                             nsIDocument *aDocument ) = 0;
+                             nsIWebShell *aNewWebShell ) = 0;
 
 }; // nsIFindComponent
 
 #define NS_DECL_IFINDCOMPONENT \
-    NS_IMETHOD CreateContext( nsIDocument *aDocument,  \
+    NS_IMETHOD CreateContext( nsIWebShell *aWebShell,  \
                               nsISupports **aResult ); \
     NS_IMETHOD Find( nsISupports *aContext );          \
     NS_IMETHOD FindNext( nsISupports *aContext );      \
     NS_IMETHOD ResetContext( nsISupports *aContext,    \
-                             nsIDocument *aDocument );
+                             nsIWebShell *aNewWebShell );
 
 #endif

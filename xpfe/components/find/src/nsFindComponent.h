@@ -49,14 +49,14 @@ public:
         
 										Context();
 				virtual 		~Context();
-				NS_IMETHOD	Init( nsIDocument *aDocument,
+				NS_IMETHOD	Init( nsIWebShell *aWebShell,
 			                 const nsString &lastSearchString,
 			                 const nsString &lastIgnoreCase,
 			                 const nsString &lastSearchBackwards,
 			                 const nsString &lastWrapSearch);
 
-			  NS_IMETHOD	MakeTSDocument( nsIDocument *aNewDocument );
-				NS_IMETHOD	Reset( nsIDocument *aNewDocument );
+			  NS_IMETHOD	MakeTSDocument( nsIWebShell *aNewWebShell );
+				NS_IMETHOD	Reset( nsIWebShell *aNewWebShell );
 				NS_IMETHOD	DoFind();
       
         // Maybe add Find/FindNext functions here?
