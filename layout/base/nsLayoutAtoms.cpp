@@ -42,6 +42,7 @@ nsIAtom* nsLayoutAtoms::bulletList;
 nsIAtom* nsLayoutAtoms::colGroupList;
 nsIAtom* nsLayoutAtoms::fixedList;
 nsIAtom* nsLayoutAtoms::floaterList;
+nsIAtom* nsLayoutAtoms::popupList;
 
 // pseudo tag names for non-element content
 nsIAtom* nsLayoutAtoms::commentTagName;
@@ -96,6 +97,7 @@ void nsLayoutAtoms::AddrefAtoms()
     colGroupList = NS_NewAtom("ColGroup-list");
     fixedList = NS_NewAtom("Fixed-list");
     floaterList = NS_NewAtom("Floater-list");
+    popupList = NS_NewAtom("Popup-list");
 
     commentTagName = NS_NewAtom("__moz_comment");
     textTagName = NS_NewAtom("__moz_text");
@@ -150,6 +152,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(colGroupList);
     NS_RELEASE(fixedList);
     NS_RELEASE(floaterList);
+    NS_RELEASE(popupList);
 
     NS_RELEASE(commentTagName);
     NS_RELEASE(textTagName);

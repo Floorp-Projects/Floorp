@@ -407,6 +407,7 @@ protected:
   nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
                                      nsIFrame*&               aNewFrame);
 
+  
   nsresult ConstructSelectFrame(nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
                                 nsIContent*              aContent,

@@ -96,9 +96,7 @@ public:
   static nsIAtom* cols;
   static nsIAtom* colspan;
   static nsIAtom* columnPseudo;
-  static nsIAtom* comboText;
-  static nsIAtom* comboTextSelected;
-  static nsIAtom* comboTextSelectedFocus;
+  static nsIAtom* combobox;
   static nsIAtom* commentPseudo;
   static nsIAtom* compact;
   static nsIAtom* content;
@@ -115,11 +113,7 @@ public:
   static nsIAtom* disabled;
   static nsIAtom* div;
   static nsIAtom* dl;
-  static nsIAtom* dropDownVisible;
-  static nsIAtom* dropDownHidden;
-  static nsIAtom* dropDownBtnOut;
-  static nsIAtom* dropDownBtnPressed;
-  static nsIAtom* dropDownList;
+  static nsIAtom* dropDownListPseudo;
 
   static nsIAtom* embed;
   static nsIAtom* encoding;

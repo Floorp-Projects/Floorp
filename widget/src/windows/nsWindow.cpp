@@ -1056,6 +1056,28 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
   return NS_OK;
 }
 
+
+//-------------------------------------------------------------------------
+//
+// Get the bounding rectangle in screen coordinates
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsWindow::GetAbsoluteBounds(nsRect &aRect)
+{
+  if (mWnd) {
+    RECT r;
+    VERIFY(::GetWindowRect(mWnd, &r));
+
+    // assign size
+    aRect.width  = r.right - r.left;
+    aRect.height = r.bottom - r.top; 
+    aRect.x = r.left;
+    aRect.y = r.top;
+  }
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Get this component dimension

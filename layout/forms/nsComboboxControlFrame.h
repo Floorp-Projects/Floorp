@@ -20,10 +20,12 @@
 #define nsComboboxControlFrame_h___
 
 
-#include "nsHTMLContainerFrame.h"
+#include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
-
+#include "nsIDOMMouseListener.h"
+#include "nsVoidArray.h"
+#include "nsIAnonymousContentCreator.h"
 
 class nsButtonControlFrame;
 class nsTextControlFrame;
@@ -33,19 +35,36 @@ class nsStyleContext;
 class nsIHTMLContent;
 class nsIListControlFrame;
 
-class nsComboboxControlFrame : public nsHTMLContainerFrame,
+/**
+ * Child list name indices
+ * @see #GetAdditionalChildListName()
+ */
+#define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
+
+class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,
-                               public nsIComboboxControlFrame
+                               public nsIComboboxControlFrame,
+                               public nsIDOMMouseListener,
+                               public nsIAnonymousContentCreator
 
 {
 public:
   nsComboboxControlFrame();
   ~nsComboboxControlFrame();
 
+   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  
+   // nsIAnonymousContentCreator
+  NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aChildList);
 
-  // nsIFrame
- 
+   // nsIFrame
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD Reflow(nsIPresContext&          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -57,45 +76,31 @@ public:
                                    nsStyleChangeList* aChangeList,
                                    PRInt32* aLocalChange);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
-                          nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus);
-
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aChildList);
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom** aListName) const;
 
-
-  virtual PRInt32 GetMaxNumValues();
-
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
-
-     // nsIFormControLFrame
+     // nsIFormControlFrame
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD GetName(nsString* aName);
+  NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
-
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
-  
-
-  //nsTextControlFrame* GetTextFrame() { return mTextFrame; }
-
-  //void SetTextFrame(nsTextControlFrame* aFrame) { mTextFrame = aFrame; }
-
-  //nsButtonControlFrame* GetBrowseFrame() { return mBrowseFrame; }
-  //void           SetBrowseFrame(nsButtonControlFrame* aFrame) { mBrowseFrame = aFrame; }
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
   virtual void   Reset();
-  NS_IMETHOD     GetName(nsString* aName);
-  NS_IMETHOD     GetType(PRInt32* aType) const;
-
+  virtual PRInt32 GetMaxNumValues();
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
@@ -107,69 +112,73 @@ public:
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
-
-  
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
-
-
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
-
-  // A Static Helper Functions
-
-  // This refreshes a particular pseudo style content when a "ReResolveStyleContent" happens
-  static void RefreshStyleContext(nsIPresContext* aPresContext,
-                                  nsIAtom *         aNewContentPseudo,
-                                  nsIStyleContext*& aCurrentStyle,
-                                  nsIContent *      aContent,
-                                  nsIStyleContext*  aParentStyle);
 
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   //nsIComboboxControlFrame
-  NS_IMETHOD SetDropDown(nsIFrame* aPlaceHolderFrame, nsIFrame* aDropDownFrame);
-  NS_IMETHOD SetDropDownStyleContexts(nsIStyleContext * aVisible, nsIStyleContext * aHidden);
-  NS_IMETHOD SetButtonStyleContexts(nsIStyleContext * aOut, nsIStyleContext * aPressed);
+  NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext);
 
+  //nsIDOMEventListener
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { printf("mouse clock\n"); return NS_OK; }; 
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-protected:
   
-  virtual void PaintComboboxControl(nsIPresContext& aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
-                                    const nsRect& aDirtyRect,
-                                    nsFramePaintLayer aWhichLayer);
+protected:
+
+   // nsHTMLContainerFrame
   virtual PRIntn GetSkipSides() const;
-  void InitTextStr();
+
+   // Utilities
+  nsresult ReflowComboChildFrame(nsIFrame*           aFrame, 
+                            nsIPresContext&          aPresContext, 
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState, 
+                            nsReflowStatus&          aStatus,
+                            nscoord                  aAvailableWidth,
+                            nscoord                  aAvailableHeight);
+
+  nsresult GetScreenHeight(nsIPresContext& aPresContext, nscoord& aHeight);
+  nsresult PositionDropdown(nsIPresContext& aPresContext,
+                            nscoord aHeight, 
+                            nsRect aAbsoluteTwipsRect, 
+                            nsRect aAbsolutePixelRect);
+  nsresult GetAbsoluteFramePosition(nsIPresContext& aPresContext,
+                                    nsIFrame *aFrame, 
+                                    nsRect& aAbsoluteTwipsRect, 
+                                    nsRect& aAbsolutePixelRect);
+  void ToggleList(nsIPresContext* aPresContext);
+  void ShowPopup(PRBool aShowPopup);
+  void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
+  void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
+  void InitTextStr(PRBool aUpdate);
+  nsresult GetPrimaryComboFrame(nsIPresContext& aPresContext, nsIContent* aContent, nsIFrame** aFrame);
+  nsIFrame* GetButtonFrame(nsIPresContext& aPresContext);
+  nsIFrame* GetDisplayFrame(nsIPresContext& aPresContext);
+  nsIFrame* GetDropdownFrame();
+ 
+   // Called when the selection has changed. If the the same item in the list is selected
+   // it is NOT called.
   void SelectionChanged();
 
+  nsFrameList mPopupFrames;                       // additional named child list
+  nsIPresContext*       mPresContext;             // XXX: Remove the need to cache the pres context.
   nsFormFrame*          mFormFrame;               // Parent Form Frame
-  nsIFrame *            mPlaceHolderFrame;
-  nsIFrame *            mListFrame;               // Generic nsIFrame
-  nsIListControlFrame * mListControlFrame;        // Specific ListControl Interface
-  nsRect                mButtonRect;              // The Arrow Button's Rect cached for Painting
-  
-  // DropDown List Visibility Styles
-  nsIStyleContext * mVisibleStyleContext;         // Style for the DropDown List to make it visible
-  nsIStyleContext * mHiddenStyleContext;          // Style for the DropDown List to make it hidden
-  nsIStyleContext * mCurrentStyleContext;         // The current Style state of the DropDown List
-
-  // Arrow Button Styles 
-  nsIStyleContext * mBtnOutStyleContext;          // Style when not pressed
-  nsIStyleContext * mBtnPressedStyleContext;      // Style When Pressed
-  nsIStyleContext * mArrowStyle;                  // Arrows currrent style (for painting)
-
-  // Combobox Text Styles
-  nsIStyleContext * mBlockTextStyle;              // Style when there is no selection and it doesn't have focus
-  nsIStyleContext * mBlockTextSelectedStyle;      // Style when selected and it doesn't have focus
-  nsIStyleContext * mBlockTextSelectedFocusStyle; // Style when selected and it has focus
-
-  PRBool            mFirstTime; 
-
-  // State data members
-  nsString          mTextStr;
-  PRBool            mGotFocus;
+  nsString              mTextStr;                 // Current Combo box selection
+  nsIHTMLContent*       mDisplayContent;          // Anonymous content used to display the current selection
+  nsIHTMLContent*       mButtonContent;           // Anonymous content used to popup the dropdown list
+  PRBool                mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
+  nsIFrame*             mDisplayFrame;            // frame to display selection
+  nsIFrame*             mButtonFrame;             // button frame
+  nsIFrame*             mDropdownFrame;           // dropdown list frame
+  nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

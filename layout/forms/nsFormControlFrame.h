@@ -36,6 +36,8 @@ class nsFormFrame;
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
 
+#define NS_FORMSIZE_NOTSET -1
+
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
@@ -227,6 +229,8 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
+  NS_IMETHOD nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
@@ -274,6 +278,8 @@ protected:
   PRBool       mDidInit;
   nsPoint      mLastClickPoint;
   nsFormFrame* mFormFrame;
+  nscoord      mSuggestedWidth;
+  nscoord      mSuggestedHeight;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

@@ -70,6 +70,8 @@ NS_NewFileControlFrame(nsIFrame** aNewFrame)
 
 nsFileControlFrame::nsFileControlFrame():mTextFrame(nsnull), mFormFrame(nsnull)
 {
+    //Shrink the area around it's contents
+  SetFlags(NS_BLOCK_SHRINK_WRAP);
 }
 
 NS_IMETHODIMP

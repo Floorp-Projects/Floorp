@@ -592,6 +592,13 @@ nsHTMLButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, 
   
 } // ReResolveStyleContext
 
+NS_IMETHODIMP nsHTMLButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+//  mSuggestedWidth = aWidth;
+//  mSuggestedHeight = aHeight;
+  return NS_OK;
+}
+
 
 
 

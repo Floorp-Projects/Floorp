@@ -37,7 +37,7 @@
 #include "nsIReflowCommand.h"
 
 // Constants
-const nscoord kMaxDropDownRows = 20; // This matches the setting for 4.x browsers
+const nscoord kMaxDropDownRows =  20; // This matches the setting for 4.x browsers
 const PRInt32 kNothingSelected = -1;
 const PRInt32 kMaxZ= 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -54,7 +54,6 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIFrameIID,                NS_IFRAME_IID);
 
-//----------------------------------------------------------------------
 
 nsresult
 NS_NewListControlFrame(nsIFrame** aNewFrame)
@@ -71,7 +70,7 @@ NS_NewListControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
+
 nsListControlFrame::nsListControlFrame()
 {
   mHitFrame         = nsnull;
@@ -83,20 +82,20 @@ nsListControlFrame::nsListControlFrame()
   mDisplayed      = PR_FALSE;
   mButtonDown     = PR_FALSE;
   mLastFrame      = nsnull;
+  mMaxWidth       = 0;
+  mMaxHeight      = 0;
+  mIsCapturingMouseEvents = PR_FALSE;
 }
 
-//----------------------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
   mComboboxFrame = nsnull;
   mFormFrame = nsnull;
 }
 
-//----------------------------------------------------------------------
 NS_IMPL_ADDREF(nsListControlFrame)
 NS_IMPL_RELEASE(nsListControlFrame)
 
-//----------------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
@@ -108,7 +107,6 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kIListControlFrameIID)) {
-    NS_ADDREF_THIS(); // Increase reference count for caller
     *aInstancePtr = (void *)((nsIListControlFrame*)this);
     return NS_OK;
   }
@@ -116,7 +114,7 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
@@ -147,7 +145,7 @@ nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 
 }
 
-//----------------------------------------------------------------------
+
 nsresult
 nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
                                         nsIAtom*       aList,
@@ -194,7 +192,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
        scrollableView->GetScrollPosition(offsetx, offsety);
        tmp.x += offsetx;
        tmp.y += offsety;  
-        // Note: scrollableView is not ref counted so it's interface is not NS_RELEASE'd 
+        // Note: scrollableView is not ref counted 
      }
    }
 
@@ -238,14 +236,13 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   }
   *aFrame = this;
   return NS_ERROR_FAILURE;
-
+  
 }
 
 
-//----------------------------------------------------------------------
 // Reflow is overriden to constrain the listbox height to the number of rows and columns
 // specified. 
-//
+
 NS_IMETHODIMP 
 nsListControlFrame::Reflow(nsIPresContext&   aPresContext, 
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -284,10 +281,9 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   nsSize scrolledAreaSize(0,0);
   nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
 
+
   if (eReflowReason_Incremental == firstPassState.reason) {
-     //XXX: Why do we have to change the reflow type in this 
-     //case? If we don't an assert in the nsScrollFrame::Reflow prevents 
-     //execution from continuing. Is the assertion in nsScrollFrame bogus?
+     // When incremental, Reflow everything
     nsIFrame* targetFrame;
     firstPassState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
@@ -308,6 +304,8 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
   nscoord scrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
   nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
+  mMaxWidth = scrolledAreaWidth;
+  mMaxHeight = scrolledAreaDesiredSize.maxElementSize->height;
 
     // The first reflow produces a box with the scrollbar width and borders
     // added in so we need to subtract them out.
@@ -342,20 +340,12 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
   nscoord visibleWidth = 0;
   if (IsInDropDownMode() == PR_TRUE) {
-    // Always set the width to be
-    // XXX: TODO The width of the list should be passed in so it can
-    // be set to the same as the text box + dropdown arrow.
-    visibleWidth = scrolledAreaWidth;
-    if (nsnull != mComboboxFrame) {
-      nsRect comboRect;
-      nsIFrame *comboFrame = nsnull;
-      if (NS_SUCCEEDED(mComboboxFrame->QueryInterface(kIFrameIID, (void **)&comboFrame))) {
-        comboFrame->GetRect(comboRect);
-        visibleWidth = comboRect.width;
-        visibleWidth -= (border.left + border.right);
-      }
-    } 
-
+     // Calculate visible width for dropdown
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
+      visibleWidth = scrolledAreaWidth;
+    } else {
+      visibleWidth = aReflowState.computedWidth - (border.left + border.right);
+    }
   } else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.computedWidth) {
       visibleWidth = scrolledAreaWidth;
@@ -364,11 +354,11 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
     }
   }
   
-    // Determine if a scrollbar will be needed, If so we need to add
-    // enough the width to allow for the scrollbar.
-    // The scrollbar will be needed under two conditions:
-    // (size * heightOfaRow) < scrolledAreaHeight or
-    // the height set through Style < scrolledAreaHeight.
+   // Determine if a scrollbar will be needed, If so we need to add
+   // enough the width to allow for the scrollbar.
+   // The scrollbar will be needed under two conditions:
+   // (size * heightOfaRow) < scrolledAreaHeight or
+   // the height set through Style < scrolledAreaHeight.
 
    // Calculate the height of a single row in the listbox or dropdown list
    // Note: It is calculated based on what layout returns for the maxElement
@@ -428,7 +418,6 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
   return NS_OK;
 }
 
-//--------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::GetFormContent(nsIContent*& aContent) const
 {
@@ -440,7 +429,7 @@ nsListControlFrame::GetFormContent(nsIContent*& aContent) const
   return rv;
 }
 
-//--------------------------------------------------------------
+
 NS_IMETHODIMP
 nsListControlFrame::GetFont(nsIPresContext*        aPresContext, 
                              nsFont&                aFont)
@@ -450,7 +439,8 @@ nsListControlFrame::GetFont(nsIPresContext*        aPresContext,
 }
 
 
-PRBool nsListControlFrame::IsOptionElement(nsIContent* aContent)
+PRBool 
+nsListControlFrame::IsOptionElement(nsIContent* aContent)
 {
   PRBool result = PR_FALSE;
  
@@ -466,7 +456,8 @@ PRBool nsListControlFrame::IsOptionElement(nsIContent* aContent)
 }
 
 
-PRBool nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
+PRBool 
+nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
 {
   nsIContent *content = nsnull;
   aFrame->GetContent(&content);
@@ -482,7 +473,8 @@ PRBool nsListControlFrame::IsOptionElementFrame(nsIFrame *aFrame)
 // Go up the frame tree looking for the first ancestor that has content
 // which is selectable
 
-nsIFrame *nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
+nsIFrame *
+nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
 {
   nsIFrame* selectedFrame = aFrame;
   
@@ -494,7 +486,8 @@ nsIFrame *nsListControlFrame::GetSelectableFrame(nsIFrame *aFrame)
   return(selectedFrame);  
 }
 
-void nsListControlFrame::ForceRedraw() 
+void 
+nsListControlFrame::ForceRedraw() 
 {
   //XXX: Hack. This should not be needed. The problem is DisplaySelected
   //and DisplayDeselected set and unset an attribute on generic HTML content
@@ -508,11 +501,12 @@ void nsListControlFrame::ForceRedraw()
 // XXX: Here we introduce a new -moz-option-selected attribute so a attribute
 // selecitor n the ua.css can change the style when the option is selected.
 
-void nsListControlFrame::DisplaySelected(nsIContent* aContent) 
+void 
+nsListControlFrame::DisplaySelected(nsIContent* aContent) 
 {
    //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
-   // The event state manager is functional. KMM
+   // The event state manager supports selected states. KMM
   
   nsCOMPtr<nsIAtom> selectedAtom ( dont_QueryInterface(NS_NewAtom(kMozSelected)));
   if (PR_TRUE == mDisplayed) {
@@ -523,7 +517,8 @@ void nsListControlFrame::DisplaySelected(nsIContent* aContent)
   }
 }
 
-void nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
+void 
+nsListControlFrame::DisplayDeselected(nsIContent* aContent) 
 {
    //XXX: This is temporary. It simulates psuedo states by using a attribute selector on 
    // -moz-option-selected in the ua.css style sheet. This will not be needed when
@@ -540,8 +535,9 @@ void nsListControlFrame::DisplayDeselected(nsIContent* aContent)
 
 }
 
-//----------------------------------------------------------------------
-PRInt32 nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame) 
+
+PRInt32 
+nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame) 
 {
   PRInt32 index   = kNothingSelected;
   // Get the content of the frame that was selected
@@ -575,19 +571,20 @@ PRInt32 nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame)
   return index;
 }
 
-//----------------------------------------------------------------------
-void nsListControlFrame::ClearSelection()
+
+void 
+nsListControlFrame::ClearSelection()
 {
   PRUint32 length = GetNumberOfOptions();
-    for (PRInt32 i = 0; i < (PRInt32)length; i++) {
-      if (i != mSelectedIndex) {
-        SetFrameSelected(i, PR_FALSE);
-       } 
-    }
+  for (PRInt32 i = 0; i < (PRInt32)length; i++) {
+    if (i != mSelectedIndex) {
+      SetFrameSelected(i, PR_FALSE);
+     } 
+  }
 }
 
-//----------------------------------------------------------------------
-void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue)
+void 
+nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue)
 {
   PRInt32 startInx;
   PRInt32 endInx;
@@ -621,7 +618,8 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
   }
 }
 
-void nsListControlFrame::SingleSelection()
+void 
+nsListControlFrame::SingleSelection()
 {
   if (nsnull != mHitFrame) {
      // Store previous selection
@@ -644,7 +642,8 @@ void nsListControlFrame::SingleSelection()
   }
 }
 
-void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
+void 
+nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
 {
   if (nsnull != mHitFrame) {
   mSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
@@ -696,15 +695,13 @@ void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
         ClearSelection();
       }
      }
-
-      //XXX Fix this mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
    }
-
 }
 
-void nsListControlFrame::HandleListSelection(nsIPresContext& aPresContext, 
-                                               nsGUIEvent*     aEvent,
-                                               nsEventStatus&  aEventStatus)
+void 
+nsListControlFrame::HandleListSelection(nsIPresContext& aPresContext, 
+                                        nsGUIEvent*     aEvent,
+                                        nsEventStatus&  aEventStatus)
 {
   if (mMultipleSelections) {
     MultipleSelection(((nsMouseEvent *)aEvent)->isShift, ((nsMouseEvent *)aEvent)->isControl);
@@ -713,7 +710,8 @@ void nsListControlFrame::HandleListSelection(nsIPresContext& aPresContext,
   }
 }
 
-PRBool nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
+PRBool 
+nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
    // Quick check, if the frames are equal they must have
    // the same content
@@ -735,8 +733,8 @@ PRBool nsListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
 }
 
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresContext, 
+nsresult
+nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresContext, 
                                                nsGUIEvent*     aEvent,
                                                nsEventStatus&  aEventStatus)
 {
@@ -762,6 +760,7 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeListEvent(nsIPresContext& aPresConte
 NS_IMETHODIMP
 nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
 {
+
     // get its view
   nsIView* view = nsnull;
   GetView(&view);
@@ -773,8 +772,10 @@ nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
+        mIsCapturingMouseEvents = PR_TRUE;
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
+        mIsCapturingMouseEvents = PR_FALSE;
       }
     }
   }
@@ -782,7 +783,8 @@ nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
-nsIView* nsListControlFrame::GetViewFor(nsIWidget* aWidget)
+nsIView* 
+nsListControlFrame::GetViewFor(nsIWidget* aWidget)
 {           
   nsIView*  view = nsnull;
   void*     clientData;
@@ -799,7 +801,8 @@ nsIView* nsListControlFrame::GetViewFor(nsIWidget* aWidget)
 
 // Determine if a view is an ancestor of another view.
 
-PRBool nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
+PRBool 
+nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
 {
   nsIView* view = aChild;
   while (nsnull != view) {
@@ -814,10 +817,11 @@ PRBool nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
   return(PR_FALSE);
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
-                                                       nsGUIEvent*     aEvent,
-                                                       nsEventStatus&  aEventStatus)
+
+nsresult
+nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
+                                                nsGUIEvent*     aEvent,
+                                                nsEventStatus&  aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     if (nsnull == mHitFrame) {
@@ -883,12 +887,14 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+
+NS_IMETHODIMP 
+nsListControlFrame::HandleEvent(nsIPresContext& aPresContext, 
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus&  aEventStatus)
 {
-/*  const char * desc[] = {"NS_MOUSE_MOVE", 
+/*
+  const char * desc[] = {"NS_MOUSE_MOVE", 
                           "NS_MOUSE_LEFT_BUTTON_UP",
                           "NS_MOUSE_LEFT_BUTTON_DOWN",
                           "<NA>","<NA>","<NA>","<NA>","<NA>","<NA>","<NA>",
@@ -910,8 +916,8 @@ NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
     printf("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->message);
   } else {
     printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
-  }*/
-
+  }
+*/
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;
   }
@@ -930,7 +936,7 @@ NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                         nsIAtom*        aListName,
@@ -945,7 +951,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return nsScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP  
 nsListControlFrame::Init(nsIPresContext&  aPresContext,
                          nsIContent*      aContent,
@@ -977,7 +983,7 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
   return result;
 }
 
-//----------------------------------------------------------------------
+
 nscoord 
 nsListControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                       nscoord aInnerHeight) const
@@ -985,7 +991,7 @@ nsListControlFrame::GetVerticalInsidePadding(float aPixToTwip,
    return NSIntPixelsToTwips(0, aPixToTwip); 
 }
 
-//----------------------------------------------------------------------
+
 nscoord 
 nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                         float aPixToTwip, 
@@ -996,7 +1002,6 @@ nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 }
 
 
-//----------------------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aSelect)
 {
@@ -1013,7 +1018,7 @@ nsListControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aSel
   }
 }
 
-//----------------------------------------------------------------------
+
 nsIDOMHTMLSelectElement* 
 nsListControlFrame::GetSelect(nsIContent * aContent)
 {
@@ -1026,14 +1031,13 @@ nsListControlFrame::GetSelect(nsIContent * aContent)
   }
 }
 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP 
 nsListControlFrame::AboutToDropDown()
 {
     // Resync the view's position with the frame.
   return(SyncViewWithFrame());
 }
-
 
 nsIContent* 
 nsListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint32 aIndex) 
@@ -1101,7 +1105,6 @@ nsListControlFrame::SetFrameSelected(PRUint32 aIndex, PRBool aSelected)
   NS_IF_RELEASE(content);
 }
 
-//----------------------------------------------------------------------
 void 
 nsListControlFrame::InitializeFromContent()
 {
@@ -1127,7 +1130,7 @@ nsListControlFrame::InitializeFromContent()
 
 }
 
-//----------------------------------------------------------------------
+
 nsIDOMHTMLCollection* 
 nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect)
 {
@@ -1147,7 +1150,6 @@ nsListControlFrame::GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* a
   }
 }
 
-//----------------------------------------------------------------------
 nsIDOMHTMLOptionElement* 
 nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRUint32 aIndex)
 {
@@ -1163,7 +1165,7 @@ nsListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRUint32 aIndex
   return nsnull;
 }
 
-//----------------------------------------------------------------------
+
 PRBool
 nsListControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32 aIndex, nsString& aValue)
 {
@@ -1184,36 +1186,27 @@ nsListControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32 a
   return status;
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP 
+nsresult 
 nsListControlFrame::Deselect() 
 {
   PRInt32 i;
   PRInt32 max = GetNumberOfOptions();
   for (i=0;i<max;i++) {
     SetFrameSelected(i, PR_FALSE);
-    // update visual here
   }
   mNumSelections = 0;
+  mSelectedIndex = kNothingSelected;
+  
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsHTMLContainerFrame
-//----------------------------------------------------------------------
 PRIntn
 nsListControlFrame::GetSkipSides() const
-{
+{    
+    // Don't skip any sides during border rendering
   return 0;
 }
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-// nsIFormControlFrame
-//----------------------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::GetType(PRInt32* aType) const
 {
@@ -1227,7 +1220,7 @@ nsListControlFrame::SetFormFrame(nsFormFrame* aFormFrame)
   mFormFrame = aFormFrame; 
 }
 
-//----------------------------------------------------------------------
+
 PRBool
 nsListControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
@@ -1235,13 +1228,12 @@ nsListControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
 }
 
-//----------------------------------------------------------------------
+
 void 
 nsListControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
 }
 
-//----------------------------------------------------------------------
 PRInt32 
 nsListControlFrame::GetMaxNumValues()
 {
@@ -1259,12 +1251,10 @@ nsListControlFrame::GetMaxNumValues()
   }
 }
 
-//----------------------------------------------------------------------
+
 void 
 nsListControlFrame::Reset() 
 {
-  SetFocus(PR_TRUE, PR_TRUE);
-
   nsIDOMHTMLCollection* options = GetOptions(mContent);
   if (!options) {
     return;
@@ -1285,11 +1275,9 @@ nsListControlFrame::Reset()
       NS_RELEASE(option);
     }
   }
-
-  // update visual here
   NS_RELEASE(options);
 } 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP
 nsListControlFrame::GetName(nsString* aResult)
 {
@@ -1311,7 +1299,7 @@ nsListControlFrame::GetName(nsString* aResult)
   return result;
 }
  
-//----------------------------------------------------------------------
+
 PRBool
 nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                      nsString* aValues, nsString* aNames)
@@ -1358,18 +1346,13 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 }
 
 
-
-//----------------------------------------------------------------------
-// native widgets don't unset focus explicitly and don't need to repaint
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   // XXX:TODO Make set focus work
 }
 
-//----------------------------------------------------------------------
-// nsIListControlFrame
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP 
 nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 {
@@ -1381,11 +1364,12 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
   return rv;
 }
 
-//----------------------------------------------------------------------
+
 NS_IMETHODIMP 
 nsListControlFrame::GetSelectedItem(nsString & aStr)
 {
-  nsresult rv = NS_OK; //XXX: This should be set to an error condition NS_ERROR;
+  aStr = "";
+  nsresult rv = NS_ERROR_FAILURE; 
   nsIDOMHTMLCollection* options = GetOptions(mContent);
   if (nsnull != options) {
     nsIDOMHTMLOptionElement* optionElement = GetOption(*options, mSelectedIndex);
@@ -1490,7 +1474,8 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 
 
 // Create a Borderless top level widget for drop-down lists.
-nsresult nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
+nsresult 
+nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* aPosition)
 {
   if (IsInDropDownMode() == PR_TRUE) {
     nsWidgetInitData widgetData;
@@ -1526,7 +1511,6 @@ nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
 }
  
 
-//----------------------------------------------------------------------
 nsresult 
 nsListControlFrame::SyncViewWithFrame()
 {
@@ -1604,6 +1588,18 @@ nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
   }
 }
 
+NS_IMETHODIMP 
+nsListControlFrame::GetMaximumSize(nsSize &aSize)
+{
+  aSize.width = mMaxWidth;
+  aSize.height = mMaxHeight;
+  return NS_OK;
+}
 
 
+NS_IMETHODIMP 
+nsListControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+  return NS_OK;
+}
 

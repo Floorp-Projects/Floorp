@@ -263,6 +263,11 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     else {
       result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
     }
+  } else {
+    if (nsHTMLAtoms::value == aAttribute) {
+     // redraw button with the changed value
+      Invalidate(mRect, PR_TRUE);
+    }
   }
   return result;
 }
@@ -382,6 +387,28 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
       nsFormFrame::AddFormControlFrame(aPresContext, *this);
     }
 
+   if ((NS_FORMSIZE_NOTSET != mSuggestedWidth) && (
+      NS_FORMSIZE_NOTSET != mSuggestedHeight)) 
+   { 
+    aDesiredSize.width   = mSuggestedWidth;
+    aDesiredSize.height  = mSuggestedHeight;
+    aDesiredSize.ascent  = mSuggestedHeight;
+    aDesiredSize.descent = 0;
+    if (aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width  = mSuggestedWidth;
+      aDesiredSize.maxElementSize->height = mSuggestedWidth;
+    }
+ 
+    if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width = aDesiredSize.width;
+      aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    }
+
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+
+   }
+
     nsSize ignore;
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
 
@@ -420,6 +447,29 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
 {
   PRInt32 type;
   GetType(&type);
+
+
+#if 0
+  if ((NS_FORM_INPUT_HIDDEN != type) && ((NS_FORMSIZE_NOTSET != mSuggestedWidth) && (
+      NS_FORMSIZE_NOTSET != mSuggestedHeight))) 
+  { 
+    aDesiredLayoutSize.width   = mSuggestedWidth;
+    aDesiredLayoutSize.height  = mSuggestedHeight;
+    aDesiredLayoutSize.ascent  = mSuggestedHeight;
+    aDesiredLayoutSize.descent = 0;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->width  = mSuggestedWidth;
+      aDesiredLayoutSize.maxElementSize->height = mSuggestedWidth;
+    }
+    aDesiredWidgetSize.width = aDesiredLayoutSize.width;
+    aDesiredWidgetSize.height= aDesiredLayoutSize.height;
+
+    return;
+  }
+#endif
+
+
+  
 
   if (NS_FORM_INPUT_HIDDEN == type) { // there is no physical rep
     aDesiredLayoutSize.width   = 0;
