@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.6 $ $Date: 2001/11/16 18:10:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.7 $ $Date: 2001/11/16 19:41:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1315,7 +1315,7 @@ nssCKFWToken_OpenSession
 
   if( CK_TRUE == rw ) {
     /* Read-write session desired */
-    if( CK_TRUE != nssCKFWToken_GetIsWriteProtected(fwToken) ) {
+    if( CK_TRUE == nssCKFWToken_GetIsWriteProtected(fwToken) ) {
       *pError = CKR_TOKEN_WRITE_PROTECTED;
       goto done;
     }

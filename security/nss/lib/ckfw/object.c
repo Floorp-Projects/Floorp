@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.7 $ $Date: 2001/11/16 19:41:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -420,10 +420,6 @@ nssCKFWObject_IsTokenObject
   }
 #endif /* NSSDEBUG */
 
-  if( CKR_OK != nssCKFWMutex_Lock(fwObject->mutex) ) {
-    return CK_FALSE;
-  }
-
   if( (void *)NULL == (void *)fwObject->mdObject->IsTokenObject ) {
     NSSItem item;
     NSSItem *pItem;
@@ -448,7 +444,6 @@ nssCKFWObject_IsTokenObject
     fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
 
  done:
-  (void)nssCKFWMutex_Unlock(fwObject->mutex);
   return b;
 }
 
@@ -616,7 +611,7 @@ nssCKFWObject_GetAttribute
   }
 #endif /* NSSDEBUG */
 
-  if( (void *)NULL == (void *)fwObject->mdObject->GetAttributeSize ) {
+  if( (void *)NULL == (void *)fwObject->mdObject->GetAttribute ) {
     *pError = CKR_GENERAL_ERROR;
     return (NSSItem *)NULL;
   }
