@@ -187,13 +187,13 @@ PRBool nsFileSpec::IsDirectory() const
 PRBool nsFileSpec::IsHidden() const
 //----------------------------------------------------------------------------------------
 {
-    PRBool hidden = PR_TRUE;
+    PRBool hidden = PR_FALSE;
     char *leafname = GetLeafName();
     if (nsnull != leafname)
     {
         if ((!strcmp(leafname, ".")) || (!strcmp(leafname, "..")))
         {
-            hidden = PR_FALSE;
+            hidden = PR_TRUE;
         }
         nsCRT::free(leafname);
     }
