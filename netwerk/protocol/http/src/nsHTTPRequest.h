@@ -22,13 +22,12 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamObserver.h"
+#include "nsIPipe.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsHTTPHeaderArray.h"
 #include "nsHTTPEnums.h"
 
-class nsIInputStream;
-class nsIBufferInputStream;
 class nsIInputStream;
 class nsHTTPChannel;
 
@@ -99,22 +98,13 @@ public:
 
     nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
         
-    /* 
-        Returns the stream set up to hold the request data
-        Calls build if not already built.
-    */
-    NS_IMETHOD          GetInputStream(nsIInputStream* *o_Stream);
-
-    NS_IMETHOD          SetTransport(nsIChannel* i_Transport, 
-                            PRBool i_UsingProxy = PR_FALSE);
-
     NS_IMETHOD          SetConnection(nsHTTPChannel* i_Connection);
 
-protected:
-
     // Build the actual request string based on the settings. 
-    NS_METHOD           Build(void);
+    nsresult            WriteRequest(nsIChannel *aChannel, 
+                                     PRBool aIsProxied = PR_FALSE);
 
+protected:
     // Use a method string corresponding to the method.
     const char*         MethodToString(HTTPMethod i_Method=HM_GET)
     {
@@ -139,13 +129,14 @@ protected:
     HTTPMethod                  mMethod;
     nsCOMPtr<nsIURL>            mURI;
     HTTPVersion                 mVersion;
-    // The actual request stream! 
-    nsIBufferInputStream*       mRequest; 
     nsCOMPtr<nsIChannel>        mTransport;
     nsHTTPChannel*              mConnection;
 
     nsHTTPHeaderArray           mHeaders;
     PRBool                      mUsingProxy;
+
+    nsCString                       mRequestBuffer;
+    nsCOMPtr<nsIInputStream>        mPostDataStream;
 };
 
 #define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)

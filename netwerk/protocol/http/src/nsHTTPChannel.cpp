@@ -549,7 +549,7 @@ nsHTTPChannel::Open(void)
     // Set up a new request observer and a response listener and pass 
     // to the transport
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIChannel> transport;
 
     // If this is the first time, then add the channel to its load group
     if (mState == HS_IDLE) {
@@ -576,7 +576,7 @@ nsHTTPChannel::Open(void)
     rv = mHandler->RequestTransport(mURI, 
                         this, 
                         mEventSinkGetter, 
-                        getter_AddRefs(channel));
+                        getter_AddRefs(transport));
 
     if (NS_ERROR_BUSY == rv) {
         mState = HS_WAITING_FOR_OPEN;
@@ -616,27 +616,12 @@ nsHTTPChannel::Open(void)
         rv = pModules->GetNext(&supEntry); // go around again
     }
 
-    if (channel) {
-        nsCOMPtr<nsIInputStream> stream;
+    if (transport) {
+        rv = mRequest->WriteRequest(transport, mUsingProxy);
+        if (NS_FAILED(rv)) return rv;
 
-        mRequest->SetTransport(channel, mUsingProxy);
-
-        //Get the stream where it will read the request data from
-        rv = mRequest->GetInputStream(getter_AddRefs(stream));
-        if (NS_SUCCEEDED(rv) && stream) {
-            PRUint32 count;
-
-            // Write the request to the server...
-            rv = stream->Available(&count);
-            rv = channel->AsyncWrite(stream, 0, count, this , mRequest);
-            if (NS_FAILED(rv)) return rv;
-
-            mState = HS_WAITING_FOR_RESPONSE;
-            mConnected = PR_TRUE;
-        } else {
-            NS_ERROR("Failed to get request Input stream.");
-            return NS_ERROR_FAILURE;
-        }
+        mState = HS_WAITING_FOR_RESPONSE;
+        mConnected = PR_TRUE;
     }
     else
         NS_ERROR("Failed to create/get a transport!");
