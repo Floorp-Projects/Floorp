@@ -69,7 +69,7 @@
 
   <hbox flex="1">
 
-    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0">
+    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" onmouseover="focus();">
       <button id="mailnews"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-mailnews.xul" label="&mailonly.label;"/>
       <button id="display" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/>
       <button id="mailcomposepref" orient="vertical" class="buttonBoxButton" type="radio" group="categories" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/>
