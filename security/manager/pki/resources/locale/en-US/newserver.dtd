@@ -16,6 +16,6 @@
   --> 
 
 <!-- Values for newserver.xul -->
-<!ENTITY newserver.title  "">
+<!ENTITY newserver.title  "Website Certified by an Unknown Authority">
 <!ENTITY alwaysAccept.label "Remember this certificate permanently">
 <!ENTITY continue.label "Continue">

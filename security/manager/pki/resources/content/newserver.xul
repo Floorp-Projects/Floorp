@@ -26,20 +26,19 @@
 %pippkiDTD;
 ]>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<window id="ssl_warning" title="&newserver.title;"
+<dialog id="ssl_warning" title="&newserver.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="width: 30em; height: 16em"
-  class="dialog"
-  onload="onLoad();">
+  onload="onLoad();"
+  buttons="accept,cancel,help"
+  ondialogaccept="return doOK();"
+  ondialogcancel="return doCancel();"
+  ondialoghelp="return doHelpButton();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/x-javascript" src="chrome://pippki/content/newserver.js"/>
 <script type="application/x-javascript" src="chrome://help/content/help.js"/>
-
-<keyset id="dialogKeys"/>
 
 <vbox flex="1">
   <hbox valign="top" align="center">
@@ -61,8 +60,6 @@
 
     </vbox>
   </hbox>
-
-  <hbox id="okCancelHelpButtonsRight" flex="1"/>
 </vbox>
 
-</window>
+</dialog>
