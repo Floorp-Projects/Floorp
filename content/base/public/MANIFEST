@@ -29,5 +29,3 @@ nsITextContent.h
 nsIContentList.h
 nsIFrameLoader.h
 mozISanitizingSerializer.h
-nsIScriptEventHandler.h
-nsIScriptEventManager.h
