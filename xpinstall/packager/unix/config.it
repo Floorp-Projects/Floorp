@@ -4,6 +4,8 @@
 Default Location=/usr/local/mozilla
 ; *** LOCALIZE ME BABY ***
 Title=Mozilla Installer
+; *** LOCALIZE ME BABY ***
+Default Setup Type=Typical
 
 
 ;-------------------------------------------------------------------------

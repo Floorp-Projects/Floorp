@@ -69,6 +69,7 @@
  *--------------------------------------------------------------------*/
 #define GENERAL             "General"
 #define DEFAULT_LOCATION    "Default Location" 
+#define DEFAULT_SETUP_TYPE  "Default Setup Type"
 
 #define CLEAN_UPGRADE       "Cleanup On Upgrade"
 #define OBJECT_IGNOREd      "ObjectToIgnore%d"
