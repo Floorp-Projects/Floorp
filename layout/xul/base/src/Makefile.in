@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkxulbase_s
-REQUIRES	= xpcom dom locale js widget view caps timer docshell uriloader necko editor htmlparser webshell pref rdf
+REQUIRES	= xpcom dom locale js widget view caps timer docshell uriloader necko editor htmlparser webshell pref rdf intl
 
 CPPSRCS		= \
        nsBulletinBoardLayout.cpp \
