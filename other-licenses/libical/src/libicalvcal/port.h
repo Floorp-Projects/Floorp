@@ -79,7 +79,12 @@ For example:
 #define TRUE	1
 #endif
 
+#ifndef WIN32
 #define stricmp strcasecmp
+#else
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 	
 #if defined(__CPLUSPLUS__) || defined(__cplusplus)
 }

@@ -1,0 +1,7 @@
+# Microsoft Developer Studio Generated Dependency File, included by regression.mak
+
+.\regression.c : \
+	"..\libical\ical.h"\
+	"..\libicalss\icalss.h"\
+	"c:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	

@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.1 2001/11/15 19:27:03 mikep%oeone.com Exp $
+  $Id: icalparser.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -52,6 +52,10 @@
 #include <stdio.h> /* For FILE and fgets and sprintf */
 #include <stdlib.h> /* for free */
 
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 extern icalvalue* icalparser_yy_value;
 void set_parser_value_state(icalvalue_kind kind);
@@ -185,7 +189,9 @@ char* make_segment(char* start, char* end)
 
 const char* input_buffer;
 const char* input_buffer_p;
+#ifndef WIN32
 #define min(a,b) ((a) < (b) ? (a) : (b))   
+#endif
 
 int icalparser_flex_input(char* buf, int max_size)
 {

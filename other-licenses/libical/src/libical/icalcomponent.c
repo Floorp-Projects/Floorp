@@ -2,7 +2,7 @@
   FILE: icalcomponent.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalcomponent.c,v 1.1 2001/11/15 19:26:53 mikep%oeone.com Exp $
+  $Id: icalcomponent.c,v 1.2 2001/11/22 19:21:47 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -42,6 +42,10 @@
 #include <errno.h>
 #include <assert.h>
 #include <stdio.h> /* for fprintf */
+
+#ifndef win32
+#include <string.h>
+#endif
 
 #define MAX_TMP 1024
 

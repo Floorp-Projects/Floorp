@@ -3,7 +3,7 @@
   FILE: icaltime.c
   CREATOR: eric 02 June 2000
   
-  $Id: icaltime.c,v 1.1 2001/11/15 19:27:10 mikep%oeone.com Exp $
+  $Id: icaltime.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -45,7 +45,11 @@
 #endif
 
 
-
+#ifdef WIN32
+#include <time.h>
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 struct icaltimetype 
 icaltime_from_timet(time_t tm, int is_date)
@@ -115,6 +119,9 @@ struct set_tz_save set_tz(const char* tzid)
     /* Old value of TZ and the string we will have to free later */
     savetz.orig_tzid = orig_tzid;
     savetz.new_env_str = new_env_str;
+#ifdef WIN32
+	_tzset();
+#endif
 
     return savetz;
 }
@@ -144,6 +151,10 @@ void unset_tz(struct set_tz_save savetz)
 	putenv("TZ"); /* Delete from environment */
     } 
 
+#ifdef WIN32
+	_tzset();
+#endif
+
     if(savetz.new_env_str != 0){
 	free(savetz.new_env_str);
     }
@@ -170,10 +181,16 @@ time_t icaltime_as_timet(struct icaltimetype tt)
     stm.tm_isdst = -1;
 
     if(tt.is_utc == 1 || tt.is_date == 1){
+#ifndef WIN32
 	struct set_tz_save old_tz = set_tz("UTC");
 	t = mktime(&stm);
 	unset_tz(old_tz);
-    } else {
+#else
+	t = mktime(&stm);
+	_tzset();
+	t -= _timezone;
+#endif
+   } else {
 	t = mktime(&stm);
     }
 
@@ -254,16 +271,26 @@ int icaltime_utc_offset(struct icaltimetype ictt, const char* tzid)
 	old_tz = set_tz(tzid);
     }
  
+#ifndef WIN32
     /* Mis-interpret a UTC broken out time as local time */
     gtm = *(gmtime(&tt));
     gtm.tm_isdst = localtime(&tt)->tm_isdst;    
     offset_tt = mktime(&gtm);
-    
+#else
+	_tzset();
+	offset_tt = _timezone;
+	if ( localtime(&tt)->tm_isdst )
+		offset_tt -= 3600;
+#endif    
     if(tzid != 0){
 	unset_tz(old_tz);
     }
 
+#ifndef WIN32
     return tt-offset_tt;
+#else
+	return -offset_tt;
+#endif
 }
 
 
@@ -353,7 +380,7 @@ struct icaltimetype icaltime_from_string(const char* str)
 }
 #endif
 
-char ctime_str[20];
+char ctime_str[32];
 char* icaltime_as_ctime(struct icaltimetype t)
 {
     time_t tt;

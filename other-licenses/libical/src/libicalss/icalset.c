@@ -12,7 +12,7 @@
     icalheapset   Store components on the heap
     icalmysqlset  Store components in a mysql database. 
 
- $Id: icalset.c,v 1.1 2001/11/15 19:27:28 mikep%oeone.com Exp $
+ $Id: icalset.c,v 1.2 2001/11/22 19:21:54 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -43,6 +43,7 @@
 #include <stdlib.h>
 /*#include "icalheapset.h"*/
 /*#include "icalmysqlset.h"*/
+#include <string.h>
 
 #define ICALSET_ID "set "
 

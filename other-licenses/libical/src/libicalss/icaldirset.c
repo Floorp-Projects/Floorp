@@ -3,7 +3,7 @@
     FILE: icaldirset.c
     CREATOR: eric 28 November 1999
   
-    $Id: icaldirset.c,v 1.1 2001/11/15 19:27:24 mikep%oeone.com Exp $
+    $Id: icaldirset.c,v 1.2 2001/11/22 19:21:54 mikep%oeone.com Exp $
     $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -66,16 +66,30 @@
 #include "icalgauge.h"
 
 #include <limits.h> /* For PATH_MAX */
+#ifndef WIN32
 #include <dirent.h> /* for opendir() */
+#include <unistd.h> /* for stat, getpid */
+#include <sys/utsname.h> /* for uname */
+#else
+#include <io.h>
+#endif
 #include <errno.h>
 #include <sys/types.h> /* for opendir() */
 #include <sys/stat.h> /* for stat */
-#include <unistd.h> /* for stat, getpid */
 #include <time.h> /* for clock() */
 #include <stdlib.h> /* for rand(), srand() */
-#include <sys/utsname.h> /* for uname */
 #include <string.h> /* for strdup */
 #include "icaldirsetimpl.h"
+
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+
+#define _S_ISTYPE(mode, mask)  (((mode) & _S_IFMT) == (mask))
+
+#define S_ISDIR(mode)    _S_ISTYPE((mode), _S_IFDIR)
+#define S_ISREG(mode)    _S_ISTYPE((mode), _S_IFREG)
+#endif
 
 
 struct icaldirset_impl* icaldirset_new_impl()
@@ -129,9 +143,10 @@ void icaldirset_unlock(const char* dir)
 /* Load the contents of the store directory into the store's internal directory list*/
 icalerrorenum icaldirset_read_directory(struct icaldirset_impl* impl)
 {
+    char *str;
+#ifndef WIN32
     struct dirent *de;
     DIR* dp;
-    char *str;
  
     dp = opendir(impl->dir);
    
@@ -160,6 +175,39 @@ icalerrorenum icaldirset_read_directory(struct icaldirset_impl* impl)
     }
 
     closedir(dp);
+#else
+	struct _finddata_t c_file;
+	long hFile;
+	
+	/* Find first .c file in current directory */
+	if( (hFile = _findfirst( "*", &c_file )) == -1L )
+	{
+		icalerror_set_errno(ICAL_FILE_ERROR);
+		return ICAL_FILE_ERROR;
+	}
+	else
+	{
+		while((str = pvl_pop(impl->directory))){
+			free(str);
+		}
+		
+		/* load all of the cluster names in the directory list */
+		do
+		{
+			/* Remove known directory names  '.' and '..'*/
+			if (strcmp(c_file.name,".") == 0 ||
+				strcmp(c_file.name,"..") == 0 ){
+				continue;
+			}
+			
+			pvl_push(impl->directory, (void*)strdup(c_file.name));
+		}
+		while ( _findnext( hFile, &c_file ) == 0 );
+			
+		_findclose( hFile );
+	}
+
+#endif
 
     return ICAL_NO_ERROR;
 }
@@ -334,19 +382,23 @@ void icaldirset_add_uid(icaldirset* store, icaldirset* comp)
 {
     char uidstring[ICAL_PATH_MAX];
     icalproperty *uid;
+#ifndef WIN32
     struct utsname unamebuf;
-
+#endif
     icalerror_check_arg_rv( (store!=0), "store");
     icalerror_check_arg_rv( (comp!=0), "comp");
 
     uid = icalcomponent_get_first_property(comp,ICAL_UID_PROPERTY);
     
     if (uid == 0) {
-	
+#ifndef WIN32	
 	uname(&unamebuf);
 	
 	sprintf(uidstring,"%d-%s",(int)getpid(),unamebuf.nodename);
 	
+#else
+	sprintf(uidstring,"%d-%s",(int)getpid(),"WINDOWS");  /* FIX: There must be an easy get the system name */
+#endif
 	uid = icalproperty_new_uid(uidstring);
 	icalcomponent_add_property(comp,uid);
     } else {

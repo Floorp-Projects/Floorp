@@ -3,7 +3,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalvalue.c,v 1.1 2001/11/15 19:27:10 mikep%oeone.com Exp $
+  $Id: icalvalue.c,v 1.2 2001/11/22 19:21:50 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -45,6 +45,10 @@
 #include <time.h> /* for mktime */
 #include <stdlib.h> /* for atoi and atof */
 #include <limits.h> /* for SHRT_MAX */         
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 #if _MAC_OS_
 #include "icalmemory_strdup.h"

@@ -5,7 +5,7 @@
   
   DESCRIPTION:
   
-  $Id: regression.c,v 1.1 2001/11/15 19:27:49 mikep%oeone.com Exp $
+  $Id: regression.c,v 1.2 2001/11/22 19:22:04 mikep%oeone.com Exp $
   $Locker:  $
 
   (C) COPYRIGHT 1999 Eric Busboom 
@@ -35,11 +35,18 @@
 #include <stdlib.h> /* for malloc */
 #include <stdio.h> /* for printf */
 #include <time.h> /* for time() */
+#ifndef WIN32
 #include <unistd.h> /* for unlink, fork */
 #include <sys/wait.h> /* For waitpid */
-#include <sys/types.h> /* For wait pid */
 #include <sys/time.h> /* for select */
+#else
+#include <Windows.h>
+#endif
+#include <sys/types.h> /* For wait pid */
 
+#ifdef WIN32
+#define snprintf	_snprintf
+#endif
 
 /* For GNU libc, strcmp appears to be a macro, so using strcmp in
  assert results in incomprehansible assertion messages. This
@@ -2796,6 +2803,7 @@ void test_fileset()
 
 void microsleep(int us)
 {
+#ifndef WIN32
     struct timeval tv;
 
     tv.tv_sec = 0;
@@ -2803,11 +2811,15 @@ void microsleep(int us)
 
     select(0,0,0,0,&tv);
 
+#else
+	Sleep(us);
+#endif
 }
 
 
 void test_file_locks()
 {
+#ifndef WIN32
     pid_t pid;
     char *path = "test_fileset_locktest.ics";
     icalfileset *fs;
@@ -2846,7 +2858,7 @@ void test_file_locks()
     
     pid = fork();
     
-    assert(pid >= 0);
+   assert(pid >= 0);
     
     if(pid == 0){
 	/*child*/
@@ -2943,6 +2955,7 @@ void test_file_locks()
 
     
     assert(sec == final);
+#endif
 }
 
 void test_action()
@@ -3349,7 +3362,7 @@ int main(int argc, char *argv[])
     if(argc==1) {
 	ttime = trecur = tspan = tmisc = tgauge = tfile = tbasic = 1;
     }
-
+#ifndef WIN32	/* not getopt under win32 */
     while ((c = getopt(argc, argv, "t:s:r:m:g:f:b:")) != -1) {
 	switch (c) {
 
@@ -3406,6 +3419,7 @@ int main(int argc, char *argv[])
     } 
 
 
+#endif
     if(ttime==1 || ttime==2){
 	printf("\n------------Test time parser ----------\n");
 	test_time_parser();

@@ -3,7 +3,7 @@
   FILE: icalfileset.c
   CREATOR: eric 23 December 1999
   
-  $Id: icalfileset.c,v 1.1 2001/11/15 19:27:24 mikep%oeone.com Exp $
+  $Id: icalfileset.c,v 1.2 2001/11/22 19:21:54 mikep%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -34,12 +34,26 @@
 #include "icalgauge.h"
 #include <errno.h>
 #include <sys/stat.h> /* for stat */
+#ifndef WIN32
 #include <unistd.h> /* for stat, getpid */
+#else
+#include <io.h>
+#include <share.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h> /* for fcntl */
-#include <unistd.h> /* for fcntl */
 #include "icalfilesetimpl.h"
+
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+
+#define _S_ISTYPE(mode, mask)  (((mode) & _S_IFMT) == (mask))
+
+#define S_ISDIR(mode)    _S_ISTYPE((mode), _S_IFDIR)
+#define S_ISREG(mode)    _S_ISTYPE((mode), _S_IFREG)
+#endif
 
 extern int errno;
 
@@ -98,16 +112,21 @@ icalfileset* icalfileset_new_open(const char* path, int flags, mode_t mode)
 	return 0;
     } 
 
-    impl->fd = open(impl->path,flags, mode);
-    
+#ifndef WIN32
+    impl->fd = open(impl->path,flags, mode);   
+#else
+	impl->fd = sopen(impl->path,flags, _SH_DENYWR, _S_IREAD | _S_IWRITE);
+#endif
     if (impl->fd < 0){
 	icalerror_set_errno(ICAL_FILE_ERROR);
 	icalfileset_free(impl);
 	return 0;
     }
 
+#ifndef WIN32  // We need this under win32, we'd open'd and lock'd in one operation
     icalfileset_lock(impl);
     
+#endif
     if(cluster_file_size > 0 ){
 	icalerrorenum error;
 	if((error = icalfileset_read_file(impl,mode))!= ICAL_NO_ERROR){
@@ -251,6 +270,7 @@ const char* icalfileset_path(icalfileset* cluster)
 
 int icalfileset_lock(icalfileset *cluster)
 {
+#ifndef WIN32
     struct icalfileset_impl *impl = (struct icalfileset_impl*)cluster;
     struct flock lock;
     int rtrn;
@@ -265,10 +285,14 @@ int icalfileset_lock(icalfileset *cluster)
     rtrn = fcntl(impl->fd, F_SETLKW, &lock);
 
     return rtrn;
+#else
+	return 0;
+#endif
 }
 
 int icalfileset_unlock(icalfileset *cluster)
 {
+#ifndef WIN32
     struct icalfileset_impl *impl = (struct icalfileset_impl*)cluster;
     struct flock lock;
     icalerror_check_arg_rz((impl->fd>0),"impl->fd");
@@ -280,6 +304,9 @@ int icalfileset_unlock(icalfileset *cluster)
 
     return (fcntl(impl->fd, F_UNLCK, &lock)); 
 
+#else
+	return 0;
+#endif
 }
 
 #ifdef ICAL_SAFESAVES
@@ -340,9 +367,11 @@ icalerrorenum icalfileset_commit(icalfileset* cluster)
     
     impl->changed = 0;    
 
+#ifndef WIN32
     if(ftruncate(impl->fd,write_size) < 0){
 	return ICAL_FILE_ERROR;
     }
+#endif
     
     return ICAL_NO_ERROR;
     

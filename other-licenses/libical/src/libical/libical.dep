@@ -1,0 +1,359 @@
+# Microsoft Developer Studio Generated Dependency File, included by libical.mak
+
+..\icalattendee.c : \
+	"..\icalattendee.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalperiod.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	
+
+..\icalcomponent.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icalderivedparameter.c : \
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparameterimpl.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	
+
+..\icalderivedproperty.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icalderivedvalue.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\icalvalueimpl.h"\
+	"..\pvl.h"\
+	
+
+..\icalduration.c : \
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalperiod.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	
+
+..\icalenums.c : \
+	"..\icalenums.h"\
+	
+
+..\icalerror.c : \
+	"..\icalerror.h"\
+	
+
+..\icallangbind.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icallexer.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\icalyacc.h"\
+	"..\pvl.h"\
+	
+
+..\icalmemory.c : \
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	
+
+..\icalmime.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalmime.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	"..\sspm.h"\
+	
+
+..\icalparameter.c : \
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparameterimpl.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	
+
+..\icalparser.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icalperiod.c : \
+	"..\icalduration.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalperiod.h"\
+	"..\icaltime.h"\
+	
+
+..\icalproperty.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icalrecur.c : \
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\pvl.h"\
+	
+
+..\icalrestriction.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalparameter.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icalrestriction.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\icaltime.c : \
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalperiod.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	
+
+..\icaltypes.c : \
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalperiod.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	
+
+..\icalvalue.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalerror.h"\
+	"..\icalmemory.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\icalvalueimpl.h"\
+	"..\pvl.h"\
+	
+
+..\icalyacc.c : \
+	"..\icalattendee.h"\
+	"..\icalcomponent.h"\
+	"..\icalderivedparameter.h"\
+	"..\icalderivedproperty.h"\
+	"..\icalderivedvalue.h"\
+	"..\icalduration.h"\
+	"..\icalenums.h"\
+	"..\icalparameter.h"\
+	"..\icalparser.h"\
+	"..\icalperiod.h"\
+	"..\icalproperty.h"\
+	"..\icalrecur.h"\
+	"..\icaltime.h"\
+	"..\icaltypes.h"\
+	"..\icalvalue.h"\
+	"..\pvl.h"\
+	
+
+..\pvl.c : \
+	"..\pvl.h"\
+	
+
+..\sspm.c : \
+	"..\sspm.h"\
+	

@@ -4,7 +4,7 @@
  CREATOR: eric 26 July 2000
 
 
- $Id: icalmime.c,v 1.1 2001/11/15 19:26:59 mikep%oeone.com Exp $
+ $Id: icalmime.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -36,6 +36,11 @@
 
 #ifdef DMALLOC
 #include "dmalloc.h"
+#endif
+
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
 #endif
 
 

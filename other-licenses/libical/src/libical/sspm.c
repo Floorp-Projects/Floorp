@@ -3,7 +3,7 @@
   FILE: sspm.c Parse Mime
   CREATOR: eric 25 June 2000
   
-  $Id: sspm.c,v 1.1 2001/11/15 19:27:13 mikep%oeone.com Exp $
+  $Id: sspm.c,v 1.2 2001/11/22 19:21:51 mikep%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -40,6 +40,10 @@
 #include <ctype.h> /* for tolower */
 #include <stdlib.h>   /* for malloc, free */
 #include <string.h> /* for strcasecmp */
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -278,8 +282,12 @@ int sspm_is_mime_header(char *line)
     }
 
     for(i = 0; mime_headers[i] != 0; i++){
+#ifndef WIN32
 	if(strcasecmp(name, mime_headers[i]) == 0)
-	    return 1;
+#else
+	if(stricmp(name, mime_headers[i]) == 0)
+#endif
+		return 1;
     }
     
     return 0;

@@ -2,7 +2,7 @@
   FILE: icalvcal.c
   CREATOR: eric 25 May 00
   
-  $Id: icalvcal.c,v 1.1 2001/11/15 19:27:36 mikep%oeone.com Exp $
+  $Id: icalvcal.c,v 1.2 2001/11/22 19:22:01 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -41,6 +41,10 @@
 
 #include "icalvcal.h"
 #include <string.h>   
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 
 enum datatype {
     COMPONENT,

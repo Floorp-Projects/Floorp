@@ -4,7 +4,7 @@
   FILE: icalproperty.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalproperty.c,v 1.1 2001/11/15 19:27:07 mikep%oeone.com Exp $
+  $Id: icalproperty.c,v 1.2 2001/11/22 19:21:49 mikep%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -45,6 +45,11 @@
 #include <stdio.h> /* for printf */
 #include <stdarg.h> /* for va_list, va_start, etc. */
                                                
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
+                                              
 #define TMP_BUF_SIZE 1024
 
 /* Private routines for icalproperty */

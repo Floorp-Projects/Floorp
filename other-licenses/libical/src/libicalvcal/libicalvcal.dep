@@ -1,0 +1,40 @@
+# Microsoft Developer Studio Generated Dependency File, included by libicalvcal.mak
+
+.\icalvcal.c : \
+	"..\libical\ical.h"\
+	".\icalvcal.h"\
+	".\port.h"\
+	".\vcc.h"\
+	".\vobject.h"\
+	
+
+.\vcaltest.c : \
+	".\port.h"\
+	".\vcaltmp.h"\
+	".\vcc.h"\
+	".\vobject.h"\
+	
+
+.\vcaltmp.c : \
+	".\port.h"\
+	".\vcaltmp.h"\
+	".\vcc.h"\
+	".\vobject.h"\
+	
+
+.\vcc.c : \
+	".\port.h"\
+	".\vcc.h"\
+	".\vobject.h"\
+	
+
+.\vctest.c : \
+	".\port.h"\
+	".\vcc.h"\
+	".\vobject.h"\
+	
+
+.\vobject.c : \
+	".\port.h"\
+	".\vobject.h"\
+	
