@@ -342,7 +342,7 @@ void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
 }
 
                 
-nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+PR_PUBLIC_API(nsresult) NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
