@@ -76,12 +76,15 @@ checkout:
 
 # Build with autoconf
 build:
-	PWD=`pwd`
-	(cd mozilla; $(AUTOCONF))
-	if test ! -d mozilla/$(OBJDIR); then rm -rf mozilla/$(@OBJDIR); mkdir -D mozilla/$(OBJDIR); else true; fi
-	(cd mozilla/$(OBJDIR); ../configure --with-nspr=$(NSPR_INSTALL_DIR) --enable-toolkit=$(MOZ_TOOLKIT))
-	(cd mozilla/$(OBJDIR); gmake depend)
-	(cd mozilla/$(OBJDIR); gmake)
+	pwd=`pwd`; \
+	echo pwd = $$pwd; \
+	autoobjdir=obj-$(shell mozilla/build/autoconf/config.guess); \
+	echo autoobjdir = $$autoobjdir; \
+	(cd mozilla; $(AUTOCONF)); \
+	if test ! -d mozilla/$$autoobjdir; then $(MKDIR) mozilla/$$autoobjdir; fi; \
+	(cd mozilla/$$autoobjdir; ../configure --with-nspr=$(NSPR_INSTALL_DIR) --enable-toolkit=$(MOZ_TOOLKIT))
+	(cd mozilla/$$autoobjdir; gmake depend)
+	(cd mozilla/$$autoobjdir; gmake)
 
 # Do an autoconf build, this isn't working yet. -mcafee
 #
