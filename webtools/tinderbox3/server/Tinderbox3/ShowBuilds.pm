@@ -74,7 +74,8 @@ sub print_showbuilds {
   print $fh "",insert_dynamic_data($special_message, $tree, $sheriff, $build_engineer, $cvs_co_date, $status, \%patch_str, $start_time, $end_time);
 
   print_tree($p, $dbh, $fh, $tree, $start_time, $end_time, $field_short_names,
-             \%field_processors, \%field_handlers, $min_row_size, $max_row_size);
+             \%field_processors, \%field_handlers, $min_row_size, $max_row_size,
+             \%patch_str);
 
   print $fh "",insert_dynamic_data($footer, $tree, $sheriff, $build_engineer, $cvs_co_date, $status, \%patch_str, $start_time, $end_time);
 
@@ -110,13 +111,14 @@ sub insert_dynamic_data {
 
 sub print_tree {
   my ($p, $dbh, $fh, $tree, $start_time, $end_time, $field_short_names,
-      $field_processors, $field_handlers, $min_row_size, $max_row_size) = @_;
+      $field_processors, $field_handlers, $min_row_size, $max_row_size,
+      $patch_str) = @_;
 
   # Get the information we will be laying out in the table
   my @event_queues;
   push @event_queues, new Tinderbox3::BuildTimeColumn($p, $dbh);
   push @event_queues, Tinderbox3::BonsaiColumns::get_bonsai_column_queues($p, $dbh, $start_time, $end_time, $tree);
-  push @event_queues, Tinderbox3::TreeColumns::get_tree_column_queues($p, $dbh, $start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers);
+  push @event_queues, Tinderbox3::TreeColumns::get_tree_column_queues($p, $dbh, $start_time, $end_time, $tree, $field_short_names, $field_processors, $field_handlers, $patch_str);
 
   my $row_num = -1;
   my @rows;
