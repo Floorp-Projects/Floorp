@@ -845,6 +845,14 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 ----------------------------------------------------------------------------- */
 PRBool nsCaret::MustDrawCaret()
 {
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell) {
+    PRBool isPaintingSuppressed;
+    presShell->IsPaintingSuppressed(&isPaintingSuppressed);
+    if (isPaintingSuppressed)
+      return PR_FALSE;
+  }
+
 	if (mDrawn)
 		return PR_TRUE;
 		

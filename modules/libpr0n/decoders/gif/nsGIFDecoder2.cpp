@@ -45,6 +45,9 @@ nsGIFDecoder2::nsGIFDecoder2()
   mGIFStruct = nsnull;
 
   mAlphaLine = nsnull;
+
+  mCurrentRow = -1;
+  mLastFlushedRow = -1;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2(void)
@@ -155,6 +158,17 @@ PRUint32 nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
   // we don't wait to decode each frame in an animation now.
   if(gif_write_ready(mGIFStruct)) {
     gif_write(mGIFStruct, data, count);
+  }
+
+  if (mImageFrame && mObserver) {
+    PRInt32 remainingRows = mCurrentRow-mLastFlushedRow;
+    if (remainingRows) {
+      PRInt32 width;
+      mImageFrame->GetWidth(&width);  
+      nsRect r(0, mLastFlushedRow+1, width, remainingRows);
+      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+      mLastFlushedRow = mCurrentRow;
+    }    
   }
 
   return count; // we always consume all the data
@@ -291,8 +305,18 @@ int EndImageFrame(
   // decoder->mImageFrame->SetTimeout(aDelayTimeout);
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
 
-  if (decoder->mObserver)
+  if (decoder->mObserver) {
+    PRInt32 remainingRows = decoder->mCurrentRow-decoder->mLastFlushedRow;
+    if (remainingRows) {
+      PRInt32 width;
+      decoder->mImageFrame->GetWidth(&width);
+      nsRect r(0, decoder->mLastFlushedRow+1, width, remainingRows);
+      decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+      decoder->mCurrentRow = decoder->mLastFlushedRow = -1;
+    }    
+
     decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
+  }
 
   decoder->mImageFrame = nsnull;
   return 0;
@@ -453,9 +477,7 @@ int HaveDecodedRow(
 
     }
 
-    nsRect r(0, aRowNumber, width, 1);
-
-    decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+    decoder->mCurrentRow = aRowNumber;
   }
 
   return 0;

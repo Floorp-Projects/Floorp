@@ -62,7 +62,9 @@ public:
   nsCOMPtr<gfxIImageFrame> mImageFrame;
   nsCOMPtr<imgIRequest> mImageRequest;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
-  
+  PRInt32 mCurrentRow;
+  PRInt32 mLastFlushedRow;
+
   gif_struct *mGIFStruct;
   
   PRUint8 *mAlphaLine;

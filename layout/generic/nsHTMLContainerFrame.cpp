@@ -99,6 +99,20 @@ nsHTMLContainerFrame::Paint(nsIPresContext* aPresContext,
     }
   }
 
+  if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+    // We are wrapping the root frame of a document. We
+    // need to check the pres shell to find out if painting is locked
+    // down (because we're still in the early stages of document
+    // and frame construction.  If painting is locked down, then we
+    // do not paint our children.  
+    PRBool paintingSuppressed = PR_FALSE;
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    shell->IsPaintingSuppressed(&paintingSuppressed);
+    if (paintingSuppressed)
+      return NS_OK;
+  }
+
   // Now paint the kids. Note that child elements have the opportunity to
   // override the visibility property and display even if their parent is
   // hidden

@@ -2139,6 +2139,19 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
                     const nsRect&   aDamageRect,
                     PRBool          aImmediate) const
 {
+  if (aPresContext) {
+    // Don't allow invalidates to do anything when
+    // painting is suppressed.
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    if (shell) {
+      PRBool suppressed = PR_FALSE;
+      shell->IsPaintingSuppressed(&suppressed);
+      if (suppressed)
+        return;
+    }
+  }
+
   nsIViewManager* viewManager = nsnull;
   nsRect damageRect(aDamageRect);
 
