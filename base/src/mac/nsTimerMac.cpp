@@ -274,7 +274,10 @@ Int32 TimerImplComparator::Compare(
 								Uint32				inSizeOne,
 								Uint32				inSizeTwo) const
 {
-	return (( TimerImpl *) inItemOne)->GetFireTime() - (( TimerImpl *) inItemTwo)->GetFireTime();
+	const TimerImpl	*timerOne = reinterpret_cast<const TimerImpl *>(*(TimerImpl **)inItemOne);
+	const TimerImpl *timerTwo = reinterpret_cast<const TimerImpl *>(*(TimerImpl **)inItemTwo);
+        
+	return (timerOne->GetFireTime() - timerTwo->GetFireTime());
 }
 								
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
