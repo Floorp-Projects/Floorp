@@ -24,9 +24,27 @@
 #ifndef XLATE_H
 #define XLATE_H
 
+#define N_FONTS 8
+
 typedef void (*XL_CompletionRoutine)(PrintSetup*);
 typedef void* XL_TextTranslation;
 typedef void* XL_PostscriptTranslation;
+
+typedef struct {
+    short llx, lly, urx, ury;
+} PS_BBox;
+
+typedef struct {
+	short wx, wy;
+	PS_BBox charBBox;
+} PS_CharInfo;
+
+typedef struct {
+    char *name;
+    PS_BBox fontBBox;
+    short upos, uthick;
+    PS_CharInfo chars[256];
+} PS_FontInfo;
 
 XP_BEGIN_PROTOS
 extern void XL_InitializePrintSetup(PrintSetup *p);
@@ -43,6 +61,7 @@ extern void XP_InitializePrintInfo(MWContext *);
 extern void XP_CleanupPrintInfo(MWContext *);
 extern void XP_DrawForPrint(MWContext *, int );
 extern void XP_LayoutForPrint(MWContext *cx, int32 doc_height);
+extern void XP_ParseAFMFile(FILE *fp, PS_FontInfo** fi);
 XP_END_PROTOS
 
 typedef struct LineRecord_struct LineRecord;
@@ -83,6 +102,7 @@ struct PrintSetup_ {
   float rules;			   /* Scale factor for rulers */
   int n_up;                        /* cool page combining */
   int bigger;                      /* Used to init sizes if sizesin NULL */
+  int paper_size;                  /* Paper Size(letter,legal,exec,a4) */
 
   char* prefix;                    /* For text xlate, prepended to each line */
   char* eol;			   /* For text translation, line terminator */
@@ -95,11 +115,12 @@ struct PrintSetup_ {
   void* carg;                      /* Data saved for completion routine */
   int status;                      /* Status of URL on completion */
 
-				   /* "other" font is typically East Asian */
-  char *otherFontName;		   /* name of "other" PostScript font */
+		/* "other" font is for encodings other than iso-8859-1 */
+  char *otherFontName[N_FONTS];		   
+  				/* name of "other" PostScript font */
+  PS_FontInfo *otherFontInfo[N_FONTS];	   
+  				/* font info parsed from "other" afm file */
   int16 otherFontCharSetID;	   /* charset ID of "other" font */
-  int otherFontWidth;		   /* width of "other" font (square) */
-  int otherFontAscent;		   /* Ascent of "other" font (square) */
 
   MWContext *cx;                   /* original context, if available */
 };
