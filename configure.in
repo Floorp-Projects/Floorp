@@ -949,7 +949,7 @@ dnl the qsort routine under solaris is faulty
        ASFLAGS="$ASFLAGS -fPIC"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
-       DSO_LDOPTS='-shared -h $@'
+       DSO_LDOPTS='-G -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
