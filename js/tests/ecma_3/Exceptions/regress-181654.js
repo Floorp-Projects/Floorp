@@ -114,7 +114,7 @@ test();
  * We allow for no colon in case err.message was not provided by the user.
  * In such a case, SpiderMonkey and Rhino currently set err.message = '',
  * as allowed for by ECMA 15.11.4.3. This makes |pattern| work in this case.
- * 
+ *
  * If this is ever changed to a non-empty string, e.g. 'undefined',
  * you may have to modify |pattern| to take that into account -
  *
@@ -140,7 +140,7 @@ function test()
   enterFunc ('test');
   printBugNumber (bug);
   printStatus (summary);
- 
+
   for (var i = 0; i < UBound; i++)
   {
     reportCompare(expectedvalues[i], actualvalues[i], statusitems[i]);
