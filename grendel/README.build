@@ -1,0 +1,29 @@
+Building Grendel:
+
+Make sure you have the required (external) packages first. Then edit the top-level rules.mk file, setting the CLASSPATH and other variables appropriately for your system.
+
+For now, we still have to use 'gmake -k' to ensure a full build, since we haven't finished getting rid of the back-end dependencies that cause the builds to fail. So use 'gmake -k' if you want to get anything usable.
+
+We've run into some namespace collisions when building under Java 2 (JDK 1.2), so be aware that you may not get Grendel to build under Java 2 at the moment. On the other hand, 'gmake -k' may do the trick and you may end up with something tht runs. Your Mileage May Vary.
+
+Running Grendel: 
+
+There are currently two ways you can run Grendel:
+	
+	1. Set your CLASSPATH environment variable to include all the 
+	   required packages, then type 'java grendel.Main'.
+
+	2. Type 'make run' after building and watch it work.
+
+What does Grendel do?
+
+Currently, we've got the following:
+
+	- A nice, three-pane GUI
+	- Ability to open local mail folders
+	- Ability to parse and display (simple) HTML messages
+
+More features are being worked on, but you can at least get a feel for what's happening with Grendel at this point. 
+
+-- Jeff Galyan (talisman) <talisman@anamorphic.com>
+
