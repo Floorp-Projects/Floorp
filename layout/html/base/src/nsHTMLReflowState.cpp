@@ -1620,18 +1620,27 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // See if the containing block height is based on the size of its
     // content
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-      // See if the containing block is a scrolled frame, i.e. its
+      // See if the containing block is (1) a scrolled frame, i.e. its
       // parent is a scroll frame. The presence of the intervening
       // frame (that the scroll frame scrolls) needs to be hidden from
-      // the containingBlockHeight calcuation.
+      // the containingBlockHeight calcuation, or (2) a cell frame which needs
+      // to use the mComputedHeight of the cell instead of what the cell block passed in.
+      nsCOMPtr<nsIAtom>  fType;
       if (cbrs->parentReflowState) {
         nsIFrame* f = cbrs->parentReflowState->frame;
-        nsCOMPtr<nsIAtom>  fType;
         f->GetFrameType(getter_AddRefs(fType));
         if (nsLayoutAtoms::scrollFrame == fType.get()) {
           // Use the scroll frame's computed height instead
           aContainingBlockHeight =
             ((nsHTMLReflowState*)cbrs->parentReflowState)->mComputedHeight;
+        }
+        else {
+          cbrs->frame->GetFrameType(getter_AddRefs(fType));
+          if (nsLayoutAtoms::tableCellFrame == fType.get()) {
+            // use the cell's computed height 
+            aContainingBlockHeight =
+              ((nsHTMLReflowState*)cbrs)->mComputedHeight;
+          }
         }
       }
     }
