@@ -259,21 +259,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
                                                  nsIMsgFolder **child)
 {
   NS_ENSURE_ARG_POINTER(child);
-
+  
   PRInt32 flags = 0;
-	nsresult rv;
-	nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  nsresult rv;
+  nsCOMPtr<nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   nsCAutoString uri(mURI);
   uri.Append('/');
-
+  
   // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
   nsXPIDLCString escapedName;
   rv = NS_MsgEscapeEncodeURLPath((*name).get(), getter_Copies(escapedName));
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   // fix for #192780
   // if this is the root folder
   // make sure the the special folders
@@ -301,67 +301,67 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   }
   else
     uri += escapedName.get();
-
+  
   nsCOMPtr <nsIMsgFolder> msgFolder;
   rv = GetChildWithURI(uri.get(), PR_FALSE/*deep*/, PR_TRUE /*case Insensitive*/, getter_AddRefs(msgFolder));  
   if (NS_SUCCEEDED(rv) && msgFolder)
     return NS_MSG_FOLDER_EXISTS;
-
-	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetResource(uri, getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;
-
+  
+  nsCOMPtr<nsIRDFResource> res;
+  rv = rdf->GetResource(uri, getter_AddRefs(res));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  
   folder->GetFlags((PRUint32 *)&flags);
-
+  
   flags |= MSG_FOLDER_FLAG_MAIL;
-
-	folder->SetParent(this);
-
-	PRBool isServer;
-    rv = GetIsServer(&isServer);
-
-	//Only set these is these are top level children.
-	if(NS_SUCCEEDED(rv) && isServer)
-	{
-		if(name->Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
-		{
+  
+  folder->SetParent(this);
+  
+  PRBool isServer;
+  rv = GetIsServer(&isServer);
+  
+  //Only set these is these are top level children.
+  if(NS_SUCCEEDED(rv) && isServer)
+  {
+    if(name->Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
+    {
       flags |= MSG_FOLDER_FLAG_INBOX;
       SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
-		}
-		else if (name->Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
-			flags |= MSG_FOLDER_FLAG_TRASH;
-		else if (name->Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
-			name->Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
-			flags |= MSG_FOLDER_FLAG_QUEUE;
+    }
+    else if (name->Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
+      flags |= MSG_FOLDER_FLAG_TRASH;
+    else if (name->Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
+      name->Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
+      flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
-		// the logic for this has been moved into 
-		// SetFlagsOnDefaultMailboxes()
+    // the logic for this has been moved into 
+    // SetFlagsOnDefaultMailboxes()
     else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
-			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-		else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
-			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-		else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
-			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+      folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+      folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
+      folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
-
-	folder->SetFlags(flags);
-
-//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
-	rv = NS_OK;
-
-	nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
-	if(folder)
-		mSubFolders->AppendElement(supports);
-	*child = folder;
-	NS_ADDREF(*child);
-
-	return rv;
+  
+  folder->SetFlags(flags);
+  
+  //at this point we must be ok and we don't want to return failure in case GetIsServer failed.
+  rv = NS_OK;
+  
+  nsCOMPtr<nsISupports> supports = do_QueryInterface(folder);
+  if(folder)
+    mSubFolders->AppendElement(supports);
+  *child = folder;
+  NS_ADDREF(*child);
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetManyHeadersToDownload(PRBool *retval)
@@ -480,7 +480,7 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     str.AppendWithConversion(sep);
     path = str.get();
 
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -498,6 +498,8 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     rv = pathSpec->GetFileSpec(&path);
     if (NS_FAILED(rv)) return rv;
     
+    if (!path.Exists())
+      path.CreateDirectory();
     if (!path.IsDirectory())
       AddDirectorySeparator(path);
     
@@ -770,45 +772,45 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetFolderURL(char **url)
   */
 nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
-	nsresult rv = NS_OK;
-
-	nsCOMPtr<nsIFileSpec> pathSpec;
-	rv = GetPath(getter_AddRefs(pathSpec));
-	if (NS_FAILED(rv)) return rv;
-
-	rv = pathSpec->GetFileSpec(&path);
-	if (NS_FAILED(rv)) return rv;
-
-	if(!path.IsDirectory())
-	{
-		//If the current path isn't a directory, add directory separator
-		//and test it out.
-		rv = AddDirectorySeparator(path);
-		if(NS_FAILED(rv))
-			return rv;
-
-		//If that doesn't exist, then we have to create this directory
-		if(!path.IsDirectory())
-		{
-			//If for some reason there's a file with the directory separator
-			//then we are going to fail.
-			if(path.Exists())
-			{
-				return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-			}
-			//otherwise we need to create a new directory.
-			else
-			{
-				path.CreateDirectory();
-				//Above doesn't return an error value so let's see if
-				//it was created.
-				if(!path.IsDirectory())
-					return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-			}
-		}
-	}
-
-	return rv;
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIFileSpec> pathSpec;
+  rv = GetPath(getter_AddRefs(pathSpec));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = pathSpec->GetFileSpec(&path);
+  if (NS_FAILED(rv)) return rv;
+  
+  if(!path.IsDirectory())
+  {
+    //If the current path isn't a directory, add directory separator
+    //and test it out.
+    rv = AddDirectorySeparator(path);
+    if(NS_FAILED(rv))
+      return rv;
+    
+    //If that doesn't exist, then we have to create this directory
+    if(!path.IsDirectory())
+    {
+      //If for some reason there's a file with the directory separator
+      //then we are going to fail.
+      if(path.Exists())
+      {
+        return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+      }
+      //otherwise we need to create a new directory.
+      else
+      {
+        path.CreateDirectory();
+        //Above doesn't return an error value so let's see if
+        //it was created.
+        if(!path.IsDirectory())
+          return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+      }
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* aUrlListener)
@@ -896,10 +898,10 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 
   nsFileSpec path;
   nsCOMPtr<nsIMsgFolder> child;
-	//Get a directory based on our current path.
-	rv = CreateDirectoryForFolder(path);
-	if(NS_FAILED(rv))
-		return rv;
+  //Get a directory based on our current path.
+  rv = CreateDirectoryForFolder(path);
+  if(NS_FAILED(rv))
+    return rv;
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
@@ -1247,80 +1249,80 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   if (NS_FAILED(rv)) 
     return rv;
   nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
-    
+  
   nsFileSpec fileSpec;
   oldPathSpec->GetFileSpec(&fileSpec);
   nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
   nsFileSpec dirSpec;
-
-	PRUint32 cnt = 0;
+  
+  PRUint32 cnt = 0;
   if (mSubFolders)
     mSubFolders->Count(&cnt);
-
+  
   if (cnt > 0)
     rv = CreateDirectoryForFolder(dirSpec);
-
-	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
-	// function in nsIFileSpec
-
-	nsXPIDLCString convertedNewName;
-	if (NS_FAILED(ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(aNewName), getter_Copies(convertedNewName))))
-		return NS_ERROR_FAILURE;
+  
+  // convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
+  // function in nsIFileSpec
+  
+  nsXPIDLCString convertedNewName;
+  if (NS_FAILED(ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(aNewName), getter_Copies(convertedNewName))))
+    return NS_ERROR_FAILURE;
   
   nsCAutoString newDiskName;
   newDiskName.Assign(convertedNewName.get());
   NS_MsgHashIfNecessary(newDiskName);
-
+  
   nsXPIDLCString oldLeafName;
   oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
-
+  
   if (mName.Equals(aNewName, nsCaseInsensitiveStringComparator()))
   {
     if(msgWindow)
       rv = ThrowAlertMsg("folderExists", msgWindow);
     return NS_MSG_FOLDER_EXISTS;
   }
-	else
+  else
   {
     nsCOMPtr <nsIFileSpec> parentPathSpec;
     parentFolder->GetPath(getter_AddRefs(parentPathSpec));
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
     nsFileSpec parentPath;
     parentPathSpec->GetFileSpec(&parentPath);
     NS_ENSURE_SUCCESS(rv,rv);
-	  
+    
     if (!parentPath.IsDirectory())
-    AddDirectorySeparator(parentPath);
-
+      AddDirectorySeparator(parentPath);
+    
     rv = CheckIfFolderExists(aNewName, parentFolder, msgWindow);
     if (NS_FAILED(rv)) 
       return rv;
   }
-    
-	ForceDBClosed();
+  
+  ForceDBClosed();
   
   nsCAutoString newNameDirStr(newDiskName.get());  //save of dir name before appending .msf 
-
+  
   rv = oldPathSpec->Rename(newDiskName.get());
   if (NS_SUCCEEDED(rv))
   {
-  	newDiskName += ".msf";
-	  oldSummarySpec.Rename(newDiskName.get());
+    newDiskName += ".msf";
+    oldSummarySpec.Rename(newDiskName.get());
   }
   else
   {
     ThrowAlertMsg("folderRenameFailed", msgWindow);
     return rv;
   }
-	
-	if (NS_SUCCEEDED(rv) && cnt > 0) 
+  
+  if (NS_SUCCEEDED(rv) && cnt > 0) 
   {
     // rename "*.sbd" directory
     newNameDirStr += ".sbd";
     dirSpec.Rename(newNameDirStr.get());
-	}
-
+  }
+  
   nsCOMPtr<nsIMsgFolder> newFolder;
   if (parentSupport)
   {
@@ -1333,15 +1335,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
       if (changed)
         AlertFilterChanged(msgWindow);
-
+      
       if (cnt > 0)
         newFolder->RenameSubFolders(msgWindow, this);
-
+      
       if (parentFolder)
       {
         SetParent(nsnull);
         parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
-
+        
         nsCOMPtr<nsISupports> newFolderSupports = do_QueryInterface(newFolder);
         nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
         if(newFolderSupports && parentSupports)
