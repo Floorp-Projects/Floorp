@@ -43,11 +43,8 @@ struct PRTime {
 };
 
 /* Some handy constants */
-#define PR_MSEC_PER_SEC		1000
 #define PR_USEC_PER_SEC		1000000L
-#define PR_NSEC_PER_SEC		1000000000L
-#define PR_USEC_PER_MSEC	1000
-#define PR_NSEC_PER_MSEC	1000000L
+#define PR_USEC_PER_MSEC	1000L
 
 /* Return the current local time in micro-seconds */
 extern PR_PUBLIC_API(int64)
