@@ -28,10 +28,12 @@
 //static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);        // XXX temporary
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHttpProtocolConnection::nsHttpProtocolConnection()
-    : mUrl(nsnull), mEventSink(nsnull), mConnected(PR_FALSE)
+    : mUrl(nsnull), mEventSink(nsnull), mState(UNCONNECTED)
 {
 }
 
@@ -50,8 +52,14 @@ nsHttpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ASSERTION(aInstancePtr, "no instance pointer");
     if (aIID.Equals(nsIHttpProtocolConnection::GetIID()) ||
         aIID.Equals(nsIProtocolConnection::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(kISupportsIID)) {
         *aInstancePtr = NS_STATIC_CAST(nsIHttpProtocolConnection*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIStreamListener::GetIID()) ||
+        aIID.Equals(nsIStreamObserver::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -67,7 +75,6 @@ nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink)
     NS_ADDREF(mUrl);
 
     rv = eventSink->QueryInterface(nsIHttpEventSink::GetIID(), (void**)&mEventSink);
-
     return rv;
 }
 
@@ -77,24 +84,42 @@ nsHttpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink)
 NS_IMETHODIMP
 nsHttpProtocolConnection::Cancel(void)
 {
-    if (!mConnected)
+    switch (mState) {
+      case CONNECTED:
+        break;
+      case POSTING:
+        break;
+      default:
         return NS_ERROR_NOT_CONNECTED;
+    }
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Suspend(void)
 {
-    if (!mConnected)
+    switch (mState) {
+      case CONNECTED:
+        break;
+      case POSTING:
+        break;
+      default:
         return NS_ERROR_NOT_CONNECTED;
+    }
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Resume(void)
 {
-    if (!mConnected)
+    switch (mState) {
+      case CONNECTED:
+        break;
+      case POSTING:
+        break;
+      default:
         return NS_ERROR_NOT_CONNECTED;
+    }
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -104,7 +129,7 @@ nsHttpProtocolConnection::Resume(void)
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetContentType(char* *contentType)
 {
-    if (!mConnected)
+    if (mState != CONNECTED)
         return NS_ERROR_NOT_CONNECTED;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -112,7 +137,7 @@ nsHttpProtocolConnection::GetContentType(char* *contentType)
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetInputStream(nsIInputStream* *result)
 {
-    if (!mConnected)
+    if (mState != CONNECTED)
         return NS_ERROR_NOT_CONNECTED;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -120,7 +145,7 @@ nsHttpProtocolConnection::GetInputStream(nsIInputStream* *result)
 NS_IMETHODIMP
 nsHttpProtocolConnection::GetOutputStream(nsIOutputStream* *result)
 {
-    if (!mConnected)
+    if (mState != CONNECTED)
         return NS_ERROR_NOT_CONNECTED;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -130,7 +155,7 @@ nsHttpProtocolConnection::AsyncWrite(nsIInputStream* data, PRUint32 count,
                                      nsresult (*callback)(void* closure, PRUint32 count),
                                      void* closure)
 {
-    if (!mConnected)
+    if (mState != CONNECTED)
         return NS_ERROR_NOT_CONNECTED;
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -139,14 +164,37 @@ nsHttpProtocolConnection::AsyncWrite(nsIInputStream* data, PRUint32 count,
 // nsIHttpProtocolConnection methods:
 
 NS_IMETHODIMP
+nsHttpProtocolConnection::GetHeader(const char* header)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHttpProtocolConnection::AddHeader(const char* header, const char* value)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHttpProtocolConnection::RemoveHeader(const char* header)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsHttpProtocolConnection::Get(void)
 {
     nsresult rv;
 //    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
 
+    // XXX temporary:
     NS_WITH_SERVICE(nsIFileTransportService, sts, kFileTransportServiceCID, &rv);
+    const char* path = "y:/temp/foo.html";
 
 //    rv = sts->AsyncWrite();
+    nsITransport* trans;
+//    rv = sts->AsyncRead(path, context, appEventQueue, this, &trans);
+    if (NS_FAILED(rv)) return rv;
 
     return rv;
 }
@@ -165,6 +213,34 @@ nsHttpProtocolConnection::Put(void)
 
 NS_IMETHODIMP
 nsHttpProtocolConnection::Post(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamObserver methods:
+
+NS_IMETHODIMP
+nsHttpProtocolConnection::OnStartBinding(nsISupports* context)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsHttpProtocolConnection::OnStopBinding(nsISupports* context,
+                                        nsresult aStatus,
+                                        nsIString* aMsg)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+
+NS_IMETHODIMP
+nsHttpProtocolConnection::OnDataAvailable(nsISupports* context,
+                                          nsIInputStream *aIStream, 
+                                          PRUint32 aLength)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

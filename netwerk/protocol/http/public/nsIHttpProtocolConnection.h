@@ -34,6 +34,21 @@ class nsIHttpProtocolConnection : public nsIProtocolConnection
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTTPPROTOCOLCONNECTION_IID);
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Things that can be done at any time:
+
+    NS_IMETHOD GetHeader(const char* header) = 0;
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Things done before connecting:
+
+    NS_IMETHOD AddHeader(const char* header, const char* value) = 0;
+
+    NS_IMETHOD RemoveHeader(const char* header) = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Things done to connect:
+
     NS_IMETHOD Get(void) = 0;
 
     NS_IMETHOD GetByteRange(PRUint32 from, PRUint32 to) = 0;
@@ -41,6 +56,9 @@ public:
     NS_IMETHOD Put(void) = 0;
 
     NS_IMETHOD Post(void) = 0;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Things done after connecting:
 
 };
 
