@@ -1539,7 +1539,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * pushobj
              * newinit
              * exception
-             * initprop <atom>                     marked SRC_CATCH
+             * initcatchvar <atom>
              * enterwith
              * [< catchguard code >]               if there's a catchguard
              * [ifeq <offset to next catch block>]         " "
@@ -1595,12 +1595,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
                 }
 
-                /* setprop <atomIndex> */
+                /* initcatchvar <atomIndex> */
                 ale = js_IndexAtom(cx, disc->pn_atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
 
-                EMIT_ATOM_INDEX_OP(JSOP_INITPROP, ALE_INDEX(ale));
+                EMIT_ATOM_INDEX_OP(JSOP_INITCATCHVAR, ALE_INDEX(ale));
                 if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0 ||
                     js_Emit1(cx, cg, JSOP_ENTERWITH) < 0) {
                     return JS_FALSE;

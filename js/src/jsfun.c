@@ -745,11 +745,11 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         }
 
         /* If resolving "prototype" in a clone, clone the parent's prototype. */
-        if (proto)
+        if (proto) {
             proto = js_NewObject(cx, OBJ_GET_CLASS(cx, proto), proto, NULL);
-        else {
+        } else {
             /*
-             * Handle the wacky case of a user function Object() - trying to
+             * Handle the wacky case of a user function Object() -- trying to
              * build a prototype for that will recur back here ad perniciem.
              */
             if (fun->atom != cx->runtime->atomState.ObjectAtom)
@@ -759,13 +759,13 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             return JS_FALSE;
 
         /*
-         * ECMA says that constructor.prototype is DontEnum for user-defined
-         * functions, but DontEnum | ReadOnly | DontDelete for native "system"
-         * constructors such as Object or Function.  So lazily set the former
-         * here in fun_resolve, but eagerly define the latter in JS_InitClass,
-         * with the right attributes.
+         * ECMA says that constructor.prototype is DontEnum | DontDelete for
+         * user-defined functions, but DontEnum | ReadOnly | DontDelete for
+         * native "system" constructors such as Object or Function.  So lazily
+         * set the former here in fun_resolve, but eagerly define the latter
+         * in JS_InitClass, with the right attributes.
          */
-        if (!js_SetClassPrototype(cx, obj, proto, 0)) {
+        if (!js_SetClassPrototype(cx, obj, proto, JSPROP_PERMANENT)) {
             cx->newborn[GCX_OBJECT] = NULL;
             return JS_FALSE;
         }

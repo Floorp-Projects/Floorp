@@ -997,9 +997,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    js_printf(jp, "%s",
 			      ATOM_BYTES(GET_ATOM(cx, jp->script, pc)));
 		    len = js_GetSrcNoteOffset(sn, 0);
-		    pc += 4;	/* initprop, enterwith */
+		    pc += 4;	/* initcatchvar, enterwith */
 		    if (len) {
-			js_printf(jp, " : ");
+			js_printf(jp, " if ");
 			DECOMPILE_CODE(pc, len - 3); /* don't decompile ifeq */
 			js_printf(jp, "%s", POP_STR());
 			pc += len;
@@ -2036,6 +2036,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		break;
 
 	      case JSOP_INITPROP:
+              case JSOP_INITCATCHVAR:
 		rval = POP_STR();
 		atom = GET_ATOM(cx, jp->script, pc);
 		xval = ATOM_BYTES(atom);
