@@ -17,17 +17,12 @@
  */
 
 /*
-
   A data source that reads the 4.x "bookmarks.html" file and
   constructs an in-memory data source.
-
-  TO DO
-
-  1) Write the modified bookmarks file back to disk.
-
  */
 
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -169,6 +164,7 @@ class BookmarkParser {
 private:
     nsInputFileStream      *mStream;
     nsIRDFDataSource       *mDataSource;
+    PRBool                 mFoundIEFavoritesRoot;
 
 protected:
     nsresult AssertTime(nsIRDFResource* aSource,
@@ -194,6 +190,11 @@ public:
     nsresult AddBookmark(nsIRDFResource * aContainer, const char *url, const char *optionalTitle,
 			PRInt32 addDate, PRInt32 lastVisitDate, PRInt32 lastModifiedDate,
 			const char *shortcutURL, nsIRDFResource *nodeType);
+    nsresult ParserFoundIEFavoritesRoot(PRBool *foundIEFavoritesRoot)
+    {
+    	*foundIEFavoritesRoot = mFoundIEFavoritesRoot;
+    	return(NS_OK);
+    }
 };
 
 
@@ -207,6 +208,7 @@ BookmarkParser::Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource)
 {
 	mStream = aStream;
 	mDataSource = aDataSource;
+	mFoundIEFavoritesRoot = PR_FALSE;
 	return(NS_OK);
 }
 
@@ -435,6 +437,15 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return rv;
+	}
+
+	PRBool		result = PR_FALSE;
+	if (NS_SUCCEEDED(rv = bookmark->EqualsResource(kNC_IEFavoritesRoot, &result)))
+	{
+		if (result == PR_TRUE)
+		{
+			mFoundIEFavoritesRoot = PR_TRUE;
+		}
 	}
 
     nsCOMPtr<nsIRDFContainer> container;
@@ -704,8 +715,10 @@ protected:
     nsIRDFDataSource* mInner;
 
     nsresult ReadBookmarks(void);
-    nsresult WriteBookmarks(void);
-
+    nsresult WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root);
+    nsresult WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *container, PRInt32 level);
+    nsresult WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *node,
+    					nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst);
     PRBool CanAccept(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aTarget);
 
 public:
@@ -723,6 +736,10 @@ public:
 	parser.Init(nsnull, NS_STATIC_CAST(nsIRDFDataSource *, this));
 	nsresult rv = parser.AddBookmark(kNC_BookmarksRoot, uri, optionalTitle,
 					0L, 0L, 0L, nsnull, kNC_Bookmark);
+	if (NS_SUCCEEDED(rv))
+	{
+		Flush();
+	}
     	return(rv);
     }
 
@@ -857,9 +874,9 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 
 BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 {
-    NS_RELEASE(mInner);
 	Flush();
-    bm_ReleaseGlobals();
+	NS_RELEASE(mInner);
+	bm_ReleaseGlobals();
 }
 
 //NS_IMPL_ISUPPORTS(BookmarkDataSourceImpl, kIRDFDataSourceIID);
@@ -925,6 +942,12 @@ BookmarkDataSourceImpl::GetTarget(nsIRDFResource* aSource,
                 return rv;
             }
 
+		nsAutoString	ncURI(uri);
+		if (ncURI.Find("NC:") == 0)
+		{
+			return(NS_RDF_NO_VALUE);
+		}
+
             nsIRDFLiteral* literal;
             if (NS_FAILED(rv = gRDFService->GetLiteral(nsAutoString(uri).GetUnicode(), &literal))) {
                 NS_ERROR("unable to construct literal for URL");
@@ -971,11 +994,10 @@ BookmarkDataSourceImpl::Unassert(nsIRDFResource* aSource,
 
 
 
-
 NS_IMETHODIMP
 BookmarkDataSourceImpl::Flush(void)
 {
-    return WriteBookmarks();
+    return WriteBookmarks(mInner, kNC_BookmarksRoot);
 }
 
 
@@ -1037,6 +1059,9 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	parser.Init(&strm, NS_STATIC_CAST(nsIRDFDataSource *, this));
 	parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
 
+	PRBool	foundIERoot = PR_FALSE;
+	parser.ParserFoundIEFavoritesRoot(&foundIERoot);
+
 	// look for and import any IE Favorites
 	nsAutoString	ieTitle("Imported IE Favorites");
 
@@ -1048,49 +1073,29 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 	nsInputFileStream	ieStream(ieFavoritesFile);
 	if (strm.is_open())
 	{
-		nsCOMPtr<nsIRDFResource>	ieFolder;
-		if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(kURINC_IEFavoritesRoot, getter_AddRefs(ieFolder))))
+		NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+		if (NS_SUCCEEDED(rv))
 		{
-			NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
-			if (NS_SUCCEEDED(rv))
+			if (NS_SUCCEEDED(rv = rdfc->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
 			{
-				if (NS_SUCCEEDED(rv = rdfc->MakeSeq(mInner, ieFolder, nsnull)))
+				BookmarkParser parser;
+				parser.Init(&ieStream, this);
+				parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
+				
+				nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
 				{
-					BookmarkParser parser;
-					parser.Init(&ieStream, this);
-					parser.Parse(ieFolder, kNC_IEFavorite);
-					
-					nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
-					{
-						rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
-					}
-					
+					rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
+				}
+				
+				// if the IE Favorites root isn't somewhere in bookmarks.html, add it
+				if (foundIERoot == PR_FALSE)
+				{
 					nsCOMPtr<nsIRDFContainer> bookmarksRoot;
 					rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(bookmarksRoot));
 					if (NS_SUCCEEDED(rv))
 					{
-						if (NS_SUCCEEDED(rv = bookmarksRoot->AppendElement(ieFolder)))
-						{
-/*
-							BookmarkParser parser;
-							parser.Init(&ieStream, this);
-							parser.Parse(ieFolder, kNC_IEFavorite);
-							
-							nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-							if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
-							{
-								rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
-							}
-
-							nsCOMPtr<nsIRDFContainer> container;
-							rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
-							if (NS_SUCCEEDED(rv))
-							{
-								rv = container->AppendElement(ieFolder);
-							}
-*/
-						}
+						rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
 					}
 				}
 			}
@@ -1112,11 +1117,15 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 			rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 		}
 
-		nsCOMPtr<nsIRDFContainer> container;
-		rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
-		if (NS_SUCCEEDED(rv))
+		// if the IE Favorites root isn't somewhere in bookmarks.html, add it
+		if (foundIERoot == PR_FALSE)
 		{
-			rv = container->AppendElement(ieFolder);
+			nsCOMPtr<nsIRDFContainer> container;
+			rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
+			if (NS_SUCCEEDED(rv))
+			{
+				rv = container->AppendElement(ieFolder);
+			}
 		}
 	}
 #endif
@@ -1126,10 +1135,198 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 
 
 nsresult
-BookmarkDataSourceImpl::WriteBookmarks(void)
+BookmarkDataSourceImpl::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 {
-    //PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED;
+	nsSpecialSystemDirectory bookmarksFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+
+	// XXX we should get this from prefs.
+	bookmarksFile += "res";
+	bookmarksFile += "rdf";
+	bookmarksFile += "bookmarks.html";
+
+	nsresult		rv = NS_ERROR_FAILURE;
+	nsOutputFileStream	strm(bookmarksFile);
+	if (strm.is_open())
+	{
+		strm << "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n";
+		strm << "<!-- This is an automatically generated file.\n";
+		strm << "It will be read and overwritten.\n";
+		strm << "Do Not Edit! -->\n";
+		strm << "<TITLE>Bookmarks</TITLE>\n";
+		strm << "<H1>Bookmarks</H1>\n\n";
+		
+		rv = WriteBookmarksContainer(ds, strm, root, 0);
+	}
+	return(rv);
+}
+
+
+nsresult
+BookmarkDataSourceImpl::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileStream strm, nsIRDFResource *parent, PRInt32 level)
+{
+	nsresult	rv = NS_OK;
+
+	nsAutoString	indentationString("");
+	for (PRInt32 loop=0; loop<level; loop++)	indentationString += "    ";
+	char		*indentation = indentationString.ToNewCString();
+	if (nsnull == indentation)	return(NS_ERROR_OUT_OF_MEMORY);
+
+	nsCOMPtr<nsIRDFContainer> container;
+	if (NS_SUCCEEDED(rv = NS_NewRDFContainer(ds, parent, getter_AddRefs(container))))
+	{
+		nsCOMPtr<nsIRDFContainerUtils> containerUtils;
+		if (NS_SUCCEEDED(rv = NS_NewRDFContainerUtils(getter_AddRefs(containerUtils))))
+		{
+			strm << indentation;
+			strm << "<DL><p>\n";
+
+			nsCOMPtr<nsISimpleEnumerator>	children;
+			if (NS_SUCCEEDED(rv = container->GetElements(getter_AddRefs(children))))
+			{
+				PRBool	more = PR_TRUE;
+				while (more == PR_TRUE)
+				{
+					if (NS_FAILED(rv = children->HasMoreElements(&more)))	break;
+					if (more != PR_TRUE)	break;
+
+					nsCOMPtr<nsISupports>	iSupports;					
+					if (NS_FAILED(rv = children->GetNext(getter_AddRefs(iSupports))))	break;
+
+					nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(iSupports);
+					if (nsnull == child)	break;
+
+					PRBool	isIERoot = PR_FALSE, isContainer = PR_FALSE;
+					if (NS_SUCCEEDED(child->EqualsResource(kNC_IEFavoritesRoot, &isIERoot)))
+					{
+						if (isIERoot == PR_FALSE)
+						{
+							if (NS_SUCCEEDED(rv = containerUtils->IsContainer(ds, child, &isContainer)))
+							{
+							}
+						}
+					}
+
+					nsCOMPtr<nsIRDFNode>	nameNode;
+					nsAutoString		nameString("");
+					char			*name = nsnull;
+					if (NS_SUCCEEDED(rv = ds->GetTarget(child, kNC_Name, PR_TRUE, getter_AddRefs(nameNode))))
+					{
+						nsCOMPtr<nsIRDFLiteral>	nameLiteral = do_QueryInterface(nameNode);
+						PRUnichar	*title = nsnull;
+						if (NS_SUCCEEDED(rv = nameLiteral->GetValue(&title)))
+						{
+							nameString = title;
+							name = nameString.ToNewCString();
+						}
+						
+					}
+
+					strm << indentation;
+					strm << "    ";
+					if (isContainer == PR_TRUE)
+					{
+						strm << "<DT><H3";
+						// output ADD_DATE
+						WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
+						strm << ">";
+
+						// output title
+						if (name)	strm << name;
+						strm << "</H3>\n";
+						rv = WriteBookmarksContainer(ds, strm, child, level+1);
+					}
+					else
+					{
+						char	*url = nsnull;
+						if (NS_SUCCEEDED(rv = child->GetValue(&url)))
+						{
+							if (url)
+							{
+								nsAutoString	uri(url);
+								// XXX What's the best way to determine if its a separator?
+								if (uri.Find(kURINC_BookmarksRoot) == 0)
+								{
+									// its a separator
+									strm << "<HR>\n";
+								}
+								else
+								{
+									strm << "<DT><A HREF=\"";
+									// output URL
+									strm << url;
+									strm << "\"";
+									
+									// output ADD_DATE
+									WriteBookmarkProperties(ds, strm, child, kNC_BookmarkAddDate, kAddDateEquals, PR_FALSE);
+
+									// output LAST_VISIT
+									WriteBookmarkProperties(ds, strm, child, kWEB_LastVisitDate, kLastVisitEquals, PR_FALSE);
+									
+									// output LAST_MODIFIED
+									WriteBookmarkProperties(ds, strm, child, kWEB_LastModifiedDate, kLastModifiedEquals, PR_FALSE);
+									
+									// output SHORTCUTURL
+									WriteBookmarkProperties(ds, strm, child, kNC_ShortcutURL, kShortcutURLEquals, PR_FALSE);
+									
+									strm << ">";
+									// output title
+									if (name)	strm << name;
+									strm << "</A>\n";
+								}
+							}
+						}
+					}
+
+					if (nsnull != name)
+					{
+						delete []name;
+						name = nsnull;
+					}
+					
+					if (NS_FAILED(rv))	break;
+				}
+			}
+			strm << indentation;
+			strm << "</DL><p>\n";
+		}
+	}
+	delete [] indentation;
+	return(rv);
+}
+
+
+nsresult
+BookmarkDataSourceImpl::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileStream strm,
+	nsIRDFResource *child, nsIRDFResource *property, const char *htmlAttrib, PRBool isFirst)
+{
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	node;
+	if (NS_SUCCEEDED(rv = ds->GetTarget(child, property, PR_TRUE, getter_AddRefs(node))))
+	{
+		nsCOMPtr<nsIRDFLiteral>	literal = do_QueryInterface(node);
+		if (literal)
+		{
+			PRUnichar	*literalUni = nsnull;
+			if (NS_SUCCEEDED(rv = literal->GetValue(&literalUni)))
+			{
+				nsAutoString	literalString = literalUni;
+				char		*attribute = literalString.ToNewCString();
+				if (nsnull != attribute)
+				{
+					if (isFirst == PR_FALSE)
+					{
+						strm << " ";
+					}
+					strm << htmlAttrib;
+					strm << attribute;
+					strm << "\"";
+					delete [] attribute;
+					attribute = nsnull;
+				}
+			}
+		}
+	}
+	return(rv);
 }
 
 
@@ -1165,101 +1362,6 @@ BookmarkDataSourceImpl::CanAccept(nsIRDFResource* aSource,
         return PR_FALSE;
     }
 }
-
-#if FIXME
-
-static const nsString&
-rdf_NumericDate(const nsString& url)
-{
-    nsAutoString result;
-    PRInt32 len = url.Length();
-    PRInt32 index = 0;
-
-    while (index < len && url[index] < '0' && url[index] > '9')
-        ++index;
-
-    if (index >= len)
-        return result;
-
-    while (index < len && url[index] >= '0' && url[index] <= '9')
-        result.Append(url[index++]);
-
-    result;
-}
-
-
-void
-HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource top, int indent)
-{
-    RDF_Cursor c = RDF_GetSources(rdf, u, gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, true);
-    RDF_Resource next;
-    char *date, *name, *url;
-    int loop;
-
-    if (c == nsnull) return;
-    if (u == top) {
-      name = RDF_GetResourceName(rdf, u);
-      ht_rjcprintf(fp, "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n", nsnull);
-      ht_rjcprintf(fp, "<!-- This is an automatically generated file.\n", nsnull);
-      ht_rjcprintf(fp, "It will be read and overwritten.\n", nsnull);
-      ht_rjcprintf(fp, "Do Not Edit! -->\n", nsnull);
-
-      ht_rjcprintf(fp, "<TITLE>%s</TITLE>\n", (name) ? name:"");
-      ht_rjcprintf(fp, "<H1>%s</H1>\n<DL><p>\n", (name) ? name:"");
-    }
-    while ((next = RDF_NextValue(c)) != nsnull) {
-
-      url = resourceID(next);
-      if (containerp(next) && (!startsWith("ftp:",url)) && (!startsWith("file:",url))
-	    && (!startsWith("IMAP:", url)) && (!startsWith("nes:", url))
-	    && (!startsWith("mail:", url)) && (!startsWith("cache:", url))
-	    && (!startsWith("ldap:", url))) {
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
-
-		date = numericDate(resourceID(next));
-		ht_rjcprintf(fp, "<DT><H3 ADD_DATE=\"%s\">", (date) ? date:"");
-		if (date) freeMem(date);
-		name = RDF_GetResourceName(rdf, next);
-		ht_rjcprintf(fp, "%s</H3>\n", name);
-
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
-		ht_rjcprintf(fp, "<DL><p>\n", nsnull);
-		HT_WriteOutAsBookmarks1(rdf, fp, next, top, indent+1);
-
-		for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
-
-		ht_rjcprintf(fp, "</DL><p>\n", nsnull);
-      }
-      else if (isSeparator(next)) {
-	for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
-	ht_rjcprintf(fp, "<HR>\n", nsnull);
-      }
-      else {
-	char* bkAddDate = (char*)RDF_GetSlotValue(rdf, next, 
-						  gNavCenter->RDF_bookmarkAddDate, 
-						  RDF_STRING_TYPE, false, true);
-
-        for (loop=0; loop<indent; loop++)	ht_rjcprintf(fp, "    ", nsnull);
-
-	ht_rjcprintf(fp, "<DT><A HREF=\"%s\" ", resourceID(next));
-	date = numericDate(bkAddDate);
-	ht_rjcprintf(fp, "ADD_DATE=\"%s\" ", (date) ? date: "");
-	if (date) freeMem(date);
-	ht_rjcprintf(fp, "LAST_VISIT=\"%s\" ", resourceLastVisitDate(rdf, next));
-	ht_rjcprintf(fp, "LAST_MODIFIED=\"%s\">", resourceLastModifiedDate(rdf, next));
-	ht_rjcprintf(fp, "%s</A>\n", RDF_GetResourceName(rdf, next));
-
-	if (resourceDescription(rdf, next) != nsnull) {
-	  ht_rjcprintf(fp, "<DD>%s\n", resourceDescription(rdf, next));
-	}
-      }
-    }
-    RDF_DisposeCursor(c);
-    if (u == top) {
-      ht_rjcprintf(fp, "</DL>\n", nsnull);
-    }
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
