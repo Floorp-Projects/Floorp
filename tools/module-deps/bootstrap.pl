@@ -181,6 +181,10 @@ sub FindMakefiles {
   my $num_modules = 0;
   my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/all\.dot --start-module $root_modules --list-only";
   $modules_string = run_shell_command($modules_cmd, 0);
+
+  # Yank modules we know we don't want.
+  $modules_string =~ s/mozldap //; # no ldap.
+
   @modules = split(' ', $modules_string);
   $num_modules = $#modules + 1;
   print "modules = $num_modules\n";
