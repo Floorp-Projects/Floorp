@@ -1438,7 +1438,7 @@ NS_IMETHODIMP nsMsgFolder::ClearFlag(PRUint32 flag)
 	if(!NS_SUCCEEDED(rv = GetFlag(flag, &flagSet)))
 		return rv;
 
-	if (!flagSet)
+	if (flagSet)
 	{
 		mFlags &= ~flag;
 		OnFlagChange (flag);
