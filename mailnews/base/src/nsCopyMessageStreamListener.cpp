@@ -69,7 +69,7 @@ NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** 
 
 static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 {
-	nsCOMPtr<nsIMsgUriUrl> uriURL;
+	nsCOMPtr<nsIMsgMessageUrl> uriURL;
 	char* uri;
 	nsresult rv;
 
@@ -171,6 +171,8 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStartRequest(nsIChannel * aChannel,
 	nsCOMPtr<nsIMessage> message;
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIURI> uri = do_QueryInterface(ctxt, &rv);
+
+  NS_ASSERTION(NS_SUCCEEDED(rv), "ahah...someone didn't pass in the expected context!!!");
 	
 	if (NS_SUCCEEDED(rv))
 		rv = GetMessage(uri, getter_AddRefs(message));
