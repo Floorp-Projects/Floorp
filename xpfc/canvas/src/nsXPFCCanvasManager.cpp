@@ -27,17 +27,31 @@ static NS_DEFINE_IID(kXPFCCanvasManagerIID, NS_IXPFC_CANVAS_MANAGER_IID);
 static NS_DEFINE_IID(kCXPFCCanvasIID,       NS_IXPFC_CANVAS_IID);
 static NS_DEFINE_IID(kIViewObserverIID,     NS_IVIEWOBSERVER_IID);
 
-class ListEntry {
+class ViewListEntry {
 public:
   nsIView * view;
   nsIXPFCCanvas * canvas;
 
-  ListEntry(nsIView * aView, 
-            nsIXPFCCanvas * aCanvas) { 
+  ViewListEntry(nsIView * aView, 
+                nsIXPFCCanvas * aCanvas) { 
     view = aView;
     canvas = aCanvas;
   }
-  ~ListEntry() {
+  ~ViewListEntry() {
+  }
+};
+
+class WidgetListEntry {
+public:
+  nsIWidget * widget;
+  nsIXPFCCanvas * canvas;
+
+  WidgetListEntry(nsIWidget * aWidget, 
+                  nsIXPFCCanvas * aCanvas) { 
+    widget = aWidget;
+    canvas = aCanvas;
+  }
+  ~WidgetListEntry() {
   }
 };
 
@@ -45,7 +59,8 @@ public:
 nsXPFCCanvasManager :: nsXPFCCanvasManager()
 {
   NS_INIT_REFCNT();
-  mList = nsnull;
+  mViewList = nsnull;
+  mWidgetList = nsnull;
   monitor = nsnull;
   mRootCanvas = nsnull;
   mFocusedCanvas = nsnull;
@@ -57,7 +72,8 @@ nsXPFCCanvasManager :: ~nsXPFCCanvasManager()
 {
   PR_DestroyMonitor(monitor);
   NS_IF_RELEASE(mRootCanvas);
-  NS_IF_RELEASE(mList);
+  NS_IF_RELEASE(mViewList);
+  NS_IF_RELEASE(mWidgetList);
 }
 
 NS_IMPL_ADDREF(nsXPFCCanvasManager)
@@ -92,7 +108,8 @@ nsresult nsXPFCCanvasManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 nsresult nsXPFCCanvasManager::Init()
 {
-  if (mList == nsnull) {
+  if (mViewList == nsnull) 
+  {
 
     static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
     static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
@@ -100,12 +117,29 @@ nsresult nsXPFCCanvasManager::Init()
     nsresult res = nsRepository::CreateInstance(kCVectorCID, 
                                        nsnull, 
                                        kCVectorCID, 
-                                       (void **)&mList);
+                                       (void **)&mViewList);
 
     if (NS_OK != res)
       return res ;
 
-    mList->Init();
+    mViewList->Init();
+  }
+
+  if (mWidgetList == nsnull) 
+  {
+
+    static NS_DEFINE_IID(kCVectorIteratorCID, NS_VECTOR_ITERATOR_CID);
+    static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
+
+    nsresult res = nsRepository::CreateInstance(kCVectorCID, 
+                                       nsnull, 
+                                       kCVectorCID, 
+                                       (void **)&mWidgetList);
+
+    if (NS_OK != res)
+      return res ;
+
+    mWidgetList->Init();
   }
 
   if (monitor == nsnull) {
@@ -123,15 +157,15 @@ nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromView(nsIView * aView)
 
   nsIIterator * iterator;
 
-  mList->CreateIterator(&iterator);
+  mViewList->CreateIterator(&iterator);
 
   iterator->Init();
 
-  ListEntry * item ;
+  ViewListEntry * item ;
 
   while(!(iterator->IsDone()))
   {
-    item = (ListEntry *) iterator->CurrentItem();
+    item = (ViewListEntry *) iterator->CurrentItem();
 
     if (item->view == aView)
     {
@@ -149,11 +183,56 @@ nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromView(nsIView * aView)
   return (canvas);
 }
 
-nsresult nsXPFCCanvasManager::Register(nsIXPFCCanvas * aCanvas, nsIView * aView)
+nsIXPFCCanvas * nsXPFCCanvasManager::CanvasFromWidget(nsIWidget * aWidget)
+{
+  nsIXPFCCanvas * canvas = nsnull;
+
+  PR_EnterMonitor(monitor);
+
+  nsIIterator * iterator;
+
+  mWidgetList->CreateIterator(&iterator);
+
+  iterator->Init();
+
+  WidgetListEntry * item ;
+
+  while(!(iterator->IsDone()))
+  {
+    item = (WidgetListEntry *) iterator->CurrentItem();
+
+    if (item->widget == aWidget)
+    {
+      canvas = item->canvas;
+      break;
+    }  
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+
+  PR_ExitMonitor(monitor);
+
+  return (canvas);
+}
+
+nsresult nsXPFCCanvasManager::RegisterView(nsIXPFCCanvas * aCanvas, nsIView * aView)
 {
   PR_EnterMonitor(monitor);
 
-  mList->Append(new ListEntry(aView, aCanvas));
+  mViewList->Append(new ViewListEntry(aView, aCanvas));
+
+  PR_ExitMonitor(monitor);
+
+  return NS_OK;
+}
+
+nsresult nsXPFCCanvasManager::RegisterWidget(nsIXPFCCanvas * aCanvas, nsIWidget * aWidget)
+{
+  PR_EnterMonitor(monitor);
+
+  mWidgetList->Append(new WidgetListEntry(aWidget, aCanvas));
 
   PR_ExitMonitor(monitor);
 
@@ -170,19 +249,41 @@ nsresult nsXPFCCanvasManager::Unregister(nsIXPFCCanvas * aCanvas)
    */
   nsIIterator * iterator;
 
-  mList->CreateIterator(&iterator);
+  mViewList->CreateIterator(&iterator);
 
   iterator->Init();
 
-  ListEntry * item ;
+  ViewListEntry * item ;
 
   while(!(iterator->IsDone()))
   {
-    item = (ListEntry *) iterator->CurrentItem();
+    item = (ViewListEntry *) iterator->CurrentItem();
 
     if (item->canvas == aCanvas)
     {
-      mList->Remove((nsComponent)item);
+      mViewList->Remove((nsComponent)item);
+      break;
+    }  
+
+    iterator->Next();
+  }
+
+  NS_RELEASE(iterator);
+
+
+  mWidgetList->CreateIterator(&iterator);
+
+  iterator->Init();
+
+  WidgetListEntry * witem ;
+
+  while(!(iterator->IsDone()))
+  {
+    witem = (WidgetListEntry *) iterator->CurrentItem();
+
+    if (witem->canvas == aCanvas)
+    {
+      mWidgetList->Remove((nsComponent)witem);
       break;
     }  
 

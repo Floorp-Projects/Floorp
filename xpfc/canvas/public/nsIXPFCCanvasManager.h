@@ -23,6 +23,7 @@
 
 class nsIXPFCCanvas;
 class nsIView;
+class nsIWidget;
 
 // IID for the nsIXPFCCanvasManager interface
 #define NS_IXPFC_CANVAS_MANAGER_IID   \
@@ -50,6 +51,7 @@ public:
    * @result nsIXPFCCanvas pointer, The resultant canvas, nsnull if none found
    */
   NS_IMETHOD_(nsIXPFCCanvas *)  CanvasFromView(nsIView * aView) = 0;
+  NS_IMETHOD_(nsIXPFCCanvas *)  CanvasFromWidget(nsIWidget * aWidget) = 0;
 
   /**
    * Get a reference to the root canvas
@@ -71,8 +73,11 @@ public:
    * @param aWidget the widget
    * @result nsresult, NS_OK if successful
    */
-  NS_IMETHOD  Register(nsIXPFCCanvas * aCanvas, 
-                       nsIView * aView) = 0;
+  NS_IMETHOD RegisterView(nsIXPFCCanvas * aCanvas, 
+                          nsIView * aView) = 0;
+
+  NS_IMETHOD RegisterWidget(nsIXPFCCanvas * aCanvas, 
+                            nsIWidget * aWidget) = 0;
 
   /**
    * UnRegister an association between a canvas and a widget
