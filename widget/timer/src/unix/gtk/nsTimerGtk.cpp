@@ -146,7 +146,7 @@ gint nsTimerExpired(gpointer aCallData)
   return 0;
 }
 
-#ifndef TOOLKIT_EXORCISM
+#ifdef MOZ_MONOLITHIC_TOOLKIT
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -170,4 +170,4 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
 void NS_ProcessTimeouts(void) 
 {
 }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* MOZ_MONOLITHIC_TOOLKIT */

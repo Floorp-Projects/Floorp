@@ -29,9 +29,9 @@
 #include "nsIServiceManager.h"
 #include "nsITimer.h"
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 #include "nsIXlibWindowService.h"
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 #include "xlibrgb.h"
 
@@ -40,18 +40,18 @@
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
-#ifndef TOOLKIT_EXORCISM
+#ifndef !MOZ_MONOLITHIC_TOOLKIT
 // // this is so that we can get the timers in the base.  most widget
 // // toolkits do this through some set of globals.  not here though.  we
 // // don't have that luxury
 extern "C" int NS_TimeToNextTimeout(struct timeval *);
 extern "C" void NS_ProcessTimeouts(void);
-#endif /* TOOLKIT_EXORCISM */
+#endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
 PRBool nsAppShell::DieAppShellDie = PR_FALSE;
 
@@ -94,7 +94,7 @@ static char *event_names[] = {
   "MappingNotify"
 };
 
-#ifdef TOOLKIT_EXORCISM
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
 {
   static nsXlibTimeToNextTimeoutFunc sFunc = nsnull;
@@ -170,7 +170,7 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
 
 static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
 {
-#ifndef TOOLKIT_EXORCISM
+#ifdef MOZ_MONOLITHIC_TOOLKIT
   return NS_TimeToNextTimeout(aTimeval);
 #else
   nsXlibTimeToNextTimeoutFunc func = GetTimeToNextTimeoutFunc();
@@ -181,12 +181,12 @@ static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
   }
 
   return 0;
-#endif /* TOOLKIT_EXORCISM */
+#endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
 static void CallProcessTimeoutsProc(void)
 {
-#ifndef TOOLKIT_EXORCISM
+#ifdef MOZ_MONOLITHIC_TOOLKIT
   NS_ProcessTimeouts();
 #else
   nsXlibProcessTimeoutsProc proc = GetProcessTimeoutsProc();
@@ -195,7 +195,7 @@ static void CallProcessTimeoutsProc(void)
   {
     (*proc)();
   }
-#endif /* TOOLKIT_EXORCISM */
+#endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
 #define ALL_EVENTS ( KeyPressMask | KeyReleaseMask | ButtonPressMask | \

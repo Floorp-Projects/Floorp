@@ -69,7 +69,7 @@ class nsIUnixToolkitService : public nsISupports
    * Check whether a toolkit name is valid.  Currently, the following are
    * valid toolkits:
    *
-   * gtk, motif, xlib
+   * gtk, motif, xlib, qt
    *
    * @param [IN] aToolkitName The name of the toolkit to to check.
    * @param [OUT] aIsValidOut PRBool value that is true if aToolkitName
@@ -90,7 +90,7 @@ class nsIUnixToolkitService : public nsISupports
 
   /**
    * Get the name of the widget dll.  The widget dll will be something like:
-   * libwidget_{gtk,motif,xlib}.so
+   * libwidget_{gtk,motif,xlib,qt}.so
    *
    * @param [OUT] aWidgetDllNameOut On return it holds the widget dll name.
    *        
@@ -99,11 +99,11 @@ class nsIUnixToolkitService : public nsISupports
 
   /**
    * Get the name of the gfx dll.  The gfx dll will be something like: 
-   * libgfx_{gtk,motif,xlib}.so
+   * libgfx_{gtk,motif,xlib,qt}.so
    *
    * @param [OUT] aGfxDllNameOut On return it holds the gfx dll name.
    *        
-   * The gfx dll will be something like: libgfx_{gtk,motif,xlib}.so
+   * The gfx dll will be something like: libgfx_{gtk,motif,xlib,qt}.so
    */
   NS_IMETHOD GetGfxDllName(nsString & aGfxDllNameOut) = 0;
 

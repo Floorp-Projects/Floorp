@@ -23,56 +23,84 @@
 #include "nsCRT.h"
 #include "prenv.h"
 
+// Cache the nsIFactory vs. nsComponentManager::CreateInstance()
+// The CM is supposed to cache the factory itself, but hashing into
+// that doubles the time NS_NewTimer() takes.
+//
+// With factory caching, the time used by this NS_NewTimer() compared
+// to the monolithic ones, is very close.  Theres only a few (2/3) ms
+// difference in optimized builds.  This is probably within the
+// margin of error of PR_Now().
+#define CACHE_FACTORY
+
+#undef CHEAP_PERFORMANCE_MEASURMENT
+
+// Used to measure how long NS_NewTimer() and CreateInstance() takes.
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
 #include "prinrval.h"
+static PRTime sStartTime = 0;
+static PRTime sEndTime = 0;
+static PRTime sCreateInstanceStartTime = 0;
+static PRTime sCreateInstanceEndTime = 0;
+static PRInt32 sTimerCount = 0;
+#endif /* CHEAP_PERFORMANCE_MEASURMENT */
+
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-static NS_DEFINE_CID(kCTimerGtk, NS_TIMER_GTK_CID);
-static NS_DEFINE_CID(kCTimerMotif, NS_TIMER_MOTIF_CID);
-static NS_DEFINE_CID(kCTimerXlib, NS_TIMER_XLIB_CID);
 
-// Yes, this debug code is evil cause it uses a static string.  
-#ifdef DEBUG_ramiro
-static nsString sToolkitName = "WTF";
-#endif
+static nsresult FindFactory(const nsCID &  aClass,
+                            nsIFactory **  aFactoryOut);
 
-static PRTime sCIStartTime = 0;
-static PRTime sCIEndTime = 0;
+static nsresult NewTimer(const nsCID & aClass,
+                         nsITimer ** aInstancePtrResult);
 
-static nsresult NewTimer(const nsCID & aClass,nsITimer ** aInstancePtrResult)
+
+static nsresult NewTimer(const nsCID & aClass,
+                         nsITimer ** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   
-  nsresult   rv;
+  nsresult   rv = NS_ERROR_FAILURE;
   nsITimer * timer = nsnull;
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+  sCreateInstanceStartTime = PR_Now();
+#endif
 
-  sCIStartTime = PR_Now();
+#ifdef CACHE_FACTORY
+  static nsIFactory * factory = nsnull;
+
+  if (nsnull == factory)
+  {
+    nsresult frv = FindFactory(aClass,&factory);
+
+    NS_ASSERTION(NS_SUCCEEDED(frv),"Could not find timer factory.");
+    NS_ASSERTION(nsnull != factory,"Could not instanciate timer factory.");
+  }
+
+  if (nsnull != factory)
+  {
+	rv = factory->CreateInstance(NULL,
+								 kITimerIID,
+								 (void **)& timer);
+
+  }
+#else
 
   rv = nsComponentManager::CreateInstance(aClass,
                                           nsnull,
                                           kITimerIID,
                                           (void **)& timer);
-
-
-  sCIEndTime = PR_Now();
-
-#ifdef NS_DEBUG
-  nsString message;
-  
-  message = "Couldn't create a ";
-
-#ifdef DEBUG_ramiro
-  message += sToolkitName;
-  message += " timer";
-#else
-  message += "timer";
 #endif
 
-  NS_ASSERTION(NS_SUCCEEDED(rv), (const char *) nsAutoCString(message));
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
+  sCreateInstanceEndTime = PR_Now();
 #endif
+
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not instanciate a timer.");
 
 
   if (nsnull == timer) 
@@ -116,27 +144,48 @@ GetTimerCID()
   return sgTimerCID;
 }
 //////////////////////////////////////////////////////////////////////////
+static nsresult FindFactory(const nsCID &  aClass,
+                            nsIFactory **  aFactoryOut)
+{
 
-static PRTime sStartTime = 0;
-static PRTime sEndTime = 0;
-static int sTimerCount = 0;
+  NS_ASSERTION(nsnull != aFactoryOut,"NULL out pointer.");
+
+  static nsIFactory * factory = nsnull;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *aFactoryOut = nsnull;
+
+  if (nsnull == factory)
+  {
+    rv = nsComponentManager::FindFactory(aClass,&factory);
+  }
+
+  *aFactoryOut = factory;
+
+  return rv;
+}
+//////////////////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////////////////////
 nsresult NS_NewTimer(nsITimer ** aInstancePtrResult)
 {
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
   sStartTime = PR_Now();
+#endif
+
   const nsCID * cid = GetTimerCID();
 
   NS_ASSERTION(nsnull != cid,"Dude! Trying to make a timer with a null CID.");
 
   nsresult rv = NewTimer(*cid,aInstancePtrResult);
 
+#ifdef CHEAP_PERFORMANCE_MEASURMENT
   sEndTime = PR_Now();
 
-#if 0
-  printf("NS_NewTimer(count=%-4d,time=%lld ms,ci=%lld ms)\n",
+  printf("NS_NewTimer(count=%-4d,time=%lld ms,CI time=%lld ms)\n",
          sTimerCount++,
          sEndTime - sStartTime,
-         sCIEndTime - sCIStartTime);
+		 sCreateInstanceEndTime - sCreateInstanceStartTime);
 #endif
 
   return rv;

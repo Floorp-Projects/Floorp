@@ -547,220 +547,48 @@ dnl Checks for X libraries.
 dnl Ordering is important.
 dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
-if test "$no_x" != "yes"; then
-XLIBS="-lX11 $XLIBS"
-_SAVE_LDFLAGS="$LDFLAGS"
-LDFLAGS="$XLDFLAGS $LDFLAGS"
-AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
-	[MISSING_X="$MISSING_X -lX11"], $XLIBS)
-AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
-	[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-AC_CHECK_LIB(ICE, IceFlush, [XICE_LIBS="-lICE"],, $XLIBS)
-AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
-AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
-	[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
-AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
-	[MISSING_X="$MISSING_X -lXmu"], $X_PRE_LIBS $XLIBS $XT_LIBS $XEXT_LIBS)
-LDFLAGS="$_SAVE_LDFLAGS"
-
-dnl Check for toolkit libs
-dnl ========================================================
-useRhapsody=`echo $target_os | egrep "^Rhapsody"`
-
-dnl ========================================================
-dnl =
-dnl = --enable-toolkit
-dnl = 
-dnl = Select which toolkit to use for widgets.
-dnl = 
-dnl = Choices are:
-dnl = 
-dnl = gtk (default)
-dnl = motif
-dnl = xlib
-dnl = 
-dnl ========================================================
-AC_ARG_ENABLE(toolkit,
-[  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
-  [if test "$enableval" = "motif" \
-        -o "$enableval" = "gtk" \
-        -o "$enableval" = "qt" \
-        -o "$enableval" = "xlib" \
-        -o "$useRhapsody" ; then
-     dnl nglayout only supports building with one toolkit,
-     dnl so ignore everything after the first comma (",").
-     MOZ_WIDGET_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
-   else
-     AC_MSG_ERROR(Toolkit must be Xlib, GTK, Qt, or Motif.)
-   fi], 
-  [if test "$useRhapsody" ; then
-     MOZ_WIDGET_TOOLKIT="rhapsody"
-   else
-     MOZ_WIDGET_TOOLKIT="gtk"
-   fi])
-
-
-if echo ":$MOZ_WIDGET_TOOLKIT" | grep "motif" >/dev/null; then
-if test "$no_x" != "yes"; then
-    if test "$x_includes"; then
-	MOTIF_XINCS="-xif -I$x_includes"
-    fi
-
-    detect_motif="${srcdir}/config/mkdetect/detect_motif.sh -cc $CC $MOTIF_XINCS"
-    MOTIF_VERSION=`${detect_motif}`
-    MOTIF_INCLUDES=`${detect_motif} -if`
-    MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
-    MOTIF_DYNAMIC_FLAGS=`${detect_motif} -df`
-    MOTIF_DYNAMIC_PATHS=`${detect_motif} -dp`
-dnl    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
-    MOTIF_REQUIRES_XPM="False"
-
-    ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
-fi
-
-    if test "$MOTIF_REQUIRES_XPM" = "True" -o "$MOTIF_VERSION" = "2.1"; then
-        _SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$XLDFLAGS $LDFLAGS"
-
-	if test "$MOTIF_REQUIRES_XPM" = "True"; then
-	    AC_CHECK_LIB(Xpm, XpmWriteFileFromImage, 
-		XPM_LIBS="-lXpm", 
-		[MISSING_MOTIF="$MISSING_MOTIF -lXpm"], $XLIBS)
-	fi
-
-	if test "$MOTIF_VERSION" = "2.1"; then
-	    AC_CHECK_LIB(Xp, XpGetPrinterList, 
-		MOTIF_XP_LIBS="-lXp",
-		[MISSING_MOTIF="$MISSING_MOTIF -lXp"], $XLIBS)
-	fi
-
-	LDFLAGS="$_SAVE_LDFLAGS"
-    fi
-
-    TK_LIBS="$XLDFLAGS $TK_LIBS"
-
-    if test "$MOTIF_STATIC_LIB" = "unknown" \
-         -a "$MOTIF_DYNAMIC_LIB" = "unknown"; then
-	AC_ERROR("Cannot find either dynamic or static Motif libraries.")
-    fi
-
-    # Get rid of offending error values
-    if test "$MOTIF_DYNAMIC_PATHS" = "unknown"; then 
-	MOTIF_DYNAMIC_PATHS=
-    fi
-
-    if test "$MOTIF_DYNAMIC_FLAGS" = "unknown"; then 
-	MOTIF_DYNAMIC_FLAGS=
-    fi
-
-    if test "$MOTIF_STATIC_FLAGS" = "unknown"; then 
-	MOTIF_STATIC_FLAGS=
-    fi
-
-    if test "$MOTIF_INCLUDE_DIR" = "unknown"; then
-	MOTIF_INCLUDE_DIR=
-    fi
-
-    TK_LIBS="$MOTIF_XP_LIBS $TK_LIBS $X_LIBS $XT_LIBS $XMU_LIBS $XPM_LIBS $XEXT_LIBS $X11_LIBS $XSM_LIBS $XICE_LIBS"
-
-    AC_ARG_WITH(static-motif,
-    [  --with-static-motif     link Motif statically if possible],
-	sysstaticmotif=$withval)
-
-    if test "$sysstaticmotif" != "yes"; then
+if test "$no_x" != "yes"
+then
+	XLIBS="-lX11 $XLIBS"
 	_SAVE_LDFLAGS="$LDFLAGS"
-    	LDFLAGS="$MOTIF_DYNAMIC_PATHS $XLDFLAGS $LDFLAGS"
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_LIBS="$MOTIF_DYNAMIC_PATHS $MOTIF_DYNAMIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_DYNAMIC_FLAGS"], 
-	    $MOTIF_DYNAMIC_PATHS $TK_LIBS $XLIBS)
+	LDFLAGS="$XLDFLAGS $LDFLAGS"
+	AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
+		[MISSING_X="$MISSING_X -lX11"], $XLIBS)
+	AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
+		[MISSING_X="$MISSING_X -lXext"], $XLIBS)
+	AC_CHECK_LIB(ICE, IceFlush, [XICE_LIBS="-lICE"],, $XLIBS)
+	AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
+	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
+		[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
+	AC_CHECK_LIB(Xmu, XmuLookupString, [XMU_LIBS="-lXmu"],
+		[MISSING_X="$MISSING_X -lXmu"], $X_PRE_LIBS $XLIBS $XT_LIBS $XEXT_LIBS)
 	LDFLAGS="$_SAVE_LDFLAGS"
-    else
-    	AC_CHECK_LIB(Xm, XmStringCreate, 
-	    TK_LIBS="$MOTIF_STATIC_FLAGS $TK_LIBS",
-	    [MISSING_MOTIF="$MISSING_MOTIF $MOTIF_STATIC_FLAGS"], 
-	    $TK_LIBS $XLIBS)
-    fi
 
-    TK_CFLAGS="$MOTIF_INCLUDES"
-fi
+	dnl ========================================================
+	dnl =
+	dnl = --enable-toolkit
+	dnl = 
+	dnl = Select the default x toolkit
+	dnl = 
+	dnl ========================================================
+	AC_ARG_ENABLE(toolkit,
+	[  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
+	  [	if test "$enableval" = "motif" \
+	        -o "$enableval" = "gtk" \
+	        -o "$enableval" = "qt" \
+	        -o "$enableval" = "xlib"
+		then
+		     dnl nglayout only supports building with one toolkit,
+		     dnl so ignore everything after the first comma (",").
+		     MOZ_WIDGET_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
+		else
+		     AC_MSG_ERROR(Toolkit must be Xlib, GTK, Qt, or Motif.)
+		fi], 
 
-if echo ":$MOZ_WIDGET_TOOLKIT" | grep "gtk" >/dev/null; then
-    AM_PATH_GTK($GTK_VERSION,,
-      AC_MSG_ERROR(Test for GTK failed.))
-
-    AC_ARG_WITH(static-gtk,
-    [  --with-static-gtk       link gtk statically if possible],
-	sysstaticgtk=$withval)
-
-    if test "$sysstaticgtk" != "yes"; then
-       TK_LIBS=$GTK_LIBS
-    else
-       changequote(,)
-
-       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
-
-       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
-       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
-       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
-
-       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
-       if test ! "$GLIB_STATIC_LOC" ; then
-         GLIB_STATIC_LOC=$GTK_STATIC_LOC
-       fi
-       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
-       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
-
-       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
-
-       changequote([,])
-
-       TK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
-       TK_LIBS="$TK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
-    fi
-    TK_CFLAGS=$GTK_CFLAGS
-fi
-
-if echo ":$MOZ_WIDGET_TOOLKIT" | grep "qt" >/dev/null; then
-    QT_CFLAGS="-I${QTDIR}/include"
-    QT_LIBS="-L/usr/X11R6/lib -lqt -lXext -lX11"
-dnl    AM_PATH_QT($QT_VERSION,,
-dnl      AC_MSG_ERROR(Test for QT failed.))
-
-    AC_ARG_WITH(static-qt,
-    [  --with-static-qt       link qt statically if possible],
-	sysstaticqt=$withval)
-
-    if test "$sysstaticqt" != "yes"; then
-       TK_LIBS=$QT_LIBS
-    else
-       changequote(,)
-
-       QT_LIBS_LOC=`echo $QT_LIBS | sed 's/\(.*\)\(-lqt.*\)/\1/'`
-
-       QT_STATIC_LOC=`echo $QT_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
-       QT_STATIC=`echo $QT_LIBS | sed 's/^.*-l\(qt[^ ]*\) .*/\1/'`
-
-       changequote([,])
-
-       TK_LIBS="$QT_STATIC_LOC/lib${QT_STATIC}.a"
-       TK_LIBS="$TK_LIBS $QT_STATIC_LOC/lib${QT_STATIC}.a"
-       TK_LIBS="$TK_LIBS $QT_LIBS_LOC"
-    fi
-    TK_CFLAGS=$QT_CFLAGS
-fi 
-
-# tk=xlib build.
-if echo ":$MOZ_WIDGET_TOOLKIT" | grep "xlib" >/dev/null; then
-    TK_CFLAGS='$(XCFLAGS)'
-    TK_LIBS='$(XLDFLAGS)'
-    TK_LIBS="$TK_LIBS $XEXT_LIBS $X11_LIBS"
-fi
-
+	  [	MOZ_WIDGET_TOOLKIT="gtk" ])
 fi # $no_x
+
+
 
 # BeOS toolkit setting
 if test "`echo $target_os | egrep "beos"`"; then
@@ -774,49 +602,75 @@ if test "`echo $target_os | egrep "nto"`"; then
         TK_LIBS='-lphoton -lphrender'
 fi
 
+dnl XXX BROKEN dnl ========================================================
+dnl XXX BROKEN dnl =
+dnl XXX BROKEN dnl = --enable-gfx-toolkit
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = Select which toolkit to use for gfx (rendering)
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = Choices are:
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = gtk
+dnl XXX BROKEN dnl = motif
+dnl XXX BROKEN dnl = xlib
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = Default is whatever MOZ_WIDGET_TOOLKIT is
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = The only valid combinations are:
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = widget       gfx
+dnl XXX BROKEN dnl = ------       ---
+dnl XXX BROKEN dnl = gtk          gtk
+dnl XXX BROKEN dnl = motif        motif
+dnl XXX BROKEN dnl = xlib         xlib
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl = motif        xlib (broken)
+dnl XXX BROKEN dnl = gtk          xlib (not tested yet)
+dnl XXX BROKEN dnl = 
+dnl XXX BROKEN dnl ========================================================
+dnl XXX BROKEN dnl MOZ_GFX_TOOLKIT=$MOZ_WIDGET_TOOLKIT
+dnl XXX BROKEN dnl 
+dnl XXX BROKEN dnl AC_ARG_ENABLE(gfx-toolkit,
+dnl XXX BROKEN dnl [  --enable-gfx-toolkit=\$val   Enable \$val fe (defaults to same as widget)],
+dnl XXX BROKEN dnl   [ MOZ_GFX_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"` ], 
+dnl XXX BROKEN dnl   [])
+dnl XXX BROKEN dnl 
+dnl XXX BROKEN dnl 
+dnl XXX BROKEN dnl if echo ":$MOZ_GFX_TOOLKIT" | grep "xlib" >/dev/null
+dnl XXX BROKEN dnl then
+dnl XXX BROKEN dnl   MOZ_XLIBRGB_LDFLAGS=-lxlibrgb
+dnl XXX BROKEN dnl   MOZ_USING_XLIBRGB=1
+dnl XXX BROKEN dnl 
+dnl XXX BROKEN dnl   AC_DEFINE(MOZ_USING_XLIBRGB)
+dnl XXX BROKEN dnl 
+dnl XXX BROKEN dnl   AC_SUBST(MOZ_XLIBRGB_LDFLAGS)
+dnl XXX BROKEN dnl   AC_SUBST(MOZ_USING_XLIBRGB)
+dnl XXX BROKEN dnl fi
+
 dnl ========================================================
-dnl =
-dnl = --enable-gfx-toolkit
-dnl = 
-dnl = Select which toolkit to use for gfx (rendering)
-dnl = 
-dnl = Choices are:
-dnl = 
-dnl = gtk
-dnl = motif
-dnl = xlib
-dnl = 
-dnl = Default is whatever MOZ_WIDGET_TOOLKIT is
-dnl = 
-dnl = The only valid combinations are:
-dnl = 
-dnl = widget       gfx
-dnl = ------       ---
-dnl = gtk          gtk
-dnl = motif        motif
-dnl = xlib         xlib
-dnl = 
-dnl = motif        xlib (broken)
-dnl = gtk          xlib (not tested yet)
-dnl = 
+dnl = 													   =
+dnl = Enable the toolkit as needed                         =
+dnl = 													   =
 dnl ========================================================
-MOZ_GFX_TOOLKIT=$MOZ_WIDGET_TOOLKIT
 
-AC_ARG_ENABLE(gfx-toolkit,
-[  --enable-gfx-toolkit=\$val   Enable \$val fe (defaults to same as widget)],
-  [ MOZ_GFX_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"` ], 
-  [])
-
-
-if echo ":$MOZ_GFX_TOOLKIT" | grep "xlib" >/dev/null
+if test "$MOZ_WIDGET_TOOLKIT" = "gtk"
 then
-  MOZ_XLIBRGB_LDFLAGS=-lxlibrgb
-  MOZ_USING_XLIBRGB=1
+	MOZ_ENABLE_GTK=1
+fi
 
-  AC_DEFINE(MOZ_USING_XLIBRGB)
+if test "$MOZ_WIDGET_TOOLKIT" = "xlib"
+then
+	MOZ_ENABLE_XLIB=1
+fi
 
-  AC_SUBST(MOZ_XLIBRGB_LDFLAGS)
-  AC_SUBST(MOZ_USING_XLIBRGB)
+if test "$MOZ_WIDGET_TOOLKIT" = "qt"
+then
+	MOZ_ENABLE_QT=1
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "motif"
+then
+	MOZ_ENABLE_MOTIF=1
 fi
 
 
@@ -1071,11 +925,15 @@ fi
 
 if test "$MOZ_ENABLE_QT"
 then
+	AC_ARG_WITH(qtdir,
+	[  --with-qtdir		Specify Qt directory ],
+	[ QTDIR=$withval],
+	[ QTDIR="/usr"])
+
 	AC_MSG_CHECKING(for Qt insanity)
 
-
     QT_CFLAGS="-I${QTDIR}/include"
-    QT_LIBS="-L/usr/X11R6/lib -lqt -lXext -lX11"
+    QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
 
@@ -1108,6 +966,45 @@ dnl = End Qt support hackery                               =
 dnl = 													   =
 dnl ========================================================
 
+
+
+dnl ========================================================
+dnl = 													   =
+dnl = Define TK_LIBS and TK_CFLAGS for apps that need to   =
+dnl = link in the toolkit (like viewer)                    =
+dnl = 													   =
+dnl ========================================================
+if test "$MOZ_WIDGET_TOOLKIT" = "gtk"
+then
+	TK_CFLAGS="$MOZ_GTK_CFLAGS"
+	TK_LIBS="$MOZ_GTK_LDFLAGS"
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "xlib"
+then
+	TK_CFLAGS="$MOZ_XLIB_CFLAGS"
+	TK_LIBS="$MOZ_XLIB_LDFLAGS"
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "qt"
+then
+	TK_CFLAGS="$MOZ_QT_CFLAGS"
+	TK_LIBS="$MOZ_QT_LDFLAGS"
+fi
+
+if test "$MOZ_WIDGET_TOOLKIT" = "motif"
+then
+	TK_CFLAGS="$MOZ_MOTIF_CFLAGS"
+	TK_LIBS="$MOZ_MOTIF_LDFLAGS"
+fi
+
+dnl ========================================================
+dnl = 													   =
+dnl = Make sure a default toolkit is set                   =
+dnl = 													   =
+dnl ========================================================
+AC_DEFINE_UNQUOTED(MOZ_DEFAULT_TOOLKIT,"$MOZ_WIDGET_TOOLKIT")
+
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
@@ -1127,7 +1024,7 @@ AC_SUBST(MOZ_XLIB_CFLAGS)
 AC_SUBST(MOZ_XLIB_LDFLAGS)
 AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
-AC_SUBST(MOZ_SINGLE_TOOLKIT)
+AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 
 XCFLAGS="$X_CFLAGS"
 
@@ -1980,11 +1877,83 @@ MOZ_ARG_ENABLE_BOOL(brprof,
   MOZ_BRPROF=1
   AC_DEFINE(MOZ_BRPROF))
 
-dnl Toolkit exorcism - a temporary hack.
-MOZ_ARG_ENABLE_BOOL(toolkit-exorcism,
-[  --enable-toolkit-exorcism           Exorcise toolkit specific link time dependencies],
-  TOOLKIT_EXORCISM=1
-  AC_DEFINE(TOOLKIT_EXORCISM))
+dnl ========================================================
+dnl =
+dnl = --enable-monolithic-toolkit
+dnl =
+dnl = We dont need to link in the toolkit statically into the
+dnl = app.  With the exception of some test programs (most
+dnl = notably the gecko viewer) mozilla does not have any
+dnl = toolkit specific code in the "app"
+dnl =
+dnl = The only places where toolkit specific code is needed
+dnl = are:
+dnl =
+dnl = mozilla/widget
+dnl = mozilla/widget/timer
+dnl = mozilla/gfx
+dnl =
+dnl = These components themselves link with the toolkit.  At
+dnl = runtime, Mozilla will dlopen() these components and 
+dnl = use the code in them without having to link with them.
+dnl =
+dnl = This all happens through XPCOM.
+dnl =
+dnl = Doing this makes it possible to have one single set of
+dnl = binaries for mozilla which can effectively use a 
+dnl = different widget toolkit at runtime.
+dnl =
+dnl = However, on some unik platforms, the linker (ld) and the
+dnl = runtime loader (ld.so) might not be smart enough to 
+dnl = resolve toolkit dependencies linked into components
+dnl = which are later dlopen()ed by mozilla.
+dnl =
+dnl = For this reason, the --enable-monolithic-toolkit flag
+dnl = is provided.  If set, it will cause the toolkit libs
+dnl = to be linked in to mozilla itself, and not the 
+dnl = 3 components above (widget, gfx and timer).
+dnl =
+dnl = In the case statement following this comment, I have
+dnl = force the toolkit to be monolithic for all platforms
+dnl = that are not Linux and Solaris, as these are the only
+dnl = ones that I could test.
+dnl =
+dnl = If you have questions, comments, or problems getting
+dnl = this to work on your platform, send me email:
+dnl = 
+dnl = ramiro@netscape.com
+dnl =
+dnl ========================================================
+
+dnl Assume life sucks
+MOZ_MONOLITHIC_TOOLKIT=1
+
+dnl The following are the only platforms I tested  -ramiro
+case "$target" in
+    *-*-linux*) 
+		MOZ_MONOLITHIC_TOOLKIT=
+		;;
+
+    *-*-solaris*) 
+		MOZ_MONOLITHIC_TOOLKIT=
+		;;
+esac
+
+
+MOZ_ARG_ENABLE_BOOL(monolithic-toolkit,
+[  --enable-monolithic-toolkit        Link the toolkit into the app],
+  MOZ_MONOLITHIC-TOOLKIT=1)
+
+
+if test "$MOZ_MONOLITHIC_TOOLKIT"
+then
+  AC_DEFINE(MOZ_MONOLITHIC_TOOLKIT)
+fi
+dnl ========================================================
+dnl =
+dnl = End MOZ_MONOLITHIC_TOOLKIT hacks
+dnl =
+dnl ========================================================
 
 dnl ========================================================
 dnl =
@@ -2380,7 +2349,7 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(NECKO)
-AC_SUBST(TOOLKIT_EXORCISM)
+AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
