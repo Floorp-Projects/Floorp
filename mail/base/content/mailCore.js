@@ -128,7 +128,8 @@ function openOptionsDialog(containerID, paneURL, itemID)
                "chrome,titlebar,resizable=yes", paneURL, containerID, itemID);
 }
 
-# Macintosh window menu functions
+// Macintosh window menu functions
+
 #ifdef XP_MACOSX
 const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
 
