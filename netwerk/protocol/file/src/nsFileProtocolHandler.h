@@ -72,7 +72,6 @@ public:
     nsresult ProcessPendingRequests(void);
 
 protected:
-    nsISupports*        mEventSinkGetter;
     nsIThreadPool*      mPool;
     nsISupportsArray*   mSuspended;
 };
