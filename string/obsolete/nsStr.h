@@ -410,6 +410,8 @@ struct NS_COM nsStr {
   static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset);
   static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
+  static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
+
   static PRBool   DidAcquireMemory(void);
 
   /**

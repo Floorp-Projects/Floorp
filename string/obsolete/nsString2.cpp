@@ -478,6 +478,72 @@ nsString& nsString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
 
 /**
  *  This method is used to replace all occurances of the
+ *  given target with the given replacement
+ *  
+ *  @param  
+ *  @return *this 
+ */
+nsString& nsString::ReplaceSubstring(const PRUnichar* aTarget,const PRUnichar* aNewValue){
+  if(aTarget && aNewValue) {
+
+    PRInt32 len=nsCRT::strlen(aTarget);
+    if(0<len) {
+      CBufDescriptor theDesc1(aTarget,PR_TRUE, len+1,len);
+      nsAutoString theTarget(theDesc1);
+
+      len=nsCRT::strlen(aNewValue);
+      if(0<len) {
+        CBufDescriptor theDesc2(aNewValue,PR_TRUE, len+1,len);
+        nsAutoString theNewValue(theDesc2);
+
+        ReplaceSubstring(theTarget,theNewValue);
+      }
+    }
+  }
+  return *this;}
+
+/**
+ *  This method is used to replace all occurances of the
+ *  given target substring with the given replacement substring
+ *  
+ *  @param aTarget
+ *  @param aNewValue
+ *  @return *this 
+ */
+nsString& nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
+
+
+  //WARNING: This is not working yet!!!!!
+
+  if(aTarget.mLength && aNewValue.mLength) {
+    PRBool isSameLen=(aTarget.mLength==aNewValue.mLength);
+
+    if((isSameLen) && (1==aNewValue.mLength)) {
+      ReplaceChar(aTarget.CharAt(0),aNewValue.CharAt(0));
+    }
+    else {
+      PRInt32 theIndex=0;
+      while(kNotFound!=(theIndex=nsStr::FindSubstr(*this,aTarget,PR_FALSE,theIndex))) {
+        if(aNewValue.mLength<aTarget.mLength) {
+          //Since target is longer than newValue, we should delete a few chars first, then overwrite.
+          PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
+          nsStr::Delete(*this,theIndex,theDelLen);
+        }
+        else {
+          //this is the worst case: the newvalue is larger than the substr it's replacing
+          //so we have to insert some characters...
+          PRInt32 theInsLen=aNewValue.mLength-aTarget.mLength;
+          nsStr::Insert(*this,theIndex,aNewValue,0,theInsLen);
+        }
+        nsStr::Overwrite(*this,aNewValue,theIndex);
+      }
+    }
+  }
+  return *this;
+}
+
+/**
+ *  This method is used to replace all occurances of the
  *  given source char with the given dest char
  *  
  *  @param  

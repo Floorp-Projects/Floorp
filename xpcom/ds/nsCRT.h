@@ -144,7 +144,12 @@ public:
 
   /// Case-insensitive string comparison with length
   static PRInt32 strncasecmp(const char* s1, const char* s2, PRUint32 aMaxLen) {
-    return PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
+    PRInt32 result=PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
+    //Egags. PL_strncasecmp is returning *very* negative numbers.
+    //Some folks expect -1,0,1, so let's temper it's enthusiasm.
+    if(result<0) 
+      result=-1;
+    return result;
   }
 
   static PRInt32 strncmp(const char* s1, const char* s2, PRInt32 aMaxLen) {

@@ -258,6 +258,9 @@ public:
   nsCString& ReplaceChar(PRUnichar aOldChar,PRUnichar aNewChar);
   nsCString& ReplaceChar(const char* aSet,PRUnichar aNewChar);
 
+  nsCString& ReplaceSubstring(const nsCString& aTarget,const nsCString& aNewValue);
+  nsCString& ReplaceSubstring(const char* aTarget,const char* aNewValue);
+
   PRInt32 CountChar(PRUnichar aChar);
 
   /**
