@@ -45,7 +45,7 @@
 #define STATFS statfs
 #endif
 
-#include <wait.h>
+#include <sys/wait.h>
 
 
 static GtkWidget        *sBrowseBtn;
