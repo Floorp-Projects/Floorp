@@ -4,25 +4,29 @@ var err = initInstall("XMLterm v0.5",  // name for install UI
 
 logComment("initInstall: " + err);
 
-var fProgram = getFolder("Program");
+var fProgram    = getFolder("Program");
 var fComponents = getFolder("Components");
-var fXMLterm = getFolder("Chrome","packages/xmlterm");
+var fChrome     = getFolder("Chrome");
 
 // addDirectory: blank, archive_dir, install_dir, subdir
-err = addDirectory("", "bin",                     fProgram,    "");
+err = addDirectory("", "bin",        fProgram,    "");
 if (err != SUCCESS)
    cancelInstall(err);
 
-err = addDirectory("", "components",              fComponents, "");
+err = addDirectory("", "components", fComponents, "");
 if (err != SUCCESS)
    cancelInstall(err);
 
-err = addDirectory("", "chrome/packages/xmlterm", fXMLterm,    "");
+err = addDirectory("", "chrome",     fChrome,     "");
 if (err != SUCCESS)
    cancelInstall(err);
 
 // Register chrome
-err = registerChrome(PACKAGE|DELAYED_CHROME, fXMLterm );
+registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","xmlterm.jar"), "content/xmlterm/");
+
+registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","xmlterm.jar"), "skin/modern/xmlterm/");
+
+registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","xmlterm.jar"), "locale/en-US/xmlterm/");
 
 if (getLastError() == SUCCESS)
     performInstall();

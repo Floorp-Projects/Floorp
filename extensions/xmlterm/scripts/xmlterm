@@ -34,13 +34,5 @@ fi
 echo cd $MOZILLA_DIR
 cd $MOZILLA_DIR
 
-if [ -f chrome/packages/xmlterm/xmlterm/content/$XMLTERM_CHROME ]
-then
-    dummy=0
-else
-    echo "chrome://xmlterm/content/$XMLTERM_CHROME not found; error in installing XMLterm?"
-    exit 1
-fi
-
-echo ./run-mozilla.sh $MOZILLA_BIN -chrome "chrome://xmlterm/content/$XMLTERM_CHROME"
-./run-mozilla.sh $MOZILLA_BIN -chrome "chrome://xmlterm/content/$XMLTERM_CHROME"
+echo ./run-mozilla.sh $MOZILLA_BIN -telnet
+./run-mozilla.sh $MOZILLA_BIN -telnet

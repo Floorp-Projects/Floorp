@@ -89,11 +89,10 @@ xpi::
 	zip $(DIST)/bin/$(XPIFILE) install.js
 	cd $(DIST); zip -g bin/$(XPIFILE) \
                bin/xcat \
-               bin/xls \
-               bin/xmlterm
+               bin/xls
 	cd $(DIST)/bin; zip -g $(XPIFILE) \
                components/libxmlterm.so \
                components/xmlterm.xpt \
                components/xmlterm-service.js
-	cd $(DIST)/bin; zip -g -r $(XPIFILE) chrome/packages/xmlterm
+	cd $(DIST)/bin; zip -g -r $(XPIFILE) chrome/xmlterm.jar
 	echo Created $(DIST)/bin/$(XPIFILE)
