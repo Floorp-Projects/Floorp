@@ -2570,7 +2570,17 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     PK11CertListType type = listCertP->type;
     CERTCertList *certList = listCertP->certList;
     CERTCertTrust *trust;
+    PRBool isUnique = PR_FALSE;
+    char *nickname = NULL;
 
+
+    if ((type == PK11CertListUnique) || (type == PK11CertListRootUnique)) {
+	isUnique = PR_TRUE;
+    }
+    /* at this point the nickname is correct for the cert. save it for later */
+    if (!isUnique) {
+         nickname = PORT_ArenaStrdup(listCertP->certList->arena,cert->nickname);
+    }
     if (derCert == NULL) {
 	newCert=CERT_DupCertificate(cert);
     } else {
@@ -2583,16 +2593,24 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 
     /* if we want user certs and we don't have one skip this cert */
     if ((type == PK11CertListUser) && 
-	( (cert->slot == NULL) || 
-	  (trust == NULL) || (((trust->sslFlags & CERTDB_USER == 0)  && 
-				((trust->emailFlags & CERTDB_USER) == 0))) ) ) {
+	  ((trust == NULL) || 
+		( ((trust->sslFlags & CERTDB_USER) == 0)  && 
+			((trust->emailFlags & CERTDB_USER) == 0) )) ) {
+	CERT_DestroyCertificate(newCert);
+	return SECSuccess;
+    }
+
+    /* if we want root certs, skip the user certs */
+    if ((type == PK11CertListRootUnique) && 
+	  ((trust) && (((trust->sslFlags & CERTDB_USER )  || 
+				(trust->emailFlags & CERTDB_USER))) ) ) {
 	CERT_DestroyCertificate(newCert);
 	return SECSuccess;
     }
 
 
     /* if we want Unique certs and we already have it on our list, skip it */
-    if ((type == PK11CertListUnique) && (isOnList(certList,newCert))) {
+    if ( isUnique && isOnList(certList,newCert) ) {
 	CERT_DestroyCertificate(newCert);
 	return SECSuccess;
     }
@@ -2600,9 +2618,9 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 
     /* put slot certs at the end */
     if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
-    	CERT_AddCertToListTail(certList,newCert);
+    	CERT_AddCertToListTailWithData(certList,newCert,nickname);
     } else {
-    	CERT_AddCertToListHead(certList,newCert);
+    	CERT_AddCertToListHeadWithData(certList,newCert,nickname);
     }
     return SECSuccess;
 }
@@ -2618,7 +2636,8 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     listCerts.type = type;
     listCerts.certList = certList;
 
-    SEC_TraversePermCerts(CERT_GetDefaultCertDB(),pk11ListCertCallback,&listCerts);
+    SEC_TraversePermCerts(CERT_GetDefaultCertDB(),pk11ListCertCallback,
+								&listCerts);
 
     PK11_TraverseSlotCerts(pk11ListCertCallback,&listCerts,pwarg);
 
