@@ -2337,13 +2337,12 @@ js_Interpret(JSContext *cx, jsval *result)
             ok = OBJ_LOOKUP_PROPERTY(cx, origobj, rval, &obj2, &prop);
             if (!ok)
                 goto out;
-            if (prop) {
+            if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
 
-                /* Yes, don't enumerate again.  Go to the next property. */
-                if (obj2 != obj)
-                    goto enum_next_property;
-            }
+            /* If the id was deleted, or found in a prototype, skip it. */
+            if (!prop || obj2 != obj)
+                goto enum_next_property;
 
             /* Make sure rval is a string for uniformity and compatibility. */
             if (!JSVAL_IS_INT(rval)) {
