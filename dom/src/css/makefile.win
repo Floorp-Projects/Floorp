@@ -21,6 +21,7 @@ CPPSRCS =				\
   nsJSCSSStyleRuleCollection.cpp  \
   nsJSCSSStyleSheet.cpp \
   nsJSCSSUnknownRule.cpp \
+  nsJSCSSValue.cpp \
 	$(NULL)
 
 CPP_OBJS=						\
@@ -35,6 +36,7 @@ CPP_OBJS=						\
   .\$(OBJDIR)\nsJSCSSStyleRuleCollection.obj \
   .\$(OBJDIR)\nsJSCSSStyleSheet.obj \
   .\$(OBJDIR)\nsJSCSSUnknownRule.obj \
+  .\$(OBJDIR)\nsJSCSSValue.obj \
 	$(NULL)
 
 

@@ -787,6 +787,9 @@ public:
   DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
   ~DOMCSSDeclarationImpl(void);
 
+  NS_IMETHOD RemoveProperty(const nsString& aPropertyName, 
+                            nsString& aReturn);
+
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
@@ -811,6 +814,34 @@ DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
 DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 {
   MOZ_COUNT_DTOR(DOMCSSDeclarationImpl);
+}
+
+NS_IMETHODIMP
+DOMCSSDeclarationImpl::RemoveProperty(const nsString& aPropertyName, 
+                                      nsString& aReturn)
+{
+  aReturn.Truncate();
+
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult rv = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+
+  if (NS_SUCCEEDED(rv) && decl) {
+    nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
+    nsCSSValue val;
+
+#if 0 // This is not done yet, once it is this ifdef should be removed
+    rv = decl->RemoveProperty(prop, val);
+#else
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    val.ToString(aReturn, prop);
+  }
+
+  return rv;
 }
 
 void 
@@ -906,6 +937,9 @@ DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
 {
   if (nsnull != mRule) {
     return mRule->QueryInterface(kISupportsIID, (void **)aParent);
+  } else {
+    NS_ENSURE_ARG_POINTER(aParent);
+    *aParent = nsnull;
   }
 
   return NS_OK;

@@ -108,6 +108,9 @@ public:
   nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
   ~nsDOMCSSAttributeDeclaration();
 
+  NS_IMETHOD RemoveProperty(const nsString& aPropertyName, 
+                            nsString& aReturn);
+
   virtual void DropReference();
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
@@ -132,6 +135,47 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIHTMLContent *aCont
 nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
 {
   MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
+}
+
+NS_IMETHODIMP
+nsDOMCSSAttributeDeclaration::RemoveProperty(const nsString& aPropertyName,
+                                             nsString& aReturn)
+{
+  nsCOMPtr<nsICSSDeclaration> decl;
+  nsresult rv = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+
+  if (NS_SUCCEEDED(rv) && decl && mContent) {
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+
+    if (doc)
+      doc->BeginUpdate();
+
+    nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
+    nsCSSValue val;
+
+#if 0 // Once nsICSSDeclaration has a RemoveProperty this ifdef should be removed
+    rv = decl->RemoveProperty(prop, val);
+#else
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    val.ToString(aReturn, prop);
+
+    if (doc) {
+      PRInt32 hint;
+      decl->GetStyleImpact(&hint);
+
+      doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style,
+                            hint);
+      doc->EndUpdate();
+    }
+  }
+
+  return rv;
 }
 
 void 

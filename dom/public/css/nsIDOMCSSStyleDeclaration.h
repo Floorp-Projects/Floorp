@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMCSSRule;
+class nsIDOMCSSValue;
 
 #define NS_IDOMCSSSTYLEDECLARATION_IID \
  { 0xa6cf90be, 0x15b3, 0x11d2, \
@@ -42,7 +44,13 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule)=0;
+
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn)=0;
+
+  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn)=0;
+
+  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn)=0;
 
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn)=0;
 
@@ -56,7 +64,10 @@ public:
   NS_IMETHOD    GetCssText(nsString& aCssText);  \
   NS_IMETHOD    SetCssText(const nsString& aCssText);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);  \
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn);  \
+  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn);  \
+  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn);  \
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn);  \
   NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);  \
@@ -67,7 +78,10 @@ public:
   NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
   NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule) { return _to GetParentRule(aParentRule); } \
   NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyValue(aPropertyName, aReturn); }  \
+  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName, nsIDOMCSSValue** aReturn) { return _to GetPropertyCSSValue(aPropertyName, aReturn); }  \
+  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName, nsString& aReturn) { return _to RemoveProperty(aPropertyName, aReturn); }  \
   NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName, nsString& aReturn) { return _to GetPropertyPriority(aPropertyName, aReturn); }  \
   NS_IMETHOD    SetProperty(const nsString& aPropertyName, const nsString& aValue, const nsString& aPriority) { return _to SetProperty(aPropertyName, aValue, aPriority); }  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to Item(aIndex, aReturn); }  \

@@ -1,18 +1,22 @@
-
-    interface CSSStyleDeclaration {
+interface CSSStyleDeclaration {
  /* IID: { 0xa6cf90be, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-      attribute wstring cssText; 
+  attribute DOMString        cssText;
+                                        // raises(DOMException) on setting
 
-      wstring getPropertyValue(in wstring propertyName); 
-      wstring getPropertyPriority(in wstring propertyName); 
-      void setProperty(in wstring propertyName, in wstring value, in wstring 
-priority); 
-      readonly attribute unsigned long length; 
-      wstring item(in unsigned long index); /* Returns property name */ 
-    };
+  DOMString          getPropertyValue(in DOMString propertyName);
+  CSSValue           getPropertyCSSValue(in DOMString propertyName);
+  DOMString          removeProperty(in DOMString propertyName)
+                                        raises(DOMException);
+  DOMString          getPropertyPriority(in DOMString propertyName);
+  void               setProperty(in DOMString propertyName, 
+                                 in DOMString value, 
+                                 in DOMString priority)
+                                        raises(DOMException);
+  readonly attribute unsigned long    length;
+  DOMString          item(in unsigned long index);
+  readonly attribute CSSRule          parentRule;
 
-
-
+};
 
