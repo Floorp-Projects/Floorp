@@ -378,8 +378,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                 StreamConvService, kStreamConverterServiceCID, &rv);
 					    if (NS_FAILED(rv)) return rv;
 
-					    nsString2 fromStr ( compressHeader );
-					    nsString2 toStr   ( "uncompressed" );
+					    nsString fromStr ( compressHeader );
+					    nsString toStr   ( "uncompressed" );
 				    
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
@@ -406,8 +406,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                 StreamConvService, kStreamConverterServiceCID, &rv);
 		    			if (NS_FAILED(rv)) return rv;
 
-			    		nsString2 fromStr ( chunkHeader);
-				    	nsString2 toStr   ("unchunked" );
+			    		nsString fromStr ( chunkHeader);
+				    	nsString toStr   ("unchunked" );
 				    
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
