@@ -202,7 +202,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(GrafPtr aPort)
 NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
 {
 	// get our native graphics port from the widget
- 	mPort = static_cast<GrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_DISPLAY));
+ 	mPort = reinterpret_cast<GrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_GRAPHIC));
 	mGS->Init(aTheWidget);
   return NS_OK;
 }
