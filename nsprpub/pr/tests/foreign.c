@@ -264,7 +264,7 @@ static void OneShot(void *arg)
             break;
             
         case 6:
-            dir = PR_OpenDir("/usr/tmp/"); 
+            dir = PR_OpenDir("/tmp/"); 
 			DPRINTF((output,"Thread[0x%x] called PR_OpenDir\n",
 			PR_GetCurrentThread()));
             PR_CloseDir(dir);
