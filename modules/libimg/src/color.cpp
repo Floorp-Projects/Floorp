@@ -21,7 +21,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.5 1999/02/10 04:29:17 mcafee%netscape.com Exp $
+   $Id: color.cpp,v 3.6 1999/03/26 09:50:40 ramiro%netscape.com Exp $
 */
 
 
@@ -488,12 +488,32 @@ ConvertRGBToRGB24(il_container *ic,
     const uint8 *end = sp + num*3;
 	/* XXX this is a hack because it ignores the shifts */
 
+    // The XP_UNIX define down here is needed because the unix gtk
+    // image munging code expects the image data to be in RGB format.
+    //
+    // The conversion below is obviously a waste of time on unix and 
+    // probably mac.
+    //
+    // Unfortunately, the alternative seems to require significant IMGLIB
+    // work.  Simply seeting to ic->converter to NULL for the 24 bit case
+    // did not work as expected.
+    //
+    // The correct fix might be to not do any conversion if the image data
+    // is already in the format expected on the nsIImage end.
+    //
+    // -ramiro
     if (!mask)
     {
         while (sp < end) {
+#if !defined(XP_UNIX)
             out[2] = sp[0];
             out[1] = sp[1];
             out[0] = sp[2];
+#else
+            out[0] = sp[0];
+            out[1] = sp[1];
+            out[2] = sp[2];
+#endif
             out+=3;
             sp+=3;
         }
@@ -501,9 +521,15 @@ ConvertRGBToRGB24(il_container *ic,
         while (sp < end) {
             if (*mask++)
             {
-                out[2] = sp[0];
-                out[1] = sp[1];
-                out[0] = sp[2];
+#if !defined(XP_UNIX)
+            out[2] = sp[0];
+            out[1] = sp[1];
+            out[0] = sp[2];
+#else
+            out[0] = sp[0];
+            out[1] = sp[1];
+            out[2] = sp[2];
+#endif
             }
             out+=3;
             sp+=3;
