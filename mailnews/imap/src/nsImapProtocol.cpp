@@ -17,6 +17,9 @@
  */
 
 #include "msgCore.h"  // for pre-compiled headers
+#ifdef XP_PC
+#include <windows.h>    // for InterlockedIncrement
+#endif
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
@@ -26,7 +29,6 @@
 #include "nsIMAPBodyShell.h"
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
-#include "nsIMsgIdentity.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -38,9 +40,7 @@ PRLogModuleInfo *IMAP;
 
 #include "nsString2.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
+#include "nsIMsgIncomingServer.h"
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
 
@@ -126,7 +126,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_pseudoInterrupted = PR_FALSE;
 
     // imap protocol sink interfaces
-    m_identity = nsnull;
+    m_server = nsnull;
     m_imapLog = nsnull;
     m_imapMailfolder = nsnull;
     m_imapMessage = nsnull;
@@ -138,7 +138,7 @@ nsImapProtocol::nsImapProtocol() :
 		IMAP = PR_NewLogModule("IMAP");
 }
 
-nsresult nsImapProtocol::Initialize(PLEventQueue * aSinkEventQueue)
+nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue)
 {
 	NS_PRECONDITION(aSinkEventQueue, "oops...trying to initalize with a null sink event queue!");
 	if (!aSinkEventQueue)
@@ -154,7 +154,7 @@ nsImapProtocol::~nsImapProtocol()
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
-    NS_IF_RELEASE(m_identity);
+    NS_IF_RELEASE(m_server);
     NS_IF_RELEASE(m_imapLog);
     NS_IF_RELEASE(m_imapMailfolder);
     NS_IF_RELEASE(m_imapMessage);
@@ -203,6 +203,8 @@ const char*
 nsImapProtocol::GetImapHostName()
 {
     const char* hostName = nsnull;
+	// mscott - i wonder if we should be getting the host name from the url
+	// or from m_server....
     if (m_runningUrl)
         m_runningUrl->GetHost(&hostName);
     return hostName;
@@ -211,9 +213,10 @@ nsImapProtocol::GetImapHostName()
 const char*
 nsImapProtocol::GetImapUserName()
 {
-    const char* userName = nsnull;
-    if (m_identity)
-        m_identity->GetImapName(&userName);
+    char* userName = nsnull;
+	nsIMsgIncomingServer * server = m_server;
+    if (server)
+		server->GetUserName(&userName);
     return userName;
 }
 
@@ -226,8 +229,8 @@ nsImapProtocol::SetupSinkProxy()
                      "fatal... null sink event queue or thread");
         nsresult res;
 
-        if (!m_identity)
-            m_runningUrl->GetIdentity(&m_identity);
+        if (!m_server)
+            m_runningUrl->GetServer(&m_server);
         if (!m_imapLog)
         {
             nsIImapLog *aImapLog;
