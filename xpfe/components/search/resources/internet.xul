@@ -46,7 +46,7 @@
 							<checkbox value="0" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
 					</treerow>
 				</treeitem>
