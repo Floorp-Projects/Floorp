@@ -221,7 +221,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mScreenManager->GetPrimaryScreen ( getter_AddRefs(screen) );
   if ( screen ) {
     PRInt32 x, y, width, height, depth;
-    screen->GetAvailRect ( &x, &y, &width, &height );
+    screen->GetRect ( &x, &y, &width, &height );
     screen->GetPixelDepth ( &depth );
     mWidthFloat = float(width);
     mHeightFloat = float(height);
@@ -504,9 +504,34 @@ NS_IMETHODIMP nsDeviceContextGTK::GetRect(nsRect &aRect)
 
 NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
 {
-  // The client rect is never different from the standard rect on
-  // linux because we don't have the concept of the title bar.
-  return GetRect ( aRect );
+  // if we have an initialized widget for this device context, use it
+  // to try and get real screen coordinates.
+  if (mDeviceWindow) {
+    gint x, y, width, height, depth;
+    x = y = width = height = 0;
+
+    gdk_window_get_geometry(mDeviceWindow, &x, &y, &width, &height,
+                            &depth);
+    gdk_window_get_origin(mDeviceWindow, &x, &y);
+
+    nsCOMPtr<nsIScreen> screen;
+    mScreenManager->ScreenForRect(x, y, width, height, getter_AddRefs(screen));
+    screen->GetAvailRect(&aRect.x, &aRect.y, &aRect.width, &aRect.height);
+    aRect.x = NSToIntRound(mDevUnitsToAppUnits * aRect.x);
+    aRect.y = NSToIntRound(mDevUnitsToAppUnits * aRect.y);
+    aRect.width = NSToIntRound(mDevUnitsToAppUnits * aRect.width);
+    aRect.height = NSToIntRound(mDevUnitsToAppUnits * aRect.height);
+  }
+  else {
+    PRInt32 width, height;
+    GetDeviceSurfaceDimensions(width, height);
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = width;
+    aRect.height = height;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,

@@ -39,23 +39,28 @@
 #define nsScreenGtk_h___
 
 #include "nsIScreen.h"
+#include "nsRect.h"
 
 //------------------------------------------------------------------------
 
 class nsScreenGtk : public nsIScreen
 {
 public:
-  nsScreenGtk ( );
-  virtual ~nsScreenGtk();
+  nsScreenGtk();
+  ~nsScreenGtk();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREEN
 
+  void Init();
+#ifdef MOZ_ENABLE_XINERAMA
+  void Init(XineramaScreenInfo *aScreenInfo);
+#endif
+
+private:
   PRUint32 mScreenNum;
-  PRUint32 mXOrg;
-  PRUint32 mYOrg;
-  PRUint32 mWidth;
-  PRUint32 mHeight;
+  nsRect mRect; // in pixels, not twips
+  nsRect mAvailRect; // in pixels, not twips
 };
 
 #endif  // nsScreenGtk_h___ 
