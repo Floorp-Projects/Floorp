@@ -279,7 +279,7 @@ pref("wallet.fetchPatches",                 false);
 pref("wallet.Server",                       "http://www.mozilla.org/wallet/tables/");
 pref("wallet.version",                      "1");
 pref("wallet.enabled",                      true);
-pref("imageblocker.enabled",                true);
+pref("imageblocker.enabled",                false);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");

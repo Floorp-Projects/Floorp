@@ -35,7 +35,7 @@
           <menuseparator/>
 
           <menu value="&walletMenu.label;">
-            <menupopup  id="personalManagers" oncreate="CheckForWallet()"> 
+            <menupopup  id="personalManagers" oncreate="CheckForWalletAndImage()"> 
               <menu value="&walletPasswordManager.label;">
                 <menupopup>
                   <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
@@ -50,7 +50,7 @@
                   <menuitem value="&walletBlockCookiesCmd.label;" oncommand="WalletAction('cookieBlock');"/> 
                 </menupopup>
               </menu>
-              <menu value="&walletImageManager.label;">
+              <menu value="&walletImageManager.label;" id="image">
                 <menupopup>
                   <menuitem value="&walletDisplayImagesCmd.label;" oncommand="WalletDialog('image');"/> 
                   <menuitem value="&walletAllowImagesCmd.label;" oncommand="WalletAction('imageAllow');"/> 

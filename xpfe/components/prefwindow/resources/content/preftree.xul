@@ -189,7 +189,7 @@
       <treechildren>
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://pref/content/pref-cookies.xul" value="&cookies.label;"/> 
+            <treecell indent="true" url="chrome://pref/content/pref-cookies.xul" value="&cookies.label;" valueWithImages="&cookies.labelWithImages;" id="cookiesCell"/> 
           </treerow>
         </treeitem>
         
