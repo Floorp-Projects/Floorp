@@ -2960,6 +2960,9 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
       // Reflow the child into the available space
       nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
                                         kidFrame, kidAvailSize, reason);
+      // XXX fix up bad mComputedWidth for scroll frame
+      kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth, 0);
+
       if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
         // If this isn't the first row group frame or the header or footer, then
         // we can't be at the top of the page anymore...
