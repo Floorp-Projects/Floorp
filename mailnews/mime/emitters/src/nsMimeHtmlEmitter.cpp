@@ -22,7 +22,12 @@
 #include "nsEmitterUtils.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"
+#include "nsEscape.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
+// For the prefs api
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
 {
@@ -55,6 +60,15 @@ nsMimeHtmlEmitter::nsMimeHtmlEmitter()
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
   mAttachContentType = NULL;
+  mHeaderDisplayType = NormalHeaders;
+  
+  nsIPref     *pref;
+  nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(pref));
+  if ((pref && NS_SUCCEEDED(rv)))
+	{
+    pref->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+    NS_RELEASE(pref);
+  }
 
 #ifdef DEBUG_rhp
   mLogFile = NULL;    /* Temp file to put generated HTML into. */
@@ -115,8 +129,10 @@ nsMimeHtmlEmitter::Complete()
   if (mBufferMgr->GetSize() > 0)
     Write("", 0, &written);
 
+#ifdef DEBUG_rhp
   printf("TOTAL WRITTEN = %d\n", mTotalWritten);
   printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
+#endif
 
 #ifdef DEBUG_rhp
   if (mLogFile) 
@@ -162,6 +178,13 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
   if ( (!field) || (!value) )
     return NS_OK;
 
+  //
+  // This is a check to see what the pref is for header display. If
+  // We should only output stuff that corresponds with that setting.
+  //
+  if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
+    return NS_OK;
+    
   char  *newValue = nsEscapeHTML(value);
   if (!newValue)
     return NS_OK;

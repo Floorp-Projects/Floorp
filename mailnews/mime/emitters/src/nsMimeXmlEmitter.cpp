@@ -24,6 +24,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsEscape.h"
 
 // For the new pref API's
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
@@ -139,8 +140,10 @@ nsMimeXmlEmitter::Complete()
   if (mBufferMgr->GetSize() > 0)
     Write("", 0, &written);
 
+#ifdef DEBUG_rhp
   printf("TOTAL WRITTEN = %d\n", mTotalWritten);
   printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
+#endif
 
 #ifdef DEBUG_rhp
   if (mLogFile) 

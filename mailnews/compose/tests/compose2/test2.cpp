@@ -145,7 +145,7 @@ char *email = {"\
 Message-ID: <375FF6D0.3070505@netscape.com>\
 \nDate: Thu, 10 Jun 1999 13:33:04 -0500\
 \nFrom: rhp@netscape.com\
-\nX-Mailer: Mozilla 5.0 [en] (Win95; I)\
+\nUser-Agent: Mozilla 5.0 [en] (Win95; I)\
 \nX-Accept-Language: en\
 \nMIME-Version: 1.0\
 \nTo: rhp@netscape.com\
