@@ -51,6 +51,10 @@
 nsIRollupListener * gRollupListener = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
+// Since we only want a single notification pending for the app we'll declare
+// these static
+static NMRec	gNMRec;
+static Boolean	gNotificationInstalled = false;
 
 #pragma mark -
 
@@ -489,6 +493,20 @@ NS_IMETHODIMP nsWindow::Enable(PRBool bState)
 }
 
     
+static Boolean we_are_front_process()
+{
+	ProcessSerialNumber	thisPSN;
+	ProcessSerialNumber	frontPSN;
+	(void)::GetCurrentProcess(&thisPSN);
+	if (::GetFrontProcess(&frontPSN) == noErr)
+	{
+		if ((frontPSN.highLongOfPSN == thisPSN.highLongOfPSN) &&
+			(frontPSN.lowLongOfPSN == thisPSN.lowLongOfPSN))
+			return true;
+	}
+	return false;
+}
+
 //-------------------------------------------------------------------------
 //
 // Set the focus on this component
@@ -497,6 +515,14 @@ NS_IMETHODIMP nsWindow::Enable(PRBool bState)
 NS_IMETHODIMP nsWindow::SetFocus(void)
 {
 	gEventDispatchHandler.SetFocus(this);
+	
+	// Here's where we see if there's a notification we need to remove
+	if (gNotificationInstalled && we_are_front_process())
+	{
+		(void)::NMRemove(&gNMRec);
+		gNotificationInstalled = false;
+	}
+	
 	return NS_OK;
 }
 
@@ -1948,6 +1974,38 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& title)
 {
   NS_ASSERTION(0, "Would some Mac person please implement me? Thanks.");
   return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::Flash()
+{
+	// Since the Mac doesn't consider each window a seperate process this call functions
+	// slightly different than on other platforms.  We first check to see if we're the
+	// foreground process and, if so, ignore the call.  We also check to see if a notification
+	// is already pending and, if so, remove it since we only have one notification per process.
+	// After all that checking we install a notification manager request to mark the app's icon
+	// in the process menu and play the default alert sound
+  
+	if (we_are_front_process())
+		return NS_OK;
+  
+	if (gNotificationInstalled)
+	{
+		(void)::NMRemove(&gNMRec);
+		gNotificationInstalled = false;
+	}
+	
+	// Setup and install the notification manager rec
+	gNMRec.qType		= nmType;
+	gNMRec.nmMark		= 1;			// Flag the icon in the process menu
+	gNMRec.nmIcon		= NULL;			// It'd be nice if we had an icon to flash - maybe later
+	gNMRec.nmSound		= (Handle)-1L;	// Use the default alert sound
+	gNMRec.nmStr		= NULL;			// No alert/window so no text
+	gNMRec.nmResp		= NULL;			// No response proc, use the default behavior
+	gNMRec.nmRefCon	= NULL;
+	if (::NMInstall(&gNMRec) == noErr)
+		gNotificationInstalled = true;
+
+	return NS_OK;
 }
 
 #pragma mark -
