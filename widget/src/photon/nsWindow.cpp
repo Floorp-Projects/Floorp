@@ -23,7 +23,6 @@
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
-//#include "nsIRenderingContextPh.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
@@ -59,7 +58,7 @@ nsWindow::nsWindow()
   mShell           = nsnull;
   mFontMetrics     = nsnull;
   mClipChildren    = PR_TRUE;		/* This needs to be true for Photon */
-  mClipSiblings    = PR_FALSE;
+  mClipSiblings    = PR_TRUE;		/* TRUE = Fixes Pop-Up Menus over animations */
   mBorderStyle     = eBorderStyle_default;
   mWindowType      = eWindowType_child;
   mIsResizing      = PR_FALSE;
@@ -92,9 +91,8 @@ ChildWindow::ChildWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::~nsWindow (%p) - Not Implemented.\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::~nsWindow this=(%p)\n", this ));
 
-#if 1
   mIsDestroyingWindow = PR_TRUE;
 
   if ( (mWindowType == eWindowType_dialog) ||
@@ -104,30 +102,23 @@ nsWindow::~nsWindow()
     Destroy();
   }
   NS_IF_RELEASE(mMenuBar);
-
-#else
-  if( mWidget )
-  {
-    RemoveResizeWidget();
-    RemoveDamagedWidget( mWidget );
-  }
-
-  mIsDestroying = PR_TRUE;
-#endif
 }
 
 NS_METHOD nsWindow::Destroy(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Destroy (%p) mIsDestroyingWindow=<%d> mOnDestroyCalled=<%d> mRefCnt=<%d>\n", this, mIsDestroyingWindow,mOnDestroyCalled, mRefCnt));
+/* Pinkerton says this routine is garbage ands will be going away soon */
+/* Removing the test for mIsDestroyingWindow forces the underlieing widget */
+/* to be destroyed. This fixes the problem when the 2 toolbar is collapsed.*/
 
-#if 1
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Destroy (%p) mIsDestroyingWindow=<%d> mOnDestroyCalled=<%d> mRefCnt=<%d>\n", this, mIsDestroyingWindow, mOnDestroyCalled, mRefCnt));
+
   NS_IF_RELEASE(mMenuBar);
 
   // Call base class first... we need to ensure that upper management
   // knows about the close so that if this is the main application
   // window, for example, the application will exit as it should.
 
-  if (mIsDestroyingWindow == PR_TRUE)
+  //if (mIsDestroyingWindow == PR_TRUE)
   {
     nsBaseWidget::Destroy();
     if (PR_FALSE == mOnDestroyCalled)
@@ -138,12 +129,6 @@ NS_METHOD nsWindow::Destroy(void)
 
   RemoveResizeWidget();
   RemoveDamagedWidget( mWidget );
-
-#else
-  RemoveResizeWidget();
-  nsWidget::Destroy();
-#endif
-
   return NS_OK;
 }
 
@@ -200,11 +185,16 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
   {
     SetWindowType( aInitData->mWindowType );
     SetBorderStyle( aInitData->mBorderStyle );
-    mClipChildren = aInitData->clipChildren;
-    mClipSiblings = aInitData->clipSiblings;
+//    mClipChildren = aInitData->clipChildren;
+//    mClipSiblings = aInitData->clipSiblings;
+
+//    if (mWindowType==1) mClipChildren = PR_FALSE; else mClipChildren = PR_TRUE;
+//    if (mWindowType==2) mClipSiblings = PR_TRUE; else mClipSiblings = PR_FALSE;
 
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
       mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
+//    printf("kedl: nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
+//      mClipChildren, mClipSiblings, mBorderStyle, mWindowType);
 
     return NS_OK;
   }
@@ -419,15 +409,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     // call the event callback to notify about creation
     DispatchStandardEvent( NS_CREATE );
 
-#if 0
-/* kirkj hack trying to get modal dialogs to work better */
-    if ( ( mWindowType == eWindowType_dialog ) || 
-	     ( mWindowType == eWindowType_child ) )
-    {
-	  this->Show(PR_TRUE);
-    }
-#endif
-	
     result = NS_OK;
   }
   else
@@ -739,7 +720,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   PtArg_t  arg;
   PhDim_t  dim = { aWidth, aHeight };
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow(%p)::Resize w/h=(%i,%i) Repaint=<%i)\n", this, aWidth, aHeight, aRepaint ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize this=<%p> w/h=(%i,%i) Repaint=<%i)\n", this, aWidth, aHeight, aRepaint ));
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
@@ -757,6 +738,18 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
     PtSetResources( mWidget, 1, &arg );
 
+	/* This fixes XUL dialogs */
+    if (mClientWidget)
+	{
+      PtWidget_t *theClientChild = PtWidgetChildBack(mClientWidget);
+	  if (theClientChild)
+	  {
+        nsWindow * pWin = (nsWindow*) GetInstance( theClientChild );
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Resize  Resizing mClientWidget->Child this=<%p> mClientWidget=<%p> ChildBack=<%p>\n", this, mClientWidget, pWin));
+	    pWin->Resize(aWidth, aHeight, aRepaint);
+      }
+	}
+	
     EnableDamage( mWidget, PR_TRUE );
 
     Invalidate( aRepaint );
@@ -886,8 +879,9 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsWindow * pWin = (nsWindow*) GetInstance( pWidget );
   nsresult   result;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for %p\n", pWin ));
-
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for %p %p\n", pWidget,pWin ));
+  //printf("nsWindow::RawDrawFunc for %p mWidget=<%p>\n", pWidget,pWin);
+  
   if ( !pWin )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because instance is NULL!\n"));
@@ -901,6 +895,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   if ( /*pWin->mCreateHold || pWin->mHold ||*/ pWin->mIsResizing )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted due to hold-off!\n"));
+    printf("nsWindow::RawDrawFunc aborted due to Resize holdoff\n");
     return;
   }
 
@@ -980,7 +975,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
 
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
-printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
+//printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
 
     if(( nsDmg.width <= 0 ) || ( nsDmg.height <= 0 ))
       return;
@@ -1007,10 +1002,12 @@ printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.wi
     pev.renderingContext = pWin->GetRenderingContext();
     if (pev.renderingContext)
     {
-     if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
+      if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
       {
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+        //printf ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height );
         result = pWin->DispatchWindowEvent(&pev);
+        //printf ("kedl: dpe result: %d\n",result);
       }
 	  else
 	  {
@@ -1162,8 +1159,8 @@ NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctile
           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetSiblingClippedRegion 5\n"));
 
           *btiles = PhClipTilings( *btiles, *ctiles, nsnull );
-          res = NS_OK;
         }
+        res = NS_OK;
       }
     }
   }
@@ -1184,6 +1181,33 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
   PtArg_t    arg;
 
   clip_tiles = last = nsnull;
+
+// kedl, I bet we need to look at our parents window type; since we are probably a dale
+// widget here.... (always a child)
+//damn
+switch (mWindowType)
+{
+	case 0:	// top
+mClipChildren = PR_TRUE;
+mClipSiblings = PR_TRUE;
+	break;
+	case 1: // dialog, prefs
+mClipChildren = PR_TRUE;
+mClipSiblings = PR_TRUE;
+	break;
+	case 2: // popup, menu
+mClipChildren = PR_FALSE;
+mClipSiblings = PR_TRUE;
+	break;
+	case 3: // child
+mClipChildren = PR_TRUE;  // better be true or big rips
+mClipSiblings = PR_TRUE;  // true means animations don't show thru menus, no rip as edit
+			  // comes up, but block in upper left and rips under prefs bad
+	break;
+	default:
+	break;
+}
+
 
   if ( mClipChildren )
   {
@@ -1224,6 +1248,7 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
       PtGetResources( node, 1, &arg );
       origin.x += area->pos.x;
       origin.y += area->pos.y;
+      //printf ("parent: %p: %d %d %d %d\n",node,area->pos.x,area->pos.y,area->size.w,area->size.h);
 
       for( w=PtWidgetBrotherInFront( node ); w; w=PtWidgetBrotherInFront( w ))
       {
@@ -1231,7 +1256,9 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
         {
           PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
           PtGetResources( w, 1, &arg );
+	  //printf ("sib: %p: %d %d %d %d\n",w,area->pos.x,area->pos.y,area->size.w,area->size.h);
           tile = PhGetTile();
+	  if (area->size.w != 43 && area->size.h != 43)  // oh god another HACK
           if( tile )
           {
             tile->rect.ul.x = area->pos.x - origin.x;
@@ -1275,12 +1302,17 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
     rects = PhTilesToRects( dmg, &rect_count );
     PgSetClipping( rect_count, rects );
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  damage clipped to:\n"));
+
+//    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  damage clipped to:\n"));
+//    printf("  damage clipped to:\n");
 
     int i;
     for(i=0;i<rect_count;i++)
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("    (%i,%i,%i,%i)\n", rects[i].ul.x, rects[i].ul.y, rects[i].lr.x, rects[i].lr.y));
-
+	{
+	  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("    (%i,%i,%i,%i)\n", rects[i].ul.x, rects[i].ul.y, rects[i].lr.x, rects[i].lr.y));
+      //printf("    (%i,%i,%i,%i)\n", rects[i].ul.x, rects[i].ul.y, rects[i].lr.x, rects[i].lr.y);
+	}
+	
     free( rects );
     PhFreeTiles( dmg );
     res = NS_OK;
@@ -1441,17 +1473,24 @@ void nsWindow::RemoveResizeWidget()
 }
 
 
+static int count=100;
 int nsWindow::ResizeWorkProc( void *data )
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ResizeWorkProc\n" ));
+  //printf ("kedl: resize work proc running %p %d\n",nsWindow::mResizeQueue,count);
 
+if (count) {count--; return Pt_CONTINUE;}
+count=100;
+  
   if( mResizeQueueInited )
   {
     DamageQueueEntry *dqe = nsWindow::mResizeQueue;
     DamageQueueEntry *last_dqe;
 
+  //printf ("kedl: resize work proc running 2\n");
     while( dqe )
     {
+  //printf ("kedl: resize work proc running 3\n");
       ((nsWindow*)dqe->inst)->mIsResizing = PR_FALSE;
       dqe->inst->Invalidate( PR_FALSE );
       last_dqe = dqe;
