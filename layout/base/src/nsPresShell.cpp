@@ -147,29 +147,37 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentObserver
-  NS_IMETHOD BeginUpdate();
-  NS_IMETHOD EndUpdate();
-  NS_IMETHOD BeginLoad();
-  NS_IMETHOD EndLoad();
-  NS_IMETHOD BeginReflow(nsIPresShell* aShell);
-  NS_IMETHOD EndReflow(nsIPresShell* aShell);
-  NS_IMETHOD ContentChanged(nsIContent* aContent,
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument);
+  NS_IMETHOD BeginLoad(nsIDocument *aDocument);
+  NS_IMETHOD EndLoad(nsIDocument *aDocument);
+  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
+                            nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentAppended(nsIContent* aContainer);
-  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
+                             nsIContent* aContainer);
+  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
+                             nsIContent* aContainer,
                              nsIContent* aChild,
                              PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
+                             nsIContent* aContainer,
                              nsIContent* aOldChild,
                              nsIContent* aNewChild,
                              PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentWillBeRemoved(nsIContent* aContainer,
+  NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
+                                  nsIContent* aContainer,
                                   nsIContent* aChild,
                                   PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentHasBeenRemoved(nsIContent* aContainer,
+  NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
+                                   nsIContent* aContainer,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer);
-  NS_IMETHOD StyleSheetAdded(nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // nsIPresShell
   NS_IMETHOD Init(nsIDocument* aDocument,
@@ -487,14 +495,14 @@ PresShell::GetRootFrame()
 }
 
 NS_IMETHODIMP
-PresShell::BeginUpdate()
+PresShell::BeginUpdate(nsIDocument *aDocument)
 {
   mUpdateCount++;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::EndUpdate()
+PresShell::EndUpdate(nsIDocument *aDocument)
 {
   NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
   if (--mUpdateCount == 0) {
@@ -504,25 +512,25 @@ PresShell::EndUpdate()
 }
 
 NS_IMETHODIMP
-PresShell::BeginLoad()
+PresShell::BeginLoad(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::EndLoad()
+PresShell::EndLoad(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::BeginReflow(nsIPresShell* aShell)
+PresShell::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PresShell::EndReflow(nsIPresShell* aShell)
+PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 {
   return NS_OK;
 }
@@ -594,7 +602,8 @@ ContentTag(nsIContent* aContent, PRIntn aSlot)
 #endif
 
 NS_IMETHODIMP
-PresShell::ContentChanged(nsIContent*  aContent,
+PresShell::ContentChanged(nsIDocument *aDocument,
+                          nsIContent*  aContent,
                           nsISupports* aSubContent)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
@@ -620,7 +629,8 @@ PresShell::ContentChanged(nsIContent*  aContent,
 }
 
 NS_IMETHODIMP
-PresShell::ContentAppended(nsIContent* aContainer)
+PresShell::ContentAppended(nsIDocument *aDocument,
+                           nsIContent* aContainer)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
@@ -644,7 +654,8 @@ PresShell::ContentAppended(nsIContent* aContainer)
 }
 
 NS_IMETHODIMP
-PresShell::ContentInserted(nsIContent* aContainer,
+PresShell::ContentInserted(nsIDocument *aDocument,
+                           nsIContent* aContainer,
                            nsIContent* aChild,
                            PRInt32     aIndexInContainer)
 {
@@ -667,7 +678,8 @@ PresShell::ContentInserted(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP
-PresShell::ContentReplaced(nsIContent* aContainer,
+PresShell::ContentReplaced(nsIDocument *aDocument,
+                           nsIContent* aContainer,
                            nsIContent* aOldChild,
                            nsIContent* aNewChild,
                            PRInt32     aIndexInContainer)
@@ -692,7 +704,8 @@ PresShell::ContentReplaced(nsIContent* aContainer,
 
 // XXX keep this?
 NS_IMETHODIMP
-PresShell::ContentWillBeRemoved(nsIContent* aContainer,
+PresShell::ContentWillBeRemoved(nsIDocument *aDocument,
+                                nsIContent* aContainer,
                                 nsIContent* aChild,
                                 PRInt32     aIndexInContainer)
 {
@@ -704,7 +717,8 @@ PresShell::ContentWillBeRemoved(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP
-PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
+PresShell::ContentHasBeenRemoved(nsIDocument *aDocument,
+                                 nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32     aIndexInContainer)
 {
@@ -722,7 +736,14 @@ PresShell::ContentHasBeenRemoved(nsIContent* aContainer,
 }
 
 NS_IMETHODIMP
-PresShell::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
+PresShell::StyleSheetAdded(nsIDocument *aDocument,
+                           nsIStyleSheet* aStyleSheet)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
 }

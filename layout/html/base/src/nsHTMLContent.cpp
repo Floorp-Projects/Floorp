@@ -527,7 +527,8 @@ nsHTMLContent::GetPreviousSibling(nsIDOMNode** aNode)
     }
   }
 
-  return NS_ERROR_FAILURE;
+  *aNode = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -547,7 +548,8 @@ nsHTMLContent::GetNextSibling(nsIDOMNode** aNextSibling)
     }
   }
 
-  return NS_ERROR_FAILURE;
+  *aNextSibling = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    

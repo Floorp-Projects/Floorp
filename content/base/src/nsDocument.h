@@ -218,7 +218,7 @@ public:
   NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
 
-  // nsIDOMNode
+  // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);
   NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
   NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
@@ -284,6 +284,7 @@ protected:
   nsIScriptContextOwner *mScriptContextOwner;
   nsIParser *mParser;
   nsIEventListenerManager* mListenerManager;
+  PRBool mInDestructor;
 };
 
 #endif /* nsDocument_h___ */

@@ -23,6 +23,7 @@ DEFINES = -D_IMPL_NS_LAYOUT
 
 CPPSRCS =				\
 	nsContainerFrame.cpp		\
+	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsFrame.cpp			\
 	nsFrameImageLoader.cpp		\
