@@ -3142,7 +3142,6 @@ nsDocShell::Destroy()
     DestroyChildren();
 
     mParentWidget = nsnull;
-    mPrefs = nsnull;
     mCurrentURI = nsnull;
 
     if (mScriptGlobal) {
@@ -5780,23 +5779,21 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     case LOAD_NORMAL:
     case LOAD_LINK:
         // Set cache checking flags
-        if (mPrefs) {
-            PRInt32 prefSetting;
-            if (NS_SUCCEEDED
-                (mPrefs->
-                 GetIntPref("browser.cache.check_doc_frequency",
-                            &prefSetting))) {
-                switch (prefSetting) {
-                case 0:
-                    loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
-                    break;
-                case 1:
-                    loadFlags |= nsIRequest::VALIDATE_ALWAYS;
-                    break;
-                case 2:
-                    loadFlags |= nsIRequest::VALIDATE_NEVER;
-                    break;
-                }
+        PRInt32 prefSetting;
+        if (NS_SUCCEEDED
+            (mPrefs->
+             GetIntPref("browser.cache.check_doc_frequency",
+                        &prefSetting))) {
+            switch (prefSetting) {
+            case 0:
+                loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
+                break;
+            case 1:
+                loadFlags |= nsIRequest::VALIDATE_ALWAYS;
+                break;
+            case 2:
+                loadFlags |= nsIRequest::VALIDATE_NEVER;
+                break;
             }
         }
         break;
