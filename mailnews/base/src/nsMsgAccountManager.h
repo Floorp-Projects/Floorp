@@ -26,7 +26,7 @@
 #include "nsHashtable.h"
 #include "nsISmtpServer.h"
 #include "nsIPref.h"
-
+#include "nsIMsgFolderCache.h"
 /*
  * some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations.
@@ -77,6 +77,7 @@ private:
   PRBool m_alreadySetNntpDefaultLocalPath;
   PRBool m_alreadySetImapDefaultLocalPath;
   
+  nsCOMPtr <nsIMsgFolderCache>	m_msgFolderCache;
   nsISupportsArray *m_accounts;
   nsHashtable m_identities;
   nsHashtable m_incomingServers;

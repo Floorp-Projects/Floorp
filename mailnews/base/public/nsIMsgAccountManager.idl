@@ -84,6 +84,8 @@ interface nsIMsgAccountManager : nsISupports {
    */
   readonly attribute nsISupportsArray allServers;
 
+  /* summary of summary files folder cache */
+  readonly attribute nsIMsgFolderCache folderCache;
   /*
    * search for the server with the given username, hostname, and type
    * the type is the same as is specified in the preferences,

@@ -74,6 +74,7 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 
 #define IMAP_SCHEMA "imap:/"
 #define IMAP_SCHEMA_LENGTH 6
@@ -669,6 +670,38 @@ nsMsgAccountManager::removeServerFromBiff(nsHashKey *aKey, void *aData,
 	return PR_TRUE;
 
 }
+
+nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
+{
+  if (!aFolderCache) return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+
+  if (!m_msgFolderCache)
+  {
+    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
+                                            NULL,
+                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
+                                            getter_AddRefs(m_msgFolderCache));
+    if (NS_FAILED(rv))
+		return rv;
+
+    nsCOMPtr <nsIFileSpec> cacheFile;
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MessengerFolderCache50, getter_AddRefs(cacheFile));
+    if (NS_FAILED(rv)) return rv;
+
+    m_msgFolderCache->Init(cacheFile);
+
+  }
+
+  *aFolderCache = m_msgFolderCache;
+  NS_IF_ADDREF(*aFolderCache);
+  return rv;
+}
+
 
 // enumaration for writing out accounts to folder cache.
 PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,

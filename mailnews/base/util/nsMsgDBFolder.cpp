@@ -27,12 +27,12 @@
 #include "nsIPref.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
-#include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsMsgDBFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgDBFolder, nsMsgFolder)
@@ -206,10 +206,10 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 
 	nsCOMPtr <nsIMsgFolderCache> folderCache;
 
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &result); 
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
 	if(NS_SUCCEEDED(result))
 	{
-		result = mailSession->GetFolderCache(getter_AddRefs(folderCache));
+		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
 		if (NS_SUCCEEDED(result) && folderCache)
 		{
 			char *uri;

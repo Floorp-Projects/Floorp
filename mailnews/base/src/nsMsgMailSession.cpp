@@ -37,15 +37,12 @@
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
  
 
 nsMsgMailSession::nsMsgMailSession():
-  mRefCnt(0),
-  m_accountManager(0),
-  m_msgFolderCache(0)
+  mRefCnt(0)
 {
 
 	NS_INIT_REFCNT();
@@ -70,18 +67,6 @@ nsresult nsMsgMailSession::Init()
 
 nsresult nsMsgMailSession::Shutdown()
 {
-  if(m_accountManager)
-  {
-	  if (m_msgFolderCache)
-		m_accountManager->WriteToFolderCache(m_msgFolderCache);
-	  m_accountManager->CloseCachedConnections();
-	  m_accountManager->UnloadAccounts();
-  }
-
-  NS_IF_RELEASE(m_accountManager);
-
-  NS_IF_RELEASE(m_msgFolderCache);
-
   return NS_OK;
 }
 
@@ -136,37 +121,6 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
   *aAM = accountManager;
   NS_IF_ADDREF(*aAM);
   return NS_OK;
-}
-
-nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
-{
-  if (!aFolderCache) return NS_ERROR_NULL_POINTER;
-
-  nsresult rv = NS_OK;
-
-  if (!m_msgFolderCache)
-  {
-    rv = nsComponentManager::CreateInstance(kMsgFolderCacheCID,
-                                            NULL,
-                                            nsCOMTypeInfo<nsIMsgFolderCache>::GetIID(),
-                                            (void **)&m_msgFolderCache);
-    if (NS_FAILED(rv))
-		return rv;
-
-    nsCOMPtr <nsIFileSpec> cacheFile;
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MessengerFolderCache50, getter_AddRefs(cacheFile));
-    if (NS_FAILED(rv)) return rv;
-
-    m_msgFolderCache->Init(cacheFile);
-
-  }
-
-  *aFolderCache = m_msgFolderCache;
-  NS_IF_ADDREF(*aFolderCache);
-  return rv;
 }
 
 nsresult nsMsgMailSession::GetTemporaryMsgWindow(nsIMsgWindow* *aMsgWindow)

@@ -39,10 +39,6 @@
 // cruft in it....
 //////////////////////////////////////////////////////////////////////////////////
 
-#include "nsIMsgAccountManager.h"
-
-class nsIMsgFolderCache;
-
 class nsMsgMailSession : public nsIMsgMailSession
 {
 public:
@@ -54,8 +50,6 @@ public:
 
 	nsresult Init();
 protected:
-  nsIMsgAccountManager *m_accountManager;
-  nsIMsgFolderCache		*m_msgFolderCache;
 	nsCOMPtr<nsISupportsArray> mListeners; 
 	nsCOMPtr<nsISupportsArray> mWindows;
 	// stick this here temporarily
