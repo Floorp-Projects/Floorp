@@ -134,7 +134,7 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
   return rv;
 }
 
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
 {
@@ -145,6 +145,7 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
     *mDocumentTitle = aTitle;
   }
 
+  // XXX should be in nsDocument
   // Pass on title to observers
   PRInt32 i, n = mObservers.Count();
   for (i = 0; i < n; i++) {
