@@ -163,6 +163,13 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
         SET_FORMATETC(textFE, CF_TEXT, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
         dObj->AddDataFlavor(kTextMime, &textFE);
       }
+      else if ( strcmp(flavorStr, kHTMLMime) == 0 ) {      
+        // if we find text/html, also advertise win32's html flavor (which we will convert
+        // on our own in nsDataObj::GetText().
+        FORMATETC htmlFE;
+        SET_FORMATETC(htmlFE, ::RegisterClipboardFormat("HTML Format"), 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        dObj->AddDataFlavor(kHTMLMime, &htmlFE);     
+      }
       else if ( strcmp(flavorStr, kURLMime) == 0 ) {
         // if we're a url, in addition to also being text, we need to register
         // the "file" flavors so that the win32 shell knows to create an internet

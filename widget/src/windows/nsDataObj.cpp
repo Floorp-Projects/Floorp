@@ -589,8 +589,12 @@ HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STG
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
-  // If someone is asking for text/plain, we need to convert unicode (assuming it's present)
-  // to text with the correct platform encoding.
+  // oddly, this isn't in the MSVC headers anywhere.
+  static int CF_HTML = ::RegisterClipboardFormat("HTML Format");
+
+  // We play games under the hood and advertise flavors that we know we
+  // can support, only they require a bit of conversion or munging of the data.
+  // Do that here.
   //
   // The transferable gives us data that is null-terminated, but this isn't reflected in
   // the |len| parameter. Windoze apps expect this null to be there so bump our data buffer
@@ -598,6 +602,8 @@ HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STG
   // CF_UNICODETEXT).
   DWORD allocLen = (DWORD)len;
   if ( aFE.cfFormat == CF_TEXT ) {
+    // Someone is asking for text/plain; convert the unicode (assuming it's present)
+    // to text with the correct platform encoding.
     char* plainTextData = nsnull;
     PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
     PRInt32 plainTextLen = 0;
@@ -615,8 +621,26 @@ HRESULT nsDataObj::GetText(nsAReadableCString & aDataFlavor, FORMATETC& aFE, STG
       return ResultFromScode(S_OK);
     }
   }
+  else if ( aFE.cfFormat == CF_HTML ) {
+    // Someone is asking for win32's HTML flavor. Convert our html fragment
+    // from unicode to UTF-8 then put it into a format specified by msft.
+    NS_ConvertUCS2toUTF8 converter ( NS_REINTERPRET_CAST(PRUnichar*, data) );
+    char* utf8HTML = nsnull;
+    nsresult rv = BuildPlatformHTML ( converter.get(), &utf8HTML );      // null terminates
+    
+    nsMemory::Free(data);
+    if ( NS_SUCCEEDED(rv) && utf8HTML ) {
+      // replace the unicode data with our HTML data. Don't forget the null.
+      data = utf8HTML;
+      allocLen = strlen(utf8HTML) + sizeof(char);
+    }
+    else {
+      NS_WARNING ( "Oh no, couldn't convert to HTML" );
+      return ResultFromScode(S_OK);
+    }
+  }
   else {
-    // we assume that any data that isn't CF_TEXT is unicode. This may
+    // we assume that any data that isn't caught above is unicode. This may
     // be an erroneous assumption, but is true so far.
     allocLen += sizeof(PRUnichar);
   }
@@ -801,3 +825,75 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
   return rv;
 
 } // ExtractShortcutTitle
+
+
+//
+// BuildPlatformHTML
+//
+// Munge our HTML data to win32's CF_HTML spec. Basically, put the requisite
+// header information on it. This will null terminate |outPlatformHTML|. See
+//  http://msdn.microsoft.com/workshop/networking/clipboard/htmlclipboard.asp
+// for details.
+//
+// We assume that |inOurHTML| is already a fragment (ie, doesn't have <HTML>
+// or <BODY> tags). We'll wrap the fragment with them to make other apps
+// happy.
+//
+// This code is derived from sample code from MSDN. It's ugly, I agree.
+//
+nsresult 
+nsDataObj :: BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML ) 
+{
+  *outPlatformHTML = nsnull;
+  
+  // Create temporary buffer for HTML header... 
+  char *buf = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(400 + strlen(inOurHTML)));
+  if( !buf )
+    return NS_ERROR_FAILURE;
+
+  // Get clipboard id for HTML format...
+  static int cfid = RegisterClipboardFormat("HTML Format");;
+
+  // Create a template string for the HTML header...
+  strcpy(buf,
+      "Version:0.9\r\n"
+      "StartHTML:00000000\r\n"
+      "EndHTML:00000000\r\n"
+      "StartFragment:00000000\r\n"
+      "EndFragment:00000000\r\n"
+      "<html><body>\r\n"
+      "<!--StartFragment -->\r\n");
+
+  // Append the HTML...
+  strcat(buf, inOurHTML);
+  strcat(buf, "\r\n");
+  // Finish up the HTML format...
+  strcat(buf,
+      "<!--EndFragment-->\r\n"
+      "</body>\r\n"
+      "</html>");
+
+  // Now go back, calculate all the lengths, and write out the
+  // necessary header information. Note, wsprintf() truncates the
+  // string when you overwrite it so you follow up with code to replace
+  // the 0 appended at the end with a '\r'...
+  char *ptr = strstr(buf, "StartHTML");
+  wsprintf(ptr+10, "%08u", strstr(buf, "<html>") - buf);
+  *(ptr+10+8) = '\r';
+
+  ptr = strstr(buf, "EndHTML");
+  wsprintf(ptr+8, "%08u", strlen(buf));
+  *(ptr+8+8) = '\r';
+
+  ptr = strstr(buf, "StartFragment");
+  wsprintf(ptr+14, "%08u", strstr(buf, "<!--StartFrag") - buf);
+  *(ptr+14+8) = '\r';
+
+  ptr = strstr(buf, "EndFragment");
+  wsprintf(ptr+12, "%08u", strstr(buf, "<!--EndFrag") - buf);
+  *(ptr+12+8) = '\r';
+
+  *outPlatformHTML = buf;
+
+  return NS_OK;
+}
