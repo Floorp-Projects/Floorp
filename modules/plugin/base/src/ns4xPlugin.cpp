@@ -1236,29 +1236,6 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_GENERIC_ERROR;
   }
 
-  case NPNVDOMDocument: {
-    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
-    NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
-
-    nsCOMPtr<nsIPluginInstancePeer> pip;
-    inst->GetPeer(getter_AddRefs(pip));
-    nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(pip));
-    if (pp) {
-      nsCOMPtr<nsIPluginInstanceOwner> owner;
-      pp->GetOwner(getter_AddRefs(owner));
-      if (owner) {
-        nsCOMPtr<nsIDocument> doc;
-        owner->GetDocument(getter_AddRefs(doc));
-        nsCOMPtr<nsIDOMDocument> domDoc (do_QueryInterface(doc));
-        if (domDoc) {
-          NS_ADDREF(*(nsIDOMDocument**)result = domDoc.get());
-          return NPERR_NO_ERROR;
-        }
-      }
-    }
-    return NPERR_GENERIC_ERROR;
-  }
-
   case NPNVDOMWindow: {
     ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
     NS_ENSURE_TRUE(inst, NPERR_GENERIC_ERROR);
