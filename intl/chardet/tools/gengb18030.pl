@@ -33,7 +33,7 @@ package genverifier;
 );
 
 
-$gb18030_ver = genverifier::GenVerifier("gb18030", "gb18030", \@gb18030_cls, 4,     \@gb18030_st);
+$gb18030_ver = genverifier::GenVerifier("gb18030", "gb18030", \@gb18030_cls, 7,     \@gb18030_st);
 print $gb18030_ver;
 
 
