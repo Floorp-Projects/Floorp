@@ -9,8 +9,111 @@
 
     <script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
+    <!-- Mail View Charset Menu -->
+    <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)"  oncreate="UpdateCharsetDetector()">
+        <template>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
+                <menupopup>
+                <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+            </rule>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+                <menupopup>
+                <menuseparator uri="..." />
+                </menupopup>
+            </rule>
+            <rule>
+                <menupopup>
+                <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                </menupopup>
+            </rule>
+        </template>
+
+        <menupopup>
+        <menu value="&charsetMenuMore1.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore2.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore3.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore4.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore5.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore6.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore6CharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+            <template>
+                <rule>
+                    <menupopup>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
+        <menuseparator />
+        <menuitem value="&charsetCustomize.label;" />
+        </menupopup>
+    </menu>
+
     <!-- Mail Edit Charset Menu -->
-    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot"  oncommand="SetDocumentCharacterSet(event);" oncreate="InitCharsetMenuCheckMark();">
+    <menu id="maileditCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event);" oncreate="InitCharsetMenuCheckMark();">
         <template>
             <rule>
                 <menupopup>
@@ -26,7 +129,7 @@
     </menu>
 
     <!-- Charset Menu -->
-    <menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"  oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
+    <menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                 <menupopup>

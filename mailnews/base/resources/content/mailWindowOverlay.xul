@@ -20,6 +20,8 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+
 <!DOCTYPE window [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
 %messengerDTD;
@@ -462,6 +464,7 @@ Rights Reserved.
 			<menuitem value="&pageSourceCmd.label;" oncommand="MsgViewPageSource();"/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" oncommand="MsgViewPageInfo();"/>
 			<menuseparator/>
+<!-- Deprecated BEGIN
 			<menu value="&dcharMenu.label;">
 				<menupopup>
 					<menuitem value="&dcharIso1Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-1');"/>
@@ -514,14 +517,12 @@ Rights Reserved.
 					<menuitem value="&dcharThaiCmd.label;" oncommand="MessengerSetDefaultCharacterSet('TIS-620');"/>
 					<menuseparator />
 					<menuitem value="&dcharArmCmd.label;" oncommand="MessengerSetDefaultCharacterSet('ARMSCII-8');"/>
-					<!--
 					<menuseparator />
 					<menuitem value="&dcharIso6Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-6');"/>
 					<menuitem value="&dcharCp1256Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1256');"/>
 					<menuseparator />
 					<menuitem value="&dcharIso8Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('ISO-8859-8');"/>
 					<menuitem value="&dcharCp1255Cmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1255');"/>
-					-->
 				</menupopup>
 			</menu>
 			<menu value="&dcharMenu4.label;">
@@ -544,6 +545,8 @@ Rights Reserved.
 					<menuitem value="&dcharWinGreekCmd.label;" oncommand="MessengerSetDefaultCharacterSet('windows-1253');"/>
 				</menupopup>
 			</menu>
+END of Deprecated -->
+            <menu id = "mailviewCharsetMenu" />
 		</menupopup>
 	</menu>
 	<menu value="&searchMenu.label;">
