@@ -24,7 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 EXPORTS =                         \
-		nsIXULCommand.h			\
 		nsIWebShellWindow.h			\
         nsAppShellCIDs.h          \
         nsIAppShellService.h      \
