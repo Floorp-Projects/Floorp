@@ -48,6 +48,8 @@
 #include "nsISupportsArray.h"
 #include "nsDataObjCollection.h"
 
+#include "nsAutoPtr.h"
+
 #include <OLE2.h>
 #include "OLEIDL.H"
 #include "shlobj.h";
@@ -98,31 +100,32 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupport
   // if we're dragging more than one item, we need to create a "collection" object to fake out
   // the OS. This collection contains one |IDataObject| for each transerable. If there is just
   // the one (most cases), only pass around the native |IDataObject|.
-  IDataObject* itemToDrag = nsnull;
+  nsRefPtr<IDataObject> itemToDrag;
   if ( numItemsToDrag > 1 ) {
     nsDataObjCollection * dataObjCollection = new nsDataObjCollection();
-    IDataObject* dataObj = nsnull;
+    if (!dataObjCollection)
+      return NS_ERROR_OUT_OF_MEMORY;
+    itemToDrag = dataObjCollection;
     for ( PRUint32 i=0; i<numItemsToDrag; ++i ) {
       nsCOMPtr<nsISupports> supports;
       anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
       nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
       if ( trans ) {
-        if ( NS_SUCCEEDED(nsClipboard::CreateNativeDataObject(trans, &dataObj)) ) {
+        nsRefPtr<IDataObject> dataObj;
+        if ( NS_SUCCEEDED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(dataObj))) ) {
           dataObjCollection->AddDataObject(dataObj);
-          NS_IF_RELEASE(dataObj);
         }
         else
           return NS_ERROR_FAILURE;
       }
     }
-    itemToDrag = NS_STATIC_CAST ( IDataObject*, dataObjCollection );
   } // if dragging multiple items
   else {
     nsCOMPtr<nsISupports> supports;
     anArrayTransferables->GetElementAt(0, getter_AddRefs(supports));
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     if ( trans ) {
-      if ( NS_FAILED(nsClipboard::CreateNativeDataObject(trans, &itemToDrag)) )
+      if ( NS_FAILED(nsClipboard::CreateNativeDataObject(trans, getter_AddRefs(itemToDrag))) )
         return NS_ERROR_FAILURE;
     }
   } // else dragging a single object
