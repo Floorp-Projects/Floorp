@@ -33,7 +33,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.6 $ $Date: 2004/01/16 01:04:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.7 $ $Date: 2004/01/20 19:57:17 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
@@ -1806,7 +1806,7 @@ test_iso88591_chars
     struct ucs2 *e = &ucs2[i];
     PRBool result;
     unsigned char iso88591;
-    unsigned char utf8[8];
+    unsigned char utf8[3];
     unsigned int len = 0;
 
     if (e->c > 0xFF) continue;
