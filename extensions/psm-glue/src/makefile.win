@@ -42,7 +42,6 @@ LINCS = $(LINCS)     \
 
 LLIBS   = \
     $(LIBNSPR) \
-    $(DIST)\lib\neckobase_s.lib \
     $(DIST)\lib\xpcom.lib \
     $(DIST)\lib\js3250.lib \
     $(DIST)\lib\cmt.lib       \
