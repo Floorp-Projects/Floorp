@@ -211,6 +211,9 @@ bin\components\pref.xpt
 bin\components\profile.xpt
 bin\components\toolkitprofile.xpt
 
+; toolkit
+bin\components\appstartup.xpt
+
 ; rdf
 bin\components\rdf.xpt
 

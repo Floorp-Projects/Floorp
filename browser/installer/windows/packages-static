@@ -60,6 +60,7 @@ bin\components\alerts.xpt
 bin\components\accessibility.xpt
 bin\components\accessibility-msaa.xpt
 bin\components\appshell.xpt
+bin\components\appstartup.xpt
 bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
