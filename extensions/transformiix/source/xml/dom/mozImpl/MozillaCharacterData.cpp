@@ -57,7 +57,7 @@ const String& CharacterData::getData()
 
     nodeValue.clear();
     if (nsCharacterData)
-        nsCharacterData->GetData(nodeValue.getNSString());
+        nsCharacterData->GetData(nodeValue);
     return nodeValue;
 }
 
@@ -71,7 +71,7 @@ void CharacterData::setData(const String& aData)
     NSI_FROM_TX(CharacterData)
 
     if (nsCharacterData)
-        nsCharacterData->SetData(aData.getConstNSString());
+        nsCharacterData->SetData(aData);
 }
 
 /**
@@ -106,7 +106,7 @@ String& CharacterData::substringData(PRUint32 aOffset, PRUint32 aCount,
 
     aDest.clear();
     if (nsCharacterData)
-        nsCharacterData->SubstringData(aOffset, aCount, aDest.getNSString());
+        nsCharacterData->SubstringData(aOffset, aCount, aDest);
     return aDest;
 }
 
@@ -120,7 +120,7 @@ void CharacterData::appendData(const String& aSource)
     NSI_FROM_TX(CharacterData)
 
     if (nsCharacterData)
-        nsCharacterData->AppendData(aSource.getConstNSString());
+        nsCharacterData->AppendData(aSource);
 }
 
 /**
@@ -134,7 +134,7 @@ void CharacterData::insertData(PRUint32 aOffset, const String& aSource)
     NSI_FROM_TX(CharacterData)
 
     if (nsCharacterData)
-        nsCharacterData->InsertData(aOffset, aSource.getConstNSString());
+        nsCharacterData->InsertData(aOffset, aSource);
 }
 
 /**
@@ -164,5 +164,5 @@ void CharacterData::replaceData(PRUint32 aOffset, PRUint32 aCount,
     NSI_FROM_TX(CharacterData)
 
     if (nsCharacterData)
-        nsCharacterData->ReplaceData(aOffset, aCount, aSource.getConstNSString());
+        nsCharacterData->ReplaceData(aOffset, aCount, aSource);
 }

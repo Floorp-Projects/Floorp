@@ -1,12 +1,7 @@
-#include "XSLTFunctions.h"
-#include "ProcessorState.h"
-#include "XMLUtils.h"
-#include "Names.h"
 #include "txIXPathContext.h"
-
-const String XSL_VERSION_PROPERTY("version");
-const String XSL_VENDOR_PROPERTY("vendor");
-const String XSL_VENDOR_URL_PROPERTY("vendor-url");
+#include "txAtoms.h"
+#include "XMLUtils.h"
+#include "XSLTFunctions.h"
 
 /*
   Implementation of XSLT 1.0 extension function: system-property
@@ -17,8 +12,8 @@ const String XSL_VENDOR_URL_PROPERTY("vendor-url");
  * aNode is the Element in the stylesheet containing the 
  * Expr and is used for namespaceID resolution
 **/
-SystemPropertyFunctionCall::SystemPropertyFunctionCall(Element* aNode) :
-    FunctionCall(SYSTEM_PROPERTY_FN), mStylesheetNode(aNode)
+SystemPropertyFunctionCall::SystemPropertyFunctionCall(Node* aQNameResolveNode)
+    : mQNameResolveNode(aQNameResolveNode)      
 {
 }
 
@@ -41,25 +36,18 @@ ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
         if (exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
-            if (XMLUtils::isValidQName(property)) {
-                String prefix;
-                PRInt32 namespaceID = kNameSpaceID_None;
-                XMLUtils::getPrefix(property, prefix);
-                if (!prefix.isEmpty()) {
-                    txAtom* prefixAtom = TX_GET_ATOM(prefix);
-                    namespaceID =
-                        mStylesheetNode->lookupNamespaceID(prefixAtom);
-                    TX_IF_RELEASE_ATOM(prefixAtom);
+            txExpandedName qname;
+            nsresult rv = qname.init(property, mQNameResolveNode, MB_TRUE);
+            if (NS_SUCCEEDED(rv) &&
+                qname.mNamespaceID == kNameSpaceID_XSLT) {
+                if (qname.mLocalName == txXSLTAtoms::version) {
+                    result = new NumberResult(1.0);
                 }
-                if (namespaceID == kNameSpaceID_XSLT) {
-                    String localName;
-                    XMLUtils::getLocalPart(property, localName);
-                    if (localName.isEqual(XSL_VERSION_PROPERTY))
-                        result = new NumberResult(1.0);
-                    else if (localName.isEqual(XSL_VENDOR_PROPERTY))
-                        result = new StringResult("Transformiix");
-                    else if (localName.isEqual(XSL_VENDOR_URL_PROPERTY))
-                        result = new StringResult("http://www.mozilla.org/projects/xslt/");
+                else if (qname.mLocalName == txXSLTAtoms::vendor) {
+                    result = new StringResult("Transformiix");
+                }
+                else if (qname.mLocalName == txXSLTAtoms::vendorUrl) {
+                    result = new StringResult("http://www.mozilla.org/projects/xslt/");
                 }
             }
         }
@@ -70,9 +58,15 @@ ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
         }
     }
 
-    if (result) 
-        return result;
-    else
-        return new StringResult("");
+    if (!result) {
+        result = new StringResult("");
+    }
+    return result;
 }
 
+nsresult SystemPropertyFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::systemProperty;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
+}

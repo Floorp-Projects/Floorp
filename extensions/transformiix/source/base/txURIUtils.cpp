@@ -82,9 +82,8 @@ istream* URIUtils::getInputStream
     }
     else {
         // Try local files
-        char* fchars = href.toCharArray();
-        inStream = new ifstream(fchars, ios::in);
-        delete [] fchars;
+        inStream = new ifstream(NS_LossyConvertUCS2toASCII(href).get(),
+                                ios::in);
     }
     delete uri;
 
@@ -142,9 +141,9 @@ void URIUtils::resolveHref(const String& href, const String& base,
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> pURL;
     String resultHref;
-    nsresult result = NS_NewURI(getter_AddRefs(pURL), base.getConstNSString());
+    nsresult result = NS_NewURI(getter_AddRefs(pURL), base);
     if (NS_SUCCEEDED(result)) {
-        NS_MakeAbsoluteURI(resultHref.getNSString(), href.getConstNSString(), pURL);
+        NS_MakeAbsoluteURI(resultHref, href, pURL);
         dest.append(resultHref);
     }
 #else
@@ -176,12 +175,11 @@ void URIUtils::resolveHref(const String& href, const String& base,
     }
     else {
         // Try local files
-        char* xHrefChars = xHref.toCharArray();
-        ifstream inFile(xHrefChars, ios::in);
+        ifstream inFile(NS_LossyConvertUCS2toASCII(xHref).get(),
+                        ios::in);
         if ( inFile ) dest.append(xHref);
         else dest.append(href);
         inFile.close();
-        delete [] xHrefChars;
     }
     delete uri;
     delete newUri;
@@ -214,9 +212,9 @@ istream* URIUtils::openStream(ParsedURI* uri) {
 
     istream* inStream = 0;
     if ( FILE_PROTOCOL.isEqual(uri->protocol) ) {
-        char* fchars = uri->path.toCharArray();
-        ifstream* inFile = new ifstream(fchars, ios::in);
-        delete [] fchars;
+        ifstream* inFile =
+            new ifstream(NS_LossyConvertUCS2toASCII(uri->path).get(),
+                         ios::in);
         inStream = inFile;
     }
 

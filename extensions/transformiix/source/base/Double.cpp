@@ -174,9 +174,8 @@ double Double::toDouble(const String& aSrc)
 
     // "."==NaN, ".0"=="0."==0
     if (digitFound && idx == len) {
-        char* buf = aSrc.toCharArray();
-        double res = buf ? atof(buf) : Double::NaN;
-        delete [] buf;
+        NS_LossyConvertUCS2toASCII buf(aSrc);
+        double res = buf.get() ? atof(buf.get()) : Double::NaN;
         return res;
     }
 

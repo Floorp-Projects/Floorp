@@ -106,7 +106,6 @@ CPP_OBJS=							\
 	..\source\xpath\$(OBJDIR)\UnionExpr.obj \
 	..\source\xpath\$(OBJDIR)\UnaryExpr.obj \
 	..\source\xpath\$(OBJDIR)\VariableRefExpr.obj \
-	..\source\xpath\$(OBJDIR)\XPathNames.obj \
 	..\source\xml\$(OBJDIR)\XMLUtils.obj \
 	..\source\xml\$(OBJDIR)\XMLDOMUtils.obj \
 	..\source\xml\parser\$(OBJDIR)\nsSyncLoader.obj \
@@ -119,7 +118,6 @@ CPP_OBJS=							\
 	..\source\xslt\$(OBJDIR)\txMozillaXMLOutput.obj \
 	..\source\xslt\$(OBJDIR)\txRtfHandler.obj \
 	..\source\xslt\$(OBJDIR)\txTextHandler.obj \
-	..\source\xslt\$(OBJDIR)\VariableBinding.obj \
 	..\source\xslt\$(OBJDIR)\txXSLTPatterns.obj \
 	..\source\xslt\$(OBJDIR)\txPatternParser.obj \
 	..\source\xslt\$(OBJDIR)\XSLTProcessor.obj \

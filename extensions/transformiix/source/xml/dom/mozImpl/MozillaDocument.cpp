@@ -199,7 +199,7 @@ Element* Document::createElement(const String& aTagName)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> element;
 
-    if (NS_SUCCEEDED(nsDocument->CreateElement(aTagName.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateElement(aTagName,
                 getter_AddRefs(element))))
         return createElement(element);
     else
@@ -218,7 +218,7 @@ Element* Document::getElementById(const String aID)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMElement> element;
 
-    if (NS_SUCCEEDED(nsDocument->GetElementById(aID.getConstNSString(), getter_AddRefs(element))))
+    if (NS_SUCCEEDED(nsDocument->GetElementById(aID, getter_AddRefs(element))))
         return createElement(element);
     else
         return NULL;
@@ -248,7 +248,7 @@ Element* Document::createElementNS(const String& aNamespaceURI,
     nsCOMPtr<nsIDOMElement> element;
 
     if (NS_SUCCEEDED(nsDocument->CreateElementNS(
-                aNamespaceURI.getConstNSString(), aTagName.getConstNSString(),
+                aNamespaceURI, aTagName,
                 getter_AddRefs(element))))
         return createElement(element);
     else
@@ -267,7 +267,7 @@ Attr* Document::createAttribute(const String& aName)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMAttr> attr;
 
-    if (NS_SUCCEEDED(nsDocument->CreateAttribute(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateAttribute(aName,
                 getter_AddRefs(attr))))
         return createAttribute(attr);
     else
@@ -289,7 +289,7 @@ Attr* Document::createAttributeNS(const String& aNamespaceURI,
     nsCOMPtr<nsIDOMAttr> attr;
 
     if (NS_SUCCEEDED(nsDocument->CreateAttributeNS(
-                aNamespaceURI.getConstNSString(), aName.getConstNSString(),
+                aNamespaceURI, aName,
                 getter_AddRefs(attr))))
         return createAttribute(attr);
     else
@@ -317,7 +317,7 @@ Text* Document::createTextNode(const String& aData)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMText> text;
 
-    if (NS_SUCCEEDED(nsDocument->CreateTextNode(aData.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateTextNode(aData,
                 getter_AddRefs(text))))
         return createTextNode(text);
     else
@@ -345,7 +345,7 @@ Comment* Document::createComment(const String& aData)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMComment> comment;
 
-    if (NS_SUCCEEDED(nsDocument->CreateComment(aData.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateComment(aData,
                 getter_AddRefs(comment))))
         return createComment(comment);
     else
@@ -373,7 +373,7 @@ CDATASection* Document::createCDATASection(const String& aData)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMCDATASection> cdata;
 
-    if (NS_SUCCEEDED(nsDocument->CreateCDATASection(aData.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateCDATASection(aData,
                 getter_AddRefs(cdata))))
         return createCDATASection(cdata);
     else
@@ -406,7 +406,7 @@ ProcessingInstruction* Document::createProcessingInstruction(
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
 
     if (NS_SUCCEEDED(nsDocument->CreateProcessingInstruction(
-                aTarget.getConstNSString(), aData.getConstNSString(),
+                aTarget, aData,
                 getter_AddRefs(pi))))
         return createProcessingInstruction(pi);
     else
@@ -435,7 +435,7 @@ EntityReference* Document::createEntityReference(const String& aName)
     NSI_FROM_TX_NULL_CHECK(Document)
     nsCOMPtr<nsIDOMEntityReference> entityRef;
 
-    if (NS_SUCCEEDED(nsDocument->CreateEntityReference(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsDocument->CreateEntityReference(aName,
                 getter_AddRefs(entityRef))))
         return createEntityReference(entityRef);
     else
@@ -641,7 +641,7 @@ PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
 {
     PRInt32 namesspaceID = kNameSpaceID_Unknown;
     if (nsNSManager)
-        nsNSManager->RegisterNameSpace(aNamespaceURI.getConstNSString(),
+        nsNSManager->RegisterNameSpace(aNamespaceURI,
                                        namesspaceID);
     return namesspaceID;
 }
@@ -650,6 +650,6 @@ void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
 {
     if (nsNSManager)
         nsNSManager->GetNameSpaceURI(aNamespaceID,
-                                     aNamespaceURI.getNSString());
+                                     aNamespaceURI);
     return;
 }

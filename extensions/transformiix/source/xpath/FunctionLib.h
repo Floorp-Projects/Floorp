@@ -39,43 +39,6 @@
 #include "ExprResult.h"
 #include "Expr.h"
 
-
-class XPathNames {
-
-public:
-//-- Function Names
-static const String BOOLEAN_FN;
-static const String CONCAT_FN;
-static const String CONTAINS_FN;
-static const String COUNT_FN ;
-static const String FALSE_FN;
-static const String ID_FN;
-static const String LANG_FN;
-static const String LAST_FN;
-static const String LOCAL_NAME_FN;
-static const String NAME_FN;
-static const String NAMESPACE_URI_FN;
-static const String NORMALIZE_SPACE_FN;
-static const String NOT_FN;
-static const String POSITION_FN;
-static const String STARTS_WITH_FN;
-static const String STRING_FN;
-static const String STRING_LENGTH_FN;
-static const String SUBSTRING_FN;
-static const String SUBSTRING_AFTER_FN;
-static const String SUBSTRING_BEFORE_FN;
-static const String SUM_FN;
-static const String TRANSLATE_FN;
-static const String TRUE_FN;
-// OG+
-static const String NUMBER_FN;
-static const String ROUND_FN;
-static const String CEILING_FN;
-static const String FLOOR_FN;
-}; //-- XPathNames
-
-
-
 /**
  * The following are definitions for the XPath functions
  *
@@ -118,7 +81,7 @@ public:
     **/
     BooleanFunctionCall(BooleanFunctions aType);
 
-    TX_DECL_EVALUATE;
+    TX_DECL_FUNCTION;
 
 private:
     BooleanFunctions mType;
@@ -134,7 +97,7 @@ public:
     ErrorFunctionCall();
     ErrorFunctionCall(const String& errorMsg);
 
-    TX_DECL_EVALUATE;
+    TX_DECL_FUNCTION;
 
     void setErrorMessage(String& errorMsg);
 
@@ -166,7 +129,7 @@ public:
      */
     NodeSetFunctionCall(NodeSetFunctions aType);
 
-    TX_DECL_EVALUATE;
+    TX_DECL_FUNCTION;
 
 private:
     NodeSetFunctions mType;
@@ -198,7 +161,7 @@ public:
     **/
     StringFunctionCall(StringFunctions aType);
 
-    TX_DECL_EVALUATE;
+    TX_DECL_FUNCTION;
 
 private:
     StringFunctions mType;
@@ -225,7 +188,7 @@ public:
      */
     NumberFunctionCall(NumberFunctions aType);
 
-    TX_DECL_EVALUATE;
+    TX_DECL_FUNCTION;
 
 private:
     NumberFunctions mType;

@@ -49,7 +49,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\ProcessorState.obj		\
 	.\$(OBJDIR)\txRtfHandler.obj		\
 	.\$(OBJDIR)\txTextHandler.obj		\
-	.\$(OBJDIR)\VariableBinding.obj		\
 	.\$(OBJDIR)\txXSLTPatterns.obj		\
 	.\$(OBJDIR)\txPatternParser.obj		\
 	.\$(OBJDIR)\XSLTProcessor.obj

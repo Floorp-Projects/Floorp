@@ -87,7 +87,6 @@ CPP_OBJS=                                       \
   ../xpath/$(OBJDIR)/UnionExpr.obj \
   ../xpath/$(OBJDIR)/UnaryExpr.obj \
   ../xpath/$(OBJDIR)/VariableRefExpr.obj \
-  ../xpath/$(OBJDIR)/XPathNames.obj \
   ../xml/$(OBJDIR)/XMLUtils.obj \
   ../xml/$(OBJDIR)/XMLDOMUtils.obj \
   ../xml/parser/$(OBJDIR)/XMLParser.obj \
@@ -103,7 +102,6 @@ CPP_OBJS=                                       \
   ../xslt/$(OBJDIR)/txXMLOutput.obj \
   ../xslt/$(OBJDIR)/txXSLTPatterns.obj \
   ../xslt/$(OBJDIR)/txPatternParser.obj \
-  ../xslt/$(OBJDIR)/VariableBinding.obj \
   ../xslt/$(OBJDIR)/XSLTProcessor.obj \
   ../xslt/functions/$(OBJDIR)/CurrentFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/DocumentFunctionCall.obj \

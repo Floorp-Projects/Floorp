@@ -50,6 +50,11 @@ NumberResult::NumberResult(double dbl) {
  * Virtual Methods from ExprResult
 */
 
+ExprResult* NumberResult::clone()
+{
+    return new NumberResult(value);
+}
+
 short NumberResult::getResultType() {
     return ExprResult::NUMBER;
 } //-- getResultType

@@ -119,7 +119,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../source/xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../source/xpath/VariableRefExpr.$(OBJ_SUFFIX) \
-  ../source/xpath/XPathNames.$(OBJ_SUFFIX) \
   ../source/xml/XMLUtils.$(OBJ_SUFFIX) \
   ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../source/xml/parser/XMLParser.$(OBJ_SUFFIX) \
@@ -132,7 +131,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/txMozillaXMLOutput.$(OBJ_SUFFIX) \
   ../source/xslt/txRtfHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txTextHandler.$(OBJ_SUFFIX) \
-  ../source/xslt/VariableBinding.$(OBJ_SUFFIX) \
   ../source/xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../source/xslt/txPatternParser.$(OBJ_SUFFIX) \
   ../source/xslt/XSLTProcessor.$(OBJ_SUFFIX) \

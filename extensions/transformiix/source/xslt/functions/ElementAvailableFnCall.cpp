@@ -37,10 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "XSLTFunctions.h"
-#include "XMLUtils.h"
-#include "Names.h"
 #include "txIXPathContext.h"
+#include "txAtoms.h"
+#include "XMLUtils.h"
+#include "XSLTFunctions.h"
 
 /*
   Implementation of XSLT 1.0 extension function: element-available
@@ -51,8 +51,8 @@
  * aNode is the Element in the stylesheet containing the 
  * Expr and is used for namespaceID resolution
 **/
-ElementAvailableFunctionCall::ElementAvailableFunctionCall(Element* aNode) :
-    FunctionCall(ELEMENT_AVAILABLE_FN), mStylesheetNode(aNode)
+ElementAvailableFunctionCall::ElementAvailableFunctionCall(Node* aQNameResolveNode)
+    : mQNameResolveNode(aQNameResolveNode)
 {
 }
 
@@ -76,52 +76,46 @@ ExprResult* ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext)
             exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
-            if (XMLUtils::isValidQName(property)) {
-                String prefix;
-                PRInt32 aNSID = kNameSpaceID_None;
-                XMLUtils::getPrefix(property, prefix);
-                if (!prefix.isEmpty()) {
-                    txAtom* prefixAtom = TX_GET_ATOM(prefix);
-                    aNSID = mStylesheetNode->lookupNamespaceID(prefixAtom);
-                    TX_IF_RELEASE_ATOM(prefixAtom);
-                }
-                if (aNSID == kNameSpaceID_XSLT) {
-                    String localName;
-                    XMLUtils::getLocalPart(property, localName);
-                    if ( localName.isEqual(APPLY_IMPORTS) ||
-                         localName.isEqual(APPLY_TEMPLATES) ||
-                         localName.isEqual(ATTRIBUTE) ||
-                         localName.isEqual(ATTRIBUTE_SET) ||
-                         localName.isEqual(CALL_TEMPLATE) ||
-                         localName.isEqual(CHOOSE) ||
-                         localName.isEqual(COMMENT) ||
-                         localName.isEqual(COPY) ||
-                         localName.isEqual(COPY_OF) ||
-                         localName.isEqual(DECIMAL_FORMAT) ||
-                         localName.isEqual(ELEMENT) ||
-                         localName.isEqual(FOR_EACH) ||
-                         localName.isEqual(IF) ||
-                         localName.isEqual(IMPORT) ||
-                         localName.isEqual(INCLUDE) ||
-                         localName.isEqual(KEY) ||
-                         localName.isEqual(MESSAGE) ||
-                         localName.isEqual(NUMBER) ||
-                         localName.isEqual(OTHERWISE) ||
-                         localName.isEqual(OUTPUT) ||
-                         localName.isEqual(PARAM) ||
-                         localName.isEqual(PROC_INST) ||
-                         localName.isEqual(PRESERVE_SPACE) ||
-                         localName.isEqual(SORT) ||
-                         localName.isEqual(STRIP_SPACE) ||
-                         localName.isEqual(TEMPLATE) ||
-                         localName.isEqual(TEXT) ||
-                         localName.isEqual(VALUE_OF) ||
-                         localName.isEqual(VARIABLE) ||
-                         localName.isEqual(WHEN) ||
-                         localName.isEqual(WITH_PARAM) ) {
-                        result = new BooleanResult(MB_TRUE);
-                    }
-                }
+            txExpandedName qname;
+            nsresult rv = qname.init(property, mQNameResolveNode, MB_TRUE);
+            if (NS_SUCCEEDED(rv) &&
+                qname.mNamespaceID == kNameSpaceID_XSLT &&
+                (qname.mLocalName == txXSLTAtoms::applyImports ||
+                 qname.mLocalName == txXSLTAtoms::applyTemplates ||
+                 qname.mLocalName == txXSLTAtoms::attribute ||
+                 qname.mLocalName == txXSLTAtoms::attributeSet ||
+                 qname.mLocalName == txXSLTAtoms::callTemplate ||
+                 qname.mLocalName == txXSLTAtoms::choose ||
+                 qname.mLocalName == txXSLTAtoms::comment ||
+                 qname.mLocalName == txXSLTAtoms::copy ||
+                 qname.mLocalName == txXSLTAtoms::copyOf ||
+                 qname.mLocalName == txXSLTAtoms::decimalFormat ||
+                 qname.mLocalName == txXSLTAtoms::element ||
+//                 qname.mLocalName == txXSLTAtoms::fallback ||
+                 qname.mLocalName == txXSLTAtoms::forEach ||
+                 qname.mLocalName == txXSLTAtoms::_if ||
+                 qname.mLocalName == txXSLTAtoms::import ||
+                 qname.mLocalName == txXSLTAtoms::include ||
+                 qname.mLocalName == txXSLTAtoms::key ||
+                 qname.mLocalName == txXSLTAtoms::message ||
+//                 qname.mLocalName == txXSLTAtoms::namespaceAlias ||
+                 qname.mLocalName == txXSLTAtoms::number ||
+                 qname.mLocalName == txXSLTAtoms::otherwise ||
+                 qname.mLocalName == txXSLTAtoms::output ||
+                 qname.mLocalName == txXSLTAtoms::param ||
+                 qname.mLocalName == txXSLTAtoms::preserveSpace ||
+                 qname.mLocalName == txXSLTAtoms::processingInstruction ||
+                 qname.mLocalName == txXSLTAtoms::sort ||
+                 qname.mLocalName == txXSLTAtoms::stripSpace ||
+                 qname.mLocalName == txXSLTAtoms::stylesheet ||
+                 qname.mLocalName == txXSLTAtoms::_template ||
+                 qname.mLocalName == txXSLTAtoms::text ||
+                 qname.mLocalName == txXSLTAtoms::transform ||
+                 qname.mLocalName == txXSLTAtoms::valueOf ||
+                 qname.mLocalName == txXSLTAtoms::variable ||
+                 qname.mLocalName == txXSLTAtoms::when ||
+                 qname.mLocalName == txXSLTAtoms::withParam)) {
+                result = new BooleanResult(MB_TRUE);
             }
         }
         else {
@@ -139,3 +133,9 @@ ExprResult* ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext)
     return result;
 }
 
+nsresult ElementAvailableFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::elementAvailable;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
+}

@@ -167,6 +167,7 @@ public:
     /*
      * Virtual methods from ExprResult
      */
+    ExprResult* clone();
     short getResultType();
     MBool booleanValue();
     double numberValue();

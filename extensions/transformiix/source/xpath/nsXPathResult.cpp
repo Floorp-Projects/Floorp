@@ -96,7 +96,7 @@ nsXPathResult::GetStringValue(nsAString &aStringValue)
         return NS_ERROR_DOM_TYPE_ERR;
 
     if (mStringValue)
-        aStringValue.Assign(mStringValue->getConstNSString());
+        aStringValue.Assign(*mStringValue);
     else
         SetDOMStringToNull(aStringValue);
     return NS_OK;

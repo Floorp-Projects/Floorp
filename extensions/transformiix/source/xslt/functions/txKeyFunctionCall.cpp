@@ -18,11 +18,11 @@
  *   -- original author.
  */
 
-#include "XSLTFunctions.h"
 #include "ProcessorState.h"
-#include "Names.h"
-#include "XMLDOMUtils.h"
+#include "txAtoms.h"
 #include "txSingleNodeContext.h"
+#include "XMLDOMUtils.h"
+#include "XSLTFunctions.h"
 
 /*
  * txKeyFunctionCall
@@ -33,10 +33,9 @@
  * Creates a new key function call
  */
 txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs,
-                                     Node* aQNameResolveNode) :
-        FunctionCall(KEY_FN),
-        mProcessorState(aPs),
-        mQNameResolveNode(aQNameResolveNode)
+                                     Node* aQNameResolveNode)
+    : mProcessorState(aPs),
+      mQNameResolveNode(aQNameResolveNode)
 {
 }
 
@@ -106,6 +105,13 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     return res;
 
 } // evaluate
+
+nsresult txKeyFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::key;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
+}
 
 /*
  * Class representing an <xsl:key>. Or in the case where several <xsl:key>s

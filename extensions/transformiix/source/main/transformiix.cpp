@@ -102,18 +102,16 @@ int main(int argc, char** argv) {
     //-- open XML file
     istream* xmlInput = &cin;
     if (xmlFilename && ! xmlFilename->isEqual("-")) {
-      char* chars = xmlFilename->toCharArray();
-      xmlInput = new ifstream(chars, ios::in);
-      delete [] chars;
+      xmlInput = new ifstream(NS_LossyConvertUCS2toASCII(*xmlFilename).get(),
+                              ios::in);
     }
 
     //-- handle output stream
     ostream* resultOutput = &cout;
     ofstream resultFileStream;
     if ( outFilename && ! outFilename->isEqual("-")) {
-        char* chars = outFilename->toCharArray();
-        resultFileStream.open(chars, ios::out);
-        delete [] chars;
+        resultFileStream.open(NS_LossyConvertUCS2toASCII(*outFilename).get(),
+                              ios::out);
         if ( !resultFileStream ) {
             cerr << "error opening output file: " << *xmlFilename << endl;
             return -1;
@@ -133,9 +131,8 @@ int main(int argc, char** argv) {
     }
     else {
         //-- open XSLT file
-        char* chars = xsltFilename->toCharArray();
-        ifstream xsltInput(chars, ios::in);
-        delete [] chars;
+        ifstream xsltInput(NS_LossyConvertUCS2toASCII(*xsltFilename).get(),
+                           ios::in);
         xsltProcessor.process(*xmlInput, *xmlFilename, xsltInput, *xsltFilename, *resultOutput);
     }
     resultFileStream.close();

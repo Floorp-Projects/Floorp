@@ -34,32 +34,17 @@
  */
 
 #include "FunctionLib.h"
-#include "XMLDOMUtils.h"
 #include <math.h>
+#include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "XMLDOMUtils.h"
 
 /*
  * Creates a NumberFunctionCall of the given type
  */
-NumberFunctionCall::NumberFunctionCall(NumberFunctions aType) {
-    mType = aType;
-    switch (mType) {
-    case ROUND:
-        name = XPathNames::ROUND_FN;
-        break;
-    case CEILING:
-        name = XPathNames::CEILING_FN;
-        break;
-    case FLOOR:
-        name = XPathNames::FLOOR_FN;
-        break;
-    case SUM:
-        name = XPathNames::SUM_FN;
-        break;
-    case NUMBER:
-        name = XPathNames::NUMBER_FN;
-        break;
-    }
+NumberFunctionCall::NumberFunctionCall(NumberFunctions aType)
+    : mType(aType)
+{
 }
 
 /*
@@ -150,4 +135,42 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
     String err("Internal error");
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
+}
+
+nsresult NumberFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    switch (mType) {
+        case NUMBER:
+        {
+            *aAtom = txXPathAtoms::number;
+            break;
+        }
+        case ROUND:
+        {
+            *aAtom = txXPathAtoms::round;
+            break;
+        }
+        case FLOOR:
+        {
+            *aAtom = txXPathAtoms::floor;
+            break;
+        }
+        case CEILING:
+        {
+            *aAtom = txXPathAtoms::ceiling;
+            break;
+        }
+        case SUM:
+        {
+            *aAtom = txXPathAtoms::sum;
+            break;
+        }
+        default:
+        {
+            *aAtom = 0;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
 }

@@ -70,7 +70,7 @@ Document* XMLParser::getDocumentFromURI(const String& href,
 {
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> documentURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), href.getConstNSString());
+    nsresult rv = NS_NewURI(getter_AddRefs(documentURI), href);
     NS_ENSURE_SUCCESS(rv, NULL);
 
     nsCOMPtr<nsISyncLoader> loader = do_CreateInstance(TRANSFORMIIX_SYNCLOADER_CONTRACTID, &rv);

@@ -56,7 +56,7 @@ const String& Entity::getPublicId()
 
     publicId.clear();
     if (nsEntity)
-        nsEntity->GetPublicId(publicId.getNSString());
+        nsEntity->GetPublicId(publicId);
     return publicId;
 }
 
@@ -71,7 +71,7 @@ const String& Entity::getSystemId()
 
     systemId.clear();
     if (nsEntity)
-        nsEntity->GetSystemId(systemId.getNSString());
+        nsEntity->GetSystemId(systemId);
     return systemId;
 }
 
@@ -87,6 +87,6 @@ const String& Entity::getNotationName()
 
     notationName.clear();
     if (nsEntity)
-        nsEntity->GetNotationName(notationName.getNSString());
+        nsEntity->GetNotationName(notationName);
     return notationName;
 }

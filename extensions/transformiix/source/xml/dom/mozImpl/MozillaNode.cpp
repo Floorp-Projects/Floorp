@@ -90,7 +90,7 @@ const String& Node::getNodeName()
 
     nodeName.clear();
     if (nsNode)
-        nsNode->GetNodeName(nodeName.getNSString());
+        nsNode->GetNodeName(nodeName);
     return nodeName;
 }
 
@@ -105,7 +105,7 @@ const String& Node::getNodeValue()
 
     nodeValue.clear();
     if (nsNode)
-        nsNode->GetNodeValue(nodeValue.getNSString());
+        nsNode->GetNodeValue(nodeValue);
     return nodeValue;
 }
 
@@ -256,7 +256,7 @@ void Node::setNodeValue(const String& aNewNodeValue)
     NSI_FROM_TX(Node)
 
     if (nsNode)
-        nsNode->SetNodeValue(aNewNodeValue.getConstNSString());
+        nsNode->SetNodeValue(aNewNodeValue);
 }
 
 /*
@@ -390,7 +390,7 @@ String Node::getNamespaceURI()
     NSI_FROM_TX(Node)
     String uri;
     if (nsNode)
-        nsNode->GetNamespaceURI(uri.getNSString());
+        nsNode->GetNamespaceURI(uri);
     return uri;
 }
 
@@ -510,7 +510,7 @@ String Node::getBaseURI()
     String url;
 
     if (nsDOM3Node)
-        nsDOM3Node->GetBaseURI(url.getNSString());
+        nsDOM3Node->GetBaseURI(url);
 
     return url;
 }

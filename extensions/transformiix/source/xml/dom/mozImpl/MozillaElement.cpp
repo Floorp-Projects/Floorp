@@ -64,7 +64,7 @@ const String& Element::getTagName()
 
     nodeName.clear();
     if (nsElement)
-        nsElement->GetTagName(nodeName.getNSString());
+        nsElement->GetTagName(nodeName);
     return nodeName;
 }
 
@@ -96,7 +96,7 @@ void Element::setAttribute(const String& aName, const String& aValue)
     NSI_FROM_TX(Element)
 
     if (nsElement)
-        nsElement->SetAttribute(aName.getConstNSString(), aValue.getConstNSString());
+        nsElement->SetAttribute(aName, aValue);
 }
 
 /*
@@ -113,9 +113,9 @@ void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
     NSI_FROM_TX(Element)
 
     if (nsElement)
-        nsElement->SetAttributeNS(aNamespaceURI.getConstNSString(),
-                                  aName.getConstNSString(),
-                                  aValue.getConstNSString());
+        nsElement->SetAttributeNS(aNamespaceURI,
+                                  aName,
+                                  aValue);
 }
 
 /*
@@ -134,7 +134,7 @@ void Element::removeAttribute(const String& aName)
         Attr* attrWrapper = NULL;
 
         // First, get the nsIDOMAttr object from the nsIDOMElement object
-        nsElement->GetAttributeNode(aName.getConstNSString(), getter_AddRefs(attr));
+        nsElement->GetAttributeNode(aName, getter_AddRefs(attr));
 
         // Second, remove the attribute wrapper object from the hash table if it is
         // there.  It might not be if the attribute was created using
@@ -144,7 +144,7 @@ void Element::removeAttribute(const String& aName)
             delete attrWrapper;
 
         // Lastly, have the Mozilla object remove the attribute
-        nsElement->RemoveAttribute(aName.getConstNSString());
+        nsElement->RemoveAttribute(aName);
     }
 }
 
@@ -161,7 +161,7 @@ Attr* Element::getAttributeNode(const String& aName)
     NSI_FROM_TX_NULL_CHECK(Element)
     nsCOMPtr<nsIDOMAttr> attr;
 
-    if (NS_SUCCEEDED(nsElement->GetAttributeNode(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsElement->GetAttributeNode(aName,
                                                  getter_AddRefs(attr))) && attr)
         return (Attr*)ownerDocument->createWrapper(attr);
     return NULL;
@@ -179,7 +179,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
     if (!cont)
         return MB_FALSE;
     nsresult rv;
-    rv = cont->GetAttr(aNSID, aLocalName, aValue.getNSString());
+    rv = cont->GetAttr(aNSID, aLocalName, aValue);
     NS_ENSURE_SUCCESS(rv, MB_FALSE);
     if (rv != NS_CONTENT_ATTR_NOT_THERE)
         return MB_TRUE;
@@ -261,7 +261,7 @@ NodeList* Element::getElementsByTagName(const String& aName)
     NSI_FROM_TX_NULL_CHECK(Element)
     nsCOMPtr<nsIDOMNodeList> list;
 
-    if (NS_SUCCEEDED(nsElement->GetElementsByTagName(aName.getConstNSString(),
+    if (NS_SUCCEEDED(nsElement->GetElementsByTagName(aName,
             getter_AddRefs(list))))
         return ownerDocument->createNodeList(list);
     return NULL;
