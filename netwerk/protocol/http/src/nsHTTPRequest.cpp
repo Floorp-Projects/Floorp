@@ -291,7 +291,8 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
         if (-1 != mPort)
         {
             char* tempHostPort = 
-                PR_smprintf("%s:%d",(const char*)mHost, mPort);
+                PR_smprintf(PL_strchr(mHost, ':') ? "[%s]:%d" : "%s:%d",
+                            (const char*)mHost, mPort);
             if (tempHostPort)
             {
                 SetHeader(nsHTTPAtoms::Host, tempHostPort);
