@@ -378,7 +378,7 @@ function vmgr_parselocation (locationURL)
     parseResult = {
         url: locationURL,
         windowId: ary[1],
-        containerId: (2 in ary) ? ary[2] : VMGR_DEFAULT_CONTAINER
+        containerId: arrayHasElementAt(ary, 2) ? ary[2] : VMGR_DEFAULT_CONTAINER
     };
 
     var rest = RegExp.rightContext.substr(1);
@@ -394,7 +394,7 @@ function vmgr_parselocation (locationURL)
                    locationURL))
         {
             /* only set the property the first time we see it */
-            if (2 in ary && !(ary[1] in parseResult))
+            if (arrayHasElementAt(ary, 2) && !(ary[1] in parseResult))
                 parseResult[ary[1]] = ary[2];
         }
         ary = rest.match(/([^&]+)/);

@@ -114,7 +114,7 @@ function parseJSDURL (url)
             {
                 var name = decodeURIComponent(ary[1]);
                 /* only set the property the first time we see it */
-                if (2 in ary && !(name in parseResult))
+                if (arrayHasElementAt(ary, 2) && !(name in parseResult))
                     parseResult[name] = decodeURIComponent(ary[2]);
             }
             ary = rest.match(/([^&#]+)/);
