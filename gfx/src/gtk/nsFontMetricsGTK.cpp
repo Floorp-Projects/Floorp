@@ -850,8 +850,6 @@ static PLHashTable* gCharSets = nsnull;
 
 static nsFontCharSetInfo Ignore = { nsnull };
 
-static nsICharsetConverterManager* gConverterManager = nsnull;
-
 static gint
 ISO88591Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
@@ -883,6 +881,47 @@ ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
 
 static nsFontCharSetInfo ISO88591 =
   { ISO88591Convert, ISO88591GenerateMap, nsnull };
+
+#if 0
+
+#define TEMPORARY_CONVERTERS
+#ifdef TEMPORARY_CONVERTERS
+
+#include "jisx0208.h"
+
+static gint
+JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRUint32 aSrcLen, PRUint8* aDestBuf, PRUint32 aDestLen)
+{
+  gint ret = 0;
+
+  while (aSrcLen--) {
+    unsigned short jis = unicodeToJISX0208[*aSrcBuf++];
+    if (aDestLen > 1) {
+      *aDestBuf++ = (jis >> 8);
+      *aDestBuf++ = (jis & 0xff);
+      aDestLen -= 2;
+      ret += 2;
+    }
+  }
+
+  return ret;
+}
+
+static void
+JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
+{
+  PRUint8* map = aSelf->mMap;
+  for (PRUint32 unicode = 0; unicode < 65536; unicode++) {
+    if (unicodeToJISX0208[unicode]) {
+      ADD_GLYPH(map, unicode);
+    }
+  }
+}
+
+#else /* TEMPORARY_CONVERTERS */
+
+static nsICharsetConverterManager* gConverterManager = nsnull;
 
 static gint
 JISX02081983Convert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
@@ -925,8 +964,8 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
   }
   encoder->SetOutputErrorBehavior(encoder->kOnError_Replace, nsnull, '?');
   PRUint8* map = aSelf->mMap;
-  PRUnichar c;
-  for (PRUint16 row = 1 /* XXX 0 */; row < 256; row++) {
+  PRUnichar c = 0;
+  for (PRUint16 row = 0; row < 256; row++) {
     PRUnichar src[256];
     for (PRUint16 cell = 0; cell < 256; cell++) {
       src[cell] = ((row << 8) | cell);
@@ -934,12 +973,24 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
     PRInt32 srcLen = 256;
     PRUint8 dest[256 * 3];
     PRInt32 destLen = sizeof(dest);
-    encoder->Reset();
-    src[0] = 0x3042;
+    /*
+    src[0] = 0x30de;
     srcLen = 1;
+    */
+    encoder->Reset();
     res = encoder->Convert(src, &srcLen, (char*) dest, &destLen);
-    printf("0x3042 -> 0x%02x 0x%02x\n", dest[0], dest[1]);
+    /*
+    if (destLen == 1) {
+      printf("U+30DE -> %x\n", dest[0]);
+    }
+    else if (destLen == 2) {
+      printf("U+30DE -> %x %x\n", dest[0], dest[1]);
+    }
+    else {
+      printf("destLen %d\n", destLen);
+    }
     return;
+    */
     if (NS_FAILED(res)) {
       printf("euc-jp Convert failed\n");
       return;
@@ -948,28 +999,63 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
       printf("srcLen != 256\n");
     }
     PRUint8* d = (PRUint8*) dest;
-    c = (row << 8); /* XXX put outside main loop */
-    while (destLen-- > 0) {
-      PRUint8 b = *d++;
-      if (b < 0x80) {
-        // do nothing
+    if (!row) {
+      printf("row 0: ");
+      for (int i = 0; i < destLen; i++) {
+        printf("%02x ", d[i]);
       }
-      else if (b == 0x8e) {
-        destLen--;
+      printf("\n");
+    }
+    printf("row %d c %x destLen %d\n", row, c, destLen);
+    while (destLen > 0) {
+      PRUint8 b = *d;
+      if (b < 0x7f) {
+	printf("%x %x\n", c, b);
+	destLen--;
 	d++;
       }
-      else if (b == 0x8f) {
+      else if (b < 0x8e) {
+	printf("%x %x\n", c, b);
+	destLen--;
+	d++;
+      }
+      else if (b == 0x8e) {
+	printf("%x %x %x\n", c, b, d[1]);
         destLen -= 2;
 	d += 2;
       }
-      else {
-        destLen--;
+      else if (b == 0x8f) {
+	printf("%x %x %x %x\n", c, b, d[1], d[2]);
+        destLen -= 3;
+	d += 3;
+      }
+      else if (b < 0xa1) {
+	printf("%x %x\n", c, b);
+	destLen--;
 	d++;
+      }
+      else if (b < 0xff) {
+	printf("%x %x %x\n", c, b, d[1]);
+        destLen -= 2;
+	d += 2;
         ADD_GLYPH(map, c);
+      }
+      else {
+	printf("%x %x\n", c, b);
+	destLen--;
+	d++;
       }
       c++;
     }
+    return;
   }
+  if (FONT_HAS_GLYPH(map, 0x30de)) {
+    printf("map contains glyph 0x30de\n");
+  }
+  else {
+    printf("map does not contain glyph 0x30de\n");
+  }
+  /*
   int count = 0;
   for (c = 0; count < 500; c++) {
     if (FONT_HAS_GLYPH(map, c)) {
@@ -978,10 +1064,15 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
     }
   }
   printf("\n");
+  */
 }
+
+#endif /* TEMPORARY_CONVERTERS */
 
 static nsFontCharSetInfo JISX02081983 =
   { JISX02081983Convert, JISX02081983GenerateMap, nsnull };
+
+#endif /* 0 */
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -1060,7 +1151,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-9",          &Ignore        },
   { "jisx0201.1976-0",    &Ignore        },
   { "jisx0201.1976-1",    &Ignore        },
-  { "jisx0208.1983-0",    &JISX02081983  },
+  { "jisx0208.1983-0",    &Ignore        }, // JISX02081983
   { "jisx0208.1990-0",    &Ignore        },
   { "jisx0212.1990-0",    &Ignore        },
   { "ksc5601.1987-0",     &Ignore        },
@@ -1811,7 +1902,6 @@ GetFontNames(char* aPattern)
         continue;
       }
     }
-    nsFontSize* size = &charSet->mSizes[charSet->mSizesCount++];
     p = name;
     while (p < charSetName) {
       if (!*p) {
@@ -1823,8 +1913,11 @@ GetFontNames(char* aPattern)
     if (!copy) {
       continue;
     }
+    nsFontSize* size = &charSet->mSizes[charSet->mSizesCount++];
     size->mName = copy;
     size->mSize = pixels;
+    size->mFont = nsnull;
+    size->mActualSize = 0;
   }
 
 #ifdef DEBUG_DUMP_TREE
@@ -1948,6 +2041,18 @@ nsFontMetricsGTK::GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
   gint len = aInfo->Convert(aInfo, aString, aLength, (PRUint8*) buf,
     sizeof(buf));
   return gdk_text_width(aFont, (char*) buf, len);
+}
+
+void
+nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, GdkFont* aFont,
+  nsFontCharSetInfo* aInfo, nscoord aX, nscoord aY, const PRUnichar* aString,
+  PRUint32 aLength)
+{
+  XChar2b buf[512];
+  gint len = aInfo->Convert(aInfo, aString, aLength, (PRUint8*) buf,
+    sizeof(buf));
+  ::gdk_draw_text(aSurface->GetDrawable(), aFont, aSurface->GetGC(), aX, aY,
+    (char*) buf, len);
 }
 
 #endif /* FONT_SWITCHING */

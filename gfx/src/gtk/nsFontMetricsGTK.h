@@ -95,6 +95,9 @@ public:
   nsFontGTK*  FindFont(PRUnichar aChar);
   static gint GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
                        const PRUnichar* aString, PRUint32 aLength);
+  static void DrawString(nsDrawingSurfaceGTK* aSurface, GdkFont* aFont,
+                         nsFontCharSetInfo* aInfo, nscoord aX, nscoord aY,
+			 const PRUnichar* aString, PRUint32 aLength);
   static void InitFonts(void);
 
   friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);

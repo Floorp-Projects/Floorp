@@ -1098,6 +1098,112 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
   return NS_OK;
 }
 
+#ifdef FONT_SWITCHING
+
+NS_IMETHODIMP
+nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                  nscoord aX, nscoord aY,
+                                  PRInt32 aFontID,
+                                  const nscoord* aSpacing)
+{
+  if (aLength && mFontMetrics) {
+    g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+
+    nscoord x = aX;
+    nscoord y;
+
+    // Substract xFontStruct ascent since drawing specifies baseline
+    mFontMetrics->GetMaxAscent(y);
+    y += aY;
+    aY = y;
+
+    mTMatrix->TransformCoord(&x, &y);
+
+    nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
+    GdkFont* prevFont = nsnull;
+    nsFontCharSetInfo* prevCharSetInfo = nsnull;
+    PRUint32 start = 0;
+    PRUint32 i;
+    for (i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      GdkFont* currFont = nsnull;
+      nsFontCharSetInfo* currCharSetInfo = nsnull;
+      nsFontGTK* font = metrics->mLoadedFonts;
+      nsFontGTK* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH(font->mMap, c)) {
+	  currFont = font->mFont;
+	  currCharSetInfo = font->mCharSetInfo;
+	  goto FoundFont; // for speed -- avoid "if" statement
+	}
+	font++;
+      }
+      font = metrics->FindFont(c);
+      currFont = font->mFont;
+      currCharSetInfo = font->mCharSetInfo;
+FoundFont:
+      // XXX avoid this test by duplicating code -- erik
+      if (prevFont) {
+	if (currFont != prevFont) {
+	  if (aSpacing) {
+	    const PRUnichar* str = &aString[start];
+	    const PRUnichar* end = &aString[i];
+	    while (str < end) {
+	      x = aX;
+	      y = aY;
+              mTMatrix->TransformCoord(&x, &y);
+              nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
+	        x, y, str, 1);
+	      aX += *aSpacing++;
+	      str++;
+	    }
+	  }
+	  else {
+            nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
+	      x, y, &aString[start], i - start);
+            x += nsFontMetricsGTK::GetWidth(prevFont, prevCharSetInfo,
+	      &aString[start], i - start);
+	  }
+	  prevFont = currFont;
+	  prevCharSetInfo = currCharSetInfo;
+	  start = i;
+	}
+      }
+      else {
+        prevFont = currFont;
+	prevCharSetInfo = currCharSetInfo;
+	start = i;
+      }
+    }
+
+    if (prevFont) {
+      if (aSpacing) {
+	const PRUnichar* str = &aString[start];
+	const PRUnichar* end = &aString[i];
+	while (str < end) {
+	  x = aX;
+	  y = aY;
+          mTMatrix->TransformCoord(&x, &y);
+          nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
+	    x, y, str, 1);
+	  aX += *aSpacing++;
+	  str++;
+	}
+      }
+      else {
+        nsFontMetricsGTK::DrawString(mSurface, prevFont, prevCharSetInfo,
+          x, y, &aString[start], i - start);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+#else /* FONT_SWITCHING */
+
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
                                   nscoord aX, nscoord aY,
@@ -1161,6 +1267,8 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
   }
   return NS_OK;
 }
+
+#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP
 nsRenderingContextGTK::DrawString(const nsString& aString,
