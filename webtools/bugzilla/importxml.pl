@@ -68,8 +68,8 @@ require "CGI.pl";
 require "globals.pl";
 $::lockcount = 0;
 
-GetVersionTable();
 ConnectToDatabase();
+GetVersionTable();
 
 
 sub sillyness {
