@@ -40,13 +40,11 @@ import java.util.*;
 
 public class VariableTable {
 
-    public int size()
-    {
+    public int size() {
         return itsVariables.size();
     }
 
-    public int getParameterCount()
-    {
+    public int getParameterCount(){
         return varStart;
     }
     
@@ -55,13 +53,11 @@ public class VariableTable {
         return new LocalVariable(name, isParameter);
     }
 
-    public LocalVariable get(int index)
-    {
+    public LocalVariable getVariable(int index) {
         return (LocalVariable)(itsVariables.elementAt(index));
     }
 
-    public LocalVariable get(String name)
-    {
+    public LocalVariable getVariable(String name) {
         Integer vIndex = (Integer)(itsVariableNames.get(name));
         if (vIndex != null)
             return (LocalVariable)(itsVariables.elementAt(vIndex.intValue()));
@@ -77,21 +73,18 @@ public class VariableTable {
             return -1;
     }
 
-    public String getName(int index)
-    {
+    public String getName(int index) {
         return ((LocalVariable)(itsVariables.elementAt(index))).getName();
     }
 
-    public void establishIndices()
-    {
+    public void establishIndices() {
         for (int i = 0; i < itsVariables.size(); i++) {
             LocalVariable lVar = (LocalVariable)(itsVariables.elementAt(i));
             lVar.setIndex(i);
         }
     }
 
-    public void addParameter(String pName)
-    {
+    public void addParameter(String pName) {
         Integer pIndex = (Integer)(itsVariableNames.get(pName));
         if (pIndex != null) {
             LocalVariable p = (LocalVariable)
@@ -111,8 +104,7 @@ public class VariableTable {
         itsVariableNames.put(pName, new Integer(curIndex));
     }
 
-    public void addLocal(String vName)
-    {
+    public void addLocal(String vName) {
         Integer vIndex = (Integer)(itsVariableNames.get(vName));
         if (vIndex != null) {
             LocalVariable v = (LocalVariable)
