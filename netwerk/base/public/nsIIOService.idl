@@ -41,9 +41,9 @@ interface nsIIOService : nsISupports
 
     /**
      * Returns a uritype for a given scheme.
-   *
-   * @param scheme	URI scheme 
-   * @return	returns short for uritype definition
+     *
+     * @param scheme	URI scheme 
+     * @return	returns short for uritype definition
      */
     short getURIType(in string scheme);
 
@@ -144,10 +144,10 @@ interface nsIIOService : nsISupports
 
     nsIURLParser getParserForScheme(in string scheme);
 
-   string extractUrlPart(in string urlString,
-                         in short flag,
-                         out unsigned long startPos,
-                         out unsigned long endPos);
+    string extractUrlPart(in string urlString,
+                          in short flag,
+                          out unsigned long startPos,
+                          out unsigned long endPos);
 
 
     /**
