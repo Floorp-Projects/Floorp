@@ -89,8 +89,6 @@ public:
   NS_IMETHOD  RemoveChild(nsIView *child);
   NS_IMETHOD  GetChildCount(PRInt32 &aCount) const;
   NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) const;
-  NS_IMETHOD  SetTransform(nsTransform2D &aXForm);
-  NS_IMETHOD  GetTransform(nsTransform2D &aXForm) const;
   NS_IMETHOD  SetOpacity(float opacity);
   NS_IMETHOD  GetOpacity(float &aOpacity) const;
   NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
@@ -110,7 +108,6 @@ public:
   NS_IMETHOD  SetViewFlags(PRUint32 aFlags);
   NS_IMETHOD  ClearViewFlags(PRUint32 aFlags);
   NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
-  NS_IMETHOD  GetScratchPoint(nsPoint **aPoint);
   NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
   NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
   NS_IMETHOD  GetExtents(nsRect *aExtents);
@@ -153,12 +150,10 @@ protected:
   PRInt32           mNumKids;
   nsRect            mBounds;
   nsViewClip        mChildClip;
-  nsTransform2D     *mXForm;
   float             mOpacity;
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
-  nsPoint           mScratchPoint;
-  PRUint32			mCompositorFlags;
+  PRUint32			    mCompositorFlags;
 
   // Bug #19416
   PRBool            mShouldIgnoreSetPosition;

@@ -42,8 +42,6 @@ static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-#define UPDATE_QUANTUM  1000 / 40
-
 
 //#define NO_DOUBLE_BUFFER
 
@@ -151,44 +149,6 @@ nsViewManager2::PostInvalidateEvent()
   }
 }
 
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-
-static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
-{
-	nsViewManager2 *vm = (nsViewManager2 *)aClosure;
-
-  printf("ViewManager2 timer callback\n");
-
-	//restart the timer
-  
-	if (vm->mTrueFrameRate == vm->mFrameRate)
-		{
-			PRUint32 fr = vm->mFrameRate;
-
-			vm->mFrameRate = 0;
-			vm->SetFrameRate(fr);
-		}
-	//printf("timer composite...\n");
-#ifndef XP_MAC
-	//XXX temporary: The Mac doesn't need the timer to repaint but
-	// obviously this is not the good method to disable the thing.
-	// It's that way for now because the proper solutions
-	// (set UPDATE_QUANTUM to 0, or simply not create the timer)
-	// don't work for now. We'll fix that and then disable the
-	// Mac timers as we should.
-	vm->Composite();
-#endif
-}
-#endif
-
-#if 0
-static void blinkRect(nsIRenderingContext* context, const nsRect& r)
-{
-	context->InvertRect(r);
-	::PR_Sleep(::PR_MillisecondsToInterval(100));
-	context->InvertRect(r);
-}
-#endif
 
 PRInt32 nsViewManager2::mVMCount = 0;
 nsDrawingSurface nsViewManager2::mDrawingSurface = nsnull;
@@ -239,12 +199,6 @@ nsViewManager2::nsViewManager2()
 
 nsViewManager2::~nsViewManager2()
 {
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-	if (nsnull != mTimer) {
-		mTimer->Cancel();     //XXX this should not be necessary. MMP
-	}
-#endif
-
     // Revoke pending invalidate events
   if (mPendingInvalidateEvent) {
     NS_ASSERTION(nsnull != mEventQueue,"Event queue is null"); 
@@ -403,11 +357,7 @@ NS_IMETHODIMP nsViewManager2::Init(nsIDeviceContext* aContext, nscoord aX, nscoo
 	mContext->GetAppUnitsToDevUnits(mTwipsToPixels);
 	mContext->GetDevUnitsToAppUnits(mPixelsToTwips);
 
-	mFrameRate = 0;
-	mTrueFrameRate = 0;
 	mTransCnt = 0;
-
-	rv = SetFrameRate(UPDATE_QUANTUM);
 
 	mLastRefresh = PR_IntervalNow();
 
@@ -482,43 +432,6 @@ NS_IMETHODIMP nsViewManager2 :: SetRootView(nsIView *aView, nsIWidget* aWidget)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager2::GetFrameRate(PRUint32 &aRate)
-{
-	aRate = mTrueFrameRate;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager2::SetFrameRate(PRUint32 aFrameRate)
-{
-	nsresult  rv = NS_OK;
-
-	if (aFrameRate != mFrameRate)
-	{
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-			if (nsnull != mTimer)
-			{
-					mTimer->Cancel();     //XXX this should not be necessary. MMP
-			}
-#endif
-
-			mFrameRate = aFrameRate;
-			mTrueFrameRate = aFrameRate;
-
-			if (mFrameRate != 0)
-			{
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-				mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-
-				if (NS_OK == rv)
-					mTimer->Init(vm_timer_callback, this, 1000 / mFrameRate);
-#endif
-			}
-			
-	}
-
-
-	return rv;
-}
 
 NS_IMETHODIMP nsViewManager2::GetWindowDimensions(nscoord *width, nscoord *height)
 {
@@ -1207,7 +1120,6 @@ NS_IMETHODIMP nsViewManager2::Composite()
 				mRootWindow->Update();
 
 			mUpdateCnt = 0;
-			PauseTimer();
 		}
 
 	return NS_OK;
@@ -1271,9 +1183,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 	// Find the nearest view (including this view) that has a widget
 	nsIView *widgetView = GetWidgetView(aView);
 	if (nsnull != widgetView) {
-		if (0 == mUpdateCnt)
-			RestartTimer();
-
+		
 		mUpdateCnt++;
 
 #if 0
@@ -1315,13 +1225,7 @@ NS_IMETHODIMP nsViewManager2::UpdateView(nsIView *aView, const nsRect &aRect, PR
 		// See if we should do an immediate refresh or wait
 		if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
 			Composite();
-		} else if ((mTrueFrameRate > 0) && !(aUpdateFlags & NS_VMREFRESH_NO_SYNC)) {
-			// or if a sync paint is allowed and it's time for the compositor to
-			// do a refresh
-			PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-			if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-				Composite();
-		}
+		} 
 	}
 
 	return NS_OK;
@@ -2304,14 +2208,7 @@ NS_IMETHODIMP nsViewManager2::EnableRefresh(PRUint32 aUpdateFlags)
   }
 
 	if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-   
-		if (mTrueFrameRate > 0)
-			{
-				PRInt32 deltams = PR_IntervalToMilliseconds(PR_IntervalNow() - mLastRefresh);
-
-				if (deltams > (1000 / (PRInt32)mTrueFrameRate))
-					Composite();
-			}
+    Composite();
 	}
 
 
@@ -2802,18 +2699,6 @@ PRBool nsViewManager2::IsClipView(nsIView* aView)
 	nsIClipView *clipView = nsnull;
 	nsresult rv = aView->QueryInterface(NS_GET_IID(nsIClipView), (void **)&clipView);
 	return (rv == NS_OK && clipView != nsnull);
-}
-
-void nsViewManager2::PauseTimer(void)
-{
-	PRUint32 oldframerate = mTrueFrameRate;
-	SetFrameRate(0);
-	mTrueFrameRate = oldframerate;
-}
-
-void nsViewManager2::RestartTimer(void)
-{
-	SetFrameRate(mTrueFrameRate);
 }
 
 nsIView* nsViewManager2::GetWidgetView(nsIView *aView) const

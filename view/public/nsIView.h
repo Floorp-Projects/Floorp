@@ -342,20 +342,6 @@ public:
   NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) const = 0;
 
   /**
-   * Note: This didn't exist in 4.0. This transform might include scaling
-   * but probably not rotation for the first pass.
-   * @param transform new transformation of view
-   */
-  NS_IMETHOD  SetTransform(nsTransform2D &aXForm) = 0;
-
-  /**
-   * Note: This didn't exist in 4.0. This transform might include scaling
-   * but probably not rotation for the first pass.
-   * @result view's transformation
-   */
-  NS_IMETHOD  GetTransform(nsTransform2D &aXForm) const = 0;
-
-  /**
    * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
    * A value of 0.0 means completely transparent. A value of 1.0 means
    * completely opaque.
@@ -486,15 +472,6 @@ public:
    */
   NS_IMETHOD GetViewFlags(PRUint32 *aFlags) const = 0;
 
-  /**
-   * Get pointer to temporary data storage used by
-   * the compositor. make no assumptions about the
-   * data returned by this method. oh yeah, and it's a hack.
-   * @param aPoint out paramemter for nsPoint structure
-   *        stored in view.
-   * @return error status
-   */
-  NS_IMETHOD GetScratchPoint(nsPoint **aPoint) = 0;
   
   /**
    * Used by the compositor for temporary marking of a view during

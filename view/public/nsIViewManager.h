@@ -83,22 +83,6 @@ public:
   NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget = nsnull) = 0;
 
   /**
-   * Get the current framerate i.e. the rate at which timed
-   * refreshes occur. A framerate of 0 indicates that timed refreshes
-   * should not occur. framerate is in terms of frames per second
-   * @result the update rate in terms of frames per second
-   */
-  NS_IMETHOD  GetFrameRate(PRUint32& aRate) = 0;
-
-  /**
-   * Set the current framerate.
-   * @param frameRate new update rate. see GetFrameRate for more info
-   * @result the call may need to create a timer and the success
-   *         status will be returned. NS_OK means all is well
-   */
-  NS_IMETHOD  SetFrameRate(PRUint32 frameRate) = 0;
-
-  /**
    * Get the dimensions of the root window. The dimensions are in
    * twips
    * @param width out parameter for width of window in twips

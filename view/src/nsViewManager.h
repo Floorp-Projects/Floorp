@@ -51,12 +51,6 @@ struct DisplayZTreeNode;
 #endif
 
 
-// Dont want to get rid of timer code, because we may want to use it
-// if we go to a implementation where we have invalidates that have been queued
-// within the view manager, instead of doing invalidates on the widget.
-// The timer would be used to cause the paints to happen.
-//#define NS_VIEWMANAGER_NEEDS_TIMER 1
-
 class nsViewManager : public nsIViewManager {
 public:
   nsViewManager();
@@ -69,9 +63,6 @@ public:
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget=nsnull);
-
-  NS_IMETHOD  GetFrameRate(PRUint32 &aRate);
-  NS_IMETHOD  SetFrameRate(PRUint32 frameRate);
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
@@ -366,17 +357,9 @@ private:
   nsIRenderingContext *mWhiteCX;
 
   nsISupportsArray  *mCompositeListeners;
-
-public:
-  //these are public so that our timer callback can poke them.
-#ifdef NS_VIEWMANAGER_NEEDS_TIMER
-  nsCOMPtr<nsITimer> mTimer;
-#endif
-  nsIView           *mRootView;
-  PRUint32          mFrameRate;
-  PRUint32          mTrueFrameRate;
-
+ 
 protected:
+  nsIView           *mRootView;
   nscoord           mX;
   nscoord           mY;
   PRBool            mAllowDoubleBuffering;
