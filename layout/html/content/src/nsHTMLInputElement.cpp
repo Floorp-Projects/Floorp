@@ -566,6 +566,17 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus)) {
     switch (aEvent->message) {
+      case NS_FOCUS_CONTENT:
+      {
+        nsIFormControlFrame* formControlFrame = nsnull;
+        nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+        if (NS_SUCCEEDED(rv)) {
+          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+          return NS_OK;
+        }                                                                       
+      }                                                                         
+      break; 
+          
       case NS_KEY_PRESS:
       {
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
@@ -573,18 +584,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
           PRInt32 type;
           GetType(&type);
           switch(type) {
-          case NS_FOCUS_CONTENT:                                                    
-          {                                                                         
-            nsIFormControlFrame* formControlFrame = nsnull;                         
-            nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-            if (NS_SUCCEEDED(rv)) {                                                 
-              formControlFrame->SetFocus(PR_TRUE, PR_TRUE);                         
-              return NS_OK;                                                         
-            }                                                                       
-            //SetFocus(&aPresContext);                                              
-          }                                                                         
-          break; 
-          
           case NS_FORM_INPUT_CHECKBOX:
             {
               PRBool checked;
