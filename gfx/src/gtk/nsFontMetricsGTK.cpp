@@ -1666,8 +1666,10 @@ nsFontGTKNormal::DrawString(nsRenderingContextGTK* aContext,
   gint len = mCharSetInfo->Convert(mCharSetInfo,
     (XFontStruct*) GDK_FONT_XFONT(mFont), aString, aLength, (char*) buf,
     sizeof(buf));
-  ::gdk_draw_text(aSurface->GetDrawable(), mFont, aContext->GetGC(), aX,
+  GdkGC *gc = aContext->GetGC();
+  ::gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
     aY + mBaselineAdjust, (char*) buf, len);
+  gdk_gc_unref(gc);
   return ::gdk_text_width(mFont, (char*) buf, len);
 }
 
@@ -1912,8 +1914,10 @@ nsFontGTKUserDefined::DrawString(nsRenderingContextGTK* aContext,
 {
   char buf[1024];
   PRUint32 len = Convert(aString, aLength, buf, sizeof(buf));
-  ::gdk_draw_text(aSurface->GetDrawable(), mFont, aContext->GetGC(), aX,
+  GdkGC *gc = aContext->GetGC();
+  ::gdk_draw_text(aSurface->GetDrawable(), mFont, gc, aX,
     aY + mBaselineAdjust, buf, len);
+  gdk_gc_unref(gc);
 
   return ::gdk_text_width(mFont, buf, len);
 }
