@@ -49,7 +49,7 @@ public:
 
 protected:
   GtkStyle *mStyle;
-  GdkWindow *mWindow;
+  GtkWidget *mWidget;
 };
 
 #endif
