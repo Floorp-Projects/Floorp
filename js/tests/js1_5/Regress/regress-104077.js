@@ -38,13 +38,24 @@
 * Date: 10 October 2001
 * SUMMARY: Regression test for Bugzilla bug 104077
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=104077
-* 
-* SpiderMonkey crashed on this code -
+* "JS crash: with/finally/return"
+*
+* SpiderMonkey crashed on this code - it shouldn't.
+*
+* NOTE: the finally-blocks below should execute even if their try-blocks
+* have return or throw statements in them:
+*
+* ------- Additional Comment #76 From Mike Shaver 2001-12-07 01:21 -------
+* finally trumps return, and all other control-flow constructs that cause
+* program execution to jump out of the try block: throw, break, etc.  Once you
+* enter a try block, you will execute the finally block after leaving the try,
+* regardless of what happens to make you leave the try.
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 104077;
-var summary = "Just testing that we don't crash on this code -";
+var summary = "Just testing that we don't crash on with/finally/return -";
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -488,6 +499,35 @@ obj.arg3.a = 10;
 obj.arg3.b = 20;
 actual = addValues_5(obj);
 expect = 8;
+captureThis();
+
+
+
+
+function testObj(obj)
+{
+  var x = 42;
+
+  try
+  {
+    with (obj)
+    {
+      if (obj.p)
+        throw obj.p;
+      x = obj.q;
+    }
+  }
+  finally
+  {
+    print("in finally block of testObj() function");
+    return 999;
+  }
+}
+
+status = inSection(12);
+obj = {p:43};
+actual = testObj(obj);
+expect = 999;
 captureThis();
 
 
