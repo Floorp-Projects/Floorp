@@ -1363,10 +1363,11 @@ NS_COM int fputs(const nsCString& aString, FILE* out)
  * @update  gess 11/15/99
  */
 void nsCString::DebugDump(void) const {
-  
+#ifdef DEBUG  
   if(mStr && (eOneByte==mCharSize)) {
     printf("\n%s",mStr);
   }
+#endif
 }
        
 //----------------------------------------------------------------------

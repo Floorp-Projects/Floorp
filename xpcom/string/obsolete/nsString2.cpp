@@ -1599,7 +1599,7 @@ NS_COM int fputs(const nsString& aString, FILE* out)
  * @update  gess 11/15/99
  */
 void nsString::DebugDump(void) const {
-  
+#ifdef DEBUG  
   const char* theBuffer=mStr;
   nsCAutoString temp;
 
@@ -1611,6 +1611,7 @@ void nsString::DebugDump(void) const {
   if(theBuffer) {
     printf("\n%s",theBuffer);
   }
+#endif
 }
        
 
