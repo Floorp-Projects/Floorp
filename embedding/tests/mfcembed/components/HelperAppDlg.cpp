@@ -210,7 +210,7 @@ CWnd* CHelperAppLauncherDialog::GetParentFromContext(nsISupports *aWindowContext
 //
 NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher, 
                                              nsISupports *aContext,
-                                             PRBool aForced)
+                                             PRUint32 aReason)
 {
     ResourceState setState;
 

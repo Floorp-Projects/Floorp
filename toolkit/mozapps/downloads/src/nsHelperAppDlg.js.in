@@ -82,7 +82,7 @@ nsUnknownContentTypeDialog.prototype = {
     // show: Open XUL dialog using window watcher.  Since the dialog is not
     //       modal, it needs to be a top level window and the way to open
     //       one of those is via that route).
-    show: function(aLauncher, aContext)  {  
+    show: function(aLauncher, aContext, aReason)  {
       this.mLauncher = aLauncher;
       this.mContext  = aContext;
       // Display the dialog using the Window Watcher interface.

@@ -113,26 +113,6 @@ public:
    * this service is first instantiated.
    */
   NS_HIDDEN_(nsresult) Init();
-
-  /**
-   * Create an external app handler and binds it with a mime info object which
-   * represents how we want to dispose of this content.
-   * CreateNewExternalHandler is implemented only by the base class.
-   * @param aMIMEInfo      MIMEInfo object, representing the type of the
-   *                       content that should be handled
-   * @param aFileExtension The extension we need to append to our temp file,
-   *                       INCLUDING the ".". e.g. .mp3
-   * @param aFileName      The filename to use
-   * @param aIsAttachment  Whether the request has Content-Disposition: attachment
-   *                       set
-   * @param aWindowContext Window context, as passed to DoContent
-   */
-  NS_HIDDEN_(nsExternalAppHandler *)
-                         CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo,
-                                                  const nsCSubstring& aFileExtension,
-                                                  const nsAString& aFileName,
-                                                  PRBool aIsAttachment,
-                                                  nsIInterfaceRequestor* aWindowContext);
  
   /**
    * Given a content type, look up the user override information to see if
@@ -349,13 +329,22 @@ public:
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSIOBSERVER
 
-  nsExternalAppHandler();
-  ~nsExternalAppHandler();
+  /**
+   * @param aMIMEInfo      MIMEInfo object, representing the type of the
+   *                       content that should be handled
+   * @param aFileExtension The extension we need to append to our temp file,
+   *                       INCLUDING the ".". e.g. .mp3
+   * @param aWindowContext Window context, as passed to DoContent
+   * @param aFileName      The filename to use
+   * @param aReason        A constant from nsIHelperAppLauncherDialog indicating
+   *                       why the request is handled by a helper app.
+   */
+  nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
+                       nsIInterfaceRequestor * aWindowContext,
+                       const nsAString& aFilename,
+                       PRUint32 aReason);
 
-  nsresult Init(nsIMIMEInfo * aMIMEInfo, const nsCSubstring& aFileExtension,
-                nsIInterfaceRequestor * aWindowContext,
-                const nsAString& aFilename,
-                PRBool aIsAttachment);
+  ~nsExternalAppHandler();
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
@@ -387,8 +376,14 @@ protected:
   PRPackedBool mReceivedDispositionInfo;
   PRPackedBool mStopRequestIssued; 
   PRPackedBool mProgressListenerInitialized;
-  /// This is set when handling something with "Content-Disposition: attachment"
-  PRPackedBool mHandlingAttachment;
+
+  /**
+   * One of the REASON_ constants from nsIHelperAppLauncherDialog. Indicates the
+   * reason the dialog was shown (unknown content type, server requested it,
+   * etc).
+   */
+  PRUint32 mReason;
+
   PRTime mTimeDownloadStarted;
   PRInt32 mContentLength;
   PRInt32 mProgress; /**< Number of bytes received (for sending progress notifications). */

@@ -565,7 +565,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 {
   nsAutoString fileName;
   nsCAutoString fileExtension;
-  PRBool isAttachment = PR_FALSE;
+  PRUint32 reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
   nsresult rv;
 
   // Get the file extension and name that we will need later
@@ -612,12 +612,14 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
       }
     }
     // Extract name & extension
-    isAttachment = GetFilenameAndExtensionFromChannel(channel, fileName,
-                                                      fileExtension,
-                                                      allowURLExt);
+    PRBool isAttachment = GetFilenameAndExtensionFromChannel(channel, fileName,
+                                                             fileExtension,
+                                                             allowURLExt);
     LOG(("Found extension '%s' (filename is '%s', handling attachment: %i)",
          fileExtension.get(), NS_ConvertUTF16toUTF8(fileName).get(),
          isAttachment));
+    if (isAttachment)
+      reason = nsIHelperAppLauncherDialog::REASON_SERVERREQUEST;
   }
 
   LOG(("HelperAppService::DoContent: mime '%s', extension '%s'\n",
@@ -645,6 +647,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
     }
     if (channel)
       channel->SetContentType(mimeType);
+    // Don't overwrite SERVERREQUEST
+    if (reason == nsIHelperAppLauncherDialog::REASON_CANTHANDLE)
+      reason = nsIHelperAppLauncherDialog::REASON_TYPESNIFFED;
   } 
   else {
     GetFromTypeAndExtension(aMimeContentType, fileExtension,
@@ -658,16 +663,15 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const nsACString& aMimeConte
 
   *aStreamListener = nsnull;
   // We want the mimeInfo's primary extension to pass it to
-  // CreateNewExternalHandler
+  // nsExternalAppHandler
   nsCAutoString buf;
   mimeInfo->GetPrimaryExtension(buf);
 
-  // this code is incomplete and just here to get things started..
-  nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo,
+  nsExternalAppHandler * handler = new nsExternalAppHandler(mimeInfo,
                                                             buf,
+                                                            aWindowContext,
                                                             fileName,
-                                                            isAttachment,
-                                                            aWindowContext);
+                                                            reason);
   if (!handler)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aStreamListener = handler);
@@ -689,23 +693,6 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
     }
   }
   return NS_OK;
-}
-
-nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
-                                                                            const nsCSubstring& aTempFileExtension,
-                                                                            const nsAString& aFileName,
-                                                                            PRBool aIsAttachment,
-                                                                            nsIInterfaceRequestor * aWindowContext)
-{
-  nsExternalAppHandler* handler = nsnull;
-  NS_NEWXPCOM(handler, nsExternalAppHandler);
-  if (!handler)
-    return nsnull;
-  // add any XP intialization code for an external handler that we may need here...
-  // right now we don't have any but i bet we will before we are done.
-
-  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext, aFileName, aIsAttachment);
-  return handler;
 }
 
 nsresult nsExternalHelperAppService::FillTopLevelProperties(nsIRDFResource * aContentTypeNodeResource, 
@@ -1361,16 +1348,35 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-nsExternalAppHandler::nsExternalAppHandler()
+nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
+                                           const nsCSubstring& aTempFileExtension,
+                                           nsIInterfaceRequestor* aWindowContext,
+                                           const nsAString& aSuggestedFilename,
+                                           PRUint32 aReason)
+: mMimeInfo(aMIMEInfo)
+, mWindowContext(aWindowContext)
+, mSuggestedFileName(aSuggestedFilename)
+, mCanceled(PR_FALSE)
+, mReceivedDispositionInfo(PR_FALSE)
+, mStopRequestIssued(PR_FALSE)
+, mProgressListenerInitialized(PR_FALSE)
+, mReason(aReason)
+, mProgress(0)
+, mContentLength(-1)
+, mRequest(nsnull)
 {
-  mCanceled = PR_FALSE;
-  mReceivedDispositionInfo = PR_FALSE;
-  mHandlingAttachment = PR_FALSE;
-  mStopRequestIssued = PR_FALSE;
-  mProgressListenerInitialized = PR_FALSE;
-  mContentLength = -1;
-  mProgress      = 0;
-  mRequest = nsnull;
+
+  // make sure the extention includes the '.'
+  if (!aTempFileExtension.IsEmpty() && aTempFileExtension.First() != '.')
+    mTempFileExtension = PRUnichar('.');
+  AppendUTF8toUTF16(aTempFileExtension, mTempFileExtension);
+
+  // replace platform specific path separator and illegal characters to avoid any confusion
+  mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+  mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+  
+  // Make sure extension is correct.
+  EnsureSuggestedFileName();
 
   sSrv->AddRef();
 }
@@ -1677,7 +1683,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   PRBool alwaysAsk = PR_TRUE;
   // If we're handling an attachment we want to default to saving but
   // always ask just in case
-  if (!mHandlingAttachment)
+  if (mReason == nsIHelperAppLauncherDialog::REASON_CANTHANDLE)
   {
     mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   }
@@ -1719,7 +1725,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // this will create a reference cycle (the dialog holds a reference to us as
     // nsIHelperAppLauncher), which will be broken in Cancel or
     // CreateProgressListener.
-    rv = mDialog->Show( this, mWindowContext, mHandlingAttachment );
+    rv = mDialog->Show( this, mWindowContext, mReason );
 
     // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
   }
@@ -2050,33 +2056,6 @@ nsresult nsExternalAppHandler::ExecuteDesiredAction()
   }
   
   return rv;
-}
-
-nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo,
-                                    const nsCSubstring& aTempFileExtension,
-                                    nsIInterfaceRequestor* aWindowContext,
-                                    const nsAString& aSuggestedFilename,
-                                    PRBool aIsAttachment)
-{
-  mWindowContext = aWindowContext;
-  mMimeInfo = aMIMEInfo;
-  mHandlingAttachment = aIsAttachment;
-
-  // make sure the extention includes the '.'
-  if (!aTempFileExtension.IsEmpty() && aTempFileExtension.First() != '.')
-    mTempFileExtension = PRUnichar('.');
-  AppendUTF8toUTF16(aTempFileExtension, mTempFileExtension);
-
-  mSuggestedFileName = aSuggestedFilename;
-
-  // replace platform specific path separator and illegal characters to avoid any confusion
-  mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-  mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-  
-  // Make sure extension is correct.
-  EnsureSuggestedFileName();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
