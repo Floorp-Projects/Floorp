@@ -21,8 +21,10 @@ CWebShellContainer::~CWebShellContainer()
 ///////////////////////////////////////////////////////////////////////////////
 // nsISupports implementation
 
+
 NS_IMPL_ADDREF(CWebShellContainer)
 NS_IMPL_RELEASE(CWebShellContainer)
+
 
 nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
 {
@@ -63,18 +65,24 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
   return NS_NOINTERFACE;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebShellContainer implementation
+
 
 NS_IMETHODIMP
 CWebShellContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
+	ATLTRACE(_T("CWebShellContainer::WillLoadURL()\n"));
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
+	ATLTRACE(_T("CWebShellContainer::BeginLoadURL()\n"));
+
 	USES_CONVERSION;
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
@@ -85,48 +93,63 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	long lFlags = 0;
 
 	m_pOwner->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
-	if (bCancel == VARIANT_TRUE)
-	{
-		// TODO cancel browsing somehow
-	}
-
 	SysFreeString(bstrURL);
 	SysFreeString(bstrTargetFrameName);
 	SysFreeString(bstrHeaders);
 
+	if (bCancel == VARIANT_TRUE)
+	{
+		if (aShell)
+		{
+			aShell->Stop();
+		}
+	}
+	else
+	{
+		m_pOwner->m_bBusy = TRUE;
+	}
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
+	ATLTRACE(_T("CWebShellContainer::ProgressLoadURL()\n"));
 	m_pOwner->Fire_ProgressChange(aProgress, aProgressMax);
 	return NS_OK;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
+	ATLTRACE(_T("CWebShellContainer::EndLoadURL()\n"));
 	USES_CONVERSION;
 	OLECHAR *pszURL = W2OLE((WCHAR *) aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
 	m_pOwner->Fire_NavigateComplete(bstrURL);
+	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
 
 	return NS_OK;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::NewWebShell(nsIWebShell *&aNewWebShell)
 {
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  return rv;
+	ATLTRACE(_T("CWebShellContainer::NewWebShell()\n"));
+	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+	return rv;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
-  return NS_ERROR_FAILURE;
+	ATLTRACE(_T("CWebShellContainer::FindWebShellWithName()\n"));
+	return NS_ERROR_FAILURE;
 }
 
 
@@ -137,23 +160,30 @@ CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& a
 NS_IMETHODIMP
 CWebShellContainer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
-  return NS_ERROR_FAILURE;
+	ATLTRACE(_T("CWebShellContainer::OnStartBinding()\n"));
+	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
-  return NS_ERROR_FAILURE;
+	ATLTRACE(_T("CWebShellContainer::OnProgress()\n"));
+	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnStatus(nsIURL* aURL, const nsString &aMsg)
 {
-  return NS_ERROR_FAILURE;
+	ATLTRACE(_T("CWebShellContainer::OnStatus()\n"));
+	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
 {
-  return NS_ERROR_FAILURE;
+	ATLTRACE(_T("CWebShellContainer::OnStopBinding()\n"));
+	return NS_ERROR_FAILURE;
 }
