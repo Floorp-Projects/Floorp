@@ -526,10 +526,10 @@
              var count = 0;
 
              while (currCol) {
-               while (currCol.localName != "outlinercol")
+               while (currCol && currCol.localName != "outlinercol")
                  currCol = currCol.nextSibling;
  
-               if (currCol != this) {
+               if (currCol && (currCol != this)) {
                  // Construct an entry for each cell in the row.
                  if (firstTime) {
                      var columnName = currCol.getAttribute("label");
@@ -548,7 +548,8 @@
                      aPopup.appendChild(popupChild);
                  }
               } 
-              currCol = currCol.nextSibling;
+              if (currCol) 
+                currCol = currCol.nextSibling;
             }
            ]]>
         </body>
