@@ -50,14 +50,10 @@ Contributor(s): ______________________________________. -->
 				<html:div flex="100%">
 					&enter.label;
 				</html:div>
-				<html:div style="width: 100%; margin-bottom: 0.5em;">
-					&choose.label;
-				</html:div>
 			</box>
 			
 			<box align="horizontal"  flex="100%">
 				<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
-            <titledbutton onclick="choose()" value="&chooseFile.label;"/>
 			</box>
 			
 			<box align="horizontal"  flex="100%" style="margin-bottom: 1em; width: 100%;">
