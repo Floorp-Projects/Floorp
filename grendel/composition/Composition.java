@@ -56,14 +56,14 @@ public class Composition extends GeneralFrame {
     AddressBar mAddressBar;
 
     public static void main(String[] args) {
-        //check arguments
-        if (2 != args.length) {
-            System.out.println ("Usage: composition mail_server_name user_name");
-            System.exit(0);
-        }
+      //check arguments
+//       if (2 != args.length) {
+//         System.out.println ("Usage: composition mail_server_name user_name");
+//         System.exit(0);
+//       }
 
-        Composition compFrame = new Composition ();
-        compFrame.show();
+      Composition compFrame = new Composition ();
+      compFrame.show();
     }
 
     /**
@@ -102,7 +102,7 @@ public class Composition extends GeneralFrame {
         //top collapsible item
         fToolBarPanelConstraints.anchor = GridBagConstraints.WEST;
         fToolBarPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
-        fToolBarPanelConstraints.weightx = 10.0;
+        // fToolBarPanelConstraints.weightx = 1.0;
         fToolBarPanel.add(fToolBar, fToolBarPanelConstraints);
         fToolBarPanelConstraints.anchor = GridBagConstraints.EAST;
         fToolBarPanelConstraints.fill = GridBagConstraints.NONE;
