@@ -59,6 +59,8 @@ ifdef PTHREADS_USER
 	OS_CFLAGS	+= -D_POSIX_C_SOURCE=199506L
 endif
 
+LDFLAGS			= -z -Wl,+s
+
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
 DSO_LDOPTS		= -b
