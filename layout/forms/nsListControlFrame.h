@@ -60,7 +60,7 @@
 #include "nsIContent.h"
 
 class nsIDOMHTMLSelectElement;
-class nsIDOMHTMLCollection;
+class nsIDOMHTMLOptionsCollection;
 class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsIViewManager;
@@ -310,9 +310,9 @@ public:
 
   // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
-  static nsIDOMHTMLCollection*    GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRInt32 aIndex);
-  static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRInt32 aIndex);
+  static nsIDOMHTMLOptionsCollection* GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
+  static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLOptionsCollection* aOptions, PRInt32 aIndex);
+  static nsIContent* GetOptionAsContent(nsIDOMHTMLOptionsCollection* aCollection,PRInt32 aIndex);
 
   static void ComboboxFocusSet();
 

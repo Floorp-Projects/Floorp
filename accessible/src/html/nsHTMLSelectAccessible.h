@@ -42,10 +42,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessibleSelectable.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
-#include "nsIWeakReference.h"
 #include "nsFormControlAccessible.h"
 
 /**
@@ -94,7 +93,7 @@ protected:
     PRUint32 mIndex;
     PRInt32 mSelCount;
     nsHTMLSelectableAccessible *mParent;
-    nsCOMPtr<nsIDOMHTMLCollection> mOptions;
+    nsCOMPtr<nsIDOMHTMLOptionsCollection> mOptions;
     nsCOMPtr<nsIDOMHTMLOptionElement> mOption;
 
   public:

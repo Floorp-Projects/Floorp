@@ -39,25 +39,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsGUIEvent.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIListControlFrame.h"
-#include "nsIOptionElement.h"
-#include "nsISelectControlFrame.h"
 #include "nsIServiceManager.h"
-#include "nsIWidget.h"
-#include "nsIDOMText.h"
+#include "nsITextContent.h"
 #include "nsLayoutAtoms.h"
 
 /**
@@ -186,7 +178,7 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint
   if (!htmlSelect)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMHTMLCollection> options;
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
   htmlSelect->GetOptions(getter_AddRefs(options));
   if (!options)
     return NS_ERROR_FAILURE;
@@ -526,14 +518,10 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccName(nsAString& aName)
   mDOMNode->GetFirstChild(getter_AddRefs(child));
 
   if (child) {
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(child));
+    nsCOMPtr<nsITextContent> text(do_QueryInterface(child));
     if (text) {
-      nsCOMPtr<nsIContent> content (do_QueryInterface(child));
-      if (!content) {
-        return NS_ERROR_FAILURE;
-      }
       nsAutoString txtValue;
-      rv = AppendFlatStringFromContentNode(content, &txtValue);
+      rv = AppendFlatStringFromContentNode(text, &txtValue);
       if (NS_SUCCEEDED(rv)) {
         // Temp var (txtValue) needed until CompressWhitespace built for nsAString
         txtValue.CompressWhitespace();
@@ -740,7 +728,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(aListNode));
   NS_ASSERTION(selectElement, "No select element where it should be");
 
-  nsCOMPtr<nsIDOMHTMLCollection> options;
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
   nsresult rv = selectElement->GetOptions(getter_AddRefs(options));
   
   if (NS_SUCCEEDED(rv)) {

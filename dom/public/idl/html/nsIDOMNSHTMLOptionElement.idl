@@ -38,21 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMHTMLElement.idl"
 
-interface nsIDOMHTMLOptionElement;
-
-
-[scriptable, uuid(409bbf14-1dd2-11b2-91de-8d672d406276)]
-interface nsIDOMNSHTMLOptionCollection : nsISupports
+[scriptable, uuid(e2dfc89c-7ae0-4651-8aee-7f5edc2aa626)]
+interface nsIDOMNSHTMLOptionElement : nsISupports
 {
-           attribute long             selectedIndex;
-
-  [noscript] void           setOption(in long index,
-                                      in nsIDOMHTMLOptionElement option);
-
-  // The following exists to give us partial compatibility with the
-  // add method as it exists in IE (we don't yet support the second
-  // argument)
-  void                      add(in nsIDOMHTMLOptionElement option);
+  // Settable version of the text attribute.
+           attribute DOMString             text;
 };

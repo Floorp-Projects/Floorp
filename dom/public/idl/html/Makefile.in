@@ -71,6 +71,7 @@ XPIDLSRCS =					\
 	nsIDOMHTMLObjectElement.idl		\
 	nsIDOMHTMLOptGroupElement.idl		\
 	nsIDOMHTMLOptionElement.idl		\
+	nsIDOMHTMLOptionsCollection.idl		\
 	nsIDOMHTMLParagraphElement.idl		\
 	nsIDOMHTMLParamElement.idl		\
 	nsIDOMHTMLPreElement.idl		\
@@ -97,7 +98,8 @@ XPIDLSRCS =					\
 	nsIDOMNSHTMLFrameElement.idl		\
 	nsIDOMNSHTMLImageElement.idl		\
 	nsIDOMNSHTMLInputElement.idl		\
-	nsIDOMNSHTMLOptionCollectn.idl	\
+	nsIDOMNSHTMLOptionCollectn.idl		\
+	nsIDOMNSHTMLOptionElement.idl		\
 	nsIDOMNSHTMLSelectElement.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
 	nsIDOMNSXBLFormControl.idl		\

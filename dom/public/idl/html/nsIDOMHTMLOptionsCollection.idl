@@ -38,21 +38,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsIDOMHTMLElement.idl"
 
-interface nsIDOMHTMLOptionElement;
+/**
+ * The nsIDOMHTMLOptionsCollection interface is the interface to a
+ * collection of [X]HTML option elements.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
 
-
-[scriptable, uuid(409bbf14-1dd2-11b2-91de-8d672d406276)]
-interface nsIDOMNSHTMLOptionCollection : nsISupports
+// Introduced in DOM Level 2:
+[scriptable, uuid(bce0213c-f70f-488f-b93f-688acca55d63)]
+interface nsIDOMHTMLOptionsCollection : nsISupports
 {
-           attribute long             selectedIndex;
+           attribute unsigned long   length;
+                                        // raises(DOMException) on setting
 
-  [noscript] void           setOption(in long index,
-                                      in nsIDOMHTMLOptionElement option);
-
-  // The following exists to give us partial compatibility with the
-  // add method as it exists in IE (we don't yet support the second
-  // argument)
-  void                      add(in nsIDOMHTMLOptionElement option);
+  nsIDOMNode         item(in unsigned long index);
+  nsIDOMNode         namedItem(in DOMString name);
 };

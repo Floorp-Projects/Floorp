@@ -1457,7 +1457,10 @@ nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
       return nsnull;
     }
 
-    nsresult rv = mFormProcessor->ProcessValue(aSource, tmpNameStr, *retval);
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    mFormProcessor->ProcessValue(aSource, tmpNameStr, *retval);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to Notify form process observer");
   }
 
