@@ -153,7 +153,8 @@ nsHTMLDocument::nsHTMLDocument()
     mStyleAttrStyleSheet(nsnull),
     mBaseURL(nsnull),
     mBaseTarget(nsnull),
-    mLastModified(nsnull)
+    mLastModified(nsnull),
+    mReferrer(nsnull)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -212,8 +213,12 @@ nsHTMLDocument::~nsHTMLDocument()
     mBaseTarget = nsnull;
   }
   if (nsnull != mLastModified) {
-    delete mLastModified;
+    nsString::Recycle(mLastModified);
     mLastModified = nsnull;
+  }
+  if (nsnull != mReferrer) {
+    nsString::Recycle(mReferrer);
+    mReferrer = nsnull;
   }
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
@@ -399,56 +404,70 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    nsXPIDLCString header;
+    nsXPIDLCString lastModHeader;
     nsAutoString lastModified;
-    nsIAtom* key = NS_NewAtom("last-modified");
+    nsIAtom* lastModKey = NS_NewAtom("last-modified");
 
-    rv = httpChannel->GetResponseHeader(key, 
-                                        getter_Copies(header));
+    rv = httpChannel->GetResponseHeader(lastModKey, 
+                                        getter_Copies(lastModHeader));
 
-    NS_RELEASE(key);
+    NS_RELEASE(lastModKey);
     if (NS_SUCCEEDED(rv)) {
-      lastModified = header;
+      lastModified = lastModHeader;
       SetLastModified(lastModified);
     }
-	if(kCharsetFromHTTPHeader > charsetSource)
-	{
-		nsIAtom* contentTypeKey = NS_NewAtom("content-type");
-		nsXPIDLCString contenttypeheader;
-		rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
-		NS_RELEASE(contentTypeKey);
-		if (NS_SUCCEEDED(rv)) {
-			nsAutoString contentType;
-			contentType = contenttypeheader;
-			PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-			if(kNotFound != start)
-			{
-				 start += 8; // 8 = "charset=".length
-				 PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
-				 if(kNotFound == end )
-					 end = contentType.Length();
-				 nsAutoString theCharset;
-				 contentType.Mid(theCharset, start, end - start);
-				 nsICharsetAlias* calias = nsnull;
-				 rv = nsServiceManager::GetService(
-									kCharsetAliasCID,
-									nsICharsetAlias::GetIID(),
-									(nsISupports**) &calias);
-				 if(NS_SUCCEEDED(rv) && (nsnull != calias) )
-				 {
-					  nsAutoString preferred;
-					  rv = calias->GetPreferred(theCharset, preferred);
-					  if(NS_SUCCEEDED(rv))
-					  {
-						  charset = preferred;
-		 				  charsetSource = kCharsetFromHTTPHeader;
-					  }
-					  nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
-				 }
-		   }
-		}
-	}
 
+    nsXPIDLCString referrerHeader;
+    nsAutoString referrer;
+    // The misspelled key 'referer' is as per the HTTP spec
+    nsIAtom* referrerKey = NS_NewAtom("referer");
+    
+    rv = httpChannel->GetRequestHeader(referrerKey, 
+                                        getter_Copies(referrerHeader));
+
+    NS_RELEASE(referrerKey);
+    if (NS_SUCCEEDED(rv)) {
+      referrer = referrerHeader;
+      SetReferrer(referrer);
+    }
+
+    if(kCharsetFromHTTPHeader > charsetSource)
+    {
+      nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+      nsXPIDLCString contenttypeheader;
+      rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+      NS_RELEASE(contentTypeKey);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString contentType;
+        contentType = contenttypeheader;
+        PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+        if(kNotFound != start)
+        {
+          start += 8; // 8 = "charset=".length
+          PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
+          if(kNotFound == end )
+            end = contentType.Length();
+          nsAutoString theCharset;
+          contentType.Mid(theCharset, start, end - start);
+          nsICharsetAlias* calias = nsnull;
+          rv = nsServiceManager::GetService(
+                                            kCharsetAliasCID,
+                                            nsICharsetAlias::GetIID(),
+                                            (nsISupports**) &calias);
+          if(NS_SUCCEEDED(rv) && (nsnull != calias) )
+          {
+            nsAutoString preferred;
+            rv = calias->GetPreferred(theCharset, preferred);
+            if(NS_SUCCEEDED(rv))
+            {
+              charset = preferred;
+              charsetSource = kCharsetFromHTTPHeader;
+            }
+            nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+          }
+        }
+      }
+    }
 
     // Don't propogate the result code beyond here, since it
     // could just be that the response header wasn't found.
@@ -849,8 +868,27 @@ nsHTMLDocument::SetLastModified(const nsString& aLastModified)
     }
   }
   else if (nsnull != mLastModified) {
-    delete mLastModified;
+    nsString::Recycle(mLastModified);
     mLastModified = nsnull;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLDocument::SetReferrer(const nsString& aReferrer)
+{
+  if (0 < aReferrer.Length()) {
+    if (nsnull != mReferrer) {
+      *mReferrer = aReferrer;
+    }
+    else {
+      mReferrer = aReferrer.ToNewString();
+    }
+  }
+  else if (nsnull != mReferrer) {
+    nsString::Recycle(mReferrer);
+    mReferrer = nsnull;
   }
 
   return NS_OK;
@@ -1264,22 +1302,13 @@ nsHTMLDocument::GetTitle(nsString& aTitle)
 NS_IMETHODIMP    
 nsHTMLDocument::GetReferrer(nsString& aReferrer)
 {
-  //XXX TBI
-  // PCB: How do we know what link was traversed to get here? Until we do, it's legal to
-  // return an empty string. Would we have to look in history to get this? Find out.
-  aReferrer.SetLength(0);
-#ifdef PCB_USE_PROTOCOL_CONNECTION
-  if (nsnull != mDocumentURL) {
-    nsIProtocolConnection* protocolConnection = NULL;
-    static NS_DEFINE_IID(kIProtocolConnectionIID, NS_IPROTOCOLCONNECTION_IID);
-    if (mDocumentURL->QueryInterface(kIProtocolConnectionIID, &protocolConnection) == NS_OK) {
-      URL_Struct_* urlInfo = NULL;
-      if (protocolConnection->GetURLInfo(&urlInfo) == NS_OK)
-        aReferrer.SetString(urlInfo->referer);
-      NS_RELEASE(protocolConnection);
-    }
+  if (nsnull != mReferrer) {
+    aReferrer = *mReferrer;
   }
-#endif
+  else {
+    aReferrer.Truncate();
+  }
+
   return NS_OK;
 }
 
@@ -2103,7 +2132,6 @@ nsHTMLDocument::SetFgColor(const nsString& aFgColor)
 NS_IMETHODIMP    
 nsHTMLDocument::GetLastModified(nsString& aLastModified)
 {
-  //XXX TBImplemented
   if (nsnull != mLastModified) {
     aLastModified = *mLastModified;
   }
