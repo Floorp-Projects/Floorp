@@ -65,9 +65,9 @@ nsTableRowGroupFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)this;
     return NS_OK;
   }
-  else if (aIID.Equals(NS_GET_IID(nsILineIterator))) 
+  else if (aIID.Equals(NS_GET_IID(nsILineIteratorNavigator))) 
   { // note there is no addref here, frames are not addref'd
-    *aInstancePtr = (void*)(nsILineIterator*)this;
+    *aInstancePtr = (void*)(nsILineIteratorNavigator*)this;
     return NS_OK;
   }
   else {

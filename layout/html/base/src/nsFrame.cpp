@@ -2277,8 +2277,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
   aPos->mPreferLeft = (aPos->mDirection == eDirNext);
 
    nsresult result;
-  nsCOMPtr<nsILineIterator> it; 
-  result = aBlockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+  nsCOMPtr<nsILineIteratorNavigator> it; 
+  result = aBlockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
   if (NS_FAILED(result) || !it)
     return result;
   PRInt32 searchingLine = aLineStart;
@@ -2351,9 +2351,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
 
     if (NS_SUCCEEDED(result) && resultFrame)
     {
-      nsCOMPtr<nsILineIterator> newIt; 
+      nsCOMPtr<nsILineIteratorNavigator> newIt; 
       //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
-      result = resultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(newIt));
+      result = resultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(newIt));
       if (NS_SUCCEEDED(result) && newIt)
       {
         aPos->mResultFrame = resultFrame;
@@ -2538,7 +2538,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }break;
     case eSelectLine :
     {
-      nsCOMPtr<nsILineIterator> it; 
+      nsCOMPtr<nsILineIteratorNavigator> it; 
       nsIFrame *blockFrame = this;
       nsIFrame *thisBlock = this;
       PRInt32   thisLine;
@@ -2548,13 +2548,13 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = blockFrame->GetParent(&blockFrame);
         if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
           return result;
-        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
         while (NS_FAILED(result) && blockFrame)
         {
           thisBlock = blockFrame;
           result = blockFrame->GetParent(&blockFrame);
           if (NS_SUCCEEDED(result) && blockFrame){
-            result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+            result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
           }
         }
         //this block is now one child down from blockframe
@@ -2586,7 +2586,7 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           else
             doneLooping = PR_TRUE; //do not continue with while loop
           if (NS_SUCCEEDED(result) && aPos->mResultFrame){
-            result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+            result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
             if (NS_SUCCEEDED(result) && it)//we have struck another block element!
             {
               doneLooping = PR_FALSE;
@@ -2610,20 +2610,20 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     case eSelectBeginLine:
     case eSelectEndLine:
     {
-      nsCOMPtr<nsILineIterator> it; 
+      nsCOMPtr<nsILineIteratorNavigator> it; 
       nsIFrame *blockFrame = this;
       nsIFrame *thisBlock = this;
       PRInt32   thisLine;
       result = blockFrame->GetParent(&blockFrame);
       if (NS_FAILED(result) || !blockFrame) //if at line 0 then nothing to do
         return result;
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
       while (NS_FAILED(result) && blockFrame)
       {
         thisBlock = blockFrame;
         result = blockFrame->GetParent(&blockFrame);
         if (NS_SUCCEEDED(result) && blockFrame){
-          result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+          result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
         }
       }
       //this block is now one child down from blockframe
@@ -2710,14 +2710,14 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
   nsIFrame *blockFrame = aFrame;
   nsIFrame *thisBlock;
   PRInt32   thisLine;
-  nsCOMPtr<nsILineIterator> it; 
+  nsCOMPtr<nsILineIteratorNavigator> it; 
   nsresult result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
   {
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
     if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     }
     else
       blockFrame = nsnull;
@@ -2740,14 +2740,14 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   nsIFrame *blockFrame = this;
   nsIFrame *thisBlock;
   PRInt32   thisLine;
-  nsCOMPtr<nsILineIterator> it; 
+  nsCOMPtr<nsILineIteratorNavigator> it; 
   nsresult result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
   {
     thisBlock = blockFrame;
     result = blockFrame->GetParent(&blockFrame);
     if (NS_SUCCEEDED(result) && blockFrame){
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     }
     else
       blockFrame = nsnull;

@@ -20,7 +20,6 @@
  * Contributor(s): 
  *   Steve Clark <buster@netscape.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -1206,7 +1205,8 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsILineIterator))) {
+  if ( aIID.Equals(NS_GET_IID(nsILineIterator)) || aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)) )
+  {
     nsLineIterator* it = new nsLineIterator;
     if (!it) {
       *aInstancePtr = nsnull;
@@ -1220,7 +1220,8 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
       delete it;
       return rv;
     }
-    return it->QueryInterface(aIID, aInstancePtr);
+    NS_ADDREF((nsILineIterator *) (*aInstancePtr = (void *) it));
+    return NS_OK;
   }
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }

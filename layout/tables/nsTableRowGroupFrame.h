@@ -83,7 +83,7 @@ struct RowGroupReflowState {
  * @see nsTableFrame
  * @see nsTableRowFrame
  */
-class nsTableRowGroupFrame : public nsHTMLContainerFrame, public nsILineIterator
+class nsTableRowGroupFrame : public nsHTMLContainerFrame, public nsILineIteratorNavigator
 {
 public:
   // nsISupports

@@ -28,6 +28,10 @@
 #define NS_ILINE_ITERATOR_IID \
  { 0xa6cf90ff, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+/* {80AA3D7A-E0BF-4e18-8A82-2110397D7BC4}*/
+#define NS_ILINE_ITERATOR_NAV_IID \
+ { 0x80aa3d7a, 0xe0bf, 0x4e18,{0x8a, 0x82, 0x21, 0x10, 0x39, 0x7d, 0x7b, 0xc4}}
+
 // Line iterator API.
 //
 // Lines are numbered from 0 to N, where 0 is the top line and N is
@@ -114,4 +118,10 @@ public:
   NS_IMETHOD GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber) = 0;
 };
 
+//special line iterator for keyboard navigation
+class nsILineIteratorNavigator : public nsILineIterator {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_NAV_IID)
+
+};
 #endif /* nsILineIterator_h___ */

@@ -371,7 +371,7 @@ protected:
 
 //----------------------------------------------------------------------
 
-class nsLineIterator : public nsILineIterator {
+class nsLineIterator : public nsILineIteratorNavigator {
 public:
   nsLineIterator();
   virtual ~nsLineIterator();
