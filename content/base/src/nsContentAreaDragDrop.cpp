@@ -1408,7 +1408,7 @@ nsTransferableFactory::ConvertStringsToTransferable(nsITransferable** outTrans)
   // add a special flavor, even if we don't have html context data
   nsCOMPtr<nsISupportsString> context =
     do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-  NS_ENSURE_TRUE(!context, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
   nsAutoString contextData(mContextString);
   context->SetData(contextData);
