@@ -1061,9 +1061,8 @@
   <hbox flex="1" id="browser">
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
-        <label id="sidebar-title" persist="value"/>
+        <label id="sidebar-title" persist="value" flex="1" crop="end"/>
         <image id="sidebar-throbber"/>
-        <spacer flex="1"/>
         <toolbarbutton class="tabs-closebutton" oncommand="toggleSidebar();"/>      
       </sidebarheader>        
       <browser id="sidebar" flex="1" autoscroll="false"
