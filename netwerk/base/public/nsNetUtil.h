@@ -42,6 +42,14 @@
 #include "nsXPIDLString.h"
 #include "prio.h"       // for read/write flags, permissions, etc.
 
+// Helper, to simplify getting the I/O service.
+inline const nsGetServiceByCID
+do_GetIOService(nsresult* error = 0)
+{
+    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+    return nsGetServiceByCID(kIOServiceCID, 0, error);
+}
+
 inline nsresult
 NS_NewURI(nsIURI* *result, 
           const char* spec, 
@@ -50,20 +58,14 @@ NS_NewURI(nsIURI* *result,
 {
     nsresult rv;
 
-    nsIIOService* serv = ioService;
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    if (serv == nsnull) {
-        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-                                          (nsISupports**)&serv);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    rv = serv->NewURI(spec, baseURI, result);
-
+    nsCOMPtr<nsIIOService> serv;
     if (ioService == nsnull) {
-        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
+        serv = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
     }
-    return rv;
+
+    return ioService->NewURI(spec, baseURI, result);
 }
 
 inline nsresult
@@ -92,16 +94,15 @@ NS_OpenURI(nsIChannel* *result,
 {
     nsresult rv;
 
-    nsIIOService* serv = ioService;
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    if (serv == nsnull) {
-        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-                                          (nsISupports**)&serv);
+    nsCOMPtr<nsIIOService> serv;
+    if (ioService == nsnull) {
+        serv = do_GetIOService(&rv);
         if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
     }
 
     nsIChannel* channel = nsnull;
-    rv = serv->NewChannelFromURI(uri, &channel);
+    rv = ioService->NewChannelFromURI(uri, &channel);
     if (NS_FAILED(rv)) return rv;
 
     if (loadGroup) {
@@ -123,10 +124,6 @@ NS_OpenURI(nsIChannel* *result,
     if (bufferMaxSize != 0) {
         rv = channel->SetBufferMaxSize(bufferMaxSize);
         if (NS_FAILED(rv)) return rv;
-    }
-
-    if (ioService == nsnull) {
-        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
     }
 
     *result = channel;
@@ -231,22 +228,16 @@ NS_NewPostDataStream(nsIInputStream **result,
                      nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
+    nsCOMPtr<nsIIOService> serv;
 
-    nsIIOService* serv = ioService;
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    if (serv == nsnull) {
-        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
-                                          (nsISupports**)&serv);
+    if (ioService == nsnull) {
+        serv = do_GetIOService(&rv);
         if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
     }
 
     nsCOMPtr<nsIProtocolHandler> handler;
-    rv = serv->GetProtocolHandler("http", getter_AddRefs(handler));
-
-    if (ioService == nsnull) {
-        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
-    }
-
+    rv = ioService->GetProtocolHandler("http", getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(handler, &rv);
