@@ -109,6 +109,7 @@ private:
   static nsIRDFResource    *kWEB_LastPingContentLen;
 
   static nsIRDFResource    *kNC_SearchCommand_AddToBookmarks;
+  static nsIRDFResource    *kNC_SearchCommand_AddQueryToBookmarks;
   static nsIRDFResource    *kNC_SearchCommand_FilterResult;
   static nsIRDFResource    *kNC_SearchCommand_FilterSite;
   static nsIRDFResource    *kNC_SearchCommand_ClearFilters;
@@ -164,6 +165,7 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32 contextType);
   char *    getSearchURI(nsIRDFResource *src);
   nsresult  addToBookmarks(nsIRDFResource *src);
+  nsresult  addQueryToBookmarks(nsIRDFResource *src);
   nsresult  filterResult(nsIRDFResource *src);
   nsresult  filterSite(nsIRDFResource *src);
   nsresult  clearFilters(void);
