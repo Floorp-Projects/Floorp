@@ -74,10 +74,12 @@ struct JSRegExp {
 };
 
 extern JSRegExp *
-js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat);
+js_NewRegExp(JSContext *cx, JSTokenStream *ts,
+             JSString *str, uintN flags, JSBool flat);
 
 extern JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat);
+js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
+                JSString *str, JSString *opt, JSBool flat);
 
 extern void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re);
@@ -114,7 +116,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
  * Create a new RegExp object.
  */
 extern JSObject *
-js_NewRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags);
+js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
+                   jschar *chars, size_t length, uintN flags);
 
 extern JSBool
 js_XDRRegExp(JSXDRState *xdr, JSObject **objp);

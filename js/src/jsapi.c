@@ -3104,7 +3104,7 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     chars = js_InflateString(cx, bytes, length);
     if (!chars)
 	return NULL;
-    obj = js_NewRegExpObject(cx, chars, length, flags);
+    obj = js_NewRegExpObject(cx, NULL, chars, length, flags);
     JS_free(cx, chars);
     return obj;
 #else
@@ -3118,7 +3118,7 @@ JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_REGEXPS
-    return js_NewRegExpObject(cx, chars, length, flags);
+    return js_NewRegExpObject(cx, NULL, chars, length, flags);
 #else
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_REG_EXPS);
     return NULL;

@@ -490,7 +490,6 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 			    const uintN errorNumber, ...)
 {
     va_list ap;
-    jschar *limit;
     JSErrorReporter onError;
     JSErrorReport report;
     jschar *tokenptr;
@@ -498,10 +497,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     char *message;
     JSBool warning;
 
+    memset(&report, 0, sizeof (struct JSErrorReport));
     report.flags = flags;
     report.errorNumber = errorNumber;
-    report.messageArgs = NULL;
-    report.ucmessage = NULL;
     message = NULL;
 
     va_start(ap, errorNumber);
@@ -515,26 +513,31 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     js_AddRoot(cx, &linestr, "error line buffer");
 
     JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
-    limit = ts->linebuf.limit;
     onError = cx->errorReporter;
     if (onError) {
-	report.filename = ts->filename;
-	report.lineno = ts->lineno;
-        linestr = js_NewStringCopyN(cx, ts->linebuf.base,
-                                    limit - ts->linebuf.base, 0);
-	report.linebuf  = linestr
-			  ? JS_GetStringBytes(linestr)
-			  : NULL;
-        tokenptr = ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
-	report.tokenptr = linestr
-			  ? report.linebuf + (tokenptr - ts->linebuf.base)
-			  : NULL;
-	report.uclinebuf = linestr
-			  ? JS_GetStringChars(linestr)
-			  : NULL;
-	report.uctokenptr = linestr
-			  ? report.uclinebuf + (tokenptr - ts->linebuf.base)
-			  : NULL;
+        /* 
+         * We can be called with a null ts from the regexp compilation functions.
+         */
+        if (ts) {
+            report.filename = ts->filename;
+            report.lineno = ts->lineno;
+            linestr = js_NewStringCopyN(cx, ts->linebuf.base,
+                                        ts->linebuf.limit - ts->linebuf.base, 0);
+            report.linebuf = linestr
+                ? JS_GetStringBytes(linestr)
+                : NULL;
+            tokenptr =
+                ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
+            report.tokenptr = linestr
+                ? report.linebuf + (tokenptr - ts->linebuf.base)
+                : NULL;
+            report.uclinebuf = linestr
+                ? JS_GetStringChars(linestr)
+                : NULL;
+            report.uctokenptr = linestr
+                ? report.uclinebuf + (tokenptr - ts->linebuf.base)
+                : NULL;
+        }
 
 #if JS_HAS_ERROR_EXCEPTIONS
 	/*
@@ -554,7 +557,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
          * otherwise the exception will describe only the last compile error,
          * which is likely spurious.
          */
-        if (!(ts->flags & TSF_ERROR))
+        if (!(ts && (ts->flags & TSF_ERROR)))
             (void) js_ErrorToException(cx, message, &report);
 
         /*
@@ -590,7 +593,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 
     js_RemoveRoot(cx->runtime, &linestr);
 
-    if (!JSREPORT_IS_WARNING(flags)) {
+    if (ts && !JSREPORT_IS_WARNING(flags)) {
         /* Set the error flag to suppress spurious reports. */
         ts->flags |= TSF_ERROR;
     }
@@ -1138,14 +1141,12 @@ skipline:
 		(void) GetChar(ts);
 		RETURN(TOK_ERROR);
 	    }
-	    obj = js_NewRegExpObject(cx,
+	    obj = js_NewRegExpObject(cx, ts,
 				     ts->tokenbuf.base,
 				     TOKEN_LENGTH(&ts->tokenbuf),
 				     flags);
-            if (!obj) {
-                js_ReportUncaughtException(cx);
+            if (!obj)
                 RETURN(TOK_ERROR);
-            }
 	    atom = js_AtomizeObject(cx, obj, 0);
 	    if (!atom)
 		RETURN(TOK_ERROR);
