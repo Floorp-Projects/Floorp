@@ -148,7 +148,7 @@ public:
 class ipcMessage_DWORD_DWORD_STR : public ipcMessage
 {
 public:
-    ipcMessage_DWORD_DWORD_STR(const nsID &target, PRUint32 first, PRUint32 second, const char *second) NS_HIDDEN;
+    ipcMessage_DWORD_DWORD_STR(const nsID &target, PRUint32 first, PRUint32 second, const char *third) NS_HIDDEN;
 
     PRUint32 First() const
     {
