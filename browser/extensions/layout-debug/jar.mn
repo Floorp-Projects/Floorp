@@ -1,0 +1,3 @@
+layoutdebug.jar:
++  content/layoutdebug/contents.rdf                 (content/contents.rdf)
++  content/layoutdebug/layoutdebug-overlay.xul      (content/layoutdebug-overlay.xul)
