@@ -467,8 +467,8 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     argv = JS_PushArguments(jscontext, &mark, "s %ip %iv %is s",
                             a_in, 
-                            &NS_GET_IID(nsITestXPCFoo2), b_in, 
-                            c_in,
+                            &NS_GET_IID(nsITestXPCFoo2), b_in.get(), 
+                            c_in.get(),
                             NS_STATIC_CAST(const nsAString*, &d_in), 
                             e_in);
 
@@ -491,7 +491,7 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     if(!b_out)
     {
-        printf(" JS to native for %ip returned NULL -- FAILED!\n");
+        printf(" JS to native for %%ip returned NULL -- FAILED!\n");
         goto out;
     }
 
@@ -510,19 +510,19 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     if(!c_out)
     {
-        printf(" JS to native for %iv returned NULL -- FAILED!\n");
+        printf(" JS to native for %%iv returned NULL -- FAILED!\n");
         goto out;
     }
 
     if(NS_FAILED(c_out->GetAsInt32(&val)) || val != 5)
     {
-        printf(" JS to native for %iv holds wrong value -- FAILED!\n");
+        printf(" JS to native for %%iv holds wrong value -- FAILED!\n");
         goto out;
     }
 
     if(d_in != d_out)
     {
-        printf(" JS to native for %is returned the wrong value -- FAILED!\n");
+        printf(" JS to native for %%is returned the wrong value -- FAILED!\n");
         goto out;
     }
 
@@ -756,10 +756,10 @@ int main()
     /**********************************************/
     // run the tests...
 
-    //TestCategoryManmager();
-    //TestSecurityManager(jscontext, glob, xpc);
+    TestCategoryManmager();
+    TestSecurityManager(jscontext, glob, xpc);
     TestArgFormatter(jscontext, glob, xpc);
-    //TestThreadJSContextStack(jscontext);
+    TestThreadJSContextStack(jscontext);
 
     /**********************************************/
 
