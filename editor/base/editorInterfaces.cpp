@@ -22,6 +22,7 @@
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "CreateElementTxn.h"
+#include "SplitElementTxn.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -247,7 +248,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
     // XXX: please please please get these mappings from an external source!
     switch (keyCode)
     {
-      // hard-coded undo
+      // XXX: hard-coded undo
       case nsIDOMEvent::VK_Z:
         if (PR_TRUE==ctrlKey)
         {
@@ -257,7 +258,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         aProcessed=PR_TRUE;
         break;
 
-      // hard-coded redo
+      // XXX: hard-coded redo
       case nsIDOMEvent::VK_Y:
         if (PR_TRUE==ctrlKey)
         {
@@ -267,6 +268,27 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         aProcessed=PR_TRUE;
         break;
 
+      // hard-coded split node test:  works on first <P> in the document
+      case nsIDOMEvent::VK_S:
+        {
+          nsString pTag("P");
+          nsCOMPtr<nsIDOMNode> currentNode;
+          nsCOMPtr<nsIDOMElement> element;
+          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, pTag, getter_AddRefs(currentNode))))
+          {
+            SplitElementTxn *txn;
+            if (PR_FALSE==isShift)   // split the element so there are 0 children in the first half
+              txn = new SplitElementTxn(mEditor, currentNode, -1);
+            else                    // split the element so there are 0 children in the first half
+             txn = new SplitElementTxn(mEditor, currentNode, 1);
+            mEditor->ExecuteTransaction(txn);        
+          }
+        }
+        aProcessed=PR_TRUE;
+        break;
+
+
+      //XXX: test for change and remove attribute, hard-coded to be width on first table in doc
       case nsIDOMEvent::VK_TAB:
         {
           //XXX: should be from a factory
