@@ -309,7 +309,7 @@ private:
    * Returns the nearest parent view with an attached widget. Can be the
    * same view as passed-in.
    */
-  nsView* GetWidgetView(nsView *aView) const;
+  static nsView* GetWidgetView(nsView *aView);
 
   /**
    * Transforms a rectangle from specified view's coordinate system to
