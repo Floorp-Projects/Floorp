@@ -362,7 +362,7 @@ dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
 
 hr {
   display: block;
-  border: 1px -moz-bg-inset;
+  border: 1px inset;
   margin: 0 auto 0 auto;
 }
 
