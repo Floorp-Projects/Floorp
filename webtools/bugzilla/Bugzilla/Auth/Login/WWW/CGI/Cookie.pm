@@ -76,7 +76,7 @@ sub authenticate {
     if ($userid) {
         # If we logged in successfully, then update the lastused time on the
         # login cookie
-        $dbh->do("UPDATE logincookies SET lastused=NULL WHERE cookie=?",
+        $dbh->do("UPDATE logincookies SET lastused=NOW() WHERE cookie=?",
                  undef,
                  $login_cookie);
 

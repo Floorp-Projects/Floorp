@@ -68,7 +68,8 @@ sub login {
         trick_taint($ipaddr);
 
         my $dbh = Bugzilla->dbh;
-        $dbh->do("INSERT INTO logincookies (userid, ipaddr) VALUES (?, ?)",
+        $dbh->do("INSERT INTO logincookies (userid, ipaddr, lastused)
+                 VALUES (?, ?, NOW())",
                  undef,
                  $userid, $ipaddr);
         my $logincookie = $dbh->selectrow_array("SELECT LAST_INSERT_ID()");

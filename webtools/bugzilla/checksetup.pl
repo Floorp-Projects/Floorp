@@ -1782,7 +1782,7 @@ $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
     ipaddr varchar(40) NOT NULL,
-    lastused timestamp,
+    lastused DATETIME NOT NULL,
 
     index(lastused)';
 
@@ -4463,6 +4463,13 @@ $sth->execute;
 if (! $sth->rows) {
     $dbh->do("INSERT INTO classifications (id,name,description) " .
              "VALUES(1,'Unclassified','Unassigned to any classifications')");
+}
+
+# 2004-08-29 - Tomas.Kopal@altap.cz, bug 257303
+# Change logincookies.lastused type from timestamp to datetime
+if (($fielddef = GetFieldDef("logincookies", "lastused")) &&
+    $fielddef->[1] =~ /^timestamp/) {
+    ChangeFieldType ('logincookies', 'lastused', 'DATETIME NOT NULL');
 }
 
 #
