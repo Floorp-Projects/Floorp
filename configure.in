@@ -4037,7 +4037,7 @@ _MOZ_CPP_EXCEPTIONS=1 ])
 
 # Irix & OSF native compilers do not like exception declarations 
 # when exceptions are disabled
-if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX"; then
+if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX" -o -n "$VACPP"; then
     AC_DEFINE(CPP_THROW_NEW, [])
 else
     AC_DEFINE(CPP_THROW_NEW, [throw()])
