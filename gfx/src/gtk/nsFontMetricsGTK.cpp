@@ -759,13 +759,9 @@ static nsFontPropertyName gStretchNames[] =
 };
 
 static PLHashTable* gCharSets = nsnull;
-#ifdef MOZ_MATHML
 static PLHashTable* gSpecialCharSets = nsnull;
-#endif
 
-#ifdef MOZ_MATHML
 static nsFontCharSetInfo Special = { nsnull };
-#endif
 static nsFontCharSetInfo Ignore = { nsnull };
 
 static gint
@@ -942,14 +938,12 @@ static nsFontCharSetInfo X11Johab =
 
 static nsFontCharSetInfo ISO106461 =
   { nsnull, ISO10646Convert, 1 };
-#ifdef MOZ_MATHML
 static nsFontCharSetInfo AdobeSymbol =
    { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMEX =
    { "x-t1-cmex", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMSY =
    { "x-t1-cmsy", SingleByteConvert, 0 };
-#endif
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -981,9 +975,7 @@ static nsFontCharSetMap gCharSetMap[] =
 {
   { "-ascii",             &Ignore        },
   { "-ibm pc",            &Ignore        },
-#ifdef MOZ_MATHML
   { "adobe-fontspecific", &Special       },
-#endif
   { "big5-0",             &Big5          },
   { "big5-1",             &Big5          },
   { "big5.et-0",          &Big5          },
@@ -1073,7 +1065,6 @@ static nsFontCharSetMap gCharSetMap[] =
   { nsnull,               nsnull         }
 };
 
-#ifdef MOZ_MATHML
 static nsFontCharSetMap gSpecialCharSetMap[] =
 {
   { "symbol-adobe-fontspecific", &AdobeSymbol  },
@@ -1082,7 +1073,6 @@ static nsFontCharSetMap gSpecialCharSetMap[] =
 
   { nsnull,                      nsnull        }
 };
-#endif
 
 #undef DEBUG_DUMP_TREE
 #ifdef DEBUG_DUMP_TREE
@@ -2168,7 +2158,6 @@ GetFontNames(char* aPattern)
     }
     nsFontCharSetInfo* charSetInfo =
       (nsFontCharSetInfo*) PL_HashTableLookup(gCharSets, charSetName);
-#ifdef MOZ_MATHML
     // indirection for font specific charset encoding 
     if (charSetInfo == &Special) {
       char *familyCharSetName = PR_smprintf ("%s-%s", familyName, charSetName);
@@ -2176,7 +2165,6 @@ GetFontNames(char* aPattern)
         (gSpecialCharSets, familyCharSetName);
       PR_smprintf_free (familyCharSetName);
     }
-#endif
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
       printf("cannot find charset %s\n", charSetName);
@@ -2544,7 +2532,6 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
       PL_HashTableAdd(gCharSets, charSetMap->mName, (void*) charSetMap->mInfo);
       charSetMap++;
     }
-#ifdef MOZ_MATHML
     gSpecialCharSets = PL_NewHashTable
       (0, PL_HashString, PL_CompareStrings, NULL, NULL, NULL);
     nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
@@ -2554,7 +2541,6 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
                        (void*) specialCharSetMap->mInfo);
       specialCharSetMap++;
     }
-#endif
   }
 
   nsFontSearch search = { this, aChar, nsnull };
