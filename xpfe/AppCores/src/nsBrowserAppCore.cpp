@@ -174,7 +174,20 @@ nsBrowserAppCore::Init(const nsString& aId)
 NS_IMETHODIMP    
 nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
 {
-	return NS_OK;
+  nsresult res = NS_OK;
+  if (nsnull != mContentWindow) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    if (NS_SUCCEEDED(res = mContentWindow->GetDocument(getter_AddRefs(domDoc)))) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc, &res));
+      if (NS_SUCCEEDED(res)) {
+        nsString *aNewCharset = new nsString(aCharset);
+        if (nsnull != aNewCharset) {
+          doc->SetDocumentCharacterSet(aNewCharset);
+        }
+      }
+    }
+  }
+  return res;
 }
 
 NS_IMETHODIMP    
