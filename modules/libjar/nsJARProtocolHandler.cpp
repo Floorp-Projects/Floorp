@@ -49,8 +49,6 @@
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 
-static NS_DEFINE_CID(kIOServiceCID,      NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kJARUriCID,         NS_JARURI_CID);
 static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 
 #define NS_JAR_CACHE_SIZE       32
