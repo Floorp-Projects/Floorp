@@ -7,7 +7,8 @@
 <window style="height:100%;width:100%"
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   onload="init_sidebar('browser', 'resource:/res/rdf/sidebar-browser.xul',
+   onload="init_sidebar('browser',
+                        'chrome://sidebar/content/sidebar-browser.xul',
                         170);" align="horizontal"> 
 
 <html:script src="contentframe.js" />
