@@ -388,6 +388,8 @@ nsLineBox::RemoveFloater(nsIFrame* aFrame)
 void
 nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
 {
+  NS_ASSERTION(aCombinedArea.width >= 0, "illegal width for combined area");
+  NS_ASSERTION(aCombinedArea.height >= 0, "illegal height for combined area");
   if (aCombinedArea != mBounds) {
     if (mData) {
       mData->mCombinedArea = aCombinedArea;
