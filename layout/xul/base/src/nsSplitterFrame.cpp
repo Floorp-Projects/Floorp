@@ -1087,10 +1087,8 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
         mParentBox->Layout(state);
         shell->ExitReflowLock(PR_TRUE);
         */
-
-        shell->FlushPendingNotifications();
-
-        nsCOMPtr<nsIViewManager> viewManager;
+     
+       nsCOMPtr<nsIViewManager> viewManager;
         nsIView* view = nsnull;
         frame->GetView(aPresContext, &view);
 
@@ -1099,18 +1097,22 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext)
 
         if (view) {
           view->GetViewManager(*getter_AddRefs(viewManager));
-          viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);
     
         } else {
-          nsRect    rect(damageRect);
           nsPoint   offset;
   
           frame->GetOffsetFromView(aPresContext, offset, &view);
           NS_ASSERTION(nsnull != view, "no view");
-          rect += offset;
+          damageRect += offset;
           view->GetViewManager(*getter_AddRefs(viewManager));
-          viewManager->UpdateView(view, rect, NS_VMREFRESH_IMMEDIATE);
         }
+
+        viewManager->DisableRefresh();
+        shell->FlushPendingNotifications();  
+        viewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+
+        viewManager->UpdateView(view, damageRect, NS_VMREFRESH_IMMEDIATE);
+
 
 #else 
     //mOuter->mState |= NS_FRAME_IS_DIRTY;

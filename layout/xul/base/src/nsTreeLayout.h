@@ -34,6 +34,9 @@
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsXULTreeSliceFrame.h"
 
+class nsIBox;
+class nsBoxLayoutState;
+
 class nsTreeLayout : public nsTempleLayout
 {
 public:
@@ -44,6 +47,8 @@ public:
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState);
+
+  NS_IMETHOD LazyRowCreator(nsBoxLayoutState& aState, nsXULTreeGroupFrame* aGroup);
 
 protected:
   nsXULTreeOuterGroupFrame* GetOuterFrame(nsIBox* aBox);

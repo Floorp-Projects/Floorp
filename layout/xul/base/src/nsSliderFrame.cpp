@@ -201,6 +201,9 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
           if (mediator) {
             mediator->PositionChanged(GetCurrentPosition(scrollbar), current);
+            char ch[100];
+            sprintf(ch,"%d", current);
+            scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
             return NS_OK;
           }
         }
@@ -692,12 +695,18 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 
   nsIBox* scrollbarBox = GetScrollbar();
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(scrollbarBox));
+ 
+
   if (scrollbarFrame) {
     // See if we have a mediator.
     nsCOMPtr<nsIScrollbarMediator> mediator;
     scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
     if (mediator) {
       mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
+      char ch[100];
+      sprintf(ch,"%d", newpos);
+      scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
+      CurrentPositionChanged(mPresContext);
       return;
     }
   }

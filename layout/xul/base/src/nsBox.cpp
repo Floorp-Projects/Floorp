@@ -1089,6 +1089,9 @@ nsBox::Redraw(nsBoxLayoutState& aState,
               const nsRect*   aDamageRect,
               PRBool          aImmediate)
 {
+  if (aState.GetDisablePainting())
+    return NS_OK;
+
   nsIPresContext* presContext = aState.GetPresContext();
   const nsHTMLReflowState* s = aState.GetReflowState();
   if (s) {

@@ -42,13 +42,26 @@
 #include "nsIScrollableView.h"
 #include "nsIMonument.h"
 #include "nsTempleLayout.h"
+#include "nsTreeLayout.h"
+#include "nsITimer.h"
 
 #define TICK_FACTOR 50
+
+// the longest amount of time that can go by before the use
+// notices it as a delay.
+#define USER_TIME_THRESHOLD 150000
+
+// how long it takes to layout a single row inital value.
+// we will time this after we scroll a few rows.
+#define TIME_PER_ROW_INITAL  50000
+
+// if we decide we can't layout the rows in the amount of time. How long
+// do we wait before checking again?
+#define SMOOTH_INTERVAL 100
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsresult NS_NewAutoScrollTimer(nsXULTreeOuterGroupFrame* aTree, nsDragAutoScrollTimer **aResult) ;
-
 
 //
 // nsDragOverListener
@@ -114,6 +127,82 @@ nsDragOverListener :: DragOver(nsIDOMEvent* aDragEvent)
 #pragma mark -
 #endif
 
+/* A mediator used to smooth out scrolling. It works by seeing if 
+ * we have time to scroll the amount of rows requested. This is determined
+ * by measuring how long it takes to scroll a row. If we can scroll the 
+ * rows in time we do so. If not we start a timer and skip the request. We
+ * do this until the timer finally first because the user has stopped moving
+ * the mouse. Then do all the queued requests in on shot.
+ */
+class nsScrollSmoother : public nsITimerCallback
+{
+public:
+
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
+  void Start();
+  void Stop();
+  PRBool IsRunning();
+
+  NS_DECL_ISUPPORTS
+  virtual ~nsScrollSmoother();
+
+  nsScrollSmoother(nsXULTreeOuterGroupFrame* aOuter);
+
+  nsCOMPtr<nsITimer>         mRepeatTimer;
+  PRBool mDelta;
+  nsXULTreeOuterGroupFrame* mOuter;
+}; 
+
+nsScrollSmoother::nsScrollSmoother(nsXULTreeOuterGroupFrame* aOuter)
+{
+  NS_INIT_REFCNT();
+  nsresult rv = NS_OK;
+  mDelta = 0;
+  mOuter = aOuter;
+}
+
+nsScrollSmoother::~nsScrollSmoother()
+{
+  Stop();
+}
+
+
+PRBool nsScrollSmoother::IsRunning()
+{
+  if (mRepeatTimer)
+    return PR_TRUE;
+  else 
+    return PR_FALSE;
+}
+
+void nsScrollSmoother::Start()
+{
+  Stop();
+  mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mRepeatTimer->Init(this, SMOOTH_INTERVAL);
+}
+
+void nsScrollSmoother::Stop()
+{
+  if ( mRepeatTimer ) {
+    mRepeatTimer->Cancel();
+    mRepeatTimer = nsnull;
+  }
+}
+
+NS_IMETHODIMP_(void) nsScrollSmoother::Notify(nsITimer *timer)
+{
+  //printf("Timer Callback!\n");
+
+  Stop();
+
+  // actually do some work.
+  mOuter->InternalPositionChangedCallback();
+}
+
+NS_IMPL_ISUPPORTS1(nsScrollSmoother, nsITimerCallback)
+
 
 //
 // NS_NewXULTreeOuterGroupFrame
@@ -143,14 +232,34 @@ nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRB
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
  mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0),
  mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCanDropBetweenRows(PR_TRUE),
- mTreeLayoutState(eTreeLayoutNormal), mReflowCallbackPosted(PR_FALSE)
+ mRowHeightWasSet(PR_FALSE), mReflowCallbackPosted(PR_FALSE), mYPosition(0), mScrolling(PR_FALSE),
+ mScrollSmoother(nsnull), mTimePerRow(TIME_PER_ROW_INITAL), mAdjustScroll(PR_FALSE)
 {
 }
 
 
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::Destroy(nsIPresContext* aPresContext)
+{
+  
+  // make sure we cancel any posted callbacks.
+  if (mReflowCallbackPosted) {
+     nsCOMPtr<nsIPresShell> shell;
+     aPresContext->GetShell(getter_AddRefs(shell));
+     shell->CancelReflowCallback(this);
+  }
+  
+
+  return nsXULTreeGroupFrame::Destroy(aPresContext);
+}
+
 // Destructor
 nsXULTreeOuterGroupFrame::~nsXULTreeOuterGroupFrame()
 {
+  NS_IF_RELEASE(mScrollSmoother);
+
+  // TODO cancel posted events.
+
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
@@ -200,7 +309,7 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
 {
   nsresult rv = nsXULTreeGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   
-  mLayingOut = PR_FALSE;
+ // mLayingOut = PR_FALSE;
 
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -257,7 +366,19 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
+  if (mScrolling)
+    aBoxLayoutState.SetDisablePainting(PR_TRUE);
+
   nsresult rv = nsXULTreeGroupFrame::DoLayout(aBoxLayoutState);
+
+  if (mScrolling)
+    aBoxLayoutState.SetDisablePainting(PR_FALSE);
+
+  // if we are scrolled and the row height changed
+  // make sure we are scrolled to a correct index.
+  if (mAdjustScroll) 
+     PostReflowCallback();
+
   return rv;
 }
 
@@ -292,10 +413,11 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
       value.AppendInt(rowHeight*count);
       parent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value, PR_FALSE);
     }
-    nsBoxLayoutState state(mPresContext);
-    MarkDirtyChildren(state); 
-    mTreeLayoutState = eTreeLayoutAbort;
-    
+
+    // signal we need to dirty everything 
+    // and we want to be notified after reflow
+    // so we can create or destory rows as needed
+    mRowHeightWasSet = PR_TRUE;
     PostReflowCallback();
   } 
 }
@@ -303,22 +425,7 @@ nsXULTreeOuterGroupFrame::SetRowHeight(nscoord aRowHeight)
 nscoord
 nsXULTreeOuterGroupFrame::GetYPosition()
 {
-  nsIBox* box;
-  GetParentBox(&box);
-  if (!box)
-    return 0;
-
-  box->GetParentBox(&box);
-  if (!box)
-    return 0;
-
-  nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(box));
-  if (!scrollFrame)
-    return 0;
-
-  nscoord x, y;
-  scrollFrame->GetScrollPosition(mPresContext, x, y);
-  return y;
+  return mYPosition;
 }
 
 void
@@ -341,6 +448,8 @@ nsXULTreeOuterGroupFrame::VerticalScroll(PRInt32 aPosition)
   scrollFrame->GetScrollPosition(mPresContext, x, y);
  
   scrollFrame->ScrollTo(mPresContext, x, aPosition, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+
+  mYPosition = aPosition;
 }
 
 nscoord
@@ -429,41 +538,105 @@ nsXULTreeOuterGroupFrame::ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNew
     return NS_OK;
   }
   InternalPositionChanged(aNewIndex < aOldIndex, 1);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
-{
-  if (aOldIndex == aNewIndex)
-    return NS_OK;
-  
+nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
+{ 
   PRInt32 oldTwipIndex, newTwipIndex;
-  oldTwipIndex = (aOldIndex*mOnePixel);
+  oldTwipIndex = mCurrentIndex*mRowHeight;
   newTwipIndex = (aNewIndex*mOnePixel);
-
   PRInt32 twipDelta = newTwipIndex > oldTwipIndex ? newTwipIndex - oldTwipIndex : oldTwipIndex - newTwipIndex;
-  PRInt32 delta = twipDelta / mRowHeight;
+
+  PRInt32 rowDelta = twipDelta / mRowHeight;
   PRInt32 remainder = twipDelta % mRowHeight;
   if (remainder > (mRowHeight/2))
-    delta++;
+    rowDelta++;
 
-  if (delta == 0)
+  if (rowDelta == 0)
     return NS_OK;
 
-  mCurrentIndex = newTwipIndex > oldTwipIndex ? mCurrentIndex + delta : mCurrentIndex - delta;
+  // update the position to be row based.
+
+  PRInt32 newIndex = newTwipIndex > oldTwipIndex ? mCurrentIndex + rowDelta : mCurrentIndex - rowDelta;
+  //aNewIndex = newIndex*mRowHeight/mOnePixel;
+
+  nsScrollSmoother* smoother = GetSmoother();
+
+  //printf("%d rows, %d per row, Estimated time needed %d, Threshhold %d (%s)\n", rowDelta, mTimePerRow, mTimePerRow * rowDelta, USER_TIME_THRESHOLD, (mTimePerRow * rowDelta > USER_TIME_THRESHOLD) ? "Nope" : "Yep");
+
+  // if we can't scroll the rows in time then start a timer. We will eat
+  // events until the user stops moving and the timer stops.
+  if (smoother->IsRunning() || rowDelta*mTimePerRow > USER_TIME_THRESHOLD) {
+
+     smoother->Stop();
+
+     nsCOMPtr<nsIPresShell> shell;
+     mPresContext->GetShell(getter_AddRefs(shell));
+     shell->FlushPendingNotifications();
+
+     smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
+
+     //printf("Eating scroll!\n");
+
+     smoother->Start();
+
+     return NS_OK;
+  }
+
+  smoother->Stop();
+
+  mCurrentIndex = newIndex;
+  smoother->mDelta = 0;
   
   if (mCurrentIndex < 0) {
     mCurrentIndex = 0;
     return NS_OK;
   }
 
-  return InternalPositionChanged(newTwipIndex < oldTwipIndex, delta);
+  return InternalPositionChanged(newTwipIndex < oldTwipIndex, rowDelta);
+}
+
+nsScrollSmoother* 
+nsXULTreeOuterGroupFrame::GetSmoother()
+{
+  if (!mScrollSmoother) {
+    mScrollSmoother = new nsScrollSmoother(this);
+    NS_ADDREF(mScrollSmoother);
+  }
+
+  return mScrollSmoother;
+}
+
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::InternalPositionChangedCallback()
+{
+   nsScrollSmoother* smoother = GetSmoother();
+   
+   if (smoother->mDelta == 0)
+     return NS_OK;
+
+   mCurrentIndex += smoother->mDelta;
+
+   if (mCurrentIndex < 0)
+     mCurrentIndex = 0;
+
+   return InternalPositionChanged(smoother->mDelta < 0, smoother->mDelta < 0 ? -smoother->mDelta : smoother->mDelta);
 }
 
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
-{
+{  
+  if (aDelta == 0)
+    return NS_OK;
+
+    // begin timing how long it takes to scroll a row
+    PRTime start = PR_Now();
+
+    //printf("Actually doing scroll mCurrentIndex=%d, delta=%d!\n", mCurrentIndex, aDelta);
+
   //if (mContentChain) {
     // XXX Eventually we need to make the code smart enough to look at a content chain
     // when building ANOTHER content chain.
@@ -534,16 +707,31 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
   }
 
   mTopFrame = mBottomFrame = nsnull; // Make sure everything is cleared out.
-
-  VerticalScroll(mCurrentIndex*mRowHeight);
   
-  if (mLayingOut) {
-    PostReflowCallback();
-  }
-  else {
-    nsBoxLayoutState state(mPresContext);
-    MarkDirtyChildren(state);
-  }
+  mYPosition = mCurrentIndex*mRowHeight;
+  nsBoxLayoutState state(mPresContext);
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  nsTreeLayout* treeLayout = (nsTreeLayout*)layout.get();
+  treeLayout->LazyRowCreator(state, this);
+  mScrolling = PR_TRUE;
+  shell->FlushPendingNotifications();
+  mScrolling = PR_FALSE;
+  VerticalScroll(mYPosition);
+
+  PRTime end = PR_Now();
+
+  PRTime difTime;
+  LL_SUB(difTime, end, start);
+
+  PRInt32 newTime;
+  LL_L2I(newTime, difTime);
+  newTime /= aDelta;
+
+  // average old and new
+  mTimePerRow = (newTime + mTimePerRow)/2;
+  
+  //printf("time per row=%d\n", mTimePerRow);
 
   return NS_OK;
 }
@@ -937,14 +1125,16 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 
   InternalPositionChanged(up, delta);
 
+  /*
   // This change has to happen immediately.
   if (mLayingOut) {
     PostReflowCallback();
   }
   else {
-    nsBoxLayoutState state(mPresContext);
-    MarkDirtyChildren(state);
+    //nsBoxLayoutState state(mPresContext);
+    //MarkDirtyChildren(state);
   }
+  */
 }
 
 void
@@ -1047,10 +1237,33 @@ nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlus
 
   nsCOMPtr<nsIBox> treeBox(do_QueryInterface(treeFrame));
 
-  mReflowCallbackPosted = PR_FALSE;
   nsBoxLayoutState state(mPresContext);
-  //MarkDirtyChildren(state);
-  treeBox->MarkStyleChange(state);
+
+  // now build or destroy any needed rows.
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  nsTreeLayout* treeLayout = (nsTreeLayout*)layout.get();
+  treeLayout->LazyRowCreator(state, this);
+
+  if (mAdjustScroll) {
+     PRInt32 pos = mCurrentIndex*mRowHeight;
+     VerticalScroll(mYPosition);
+     mAdjustScroll = PR_FALSE;
+  }
+
+  // if the row height changed
+  // then mark everything as a style change. That
+  // will dirty the tree all the way to its leaves.
+  if (mRowHeightWasSet) {
+     treeBox->MarkStyleChange(state);
+     PRInt32 pos = mCurrentIndex*mRowHeight;
+     if (mYPosition != pos) 
+       mAdjustScroll = PR_TRUE;
+
+    mRowHeightWasSet = PR_FALSE;
+  }
+
+  mReflowCallbackPosted = PR_FALSE;
 
   *aFlushFlag = PR_TRUE;
   return NS_OK;

@@ -32,6 +32,9 @@
 #include "nsIBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsBox.h"
+#include "nsIReflowCallback.h"
+#include "nsBoxLayoutState.h"
+
 
 // ------ nsTreeLayout ------
 
@@ -141,16 +144,22 @@ nsTreeLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
   return rv;
 }
 
-
+/**
+ * Called to layout our our children. Does no frame construction
+ */
 NS_IMETHODIMP
 nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
 {
+  PRInt32 redrawStart = -1;
+
   // Get the start y position.
-  nsXULTreeGroupFrame* frame = GetGroupFrame(aBox);
-  if (!frame) {
+  nsXULTreeGroupFrame* group = GetGroupFrame(aBox);
+  if (!group) {
     NS_ERROR("Frame encountered that isn't a tree row group!\n");
     return NS_ERROR_FAILURE;
   }
+
+  nsXULTreeOuterGroupFrame* outer = group->GetOuterFrame();
 
   nsMargin margin;
 
@@ -160,14 +169,16 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
 
   // Get the starting y position and the remaining available
   // height.
-  nscoord availableHeight = frame->GetAvailableHeight();
-  nscoord yOffset = frame->GetYPosition();
+  nscoord availableHeight = group->GetAvailableHeight();
+  nscoord yOffset = group->GetYPosition();
   
   if (availableHeight <= 0)
     return NS_OK;
 
-  // Walk our frames, building them dynamically as needed.
-  nsIBox* box = frame->GetFirstTreeBox();
+  // run through all our currently created children
+  nsIBox* box = nsnull;
+  group->GetChildBox(&box);
+
   while (box) {  
     // If this box is dirty or if it has dirty children, we
     // call layout on it.
@@ -175,12 +186,7 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     PRBool dirtyChildren = PR_FALSE;           
     box->IsDirty(dirty);
     box->HasDirtyChildren(dirtyChildren);
-    
-    nsIFrame* childFrame;
-    box->GetFrame(&childFrame);
-    nsFrameState state;
-    childFrame->GetFrameState(&state);
-    
+       
     PRBool isRow = PR_TRUE;
     nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
     if (childGroup) {
@@ -189,71 +195,154 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
       isRow = PR_FALSE;
     }
 
-    PRBool relayoutAll = (frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutDirtyAll);
+    // if the reason is resize or initial we must relayout.
+    PRBool relayout = (aState.GetLayoutReason() == nsBoxLayoutState::Resize || aState.GetLayoutReason() == nsBoxLayoutState::Initial);
 
     nsRect childRect;
-    PRBool sizeChanged = PR_FALSE;
-    if (isRow) {
-      nsSize size;
-      box->GetPrefSize(aState, size);
-      if (size.width != clientRect.width)
-        sizeChanged = PR_TRUE;
-    }
-
-    if (relayoutAll || childGroup || sizeChanged || dirty || dirtyChildren || aState.GetLayoutReason() == nsBoxLayoutState::Initial) {      
-      nsRect childRect;
+    box->GetMargin(margin);
+      
+    // relayout if we must or we are dirty or some of our children are
+    // dirty
+    if (relayout || dirty || dirtyChildren) {      
       childRect.x = 0;
       childRect.y = yOffset;
       childRect.width = clientRect.width;
       
-      if (isRow)
-        childRect.height = frame->GetOuterFrame()->GetRowHeightTwips();
+      // of we can determine the height of the child be getting the number
+      // of row inside it and multiplying it by the height of a row.
+      // remember this is on screen rows not total row. We create things
+      // lazily and we only worry about what is on screen during layout.
+      nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
+      PRInt32 rowCount = 0;
+      slice->GetOnScreenRowCount(&rowCount);
 
-      box->GetMargin(margin);
+      // if we are a row then we could potential change the row size. We
+      // don't know the height of a row until layout so tell the outer group
+      // now. If the row height is greater than the current. We may have to 
+      // reflow everyone again!
+      if (isRow) {
+        nsSize size;
+        box->GetPrefSize(aState, size);
+        outer->SetRowHeight(size.height);
+      }
+
+      // of now get the row height and figure out our child's total height.
+      nscoord rowHeight = outer->GetRowHeightTwips();
+
+      childRect.height = rowHeight*rowCount;
+      
       childRect.Deflate(margin);
       box->SetBounds(aState, childRect);
       box->Layout(aState);
+    } else {
+      // if the child did not need to be relayed out. Then its easy.
+      // Place the child by just grabbing its rect and adjusting the y.
+      box->GetBounds(childRect);
+      PRInt32 newPos = yOffset+margin.top;
 
-      nsSize size;
-      if (!isRow) {
-        // We are a row group that might have dynamically
-        // constructed new rows.  We need to clear out
-        // and recompute our pref size and then adjust our
-        // rect accordingly.
-        box->NeedsRecalc();
-        box->GetPrefSize(aState, size);
-        childRect.height = size.height;
-        box->SetBounds(aState, childRect);
-      }
-      else {// Check to see if the row height of the tree has changed.
-        box->GetPrefSize(aState, size);
-        frame->GetOuterFrame()->SetRowHeight(size.height);
-      }
+      // are we pushing down or pulling up any rows?
+      // Then we may have to redraw everything below the the moved 
+      // rows.
+      if (redrawStart == -1 && childRect.y != newPos)
+        redrawStart = newPos;
+
+      childRect.y = newPos;
+      box->SetBounds(aState, childRect);
     }
 
-    // Place the child by just grabbing its rect and adjusting the x,y.
-    box->GetContentRect(childRect);
-    childRect.x = 0;
-    childRect.y = yOffset;
-    yOffset += childRect.height;
-    availableHeight -= childRect.height;
-    box->GetMargin(margin);
-    childRect.Deflate(margin);
-    childRect.width = childRect.width < 0 ? 0 : childRect.width;
-    childRect.height = childRect.height < 0 ? 0 : childRect.height;
+    // Ok now the available size gets smaller and we move the
+    // starting position of the next child down some.
+    nscoord size = childRect.height + margin.top + margin.bottom;
+
+    yOffset += size;
+    availableHeight -= size;
     
-    box->SetBounds(aState, childRect);
+    box->GetNextBox(&box);
+  }
 
-    if ((frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutAbort) || 
-        (!frame->ContinueReflow(availableHeight)))
-      break;
+  if (availableHeight > outer->GetRowHeightTwips() || availableHeight < 0) {
+      // of if we have enough available height left to add some more rows
+      // or we have to much then we need to add or create some rows. We
+      // can't do this durning layout but we can do it after. So post
+      // a callback to do it after.
+      outer->PostReflowCallback();
+  }
 
-    box = frame->GetNextTreeBox(box);
+  // if rows were pushed down or pulled up because some rows were added
+  // before them then redraw everything under the inserted rows. The inserted
+  // rows will automatically be redrawn because the were marked dirty on insertion.
+  if (redrawStart > -1) {
+    nsRect bounds;
+    aBox->GetBounds(bounds);
+    aBox->Redraw(aState, &nsRect(0,redrawStart,bounds.width, bounds.height - redrawStart));
   }
 
   return NS_OK;
 }
 
+/**
+ * This method creates or removes rows lazily. This is done after layout because 
+ * It is illegal to add or remove frames during layout in the box system.
+ */
+NS_IMETHODIMP
+nsTreeLayout::LazyRowCreator(nsBoxLayoutState& aState, nsXULTreeGroupFrame* aGroup)
+{
+  nsXULTreeOuterGroupFrame* outer = aGroup->GetOuterFrame();
+
+  // Get our client rect.
+  nsRect clientRect;
+  aGroup->GetClientRect(clientRect);
+
+  // Get the starting y position and the remaining available
+  // height.
+  nscoord availableHeight = aGroup->GetAvailableHeight();
+  
+  if (availableHeight <= 0)
+    return NS_OK;
+  
+  nsSize size;
+
+  // get the first tree box. If there isn't one create one.
+  PRBool created = PR_FALSE;
+  nsIBox* box = aGroup->GetFirstTreeBox(&created);
+  while (box) {  
+
+    // if its a group recursizely dive into it to build its rows.
+    PRBool isRow = PR_TRUE;
+    nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
+    if (childGroup) {
+      childGroup->SetAvailableHeight(availableHeight);
+      LazyRowCreator(aState, childGroup);
+      isRow = PR_FALSE;
+    }
+
+    nscoord rowHeight = outer->GetRowHeightTwips();
+
+    // if the row height is 0 then fail. Wait until someone 
+    // laid out and sets the row height.
+    if (rowHeight == 0)
+        return NS_OK;
+     
+    // figure out the child's height. Its the number of rows
+    // the child contains * the row height. Remember this is
+    // on screen rows not total rows.
+    nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
+
+    PRInt32 rowCount = 0;
+    slice->GetOnScreenRowCount(&rowCount);
+
+    availableHeight -= rowHeight*rowCount;
+    
+    // should we continue? Is the enought height?
+    if (!aGroup->ContinueReflow(availableHeight))
+      break;
+
+    // get the next tree box. Create one if needed.
+    box = aGroup->GetNextTreeBox(box, &created);
+  }
+
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP
@@ -265,7 +354,6 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
   if (isOuterGroup) {
     nsXULTreeOuterGroupFrame* outer = (nsXULTreeOuterGroupFrame*) frame;
-    nsTreeLayoutState state = outer->GetTreeLayoutState();
 
     // Always ensure an accurate scrollview position
     // This is an edge case that was caused by the row height
@@ -283,12 +371,6 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
     nsresult rv = LayoutInternal(aBox, aState);
     if (NS_FAILED(rv)) return rv;
-    state = outer->GetTreeLayoutState();
-    if (state == eTreeLayoutDirtyAll)
-      outer->SetTreeLayoutState(eTreeLayoutNormal);
-    else if (state == eTreeLayoutAbort)
-      outer->SetTreeLayoutState(eTreeLayoutDirtyAll);
-    state = outer->GetTreeLayoutState();
   }
   else
     return LayoutInternal(aBox, aState);

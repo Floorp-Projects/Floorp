@@ -36,7 +36,7 @@ class nsIScrollbarMediator : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLBARMEDIATOR_IID; return iid; }
   
-  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+  NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
   NS_IMETHOD VisibilityChanged(PRBool aVisible) = 0;

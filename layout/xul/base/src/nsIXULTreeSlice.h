@@ -38,6 +38,7 @@ public:
   NS_IMETHOD IsOutermostFrame(PRBool* aResult) = 0;
   NS_IMETHOD IsGroupFrame(PRBool* aResult) = 0;
   NS_IMETHOD IsRowFrame(PRBool* aResult) = 0;
+  NS_IMETHOD GetOnScreenRowCount(PRInt32* aCount) = 0;
 
 }; // class nsIXULTreeSlice
 

@@ -43,7 +43,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aP
                                                                  mMaxElementSize(nsnull),
                                                                  mOverFlowSize(0,0),
                                                                  mIncludeOverFlow(PR_TRUE),
-                                                                 mLayoutFlags(0)
+                                                                 mLayoutFlags(0),
+                                                                 mDisablePainting(PR_FALSE)
 {
 }
 
@@ -55,6 +56,7 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mMaxElementSize = aState.mMaxElementSize;
   mOverFlowSize = aState.mOverFlowSize;
   mLayoutFlags = aState.mLayoutFlags;
+  mDisablePainting = aState.mDisablePainting;
 }
 
 nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
@@ -62,7 +64,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull),
                                                          mMaxElementSize(nsnull),
                                                          mOverFlowSize(0,0),
                                                          mIncludeOverFlow(PR_TRUE),
-                                                         mLayoutFlags(0)
+                                                         mLayoutFlags(0),
+                                                         mDisablePainting(PR_FALSE)
 {
    aShell->GetPresContext(getter_AddRefs(mPresContext));
 }
@@ -74,7 +77,8 @@ nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext,
                                                                       mType(Dirty),
                                                                       mOverFlowSize(0,0),
                                                                       mIncludeOverFlow(PR_TRUE),
-                                                                      mLayoutFlags(0)
+                                                                      mLayoutFlags(0),
+                                                                      mDisablePainting(PR_FALSE)
 
                                                                                         
 

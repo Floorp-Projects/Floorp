@@ -802,6 +802,7 @@ public:
    * Post a callback that should be handled after reflow has finished.
    */
   NS_IMETHOD PostReflowCallback(nsIReflowCallback* aCallback);
+  NS_IMETHOD CancelReflowCallback(nsIReflowCallback* aCallback);
 
   /**
    * Reflow batching
@@ -3414,6 +3415,38 @@ PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::CancelReflowCallback(nsIReflowCallback* aCallback)
+{
+   nsCallbackEventRequest* before = nsnull;
+   nsCallbackEventRequest* node = mFirstCallbackEventRequest;
+   while(node)
+   {
+      nsIReflowCallback* callback = node->callback;
+
+      if (callback == aCallback) 
+      {
+        nsCallbackEventRequest* toFree = node;
+        if (node == mFirstCallbackEventRequest) {
+           mFirstCallbackEventRequest = node->next;
+           node = mFirstCallbackEventRequest;
+           before = nsnull;
+        } else {
+           node = node->next;
+           before->next = node;
+        }
+
+        FreeFrame(sizeof(nsCallbackEventRequest), toFree);
+        NS_RELEASE(callback);
+      } else {
+        before = node;
+        node = node->next;
+      }
+   }
+
+   return NS_OK;
+}
+
 /**
 * Post a request to handle a DOM event after Reflow has finished.
 * The event must have been created with the "new" operator.
@@ -3483,6 +3516,7 @@ PresShell::PostAttributeChange(nsIContent* aContent,
 
   return NS_OK;
 }
+
 
 void
 PresShell::HandlePostedReflowCallbacks()
