@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.3 2000/07/19 23:23:24 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.4 2000/07/22 07:22:37 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -63,8 +63,8 @@ MPICMN = -I. -DMP_API_COMPATIBLE
 #CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -O3 $(MPICMN)
-#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
-#CFLAGS=-ansi -n32 -g -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
 CFLAGS= -O $(MPICMN)
 
@@ -201,8 +201,8 @@ mpi-test: mpi.o mpprime.o test-info.c mpi-test.c
 bbsrand: utils/bbs_rand.o mpi.o utils/bbsrand.c
 	$(CC) $(CFLAGS) -o bbsrand mpi.o bbs_rand.o utils/bbsrand.c $(LIBS)
 
-primegen: mpprime.o mpi.o utils/primegen.c
-	$(CC) $(CFLAGS) -o primegen mpi.o mpprime.o utils/primegen.c $(LIBS)
+primegen: mpi.o mpprime.o mplogic.o utils/primegen.c primes.c
+	$(CC) $(CFLAGS) -o primegen mpi.o mpprime.o mplogic.o utils/primegen.c $(LIBS)
 
 metime: mpprime.o mpi.o utils/metime.c
 	$(CC) $(CFLAGS) -o metime mpi.o mpprime.o utils/metime.c $(LIBS)
