@@ -30,7 +30,6 @@ CPPSRCS =                              \
         nsSyncStreamListener.cpp       \
         nsIOService.cpp                \
         nsSocketTransport.cpp          \
-        nsSocketTransportStreams.cpp   \
         nsSocketTransportService.cpp   \
         nsStandardUrl.cpp              \
 	nsNetModuleMgr.cpp             \
