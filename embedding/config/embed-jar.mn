@@ -46,4 +46,6 @@ locale/XXXX/pippki, XXXX/locale/XXXX/pippki
 
 # Wallet and Cookie stuff
 locale/XXXX/communicator/wallet, XXXX/locale/XXXX/communicator/wallet
+content/cookie/contents.rdf, comm/content/cookie/contents.rdf
+locale/XXXX/cookie/contents.rdf, XXXX/locale/XXXX/cookie/contents.rdf
 locale/XXXX/cookie/cookie.properties, XXXX/locale/XXXX/cookie/cookie.properties
