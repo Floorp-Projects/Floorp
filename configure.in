@@ -2661,6 +2661,16 @@ if test "$MOZ_ENDER_LITE"; then
 fi
 AC_SUBST(MOZ_ENDER_LITE)
 
+dnl Turn on malloc tracing
+NS_TRACE_MALLOC=
+MOZ_ARG_ENABLE_BOOL(trace-malloc,
+[  --enable-trace-malloc    Enable malloc tracing],
+  NS_TRACE_MALLOC=1 )
+if test "$NS_TRACE_MALLOC"; then
+  AC_DEFINE(NS_TRACE_MALLOC)
+fi
+AC_SUBST(NS_TRACE_MALLOC)
+
 dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
