@@ -233,7 +233,7 @@ LM_PrintZigError(int status, void *zigPtr, const char *metafile,
     char* zig_name = NULL;
     int len;
 
-	PR_ASSERT(errortext);
+    XP_ASSERT(errortext);
 
     if (zig) {
         zig_name = SOB_get_url(zig);
