@@ -1800,8 +1800,8 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo, PR
 			{
 				--currentElement;
 
-				nsIRDFResource	*resource;
-				gXULUtils->GetElementResource(child, &resource);
+				nsCOMPtr<nsIRDFResource> resource;
+				gXULUtils->GetElementResource(child, getter_AddRefs(resource));
 				contentSortInfo *contentInfo = CreateContentSortInfo(child, resource);
 				if(contentInfo)
 					contentSortInfoArray[currentElement] = contentInfo;
