@@ -21,7 +21,7 @@
         <argument name="attributeValue"/>
         <body>
           <![CDATA[            
-            var textNode = this.anonymousContent[0].firstChild.firstChild;
+            var textNode = document.getAnonymousNodes(this)[0].firstChild.firstChild;
             textNode.setAttribute(attributeName, attributeValue);
           ]]>
         </body>
@@ -32,7 +32,7 @@
         <argument name="attributeValue"/>
         <body>
           <![CDATA[            
-            var textNode = this.anonymousContent[0].firstChild.firstChild;
+            var textNode = document.getAnonymousNodes(this)[0].firstChild.firstChild;
             return textNode.getAttribute(attributeName, attributeValue);
           ]]>
         </body>
@@ -106,10 +106,10 @@
       </property>
 
       <!-- value forwards to the internal menulist's "data" attribute -->
-      <property name="value" onget="return this.anonymousContent[0].selectedItem.getAttribute('data');">
+      <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('data');">
         <setter>
           <![CDATA[
-            var menulist = this.anonymousContent[0];
+            var menulist = document.getAnonymousNodes(this)[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
             if (dataItems.length > 0)
                 menulist.selectedItem = dataItems[0];
@@ -122,7 +122,7 @@
             var menuItemIds = this.valueIds;
             var menuItemStrings = this.valueStrings;
 
-            var menulist = this.anonymousContent[0];
+            var menulist = document.getAnonymousNodes(this)[0];
             var popup = menulist.firstChild;
 
             // save our old "data" so we can restore it later
@@ -155,7 +155,7 @@
         <argument name="event"/>
         <body>
           <![CDATA[
-            var menulist = this.anonymousContent[0];
+            var menulist = document.getAnonymousNodes(this)[0];
 
             // notify targets
             var targets = this.targets;
@@ -278,11 +278,11 @@
           var attrib = val.attrib;
           this.searchAttribute = attrib;
           if (attrib == Components.interfaces.nsMsgSearchAttrib.Priority)
-            this.anonymousContent[1].data=val.priority;
+            document.getAnonymousNodes(this)[1].data=val.priority;
           else if (attrib == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
-            this.anonymousContent[2].data=val.status;
+            document.getAnonymousNodes(this)[2].data=val.status;
           else
-            this.anonymousContent[0].value = val.str;
+            document.getAnonymousNodes(this)[0].value = val.str;
           ]]>
         </setter>
       </property>
@@ -295,11 +295,11 @@
 
             searchValue.attrib = searchAttribute;
             if (searchAttribute == nsMsgSearchAttrib.Priority)
-               searchValue.priority = this.anonymousContent[1].selectedItem.data;
+               searchValue.priority = document.getAnonymousNodes(this)[1].selectedItem.data;
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
-               searchValue.status = this.anonymousContent[2].selectedItem.data;
+               searchValue.status = document.getAnonymousNodes(this)[2].selectedItem.data;
             else
-               searchValue.str = this.anonymousContent[0].value;
+               searchValue.str = document.getAnonymousNodes(this)[0].value;
           ]]>
         </body>
       </method>
