@@ -1,19 +1,20 @@
-TransforMiiX (TM) 
+TransforMiiX (TM)
 (C) Copyright 1999 The MITRE Corporation, Keith Visco. All rights reserved.
 
 
-Last updated: 2000/04/12
+Last updated: 2000/05/23
 
 The current "target" XSLT version is the 19991116 XSLT Recommendation, which
-can be found at http://www.w3.org/TR/1999/REC-xslt-19991116. 
+can be found at http://www.w3.org/TR/1999/REC-xslt-19991116.
 XPath implementation is also "targeting" the 19991116 version.
 
 What's Remaining?
 
--- Network support for URI handling
+-- Network support for URI handling  (standalone version only)
+
   -- currently I only implemented the file:/// protocol
   -- Note: Peter Van der Beken is currently working on integrating the
-     URIUtils into Mozilla
+     URIUtils for use when compiled as a Mozilla module
 
 -- I18N support for sorting and numbering
 
@@ -23,22 +24,28 @@ What's Remaining?
 -- Stylesheet inclusion using xsl:import
    -- xsl:include works
 
--- finish XPath function implementations
-   -- see examples/functions.html for a list of available functions
-   -- Note: Olivier Gerardin is currently working on the number functions.
+-- XSLT Additional functions  (Section 12 in the XSLT 1.0 Rec)
 
--- XSLT extension functions
-   -- I've implemented generate-id(), see examples/functions.html
-      for a list of currently implemented functions
-   -- document(), format-number(), system-propety(), etc need to
-      be implemented
+   See examples/functions.html for a list of available functions
 
--- Add support for xsl:key
+   -- document() has been implemented by Olivier Gerardin
+      - The second argument is currently not supported.
+
+   -- Remaining functions which need to be implemented:
+      - From section 12.2, the key() function
+      - From section 12.3, the format-number() function
+      - From section 12.4
+          - system-property()
+          - unparsed-entity-uri()
+
+-- Add support for xsl:key (XSLT 1.0, Section 12.2)
+
+-- Fallback (XSLT 1.0, Section 15)
 
 -- convert result-ns, and indent-result to new xsl:output
    -- some of this has been done
 
--- Add support for disable-output-escaping for xsl:text
+-- Add support for disable-output-escaping (Section 16.4) for xsl:text
 
 -- clean up Namespace handling
 
