@@ -27,6 +27,7 @@
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "netCore.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -113,6 +114,7 @@ nsInputStreamChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsInputStreamChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     mStatus = status;
     if (mFileTransport)
         return mFileTransport->Cancel(status);
@@ -178,7 +180,10 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
+    nsXPIDLCString spec;
+    rv = mURI->GetSpec(getter_Copies(spec));
+    if (NS_FAILED(rv)) return rv;
+    rv = fts->CreateTransportFromStream(mInputStream, spec, mContentType, mContentLength,
                                         getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
     if (mBufferSegmentSize > 0) {
@@ -239,7 +244,10 @@ nsInputStreamChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
+        nsXPIDLCString spec;
+        rv = mURI->GetSpec(getter_Copies(spec));
+        if (NS_FAILED(rv)) return rv;
+        rv = fts->CreateTransportFromStream(mInputStream, spec, mContentType, mContentLength,
                                             getter_AddRefs(mFileTransport));
         if (NS_FAILED(rv)) return rv;
         if (mBufferSegmentSize > 0) {

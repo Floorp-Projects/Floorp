@@ -91,35 +91,16 @@ public:
                          "wrong transport");
             // after successfully downloading the jar file to the cache,
             // start the extraction process:
-            nsCOMPtr<nsIFileChannel> jarCacheFile;
-            rv = NS_NewLocalFileChannel(getter_AddRefs(jarCacheFile),
-                                        mJarCacheFile, 
-                                        PR_RDONLY,
-                                        0);
-            if (NS_FAILED(rv)) return rv;
-            rv = jarCacheFile->SetLoadGroup(mJARChannel->mLoadGroup);
-            if (NS_FAILED(rv)) return rv;
-            rv = jarCacheFile->SetBufferSegmentSize(mJARChannel->mBufferSegmentSize);
-            if (NS_FAILED(rv)) return rv;
-            rv = jarCacheFile->SetBufferMaxSize(mJARChannel->mBufferMaxSize);
-            if (NS_FAILED(rv)) return rv;
-            rv = jarCacheFile->SetLoadAttributes(mJARChannel->mLoadAttributes);
-            if (NS_FAILED(rv)) return rv;
-            rv = jarCacheFile->SetNotificationCallbacks(mJARChannel->mCallbacks);
-            if (NS_FAILED(rv)) return rv;
-
-            mJARChannel->SetJARBaseFile(jarCacheFile);
             rv = mOnJARFileAvailable(mJARChannel, mClosure);
         }
         mJARChannel->mJarCacheTransport = nsnull;
         return rv;
     }
 
-    nsJARDownloadObserver(nsIFile* jarCacheFile, nsJARChannel* jarChannel,
+    nsJARDownloadObserver(nsJARChannel* jarChannel,
                           OnJARFileAvailableFun onJARFileAvailable, 
                           void* closure)
-        : mJarCacheFile(jarCacheFile),
-          mJARChannel(jarChannel),
+        : mJARChannel(jarChannel),
           mOnJARFileAvailable(onJARFileAvailable),
           mClosure(closure)
     {
@@ -132,7 +113,6 @@ public:
     }
 
 protected:
-    nsCOMPtr<nsIFile>           mJarCacheFile;
     nsJARChannel*               mJARChannel;
     OnJARFileAvailableFun       mOnJARFileAvailable;
     void*                       mClosure;
@@ -142,6 +122,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#define NS_DEFAULT_JAR_BUFFER_SEGMENT_SIZE      (16*1024)
+#define NS_DEFAULT_JAR_BUFFER_MAX_SIZE          (256*1024)
+
 nsJARChannel::nsJARChannel()
     : mContentType(nsnull),
       mContentLength(-1),
@@ -150,6 +133,8 @@ nsJARChannel::nsJARChannel()
       mReadCount(-1),
       mJAREntry(nsnull),
       mMonitor(nsnull),
+      mBufferSegmentSize(NS_DEFAULT_JAR_BUFFER_SEGMENT_SIZE),
+      mBufferMaxSize(NS_DEFAULT_JAR_BUFFER_MAX_SIZE),
       mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
@@ -175,13 +160,13 @@ nsJARChannel::~nsJARChannel()
         PR_DestroyMonitor(mMonitor);
 }
 
-NS_IMPL_ISUPPORTS6(nsJARChannel,
-                   nsIJARChannel,
-                   nsIChannel,
-                   nsIRequest,
-                   nsIStreamObserver,
-                   nsIStreamListener,
-                   nsIFileSystem)
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsJARChannel,
+                              nsIJARChannel,
+                              nsIChannel,
+                              nsIRequest,
+                              nsIStreamObserver,
+                              nsIStreamListener,
+                              nsIFileSystem)
 
 NS_METHOD
 nsJARChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -235,6 +220,7 @@ nsJARChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv;
     nsAutoMonitor monitor(mMonitor);
 
@@ -323,14 +309,14 @@ nsJARChannel::SetURI(nsIURI* aURI)
 }
 
 static nsresult
-OpenJARElement(nsJARChannel* channel, void* closure)
+OpenJARElement(nsJARChannel* jarChannel, void* closure)
 {
     nsresult rv;
     nsIInputStream* *result = (nsIInputStream**)closure;
-    nsAutoCMonitor mon(channel);
-    rv = channel->Open(nsnull, nsnull);
+    nsAutoCMonitor mon(jarChannel);
+    rv = jarChannel->Open(nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
-    rv = channel->GetInputStream(result);
+    rv = jarChannel->GetInputStream(result);
     mon.Notify();       // wake up OpenInputStream
 	return rv;
 }
@@ -363,10 +349,10 @@ nsJARChannel::AsyncOpen(nsIStreamObserver* observer, nsISupports* ctxt)
 }
 
 static nsresult
-ReadJARElement(nsJARChannel* channel, void* closure)
+ReadJARElement(nsJARChannel* jarChannel, void* closure)
 {
     nsresult rv;
-    rv = channel->AsyncReadJARElement();
+    rv = jarChannel->AsyncReadJARElement();
     return rv;
 }
 
@@ -382,7 +368,15 @@ nsresult
 nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable, 
                                      void* closure)
 {
+    // There are 3 cases to dealing with jar files:
+    // 1. They exist on the local disk and don't need to be cached
+    // 2. They have already been downloaded and exist in the cache
+    // 3. They need to be downloaded and cached
     nsresult rv;
+    nsCOMPtr<nsIChannel> jarBaseChannel;
+    nsCOMPtr<nsIFile> jarCacheFile;
+    nsCOMPtr<nsIChannel> jarCacheTransport;
+    nsCOMPtr<nsIInputStream> jarBaseIn;
 
 #ifdef PR_LOGGING
     nsXPIDLCString jarURLStr;
@@ -391,97 +385,115 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
            ("nsJarProtocol: EnsureJARFileAvailable %s", (const char*)jarURLStr));
 #endif
 
+    if (mLoadGroup) {
+        if (mUserListener) {
+            nsCOMPtr<nsILoadGroupListenerFactory> factory;
+            //
+            // Create a load group "proxy" listener...
+            //
+            rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
+            if (factory) {
+                nsIStreamListener *newListener;
+                rv = factory->CreateLoadGroupListener(mUserListener, &newListener);
+                if (NS_SUCCEEDED(rv)) {
+                    mUserListener = newListener;
+                    NS_RELEASE(newListener);
+                }
+            }
+        }
+        rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = mURI->GetJARFile(getter_AddRefs(mJARBaseURI));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto error;
 
     rv = mURI->GetJAREntry(&mJAREntry);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto error;
 
-    nsCOMPtr<nsIChannel> jarBaseChannel;
     rv = NS_OpenURI(getter_AddRefs(jarBaseChannel), mJARBaseURI, nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = jarBaseChannel->SetLoadGroup(mLoadGroup);
-    if (NS_FAILED(rv)) return rv;
-    rv = jarBaseChannel->SetLoadAttributes(mLoadAttributes);
-    if (NS_FAILED(rv)) return rv;
-    rv = jarBaseChannel->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
-
-    if (mLoadGroup)
-        (void)mLoadGroup->AddChannel(this, nsnull);
-
-//    mJARBaseFile = do_QueryInterface(jarBaseChannel, &rv);
+    if (NS_FAILED(rv)) goto error;
 
     PRBool shouldCache;
     rv = jarBaseChannel->GetShouldCache(&shouldCache);
 
     if (NS_SUCCEEDED(rv) && !shouldCache) {
-        // then we've already got a local jar file -- no need to download it
+        // Case 1: Local file
+        // we've already got a local jar file -- no need to download it
+        mJARBaseFile = do_QueryInterface(jarBaseChannel, &rv);  // XXX fails for resource:
+        if (NS_FAILED(rv)) goto error;
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                ("nsJarProtocol: extracting local jar file %s", (const char*)jarURLStr));
         rv = onJARFileAvailable(this, closure);
+        goto error;
     }
-    else {
-        // otherwise, we need to download the jar file
 
-        nsCOMPtr<nsIFile> jarCacheFile;
-        rv = GetCacheFile(getter_AddRefs(jarCacheFile));
-        if (NS_FAILED(rv)) return rv;
-        
-        PRBool filePresent;
-        
-		rv = jarCacheFile->IsFile(&filePresent);
-        
-        if (NS_SUCCEEDED(rv) && filePresent)
-        {
-	        // then we've already got the file in the local cache -- no need to download it
-            rv = NS_NewLocalFileChannel(getter_AddRefs(mJARBaseFile),
-                                        jarCacheFile, 
-                                        PR_RDONLY,
-                                        0);
-            if (NS_FAILED(rv)) return rv;
-            rv = mJARBaseFile->SetBufferSegmentSize(mBufferSegmentSize);
-            if (NS_FAILED(rv)) return rv;
-            rv = mJARBaseFile->SetBufferMaxSize(mBufferMaxSize);
-            if (NS_FAILED(rv)) return rv;
-
+    rv = GetCacheFile(getter_AddRefs(jarCacheFile));
+    if (NS_FAILED(rv)) goto error;
+    
+    PRBool filePresent;
+    rv = jarCacheFile->IsFile(&filePresent);
+    if (NS_SUCCEEDED(rv) && filePresent) {
+        // failed downloads can sometimes leave a zero-length file, so check for that too:
+        PRInt64 size;
+        rv = jarCacheFile->GetFileSize(&size);
+        if (NS_FAILED(rv)) goto error;
+        if (!LL_IS_ZERO(size)) {
+            // Case 2: Already downloaded
+            // we've already got the file in the local cache -- no need to download it
             PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                    ("nsJarProtocol: jar file already in cache %s", (const char*)jarURLStr));
             rv = onJARFileAvailable(this, closure);
-			return rv;
-		}
+            goto error;
+        }
+    }
 
+    // Case 3: Download jar file and cache
+    {
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) goto error;
 
         nsAutoMonitor monitor(mMonitor);
 
-        // use a file transport to serve as a data pump for the download (done
-        // on some other thread)
-        nsCOMPtr<nsIChannel> jarCacheTransport;
-        rv = fts->CreateTransport(jarCacheFile, PR_RDONLY, 0, 
-                                  getter_AddRefs(mJarCacheTransport));
-        if (NS_FAILED(rv)) return rv;
-        rv = mJarCacheTransport->SetBufferSegmentSize(mBufferSegmentSize);
-        if (NS_FAILED(rv)) return rv;
-        rv = mJarCacheTransport->SetBufferMaxSize(mBufferMaxSize);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mJarCacheTransport->SetNotificationCallbacks(mCallbacks);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIStreamObserver> downloadObserver = 
-            new nsJARDownloadObserver(jarCacheFile, this, onJARFileAvailable, closure);
+        nsCOMPtr<nsIStreamObserver> downloadObserver =
+            new nsJARDownloadObserver(this, onJARFileAvailable, closure);
         if (downloadObserver == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
         PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
                ("nsJarProtocol: downloading jar file %s", (const char*)jarURLStr));
-        nsCOMPtr<nsIInputStream> jarBaseIn;
-        rv = jarBaseChannel->OpenInputStream(getter_AddRefs(jarBaseIn));
-        if (NS_FAILED(rv)) return rv;
 
-        rv = mJarCacheTransport->AsyncWrite(jarBaseIn, nsnull, downloadObserver);
+        // set up the jarBaseChannel for getting input:
+        rv = jarBaseChannel->SetLoadAttributes(mLoadAttributes);
+        if (NS_FAILED(rv)) goto error;
+        rv = jarBaseChannel->SetNotificationCallbacks(mCallbacks);
+        if (NS_FAILED(rv)) goto error;
+
+        rv = jarBaseChannel->OpenInputStream(getter_AddRefs(jarBaseIn));
+        if (NS_FAILED(rv)) goto error;
+
+    // use a file transport to serve as a data pump for the download (done
+    // on some other thread)
+        rv = fts->CreateTransport(jarCacheFile, PR_WRONLY | PR_CREATE_FILE, 0, 
+                                  getter_AddRefs(mJarCacheTransport));
+        if (NS_FAILED(rv)) goto error;
+        rv = mJarCacheTransport->SetBufferSegmentSize(mBufferSegmentSize);
+        if (NS_FAILED(rv)) goto error;
+        rv = mJarCacheTransport->SetBufferMaxSize(mBufferMaxSize);
+        if (NS_FAILED(rv)) goto error;
+#if 0   // don't give callbacks for writing to disk
+        rv = mJarCacheTransport->SetNotificationCallbacks(mCallbacks);
+        if (NS_FAILED(rv)) goto error;
+#endif 
+
+        rv = mJarCacheTransport->AsyncWrite(jarBaseIn, downloadObserver, nsnull);
+        return rv;
+    }
+
+  error:
+    if (mLoadGroup) {
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, nsnull, rv, nsnull); // XXX fix error message
+        NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
     }
     return rv;
 }
@@ -519,6 +531,21 @@ nsJARChannel::GetCacheFile(nsIFile* *cacheFile)
     
     *cacheFile = jarCacheFile;
     NS_ADDREF(*cacheFile);
+
+    // also set up the jar base file channel while we're here
+    rv = NS_NewLocalFileChannel(getter_AddRefs(mJARBaseFile),
+                                jarCacheFile, 
+                                PR_RDONLY,
+                                0);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJARBaseFile->SetBufferSegmentSize(mBufferSegmentSize);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJARBaseFile->SetBufferMaxSize(mBufferMaxSize);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJARBaseFile->SetLoadAttributes(mLoadAttributes);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJARBaseFile->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
     return rv;
 }
 
@@ -529,39 +556,27 @@ nsJARChannel::AsyncReadJARElement()
 
     nsAutoMonitor monitor(mMonitor);
 
+    // Ensure that we have mJARBaseFile at this point. We'll need it in our
+    // nsIFileSystem implementation that accesses the jar file.
     NS_ASSERTION(mJARBaseFile, "mJARBaseFile is null");
-
-    if (mLoadGroup) {
-        nsCOMPtr<nsILoadGroupListenerFactory> factory;
-        //
-        // Create a load group "proxy" listener...
-        //
-        rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-        if (factory) {
-            nsIStreamListener *newListener;
-            rv = factory->CreateLoadGroupListener(mUserListener, &newListener);
-            if (NS_SUCCEEDED(rv)) {
-                mUserListener = newListener;
-                NS_RELEASE(newListener);
-            }
-        }
-
-        rv = mLoadGroup->AddChannel(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransportFromFileSystem(this, 
+    nsXPIDLCString spec;
+    rv = mURI->GetSpec(getter_Copies(spec));    // name for display purposes in status bar
+    rv = fts->CreateTransportFromFileSystem(this, spec,
                                             getter_AddRefs(mJarExtractionTransport));
     if (NS_FAILED(rv)) return rv;
     rv = mJarExtractionTransport->SetBufferSegmentSize(mBufferSegmentSize);
     if (NS_FAILED(rv)) return rv;
     rv = mJarExtractionTransport->SetBufferMaxSize(mBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
-
     rv = mJarExtractionTransport->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetTransferOffset(mStartPosition);
+    if (NS_FAILED(rv)) return rv;
+    rv = mJarExtractionTransport->SetTransferCount(mReadCount);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef PR_LOGGING
@@ -570,10 +585,7 @@ nsJARChannel::AsyncReadJARElement()
     PR_LOG(gJarProtocolLog, PR_LOG_DEBUG,
            ("nsJarProtocol: AsyncRead jar entry %s", (const char*)jarURLStr));
 #endif
-    rv = mJarExtractionTransport->SetTransferOffset(mStartPosition);
-    if (NS_FAILED(rv)) return rv;
-    rv = mJarExtractionTransport->SetTransferCount(mReadCount);
-    if (NS_FAILED(rv)) return rv;
+
     rv = mJarExtractionTransport->AsyncRead(this, nsnull);
     return rv;
 }
@@ -918,9 +930,6 @@ nsJARChannel::Open(char* *contentType, PRInt32 *contentLength)
 
 	rv = mJAR->Open();
     if (NS_FAILED(rv)) return rv; 
-
-    // If this fails, GetOwner will fail, but otherwise we can continue.
-	mJAR->ParseManifest();
 
     nsCOMPtr<nsIZipEntry> entry;
 	rv = mJAR->GetEntry(mJAREntry, getter_AddRefs(entry));

@@ -305,6 +305,7 @@ nsDNSRequest::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsDNSRequest::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     mStatus = status;
     if (mUserListener) {
         // Hold onto a reference to ourself because if we decide to remove

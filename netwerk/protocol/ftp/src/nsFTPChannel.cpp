@@ -147,6 +147,7 @@ nsFTPChannel::GetStatus(nsresult *status)
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(nsresult status) {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv;
     nsAutoLock lock(mLock);
     mStatus = status;

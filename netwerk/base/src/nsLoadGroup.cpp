@@ -171,6 +171,7 @@ nsLoadGroup::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsLoadGroup::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv, firstError;
     PRUint32 count;
 

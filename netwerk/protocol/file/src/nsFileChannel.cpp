@@ -128,6 +128,7 @@ nsFileChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsFileChannel::Cancel(nsresult status)
 {
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
                  "wrong thread calling this routine");

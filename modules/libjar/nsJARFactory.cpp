@@ -41,16 +41,19 @@
 #include "nsJAR.h"
 #include "nsIJARFactory.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR);
-
 // The list of components we register
 static nsModuleComponentInfo components[] = 
 {
     { "Zip Reader", 
        NS_ZIPREADER_CID,
-      "component://netscape/libjar", 
-      nsJARConstructor
+      "component://netscape/libjar/zip-reader", 
+      nsJAR::Create
     },
+    { "Zip Reader Cache", 
+       NS_ZIPREADERCACHE_CID,
+      "component://netscape/libjar/zip-reader-cache", 
+      nsZipReaderCache::Create
+    }
 };
 
 NS_IMPL_NSGETMODULE("nsJarModule", components);

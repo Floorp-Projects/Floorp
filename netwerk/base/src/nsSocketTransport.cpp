@@ -1378,6 +1378,7 @@ nsSocketTransport::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsSocketTransport::Cancel(nsresult status)
 {
+  NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...

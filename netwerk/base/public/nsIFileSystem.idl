@@ -25,6 +25,12 @@
 interface nsIInputStream;
 interface nsIOutputStream;
 
+/**
+ * The nsIFileSystem interface is only used by nsIFileTransportService
+ * in its createTransportFromFileSystem method. Given an object that 
+ * satisfies this synchronous interface, the file transport can give 
+ * asyncronous access to that data by acting as a data pump.
+ */
 [scriptable, uuid(818e1370-77c4-11d3-9395-00104ba0fd40)]
 interface nsIFileSystem : nsISupports
 {

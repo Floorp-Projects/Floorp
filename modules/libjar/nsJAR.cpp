@@ -154,7 +154,7 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 
 // The following initialization makes a guess of 25 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 25),
-                step1Complete(PR_FALSE)
+                mParsedManifest(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -163,15 +163,39 @@ nsJAR::~nsJAR()
 { 
 }
 
-NS_IMPL_ISUPPORTS1(nsJAR, nsIZipReader);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJAR, nsIZipReader);
 
 //----------------------------------------------
 // nsJAR public implementation
 //----------------------------------------------
+
+NS_METHOD
+nsJAR::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsJAR* jar = new nsJAR();
+    if (jar == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(jar);
+    nsresult rv = jar->QueryInterface(aIID, aResult);
+    NS_RELEASE(jar);
+    return rv;
+}
+
 NS_IMETHODIMP
 nsJAR::Init(nsIFile* zipFile)
 {
   mZipFile = zipFile;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJAR::GetFile(nsIFile* *result)
+{
+  *result = mZipFile;
+  NS_ADDREF(*result);
   return NS_OK;
 }
 
@@ -283,16 +307,16 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
 #define JAR_MF_HEADER (const char*)"Manifest-Version: 1.0"
 #define JAR_SF_HEADER (const char*)"Signature-Version: 1.0"
 
-NS_IMETHODIMP
+nsresult
 nsJAR::ParseManifest()
 {
 #ifdef XP_MAC
 return NS_OK;
 #else
   //-- Verification Step 1
-  if (step1Complete)
+  if (mParsedManifest)
     return NS_OK;
-  step1Complete = PR_TRUE;   
+  mParsedManifest = PR_TRUE;   
 
   //-- (1)Manifest (MF) file
   nsresult rv;
@@ -674,9 +698,11 @@ nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
   //-- Verification Step 2
   // Check that verification is supported and step 1 has been done
 
-  NS_ASSERTION(step1Complete, 
+  if (!mParsedManifest)
+    ParseManifest();
+  NS_ASSERTION(mParsedManifest, 
                "Verification step 2 called before step 1 complete");
-  if (!step1Complete) return NS_ERROR_FAILURE;
+  if (!mParsedManifest) return NS_ERROR_FAILURE;
 
   //-- Get the manifest item
   nsStringKey key(aEntryName);
@@ -1034,3 +1060,151 @@ nsJARItem::GetCRC32(PRUint32 *aCrc32)
     return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsIZipReaderCache
+
+class nsZipCacheEntry
+{
+public:
+  nsZipCacheEntry(nsIZipReader* zip)
+    : mZip(zip), mUseCount(0), mNextOlder(nsnull) {}
+  ~nsZipCacheEntry() {}
+
+  static void* PR_CALLBACK
+  Clone(nsHashKey *aKey, void *aData, void* closure) {
+    NS_NOTREACHED("nsZipCacheEntry::Clone");    // should never be called
+    return nsnull;
+  }
+
+  static PRBool PR_CALLBACK
+  Delete(nsHashKey *aKey, void *aData, void* closure) {
+    nsZipCacheEntry* entry = (nsZipCacheEntry*)aData;
+    delete entry;
+    return PR_TRUE;
+  }
+
+  nsCOMPtr<nsIZipReader>        mZip;
+  nsrefcnt                      mUseCount;
+  nsZipCacheEntry*              mNextOlder;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
+
+nsZipReaderCache::nsZipReaderCache()
+  : mZips(nsZipCacheEntry::Clone, nsnull,
+          nsZipCacheEntry::Delete, nsnull),
+    mLock(nsnull),
+    mFreeCount(0)
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::Init(PRUint32 cacheSize)
+{
+  mCacheSize = cacheSize;
+  mLock = PR_NewLock();
+  return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsZipReaderCache::~nsZipReaderCache()
+{
+  if (mLock)
+    PR_DestroyLock(mLock);
+}
+
+NS_METHOD
+nsZipReaderCache::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsZipReaderCache* cache = new nsZipReaderCache();
+    if (cache == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(cache);
+    nsresult rv = cache->QueryInterface(aIID, aResult);
+    NS_RELEASE(cache);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
+{
+  nsresult rv;
+  nsAutoLock lock(mLock);
+
+  nsISupportsKey key(zipFile);
+  nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
+  if (entry) {
+    *result = entry->mZip;
+    entry->mUseCount++;
+    NS_ADDREF(*result);
+    return NS_OK;
+  }
+
+  // not found -- create a new one and cache it
+  nsCOMPtr<nsIZipReader> zip;
+  rv = nsJAR::Create(nsnull, NS_GET_IID(nsIZipReader), getter_AddRefs(zip));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = zip->Init(zipFile);
+  if (NS_FAILED(rv)) return rv;
+  rv = zip->Open();
+  if (NS_FAILED(rv)) return rv;
+
+  entry = new nsZipCacheEntry(zip);
+  if (entry == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  entry->mUseCount++;
+  (void)mZips.Put(&key, entry);
+  *result = zip;
+  NS_ADDREF(*result);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
+{
+  nsresult rv;
+  nsAutoLock lock(mLock);
+
+  nsCOMPtr<nsIFile> zipFile;
+  rv = zip->GetFile(getter_AddRefs(zipFile));
+  if (NS_FAILED(rv)) return rv;
+
+  nsISupportsKey key(zipFile);
+  nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
+  if (entry == nsnull)
+    return NS_ERROR_FAILURE;
+
+  if (--entry->mUseCount == 0) {
+    // The first step in releasing a zip is to throw it on the LRU free list.
+    // That way it can be quickly re-opened if necessary. But if the free
+    // list grows too long, some need to be thrown out.
+
+    entry->mNextOlder = mFreeList;
+    mFreeList = entry;
+
+    if (++mFreeCount >= mCacheSize) {
+      // throw out the oldest one:
+      nsZipCacheEntry** oldestPtr = &mFreeList;
+      NS_ASSERTION(*oldestPtr, "null free list");
+      while ((*oldestPtr)->mNextOlder != nsnull) {
+        oldestPtr = &(*oldestPtr)->mNextOlder;
+      }
+      nsZipCacheEntry* oldest = *oldestPtr;
+      *oldestPtr = nsnull;
+
+      nsZipCacheEntry* elt = (nsZipCacheEntry*)mZips.Remove(&key);
+      NS_ASSERTION(elt == entry, "Remove failed");
+      --mFreeCount;
+    }
+  }
+
+  NS_RELEASE(zip);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////

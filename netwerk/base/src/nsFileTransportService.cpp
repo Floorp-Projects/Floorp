@@ -61,7 +61,7 @@ nsFileTransportService::~nsFileTransportService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
 
-NS_IMETHODIMP
+NS_METHOD
 nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
     if (aOuter)
@@ -103,6 +103,7 @@ nsFileTransportService::CreateTransport(nsIFile* file,
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
+                                                  const char* streamName,
                                                   const char* contentType,
                                                   PRInt32 contentLength,
                                                   nsIChannel** result)
@@ -112,7 +113,7 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fromStream, contentType, contentLength);
+    rv = trans->Init(fromStream, streamName, contentType, contentLength);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -123,6 +124,7 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
+                                                      const char* streamName,
                                                       nsIChannel **result)
 {
     nsresult rv;
@@ -130,7 +132,7 @@ nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fsObj);
+    rv = trans->Init(fsObj, streamName);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
