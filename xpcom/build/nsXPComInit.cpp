@@ -112,6 +112,8 @@
 
 #include "SpecialSystemDirectory.h"
 
+#include <locale.h>
+
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry
 // Since noone outside xpcom needs to know about this and nsRegistry.cpp
@@ -439,6 +441,11 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     // Startup the memory manager
     rv = nsMemoryImpl::Startup();
     if (NS_FAILED(rv)) return rv;
+
+    // If the locale hasn't already been setup by our embedder,
+    // get us out of the "C" locale and into the system 
+    if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
+        setlocale(LC_ALL, "");
 
 #if defined(XP_UNIX) || defined(XP_OS2)
     NS_StartupNativeCharsetUtils();

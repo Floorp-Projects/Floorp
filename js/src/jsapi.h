@@ -1562,6 +1562,7 @@ struct JSLocaleCallbacks {
     JSLocaleToUpperCase     localeToUpperCase;
     JSLocaleToLowerCase     localeToLowerCase;
     JSLocaleCompare         localeCompare;
+    JSLocaleToUnicode       localeToUnicode;
 };
 
 /*

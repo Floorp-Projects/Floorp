@@ -78,6 +78,9 @@
 #include "nsContentUtils.h"
 
 // For locale aware string methods
+#include "plstr.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
 #include "nsUnicharUtils.h"
 #include "nsILocaleService.h"
 #include "nsICollation.h"
@@ -139,6 +142,7 @@ static nsIScriptSecurityManager *sSecurityManager;
 
 static nsICollation *gCollation;
 
+static nsIUnicodeDecoder *gDecoder;
 
 void JS_DLL_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx,
@@ -299,6 +303,80 @@ NS_ScriptErrorReporter(JSContext *cx,
   // XXX do we really want to be doing this?
   ::JS_ClearPendingException(cx);
 }
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
+{
+  nsresult rv;
+
+  if (!gDecoder) {
+    // use app default locale
+    nsCOMPtr<nsILocaleService> localeService = 
+      do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsILocale> appLocale;
+      rv = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString localeStr;
+        rv = appLocale->
+          GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get app locale info");
+
+        nsCOMPtr<nsIPlatformCharset> platformCharset =
+          do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+
+        if (NS_SUCCEEDED(rv)) {
+          nsCAutoString charset;
+          rv = platformCharset->GetDefaultCharsetForLocale(localeStr, charset);
+          if (NS_SUCCEEDED(rv)) {
+            // get/create unicode decoder for charset
+            nsCOMPtr<nsICharsetConverterManager> ccm =
+              do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv))
+              ccm->GetUnicodeDecoder(charset.get(), &gDecoder);
+          }
+        }
+      }
+    }
+  }
+
+  JSString *str = nsnull;
+  PRInt32 srcLength = PL_strlen(src);
+
+  if (gDecoder) {
+    PRInt32 unicharLength = srcLength;
+    PRUnichar *unichars = (PRUnichar *)malloc((srcLength + 1) * sizeof(PRUnichar));
+    if (unichars) {
+      rv = gDecoder->Convert(src, &srcLength, unichars, &unicharLength);
+      if (NS_SUCCEEDED(rv)) {
+        // terminate the returned string
+        unichars[unicharLength] = 0;
+
+        // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
+        if (unicharLength + 1 < srcLength + 1) {
+          PRUnichar *shrunkUnichars =
+            (PRUnichar *)realloc(unichars, (unicharLength + 1) * sizeof(PRUnichar));
+          if (shrunkUnichars)
+            unichars = shrunkUnichars;
+        }
+        str = JS_NewUCString(cx,
+                             NS_REINTERPRET_CAST(jschar*, unichars),
+                             unicharLength);
+      }
+      if (!str)
+        free(unichars);
+    }
+  }
+
+  if (!str) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
+    return JS_FALSE;
+  }
+
+  *rval = STRING_TO_JSVAL(str);
+  return JS_TRUE;
+}
+
 
 static JSBool
 ChangeCase(JSContext *cx, JSString *src, jsval *rval,
@@ -577,7 +655,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
       {
         LocaleToUpperCase,
         LocaleToLowerCase,
-        LocaleCompare
+        LocaleCompare,
+        LocaleToUnicode
       };
 
     ::JS_SetLocaleCallbacks(mContext, &localeCallbacks);
@@ -634,6 +713,7 @@ nsJSContext::~nsJSContext()
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
     NS_IF_RELEASE(gCollation);
+    NS_IF_RELEASE(gDecoder);
   }
 }
 
@@ -2045,6 +2125,7 @@ void nsJSEnvironment::ShutDown()
     NS_IF_RELEASE(sRuntimeService);
     NS_IF_RELEASE(sSecurityManager);
     NS_IF_RELEASE(gCollation);
+    NS_IF_RELEASE(gDecoder);
   }
 
   sDidShutdown = PR_TRUE;

@@ -62,6 +62,7 @@
 #include "nsAutoLock.h"
 #include "prinit.h"
 #include "nsUnicharUtils.h"
+#include "nsIPosixLocale.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
@@ -325,7 +326,7 @@ NS_IMETHODIMP
 nsPlatformCharset::Init()
 {
   nsCAutoString charset;
-  nsresult res;
+  nsresult res = NS_OK;
 
   //
   // remember default locale so we can use the
@@ -334,9 +335,14 @@ nsPlatformCharset::Init()
   char* locale = setlocale(LC_CTYPE, nsnull);
   NS_ASSERTION(locale, "cannot setlocale");
   if (locale) {
-    mLocale.AssignWithConversion(locale);
+    nsCOMPtr<nsIPosixLocale> posixConverter =
+      do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
+    if (posixConverter)
+      res = posixConverter->GetXPLocale(locale, mLocale);
+    if (NS_FAILED(res))
+      return res;
   } else {
-    mLocale.Assign(NS_LITERAL_STRING("en_US"));
+    mLocale.Assign(NS_LITERAL_STRING("en-US"));
   }
 
   res = InitGetCharset(charset);

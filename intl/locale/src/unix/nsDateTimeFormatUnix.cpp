@@ -55,7 +55,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat)
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 {
   nsAutoString localeStr;
-  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_TIME##PLATFORM");
+  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_TIME");
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale
