@@ -1163,14 +1163,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   aFrame->GetContent(getter_AddRefs(parentContent));
   nsCOMPtr<nsIAtom> tag;
   mContent->GetTag(*getter_AddRefs(tag));
-  if (tag.get() != nsXULAtoms::tooltip) {
-    nsAutoString sizeToContent;
-    parentContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizeToContent);
-    if (sizeToContent == NS_LITERAL_STRING("pref") ||
-        sizeToContent == NS_LITERAL_STRING("always")) {
+  if (tag.get() != nsXULAtoms::tooltip &&
+      nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE)) {
       nsBoxLayoutState state(mPresContext);
       SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
-    }
   }
     
   nsAutoString shouldDisplay, menuActive;
