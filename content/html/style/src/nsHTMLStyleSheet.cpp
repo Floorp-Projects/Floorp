@@ -45,6 +45,9 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDOMHTMLSelectElement.h"
+#include "nsIComboboxControlFrame.h"
+#include "nsIListControlFrame.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -53,6 +56,8 @@
 #include "nsToolbarFrame.h"
 #endif
 
+//#define FRAMEBASED_COMPONENTS 1 // This is temporary please leave in for now - rods
+
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -60,6 +65,10 @@ static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_I
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+
+static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
+static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
@@ -423,6 +432,17 @@ protected:
                                      nsIFrame*        aParentFrame,
                                      nsIFrame*&       aPlaceholderFrame);
 
+  nsresult ConstructSelectFrame(nsIPresContext*  aPresContext,
+                                nsIContent*      aContent,
+                                nsIFrame*        aParentFrame,
+                                nsIAtom*         aTag,
+                                nsIStyleContext* aStyleContext,
+                                nsAbsoluteItems& aAbsoluteItems,
+                                nsIFrame*&       aNewFrame,
+                                PRBool &         aProcessChildren,
+                                PRBool &         aIsAbsolutelyPositioned,
+                                PRBool &         aFrameHasBeenInitialized);
+
   nsresult ConstructFrameByTag(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
                                nsIFrame*        aParentFrame,
@@ -491,6 +511,15 @@ protected:
   nsIFrame* GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
 
+  nsresult InitializeScrollFrame(nsIFrame *            aScrollFrame,
+                                 nsIPresContext*       aPresContext,
+                                 nsIContent*           aContent,
+                                 nsIFrame*             aParentFrame,
+                                 nsIStyleContext*      aStyleContext,
+                                 nsAbsoluteItems&      aAbsoluteItems,
+                                 nsIFrame*&            aNewFrame,
+                                 PRBool                isAbsolutelyPositioned,
+                                 PRBool                aCreateBlock);
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -1688,6 +1717,98 @@ HTMLStyleSheetImpl::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 }
 
 nsresult
+HTMLStyleSheetImpl::ConstructSelectFrame(nsIPresContext*  aPresContext,
+                                        nsIContent*      aContent,
+                                        nsIFrame*        aParentFrame,
+                                        nsIAtom*         aTag,
+                                        nsIStyleContext* aStyleContext,
+                                        nsAbsoluteItems& aAbsoluteItems,
+                                        nsIFrame*&       aNewFrame,
+                                        PRBool &         aProcessChildren,
+                                        PRBool &         aIsAbsolutelyPositioned,
+                                        PRBool &         aFrameHasBeenInitialized)
+{
+#ifdef FRAMEBASED_COMPONENTS
+  nsresult rv = NS_OK;
+  nsIDOMHTMLSelectElement* select   = nsnull;
+  PRBool                   multiple = PR_FALSE;
+  nsresult result = aContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
+  if (NS_OK == result) {
+    result = select->GetMultiple(&multiple); // XXX This is wrong!
+    if (!multiple) {
+      nsIFrame * comboboxFrame;
+      rv = NS_NewComboboxControlFrame(comboboxFrame);
+      nsIComboboxControlFrame* comboBox;
+      if (NS_OK == comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox)) {
+
+        nsIFrame * listFrame;
+        rv = NS_NewListControlFrame(listFrame);
+
+        // This is important to do before it is initialized
+        // it tells it that it is in "DropDown Mode"
+        nsIListControlFrame * listControlFrame;
+        if (NS_OK == listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame)) {
+          listControlFrame->SetComboboxFrame(comboboxFrame);
+        }
+
+        InitializeScrollFrame(listFrame, aPresContext, aContent, comboboxFrame, aStyleContext,
+                              aAbsoluteItems,  aNewFrame, PR_TRUE, PR_TRUE);
+
+        nsIFrame* placeholderFrame;
+
+        CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                  aParentFrame, placeholderFrame);
+
+        // Add the absolutely positioned frame to its containing block's list
+        // of child frames
+        aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+        listFrame = aNewFrame;
+
+        // This needs to be done "after" the ListFrame has it's ChildList set
+        // because the SetInitChildList intializes the ListBox selection state
+        // and this method initializes the ComboBox's selection state
+        comboBox->SetDropDown(placeholderFrame, listFrame);
+
+        // Set up the Pseudo Style contents
+        nsIStyleContext*  visiblePseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                            (aContent, nsHTMLAtoms::dropDownVisible, aStyleContext);
+        nsIStyleContext*  hiddenPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                            (aContent, nsHTMLAtoms::dropDownHidden, aStyleContext);
+        nsIStyleContext*  outPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                            (aContent, nsHTMLAtoms::dropDownBtnOut, aStyleContext);
+        nsIStyleContext* pressPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                            (aContent, nsHTMLAtoms::dropDownBtnPressed, aStyleContext);
+
+        comboBox->SetDropDownStyleContexts(visiblePseudoStyle, hiddenPseudoStyle);
+        comboBox->SetButtonStyleContexts(outPseudoStyle, pressPseudoStyle);
+
+        aProcessChildren = PR_FALSE;
+        nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, listFrame,
+                                                 aStyleContext, PR_TRUE);
+        aNewFrame = comboboxFrame;
+      }
+
+    } else {
+      nsIFrame * listFrame;
+      rv = NS_NewListControlFrame(listFrame);
+      aNewFrame = listFrame;
+      InitializeScrollFrame(listFrame, aPresContext, aContent, aParentFrame, aStyleContext,
+                            aAbsoluteItems,  aNewFrame, aIsAbsolutelyPositioned, PR_TRUE);
+      aFrameHasBeenInitialized = PR_TRUE;
+    }
+    NS_RELEASE(select);
+  } else {
+    rv = NS_NewSelectControlFrame(aNewFrame);
+  }
+
+#else
+  nsresult rv = NS_NewSelectControlFrame(aNewFrame);
+#endif
+  return rv;
+}
+
+nsresult
 HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,
                                         nsIFrame*        aParentFrame,
@@ -1699,6 +1820,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
   PRBool    isAbsolutelyPositioned = PR_FALSE;
+  PRBool    frameHasBeenInitialized = PR_FALSE;
 
   // Initialize OUT parameter
   aNewFrame = nsnull;
@@ -1740,7 +1862,9 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewTextControlFrame(aNewFrame);
       }
       else if (nsHTMLAtoms::select == aTag) {
-        rv = NS_NewSelectControlFrame(aNewFrame);
+        rv = ConstructSelectFrame(aPresContext, aContent, aParentFrame,
+                                  aTag, aStyleContext, aAbsoluteItems, aNewFrame, 
+                                  processChildren, isAbsolutelyPositioned, frameHasBeenInitialized);
       }
       else if (nsHTMLAtoms::applet == aTag) {
         rv = NS_NewObjectFrame(aNewFrame);
@@ -1794,23 +1918,25 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
-    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
-                                                         aParentFrame;
-    aNewFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+    if (!frameHasBeenInitialized) {
+      nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                           aParentFrame;
+      aNewFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
 
-    // See if we need to create a view, e.g. the frame is absolutely positioned
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
-                                             aStyleContext, PR_FALSE);
+      // See if we need to create a view, e.g. the frame is absolutely positioned
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                               aStyleContext, PR_FALSE);
 
-    // Process the child content if requested
-    nsIFrame* childList = nsnull;
-    if (processChildren) {
-      rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
-                           childList);
+      // Process the child content if requested
+      nsIFrame* childList = nsnull;
+      if (processChildren) {
+        rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
+                             childList);
+      }
+
+      // Set the frame's initial child list
+      aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
     }
-
-    // Set the frame's initial child list
-    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
 
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned) {
@@ -1948,6 +2074,70 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
   }
 
   return rv;
+}
+#endif
+
+nsresult
+HTMLStyleSheetImpl::InitializeScrollFrame(nsIFrame *            scrollFrame,
+                                          nsIPresContext*       aPresContext,
+                                          nsIContent*           aContent,
+                                          nsIFrame*             aParentFrame,
+                                          nsIStyleContext*      aStyleContext,
+                                          nsAbsoluteItems&      aAbsoluteItems,
+                                          nsIFrame*&            aNewFrame,
+                                          PRBool                isAbsolutelyPositioned,
+                                          PRBool                aCreateBlock)
+{
+    // Initialize it
+    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                         aParentFrame;
+    scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+
+    // The scroll frame gets the original style context, and the scrolled
+    // frame gets a SCROLLED-CONTENT pseudo element style context that
+    // inherits the background properties
+    nsIStyleContext*  scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                        (aContent, nsHTMLAtoms::scrolledContentPseudo, aStyleContext);
+
+    // Create an area container for the frame
+    nsIFrame* scrolledFrame;
+    NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+
+    // Initialize the frame and force it to have a view
+    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
+    NS_RELEASE(scrolledPseudoStyle);
+
+    // Process children
+    if (isAbsolutelyPositioned) {
+      // The area frame becomes a container for child frames that are
+      // absolutely positioned
+      nsAbsoluteItems  absoluteItems(scrolledFrame);
+      nsIFrame*        childList;
+      ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
+                      childList);
+  
+      // Set the initial child lists
+      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+      if (nsnull != absoluteItems.childList) {
+        scrolledFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                           absoluteItems.childList);
+      }
+
+    } else {
+      nsIFrame* childList;
+      ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
+                      childList);
+  
+      // Set the initial child lists
+      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    }
+    scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
+    aNewFrame = scrollFrame;
+
+
+    return NS_OK;
 }
 
 nsresult
@@ -2180,8 +2370,6 @@ HTMLStyleSheetImpl::ConstructTreeCellFrame(nsIPresContext*  aPresContext,
   return rv;
 }
 
-#endif
-
 nsresult
 HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
                                                 const nsStyleDisplay* aDisplay,
@@ -2224,6 +2412,10 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     NS_NewScrollFrame(scrollFrame);
 
     // Initialize it
+    InitializeScrollFrame(scrollFrame, aPresContext, aContent, aParentFrame,  aStyleContext,
+                         aAbsoluteItems,  aNewFrame, isAbsolutelyPositioned, PR_FALSE);
+
+#if 0 // XXX The following "ifdef" could has been moved to the method "InitializeScrollFrame"
     nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
                                                          aParentFrame;
     scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
@@ -2270,6 +2462,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     }
     scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
     aNewFrame = scrollFrame;
+#endif
 
   // See if the frame is absolutely positioned
   } else if ((NS_STYLE_POSITION_ABSOLUTE == position->mPosition) &&
@@ -3089,7 +3282,12 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
       view->GetViewManager(viewManager);
     }
     const nsStyleColor* color;
+    const nsStyleDisplay* disp; 
     aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
+    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+
+    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
+
     viewManager->SetViewOpacity(view, color->mOpacity);
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
