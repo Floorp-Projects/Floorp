@@ -55,11 +55,11 @@ titledbutton#security-button {
 
 titledbutton#Throbber
 {
-	list-style-image:url(chrome://navigator/skin/animthrob.gif);
+	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
 }
 
 titledbutton#Throbber[busy="true"] {
-	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+	list-style-image:url(chrome://navigator/skin/animthrob.gif);
 }
 
 toolbar#taskbar titledbutton{
