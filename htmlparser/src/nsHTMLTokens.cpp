@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public License
@@ -1221,8 +1222,9 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
     #endif
           aString.Append(PRUnichar(value));
         }
-    }
-  }
+      }//if
+      return value;
+    }//if
   
   char cbuf[30];
   mTextValue.ToCString(cbuf, sizeof(cbuf));
