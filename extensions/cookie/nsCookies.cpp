@@ -218,14 +218,8 @@ cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char *cookieString, 
   PR_LOG(gCookieLog, PR_LOG_WARNING,("\n"));
 }
 
-// inline wrapper to make passing in nsAStrings easier
-PRIVATE inline void
-cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, const char *reason) {
-  cookie_LogFailure(set_cookie, curURL, cookieString.get(), reason);
-}
-
 PRIVATE void
-cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, cookie_CookieStruct * cookie) {
+cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const char *cookieString, cookie_CookieStruct * cookie) {
   if (!gCookieLog) {
     gCookieLog = PR_NewLogModule("cookie");
   }
@@ -235,7 +229,7 @@ cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cook
   PR_LOG(gCookieLog, PR_LOG_DEBUG,
     ("%s%s%s\n", "===== ", set_cookie ? "COOKIE ACCEPTED" : "COOKIE SENT", " ====="));
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
-  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString.get()));
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString));
   time_t curTime = get_current_time();
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("current time (gmt): %s", asctime(gmtime(&curTime))));
 
@@ -250,6 +244,17 @@ cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cook
     PR_LOG(gCookieLog, PR_LOG_DEBUG,("is secure: %s\n", cookie->isSecure ? "true" : "false"));
   }
   PR_LOG(gCookieLog, PR_LOG_DEBUG,("\n"));
+}
+
+// inline wrappers to make passing in nsAStrings easier
+PRIVATE inline void
+cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, const char *reason) {
+  cookie_LogFailure(set_cookie, curURL, cookieString.get(), reason);
+}
+
+PRIVATE inline void
+cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const nsAFlatCString &cookieString, cookie_CookieStruct * cookie) {
+  cookie_LogSuccess(set_cookie, curURL, cookieString.get(), cookie);
 }
 #else
 #define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
@@ -1153,10 +1158,16 @@ cookie_Count(const nsAFlatCString &host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(nsIURI *curURL, nsIPrompt *aPrompter, const nsAFlatCString &setCookieHeader,
+cookie_SetCookieString(nsIURI *curURL, nsIPrompt *aPrompter, const char *setCookieHeader,
                        cookie_CookieStruct *aCookie, time_t timeToExpire, nsIHttpChannel *aHttpChannel,
                        nsCookieStatus status)
 {
+  // reject cookie if it's over the size limit, per RFC2109
+  if ((aCookie->name.Length() + aCookie->cookie.Length()) > MAX_BYTES_PER_COOKIE) {
+    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie too big (> 4kb)");
+    return;
+  }
+
   nsCAutoString cur_host, cur_path;
   nsresult rv;
   rv = curURL->GetHost(cur_host);
@@ -1580,12 +1591,6 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
   // switch to a nice string type now
   nsDependentCString cookieHeader(setCookieHeader);
 
-  // reject cookie if it's over the size limit, per RFC2109
-  if (cookieHeader.Length() > MAX_BYTES_PER_COOKIE) {
-    COOKIE_LOGFAILURE(SET_COOKIE, curURL, setCookieHeader, "cookie too big (> 4kb)");
-    return;
-  }
-
   /* If the outputFormat is not PRESENT (the url is not going to the screen), and not
    *  SAVE AS (shift-click) then 
    *  the cookie being set is defined as inline so we need to do what the user wants us
@@ -1680,7 +1685,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
   }
 
   // call the main cookie processing function
-  cookie_SetCookieString(curURL, aPrompter, cookieHeader, cookieAttributes,
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, cookieAttributes,
                          gmtCookieExpires, aHttpChannel, status);
 
   // we're finished with attributes - data has been copied, if required
