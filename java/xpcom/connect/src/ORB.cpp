@@ -57,12 +57,21 @@ ORB::~ORB() {
 
 bcOID ORB::RegisterStub(bcIStub *stub) {
     bcOID oid = GenerateOID();
-    stubs->Put(new bcOIDKey(oid),stub);
+    RegisterStubWithOID(stub,&oid);
     return oid;
 }
 
-void ORB:: RegisterStubWithOID(bcIStub *stub, bcOID *oid) {
+void ORB::RegisterStubWithOID(bcIStub *stub, bcOID *oid) {
     stubs->Put(new bcOIDKey(*oid),stub);
+    stub->SetORB(this);
+    stub->SetOID(*oid);
+    return;
+}
+
+void ORB::UnregisterStub(bcOID oid) {
+    bcOIDKey *oidKey = new bcOIDKey(oid);
+    stubs->Remove(oidKey);
+    delete oidKey;
     return;
 }
 
@@ -91,12 +100,11 @@ bcIStub * ORB::GetStub(bcOID *oid) {
     return (bcIStub*)tmp;
 }
 
-
-
 struct bcOIDstruct {
     PRUint16 high;
     PRUint16 low;
 };
+
 bcOID ORB::GenerateOID() {
     bcOID oid;
     bcOIDstruct oidStruct;
@@ -104,7 +112,6 @@ bcOID ORB::GenerateOID() {
     oidStruct.high = ((PRUint32)this);
     oid = *(bcOID*)&oidStruct;
     return oid;
-
 }
 
 

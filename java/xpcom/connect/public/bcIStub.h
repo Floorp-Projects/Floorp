@@ -26,6 +26,7 @@
 class bcIStub {
 public:
     virtual void Dispatch(bcICall *call) = 0;
-    //nb shortcut
+    virtual void SetORB(bcIORB *orb) = 0;
+    virtual void SetOID(bcOID oid) = 0;
 };
 #endif

@@ -31,7 +31,7 @@ static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 static nsID nullID =   {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterfaceInfo *_interfaceInfo, 
-					 nsXPTCMiniVariant* _params, bcIORB *_orb) {
+                                             nsXPTCMiniVariant* _params, bcIORB *_orb) {
     callSide = onClient;
     orb = _orb;
     methodIndex = _methodIndex;

@@ -31,8 +31,13 @@ class bcJavaStub : public bcIStub {
     bcJavaStub(jobject obj);
     virtual ~bcJavaStub();
     virtual void Dispatch(bcICall *call) ;
+    virtual void SetORB(bcIORB *orb);
+    virtual void SetOID(bcOID oid);
 private:
+    bcIORB *orb;
+    bcOID oid;
     jobject object;
+    PRUint32 refCounter;
     static jclass objectClass;
     static jclass utilitiesClass;
     static jmethodID callMethodByIndexMID;

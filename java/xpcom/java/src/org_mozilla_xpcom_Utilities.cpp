@@ -52,8 +52,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     str = env->GetStringUTFChars(jiid,NULL);
     iid.Parse(str);
     env->ReleaseStringUTFChars(jiid,str);
+    if (mid == 2) {
+        INVOKE_RELEASE(&oid,&iid,orb);
+        return NULL;
+    } else if (mid == 1) {
+        INVOKE_ADDREF(&oid,&iid,orb);
+        return NULL;
+    }
     bcICall *call = orb->CreateCall(&iid, &oid, mid);
-
+    
     /*****/
     nsIInterfaceInfo *interfaceInfo;
     nsIInterfaceInfoManager* iimgr;

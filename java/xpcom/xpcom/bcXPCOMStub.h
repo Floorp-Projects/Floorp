@@ -32,13 +32,19 @@ public:
     bcXPCOMStub(nsISupports *obj);
     virtual ~bcXPCOMStub();
     virtual void Dispatch(bcICall *call) ;
+    virtual void SetORB(bcIORB *orb);
+    virtual void SetOID(bcOID oid);
     void DispatchAndSaveThread(bcICall *call, nsIEventQueue *q = NULL);
 private:
     nsISupports *object;
+    bcIORB *orb;
+    bcOID oid;
     void* _mOwningThread;
     nsCOMPtr<nsIEventQueue> owningEventQ;
     nsCOMPtr<nsIEventQueueService>  eventQService;
-
+    PRUint32 refCounter;
 };
 
 #endif
+
+

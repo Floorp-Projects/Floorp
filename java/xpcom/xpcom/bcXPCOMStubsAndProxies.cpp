@@ -150,6 +150,7 @@ NS_IMETHODIMP bcXPCOMStubsAndProxies::GetEventQueue(nsIEventQueue **eventQueue) 
     }
     return NS_OK;
 }
+
 NS_IMETHODIMP bcXPCOMStubsAndProxies::PopEventQueue(nsIEventQueue **_eventQueue) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue\n"));

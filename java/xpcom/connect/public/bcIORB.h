@@ -31,6 +31,7 @@ class bcIORB {
 public:
     virtual bcOID RegisterStub(bcIStub *stub) = 0;
     virtual void RegisterStubWithOID(bcIStub *stub, bcOID *oid) = 0;
+    virtual void UnregisterStub(bcOID oid) = 0;
     virtual bcICall * CreateCall(bcIID *, bcOID *, bcMID) = 0;
     virtual int SendReceive(bcICall *) = 0;
     //virtual IThread * GetThread(TID) = 0;

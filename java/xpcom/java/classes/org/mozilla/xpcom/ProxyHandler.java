@@ -25,9 +25,10 @@ import java.lang.reflect.*;
 
 class ProxyHandler implements InvocationHandler {
     ProxyHandler(long _oid, IID _iid, long _orb) {
-	oid = _oid;
-	iid = _iid;
-	orb = _orb;
+        oid = _oid;
+        iid = _iid;
+        orb = _orb;
+        Utilities.callMethod(oid, null, iid, orb, null); //it is hack method = null means addref
     } 
     public Object invoke(Object proxy,
 			 Method method,
@@ -39,6 +40,7 @@ class ProxyHandler implements InvocationHandler {
         } else if (str.equals("clone")) {
             throw new java.lang.CloneNotSupportedException();
         } else if (str.equals("finalize")) {
+            Utilities.callMethod(oid, method, iid, orb, args);
             finalize();
         } else if (str.equals("equals")) {
             if (args[0] instanceof ProxyHandler) {
@@ -63,4 +65,6 @@ class ProxyHandler implements InvocationHandler {
     private IID iid;
     private long orb;
 }
+
+
 

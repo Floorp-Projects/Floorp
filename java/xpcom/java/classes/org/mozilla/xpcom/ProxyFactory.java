@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -27,20 +27,20 @@ import java.lang.ref.*;
 
 class ProxyKey {
     ProxyKey(long _oid, IID _iid) {
-	oid = new Long(_oid);
-	iid = _iid;
+        oid = new Long(_oid);
+        iid = _iid;
     }
     public boolean equals(Object obj) {
-	if (! (obj instanceof ProxyKey)) { 
-	    return false;
-	}
-	return (oid.equals(((ProxyKey)obj).oid) && iid.equals(((ProxyKey)obj).iid));
+        if (! (obj instanceof ProxyKey)) { 
+            return false;
+        }
+        return (oid.equals(((ProxyKey)obj).oid) && iid.equals(((ProxyKey)obj).iid));
     }
     public int hashCode() {
-	return oid.hashCode();
+        return oid.hashCode();
     }
     public String toString() {
-	return "org.mozilla.xpcom.ProxyFactory.ProxyKey "+oid+" "+iid;
+        return "org.mozilla.xpcom.ProxyFactory.ProxyKey "+oid+" "+iid;
     }
     Long oid;
     IID iid;
@@ -51,34 +51,34 @@ public class ProxyFactory {
         Debug.log("--[java] ProxyFactory.getInterface "+iid);
         return InterfaceRegistry.getInterface(iid);
     }
-
+    
     public static Object getProxy(long oid, IID iid, long orb) {
         try {
-        Debug.log("--[java] ProxyFactory.getProxy "+iid);
-        ProxyKey key = new ProxyKey(oid, iid);
-        Object obj = null;
-        Object result = null;
-        if (proxies != null) {
-            obj = proxies.get(key);
-            if (obj != null 
-                && (obj instanceof Reference)) {
-                result = ((Reference)obj).get();
+            Debug.log("--[java] ProxyFactory.getProxy "+iid);
+            ProxyKey key = new ProxyKey(oid, iid);
+            Object obj = null;
+            Object result = null;
+            if (proxies != null) {
+                obj = proxies.get(key);
+                if (obj != null 
+                    && (obj instanceof Reference)) {
+                    result = ((Reference)obj).get();
+                }
+            } else {
+                proxies = new Hashtable();
             }
-        } else {
-            proxies = new Hashtable();
-        }
-        if (result == null) {
-            Class inter = getInterface(iid);
-            if (inter == null) {
-                Debug.log("--[java] ProxyFactory.getProxy we did not find interface for iid="+iid+"returing null");
-                return null;
+            if (result == null) {
+                Class inter = getInterface(iid);
+                if (inter == null) {
+                    Debug.log("--[java] ProxyFactory.getProxy we did not find interface for iid="+iid+"returing null");
+                    return null;
+                }
+                InvocationHandler handler = new ProxyHandler(oid, iid, orb);
+                result = Proxy.newProxyInstance(inter.getClassLoader(), new Class[] {inter},handler);
+                proxies.put(new WeakReference(result), key);
             }
-            InvocationHandler handler = new ProxyHandler(oid, iid, orb);
-            result = Proxy.newProxyInstance(inter.getClassLoader(), new Class[] {inter},handler);
-            proxies.put(new WeakReference(result), key);
-        }
-        Debug.log("--[java] ProxyFactory.getProxy we got proxy "+result);
-        return result;
+            Debug.log("--[java] ProxyFactory.getProxy we got proxy "+result);
+            return result;
         } catch (Exception e) {
             Debug.log("--[java] ProxyFactory.getProxy we got exception "+e);
         }

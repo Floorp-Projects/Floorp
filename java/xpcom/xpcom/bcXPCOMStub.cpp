@@ -52,10 +52,11 @@ struct CallInfo {
     PRBool completed;
 };
 
-bcXPCOMStub::bcXPCOMStub(nsISupports *o) : object(o) {
+bcXPCOMStub::bcXPCOMStub(nsISupports *o) : object(o), orb(NULL) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
     PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::bcXPCOMStub\n"));
     NS_ADDREF(object);
+    refCounter = 0;
     nsresult rv;
     _mOwningThread = PR_CurrentThread();
     eventQService = do_GetService(kEventQueueServiceCID);
@@ -75,6 +76,9 @@ bcXPCOMStub::bcXPCOMStub(nsISupports *o) : object(o) {
 
 bcXPCOMStub::~bcXPCOMStub() {
     NS_RELEASE(object);
+    if (orb != NULL) {
+        orb->UnregisterStub(oid);
+    }
 }
 
 void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue) {
@@ -109,25 +113,47 @@ void bcXPCOMStub::DispatchAndSaveThread(bcICall *call, nsIEventQueue *eventQueue
     nsCOMPtr<bcIXPCOMStubsAndProxies> stubsAndProxiesService;
     stubsAndProxiesService = do_GetService(kStubsAndProxies);
     stubsAndProxiesService->PushEventQueue(eventQueue);
-    //nb return value; excepion handling
-    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to XPTC_InvokeByIndex\n"));
-    nsresult result = XPTC_InvokeByIndex(object, mid, paramCount, params);
-    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade after XPTC_InvokeByIndex\n"));
-    bcIMarshaler * m = call->GetMarshaler();
-    m->WriteSimple(&result, bc_T_U32); 
-    if (NS_SUCCEEDED(result)
-        && mt != NULL) { 
-        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to mt->Marshal\n"));
-        mt->Marshal(m);
-        delete m;
+    if (mid == 2) { //Release
+        if (refCounter <= 0) { 
+            NS_DELETEXPCOM(this);
+        }
+    } else {
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to XPTC_InvokeByIndex\n"));
+        nsresult result = XPTC_InvokeByIndex(object, mid, paramCount, params);
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade after XPTC_InvokeByIndex\n"));
+        bcIMarshaler * m = call->GetMarshaler();
+        m->WriteSimple(&result, bc_T_U32); 
+        if (NS_SUCCEEDED(result)
+            && mt != NULL) { 
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStub::DispatchAndSaveThreade about to mt->Marshal\n"));
+            mt->Marshal(m);
+            delete m;
+        }
+        delete mt;
     }
-    delete mt;
     //pop caller eventQueue
     stubsAndProxiesService->PopEventQueue(NULL);
     return;
 }
+
 void bcXPCOMStub::Dispatch(bcICall *call) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    /* AddRef Release handling is here.
+     */
+    bcIID iid; bcOID oid; bcMID mid;
+    call->GetParams(&iid, &oid, &mid);
+    if (mid == 1) { //AddRef
+        refCounter++;
+        return;
+    } else if (mid == 2) { //Release
+        refCounter--;
+        if (refCounter > 0) { 
+            // if refCounter <= 0 wrapped object has to be released. 
+            // That release should happen in the appropriate thread
+            return;
+        }
+    }
+
     if (_mOwningThread == PR_CurrentThread()
         || NULL == (void*)owningEventQ) {
         DispatchAndSaveThread(call);
@@ -176,6 +202,13 @@ void bcXPCOMStub::Dispatch(bcICall *call) {
 }
 
 
+void bcXPCOMStub::SetORB(bcIORB *_orb) {
+    orb = _orb;
+}
+
+void bcXPCOMStub::SetOID(bcOID _oid) {
+    oid = _oid;
+}
 
 static void* EventHandler(PLEvent *self) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();

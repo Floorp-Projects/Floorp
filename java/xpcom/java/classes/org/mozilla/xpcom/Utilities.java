@@ -74,7 +74,14 @@ public class Utilities {
 
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
         Debug.log("--[java]Utilities.callMethod "+method);
-        int mid = InterfaceRegistry.getIndexByMethod(method, iid);
+        int mid;
+        if (method == null) {
+            mid = 1; //it is hack method = null means addref
+        } else if ("finalize".equals(method.getName())) {
+            mid = 2;
+        } else {
+            mid = InterfaceRegistry.getIndexByMethod(method, iid);
+        }
         if (mid < 0) {
             Debug.log("--[java]Utilities.callMethod we do not have implementation for "+method);
             return null;

@@ -34,6 +34,28 @@ class bcICall {
     virtual bcIUnMarshaler * GetUnMarshaler() = 0;
     virtual bcIORB * GetORB() = 0;
 };
+
+#define INVOKE_ADDREF(oid,iid,orb) \
+        do {                          \
+            bcICall * call;           \
+            call = GET_ADDREF_CALL((oid),(iid),(orb)); \
+            (orb)->SendReceive(call);  \
+            delete call;               \
+        } while(0)
+
+#define INVOKE_RELEASE(oid,iid,orb)   \
+        do {                          \
+            bcICall * call;           \
+            call = GET_RELEASE_CALL((oid),(iid),(orb)); \
+            (orb)->SendReceive(call);  \
+            delete call;               \
+        } while(0)
+
+#define GET_ADDREF_CALL(oid,iid,orb) \
+        (orb)->CreateCall((iid),(oid),1)
+
+#define GET_RELEASE_CALL(oid,iid,orb) \
+        (orb)->CreateCall((iid),(oid),2)
 #endif
 
 

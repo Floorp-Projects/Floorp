@@ -34,7 +34,7 @@ jclass bcJavaStub::objectClass = NULL;
 jclass bcJavaStub::utilitiesClass = NULL;
 jmethodID bcJavaStub::callMethodByIndexMID = NULL;
 
-bcJavaStub::bcJavaStub(jobject obj) {
+bcJavaStub::bcJavaStub(jobject obj) : orb(NULL) {
     PRLogModuleInfo *log = bcJavaGlobal::GetLog();
     PR_LOG(log,PR_LOG_DEBUG,("--bcJavaStub::bcJavaStub \n"));
     if (!obj) {
@@ -43,11 +43,24 @@ bcJavaStub::bcJavaStub(jobject obj) {
     }
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     object = env->NewGlobalRef(obj);
+    refCounter = 0;
 }
 
 
 bcJavaStub::~bcJavaStub() {
     bcJavaGlobal::GetJNIEnv()->DeleteGlobalRef(object);
+    if (orb != NULL) {
+        orb->UnregisterStub(oid);
+    }
+}
+
+
+void bcJavaStub::SetORB(bcIORB *_orb) {
+    orb = _orb;
+}
+
+void bcJavaStub::SetOID(bcOID _oid) {
+    oid = _oid;
 }
 
 void bcJavaStub::Dispatch(bcICall *call) {
@@ -57,6 +70,20 @@ void bcJavaStub::Dispatch(bcICall *call) {
     bcIID iid; bcOID oid; bcMID mid;
     jobjectArray args;
     call->GetParams(&iid, &oid, &mid);
+
+    if (mid == 1) { //AddRef
+        refCounter++;
+        return;
+    } else if (mid == 2) { //Release
+        refCounter--;
+        printf("-java mid==2\n");
+        if (refCounter <= 0) { 
+            printf("-java delete\n");
+            delete this;
+            return;
+        }
+    }
+
     nsIInterfaceInfo *interfaceInfo;
     nsIInterfaceInfoManager* iimgr;
     if((iimgr = XPTI_GetInterfaceInfoManager()) != NULL) {

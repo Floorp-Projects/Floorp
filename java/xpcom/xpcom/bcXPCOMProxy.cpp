@@ -49,10 +49,12 @@ bcXPCOMProxy::bcXPCOMProxy(bcOID _oid, const nsIID &_iid, bcIORB *_orb) {
     orb = _orb;
     interfaceInfo = NULL;
     PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMProxy::bcXPCOMProxy this: %p iid: %s\n",this, iid.ToString()));
+    INVOKE_ADDREF(&oid,&iid,orb);
 }
 
 bcXPCOMProxy::~bcXPCOMProxy() {
     NS_IF_RELEASE(interfaceInfo);
+    INVOKE_RELEASE(&oid,&iid,orb);
 }
  
 
@@ -174,7 +176,7 @@ nsrefcnt bcXPCOMProxy::Release(void) {
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
     PR_LOG(log, PR_LOG_DEBUG, ("--[c++] bcXPCOMProxy::Release %d\n",(unsigned)cnt));
     if(0 == cnt) {  
-        delete this;
+       delete this;
     }
     return cnt;
 }

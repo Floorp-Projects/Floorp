@@ -31,6 +31,7 @@ public:
     virtual ~ORB();
     virtual bcOID RegisterStub(bcIStub *stub);
     virtual void RegisterStubWithOID(bcIStub *stub, bcOID *oid);
+    virtual void UnregisterStub(bcOID oid);
     virtual bcICall * CreateCall(bcIID *, bcOID *, bcMID);
     virtual int SendReceive(bcICall *);
 private:
