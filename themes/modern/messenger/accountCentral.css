@@ -132,3 +132,8 @@ separator.thin {
 #OfflineSettings {
   list-style-image: url("chrome://messenger/skin/icons/acct-prefs.gif");
 }
+
+#JunkSettings {
+  list-style-image: url("chrome://messenger/skin/icons/acct-filters.gif");
+}
+
