@@ -53,7 +53,8 @@ extern "C" {
  */
 #define LDAP_API_VERSION	2005
 
-
+/* special values that may appear in the attributes field of a SearchRequest.
+ */
 #define LDAP_NO_ATTRS		"1.1"
 #define LDAP_ALL_USER_ATTRS	"*"
 
