@@ -20,12 +20,13 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Ere Maijala <ere@atp.fi>
+ *   Mark Hammond <markh@activestate.com>
  *   Michael Lowe <michael.lowe@bigfoot.com>
  *   Peter Bajusz <hyp-x@inf.bme.hu>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
- *   Dean Tessman <dean_tessman@hotmail.com>
- *   Mark Hammond <markh@activestate.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -2810,6 +2811,7 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
     aboveWindow = GetNSWindowPtr(*aAfter);
   }
   event.mReqBelow = aboveWindow;
+  event.mActualBelow = nsnull;
 
   event.mImmediate = PR_FALSE;
   event.mAdjusted = PR_FALSE;
@@ -2822,10 +2824,9 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
       *aAfter = HWND_TOP;
     else {
       *aAfter = (HWND)event.mActualBelow->GetNativeData(NS_NATIVE_WINDOW);
-      NS_IF_RELEASE(event.mActualBelow);
     }
   }
-
+  NS_IF_RELEASE(event.mActualBelow);
   NS_RELEASE(event.widget);
 }
 
@@ -3861,6 +3862,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             event.mIsFileURL = PR_FALSE;
             event.mURL       = (PRUnichar *)fileStr.get();
             DispatchEvent(&event, status);
+            NS_RELEASE(event.widget);
 	        }
 #endif
         } break;
@@ -4518,7 +4520,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
      (gLastMouseMovePoint.x == mp.x) &&
      (gLastMouseMovePoint.y == mp.y))
   {
-     return result;
+    NS_RELEASE(event.widget);
+    return result;
   } else {
     gLastMouseMovePoint.x = mp.x;
     gLastMouseMovePoint.y = mp.y;
@@ -4689,7 +4692,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
         gCurrentWindow = nsnull;
       }
     }
-    NS_IF_RELEASE(event.widget);
+    NS_RELEASE(event.widget);
     return result;
   }
 
