@@ -268,13 +268,12 @@ net_pop3_write_state(Pop3UidlHost* host, nsIFileSpec *mailDirectory)
 
   nsOutputFileStream outFileStream(fileSpec, PR_WRONLY | PR_CREATE_FILE |
                                    PR_TRUNCATE);
-	char* tmpBuffer = PR_smprintf("%s", "# Netscape POP3 State File" MSG_LINEBREAK
-			   "# This is a generated file!  Do not edit." MSG_LINEBREAK MSG_LINEBREAK);
-	PR_ASSERT(tmpBuffer);
+	char* tmpBuffer =
+        "# Netscape POP3 State File" MSG_LINEBREAK
+        "# This is a generated file!  Do not edit." MSG_LINEBREAK
+        MSG_LINEBREAK;
 
   outFileStream << tmpBuffer;
-
- 	PR_Free(tmpBuffer);
 
   for (; host && (len >= 0); host = host->next)
   {
@@ -417,6 +416,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
         nsCOMPtr<nsIMsgIncomingServer> server;
       mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
       mailnewsUrl->GetServer(getter_AddRefs(server));
+      NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
       m_pop3Server = do_QueryInterface(server);
       if (m_pop3Server)
         m_pop3Server->GetPop3CapabilityFlags(&m_pop3ConData->capability_flags);
@@ -479,7 +479,7 @@ void nsPop3Protocol::UpdateStatus(PRInt32 aStatusID)
 	}
 }
 
-void nsPop3Protocol::UpdateStatusWithString(PRUnichar * aStatusString)
+void nsPop3Protocol::UpdateStatusWithString(const PRUnichar * aStatusString)
 {
     nsresult rv;
     if (mProgressEventSink) {
@@ -1308,6 +1308,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
      */
     if(!m_pop3ConData->command_succeeded) 
 	{
+        nsresult rv;
         
         /* UIDL, XTND and TOP are all unsupported for this mail server.
            Tell the user to join the 20th century.
@@ -1317,26 +1318,37 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
            `Maximum Message Size' prefs.  Some people really get their panties
            in a bunch if we download their mail anyway. (bug 11561)
            */
-
-		PRUnichar * statusTemplate = nsnull;
-    mStringService->GetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC, &statusTemplate);
-		if (statusTemplate)
-		{
-			nsXPIDLCString hostName;
-			PRUnichar * statusString = nsnull;
-			m_url->GetHost(getter_Copies(hostName));
-
-			if (hostName)
-				statusString = nsTextFormatter::smprintf(statusTemplate, (const char *) hostName);  
-			else
-				statusString = nsTextFormatter::smprintf(statusTemplate, "(null)"); 
-			UpdateStatusWithString(statusString);
-			nsTextFormatter::smprintf_free(statusString);
-			nsCRT::free(statusTemplate);
-		}
-
+        
+        // set up status first, so if the rest fails, state is ok
         m_pop3ConData->next_state = POP3_ERROR_DONE;
         m_pop3ConData->pause_for_read = PR_FALSE;
+        
+        // get the hostname first, convert to unicode
+        nsXPIDLCString hostName;
+        m_url->GetHost(getter_Copies(hostName));
+        
+        nsAutoString hostNameUnicode;
+        hostNameUnicode.AssignWithConversion(hostName);
+    
+        const PRUnichar *formatStrings[] =
+        {
+            hostNameUnicode.GetUnicode(),
+        };
+
+        // get the strings for the format
+        nsCOMPtr<nsIStringBundle> bundle;
+        rv = mStringService->GetBundle(getter_AddRefs(bundle));
+        NS_ENSURE_SUCCESS(rv, -1);
+        
+        nsXPIDLString statusString;
+        rv = bundle->FormatStringFromID(POP3_SERVER_DOES_NOT_SUPPORT_UIDL_ETC,
+                                        formatStrings, 1,
+                                        getter_Copies(statusString));
+        NS_ENSURE_SUCCESS(rv, -1);
+        
+
+        UpdateStatusWithString(statusString);
+
         return -1;
         
     }
@@ -1988,20 +2000,31 @@ nsPop3Protocol::SendRetr()
 		}
 		else
 		{
-			PRUnichar * statusString = nsnull;
-      mStringService->GetStringByID(LOCAL_STATUS_RECEIVING_MESSAGE_OF, &statusString);
-			if (statusString && m_statusFeedback)
-			{
-				// all this ugly conversion stuff is necessary because we can't sprintf a value
-				// with a PRUnichar string.
-				nsCAutoString cstr; cstr.AssignWithConversion(statusString);
-				char * finalString = PR_smprintf(cstr.GetBuffer(),m_pop3ConData->real_new_counter, m_pop3ConData->really_new_messages);
-				nsAutoString uniFinalString; uniFinalString.AssignWithConversion(finalString);
-				if (m_statusFeedback)
-					m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
-				PL_strfree(finalString);
-			}
-			nsCRT::free(statusString);
+            nsresult rv;
+            
+            nsAutoString realNewString;
+            realNewString.AppendInt(m_pop3ConData->real_new_counter);
+
+            nsAutoString reallyNewMessages;
+            reallyNewMessages.AppendInt(m_pop3ConData->really_new_messages);
+
+            nsCOMPtr<nsIStringBundle> bundle;
+            rv = mStringService->GetBundle(getter_AddRefs(bundle));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't get bundle");
+
+            const PRUnichar *formatStrings[] = {
+                realNewString.GetUnicode(),
+                reallyNewMessages.GetUnicode(),
+            };
+
+            nsXPIDLString finalString;
+            rv = bundle->FormatStringFromID(LOCAL_STATUS_RECEIVING_MESSAGE_OF,
+                                            formatStrings, 2,
+                                            getter_Copies(finalString));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't format string");
+
+            m_statusFeedback->ShowStatusString(finalString);
+            
 		}
 
 		status = SendData(m_url, cmd);

@@ -99,10 +99,12 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
         nsXPIDLCString folderName;
         rv = url->GetFilePath(getter_Copies(fileName));
 		url->GetFileName(getter_Copies(folderName));
-        char* tempfolder = nsnull;
-        rv = ioServ->Unescape(folderName, &tempfolder);
-        m_folderName = tempfolder;
-        CRTFREEIF(tempfolder);
+        
+        nsXPIDLCString tempfolder;
+        rv = ioServ->Unescape(folderName, getter_Copies(tempfolder));
+
+        m_folderName.Assign(NS_ConvertUTF8toUCS2(tempfolder));
+
 		if (fileName)
 		{
             char* result = nsnull;
@@ -216,33 +218,26 @@ void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)
 {
 	if (m_statusFeedback)
 	{
-    if (!mStringService) // if we haven't gotten the serivce yet...
-      mStringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_PROGID);
+        nsresult rv;
+        if (!mStringService) // if we haven't gotten the serivce yet...
+            mStringService = do_GetService(NS_MSG_MAILBOXSTRINGSERVICE_PROGID);
     
-		PRUnichar * statusString = nsnull; 
-    mStringService->GetStringByID(stringID, &statusString);
-
+        nsXPIDLString finalString;
 		if (stringID == LOCAL_STATUS_SELECTING_MAILBOX)
 		{
-			if (statusString)
-			{
-				// all this ugly conversion stuff is necessary because we can't sprintf a value
-				// with a PRUnichar string.
-				nsCAutoString cstr; cstr.AssignWithConversion(statusString);
-				char * finalString = PR_smprintf(cstr.GetBuffer(), (const char *) m_folderName);
-				nsAutoString uniFinalString; uniFinalString.AssignWithConversion(finalString);
-				m_statusFeedback->ShowStatusString(uniFinalString.GetUnicode());
-				PL_strfree(finalString);
-			}
+            nsCOMPtr<nsIStringBundle> bundle;
+            mStringService->GetBundle(getter_AddRefs(bundle));
+            const PRUnichar * stringArray[] = { m_folderName.GetUnicode() };
+            rv = bundle->FormatStringFromID(stringID, stringArray, 1,
+                                                   getter_Copies(finalString));
 		}
 		else
-		{
-			if (statusString)
-				m_statusFeedback->ShowStatusString(statusString);
-		}
+            mStringService->GetStringByID(stringID,
+                                          getter_Copies(finalString));
 
-		nsCRT::free(statusString);
-	}
+        m_statusFeedback->ShowStatusString(finalString);
+
+    }
 }
 
 void nsMsgMailboxParser::UpdateProgressPercent ()
@@ -1718,7 +1713,6 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
             filter->GetActionTargetFolderUri(getter_Copies(actionTargetFolderUri));
 		nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
 		PRUint32 msgFlags;
-		nsCAutoString trashNameVal;
 
 		msgHdr->GetFlags(&msgFlags);
 

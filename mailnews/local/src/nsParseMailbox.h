@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -189,7 +189,7 @@ protected:
 	void					FreeBuffers();
 
 	// data
-	nsXPIDLCString   m_folderName;
+    nsString        m_folderName;
 	char			*m_mailboxName;
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;
