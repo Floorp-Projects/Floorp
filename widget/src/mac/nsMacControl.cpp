@@ -314,6 +314,37 @@ void nsMacControl::SetupMacControlFont()
 	fontStyleRec.style = theStyle.tsFace;
 	::SetControlFontStyle(mControl, &fontStyleRec);
 }
-	
-	
 
+#pragma mark -
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+
+void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
+{
+	char buffer[256];
+	
+	aText.ToCString(buffer,255);
+		
+	PRInt32 len = strlen(buffer);
+	memcpy(&aStr255[1],buffer,len);
+	aStr255[0] = len;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+
+void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
+{
+	char 		buffer[256];
+	PRInt32 len = aStr255[0];
+  
+	memcpy(buffer,&aStr255[1],len);
+	buffer[len] = 0;
+
+	aText = buffer;		
+}
