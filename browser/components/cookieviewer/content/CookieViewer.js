@@ -106,8 +106,7 @@ var cookiesTreeView = {
   getCellProperties : function(row,column,prop) {}
  };
 
-function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
-                status,policy) {
+function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires) {
   this.number = number;
   this.name = name;
   this.value = value;
@@ -117,8 +116,6 @@ function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
   this.path = path;
   this.isSecure = isSecure;
   this.expires = expires;
-  this.status = status;
-  this.policy = policy;
 }
 
 function loadCookies() {
@@ -138,14 +135,10 @@ function loadCookies() {
       if (!nextCookie) break;
       nextCookie = nextCookie.QueryInterface(Components.interfaces.nsICookie);
       var host = nextCookie.host;
-      if (nextCookie.policy != nsICookie.POLICY_UNKNOWN) {
-        showPolicyField = true;
-      }
       cookies[count] =
         new Cookie(count++, nextCookie.name, nextCookie.value, nextCookie.isDomain, host,
                    (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                   nextCookie.path, nextCookie.isSecure, nextCookie.expires,
-                   nextCookie.status, nextCookie.policy);
+                   nextCookie.path, nextCookie.isSecure, nextCookie.expires);
     }
   }
 
@@ -168,22 +161,6 @@ function GetExpiresString(expires) {
                                        date.getMinutes(), date.getSeconds());
   }
   return cookieBundle.getString("AtEndOfSession");
-}
-
-function GetPolicyString(policy) {
-  switch (policy) {
-    case nsICookie.POLICY_NONE:
-      return cookieBundle.getString("policyUnstated");
-    case nsICookie.POLICY_NO_CONSENT:
-      return cookieBundle.getString("policyNoConsent");
-    case nsICookie.POLICY_IMPLICIT_CONSENT:
-      return cookieBundle.getString("policyImplicitConsent");
-    case nsICookie.POLICY_EXPLICIT_CONSENT:
-      return cookieBundle.getString("policyExplicitConsent");
-    case nsICookie.POLICY_NO_II:
-      return cookieBundle.getString("policyNoIICollected");
-  }
-  return "";
 }
 
 function CookieSelected() {
@@ -213,9 +190,9 @@ function CookieSelected() {
     {id: "ifl_path", value: cookies[idx].path},
     {id: "ifl_isSecure",
      value: cookies[idx].isSecure ?
-            cookieBundle.getString("yes") : cookieBundle.getString("no")},
+            cookieBundle.getString("forSecureOnly") : 
+            cookieBundle.getString("forAnyConnection")},
     {id: "ifl_expires", value: GetExpiresString(cookies[idx].expires)},
-    {id: "ifl_policy", value: GetPolicyString(cookies[idx].policy)}
   ];
 
   var value;
@@ -235,7 +212,7 @@ function CookieSelected() {
 
 function ClearCookieProperties() {
   var properties = 
-    ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires","ifl_policy"];
+    ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires"];
   for (var prop=0; prop<properties.length; prop++) {
     document.getElementById(properties[prop]).value = "";
   }
