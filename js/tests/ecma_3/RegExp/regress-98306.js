@@ -19,24 +19,17 @@
 * Contributor(s): jrgm@netscape.com, pschwartau@netscape.com
 * Date: 04 September 2001
 *
-* SUMMARY: Regression test for Bugzilla bug 98306:
+* SUMMARY: Regression test for Bugzilla bug 98306
 * "JS parser crashes in ParseAtom for script using Regexp()"
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=98306
-* As noted there, we could generate this crash with just one line:
-*
-*                 "Hello".match(/[/]/);
-*
-* However, we include the longer testcase as originally reported -
 */
 //-----------------------------------------------------------------------------
 var bug = 98306;
 var summary = "Testing that we don't crash on this code -";
-var cnUSERAGENT = 'Mozilla/5.0 (Windows; U; WinNT4.0; en-US; rv:0.9.3+) Gecko/20010828';
 var cnUBOUND = 10;
-var obj;
 var re;
-
+var s;
 
 
 //-----------------------------------------------------------------------------
@@ -51,81 +44,35 @@ function test()
   printBugNumber (bug);
   printStatus (summary);
 
-  // Sometimes it was necessary to try these more than once to crash
-  for (var i=0; i<cnUBOUND; i++)
-  {
-    // This alone caused a crash -
-    obj = new BrowserData('Hello');
+  s = '"Hello".match(/[/]/)';
+  tryThis(s);
 
-    // Here is a more realistic string. Test this, too.
-    obj = new BrowserData(cnUSERAGENT);
+  s = 're = /[/';
+  tryThis(s);
 
-    // These also caused crashes -
-    "Hello".match(/[/]/);
-    re = /[/;
-    re = /[/]/;
-    re = /[//]/;
-  }
+  s = 're = /[/]/';
+  tryThis(s);
+
+  s = 're = /[//]/';
+  tryThis(s);
 
   exitFunc ('test');
 }
 
 
-/*
- *  BrowserData() constructor
- *
- * .userAgent: (string) the HTTP_USER_AGENT input string
- * .browser: (string) "MSIE", "Opera", "Nav", "Other"
- * .majorVer: (integer) major version
- * .minorVer: (string) minor (dot) version
- * .betaVer: (string) beta version
- * .platform: (string) operating system
- * .getsNavBar (boolean) whether browser gets the DHTML menus
- * .doesActiveX (boolean) whether browser does 32-bit ActiveX
- */
-function BrowserData(sUA)
+// Try to provoke a crash -
+function tryThis(sCode)
 {
-  this.userAgent = sUA.toString();
-  var rPattern = /(MSIE)\s(\d+)\.(\d+)((b|p)([^(s|;)]+))?;?(.*(98|95|NT|3.1|32|Mac|X11))?\s*([^\)]*)/;
-
-  if (this.userAgent.match(rPattern))
+  // sometimes more than one attempt was necessary -
+  for (var i=0; i<cnUBOUND; i++)
   {
-    this.browser = "MSIE";
-    this.majorVer = parseInt(RegExp.$2) || 0;
-    this.minorVer = RegExp.$3.toString() || "0";
-    this.betaVer = RegExp.$6.toString() || "0";
-    this.platform = RegExp.$8 || "Other";
-    this.platVer = RegExp.$9 || "0";
+    try
+    {
+      eval(sCode);
+    }
+    catch(e)
+    {
+      // do nothing; keep going -
+    }
   }
-  else if (this.userAgent.match(/Mozilla[/].*(95[/]NT|95|NT|98|3.1).*Opera.*(\d+)\.(\d+)/))
-  {
-    //"Mozilla/4.0 (Windows NT 5.0;US) Opera 3.60  [en]";
-    this.browser = "Opera";
-    this.majorVer = parseInt(RegExp.$2) || parseInt(RegExp.$2) || 0;
-    this.minorVer = RegExp.$3.toString() || RegExp.$3.toString() || "0";
-    this.platform = RegExp.$1 || "Other";
-  }
-  else if (this.userAgent.match(/Mozilla[/](\d*)\.?(\d*)(.*(98|95|NT|32|16|68K|PPC|X11))?/))
-  {
-    //"Mozilla/4.5 [en] (WinNT; I)"
-    this.browser = "Nav";
-    this.majorVer = parseInt(RegExp.$1) || 0;
-    this.minorVer = RegExp.$2.toString() || "0";
-    this.platform = RegExp.$4 || "Other";
-  }
-  else
-  {
-    this.browser = "Other";
-  }
-
-  this.getsNavBar = ("MSIE" == this.browser && 4 <= this.majorVer &&
-                     "Mac" != this.platform && "X11" != this.platform);
-  
-  this.doesActiveX = ("MSIE" == this.browser && 3 <= this.majorVer &&
-                     ("95" == this.platform || "98" == this.platform || "NT" == this.platform));
-  
-  this.fullVer = parseFloat( this.majorVer + "." + this.minorVer );
-
-  this.doesPersistence = ("MSIE" == this.browser && 5 <= this.majorVer &&
-                          "Mac" != this.platform && "X11" != this.platform);
 }
