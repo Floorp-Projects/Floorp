@@ -485,7 +485,16 @@ static void
 FreeStretch(nsFontStretch* aStretch)
 {
   PR_smprintf_free(aStretch->mScalable);
-  // XXX nsVoidArray mScaledFonts;
+
+  PRInt32 count;
+  while ((count = aStretch->mScaledFonts.Count())) {
+    // go backwards to keep nsVoidArray from memmoving everything each time
+    count--; // nsVoidArray is zero based
+    nsFontGTK *font = (nsFontGTK*)aStretch->mScaledFonts.ElementAt(count);
+    aStretch->mScaledFonts.RemoveElementAt(count);
+    if (font) delete font;
+  }
+
   for (int i = 0; i < aStretch->mSizesCount; i++) {
     delete aStretch->mSizes[i];
   }
