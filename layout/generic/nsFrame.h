@@ -180,6 +180,7 @@ public:
                                  nsPoint*               outPoint);
 
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
+                                 PRBool                 inHint,
                                  PRInt32*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 

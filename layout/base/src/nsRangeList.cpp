@@ -143,7 +143,7 @@ public:
 
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
-  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
+//  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
   NS_IMETHOD   SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
@@ -200,6 +200,7 @@ public:
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(SelectionType aType);
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame);
 /*END nsIFrameSelection interfacse*/
 
 
@@ -249,6 +250,7 @@ private:
   PRBool mMouseDownState; //for drag purposes
   PRInt32 mDesiredX;
   PRBool mDesiredXSet;
+  enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
 public:
   static nsIAtom *sTableAtom;
   static nsIAtom *sCellAtom;
@@ -790,14 +792,17 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
       return result;
     nsPeekOffsetStruct pos;
     pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
+    mHint = HINTRIGHT;//stick to opposite of movement
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::VK_RIGHT : 
           pos.mDirection = eDirNext;
+          mHint = HINTLEFT;//stick to this line
       case nsIDOMUIEvent::VK_LEFT  : //no break
           InvalidateDesiredX();
         break;
       case nsIDOMUIEvent::VK_DOWN : 
-         pos.mDirection = eDirNext;//no break here
+          pos.mDirection = eDirNext;//no break here
+          mHint = HINTLEFT;//stick to this line
       case nsIDOMUIEvent::VK_UP : 
           pos.mAmount = eSelectLine;
         break;
@@ -808,7 +813,8 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
       case nsIDOMUIEvent::VK_END :
           pos.mAmount = eSelectEndLine;
           InvalidateDesiredX();
-        break;
+          mHint = HINTLEFT;//stick to this line
+       break;
     default :return result;
     }
     if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
@@ -867,6 +873,7 @@ nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, PRBool aMultipleSelection)
 {
   InvalidateDesiredX();
+  mHint = HINTLEFT;//not really good we need a "hint" from the clicking code... this can be done..
   return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
 }
 
@@ -1014,6 +1021,24 @@ nsRangeList::RepaintSelection(SelectionType aType)
     return NS_ERROR_NULL_POINTER;
 
   return mDomSelections[aType]->Repaint();
+}
+ 
+NS_IMETHODIMP
+nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame)
+{
+  if (!aNode || !aReturnFrame)
+    return NS_ERROR_NULL_POINTER;
+  nsresult result;
+	result = mTracker->GetPrimaryFrameFor(aNode, aReturnFrame);
+	if (NS_FAILED(result))
+		return result;
+	
+	if (!*aReturnFrame)
+		return NS_ERROR_UNEXPECTED;
+		
+	// find the child frame containing the offset we want
+	result = (*aReturnFrame)->GetChildFrameContainingOffset(aOffset, mHint, &aOffset, aReturnFrame);
+	return result;
 }
 
 //////////END FRAMESELECTION
@@ -1524,6 +1549,7 @@ nsDOMSelection::Clear()
 
 //utility method to get the primary frame of node or use the offset to get frame of child node
 
+#if 0
 NS_IMETHODIMP
 nsDOMSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aReturnFrame)
 {
@@ -1573,6 +1599,8 @@ nsDOMSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffs
   result = mRangeList->GetTracker()->GetPrimaryFrameFor(content,aReturnFrame);
   return result;
 }
+#endif
+
 
 NS_IMETHODIMP
 nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
@@ -1581,9 +1609,10 @@ nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
   *aReturnFrame = 0;
-
-  return GetPrimaryFrameForRangeEndpoint(FetchAnchorNode(), FetchAnchorOffset(),
-                                        (GetDirection() == eDirPrevious), aReturnFrame);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
+  if (content)
+    return mRangeList->GetFrameForNodeOffset(content, FetchAnchorOffset(),aReturnFrame);
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1594,8 +1623,10 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   
   *aReturnFrame = 0;
 
-  return GetPrimaryFrameForRangeEndpoint(FetchFocusNode(), FetchFocusOffset(),
-                                        (GetDirection() == eDirNext), aReturnFrame);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
+  if (content)
+    return mRangeList->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame);
+  return NS_ERROR_FAILURE;
 }
 
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
@@ -2940,8 +2971,11 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
   if (!node)
     return NS_ERROR_NULL_POINTER;
 
-  result = GetPrimaryFrameForRangeEndpoint(node, nodeOffset, isEndNode, &frame);
-
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  if (content)
+    result = mRangeList->GetFrameForNodeOffset(content, nodeOffset, &frame);
+  else
+    result = NS_ERROR_FAILURE;
   if(NS_FAILED(result))
     return result;
 
@@ -2960,7 +2994,7 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
     nsIFrame *childFrame = 0;
     PRInt32 frameOffset  = 0;
 
-    result = frame->GetChildFrameContainingOffset(nodeOffset, &frameOffset, &childFrame);
+    result = frame->GetChildFrameContainingOffset(nodeOffset, mRangeList->mHint, &frameOffset, &childFrame);
 
     if (NS_FAILED(result))
       return result;

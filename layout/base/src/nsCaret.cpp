@@ -230,16 +230,13 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 
 	// find the frame that contains the content node that has focus
 	nsIFrame*	theFrame = nsnull;
-	err = mPresShell->GetPrimaryFrameFor(contentNode, &theFrame);
-	if (NS_FAILED(err))
-		return err;
-	
-	if (!theFrame)
-		return NS_ERROR_UNEXPECTED;
-		
-	// find the child frame containing the offset we want
-	PRInt32 	contentOffset = focusOffset;
-	err = theFrame->GetChildFrameContainingOffset(focusOffset, &focusOffset, &theFrame);
+
+  //get frame selection and find out what frame to use...
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
+	if (NS_FAILED(err) || !frameSelection)
+		return err; 
+  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame);
 	if (NS_FAILED(err))
 		return err;
 	
@@ -274,7 +271,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRB
 
 	// now we can measure the offset into the frame.
 	nsPoint		framePos(0, 0);
-	theFrame->GetPointFromOffset(presContext, rendContext, contentOffset, &framePos);
+	theFrame->GetPointFromOffset(presContext, rendContext, focusOffset, &framePos);
 
 	// now add the frame offset to the view offset, and we're done
 	viewOffset += framePos;
@@ -454,10 +451,16 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 			  }
 			
 				nsIFrame*	theFrame = nsnull;
-				PRInt32 	focusOffset;
 				
-				if (NS_SUCCEEDED(mPresShell->GetPrimaryFrameFor(contentNode, &theFrame)) &&
-					 theFrame && NS_SUCCEEDED(theFrame->GetChildFrameContainingOffset(contentOffset, &focusOffset, &theFrame)))
+        //get frame selection and find out what frame to use...
+        nsCOMPtr<nsIFrameSelection> frameSelection;
+        err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
+	      if (NS_FAILED(err) || !frameSelection)
+		      return err;
+        err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame);
+	      if (NS_FAILED(err))
+		      return err;
+        else
 				{
 
 					// mark the frame, so we get notified on deletion.

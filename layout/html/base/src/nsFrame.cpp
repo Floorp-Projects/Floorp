@@ -834,6 +834,9 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
   }
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  if (me->clickCount >2 )
+    return nsFrame::HandleMultiplePress(aPresContext,aEvent,aEventStatus);
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
@@ -865,6 +868,77 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus&  aEventStatus)
 {
+   if (!DisplaySelection(aPresContext)) {
+    return NS_OK;
+  }
+
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  if (me->clickCount <3 )
+    return NS_OK;
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    nsCOMPtr<nsIRenderingContext> acx;      
+    nsCOMPtr<nsIFocusTracker> tracker;
+    tracker = do_QueryInterface(shell, &rv);
+    if (NS_FAILED(rv) || !tracker)
+      return rv;
+    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    if (NS_SUCCEEDED(rv)){
+      PRInt32 startPos = 0;
+      PRInt32 contentOffsetEnd = 0;
+      nsCOMPtr<nsIContent> newContent;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+                       getter_AddRefs(newContent), startPos, contentOffsetEnd))){
+        //find which word needs to be selected! use peek offset one way then the other
+        nsCOMPtr<nsIContent> startContent;
+        nsCOMPtr<nsIDOMNode> startNode;
+        nsCOMPtr<nsIContent> endContent;
+        nsCOMPtr<nsIDOMNode> endNode;
+        //peeks{}
+        nsPeekOffsetStruct startpos;
+        startpos.SetData(tracker, 
+                        0, 
+                        eSelectBeginLine,
+                        eDirPrevious,
+                        startPos,
+                        PR_FALSE,
+                        PR_TRUE);
+        rv = PeekOffset(&startpos);
+        if (NS_FAILED(rv))
+          return rv;
+        nsPeekOffsetStruct endpos;
+        endpos.SetData(tracker, 
+                        0, 
+                        eSelectEndLine,
+                        eDirNext,
+                        startPos,
+                        PR_FALSE,
+                        PR_FALSE);
+        rv = PeekOffset(&endpos);
+        if (NS_FAILED(rv))
+          return rv;
+
+        endNode = do_QueryInterface(endpos.mResultContent,&rv);
+        if (NS_FAILED(rv))
+          return rv;
+        startNode = do_QueryInterface(startpos.mResultContent,&rv);
+        if (NS_FAILED(rv))
+          return rv;
+
+        nsCOMPtr<nsIDOMSelection> selection;
+        if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+          rv = selection->Collapse(startNode,startpos.mContentOffset);
+          if (NS_FAILED(rv))
+            return rv;
+          rv = selection->Extend(endNode,endpos.mContentOffset);
+          if (NS_FAILED(rv))
+            return rv;
+        }
+        //no release 
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -1692,10 +1766,10 @@ nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* 
 }
 
 NS_IMETHODIMP
-nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
+nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, PRInt32* outFrameContentOffset, nsIFrame **outChildFrame)
 {
   NS_PRECONDITION(outChildFrame && outFrameContentOffset, "Null parameter");
-  *outFrameContentOffset = 0;
+  *outFrameContentOffset = (PRInt32)inHint;
   *outChildFrame = this;
   return NS_OK;
 }
