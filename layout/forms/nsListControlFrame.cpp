@@ -1607,10 +1607,10 @@ nsListControlFrame::RemoveOption(PRInt32 aIndex)
   GetSelectedIndexFromDOM(&selectedIndex); // comes from the DOM
 
   if (aIndex == mSelectedIndex) {
-    ToggleSelected(selectedIndex); // sets mSelectedIndex
-  } else {
-    mSelectedIndex = selectedIndex;
+    // Don't need to deselect option as it is being removed anyway.
+    SetContentSelected(selectedIndex, PR_TRUE); // Select the new selectedIndex
   }
+  mSelectedIndex = selectedIndex;
   if (nsnull != mComboboxFrame) {
     mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
   }
