@@ -24,7 +24,7 @@ Description=Netscape Internet Account Server
 SiteName=Netscape Internet Account Server
 
 [IP]
-RegCGI=https://205.217.225.10/IAS5/docs/reg.cgi
+RegCGI=https://reggie.netscape.com/IAS5/docs/reg.cgi
 DNSAddress2=205.217.225.20
 DNSAddress=205.217.225.10
 DomainName=netscape.com
@@ -33,7 +33,7 @@ Enabled=Yes
 
 [Configuration]
 REG_SCRIPTING=
-RegRoot=https://205.217.225.10/IAS5/docs/ISP/
+RegRoot=https://reggie.netscape.com/IAS5/docs/
 
 [Security]
 SecurityDevice=No
