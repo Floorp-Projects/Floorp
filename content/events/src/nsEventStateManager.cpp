@@ -339,10 +339,6 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
             }
           }
 
-          if (nsEventStatus_eConsumeNoDefault != status) {
-            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-          }
-
           //Now dispatch to the frame
           if (nsnull != mLastMouseOverFrame) {
             //XXX Get the new frame
