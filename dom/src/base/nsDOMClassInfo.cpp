@@ -2365,8 +2365,10 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       frames->Item(JSVAL_TO_INT(id), getter_AddRefs(f));
 
-      rv = WrapNative(cx, ::JS_GetGlobalObject(cx), f,
-                      NS_GET_IID(nsIDOMWindow), vp);
+      if (f) {
+        rv = WrapNative(cx, ::JS_GetGlobalObject(cx), f,
+                        NS_GET_IID(nsIDOMWindow), vp);
+      }
     }
   }
 
