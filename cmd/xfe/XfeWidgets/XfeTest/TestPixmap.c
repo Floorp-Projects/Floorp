@@ -91,7 +91,7 @@ XfeAllocatePixmapFromFile(char *			filename,
 						  BlackPixelOfScreen(DefaultScreenOfDisplay(dpy)),
 						  bg);
 
-	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+	assert( *pixmap != XmUNSPECIFIED_PIXMAP );
 	
 	*mask = XmUNSPECIFIED_PIXMAP;
 
@@ -158,7 +158,7 @@ XfeAllocatePixmapFromData(char **			data,
 						  BlackPixelOfScreen(DefaultScreenOfDisplay(dpy)),
 						  bg);
 
-	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+	assert( *pixmap != XmUNSPECIFIED_PIXMAP );
 	
 	*mask = XmUNSPECIFIED_PIXMAP;
 
