@@ -23,7 +23,7 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: ExprResult.h,v 1.4 2000/04/13 14:14:33 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ExprResult.h,v 1.5 2000/04/13 23:41:43 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "MITREObject.h"
@@ -42,7 +42,7 @@
  * <BR/>
  * Note: for NodeSet, see NodeSet.h <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2000/04/13 14:14:33 $
+ * @version $Revision: 1.5 $ $Date: 2000/04/13 23:41:43 $
 */
 
 class ExprResult : public MITREObject {
@@ -69,7 +69,7 @@ public:
      * Creates a String representation of this ExprResult
      * @param str the destination string to append the String representation to.
     **/
-    virtual void stringValue(String& str) = 0;
+    virtual void stringValue(DOMString& str) = 0;
 
     /**
      * Converts this ExprResult to a Boolean (MBool) value
