@@ -1578,6 +1578,15 @@ function SetEditMode(mode)
     var flags = (editor.documentCharacterSet == "ISO-8859-1")
       ? 32768  // OutputEncodeLatin1Entities
       : 16384; // OutputEncodeBasicEntities
+    try { 
+      var encodeEntity = gPrefs.getCharPref("editor.encode_entity");
+      switch (encodeEntity) {
+        case "basic"  : flags = 16384; break; // OutputEncodeBasicEntities
+        case "latin1" : flags = 32768; break; // OutputEncodeLatin1Entities
+        case "html"   : flags = 65536; break; // OutputEncodeHTMLEntities
+        case "none"   : flags = 0;     break;
+      }
+    } catch (e) { }
 
     try { 
       var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");

@@ -997,9 +997,7 @@ function unicodeToEntity(text)
     } catch (ex) { }
   }
 
-  const entityVersion =
-    Components.interfaces.nsIEntityConverter.html40 |
-    Components.interfaces.nsIEntityConverter.mathml20;
+  const entityVersion = Components.interfaces.nsIEntityConverter.entityW3C;
 
   var str = text;
 
