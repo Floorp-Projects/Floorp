@@ -70,7 +70,7 @@ function EditorStartup(editorType)
   contentWindow = window.content;
 
   // set up event listeners
-  window.content.addEventListener("load", EditorDocumentLoaded, true, false);  
+  window.addEventListener("load", EditorDocumentLoaded, true, false);  
   
   dump("Trying to make an Editor Shell through the component manager...\n");
   var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
@@ -912,8 +912,8 @@ function EditorDocumentLoaded()
 {
   dump("The document was loaded in the content area\n");
 
-  //window.content.addEventListener("keyup", EditorReflectDocState, true, false);	// post process, no capture
-  //window.content.addEventListener("dblclick", EditorDoDoubleClick, true, false);
+  //window.addEventListener("keyup", EditorReflectDocState, true, false);	// post process, no capture
+  //window.addEventListener("dblclick", EditorDoDoubleClick, true, false);
 
   documentModified = (window.editorShell.documentStatus != 0);
   return true;
