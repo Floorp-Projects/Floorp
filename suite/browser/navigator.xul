@@ -54,11 +54,6 @@ Contributor(s): ______________________________________. -->
  </popup>
 </popupset>
 
-<!-- This is for test purposes. -->
-<keyset>
-    <key id="openKey" key="x" command="true" onkeypress="BrowserOpenWindow()"/>
-</keyset>
-
 <html:script language="javascript">
   var gBookmarkPopup = null;
 </html:script>
