@@ -17,27 +17,15 @@
  */
 
 
-#include <stdio.h>
+#include "primpl.h"
+
 #include <string.h>
-#include <signal.h>
 #include <unistd.h>
 #include <errno.h>
-#include <stdlib.h>
 #include <sys/time.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <assert.h>
-#include <time.h>
-#include <primpl.h>
 
 
 #if defined(SOLARIS)
-
-#include <sys/systeminfo.h>
-#include <sys/times.h>
-#include <wait.h>
-
-/* int gettimeofday(struct timeval *); */
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -52,9 +40,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 
 #elif defined(SUNOS4)
 
-#include <sys/wait.h>
-extern long sysconf(int name);
-
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -62,9 +47,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 
 #elif defined(HPUX)
-
-#include <sys/unistd.h>
-#include <sys/wait.h>
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -78,10 +60,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 
 #elif defined(OSF1)
 
-#include <sys/types.h>
-#include <sys/sysinfo.h>
-#include <sys/wait.h>
-#include <sys/systeminfo.h>
 #include <c_asm.h>
 
 /*
@@ -128,7 +106,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <time.h>
 
 static int      fdDevRandom;
 static PRCallOnceType coOpenDevRandom;
@@ -167,9 +144,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 
 #elif defined(NCR)
 
-#include <sys/utsname.h>
-#include <sys/systeminfo.h>
-
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -184,7 +158,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 #include <sys/immu.h>
 #include <sys/systeminfo.h>
 #include <sys/utsname.h>
-#include <wait.h>
 
 static size_t GetHighResClock(void *buf, size_t maxbuf)
 {
@@ -193,8 +166,7 @@ static size_t GetHighResClock(void *buf, size_t maxbuf)
     static int tries = 0;
     static int cntr_size;
     int mfd;
-    long s0[2];
-    struct timeval tv;
+    unsigned s0[2];
 
 #ifndef SGI_CYCLECNTR_SIZE
 #define SGI_CYCLECNTR_SIZE      165     /* Size user needs to use to read CC */
@@ -262,7 +234,6 @@ static size_t GetHighResClock(void *buf, size_t maxbuf)
 }
 
 #elif defined(SONY)
-#include <sys/systeminfo.h>
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -271,12 +242,7 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 
 #elif defined(SNI)
-#include <unistd.h>
-#include <sys/systeminfo.h>
 #include <sys/times.h>
-
-int gettimeofday(struct timeval *, struct timezone *);
-int gethostname(char *, int);
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -289,7 +255,6 @@ GetHighResClock(void *buf, size_t maxbytes)
 }
 
 #elif defined(NEC)
-#include <sys/systeminfo.h>
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
@@ -323,12 +288,12 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
 
     GETTIMEOFDAY(&tv);
 
-    if ( size >= 0 ) {
+    if ( size > 0 ) {
         s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_usec, sizeof(tv.tv_usec));
         size -= s;
         n += s;
     }
-    if ( size >= 0 ) {
+    if ( size > 0 ) {
         s = _pr_CopyLowBits((char*)buf+n, size, &tv.tv_sec, sizeof(tv.tv_usec));
         size -= s;
         n += s;
