@@ -19,7 +19,8 @@
 #include "msgCore.h"
 #include "nsParseMailbox.h"
 #include "nsIMessage.h"
-#include "nsMailDatabase.h"
+#include "nsIMsgDatabase.h"
+#include "nsMsgMessageFlags.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIByteBuffer.h"
 #include "nsIInputStream.h"
@@ -239,7 +240,7 @@ void nsMsgMailboxParser::UpdateDBFolderInfo()
 }
 
 // update folder info in db so we know not to reparse.
-void nsMsgMailboxParser::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
+void nsMsgMailboxParser::UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *mailboxName)
 {
 	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
@@ -457,7 +458,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 	return 0;
 }
 
-void nsParseMailMessageState::SetMailDB(nsMailDatabase *mailDB)
+void nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 {
 	m_mailDB = mailDB;
 }
@@ -1703,7 +1704,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMessage *msgHdr)
 }
 
 int nsParseNewMailState::MoveIncorporatedMessage(nsIMessage *mailHdr, 
-											   nsMailDatabase *sourceDB, 
+											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter)
 {
@@ -1763,7 +1764,7 @@ int nsParseNewMailState::MoveIncorporatedMessage(nsIMessage *mailHdr,
 		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
 	}
 
-	nsMailDatabase *mailDb = NULL;
+	nsIMsgDatabase *mailDb = NULL;
 	// don't force upgrade in place - open the db here before we start writing to the 
 	// destination file because XP_Stat can return file size including bytes written...
 	MsgERR msgErr = nsMailDatabase::Open (destFolder, TRUE, &mailDb);	
@@ -1942,7 +1943,7 @@ int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMessage *msgHdr)
 
 
 int ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMessage *mailHdr, 
-											   nsMailDatabase *sourceDB, 
+											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter)
 {

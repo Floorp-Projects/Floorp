@@ -28,8 +28,8 @@
 
 class nsFileSpec;
 class nsByteArray;
-class nsMailDatabase;
 class nsIMessage;
+class nsIMsgDatabase;
 class nsOutputFileStream;
 class nsInputFileStream;
 class MSG_Filter;
@@ -81,7 +81,7 @@ public:
 	int				InternSubject (struct message_header *header);
 	nsresult		InternRfc822 (struct message_header *header, 
 								char **ret_name);
-	void			SetMailDB(nsMailDatabase *mailDB);
+	void			SetMailDB(nsIMsgDatabase *mailDB);
 
 	static PRBool	IsEnvelopeLine(const char *buf, PRInt32 buf_size);
 	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
@@ -89,9 +89,9 @@ public:
 
 	nsIMsgHeaderParser* m_HeaderAddressParser;
 
-	nsMailDatabase	*GetMailDB() {return m_mailDB;}
+	nsIMsgDatabase	*GetMailDB() {return m_mailDB;}
 	nsIMessage		*m_newMsgHdr;		/* current message header we're building */
-	nsMailDatabase	*m_mailDB;
+	nsIMsgDatabase	*m_mailDB;
 
 	MBOX_PARSE_STATE m_state;
 	PRUint32			m_position;
@@ -181,8 +181,8 @@ public:
 	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
 	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
 
-	void			SetDB (nsMailDatabase *mailDB) {m_mailDB = mailDB; }
-	nsMailDatabase			*GetDB() {return m_mailDB;}
+	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = mailDB; }
+	nsIMsgDatabase			*GetDB() {return m_mailDB;}
 	char			*GetMailboxName() {return m_mailboxName;}
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
@@ -198,7 +198,7 @@ public:
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 	void			UpdateDBFolderInfo();
-	void			UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName);
+	void			UpdateDBFolderInfo(nsIMsgDatabase *mailDB, const char *mailboxName);
 	void			UpdateStatusText ();
 
 	// Update the progress bar based on what we know.
@@ -261,7 +261,7 @@ protected:
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual MSG_FolderInfoMail *GetTrashFolder();
 	virtual int		MoveIncorporatedMessage(nsIMessage *mailHdr, 
-											   nsMailDatabase *sourceDB, 
+											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter);
 	virtual	int			MarkFilteredMessageRead(nsIMessage *msgHdr);
@@ -299,7 +299,7 @@ protected:
 	
 	virtual MSG_FolderInfoMail *GetTrashFolder();
 	virtual int		MoveIncorporatedMessage(nsIMessage *mailHdr, 
-											   nsMailDatabase *sourceDB, 
+											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter);
 	virtual	int				MarkFilteredMessageRead(nsIMessage *msgHdr);
