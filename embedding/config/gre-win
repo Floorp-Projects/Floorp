@@ -30,11 +30,6 @@ components\history.xpt
 components\htmlparser.xpt
 
 ;
-; javascript
-;
-components\jsloader.dll
-
-;
 ; imagelib
 ;
 components\imgbmp.dll
