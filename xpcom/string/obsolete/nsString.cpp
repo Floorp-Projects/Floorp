@@ -865,6 +865,7 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
 
 
 void nsCString::Adopt(char* aPtr, PRInt32 aLength) {
+  NS_ASSERTION(aPtr, "Can't adopt |0|");
   nsStr::Destroy(*this);
   if (aLength == -1)
     aLength = nsCharTraits<char>::length(aPtr);
