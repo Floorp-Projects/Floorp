@@ -20,7 +20,7 @@
 #
 # Contributor(s): Harrison Page <harrison@netscape.com>
 #                 Terry Weissman <terry@mozilla.org>
-
+#                 Risto Kotalampi <risto@kotalampi.com>
 #
 # mozbot.pl harrison@netscape.com 10/14/98
 # "irc bot for the gang on #mozilla"
@@ -619,7 +619,7 @@ sub bot_about {
         "harrison\@netscape.com 10/16/98. " .
         "connected to $server since " .
                   &logdate ($uptime) . " (" . &days ($uptime) . "). " .
-				"see http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla/webtools/mozbot/&date=week " .
+				"see http://bonsai.mozilla.org/cvsquery.cgi?branch=HEAD&file=mozilla/webtools/mozbot/&date=week " .
                   "for a changelog.");
     sendmsg($::speaker, "Known commands are: " .
             listcmds(\%pubcmds));
@@ -710,7 +710,7 @@ sub bot_tinderbox {
     
     # loop through requested trees
 
-    push @buf, "Tinderbox status from http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi";
+    push @buf, "Tinderbox status from http://tinderbox.mozilla.org/showbuilds.cgi";
 
     foreach my $t (@tree)
         {
