@@ -127,7 +127,6 @@
 #include "nsEditorUtils.h"
 #include "nsIStyleSet.h"
 #include "nsIPref.h"
-#include "nsParserCIID.h"
 #include "nsITextContent.h"
 #include "nsWSRunObject.h"
 #include "nsHTMLObjectResizer.h"
@@ -565,28 +564,20 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
 {
   if (!aNode || !aIsBlock) { return NS_ERROR_NULL_POINTER; }
 
+  *aIsBlock = PR_FALSE;
+
 #define USE_PARSER_FOR_BLOCKNESS 1
 #ifdef USE_PARSER_FOR_BLOCKNESS
   nsresult rv;
 
-  nsCOMPtr<nsIDOMElement>element;
-  element = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMElement>element = do_QueryInterface(aNode);
   if (!element)
   {
     // We don't have an element -- probably a text node
-    *aIsBlock = PR_FALSE;
     return NS_OK;
   }
 
-  *aIsBlock = PR_FALSE;
-
-  // Get the node name and atom:
-  nsAutoString tagName;
-  rv = element->GetTagName(tagName);
-  if (NS_FAILED(rv)) return rv;
-
-  ToLowerCase(tagName);
-  nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tagName));
+  nsCOMPtr<nsIAtom> tagAtom = nsEditor::GetTag(aNode);
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
   if (!sParserService) {
@@ -611,13 +602,8 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     return NS_OK;
   }
 
-  // This sucks.  The parser service's isBlock requires a string,
-  // so we have to get the name atom, convert it into a string, call
-  // the parser service to get the id, in order to call the parser
-  // service to ask about blockness.
-  // Harish is working on a more efficient API we can use.
   PRInt32 id;
-  rv = sParserService->HTMLStringTagToId(tagName, &id);
+  rv = sParserService->HTMLAtomTagToId(tagAtom, &id);
   if (NS_FAILED(rv)) return rv;
   rv = sParserService->IsBlock(id, *aIsBlock);
 
@@ -652,6 +638,11 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     if (!(*aIsBlock))
     {
       nsAutoString assertmsg (NS_LITERAL_STRING("Parser and editor disagree on blockness: "));
+
+      nsAutoString tagName;
+      rv = element->GetTagName(tagName);
+      if (NS_FAILED(rv)) return rv;
+
       assertmsg.Append(tagName);
       char* assertstr = ToNewCString(assertmsg);
       NS_ASSERTION(*aIsBlock, assertstr);
