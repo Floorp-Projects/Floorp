@@ -25,7 +25,6 @@
 #define __NS_NSSDIALOGS_H__
 
 #include "nsITokenPasswordDialogs.h"
-#include "nsISecurityWarningDialogs.h"
 #include "nsIBadCertListener.h"
 #include "nsICertificateDialogs.h"
 #include "nsIClientAuthDialogs.h"
@@ -37,7 +36,6 @@
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
-#include "nsISecurityWarningDialogs.h"
 
 #define NS_NSSDIALOGS_CID \
   { 0x518e071f, 0x1dd2, 0x11b2, \
@@ -46,7 +44,6 @@
 class nsNSSDialogs
 : public nsITokenPasswordDialogs,
   public nsIBadCertListener,
-  public nsISecurityWarningDialogs,
   public nsICertificateDialogs,
   public nsIClientAuthDialogs,
   public nsICertPickDialogs,
@@ -58,7 +55,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITOKENPASSWORDDIALOGS
   NS_DECL_NSIBADCERTLISTENER
-  NS_DECL_NSISECURITYWARNINGDIALOGS
   NS_DECL_NSICERTIFICATEDIALOGS
   NS_DECL_NSICLIENTAUTHDIALOGS
   NS_DECL_NSICERTPICKDIALOGS
@@ -71,15 +67,7 @@ public:
   nsresult Init();
 
 protected:
-  nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                   const PRUnichar *messageName,
-                   const PRUnichar *showAgainName);
-  nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                   const PRUnichar *messageName, 
-                   const PRUnichar *showAgainName, PRBool* _result);
-  nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIStringBundle> mPIPStringBundle;
-  nsCOMPtr<nsIPref> mPref;
 };
 
 #endif

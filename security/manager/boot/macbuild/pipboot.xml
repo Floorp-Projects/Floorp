@@ -1087,6 +1087,15 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::src:</ACCESSPATH>
+                    <PATH>:nsSecurityWarningDialogs.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -1157,6 +1166,13 @@
                     <PATHROOT>Project</PATHROOT>
                     <ACCESSPATH>::src:</ACCESSPATH>
                     <PATH>:nsSecureBrowserUIImpl.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::src:</ACCESSPATH>
+                    <PATH>:nsSecurityWarningDialogs.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -2195,6 +2211,15 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::src:</ACCESSPATH>
+                    <PATH>:nsSecurityWarningDialogs.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS></FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2267,6 +2292,13 @@
                     <PATH>:nsSecureBrowserUIImpl.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::src:</ACCESSPATH>
+                    <PATH>:nsSecurityWarningDialogs.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
             </LINKORDER>
         </TARGET>
     </TARGETLIST>
@@ -2300,6 +2332,14 @@
                 <PATHROOT>Project</PATHROOT>
                 <ACCESSPATH>::src:</ACCESSPATH>
                 <PATH>:nsSecureBrowserUIImpl.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>pipbootDebug.shlb</TARGETNAME>
+                <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHROOT>Project</PATHROOT>
+                <ACCESSPATH>::src:</ACCESSPATH>
+                <PATH>:nsSecurityWarningDialogs.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
