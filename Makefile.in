@@ -125,10 +125,9 @@ DIRS		+= xpcom/tests
 endif
 
 GARBAGE += dist
-DIST_GARBAGE	:= config.cache config.log config.status config-defs.h \
-		dependencies.beos config/autoconf.mk \
-		$(shell cd $(topsrcdir); . ./allmakefiles.sh; \
-			echo $${MAKEFILES})
+DIST_GARBAGE = config.cache config.log config.status config-defs.h \
+   dependencies.beos config/autoconf.mk \
+   $(shell cd $(topsrcdir); . ./allmakefiles.sh; echo $${MAKEFILES})
 
 include $(topsrcdir)/config/rules.mk
 
