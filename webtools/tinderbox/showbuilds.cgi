@@ -29,7 +29,7 @@ $default_root = '/cvsroot';
 
 # Show 12 hours by default
 #
-$nowdate = time; 
+$nowdate = time;
 if (not defined($maxdate = $form{maxdate})) {
   $maxdate = $nowdate;
 }
@@ -57,16 +57,10 @@ else {
 
 $tree = $form{tree};
 
-# $rel_path is the relative path to webtools/tinderbox used for links.
-# It changes to "../" if the page is generated statically, because then
-# it is placed in tinderbox/$tree.
-$rel_path = ''; 
-
 if (exists $form{rebuildguilty} or exists $form{showall}) {
   system ("./buildwho.pl -days 7 $tree > /dev/null");
   undef $form{rebuildguilty};
 }
-
 &show_tree_selector,  exit if $form{tree} eq '';
 &do_quickparse,       exit if $form{quickparse};
 &do_express,          exit if $form{express};
@@ -151,7 +145,7 @@ sub do_static {
 }
 
 sub do_tinderbox {
-  &tb_load_data;
+  &load_data;
   &print_page_head;
   &print_table_header;
   &print_table_body;
@@ -229,152 +223,163 @@ sub print_page_head {
 }
 
 sub print_table_body {
-  for (my $tt=0; $tt < $time_count; $tt++) {
+  for (my $tt=1; $tt <= $time_count; $tt++) {
     last if $build_time_times->[$tt] < $mindate;
     print_table_row($tt);    
   }
 }
 
-sub print_bloat_delta {
+sub print_delta {
   my ($value, $min) = @_;
   # this function rounds off, and prints bad (> min) values in red
 
   my $worse = ($value - $min) > 1000;    # heuristic -- allow 1k of noise
-  my $units = 'b';
+  my $units = "b";
   if ($value >= 1000000) {
-    $value = int($value / 1000000);
-    $min =   int($min / 1000000);
-    $units = 'M';
-  } elsif ($value >= 1000) {
-    $value = int($value / 1000);
-    $min =   int($min / 1000);
-    $units = 'K';
+      $value = int($value / 1000000);
+      $min = int($min / 1000000);
+      $units = "M";
+  }
+  else {
+      if ($value >= 1000) {
+          $value = int($value / 1000);
+          $min = int($min / 1000);
+          $units = "K";
+      }
   }
 
   if ($worse) {
-    return sprintf('<b><font color="#FF0000">%d%s</font></b>', $value, $units);
-  } else {
-    return sprintf('%d%s', $value, $units);
+      return sprintf("<b><font color=\"#FF0000\">%d%s</font></b>",
+                     $value, $units);
+  }
+  else {
+      return sprintf("%d%s", $value, $units);
   }
 }
 
-BEGIN {
-  # Make $lasthour persistent private variable for print_table_row().
-  my $lasthour = ''; 
+sub print_table_row {
+  my ($tt) = @_;
 
-  sub print_table_row {
-    my ($tt) = @_;
+  # Time column
+  # 
+  my $query_link = '';
+  my $end_query  = '';
+  my $pretty_time = &print_time($build_time_times->[$tt]);
 
-    # Time column
-    # 
-    my $query_link = '';
-    my $end_query  = '';
-    my $pretty_time = &print_time($build_time_times->[$tt]);
-    
-    ($hour) = $pretty_time =~ /(\d\d):/;
+  ($hour) = $pretty_time =~ /(\d\d):/;
 
-    if ($lasthour ne $hour or &has_who_list($tt)) {
-      $query_link = &query_ref($td, $build_time_times->[$tt]);
-      $end_query  = '</a>';
-    }
-    if ($lasthour eq $hour) {
-      $pretty_time =~ s/^.*&nbsp;//;
-    } else {
-      $lasthour = $hour;
-    }
-    
-    my $hour_color = '';
-    $hour_color = ' bgcolor=#e7e7e7' if $build_time_times->[$tt] % 7200 <= 3600;
-    print "<tr align=center><td align=right$hour_color>",
-      "$query_link\n$pretty_time$end_query</td>\n";
-    
-    # Guilty
-    #
-    print '<td>';
-    for $who (sort keys %{$who_list->[$tt]} ){
-      my $qr = &who_menu($td, $build_time_times->[$tt],
-                         $build_time_times->[$tt-1],$who);
-      $who =~ s/%.*$//;
-      print "  $qr$who</a>\n";
-    }
-    print '</td>';
-    
-    # Build Status
-    #
-    for (my $build_index=0; $build_index < $name_count; $build_index++) {
-      if (not defined($br = $build_table->[$tt][$build_index])) {
-        # No build data for this time
-        print "<td></td>\n";
-        next;
-      }
-      next if $br == -1;  # rowspan has covered this row
-
-      my $rowspan = $br->{rowspan};
-      $rowspan = $mindate_time_count - $tt + 1
-        if $tt + $rowspan - 1 > $mindate_time_count;
-      print "<td rowspan=$rowspan bgcolor=$colormap{$br->{buildstatus}}>\n";
-      
-      my $logfile = $br->{logfile};
-      my $buildtree = $br->{td}->{name};
-      
-      print "<tt>\n";
-        
-      # Build Note
-      # 
-      my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
-      
-      if ($br->{hasnote}) {
-        print "<a href='$logurl' onclick=\"return ",
-          "note(event,$br->{noteid},'$logfile');\">",
-          "<img src='$images{star}' border=0></a>\n";
-      }
-        
-      # Build Log
-      # 
-      print "<A HREF='$logurl'"
-           ." onclick=\"return log(event,$build_index,'$logfile');\">"
-           ."L</a>";
-      
-      # What Changed
-      #
-      # Only add the "C" link if there have been changes since the last build.
-      if( $br->{previousbuildtime} ){
-        my $previous_br = $build_table->[$tt+$rowspan][$build_index];
-        my $previous_rowspan = $previous_br->{rowspan};
-        if (&has_who_list($tt+$rowspan,
-                          $tt+$rowspan+$previous_rowspan-1)) {
-          print "\n", &query_ref($br->{td}, 
-                                 $br->{previousbuildtime},
-                                 $br->{buildtime});
-          print "C</a>";
-        }
-      }
-      
-      # Leak/Bloat
-      #
-      if (defined $bloaty_by_log->{$logfile}) {
-        my ($leaks, $bloat);
-        ($leaks, $bloat) = @{ $bloaty_by_log->{$logfile} };
-        printf "<br>Lk:%s<br>Bl:%s", 
-        print_bloat_delta($leaks, $bloaty_min_leaks), 
-        print_bloat_delta($bloat, $bloaty_min_bloat);
-      }
-
-      # Binary
-      #
-      if ($br->{binaryname} ne '') {
-        $binfile = "$buildtree/bin/$br->{buildtime}/$br->{buildname}/"
-          ."$br->{binaryname}";
-        $binfile =~ s/ //g;
-        print " <a href=$rel_path$binfile>B</a>";
-      }
-      print "</tt>\n</td>";
-    }
-    print "</tr>\n";
+  if ($lasthour != $hour or &has_who_list($tt)) {
+    $query_link = &query_ref($td1, $build_time_times->[$tt]);
+    $end_query  = '</a>';
   }
+  if ($lasthour == $hour) {
+    $pretty_time =~ s/^.*&nbsp;//;
+  } else {
+    $lasthour = $hour;
+  }
+
+  my $hour_color = '';
+  $hour_color = ' bgcolor=#e7e7e7' if $build_time_times->[$tt] % 7200 <= 3600;
+  print "<tr align=center><td align=right$hour_color>",
+        "$query_link\n$pretty_time$end_query</td>\n";
+
+  # Guilty
+  #
+  print '<td>';
+  for $who (sort keys %{$who_list->[$tt]} ){
+    $qr = &who_menu($td1, $build_time_times->[$tt],
+                    $build_time_times->[$tt-1],$who);
+    $who =~ s/%.*$//;
+    print "  ${qr}$who</a>\n";
+  }
+  print '</td>';
+
+  # Build Status
+  #
+  for ($bn=1; $bn <= $name_count; $bn++) {
+    if (not defined($br = $build_table->[$tt][$bn])) {
+      # No build data for this time
+      print "<td></td>\n";
+      next;
+    }
+    next if $br == -1;  # rowspan has covered this row
+
+    $hasnote = $br->{hasnote};
+    $noteid = $hasnote ? $br->{noteid} : 0;
+    $rowspan = $br->{rowspan};
+    $rowspan = $mindate_time_count - $tt + 1
+      if $tt + $rowspan - 1 > $mindate_time_count;
+    $color = $colormap{$br->{buildstatus}};
+    $status = $br->{buildstatus};
+    print "<td rowspan=$rowspan bgcolor=${color}>\n";
+      
+    $logfile = $br->{logfile};
+    $errorparser = $br->{errorparser};
+    $buildname = $br->{buildname};
+    $buildtime = $br->{buildtime};
+    $buildtree = $br->{td}->{name};
+      
+    print "<tt>\n";
+        
+    # Build Note
+    # 
+    $buildname = &url_encode($buildname);
+    my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
+
+    if ($hasnote) {
+      print "<a href='$logurl' onclick=\"return ",
+            "note(event,$noteid,'$logfile');\">",
+            "<img src='$images{star}' border=0></a>\n";
+    }
+        
+    # Build Log
+    # 
+    print "<A HREF='$logurl' onclick=\"return log(event,$bn,'$logfile');\">";
+    print "L</a>";
+      
+    # What Changed
+    #
+    if( $br->{previousbuildtime} ){
+      my $previous_br = $build_table->[$tt+$rowspan][$bn];
+      my $previous_rowspan = $previous_br->{rowspan};
+      if (&has_who_list($tt+$rowspan,
+                        $tt+$rowspan+$previous_rowspan-1)) {
+        print "\n", &query_ref($br->{td}, 
+                               $br->{previousbuildtime},
+                               $br->{buildtime});
+        print "C</a>";
+      }
+    }
+
+    # Leak/Bloat
+    #
+    if (defined $bloat_by_log->{$logfile}) {
+      my $leaks, $bloat;
+      ($leaks, $bloat) = @{ $bloat_by_log->{$logfile} };
+      # Percentage, or absolute?
+      # printf "<br>%+.2f<br>%+.2f", $leaks, $bloat;
+      #printf "<br>%d<br>%d", $leaks, $bloat;
+      printf "<br>Lk:%s<br>Bl:%s", 
+             print_delta($leaks, $minLeaks), 
+             print_delta($bloat, $minBloat);
+    }
+
+    # Binary
+    #
+    if ($br->{binaryname} ne '') {
+      $binfile = "$buildtree/bin/$buildtime/$br->{buildname}/"
+                ."$br->{binaryname}";
+      $binfile =~ s/ //g;
+      print " <a href=$rel_path$binfile>B</a>";
+    }
+    print "</tt>\n</td>";
+  }
+  print "</tr>\n";
 }
 
 sub print_table_header {
+  my $ii, $nspan;
+
   print "<table border=1 bgcolor='#FFFFFF' cellspacing=1 cellpadding=1>\n";
 
   print "<tr align=center>\n";
@@ -386,14 +391,14 @@ sub print_table_header {
         &open_showbuilds_href(rebuildguilty=>'1'),
         "Rebuild guilty list</a></td>";
 
-  for (my $ii=0; $ii < $name_count; $ii++) {
+  for ($ii=1; $ii <= $name_count; $ii++) {
 
-    my $bn = $build_names->[$ii];
+    my $bn = $build_name_names->[$ii];
     $bn =~ s/Clobber/Clbr/g;
     $bn =~ s/Depend/Dep/g;
     $bn = "<font face='Helvetica,Arial' size=-1>$bn</font>";
 
-    my $last_status = tb_last_status($ii);
+    my $last_status = &last_status($ii);
     if ($last_status eq 'busted') {
       if ($form{nocrap}) {
         print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
@@ -450,16 +455,24 @@ sub query_ref {
   $output .= "&branch=$td->{cvs_branch}"   if $td->{cvs_branch} ne 'HEAD';
   $output .= "&cvsroot=$td->{cvs_root}"    if $td->{cvs_root} ne $default_root;
   $output .= "&date=explicit&mindate=$mindate";
-  $output .= "&maxdate=$maxdate"           if $maxdate and $maxdate ne '';
-  $output .= "&who=$who"                   if $who and $who ne '';
+  $output .= "&maxdate=$maxdate"           if $maxdate ne '';
+  $output .= "&who=$who"                   if $who ne '';
   $output .= ">";
+}
+
+sub query_ref2 {
+  my ($td, $mindate, $maxdate, $who) = @_;
+  return "${rel_path}../bonsai/cvsquery.cgi?module=$td->{cvs_module}"
+        ."&branch=$td->{cvs_branch}&cvsroot=$td->{cvs_root}"
+        ."&date=explicit&mindate=$mindate&maxdate=$maxdate&who="
+        . url_encode($who);
 }
 
 sub who_menu {
   my ($td, $mindate, $maxdate, $who) = @_;
   my $treeflag;
 
-  my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
+  $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
       . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
   return "<a href='$qr' onclick=\"return who(event);\">";
@@ -473,13 +486,14 @@ sub has_who_list {
 
   if (not defined(@who_check_list)) {
     # Build a static array of true/false values for each time slot.
-    $who_check_list[$time_count - 1] = 0;
-    for (my $tt = 0; $tt < $time_count; $tt++) {
-      $who_check_list[$tt] = 1 if each %{$who_list->[$tt]};
+    $who_check_list[$time_count] = 0;
+    my ($t) = 1;
+    for (; $t<=$time_count; $t++) {
+      $who_check_list[$t] = 1 if each %{$who_list->[$t]};
     }
   }
   if ($time2) {
-    for (my $ii=$time1; $ii<=$time2; $ii++) {	 
+    for ($ii=$time1; $ii<=$time2; $ii++) {	 
       return 1 if $who_check_list[$ii]
     }
     return 0
@@ -489,7 +503,7 @@ sub has_who_list {
 }
 
 sub tree_open {
-  my ($line, $treestate);
+  my $line, $treestate;
   open(BID, "<../bonsai/data/$bonsai_tree/batchid.pl")
     or print "can't open batchid<br>";
   $line = <BID>;
@@ -606,9 +620,9 @@ __ENDJS
     $ss =~ s/\n/\\n/g;
     print "\"$ss\";\n";
   }
-  for ($ii=0; $ii < $name_count; $ii++) {
-    if (defined($br = $build_table->[0][$ii]) and $br != -1) {
-      my $bn = $build_names->[$ii];
+  for ($ii=1; $ii <= $name_count; $ii++) {
+    if (defined($br = $build_table->[1][$ii]) and $br != -1) {
+      my $bn = $build_name_names->[$ii];
       print "builds[$ii]='$bn';\n";
     }
   }
@@ -634,8 +648,8 @@ __ENDJS
 sub do_express {
   print "Content-type: text/html\nRefresh: 900\n\n<HTML>\n";
 
-  my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
 
   my @keys = sort keys %build;
   my $keycount = @keys;
@@ -653,8 +667,8 @@ sub do_express {
 sub do_panel {
   print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
-  my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
   
   print q(
     <head>
@@ -692,8 +706,8 @@ sub do_panel {
 sub do_flash {
   print "Content-type: text/rdf\n\n" unless $form{static};
 
-  my (%build, %times);
-  tb_loadquickparseinfo($form{tree}, \%build, \%times);
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
 
   my ($mac,$unix,$win) = (0,0,0);
 
@@ -764,8 +778,8 @@ sub do_quickparse {
       my $state = tree_open() ? "Open" : "Close";
       print "State|$t|$bonsai_tree|$state\n";
     }
-    my (%build, %times);
-    tb_loadquickparseinfo($t, \%build, \%times);
+    my %build, %times;
+    loadquickparseinfo($t, \%build, \%times);
     
     foreach my $buildname (sort keys %build) {
       print "Build|$t|$buildname|$build{$buildname}\n";
@@ -781,8 +795,8 @@ sub do_rdf {
 
   $dirurl =~ s@/[^/]*$@@;
 
-  my (%build, %times);
-  tb_loadquickparseinfo($tree, \%build, \%times);
+  my %build, %times;
+  loadquickparseinfo($tree, \%build, \%times);
 
   my $image = "channelok.gif";
   my $imagetitle = "OK";
