@@ -1,6 +1,6 @@
 /*
 The contents of this file are subject to the Mozilla Public License
-Version 1.0 (the "License"); you may not use this file except in
+Version 1.1 (the "License"); you may not use this file except in
 compliance with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/
 
@@ -12,18 +12,35 @@ under the License.
 The Original Code is expat.
 
 The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998
+Portions created by James Clark are Copyright (C) 1998, 1999
 James Clark. All Rights Reserved.
 
 Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms
+of the GNU General Public License (the "GPL"), in which case the
+provisions of the GPL are applicable instead of those above.  If you
+wish to allow use of your version of this file only under the terms of
+the GPL and not to allow others to use your version of this file under
+the MPL, indicate your decision by deleting the provisions above and
+replace them with the notice and other provisions required by the
+GPL. If you do not delete the provisions above, a recipient may use
+your version of this file under either the MPL or the GPL.
 */
 
 #include "xmldef.h"
 #include "xmltok.h"
 #include "nametab.h"
 
+#ifdef XML_DTD
+#define IGNORE_SECTION_TOK_VTABLE , PREFIX(ignoreSectionTok)
+#else
+#define IGNORE_SECTION_TOK_VTABLE /* as nothing */
+#endif
+
 #define VTABLE1 \
-  { PREFIX(prologTok), PREFIX(contentTok), PREFIX(cdataSectionTok) }, \
+  { PREFIX(prologTok), PREFIX(contentTok), \
+    PREFIX(cdataSectionTok) IGNORE_SECTION_TOK_VTABLE }, \
   { PREFIX(attributeValueTok), PREFIX(entityValueTok) }, \
   PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \
@@ -658,7 +675,7 @@ int little2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 static const struct normal_encoding little2_encoding_ns = { 
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 12
+#if XML_BYTE_ORDER == 12
     1
 #else
     0
@@ -675,7 +692,7 @@ static const struct normal_encoding little2_encoding_ns = {
 
 static const struct normal_encoding little2_encoding = { 
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 12
+#if XML_BYTE_ORDER == 12
     1
 #else
     0
@@ -690,7 +707,7 @@ static const struct normal_encoding little2_encoding = {
   STANDARD_VTABLE(little2_)
 };
 
-#if BYTE_ORDER != 21
+#if XML_BYTE_ORDER != 21
 
 #ifdef XML_NS
 
@@ -797,7 +814,7 @@ int big2_isNmstrtMin(const ENCODING *enc, const char *p)
 
 static const struct normal_encoding big2_encoding_ns = {
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 21
+#if XML_BYTE_ORDER == 21
   1
 #else
   0
@@ -814,7 +831,7 @@ static const struct normal_encoding big2_encoding_ns = {
 
 static const struct normal_encoding big2_encoding = {
   { VTABLE, 2, 0,
-#if BYTE_ORDER == 21
+#if XML_BYTE_ORDER == 21
   1
 #else
   0
@@ -829,7 +846,7 @@ static const struct normal_encoding big2_encoding = {
   STANDARD_VTABLE(big2_)
 };
 
-#if BYTE_ORDER != 12
+#if XML_BYTE_ORDER != 12
 
 #ifdef XML_NS
 
@@ -916,6 +933,7 @@ int parsePseudoAttribute(const ENCODING *enc,
 			 const char *ptr,
 			 const char *end,
 			 const char **namePtr,
+			 const char **nameEndPtr,
 			 const char **valPtr,
 			 const char **nextTokPtr)
 {
@@ -943,9 +961,12 @@ int parsePseudoAttribute(const ENCODING *enc,
       *nextTokPtr = ptr;
       return 0;
     }
-    if (c == '=')
+    if (c == '=') {
+      *nameEndPtr = ptr;
       break;
+    }
     if (isSpace(c)) {
+      *nameEndPtr = ptr;
       do {
 	ptr += enc->minBytesPerChar;
       } while (isSpace(c = toAscii(enc, ptr, end)));
@@ -1008,13 +1029,14 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
 {
   const char *val = 0;
   const char *name = 0;
+  const char *nameEnd = 0;
   ptr += 5 * enc->minBytesPerChar;
   end -= 2 * enc->minBytesPerChar;
-  if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr) || !name) {
+  if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr) || !name) {
     *badPtr = ptr;
     return 0;
   }
-  if (!XmlNameMatchesAscii(enc, name, "version")) {
+  if (!XmlNameMatchesAscii(enc, name, nameEnd, "version")) {
     if (!isGeneralTextEntity) {
       *badPtr = name;
       return 0;
@@ -1023,7 +1045,7 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
   else {
     if (versionPtr)
       *versionPtr = val;
-    if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr)) {
+    if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
     }
@@ -1036,7 +1058,7 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
       return 1;
     }
   }
-  if (XmlNameMatchesAscii(enc, name, "encoding")) {
+  if (XmlNameMatchesAscii(enc, name, nameEnd, "encoding")) {
     int c = toAscii(enc, val, end);
     if (!('a' <= c && c <= 'z') && !('A' <= c && c <= 'Z')) {
       *badPtr = val;
@@ -1046,22 +1068,22 @@ int doParseXmlDecl(const ENCODING *(*encodingFinder)(const ENCODING *,
       *encodingName = val;
     if (encoding)
       *encoding = encodingFinder(enc, val, ptr - enc->minBytesPerChar);
-    if (!parsePseudoAttribute(enc, ptr, end, &name, &val, &ptr)) {
+    if (!parsePseudoAttribute(enc, ptr, end, &name, &nameEnd, &val, &ptr)) {
       *badPtr = ptr;
       return 0;
     }
     if (!name)
       return 1;
   }
-  if (!XmlNameMatchesAscii(enc, name, "standalone") || isGeneralTextEntity) {
+  if (!XmlNameMatchesAscii(enc, name, nameEnd, "standalone") || isGeneralTextEntity) {
     *badPtr = name;
     return 0;
   }
-  if (XmlNameMatchesAscii(enc, val, "yes")) {
+  if (XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, "yes")) {
     if (standalone)
       *standalone = 1;
   }
-  else if (XmlNameMatchesAscii(enc, val, "no")) {
+  else if (XmlNameMatchesAscii(enc, val, ptr - enc->minBytesPerChar, "no")) {
     if (standalone)
       *standalone = 0;
   }
@@ -1158,7 +1180,7 @@ struct unknown_encoding {
   char utf8[256][4];
 };
 
-int XmlSizeOfUnknownEncoding()
+int XmlSizeOfUnknownEncoding(void)
 {
   return sizeof(struct unknown_encoding);
 }
@@ -1361,7 +1383,8 @@ int getEncodingIndex(const char *name)
 /* For binary compatibility, we store the index of the encoding specified
 at initialization in the isUtf16 member. */
 
-#define INIT_ENC_INDEX(enc) ((enc)->initEnc.isUtf16)
+#define INIT_ENC_INDEX(enc) ((int)(enc)->initEnc.isUtf16)
+#define SET_INIT_ENC_INDEX(enc, i) ((enc)->initEnc.isUtf16 = (char)i)
 
 /* This is what detects the encoding.
 encodingTable maps from encoding indices to encodings;
@@ -1386,9 +1409,11 @@ int initScan(const ENCODING **encodingTable,
   encPtr = enc->encPtr;
   if (ptr + 1 == end) {
     /* only a single byte available for auto-detection */
+#ifndef XML_DTD /* FIXME */
     /* a well-formed document entity must have more than one byte */
     if (state != XML_CONTENT_STATE)
       return XML_TOK_PARTIAL;
+#endif
     /* so we're parsing an external text entity... */
     /* if UTF-16 was externally specified, then we need at least 2 bytes */
     switch (INIT_ENC_INDEX(enc)) {

@@ -1,6 +1,6 @@
 /*
 The contents of this file are subject to the Mozilla Public License
-Version 1.0 (the "License"); you may not use this file except in
+Version 1.1 (the "License"); you may not use this file except in
 compliance with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/
 
@@ -12,10 +12,20 @@ under the License.
 The Original Code is expat.
 
 The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998
+Portions created by James Clark are Copyright (C) 1998, 1999
 James Clark. All Rights Reserved.
 
 Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms
+of the GNU General Public License (the "GPL"), in which case the
+provisions of the GPL are applicable instead of those above.  If you
+wish to allow use of your version of this file only under the terms of
+the GPL and not to allow others to use your version of this file under
+the MPL, indicate your decision by deleting the provisions above and
+replace them with the notice and other provisions required by the
+GPL. If you do not delete the provisions above, a recipient may use
+your version of this file under either the MPL or the GPL.
 */
 
 #ifndef IS_INVALID_CHAR
@@ -943,7 +953,7 @@ int PREFIX(scanPoundName)(const ENCODING *enc, const char *ptr, const char *end,
       return XML_TOK_INVALID;
     }
   }
-  return XML_TOK_PARTIAL;
+  return -XML_TOK_POUND_NAME;
 }
 
 static
@@ -961,7 +971,7 @@ int PREFIX(scanLit)(int open, const ENCODING *enc,
       if (t != open)
 	break;
       if (ptr == end)
-	return XML_TOK_PARTIAL;
+	return -XML_TOK_LITERAL;
       *nextTokPtr = ptr;
       switch (BYTE_TYPE(enc, ptr)) {
       case BT_S: case BT_CR: case BT_LF:
@@ -1023,7 +1033,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
     }
   case BT_CR:
     if (ptr + MINBPC(enc) == end)
-      return XML_TOK_TRAILING_CR;
+      return -XML_TOK_PROLOG_S;
     /* fall through */
   case BT_S: case BT_LF:
     for (;;) {
@@ -1056,7 +1066,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RSQB:
     ptr += MINBPC(enc);
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return -XML_TOK_CLOSE_BRACKET;
     if (CHAR_MATCHES(enc, ptr, ']')) {
       if (ptr + MINBPC(enc) == end)
 	return XML_TOK_PARTIAL;
@@ -1073,7 +1083,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
   case BT_RPAR:
     ptr += MINBPC(enc);
     if (ptr == end)
-      return XML_TOK_PARTIAL;
+      return -XML_TOK_CLOSE_PAREN;
     switch (BYTE_TYPE(enc, ptr)) {
     case BT_AST:
       *nextTokPtr = ptr + MINBPC(enc);
@@ -1203,7 +1213,7 @@ int PREFIX(prologTok)(const ENCODING *enc, const char *ptr, const char *end,
       return XML_TOK_INVALID;
     }
   }
-  return XML_TOK_PARTIAL;
+  return -tok;
 }
 
 static
@@ -1316,6 +1326,61 @@ int PREFIX(entityValueTok)(const ENCODING *enc, const char *ptr, const char *end
   return XML_TOK_DATA_CHARS;
 }
 
+#ifdef XML_DTD
+
+static
+int PREFIX(ignoreSectionTok)(const ENCODING *enc, const char *ptr, const char *end,
+			     const char **nextTokPtr)
+{
+  int level = 0;
+  if (MINBPC(enc) > 1) {
+    size_t n = end - ptr;
+    if (n & (MINBPC(enc) - 1)) {
+      n &= ~(MINBPC(enc) - 1);
+      end = ptr + n;
+    }
+  }
+  while (ptr != end) {
+    switch (BYTE_TYPE(enc, ptr)) {
+    INVALID_CASES(ptr, nextTokPtr)
+    case BT_LT:
+      if ((ptr += MINBPC(enc)) == end)
+	return XML_TOK_PARTIAL;
+      if (CHAR_MATCHES(enc, ptr, '!')) {
+	if ((ptr += MINBPC(enc)) == end)
+	  return XML_TOK_PARTIAL;
+	if (CHAR_MATCHES(enc, ptr, '[')) {
+	  ++level;
+	  ptr += MINBPC(enc);
+	}
+      }
+      break;
+    case BT_RSQB:
+      if ((ptr += MINBPC(enc)) == end)
+	return XML_TOK_PARTIAL;
+      if (CHAR_MATCHES(enc, ptr, ']')) {
+	if ((ptr += MINBPC(enc)) == end)
+	  return XML_TOK_PARTIAL;
+	if (CHAR_MATCHES(enc, ptr, '>')) {
+	  ptr += MINBPC(enc);
+	  if (level == 0) {
+	    *nextTokPtr = ptr;
+	    return XML_TOK_IGNORE_SECT;
+	  }
+	  --level;
+	}
+      }
+      break;
+    default:
+      ptr += MINBPC(enc);
+      break;
+    }
+  }
+  return XML_TOK_PARTIAL;
+}
+
+#endif /* XML_DTD */
+
 static
 int PREFIX(isPublicId)(const ENCODING *enc, const char *ptr, const char *end,
 		       const char **badPtr)
@@ -1381,7 +1446,8 @@ int PREFIX(getAtts)(const ENCODING *enc, const char *ptr,
 {
   enum { other, inName, inValue } state = inName;
   int nAtts = 0;
-  int open;
+  int open = 0; /* defined when state == inValue;
+		   initialization just to shut up compilers */
 
   for (ptr += MINBPC(enc);; ptr += MINBPC(enc)) {
     switch (BYTE_TYPE(enc, ptr)) {
@@ -1625,29 +1691,16 @@ int PREFIX(sameName)(const ENCODING *enc, const char *ptr1, const char *ptr2)
 }
 
 static
-int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1, const char *ptr2)
+int PREFIX(nameMatchesAscii)(const ENCODING *enc, const char *ptr1,
+			     const char *end1, const char *ptr2)
 {
   for (; *ptr2; ptr1 += MINBPC(enc), ptr2++) {
+    if (ptr1 == end1)
+      return 0;
     if (!CHAR_MATCHES(enc, ptr1, *ptr2))
       return 0;
   }
-  switch (BYTE_TYPE(enc, ptr1)) {
-  case BT_LEAD2:
-  case BT_LEAD3:
-  case BT_LEAD4:
-  case BT_NONASCII:
-  case BT_NMSTRT:
-#ifdef XML_NS
-  case BT_COLON:
-#endif
-  case BT_HEX:
-  case BT_DIGIT:
-  case BT_NAME:
-  case BT_MINUS:
-    return 0;
-  default:
-    return 1;
-  }
+  return ptr1 == end1;
 }
 
 static

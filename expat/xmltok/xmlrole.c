@@ -1,6 +1,6 @@
 /*
 The contents of this file are subject to the Mozilla Public License
-Version 1.0 (the "License"); you may not use this file except in
+Version 1.1 (the "License"); you may not use this file except in
 compliance with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/
 
@@ -12,10 +12,20 @@ under the License.
 The Original Code is expat.
 
 The Initial Developer of the Original Code is James Clark.
-Portions created by James Clark are Copyright (C) 1998
+Portions created by James Clark are Copyright (C) 1998, 1999
 James Clark. All Rights Reserved.
 
 Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms
+of the GNU General Public License (the "GPL"), in which case the
+provisions of the GPL are applicable instead of those above.  If you
+wish to allow use of your version of this file only under the terms of
+the GPL and not to allow others to use your version of this file under
+the MPL, indicate your decision by deleting the provisions above and
+replace them with the notice and other provisions required by the
+GPL. If you do not delete the provisions above, a recipient may use
+your version of this file under either the MPL or the GPL.
 */
 
 #include "xmldef.h"
@@ -32,7 +42,16 @@ Contributor(s):
 #define MIN_BYTES_PER_CHAR(enc) ((enc)->minBytesPerChar)
 #endif
 
-typedef int PROLOG_HANDLER(struct prolog_state *state,
+#ifdef XML_DTD
+#define setTopLevel(state) \
+  ((state)->handler = ((state)->documentEntity \
+                       ? internalSubset \
+                       : externalSubset1))
+#else /* not XML_DTD */
+#define setTopLevel(state) ((state)->handler = internalSubset)
+#endif /* not XML_DTD */
+
+typedef int PROLOG_HANDLER(PROLOG_STATE *state,
 			   int tok,
 			   const char *ptr,
 			   const char *end,
@@ -49,11 +68,15 @@ static PROLOG_HANDLER
   attlist7, attlist8, attlist9,
   element0, element1, element2, element3, element4, element5, element6,
   element7,
+#ifdef XML_DTD
+  externalSubset0, externalSubset1,
+  condSect0, condSect1, condSect2,
+#endif /* XML_DTD */
   declClose,
   error;
 
 static
-int syntaxError(PROLOG_STATE *);
+int common(PROLOG_STATE *state, int tok);
 
 static
 int prolog0(PROLOG_STATE *state,
@@ -79,6 +102,7 @@ int prolog0(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			     end,
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -87,7 +111,7 @@ int prolog0(PROLOG_STATE *state,
     state->handler = error;
     return XML_ROLE_INSTANCE_START;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -107,6 +131,7 @@ int prolog1(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (!XmlNameMatchesAscii(enc,
 			     ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			     end,
 			     "DOCTYPE"))
       break;
     state->handler = doctype0;
@@ -115,7 +140,7 @@ int prolog1(PROLOG_STATE *state,
     state->handler = error;
     return XML_ROLE_INSTANCE_START;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -135,7 +160,7 @@ int prolog2(PROLOG_STATE *state,
     state->handler = error;
     return XML_ROLE_INSTANCE_START;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -153,7 +178,7 @@ int doctype0(PROLOG_STATE *state,
     state->handler = doctype1;
     return XML_ROLE_DOCTYPE_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -173,17 +198,17 @@ int doctype1(PROLOG_STATE *state,
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = doctype3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = doctype2;
       return XML_ROLE_NONE;
     }
     break;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -200,7 +225,7 @@ int doctype2(PROLOG_STATE *state,
     state->handler = doctype3;
     return XML_ROLE_DOCTYPE_PUBLIC_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -217,7 +242,7 @@ int doctype3(PROLOG_STATE *state,
     state->handler = doctype4;
     return XML_ROLE_DOCTYPE_SYSTEM_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -237,7 +262,7 @@ int doctype4(PROLOG_STATE *state,
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -254,7 +279,7 @@ int doctype5(PROLOG_STATE *state,
     state->handler = prolog2;
     return XML_ROLE_DOCTYPE_CLOSE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -270,24 +295,28 @@ int internalSubset(PROLOG_STATE *state,
   case XML_TOK_DECL_OPEN:
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ENTITY")) {
       state->handler = entity0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ATTLIST")) {
       state->handler = attlist0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "ELEMENT")) {
       state->handler = element0;
       return XML_ROLE_NONE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + 2 * MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "NOTATION")) {
       state->handler = notation0;
       return XML_ROLE_NONE;
@@ -302,8 +331,55 @@ int internalSubset(PROLOG_STATE *state,
     state->handler = doctype5;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
+
+#ifdef XML_DTD
+
+static
+int externalSubset0(PROLOG_STATE *state,
+		    int tok,
+		    const char *ptr,
+		    const char *end,
+		    const ENCODING *enc)
+{
+  state->handler = externalSubset1;
+  if (tok == XML_TOK_XML_DECL)
+    return XML_ROLE_TEXT_DECL;
+  return externalSubset1(state, tok, ptr, end, enc);
+}
+
+static
+int externalSubset1(PROLOG_STATE *state,
+		    int tok,
+		    const char *ptr,
+		    const char *end,
+		    const ENCODING *enc)
+{
+  switch (tok) {
+  case XML_TOK_COND_SECT_OPEN:
+    state->handler = condSect0;
+    return XML_ROLE_NONE;
+  case XML_TOK_COND_SECT_CLOSE:
+    if (state->includeLevel == 0)
+      break;
+    state->includeLevel -= 1;
+    return XML_ROLE_NONE;
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
+  case XML_TOK_CLOSE_BRACKET:
+    break;
+  case XML_TOK_NONE:
+    if (state->includeLevel)
+      break;
+    return XML_ROLE_NONE;
+  default:
+    return internalSubset(state, tok, ptr, end, enc);
+  }
+  return common(state, tok);
+}
+
+#endif /* XML_DTD */
 
 static
 int entity0(PROLOG_STATE *state,
@@ -322,7 +398,7 @@ int entity0(PROLOG_STATE *state,
     state->handler = entity2;
     return XML_ROLE_GENERAL_ENTITY_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -339,7 +415,7 @@ int entity1(PROLOG_STATE *state,
     state->handler = entity7;
     return XML_ROLE_PARAM_ENTITY_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -353,11 +429,11 @@ int entity2(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = entity4;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = entity3;
       return XML_ROLE_NONE;
     }
@@ -366,7 +442,7 @@ int entity2(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_ENTITY_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -383,7 +459,7 @@ int entity3(PROLOG_STATE *state,
     state->handler = entity4;
     return XML_ROLE_ENTITY_PUBLIC_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 
@@ -401,7 +477,7 @@ int entity4(PROLOG_STATE *state,
     state->handler = entity5;
     return XML_ROLE_ENTITY_SYSTEM_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -415,16 +491,16 @@ int entity5(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
-    state->handler = internalSubset;
+    setTopLevel(state);
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "NDATA")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "NDATA")) {
       state->handler = entity6;
       return XML_ROLE_NONE;
     }
     break;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -441,7 +517,7 @@ int entity6(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_ENTITY_NOTATION_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -455,11 +531,11 @@ int entity7(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = entity9;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = entity8;
       return XML_ROLE_NONE;
     }
@@ -468,7 +544,7 @@ int entity7(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_ENTITY_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -485,7 +561,7 @@ int entity8(PROLOG_STATE *state,
     state->handler = entity9;
     return XML_ROLE_ENTITY_PUBLIC_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -502,7 +578,7 @@ int entity9(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_ENTITY_SYSTEM_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -519,7 +595,7 @@ int notation0(PROLOG_STATE *state,
     state->handler = notation1;
     return XML_ROLE_NOTATION_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -533,17 +609,17 @@ int notation1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "SYSTEM")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "SYSTEM")) {
       state->handler = notation3;
       return XML_ROLE_NONE;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "PUBLIC")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "PUBLIC")) {
       state->handler = notation2;
       return XML_ROLE_NONE;
     }
     break;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -560,7 +636,7 @@ int notation2(PROLOG_STATE *state,
     state->handler = notation4;
     return XML_ROLE_NOTATION_PUBLIC_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -577,7 +653,7 @@ int notation3(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_NOTATION_SYSTEM_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -594,10 +670,10 @@ int notation4(PROLOG_STATE *state,
     state->handler = declClose;
     return XML_ROLE_NOTATION_SYSTEM_ID;
   case XML_TOK_DECL_CLOSE:
-    state->handler = internalSubset;
+    setTopLevel(state);
     return XML_ROLE_NOTATION_NO_SYSTEM_ID;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -615,7 +691,7 @@ int attlist0(PROLOG_STATE *state,
     state->handler = attlist1;
     return XML_ROLE_ATTLIST_ELEMENT_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -629,14 +705,14 @@ int attlist1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
-    state->handler = internalSubset;
+    setTopLevel(state);
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
   case XML_TOK_PREFIXED_NAME:
     state->handler = attlist2;
     return XML_ROLE_ATTRIBUTE_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -663,12 +739,12 @@ int attlist2(PROLOG_STATE *state,
       };
       int i;
       for (i = 0; i < (int)(sizeof(types)/sizeof(types[0])); i++)
-	if (XmlNameMatchesAscii(enc, ptr, types[i])) {
+	if (XmlNameMatchesAscii(enc, ptr, end, types[i])) {
 	  state->handler = attlist8;
 	  return XML_ROLE_ATTRIBUTE_TYPE_CDATA + i;
 	}
     }
-    if (XmlNameMatchesAscii(enc, ptr, "NOTATION")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "NOTATION")) {
       state->handler = attlist5;
       return XML_ROLE_NONE;
     }
@@ -677,7 +753,7 @@ int attlist2(PROLOG_STATE *state,
     state->handler = attlist3;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -696,7 +772,7 @@ int attlist3(PROLOG_STATE *state,
     state->handler = attlist4;
     return XML_ROLE_ATTRIBUTE_ENUM_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -716,7 +792,7 @@ int attlist4(PROLOG_STATE *state,
     state->handler = attlist3;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -733,7 +809,7 @@ int attlist5(PROLOG_STATE *state,
     state->handler = attlist6;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 
@@ -751,7 +827,7 @@ int attlist6(PROLOG_STATE *state,
     state->handler = attlist7;
     return XML_ROLE_ATTRIBUTE_NOTATION_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -771,7 +847,7 @@ int attlist7(PROLOG_STATE *state,
     state->handler = attlist6;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 /* default value */
@@ -788,18 +864,21 @@ int attlist8(PROLOG_STATE *state,
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "IMPLIED")) {
       state->handler = attlist1;
       return XML_ROLE_IMPLIED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "REQUIRED")) {
       state->handler = attlist1;
       return XML_ROLE_REQUIRED_ATTRIBUTE_VALUE;
     }
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "FIXED")) {
       state->handler = attlist9;
       return XML_ROLE_NONE;
@@ -809,7 +888,7 @@ int attlist8(PROLOG_STATE *state,
     state->handler = attlist1;
     return XML_ROLE_DEFAULT_ATTRIBUTE_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -826,7 +905,7 @@ int attlist9(PROLOG_STATE *state,
     state->handler = attlist1;
     return XML_ROLE_FIXED_ATTRIBUTE_VALUE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -844,7 +923,7 @@ int element0(PROLOG_STATE *state,
     state->handler = element1;
     return XML_ROLE_ELEMENT_NAME;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -858,11 +937,11 @@ int element1(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
-    if (XmlNameMatchesAscii(enc, ptr, "EMPTY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "EMPTY")) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_EMPTY;
     }
-    if (XmlNameMatchesAscii(enc, ptr, "ANY")) {
+    if (XmlNameMatchesAscii(enc, ptr, end, "ANY")) {
       state->handler = declClose;
       return XML_ROLE_CONTENT_ANY;
     }
@@ -872,7 +951,7 @@ int element1(PROLOG_STATE *state,
     state->level = 1;
     return XML_ROLE_GROUP_OPEN;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -888,6 +967,7 @@ int element2(PROLOG_STATE *state,
   case XML_TOK_POUND_NAME:
     if (XmlNameMatchesAscii(enc,
 			    ptr + MIN_BYTES_PER_CHAR(enc),
+			    end,
 			    "PCDATA")) {
       state->handler = element3;
       return XML_ROLE_CONTENT_PCDATA;
@@ -911,7 +991,7 @@ int element2(PROLOG_STATE *state,
     state->handler = element7;
     return XML_ROLE_CONTENT_ELEMENT_PLUS;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -932,7 +1012,7 @@ int element3(PROLOG_STATE *state,
     state->handler = element4;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -950,7 +1030,7 @@ int element4(PROLOG_STATE *state,
     state->handler = element5;
     return XML_ROLE_CONTENT_ELEMENT;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -970,7 +1050,7 @@ int element5(PROLOG_STATE *state,
     state->handler = element4;
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -1000,7 +1080,7 @@ int element6(PROLOG_STATE *state,
     state->handler = element7;
     return XML_ROLE_CONTENT_ELEMENT_PLUS;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 static
@@ -1040,8 +1120,71 @@ int element7(PROLOG_STATE *state,
     state->handler = element6;
     return XML_ROLE_GROUP_CHOICE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
+
+#ifdef XML_DTD
+
+static
+int condSect0(PROLOG_STATE *state,
+	      int tok,
+	      const char *ptr,
+	      const char *end,
+	      const ENCODING *enc)
+{
+  switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
+  case XML_TOK_NAME:
+    if (XmlNameMatchesAscii(enc, ptr, end, "INCLUDE")) {
+      state->handler = condSect1;
+      return XML_ROLE_NONE;
+    }
+    if (XmlNameMatchesAscii(enc, ptr, end, "IGNORE")) {
+      state->handler = condSect2;
+      return XML_ROLE_NONE;
+    }
+    break;
+  }
+  return common(state, tok);
+}
+
+static
+int condSect1(PROLOG_STATE *state,
+	      int tok,
+	      const char *ptr,
+	      const char *end,
+	      const ENCODING *enc)
+{
+  switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
+  case XML_TOK_OPEN_BRACKET:
+    state->handler = externalSubset1;
+    state->includeLevel += 1;
+    return XML_ROLE_NONE;
+  }
+  return common(state, tok);
+}
+
+static
+int condSect2(PROLOG_STATE *state,
+	      int tok,
+	      const char *ptr,
+	      const char *end,
+	      const ENCODING *enc)
+{
+  switch (tok) {
+  case XML_TOK_PROLOG_S:
+    return XML_ROLE_NONE;
+  case XML_TOK_OPEN_BRACKET:
+    state->handler = externalSubset1;
+    return XML_ROLE_IGNORE_SECT;
+  }
+  return common(state, tok);
+}
+
+#endif /* XML_DTD */
 
 static
 int declClose(PROLOG_STATE *state,
@@ -1054,10 +1197,10 @@ int declClose(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_DECL_CLOSE:
-    state->handler = internalSubset;
+    setTopLevel(state);
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 
 #if 0
@@ -1076,23 +1219,27 @@ int ignore(PROLOG_STATE *state,
   default:
     return XML_ROLE_NONE;
   }
-  return syntaxError(state);
+  return common(state, tok);
 }
 #endif
 
 static
 int error(PROLOG_STATE *state,
-	   int tok,
-	   const char *ptr,
-	   const char *end,
-	   const ENCODING *enc)
+	  int tok,
+	  const char *ptr,
+	  const char *end,
+	  const ENCODING *enc)
 {
   return XML_ROLE_NONE;
 }
 
 static
-int syntaxError(PROLOG_STATE *state)
+int common(PROLOG_STATE *state, int tok)
 {
+#ifdef XML_DTD
+  if (!state->documentEntity && tok == XML_TOK_PARAM_ENTITY_REF)
+    return XML_ROLE_INNER_PARAM_ENTITY_REF;
+#endif
   state->handler = error;
   return XML_ROLE_ERROR;
 }
@@ -1100,11 +1247,19 @@ int syntaxError(PROLOG_STATE *state)
 void XmlPrologStateInit(PROLOG_STATE *state)
 {
   state->handler = prolog0;
+#ifdef XML_DTD
+  state->documentEntity = 1;
+  state->includeLevel = 0;
+#endif /* XML_DTD */
 }
 
-#ifdef EXTERNAL_ENTITY_SUPPORT
-void XmlPrologStateHack(PROLOG_STATE *state)
+#ifdef XML_DTD
+
+void XmlPrologStateInitExternalEntity(PROLOG_STATE *state)
 {
-  state->handler = prolog1;
+  state->handler = externalSubset0;
+  state->documentEntity = 0;
+  state->includeLevel = 0;
 }
-#endif
+
+#endif /* XML_DTD */
