@@ -58,6 +58,8 @@
 #include "prlog.h"
 #include "prprf.h"
 
+#include "nsWeakReference.h"
+
 #include "nsIStreamConverterService.h"
 #include "nsIStreamConverter.h"
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -205,7 +207,8 @@ protected:
 
 class nsDocLoaderImpl : public nsIDocumentLoader, 
                         public nsIStreamObserver,
-                        public nsILoadGroupListenerFactory
+                        public nsILoadGroupListenerFactory,
+                        public nsSupportsWeakReference
 {
 public:
 
@@ -246,6 +249,7 @@ public:
     NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult);
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, 
                                          nsIContentViewerContainer** aResult);
+    NS_IMETHOD Destroy();
 
     // nsILoadGroup interface...
     NS_IMETHOD CreateURL(nsIURI** aInstancePtrResult, 
@@ -362,13 +366,6 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
     mIsLoadingDocument = PR_FALSE;
 
-	// XXX I wanted to pull this initialization code out of this constructor
-	// because it could fail... but the web shell uses this implementation
-	// as a service too. Since it's a service, it really can't have any
-	// initialization. We're sort of screwed here.
-    nsresult rv = Init();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "nsDocLoaderImpl::Init failed");
-
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: created.\n", this));
 }
@@ -456,6 +453,11 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
         return NS_OK;
     }
 #endif // NECKO
+    if (aIID.Equals(nsCOMTypeInfo<nsISupportsWeakReference>::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupportsWeakReference*,this);
+        NS_ADDREF_THIS();
+        return NS_OK;        
+    }
     return NS_NOINTERFACE;
 }
 
@@ -480,12 +482,16 @@ nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
 
     rv = newLoader->QueryInterface(kIDocumentLoaderIID, (void**)anInstance);
     if (NS_SUCCEEDED(rv)) {
+        // Initialize now that we have a reference
+        rv = newLoader->Init();
+        if (NS_SUCCEEDED(rv)) {
 #ifdef NECKO
-        AddChildGroup(newLoader->GetLoadGroup());
+            AddChildGroup(newLoader->GetLoadGroup());
 #else
-        AddChildGroup(newLoader);
+            AddChildGroup(newLoader);
 #endif
-        newLoader->SetParent(this);
+            newLoader->SetParent(this);
+        }
     }
 
   done:
@@ -776,6 +782,15 @@ nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
     NS_RELEASE(doc);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsDocLoaderImpl::Destroy()
+{
+    Stop();
+    NS_IF_RELEASE(mDocumentChannel);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2302,6 +2317,9 @@ nsDocLoaderImpl::Create(nsISupports *aOuter, const nsIID &aIID, void **aResult)
 
   NS_ADDREF(inst);
   rv = inst->QueryInterface(aIID, aResult);
+  if (NS_SUCCEEDED(rv)) {
+      rv = inst->Init();
+  }
   NS_RELEASE(inst);
 
 done:

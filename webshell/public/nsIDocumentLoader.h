@@ -131,6 +131,8 @@ public:
     NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult) = 0;
     
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, nsIContentViewerContainer** aResult) = 0;
+
+    NS_IMETHOD Destroy() = 0;
 };
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
