@@ -257,7 +257,6 @@ CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/allmakefiles.sh \
 	$(TOPSRCDIR)/.client-defs.mk \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
-	$(wildcard $(TOPSRCDIR)/netwerk/makefiles) \
 	$(NULL)
 
 $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
