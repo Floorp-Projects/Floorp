@@ -270,7 +270,7 @@
 
   <binding id="marquee-horizontal"
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
-	   inheritstyle="false">
+           inheritstyle="false">
 
     <implementation>
 
