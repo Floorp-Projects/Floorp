@@ -29,13 +29,20 @@ MSG_DEF(JSFILEMSG_CANNOT_COPY_FILE_OPEN_FOR_WRITING_ERROR,         5, 1, JSEXN_N
 MSG_DEF(JSFILEMSG_CANNOT_ACCESS_FILE_INFO_ERROR,                   6, 1, JSEXN_NONE, "Cannot access file information for {0}")
 MSG_DEF(JSFILEMSG_COPY_READ_ERROR,                                 7, 1, JSEXN_NONE, "An error occured while attempting to read a file {0} to copy")
 MSG_DEF(JSFILEMSG_COPY_WRITE_ERROR,                                8, 1, JSEXN_NONE, "An error occured while attempting to copy into file {0}")
-MSG_DEF(JSFILEMSG_RENAME_EXPECTS_ONE_ARG_ERROR,                    9, 0, JSEXN_NONE, "file.renameTo expects one argument")
+MSG_DEF(JSFILEMSG_EXPECTS_ONE_ARG_ERROR,                           9, 0, JSEXN_NONE, "Operation {0} expects one argument, not {1}")
 MSG_DEF(JSFILEMSG_CANNOT_FLUSH_CLOSE_FILE_ERROR,                  10, 1, JSEXN_NONE, "Cannot flush closed file {0}")
 MSG_DEF(JSFILEMSG_CANNOT_OPEN_WRITING_ERROR,                      11, 1, JSEXN_NONE, "Cannot open file {0} for writing")
 MSG_DEF(JSFILEMSG_WRITEALL_EXPECTS_ONE_ARG_ERROR,                 12, 0, JSEXN_NONE, "writeAll expects one argument")
 MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_WRITEALL_NOT_ARRAY_ERROR,        13, 0, JSEXN_NONE, "writeAll expects an array as an argument")
 MSG_DEF(JSFILEMSG_CANNOT_OPEN_FILE_ERROR,                         15, 1, JSEXN_NONE, "Cannot open file {0}")
 MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_CONSTRUCTOR_NOT_STRING_ERROR,    16, 1, JSEXN_NONE, "The argument to the File constructor {0} must be a string")
-MSG_DEF(JSFILEMSG_BIDIRECTIONAL_PIPE_NOT_SUPPORTED,				  17, 0, JSEXN_NONE, "Bidirectional pipes are not supported")
-MSG_DEF(JSFILEMSG_OPEN_MODE_NOT_SUPPORTED_WITH_PIPES,		      18, 2, JSEXN_NONE, "The opening mode you have chosen {0} is not supported by the pipe you are trying to open: {1}")
+MSG_DEF(JSFILEMSG_BIDIRECTIONAL_PIPE_NOT_SUPPORTED,               17, 0, JSEXN_NONE, "Bidirectional pipes are not supported")
+MSG_DEF(JSFILEMSG_OPEN_MODE_NOT_SUPPORTED_WITH_PIPES,             18, 2, JSEXN_NONE, "The opening mode you have chosen {0} is not supported by the pipe you are trying to open: {1}")
+MSG_DEF(JSFILEMSG_OPEN_FAILED,                                    19, 1, JSEXN_NONE, "open on file {0} failed")
+MSG_DEF(JSFILEMSG_CLOSE_FAILED,                                   20, 1, JSEXN_NONE, "close on file {0} failed")
+MSG_DEF(JSFILEMSG_PCLOSE_FAILED,                                  21, 1, JSEXN_NONE, "pclose on file {0} failed")
+MSG_DEF(JSFILEMSG_REMOVE_FAILED,                                  22, 1, JSEXN_NONE, "remove on file {0} failed")
+MSG_DEF(JSFILEMSG_CANNOT_ACCESS_FILE_STATUS,                      23, 1, JSEXN_NONE, "Cannot access file status for {0}")
+
+
 
