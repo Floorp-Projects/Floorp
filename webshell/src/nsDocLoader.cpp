@@ -31,6 +31,7 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
 #ifndef NECKO
 #include "nsIHttpURL.h"
 #include "nsIRefreshUrl.h"
@@ -2390,20 +2391,33 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
   ///////////////////////////////
   // STREAM CONVERTERS
   ///////////////////////////////
-  char *contentType = nsnull;
-  rv = aChannel->GetContentType(&contentType);
+
+  nsXPIDLCString contentType;
+  rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
 
+  PRBool conversionRequired = PR_FALSE;
+  nsAutoString from, to;
+
   // Let's shanghai this channelListener's mNextListener if we want to convert the stream.
-  if (!PL_strcmp(contentType, "multipart/x-mixed-replace")) {
-    // we want to pass off multipart/x-mixed-replace to the a stream converter
-    // that knows what to do with it.
-    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-    if (NS_FAILED(rv)) {
-        nsAllocator::Free(contentType);
-        return rv;
-    }
-    nsString2 from("multipart/x-mixed-replace"), to("text/html");
+  if (!PL_strcmp(contentType, "message/rfc822"))
+  {
+	  from = "message/rfc822";
+	  to = "text/xul";
+	  conversionRequired = PR_TRUE;
+  }
+  else if (!PL_strcmp(contentType, "multipart/x-mixed-replace")) 
+  {
+	  from = "multipart/x-mixed-replace";
+	  to = "text/html";
+	  conversionRequired = PR_TRUE;
+  }
+
+  if (conversionRequired)
+  {
+
+	NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+	if (NS_FAILED(rv)) return rv;
 
     // The following call binds this channelListener's mNextListener (typically
     // the nsDocumentBindInfo) to the underlying stream converter, and returns
@@ -2411,13 +2425,10 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
     // mNextListener. This effectively nestles the stream converter down right
     // in between the raw stream and the final listener.
     nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(from.GetUnicode(), 
-                                             to.GetUnicode(), mNextListener,
-                                             nsnull, /* some nsISupports context */
+    rv = StreamConvService->AsyncConvertData(from.GetUnicode(), to.GetUnicode(), mNextListener, aChannel,
                                              &converterListener);
     mNextListener = converterListener;
   }
-  nsAllocator::Free(contentType);
 
   //////////////////////////////
   // END STREAM CONVERTERS
