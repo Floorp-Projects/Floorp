@@ -420,22 +420,16 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
 
+    PRInt32 count = 0;
     result = ExtractDirEntries(aJarSource, paths);
-    if (result != nsInstall::SUCCESS)
+    if (result == nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
-        return NS_OK;
+        count = paths->Count();
+        if (count == 0)
+            result = nsInstall::DOES_NOT_EXIST;
     }
 
-    PRInt32 count = paths->Count();
-
-    if (count == 0)
-    {
-        *aReturn = SaveError( nsInstall::DOES_NOT_EXIST );
-        return NS_OK;
-    }
-
-    for (PRInt32 i=0; i < count; i++)
+    for (PRInt32 i=0; i < count && result == nsInstall::SUCCESS; i++)
     {
         nsString *thisPath = (nsString *)paths->ElementAt(i);
 
@@ -464,19 +458,16 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
         if (ie == nsnull)
         {
-            *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-                return NS_OK;
+            result = nsInstall::OUT_OF_MEMORY;
         }
-
-        if (result == nsInstall::SUCCESS)
-        {
-            result = ScheduleForInstall( ie );
-        }
-        else
+        else if (result != nsInstall::SUCCESS)
         {
             delete ie;
         }
-
+        else
+        {
+            result = ScheduleForInstall( ie );
+        }
     }
 
     DeleteVector(paths);
