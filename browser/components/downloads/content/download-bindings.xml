@@ -16,15 +16,23 @@
     <content>
       <xul:deck anonid="title-deck">
         <xul:hbox>
+#ifdef XP_WIN
           <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
+#endif
           <xul:label xbl:inherits="value=target"/>
         </xul:hbox>
         <xul:hbox>
+#ifdef XP_WIN
           <xul:image style="width: 16px; max-width: 16px; height: 16px; max-height: 16px;" xbl:inherits="src=image"/>
+#endif
           <xul:label xbl:inherits="value=target" class="link" onclick="this.parentNode.parentNode.parentNode.launch();"/>
         </xul:hbox>
       </xul:deck>
-      <xul:deck flex="1" anonid="deck" class="indented">
+      <xul:deck flex="1" anonid="deck"
+#ifdef XP_WIN
+           class="indented"
+#endif
+           >
         <xul:vbox flex="1">
           <xul:hbox flex="1">
             <xul:progressmeter mode="normal" value="0"
