@@ -5,15 +5,19 @@ require 5.004;
 require Exporter;
 
 use strict;
-use vars qw(@ISA @EXPORT $IMGLIB_BRANCH $distlist);
+use vars qw( @ISA @EXPORT );
 
-use MacCVS;
+# perl includes
 use Mac::StandardFile;
 use Cwd;
+use File::Path;
+
+# homegrown
 use Moz;
+use MacCVS;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw( Checkout BuildDist );
+@EXPORT			= qw( Checkout BuildDist BuildProjects);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -21,12 +25,11 @@ use Moz;
 # caller variables that affect behaviour:
 # DEBUG		: 1 if we are building a debug version
 # 3-part build process: checkout, dist, and build_projects
-
-#
-# declarations
-#
-$IMGLIB_BRANCH = "MODULAR_IMGLIB_BRANCH";
-
+# Hack alert:
+# NGLayout defines are located in :mozilla:config:mac:NGLayoutConfigInclude.h
+# An alias "MacConfigInclude.h" to this file is created inside dist:config
+# Note that the name of alias is different than the name of the file. This
+# is to trick CW into including NGLayout defines 
 
 #
 # Utility routines
@@ -85,6 +88,11 @@ sub _assertRightDirectory()
 	} 
 }
 
+sub _getDistDirectory()
+{
+	return $main::DEBUG ? ":mozilla:dist:client_debug:" : ":mozilla:dist:client:";
+}
+
 #
 # MAIN ROUTINES
 #
@@ -117,6 +125,8 @@ sub Checkout()
 	}
 	if ($main::pull{imglib})
 	{
+		my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH";
+
 		$session->checkout("mozilla/jpeg ", $IMGLIB_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
@@ -155,117 +165,185 @@ sub BuildDist()
 	unless ( $main::build{dist} ) { return;}
 	_assertRightDirectory();
 	
+	# we really do not need all these paths, but many client projects include them
+	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
+	
+	my($distdirectory) = ":mozilla:dist";
+
 	my($distlist) = [
+#MAC_COMMON
+	[":mozilla:build:mac:MANIFEST", "$distdirectory:mac:common:"],
+	[":mozilla:lib:mac:NSStdLib:include:MANIFEST", "$distdirectory:mac:common:"],
+	[":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST", "$distdirectory:mac:common:"],
+	[":mozilla:lib:mac:Misc:MANIFEST", "$distdirectory:mac:common:"],
+	[":mozilla:lib:mac:MoreFiles:MANIFEST", "$distdirectory:mac:common:morefiles:"],
 #INCLUDE
-		[":mozilla:config:mac:MANIFEST", ":mozilla:dist:config:"],
-		[":mozilla:include:MANIFEST", ":mozilla:dist:include:"],		
-		[":mozilla:cmd:macfe:pch:MANIFEST", ":mozilla:dist:include:"],
+		[":mozilla:config:mac:MANIFEST", "$distdirectory:config:"],
+		[":mozilla:include:MANIFEST", "$distdirectory:include:"],		
+		[":mozilla:cmd:macfe:pch:MANIFEST", "$distdirectory:include:"],
 #NSPR	
-    [":mozilla:nsprpub:pr:include:MANIFEST", ":mozilla:dist:nspr:"],		
-    [":mozilla:nsprpub:pr:src:md:mac:MANIFEST", ":mozilla:dist:nspr:mac:"],		
-    [":mozilla:nsprpub:lib:ds:MANIFEST", ":mozilla:dist:nspr:"],		
-    [":mozilla:nsprpub:lib:libc:include:MANIFEST", ":mozilla:dist:nspr:"],		
-    [":mozilla:nsprpub:lib:msgc:include:MANIFEST", ":mozilla:dist:nspr:"],
+    [":mozilla:nsprpub:pr:include:MANIFEST", "$distdirectory:nspr:"],		
+    [":mozilla:nsprpub:pr:src:md:mac:MANIFEST", "$distdirectory:nspr:mac:"],		
+    [":mozilla:nsprpub:lib:ds:MANIFEST", "$distdirectory:nspr:"],		
+    [":mozilla:nsprpub:lib:libc:include:MANIFEST", "$distdirectory:nspr:"],		
+    [":mozilla:nsprpub:lib:msgc:include:MANIFEST", "$distdirectory:nspr:"],
 #JPEG
-    [":mozilla:jpeg:MANIFEST", ":mozilla:dist:jpeg:"],
+    [":mozilla:jpeg:MANIFEST", "$distdirectory:jpeg:"],
 #LIBREG
-    [":mozilla:modules:libreg:include:MANIFEST", ":mozilla:dist:libreg:"],
+    [":mozilla:modules:libreg:include:MANIFEST", "$distdirectory:libreg:"],
 #XPCOM
-    [":mozilla:xpcom:src:MANIFEST", ":mozilla:dist:xpcom:"],
+    [":mozilla:xpcom:src:MANIFEST", "$distdirectory:xpcom:"],
 #ZLIB
-    [":mozilla:modules:zlib:src:MANIFEST", ":mozilla:dist:zlib:"],
+    [":mozilla:modules:zlib:src:MANIFEST", "$distdirectory:zlib:"],
 #LIBUTIL
-    [":mozilla:modules:libutil:public:MANIFEST", ":mozilla:dist:libutil:"],
+    [":mozilla:modules:libutil:public:MANIFEST", "$distdirectory:libutil:"],
 #SUN_JAVA
-    [":mozilla:sun-java:stubs:include:MANIFEST", ":mozilla:dist:sun-java:"],
-    [":mozilla:sun-java:stubs:macjri:MANIFEST", ":mozilla:dist:sun-java:"],
+    [":mozilla:sun-java:stubs:include:MANIFEST", "$distdirectory:sun-java:"],
+    [":mozilla:sun-java:stubs:macjri:MANIFEST", "$distdirectory:sun-java:"],
 #NAV_JAVA
-    [":mozilla:nav-java:stubs:include:MANIFEST", ":mozilla:dist:nav-java:"],
-    [":mozilla:nav-java:stubs:macjri:MANIFEST", ":mozilla:dist:nav-java:"],
+    [":mozilla:nav-java:stubs:include:MANIFEST", "$distdirectory:nav-java:"],
+    [":mozilla:nav-java:stubs:macjri:MANIFEST", "$distdirectory:nav-java:"],
 #JS
-    [":mozilla:js:src:MANIFEST", ":mozilla:dist:js:"],
+    [":mozilla:js:src:MANIFEST", "$distdirectory:js:"],
 #SECURITY_freenav
-    [":mozilla:modules:security:freenav:MANIFEST", ":mozilla:dist:security:"],
+    [":mozilla:modules:security:freenav:MANIFEST", "$distdirectory:security:"],
 #LIBPREF
-    [":mozilla:modules:libpref:public:MANIFEST", ":mozilla:dist:libpref:"],
+    [":mozilla:modules:libpref:public:MANIFEST", "$distdirectory:libpref:"],
 #LIBIMAGE
-    [":mozilla:modules:libimg:png:MANIFEST", ":mozilla:dist:libimg:"],
-    [":mozilla:modules:libimg:src:MANIFEST", ":mozilla:dist:libimg:"],
-    [":mozilla:modules:libimg:public:MANIFEST", ":mozilla:dist:libimg:"],
+    [":mozilla:modules:libimg:png:MANIFEST", "$distdirectory:libimg:"],
+    [":mozilla:modules:libimg:src:MANIFEST", "$distdirectory:libimg:"],
+    [":mozilla:modules:libimg:public:MANIFEST", "$distdirectory:libimg:"],
 #NETWORK
-    [":mozilla:network:cache:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:client:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:cnvts:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:cstream:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:main:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:mimetype:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:util:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:about:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:certld:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:dataurl:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:file:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:ftp:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:gopher:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:http:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:js:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:mailbox:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:marimba:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:nntp:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:pop3:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:remote:MANIFEST", ":mozilla:dist:network:"],
-    [":mozilla:network:protocol:smtp:MANIFEST", ":mozilla:dist:network:"],
+    [":mozilla:network:cache:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:client:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:cnvts:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:cstream:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:main:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:mimetype:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:util:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:about:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:certld:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:dataurl:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:file:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:ftp:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:gopher:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:http:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:js:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:mailbox:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:marimba:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:nntp:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:pop3:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:remote:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:protocol:smtp:MANIFEST", "$distdirectory:network:"],
+    [":mozilla:network:module:MANIFEST","$distdirectory:network:module"],
 #BASE
-#XP
-#error still not exported
+    [":mozilla:base:src:MANIFEST", "$distdirectory:base:"],
+    [":mozilla:base:public:MANIFEST", "$distdirectory:base:"],
+#WEBSHELL
+    [":mozilla:webshell:public:MANIFEST", "$distdirectory:webshell:"],
+#LAYOUT
+    [":mozilla:layout:base:public:MANIFEST", "$distdirectory:layout:"],
+    [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
+#WIDGET
+    [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
+#GFX
+    [":mozilla:gfx:src:MANIFEST", "$distdirectory:gfx:"],
+#VIEW
+    [":mozilla:view:public:MANIFEST", "$distdirectory:view:"],
+#DOM
+   [":mozilla:dom:public:MANIFEST", "$distdirectory:dom:"],
+   [":mozilla:dom:public:coreDom:MANIFEST", "$distdirectory:dom:"],
+   [":mozilla:dom:public:coreEvents:MANIFEST", "$distdirectory:dom:"],
+   [":mozilla:dom:public:events:MANIFEST", "$distdirectory:dom:"],
+#HTMLPARSER
+   [":mozilla:htmlparser:src:MANIFEST", "$distdirectory:htmlparser:"],
+
 	];
 	foreach $a (@$distlist)
 	{
-		print "InstallFromManifest $a->[0] $a->[1]\n";
 		InstallFromManifest( $a->[0], $a->[1]);
 	}
+	
+# To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
+	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h", ":mozilla:dist:config:MacConfigInclude.h");
 }
 
 # builds all projects
 # different targets controlled by $main::build
-sub BuildProjects()
+sub BuildCommonProjects()
 {
 	unless( $main::build{projects} ) { return; }
 	_assertRightDirectory();
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
-	my($D) = $main::DEBUG ? " (Debug)" : "";
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+#	Moz::BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
+	Moz::BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"Stubs");
+#	Moz::BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"Stubs");
+
+#	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
+#	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
 	
-	Moz::BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              				"Stub Library");
-	Moz::BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"Stub Library");
-	Moz::BuildProject(":mozilla:cmd:macfe:projects:client:Navigator.mcp",    				"Stub Library");
+	Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp");
+	MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb", "$dist_dir");
 
-	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
-	Moz::BuildProject(":mozilla:cmd:macfe:restext:NavStringLibPPC.mcp");
-	Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.prj");
+	BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",	"NSPR20$D.shlb");
+	MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", "$dist_dir");
 
-	if ( $D )
-		{
-			Moz::BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPCDebug.mcp");
-			Moz::BuildProject(":mozilla:dbm:macbuild:DBMPPCDebug.mcp");
-		}
-	else
-		{
-			Moz::BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp");
-			Moz::BuildProject(":mozilla:dbm:macbuild:DBMPPC.mcp");
-		}
+	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"MemAllocator$D.shlb");
+	MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb", "$dist_dir");
+	
+	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
+	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
+	
+	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 
-	Moz::BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",				"PPC Shared Library$D");
-	Moz::BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              				"PPC Shared Library");
-	Moz::BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	"PPC Shared Library$D");
+	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
+	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
 
-	if ( $D )
-	{
-		Moz::BuildProject(":mozilla:xpcom:macbuild:xpcomPPCDebug.mcp");
-	}
-	else
-	{
-		Moz::BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp");
-	}
-	Moz::BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",                    			  "PPC Shared Library$D");
+	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",										"JPEG$D.shlb");
+	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
 
+	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",										"png$D.o");
+#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
+
+	BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",										"libimg$D.o");
+#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
+
+}
+
+sub BuildLayoutProjects()
+{
+	unless( $main::build{projects} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+	my($dist_dir) = _getDistDirectory();
+
+	BuildProject(":mozilla:modules:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.o");
+	
+	BuildProject(":mozilla:dom:macbuild:dom.mcp",				"dom$D.o");
+
+	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",				"gfx$D.o");
+
+	BuildProject(":mozilla:layout:macbuild:layout.mcp",	"layout$D.o");
+#	MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o", "$dist_dir");
+	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
+
+# LAYOUT SPECIFIC
+#  view				\
+#  widget			\
+#  layout			\
+#  webshell
+
+
+}
+
+sub BuildProjects()
+{
+	BuildCommonProjects();
+	BuildLayoutProjects();
 }
