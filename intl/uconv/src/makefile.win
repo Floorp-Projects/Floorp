@@ -19,8 +19,8 @@ DEPTH=..\..\..
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
-MODULE=intl
-REQUIRES=xpcom 
+MODULE=uconv
+REQUIRES=xpcom
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = uconv
@@ -29,14 +29,28 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPPSRCS =				\
 	nsCharsetConverterManager.cpp	\
 	nsAscii2Unicode.cpp		\
+	nsUnicodeDecodeUtil.cpp		\
 	nsUConvDll.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\
 	.\$(OBJDIR)\nsAscii2Unicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
 	$(NULL)
+
+CSRCS =				\
+	umap.c	\
+	ugen.c	\
+	uscan.c	\
+	$(NULL)
+
+OBJS = \
+        .\$(OBJDIR)\umap.obj \
+        .\$(OBJDIR)\ugen.obj \
+        .\$(OBJDIR)\uscan.obj \
+        $(NULL)
 
 EXPORTS=				\
 	$(NULL)
@@ -44,7 +58,9 @@ EXPORTS=				\
 LINCS=					\
 	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
-	-I$(PUBLIC)\intl		\
+	-I$(PUBLIC)\uconv		\
+# the following lines are hacks
+	-I$(PUBLIC)\ucvja		\
 	$(NULL)
 
 LLIBS=					\
@@ -67,3 +83,4 @@ install:: $(DLL)
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib

@@ -80,6 +80,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 {
   nsresult res;
 
+  if (NS_FAILED(res)) return res;
+
   res = nsRepository::RegisterFactory(kAscii2UnicodeCID, path, 
       PR_TRUE, PR_TRUE);
   if (NS_FAILED(res)) return res;

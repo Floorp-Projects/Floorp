@@ -27,9 +27,12 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeDecodeUtil.h"
+#include "nsUnicodeDecodeUtil.h"
 #include "nsCharsetConverterManager.h"
-#include "nsConverterCID.h"
 #include "nsUConvDll.h"
+#include "registryhack1.h"
+
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -206,13 +209,8 @@ nsresult nsCharsetConverterManager::CreateMapping()
 // slots.
 nsresult nsCharsetConverterManager::CreateConvertersList()
 {
-  mDecSize           = 1;
-  mDecArray          = new ConverterInfo [mDecSize];
 
-  mDecArray[0].mCID  = &kAscii2UnicodeCID;
-
-  mEncSize           = 0;
-  mEncArray          = NULL;
+#include "registryhack2.h"
 
   return NS_OK;
 }
@@ -425,11 +423,21 @@ NS_IMETHODIMP nsManagerFactory::CreateInstance(nsISupports *aDelegate,
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
 
-  nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  nsresult res = NS_OK;
+
+  if (aIID.Equals(kICharsetConverterManagerIID))
+  {
+    nsICharsetConverterManager * t = nsCharsetConverterManager::GetInstance();  
+    if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
+    res = t->QueryInterface(aIID, aResult);
+    if (NS_FAILED(res)) delete t;
+  } else if(aIID.Equals(kIUnicodeDecodeUtilIID)) {
+    nsIUnicodeDecodeUtil * t = new nsUnicodeDecodeUtil();
+    if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
+    res = t->QueryInterface(aIID, aResult);
+    if (NS_FAILED(res)) delete t;
+  }
   
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
 
   return res;
 }
