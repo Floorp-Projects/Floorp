@@ -295,11 +295,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://communicator/skin/document-error.gif");
   }  
   
-#go-button  
-  {
-    display               : none;
-  }
-  
 #search-button
   {
     margin-right          : 10px;
