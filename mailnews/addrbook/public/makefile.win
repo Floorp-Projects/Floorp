@@ -19,7 +19,6 @@ DEPTH=..\..\..
 MODULE=addrbook
 
 XPIDLSRCS =						 \
-			.\nsIAbBase.idl		 \
 			.\nsIAbListener.idl	 \
 			.\nsIAbDirectory.idl \
 			.\nsIAbCard.idl		 \

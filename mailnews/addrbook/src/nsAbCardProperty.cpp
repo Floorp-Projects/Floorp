@@ -20,28 +20,27 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
-#include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsXPIDLString.h"
 #include "nsAbBaseCID.h"
 #include "prmem.h"	 
 #include "prlog.h"	 
 #include "prprf.h"	 
 #include "rdf.h"
+#include "nsCOMPtr.h"
 
 #include "nsAddrDatabase.h"
+#include "nsIAddrBookSession.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+
+/* The definition is nsAddressBook.cpp */
+extern const char *kDirectoryDataSourceRoot;
+extern const char *kCardDataSourceRoot;
 
 /* The definition is nsAddrDatabase.cpp */
+extern const char *kMainPersonalAddressBook;
 extern const char *kFirstNameColumn;
 extern const char *kLastNameColumn;
 extern const char *kDisplayNameColumn;
@@ -79,6 +78,7 @@ extern const char *kCustom2Column;
 extern const char *kCustom3Column;
 extern const char *kCustom4Column;
 extern const char *kNotesColumn;
+extern const char *kLastModifiedDateColumn;
 /* end */
 
 nsAbCardProperty::nsAbCardProperty(void)
@@ -122,6 +122,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_pCustom3 = nsnull;
 	m_pCustom4 = nsnull;
 	m_pNote = nsnull;
+	m_pLastModDate = nsnull;
 
 	m_bSendPlainText = PR_FALSE;
 
@@ -171,12 +172,14 @@ nsAbCardProperty::~nsAbCardProperty(void)
 	PR_FREEIF(m_pCustom3);
 	PR_FREEIF(m_pCustom4);
 	PR_FREEIF(m_pNote);
+	PR_FREEIF(m_pLastModDate);
 
 	RemoveAnonymousAttrubutesList();
 
 	RemoveAnonymousValuesList();
 
 }
+
 nsresult nsAbCardProperty::RemoveAnonymousAttrubutesList()
 {
 	if (m_pAnonymousAttributes)
@@ -525,8 +528,21 @@ NS_IMETHODIMP nsAbCardProperty::SetAnonymousAttribute(const char *attrname, cons
 NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 {
 	char* cardURI = nsnull;
-	if (uri && m_dbTableID != 0 && m_dbRowID != 0)
-		cardURI = PR_smprintf("abcard://Pab%ld/Card%ld", m_dbTableID, m_dbRowID);
+	nsFileSpec  *filePath = nsnull;
+	if (mDatabase)
+	{
+		mDatabase->GetDbPath(&filePath);
+		if (filePath)
+		{
+			char* file = nsnull;
+			file = filePath->GetLeafName();
+			if (file && m_dbRowID)
+				cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
+			if (file)
+				nsCRT::free(file);
+			delete filePath;
+		}
+	}
 	if (cardURI)
 	{
 		*uri = cardURI;
@@ -536,80 +552,66 @@ NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase()
+nsresult nsAbCardProperty::GetCardDatabase(const char *uri)
 {
-	// find out which database, which directory to add
-	// get RDF directory selected node
+	nsresult rv = NS_OK;
 
-	nsresult openAddrDB = NS_OK;
-	if (!mDatabase)
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if (NS_SUCCEEDED(rv))
 	{
-		nsresult rv = NS_ERROR_FAILURE;
+		nsFileSpec* dbPath;
+		abSession->GetUserProfileDirectory(&dbPath);
 
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv))
-			return rv;
+		const char* file = nsnull;
+		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
+		(*dbPath) += file;
 
-		nsIFileSpec* userdir;
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
-		if (NS_FAILED(rv))
-			return rv;
-		
-		nsFileSpec dbPath;
-		userdir->GetFileSpec(&dbPath);
-		dbPath += "abook.mab";
-
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDB, &rv);
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			openAddrDB = addrDBFactory->Open(&dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
+{
+	if (!mDatabase && uri)
+	{
+		GetCardDatabase(uri);
 
 		if (mDatabase)
 		{
 			mDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
 			mDatabase->Close(PR_TRUE);
 			mDatabase = null_nsCOMPtr();
+			return NS_OK;
 		}
+		else
+			return NS_ERROR_NULL_POINTER;
 	}
-	return NS_OK;
-
+	else
+		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase()
+NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 {
-	// find out which database, which directory to add
-	// get RDF directory selected node
-	nsresult openAddrDB = NS_OK;
-	if (!mDatabase)
+	if (!mDatabase && uri)
 	{
-		nsresult rv = NS_ERROR_FAILURE;
-
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv))
-			return rv;
-
-		nsIFileSpec* userdir;
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
-		if (NS_FAILED(rv))
-			return rv;
-		
-		nsFileSpec dbPath;
-		userdir->GetFileSpec(&dbPath);
-		dbPath += "abook.mab";
-
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDB, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			openAddrDB = addrDBFactory->Open(&dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+		GetCardDatabase(uri);
 
 		if (mDatabase)
 		{
 			mDatabase->EditCard(this, PR_TRUE);
 			mDatabase->Close(PR_TRUE);
 			mDatabase = null_nsCOMPtr();
+			return NS_OK;
 		}
+		else
+			return NS_ERROR_NULL_POINTER;
 	}
-	return NS_OK;
+	else
+		return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)

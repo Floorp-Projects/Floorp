@@ -21,14 +21,20 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsAbBaseCID.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
+#include "prmem.h"
 
 #include "nsAddrDatabase.h"
+#include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+
+/* The definition is nsAddressBook.cpp */
+extern const char *kDirectoryDataSourceRoot;
+
+/* The definition is nsAddrDatabase.cpp */
+extern const char *kMainPersonalAddressBook;
 
 
 nsAbRDFResource::nsAbRDFResource(void)
@@ -36,7 +42,6 @@ nsAbRDFResource::nsAbRDFResource(void)
 	NS_INIT_REFCNT();
 
 	mDatabase = null_nsCOMPtr();
-	GetAbDatabase();
 }
 
 nsAbRDFResource::~nsAbRDFResource(void)
@@ -71,34 +76,30 @@ NS_IMETHODIMP nsAbRDFResource::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigat
 
 nsresult nsAbRDFResource::GetAbDatabase()
 {
-	// find out which database, which directory to add
-	// get RDF directory selected node
-
 	nsresult openAddrDB = NS_OK;
-	if (!mDatabase)
+	if (!mDatabase && mURI)
 	{
-		nsresult rv = NS_ERROR_FAILURE;
+		nsresult rv = NS_OK;
+		nsFileSpec* dbPath = nsnull;
 
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv))
-			return rv;
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->GetUserProfileDirectory(&dbPath);
 
-		nsIFileSpec* userdir;
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
-		if (NS_FAILED(rv))
-			return rv;
-		
-		nsFileSpec dbPath;
-		userdir->GetFileSpec(&dbPath);
-		dbPath += "abook.mab";
+		const char* file = nsnull;
+		file = &(mURI[PL_strlen(kDirectoryDataSourceRoot)]);
+		(*dbPath) += file;
 
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDB, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			openAddrDB = addrDBFactory->Open(&dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			if (NS_SUCCEEDED(rv) && addrDBFactory)
+				openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
-		if (mDatabase)
-			mDatabase->AddListener(this);
+			if (mDatabase)
+				mDatabase->AddListener(this);
+		}
 	}
 	return NS_OK;
 }

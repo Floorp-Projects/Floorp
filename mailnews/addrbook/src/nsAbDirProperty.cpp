@@ -75,7 +75,6 @@ NS_IMETHODIMP nsAbDirProperty::QueryInterface(REFNSIID aIID, void** aResult)
 
 NS_IMETHODIMP nsAbDirProperty::GetDirFilePath(char **dbPath)
 {
-	char* path = nsnull;
 	if (m_Server && m_Server->fileName)
 	{
 		nsresult rv = NS_OK;

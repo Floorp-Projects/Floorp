@@ -101,7 +101,7 @@ Rights Reserved.
 					</treehead>
 
 					<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
-						<treeitem ref="abdirectory:/" open="true">
+						<treeitem ref="abdirectory://" open="true">
 						</treeitem>
 					</treechildren>
 				</tree>
@@ -167,4 +167,3 @@ Rights Reserved.
 	<box id="okCancelButtons"/>
 
 </window>
-

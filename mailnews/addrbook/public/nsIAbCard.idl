@@ -16,7 +16,7 @@
  * Reserved.
  */
  
-#include "nsIAbBase.idl"
+#include "nsISupports.idl"
 
 [ptr] native nsVoidArray(nsVoidArray);
 
@@ -25,7 +25,7 @@
 %}
 
 [scriptable, uuid(FA5C977F-04C8-11d3-A2EB-001083003D0C)]
-interface nsIAbCard : nsIAbBase {
+interface nsIAbCard : nsISupports {
 
 	attribute string FirstName;
 	attribute string LastName;
@@ -63,10 +63,10 @@ interface nsIAbCard : nsIAbBase {
 	attribute string Custom3;
 	attribute string Custom4;
 	attribute string Notes;
+	attribute string LastModifiedDate;
 
 	attribute boolean SendPlainText;
 
-  
     attribute unsigned long DbTableID;
     attribute unsigned long DbRowID;
 
@@ -78,7 +78,7 @@ interface nsIAbCard : nsIAbBase {
 	void SetAnonymousValuesList(in nsVoidArray valuelist);
 	void SetAnonymousAttribute(in string attrname, in string value);
 	void GetCardURI(out string uri);
-	void AddCardToDatabase();
-	void EditCardToDatabase();
+	void AddCardToDatabase(in string uri);
+	void EditCardToDatabase(in string uri);
 	void CopyCard(in nsIAbCard srcCard);
 };

@@ -26,30 +26,34 @@ MODULE=addrbook
 LIBRARY_NAME=addrbook_s
 
 EXPORTS = \
-	nsAbCard.h \
+	nsAddressBook.h\
+	nsAddrBookSession.h\
+	nsAbRDFDataSource.h\
+	nsAbRDFResource.h\
 	nsCardDataSource.h \
-	nsAbDirectory.h \
 	nsDirectoryDataSource.h \
+	nsAbCard.h \
+	nsAbDirectory.h \
+	nsAbCardProperty.h\
 	nsDirPrefs.h \
 	nsAddrDatabase.h\
-	nsAddressBook.h\
-	nsAbCardProperty.h\
-	nsAbRDFResource.h\
-	nsAddrBookSession.h\
+	nsAbDirProperty.h\
 	nsAbAutoCompleteSession.h\
 	$(NULL)
 
 CPPSRCS = \
-	nsDirectoryDataSource.cpp	\
-	nsAbDirectory.cpp	\
+	nsAddressBook.cpp\
+	nsAddrBookSession.cpp\
+	nsAbRDFDataSource.cpp\
+	nsAbRDFResource.cpp\
 	nsCardDataSource.cpp	\
+	nsDirectoryDataSource.cpp	\
 	nsAbCard.cpp	\
+	nsAbDirectory.cpp	\
+	nsAbCardProperty.cpp\
 	nsDirPrefs.cpp	\
 	nsAddrDatabase.cpp\
-	nsAddressBook.cpp\
-	nsAbCardProperty.cpp\
-	nsAbRDFResource.cpp\
-	nsAddrBookSession.cpp\
+	nsAbDirProperty.cpp\
 	nsAbAutoCompleteSession.cpp\
 	$(NULL)
 

@@ -25,7 +25,6 @@
 #ifndef nsAbCardProperty_h__
 #define nsAbCardProperty_h__
 
-#include "nsIAbBase.h"  
 #include "nsIAbCard.h"  
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
@@ -44,43 +43,6 @@ public:
 
 	nsAbCardProperty(void);
 	virtual ~nsAbCardProperty(void);
-
-	// nsICollection methods:
-
-	NS_IMETHOD Count(PRUint32 *result) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD GetElementAt(PRUint32 i, nsISupports* *result) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD SetElementAt(PRUint32 i, nsISupports* value) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD AppendElement(nsISupports *aElement) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD RemoveElement(nsISupports *aElement) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD Enumerate(nsIEnumerator* *result) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-	NS_IMETHOD Clear(void) {
-	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-	// nsIAbBase methods:
-
-	NS_IMETHOD GetURI(char* *name) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD GetName(char **name) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD SetName(char *name) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD GetParent(nsIAbBase* *parent) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD SetParent(nsIAbBase *parent) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD GetChildNodes(nsIEnumerator* *result) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD AddUnique(nsISupports* element) { return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement) { return NS_ERROR_NOT_IMPLEMENTED; }
-
 
 	// nsIAbCard methods:
 	NS_IMETHOD GetFirstName(char * *aFirstName) { return GetAttributeName(aFirstName, m_pFirstName); }
@@ -119,6 +81,7 @@ public:
 	NS_IMETHOD GetCustom3(char * *aCustom3) { return GetAttributeName(aCustom3, m_pCustom3); }
 	NS_IMETHOD GetCustom4(char * *aCustom4) { return GetAttributeName(aCustom4, m_pCustom4); }
 	NS_IMETHOD GetNotes(char * *aNotes) { return GetAttributeName(aNotes, m_pNote); }
+	NS_IMETHOD GetLastModifiedDate(char * *aLastModifiedDate) { return GetAttributeName(aLastModifiedDate, m_pLastModDate); }
 
 	NS_IMETHOD SetFirstName(char * aFirstName) { return SetAttributeName(aFirstName, &m_pFirstName); }
 	NS_IMETHOD SetLastName(char * aLastName) { return SetAttributeName(aLastName, &m_pLastName); }
@@ -156,6 +119,7 @@ public:
 	NS_IMETHOD SetCustom3(char * aCustom3) { return SetAttributeName(aCustom3, &m_pCustom3); }
 	NS_IMETHOD SetCustom4(char * aCustom4) { return SetAttributeName(aCustom4, &m_pCustom4); }
 	NS_IMETHOD SetNotes(char * aNotes) { return SetAttributeName(aNotes, &m_pNote); }
+	NS_IMETHOD SetLastModifiedDate(char * aLastModifiedDate) { return SetAttributeName(aLastModifiedDate, &m_pLastModDate); }
 
 	NS_IMETHOD GetSendPlainText(PRBool *aSendPlainText);
 	NS_IMETHOD SetSendPlainText(PRBool aSendPlainText);
@@ -173,13 +137,14 @@ public:
 	NS_IMETHOD SetAnonymousValuesList(nsVoidArray *pValuelist);
 	NS_IMETHOD SetAnonymousAttribute(const char *attrname, const char *value);
 	NS_IMETHOD GetCardURI(char **uri);
-	NS_IMETHOD AddCardToDatabase();
-	NS_IMETHOD EditCardToDatabase();
+	NS_IMETHOD AddCardToDatabase(const char *uri);
+	NS_IMETHOD EditCardToDatabase(const char *uri);
 	NS_IMETHOD CopyCard(nsIAbCard* srcCard);
 
 
 protected:
 
+	nsresult GetCardDatabase(const char *uri);
 	nsresult GetAttributeName(char **aName, char* pValue);
 	nsresult SetAttributeName(char *aName, char** arrtibute);
 	nsresult RemoveAnonymousAttrubutesList();
@@ -221,6 +186,7 @@ protected:
 	char* m_pCustom3;
 	char* m_pCustom4;
 	char* m_pNote;
+	char* m_pLastModDate;
 
 	PRBool   m_bSendPlainText;
 

@@ -36,6 +36,7 @@
 #include "nsAddrDatabase.h"
 #include "nsAddressBook.h"
 #include "nsAddrBookSession.h"
+#include "nsAbDirProperty.h"
 #include "nsAbAutoCompleteSession.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -45,9 +46,10 @@ static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORYRESOURCE_CID); 
 static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID); 
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kAbDirPropertyCID, NS_ABDIRPROPERTY_CID);
 static NS_DEFINE_CID(kAbAutoCompleteSessionCID ,NS_ABAUTOCOMPLETESESSION_CID);
 
 ////////////////////////////////////////////////////////////
@@ -145,21 +147,12 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 	}
 	else if (mClassID.Equals(kAbDirectoryDataSourceCID)) 
 	{
-		nsresult rv;
-		nsABDirectoryDataSource * directoryDataSource = new nsABDirectoryDataSource();
-		if (directoryDataSource)
-			rv = directoryDataSource->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-
-		if (NS_FAILED(rv) && directoryDataSource)
-			delete directoryDataSource;
-		return rv;
+		return NS_NewAbDirectoryDataSource(aIID, aResult);
 	}
 	else if (mClassID.Equals(kAbDirectoryCID)) 
 	{
 		nsresult rv;
-		nsABDirectory * directory = new nsABDirectory();
+		nsAbDirectory * directory = new nsAbDirectory();
 		if (directory)
 			rv = directory->QueryInterface(aIID, aResult);
 		else
@@ -171,21 +164,12 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 	}
 	else if (mClassID.Equals(kAbCardDataSourceCID)) 
 	{
-		nsresult rv;
-		nsABCardDataSource * cardDataSource = new nsABCardDataSource();
-		if (cardDataSource)
-			rv = cardDataSource->QueryInterface(aIID, aResult);
-		else
-			rv = NS_ERROR_OUT_OF_MEMORY;
-
-		if (NS_FAILED(rv) && cardDataSource)
-			delete cardDataSource;
-		return rv;
+		return NS_NewAbCardDataSource(aIID, aResult);
 	}
 	else if (mClassID.Equals(kAbCardCID)) 
 	{
 		nsresult rv;
-		nsABCard * card = new nsABCard();
+		nsAbCard * card = new nsAbCard();
 		if (card)
 			rv = card->QueryInterface(aIID, aResult);
 		else
@@ -195,7 +179,7 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 			delete card;
 		return rv;
 	}
-	else if (mClassID.Equals(kAddressBookDB)) 
+	else if (mClassID.Equals(kAddressBookDBCID)) 
 	{
 		nsresult rv;
 		nsAddrDatabase * abDatabase = new nsAddrDatabase();
@@ -219,6 +203,19 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 
 		if (NS_FAILED(rv) && abCardProperty)
 			delete abCardProperty;
+		return rv;
+	} 
+	else if (mClassID.Equals(kAbDirPropertyCID)) 
+	{
+		nsresult rv;
+		nsAbDirProperty * abDirProperty = new nsAbDirProperty();
+		if (abDirProperty)
+			rv = abDirProperty->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && abDirProperty)
+			delete abDirProperty;
 		return rv;
 	} 
 	else if (mClassID.Equals(kAddrBookSessionCID)) 
@@ -321,13 +318,22 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
 	if (NS_FAILED(rv)) finalResult = rv;
 	
-	rv = compMgr->RegisterComponent(kAddressBookDB, nsnull, nsnull,
-								  path, PR_TRUE, PR_TRUE);
+	rv = compMgr->RegisterComponent(kAddressBookDBCID, 
+								   "Mail/News Address Book Card Database", 
+								   "component://netscape/addressbook/carddatabase",
+								   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv))finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kAbCardPropertyCID,
 								  "Mail/News Address Book Card Property",
 								  "component://netscape/addressbook/cardproperty",
+								  path, PR_TRUE, PR_TRUE);
+
+	if (NS_FAILED(rv)) finalResult = rv;
+	
+	rv = compMgr->RegisterComponent(kAbDirPropertyCID,
+								  "Mail/News Address Book Directory Property",
+								  "component://netscape/addressbook/directoryproperty",
 								  path, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv)) finalResult = rv;
@@ -375,10 +381,13 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kAbCardCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 	
-	rv = compMgr->UnregisterComponent(kAddressBookDB, path);
+	rv = compMgr->UnregisterComponent(kAddressBookDBCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAbCardPropertyCID, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->UnregisterComponent(kAbDirPropertyCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->UnregisterComponent(kAddrBookSessionCID, path);

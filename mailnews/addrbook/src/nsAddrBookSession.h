@@ -38,11 +38,13 @@ public:
 	NS_IMETHOD NotifyItemPropertyChanged(nsISupports *item, const char *property, const char* oldValue, const char* newValue);
 	NS_IMETHOD NotifyDirectoryItemAdded(nsIAbDirectory *directory, nsISupports *item);
 	NS_IMETHOD NotifyDirectoryItemDeleted(nsIAbDirectory *directory, nsISupports *item);
+	NS_IMETHOD GetUserProfileDirectory(nsFileSpec * *userDir);
 
   
 protected:
 
 	nsVoidArray *mListeners; 
+	nsFileSpec	*mpUserDirectory;
 
 };
 

@@ -18,15 +18,12 @@
 
 #include "nsISupports.idl"
 #include "nsIEnumerator.idl"
-#include "nsIAbBase.idl"
-
-interface nsIAbBase;
 
 [scriptable, uuid(1920E484-0709-11d3-A2EC-001083003D0C)]    
 interface nsIAbListener : nsISupports {
 
-	void OnItemAdded(in nsIAbBase parentDir, in nsISupports item);
-	void OnItemRemoved(in nsIAbBase parentDir, in nsISupports item);
+	void OnItemAdded(in nsISupports parentDir, in nsISupports item);
+	void OnItemRemoved(in nsISupports parentDir, in nsISupports item);
 	void OnItemPropertyChanged(in nsISupports item, in string property, in string oldValue, in string newValue);
 
 };

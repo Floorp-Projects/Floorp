@@ -19,8 +19,12 @@
 #include "nsIAddressBook.h"
 #include "nsAddressBook.h"
 #include "nsAbBaseCID.h"
+#include "nsDirPrefs.h"
+#include "nsIAddrBookSession.h"
+#include "nsAbRDFResource.h"
 
 #include "prmem.h"
+#include "prprf.h"	 
 
 #include "nsCOMPtr.h"
 #include "nsIDOMXULTreeElement.h"
@@ -31,10 +35,19 @@
 #include "nsIServiceManager.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsAppShellCIDs.h"
+#include "nsIAppShellService.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+
+
+const char *kDirectoryDataSourceRoot = "abdirectory://";
+const char *kCardDataSourceRoot = "abcard://";
+
 
 
 static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
@@ -90,70 +103,109 @@ nsAddressBook::~nsAddressBook()
 }
 
 NS_IMPL_ISUPPORTS(nsAddressBook, nsIAddressBook::GetIID());
-/*
-NS_IMPL_ADDREF(nsAddressBook)
-NS_IMPL_RELEASE(nsAddressBook)
 
-NS_IMETHODIMP nsAddressBook::QueryInterface(REFNSIID aIID, void** aResult)
-{   
-    if (aResult == NULL)  
-        return NS_ERROR_NULL_POINTER;  
-
-    if (aIID.Equals(nsCOMTypeInfo<nsIAddressBook>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIAbCard>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIAddressBook*, this);   
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}   
-*/
 //
 // nsIAddressBook
 //
 
-//NS_IMETHODIMP nsAddressBook::NewCard(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
-//						nsIAbCard *card)
-NS_IMETHODIMP nsAddressBook::NewCard()
+NS_IMETHODIMP nsAddressBook::DeleteCards
+(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
 {
-	nsresult rv = NS_OK;
-/*	nsCOMPtr<nsIRDFResource> folderResource;
-	nsCOMPtr<nsISupportsArray> nameArray, dirArray;
+	nsresult rv;
 
-	if(!parentFolderElement || !card)
+	if(!tree || !srcDirectory || !nodeList)
 		return NS_ERROR_NULL_POINTER;
 
-	rv = parentFolderElement->GetResource(getter_AddRefs(folderResource));
+	nsCOMPtr<nsIRDFCompositeDataSource> database;
+	nsCOMPtr<nsISupportsArray> resourceArray, dirArray;
+	nsCOMPtr<nsIRDFResource> resource;
+
+	rv = srcDirectory->GetResource(getter_AddRefs(resource));
+
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
+	rv = tree->GetDatabase(getter_AddRefs(database));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
 	if(NS_FAILED(rv))
 	{
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
-	if(NS_FAILED(rv))
-		return NS_ERROR_OUT_OF_MEMORY;
+	dirArray->AppendElement(resource);
+	
+	rv = DoCommand(database, NC_RDF_DELETE, dirArray, resourceArray);
 
-	dirArray->AppendElement(folderResource);
-
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-	if(NS_SUCCEEDED(rv))
-	{
-		nsString nameStr"person";
-		nsCOMPtr<nsIRDFLiteral> nameLiteral;
-
-		rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
-		nameArray->AppendElement(nameLiteral);
-		rv = DoCommand(database, NC_RDF_NEWABCARD, dirArray, nameArray);
-	}*/
 	return rv;
 }
 
-NS_IMETHODIMP nsAddressBook::DeleteCards
+NS_IMETHODIMP nsAddressBook::NewAddressBook
+(nsIRDFCompositeDataSource* db, nsIDOMXULElement *srcDirectory, const char *name)
+{
+	if(!db || !srcDirectory || !name)
+		return NS_ERROR_NULL_POINTER;
+
+//	DIR_Server * server = nsnull;
+//	nsresult rv = DIR_AddNewAddressBook(name, &server);
+	nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsISupportsArray> nameArray, dirArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(dirArray));
+	if(NS_FAILED(rv))
+		return NS_ERROR_OUT_OF_MEMORY;
+	nsCOMPtr<nsIRDFResource> parentResource;
+	char *parentUri = PR_smprintf("%s", kDirectoryDataSourceRoot);
+	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
+	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
+	if (!parentDir)
+		return NS_ERROR_NULL_POINTER;
+	if (parentUri)
+		PR_smprintf_free(parentUri);
+
+	dirArray->AppendElement(parentResource);
+
+	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
+	if(NS_FAILED(rv))
+		return NS_ERROR_OUT_OF_MEMORY;
+	/*
+	nsCOMPtr<nsIRDFResource> itemResource;
+	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
+	rv = rdfService->GetResource(uri, getter_AddRefs(itemResource));
+	if (uri)
+		PR_smprintf_free(uri);
+	nsCOMPtr<nsIAbDirectory> newDir = do_QueryInterface(itemResource);
+	if (newDir)
+	{
+		newDir->SetDirName(server->description);
+		newDir->SetServer(server);
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+*/
+	nsString nameStr = name;
+	nsCOMPtr<nsIRDFLiteral> nameLiteral;
+
+	rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
+	nameArray->AppendElement(nameLiteral);
+//	resourceArray->AppendElement(itemResource);
+
+
+	DoCommand(db, "http://home.netscape.com/NC-rdf#NewDirectory", dirArray, nameArray);
+	return rv;
+}
+
+NS_IMETHODIMP nsAddressBook::DeleteAddressBook
 (nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcDirectory, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;

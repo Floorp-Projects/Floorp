@@ -71,18 +71,24 @@ public:
 
 	NS_IMETHOD GetDbPath(nsFileSpec * *aDbPath);
 	NS_IMETHOD SetDbPath(nsFileSpec * aDbPath);
-	NS_IMETHOD Open(nsFileSpec * folderName, PRBool create, nsIAddrDatabase **pMessageDB, PRBool upgrading);
+	NS_IMETHOD Open(nsFileSpec * folderName, PRBool create, nsIAddrDatabase **pCardDB, PRBool upgrading);
 	NS_IMETHOD Close(PRBool forceCommit);
 	NS_IMETHOD OpenMDB(nsFileSpec *dbName, PRBool create);
 	NS_IMETHOD CloseMDB(PRBool commit);
+	NS_IMETHOD OpenAnonymousDB(nsIAddrDatabase **pCardDB);
+	NS_IMETHOD CloseAnonymousDB(PRBool forceCommit);
 	NS_IMETHOD Commit(PRUint32 commitType);
 	NS_IMETHOD ForceClosed();
 
 	NS_IMETHOD CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result);
+	NS_IMETHOD EnumerateMailingLists(nsIAbDirectory *directory, nsIEnumerator **result);
 	NS_IMETHOD DeleteCard(nsIAbCard *newCard, PRBool notify);
 	NS_IMETHOD EditCard(nsIAbCard *card, PRBool notify);
 	NS_IMETHOD ContainsCard(nsIAbCard *card, PRBool *hasCard);
+	NS_IMETHOD SetAnonymousAttribute(const char *attrname, const char *value);
+	NS_IMETHOD GetAnonymousAttribute(const char *attrname, char** value);
+	NS_IMETHOD AddAnonymousAttributesToDB();
 
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
@@ -119,7 +125,6 @@ public:
 
 protected:
 
-	// open db cache
     static void		AddToCache(nsAddrDatabase* pAddrDB) 
 						{GetDBCache()->AppendElement(pAddrDB);}
 	static void		RemoveFromCache(nsAddrDatabase* pAddrDB);
@@ -137,9 +142,11 @@ protected:
 	mdb_err AddCardColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
 	nsresult GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow);
-	nsresult AddAnonymousAttributesToDB(nsIAbCard *newCard, nsIMdbRow *cardRow);
 	nsresult GetAnonymousAttributesFromDB();
 	nsresult AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *cardRow);
+	nsresult RemoveAnonymousAttrubutesList();
+	nsresult RemoveAnonymousValuesList();
+
 
 	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
 	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
@@ -161,8 +168,6 @@ protected:
 
 	nsIMdbTable		    *m_mdbAnonymousTable;
 	mdb_kind			m_AnonymousTableKind;
-	mdb_scope			m_AnonymousRowScopeToken;
-	mdb_token			m_AnonymousColumnToken;
 	nsVoidArray*		m_pAnonymousAttributes;
 	nsVoidArray*		m_pAnonymousValues;
 
@@ -209,6 +214,7 @@ protected:
 	mdb_token			m_Custom3ColumnToken;
 	mdb_token			m_Custom4ColumnToken;
 	mdb_token			m_NotesColumnToken;
+	mdb_token			m_LastModDateColumnToken;
 
 	mdb_token			m_PlainTextColumnToken;
 

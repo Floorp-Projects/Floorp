@@ -23,7 +23,6 @@ MODULE		= addrbook
 
 include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS =				  \
-		nsIAbBase.idl	\
 		nsIAbListener.idl	\
 		nsIAbDirectory.idl	\
 		nsIAbCard.idl	\

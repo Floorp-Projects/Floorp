@@ -43,5 +43,7 @@ interface nsIAddrBookSession : nsISupports {
                                  in string newValue);
   void NotifyDirectoryItemAdded(in nsIAbDirectory directory, in nsISupports item);
   void NotifyDirectoryItemDeleted(in nsIAbDirectory directory, in nsISupports item);
+
+  void GetUserProfileDirectory(out nsFileSpec userDir);
 };
 

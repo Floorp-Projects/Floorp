@@ -32,49 +32,24 @@
 #include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
-nsABCard::nsABCard(void)
-  : nsAbRDFResource(), mListeners(nsnull),
-    mInitialized(PR_FALSE), 
-    mCsid(0), mDepth(0), mPrefFlags(0)
+nsAbCard::nsAbCard(void)
+  : nsAbRDFResource(), mListeners(nsnull)
 {
-//  NS_INIT_REFCNT(); done by superclass
-
-	NS_NewISupportsArray(getter_AddRefs(mSubDirectories));
-
-	//The rdf:addresscard datasource is going to be a listener to all nsIMsgFolders, so add
-	//it as a listener
- /*   nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFDataSource> datasource;
-		rv = rdfService->GetDataSource("rdf:addresscard", getter_AddRefs(datasource));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIAbListener> directoryListener(do_QueryInterface(datasource, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				AddAddrBookListener(directoryListener);
-			}
-		}
-	}*/
-
+	NS_NewISupportsArray(getter_AddRefs(mSubCards));
 }
 
-nsABCard::~nsABCard(void)
+nsAbCard::~nsAbCard(void)
 {
-	if(mSubDirectories)
+	if (mSubCards)
 	{
 		PRUint32 count;
-		nsresult rv = mSubDirectories->Count(&count);
+		nsresult rv = mSubCards->Count(&count);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
 		PRInt32 i;
 		for (i = count - 1; i >= 0; i--)
-			mSubDirectories->RemoveElementAt(i);
+			mSubCards->RemoveElementAt(i);
 	}
 
 	if (mListeners) 
@@ -86,10 +61,10 @@ nsABCard::~nsABCard(void)
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsABCard, nsAbRDFResource, nsIAbCard)
+NS_IMPL_ISUPPORTS_INHERITED(nsAbCard, nsAbRDFResource, nsIAbCard)
 
 ////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsABCard::OnCardEntryChange
+NS_IMETHODIMP nsAbCard::OnCardEntryChange
 (PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator)
 {
 	if (abCode == AB_NotifyPropertyChanged && card)
@@ -121,7 +96,7 @@ NS_IMETHODIMP nsABCard::OnCardEntryChange
 	return NS_OK;
 }
 
-nsresult nsABCard::NotifyPropertyChanged(char *property, char* oldValue, char* newValue)
+nsresult nsAbCard::NotifyPropertyChanged(char *property, char* oldValue, char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(supports))))
@@ -136,8 +111,7 @@ nsresult nsABCard::NotifyPropertyChanged(char *property, char* oldValue, char* n
 	return NS_OK;
 }
 
-
-nsresult nsABCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
+nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 {
 	if(!childCard)
 		return NS_ERROR_NULL_POINTER;
@@ -166,105 +140,12 @@ nsresult nsABCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 		return rv;        
 	delete[] uriStr;
 
-	mSubDirectories->AppendElement(card);
+	mSubCards->AppendElement(card);
 	*childCard = card;
 	NS_IF_ADDREF(*childCard);
 
     (void)nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
 
-	return rv;
-}
-
-NS_IMETHODIMP nsABCard::ContainsChildNamed(const char *name, PRBool* containsChild)
-{
-	nsCOMPtr<nsISupports> child;
-	
-	if(containsChild)
-	{
-		*containsChild = PR_FALSE;
-		if(NS_SUCCEEDED(GetChildNamed(name, getter_AddRefs(child))))
-		{
-			*containsChild = child != nsnull;
-		}
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP nsABCard::FindParentOf(nsIAbCard * aDirectory, nsIAbCard ** aParent)
-{
-	if(!aParent)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv;
-
-	*aParent = nsnull;
-
-	PRUint32 i, j, count;
-	rv = mSubDirectories->Count(&count);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-	nsCOMPtr<nsISupports> supports;
-	nsCOMPtr<nsIAbCard> child;
-	for (i = 0; i < count && *aParent == NULL; i++)
-	{
-		supports = getter_AddRefs(mSubDirectories->ElementAt(i));
-		child = do_QueryInterface(supports, &rv);
-		if(NS_SUCCEEDED(rv) && child)
-		{
-			if (aDirectory == child.get())
-			{
-				*aParent = this;
-				NS_ADDREF(*aParent);
-				return NS_OK;
-			}
-		}
-	}
-	for (j = 0; j < count && *aParent == NULL; j++)
-	{
-/*
-		supports = getter_AddRefs(mSubDirectories->ElementAt(j));
-		child = do_QueryInterface(supports, &rv);
-		if(NS_SUCCEEDED(rv) && child)
-		{
-			rv = child->FindParentOf(aDirectory, aParent);
-			if(NS_SUCCEEDED(rv))
-				return rv;
-		}
-*/
-	}
-
-	return rv;
-}
-
-NS_IMETHODIMP nsABCard::IsParentOf(nsIAbCard *child, PRBool deep, PRBool *isParent)
-{
-	if(!isParent)
-		return NS_ERROR_NULL_POINTER;
-	
-	nsresult rv = NS_OK;
-
-	PRUint32 i, count;
-	rv = mSubDirectories->Count(&count);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
- 
-	for (i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubDirectories->ElementAt(i));
-		nsCOMPtr<nsIAbCard> directory(do_QueryInterface(supports, &rv));
-		if(NS_SUCCEEDED(rv))
-		{
-			if (directory.get() == child )
-				*isParent = PR_TRUE;
-			else if(deep)
-			{;
-//				directory->IsParentOf(child, deep, isParent);
-			}
-		}
-		if(*isParent)
-			return NS_OK;
-    }
-	*isParent = PR_FALSE;
 	return rv;
 }
 

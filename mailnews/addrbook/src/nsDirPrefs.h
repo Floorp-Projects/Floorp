@@ -22,7 +22,8 @@
 class nsVoidArray;
 class nsIPref;
 
-#define kCurrentListVersion    2
+#define kPreviousListVersion   2
+#define kCurrentListVersion    3
 #define PREF_LDAP_GLOBAL_TREE_NAME "ldap_2"
 #define PREF_LDAP_VERSION_NAME     "ldap_2.version"
 #define PREF_LDAP_SERVER_TREE_NAME "ldap_2.servers"
@@ -157,8 +158,8 @@ typedef struct DIR_Server
 {
 	/* Housekeeping fields */
 	char   *prefName;			/* preference name, this server's subtree */
-	PRInt32   position;			/* relative position in server list       */
-	PRUint32  refCount;           /* Use count for server                   */
+	PRInt32  position;			/* relative position in server list       */
+	PRUint32  refCount;         /* Use count for server                   */
 
 	/* General purpose fields */
 	char   *description;		/* human readable name                    */
@@ -230,6 +231,9 @@ typedef struct DIR_Server
 nsVoidArray* DIR_GetDirectories();
 nsresult DIR_GetDirServers();
 nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
+
+nsresult DIR_AddNewAddressBook(const char *name, DIR_Server** pServer);
+nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *);
 nsresult DIR_IncrementServerRefCount (DIR_Server *);

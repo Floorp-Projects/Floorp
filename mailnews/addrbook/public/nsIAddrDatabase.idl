@@ -16,16 +16,15 @@
  * Reserved.
  */
 
+/* nsFileSpec is declared in nsIAbDirectory.idl */
 #include "nsIAddrDBAnnouncer.idl"
 #include "nsIAbCard.idl"
 #include "nsIAbDirectory.idl"
 
-[ptr] native nsFileSpec(nsFileSpec);
 [ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
 [ptr] native nsIMdbEnv(nsIMdbEnv);
 
 %{C++
-#include "nsFileSpec.h"
 #include "mdb.h"
 %}
 
@@ -36,17 +35,23 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	attribute nsFileSpec dbPath;
 
 	void Open(in nsFileSpec folderName, in boolean create, 
-			  out nsIAddrDatabase pMessageDB, in boolean upgrading);
+			  out nsIAddrDatabase pCardDB, in boolean upgrading);
 	void Close(in boolean forceCommit);
 	void OpenMDB(in nsFileSpec dbName, in boolean create);
 	void CloseMDB(in boolean commit);
+	void OpenAnonymousDB(out nsIAddrDatabase pCardDB);
+	void CloseAnonymousDB(in boolean forceCommit);
 
 	void Commit(in unsigned long commitType);
 	void ForceClosed();
 
 	void CreateNewCardAndAddToDB(in nsIAbCard newCard, in boolean beNotify);
 	void EnumerateCards(in nsIAbDirectory directory, out nsIEnumerator result);
+	void EnumerateMailingLists(in nsIAbDirectory directory, out nsIEnumerator result);
 	void DeleteCard(in nsIAbCard card, in boolean beNotify);
 	void EditCard(in nsIAbCard card, in boolean beNotify);
 	void ContainsCard(in nsIAbCard card, out boolean hasCard);
+	void SetAnonymousAttribute(in string attrname, in string value);
+	void GetAnonymousAttribute(in string attrname, out string value);
+	void AddAnonymousAttributesToDB();
 };

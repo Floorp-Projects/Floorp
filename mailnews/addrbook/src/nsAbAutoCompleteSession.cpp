@@ -63,7 +63,7 @@ nsresult nsAbAutoCompleteSession::InitializeTable()
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource("abdirectory://Pab1", getter_AddRefs(resource));
+  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
   
   // query interface 
@@ -141,10 +141,11 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 	{
 		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
 		PRBool matchFound = PR_FALSE;
-		for (PRInt32 index = 0; index < m_numEntries && !matchFound; index++)
+		PRInt32 nIndex;
+		for (nIndex = 0; nIndex < m_numEntries && !matchFound; nIndex++)
 		{
-			if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[index].userName, searchStringLen) == 0
-				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[index].emailAddress,searchStringLen) == 0)
+			if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].userName, searchStringLen) == 0
+				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
 			{
 				matchFound = PR_TRUE; // so we kick out of the loop
 
@@ -157,8 +158,8 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 
 				char * fullAddress = nsnull;
 				if (parser)
-					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[index].userName, 
-											m_searchNameCompletionEntryTable[index].emailAddress, &fullAddress);
+					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
+											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
 				nsString2 searchResult(fullAddress);
 				// iterate over the table looking for a match
 				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());

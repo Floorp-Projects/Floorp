@@ -43,74 +43,41 @@ typedef struct _nsAbRDFNotification {
   nsIRDFNode *object;
 } nsAbRDFNotification;
                                                 
-
-
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORYRESOURCE_CID); 
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
-nsIRDFResource* nsABDirectoryDataSource::kNC_Child;
-nsIRDFResource* nsABDirectoryDataSource::kNC_DirName;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_Child = nsnull;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_DirName = nsnull;
 
-nsIRDFResource* nsABDirectoryDataSource::kNC_DirChild;
-nsIRDFResource* nsABDirectoryDataSource::kNC_CardChild;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_MailingList = nsnull;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_CardChild = nsnull;
 
 // commands
-nsIRDFResource* nsABDirectoryDataSource::kNC_Delete;
-nsIRDFResource* nsABDirectoryDataSource::kNC_NewDirectory;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_Delete = nsnull;
+nsIRDFResource* nsAbDirectoryDataSource::kNC_NewDirectory = nsnull;
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, DirName);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, DirChild);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, CardChild);
+#define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
+#define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
+#define NC_RDF_MAILINGLIST			"http://home.netscape.com/NC-rdf#MailingList"
+#define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Delete);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, NewDirectory);
+//Directory Commands
+#define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
+#define NC_RDF_NEWDIRECTORY			"http://home.netscape.com/NC-rdf#NewDirectory"
 
 ////////////////////////////////////////////////////////////////////////
-// Utilities
 
-
-void nsABDirectoryDataSource::createNode(nsString& str, nsIRDFNode **node)
-{
-	*node = nsnull;
-    nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return;   // always check this before proceeding 
-	nsIRDFLiteral * value;
-	if (NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) 
-	{
-		*node = value;
-	}
-}
-
-void nsABDirectoryDataSource::createNode(PRUint32 value, nsIRDFNode **node)
-{
-	char *valueStr = PR_smprintf("%d", value);
-	nsString str(valueStr);
-	createNode(str, node);
-	PR_smprintf_free(valueStr);
-}
-
-nsABDirectoryDataSource::nsABDirectoryDataSource():
-  mObservers(nsnull),
+nsAbDirectoryDataSource::nsAbDirectoryDataSource():
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
-	NS_INIT_REFCNT();
 
-  // XXX This call should be moved to a NS_NewMsgFooDataSource()
-  // method that the factory calls, so that failure to construct
-  // will return an error code instead of returning a partially
-  // initialized object.
-  nsresult rv = Init();
-	PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
-nsABDirectoryDataSource::~nsABDirectoryDataSource (void)
+nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
 {
 	mRDFService->UnregisterDataSource(this);
 
@@ -122,7 +89,7 @@ nsABDirectoryDataSource::~nsABDirectoryDataSource (void)
 	nsrefcnt refcnt;
 	NS_RELEASE2(kNC_Child, refcnt);
 	NS_RELEASE2(kNC_DirName, refcnt);
-	NS_RELEASE2(kNC_DirChild, refcnt);
+	NS_RELEASE2(kNC_MailingList, refcnt);
 	NS_RELEASE2(kNC_CardChild, refcnt);
 
 	NS_RELEASE2(kNC_Delete, refcnt);
@@ -138,7 +105,7 @@ nsABDirectoryDataSource::~nsABDirectoryDataSource (void)
 }
 
 nsresult
-nsABDirectoryDataSource::Init()
+nsAbDirectoryDataSource::Init()
 {
 	if (mInitialized)
 		return NS_ERROR_ALREADY_INITIALIZED;
@@ -155,54 +122,43 @@ nsABDirectoryDataSource::Init()
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 
 	if (!kNC_Child)
-		mRDFService->GetResource(kURINC_child,		&kNC_Child);
-	if (!kNC_DirName)
-		mRDFService->GetResource(kURINC_DirName,	&kNC_DirName);
-	if (!kNC_DirChild)
-		mRDFService->GetResource(kURINC_DirChild,	&kNC_DirChild);
-	if (!kNC_CardChild)
-		mRDFService->GetResource(kURINC_CardChild,	&kNC_CardChild);
+	{
+		mRDFService->GetResource(NC_RDF_CHILD, &kNC_Child);
+		mRDFService->GetResource(NC_RDF_DIRNAME, &kNC_DirName);
+		mRDFService->GetResource(NC_RDF_MAILINGLIST, &kNC_MailingList);
+		mRDFService->GetResource(NC_RDF_CARDCHILD, &kNC_CardChild);
 
-	if (!kNC_Delete)
-		mRDFService->GetResource(kURINC_Delete, &kNC_Delete);
-	if (!kNC_NewDirectory)
-		mRDFService->GetResource(kURINC_NewDirectory, &kNC_NewDirectory);
-	
+		mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
+		mRDFService->GetResource(NC_RDF_NEWDIRECTORY, &kNC_NewDirectory);
+	}
+
 	DIR_GetDirServers();
 
 	mInitialized = PR_TRUE;
 	return NS_OK;
 }
 
+NS_IMPL_ADDREF_INHERITED(nsAbDirectoryDataSource, nsAbRDFDataSource)
+NS_IMPL_RELEASE_INHERITED(nsAbDirectoryDataSource, nsAbRDFDataSource)
 
-NS_IMPL_ADDREF(nsABDirectoryDataSource)
-NS_IMPL_RELEASE(nsABDirectoryDataSource)
-
-NS_IMETHODIMP
-nsABDirectoryDataSource::QueryInterface(REFNSIID iid, void** result)
+NS_IMETHODIMP nsAbDirectoryDataSource::QueryInterface(REFNSIID iid, void** result)
 {
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
-		iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-	{
-		*result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-		AddRef();
-		return NS_OK;
-	}
-	else if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
+	if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIAbListener*, this);
-		AddRef();
+		NS_ADDREF(this);
 		return NS_OK;
 	}
-	return NS_NOINTERFACE;
+	else
+		return nsAbRDFDataSource::QueryInterface(iid, result);
 }
 
  // nsIRDFDataSource methods
-NS_IMETHODIMP nsABDirectoryDataSource::GetURI(char* *uri)
+NS_IMETHODIMP nsAbDirectoryDataSource::GetURI(char* *uri)
 {
   if ((*uri = nsXPIDLCString::Copy("rdf:addressdirectory")) == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -210,16 +166,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetURI(char* *uri)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::GetSource(nsIRDFResource* property,
-                                               nsIRDFNode* target,
-                                               PRBool tv,
-                                               nsIRDFResource** source /* out */)
-{
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::GetTarget(nsIRDFResource* source,
+NS_IMETHODIMP nsAbDirectoryDataSource::GetTarget(nsIRDFResource* source,
                                                nsIRDFResource* property,
                                                PRBool tv,
                                                nsIRDFNode** target)
@@ -240,16 +187,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTarget(nsIRDFResource* source,
 }
 
 
-NS_IMETHODIMP nsABDirectoryDataSource::GetSources(nsIRDFResource* property,
-                                                nsIRDFNode* target,
-                                                PRBool tv,
-                                                nsISimpleEnumerator** sources)
-{
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
+NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
                                                 nsIRDFResource* property,    
                                                 PRBool tv,
                                                 nsISimpleEnumerator** targets)
@@ -288,17 +226,29 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
       nsCOMPtr<nsIEnumerator> cardChild;
 
       rv = directory->GetChildCards(getter_AddRefs(cardChild));
+      if (NS_SUCCEEDED(rv) && cardChild)
+	  {
+		  nsAdapterEnumerator* cursor =
+			new nsAdapterEnumerator(cardChild);
+		  if (cursor == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+		  NS_ADDREF(cursor);
+		  *targets = cursor;
+		  rv = NS_OK;
+	  }
+    }
+    else if((kNC_MailingList == property))
+    { 
+      nsCOMPtr<nsIEnumerator> mailingList;
+
+      rv = directory->GetMailingList(getter_AddRefs(mailingList));
       if (NS_FAILED(rv)) return rv;
       nsAdapterEnumerator* cursor =
-        new nsAdapterEnumerator(cardChild);
+        new nsAdapterEnumerator(mailingList);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
       *targets = cursor;
-      rv = NS_OK;
-    }
-    else if((kNC_DirChild == property))
-    { 
       rv = NS_OK;
     }
   }
@@ -318,7 +268,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::GetTargets(nsIRDFResource* source,
   return rv;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::Assert(nsIRDFResource* source,
+NS_IMETHODIMP nsAbDirectoryDataSource::Assert(nsIRDFResource* source,
                       nsIRDFResource* property, 
                       nsIRDFNode* target,
                       PRBool tv)
@@ -332,31 +282,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::Assert(nsIRDFResource* source,
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::Unassert(nsIRDFResource* source,
-                        nsIRDFResource* property,
-                        nsIRDFNode* target)
-{
-  return NS_RDF_ASSERTION_REJECTED;//NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::Change(nsIRDFResource *aSource,
-                                              nsIRDFResource *aProperty,
-                                              nsIRDFNode *aOldTarget,
-                                              nsIRDFNode *aNewTarget)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::Move(nsIRDFResource *aOldSource,
-                                            nsIRDFResource *aNewSource,
-                                            nsIRDFResource *aProperty,
-                                            nsIRDFNode *aTarget)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP nsABDirectoryDataSource::HasAssertion(nsIRDFResource* source,
+NS_IMETHODIMP nsAbDirectoryDataSource::HasAssertion(nsIRDFResource* source,
                             nsIRDFResource* property,
                             nsIRDFNode* target,
                             PRBool tv,
@@ -371,73 +297,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::HasAssertion(nsIRDFResource* source,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::AddObserver(nsIRDFObserver* n)
-{
-  if (! mObservers) {
-    nsresult rv;
-    rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
-    if (NS_FAILED(rv)) return rv;
-  }
-  mObservers->AppendElement(n);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::RemoveObserver(nsIRDFObserver* n)
-{
-  if (! mObservers)
-    return NS_OK;
-  mObservers->RemoveElement(n);
-  return NS_OK;
-}
-
-PRBool
-nsABDirectoryDataSource::assertEnumFunc(nsISupports *aElement, void *aData)
-{
-  nsAbRDFNotification *note = (nsAbRDFNotification *)aData;
-  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
-  
-  observer->OnAssert(note->subject,
-                     note->property,
-                     note->object);
-  return PR_TRUE;
-}
-
-PRBool
-nsABDirectoryDataSource::unassertEnumFunc(nsISupports *aElement, void *aData)
-{
-  nsAbRDFNotification* note = (nsAbRDFNotification *)aData;
-  nsIRDFObserver* observer = (nsIRDFObserver *)aElement;
-
-  observer->OnUnassert(note->subject,
-                     note->property,
-                     note->object);
-  return PR_TRUE;
-}
-
-nsresult nsABDirectoryDataSource::NotifyObservers(nsIRDFResource *subject,
-                                                nsIRDFResource *property,
-                                                nsIRDFNode *object,
-                                                PRBool assert)
-{
-	if(mObservers)
-	{
-		nsAbRDFNotification note = { subject, property, object };
-		if (assert)
-			mObservers->EnumerateForwards(assertEnumFunc, &note);
-		else
-			mObservers->EnumerateForwards(unassertEnumFunc, &note);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::ArcLabelsIn(nsIRDFNode* node,
-                                                nsISimpleEnumerator** labels)
-{
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsABDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
+NS_IMETHODIMP nsAbDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                  nsISimpleEnumerator** labels)
 {
   nsCOMPtr<nsISupportsArray> arcs;
@@ -466,7 +326,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
 }
 
 nsresult
-nsABDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
+nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
                                              nsISupportsArray **arcs)
 {
 	nsresult rv;
@@ -481,14 +341,7 @@ nsABDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 }
 
 NS_IMETHODIMP
-nsABDirectoryDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
-{
-  NS_NOTYETIMPLEMENTED("sorry!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsABDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
+nsAbDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
                                       nsIEnumerator/*<nsIRDFResource>*/** commands)
 {
   nsresult rv;
@@ -508,15 +361,7 @@ nsABDirectoryDataSource::GetAllCommands(nsIRDFResource* source,
 }
 
 NS_IMETHODIMP
-nsABDirectoryDataSource::GetAllCmds(nsIRDFResource* source,
-                                      nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
-{
-  NS_NOTYETIMPLEMENTED("sorry!");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                         nsIRDFResource*   aCommand,
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                         PRBool* aResult)
@@ -543,7 +388,7 @@ nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
 }
 
 NS_IMETHODIMP
-nsABDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsIRDFResource*   aCommand,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
@@ -567,7 +412,7 @@ nsABDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::OnItemAdded(nsIAbBase *parentDirectory, nsISupports *item)
+NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory, nsISupports *item)
 {
 	nsresult rv;
 	nsCOMPtr<nsIAbCard> card;
@@ -592,15 +437,16 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemAdded(nsIAbBase *parentDirectory, n
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				//Notify folders that a message was added.
+				//Notify a directory was added.
 				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE);
 			}
 		}
 	}
+
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::OnItemRemoved(nsIAbBase *parentDirectory, nsISupports *item)
+NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirectory, nsISupports *item)
 {
 	nsresult rv;
 	nsCOMPtr<nsIAbCard> card;
@@ -615,7 +461,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemRemoved(nsIAbBase *parentDirectory,
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				//Notify folders that a message was deleted.
+				//Notify directories that a message was deleted.
 				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_FALSE);
 			}
 		}
@@ -625,15 +471,15 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemRemoved(nsIAbBase *parentDirectory,
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				//Notify folders that a message was deleted.
-				NotifyObservers(parentResource, kNC_Child, itemNode, PR_FALSE);
+				//Notify a directory was deleted.
+				NotifyObservers(parentResource, kNC_DirName, itemNode, PR_FALSE);
 			}
 		}
 	}
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABDirectoryDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
+NS_IMETHODIMP nsAbDirectoryDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
 														   const char *oldValue, const char *newValue)
 
 {
@@ -650,26 +496,7 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemPropertyChanged(nsISupports *item, 
 	return NS_OK;
 }
 
-nsresult nsABDirectoryDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  const char *oldValue, const char *newValue)
-{
-	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsString newValueStr = newValue;
-	createNode(newValueStr, getter_AddRefs(newValueNode));
-	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
-
-	if (oldValue)
-	{
-		nsCOMPtr<nsIRDFNode> oldValueNode;
-		nsString oldValueStr = oldValue;
-		createNode(oldValueStr, getter_AddRefs(oldValueNode));
-		NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
-	}
-	return NS_OK;
-}
-
-nsresult nsABDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
+nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
                                                  nsIRDFResource* property,
                                                  nsIRDFNode** target)
 {
@@ -677,20 +504,20 @@ nsresult nsABDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
   
   if ((kNC_DirName == property))
 	rv = createDirectoryNameNode(directory, target);
-  else if ((kNC_Child == property))
-    rv = createDirectoryChildNode(directory,target);
-  else if ((kNC_CardChild == property))
-    rv = createCardChildNode(directory,target);
+//  else if ((kNC_Child == property))
+//    rv = createDirectoryChildNode(directory,target);
+//  else if ((kNC_CardChild == property))
+//    rv = createCardChildNode(directory,target);
   
   return rv;
 }
 
 
-nsresult nsABDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
+nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
   char *name;
-  nsresult rv = directory->GetName(&name);
+  nsresult rv = directory->GetDirName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
   createNode(nameString, target);
@@ -699,7 +526,7 @@ nsresult nsABDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *direct
 }
 
 nsresult
-nsABDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
+nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
                                              nsIRDFNode **target)
 {
   nsresult rv = NS_RDF_NO_VALUE;
@@ -708,11 +535,11 @@ nsABDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 }
 
 nsresult
-nsABDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
+nsAbDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
                                              nsIRDFNode **target)
 {
   char *name;
-  nsresult rv = directory->GetName(&name);
+  nsresult rv = directory->GetDirName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
   createNode(nameString, target);
@@ -720,7 +547,7 @@ nsABDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
   return NS_OK;
 }
 
-nsresult nsABDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
+nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
 	PRUint32 itemCount;
@@ -733,7 +560,8 @@ nsresult nsABDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 
 	//Split up deleted items into different type arrays to be passed to the folder
 	//for deletion.
-	for(PRUint32 item = 0; item < itemCount; item++)
+	PRUint32 item;
+	for(item = 0; item < itemCount; item++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
 		nsCOMPtr<nsIAbCard> deletedCard(do_QueryInterface(supports));
@@ -753,14 +581,20 @@ nsresult nsABDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 	if (cnt > 0)
 		rv = directory->DeleteCards(cardArray);
 
+	rv = dirArray->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+	if (cnt > 0)
+		rv = directory->DeleteDirectories(dirArray);
+
 	return rv;
 }
 
-nsresult nsABDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
+
+nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0)); 
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(elem, &rv));
+	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
+	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;
@@ -768,19 +602,37 @@ nsresult nsABDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 		nsString tempStr = name;
 		nsAutoCString nameStr(tempStr);
 
-//		rv = directory->CreateSubDirectory(nameStr);
+		rv = directory->CreateNewDirectory(nameStr);
 	}
+/*
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsISupportsArray> dirArray;
+	NS_NewISupportsArray(getter_AddRefs(dirArray));
+	PRUint32 itemCount;
+	rv = arguments->Count(&itemCount);
+	for(PRUint32 item = 0; item < itemCount; item++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
+		nsCOMPtr<nsIAbDirectory> newDir(do_QueryInterface(supports));
+		if (newDir)
+		{
+			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir));
+			OnItemAdded(directory, dirSupports);
+		}
+	}
+*/
 	return rv;
 }
 
-nsresult nsABDirectoryDataSource::DoDirectoryAssert(nsIAbDirectory *directory, nsIRDFResource *property, nsIRDFNode *target)
+
+nsresult nsAbDirectoryDataSource::DoDirectoryAssert(nsIAbDirectory *directory, nsIRDFResource *property, nsIRDFNode *target)
 {
 	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
 }
 
 
-nsresult nsABDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *directory, nsIRDFResource *property, nsIRDFNode *target,
+nsresult nsAbDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *directory, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion)
 {
 	nsresult rv = NS_OK;
@@ -794,11 +646,17 @@ nsresult nsABDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 		return NS_OK;
 	}
 
-	if((kNC_CardChild == property))
+	if ((kNC_CardChild == property))
 	{
 		nsCOMPtr<nsIAbCard> card(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
 			rv = directory->HasCard(card, hasAssertion);
+	}
+	else if ((kNC_Child == property))
+	{
+		nsCOMPtr<nsIAbDirectory> newDirectory(do_QueryInterface(target, &rv));
+		if(NS_SUCCEEDED(rv))
+			rv = directory->HasDirectory(newDirectory, hasAssertion);
 	}
 	else 
 		*hasAssertion = PR_FALSE;
@@ -807,3 +665,22 @@ nsresult nsABDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 
 }
 
+nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result)
+{
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsAbDirectoryDataSource* datasource = new nsAbDirectoryDataSource();
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = datasource->Init();
+    if (NS_FAILED(rv)) {
+        delete datasource;
+        return rv;
+    }
+
+	return datasource->QueryInterface(iid, result);
+}

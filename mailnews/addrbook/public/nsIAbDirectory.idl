@@ -16,19 +16,35 @@
  * Reserved.
  */
  
-#include "nsIAbBase.idl"
+#include "nsISupports.idl"
 #include "nsIAbCard.idl"
 #include "nsISupportsArray.idl"
 
+[ptr] native nsFileSpec(nsFileSpec);
+[ptr] native DIR_Server(DIR_Server);
+
+%{C++
+#include "nsFileSpec.h"
+#include "nsDirPrefs.h"
+%}
+
 [scriptable, uuid(1920E485-0709-11d3-A2EC-001083003D0C)]
-interface nsIAbDirectory : nsIAbBase {
+interface nsIAbDirectory : nsISupports {
 
-    nsIEnumerator GetChildCards();
+    attribute string DirName;
+    attribute string LastModifiedDate;
+    attribute DIR_Server server;
 
-	nsIAbCard CreateCardFromDirectory();
-
+	void GetDirFilePath(out string dbPath);
+	void GetChildNodes(out nsIEnumerator childList);
+    void GetChildCards(out nsIEnumerator childCards);
 	void AddChildCards(in string uriName, out nsIAbCard childCard);
-	void GetDirPosition(out unsigned long pos);
+	void AddDirectory(in string uriName, out nsIAbDirectory childDir);
+	void DeleteDirectories(in nsISupportsArray dierctories);
 	void DeleteCards(in nsISupportsArray cards);
 	void HasCard(in nsIAbCard cards, out boolean hasCard);
+	void HasDirectory(in nsIAbDirectory dir, out boolean hasDir);
+	void GetMailingList(out nsIEnumerator mailingList);
+	void CreateNewDirectory(in string dirName);
+
 };

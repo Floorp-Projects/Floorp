@@ -22,10 +22,9 @@
  
 *********************************************************************************************************/
 
-#ifndef nsABCard_h__
-#define nsABCard_h__
+#ifndef nsAbCard_h__
+#define nsAbCard_h__
 
-#include "nsIAbBase.h"  
 #include "nsAbCardProperty.h"  
 #include "nsAbRDFResource.h"
 #include "nsISupportsArray.h"
@@ -38,88 +37,26 @@
   * Address Book Directory
   */ 
 
-class nsABCard: public nsAbRDFResource, public nsAbCardProperty
+class nsAbCard: public nsAbRDFResource, public nsAbCardProperty
 {
 public: 
 
-  NS_DECL_ISUPPORTS_INHERITED
+	NS_DECL_ISUPPORTS_INHERITED
 
-  nsABCard(void);
-  virtual ~nsABCard(void);
-
-  // nsICollection methods:
-  
-  NS_IMETHOD Count(PRUint32 *result) {
-    return mSubDirectories->Count(result);
-  }
-  NS_IMETHOD GetElementAt(PRUint32 i, nsISupports* *result) {
-    return mSubDirectories->GetElementAt(i, result);
-  }
-  NS_IMETHOD SetElementAt(PRUint32 i, nsISupports* value) {
-    return mSubDirectories->SetElementAt(i, value);
-  }
-  NS_IMETHOD AppendElement(nsISupports *aElement) {
-    return mSubDirectories->AppendElement(aElement);
-  }
-  NS_IMETHOD RemoveElement(nsISupports *aElement) {
-    return mSubDirectories->RemoveElement(aElement);
-  }
-  NS_IMETHOD Enumerate(nsIEnumerator* *result) {
-    return mSubDirectories->Enumerate(result);
-  }
-  NS_IMETHOD Clear(void) {
-    return mSubDirectories->Clear();
-  }
-
-  // nsIAbBase methods:
-/*  
-  NS_IMETHOD GetURI(char* *name) { return nsAbRDFResource::GetValue(name); }
-  NS_IMETHOD GetName(char **name);
-  NS_IMETHOD SetName(char *name);
-  NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
-  NS_IMETHOD GetParent(nsIAbBase* *parent);
-  NS_IMETHOD SetParent(nsIAbBase *parent);
-  NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
-  NS_IMETHOD AddAddrBookListener(nsIAbListener * listener);
-  NS_IMETHOD RemoveAddrBookListener(nsIAbListener * listener);
-  NS_IMETHOD AddUnique(nsISupports* element);
-  NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-*/
-
-//  NS_IMETHOD GetPrettiestName(char ** name);
-
-//  NS_IMETHOD OnCloseDirectory();
-//  NS_IMETHOD Delete();
-
-	NS_IMETHODIMP ContainsChildNamed(const char *name, PRBool* containsChild);
-	NS_IMETHODIMP FindParentOf(nsIAbCard * aDirectory, nsIAbCard ** aParent);
-	NS_IMETHODIMP IsParentOf(nsIAbCard *child, PRBool deep, PRBool *isParent);
+	nsAbCard(void);
+	virtual ~nsAbCard(void);
 
 	// nsIAddrDBListener methods:
 	NS_IMETHOD OnCardEntryChange(PRUint32 abCode, nsIAbCard *card, nsIAddrDBListener *instigator);
-
-#ifdef HAVE_DB
-  NS_IMETHOD GetTotalPersonsInDB(PRUint32 *totalPersons) const;					// How many messages in database.
-#endif
 	
 protected:
 
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
-//	nsresult NotifyItemAdded(nsISupports *item);
-//	nsresult NotifyItemDeleted(nsISupports *item);
-
-
-   nsresult AddSubNode(nsAutoString name, nsIAbCard **childDir);
+	nsresult AddSubNode(nsAutoString name, nsIAbCard **childDir);
 
 protected:
-	nsString mCardName;
-	nsCOMPtr<nsISupportsArray> mSubDirectories;
+	nsCOMPtr<nsISupportsArray> mSubCards;
 	nsVoidArray *mListeners;
-	PRBool mInitialized;
-
-	PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
-	PRUint8 mDepth;
-	PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
 };
 
 #endif

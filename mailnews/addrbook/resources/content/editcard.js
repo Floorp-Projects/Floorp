@@ -84,7 +84,7 @@ function NewCardOKButton()
 	{
 		SetCardValues(cardproperty, frames["editcard"].document);
 	
-		cardproperty.AddCardToDatabase();// Candice pass  editCard.abURI  this is the var containing GetResultTreeDirectory()
+		cardproperty.AddCardToDatabase(editCard.abURI);
 	}
 	
 	return true;	// close the window
@@ -95,7 +95,7 @@ function EditCardOKButton()
 {
 	SetCardValues(editCard.card, frames["editcard"].document);
 	
-	editCard.card.EditCardToDatabase();// Candice pass  editCard.abURI  this is the var containing GetResultTreeDirectory()
+	editCard.card.EditCardToDatabase(editCard.abURI);
 	
 	// callback to allow caller to update
 	if ( editCard.okCallback )
@@ -261,4 +261,3 @@ function DisplayNameChanged()
 	// turn off generateDisplayName if the user changes the display name
 	editCard.generateDisplayName = false;
 }
-

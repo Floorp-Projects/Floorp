@@ -3,7 +3,7 @@ function AbNewCardDialog()
 	var dialog = window.openDialog("chrome://addressbook/content/newcardDialog.xul",
 								   "abNewCard",
 								   "chrome",
-								   {abURI:GetResultTreeDirectory()});
+								   {abURI:GetResultTreeDirectory().getAttribute('id')});
 
 	return dialog;
 }
@@ -13,16 +13,17 @@ function AbEditCardDialog(card, okCallback)
 	var dialog = window.openDialog("chrome://addressbook/content/editcardDialog.xul",
 								   "abEditCard",
 								   "chrome",
-								   {abURI:GetResultTreeDirectory(),
+								   {abURI:GetResultTreeDirectory().getAttribute('id'),
 								    card:card, okCallback:okCallback});
 	
 	return dialog;
 }
 
+var addressbook = Components.classes["component://netscape/addressbook"].createInstance();
+	addressbook = addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+
 function AbDelete()
 {
-	var addressbook = Components.classes["component://netscape/addressbook"].createInstance();
-	addressbook = addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 	dump("\AbDelete from XUL\n");
 	var tree = GetResultTree();
 	if( tree )
@@ -128,4 +129,12 @@ function AbClose()
 {
 	top.window.close();
 }
+
+function AbNewAddressBook()
+{
+    var dirTree = GetDirectoryTree(); 
+	var srcDirectory = GetResultTreeDirectory();
+	addressbook.NewAddressBook(dirTree.database, srcDirectory, "My New Address Book");
+}
+
 

@@ -24,17 +24,19 @@ include <$(DEPTH)\config\config.mak>
 ## exports
 
 EXPORTS=								\
-			nsDirectoryDataSource.h		\
-			nsAbDirectory.h				\
+			nsAddressBook.h				\
+			nsAddrBookSession.h			\
+ 			nsAbRDFDataSource.h			\
+			nsAbRDFResource.h			\
 			nsCardDataSource.h			\
+			nsDirectoryDataSource.h		\
 			nsAbCard.h					\
+			nsAbDirectory.h				\
+			nsAbCardProperty.h			\
 			nsDirPrefs.h				\
 			nsAddrDatabase.h			\
-			nsAddressBook.h				\
-			nsAbCardProperty.h				\
-			nsAbRDFResource.h			\
-			nsAddrBookSession.h			\
-			nsAbAutoCompleteSession.h		\
+			nsAbDirProperty.h			\
+			nsAbAutoCompleteSession.h	\
 			$(NULL)
 
 ################################################################################
@@ -43,16 +45,18 @@ EXPORTS=								\
 LIBRARY_NAME=addrbook_s
 
 CPP_OBJS=										\
-    .\$(OBJDIR)\nsDirectoryDataSource.obj		\
-    .\$(OBJDIR)\nsAbDirectory.obj				\
+    .\$(OBJDIR)\nsAddressBook.obj				\
+    .\$(OBJDIR)\nsAddrBookSession.obj			\
+    .\$(OBJDIR)\nsAbRDFDataSource.obj			\
+    .\$(OBJDIR)\nsAbRDFResource.obj				\
     .\$(OBJDIR)\nsCardDataSource.obj			\
+    .\$(OBJDIR)\nsDirectoryDataSource.obj		\
     .\$(OBJDIR)\nsAbCard.obj					\
+    .\$(OBJDIR)\nsAbDirectory.obj				\
+    .\$(OBJDIR)\nsAbCardProperty.obj			\
     .\$(OBJDIR)\nsDirPrefs.obj					\
     .\$(OBJDIR)\nsAddrDatabase.obj				\
-    .\$(OBJDIR)\nsAddressBook.obj				\
-    .\$(OBJDIR)\nsAbCardProperty.obj				\
-    .\$(OBJDIR)\nsAbRDFResource.obj				\
-    .\$(OBJDIR)\nsAddrBookSession.obj				\
+    .\$(OBJDIR)\nsAbDirProperty.obj				\
     .\$(OBJDIR)\nsAbAutoCompleteSession.obj		\
 	$(NULL)
 

@@ -27,6 +27,7 @@
 
 #include "nsRDFResource.h"
 #include "nsIAbCard.h"
+#include "nsIAbDirectory.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"

@@ -19,12 +19,18 @@
 #include "nsCOMPtr.h"
 #include "nsAddrBookSession.h"
 #include "nsIAddrBookSession.h"
+#include "nsIFileSpec.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+
+
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+
 
 NS_IMPL_ISUPPORTS(nsAddrBookSession, nsCOMTypeInfo<nsIAddrBookSession>::GetIID());
-
     
 nsAddrBookSession::nsAddrBookSession():
-  mRefCnt(0)
+  mRefCnt(0), mpUserDirectory(nsnull)
 {
 	NS_INIT_REFCNT();
 
@@ -34,9 +40,9 @@ nsAddrBookSession::nsAddrBookSession():
 nsAddrBookSession::~nsAddrBookSession()
 {
 	if (mListeners) 
-	{
 		delete mListeners;
-	}
+	if (mpUserDirectory)
+		delete mpUserDirectory;
 }
 
 
@@ -96,5 +102,24 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryItemDeleted(nsIAbDirectory *dire
 
 }
 
+NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
+{
+	nsresult rv = NS_OK;
+	if (!mpUserDirectory)
+		mpUserDirectory = new nsFileSpec();
+
+	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsIFileSpec* profiledir;
+	rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &profiledir);
+	if (NS_FAILED(rv))
+		return rv;
+	profiledir->GetFileSpec(mpUserDirectory);
+
+	*userDir = mpUserDirectory;
+	return rv;
+}
 
 

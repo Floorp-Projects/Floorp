@@ -41,7 +41,7 @@
 	<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child"
 				  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
 				  open="true">
-		<treeitem ref="abdirectory:/" open="true">
+		<treeitem ref="abdirectory://" open="true">
 		</treeitem>
 	</treechildren>
 </tree>
