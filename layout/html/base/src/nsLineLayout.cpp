@@ -1040,7 +1040,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the float.
   if (frameType) {
     if (nsLayoutAtoms::placeholderFrame == frameType) {
-      pfd->SetFlag(PFD_ISPLACEHOLDERFRAME, PR_TRUE);
+      pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
       if (outOfFlowFrame) {
         // Make sure it's floated and not absolutely positioned
@@ -1102,6 +1102,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     }
     else if (nsLayoutAtoms::letterFrame==frameType) {
       pfd->SetFlag(PFD_ISLETTERFRAME, PR_TRUE);
+    }
+    else if (nsLayoutAtoms::brFrame == frameType) {
+      pfd->SetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE, PR_TRUE);
     }
   }
 
@@ -2644,7 +2647,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       }
     }
     else if (!pfd->GetFlag(PFD_ISTEXTFRAME) &&
-             !pfd->GetFlag(PFD_ISPLACEHOLDERFRAME)) {
+             !pfd->GetFlag(PFD_SKIPWHENTRIMMINGWHITESPACE)) {
       // If we hit a frame on the end that's not text and not a placeholder,
       // then there is no trailing whitespace to trim. Stop the search.
       *aDeltaWidth = 0;
