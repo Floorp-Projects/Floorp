@@ -55,8 +55,19 @@ nsDateTimeChannel::Init(const char* verb,
 {
     nsresult rv;
 
+    NS_ASSERTION(uri, "no uri");
+
     mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
+
+    rv = mUrl->GetPort(&mPort);
+    if (NS_FAILED(rv) || mPort < 1)
+        mPort = DATETIME_PORT;
+
+    rv = mUrl->GetPath(getter_Copies(mHost));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!*(const char *)mHost) return NS_ERROR_NOT_INITIALIZED;
 
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
@@ -65,12 +76,6 @@ nsDateTimeChannel::Init(const char* verb,
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mUrl->GetPort(&mPort);
-    if (NS_FAILED(rv) || mPort < 1)
-        mPort = DATETIME_PORT;
-
-    rv = mUrl->GetPath(getter_Copies(mHost));
-    if (NS_FAILED(rv)) return rv;
     return NS_OK;
 }
 
