@@ -1567,6 +1567,15 @@ PR_ParseTimeString(
                   secs = mktime(&localTime);
                   if (secs != (time_t) -1)
                     {
+#if defined(XP_MAC)
+                      /*
+                       * The mktime() routine in MetroWerks MSL C
+                       * Runtime library returns seconds since midnight,
+                       * 1 Jan. 1900, not 1970.  So we need to adjust
+                       * its return value to the NSPR epoch.
+                       */
+                      secs -= ((365 * 70UL) + 17) * 24 * 60 * 60;
+#endif
                       LL_I2L(*result, secs);
                       LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
                       LL_MUL(*result, *result, usec_per_sec);
