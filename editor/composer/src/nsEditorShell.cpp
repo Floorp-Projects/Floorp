@@ -3062,7 +3062,7 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
     res = editor->SetDocumentCharacterSet(characterSet);
   
   if(NS_SUCCEEDED(res)) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow));
+    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryReferent(mContentWindow));
     if (!globalObj) {
       return NS_ERROR_FAILURE;
     }
