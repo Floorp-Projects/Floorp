@@ -85,7 +85,7 @@ extern "C" NS_EXPORT nsresult
 JSJ_RegisterLiveConnectFactory()
 {
     nsCOMPtr<nsIFactory> factory = new nsCLiveconnectFactory;
-    if (factory != NULL) {
+    if (factory) {
         return nsComponentManager::RegisterFactory(kCLiveconnectCID, "LiveConnect",
                                                   "@mozilla.org/liveconnect/liveconnect;1",
                                                   factory, PR_TRUE);
