@@ -597,7 +597,7 @@ NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
                                     prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
         if (!proxyPrompt) return NS_ERROR_FAILURE;
         *result = proxyPrompt;
-        NS_ADDREF(proxyPrompt);
+        NS_ADDREF((nsIPrompt*)*result);
       }
     }
   } else {
@@ -709,7 +709,7 @@ NS_IMETHODIMP CertDownloaderContext::GetInterface(const nsIID & uuid, void * *re
                                     prompter, PROXY_SYNC, getter_AddRefs(proxyPrompt));
         if (!proxyPrompt) return NS_ERROR_FAILURE;
         *result = proxyPrompt;
-        NS_ADDREF(proxyPrompt);
+        NS_ADDREF((nsIPrompt*)*result);
       }
     }
   } else {
