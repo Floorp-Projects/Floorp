@@ -167,7 +167,11 @@ void testStrings(nsIDocument* aDoc) {
 class MyDocument : public nsDocument {
 public:
   MyDocument();
-  void LoadURL(nsIURL* aURL, nsIPostData* aPostData);
+  NS_IMETHOD LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
+                     nsIPostData* aPostData)
+  {
+    return NS_OK;
+  }
 
 protected:
   virtual ~MyDocument();
@@ -178,10 +182,6 @@ MyDocument::MyDocument()
 }
 
 MyDocument::~MyDocument()
-{
-}
-
-void MyDocument::LoadURL(nsIURL* aURL, nsIPostData* aPostData)
 {
 }
 
