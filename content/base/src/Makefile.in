@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  imglib2 \
 		  gfx2 \
+		  uriloader \
       webbrwsr  \
 		  $(NULL)
 
@@ -66,6 +67,8 @@ CPPSRCS		= \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
 		nsDocumentViewer.cpp \
+		nsPrintProgress.cpp \
+		nsPrintProgressParams.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \

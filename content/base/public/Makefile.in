@@ -68,6 +68,9 @@ XPIDLSRCS	= \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoader.idl  \
 		nsIScriptLoaderObserver.idl  \
+		nsIPrintProgress.idl  \
+		nsIPrintProgressParams.idl  \
+		nsIPrintStatusFeedback.idl  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

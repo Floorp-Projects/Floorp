@@ -55,10 +55,13 @@ REQUIRES	= xpcom \
 		  intl \
 		  imglib2 \
 		  gfx2 \
+		  uriloader \
 		  webBrowser_core\
 		  $(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsPrintProgress.obj	\
+	.\$(OBJDIR)\nsPrintProgressParams.obj	\
 	.\$(OBJDIR)\nsStyleContext.obj		\
 	.\$(OBJDIR)\nsStyleSet.obj		\
 	.\$(OBJDIR)\nsCommentNode.obj		\
