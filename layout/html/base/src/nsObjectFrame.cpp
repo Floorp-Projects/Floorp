@@ -1344,7 +1344,10 @@ nsresult nsObjectFrame::GetFullURL(nsIURI*& aFullURL)
 
 nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 {
-  return mInstanceOwner->GetInstance(aPluginInstance);
+  if(mInstanceOwner == nsnull)
+    return NS_ERROR_NULL_POINTER;
+  else
+    return mInstanceOwner->GetInstance(aPluginInstance);
 }
 
 nsresult
