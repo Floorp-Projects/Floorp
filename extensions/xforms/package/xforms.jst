@@ -1,0 +1,28 @@
+var err = initInstall("Mozilla XForms", "XForms", "0.1");
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+var srChrome = $SpaceRequired$:chrome;
+var srComponents = $SpaceRequired$:components;
+
+if (verifyDiskSpace(fProgram, srChrome + srComponents))
+{
+  err = addFile("", "0.1", "components", fProgram, "", true);
+  logComment("addDirectory components: " + err);
+  err = addDirectory("", "0.1", "chrome", fProgram, "", true);
+  logComment("addDirectory chrome: " + err);
+
+  registerChrome(PACKAGE | DELAYED_CHROME, 
+  if (err == SUCCESS)
+  {
+    err = performInstall();
+    logComment("performInstall() returned: " + err);
+  }
+  else
+  {
+    cancelInstall();
+    logComment("cancelInstall() due to error: "+err);
+  }
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);

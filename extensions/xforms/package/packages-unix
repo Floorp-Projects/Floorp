@@ -1,0 +1,6 @@
+[xforms]
+chrome/xforms.jar
+components/libschemavalidation.so
+components/schemavalidation.xpt
+components/libxforms.so
+components/xforms.xpt

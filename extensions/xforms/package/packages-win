@@ -1,0 +1,6 @@
+[xforms]
+chrome/xforms.jar
+components/schemavalidation.dll
+components/schemavalidation.xpt
+components/xforms.dll
+components/xforms.xpt
