@@ -12,13 +12,14 @@
         <broadcaster id="data.location" type="url" value="url"/>
         <broadcaster id="data.contentType" type="string" value="content-type"/>
         <broadcaster id="data.fileName" type="string" value=""/>
-        <broadcaster id="data.progress" type="progress" value="0" max="0"/>
+        <broadcaster id="data.progress" type="progress" value="0" max="0" completed="false"/>
         <broadcaster id="data.status" type="string" value=""/>
         <broadcaster id="data.execute" command=""/>
     </data>
 
     <dialog>
         <observes element="data.progress" attribute="value" onchange="onProgress()"/>
+        <observes element="data.progress" attribute="completed" onchange="onCompletion()"/>
     </dialog>
 
     <html:script>
@@ -47,13 +48,15 @@
             dialog.progress    = document.getElementById("dialog.progress");
             dialog.progressPercent = document.getElementById("dialog.progressPercent");
             dialog.timeLeft    = document.getElementById("dialog.timeLeft");
+            dialog.cancel      = document.getElementById("dialog.cancel");
 
             // Fill dialog.
             loadDialog();
         }
 
-        function cancel() {
-            data.execute.setAttribute("command","cancel");
+        function stop() {
+            // Stop the download.
+            data.execute.setAttribute("command","stop");
         }
 
         var started = false;
@@ -67,6 +70,8 @@
                 // Initialize download start time.
                 started = true;
                 startTime = ( new Date() ).getTime();
+                // Let the user stop, now.
+                dialog.cancel.removeAttribute( "disabled" );
             }
             // Get stats.
             var bytes = data.progress.getAttribute("value");
@@ -130,6 +135,10 @@
                 dialog.timeLeft.childNodes[0].nodeValue = status;
             }
         }
+
+        function onCompletion() {
+            dialog.cancel.setAttribute( "disabled", "" );
+        }
     </html:script>
 
     <html:table style="width:100%;">
@@ -186,7 +195,7 @@
 
         <html:tr>
             <html:td align="center" colspan="2">
-                <html:button onclick="cancel()">Cancel</html:button>
+                <html:button id="dialog.cancel" onclick="stop()" disabled>Cancel</html:button>
             </html:td>
         </html:tr>
 
