@@ -1192,9 +1192,9 @@ xpcom/tests/dynamic/Makefile
 xpcom/tools/Makefile
 xpcom/tools/xpidl/Makefile
 xpfe/Makefile
-xpfe/xpviewer/Makefile
-xpfe/xpviewer/src/Makefile
-xpfe/xpviewer/public/Makefile
+dnl xpfe/xpviewer/Makefile
+dnl xpfe/xpviewer/src/Makefile
+dnl xpfe/xpviewer/public/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
