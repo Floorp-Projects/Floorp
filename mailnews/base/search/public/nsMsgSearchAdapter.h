@@ -121,7 +121,8 @@ public:
   static const char *m_kImapSizeLarger;
   static const char *m_kImapNew;
   static const char *m_kImapNotNew;
-
+  static const char *m_kImapFlagged;
+  static const char *m_kImapNotFlagged;
 protected:
   typedef enum _msg_TransformType
   {

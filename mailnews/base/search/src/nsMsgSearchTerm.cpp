@@ -260,7 +260,7 @@ nsresult NS_MsgGetStringForOperator(PRInt16 op, const char **string)
 void NS_MsgGetUntranslatedStatusName (uint32 s, nsCString *outName)
 {
 	const char *tmpOutName = NULL;
-#define MSG_STATUS_MASK (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED | MSG_FLAG_NEW)
+#define MSG_STATUS_MASK (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED | MSG_FLAG_NEW | MSG_FLAG_MARKED)
 	PRUint32 maskOut = (s & MSG_STATUS_MASK);
 
 	// diddle the flags to pay attention to the most important ones first, if multiple
@@ -292,6 +292,9 @@ void NS_MsgGetUntranslatedStatusName (uint32 s, nsCString *outName)
 	case MSG_FLAG_NEW:
 		tmpOutName = "new";
 		break;
+        case MSG_FLAG_MARKED:
+                tmpOutName = "flagged";
+                break;
 	default:
 		// This is fine, status may be "unread" for example
         break;
@@ -314,6 +317,8 @@ PRInt32 NS_MsgGetStatusValueFromName(char *name)
     return MSG_FLAG_FORWARDED|MSG_FLAG_REPLIED;
   if (!strcmp("new", name))
     return MSG_FLAG_NEW;
+  if (!strcmp("flagged", name))
+    return MSG_FLAG_MARKED;
   return 0;
 }
 
