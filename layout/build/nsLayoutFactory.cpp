@@ -35,6 +35,8 @@
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsICollection.h"
+#include "nsIDOMRange.h"
+
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -44,13 +46,15 @@ static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
-static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
+static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
+nsresult NS_NewRange(nsIDOMRange **);
 
 
 
@@ -222,8 +226,15 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kICollectionIID)) {
+  else if (mClassID.Equals(kCRangeListCID)) {
     res = NS_NewRangeList((nsICollection **)&inst);
+    if (!NS_SUCCEEDED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kCRangeCID)) {
+    res = NS_NewRange((nsIDOMRange **)&inst);
     if (!NS_SUCCEEDED(res)) {
       return res;
     }
