@@ -57,7 +57,7 @@ RemoveAttributes(PLHashEntry* he, PRIntn i, void* arg)
     NS_RELEASE(attrPrivate);
     NS_RELEASE(attr);
   }
-  delete [] str;
+  Recycle(str);
 
   return HT_ENUMERATE_REMOVE;
 }
@@ -307,7 +307,7 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
           key = (char*)(*he)->key;
           PL_HashTableRemove(attrHash, buf);
           if (nsnull != key) {
-            delete [] key;
+            Recycle(key);
           }
           
           result = oldAttribute->QueryInterface(kIDOMAttributePrivateIID,
@@ -404,7 +404,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 
         PL_HashTableRemove(attrHash, buf);
         if (nsnull != key) {
-          delete [] key;
+          Recycle(key);
         }
           
         result = attribute->QueryInterface(kIDOMAttributePrivateIID,
