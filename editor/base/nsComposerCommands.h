@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Ryan Cassin (rcassin@supernova.org)
  *   
  */
 
@@ -208,11 +209,6 @@ NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 // File menu
 NS_DECL_COMPOSER_COMMAND(nsNewCommands)   // handles 'new' anything
-
-
-NS_DECL_COMPOSER_COMMAND(nsSaveCommand)
-NS_DECL_COMPOSER_COMMAND(nsSaveAsCommand)
-
 
 
 // Edit menu

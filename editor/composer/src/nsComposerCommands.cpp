@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Ryan Cassin (rcassin@supernova.org)
  *   
  */
 
@@ -244,71 +245,6 @@ nsPrintingCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
 
   return rv;  
 }
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-NS_IMETHODIMP
-nsSaveCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  *outCmdEnabled = PR_FALSE;
-  if (editorShell)
-  {
-    PRBool docModified;
-    if (NS_SUCCEEDED(editorShell->GetDocumentModified(&docModified)))
-      *outCmdEnabled = docModified;
-  }
-  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSaveCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  
-  if (editorShell)
-  {
-    editorShell->FinishHTMLSource();
-    PRBool wasSaved;
-    rv = editorShell->SaveDocument(PR_FALSE, PR_FALSE, &wasSaved);
-  }
-  return rv;  
-}
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-NS_IMETHODIMP
-nsSaveAsCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  *outCmdEnabled = (editorShell.get() != nsnull);  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSaveAsCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editorShell)
-  {
-    editorShell->FinishHTMLSource();
-    PRBool wasSaved;
-    rv = editorShell->SaveDocument(PR_TRUE, PR_FALSE, &wasSaved);
-  }
-  return rv;  
-}
-
 
 #ifdef XP_MAC
 #pragma mark -
