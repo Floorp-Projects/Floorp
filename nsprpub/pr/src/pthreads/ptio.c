@@ -1453,6 +1453,11 @@ static PRInt32 pt_Read(PRFileDesc *fd, void *buf, PRInt32 amount)
     return bytes;
 }  /* pt_Read */
 
+static PRInt32 pt_SocketRead(PRFileDesc *fd, void *buf, PRInt32 amount)
+{
+    return pt_Recv(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
+}  /* pt_SocketRead */
+
 static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
 {
     PRInt32 syserrno, bytes = -1;
@@ -1494,6 +1499,11 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
         pt_MapError(_PR_MD_MAP_WRITE_ERROR, syserrno);
     return bytes;
 }  /* pt_Write */
+
+static PRInt32 pt_SocketWrite(PRFileDesc *fd, const void *buf, PRInt32 amount)
+{
+    return pt_Send(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
+}  /* pt_SocketWrite */
 
 static PRInt32 pt_Writev(
     PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_len, PRIntervalTime timeout)
@@ -2940,8 +2950,8 @@ static PRIOMethods _pr_pipe_methods = {
 static PRIOMethods _pr_tcp_methods = {
     PR_DESC_SOCKET_TCP,
     pt_Close,
-    pt_Read,
-    pt_Write,
+    pt_SocketRead,
+    pt_SocketWrite,
     pt_Available_s,
     pt_Available64_s,
     pt_Synch,
@@ -2979,8 +2989,8 @@ static PRIOMethods _pr_tcp_methods = {
 static PRIOMethods _pr_udp_methods = {
     PR_DESC_SOCKET_UDP,
     pt_Close,
-    pt_Read,
-    pt_Write,
+    pt_SocketRead,
+    pt_SocketWrite,
     pt_Available_s,
     pt_Available64_s,
     pt_Synch,
