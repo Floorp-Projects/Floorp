@@ -2519,13 +2519,10 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
             Pop3MsgInfo* info = m_pop3ConData->msg_info +
                 m_pop3ConData->last_accessed_msg; 
             if (info && info->uidl && (m_pop3ConData->only_uidl == NULL) &&
-                m_pop3ConData->newuidl) 
-            {   // check if newuidl has more than zero entries
-              if (m_pop3ConData->newuidl->nentries > 0)
-              {
+                m_pop3ConData->newuidl && m_pop3ConData->newuidl->nentries > 0) 
+            {  
                 PRBool val = PL_HashTableRemove (m_pop3ConData->newuidl, info->uidl);
                 PR_ASSERT(val);
-              }
             }
         }
     }
