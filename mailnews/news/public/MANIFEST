@@ -27,5 +27,5 @@
 #[installed by xpidl] nsINntpIncomingServer.h
 
 nsINNTPNewsgroupPost.h
-nsINntpUrl.h
 nsINNTPProtocol.h
+nsINntpUrl.h

@@ -18,30 +18,22 @@
 DEPTH=..\..\..
 
 XPIDLSRCS= \
-	.\nsIMsgOfflineNewsState.idl \
-	.\nsINNTPArticleList.idl \
-	.\nsINNTPCategory.idl \
-	.\nsINNTPCategoryContainer.idl \
-	.\nsINNTPHost.idl \
-	.\nsINNTPNewsgroup.idl \
-	.\nsINNTPNewsgroupList.idl \
-	.\nsINntpIncomingServer.idl \
-	.\nsINntpService.idl \
-	$(NULL)
+		.\nsIMsgOfflineNewsState.idl \
+		.\nsINNTPArticleList.idl \
+		.\nsINNTPCategory.idl \
+		.\nsINNTPCategoryContainer.idl \
+		.\nsINNTPHost.idl \
+		.\nsINNTPNewsgroup.idl \
+		.\nsINNTPNewsgroupList.idl \
+		.\nsINntpIncomingServer.idl \
+		.\nsINntpService.idl \
+		$(NULL)
 
-EXPORTS =							\
-		nsIMsgOfflineNewsState.h 	\
-		nsINNTPCategory.h			\
-		nsINNTPCategoryContainer.h	\
-		nsINNTPHost.h				\
-		nsINNTPNewsgroup.h 			\
-		nsINNTPNewsgroupPost.h		\
-		nsINNTPNewsgroupList.h		\
-		nsINNTPProtocol.h \
-		nsINntpIncomingServer.h			\
-		nsINntpService.h			\
-		nsINntpUrl.h				\
-        $(NULL)
+EXPORTS= \
+		nsINNTPNewsgroupPost.h  \
+		nsINNTPProtocol.h       \
+		nsINntpUrl.h    \
+		$(NULL)
 
 MODULE=news
 

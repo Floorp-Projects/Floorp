@@ -37,17 +37,8 @@ XPIDLSRCS= \
 		$(NULL)
 
 EXPORTS= \
-		nsIMsgOfflineNewsState.h	\
-		nsINNTPArticleList.h	\
-		nsINNTPCategory.h	\
-		nsINNTPCategoryContainer.h	\
-		nsINNTPHost.h	\
-		nsINNTPNewsgroup.h	\
-		nsINNTPNewsgroupList.h	\
 		nsINNTPNewsgroupPost.h	\
 		nsINNTPProtocol.h	\
-		nsINntpIncomingServer.h	\
-		nsINntpService.h	\
 		nsINntpUrl.h	\
 		$(NULL)
 
