@@ -21,9 +21,7 @@
  */
 
 /*
-
   The global bookmarks service.
-
  */
 
 #include "nsCOMPtr.h"
@@ -96,7 +94,7 @@
 #endif
 
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
-// #define	DEBUG_BOOKMARK_PING_OUTPUT	1
+//	#define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -289,10 +287,13 @@ class	nsBookmarksService;
 class BookmarkParser {
 private:
 	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
-	nsInputFileStream		*mStream;
 	nsIRDFDataSource		*mDataSource;
 	const char			*mIEFavoritesRoot;
 	PRBool				mFoundIEFavoritesRoot;
+	char				*mContents;
+	PRUint32			mContentsLen;
+	PRInt32				mStartOffset;
+	nsInputFileStream		*mInputStream;
 
 friend	class nsBookmarksService;
 
@@ -307,35 +308,39 @@ protected:
 
 	nsresult ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder);
 
-	nsresult ParseBookmark(const nsString& aLine,
-			       nsCOMPtr<nsIRDFContainer>& aContainer,
+	nsresult ParseBookmark(const nsString &aLine,
+			       const nsCOMPtr<nsIRDFContainer> &aContainer,
 			       nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode);
 
-	nsresult ParseBookmarkHeader(const nsString& aLine,
-				     nsCOMPtr<nsIRDFContainer>& aContainer,
+	nsresult ParseBookmarkHeader(const nsString &aLine,
+				     const nsCOMPtr<nsIRDFContainer> &aContainer,
 				     nsIRDFResource *nodeType);
 
-	nsresult ParseBookmarkSeparator(const nsString& aLine,
-					nsCOMPtr<nsIRDFContainer>& aContainer);
+	nsresult ParseBookmarkSeparator(const nsString &aLine,
+					const nsCOMPtr<nsIRDFContainer> &aContainer);
 
-	nsresult ParseHeaderBegin(const nsString& aLine,
-				  nsCOMPtr<nsIRDFContainer>& aContainer);
+	nsresult ParseHeaderBegin(const nsString &aLine,
+				  const nsCOMPtr<nsIRDFContainer> &aContainer);
 
-	nsresult ParseHeaderEnd(const nsString& aLine);
+	nsresult ParseHeaderEnd(const nsString &aLine);
 
-	nsresult ParseAttribute(const nsString& aLine,
-				const char* aAttribute,
-				PRInt32 aAttributeLen,
-				nsString& aResult);
+	nsresult ParseAttribute(const nsString &aLine, const char *aAttribute,
+				PRInt32 aAttributeLen, nsString &aResult);
+
+	PRInt32	getEOL(const char *whole, PRInt32 startOffset, PRInt32 totalLength);
 
 public:
 	BookmarkParser();
 	~BookmarkParser();
 
-	nsresult Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource);
+	nsresult Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource);
+	nsresult DecodeBuffer(nsString &line, char *buf, PRUint32 aLength);
+	nsresult ProcessLine(nsIRDFContainer *aContainer, nsIRDFResource *nodeType,
+			nsIRDFResource **bookmarkNode, nsString &line,
+			nsString &description, PRBool &inDescription, PRBool &isActiveFlag);
 	nsresult Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType);
 
-	nsresult AddBookmark(nsCOMPtr<nsIRDFContainer>& aContainer,
+	nsresult AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 			     const char*      aURL,
 			     const PRUnichar* aOptionalTitle,
 			     PRInt32          aAddDate,
@@ -360,19 +365,57 @@ public:
 
 
 BookmarkParser::BookmarkParser()
+	: mContents(nsnull), mContentsLen(0L), mStartOffset(0L), mInputStream(nsnull)
 {
-    bm_AddRefGlobals();
+	bm_AddRefGlobals();
 }
 
 
 
 nsresult
-BookmarkParser::Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource)
+BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource)
 {
-	mStream = aStream;
 	mDataSource = aDataSource;
 	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
+
+	if (fileSpec)
+	{
+		mContentsLen = fileSpec->GetFileSize();
+		if (mContentsLen > 0)
+		{
+			mContents = new char [mContentsLen + 1];
+			if (mContents)
+			{
+				nsInputFileStream inputStream(*fileSpec);	// defaults to read only
+			       	PRInt32 howMany = inputStream.read(mContents, mContentsLen);
+			        if (PRUint32(howMany) == mContentsLen)
+			        {
+					mContents[mContentsLen] = '\0';
+			        }
+			        else
+			        {
+			        	delete [] mContents;
+			        	mContents = nsnull;
+			        }
+			}
+		}
+
+		if (!mContents)
+		{
+			// we were unable to read in the entire bookmark file at once,
+			// so let's try reading it in a bit at a time instead
+			mInputStream = new nsInputFileStream(*fileSpec);
+			if (mInputStream)
+			{
+				if (! mInputStream->is_open())
+				{
+					delete mInputStream;
+					mInputStream = nsnull;
+				}
+			}
+		}
+	}
 	return(NS_OK);
 }
 
@@ -380,6 +423,16 @@ BookmarkParser::Init(nsInputFileStream *aStream, nsIRDFDataSource *aDataSource)
 
 BookmarkParser::~BookmarkParser()
 {
+	if (mContents)
+	{
+		delete [] mContents;
+		mContents = nsnull;
+	}
+	if (mInputStream)
+	{
+		delete mInputStream;
+		mInputStream = nsnull;
+	}
 	bm_ReleaseGlobals();
 }
 
@@ -424,12 +477,168 @@ static const char kCharsetEquals[]         = "charset=";		// note: no quote
 
 
 
+PRInt32
+BookmarkParser::getEOL(const char *whole, PRInt32 startOffset, PRInt32 totalLength)
+{
+	PRInt32		eolOffset = -1;
+
+	while (startOffset < totalLength)
+	{
+		char	c;
+		c = whole[startOffset];
+		if ((c == '\n') || (c == '\r') || (c == '\0'))
+		{
+			eolOffset = startOffset;
+			break;
+		}
+		++startOffset;
+	}
+	return(eolOffset);
+}
+
+
+
 nsresult
-BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
+BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
+{
+	if (mUnicodeDecoder)
+	{
+		nsresult	rv;
+		char		*aBuffer = buf;
+		PRInt32		unicharBufLen = 0;
+		mUnicodeDecoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
+		PRUnichar	*unichars = new PRUnichar [ unicharBufLen+1 ];
+		do
+		{
+			PRInt32		srcLength = aLength;
+			PRInt32		unicharLength = unicharBufLen;
+			rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
+			unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+
+			// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
+
+			// Hack Start
+			for(PRInt32 i=0;i<unicharLength-1; i++)
+				if(0x0000 == unichars[i])	unichars[i] = 0x0020;
+			// Hack End
+
+			line.Append(unichars, unicharLength);
+			// if we failed, we consume one byte by replace it with U+FFFD
+			// and try conversion again.
+			if(NS_FAILED(rv))
+			{
+				mUnicodeDecoder->Reset();
+				line.Append( (PRUnichar)0xFFFD);
+				if(((PRUint32) (srcLength + 1)) > (PRUint32)aLength)
+					srcLength = aLength;
+				else 
+					srcLength++;
+				aBuffer += srcLength;
+				aLength -= srcLength;
+			}
+		} while (NS_FAILED(rv) && (aLength > 0));
+		delete [] unichars;
+		unichars = nsnull;
+	}
+	else
+	{
+		line.Append(buf, aLength);
+	}
+	return(NS_OK);
+}
+
+
+
+nsresult
+BookmarkParser::ProcessLine(nsIRDFContainer *container, nsIRDFResource *nodeType,
+			nsIRDFResource **bookmarkNode, nsString &line,
+			nsString &description, PRBool &inDescription, PRBool &isActiveFlag)
+{
+	nsresult	rv;
+	PRInt32		offset;
+
+	if (inDescription == PR_TRUE)
+	{
+		offset = line.FindChar('<');
+		if (offset < 0)
+		{
+			if (description.Length() > 0)
+			{
+				description += "\n";
+			}
+			description += line;
+			return(NS_OK);
+		}
+
+		Unescape(description);
+
+		if (*bookmarkNode)
+		{
+			nsCOMPtr<nsIRDFLiteral>	descLiteral;
+			if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
+			{
+				rv = mDataSource->Assert(*bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
+			}
+		}
+
+		inDescription = PR_FALSE;
+		description.Truncate();
+	}
+
+	if ((offset = line.Find(kHREFEquals, PR_TRUE)) >= 0)
+	{
+		rv = ParseBookmark(line, container, nodeType, bookmarkNode);
+	}
+	else if ((offset = line.Find(kOpenMeta, PR_TRUE)) >= 0)
+	{
+		rv = ParseMetaTag(line, getter_AddRefs(mUnicodeDecoder));
+	}
+	else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
+		 nsString::IsDigit(line.CharAt(offset + 2)))
+	{
+		// XXX Ignore <H1> so that bookmarks root _is_ <H1>
+		if (line.CharAt(offset + 2) != PRUnichar('1'))
+		{
+			rv = ParseBookmarkHeader(line, container, nodeType);
+		}
+	}
+	else if ((offset = line.Find(kSeparator, PR_TRUE)) >= 0)
+	{
+		rv = ParseBookmarkSeparator(line, container);
+	}
+	else if ((offset = line.Find(kCloseUL, PR_TRUE)) >= 0 ||
+		 (offset = line.Find(kCloseMenu, PR_TRUE)) >= 0 ||
+		 (offset = line.Find(kCloseDL, PR_TRUE)) >= 0)
+	{
+		isActiveFlag = PR_FALSE;
+		return ParseHeaderEnd(line);
+	}
+	else if ((offset = line.Find(kOpenUL, PR_TRUE)) >= 0 ||
+		 (offset = line.Find(kOpenMenu, PR_TRUE)) >= 0 ||
+		 (offset = line.Find(kOpenDL, PR_TRUE)) >= 0)
+	{
+		rv = ParseHeaderBegin(line, container);
+	}
+	else if ((offset = line.Find(kOpenDD, PR_TRUE)) >= 0)
+	{
+		inDescription = PR_TRUE;
+		line.Cut(0, offset+sizeof(kOpenDD)-1);
+		description = line;
+	}
+	else
+	{
+		// XXX Discard the line?
+	}
+	return(rv);
+}
+
+
+
+nsresult
+BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 {
 	// tokenize the input stream.
 	// XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
-	nsRandomAccessInputStream	in(*mStream);
 	nsresult			rv;
 
 	nsCOMPtr<nsIRDFContainer> container;
@@ -443,145 +652,80 @@ BookmarkParser::Parse(nsIRDFResource* aContainer, nsIRDFResource *nodeType)
 	if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIRDFResource>	bookmarkNode = aContainer;
-	nsAutoString			line, description;
-	PRBool				inDescription = PR_FALSE;
+	nsAutoString			description, line;
+	PRBool				isActiveFlag = PR_TRUE, inDescriptionFlag = PR_FALSE;
 
-	while (NS_SUCCEEDED(rv) && !in.eof() && !in.failed())
+	if ((mContents) && (mContentsLen > 0))
 	{
-		line.Truncate();
+		// we were able to read the entire bookmark file into memory, so process it
+		char				*linePtr;
+		PRInt32				eol;
 
-		while (PR_TRUE)
+		while ((isActiveFlag == PR_TRUE) && (mStartOffset < (signed)mContentsLen))
 		{
-			char	buf[256];
-			PRBool	untruncated = in.readline(buf, sizeof(buf));
+			linePtr = &mContents[mStartOffset];
+			eol = getEOL(mContents, mStartOffset, mContentsLen);
 
-			// in.readline() return PR_FALSE if there was buffer overflow,
-			// or there was a catastrophe. Check to see if we're here
-			// because of the latter...
-			NS_ASSERTION (! in.failed(), "error reading file");
-			if (in.failed()) return NS_ERROR_FAILURE;
+			PRInt32	aLength;
 
-			PRUint32		aLength;
-			if (untruncated)	aLength = strlen(buf);
-			else			aLength = sizeof(buf);
-
-			if (mUnicodeDecoder)
+			if ((eol >= mStartOffset) && (eol < (signed)mContentsLen))
 			{
-				char			*aBuffer = buf;
-				PRInt32			unicharBufLen = 0;
-				mUnicodeDecoder->GetMaxLength(aBuffer, aLength, &unicharBufLen);
-				PRUnichar		*unichars = new PRUnichar [ unicharBufLen+1 ];
-				do
-				{
-					PRInt32		srcLength = aLength;
-					PRInt32		unicharLength = unicharBufLen;
-					rv = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
-					unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
-
-					// Move the nsParser.cpp 00 -> space hack to here so it won't break UCS2 file
-
-					// Hack Start
-					for(PRInt32 i=0;i<unicharLength-1; i++)
-						if(0x0000 == unichars[i])	unichars[i] = 0x0020;
-					// Hack End
-
-					line.Append(unichars, unicharLength);
-					// if we failed, we consume one byte by replace it with U+FFFD
-					// and try conversion again.
-					if(NS_FAILED(rv))
-					{
-						mUnicodeDecoder->Reset();
-						line.Append( (PRUnichar)0xFFFD);
-						if(((PRUint32) (srcLength + 1)) > aLength)
-							srcLength = aLength;
-						else 
-							srcLength++;
-						aBuffer += srcLength;
-						aLength -= srcLength;
-					}
-				} while (NS_FAILED(rv) && (aLength > 0));
-				delete [] unichars;
-				unichars = nsnull;
+				// mContents[eol] = '\0';
+				aLength = eol - mStartOffset;
+				mStartOffset = eol + 1;
 			}
 			else
 			{
-				line.Append(buf, aLength);
+				aLength = mContentsLen - mStartOffset;
+				mStartOffset = mContentsLen + 1;
+				isActiveFlag = PR_FALSE;
 			}
+			if (aLength < 1)	continue;
 
-			if (untruncated)
-				break;
+			line.Truncate();
+			DecodeBuffer(line, linePtr, aLength);
+
+			ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+				line, description, inDescriptionFlag, isActiveFlag);
 		}
-
-		PRInt32	offset;
-		
-		if (inDescription == PR_TRUE)
+	}
+	else if (mInputStream)
+	{
+		// we were unable to read in the entire bookmark file at once,
+		// so let's try reading it in a bit at a time instead, and process it
+		while (NS_SUCCEEDED(rv) && (isActiveFlag == PR_TRUE) &&
+			(!mInputStream->eof()) && (!mInputStream->failed()))
 		{
-			offset = line.FindChar('<');
-			if (offset < 0)
+			line.Truncate();
+
+			while (PR_TRUE)
 			{
-				if (description.Length() > 0)
+				char	buf[256];
+				PRBool	untruncated = mInputStream->readline(buf, sizeof(buf));
+
+				// in.readline() return PR_FALSE if there was buffer overflow,
+				// or there was a catastrophe. Check to see if we're here
+				// because of the latter...
+				NS_ASSERTION (! mInputStream->failed(), "error reading file");
+				if (mInputStream->failed())
 				{
-					description += "\n";
+					rv = NS_ERROR_FAILURE;
+					break;
 				}
-				description += line;
-				continue;
+
+				PRUint32		aLength;
+				if (untruncated)	aLength = strlen(buf);
+				else			aLength = sizeof(buf);
+
+				DecodeBuffer(line, buf, aLength);
+				
+				if (untruncated)	break;
 			}
-
-			Unescape(description);
-
-			if (bookmarkNode)
+			if (NS_SUCCEEDED(rv))
 			{
-				nsCOMPtr<nsIRDFLiteral>	descLiteral;
-				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(description.GetUnicode(), getter_AddRefs(descLiteral))))
-				{
-					rv = mDataSource->Assert(bookmarkNode, kNC_Description, descLiteral, PR_TRUE);
-				}
+				ProcessLine(container, nodeType, getter_AddRefs(bookmarkNode),
+					line, description, inDescriptionFlag, isActiveFlag);
 			}
-
-			inDescription = PR_FALSE;
-			description.Truncate();
-		}
-
-		if ((offset = line.Find(kHREFEquals, PR_TRUE)) >= 0)
-		{
-			rv = ParseBookmark(line, container, nodeType, getter_AddRefs(bookmarkNode));
-		}
-		else if ((offset = line.Find(kOpenMeta, PR_TRUE)) >= 0)
-		{
-			rv = ParseMetaTag(line, getter_AddRefs(mUnicodeDecoder));
-		}
-		else if ((offset = line.Find(kOpenHeading, PR_TRUE)) >= 0 &&
-			 nsString::IsDigit(line.CharAt(offset + 2)))
-		{
-			// XXX Ignore <H1> so that bookmarks root _is_ <H1>
-			if (line.CharAt(offset + 2) != PRUnichar('1'))
-				rv = ParseBookmarkHeader(line, container, nodeType);
-		}
-		else if ((offset = line.Find(kSeparator, PR_TRUE)) >= 0)
-		{
-			rv = ParseBookmarkSeparator(line, container);
-		}
-		else if ((offset = line.Find(kCloseUL, PR_TRUE)) >= 0 ||
-			 (offset = line.Find(kCloseMenu, PR_TRUE)) >= 0 ||
-			 (offset = line.Find(kCloseDL, PR_TRUE)) >= 0)
-		{
-			return ParseHeaderEnd(line);
-		}
-		else if ((offset = line.Find(kOpenUL, PR_TRUE)) >= 0 ||
-			 (offset = line.Find(kOpenMenu, PR_TRUE)) >= 0 ||
-			 (offset = line.Find(kOpenDL, PR_TRUE)) >= 0)
-		{
-			rv = ParseHeaderBegin(line, container);
-		}
-		else if ((offset = line.Find(kOpenDD, PR_TRUE)) >= 0)
-		{
-			inDescription = PR_TRUE;
-			line.Cut(0, offset+sizeof(kOpenDD)-1);
-			description = line;
-		}
-		else
-		{
-			// XXX Discard the line?
 		}
 	}
 	return(rv);
@@ -690,7 +834,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 
 
 nsresult
-BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer,
+BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContainer> &aContainer,
 				nsIRDFResource *nodeType, nsIRDFResource **bookmarkNode)
 {
 	NS_PRECONDITION(aContainer != nsnull, "null ptr");
@@ -967,7 +1111,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 
     // Now create the bookmark
 nsresult
-BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
+BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             const char*      aURL,
                             const PRUnichar* aOptionalTitle,
                             PRInt32          aAddDate,
@@ -1059,8 +1203,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer>&  aContainer,
 
 
 nsresult
-BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
-				    nsCOMPtr<nsIRDFContainer>& aContainer,
+BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
+				    const nsCOMPtr<nsIRDFContainer> &aContainer,
 				    nsIRDFResource *nodeType)
 {
 	// Snip out the header
@@ -1176,7 +1320,7 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 
 
 nsresult
-BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer)
+BookmarkParser::ParseBookmarkSeparator(const nsString &aLine, const nsCOMPtr<nsIRDFContainer> &aContainer)
 {
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	separator;
@@ -1203,26 +1347,26 @@ BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsCOMPtr<nsIRDFCon
 
 
 nsresult
-BookmarkParser::ParseHeaderBegin(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& aContainer)
+BookmarkParser::ParseHeaderBegin(const nsString &aLine, const nsCOMPtr<nsIRDFContainer> &aContainer)
 {
-	return NS_OK;
+	return(NS_OK);
 }
 
 
 
 nsresult
-BookmarkParser::ParseHeaderEnd(const nsString& aLine)
+BookmarkParser::ParseHeaderEnd(const nsString &aLine)
 {
-	return NS_OK;
+	return(NS_OK);
 }
 
 
 
 nsresult
-BookmarkParser::ParseAttribute(const nsString& aLine,
-                               const char* aAttributeName,
+BookmarkParser::ParseAttribute(const nsString &aLine,
+                               const char *aAttributeName,
                                PRInt32 aAttributeLen,
-                               nsString& aResult)
+                               nsString &aResult)
 {
 	aResult.Truncate();
 
@@ -1296,6 +1440,11 @@ protected:
 	PRBool				busySchedule;
 	nsCOMPtr<nsIRDFResource>	busyResource;
 	PRUint32			htmlSize;
+#ifdef	XP_MAC
+	PRBool				mIEFavoritesAvailable;
+
+	nsresult ReadFavorites();
+#endif
 
 static	void	FireTimer(nsITimer* aTimer, void* aClosure);
 nsresult	ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool & examineFlag);
@@ -1411,11 +1560,29 @@ public:
 	}
 
 	NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-				nsISimpleEnumerator** labels) {
+				nsISimpleEnumerator** labels)
+	{
+#ifdef	XP_MAC
+
+		// on the Mac, IE favorites are stored in an HTML file.
+		// Defer importing this files contents until necessary.
+
+		if ((source == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+		{
+			ReadFavorites();
+		}
+#endif
 		return mInner->ArcLabelsOut(source, labels);
 	}
 
-	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult) {
+	NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult)
+	{
+#ifdef	XP_MAC
+		if (mIEFavoritesAvailable == PR_FALSE)
+		{
+			ReadFavorites();
+		}
+#endif
 		return mInner->GetAllResources(aResult);
 	}
 
@@ -1446,6 +1613,9 @@ public:
 
 nsBookmarksService::nsBookmarksService()
 	: mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
+#ifdef	XP_MAC
+	,mIEFavoritesAvailable(PR_FALSE)
+#endif
 {
 	NS_INIT_REFCNT();
 }
@@ -1454,7 +1624,16 @@ nsBookmarksService::nsBookmarksService()
 
 nsBookmarksService::~nsBookmarksService()
 {
-	Flush();
+	if (mTimer)
+	{
+		// be sure to cancel the timer, as it holds a
+		// weak reference back to nsBookmarksService
+		mTimer->Cancel();
+		mTimer = nsnull;
+	}
+	// Note: can't flush in the DTOR, as the RDF service
+	// has probably already been destroyed
+	// Flush();
 	bm_ReleaseGlobals();
 }
 
@@ -1482,11 +1661,8 @@ nsBookmarksService::Init()
 
 		rv = NS_NewTimer(getter_AddRefs(mTimer));
 		if (NS_FAILED(rv)) return rv;
-
-		// by default, fire the timer once a minute (unit is milliseconds)
 		mTimer->Init(nsBookmarksService::FireTimer, this, /* repeat, */ BOOKMARK_TIMEOUT);
-		// the timer will hold a reference to the bookmark service, so AddRef
-		NS_ADDREF(this);
+		// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
 	}
 
 	return NS_OK;
@@ -1717,7 +1893,6 @@ nsBookmarksService::GetBookmarkToPing(nsIRDFResource **theBookmark)
 void
 nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
-	// XXX Any lifetime issues we need to deal with here???
 	nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
 	if (!bmks)	return;
 
@@ -1774,19 +1949,11 @@ else
 #endif
 
 
-	// reschedule the timer unless bookmarks service is going away
-	nsrefcnt	refcnt;
-	NS_RELEASE2(bmks, refcnt);
-	if (0 != refcnt)
-	{
-		nsresult rv = NS_NewTimer(getter_AddRefs(bmks->mTimer));
-		if (NS_FAILED(rv)) return;
-
-		// by default, fire the timer once a minute (unit is milliseconds)
-		bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, /* repeat, */ BOOKMARK_TIMEOUT);
-		// the timer will hold a reference to the bookmark service, so AddRef
-		NS_ADDREF(bmks);
-	}
+	// reschedule the timer
+	nsresult rv = NS_NewTimer(getter_AddRefs(bmks->mTimer));
+	if (NS_FAILED(rv)) return;
+	bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, /* repeat, */ BOOKMARK_TIMEOUT);
+	// Note: don't addref "bmks" as we'll cancel the timer in the nsBookmarkService destructor
 }
 
 
@@ -3142,6 +3309,55 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 
 
 
+#ifdef	XP_MAC
+
+nsresult
+nsBookmarksService::ReadFavorites()
+{
+	mIEFavoritesAvailable = PR_TRUE;
+			
+#ifdef	DEBUG
+	PRTime		now;
+	Microseconds((UnsignedWide *)&now);
+	printf("Start reading in IE Favorites.html\n");
+#endif
+	// look for and import any IE Favorites
+	nsAutoString	ieTitle("Imported IE Favorites");			// XXX localization?
+
+	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
+	ieFavoritesFile += "Explorer";
+	ieFavoritesFile += "Favorites.html";
+
+	nsresult	rv;
+	if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
+	{
+		BookmarkParser parser;
+		parser.Init(&ieFavoritesFile, mInner);
+		parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
+			
+		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+		rv = gRDF->GetLiteral(ieTitle.GetUnicode(), getter_AddRefs(ieTitleLiteral));
+		if (NS_SUCCEEDED(rv) && ieTitleLiteral)
+		{
+			rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
+		}
+	}
+#ifdef	DEBUG
+	PRTime		now2;
+	Microseconds((UnsignedWide *)&now2);
+	PRUint64	loadTime64;
+	LL_SUB(loadTime64, now2, now);
+	PRUint32	loadTime32;
+	LL_L2UI(loadTime32, loadTime64);
+	printf("Finished reading in IE Favorites.html  (%u microseconds)\n", loadTime32);
+#endif
+	return(rv);
+}
+
+#endif
+
+
+
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks()
 {
@@ -3188,16 +3404,8 @@ nsBookmarksService::ReadBookmarks()
 #endif
 
 	{ // <-- scope the stream to get the open/close automatically.
-		nsInputFileStream strm(bookmarksFile);
-
-		if (! strm.is_open())
-		{
-			NS_ERROR("unable to open file");
-			return NS_ERROR_FAILURE;
-		}
-
 		BookmarkParser parser;
-		parser.Init(&strm, mInner);
+		parser.Init(&bookmarksFile, mInner);
 
 #ifdef	XP_MAC
 		parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
@@ -3243,43 +3451,21 @@ nsBookmarksService::ReadBookmarks()
 #endif
 
 #ifdef	XP_MAC
-	nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
-	ieFavoritesFile += "Explorer";
-	ieFavoritesFile += "Favorites.html";
-
-	nsInputFileStream	ieStream(ieFavoritesFile);
-	if (ieStream.is_open())
+	// if the IE Favorites root isn't somewhere in bookmarks.html, add it
+	if (!foundIERoot)
 	{
-		if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
-		{
-			BookmarkParser parser;
-			parser.Init(&ieStream, mInner);
-			parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
-				
-			nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
-			rv = gRDF->GetLiteral(ieTitle.GetUnicode(), getter_AddRefs(ieTitleLiteral));
-			if (NS_SUCCEEDED(rv) && ieTitleLiteral)
-			{
-				rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
-			}
-				
-			// if the IE Favorites root isn't somewhere in bookmarks.html, add it
-			if (!foundIERoot)
-			{
-				nsCOMPtr<nsIRDFContainer> bookmarksRoot;
-				rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-									nsnull,
-									nsIRDFContainer::GetIID(),
-									getter_AddRefs(bookmarksRoot));
-				if (NS_FAILED(rv)) return rv;
+		nsCOMPtr<nsIRDFContainer> bookmarksRoot;
+		rv = nsComponentManager::CreateInstance(kRDFContainerCID,
+							nsnull,
+							nsIRDFContainer::GetIID(),
+							getter_AddRefs(bookmarksRoot));
+		if (NS_FAILED(rv)) return rv;
 
-				rv = bookmarksRoot->Init(mInner, kNC_BookmarksRoot);
-				if (NS_FAILED(rv)) return rv;
+		rv = bookmarksRoot->Init(mInner, kNC_BookmarksRoot);
+		if (NS_FAILED(rv)) return rv;
 
-				rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
-				if (NS_FAILED(rv)) return rv;
-			}
-		}
+		rv = bookmarksRoot->AppendElement(kNC_IEFavoritesRoot);
+		if (NS_FAILED(rv)) return rv;
 	}
 #endif
 
@@ -3367,7 +3553,7 @@ nsBookmarksService::ReadBookmarks()
 	printf("Finished reading in bookmarks.html  (%u microseconds)\n", loadTime32);
 #endif
 
-	return NS_OK;	
+	return(NS_OK);
 }
 
 
@@ -3716,30 +3902,27 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 	// to exclude any property that isn't talking about a known
 	// bookmark.
 	nsresult	rv;
-	PRBool		isOrdinal;
-	rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal);
-	if (NS_FAILED(rv))
-		return PR_FALSE;
+	PRBool		canAcceptFlag = PR_FALSE, isOrdinal;
 
-	if (isOrdinal)
+	if (NS_SUCCEEDED(rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal)))
 	{
-		return PR_TRUE;
+		if (isOrdinal == PR_TRUE)
+		{
+			canAcceptFlag = PR_TRUE;
+		}
+		else if ((aProperty == kNC_Description) ||
+			 (aProperty == kNC_Name) ||
+			 (aProperty == kNC_ShortcutURL) ||
+			 (aProperty == kNC_URL) ||
+			 (aProperty == kWEB_LastModifiedDate) ||
+			 (aProperty == kWEB_LastVisitDate) ||
+			 (aProperty == kNC_BookmarkAddDate) ||
+			 (aProperty == kWEB_Schedule))
+		{
+			canAcceptFlag = PR_TRUE;
+		}
 	}
-	else if ((aProperty == kNC_Description) ||
-		 (aProperty == kNC_Name) ||
-		 (aProperty == kNC_ShortcutURL) ||
-		 (aProperty == kNC_URL) ||
-		 (aProperty == kWEB_LastModifiedDate) ||
-		 (aProperty == kWEB_LastVisitDate) ||
-		 (aProperty == kNC_BookmarkAddDate) ||
-		 (aProperty == kWEB_Schedule))
-	{
-		return PR_TRUE;
-	}
-	else
-	{
-		return PR_FALSE;
-	}
+	return(canAcceptFlag);
 }
 
 
