@@ -159,7 +159,6 @@
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
-nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
 nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
 nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
 #ifdef DEBUG_jst
@@ -272,10 +271,6 @@ GlobalWindowImpl::GlobalWindowImpl()
   printf("++DOMWINDOW == %d\n", gRefCnt);
 #endif
 
-  if (!sXPConnect) {
-    CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-  }
-
   if (!sSecMan) {
     CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecMan);
   }
@@ -299,7 +294,6 @@ GlobalWindowImpl::~GlobalWindowImpl()
 void
 GlobalWindowImpl::ShutDown()
 {
-  NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
   NS_IF_RELEASE(sComputedDOMStyleFactory);
 
@@ -598,9 +592,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
           if (mNavigator) {
             nsIDOMNavigator* navigator =
               NS_STATIC_CAST(nsIDOMNavigator*, mNavigator.get());
-            sXPConnect->WrapNative(cx, mJSObject, navigator,
-                                   NS_GET_IID(nsIDOMNavigator),
-                                   getter_AddRefs(mNavigatorHolder));
+            nsContentUtils::XPConnect()->
+              WrapNative(cx, mJSObject, navigator, NS_GET_IID(nsIDOMNavigator),
+                         getter_AddRefs(mNavigatorHolder));
           }
 
           JSObject *gsp =
@@ -2378,12 +2372,12 @@ NS_IMETHODIMP
 GlobalWindowImpl::Prompt(nsAString& aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
-  NS_ENSURE_STATE(sXPConnect);
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -3283,12 +3277,10 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 {
   *_retval = nsnull;
 
-  NS_ENSURE_STATE(sXPConnect);
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -3386,12 +3378,9 @@ GlobalWindowImpl::OpenDialog(nsIDOMWindow** _retval)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  NS_ENSURE_STATE(sXPConnect);
-
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
-
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -3812,14 +3801,14 @@ GlobalWindowImpl::Find(const nsAString& aStr,
 NS_IMETHODIMP
 GlobalWindowImpl::Find(PRBool *aDidFind)
 {
-  NS_ENSURE_STATE(sXPConnect);
   nsresult rv = NS_OK;
 
   // We get the arguments passed to the function using the XPConnect native
   // call context.
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ASSERTION(ncc, "No Native Call Context."
@@ -4740,10 +4729,9 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  NS_ENSURE_STATE(sXPConnect);
-
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
-  nsresult rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -5278,12 +5266,11 @@ nsTimeoutImpl::AddRef()
 nsresult
 GlobalWindowImpl::ClearTimeoutOrInterval()
 {
-  NS_ENSURE_STATE(sXPConnect);
-
   nsresult rv = NS_OK;
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
 
-  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)
@@ -6217,12 +6204,9 @@ NavigatorImpl::sPrefInternal_id = JSVAL_VOID;
 NS_IMETHODIMP
 NavigatorImpl::Preference()
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
-  rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+  nsresult rv = nsContentUtils::XPConnect()->
+    GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!ncc)

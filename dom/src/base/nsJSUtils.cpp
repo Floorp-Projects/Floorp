@@ -53,6 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 
 
 JSBool
@@ -110,20 +111,13 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
   if (JSVAL_IS_NULL(aValue)) {
     return JS_TRUE;
   }
-  else if (JSVAL_IS_OBJECT(aValue)) {
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if (NS_FAILED(rv))
-      return JS_FALSE;
 
+  if (JSVAL_IS_OBJECT(aValue)) {
     // WrapJS does all the work to recycle an existing wrapper and/or do a QI
-    rv = xpc->WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID,
-                     (void**)aSupports);
+    nsresult rv = nsContentUtils::XPConnect()->
+      WrapJS(aContext, JSVAL_TO_OBJECT(aValue), aIID, (void**)aSupports);
 
-    if (NS_FAILED(rv))
-      return JS_FALSE;
-
-    return JS_TRUE;
+    return NS_SUCCEEDED(rv);
   }
 
   return JS_FALSE;

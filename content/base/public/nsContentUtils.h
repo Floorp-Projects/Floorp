@@ -429,6 +429,14 @@ public:
    */
   static const char *GetEventArgName(PRInt32 aNameSpaceID);
 
+  /**
+   * Return the nsIXPConnect service.
+   */
+  static nsIXPConnect *XPConnect()
+  {
+    return sXPConnect;
+  }
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,

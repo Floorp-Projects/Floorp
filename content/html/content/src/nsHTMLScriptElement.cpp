@@ -224,22 +224,18 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   }
 
   // wrap the target object...
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-
   JSContext *cx = (JSContext *)scriptContext->GetNativeContext();
   JSObject *scriptObject = nsnull;
 
-  if (xpc) {
-    rv = xpc->WrapNative(cx,
-                         ::JS_GetGlobalObject(cx),
-                         aTargetObject,
-                         NS_GET_IID(nsISupports),
-                         getter_AddRefs(holder));
-    if (holder) {
-      rv = holder->GetJSObject(&scriptObject);
-    }
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  nsContentUtils::XPConnect()->WrapNative(cx, ::JS_GetGlobalObject(cx),
+                                          aTargetObject,
+                                          NS_GET_IID(nsISupports),
+                                          getter_AddRefs(holder));
+  if (holder) {
+    holder->GetJSObject(&scriptObject);
   }
+
   // Fail if wrapping the native object failed...
   if (!scriptObject) {
     return NS_ERROR_FAILURE;

@@ -39,6 +39,7 @@
 #include "nsXBLProtoImpl.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptContext.h"
@@ -108,10 +109,10 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
   JSObject* global = ::JS_GetGlobalObject(jscontext);
   nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = xpc->WrapNative(jscontext, global, aBoundElement,
-                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
+  rv = nsContentUtils::XPConnect()->WrapNative(jscontext, global,
+                                               aBoundElement,
+                                               NS_GET_IID(nsISupports),
+                                               getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
   JSObject * object = nsnull;
   rv = wrapper->GetJSObject(&object);

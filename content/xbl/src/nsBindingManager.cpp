@@ -54,6 +54,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
+#include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
 #include "nsContentCID.h"
@@ -1148,9 +1149,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       if (!jscontext)
         return NS_NOINTERFACE;
 
-      nsCOMPtr<nsIXPConnect> xpConnect = do_GetService("@mozilla.org/js/xpc/XPConnect;1");
-      if (!xpConnect)
-        return NS_NOINTERFACE;
+      nsIXPConnect *xpConnect = nsContentUtils::XPConnect();
 
       nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
       xpConnect->GetWrappedNativeOfNativeObject(jscontext,

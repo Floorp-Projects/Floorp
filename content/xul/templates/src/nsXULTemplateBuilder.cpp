@@ -865,9 +865,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
 
-    static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
     JSObject* jselement = nsnull;
 
