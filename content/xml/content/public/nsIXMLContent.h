@@ -60,16 +60,26 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
   
   /**
-   * Give this element a change to fire its links that should be fired
+   * Give this element a chance to fire links that should be fired
    * automatically when loaded. If the element was an autoloading link
-   * and it was succesfully handled, we will return informal return value.
-   * If the return value is NS_XML_AUTOLINK_REPLACE, the caller should
-   * stop processing the current document because it will be replaced.
-   * We normally treat NS_XML_AUTOLINK_UNDEFINED the same way as replace
-   * links, so processing should usually stop after that as well.
+   * and it was succesfully handled, we will throw special nsresult values.
+   *
+   * @param aShell the current web shell (to possibly load the link on)
+   * @throws NS_OK if nothing happened
+   * @throws NS_XML_AUTOLINK_EMBED if the caller is loading the link embedded
+   * @throws NS_XML_AUTOLINK_NEW if the caller is loading the link in a new
+   *         window
+   * @throws NS_XML_AUTOLINK_REPLACE if it is loading a link that will replace
+   *         the current window (and thus the caller must stop parsing)
+   * @throws NS_XML_AUTOLINK_UNDEFINED if it is loading in any other way--in
+   *         which case, the caller should stop parsing as well.
    */
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell) = 0;
 
+  /**
+   * Get the XML Base URI for this element (http://www.w3.org/TR/xmlbase/)
+   * @param aURI the base URI [OUT]
+   */
   NS_IMETHOD GetXMLBaseURI(nsIURI **aURI) = 0;
 };
 
