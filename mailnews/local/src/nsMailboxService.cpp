@@ -31,6 +31,11 @@
 #include "nsMsgDBCID.h"
 #include "nsMsgKeyArray.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 nsMailboxService::nsMailboxService()
@@ -41,7 +46,38 @@ nsMailboxService::nsMailboxService()
 nsMailboxService::~nsMailboxService()
 {}
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMailboxService, nsIMailboxService::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(nsMailboxService);
+NS_IMPL_THREADSAFE_RELEASE(nsMailboxService);
+
+nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
+{
+    if (nsnull == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+ 
+    if (aIID.Equals(nsIMailboxService::GetIID()) || aIID.Equals(kISupportsIID)) 
+	{
+        *aInstancePtr = (void*) ((nsIMailboxService*)this);
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
+	{
+        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
+        AddRef();
+        return NS_OK;
+    }
+
+#if defined(NS_DEBUG)
+    /*
+     * Check for the debug-only interface indicating thread-safety
+     */
+    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+    if (aIID.Equals(kIsThreadsafeIID))
+        return NS_OK;
+#endif
+ 
+    return NS_NOINTERFACE;
+}
 
 nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURL ** aURL)
@@ -68,7 +104,11 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 
 			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 			if (protocol)
+			{
+				NS_ADDREF(protocol);
 				rv = protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
+				NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
+			}
 
 			if (aURL)
 				*aURL = url;
