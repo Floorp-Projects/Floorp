@@ -138,6 +138,7 @@ static NS_DEFINE_CID(kFileSpecWithUICID, NS_FILESPECWITHUI_CID);
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
+static NS_DEFINE_CID(kCFontEnumeratorCID, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_CID(kCImageCID, NS_IMAGE_CID);
 static NS_DEFINE_CID(kCRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kCScriptableRegionCID, NS_SCRIPTABLE_REGION_CID);
@@ -327,6 +328,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "component://netscape/gfx/renderingcontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "component://netscape/gfx/devicecontext", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "component://netscape/gfx/fontmetrics", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFontEnumeratorCID, "Font Enumerator", "component://netscape/gfx/fontenumerator", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "component://netscape/gfx/image", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCRegionCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCScriptableRegionCID, "Region", "component://netscape/gfx/region", GFXWIN_DLL, PR_FALSE, PR_FALSE);
