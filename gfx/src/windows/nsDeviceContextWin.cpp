@@ -167,8 +167,8 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
 {
   int   rasterCaps = ::GetDeviceCaps(aDC, RASTERCAPS);
 
-  mTwipsToPixels = ((float)::GetDeviceCaps(aDC, LOGPIXELSY)) / (float)NSIntPointsToTwips(72);
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
+  mPixelsToTwips = NSToIntRound((float)NSIntPointsToTwips(72) / ((float)::GetDeviceCaps(aDC, LOGPIXELSY)));
+  mTwipsToPixels = 1.0 / mPixelsToTwips;
 
   mDepth = (PRUint32)::GetDeviceCaps(aDC, BITSPIXEL);
   mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
