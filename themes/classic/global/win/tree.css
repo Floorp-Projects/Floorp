@@ -53,13 +53,21 @@ treecell
     padding               : 0px;
   }
 
-.treecell-header-image {
-  padding: 0px;
-}
+.treecell-header-image 
+  {
+    behavior              : url("chrome://global/skin/treeBindings.xml#treecell-header-image");
+    padding               : 0px;
+  }
+  
+.tree-header-image
+  {
+    list-style-image      : inherit;
+  }  
 
-.treecell-image {
-  padding: 0px;
-}
+.treecell-image 
+  {
+    padding               : 0px;
+  }
 
 .treecell-header-box
   {
@@ -67,7 +75,16 @@ treecell
     border-top            : 1px solid threedface;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
-    padding               : 1px 5px 1px 4px;
+    padding               : 0px 5px 0px 4px;
+  }  
+  
+.treecell-header-image-box
+  {
+    border-left           : 1px solid threedface;
+    border-top            : 1px solid threedface;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    padding               : 0px 0px 0px 0px;
   }  
   
 .sortable.treecell-header:hover:active,
