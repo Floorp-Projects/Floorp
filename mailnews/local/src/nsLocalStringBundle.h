@@ -34,7 +34,7 @@ public:
   virtual ~nsLocalStringService();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMSGSTRINGSERVICE;
+  NS_DECL_NSIMSGSTRINGSERVICE
 
 private:
   nsCOMPtr<nsIStringBundle> mLocalStringBundle;
