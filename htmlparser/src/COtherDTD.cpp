@@ -129,7 +129,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @param   
  *  @return   
  */ 
-COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
+COtherDTD::COtherDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mSink = 0; 
   mParser=0;       
@@ -149,6 +149,7 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   mHadBody=PR_FALSE;
   mHasOpenScript=PR_FALSE;
   mParserCommand=eViewNormal;
+  mNodeAllocator=new nsNodeAllocator();
   mBodyContext=new nsDTDContext();
 
 #if 1 //set this to 1 if you want strictDTD to be based on the environment setting.
@@ -169,35 +170,7 @@ COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
 
-#ifdef NS_DEBUG
-  gNodeCount=0;
-#endif
 }
-
-/**
- * This method creates a new parser node. It tries to get one from
- * the recycle list before allocating a new one.
- * @update  gess1/8/99
- * @param 
- * @return valid node*
- */
-nsCParserNode* COtherDTD::CreateNode(void) {
-
-  nsCParserNode* result=0;
-  if(0<mSharedNodes.GetSize()) {
-    result=(nsCParserNode*)mSharedNodes.Pop();
-  } 
-  else{
-    result=new nsCParserNode();
-#ifdef NS_DEBUG 
-#if 1
-    gNodeCount++; 
-#endif
-#endif
-  }
-  return result;
-} 
-
 
 /**
  * 
@@ -219,29 +192,12 @@ const nsIID& COtherDTD::GetMostDerivedIID(void)const {
 COtherDTD::~COtherDTD(){
   delete mBodyContext;
 
+  if(mNodeAllocator) {
+    delete mNodeAllocator;
+    mNodeAllocator=nsnull;
+  }
+  
   NS_IF_RELEASE(mTokenizer);
-
-  nsCParserNode* theNode=0;
-
-#ifdef NS_DEBUG
-#if 0
-  PRInt32 count=gNodeCount-mSharedNodes.GetSize();
-  if(count) {
-    printf("%i of %i nodes leaked!\n",count,gNodeCount);
-  }
-#endif
-#endif
-
-#if 1
-  while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
-    delete theNode;
-  }
-#endif
-
-#ifdef  NS_DEBUG
-  gNodeCount=0;
-#endif
-
   NS_IF_RELEASE(mSink);
   NS_IF_RELEASE(mDTDDebug);
 }
@@ -455,6 +411,7 @@ nsresult COtherDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITo
       mTokenAllocator=mTokenizer->GetTokenAllocator();
       
       mBodyContext->SetTokenAllocator(mTokenAllocator);
+      mBodyContext->SetNodeAllocator(mNodeAllocator);
 
       if(mSink) {
 
@@ -529,10 +486,10 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
             nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);
             if(theNode) {
               theNode->mUseCount=0;
-              mBodyContext->RecycleNode(theNode);
               if(theChildStyles) {
                 delete theChildStyles;
               } 
+              NS_IF_RELEASE(theNode);
             }
           }    
         }    
@@ -606,7 +563,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
  * @param   aChildTag is the tag itself.
  * @return  status
  */
-nsresult COtherDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
+nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
   switch(aChildTag){ 
@@ -683,7 +640,7 @@ void WriteTokenToLog(CToken* aToken) {
  * @param   aNode is the node (tag) with associated attributes.
  * @return  TRUE if tag processing should continue; FALSE if the tag has been handled.
  */
-nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode& aNode){
+nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode& aNode){
   nsresult result=NS_OK; 
 
     //first let's see if there's some skipped content to deal with... 
@@ -743,9 +700,8 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...  
  
   nsresult  result=NS_OK;
-  nsCParserNode* theNode=CreateNode();
+  nsIParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
-    theNode->Init(aToken,mLineNumber,mTokenAllocator);
    
     eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
     PRInt16       attrCount=aToken->GetAttributeCount();
@@ -786,7 +742,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
    
       } //if             
     }//if           
-    mBodyContext->RecycleNode(theNode);          
+    NS_IF_RELEASE(theNode);
   }
   else result=NS_ERROR_OUT_OF_MEMORY;
           
@@ -831,11 +787,10 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }
       CElement* theElement=gElementTable->mElements[theParent];
       if(theElement) { 
-        nsCParserNode* theNode=CreateNode();
+        nsIParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
         if(theNode) {
-          theNode->Init(aToken,mLineNumber,mTokenAllocator);
           result=theElement->HandleEndToken(theNode,theChildTag,mBodyContext,mSink);
-          mBodyContext->RecycleNode((nsCParserNode*)theNode);
+          NS_IF_RELEASE(theNode);
         }
       }   
       break; 
@@ -853,7 +808,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount){
+nsresult COtherDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount){
   int attr=0;
 
   nsresult result=NS_OK;

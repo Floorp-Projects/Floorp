@@ -45,6 +45,7 @@
 #include "nsString.h"
 #include "nsParserCIID.h"
 #include "nsDeque.h"
+#include "nsDTDUtils.h"
 
 class nsTokenAllocator;
 
@@ -54,12 +55,44 @@ class nsCParserNode :  public nsIParserNode {
 
     NS_DECL_ISUPPORTS
 
+            
+#ifdef HEAP_ALLOCATED_NODES
+    void* operator new(size_t aSize) {
+      return ::operator new(aSize);
+    }
+#else
+    /**
+     * 
+     * @update	harishd 01/01/01
+     * @param   aSize    - 
+     * @param   aArena   - Allocate memory from this pool.
+     */
+    static void * operator new (size_t aSize, nsFixedSizeAllocator& anArena)
+    {
+      return anArena.Alloc(aSize);
+    }
+#endif
+    /**
+     *  
+     *
+     * @update	harishd 01/01/01
+     * @param   aPtr     - The memory that should be recycled/freed.
+     * @param   aSize    - The size of memory that needs to be freed.
+     */
+    static void operator delete (void* aPtr,size_t aSize)
+    {
+      // NodeAllocator would take care of heap allocated nodes..
+#ifndef HEAP_ALLOCATED_NODES
+      nsFixedSizeAllocator::Free(aPtr,aSize);
+#endif
+    }
+
     /**
      * Default constructor
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
+    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0,nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Destructor
@@ -71,7 +104,7 @@ class nsCParserNode :  public nsIParserNode {
      * Init
      * @update	gess5/11/98
      */
-    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
+    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0,nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Retrieve the name of the node
@@ -212,6 +245,10 @@ class nsCParserNode :  public nsIParserNode {
     nsCOMPtr<nsIAtom> mIDAttributeAtom;
     
    nsTokenAllocator* mTokenAllocator;
+#ifdef HEAP_ALLOCATED_NODES
+   nsNodeAllocator*  mNodeAllocator; // weak 
+#endif
+
 };
 
 #endif

@@ -652,7 +652,7 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
     }
   }
 
-  mNodeRecycler->RecycleNode(node);
+  NS_IF_RELEASE(node);
   return result;
 }
 
@@ -1066,7 +1066,7 @@ nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
     if(IsHTMLContainer(theTag) && theTag!=eHTMLTag_unknown) {
       result=mSink->CloseContainer(aNode); 
     }
-    mNodeRecycler->RecycleNode(theNode);
+    NS_IF_RELEASE(aNode);
   }
   return result;
 }
@@ -1398,7 +1398,8 @@ nsresult nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
   ((nsCParserNode&)aNode).SetSkippedContent(mBuffer);
   
   result=mSink->AddLeaf(aNode);
-  mNodeRecycler->RecycleNode((nsCParserNode*)mXIFContext->Pop());
+  nsIParserNode* node=mXIFContext->Pop();
+  NS_IF_RELEASE(node);
   return result;
 }
 

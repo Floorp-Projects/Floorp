@@ -91,7 +91,6 @@
 #include "nsDeque.h"
 #include "nsParserCIID.h"
 
-
 #define NS_IOTHERHTML_DTD_IID      \
   {0x8a5e89c0, 0xd16d,  0x11d1,  \
   {0x80, 0x22, 0x00,    0x60, 0x8, 0x14, 0x98, 0x89}}
@@ -103,8 +102,9 @@ class nsParser;
 class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
-class nsCParserNode;
+class nsIParserNode;
 class nsTokenAllocator;
+class nsNodeAllocator;
 
 /***************************************************************
   Now the main event: COtherDTD.
@@ -313,10 +313,10 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     
 protected:
 
-		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
-    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
-    nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
-    nsCParserNode*  CreateNode(void);
+		nsresult        CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
+    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
+    nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
+    nsIParserNode*  CreateNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
 
     nsIHTMLContentSink* mSink;
 
@@ -332,10 +332,10 @@ protected:
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
-    nsTokenAllocator*    mTokenAllocator;
+    nsTokenAllocator*   mTokenAllocator;
+    nsNodeAllocator*    mNodeAllocator;
     PRBool              mHasOpenScript;
     eHTMLTags           mSkipTarget;
-    nsDeque             mSharedNodes;
     nsresult            mDTDState;
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
@@ -345,10 +345,6 @@ protected:
     nsString            mScratch;  //used for various purposes; non-persistent
     eParserDocType      mDocType;
     PRBool              mEnableStrict;
-
-#ifdef NS_DEBUG
-    PRInt32 gNodeCount;
-#endif
 
 };
 

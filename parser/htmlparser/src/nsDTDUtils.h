@@ -46,11 +46,11 @@
 #include "nsVoidArray.h"
 
 #define IF_HOLD(_ptr) if(_ptr) { _ptr->AddRef(); }
-#define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr
+#define IF_FREE(_ptr) if(_ptr) { _ptr->Release(); _ptr=0; } // recycles _ptr  
 
 class nsIParserNode;
 class nsCParserNode;
-class CNodeRecycler;
+class nsNodeAllocator;
 
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
@@ -238,7 +238,6 @@ protected:
 #endif
 };
 
-
 /************************************************************************
   CNodeRecycler class implementation.
   This class is used to recycle nodes. 
@@ -246,22 +245,24 @@ protected:
   that get created during the run of the system.
  ************************************************************************/
 
-class CNodeRecycler {
+class nsNodeAllocator {
 public:
   
-                         CNodeRecycler();
-  virtual                ~CNodeRecycler();
-  virtual nsCParserNode* CreateNode(void);
-  virtual void           RecycleNode(nsCParserNode* aNode);
-
+                         nsNodeAllocator();
+  virtual                ~nsNodeAllocator();
+  virtual nsIParserNode* CreateNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0);
+#ifdef HEAP_ALLOCATED_NODES
+  void Recycle(nsIParserNode* aNode) { mSharedNodes.Push(NS_STATIC_CAST(void*,aNode)); }
 protected:
-    nsDeque  mSharedNodes;
-
-#ifdef NS_DEBUG
-    PRInt32 gNodeCount;
+  nsDeque mSharedNodes;
+#ifdef DEBUG_TRACK_NODES
+  PRInt32 mCount;
+#endif
+#else
+protected:
+  nsFixedSizeAllocator mNodePool;
 #endif
 };
-
 
 /************************************************************************
   The dtdcontext class defines an ordered list of tags (a context).
@@ -295,8 +296,6 @@ public:
   nsIParserNode*  PopStyle(eHTMLTags aTag);
   nsIParserNode*  RemoveStyle(eHTMLTags aTag);
 
-  nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
-  void            RecycleNode(nsCParserNode *aNode);
   static  void    ReleaseGlobalObjects(void);
 
   CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
@@ -304,9 +303,10 @@ public:
 
   void            ResetCounters(void);
   void            AllocateCounters(void);
-  PRInt32         IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsString& aResult);
+  PRInt32         IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsString& aResult);
 
   void            SetTokenAllocator(nsTokenAllocator* aTokenAllocator) { mTokenAllocator=aTokenAllocator; }
+  void            SetNodeAllocator(nsNodeAllocator* aNodeAllocator) { mNodeAllocator=aNodeAllocator; }
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
@@ -324,12 +324,10 @@ public:
   union {
     PRUint32  mAllBits;
     CFlags    mFlags;
-  };
-
-
-  static          CNodeRecycler   *gNodeRecycler;
+  };    
   
   nsTokenAllocator  *mTokenAllocator;
+  nsNodeAllocator   *mNodeAllocator;
   CTableState       *mTableStates;
   PRInt32           *mCounters;
   nsDeque           mEntities;

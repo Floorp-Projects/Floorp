@@ -46,7 +46,11 @@
 #include "nsString.h"
 #include "nsDebug.h"
 
-// class CToken;
+//#define HEAP_ALLOCATED_NODES 
+//#define DEBUG_TRACK_NODES
+
+
+class CToken;
 
 // 6e59f160-2717-11d2-9246-00805f8a7ab6
 #define NS_IPARSER_NODE_IID      \
@@ -132,6 +136,9 @@ class nsIParserNode : public nsISupports {
      * @return  int (unicode char or unicode index from table)
      */
     virtual PRInt32 TranslateToUnicodeStr(nsString& aString) const = 0;
+
+
+    virtual void AddAttribute(CToken* aToken)=0;
 
     /**
      * This getter retrieves the line number from the input source where
