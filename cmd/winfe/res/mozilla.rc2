@@ -422,6 +422,11 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Turkish (ISO-8859-9)",          ID_OPTIONS_ENCODING_17
             MENUITEM SEPARATOR
+            MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+            MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+            MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+            MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
+            MENUITEM SEPARATOR
             MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
             MENUITEM "Unicode (UTF-7)",              ID_OPTIONS_ENCODING_20
             MENUITEM SEPARATOR
@@ -606,6 +611,7 @@ BEGIN
 	//		MENUITEM SEPARATOR
 	//		MENUITEM "Turkish (ISO-8859-9)",          ID_OPTIONS_ENCODING_17
 	//		MENUITEM SEPARATOR
+        //              MENUITEM SEPARATOR
 	//		MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
 	//		MENUITEM "Unicode (UTF-7)",              ID_OPTIONS_ENCODING_20
 	//		MENUITEM SEPARATOR
@@ -832,7 +838,12 @@ BEGIN
 		MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
 		MENUITEM SEPARATOR
 		MENUITEM "Turkish (ISO-8859-9)",          ID_OPTIONS_ENCODING_17
-		MENUITEM SEPARATOR
+                MENUITEM SEPARATOR
+                MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+                MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+                MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+                MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
+                MENUITEM SEPARATOR
 		MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
 		MENUITEM "Unicode (UTF-7)",              ID_OPTIONS_ENCODING_20
 		MENUITEM SEPARATOR
@@ -965,7 +976,12 @@ BEGIN
 	    MENUITEM "Greek (Windows-1253)",              ID_OPTIONS_ENCODING_16
 	    MENUITEM SEPARATOR
 	    MENUITEM "Turkish (ISO-8859-9)",           ID_OPTIONS_ENCODING_17
-	    MENUITEM SEPARATOR
+            MENUITEM SEPARATOR
+            MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+            MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+            MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+            MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
+            MENUITEM SEPARATOR
 	    MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
 	    MENUITEM "Unicode (UTF-7)",              ID_OPTIONS_ENCODING_20
 	    MENUITEM SEPARATOR
@@ -2293,6 +2309,11 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Turkish (ISO-8859-9)",        ID_OPTIONS_ENCODING_17
             MENUITEM SEPARATOR
+            MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+            MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+            MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+            MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
+            MENUITEM SEPARATOR
             MENUITEM "Unicode (UTF-8)",             ID_OPTIONS_ENCODING_18
             MENUITEM "Unicode (UTF-7)",             ID_OPTIONS_ENCODING_20
             MENUITEM SEPARATOR
@@ -2592,6 +2613,11 @@ BEGIN
             MENUITEM "Greek (Windows-1253)",        ID_OPTIONS_ENCODING_16
             MENUITEM SEPARATOR
             MENUITEM "Turkish (ISO-8859-9)",        ID_OPTIONS_ENCODING_17
+            MENUITEM SEPARATOR
+            MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+            MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+            MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+            MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
             MENUITEM SEPARATOR
             MENUITEM "Unicode (UTF-8)",             ID_OPTIONS_ENCODING_18
             MENUITEM "Unicode (UTF-7)",             ID_OPTIONS_ENCODING_20
@@ -2893,6 +2919,11 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Turkish (ISO-8859-9)",        ID_OPTIONS_ENCODING_17
         MENUITEM SEPARATOR
+        MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+        MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+        MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+        MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
+        MENUITEM SEPARATOR
         MENUITEM "Unicode (UTF-8)",             ID_OPTIONS_ENCODING_18
         MENUITEM "Unicode (UTF-7)",             ID_OPTIONS_ENCODING_20
         MENUITEM SEPARATOR
@@ -3085,6 +3116,11 @@ BEGIN
             MENUITEM "Greek (Windows-1253)",        ID_OPTIONS_ENCODING_16
             MENUITEM SEPARATOR
             MENUITEM "Turkish (ISO-8859-9)",        ID_OPTIONS_ENCODING_17
+            MENUITEM SEPARATOR
+            MENUITEM "Vietnamese (VISCII)",  ID_OPTIONS_ENCODING_23
+            MENUITEM "Vietnamese (VIQR)",    ID_OPTIONS_ENCODING_26
+            MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
+            MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
             MENUITEM SEPARATOR
             MENUITEM "Unicode (UTF-8)",             ID_OPTIONS_ENCODING_18
             MENUITEM "Unicode (UTF-7)",             ID_OPTIONS_ENCODING_20

@@ -144,6 +144,10 @@ struct FontCharTable  fontchar_tbl[] =
 	CS_ARMSCII8, "ArmNet Helvetica",	12, "ArmNet Courier", 10, 160, 160,
 	CS_CP_1253, "Times New Roman", 		12, "Courier New",  10, 161,161,  
 	CS_8859_9, "Times New Roman", 		12, "Courier New",  10, 162,162,  
+        CS_VIET_VIQR,    "Times New Roman",     12, "Courier New",  10, 163,163,
+        CS_VIET_VISCII,  "ÁnhMinh 1.1",         12, "MinhQuân 1.1", 10, 163,163,
+        CS_VIET_VPS,     "VPS Times",           12, "VPS Courier",  10, 163,163,
+        CS_VIET_TCVN,    ".VNTime",             12, ".VNTime",      10, 163,163,
 	CS_TIS620, 	"AngsanaUPC", 	16, "CordiaUPC", 14, THAI_CHARSET, THAI_CHARSET,
 	CS_UTF8, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, DEFAULT_CHARSET, DEFAULT_CHARSET,
 	CS_USER_DEFINED_ENCODING, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, ANSI_CHARSET, ANSI_CHARSET,
@@ -170,6 +174,10 @@ unsigned int lang_table[] =
 	IDS_LANGUAGE_ARMENIAN, CS_ARMSCII8, CS_ARMSCII8, 0,
 	IDS_LANGUAGE_GREEK, CS_CP_1253, CS_CP_1253, CS_8859_7, 0,
 	IDS_LANGUAGE_TURKISH, CS_8859_9, CS_8859_9, 0,
+        IDS_LANGUAGE_VIETNAMESE_VIQR, CS_VIET_VIQR, CS_VIET_VIQR, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VNI, 0,
+        IDS_LANGUAGE_VIETNAMESE_VISCII, CS_VIET_VISCII, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
+        IDS_LANGUAGE_VIETNAMESE_VPS, CS_VIET_VPS, CS_VIET_VPS, CS_VIET_VISCII, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
+        IDS_LANGUAGE_VIETNAMESE_TCVN, CS_VIET_TCVN, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
 	IDS_LANGUAGE_THAI, CS_TIS620, CS_TIS620, 0,
 	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, 0,
 	IDS_LANGUAGE_USERDEFINED, CS_USER_DEFINED_ENCODING, CS_USER_DEFINED_ENCODING, 0,
@@ -309,22 +317,42 @@ int CIntlFont::DocCSIDtoID(int doc_csid)
 	int i, j;
 	EncodingInfo  *pEncoding ;
 
-	pEncoding = &pEncodingInfoTbl[0];
-
-	for (i = 0; i < nEncoding; i++)
-	{
-		for (j = 0; j < pEncoding->nCodeset; j++)
-		{
-		 	if (doc_csid == pEncoding->csid[j])
-			{
-				return i ;
-			}
-		}
-		pEncoding ++ ;
-	}
-	// Note!!!:  return 0 here is not good idea, but it can avoid crash.
-	//           need to revisit this code later.
-	return 0;
+        /**************************************************************/
+        /*** This section should work for everybody, but for now we ***/
+        /*** make it work for vietnamese only (our area). Basically ***/
+        /*** instead of returning the first csid found in doc_csid, ***/
+        /*** we check the default view encoding first, and return   ***/
+        /*** that default view csid if found, otherwise it will     ***/
+        /*** return the value as the usual way                      ***/
+        int k;
+        int16 def_doccsid;
+        def_doccsid = INTL_DefaultDocCharSetID(0);
+        if (! ((def_doccsid == CS_VIET_VISCII) ||
+               (def_doccsid == CS_VIET_VPS) ||
+               (def_doccsid == CS_VIET_TCVN) ||
+               (def_doccsid == CS_VIET_VIQR)
+           )) {
+                def_doccsid = 0;
+        }
+        k = 0;
+        pEncoding = &pEncodingInfoTbl[0];
+        for (i = 0; i < nEncoding; i++)
+        {
+                for (j = 0; j < pEncoding->nCodeset; j++)
+                {
+                        if (doc_csid == pEncoding->csid[j])
+                        {
+                            if ((def_doccsid == 0) ||
+                                (def_doccsid == pEncoding->iCSID))
+                                 return i ;
+                            if (k == 0) k = i;
+                        }
+                }
+                pEncoding ++ ;
+        }
+        // Note!!!:  return 0 here is not good idea, but it can avoid crash.
+        //           need to revisit this code later.
+        return k;
 }
 
 char * CIntlFont::GetEncodingName(int id)
@@ -800,7 +828,13 @@ static BOOL intlUnicodeFlag(int16 wincsid)
 	{
 		return FALSE;
 	}
-
+        if((CS_VIET_VISCII == wincsid) ||
+           (CS_VIET_VPS == wincsid) ||
+           (CS_VIET_TCVN == wincsid) ||
+           (CS_VIET_VIQR == wincsid)
+          ){
+                return FALSE;
+        }
 	if( wincsid & MULTIBYTE)
 	{
 		if(CIntlWin::GetSystemLocaleCsid() == wincsid)
