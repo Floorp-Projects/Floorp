@@ -47,7 +47,7 @@ typedef enum {
 class nsIMsgDBHdr;
 class nsIFileSpec;
 
-class nsIMailboxUrl : public nsIMsgMailNewsUrl
+class nsIMailboxUrl : public nsISupports
 {
 public:
   static const nsIID& GetIID() {
