@@ -85,25 +85,7 @@ NS_IMPL_RELEASE(nsEditorTxnLog)
 
 #endif
 
-NS_IMETHODIMP
-nsEditorTxnLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsITransactionListener))) {
-    *aInstancePtr = (void*)(nsITransactionListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE1(nsEditorTxnLog, nsITransactionListener)
 
 NS_IMETHODIMP
 nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)

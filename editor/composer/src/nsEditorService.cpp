@@ -49,8 +49,6 @@ nsEditorService::~nsEditorService()
 {
 }
 
-NS_IMPL_ADDREF(nsEditorService);
-NS_IMPL_RELEASE(nsEditorService);
-NS_IMPL_QUERY_INTERFACE1(nsEditorService, nsICmdLineHandler) 
+NS_IMPL_ISUPPORTS1(nsEditorService, nsICmdLineHandler) 
 
 CMDLINEHANDLER_IMPL(nsEditorService,"-edit","general.startup.editor","chrome://editor/content/editor.xul","Start with editor.","@mozilla.org/commandlinehandler/general-startup;1?type=editor","Editor Startup Handler", PR_TRUE,"about:blank", PR_TRUE)

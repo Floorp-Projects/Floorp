@@ -166,25 +166,7 @@ NS_IMPL_RELEASE(nsTextServicesDocument)
 
 #endif
 
-NS_IMETHODIMP
-nsTextServicesDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kITextServicesDocumentIID)) {
-    *aInstancePtr = (void*)(nsITextServicesDocument*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  *aInstancePtr = 0;
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE1(nsTextServicesDocument, nsITextServicesDocument)
 
 NS_IMETHODIMP
 nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell)
@@ -605,7 +587,7 @@ nsTextServicesDocument::GetCurrentTextBlock(nsString *aStr)
   if (!aStr)
     return NS_ERROR_NULL_POINTER;
 
-  aStr->SetLength(0);
+  aStr->Truncate();
 
   if (!mIterator)
     return NS_ERROR_FAILURE;
@@ -4617,7 +4599,7 @@ nsTextServicesDocument::CreateOffsetTable(nsVoidArray *aOffsetTable,
   ClearOffsetTable(aOffsetTable);
 
   if (aStr)
-    aStr->SetLength(0);
+    aStr->Truncate();
 
   if (*aIteratorStatus == nsTextServicesDocument::eIsDone)
     return NS_OK;
