@@ -7,55 +7,44 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Specific Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-msgbsutl.dll
-components\addrbook.dll
+components\mail.dll
+components\import.dll
+
 components\addrbook.xpt
-components\emitter.dll
-components\mime.dll
 components\mime.xpt
 components\mailnews.xpt
-components\msgbase.dll
 components\msgbase.xpt
-components\msgcompo.dll
 components\msgcompo.xpt
-components\msgdb.dll
 components\msgdb.xpt
-components\msgimap.dll
 components\msgimap.xpt
-components\msglocal.dll
 components\msglocal.xpt
-components\msgnews.dll
 components\msgnews.xpt
 components\msgsearch.xpt
-components\vcard.dll
-components\import.dll
 components\import.xpt
-components\importOE.dll
-components\impOutlk.dll
-components\impEudra.dll
-components\impText.dll
-components\impComm4xMail.dll
 components\impComm4xMail.xpt
-components\nsLDAPPrefsService.js
+components\mailview.xpt
+
 chrome\messenger.jar
 chrome\icons\default\abcardWindow.ico
 chrome\icons\default\addressbookWindow.ico
 chrome\icons\default\messengerWindow.ico
 chrome\icons\default\msgcomposeWindow.ico
-components\msgsmime.dll
-components\msgsmime.xpt
-components\smime-service.js
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Mail Extensions (smime, etc.)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MapiProxy.dll
 mozMapi32.dll
 components\msgMapi.dll
 components\mapihook.xpt
-components\msgmdn.dll
-components\mdn-service.js
 components\nsSetDefaultMail.js
 components\nsUnsetDefaultMail.js
-components\bayesflt.dll
-components\mailview.dll
-components\mailview.xpt
+
+components\mdn-service.js
+
+components\smime-service.js
+components\msgsmime.xpt
+components\msgsmime.dll
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Chrome Files
@@ -90,6 +79,7 @@ defaults\wallet\*
 ; LDAP components 
 components\mozldap.dll
 components\mozldap.xpt
+components\nsLDAPPrefsService.js
 nsldap32v50.dll
 nsldappr32v50.dll
 
