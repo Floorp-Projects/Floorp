@@ -495,7 +495,7 @@ void nsTimerImpl::PostTimerEvent()
   PRThread *thread;
   nsresult rv = mCallingThread->GetPRThread(&thread);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Droping timer event because thread is dead");
+    NS_WARNING("Dropping timer event because thread is dead");
     return;
   }
 
