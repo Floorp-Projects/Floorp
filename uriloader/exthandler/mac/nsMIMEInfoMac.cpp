@@ -58,7 +58,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile)
 #ifdef XP_MACOSX
   // We didn't get an application to handle the file from aMIMEInfo, ask LaunchServices directly
   nsresult rv;
-  nsCOMPtr <nsILocalFileMac> tempFile = do_QueryInterface(aTempFile, &rv);
+  nsCOMPtr <nsILocalFileMac> tempFile = do_QueryInterface(aFile, &rv);
   if (NS_FAILED(rv)) return rv;
   
   FSRef tempFileRef;
@@ -71,7 +71,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile)
     if (!app) return NS_ERROR_FAILURE;
     app->InitWithFSRef(&appFSRef);
     
-    nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+    nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aFile, &rv);
     if (NS_FAILED(rv)) return rv;
     
     rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
