@@ -313,7 +313,7 @@ BOOL CWizardMachineApp::InitInstance()
 
 	if (PageReturnValue == ID_WIZFINISH)
 	{
-		CreateRshell();
+//		CreateRshell(); //Creation of Rshell is a CCK specific task to be done by the install builder.
 //removing the isbuildinstaller from the routine.
 //		if (!isBuildInstaller) {
 
