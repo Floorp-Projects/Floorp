@@ -35,6 +35,7 @@
 
 #include "plhash.h"
 #include "prlock.h"
+#include "nscore.h"
 #include "nsCom.h"
 
 class NS_COM nsHashKey {
