@@ -523,6 +523,7 @@ stub_interface(TreeState *state)
 
         /* Emit a InitJSClass static method. */
         fprintf(state->file,
+                "#ifdef XPIDL_JS_STUBS\n"
                 "\nJSObject *\n"
                 "%s::InitJSClass(JSContext *cx)\n"
                 "{\n"
@@ -579,7 +580,8 @@ stub_interface(TreeState *state)
                 "    }\n"
                 "  }\n"
                 "  return (JSObject *)JSVAL_TO_PRIVATE(v);\n"
-                "}\n",
+                "}\n"
+                "#endif /* XPIDL_JS_STUBS */\n",
                 className, className, className);
     }
 
