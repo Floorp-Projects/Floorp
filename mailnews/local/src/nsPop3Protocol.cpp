@@ -575,6 +575,8 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         nsTextFormatter::smprintf_free(passwordPromptString);
 
         ClearFlag(POP3_PASSWORD_FAILED);
+        if (NS_FAILED(rv))
+            m_pop3ConData->next_state = POP3_ERROR_DONE;
     } // if we have a server
 	else
 		rv = NS_ERROR_FAILURE;
@@ -988,7 +990,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 {
     /* check password response */
     if(!m_pop3ConData->command_succeeded)
-	  {
+    {
         /* The password failed.
            
            Sever the connection and go back to the `read password' state,
@@ -1000,13 +1002,19 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            prompting the user for a password: just fail silently. */
         if (m_pop3ConData->only_check_for_new_mail)
             return MK_POP3_PASSWORD_UNDEFINED;
-
+        else
+            Error(POP3_PASSWORD_FAILURE);
 		SetFlag(POP3_PASSWORD_FAILED);
-        m_pop3ConData->next_state = POP3_ERROR_DONE;	/* close */
-        m_pop3ConData->pause_for_read = PR_FALSE;		   /* try again right away */
-        m_pop3ConData->capability_flags = POP3_AUTH_LOGIN_UNDEFINED | POP3_XSENDER_UNDEFINED |
-            POP3_GURL_UNDEFINED;
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
+        PRBool prefBool = PR_FALSE;
+        m_pop3Server->GetAuthLogin(&prefBool);
+        if (prefBool && m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
+            m_pop3ConData->next_state = POP3_AUTH_LOGIN;
+        else
+            m_pop3ConData->next_state_after_response = POP3_SEND_USERNAME;
+        /* try again right away */
+        m_pop3ConData->pause_for_read = PR_FALSE;
+        m_pop3ConData->command_succeeded = PR_TRUE;
 
         // libmsg event sink
         if (m_nsIPop3Sink) 
@@ -1019,41 +1027,12 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
          * we need to sync with auth smtp password 
          */
         return 0;
-	  }
-#if 0 // not yet
-    else if (net_pop3_password_pending)
-    {
-        /*
-         * First time with this password.  Record it as a keeper.
-         * (The user's preference might say to save it.)
-         */
-        char* host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-        FE_RememberPopPassword(ce->window_id, net_pop3_password);
-        if (host)
-        {
-            if (m_pop3ConData->pane)
-            {
-                char *unMungedPassword = net_get_pop3_password();
-                if (unMungedPassword)
-                {
-                    MSG_SetPasswordForMailHost(MSG_GetMaster(m_pop3ConData->pane), 
-                                               host, unMungedPassword);
-                    PR_Free(unMungedPassword);
-                }
-            }
-            PR_Free(host);
-        }
-        net_pop3_password_pending = PR_FALSE;
-        if (m_pop3ConData->pane)
-            MSG_SetUserAuthenticated(MSG_GetMaster(m_pop3ConData->pane),
-                                     PR_TRUE);
     }
-#else
     else 
     {
         m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
     }
-#endif 
+
     
 	nsCAutoString cmd;
     if (sendStat) 
