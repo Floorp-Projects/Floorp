@@ -67,6 +67,7 @@
 //                 with Java
 // KV  08/11/1999  removed PRBool, uses baseutils.h (MBool)
 
+
 #ifndef MITRE_STRING
 #define MITRE_STRING
 
@@ -74,11 +75,10 @@
 #include "baseutils.h"
 #include <iostream.h>
 
-
 typedef unsigned short UNICODE_CHAR;
 
 #ifndef NULL
-typedef 0 NULL;
+ #define NULL 0
 #endif
 
 #define NOT_FOUND -1
@@ -105,8 +105,8 @@ class String : public MITREObject
     String& operator=(Int32 source);
 
     //Grow buffer if necessary and append the source
-    void append(const UNICODE_CHAR source);
-    void append(const char source);
+    void append(UNICODE_CHAR source);
+    void append(char source);
     void append(const String& source);
     void append(const char* source);
     void append(const UNICODE_CHAR* source);
@@ -218,3 +218,4 @@ class String : public MITREObject
 ostream& operator<<(ostream& output, const String& source);
 
 #endif
+

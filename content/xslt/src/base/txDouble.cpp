@@ -1,25 +1,31 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
+ * 
+ * Larry Fitzpatrick, lef@opentext.com
  *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: txDouble.cpp,v 1.2 1999/11/15 07:12:39 nisheeth%netscape.com Exp $
  */
-
-
 
 #include "primitives.h"
 
@@ -29,8 +35,8 @@
 /**
  * A wrapper for the primitive double type, and provides some simple
  * floating point related routines
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
  * @author <a href="mailto:lef@opentext.com">Larry Fitzpatrick</a>
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 
 double d0 = 0.0;
@@ -98,8 +104,8 @@ MBool Double::isInfinite() {
  * Determins whether the given double is NaN
 **/
 MBool Double::isNaN(double dbl) {
-#ifdef MOZILLA
-    return (MBool) _isnan(dbl);
+#ifdef WIN32
+    return _isnan(dbl);
 #else
     return (MBool) isnan(dbl);
 #endif
@@ -109,8 +115,8 @@ MBool Double::isNaN(double dbl) {
  * Determins whether this Double's value is NaN
 **/
 MBool Double::isNaN() {
-#ifdef MOZILLA
-    return (MBool) _isnan(value);
+#ifdef WIN32
+    return _isnan(value);
 #else
     return (MBool) isnan(value);
 #endif
@@ -234,5 +240,4 @@ String& Double::toString(double value, String& dest) {
     dest.append(iStr);
     return dest;
 } //-- toString
-
 

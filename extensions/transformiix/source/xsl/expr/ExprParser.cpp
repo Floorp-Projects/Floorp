@@ -1,29 +1,35 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *   -- original author.
+ *    
+ * $Id: ExprParser.cpp,v 1.2 1999/11/15 07:13:11 nisheeth%netscape.com Exp $
  */
 
 /**
  * ExprParser
  * This class is used to parse XSL Expressions
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A> 
  * @see ExprLexer
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:11 $
 **/
 
 #include "ExprParser.h"
@@ -159,18 +165,43 @@ LocationStep* ExprParser::createLocationStep(const String& path) {
 Expr* ExprParser::createBinaryExpr   (Expr* left, Expr* right, Token* op) {
     if ( !op ) return 0;
     switch(op->type) {
+
+
+        //-- additive ops
         case Token::ADDITION_OP :
             return new AdditiveExpr(left, right, AdditiveExpr::ADDITION);
-        case Token::DIVIDE_OP :
-            return new MultiplicativeExpr(left, right, MultiplicativeExpr::DIVIDE);
+        case Token::SUBTRACTION_OP:
+            return new AdditiveExpr(left, right, AdditiveExpr::SUBTRACTION);
+
+        //-- case boolean ops
+        case Token::AND_OP:
+            return new BooleanExpr(left, right, BooleanExpr::AND);
+        case Token::OR_OP:
+            return new BooleanExpr(left, right, BooleanExpr::OR);
+
+        //-- equality ops
         case Token::EQUAL_OP :
             return new RelationalExpr(left, right, RelationalExpr::EQUAL);
+        case Token::NOT_EQUAL_OP :
+            return new RelationalExpr(left, right, RelationalExpr::NOT_EQUAL);
+
+        //-- relational ops
+        case Token::LESS_THAN_OP:
+            return new RelationalExpr(left, right, RelationalExpr::LESS_THAN);
+        case Token::GREATER_THAN_OP:
+            return new RelationalExpr(left, right, RelationalExpr::GREATER_THAN);
+        case Token::LESS_OR_EQUAL_OP:
+            return new RelationalExpr(left, right, RelationalExpr::LESS_OR_EQUAL);
+        case Token::GREATER_OR_EQUAL_OP:
+            return new RelationalExpr(left, right, RelationalExpr::GREATER_OR_EQUAL);
+
+        //-- multiplicative ops
+        case Token::DIVIDE_OP :
+            return new MultiplicativeExpr(left, right, MultiplicativeExpr::DIVIDE);
         case Token::MODULUS_OP :
             return new MultiplicativeExpr(left, right, MultiplicativeExpr::MODULUS);
         case Token::MULTIPLY_OP :
             return new MultiplicativeExpr(left, right, MultiplicativeExpr::MULTIPLY);
-        case Token::SUBTRACTION_OP:
-            return new AdditiveExpr(left, right, AdditiveExpr::SUBTRACTION);
         default:
             break;
 
@@ -185,6 +216,9 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
     MBool done = MB_FALSE;
 
     Expr* expr = 0;
+
+    Stack exprs;
+    Stack ops;
 
     while ( lexer.hasMoreTokens() && (!done)) {
 
@@ -245,16 +279,34 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
             case Token::VAR_REFERENCE:
                 expr = new VariableRefExpr(tok->value);
                 break;
+            //-- additive ops
             case Token::ADDITION_OP:
             case Token::DIVIDE_OP:
+            //-- boolean ops
+            case Token::AND_OP :
+            case Token::OR_OP :
+            //-- equality ops
             case Token::EQUAL_OP:
+            case Token::NOT_EQUAL_OP:
+            //-- relational ops
+            case Token::LESS_THAN_OP:
+            case Token::GREATER_THAN_OP:
+            case Token::LESS_OR_EQUAL_OP:
+            case Token::GREATER_OR_EQUAL_OP:
+            //-- multiplicative ops
             case Token::MODULUS_OP:
             case Token::MULTIPLY_OP:
             case Token::SUBTRACTION_OP:
             {
-                Expr* left  = expr;
-                Expr* right = createExpr(lexer);
-                expr = createBinaryExpr(left, right, tok);
+                if ( !exprs.empty() ) {
+                    short ttype = ((Token*)ops.peek())->type;
+                    if (precedenceLevel(tok->type) < precedenceLevel(ttype)) {
+                        expr = createBinaryExpr((Expr*)exprs.pop(), expr,
+                            (Token*)ops.pop());
+                    }
+                }
+                exprs.push(expr);
+                ops.push(tok);
                 break;
             }
             default:
@@ -262,6 +314,10 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
                 expr = createPatternExpr(lexer);
                 break;
         }
+    }
+
+    while (!exprs.empty() ) {
+        expr = createBinaryExpr((Expr*)exprs.pop(), expr, (Token*)ops.pop());
     }
     return expr;
 
@@ -334,61 +390,61 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     //-- compare function names
     //-- * we should hash these names for speed
 
-    if ( BOOLEAN_FN.isEqual(tok->value) ) {
+    if ( XPathNames::BOOLEAN_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::BOOLEAN);
     }
-    else if ( CONCAT_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::CONCAT_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONCAT);
     }
-    else if ( CONTAINS_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::CONTAINS_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONTAINS);
     }
-    else if ( COUNT_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::COUNT_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::COUNT);
     }
-    else if ( FALSE_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::FALSE_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall();
     }
-    else if ( LAST_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::LAST_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LAST);
     }
-    else if ( LOCAL_PART_FN.isEqual(tok->value) ) {
-        fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LOCAL_PART);
+    else if ( XPathNames::LOCAL_NAME_FN.isEqual(tok->value) ) {
+        fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LOCAL_NAME);
     }
-    else if ( NAME_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::NAME_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAME);
     }
-    else if ( NAMESPACE_FN.isEqual(tok->value) ) {
-        fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE);
+    else if ( XPathNames::NAMESPACE_URI_FN.isEqual(tok->value) ) {
+        fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
     }
-    else if ( NOT_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::NOT_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::NOT);
     }
-    else if ( POSITION_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::POSITION_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::POSITION);
     }
-    else if ( STARTS_WITH_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::STARTS_WITH_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::STARTS_WITH);
     }
-    else if ( STRING_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::STRING_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING);
     }
-    else if ( STRING_LENGTH_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::STRING_LENGTH_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING_LENGTH);
     }
-    else if ( SUBSTRING_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::SUBSTRING_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING);
     }
-    else if ( SUBSTRING_AFTER_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::SUBSTRING_AFTER_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_AFTER);
     }
-    else if ( SUBSTRING_BEFORE_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::SUBSTRING_BEFORE_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_BEFORE);
     }
-    else if ( TRANSLATE_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::TRANSLATE_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);
     }
-    else if ( TRUE_FN.isEqual(tok->value) ) {
+    else if ( XPathNames::TRUE_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TRUE);
     }
     else {
@@ -790,4 +846,35 @@ String* ExprParser::parseParameters(List* list, ExprLexer& lexer) {
     return errorMsg;
 
 } //-- parseParameters
+
+short ExprParser::precedenceLevel(short tokenType) {
+    switch(tokenType) {
+        case Token::OR_OP:
+            return 1;
+        case Token::AND_OP:
+            return 2;
+        //-- equality
+        case Token::EQUAL_OP:
+        case Token::NOT_EQUAL_OP:
+            return 3;
+        //-- relational
+        case Token::LESS_THAN_OP:
+        case Token::GREATER_THAN_OP:
+        case Token::LESS_OR_EQUAL_OP:
+        case Token::GREATER_OR_EQUAL_OP:
+            return 4;
+        //-- additive operators
+        case Token::ADDITION_OP:
+        case Token::SUBTRACTION_OP:
+            return 5;
+        //-- multiplicative
+        case Token::DIVIDE_OP:
+        case Token::MULTIPLY_OP:
+        case Token::MODULUS_OP:
+            return 6;
+        default:
+            break;
+    }
+    return 0;
+} //-- precedenceLevel
 

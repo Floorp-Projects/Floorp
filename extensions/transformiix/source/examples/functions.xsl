@@ -287,13 +287,13 @@
    <TR>
       <TD BGColor="#EEEEEE"><B>Function:</B></TD>
       <TD BGColor="#EEEEEE">
-         String <B> local-part(</B><I>node-set?</I><B>)</B>
+         String <B> local-name(</B><I>node-set?</I><B>)</B>
       </TD>
    </TR>
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="local-part(names/abc:test-name)"/&gt;<BR />
+         &lt;xsl:value-of select="local-name(names/abc:test-name)"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -306,7 +306,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="local-part(names/abc:test-name)"/>
+            <xsl:value-of select="local-name(names/abc:test-name)"/>
          </FONT>
       </TD>
    </TR>
@@ -314,13 +314,13 @@
    <TR>
       <TD BGColor="#EEEEEE"><B>Function:</B></TD>
       <TD BGColor="#EEEEEE">
-         String <B> local-part(</B><I>node-set?</I><B>)</B>
+         String <B> local-name(</B><I>node-set?</I><B>)</B>
       </TD>
    </TR>
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="local-part()"/&gt;<BR />
+         &lt;xsl:value-of select="local-name()"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -333,7 +333,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="local-part()"/>
+            <xsl:value-of select="local-name()"/>
          </FONT>
       </TD>
    </TR>
@@ -341,7 +341,7 @@
    <TR>
       <TD BGColor="#EEEEEE"><B>Function:</B></TD>
       <TD BGColor="#EEEEEE">
-         String <B>name(</B><I>node-set?</I><B>)</B>
+         String <B> name(</B><I>node-set?</I><B>)</B>
       </TD>
    </TR>
    <TR>
@@ -368,13 +368,13 @@
    <TR>
       <TD BGColor="#EEEEEE"><B>Function:</B></TD>
       <TD BGColor="#EEEEEE">
-         String <B>namespace(</B><I>node-set?</I><B>)</B>
+         String<B> namespace-uri(</B><I>node-set?</I><B>)</B>
       </TD>
    </TR>
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="namespace(names/abc:test-name)"/&gt;<BR />
+         &lt;xsl:value-of select="namespace-uri(names/abc:test-name)"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -387,7 +387,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="namespace(names/abc:test-name)"/>
+            <xsl:value-of select="namespace-uri(names/abc:test-name)"/>
          </FONT>
       </TD>
    </TR>

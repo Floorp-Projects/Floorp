@@ -1,12 +1,12 @@
 target: make_netlib
 
-CC = g++
+CC := $(CC) -g
 
 #ifndef PROJ_PATH
 BASE_PATH     = ../base
 #endif
 
-INCLUDE_PATHS = -I . -I$(BASE_PATH) -I-
+INCLUDE_PATHS = -I. -I$(BASE_PATH) -I-
 
 BASE_OBJS = $(BASE_PATH)/String.o
 

@@ -1,6 +1,6 @@
 target: make_base
 
-CC = g++
+CC := $(CC) -g
 
 BASE_OBJS = CommandLineUtils.o \
 	    Double.o \

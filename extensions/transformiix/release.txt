@@ -1,4 +1,6 @@
-TransforMiiX (TM) (C) Copyright The MITRE Corporation 1999  All rights reserved.
+TransforMiiX (TM) 
+(C) Copyright The MITRE Corporation 1999, Keith Visco, and Contributors  
+All rights reserved.
 
 All source and compiled binaries are considered the "program".
 

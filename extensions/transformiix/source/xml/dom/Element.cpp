@@ -57,6 +57,7 @@ Node* Element::insertBefore(Node* newChild, Node* refChild)
       case Node::COMMENT_NODE :
       case Node::PROCESSING_INSTRUCTION_NODE :
       case Node::CDATA_SECTION_NODE :
+      case Node::DOCUMENT_FRAGMENT_NODE : //-- added 19990813 (kvisco)
       case Node::ENTITY_REFERENCE_NODE:
         returnVal = NodeDefinition::insertBefore(newChild, refChild);
         break;

@@ -1,22 +1,27 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: Names.h,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
  */
 
 #include "String.h"
@@ -46,9 +51,12 @@ extern const String COPY_OF;
 extern const String ELEMENT;
 extern const String FOR_EACH;
 extern const String IF;
+extern const String IMPORT;
+extern const String INCLUDE;
 extern const String MESSAGE;
 extern const String NUMBER;
 extern const String OTHERWISE;
+extern const String PARAM;
 extern const String PI;
 extern const String PRESERVE_SPACE;
 extern const String STRIP_SPACE;
@@ -57,6 +65,7 @@ extern const String TEXT;
 extern const String VALUE_OF;
 extern const String VARIABLE;
 extern const String WHEN;
+extern const String WITH_PARAM;
 
 
 //-- Attributes
@@ -65,6 +74,9 @@ extern const String DEFAULT_SPACE_ATTR;
 extern const String ELEMENTS_ATTR;
 extern const String EXPR_ATTR;
 extern const String FORMAT_ATTR;
+extern const String FROM_ATTR;
+extern const String HREF_ATTR;
+extern const String LEVEL_ATTR;
 extern const String MATCH_ATTR;
 extern const String MODE_ATTR;
 extern const String NAME_ATTR;
@@ -73,12 +85,16 @@ extern const String PRIORITY_ATTR;
 extern const String SELECT_ATTR;
 extern const String TEST_ATTR;
 extern const String USE_ATTRIBUTE_SETS_ATTR;
+extern const String VALUE_ATTR;
 
 //-- Attribute Values
-extern const String STRIP_VALUE;
-extern const String PRESERVE_VALUE;
-extern const String YES_VALUE;
+extern const String ANY_VALUE;
+extern const String MULTIPLE_VALUE;
 extern const String NO_VALUE;
+extern const String PRESERVE_VALUE;
+extern const String SINGLE_VALUE;
+extern const String STRIP_VALUE;
+extern const String YES_VALUE;
 
 //-- Stylesheet attributes
 extern const String INDENT_RESULT_ATTR;
@@ -108,29 +124,7 @@ extern const String NODE_FNAME;
 extern const String IDENTITY_OP;
 extern const String PARENT_OP;
 
-//-- Function Names
-extern const String BOOLEAN_FN;
-extern const String CONCAT_FN;
-extern const String CONTAINS_FN;
-extern const String COUNT_FN ;
-extern const String FALSE_FN;
-extern const String LAST_FN;
-extern const String LOCAL_PART_FN;
-extern const String NAME_FN;
-extern const String NAMESPACE_FN;
-extern const String NOT_FN;
-extern const String POSITION_FN;
-extern const String STARTS_WITH_FN;
-extern const String STRING_FN;
-extern const String STRING_LENGTH_FN;
-extern const String SUBSTRING_FN;
-extern const String SUBSTRING_AFTER_FN;
-extern const String SUBSTRING_BEFORE_FN;
-extern const String TRANSLATE_FN;
-extern const String TRUE_FN;
-
-//-- internal XSL processor functions
-extern const String ERROR_FN;
+//-- XSL extension functions
 
 extern const String WILD_CARD;
 

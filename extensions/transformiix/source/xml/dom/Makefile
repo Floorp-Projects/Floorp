@@ -4,10 +4,10 @@ BASE_PATH = ../../base
 DOM_PATH = .
 #endif
 
-INCLUDE_PATHS = -I$(BASE_PATH) -I . -I-
+INCLUDE_PATHS = -I$(BASE_PATH) -I. -I-
 
 
-CC = g++ $(INCLUDE_PATHS)
+CC := $(CC) -g $(INCLUDE_PATHS)
 
 DOM_OBJS = NodeDefinition.o \
            Document.o \

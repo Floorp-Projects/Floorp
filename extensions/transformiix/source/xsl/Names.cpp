@@ -1,28 +1,34 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: Names.cpp,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:07 $
 **/
 #include "Names.h"
 
@@ -48,9 +54,12 @@ const String COPY_OF            = "copy-of";
 const String ELEMENT            = "element";
 const String FOR_EACH           = "for-each";
 const String IF                 = "if";
+const String IMPORT             = "import";
+const String INCLUDE            = "include";
 const String MESSAGE            = "message";
 const String NUMBER             = "number";
 const String OTHERWISE          = "otherwise";
+const String PARAM              = "param";
 const String PI                 = "processing-instruction";
 const String PRESERVE_SPACE     = "preserve-space";
 const String STRIP_SPACE        = "strip-space";
@@ -59,6 +68,7 @@ const String TEXT               = "text";
 const String VALUE_OF           = "value-of";
 const String VARIABLE           = "variable";
 const String WHEN               = "when";
+const String WITH_PARAM         = "with-param";
 
 
 //-- Attributes
@@ -67,6 +77,9 @@ const String DEFAULT_SPACE_ATTR      = "default-space";
 const String ELEMENTS_ATTR           = "elements";
 const String EXPR_ATTR               = "expr";
 const String FORMAT_ATTR             = "format";
+const String FROM_ATTR               = "from";
+const String HREF_ATTR               = "href";
+const String LEVEL_ATTR              = "level";
 const String MATCH_ATTR              = "match";
 const String MODE_ATTR               = "mode";
 const String NAME_ATTR               = "name";
@@ -75,12 +88,16 @@ const String PRIORITY_ATTR           = "priority";
 const String SELECT_ATTR             = "select";
 const String TEST_ATTR               = "test";
 const String USE_ATTRIBUTE_SETS_ATTR = "use-attribute-sets";
+const String VALUE_ATTR              = "value";
 
 //-- Attribute Values
-const String STRIP_VALUE          = "strip";
-const String PRESERVE_VALUE       = "preserve";
-const String YES_VALUE            = "yes";
+const String ANY_VALUE            = "any";
+const String MULTIPLE_VALUE       = "multiple";
 const String NO_VALUE             = "no";
+const String PRESERVE_VALUE       = "preserve";
+const String SINGLE_VALUE         = "single";
+const String STRIP_VALUE          = "strip";
+const String YES_VALUE            = "yes";
 
 //-- Stylesheet attributes
 const String INDENT_RESULT_ATTR   = "indent-result";
@@ -110,29 +127,7 @@ const String NODE_FNAME              = "node";
 const String IDENTITY_OP             = ".";
 const String PARENT_OP               = "..";
 
-//-- Function Names
-const String BOOLEAN_FN              = "boolean";
-const String CONCAT_FN               = "concat";
-const String CONTAINS_FN             = "contains";
-const String COUNT_FN                = "count";
-const String FALSE_FN                = "false";
-const String LAST_FN                 = "last";
-const String LOCAL_PART_FN           = "local-part";
-const String NAME_FN                 = "name";
-const String NAMESPACE_FN            = "namespace";
-const String NOT_FN                  = "not";
-const String POSITION_FN             = "position";
-const String STARTS_WITH_FN          = "starts-with";
-const String STRING_FN               = "string";
-const String STRING_LENGTH_FN        = "string-length";
-const String SUBSTRING_FN            = "substring";
-const String SUBSTRING_AFTER_FN      = "substring-after";
-const String SUBSTRING_BEFORE_FN     = "substring-before";
-const String TRANSLATE_FN            = "translate";
-const String TRUE_FN                 = "true";
-
-//-- internal XSL processor functions
-const String ERROR_FN                = "error";
+//-- XSL extension functions
 
 const String WILD_CARD               = "*";
 

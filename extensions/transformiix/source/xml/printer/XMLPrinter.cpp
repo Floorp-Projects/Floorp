@@ -1,25 +1,30 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is XSL:P XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is Keith Visco.
+ * Portions created by Keith Visco (C) 1999 Keith Visco. 
+ * All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author
+ * Majkel Kretschmar
+ *    -- UTF-8 changes
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: XMLPrinter.cpp,v 1.2 1999/11/15 07:13:01 nisheeth%netscape.com Exp $
  */
 
-#include "Printers.h"
+#include "printers.h"
 
   //--------------------------------/
  //- Implementation of XMLPrinter -/
@@ -28,7 +33,8 @@
 /**
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
- * @author <a href="kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:01 $
 **/
 
 /**
@@ -79,7 +85,7 @@ const char   XMLPrinter::LF               = '\n';
 **/
 XMLPrinter::XMLPrinter() {
     initialize(cout, DEFAULT_INDENT);
-} //-- HTMLPrinter
+} //-- XMLPrinter
 
 /**
  * Creates a new XML Printer using the given ostream for output
@@ -361,7 +367,8 @@ void XMLPrinter::printUTF8Char(DOM_CHAR ch) const {
     ostream& out = *this->ostreamPtr;
     if (ch >= 128) {
         out << HEX_ENTITY;
-        out << ch;
+        if ( ch >= 256 ) out << (ch % 256);
+        else out << ch;
         out << SEMICOLON;
     }
     else out << (char)ch;
@@ -429,5 +436,4 @@ void XMLPrinter::printComment(const DOMString& data) {
         prevChar = currChar;
     }
 } //-- formatComment
-
 

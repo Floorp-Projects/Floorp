@@ -1,33 +1,43 @@
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is TransforMiiX XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999 Keith Visco. All Rights Reserved.
+ * 
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    -- original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
+ * Bob Miller, Oblix Inc., kbob@oblix.com
+ *    -- fixed memory leak in NamedMap::hashKey method by deleting
+ *       up char[] chars;
  *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: NamedMap.cpp,v 1.2 1999/11/15 07:12:40 nisheeth%netscape.com Exp $
  */
 
 /**
  * A Named Map for MITREObjects
- * @author <a href="kvisco@mitre.org">Keith Visco</a>
+ * @author <a href="kvisco@ziplink.net">Keith Visco</a>
+ * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:40 $
 **/
 
 #include "NamedMap.h"
 
-    //-------------/
-  //- Constants -/
+  //-------------/
+ //- Constants -/
 //-------------/
 
 const int NamedMap::DEFAULT_SIZE = 17;
@@ -73,10 +83,8 @@ void NamedMap::initialize(Int32 size) {
  * Destructor for NamedMap
 **/
 NamedMap::~NamedMap() {
-    //cout << "~NamedMap() - start"<<endl;
     clear();
     delete [] elements;
-    //cout << "~NamedMap() - done"<<endl;
 } //-- ~NamedMap
 
 
@@ -169,12 +177,29 @@ MITREObject* NamedMap::get(const String& key) {
 } //-- get
 
 /**
- * Returns true if there are no Nodes in the NodeStack.
- * @return true if there are no Nodes in the NodeStack.
+ * Returns true if there are no objects in this map.
+ * @return true if there are no objects in this map.
 **/
 MBool NamedMap::isEmpty() {
     return (numberOfElements == 0) ? MB_TRUE : MB_FALSE;
 } //-- isEmpty
+
+
+/**
+ * Returns a StringList of all the keys in this NamedMap.
+ * Please delete this List when you are done with it
+**/
+StringList* NamedMap::keys() {
+  StringList* list = new StringList();
+    for (int i = 0; i < numberOfBuckets; i++) {
+        BucketItem* item = elements[i];
+        while (item) {
+	    list->add(new String(item->key));
+            item = item->next;
+        }
+    }
+    return list;
+} //-- keys
 
 /**
  * Adds the specified Node to the top of this Stack.
@@ -235,12 +260,26 @@ void NamedMap::put(const String& key, MITREObject* obj) {
 **/
 MITREObject* NamedMap::remove(String& key) {
 
-    BucketItem* bktItem = getBucketItem(key);
+    // compute hash for key
+    long hashCode = hashKey(key);
+
+    int idx = hashCode % numberOfBuckets;
+
+    BucketItem* bktItem = elements[idx];
+
+    while ( bktItem ) {
+        if ( bktItem->key.isEqual(key) ) break;
+        bktItem = bktItem->next;
+    }
 
     if ( bktItem ) {
-        bktItem->prev->next = bktItem->next;
+        if (bktItem == elements[idx]) elements[idx] = bktItem->next;
+        else bktItem->prev->next = bktItem->next;
         numberOfElements--;
-        return bktItem->item;
+        MITREObject* mObject = bktItem->item;
+        bktItem->item = 0;
+        delete bktItem;
+        return mObject;
     }
     return 0;
 
@@ -306,7 +345,7 @@ unsigned long NamedMap::hashKey(const String& key) {
     for (Int32 i = 0; i < len; i++) {
         hashCode +=  ((Int32)chars[i]) << 3;
     }
-
+    delete [] chars;
     return hashCode;
 } //-- hashKey
 

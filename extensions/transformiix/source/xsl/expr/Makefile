@@ -1,6 +1,6 @@
 target: exprlib
 
-CC = g++
+CC := $(CC) -g
 
 EXPR_PATH      = .
 ROOT_PATH      = ../..
@@ -10,12 +10,12 @@ BASE_PATH      = $(ROOT_PATH)/base
 XSLUTIL_PATH   = $(PROCESSOR_PATH)/util
 PROCESSOR_PATH = ..
 
-INCLUDE_PATHS = -I $(EXPR_PATH) \
-                -I $(DOM_PATH) \
-                -I $(BASE_PATH) \
-                -I $(XML_PATH) \
-                -I $(XSLUTIL_PATH) \
-                -I $(PROCESSOR_PATH) \
+INCLUDE_PATHS = -I$(EXPR_PATH) \
+                -I$(DOM_PATH) \
+                -I$(BASE_PATH) \
+                -I$(XML_PATH) \
+                -I$(XSLUTIL_PATH) \
+                -I$(PROCESSOR_PATH) \
                 -I-
 
 
@@ -23,6 +23,7 @@ EXPR_OBJS = AdditiveExpr.o \
             AttributeExpr.o \
             AttributeValueTemplate.o \
             BasicNodeExpr.o \
+            BooleanExpr.o \
             BooleanResult.o \
             ElementExpr.o \
             ExprLexer.o \
@@ -43,7 +44,8 @@ EXPR_OBJS = AdditiveExpr.o \
 	    TextExpr.o \
             UnionExpr.o \
             VariableRefExpr.o \
-	    WildCardExpr.o
+	    WildCardExpr.o \
+            XPathNames.o
 
 FUNCTION_CALL_OBJS = \
             BooleanFunctionCall.o \
@@ -53,7 +55,7 @@ FUNCTION_CALL_OBJS = \
             StringFunctionCall.o
 
 ALL_OBJS = $(EXPR_OBJS) \
-           $(FUNCTION_CALL_OBJS) \
+           $(FUNCTION_CALL_OBJS)
 
 exprlib: $(ALL_OBJS)
 
@@ -69,6 +71,9 @@ AttributeValueTemplate.o: Expr.h AttributeValueTemplate.cpp
 
 BasicNodeExpr.o: Expr.h BasicNodeExpr.cpp
 	$(CC) $(INCLUDE_PATHS) -c BasicNodeExpr.cpp
+
+BooleanExpr.o: Expr.h BooleanExpr.cpp
+	$(CC) $(INCLUDE_PATHS) -c BooleanExpr.cpp
 
 BooleanResult.o: ExprResult.h BooleanResult.cpp
 	$(CC) $(INCLUDE_PATHS) -c BooleanResult.cpp
@@ -132,6 +137,9 @@ VariableRefExpr.o: Expr.h VariableRefExpr.cpp
 
 WildCardExpr.o: Expr.h WildCardExpr.cpp
 	$(CC) $(INCLUDE_PATHS) -c WildCardExpr.cpp
+
+XPathNames.o: FunctionLib.h XPathNames.cpp
+	$(CC) $(INCLUDE_PATHS) -c XPathNames.cpp
 
 
 ########################
