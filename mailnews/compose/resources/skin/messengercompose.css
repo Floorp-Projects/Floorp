@@ -80,3 +80,7 @@ tree[class="addressingWidget"] treeitem > treerow {
 #button_stop {
 	list-style-image:url("chrome://global/skin/stop.gif");
 }
+
+toolbar#MsgHeadersToolbar {
+  border-bottom: 1px solid #999999;
+}
