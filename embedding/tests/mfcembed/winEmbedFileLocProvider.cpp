@@ -26,16 +26,17 @@
  *
  * Contributor(s):
  *   Conrad Carlen <conrad@ingress.com>
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  * ***** END LICENSE BLOCK ***** */
  
 #include "winEmbedFileLocProvider.h"
+#include "nsXPCOMGlue.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsCRT.h"
 
 
 #include <windows.h>
@@ -89,23 +90,23 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
     *_retval = nsnull;
     *persistant = PR_TRUE;
     
-    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
     }
-    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    else if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendNative(APP_REGISTRY_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
+    else if (strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(DEFAULTS_DIR_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
+    else if (strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -114,8 +115,8 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
                 rv = localFile->AppendRelativeNativePath(DEFAULTS_PREF_DIR_NAME);
         }
     }
-    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
-             nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
+    else if (strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
+             strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -124,138 +125,54 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
                 rv = localFile->AppendRelativeNativePath(DEFAULTS_PROFILE_DIR_NAME);
         }
     }
-    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
+    else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
         rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));   
     }
-    else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
+    else if (strcmp(prop, NS_APP_RES_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(RES_DIR_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
+    else if (strcmp(prop, NS_APP_CHROME_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(CHROME_DIR_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
+    else if (strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
-    else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
+    else if (strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(SEARCH_DIR_NAME);
     }
+
+#ifdef XPCOM_GLUE
     //---------------------------------------------------------------
     // Note that by returning a valid localFile's for NS_GRE_DIR and
     // NS_GRE_COMPONENT_DIR your app is indicating to XPCOM that 
     // it found an GRE version with which it's compatible with and 
     // it intends to be "run against" that GRE
     //
-    // Please see http://www.mozilla.org/projects/embedding/MRE.html
+    // Please see http://www.mozilla.org/projects/embedding/GRE.html
     // for more info. on GRE
     //---------------------------------------------------------------
-    else if (nsCRT::strcmp(prop, NS_GRE_DIR) == 0)
+    else if (strcmp(prop, NS_GRE_DIR) == 0)
     {
-        rv = GetGreDirectory(getter_AddRefs(localFile));
-    }    
-    else if (nsCRT::strcmp(prop, NS_GRE_COMPONENT_DIR) == 0)
-    {
-        rv = GetGreDirectory(getter_AddRefs(localFile));
-        if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativeNativePath(COMPONENTS_DIR_NAME);
-    }    
+        rv = GRE_GetGREDirectory(getter_AddRefs(localFile));
+    }
+#endif
 
     if (localFile && NS_SUCCEEDED(rv))
         return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
         
-    return rv;
-}
-
-// Get the location of the GRE version we're compatible with from 
-// the registry
-//
-char * winEmbedFileLocProvider::GetGreLocationFromRegistry()
-{
-    char szKey[256];
-    HKEY hRegKey = NULL;
-    DWORD dwLength = _MAX_PATH * sizeof(char);
-    long rc;
-    char keyValue[_MAX_PATH + 1];
-    char *pGreLocation = NULL;
-
-    // A couple of key points here:
-    // 1. Note the usage of the "Software\\Mozilla\\GRE" subkey - this allows
-    //    us to have multiple versions of GREs on the same machine by having
-    //    subkeys such as 1.0, 1.1, 2.0 etc. under it.
-    // 2. In this sample below we're looking for the location of GRE version 1.2
-    //    i.e. we're compatible with GRE 1.2 and we're trying to find it's install
-    //    location.
-    //
-    // Please see http://www.mozilla.org/projects/embedding/MRE.html for
-    // more info.
-    //
-    strcpy(szKey, "Software\\mozilla.org\\GRE\\" MOZILLA_VERSION);
-
-    if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) 
-    {
-        if ((rc = ::RegQueryValueEx(hRegKey, "GreHome", NULL, NULL, (BYTE *)keyValue, &dwLength))==ERROR_SUCCESS)
-        {
-            pGreLocation = ::strdup(keyValue);
-            ::RegCloseKey(hRegKey);
-        }
-    }
-
-    return pGreLocation;
-}
-
-// Create and return the location of the GRE the application is 
-// currently using, if any, via the |aLocalFile| param
-//
-// If an embedding application is written to use an GRE it determines
-// the compatible GRE's location by looking in the Windows registry
-// In this case GetGreDirectory() creates a new localFile based on the
-// GRE path it just read from the registry
-//
-// If the embedding appliction is not using an GRE and is running in
-// a "regular" embedding scenario GetGreDirectory() simply returns a
-// failure code indicating to the caller to fallback to a non-GRE
-// based operation - which is the default mode of operation.
-// 
-// Please see http://www.mozilla.org/projects/embedding/MRE.html for 
-// more information on the Gecko Runtime Environment(GRE) and for 
-// the actual registry key whichs contains the GRE path, if any.
-
-NS_METHOD winEmbedFileLocProvider::GetGreDirectory(nsILocalFile **aLocalFile)
-{
-    NS_ENSURE_ARG_POINTER(aLocalFile);
-    nsresult rv = NS_ERROR_FAILURE;
-
-    // Get the path of the GRE which is compatible with our embedding application
-    // from the registry
-    //
-    char *pGreDir = GetGreLocationFromRegistry();
-    if(pGreDir)
-    {
-        nsCOMPtr<nsILocalFile> tempLocal;
-        rv = NS_NewNativeLocalFile(nsDependentCString(pGreDir), TRUE, getter_AddRefs(tempLocal));
-
-        if (tempLocal)
-        {
-           *aLocalFile = tempLocal;
-           NS_ADDREF(*aLocalFile);
-           rv = NS_OK;
-        }
-
-        ::free(pGreDir);
-    }
-
     return rv;
 }
 

@@ -120,7 +120,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
  *
  * XPCOM_DLL              - name of the loadable xpcom library on disk. 
  * XPCOM_SEARCH_KEY       - name of the environment variable that can be 
- *                          modified to include additional search paths.   
+ *                          modified to include additional search paths.
  * GRE_CONF_NAME          - Name of the GRE Configuration file
  */
 
@@ -130,13 +130,6 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #define GRE_CONF_NAME     "gre.config"
 #define GRE_WIN_REG_LOC   "Software\\mozilla.org\\GRE\\"
 #define XPCOM_DLL         "xpcom.dll"
-
-#elif defined(XP_MAC)
-
-#define XPCOM_SEARCH_KEY  "PATH"
-#define GRE_CONF_NAME "gre.config"
-#define GRE_CONF_PATH ":Macintosh HD:gre.conf"
-#define XPCOM_DLL "xpcom.shlb"
 
 #elif defined(XP_BEOS)
 
@@ -161,14 +154,12 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 #define GRE_CONF_DIR  "/etc/gre.d/"
 #endif
 
-
-
-#if defined(XP_MAC)
-  #define XPCOM_FILE_PATH_SEPARATOR       ":"
-#elif defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
   #define XPCOM_FILE_PATH_SEPARATOR       "\\"
+  #define XPCOM_ENV_PATH_SEPARATOR        ";"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
   #define XPCOM_FILE_PATH_SEPARATOR       "/"
+  #define XPCOM_ENV_PATH_SEPARATOR        ":"
 #else
   #error need_to_define_your_file_path_separator_and_illegal_characters
 #endif

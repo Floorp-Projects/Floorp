@@ -38,37 +38,31 @@
 #ifndef nsGREDirServiceProvider_h_
 #define nsGREDirServiceProvider_h_
 
-#include "nsILocalFile.h"
+#ifndef MAXPATHLEN
+#ifdef _MAX_PATH
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
+#endif
+
 #include "nsIDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
 
-class nsIFile;
-
-//*****************************************************************************
-// class greEmbedFileLocProvider
-//*****************************************************************************   
-
+/**
+ * the directoryserviceprovider used by GRE_Startup when calling NS_InitXPCOM2
+ */
 class nsGREDirServiceProvider : public nsIDirectoryServiceProvider
 {
 public:
-
-   nsGREDirServiceProvider();
+   nsGREDirServiceProvider() { }
 
    NS_DECL_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
-   static char* GetXPCOMPath();
-   static char* GetGREDirectoryPath();
-   static char* GetPathFromConfigDir(const char* dirname);
-   static char* GetPathFromConfigFile(const char* filename);
-
 protected:
-   virtual              ~nsGREDirServiceProvider();
-   nsresult             GetGreDirectory(nsILocalFile **aLocalFile);   
-   void                 AddGRELocationToPath();
-
-   char*                mPathEnvString;
+   virtual              ~nsGREDirServiceProvider() { }
 };
 
 #endif // nsGREDirServiceProvider.h
-

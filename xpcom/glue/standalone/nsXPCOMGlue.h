@@ -39,17 +39,71 @@
 
 class nsILocalFile;
 
-extern "C"
-nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile);
+/**
+ * Initialize the XPCOM glue by dynamically linking against the XPCOM
+ * shared library indicated by xpcomFile.
+ */
 
 extern "C"
-nsresult NS_COM XPCOMGlueShutdown();
+nsresult XPCOMGlueStartup(const char* xpcomFile);
 
 
-// Default GRE startup and shutdown
+/**
+ * Finish the XPCOM glue after it is no longer needed.
+ */
 
 extern "C"
-nsresult NS_COM GRE_Startup();
+nsresult XPCOMGlueShutdown();
+
+
+/**
+ * Locate the path of a compatible GRE.
+ * 
+ * @return string buffer pointing to the GRE path (without a trailing
+ *         directory separator). Callers do no need to free this buffer.
+ */
 
 extern "C"
-nsresult NS_COM GRE_Shutdown();
+char const * GRE_GetGREPath();
+
+
+/**
+ * Locate the path of a compatible GRE. This is returned as an
+ * nsILocalFile instead of a char*.
+ *
+ * @param _retval   Ordinary XPCOM getter, returns an addrefed interface.
+ */
+
+extern "C"
+nsresult GRE_GetGREDirectory(nsILocalFile* *_retval);
+
+
+/**
+ * Locate the path of the XPCOM binary of a compatible GRE.
+ * The result of this function is normally passed directly to
+ * XPCOMGlueStartup.
+ *
+ * @return string buffer pointing to the XPCOM DLL path. Callers do
+ *         not need to free this buffer.
+ */
+
+extern "C"
+char const * GRE_GetXPCOMPath();
+
+
+/**
+ * Embedding applications which don't need a custom
+ * directoryserviceprovider may use GRE_Startup to start the XPCOM
+ * glue and initialize the GRE in one step.
+ */
+
+extern "C"
+nsresult GRE_Startup();
+
+
+/**
+ * Shut down XPCOM and the XPCOM glue in one step.
+ */
+
+extern "C"
+nsresult GRE_Shutdown();

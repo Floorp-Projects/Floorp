@@ -47,6 +47,8 @@
 // Local Includes
 #include "stdafx.h"
 #include "MfcEmbed.h"
+#include "nsXPCOMGlue.h"
+#include "nsIComponentRegistrar.h"
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
 #include "winEmbedFileLocProvider.h"
@@ -54,7 +56,6 @@
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
 #include "Preferences.h"
-#include "nsCRT.h"
 #include <io.h>
 #include <fcntl.h>
 
@@ -250,8 +251,10 @@ CMfcEmbedApp theApp;
 */
 nsresult CMfcEmbedApp::OverrideComponents()
 {
-    nsresult rv = NS_OK;
-
+    nsCOMPtr<nsIComponentRegistrar> compReg;
+    nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(compReg));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     // replace Mozilla's default PromptService with our own, if the
     // expected override DLL is present
     HMODULE overlib = ::LoadLibrary(kComponentsLibname);
@@ -266,12 +269,12 @@ nsresult CMfcEmbedApp::OverrideComponents()
 
             nsCOMPtr<nsIFactory> promptFactory;
             rv = MakeFactory(getter_AddRefs(promptFactory));
-            if (NS_SUCCEEDED(rv))
-                nsComponentManager::RegisterFactory(kPromptServiceCID,
-                                                    "Prompt Service",
-                                                    "@mozilla.org/embedcomp/prompt-service;1",
-                                                    promptFactory,
-                                                    PR_TRUE); // replace existing
+            if (NS_SUCCEEDED(rv)) {
+                compReg->RegisterFactory(kPromptServiceCID,
+                                         "Prompt Service",
+                                         "@mozilla.org/embedcomp/prompt-service;1",
+                                         promptFactory);
+            }
         } else
           ::FreeLibrary(overlib);
     }
@@ -290,11 +293,10 @@ nsresult CMfcEmbedApp::OverrideComponents()
             nsCOMPtr<nsIFactory> helperAppDlgFactory;
             rv = MakeFactory(getter_AddRefs(helperAppDlgFactory));
             if (NS_SUCCEEDED(rv))
-                nsComponentManager::RegisterFactory(kHelperAppLauncherDialogCID,
-                                                    "Helper App Launcher Dialog",
-                                                    "@mozilla.org/helperapplauncherdialog;1",
-                                                    helperAppDlgFactory,
-                                                    PR_TRUE); // replace existing
+                compReg->RegisterFactory(kHelperAppLauncherDialogCID,
+                                         "Helper App Launcher Dialog",
+                                         "@mozilla.org/helperapplauncherdialog;1",
+                                         helperAppDlgFactory);
         } else
           ::FreeLibrary(overlib);
     }
@@ -314,11 +316,10 @@ nsresult CMfcEmbedApp::OverrideComponents()
             nsCOMPtr<nsIFactory> printingPromptFactory;
             rv = MakeFactory(getter_AddRefs(printingPromptFactory));
             if (NS_SUCCEEDED(rv))
-                nsComponentManager::RegisterFactory(kPrintingPromptServiceCID,
-                                                    "Printing Prompt Service",
-                                                    "@mozilla.org/embedcomp/printingprompt-service;1",
-                                                    printingPromptFactory,
-                                                    PR_TRUE); // replace existing
+                compReg->RegisterFactory(kPrintingPromptServiceCID,
+                                         "Printing Prompt Service",
+                                         "@mozilla.org/embedcomp/printingprompt-service;1",
+                                         printingPromptFactory);
         } else
           ::FreeLibrary(overlib);
     }
@@ -382,11 +383,17 @@ BOOL CMfcEmbedApp::InitInstance()
     NSGetStaticModuleInfo = app_getModuleInfo;
 #endif
 
-    
     CMfcEmbedCommandLine cmdLine(*this);
     ParseCommandLine(cmdLine);
     
     Enable3dControls();
+
+#ifdef XPCOM_GLUE
+    if (NS_FAILED(XPCOMGlueStartup(GRE_GetXPCOMPath()))) {
+        MessageBox(NULL, "Could not initialize XPCOM. Perhaps the GRE\nis not installed or could not be found?", "MFCEmbed", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+#endif
 
     //
     // 1. Determine the name of the dir from which the GRE based app is being run
@@ -394,15 +401,22 @@ BOOL CMfcEmbedApp::InitInstance()
     //
     // 2. Create an nsILocalFile out of it which will passed in to NS_InitEmbedding()
     //
-    // Please see http://www.mozilla.org/projects/embedding/MRE.html
+    // Please see http://www.mozilla.org/projects/embedding/GRE.html
     // for more info. on GRE
 
-    TCHAR curDir[_MAX_PATH+1];
-    ::GetCurrentDirectory(_MAX_PATH, curDir);
+    TCHAR path[_MAX_PATH+1];
+    ::GetModuleFileName(0, path, _MAX_PATH);
+    TCHAR* lastSlash = _tcsrchr(path, _T('\\'));
+    if (!lastSlash) {
+        NS_ERROR("No slash in module file name... something is wrong.");
+        return FALSE;
+    }
+    *lastSlash = _T('\0');
+
     USES_CONVERSION;
     nsresult rv;
     nsCOMPtr<nsILocalFile> mreAppDir;
-    rv = NS_NewNativeLocalFile(nsDependentCString(T2A(curDir)), TRUE, getter_AddRefs(mreAppDir));
+    rv = NS_NewNativeLocalFile(nsDependentCString(T2A(path)), TRUE, getter_AddRefs(mreAppDir));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create mreAppDir localfile");
 
     // Take a look at 
@@ -588,6 +602,10 @@ int CMfcEmbedApp::ExitInstance()
 #endif
 
     NS_TermEmbedding();
+
+#ifdef XPCOM_GLUE
+    XPCOMGlueShutdown();
+#endif
 
     return 1;
 }
@@ -798,7 +816,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
 {
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
+    if (strcmp(aTopic, "profile-approve-change") == 0)
     {
         // Ask the user if they want to
         int result = MessageBox(NULL,
@@ -811,7 +829,7 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
             status->VetoChange();
         }
     }
-    else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
+    else if (strcmp(aTopic, "profile-change-teardown") == 0)
     {
         // Close all open windows. Alternatively, we could just call CBrowserWindow::Stop()
         // on each. Either way, we have to stop all network activity on this phase.
@@ -832,13 +850,13 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const char *aTopic, c
             }
         }
     }
-    else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
+    else if (strcmp(aTopic, "profile-after-change") == 0)
     {
         InitializePrefs(); // In case we have just switched to a newly created profile.
         
         // Only make a new browser window on a switch. This also gets
         // called at start up and we already make a window then.
-        if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("switch").get()))      
+        if (!wcscmp(someData, NS_LITERAL_STRING("switch").get()))      
             OnNewBrowser();
     }
     return rv;

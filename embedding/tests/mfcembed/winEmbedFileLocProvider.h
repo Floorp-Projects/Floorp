@@ -49,15 +49,12 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
-    static char * GetGreLocationFromRegistry();
-
 protected:
     virtual              ~winEmbedFileLocProvider();
 
     NS_METHOD            CloneMozBinDirectory(nsILocalFile **aLocalFile);   
     NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
     NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
-    NS_METHOD            GetGreDirectory(nsILocalFile **aLocalFile);   
 
 
     nsCString              mProductDirName;
