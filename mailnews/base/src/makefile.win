@@ -64,6 +64,7 @@ EXPORTS=                    \
 	nsNewsSet.h         \
 	nsMsgLineBuffer.h \
 	nsMsgGroupRecord.h  \
+	nsLocalFolderSummarySpec.h \
 	$(NULL)
 
 
