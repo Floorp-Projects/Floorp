@@ -1684,38 +1684,6 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
   if (NS_FAILED(res)) return res;
   if (!firstRange) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_cmanske
-    {
-    nsCOMPtr<nsIDOMNode> anchorNode;
-    PRInt32 anchorOffset = -1;
-    selection->GetAnchorNode(getter_AddRefs(anchorNode));
-    selection->GetAnchorOffset(&anchorOffset);
-    
-    nsCOMPtr<nsIDOMNode> focusNode;
-    res = selection->GetFocusNode(getter_AddRefs(focusNode));
-    if (NS_FAILED(res)) return res;
-    PRInt32 focusOffset = -1;
-    selection->GetFocusOffset(&focusOffset);
-    
-    nsAutoString name;
-    anchorNode->GetNodeName(name);
-    printf("GetFirstSelectedCell: Anchor node of selection: ");
-    wprintf(name.GetUnicode());
-    printf(" Offset: %d\n", anchorOffset);
-    focusNode->GetNodeName(name);
-    printf("Focus node of selection: ");
-    wprintf(name.GetUnicode());
-    printf(" Offset: %x\n", focusOffset);
-
-    PRInt32 rangeCount;
-    res = selection->GetRangeCount(&rangeCount);
-    printf(" RangeCount: %d\n", rangeCount);
-    printf(" Range pointer = %d\n", firstRange);
-    }
-#endif
-
-  // This is failing -- range doesn't match that set when selecting cell!
-
   nsCOMPtr<nsIDOMNode> cellNode;
   res = GetFirstNodeInRange(firstRange, getter_AddRefs(cellNode));
   if (NS_FAILED(res)) return res;
@@ -1730,6 +1698,7 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell)
   else 
     res = NS_EDITOR_ELEMENT_NOT_FOUND;
 
+  // Setup for next cell
   mSelectedCellIndex = 1;
 
   return res;  
@@ -1759,7 +1728,7 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell)
     return NS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
-  // Get first node in first range of selection - test if it's a cell
+  // Get first node in next range of selection - test if it's a cell
   nsCOMPtr<nsIDOMRange> range;
   res = selection->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
   if (NS_FAILED(res)) return res;

@@ -1334,174 +1334,172 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         PRBool noFileSpec = (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
         PRBool mustShowFileDialog = saveAs || noFileSpec;
         PRBool replacing = !saveAs;
-  
+
+        
+        // Get existing document title
+        nsAutoString title;
+        nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(doc);
+        if (!HTMLDoc) return NS_ERROR_FAILURE;
+        res = HTMLDoc->GetTitle(title);
+        if (NS_FAILED(res)) return res;
+        
         if (mustShowFileDialog)
         {
-          PRBool bUpdateWindowTitle = PR_TRUE;
-
-          // Check if the document has a title and prompt for one if missing
-          nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(doc);
-          if (HTMLDoc)
+          // Prompt for title ONLY if existing title is empty
+          if ( title.Length() == 0)
           {
-            nsString title;
-            res = HTMLDoc->GetTitle(title);
-
-            // Prompt for title ONLY if it's empty
-            if (NS_SUCCEEDED(res) && title.Length() == 0)
-            {
-              // Use a "prompt" common dialog to get title string from user
-              NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
-              if (NS_SUCCEEDED(res)) 
-              { 
-                PRUnichar *titleUnicode;
-                nsAutoString captionStr, msgStr;
-                
-                GetBundleString("DocumentTitle", captionStr);
-                GetBundleString("NeedDocTitle", msgStr); 
-                
-                PRBool retVal = PR_FALSE;
-                res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr.GetUnicode(),
-                                     title.GetUnicode(), &titleUnicode, &retVal); 
-                
-                if( retVal == PR_FALSE)
-                {
-                  // This indicates Cancel was used -- don't continue saving
-                  *_retval = PR_FALSE;
-                  return NS_OK;
-                }
-                //This will call UpdateWindowTitle
-                SetDocumentTitle(titleUnicode);
-                title = titleUnicode;
-                bUpdateWindowTitle = PR_FALSE;
-                nsCRT::free(titleUnicode);
-              }
-            }
-
-            nsCOMPtr<nsIFileWidget>  fileWidget;
-            res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, NS_GET_IID(nsIFileWidget), getter_AddRefs(fileWidget));
-            if (NS_SUCCEEDED(res) && fileWidget)
-            {
-              nsAutoString  promptString;
-              GetBundleString("SaveDocumentAs", promptString);
-
-              nsString* titles = nsnull;
-              nsString* filters = nsnull;
-              nsString* nextTitle;
-              nsString* nextFilter;
-              nsAutoString HTMLFiles;
-              nsAutoString TextFiles;
-              nsAutoString fileName;
-              nsFileSpec parentPath;
-
-              titles = new nsString[3];
-              if (!titles)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-              filters = new nsString[3];
-              if (!filters)
-              {
-                delete [] titles;
-                return NS_ERROR_OUT_OF_MEMORY;
-              }
-              nextTitle = titles;
-              nextFilter = filters;
-              // The names of the file types are localizable
-              GetBundleString("HTMLFiles", HTMLFiles);
-              GetBundleString("TextFiles", TextFiles);
-              if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
-              {
-                nsAutoString allFilesStr;
-                GetBundleString("AllFiles", allFilesStr);
-                
-              *nextTitle++ = HTMLFiles;
-              *nextFilter++ = "*.htm; *.html; *.shtml";
-              *nextTitle++ = TextFiles;
-              *nextFilter++ = "*.txt";
-              *nextTitle++ = allFilesStr;
-              *nextFilter++ = "*.*";
-              fileWidget->SetFilterList(3, titles, filters);
-              }
+            // Use a "prompt" common dialog to get title string from user
+            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
+            if (NS_SUCCEEDED(res)) 
+            { 
+              PRUnichar *titleUnicode;
+              nsAutoString captionStr, msgStr;
               
-              if (noFileSpec)
-              {
-                // check the current url, use that file name if possible
-                nsString urlstring;
-                res = HTMLDoc->GetURL(urlstring);
-
-       //         ?????
-       //         res = HTMLDoc->GetSourceDocumentURL(jscx, uri);
-       //         do a QI to get an nsIURL and then call GetFileName()
-
-                // if it's not a local file already, grab the current file name
-                if ( (urlstring.Compare("file", PR_TRUE, 4) != 0 )
-                  && (urlstring.Compare("about:blank", PR_TRUE, -1) != 0) )
-                {
-                  PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
-                  if ( index != -1 )
-                  {
-                    // remove cruft before file name including '/'
-                    // if the url ends with a '/' then the whole string will be cut
-                    urlstring = urlstring.Cut(0, index + 1);
-                    if (urlstring.Length() > 0)
-                      fileName = urlstring;
-                  }
-                }
-                
-                // Use page title as suggested name for new document
-                if (fileName.Length() == 0 && title.Length() > 0)
-                {
-                  //Replace "bad" filename characteres with "_"
-                  PRUnichar space = (PRUnichar)' ';
-                  PRUnichar dot = (PRUnichar)'.';
-                  PRUnichar bslash = (PRUnichar)'\\';
-                  PRUnichar fslash = (PRUnichar)'/';
-                  PRUnichar at = (PRUnichar)'@';
-                  PRUnichar colon = (PRUnichar)':';
-                  PRUnichar underscore = (PRUnichar)'_';
-                  title = title.ReplaceChar(space, underscore);
-                  title = title.ReplaceChar(dot, underscore);
-                  title = title.ReplaceChar(bslash, underscore);
-                  title = title.ReplaceChar(fslash, underscore);
-                  title = title.ReplaceChar(at, underscore);
-                  title = title.ReplaceChar(colon, underscore);
-                  fileName = title + nsString(".html");
-                }
-              } 
-              else
-              {
-                char *leafName = docFileSpec.GetLeafName();
-                if (leafName)
-                {
-                  fileName = leafName;
-                  nsCRT::free(leafName);
-                }
-                docFileSpec.GetParent(parentPath);
-
-                // TODO: CHANGE TO THE DIRECTORY OF THE PARENT PATH?
-              }
+              GetBundleString("DocumentTitle", captionStr);
+              GetBundleString("NeedDocTitle", msgStr); 
               
-              if (fileName.Length() > 0)
-                fileWidget->SetDefaultString(fileName);
-
-              nsFileDlgResults dialogResult;
-              // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
-              dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
-              delete [] titles;
-              delete [] filters;
-
-              if (dialogResult == nsFileDlgResults_Cancel)
+              PRBool retVal = PR_FALSE;
+              res = dialog->Prompt(mContentWindow, captionStr.GetUnicode(), msgStr.GetUnicode(),
+                                   title.GetUnicode(), &titleUnicode, &retVal); 
+              
+              if( retVal == PR_FALSE)
               {
-                // Note that *_retval = PR_FALSE at this point
+                // This indicates Cancel was used -- don't continue saving
+                *_retval = PR_FALSE;
                 return NS_OK;
               }
-              replacing = (dialogResult == nsFileDlgResults_Replace);
-            }
-            else
-            {
-               NS_ASSERTION(0, "Failed to get file widget");
-              return res;
+              title = titleUnicode;
+              nsCRT::free(titleUnicode);
             }
           }
+
+          nsCOMPtr<nsIFileWidget>  fileWidget;
+          res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, 
+                                                   NS_GET_IID(nsIFileWidget), 
+                                                   getter_AddRefs(fileWidget));
+          if (NS_SUCCEEDED(res) && fileWidget)
+          {
+            nsAutoString  promptString;
+            GetBundleString("SaveDocumentAs", promptString);
+
+            nsString* titles = nsnull;
+            nsString* filters = nsnull;
+            nsString* nextTitle;
+            nsString* nextFilter;
+            nsAutoString HTMLFiles;
+            nsAutoString TextFiles;
+            nsAutoString fileName;
+            nsFileSpec parentPath;
+
+            titles = new nsString[3];
+            if (!titles)
+              return NS_ERROR_OUT_OF_MEMORY;
+
+            filters = new nsString[3];
+            if (!filters)
+            {
+              delete [] titles;
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            nextTitle = titles;
+            nextFilter = filters;
+            // The names of the file types are localizable
+            GetBundleString("HTMLFiles", HTMLFiles);
+            GetBundleString("TextFiles", TextFiles);
+            if (! (HTMLFiles.Length() == 0 || TextFiles.Length() == 0))
+            {
+              nsAutoString allFilesStr;
+              GetBundleString("AllFiles", allFilesStr);
+              
+            *nextTitle++ = HTMLFiles;
+            *nextFilter++ = "*.htm; *.html; *.shtml";
+            *nextTitle++ = TextFiles;
+            *nextFilter++ = "*.txt";
+            *nextTitle++ = allFilesStr;
+            *nextFilter++ = "*.*";
+            fileWidget->SetFilterList(3, titles, filters);
+            }
+            
+            if (noFileSpec)
+            {
+              // check the current url, use that file name if possible
+              nsString urlstring;
+              res = HTMLDoc->GetURL(urlstring);
+
+     //         ?????
+     //         res = HTMLDoc->GetSourceDocumentURL(jscx, uri);
+     //         do a QI to get an nsIURL and then call GetFileName()
+
+              // if it's not a local file already, grab the current file name
+              if ( (urlstring.Compare("file", PR_TRUE, 4) != 0 )
+                && (urlstring.Compare("about:blank", PR_TRUE, -1) != 0) )
+              {
+                PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
+                if ( index != -1 )
+                {
+                  // remove cruft before file name including '/'
+                  // if the url ends with a '/' then the whole string will be cut
+                  urlstring = urlstring.Cut(0, index + 1);
+                  if (urlstring.Length() > 0)
+                    fileName = urlstring;
+                }
+              }
+              
+              // Use page title as suggested name for new document
+              if (fileName.Length() == 0 && title.Length() > 0)
+              {
+                //Replace "bad" filename characteres with "_"
+                PRUnichar space = (PRUnichar)' ';
+                PRUnichar dot = (PRUnichar)'.';
+                PRUnichar bslash = (PRUnichar)'\\';
+                PRUnichar fslash = (PRUnichar)'/';
+                PRUnichar at = (PRUnichar)'@';
+                PRUnichar colon = (PRUnichar)':';
+                PRUnichar underscore = (PRUnichar)'_';
+                title = title.ReplaceChar(space, underscore);
+                title = title.ReplaceChar(dot, underscore);
+                title = title.ReplaceChar(bslash, underscore);
+                title = title.ReplaceChar(fslash, underscore);
+                title = title.ReplaceChar(at, underscore);
+                title = title.ReplaceChar(colon, underscore);
+                fileName = title + nsString(".html");
+              }
+            } 
+            else
+            {
+              char *leafName = docFileSpec.GetLeafName();
+              if (leafName)
+              {
+                fileName = leafName;
+                nsCRT::free(leafName);
+              }
+              docFileSpec.GetParent(parentPath);
+
+              // TODO: CHANGE TO THE DIRECTORY OF THE PARENT PATH?
+            }
+            
+            if (fileName.Length() > 0)
+              fileWidget->SetDefaultString(fileName);
+
+            nsFileDlgResults dialogResult;
+            // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
+            dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
+            delete [] titles;
+            delete [] filters;
+
+            if (dialogResult == nsFileDlgResults_Cancel)
+            {
+              // Note that *_retval = PR_FALSE at this point
+              return NS_OK;
+            }
+            replacing = (dialogResult == nsFileDlgResults_Replace);
+          }
+          else
+          {
+             NS_ASSERTION(0, "Failed to get file widget");
+            return res;
+          }
+
           // Set the new URL for the webshell
           if (mContentAreaWebShell)
           {
@@ -1513,11 +1511,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               mContentAreaWebShell->SetURL(fileURLUnicode);
         			Recycle(fileURLUnicode);
             }
-          }         
-          
-          // Update window caption in case title has changed.
-          if (bUpdateWindowTitle)
-            UpdateWindowTitle();
+          }
         } // mustShowFileDialog
 
         // TODO: Get the file type (from the extension?) the user set for the file
@@ -1533,6 +1527,11 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
+ 
+          // If user changed filename they may have changed title
+          // This will call UpdateWindowTitle
+          if (mustShowFileDialog)
+            SetDocumentTitle(title.GetUnicode());
         }
       }
       break;
