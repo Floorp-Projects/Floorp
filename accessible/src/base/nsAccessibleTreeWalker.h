@@ -50,12 +50,13 @@
 #include "nsIBindingManager.h"
 #include "nsIWeakReference.h"
 
-enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2, eSiblingsWalkFrames = -3 };
+enum { eSiblingsUninitialized = -1, eSiblingsWalkFrames = -2 };
 
 struct WalkState {
   nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIDOMNodeList> siblingList;
+  nsIContent *parentContent; // For walking normal DOM
   WalkState *prevState;
   nsIFrame *frame;     // Helps avoid GetPrimaryFrameFor() calls
   PRInt32 siblingIndex;    // Holds a state flag or an index into the siblingList
