@@ -133,6 +133,7 @@ rollbox.
   static void AddMargin(nsIBox* aChild, nsSize& aSize);
   static void AddMargin(nsSize& aSize, const nsMargin& aMargin);
 
+  static void BoundsCheckMinMax(nsSize& aMinSize, nsSize& aMaxSize);
   static void BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize);
   static void BoundsCheck(nscoord& aMinSize, nscoord& aPrefSize, nscoord& aMaxSize);
 
