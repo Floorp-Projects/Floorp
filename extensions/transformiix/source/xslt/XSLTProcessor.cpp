@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.16 2000/06/19 07:09:02 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.17 2000/06/19 07:16:37 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.16 $ $Date: 2000/06/19 07:09:02 $
+ * @version $Revision: 1.17 $ $Date: 2000/06/19 07:16:37 $
 **/
 
 /**
@@ -1464,16 +1464,17 @@ NamedMap* XSLTProcessor::processParameters(Element* xslAction, Node* context, Pr
                 else {
                     ExprResult* exprResult = processVariable(context, action, ps);
                     if (params->get(name)) {
-                    //-- error cannot rebind parameters
-                    String err("value for parameter '");
-                    err.append(name);
-                    err.append("' specified more than once.");
-                    notifyError(err);
-                }
-                else {
-                    VariableBinding* binding = new VariableBinding(name, exprResult);
-                    params->put((const String&)name, binding);
-                }
+                        //-- error cannot rebind parameters
+                        String err("value for parameter '");
+                        err.append(name);
+                        err.append("' specified more than once.");
+                        notifyError(err);
+                    }
+                    else {
+                        VariableBinding* binding = new VariableBinding(name, exprResult);
+                        params->put((const String&)name, binding);
+                    }
+				}
             }
         }
     }
