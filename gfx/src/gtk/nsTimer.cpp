@@ -174,7 +174,7 @@ TimerImpl::Cancel()
     gtk_timeout_remove(mTimerId);
 }
 
-NS_GFX nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+NS_GFXNONXP nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
