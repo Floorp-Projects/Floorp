@@ -37,6 +37,7 @@ aw-server.dtd
 AccountManager.dtd
 AccountWizard.dtd
 am-advanced.dtd
+am-imap-advanced.dtd
 am-copies.dtd
 am-main.dtd
 am-server-top.dtd

@@ -43,6 +43,7 @@ install::
 	$(MAKE_INSTALL) AccountManager.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) AccountWizard.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-advanced.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) am-imap-advanced.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-copies.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-main.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) am-server-top.dtd $(DISTBROWSER)
@@ -67,6 +68,7 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\AccountManager.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\AccountWizard.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-advanced.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-imap-advanced.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-copies.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-main.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\am-server-top.dtd
