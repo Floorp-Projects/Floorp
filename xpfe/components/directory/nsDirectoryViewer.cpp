@@ -481,7 +481,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
       PRInt64 size;
       rv = aIndex->GetSize(&size);
       if (NS_FAILED(rv)) return rv;
-      PRInt64 minus1 = LL_MAXUINT;
+      const PRInt64 minus1 = LL_MAXUINT;
       if (LL_NE(size, minus1)) {
         PRInt32 intSize;
         LL_L2I(intSize, size);
