@@ -217,6 +217,7 @@ void              RestoreAdditionalFlag(siC *siCNode);
 void              RestoreEnabledFlag(siC *siCNode);
 void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
 void              ClearWinRegUninstallFileDeletion(void);
+void              RemoveDelayedDeleteFileEntries(const char *aPathToMatch);
 int               AppendToGlobalMessageStream(char *szInfo);
 char              *GetOSTypeString(char *szOSType, DWORD dwOSTypeBufSize);
 int               UpdateIdiFile(char  *szPartialUrl,
