@@ -67,14 +67,8 @@ struct nsSize {
   nsSize operator+(const nsSize& aSize) const {
     return nsSize(width + aSize.width, height + aSize.height);
   }
-  nsSize operator-(const nsSize& aSize) const {
-    return nsSize(width - aSize.width, height - aSize.height);
-  }
   nsSize& operator+=(const nsSize& aSize) {width += aSize.width;
                                            height += aSize.height;
-                                           return *this;}
-  nsSize& operator-=(const nsSize& aSize) {width -= aSize.width;
-                                           height -= aSize.height;
                                            return *this;}
 };
 
