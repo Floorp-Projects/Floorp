@@ -76,6 +76,7 @@ typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
 						 const GnomeModuleInfo *, int,
 						 char **, const char *, ...);
 typedef const GnomeModuleInfo * (*_libgnome_module_info_get_fn)();
+typedef GnomeProgram * (*_gnome_program_get_fn)();
 
 #define DECL_FUNC_PTR(func) static _##func##_fn _##func
 
@@ -90,6 +91,7 @@ DECL_FUNC_PTR(gnome_vfs_mime_get_default_application);
 DECL_FUNC_PTR(gnome_vfs_mime_application_free);
 DECL_FUNC_PTR(gnome_program_init);
 DECL_FUNC_PTR(libgnome_module_info_get);
+DECL_FUNC_PTR(gnome_program_get);
 
 static void
 CleanUp()
@@ -149,6 +151,7 @@ nsGNOMERegistry::Startup()
   GET_LIB_FUNCTION(gnome, gnome_url_show);
   GET_LIB_FUNCTION(gnome, gnome_program_init);
   GET_LIB_FUNCTION(gnome, libgnome_module_info_get);
+  GET_LIB_FUNCTION(gnome, gnome_program_get);
 
   // Attempt to open libgnomevfs
   vfsLib = LoadVersionedLibrary("gnomevfs-2", ".0");
@@ -164,9 +167,11 @@ nsGNOMERegistry::Startup()
   // Initialize GNOME, if it's not already initialized.  It's not
   // necessary to tell GNOME about our actual command line arguments.
 
-  char *argv[1] = { "gecko" };
-  _gnome_program_init("Gecko", "1.0", _libgnome_module_info_get(),
-		      1, argv, NULL);
+  if (!_gnome_program_get()) {
+    char *argv[1] = { "gecko" };
+    _gnome_program_init("Gecko", "1.0", _libgnome_module_info_get(),
+                        1, argv, NULL);
+  }
 
   // Note: after GNOME has been initialized, do not ever unload these
   // libraries.  They register atexit handlers, so if they are unloaded, we'll
