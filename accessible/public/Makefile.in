@@ -47,6 +47,7 @@ XPIDLSRCS = \
       nsIAccessibleProvider.idl \
       nsIAccessibleSelectable.idl \
       nsIAccessNode.idl \
+      nsIAccessibleEvent.idl \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk

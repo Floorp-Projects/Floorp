@@ -52,6 +52,7 @@ REQUIRES	= commandhandler \
 
 CPPSRCS = \
   nsAccessNode.cpp \
+  nsAccessibleEventData.cpp \
   nsDocAccessible.cpp \
   nsOuterDocAccessible.cpp \
   nsAccessibilityAtoms.cpp \

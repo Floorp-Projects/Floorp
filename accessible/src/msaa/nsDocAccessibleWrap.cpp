@@ -160,6 +160,8 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     return NS_ERROR_FAILURE;
   }
 
+  nsDocAccessible::FireToolkitEvent(aEvent, aAccessible, aData); // Fire nsIObserver message
+
 #ifdef SWALLOW_DOC_FOCUS_EVENTS
   // Remove this until we can figure out which focus events are coming at
   // the same time as native window focus events, although
