@@ -286,7 +286,7 @@ var nsSaveCommand =
     return window.editorShell && 
       (window.editorShell.documentModified || 
        window.editorShell.editorDocument.location == "about:blank" ||
-       gEditorDisplayMode == DisplayModeSource);
+       window.gHTMLSourceChanged);
   },
   
   doCommand: function(aCommand)
@@ -1252,7 +1252,24 @@ var nsDeleteTableRowCommand =
   },
   doCommand: function(aCommand)
   {
-    window.editorShell.DeleteTableRow(1);
+    var rows = GetNumberOfContiguousSelectedRows();
+    // Delete at least one row
+    if (rows == 0)
+      rows = 1;
+
+    try {
+      window.editorShell.BeginBatchChanges();
+
+      // Loop to delete all blocks of contiguous, selected rows
+      while (rows)
+      {
+        window.editorShell.DeleteTableRow(rows);
+        rows = GetNumberOfContiguousSelectedRows();
+      }
+      window.editorShell.EndBatchChanges();
+    } catch(ex) {
+      window.editorShell.EndBatchChanges();
+    }
     window._content.focus();
   }
 };
@@ -1265,7 +1282,24 @@ var nsDeleteTableColumnCommand =
   },
   doCommand: function(aCommand)
   {
-    window.editorShell.DeleteTableColumn(1); 
+    var columns = GetNumberOfContiguousSelectedColumns();
+    // Delete at least one column
+    if (columns == 0)
+      columns = 1;
+
+    try {
+      window.editorShell.BeginBatchChanges();
+
+      // Loop to delete all blocks of contiguous, selected columns
+      while (columns)
+      {
+        window.editorShell.DeleteTableColumn(columns);
+        columns = GetNumberOfContiguousSelectedColumns();
+      }
+      window.editorShell.EndBatchChanges();
+    } catch(ex) {
+      window.editorShell.EndBatchChanges();
+    }
     window._content.focus();
   }
 };

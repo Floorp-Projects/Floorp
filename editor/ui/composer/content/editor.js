@@ -42,6 +42,7 @@ var WebCompose = false;     // Set true for Web Composer, leave false for Messen
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
 var gSourceContentWindow = 0;
+var gHTMLSourceChanged = false;
 var gContentWindowDeck;
 var gFormatToolbar;
 var gFormatToolbarHidden = false;
@@ -1051,8 +1052,6 @@ function SetEditMode(mode)
     if (!SetDisplayMode(mode))
       return;
 
-    var source;
-
     if (mode == DisplayModeSource)
     {
       // Display the DOCTYPE as a non-editable string above edit area
@@ -1079,12 +1078,6 @@ function SetEditMode(mode)
             doctypeNode.setAttribute("collapsed", "true");
         }
       }
-
-      // We can't monitor changes while in HTML Source,
-      //   so the nsSaveCommand::isCommandEnabled() will always return true
-      //   when in HTML Source mode
-      goUpdateCommand("cmd_save");
-
       // Get the entire document's source string
 
       var flags = gOutputEncodeEntities;
@@ -1093,43 +1086,74 @@ function SetEditMode(mode)
       if (prettyPrint)
         flags |= gOutputFormatted;
 
-      source = editorShell.GetContentsAs("text/html", flags);
+      var source = editorShell.GetContentsAs("text/html", flags);
       var start = source.search(/<html/i);
       if (start == -1) start = 0;
       gSourceContentWindow.value = source.slice(start);
       gSourceContentWindow.focus();
+
+      // Set oninput handler so we know if user made any changes
+      gSourceContentWindow.setAttribute("oninput", "oninputHTMLSource();");
+      gHTMLSourceChanged = false;
     }
     else if (previousMode == DisplayModeSource)
     {
-      // We are comming from edit source mode,
-      //   so transfer that back into the document
-      source = gSourceContentWindow.value;
-      editorShell.RebuildDocumentFromSource(source);
-
-      // Get the text for the <title> from the newly-parsed document
-      // (must do this for proper conversion of "escaped" characters)
-      var title = "";
-      var titlenodelist = window.editorShell.editorDocument.getElementsByTagName("title");
-      if (titlenodelist)
+      // Only rebuild document if a change was made in source window
+      if (gHTMLSourceChanged)
       {
-        var titleNode = titlenodelist.item(0);
-        if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
-          title = titleNode.firstChild.data;
+        editorShell.BeginBatchChanges();
+        try {
+          // We are comming from edit source mode,
+          //   so transfer that back into the document
+          source = gSourceContentWindow.value;
+          editorShell.RebuildDocumentFromSource(source);
+
+          // Get the text for the <title> from the newly-parsed document
+          // (must do this for proper conversion of "escaped" characters)
+          var title = "";
+          var titlenodelist = window.editorShell.editorDocument.getElementsByTagName("title");
+          if (titlenodelist)
+          {
+            var titleNode = titlenodelist.item(0);
+            if (titleNode && titleNode.firstChild && titleNode.firstChild.data)
+              title = titleNode.firstChild.data;
+          }
+          if (window.editorShell.editorDocument.title != title)
+          {
+            window.editorShell.editorDocument.title = title;
+            ResetWindowTitleWithFilename();
+          }
+
+          // reset selection to top of doc (wish we could preserve it!)
+          if (bodyNode)
+            editorShell.editorSelection.collapse(bodyNode, 0);
+
+        } catch (ex) {
+          dump(ex);
+        }
+        editorShell.EndBatchChanges();
+
       }
-      window.editorShell.editorDocument.title = title;
+      gHTMLSourceChanged = false;
 
       // Clear out the string buffers
-      source = null;
       gSourceContentWindow.value = null;
-
-      // reset selection to top of doc (wish we could preserve it!)
-      if (bodyNode)
-        editorShell.editorSelection.collapse(bodyNode, 0);
 
       gContentWindow.focus();
     }
-    ResetWindowTitleWithFilename();
   }
+}
+
+function oninputHTMLSource()
+{
+  gHTMLSourceChanged = true;
+
+  // Trigger update of "Save" button
+  goUpdateCommand("cmd_save");
+
+  // We don't need to call this again, so remove handler
+  // (Note: using "removeAttribute" didn't work!)
+  gSourceContentWindow.setAttribute("oninput", null);
 }
 
 function ResetWindowTitleWithFilename()
@@ -1142,9 +1166,8 @@ function CancelHTMLSource()
 {
   // Don't convert source text back into the DOM document
   gSourceContentWindow.value = "";
+  gHTMLSourceChanged = false;
   SetDisplayMode(PreviousNonSourceDisplayMode);
-
-  ResetWindowTitleWithFilename();
 }
 
 
@@ -2287,6 +2310,60 @@ function EditorTableCellProperties()
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
     gContentWindow.focus();
   }
+}
+
+function GetNumberOfContiguousSelectedRows()
+{
+  var cell = editorShell.GetFirstSelectedCell();
+
+  if (!cell)
+    return 0;
+
+  var rows = 1;
+  var lastIndex = editorShell.GetRowIndex(cell);
+
+  do {
+    cell = editorShell.GetNextSelectedCell();
+    if (cell)
+    {
+      var index = editorShell.GetRowIndex(cell);
+      if (index == lastIndex + 1)
+      {
+        lastIndex = index;
+        rows++;
+      }
+    }
+  }
+  while (cell);
+
+  return rows;
+}
+
+function GetNumberOfContiguousSelectedColumns()
+{
+  var cell = editorShell.GetFirstSelectedCell();
+
+  if (!cell)
+    return 0;
+
+  var columns = 1;
+  var lastIndex = editorShell.GetColumnIndex(cell);
+
+  do {
+    cell = editorShell.GetNextSelectedCell();
+    if (cell)
+    {
+      var index = editorShell.GetColumnIndex(cell);
+      if (index == lastIndex +1)
+      {
+        lastIndex = index;
+        columns++;
+      }
+    }
+  }
+  while (cell);
+
+  return columns;
 }
 
 function EditorOnFocus()
