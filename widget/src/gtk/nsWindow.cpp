@@ -430,9 +430,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   if (!mShell)
     return NS_ERROR_FAILURE;
 
-  char * titleStr = aTitle.ToNewCString();
-  gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
-  delete[] titleStr;
+  gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
 
   // XXX Hack.  Set the window icon here until we have
   // a way to do this XP, from XUL.

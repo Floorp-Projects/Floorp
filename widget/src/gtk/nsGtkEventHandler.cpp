@@ -424,7 +424,7 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 //==============================================================
 void menu_item_activate_handler(GtkWidget *w, gpointer p)
 {
-  g_print("menu_item_activate_handler\n");
+  // g_print("menu_item_activate_handler\n");
 
   nsIMenuListener *menuListener = nsnull;
   nsIMenuItem *menuItem = (nsIMenuItem *)p;
@@ -434,7 +434,7 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     mevent.eventStructType = NS_MENU_EVENT;
     mevent.point.x = 0;
     mevent.point.y = 0;
-//    mevent.widget = menuItem;
+    // mevent.widget = menuItem;
     mevent.widget = nsnull;
     menuItem->GetCommand(mevent.mCommand);
 
@@ -442,8 +442,8 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     mevent.time = PR_IntervalNow();
 
     // FIXME - THIS SHOULD WORK.  FIX EVENTS FOR XP CODE!!!!! (pav)
-//    nsEventStatus status;
-//    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
+    //    nsEventStatus status;
+    //    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
 
     menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
     if(menuListener) {

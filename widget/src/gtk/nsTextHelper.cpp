@@ -97,33 +97,35 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 {
-  char *buf = aText.ToNewCString();
-
   if (GTK_IS_ENTRY(mTextWidget)) {
-    gtk_entry_set_text(GTK_ENTRY(mTextWidget), buf);
+    gtk_entry_set_text(GTK_ENTRY(mTextWidget),
+                       (const gchar *)nsAutoCString(aText));
   } else if (GTK_IS_TEXT(mTextWidget)) {
     gtk_editable_delete_text(GTK_EDITABLE(mTextWidget), 0,
                              gtk_text_get_length(GTK_TEXT (mTextWidget)));
-    gtk_text_insert(GTK_TEXT(mTextWidget), nsnull, nsnull, nsnull,
-                    buf, aText.Length());
+    gtk_text_insert(GTK_TEXT(mTextWidget),
+                    nsnull, nsnull, nsnull,
+                    (const char *)nsAutoCString(aText),
+                    aText.Length());
   }
 
   aActualSize = aText.Length();
 
-  delete[] buf;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
+NS_METHOD  nsTextHelper::InsertText(const nsString &aText,
+                                    PRUint32 aStartPos,
+                                    PRUint32 aEndPos,
+                                    PRUint32& aActualSize)
 {
-  char *buf = aText.ToNewCString();
-
-  gtk_editable_insert_text(GTK_EDITABLE(mTextWidget), buf, (gint)aText.Length(), (gint*)&aStartPos);
+  gtk_editable_insert_text(GTK_EDITABLE(mTextWidget),
+                           (const gchar *)nsAutoCString(aText),
+                           (gint)aText.Length(), (gint*)&aStartPos);
 
   aActualSize = aText.Length();
 
-  delete[] buf;
   return NS_OK;
 }
 
