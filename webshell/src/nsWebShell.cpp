@@ -529,6 +529,8 @@ nsWebShell::~nsWebShell()
 
   NS_IF_RELEASE(mWindow);
 
+  ++mRefCnt; // hack will come back to this (pinkerton, scc)
+  
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);

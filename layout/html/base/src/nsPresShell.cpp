@@ -372,11 +372,16 @@ protected:
   PRBool mInVerifyReflow;
 #endif
 
-  nsIDocument* mDocument;
-  nsIPresContext* mPresContext;
-  nsIStyleSet* mStyleSet;
+  // IMPORTANT: The ownership implicit in the following member variables has been 
+  // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+  // pointers for weak (ie, non owning) references. If you add any members to this
+  // class, please make the ownership explicit (pinkerton, scc).
+  
+  nsIDocument* mDocument;         // [WEAK] docViewer owns it so I don't have to
+  nsIPresContext* mPresContext;   // [WEAK] docViewer owns it so I don't have to
+  nsCOMPtr<nsIStyleSet> mStyleSet;
   nsIFrame* mRootFrame;
-  nsIViewManager* mViewManager;
+  nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
@@ -542,20 +547,10 @@ PresShell::~PresShell()
     // Disable paints during tear down of the frame tree
     mViewManager->DisableRefresh();
   }
-  if (nsnull != mRootFrame) {
+  if (mRootFrame)
     mRootFrame->DeleteFrame(*mPresContext);
-  }
-  NS_IF_RELEASE(mViewManager);
-
-  //Note: Release mPresContext after mViewManager
-  // XXX why?
-  NS_IF_RELEASE(mPresContext);
-  NS_IF_RELEASE(mStyleSet);
-  if (nsnull != mDocument) {
+  if (mDocument)
     mDocument->DeleteShell(this);
-    NS_RELEASE(mDocument);
-  }
-
   mRefCnt = 0;
   delete mPlaceholderMap;
 }
@@ -582,20 +577,16 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   mDocument = aDocument;
-  NS_ADDREF(aDocument);
   mViewManager = aViewManager;
-  NS_ADDREF(mViewManager);
 
   //doesn't add a ref since we own it... MMP
   mViewManager->SetViewObserver((nsIViewObserver *)this);
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  NS_ADDREF(aPresContext);
   aPresContext->SetShell(this);
 
-  mStyleSet = aStyleSet;
-  NS_ADDREF(aStyleSet);
+  mStyleSet = dont_QueryInterface(aStyleSet);
 
   nsCOMPtr<nsIDOMSelection>domselection;
   nsresult result = nsComponentManager::CreateInstance(kRangeListCID, nsnull,
@@ -712,14 +703,14 @@ PresShell::GetStyleSet(nsIStyleSet** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mStyleSet;
-  NS_IF_ADDREF(mStyleSet);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
 { // first non-html sheet in style set that has title
-  if (nsnull != mStyleSet) {
+  if (mStyleSet) {
     PRInt32 count = mStyleSet->GetNumberOfDocStyleSheets();
     PRInt32 index;
     nsAutoString textHtml("text/html");
@@ -746,7 +737,7 @@ PresShell::GetActiveAlternateStyleSheet(nsString& aSheetTitle)
 NS_IMETHODIMP
 PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
-  if ((nsnull != mDocument) && (nsnull != mStyleSet)) {
+  if ((nsnull != mDocument) && mStyleSet) {
     PRInt32 count = mDocument->GetNumberOfStyleSheets();
     PRInt32 index;
     nsAutoString textHtml("text/html");
@@ -2431,11 +2422,10 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsIStyleSet* newSet;
-  rv = CloneStyleSet(mStyleSet, &newSet);
+  nsCOMPtr<nsIStyleSet> newSet;
+  rv = CloneStyleSet(mStyleSet, getter_AddRefs(newSet));
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);
-  NS_RELEASE(newSet);
   NS_ASSERTION(NS_OK == rv, "failed to create presentation shell");
   vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
   sh->InitialReflow(r.width, r.height);

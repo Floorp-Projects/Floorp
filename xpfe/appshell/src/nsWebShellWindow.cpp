@@ -359,14 +359,12 @@ NS_METHOD
 nsWebShellWindow::Close()
 {
   ExitModalLoop();
+  if ( mWebShell ) {
+    mWebShell->Destroy();
+    NS_IF_RELEASE(mWebShell);
+  }
+
   NS_IF_RELEASE(mWindow);
-  NS_IF_RELEASE(mWebShell);
-  /* note: this next Release() seems like the right thing to do, but it doesn't
-     appear exactly necessary, and we are afraid of possible repercussions
-     unexplored at this time.  ("this time" being a stability release crunch.)
-     Revisit this later!?
-  */
-//  Release();
   nsIAppShellService* appShell;
   nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
                                   kIAppShellServiceIID,

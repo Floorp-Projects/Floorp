@@ -81,29 +81,20 @@ nsPresContext::~nsPresContext()
 
   Stop();
 
-  if (nsnull != mImageGroup) {
+  if (mImageGroup) {
     // Interrupt any loading images. This also stops all looping
     // image animations.
     mImageGroup->Interrupt();
-    NS_RELEASE(mImageGroup);
   }
 
-  NS_IF_RELEASE(mLinkHandler);
-  NS_IF_RELEASE(mContainer);
+  if (mEventManager)
+    mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
 
-  if (nsnull != mEventManager) {
-    mEventManager->SetPresContext(nsnull);
-    NS_RELEASE(mEventManager);
-  }
-
-  NS_IF_RELEASE(mDeviceContext);
   // Unregister preference callbacks
-  if (nsnull != mPrefs) {
+  if (mPrefs) {
     mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
   }
-  NS_IF_RELEASE(mPrefs);
-  NS_IF_RELEASE(mBaseURL);
   nsLayoutAtoms::ReleaseAtoms();
 }
 
@@ -253,13 +244,10 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
 
-  mDeviceContext = aDeviceContext;
-  NS_IF_ADDREF(mDeviceContext);
+  mDeviceContext = dont_QueryInterface(aDeviceContext);
 
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
-
-  if (nsnull != mPrefs) {
+  mPrefs = dont_QueryInterface(aPrefs);
+  if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
     mPrefs->RegisterCallback("browser.", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
@@ -280,14 +268,13 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 NS_IMETHODIMP
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
-  NS_IF_RELEASE(mBaseURL);
   mShell = aShell;
   if (nsnull != mShell) {
     nsCOMPtr<nsIDocument> doc;
     if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
-        doc->GetBaseURL(mBaseURL);
+        doc->GetBaseURL(*getter_AddRefs(mBaseURL));
       }
     }
   }
@@ -314,7 +301,7 @@ nsPresContext::GetPrefs(nsIPref** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mPrefs;
-  NS_IF_ADDREF(mPrefs);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -366,7 +353,7 @@ nsPresContext::GetBaseURL(nsIURL** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mBaseURL;
-  NS_IF_ADDREF(mBaseURL);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -459,7 +446,7 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
   }
 
   nsIFontMetrics* metrics = nsnull;
-  if (nsnull != mDeviceContext) {
+  if (mDeviceContext) {
     mDeviceContext->GetMetricsFor(aFont, metrics);
   }
   *aResult = metrics;
@@ -572,7 +559,7 @@ nsPresContext::GetPixelsToTwips(float* aResult) const
   }
 
   float p2t = 1.0f;
-  if (nsnull != mDeviceContext) {
+  if (mDeviceContext) {
     mDeviceContext->GetDevUnitsToAppUnits(p2t);
   }
   *aResult = p2t;
@@ -588,7 +575,7 @@ nsPresContext::GetTwipsToPixels(float* aResult) const
   }
 
   float app2dev = 1.0f;
-  if (nsnull != mDeviceContext) {
+  if (mDeviceContext) {
     mDeviceContext->GetAppUnitsToDevUnits(app2dev);
   }
   *aResult = app2dev;
@@ -604,7 +591,7 @@ nsPresContext::GetScaledPixelsToTwips(float* aResult) const
   }
 
   float scale = 1.0f;
-  if (nsnull != mDeviceContext)
+  if (mDeviceContext)
   {
     float p2t;
     mDeviceContext->GetDevUnitsToAppUnits(p2t);
@@ -623,7 +610,7 @@ nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mDeviceContext;
-  NS_IF_ADDREF(mDeviceContext);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -635,26 +622,25 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull == mImageGroup) {
+  if (!mImageGroup) {
     // Create image group
-    nsresult rv = NS_NewImageGroup(&mImageGroup);
+    nsresult rv = NS_NewImageGroup(getter_AddRefs(mImageGroup));
     if (NS_OK != rv) {
       return rv;
     }
 
     // Initialize the image group
-    nsIURLGroup* urlGroup;
-    rv = mBaseURL->GetURLGroup(&urlGroup);
+    nsCOMPtr<nsIURLGroup> urlGroup;
+    rv = mBaseURL->GetURLGroup(getter_AddRefs(urlGroup));
     if (rv == NS_OK)
       rv = mImageGroup->Init(mDeviceContext, urlGroup);
-    NS_IF_RELEASE(urlGroup);
     if (NS_OK != rv) {
       return rv;
     }
   }
 
   *aResult = mImageGroup;
-  NS_IF_ADDREF(mImageGroup);
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -708,9 +694,9 @@ nsPresContext::StartLoadImage(const nsString& aURL,
 
   // Create image group if needed
   nsresult rv;
-  if (nsnull == mImageGroup) {
+  if (!mImageGroup) {
     nsCOMPtr<nsIImageGroup> group;
-    rv = GetImageGroup(getter_AddRefs(group));
+    rv = GetImageGroup(getter_AddRefs(group));   // sets mImageGroup as side effect
     if (NS_OK != rv) {
       return rv;
     }
@@ -819,10 +805,8 @@ nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame)
 
 NS_IMETHODIMP
 nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
-{ // XXX should probably be a WEAK reference
-  NS_IF_RELEASE(mLinkHandler);
+{
   mLinkHandler = aHandler;
-  NS_IF_ADDREF(aHandler);
   return NS_OK;
 }
 
@@ -840,10 +824,8 @@ nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
 
 NS_IMETHODIMP
 nsPresContext::SetContainer(nsISupports* aHandler)
-{ // XXX should most likely be a WEAK reference
-  NS_IF_RELEASE(mContainer);
+{
   mContainer = aHandler;
-  NS_IF_ADDREF(aHandler);
   return NS_OK;
 }
 
@@ -868,7 +850,7 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
   }
 
   if (nsnull == mEventManager) {
-    nsresult rv = NS_NewEventStateManager(&mEventManager);
+    nsresult rv = NS_NewEventStateManager(getter_AddRefs(mEventManager));
     if (NS_OK != rv) {
       return rv;
     }
@@ -878,7 +860,7 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
   mEventManager->SetPresContext(this);
 
   *aManager = mEventManager;
-  NS_IF_ADDREF(mEventManager);
+  NS_IF_ADDREF(*aManager);
   return NS_OK;
 }
 

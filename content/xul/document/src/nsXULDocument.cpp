@@ -677,35 +677,40 @@ protected:
     nsresult
     AddNamedDataSource(const char* uri);
 
+    // IMPORTANT: The ownership implicit in the following member variables has been 
+    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+    // pointers for weak (ie, non owning) references. If you add any members to this
+    // class, please make the ownership explicit (pinkerton, scc).
+    // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE CHANGING
 
-    nsIArena*                  mArena;
+    nsCOMPtr<nsIArena>         mArena;
     nsVoidArray                mObservers;
     nsAutoString               mDocumentTitle;
-    nsIURL*                    mDocumentURL;
-    nsIURLGroup*               mDocumentURLGroup;
-    nsIContent*                mRootContent;
+    nsIURL*                    mDocumentURL;     // [OWNER] ??? compare with loader
+    nsIURLGroup*               mDocumentURLGroup;  // [OWNER] leads to loader
+    nsIContent*                mRootContent;    // [OWNER] 
     nsIDocument*               mParentDocument;
-    nsIScriptContextOwner*     mScriptContextOwner;
-    void*                      mScriptObject;
+    nsIScriptContextOwner*     mScriptContextOwner;   // [WEAK] it owns me! (indirectly)
+    void*                      mScriptObject;    // ????
     nsString                   mCharSetID;
     nsVoidArray                mStyleSheets;
-    nsIDOMSelection*           mSelection;
+    nsIDOMSelection*           mSelection;        // [OWNER] 
     PRBool                     mDisplaySelection;
     nsVoidArray                mPresShells;
-    nsINameSpaceManager*       mNameSpaceManager;
-    nsIHTMLStyleSheet*         mAttrStyleSheet;
-    nsIHTMLCSSStyleSheet*      mInlineStyleSheet;
+    nsINameSpaceManager*       mNameSpaceManager;  // [OWNER] 
+    nsIHTMLStyleSheet*         mAttrStyleSheet;    // [OWNER] 
+    nsCOMPtr<nsIHTMLCSSStyleSheet> mInlineStyleSheet;
     nsElementMap               mResources;
-    nsISupportsArray*          mBuilders;
-    nsIRDFContentModelBuilder* mXULBuilder;
-    nsIRDFDataSource*          mLocalDataSource;
-    nsIRDFDataSource*          mDocumentDataSource;
-    nsILineBreaker*            mLineBreaker;
-    nsIWordBreaker*            mWordBreaker;
-    nsIContentViewerContainer* mContentViewerContainer;
+    nsISupportsArray*          mBuilders;        // [OWNER] of array, elements shouldn't own this, but they do
+    nsIRDFContentModelBuilder* mXULBuilder;     // [OWNER] 
+    nsIRDFDataSource*          mLocalDataSource;     // [OWNER] 
+    nsIRDFDataSource*          mDocumentDataSource;  // [OWNER] 
+    nsILineBreaker*            mLineBreaker;    // [OWNER] 
+    nsIWordBreaker*            mWordBreaker;    // [OWNER] 
+    nsIContentViewerContainer* mContentViewerContainer;   // [WEAK] it owns me! (indirectly)
     nsString                   mCommand;
-    nsIRDFResource*            mFragmentRoot;
-    nsVoidArray                mSubDocuments;
+    nsIRDFResource*            mFragmentRoot;    // [OWNER] 
+    nsVoidArray                mSubDocuments;     // [OWNER] of subelements
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -721,8 +726,7 @@ nsIRDFResource* XULDocumentImpl::kXUL_element;
 // ctors & dtors
 
 XULDocumentImpl::XULDocumentImpl(void)
-    : mArena(nsnull),
-      mDocumentURL(nsnull),
+    : mDocumentURL(nsnull),
       mDocumentURLGroup(nsnull),
       mRootContent(nsnull),
       mParentDocument(nsnull),
@@ -793,7 +797,8 @@ XULDocumentImpl::~XULDocumentImpl()
       NS_RELEASE(subdoc);
     }
 
-    // set all builder references to document to nsnull
+    // set all builder references to document to nsnull -- out of band notification
+    // to break ownership cycle
     if (mBuilders)
     {
 
@@ -822,16 +827,13 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mBuilders);
     NS_IF_RELEASE(mXULBuilder);
     NS_IF_RELEASE(mSelection);
-    NS_IF_RELEASE(mScriptContextOwner);
     NS_IF_RELEASE(mAttrStyleSheet);
     NS_IF_RELEASE(mRootContent);
     NS_IF_RELEASE(mDocumentURLGroup);
     NS_IF_RELEASE(mDocumentURL);
-    NS_IF_RELEASE(mArena);
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mLineBreaker);
     NS_IF_RELEASE(mWordBreaker);
-    NS_IF_RELEASE(mContentViewerContainer);
     NS_IF_RELEASE(mFragmentRoot);
     
     if (--gRefCnt == 0) {
@@ -938,8 +940,9 @@ NS_IMPL_RELEASE(XULDocumentImpl);
 nsIArena*
 XULDocumentImpl::GetArena()
 {
-    NS_IF_ADDREF(mArena);
-    return mArena;
+    nsIArena* result = mArena;
+    NS_IF_ADDREF(result);
+    return result;
 }
 
 static
@@ -988,13 +991,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 #endif
 
     if (aContainer && aContainer != mContentViewerContainer)
-    {
-    	NS_IF_RELEASE(mContentViewerContainer);
-
-      // AddRef and hold the container
-      NS_ADDREF(aContainer);
       mContentViewerContainer = aContainer;
-    }
 
     nsresult rv;
 
@@ -1043,11 +1040,9 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
     if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLCSSStyleSheetCID,
                                                        nsnull,
                                                        kIHTMLCSSStyleSheetIID,
-                                                       (void**) &inlineSheet))) {
+                                                       (void**)&inlineSheet))) {
         if (NS_SUCCEEDED(rv = inlineSheet->Init(syntheticURL, this))) {
-            mInlineStyleSheet = inlineSheet;
-            NS_ADDREF(mInlineStyleSheet);
-
+            mInlineStyleSheet = dont_QueryInterface(inlineSheet);
             AddStyleSheet(mInlineStyleSheet);
         }
         NS_RELEASE(inlineSheet);
@@ -1397,7 +1392,7 @@ XULDocumentImpl::CreateShell(nsIPresContext* aContext,
     }
 
     mPresShells.AppendElement(shell);
-    *aInstancePtrResult = shell; // addref implicit
+    *aInstancePtrResult = shell; // addref implicit in CreateInstance()
 
     return NS_OK;
 }
@@ -1624,9 +1619,7 @@ XULDocumentImpl::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwne
     if (!aScriptContextOwner && mRootContent)
         mRootContent->SetDocument(nsnull, PR_TRUE);
 
-    NS_IF_RELEASE(mScriptContextOwner);
     mScriptContextOwner = aScriptContextOwner;
-    NS_IF_ADDREF(mScriptContextOwner);
 }
 
 NS_IMETHODIMP
@@ -2731,11 +2724,10 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
 NS_IMETHODIMP 
 XULDocumentImpl::GetContentViewerContainer(nsIContentViewerContainer** aContainer)
 {
-    if (mContentViewerContainer != nsnull)
-    {
-        NS_ADDREF(mContentViewerContainer);
-        *aContainer = mContentViewerContainer;
-    }
+    NS_PRECONDITION ( aContainer, "Null Parameter into GetContentViewerContainer" );
+    
+    *aContainer = mContentViewerContainer;
+    NS_IF_ADDREF(*aContainer);
 
     return NS_OK;
 }
@@ -3134,11 +3126,11 @@ XULDocumentImpl::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
         return NS_ERROR_NULL_POINTER;
     }
     *aResult = mInlineStyleSheet;
-    if (nsnull == mInlineStyleSheet) {
+    if (!mInlineStyleSheet) {
         return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
     }
     else {
-        NS_ADDREF(mInlineStyleSheet);
+        NS_ADDREF(*aResult);
     }
     return NS_OK;
 }
@@ -3437,7 +3429,7 @@ XULDocumentImpl::Init(void)
 {
     nsresult rv;
 
-    if (NS_FAILED(rv = NS_NewHeapArena(&mArena, nsnull)))
+    if (NS_FAILED(rv = NS_NewHeapArena(getter_AddRefs(mArena), nsnull)))
         return rv;
 
     // Create a namespace manager so we can manage tags

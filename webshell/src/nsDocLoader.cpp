@@ -874,19 +874,26 @@ private:
     static PRBool IsBusyEnumerator(void* aElement, void* aData);
 
 public:
-    nsIDocumentLoaderFactory* m_DocFactory;
+    nsCOMPtr<nsIDocumentLoaderFactory> m_DocFactory;
 
 protected:
-    nsIURL*                    mDocumentUrl;
-    nsISupportsArray*          m_LoadingDocsList;
+
+    // IMPORTANT: The ownership implicit in the following member variables has been 
+    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+    // pointers for weak (ie, non owning) references. If you add any members to this
+    // class, please make the ownership explicit (pinkerton, scc).
+  
+    nsIURL*                    mDocumentUrl;       // [OWNER] ???compare with document
+    nsCOMPtr<nsISupportsArray> m_LoadingDocsList;
 
     nsVoidArray                mChildGroupList;
     nsVoidArray                mDocObservers;
-    nsILoadAttribs*            m_LoadAttrib;
-    nsIStreamObserver*         mStreamObserver;
-    nsIContentViewerContainer* mContainer;
+    nsCOMPtr<nsILoadAttribs>   m_LoadAttrib;
+    nsCOMPtr<nsIStreamObserver> mStreamObserver;   // ??? unclear what to do here
+    nsIContentViewerContainer* mContainer;         // [WEAK] it owns me!
 
-    nsDocLoaderImpl*           mParent;
+    nsDocLoaderImpl*           mParent;            // [OWNER] but upside down ownership model
+                                                   //  needs to be fixed***
     /*
      * The following counts are for the current document loader only.  They
      * do not take into account URLs being loaded by child document loaders.
@@ -914,19 +921,16 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 
     mDocumentUrl    = nsnull;
     mParent         = nsnull;
-    mStreamObserver = nsnull;
     mContainer      = nsnull;
     mForegroundURLs = 0;
     mTotalURLs      = 0;
 
     mIsLoadingDocument = PR_FALSE;
 
-    NS_NewISupportsArray(&m_LoadingDocsList);
-    NS_NewLoadAttribs(&m_LoadAttrib);
+    NS_NewISupportsArray(getter_AddRefs(m_LoadingDocsList));
+    NS_NewLoadAttribs(getter_AddRefs(m_LoadAttrib));
 
-    m_DocFactory = new nsDocFactoryImpl();
-    NS_ADDREF(m_DocFactory);
-
+    m_DocFactory = do_QueryInterface(NS_STATIC_CAST(nsIDocumentLoaderFactory*, new nsDocFactoryImpl()));
 
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: created.\n", this));
@@ -941,11 +945,6 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
     NS_RELEASE(mParent);
   }
 
-  NS_IF_RELEASE(m_LoadingDocsList);
-  NS_IF_RELEASE(m_DocFactory);
-  NS_IF_RELEASE(m_LoadAttrib);
-  NS_IF_RELEASE(mStreamObserver);
-  NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mDocumentUrl);
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
@@ -1015,9 +1014,7 @@ done:
 NS_IMETHODIMP
 nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
 {
-  NS_IF_RELEASE(m_DocFactory);
-  m_DocFactory = aFactory;
-  NS_IF_ADDREF(m_DocFactory);
+  m_DocFactory = dont_QueryInterface(aFactory);
 
   return NS_OK;
 }
@@ -1025,8 +1022,8 @@ nsDocLoaderImpl::SetDocumentFactory(nsIDocumentLoaderFactory* aFactory)
 NS_IMETHODIMP
 nsDocLoaderImpl::GetDocumentFactory(nsIDocumentLoaderFactory** aResult)
 {
-	NS_IF_ADDREF(m_DocFactory);
 	*aResult = m_DocFactory;
+	NS_IF_ADDREF(*aResult);
 	return NS_OK;
 }
 
@@ -1101,9 +1098,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
       m_LoadAttrib->SetLocalIP(aLocalIP);
   }
 
-  NS_IF_RELEASE(mStreamObserver);
-  mStreamObserver = anObserver;
-  NS_IF_ADDREF(mStreamObserver);
+  mStreamObserver = dont_QueryInterface(anObserver);
 
   rv = loader->Bind(aURLSpec, aPostData, nsnull);
 
@@ -1182,7 +1177,7 @@ nsDocLoaderImpl::Stop(void)
    * Release the Stream Observer...  
    * It will be set on the next LoadDocument(...) 
    */
-  NS_IF_RELEASE(mStreamObserver);
+  mStreamObserver = do_QueryInterface(0);   // to be replaced with null_nsCOMPtr()
 
   return NS_OK;
 }       
@@ -1234,9 +1229,7 @@ nsDocLoaderImpl::RemoveObserver(nsIDocumentLoaderObserver* aObserver)
 NS_IMETHODIMP
 nsDocLoaderImpl::SetContainer(nsIContentViewerContainer* aContainer)
 {
-  NS_IF_RELEASE(mContainer);
   mContainer = aContainer;
-  NS_IF_ADDREF(mContainer);
 
   return NS_OK;
 }
@@ -1250,7 +1243,7 @@ nsDocLoaderImpl::GetContainer(nsIContentViewerContainer** aResult)
     rv = NS_ERROR_NULL_POINTER;
   } else {
     *aResult = mContainer;
-    NS_IF_ADDREF(mContainer);
+    NS_IF_ADDREF(*aResult);
   }
   return rv;
 }
@@ -1270,13 +1263,10 @@ nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult,
   } else {
     rv = NS_NewURL(&url, aURLSpec, aBaseURL, aContainer, this);
     if (NS_SUCCEEDED(rv)) {
-      nsILoadAttribs* loadAttributes;
-
-      rv = url->GetLoadAttribs(&loadAttributes);
-      if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsILoadAttribs> loadAttributes;
+      rv = url->GetLoadAttribs(getter_AddRefs(loadAttributes));
+      if (loadAttributes)
         loadAttributes->Clone(m_LoadAttrib);
-        NS_RELEASE(loadAttributes);
-      }
     }
     *aInstancePtrResult = url;
   }
@@ -1341,7 +1331,7 @@ NS_IMETHODIMP
 nsDocLoaderImpl::GetDefaultLoadAttributes(nsILoadAttribs*& aLoadAttribs)
 {
   aLoadAttribs = m_LoadAttrib;
-  NS_IF_ADDREF(m_LoadAttrib);
+  NS_IF_ADDREF(aLoadAttribs);
 
   return NS_OK;;
 }

@@ -102,17 +102,26 @@ private:
                         const nsRect& aBounds,
                         nsScrollPreference aScrolling);
 
-    protected:
-    nsIViewManager* mViewManager;
-    nsIView*        mView;
-    nsIWidget*      mWindow;
-    nsIContentViewerContainer* mContainer;
-    nsIDeviceContext *mDeviceContext;
+protected:
 
-    nsIDocument*    mDocument;
-    nsIPresContext* mPresContext;
-    nsIPresShell*   mPresShell;
-    nsIStyleSheet*  mUAStyleSheet;
+    // IMPORTANT: The ownership implicit in the following member variables has been 
+    // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
+    // pointers for weak (ie, non owning) references. If you add any members to this
+    // class, please make the ownership explicit (pinkerton, scc).
+  
+    nsIContentViewerContainer* mContainer; // [WEAK] it owns me!
+    nsCOMPtr<nsIDeviceContext> mDeviceContext;   // ??? can't hurt, but...
+    nsIView*                 mView;        // [WEAK] cleaned up by view mgr
+
+    // the following six items are explicitly in this order
+    // so they will be destroyed in the reverse order (pinkerton, scc)
+    nsCOMPtr<nsIDocument>    mDocument;
+    nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
+    nsCOMPtr<nsIViewManager> mViewManager;
+    nsCOMPtr<nsIPresContext> mPresContext;
+    nsCOMPtr<nsIPresShell>   mPresShell;
+
+    nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 };
 
 //Class IDs
@@ -142,10 +151,9 @@ DocumentViewerImpl::DocumentViewerImpl()
 }
 
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
+  : mPresContext(dont_QueryInterface(aPresContext))
 {
     NS_INIT_REFCNT();
-    mPresContext = aPresContext;
-    NS_IF_ADDREF(aPresContext);
 }
 
 // ISupports implementation...
@@ -179,11 +187,7 @@ nsresult DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
-    // Release windows and views
-    NS_IF_RELEASE(mViewManager);
-    NS_IF_RELEASE(mWindow);
-
-    if (nsnull != mDocument) {
+    if (mDocument) {
       //Break global object circular reference on the document
       //created in the DocViewer Init
       nsIScriptContextOwner *mOwner = mDocument->GetScriptContextOwner();
@@ -196,28 +200,17 @@ DocumentViewerImpl::~DocumentViewerImpl()
         }
         NS_RELEASE(mOwner);
 
-        mDocument->SetScriptContextOwner(nsnull);
+        mDocument->SetScriptContextOwner(nsnull);  // out of band cleanup of webshell
       }
-      NS_RELEASE(mDocument);
     }
 
-    if (nsnull != mDeviceContext) {
+    if (mDeviceContext)
       mDeviceContext->FlushFontCache();
-      NS_RELEASE(mDeviceContext);
-    }
 
-    // Note: release context then shell
-    NS_IF_RELEASE(mPresContext);
-    if (nsnull != mPresShell) {
-        // Break circular reference first
+    if (mPresShell) {
+        // Break circular reference (or something)
         mPresShell->EndObservingDocument();
-
-        // Then release the shell
-        NS_RELEASE(mPresShell);
     }
-    
-    NS_IF_RELEASE(mUAStyleSheet);
-    NS_IF_RELEASE(mContainer);
 }
 
 
@@ -230,32 +223,26 @@ DocumentViewerImpl::~DocumentViewerImpl()
 NS_IMETHODIMP
 DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 {
-    nsresult rv;
-
-    NS_PRECONDITION(nsnull == mDocument, "Viewer is already bound to a document!");
+    NS_PRECONDITION(!mDocument, "Viewer is already bound to a document!");
 
 #ifdef NOISY_VIEWER
     printf("DocumentViewerImpl::BindToDocument\n");
 #endif
 
-    rv = aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
-    if (nsnull != mDocument) {
-    }
+    nsresult rv;
+    mDocument = do_QueryInterface(aDoc,&rv);
     return rv;
 }
 
 NS_IMETHODIMP
 DocumentViewerImpl::SetContainer(nsIContentViewerContainer* aContainer)
 {
-    NS_IF_RELEASE(mContainer);
     mContainer = aContainer;
-
-    if (nsnull != aContainer) {
-        if (nsnull != mPresContext) {
-            mPresContext->SetContainer(aContainer);
-        }
-        NS_ADDREF(mContainer);
-    }
+ 
+    // this seems wrong if someone passes in nsnull for |aContainer|. it will leave
+    // |mPresContext| pointing to the old container??? (pinkerton, scc)
+    if (aContainer && mPresContext) 
+      mPresContext->SetContainer(aContainer);
 
     return NS_OK;
 }
@@ -264,7 +251,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetContainer(nsIContentViewerContainer*& aResult)
 {
     aResult = mContainer;
-    NS_IF_ADDREF(mContainer);
+    NS_IF_ADDREF(aResult);
     return NS_OK;
 }
 
@@ -278,17 +265,16 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 {
     nsresult rv;
 
-    if (nsnull == mDocument) {
+    if (!mDocument) {
         return NS_ERROR_NULL_POINTER;
     }
 
-    mDeviceContext = aDeviceContext;
-    NS_IF_ADDREF(mDeviceContext);
+    mDeviceContext = dont_QueryInterface(aDeviceContext);
 
     PRBool makeCX = PR_FALSE;
-    if (nsnull == mPresContext) {
+    if (!mPresContext) {
         // Create presentation context
-        rv = NS_NewGalleyContext(&mPresContext);
+        rv = NS_NewGalleyContext(getter_AddRefs(mPresContext));
         if (NS_OK != rv) {
             return rv;
         }
@@ -334,7 +320,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
     if (NS_OK == rv) {
         // Now make the shell for the document
         rv = mDocument->CreateShell(mPresContext, mViewManager, styleSet,
-                                    &mPresShell);
+                                    getter_AddRefs(mPresShell));
         NS_RELEASE(styleSet);
         if (NS_OK == rv) {
             // Initialize our view manager
@@ -368,7 +354,7 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 NS_IMETHODIMP
 DocumentViewerImpl::Stop(void)
 {
-    if (nsnull != mPresContext) {
+    if (mPresContext) {
         mPresContext->Stop();
     }
     return NS_OK;
@@ -377,10 +363,7 @@ DocumentViewerImpl::Stop(void)
 NS_IMETHODIMP
 DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 {
-    NS_IF_RELEASE(mUAStyleSheet);
-    mUAStyleSheet = aUAStyleSheet;
-    NS_IF_ADDREF(mUAStyleSheet);
-
+    mUAStyleSheet = dont_QueryInterface(aUAStyleSheet);
     return NS_OK;
 }
   
@@ -388,7 +371,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetDocument(nsIDocument*& aResult)
 {
     aResult = mDocument;
-    NS_IF_ADDREF(mDocument);
+    NS_IF_ADDREF(aResult);
     return NS_OK;
 }
   
@@ -396,7 +379,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetPresShell(nsIPresShell*& aResult)
 {
     aResult = mPresShell;
-    NS_IF_ADDREF(mPresShell);
+    NS_IF_ADDREF(aResult);
     return NS_OK;
 }
   
@@ -404,7 +387,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
 {
     aResult = mPresContext;
-    NS_IF_ADDREF(mPresContext);
+    NS_IF_ADDREF(aResult);
     return NS_OK;
 }
 
@@ -583,7 +566,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     // different sets for different media
     nsresult rv;
 
-    if (nsnull == mUAStyleSheet) {
+    if (!mUAStyleSheet) {
         NS_WARNING("unable to load UA style sheet");
     }
 
@@ -596,7 +579,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
             (*aStyleSet)->AddDocStyleSheet(sheet, aDocument);
             NS_RELEASE(sheet);
         }
-        if (nsnull != mUAStyleSheet) {
+        if (mUAStyleSheet) {
             (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
         }
     }
@@ -613,7 +596,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     rv = nsComponentManager::CreateInstance(kViewManagerCID, 
                                       nsnull, 
                                       kIViewManagerIID, 
-                                      (void **)&mViewManager);
+                                      getter_AddRefs(mViewManager));
 
     nsCOMPtr<nsIDeviceContext> dx;
     mPresContext->GetDeviceContext(getter_AddRefs(dx));
@@ -632,7 +615,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     rv = nsComponentManager::CreateInstance(kViewCID, 
                                       nsnull, 
                                       kIViewIID, 
-                                      (void **)&mView);
+                                      (void**)&mView);
     static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
     if ((NS_OK != rv) || (NS_OK != mView->Init(mViewManager, 
                                                tbounds,
@@ -648,7 +631,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
     // Setup hierarchical relationship in view manager
     mViewManager->SetRootView(mView);
 
-    mView->GetWidget(mWindow);
+    mView->GetWidget(*getter_AddRefs(mWindow));
 
     //set frame rate to 25 fps
     mViewManager->SetFrameRate(25);
@@ -665,7 +648,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                               nsIDocumentViewer*& aResult)
 {
-    if (nsnull == mDocument) {
+    if (!mDocument) {
         // XXX better error
         return NS_ERROR_NULL_POINTER;
     }
