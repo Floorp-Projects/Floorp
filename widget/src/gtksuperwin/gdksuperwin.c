@@ -614,6 +614,7 @@ void gdk_superwin_handle_expose (GdkSuperWin *superwin, XEvent *xevent,
       /* if the rect of the expose event is contained in the
          antiexpose then we should just drop it on the floor. */
       if (gdk_region_rect_in(antiexpose_region, &rect) == GDK_OVERLAP_RECTANGLE_IN) {
+        gdk_region_destroy(antiexpose_region);
         goto end;
       }
       gdk_region_destroy(antiexpose_region);
