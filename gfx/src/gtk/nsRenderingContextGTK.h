@@ -44,13 +44,7 @@
 
 #define USE_NATIVE_TILING 1
 
-#ifndef GTK_CHECK_VERSION
-#define GTK_CHECK_VERSION(major,minor,micro)    \
-    (GTK_MAJOR_VERSION > (major) || \
-     (GTK_MAJOR_VERSION == (major) && GTK_MINOR_VERSION > (minor)) || \   
-     (GTK_MAJOR_VERSION == (major) && GTK_MINOR_VERSION == (minor) && \
-      GTK_MICRO_VERSION >= (micro)))
-#endif
+
 
 class nsFontGTK;
 
@@ -251,7 +245,8 @@ private:
   GdkFunction            mFunction;
   GdkLineStyle           mLineStyle;
  // gtk+ 1.2.7 introduces an incompatible API change
-#if GTK_CHECK_VERSION(1,2,7)
+#if (GTK_MAJOR_VERSION > 1) || ((GTK_MAJOR_VERSION == 1) && ((GTK_MINOR_VERSION > 2) || \
+    ((GTK_MINOR_VERSION == 2) && (GTK_MICRO_VERSION >= 7))))
   gint8                  mDashList[2];
 #else
   gchar                  mDashList[2];
