@@ -12,6 +12,11 @@
 	#define HAVE_CPP_NUMERIC_LIMITS
 #endif
 
+  // under MSVC shut off copious warnings about unused in-lines
+#ifdef _MSC_VER
+  #pragma warning( disable: 4514 )
+#endif
+
 #ifdef HAVE_CPP_NUMERIC_LIMITS
 #include <limits>
 #else
