@@ -98,6 +98,7 @@ textbox {
 /* ::::: tree ::::: */
 
 .autocomplete-tree {
+  -moz-appearance: none !important;
   border: none;
   background-color: transparent !important;
 }
