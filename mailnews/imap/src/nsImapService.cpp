@@ -153,11 +153,6 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
     {
         // do nothing; return NS_OK; for queuing
     }
-    else if (freeConnection)
-    {
-        *aImapConnection = freeConnection;
-        NS_IF_ADDREF(*aImapConnection);
-    }
 	else if (cnt < MAXIMUM_CONNECTION && aEventQueue)
 	{	
 		// create a new connection and add it to the connection cache
@@ -177,6 +172,11 @@ nsImapService::CreateImapConnection(nsIEventQueue *aEventQueue, nsIImapUrl * aIm
 		*aImapConnection = protocolInstance; // this is already ref counted.
 
 	}
+    else if (freeConnection)
+    {
+        *aImapConnection = freeConnection;
+        NS_IF_ADDREF(*aImapConnection);
+    }
     else // cannot get anyone to handle the url queue it
     {
         // queue the url
