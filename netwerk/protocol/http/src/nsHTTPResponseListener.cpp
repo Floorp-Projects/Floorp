@@ -21,7 +21,6 @@
  */
 
 #include "nspr.h"
-#include "nsAuthEngine.h"
 #include "nsHTTPRequest.h"
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"

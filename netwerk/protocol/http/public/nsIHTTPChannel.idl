@@ -55,6 +55,11 @@ interface nsIHTTPChannel : nsIChannel
     */
 	attribute nsIInputStream PostDataStream;
 
+    /* Since multiple inheritence is not supported in idl */
+    attribute string ProxyHost;
+    attribute long ProxyPort;
+    attribute PRBool UsingProxy;
+
     /* 
         Response funtions. A call to any of these implicitly calls Load() on this
         protocol instance. 

@@ -4,3 +4,4 @@
 
 netCore.h
 nsNetUtil.h
+nsUnixColorPrintf.h
