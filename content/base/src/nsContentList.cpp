@@ -43,6 +43,7 @@ nsContentList::nsContentList(nsIDocument *aDocument)
   mDocument = aDocument;
   mData = nsnull;
   mMatchAll = PR_FALSE;
+  mRootContent = nsnull;
 }
 
 nsContentList::nsContentList(nsIDocument *aDocument,
