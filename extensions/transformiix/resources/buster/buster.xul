@@ -132,19 +132,6 @@
     </menupopup>
   </menulist>
 </groupbox>
-<groupbox orient="horizontal"><caption label="select" />
-  <button label="Select from " oncommand="selectRange()" observes="not_yet"/>
-  <textbox style="width: 10em;" id="start-field" persist="value" />
-  <label value=" to " />
-  <textbox style="width: 10em;" id="end-field" persist="value" />
-</groupbox>
-<spacer flex="1" /></hbox>
-<hbox><groupbox orient="horizontal"><caption label="stats" />
-  <label value="tests run: "/><label id="tests_run" value="0" />
-  <label value="  tests passed: "/><label id="tests_passed" value="0"/>
-  <label value="  tests failed: "/><label id="tests_failed" value="0"/>
-  <label value="  tests selected: "/><label id="tests_selected" value="0"/>
-</groupbox>  
 <spacer flex="1" /></hbox>
 
 <tree id="out" flex="1" flags="dont-build-content" hidecolumnpicker="true"

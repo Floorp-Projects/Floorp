@@ -38,6 +38,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 var parser = new DOMParser();
+var methodExpr = (new XPathEvaluator).createExpression("xsl:output/@method",
+    {
+    lookupNamespaceURI: function(aPrefix)
+        {
+            if (aPrefix == "xsl")
+                return "http://www.w3.org/1999/XSL/Transform";
+            return "";
+        }
+    });
+
+const nsIWebProgListener = Components.interfaces.nsIWebProgressListener;
 
 var runQueue = 
 {
@@ -168,6 +179,8 @@ runItem.prototype =
             path = path.QueryInterface(nsIRDFLiteral);
             var xalan_fl  = this.kXalan.resolve(cat.Value+"/"+path.Value);
             var xalan_ref  = this.kXalan.resolve(cat.Value+"-gold/"+path.Value);
+            this.mRefURL =
+                this.kXalan.resolve(cat.Value + "-gold/" + path.Value + ".out");
             dump(name.Value+" links to "+xalan_fl+"\n");
         }
         // Directory selected
@@ -183,31 +196,39 @@ runItem.prototype =
                 child.QueryInterface(nsIRDFResource);
             }
         }
-        var refContent = this.loadTextFile(xalan_ref+".out");
-        var iframe;
-        if (refContent.match(/^<\?xml/)) {
-            this.mRefDoc = parser.parseFromString(refContent, 'text/xml');
-        }
-        else if (refContent.match(/^\s*<html/gi)) {
-            this.mMethod = 'html';
-            iframe = document.getElementById('hiddenHtml').contentDocument;
-            iframe.documentElement.innerHTML = refContent;
-            this.mRefDoc = iframe;
-        }
-        else {
-            iframe = document.getElementById('hiddenHtml').contentDocument;
-            iframe.documentElement.innerHTML = refContent;
-            if (iframe.documentElement.firstChild) {
-                this.mMethod = 'html';
-                this.mRefDoc = iframe;
-            }
-        }
         this.mSourceDoc = document.implementation.createDocument('', '', null);
         this.mSourceDoc.addEventListener("load",this.onload(1),false);
         this.mSourceDoc.load(xalan_fl+".xml");
         this.mStyleDoc = document.implementation.createDocument('', '', null);
-        this.mStyleDoc.addEventListener("load",this.onload(2),false);
+        this.mStyleDoc.addEventListener("load",this.styleLoaded(),false);
         this.mStyleDoc.load(xalan_fl+".xsl");
+    },
+
+    // nsIWebProgressListener
+    QueryInterface: function(aIID)
+    {
+        return this;
+    },
+    onStateChange: function(aProg, aRequest, aFlags, aStatus)
+    {
+        if ((aFlags & nsIWebProgListener.STATE_STOP) &&
+            (aFlags & nsIWebProgListener.STATE_IS_DOCUMENT)) {
+            aProg.removeProgressListener(this);
+            this.mRefDoc = document.getElementById('hiddenHtml').contentDocument;
+            this.fileLoaded(4);
+        }
+    },
+    onProgressChange: function(aProg, b,c,d,e,f)
+    {
+    },
+    onLocationChange: function(aProg, aRequest, aURI)
+    {
+    },
+    onStatusChange: function(aProg, aRequest, aStatus, aMessage)
+    {
+    },
+    onSecurityChange: function(aWebProgress, aRequest, aState)
+    {
     },
 
     // onload handler helper
@@ -220,18 +241,79 @@ runItem.prototype =
         };
     },
 
+    styleLoaded : function()
+    {
+        var self = this;
+        return function(e)
+        {
+            return self.styleLoadedHelper();
+        };
+    },
+    styleLoadedHelper : function()
+    {
+        var method = methodExpr.evaluate(this.mStyleDoc.documentElement, 2,
+                                         null).stringValue;
+        var refContent;
+        if (!method) {
+            // implicit method, guess from result
+            refContent = this.loadTextFile(this.mRefURL);
+            if (refContent.match(/^\s*<html/gi)) {
+                method = 'html';
+            }
+            else {
+                method = 'xml';
+            }
+        }
+        this.mMethod = method;
+
+        switch (method) {
+        case 'xml':
+            if (!refContent) {
+                refContent = this.loadTextFile(this.mRefURL);
+            }
+            this.mRefDoc = parser.parseFromString(refContent, 'text/xml');
+            this.mLoaded += 4;
+            break;
+        case 'html':
+            view.loadHtml(this.mRefURL, this);
+            break;
+        case 'text':
+            if (!refContent) {
+                refContent = this.loadTextFile(this.mRefURL);
+            }
+            const ns = 'http://www.mozilla.org/TransforMiix';
+            const qn = 'transformiix:result';
+            this.mRefDoc =
+                document.implementation.createDocument(ns, qn, null);
+            var txt = this.mRefDoc.createTextNode(refContent);
+            this.mRefDoc.documentElement.appendChild(txt);
+            this.mLoaded += 4;
+            break;
+        default:
+            throw "unkown XSLT output method";
+        }
+        this.fileLoaded(2)
+    },
+
     fileLoaded : function(mask)
     {
         this.mLoaded += mask;
-        if (this.mLoaded < 3) {
+        if (this.mLoaded < 7) {
             return;
         }
-        this.mResDoc = document.implementation.createDocument("", "", null);
-        this.kProcessor.transformDocument(this.mSourceDoc,
-                                          this.mStyleDoc,
-                                          this.mResDoc, null);
-        this.mRefDoc.normalize();
+        this.doTransform();
+    },
+
+    doTransform : function()
+    {
+        this.kProcessor.reset();
+        this.kProcessor.importStylesheet(this.mStyleDoc);
+        this.mResDoc = this.kProcessor.transformToDocument(this.mSourceDoc);
+        //var proc = new XSLTProcessor;
+        //proc.importStylesheet(this.mStyleDoc);
+        //this.mResDoc = proc.transformToDocument(this.mSourceDoc);
         try {
+            this.mRefDoc.normalize();
             isGood = DiffDOM(this.mResDoc.documentElement,
                              this.mRefDoc.documentElement,
                              this.mMethod == 'html');

@@ -128,6 +128,15 @@ var view =
         runItem.prototype.kXalan.init(runItem.prototype.kXalan.URLTYPE_STANDARD,
                                       0, baseSpec, null, null);
     },
+    loadHtml : function(aUrl, aListener)
+    {
+        const nsIIRequestor = Components.interfaces.nsIInterfaceRequestor;
+        const nsIWebProgress = Components.interfaces.nsIWebProgress;
+        var req = this.mIframe.webNavigation.QueryInterface(nsIIRequestor);
+        var prog = req.getInterface(nsIWebProgress);
+        prog.addProgressListener(aListener, nsIWebProgress.NOTIFY_ALL);
+        this.mIframe.webNavigation.loadURI(aUrl, 0,null,null,null);
+    },
     fillItemContext : function()
     {
         var index = view.boxObject.selection.currentIndex;
@@ -183,7 +192,7 @@ regressionStats =
         // parent chached?
         var parent = this.getParent(view.XalanDS, aSource);
         while (parent && !parent.EqualsNode(root)) {
-            var countRes = this.mRegressionDS.GetTarget(parent, aArc, true);
+            var countRes = view.mResultDS.GetTarget(parent, aArc, true);
             if (countRes) {
                 count = countRes.QueryInterface(nsIRDFInt).Value;
             }
@@ -193,10 +202,10 @@ regressionStats =
             }
 
             if (countRes) {
-                this.mRegressionDS.Change(parent, aArc, countRes, newCountRes);
+                view.mResultDS.Change(parent, aArc, countRes, newCountRes);
             }
             else {
-                this.mRegressionDS.Assert(parent, aArc, newCountRes, true);
+                view.mResultDS.Assert(parent, aArc, newCountRes, true);
             }
             parent = this.getParent(view.XalanDS, parent);
         }
