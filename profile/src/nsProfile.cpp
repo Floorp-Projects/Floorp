@@ -1506,6 +1506,11 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
     prefs->ResetPrefs();
     prefs->ReadUserPrefs();
 
+/*
+	// rjc says:  no longer do this!  The profile manager now runs BEFORE
+	// hiddenwindow.xul (which causes bookmarks to be read in) is loaded
+
+
 	// we need to re-read the bookmarks here, other wise the user
 	// won't have there 4.x bookmarks until after they exit and come back
 	NS_WITH_SERVICE(nsIBookmarksService, bookmarks, kBookmarksCID, &rv);
@@ -1516,6 +1521,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const char* profileName)
 		printf("failed to read bookmarks\n");
 		return rv;
 	}
+*/
 
     rv = CloseRegistry();
     if (NS_FAILED(rv)) return rv;
