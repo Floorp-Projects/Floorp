@@ -283,7 +283,7 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   const nsAString *keyStr = NS_STATIC_CAST(const nsAString *, key);
 
   // Inititlize the entry with placement new
-  IdAndNameMapEntry *e = new (entry) IdAndNameMapEntry(*keyStr);
+  new (entry) IdAndNameMapEntry(*keyStr);
 }
 
 nsHTMLDocument::nsHTMLDocument()
@@ -558,7 +558,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                      PRInt32& aCharsetSource, 
                                      nsAString& aCharset)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if(kCharsetFromUserForced <= aCharsetSource) 
     return PR_TRUE;
@@ -567,7 +567,7 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
   if (aMarkupDV) 
     rv = aMarkupDV->GetForceCharacterSet(&forceCharsetFromWebShell);
 
-  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
+  if(NS_SUCCEEDED(rv) && forceCharsetFromWebShell)
   {
     aCharset = forceCharsetFromWebShell;
     Recycle(forceCharsetFromWebShell);
@@ -2889,48 +2889,44 @@ NS_IMETHODIMP
 nsHTMLDocument::GetWidth(PRInt32* aWidth)
 {
   NS_ENSURE_ARG_POINTER(aWidth);
-
-  FlushPendingNotifications();
+  *aWidth = 0;
 
   nsCOMPtr<nsIPresShell> shell;
-  nsresult result = NS_OK;
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
   GetShellAt(0, getter_AddRefs(shell));
-  if (shell) {
-    PRInt32 width, height;
+  if (!shell) {
+    return NS_OK;
+  }
 
-    result = GetPixelDimensions(shell, &width, &height);
-    *aWidth = width;
-  } else
-    *aWidth = 0;
+  PRInt32 dummy;
 
-  return result;
+  // GetPixelDimensions() does the flushing for us, no need to flush
+  // here too
+  return GetPixelDimensions(shell, aWidth, &dummy);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLDocument::GetHeight(PRInt32* aHeight)
 {
   NS_ENSURE_ARG_POINTER(aHeight);
-
-  FlushPendingNotifications();
+  *aHeight = 0;
 
   nsCOMPtr<nsIPresShell> shell;
-  nsresult result = NS_OK;
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
   GetShellAt(0, getter_AddRefs(shell));
-  if (shell) {
-    PRInt32 width, height;
+  if (!shell) {
+    return NS_OK;
+  }
 
-    result = GetPixelDimensions(shell, &width, &height);
-    *aHeight = height;
-  } else
-    *aHeight = 0;
+  PRInt32 dummy;
 
-  return result;
+  // GetPixelDimensions() does the flushing for us, no need to flush
+  // here too
+  return GetPixelDimensions(shell, &dummy, aHeight);
 }
 
 NS_IMETHODIMP
@@ -3262,21 +3258,6 @@ nsHTMLDocument::GetCompatMode(nsAWritableString& aCompatMode)
   }
 
   return NS_OK;
-}
-
-static PRBool PR_CALLBACK
-NameHashCleanupEnumeratorCallback(nsHashKey *aKey, void *aData, void* closure)
-{
-  nsBaseContentList *list = (nsBaseContentList *)aData;
-
-  // The document this hash is in is most likely going away so we
-  // reset the live nodelists to avoid leaving dangling pointers to
-  // non-existing content
-  list->Reset();
-
-  NS_RELEASE(list);
-
-  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)

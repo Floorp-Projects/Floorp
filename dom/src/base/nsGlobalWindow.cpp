@@ -1213,18 +1213,7 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
-  GetParentInternal(getter_AddRefs(parent));
-
-  if (parent) {
-    PRInt32 dummy;
-
-    // Force a flush in the parent
-    parent->GetInnerWidth(&dummy);
-  }
-
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_TRUE);
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerWidth = 0;
@@ -1264,18 +1253,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
-  GetParentInternal(getter_AddRefs(parent));
-
-  if (parent) {
-    PRInt32 dummy;
-
-    // Force a flush in the parent
-    parent->GetInnerHeight(&dummy);
-  }
-
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_TRUE);
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
   *aInnerHeight = 0;
@@ -1316,22 +1294,11 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 
 NS_IMETHODIMP GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
-  GetParentInternal(getter_AddRefs(parent));
-
-  if (parent) {
-    PRInt32 dummy;
-
-    // Force a flush in the parent
-    parent->GetOuterWidth(&dummy);
-  }
-
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_TRUE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(aOuterWidth, nsnull),
                     NS_ERROR_FAILURE);
@@ -1359,22 +1326,11 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 {
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
-  GetParentInternal(getter_AddRefs(parent));
-
-  if (parent) {
-    PRInt32 dummy;
-
-    // Force a flush in the parent
-    parent->GetOuterHeight(&dummy);
-  }
-
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_TRUE);
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, aOuterHeight),
                     NS_ERROR_FAILURE);
@@ -1516,7 +1472,7 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
     PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
     PRInt32 winLeft, winTop, winWidth, winHeight;
 
-    FlushPendingNotifications();
+    FlushPendingNotifications(PR_TRUE);
 
     // Get the window size
     nsCOMPtr<nsIBaseWindow> treeOwner;
@@ -1671,19 +1627,24 @@ NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
   return NS_OK;
 }
 
-static void EnsureReflowFlushAndPaint(nsIDocShell* aDocShell)
+void
+GlobalWindowImpl::EnsureReflowFlushAndPaint()
 {
-  if (!aDocShell)
-    return;
+  NS_ASSERTION(mDocShell, "EnsureReflowFlushAndPaint() called with no "
+               "docshell!");
 
   nsCOMPtr<nsIPresShell> presShell;
-  aDocShell->GetPresShell(getter_AddRefs(presShell));
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
 
   if (!presShell)
     return;
 
   // Flush pending reflows.
-  presShell->FlushPendingNotifications(PR_FALSE);
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+
+  if (doc) {
+    doc->FlushPendingNotifications(PR_TRUE, PR_FALSE);
+  }
 
   // Unsuppress painting.
   presShell->UnsuppressPainting();
@@ -1732,7 +1693,7 @@ GlobalWindowImpl::Alert(const nsAReadableString& aString)
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
-  EnsureReflowFlushAndPaint(mDocShell);
+  EnsureReflowFlushAndPaint();
 
   return prompter->Alert(nsnull, str.get());
 }
@@ -1755,7 +1716,7 @@ GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
-  EnsureReflowFlushAndPaint(mDocShell);
+  EnsureReflowFlushAndPaint();
 
   return prompter->Confirm(nsnull, str.get(), aReturn);
 }
@@ -1782,7 +1743,7 @@ GlobalWindowImpl::Prompt(const nsAReadableString& aMessage,
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
-  EnsureReflowFlushAndPaint(mDocShell);
+  EnsureReflowFlushAndPaint();
 
   rv = prompter->Prompt(PromiseFlatString(aTitle).get(),
                         PromiseFlatString(aMessage).get(), nsnull,
@@ -2510,7 +2471,7 @@ GlobalWindowImpl::GetFrames(nsIDOMWindow** aFrames)
   *aFrames = this;
   NS_ADDREF(*aFrames);
 
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_FALSE);
 
   return NS_OK;
 }
@@ -4231,20 +4192,9 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
 {
   *aScrollableView = nsnull;
 
-  nsCOMPtr<nsIDOMWindowInternal> parent;
-
-  GetParentInternal(getter_AddRefs(parent));
-
-  if (parent) {
-    PRInt32 dummy;
-
-    // Force a flush in the parent
-    parent->GetScrollX(&dummy);
-  }
-
   // Flush pending notifications so that the presentation is up to
   // date.
-  FlushPendingNotifications();
+  FlushPendingNotifications(PR_TRUE);
 
   nsCOMPtr<nsIPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
@@ -4317,12 +4267,11 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   return NS_OK;
 }
 
-void GlobalWindowImpl::FlushPendingNotifications()
+void GlobalWindowImpl::FlushPendingNotifications(PRBool aFlushReflows)
 {
-  if (mDocument) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    if (doc)
-      doc->FlushPendingNotifications();
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+  if (doc) {
+    doc->FlushPendingNotifications(aFlushReflows);
   }
 }
 

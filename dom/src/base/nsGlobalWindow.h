@@ -233,7 +233,8 @@ protected:
   nsresult SecurityCheckURL(const char *aURL);
   PRBool   CheckForAbusePoint();
 
-  void FlushPendingNotifications();
+  void FlushPendingNotifications(PRBool aFlushReflows);
+  void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
 
