@@ -70,6 +70,24 @@ sub syntax($@) {
     die "$message at $filename line $line\n";
 }
 
+sub stacktrace($) {
+    my($index) = @_;
+    my @stacktrace;
+    while (my @data = caller($index++)) {
+        push(@stacktrace, {
+            'package' => $data[0],
+            'filename' => $data[1],
+            'line' => $data[2],
+            'subroutine' => $data[3], # set to '(eval)' for eval, require, and use statements
+            'hasargs' => $data[4],
+            'wantarray' => $data[5],
+            'evaltext' => $data[6], # undef for eval {}, EXPR for eval EXPR
+            'is_require' => $data[7], # true if eval was caused by require or use statement
+        });
+    }
+    return \@stacktrace;
+}
+
 sub create {
     my $class = shift;
     return bless({@_}, $class);
@@ -78,6 +96,8 @@ sub create {
 sub raise {
     my($exception, @data) = @_;
     my($package, $filename, $line) = caller;
+    my $stacktrace = stacktrace(2);
+    PLIF->warn(7, "Exception raised: $exception");
     if (ref($exception) and $exception->isa('PLIF::Exception')) {
         # if the exception is an object, raise it
         # this is for people doing things like:
@@ -88,6 +108,7 @@ sub raise {
         #   $memoryException->raise();
         $exception->{'filename'} = $filename;
         $exception->{'line'} = $line;
+        $exception->{'stacktrace'} = $stacktrace;
         die $exception;
     } else {
         # otherwise, assume we were called as a constructor
@@ -101,6 +122,7 @@ sub raise {
         die $exception->create(
             'filename' => $filename,
             'line' => $line,
+            'stacktrace' => $stacktrace,
             @data
         );
     }
@@ -128,7 +150,7 @@ sub try(&;$) {
         }
     };
     if (defined($continuation)) {
-        $continuation->handle($@, caller);
+        $continuation->handle($@, caller, stacktrace(2));
     }
     return $context ? @result : $result;
 }
@@ -209,10 +231,27 @@ sub fallthrough() {
 
 sub stringify {
     my $self = shift;
+    my $stacktrace = '';
+    foreach my $frame (@{$self->{'stacktrace'}}) {
+        # XXX this should be made better
+        if ($frame->{'subroutine'} eq '(eval)') {
+            if ($frame->{'is_require'}) {
+                $stacktrace .= "  require in $frame->{'filename'} line $frame->{'line'}\n";
+            } elsif (defined($frame->{'evaltext'})) {
+                $stacktrace .= "  eval '$frame->{'evaltext'}' in $frame->{'filename'} line $frame->{'line'}\n";
+            } else {
+                $stacktrace .= "  eval {...} in $frame->{'filename'} line $frame->{'line'}\n";
+            }
+        } elsif ($frame->{'hasargs'}) {
+            $stacktrace .= "  $frame->{'subroutine'}(...) called from $frame->{'filename'} line $frame->{'line'}\n";
+        } else {
+            $stacktrace .= "  $frame->{'subroutine'}() called from $frame->{'filename'} line $frame->{'line'}\n";
+        }
+    }
     if (defined($self->{'message'})) {
-        return "$self->{'message'} at $self->{'filename'} line $self->{'line'}";
+        return "$self->{'message'} at $self->{'filename'} line $self->{'line'}\n$stacktrace";
     } else {
-        return ref($self) . " exception at $self->{'filename'} line $self->{'line'}";
+        return ref($self) . " exception at $self->{'filename'} line $self->{'line'}\n$stacktrace";
     }
 }
 
@@ -228,13 +267,18 @@ sub comparison {
 
 package PLIF::Exception::Internal::Continuation;
 
-sub wrap($) {
-    my($exception) = @_;
+sub wrap($$$$) {
+    my($exception, $filename, $line, $stacktrace) = @_;
     if ($exception ne '') {
         if (not ref($exception) or
             not $exception->isa('PLIF::Exception')) {
             # an unexpected exception
             $exception = PLIF::Exception->create('message' => $exception);
+        }
+        if (not exists $exception->{'stacktrace'}) {
+            $exception->{'filename'} = $filename;
+            $exception->{'line'} = $line;
+            $exception->{'stacktrace'} = $stacktrace;
         }
     } else {
         $exception = undef;
@@ -256,18 +300,16 @@ sub create {
 
 sub handle {
     my $self = shift;
-    my($exception, $package, $filename, $line) = @_;
+    my($exception, $package, $filename, $line, $stacktrace) = @_;
     $self->{'resolved'} = 1;
-    $exception = wrap($exception);
+    $exception = wrap($exception, $filename, $line, $stacktrace);
     my $reraise = undef;
     handler: while (1) {
         if (defined($exception)) {
-            $exception->{'filename'} = $filename;
-            $exception->{'line'} = $line;
             foreach my $handler (@{$self->{'handlers'}}) {
                 if ($exception->isa($handler->[0])) {
                     my $result = eval { &{$handler->[1]}($exception) };
-                    $reraise = wrap($@);
+                    $reraise = wrap($@, $filename, $line, $stacktrace);
                     if (not defined($result) or # $result is not defined if $reraise is now defined
                         not ref($result) or
                         not $result->isa('PLIF::Exception::Internal::Fallthrough')) {
@@ -279,7 +321,7 @@ sub handle {
             }
             if (defined($self->{'except'})) {
                 my $result = eval { &{$self->{'except'}}($exception) };
-                $reraise = wrap($@);
+                $reraise = wrap($@, $filename, $line, $stacktrace);
             } else {
                 # fallthrough exception
                 $reraise = $exception;
@@ -287,7 +329,7 @@ sub handle {
         } else {
             if (defined($self->{'otherwise'})) {
                 my $result = eval { &{$self->{'otherwise'}}($exception) };
-                $reraise = wrap($@);
+                $reraise = wrap($@, $filename, $line, $stacktrace);
             }
         }
         last;
