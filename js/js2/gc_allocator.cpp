@@ -56,7 +56,7 @@ template <class T> struct gc_types {
 };
 #else
 template <class T> struct gc_types {
-	// typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
+	typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
 	typedef typename std::vector<T, JS::gc_allocator<T> > vector;
 };
 #endif
@@ -79,7 +79,10 @@ public:
 	
 	static int instances;
 	
-	void* operator new(std::size_t) {return allocator::allocate(1);}
+	void* operator new(std::size_t)
+	{
+		return allocator::allocate(1);
+	}
 	
 	A()
 	{
@@ -111,9 +114,8 @@ int main(int /* argc */, char* /* argv[] */)
 	// allocate a string, using the GC, and owned by an auto_ptr, that knows how to correctly destroy the string.
 	typedef gc_types<char>::string char_string;
 	typedef gc_allocator<char_string> char_string_alloc;
-	// auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
-	// const char_string& str = *ptr;
-	char_string str("This is a garbage collectable string.");
+	auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
+	const char_string& str = *ptr;
 	cout << str << endl;
 #endif
 	
