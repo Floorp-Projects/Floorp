@@ -527,6 +527,7 @@ void CNSNavFrame::ForceFloat(BOOL show)
 	else SetWindowPos(&wndNoTopMost, 0, 0, 0, 0, SWP_FRAMECHANGED
 						| SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
+	CFrameWnd *pLayout = GetParentFrame();
 	SetParent(NULL);
 
 	if (m_DragWnd)
@@ -545,8 +546,7 @@ void CNSNavFrame::ForceFloat(BOOL show)
     XP_UndockNavCenter(GetHTPane());
 
 	// Tell ParentFrame that we are not docked anymore.
-	CFrameWnd *pLayout = GetParentFrame();
-    if (pLayout)
+	if (pLayout)
 		pLayout->RecalcLayout();
 
 }
