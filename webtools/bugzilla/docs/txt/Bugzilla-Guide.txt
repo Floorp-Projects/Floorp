@@ -2,7 +2,7 @@
 The Bugzilla Guide - 2.17.5 Development ReleaseMatthew P. BarnsonJacob
 SteenhagenThe Bugzilla Team
 
-2003-10-31
+2003-11-01
 
    This is the documentation for Bugzilla, the mozilla.org bug-tracking
    system. Bugzilla is an enterprise-class piece of software that powers
@@ -16,6 +16,9 @@ SteenhagenThe Bugzilla Team
    This is a development version of this guide. Information in it is
    subject to change before the 2.18 release of this guide (which will
    correspond with the 2.18 release of Bugzilla).
+
+   The most current version of this document can always be found on the
+   Bugzilla Documentation Page.
   _______________________________________________________________________
 
    Table of Contents

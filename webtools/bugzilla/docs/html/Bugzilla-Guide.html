@@ -53,7 +53,7 @@ CLASS="corpauthor"
 >The Bugzilla Team</H3
 ><P
 CLASS="pubdate"
->2003-10-31<BR></P
+>2003-11-01<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
@@ -82,6 +82,14 @@ TARGET="_top"
         is subject to change before the 2.18 release of this guide
         (which will correspond with the 2.18 release of Bugzilla).
         </P
+><P
+>&#13;        The most current version of this document can always be found on the
+        <A
+HREF="http://www.bugzilla.org/documentation.html"
+TARGET="_top"
+>Bugzilla Documentation Page</A
+>.
+      </P
 ><P
 ></P
 ></DIV
@@ -503,7 +511,7 @@ CLASS="section"
 ><A
 NAME="copyright">1.1. Copyright Information</H1
 ><A
-NAME="AEN33"><TABLE
+NAME="AEN35"><TABLE
 BORDER="0"
 WIDTH="100%"
 CELLSPACING="0"
@@ -796,7 +804,7 @@ NAME="conventions">1.5. Document Conventions</H1
 ><DIV
 CLASS="informaltable"
 ><A
-NAME="AEN111"><P
+NAME="AEN113"><P
 ></P
 ><TABLE
 BORDER="0"
@@ -1984,7 +1992,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN405">3.2.1. Autolinkification</H2
+NAME="AEN407">3.2.1. Autolinkification</H2
 ><P
 >Bugzilla comments are plain text - so posting HTML will result
       in literal HTML tags rather than being interpreted by a browser.
@@ -2124,7 +2132,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN434">3.2.5. Filing Bugs</H2
+NAME="AEN436">3.2.5. Filing Bugs</H2
 ><P
 >Try to make sure that everything said in the summary is also 
       said in the first comment. Summaries are often updated and this will
@@ -3941,7 +3949,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN793">4.1.7. <TT
+NAME="AEN795">4.1.7. <TT
 CLASS="filename"
 >checksetup.pl</TT
 ></H2
@@ -4089,7 +4097,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN824">4.1.8. Configuring Bugzilla</H2
+NAME="AEN826">4.1.8. Configuring Bugzilla</H2
 ><P
 >&#13;      You should run through the parameters on the Edit Parameters page
       (link in the footer) and set them all to appropriate values. 
@@ -4111,7 +4119,7 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN830">4.2.1. Dependency Charts</H2
+NAME="AEN832">4.2.1. Dependency Charts</H2
 ><P
 >As well as the text-based dependency graphs, Bugzilla also
       supports dependency graphing, using a package called 'dot'.
@@ -4173,7 +4181,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN845">4.2.2. Bug Graphs</H2
+NAME="AEN847">4.2.2. Bug Graphs</H2
 ><P
 >As long as you installed the GD and Graph::Base Perl modules you
       might as well turn on the nifty Bugzilla bug reporting graphs.</P
@@ -4230,7 +4238,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN858">4.2.3. The Whining Cron</H2
+NAME="AEN860">4.2.3. The Whining Cron</H2
 ><P
 >By now you have a fully functional Bugzilla, but what good are
       bugs if they're not annoying? To help make those bugs more annoying you
@@ -6014,7 +6022,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1155">4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
+NAME="AEN1157">4.5.1. Bundle::Bugzilla makes me upgrade to Perl 5.6.1</H2
 ><P
 >&#13;      Try executing <B
 CLASS="command"
@@ -6037,7 +6045,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1160">4.5.2. DBD::Sponge::db prepare failed</H2
+NAME="AEN1162">4.5.2. DBD::Sponge::db prepare failed</H2
 ><P
 >&#13;        The following error message may appear due to a bug in DBD::mysql
         (over which the Bugzilla team have no control):
@@ -8077,7 +8085,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1604">5.7.1. What to Edit</H2
+NAME="AEN1606">5.7.1. What to Edit</H2
 ><P
 >&#13;        There are two different ways of editing of Bugzilla's templates,
         and which you use depends mainly on how you upgrade Bugzilla. The
@@ -8225,7 +8233,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1627">5.7.2. How To Edit Templates</H2
+NAME="AEN1629">5.7.2. How To Edit Templates</H2
 ><P
 >&#13;        The syntax of the Template Toolkit language is beyond the scope of
         this guide. It's reasonably easy to pick up by looking at the current 
@@ -8305,7 +8313,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1637">5.7.3. Template Formats</H2
+NAME="AEN1639">5.7.3. Template Formats</H2
 ><P
 >&#13;        Some CGIs have the ability to use more than one template. For
         example, buglist.cgi can output bug lists as RDF or two
@@ -8365,7 +8373,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN1650">5.7.4. Particular Templates</H2
+NAME="AEN1652">5.7.4. Particular Templates</H2
 ><P
 >&#13;        There are a few templates you may be particularly interested in
         customizing for your installation.
@@ -11126,7 +11134,7 @@ CLASS="answer"
 	    You can call bug_email.pl directly from your aliases file, with
 	    an entry like this:
 	    <A
-NAME="AEN2065"><BLOCKQUOTE
+NAME="AEN2067"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >&#13;		bugzilla-daemon: "|/usr/local/bin/bugzilla/contrib/bug_email.pl"
@@ -11542,7 +11550,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN2148"><BLOCKQUOTE
+NAME="AEN2150"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >&#13;		"Set application mappings. In the ISM, map the extension for the script
@@ -12173,7 +12181,7 @@ CLASS="section"
 ><HR><H2
 CLASS="section"
 ><A
-NAME="AEN2277">B.2.1. Bugzilla Database Basics</H2
+NAME="AEN2279">B.2.1. Bugzilla Database Basics</H2
 ><P
 >If you were like me, at this point you're totally clueless about
       the internals of MySQL, and if it weren't for this executive order from
@@ -12285,7 +12293,7 @@ CLASS="section"
 ><HR><H3
 CLASS="section"
 ><A
-NAME="AEN2304">B.2.1.1. Bugzilla Database Tables</H3
+NAME="AEN2306">B.2.1.1. Bugzilla Database Tables</H3
 ><P
 >Imagine your MySQL database as a series of spreadsheets, and
         you won't be too far off. If you use this command:</P
@@ -12824,7 +12832,7 @@ NAME="gfdl">Appendix E. GNU Free Documentation License</H1
 ><P
 >Version 1.1, March 2000</P
 ><A
-NAME="AEN2392"><BLOCKQUOTE
+NAME="AEN2394"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >Copyright (C) 2000 Free Software Foundation, Inc. 59 Temple Place,
@@ -13261,7 +13269,7 @@ NAME="gfdl-howto">How to use this License for your documents</H1
     of the License in the document and put the following copyright and
     license notices just after the title page:</P
 ><A
-NAME="AEN2482"><BLOCKQUOTE
+NAME="AEN2484"><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
 ><P
 >Copyright (c) YEAR YOUR NAME. Permission is granted to copy,
@@ -13294,7 +13302,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2487">0-9, high ascii</H1
+NAME="AEN2489">0-9, high ascii</H1
 ><DL
 ><DT
 ><B
@@ -14098,7 +14106,7 @@ NAME="gloss-zarro"><B
         Terry had the following to say:
         </P
 ><A
-NAME="AEN2722"><TABLE
+NAME="AEN2724"><TABLE
 BORDER="0"
 WIDTH="100%"
 CELLSPACING="0"
