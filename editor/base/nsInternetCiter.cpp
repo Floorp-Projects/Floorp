@@ -272,7 +272,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
     }
 
     // find the next newline -- don't want to go farther than that
-    PRUint32 nextNewline = aInString.FindChar(nl, PR_FALSE, posInString);
+    PRInt32 nextNewline = aInString.FindChar(nl, PR_FALSE, posInString);
     if (nextNewline < 0) nextNewline = length;
 
     // For now, don't wrap unquoted lines at all.
@@ -292,7 +292,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       aOutString.Append(nsPromiseSubstring<PRUnichar>(aInString, posInString,
                                   nextNewline-posInString));
       outStringCol += nextNewline - posInString;
-      if (nextNewline != length)
+      if (nextNewline != (PRInt32)length)
       {
 #ifdef DEBUG_wrapping
         printf("unquoted: appending a newline\n");
@@ -306,7 +306,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
 
     // Otherwise we have to use the line breaker and loop
     // over this line of the input string to get all of it:
-    while (posInString < nextNewline)
+    while ((PRInt32)posInString < nextNewline)
     {
 #ifdef DEBUG_wrapping
       nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline-posInString));
@@ -318,7 +318,7 @@ nsInternetCiter::Rewrap(const nsString& aInString,
       {
         // If this short line is the final one in the in string,
         // then we need to include the final newline, if any:
-        if (nextNewline+1 == length && aInString[nextNewline-1] == nl)
+        if (nextNewline+1 == (PRInt32)length && aInString[nextNewline-1] == nl)
           ++nextNewline;
 #ifdef DEBUG_wrapping
         nsAutoString debug (nsPromiseSubstring<PRUnichar>(aInString, posInString, nextNewline - posInString));
