@@ -257,7 +257,7 @@ int main(int argc, char** argv)
   NS_ASSERTION(container->CanContainChildren(),"");
   container->SetDocument(myDoc);
 
-  container->AppendChild(text);
+  container->AppendChild(text, PR_FALSE);
   if (container->ChildCount() != 1) {
     printf("Container has wrong number of children.");
   }
