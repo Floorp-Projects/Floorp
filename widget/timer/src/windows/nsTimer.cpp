@@ -36,9 +36,10 @@
 
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
+static nsCOMPtr<nsIWindowsTimerMap> sTimerMap;
+static nsCOMPtr<nsITimerQueue> sTimerQueue;
 
 class nsTimer;
-
 
 #define NS_PRIORITY_IMMEDIATE 10
 
@@ -48,17 +49,11 @@ void CALLBACK FireTimeout(HWND aWindow,
                           UINT aTimerID, 
                           DWORD aTime)
 {
-  //  Don't allow old timer messages in here.
-  if(aMessage != WM_TIMER) {
-    PR_ASSERT(0);
-    return;
-  }
+  PR_ASSERT(aMessage == WM_TIMER);
 
-  nsresult rv;
-  NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
-  if (NS_FAILED(rv)) return;
+  if (!sTimerMap) return;
 
-  nsTimer* timer = manager->GetTimer(aTimerID);
+  nsTimer* timer = sTimerMap->GetTimer(aTimerID);
   if (timer == nsnull) {
     return;
   }
@@ -68,26 +63,30 @@ void CALLBACK FireTimeout(HWND aWindow,
     timer->KillOSTimer();
   }
 
-  nsCOMPtr<nsITimerQueue> queue = do_QueryInterface(manager, &rv);
-  if (NS_FAILED(rv)) return;
+  if (!sTimerQueue) return;
 
   MSG wmsg;
-  if (!::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE) ||
+  bool eventQueueEmpty = !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE);
+  bool timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
+
+  if ((timerQueueEmpty && eventQueueEmpty) || 
       timer->GetPriority() >= NS_PRIORITY_IMMEDIATE) {
     
     // fire timer immediatly
     timer->Fire();
 
-    // while event queue is empty, fire off waiting timers
-    while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
-      !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE)) {
-
-      queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-    }
-
   } else {
     // defer timer firing
-    queue->AddReadyQueue(timer);
+    sTimerQueue->AddReadyQueue(timer);
+  }
+
+  if (eventQueueEmpty) {
+    // while event queue is empty, fire off waiting timers
+    while (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
+        !::PeekMessage(&wmsg, NULL, 0, 0, PM_NOREMOVE)) {
+
+      sTimerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+    }
   }
 }
 
@@ -104,6 +103,15 @@ nsTimer::nsTimer() : nsITimer()
   mClosure = nsnull;
   mTimerID = 0;
   mTimerRunning = false;
+
+  static int cachedService = 0;
+  if (cachedService == 0) {
+    cachedService = 1;
+
+    nsresult rv;
+    sTimerMap = do_GetService(kTimerManagerCID, &rv);
+    sTimerQueue = do_GetService(kTimerManagerCID, &rv);
+  }
 }
 
 
@@ -224,15 +232,13 @@ void nsTimer::StartOSTimer(PRUint32 aDelay)
 {
   PR_ASSERT(mTimerID == 0);
 
-  nsresult rv;
-  NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
-  if (NS_FAILED(rv)) return;
+  if (!sTimerMap) return;
 
   // create OS timer
   mTimerID = ::SetTimer(NULL, 0, aDelay, (TIMERPROC)FireTimeout);
 
   // store mapping from OS timer to timer object
-  manager->AddTimer(mTimerID, this);
+  sTimerMap->AddTimer(mTimerID, this);
 }
 
 
@@ -240,12 +246,9 @@ void nsTimer::KillOSTimer()
 {
   if (mTimerID != 0) {
 
-    nsresult rv;
-    NS_WITH_SERVICE(nsIWindowsTimerMap, manager, kTimerManagerCID, &rv);
-
     // remove mapping from OS timer to timer object
-    if (NS_SUCCEEDED(rv)) {
-      manager->RemoveTimer(mTimerID);
+    if (sTimerMap) {
+      sTimerMap->RemoveTimer(mTimerID);
     }
 
     // kill OS timer
