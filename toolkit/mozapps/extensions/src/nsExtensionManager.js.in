@@ -171,7 +171,7 @@ function getItemRoots(aItemType)
 
 function getItemType(aURI)
 {
-  var type = 0;
+  var type = -1;
   if (aURI.substr(0, PREFIX_EXTENSION.length) == PREFIX_EXTENSION)
     type = nsIUpdateItem.TYPE_EXTENSION;
   else if (aURI.substr(0, PREFIX_THEME.length) == PREFIX_THEME)
@@ -850,10 +850,12 @@ nsThemeInstaller.prototype = {
       var elts = ctr.GetElements();
       while (elts.hasMoreElements()) {
         var elt = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        var name = chromeMetadata.GetTarget(elt, nameArc, true);
-        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-        
-        this._writer.installSkin(name, aIsProfile);
+        if (getItemType(elt.Value) != -1) {
+          var name = chromeMetadata.GetTarget(elt, nameArc, true);
+          name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+          
+          this._writer.installSkin(name, aIsProfile);
+        }
       }
 
       this._writer.close();
@@ -1395,7 +1397,7 @@ nsExtensionManager.prototype = {
                               .createInstance(Components.interfaces.nsIZipReader);
     zipReader.init(aXPIFile);
     zipReader.open();
-
+    
     var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var tempManifest = getFile(getDirKey(installProfile),
                                [DIR_EXTENSIONS, DIR_TEMP, FILE_INSTALL_MANIFEST]);
@@ -1604,6 +1606,90 @@ nsExtensionManager.prototype = {
     return this._ds;
   },
   
+  /////////////////////////////////////////////////////////////////////////////    
+  // Downloads
+  _transactions: [],
+  addDownloads: function (aItems, aItemCount)
+  {
+    var txn = new nsItemDownloadTransaction(this);
+    for (var i = 0; i < aItemCount; ++i) {
+      var currItem = aItems[i];
+      txn.addDownload(currItem.name, currItem.updateURL, currItem.iconURL, currItem.type);
+      this._transactions.push(txn);
+    }
+
+    // Kick off the download process for this transaction
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    os.notifyObservers(txn, "xpinstall-progress", "open");  
+  },
+  
+  removeDownload: function (aURL, aType)
+  {
+    for (var i = 0; i < this._transactions.length; ++i) {
+      if (this._transactions[i].containsURL(aURL)) {
+        this._transactions[i].removeDownload(aURL, aType);
+        return;
+      }
+    } 
+  },
+  
+  // The nsIXPIProgressDialog implementation in the download transaction object
+  // forwards notifications through these methods which we then pass on to any
+  // front end objects implementing nsIExtensionDownloadProgressListener that 
+  // are listening. We maintain the master state of download operations HERE, 
+  // not in the front end, because if the user closes the extension or theme 
+  // managers during the downloads we need to maintain state and not terminate
+  // the download/install process. 
+  onStateChange: function (aTransaction, aURL, aState, aValue)
+  {
+    if (!(aURL in this._progressData)) 
+      this._progressData[aURL] = { };
+    this._progressData[aURL].state = aState;
+    
+    for (var i = 0; i < this._downloadObservers.length; ++i)
+      this._downloadObservers[i].onStateChange(aURL, aState, aValue);
+
+    const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
+    if (aState == nsIXPIProgressDialog.DIALOG_CLOSE) {
+      for (var i = 0; i < this._transactions.length; ++i) {
+        if (this._transactions[i] == aTransaction) {
+          this._transactions.splice(i, 1);
+          delete aTransaction;
+          break;
+        }
+      }
+    }
+  },
+  
+  _progressData: { },
+  onProgress: function (aURL, aValue, aMaxValue)
+  {
+    for (var i = 0; i < this._downloadObservers.length; ++i)
+      this._downloadObservers[i].onProgress(aURL, aValue, aMaxValue);
+    
+    if (!(aURL in this._progressData)) 
+      this._progressData[aURL] = { };
+    this._progressData[aURL].progress = Math.round((aValue / aMaxValue) * 100);
+  },
+
+  _downloadObservers: [],
+  addDownloadObserver: function (aXPIProgressDialog)
+  {
+    for (var i = 0; i < this._downloadObservers.length; ++i) {
+      if (this._downloadObservers[i] == aXPIProgressDialog)
+        return i;
+    }
+    this._downloadObservers.push(aXPIProgressDialog);
+    return this._downloadObservers.length - 1;
+  },
+  
+  removeDownloadObserverAt: function (aIndex)
+  {
+    this._downloadObservers.splice(aIndex, 1);
+    this._ds.flushProgressInfo(this._progressData);
+  },
+
   //
   _ds: null,
 
@@ -1631,6 +1717,7 @@ nsExtensionManager.prototype = {
   getInterfaces: function (aCount)
   {
     var interfaces = [Components.interfaces.nsIExtensionManager,
+                      Components.interfaces.nsIXPIProgressDialog,
                       Components.interfaces.nsIObserver];
     aCount.value = interfaces.length;
     return interfaces;
@@ -1672,6 +1759,72 @@ nsExtensionManager.prototype = {
   {
     if (!aIID.equals(Components.interfaces.nsIExtensionManager) &&
         !aIID.equals(Components.interfaces.nsIObserver) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsItemDownloadTransaction
+//
+//   This object implements nsIXPIProgressDialog and represents a collection of
+//   XPI/JAR download and install operations. There is one 
+//   nsItemDownloadTransaction per back-end XPInstallManager object. We maintain
+//   a collection of separate transaction objects because it's possible to have
+//   multiple separate XPInstall download/install operations going on 
+//   simultaneously, each with its own XPInstallManager instance. For instance
+//   you could start downloading two extensions and then download a theme. Each
+//   of these operations would open the appropriate FE and have to be able to
+//   track each operation independently.
+//
+function nsItemDownloadTransaction(aManager)
+{
+  this._manager = aManager;
+}
+
+nsItemDownloadTransaction.prototype = {
+  _manager    : null,
+  _downloads  : [],
+  
+  addDownload: function (aName, aURL, aIconURL, aItemType)
+  {
+    this._downloads.push({ url: aURL, type: aItemType, waiting: true });
+    this._manager._ds.addDownload(aName, aURL, aIconURL, aItemType);
+  },
+  
+  removeDownload: function (aURL, aItemType)
+  {
+    this._manager._ds.removeDownload(aURL, aItemType);
+  },
+  
+  containsURL: function (aURL)
+  {
+    for (var i = 0; i < this._downloads.length; ++i) {
+      if (this._downloads[i].url == aURL)
+        return true;
+    }
+    return false;
+  },
+
+  /////////////////////////////////////////////////////////////////////////////  
+  // nsIXPIProgressDialog
+  onStateChange: function (aIndex, aState, aValue)
+  {
+    this._manager.onStateChange(this, this._downloads[aIndex].url, aState, aValue);
+  },
+  
+  onProgress: function (aIndex, aValue, aMaxValue)
+  {
+    this._manager.onProgress(this._downloads[aIndex].url, aValue, aMaxValue);
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIXPIProgressDialog) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
@@ -1948,7 +2101,7 @@ nsExtensionsDataSource.prototype = {
       var elements = ctr.GetElements();
       while (elements.hasMoreElements()) {
         var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        if (!this.isCompatible(this, e)) {
+        if (getItemType(e.Value) != -1 && !this.isCompatible(this, e)) {
           var itemType = getItemType(e.Value);
           var id = stripPrefix(e.Value, itemType);
           var item = Components.classes["@mozilla.org/updates/item;1"]
@@ -1986,14 +2139,16 @@ nsExtensionsDataSource.prototype = {
         var elements = ctr.GetElements();
         while (elements.hasMoreElements()) {
           var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-          var id = stripPrefix(e.Value, aType);
-          var item = Components.classes["@mozilla.org/updates/item;1"]
-                              .createInstance(Components.interfaces.nsIUpdateItem);
-          item.init(id, this.getItemProperty(id, "version"),
-                    this.getItemProperty(id, "name"),
-                    -1, "", "", 
-                    this.getItemProperty(id, "updateURL"), aType);
-          items.push(item);
+          if (getItemType(e.Value) != -1) {
+            var id = stripPrefix(e.Value, aType);
+            var item = Components.classes["@mozilla.org/updates/item;1"]
+                                .createInstance(Components.interfaces.nsIUpdateItem);
+            item.init(id, this.getItemProperty(id, "version"),
+                      this.getItemProperty(id, "name"),
+                      -1, "", "", 
+                      this.getItemProperty(id, "updateURL"), aType);
+            items.push(item);
+          }
         }
       }
     }
@@ -2026,10 +2181,11 @@ nsExtensionsDataSource.prototype = {
       var elements = ctr.GetElements();
       while (elements.hasMoreElements()) {
         var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        
-        var value = this.GetTarget(e, this._emR(aFlag), true);
-        if (!value)
-          items.push(stripPrefix(e.Value, getItemType(e.Value)));
+        if (getItemType(e.Value) != -1) {
+          var value = this.GetTarget(e, this._emR(aFlag), true);
+          if (!value)
+            items.push(stripPrefix(e.Value, getItemType(e.Value)));
+        }
       }
     }
     return items;
@@ -2264,22 +2420,81 @@ nsExtensionsDataSource.prototype = {
     this.removeItemFromContainer(aThemeID, nsIUpdateItem.TYPE_THEME, isProfile);
   },
   
+  // Cleans the resource of all its assertionss
   removeItemMetadata: function (aItemID, aItemType)
   {
     var item = this._rdf.GetResource(getItemPrefix(aItemType) + aItemID);
     var isProfile = this.isProfileItem(aItemID);
     var ds = isProfile ? this._profileExtensions : this._appExtensions;
-
+    this._cleanResource(item, ds);
+  },
+  
+  _cleanResource: function (aResource, aDS)
+  {
     // Remove outward arcs
-    var arcs = ds.ArcLabelsOut(item);
+    var arcs = aDS.ArcLabelsOut(aResource);
     while (arcs.hasMoreElements()) {
       var arc = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      var value = ds.GetTarget(item, arc, true);
+      var value = aDS.GetTarget(aResource, arc, true);
       if (value)
-        ds.Unassert(item, arc, value);
+        aDS.Unassert(aResource, arc, value);
     }
   },
   
+  addDownload: function (aName, aURL, aIconURL, aItemType)
+  {
+    var root = this._rdf.GetResource(getItemRoot(aItemType));
+    
+    var res = this._rdf.GetResource(aURL);
+    this._setProperty(this._profileExtensions, res, 
+                      this._emR("name"),
+                      this._rdf.GetLiteral(aName))
+    this._setProperty(this._profileExtensions, res, 
+                      this._emR("version"),
+                      this._rdf.GetLiteral(" "));
+    this._setProperty(this._profileExtensions, res, 
+                      this._emR("iconURL"),
+                      this._rdf.GetLiteral(aIconURL));
+    this._setProperty(this._profileExtensions, res, 
+                      this._emR("downloadURL"),
+                      this._rdf.GetLiteral(aURL));
+
+    var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                        .createInstance(Components.interfaces.nsIRDFContainer);
+    ctr.Init(this._profileExtensions, root);
+    if (ctr.IndexOf(res) == -1) 
+      ctr.InsertElementAt(res, 1, true);
+    
+    this._flush(true);
+  },
+  
+  removeDownload: function (aURL, aItemType)
+  {
+    var root = this._rdf.GetResource(getItemRoot(aItemType));
+    var res = this._rdf.GetResource(aURL);
+    var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                        .createInstance(Components.interfaces.nsIRDFContainer);
+    ctr.Init(this._profileExtensions, root);
+    ctr.RemoveElement(res, true);
+    this._cleanResource(res, this._profileExtensions);
+    
+    this._flush(true);
+  },
+    
+  flushProgressInfo: function (aData)
+  {
+    for (var url in aData) {
+      var res = this._rdf.GetResource(url);
+      this._setProperty(this._profileExtensions, res, 
+                        this._emR("state"),
+                        this._rdf.GetIntLiteral(aData[url].state));
+      this._setProperty(this._profileExtensions, res, 
+                        this._emR("progress"),
+                        this._rdf.GetIntLiteral(aData[url].progress));
+    }
+    this._flush(true);
+  },   
+   
   loadExtensions: function (aProfile)
   {
     var extensionsFile  = getFile(getDirKey(aProfile), 

@@ -5,12 +5,14 @@ const kObserverServiceProgID = "@mozilla.org/observer-service;1";
 const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 
 var gExtensionManager = null;
-var gDownloadListener = null;
 var gExtensionssView  = null;
 var gWindowState      = "";
 var gURIPrefix        = ""; // extension or theme prefix
 var gDSRoot           = ""; // extension or theme root
 var gGetMoreURL       = "";
+var gCurrentTheme     = "";
+var gDownloadManager  = null;
+var gObserverIndex    = -1;
 
 const PREF_APP_ID                           = "app.id";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
@@ -63,7 +65,8 @@ function onExtensionSelect(aEvent)
 // Startup, Shutdown
 function Startup() 
 {
-  gWindowState = window.arguments[0];
+  gWindowState = window.location.search.substr("?type=".length, window.location.search.length);
+  
   var isExtensions = gWindowState == "extensions";
   gURIPrefix  = isExtensions ? "urn:mozilla:extension:" : "urn:mozilla:theme:";
   gDSRoot     = isExtensions ? "urn:mozilla:extension:root" : "urn:mozilla:theme:root";
@@ -134,14 +137,225 @@ function Startup()
     win.setAttribute("width", isExtensions ? 400 : 500);
     win.setAttribute("height", isExtensions ? 300 : 380);
   }
+
+  // Now look and see if we're being opened by XPInstall
+  var gDownloadManager = new XPInstallDownloadManager();
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  os.addObserver(gDownloadManager, "xpinstall-download-started", false);
+
+  gObserverIndex = gExtensionManager.addDownloadObserver(gDownloadManager);
+  
+  if ("arguments" in window) {
+    try {
+      var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+      gDownloadManager.addDownloads(params);
+    }
+    catch (e) { }
+  }
 }
 
 function Shutdown() 
 {
   if (gWindowState != "extensions")
     gExtensionsView.removeEventListener("richview-select", onThemeSelect, false);
+  
+  gExtensionManager.removeDownloadObserverAt(gObserverIndex);
+
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+                     .getService(Components.interfaces.nsIObserverService);
+  os.removeObserver(gObserver, "xpinstall-download-started");
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// XPInstall
+//
+
+function getURLSpecFromFile(aFile)
+{
+  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                          .getService(Components.interfaces.nsIIOService);
+  var fph = ioServ.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+  return fph.getURLSpecFromFile(aFile);
+}
+
+function XPInstallDownloadManager()
+{
+  var extensionsStrings = document.getElementById("extensionsStrings");
+  this._statusFormatKBMB  = extensionsStrings.getString("statusFormatKBMB");
+  this._statusFormatKBKB  = extensionsStrings.getString("statusFormatKBKB");
+  this._statusFormatMBMB  = extensionsStrings.getString("statusFormatMBMB");
+}
+
+XPInstallDownloadManager.prototype = {
+  _statusFormat     : null,
+  _statusFormatKBMB : null,
+  _statusFormatKBKB : null,
+  _statusFormatMBMB : null,
+  
+  observe: function (aSubject, aTopic, aData) 
+  {
+    if (aTopic  == "xpinstall-download-started") {
+      var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
+      var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
+      paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
+      this.addDownloads(paramBlock);
+    }
+  },
+  
+  addDownloads: function (aParams)
+  {
+    var numXPInstallItems = aParams.GetInt(1);
+    var isExtensions = gWindowState == "extensions";
+    
+    var items = [];
+    for (var i = 0; i < numXPInstallItems;) {
+      var displayName = aParams.GetString(i++);
+      var url = aParams.GetString(i++);
+      var iconURL = aParams.GetString(i++);
+      if (!iconURL) { 
+        iconURL = isExtensions ? "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png" : 
+                                 "chrome://mozapps/skin/extensions/themeGeneric.png";
+      }
+      
+      var type = isExtensions ? nsIUpdateItem.TYPE_EXTENSION : nsIUpdateItem.TYPE_THEME;
+      // gExtensionManager.addDownload(displayName, url, iconURL, type);
+      var item = Components.classes["@mozilla.org/updates/item;1"]
+                           .createInstance(Components.interfaces.nsIUpdateItem);
+      item.init(url, " ", displayName, -1, url, iconURL, "", type);
+      items.push(item);
+
+      // Advance the enumerator
+      var certName = aParams.GetString(i++);
+    }
+    
+    gExtensionManager.addDownloads(items, items.length);
+  },
+
+  removeDownload: function (aEvent)
+  {
+  
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////  
+  // nsIExtensionDownloadProgressListener
+  onStateChange: function (aURL, aState, aValue)
+  {
+    const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
+    var element = document.getElementById(aURL);
+    switch (aState) {
+    case nsIXPIProgressDialog.DOWNLOAD_START:
+      dump("*** download start\n");
+      element.setAttribute("state", "waiting");
+      element.setAttribute("progress", "0");
+      break;
+    case nsIXPIProgressDialog.DOWNLOAD_DONE:
+      dump("*** download done\n");
+      element.setAttribute("progress", "100");
+      break;
+    case nsIXPIProgressDialog.INSTALL_START:
+      dump("*** install start\n");
+      element.setAttribute("state", "installing");
+      break;
+    case nsIXPIProgressDialog.INSTALL_DONE:
+      dump("*** install done\n");
+      element.setAttribute("state", "done");
+      var msg;
+      if (aValue != 0) {
+        var xpinstallStrings = document.getElementById("xpinstallStrings");
+        try {
+          msg = xpinstallStrings.getString("error" + aValue);
+        }
+        catch (e) {
+          msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
+        }
+        element.setAttribute("error", msg);
+      }
+      else {
+        // Remove the dummy, since we installed successfully
+        var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION 
+                                                : nsIUpdateItem.TYPE_THEME;
+        gExtensionManager.removeDownload(aURL, type);
+      }
+      break;
+    case nsIXPIProgressDialog.DIALOG_CLOSE:
+      break;
+    }
+  },
+  
+  _urls: { },
+  onProgress: function (aURL, aValue, aMaxValue)
+  {
+    var element = document.getElementById(aURL);
+    var percent = Math.round((aValue / aMaxValue) * 100);
+    if (percent > 1 && !(aURL in this._urls)) {
+      this._urls[aURL] = true;
+      element.setAttribute("state", "downloading");
+    }
+    element.setAttribute("progress", percent);
+    
+    var KBProgress = parseInt(aValue/1024 + .5);
+    var KBTotal = parseInt(aMaxValue/1024 + .5);
+    element.setAttribute("status", this._formatKBytes(KBProgress, KBTotal));
+  },
+  
+  _replaceInsert: function ( text, index, value ) 
+  {
+    var result = text;
+    var regExp = new RegExp( "#"+index );
+    result = result.replace( regExp, value );
+    return result;
+  },
+  
+  // aBytes     aTotalKBytes    returns:
+  // x, < 1MB   y < 1MB         x of y KB
+  // x, < 1MB   y >= 1MB        x KB of y MB
+  // x, >= 1MB  y >= 1MB        x of y MB
+  _formatKBytes: function (aKBytes, aTotalKBytes)
+  {
+    var progressHasMB = parseInt(aKBytes/1000) > 0;
+    var totalHasMB = parseInt(aTotalKBytes/1000) > 0;
+    
+    var format = "";
+    if (!progressHasMB && !totalHasMB) {
+      format = this._statusFormatKBKB;
+      format = this._replaceInsert(format, 1, aKBytes);
+      format = this._replaceInsert(format, 2, aTotalKBytes);
+    }
+    else if (progressHasMB && totalHasMB) {
+      format = this._statusFormatMBMB;
+      format = this._replaceInsert(format, 1, (aKBytes / 1000).toFixed(1));
+      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
+    }
+    else if (totalHasMB && !progressHasMB) {
+      format = this._statusFormatKBMB;
+      format = this._replaceInsert(format, 1, aKBytes);
+      format = this._replaceInsert(format, 2, (aTotalKBytes / 1000).toFixed(1));
+    }
+    else {
+      // This is an undefined state!
+      dump("*** huh?!\n");
+    }
+    
+    return format;  
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsISupports
+  QueryInterface: function (aIID) 
+  {
+    if (!aIID.equals(Components.interfaces.nsIExtensionDownloadProgressListener) &&
+        !aIID.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// View Event Handlers
+//
 function onViewDoubleClick()
 {
   switch (gWindowState) {

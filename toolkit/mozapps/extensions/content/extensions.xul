@@ -64,6 +64,7 @@
   <stringbundleset id="extensionsSet">
     <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+    <stringbundle id="xpinstallStrings" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
   </stringbundleset>
     
   <keyset id="extensionsKeys">
@@ -190,8 +191,22 @@
             <binding subject="?extension"
                     predicate="http://www.mozilla.org/2004/em-rdf#internalName"
                     object="?internalName"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#downloadURL"
+                    object="?downloadURL"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#state"
+                    object="?state"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#progress"
+                    object="?progress"/>
+            <binding subject="?extension"
+                    predicate="http://www.mozilla.org/2004/em-rdf#status"
+                    object="?status"/>
           </bindings>            
           <action>
+            <!-- XXXben - we could really use a variety of different templates
+                          here to make each element not be so heavy. -->
             <extension uri="?extension" context="extensionContextMenu"
                        image="?icon" name="?name" version="?version" 
                        description="?description" creator="?creator"
@@ -201,7 +216,8 @@
                        previewImage="?previewImage" internalName="?internalName"
                        toBeInstalled="?toBeInstalled" toBeUninstalled="?toBeUninstalled"
                        toBeEnabled="?toBeEnabled" toBeDisabled="?toBeDisabled"
-                       itemType="?itemType"/>
+                       itemType="?itemType" downloadURL="?downloadURL"
+                       state="?state" progress="?progress" status="?status"/>
           </action>
         </rule>
       </template>
