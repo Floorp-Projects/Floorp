@@ -327,12 +327,26 @@ NS_IMPL_ADDREF(nsMsgDatabase)
 
 NS_IMETHODIMP nsMsgDatabase::Release(void)                    
 {                                                      
-  NS_PRECONDITION(0 != mRefCnt, "dup release");        
-  if (--mRefCnt == 0) {                                
-    NS_DELETEXPCOM(this);                              
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
+	NS_PRECONDITION(0 != mRefCnt, "dup release");     
+	if (--mRefCnt == 1)	// OK, only the cache is holding onto this, so we really want to delete it, 
+	{						// after removing it from the cache.
+		RemoveFromCache(this);
+#ifdef DEBUG_bienvenu1
+		if (GetNumInCache() != 0)
+		{
+			XP_Trace("closing %s\n", m_dbName);
+			DumpCache();
+		}
+#endif
+		if (m_mdbStore)
+			m_mdbStore->CloseMdbObject(m_mdbEnv);
+	}
+	if (mRefCnt == 0) 
+	{ 
+		NS_DELETEXPCOM(this);                              
+		return 0;                                          
+	}                                                    
+	return mRefCnt;                                      
 }
 
 // NS_IMPL_RELEASE(nsMsgDatabase)
@@ -595,30 +609,9 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 {
-	--mRefCnt; 
-	PR_ASSERT(mRefCnt >= 0);
-	if (mRefCnt <= 1)	// this used to be == 0, but the cache holds on to a reference, so we never would close.
-	{
-		if (commit)
-			Commit(kSessionCommit);
-		RemoveFromCache(this);
-#ifdef DEBUG_bienvenu1
-		if (GetNumInCache() != 0)
-		{
-			XP_Trace("closing %s\n", m_dbName);
-			DumpCache();
-		}
-#endif
-		if (m_mdbStore)
-			m_mdbStore->CloseMdbObject(m_mdbEnv);
-		// if this terrifies you, we can make it a static method
-		delete this;	
-		return(NS_OK);
-	}
-	else
-	{
-		return(NS_OK);
-	}
+	if (commit)
+		Commit(kSessionCommit);
+	return(NS_OK);
 }
 
 // force the database to close - this'll flush out anybody holding onto
@@ -634,12 +627,11 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	// never getting called. ARGGGHHH!
 	RemoveFromCache(this);
 
-	while (mRefCnt > 0 && NS_SUCCEEDED(err))
+	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
+	if (m_mdbStore)
 	{
-		int32 saveUseCount = mRefCnt;
-		err = CloseMDB(PR_TRUE);
-		if (saveUseCount <= 2)	// boy, this sucks because the cache holds a ref now...
-			break;
+		m_mdbStore->CloseMdbObject(m_mdbEnv);
+		m_mdbStore = nsnull;
 	}
 	return err;
 }
