@@ -2196,9 +2196,10 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
       aTopLevelChange = frameChange;
     }
 
-    if (aTopLevelChange >= NS_STYLE_HINT_REFLOW) {
-      // If it's going to cause a reflow (or worse), then don't touch
-      // the any continuations: they must be taken care of by the reflow.
+    if (aTopLevelChange >= NS_STYLE_HINT_FRAMECHANGE) {
+      // If it's going to cause a framechange, then don't bother with
+      // the continutaions since they'll be clobbered by the frame
+      // reconstruct anyway.
 #ifdef NS_DEBUG
       nsIFrame* prevInFlow;
       frame->GetPrevInFlow(&prevInFlow);
