@@ -109,7 +109,9 @@
     <command id="cmd_close"        value="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
 
     <command id="cmd_printSetup"   value="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
+<!--
     <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
+-->
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
     
     <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
@@ -315,7 +317,7 @@
       <menuitem id="menu_editSendPage" accesskey="&sendPage.accesskey;"    observes="cmd_editSendPage"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
-<!--  <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/> -->
+      <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
       <menuitem accesskey="&fileprint.accesskey;" id="printMenuItem" key="printkb" observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator />
       <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="cmd_quit"/>
@@ -354,10 +356,10 @@
     </menupopup>
   </menu>
 
-  <menuitem id="viewNormalMode"   type="radio" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
-  <menuitem id="viewAllTagsMode"  type="radio" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
-  <menuitem id="viewSourceMode"   type="radio" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" value="&HTMLSourceMode.label;"/>
-  <menuitem id="viewPreviewMode"  type="radio" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
+  <menuitem id="viewNormalMode"   type="radio" name="1" accesskey="&NormalMode.accesskey;"     observes="cmd_NormalMode"/>
+  <menuitem id="viewAllTagsMode"  type="radio" name="1" accesskey="&AllTagsMode.accesskey;"    observes="cmd_AllTagsMode"/>
+  <menuitem id="viewSourceMode"   type="radio" name="1" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" value="&HTMLSourceMode.label;"/>
+  <menuitem id="viewPreviewMode"  type="radio" name="1" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
 
   <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
 
@@ -379,13 +381,13 @@
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" value="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.data)">
-        <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
-        <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt" key="fontfixedwidthkb"/>
+      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.data)" oncreate="initFontFaceMenu(this)">
+        <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data="" type="radio" name="1"/>
+        <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt" type="radio" name="1" key="fontfixedwidthkb"/>
         <menuseparator/>
-        <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Helvetica, Arial, sans-serif"/>
-        <menuitem value="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       data="Times New Roman, Times, serif"/>
-        <menuitem value="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     data="Courier New, Courier, mono"/>
+        <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Helvetica, Arial, sans-serif" type="radio" name="2" />
+        <menuitem value="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       data="Times New Roman, Times, serif" type="radio" name="2" />
+        <menuitem value="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     data="Courier New, Courier, mono" type="radio" name="2" />
       </menupopup>
     </menu>
 
@@ -393,17 +395,19 @@
     <menu id="fontSizeMenu" value="&fontsizeMenu.label;"
           accesskey="&formatsizemenu.accesskey;" 
           position="2">
-      <menupopup>
-      <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" observes="cmd_decreaseFont" key="decreasefontsizekb"/>
-      <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" observes="cmd_increaseFont" key="increasefontsizekb"/>
+      <menupopup oncreate="initFontSizeMenu(this)">
+      <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" observes="cmd_decreaseFont" type="radio" name="1" key="decreasefontsizekb"/>
+      <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" observes="cmd_increaseFont" type="radio" name="1" key="increasefontsizekb"/>
         <menuseparator/>
-        <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')"/>
-        <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')"/>
-        <menuitem value="&size-smallCmd.label;"    accesskey="&size-small.accesskey;"    oncommand="EditorSetFontSize('small')"/>
-        <menuitem value="&size-mediumCmd.label;"   accesskey="&size-medium.accesskey;"   oncommand="EditorSetFontSize('medium')"/>
-        <menuitem value="&size-largeCmd.label;"    accesskey="&size-large.accesskey;"    oncommand="EditorSetFontSize('large')"/>
-        <menuitem value="&size-x-largeCmd.label;"  accesskey="&size-x-large.accesskey;"  oncommand="EditorSetFontSize('x-large')"/>
-        <menuitem value="&size-xx-largeCmd.label;" accesskey="&size-xx-large.accesskey;" oncommand="EditorSetFontSize('xx-large')"/>
+<!-- Not supported in current font size implementation
+        <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')" type="radio" name="2" />
+-->
+        <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')" type="radio" name="2" />
+        <menuitem value="&size-smallCmd.label;"    accesskey="&size-small.accesskey;"    oncommand="EditorSetFontSize('small')" type="radio" name="2" />
+        <menuitem value="&size-mediumCmd.label;"   accesskey="&size-medium.accesskey;"   oncommand="EditorSetFontSize('medium')" type="radio" name="2" />
+        <menuitem value="&size-largeCmd.label;"    accesskey="&size-large.accesskey;"    oncommand="EditorSetFontSize('large')" type="radio" name="2" />
+        <menuitem value="&size-x-largeCmd.label;"  accesskey="&size-x-large.accesskey;"  oncommand="EditorSetFontSize('x-large')" type="radio" name="2" />
+        <menuitem value="&size-xx-largeCmd.label;" accesskey="&size-xx-large.accesskey;" oncommand="EditorSetFontSize('xx-large')" type="radio" name="2" />
       </menupopup>
     </menu>
 
@@ -412,22 +416,22 @@
           accesskey="&formatstylemenu.accesskey;"
           position="3">
     <menupopup oncreate="initFontStyleMenu(this)" oncommand="goDoCommand(event.target.observes)">
-      <menuitem value="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"         observes="cmd_bold"         key="boldkb"/>
-      <menuitem value="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"       observes="cmd_italic"       key="italickb" />
-      <menuitem value="&styleUnderlineCmd.label;"   accesskey="&styleunderline.accesskey;"    observes="cmd_underline"    key="underlinekb"/>
-      <menuitem value="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"   observes="cmd_strikethrough"/>
-      <menuitem value="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;"  observes="cmd_superscript"/>
-      <menuitem value="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"    observes="cmd_subscript"/>
-      <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;"  observes="cmd_nobreak"/>
+      <menuitem value="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"         observes="cmd_bold"          type="checkbox" key="boldkb"/>
+      <menuitem value="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"       observes="cmd_italic"        type="checkbox" key="italickb" />
+      <menuitem value="&styleUnderlineCmd.label;"   accesskey="&styleunderline.accesskey;"    observes="cmd_underline"     type="checkbox" key="underlinekb"/>
+      <menuitem value="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"   observes="cmd_strikethrough" type="checkbox"/>
+      <menuitem value="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;"  observes="cmd_superscript"   type="checkbox"/>
+      <menuitem value="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"    observes="cmd_subscript"     type="checkbox"/>
+      <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;"  observes="cmd_nobreak"       type="checkbox"/>
       <menuseparator/>
-      <menuitem value="&styleEm.label;"             accesskey="&styleEm.accesskey;"           observes="cmd_em"/>
-      <menuitem value="&styleStrong.label;"         accesskey="&styleStrong.accesskey;"       observes="cmd_strong"/>
-      <menuitem value="&styleCite.label;"           accesskey="&styleCite.accesskey;"         observes="cmd_cite"/>
-      <menuitem value="&styleAbbr.label;"           accesskey="&styleAbbr.accesskey;"         observes="cmd_abbr"/>
-      <menuitem value="&styleAcronym.label;"        accesskey="&styleAcronym.accesskey;"      observes="cmd_acronym"/>
-      <menuitem value="&styleCode.label;"           accesskey="&styleCode.accesskey;"         observes="cmd_code"/>
-      <menuitem value="&styleSamp.label;"           accesskey="&styleSamp.accesskey;"         observes="cmd_samp"/>
-      <menuitem value="&styleVar.label;"            accesskey="&styleVar.accesskey;"          observes="cmd_var"/>
+      <menuitem value="&styleEm.label;"             accesskey="&styleEm.accesskey;"           observes="cmd_em"            type="checkbox"/>
+      <menuitem value="&styleStrong.label;"         accesskey="&styleStrong.accesskey;"       observes="cmd_strong"        type="checkbox"/>
+      <menuitem value="&styleCite.label;"           accesskey="&styleCite.accesskey;"         observes="cmd_cite"          type="checkbox"/>
+      <menuitem value="&styleAbbr.label;"           accesskey="&styleAbbr.accesskey;"         observes="cmd_abbr"          type="checkbox"/>
+      <menuitem value="&styleAcronym.label;"        accesskey="&styleAcronym.accesskey;"      observes="cmd_acronym"       type="checkbox"/>
+      <menuitem value="&styleCode.label;"           accesskey="&styleCode.accesskey;"         observes="cmd_code"          type="checkbox"/>
+      <menuitem value="&styleSamp.label;"           accesskey="&styleSamp.accesskey;"         observes="cmd_samp"          type="checkbox"/>
+      <menuitem value="&styleVar.label;"            accesskey="&styleVar.accesskey;"          observes="cmd_var"           type="checkbox"/>
     </menupopup>
     </menu>
     
@@ -455,16 +459,16 @@
           accesskey="&formatparagraphmenu.accesskey;"
           position="9" oncreate="InitParagraphMenu()">
       <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
-        <menuitem id="menu_bodyText"  type="radio" value="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"              data=""/>
-        <menuitem id="menu_p"         type="radio" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
-        <menuitem id="menu_h1"        type="radio" value="&heading1Cmd.label;"             accesskey="&heading1.accesskey;"            data="h1"/>
-        <menuitem id="menu_h2"        type="radio" value="&heading2Cmd.label;"             accesskey="&heading2.accesskey;"            data="h2"/>
-        <menuitem id="menu_h3"        type="radio" value="&heading3Cmd.label;"             accesskey="&heading3.accesskey;"            data="h3"/>
-        <menuitem id="menu_h4"        type="radio" value="&heading4Cmd.label;"             accesskey="&heading4.accesskey;"            data="h4"/>
-        <menuitem id="menu_h5"        type="radio" value="&heading5Cmd.label;"             accesskey="&heading5.accesskey;"            data="h5"/>
-        <menuitem id="menu_h6"        type="radio" value="&heading6Cmd.label;"             accesskey="&heading6.accesskey;"            data="h6"/>
-        <menuitem id="menu_address"   type="radio" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
-        <menuitem id="menu_pre"       type="radio" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="pre"/>       
+        <menuitem id="menu_bodyText"  type="radio" name="1" value="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"              data=""/>
+        <menuitem id="menu_p"         type="radio" name="1" value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="p"/>
+        <menuitem id="menu_h1"        type="radio" name="1" value="&heading1Cmd.label;"             accesskey="&heading1.accesskey;"            data="h1"/>
+        <menuitem id="menu_h2"        type="radio" name="1" value="&heading2Cmd.label;"             accesskey="&heading2.accesskey;"            data="h2"/>
+        <menuitem id="menu_h3"        type="radio" name="1" value="&heading3Cmd.label;"             accesskey="&heading3.accesskey;"            data="h3"/>
+        <menuitem id="menu_h4"        type="radio" name="1" value="&heading4Cmd.label;"             accesskey="&heading4.accesskey;"            data="h4"/>
+        <menuitem id="menu_h5"        type="radio" name="1" value="&heading5Cmd.label;"             accesskey="&heading5.accesskey;"            data="h5"/>
+        <menuitem id="menu_h6"        type="radio" name="1" value="&heading6Cmd.label;"             accesskey="&heading6.accesskey;"            data="h6"/>
+        <menuitem id="menu_address"   type="radio" name="1" value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="address"/>   
+        <menuitem id="menu_pre"       type="radio" name="1" value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="pre"/>       
         <menuseparator/>
         <menuitem id="menu_blockquote" type="checkbox" value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="blockquote"/>
       </menupopup>
@@ -475,11 +479,11 @@
           accesskey="&formatlistmenu.accesskey;"
           position="10" oncreate="InitListMenu()">
       <menupopup>
-        <menuitem id="menu_noList" type="radio" value="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
-        <menuitem id="menu_ul"     type="radio" value="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
-        <menuitem id="menu_ol"     type="radio" value="&listNumberedCmd.label;"   accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
-        <menuitem id="menu_dt"     type="radio" value="&listTermCmd.label;"       accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
-        <menuitem id="menu_dd"     type="radio" value="&listDefinitionCmd.label;" accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
+        <menuitem id="menu_noList" type="radio" name="1" value="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
+        <menuitem id="menu_ul"     type="radio" name="1" value="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
+        <menuitem id="menu_ol"     type="radio" name="1" value="&listNumberedCmd.label;"   accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
+        <menuitem id="menu_dt"     type="radio" name="1" value="&listTermCmd.label;"       accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
+        <menuitem id="menu_dd"     type="radio" name="1" value="&listDefinitionCmd.label;" accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
         <menuseparator/>
         <menuitem id="listProps" value="&listProps.label;" accesskey="&listprops.accesskey;" observes="cmd_listProperties"/>
       </menupopup>
@@ -496,10 +500,10 @@
         position="14">
       <!-- Align submenu -->
       <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('data'))">
-        <menuitem id="menu_left"    value="&alignLeft.label;"  accesskey="&alignleft.accesskey;"      type="radio" data="left"/>
-        <menuitem id="menu_center"  value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  type="radio" data="center"/>
-        <menuitem id="menu_right"   value="&alignRight.label;"   accesskey="&alignright.accesskey;"   type="radio" data="right"/>
-        <menuitem id="menu_justify" value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" type="radio" data="justify"/>
+        <menuitem id="menu_left"    value="&alignLeft.label;"  accesskey="&alignleft.accesskey;"      type="radio" name="1" data="left"/>
+        <menuitem id="menu_center"  value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  type="radio" name="1" data="center"/>
+        <menuitem id="menu_right"   value="&alignRight.label;"   accesskey="&alignright.accesskey;"   type="radio" name="1" data="right"/>
+        <menuitem id="menu_justify" value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" type="radio" name="1" data="justify"/>
       </menupopup>
     </menu>
     <menuseparator position="15"/>
