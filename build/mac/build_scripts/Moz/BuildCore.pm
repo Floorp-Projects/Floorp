@@ -10,6 +10,7 @@ use vars qw( @ISA @EXPORT );
 # perl includes
 use Cwd;
 use File::Basename;
+use LWP::Simple;
 
 # homegrown
 use Moz::Moz;
@@ -22,7 +23,9 @@ use Moz::CodeWarriorLib;
 
 
 @ISA        = qw(Exporter);
-@EXPORT     = qw(RunBuild);
+@EXPORT     = qw(
+                    RunBuild
+                );
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -220,13 +223,89 @@ sub getScriptFolder()
 
 
 #//--------------------------------------------------------------------------------------------------
+#// getScriptFolder
+#//--------------------------------------------------------------------------------------------------
+sub get_url_contents($)
+{
+    my($url) = @_;
+
+    my($url_contents) = LWP::Simple::get($url);
+    $url_contents =~ s/\r\n/\n/g;     # normalize linebreaks
+    $url_contents =~ s/\r/\n/g;       # normalize linebreaks
+    return $url_contents;
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// get_files_from_content
+#//--------------------------------------------------------------------------------------------------
+sub uniq
+{
+  my $lastval;
+  grep(($_ ne $lastval, $lastval = $_)[$[], @_);
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// get_files_from_content
+#//--------------------------------------------------------------------------------------------------
+sub get_files_from_content($)
+{
+  my($content) = @_;
+
+  my(@jscalls) = grep (/return js_file_menu[^{]*/, split(/\n/, $content));
+  my $i;
+
+  for ($i = 0; $i < @jscalls ; $i++)
+  {
+    $jscalls[$i] =~ s/.*\(|\).*//g;
+    my(@callparams) = split(/,/, $jscalls[$i]);
+    my ($repos, $dir, $file, $rev) = grep(s/['\s]//g, @callparams);
+    $jscalls[$i] = "$dir/$file";
+  }
+
+  &uniq(sort(@jscalls));
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// FastUpdate
+#// 
+#// Use Bonsai url data to update only those dirs which have new files
+#// 
+#//--------------------------------------------------------------------------------------------------
+sub FastUpdate($)
+{
+    my($num_hours) = @_;
+
+    my($the_module) = "SeaMonkeyAll";
+    my($the_branch) = "HEAD";
+    my($search_type) = "hours";
+    my($min_date) = "";
+    my($max_date) = "";
+    my($url) = "http://bonsai.mozilla.org/cvsquery.cgi?treeid=default&module=${the_module}&branch=${the_branch}&branchtype=match&dir=&file=&filetype=match&who=&whotype=match&sortby=Date&hours=${num_hours}&date=${search_type}&mindate=${min_date}&maxdate=${max_date}&cvsroot=%2Fcvsroot";
+
+    my(@files) = &get_files_from_content(&get_url_contents($url));
+
+	my(@cvs_co_list);
+
+	my($co_file);
+	foreach $co_file (@files)
+	{
+	  my(@cvs_co) = ["", "", ""];
+	  @cvs_co[0] = $co_file;
+	  push(@cvs_co_list, \@cvs_co);
+	}
+
+	CheckoutModules(\@cvs_co_list);
+}
+
+
+#//--------------------------------------------------------------------------------------------------
 #// Checkout
 #//--------------------------------------------------------------------------------------------------
-sub Checkout($)
+sub CheckoutModules($)
 {
-    my($checkout_list) = @_;
-    
-    unless ( $main::build{pull} ) { return; }
+    my($modules) = @_;          # list of modules to check out
 
     my($start_time) = TimeStart();
 
@@ -234,6 +313,29 @@ sub Checkout($)
     my($cvsfile) = AskAndPersistFile($main::filepaths{"sessionpath"});
     my($session) = Moz::MacCVS->new( $cvsfile );
     unless (defined($session)) { die "Error: Checkout aborted. Cannot create session file: $session" }
+
+    # activate MacCVS
+    ActivateApplication('Mcvs');
+
+    my($this_co);
+    foreach $this_co (@$modules)
+    {
+        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);        
+        CheckOutModule($session, $module, $revision, $date);
+        # print "Checking out $module with ref $revision, date $date\n";
+    }
+
+    TimeEnd($start_time, "Checkout");
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Checkout
+#//--------------------------------------------------------------------------------------------------
+sub Checkout($)
+{
+    my($checkout_list) = @_;
+    
+    unless ( $main::build{pull} ) { return; }
 
     StartBuildModule("pull");
 
@@ -290,17 +392,8 @@ sub Checkout($)
 
     close(CHECKOUT_FILE);
 
-    # activate MacCVS
-    ActivateApplication('Mcvs');
+    CheckoutModules(\@cvs_co_list);
 
-    my($this_co);
-    foreach $this_co (@cvs_co_list)
-    {
-        my($module, $revision, $date) = ($this_co->[0], $this_co->[1], $this_co->[2]);        
-        CheckOutModule($session, $module, $revision, $date);
-    }
-
-    TimeEnd($start_time, "Checkout");
     EndBuildModule("pull");
 }
 
@@ -333,6 +426,9 @@ sub RunBuild($$$$)
         $main::build{"pull"} = 1;
     }
     
+    # transfer this flag
+    $CodeWarriorLib::CLOSE_PROJECTS_FIRST = $main::CLOSE_PROJECTS_FIRST;
+    
     # setup the build log
     SetupBuildLog($main::filepaths{"buildlogfilepath"}, $main::USE_TIMESTAMPED_LOGS);
     StopForErrors();
@@ -343,7 +439,14 @@ sub RunBuild($$$$)
         
     # run a pre-build check to see that the tools etc are in order
     DoPrebuildCheck();
-    Checkout($input_files->{"checkoutdata"});
+    
+    if ($main::FAST_UPDATE)
+    {
+        my($hours) = 8;     # update files checked in during last 8 hours
+        FastUpdate($hours);
+    } else {
+        Checkout($input_files->{"checkoutdata"});
+    }
     
     unless ($do_build) { return; }
 
