@@ -32,6 +32,7 @@
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
+#include "nsFileSpecWithUIImpl.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
@@ -249,6 +250,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*) (nsIDragService *) new nsDragService();
+    }
+    else if (mClassID.Equals(nsIFileSpecWithUI::GetIID()))
+    {
+    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     }
     else {
         printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
