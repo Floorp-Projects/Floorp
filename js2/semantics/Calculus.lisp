@@ -29,7 +29,7 @@
 
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
-                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (:narrow . 1) (:select . 1)
+                             (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2) (:narrow . 1) (:select . 1)
                              (let-local-var . 2)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
@@ -1762,6 +1762,9 @@
            (error "Recursive type forward reference ~S ~S" symbol symbol-stack))
           (t (let ((type (resolve-type-expr type (cons symbol symbol-stack))))
                (assert-true (type? type))
+               ;If the old type was anonymous, give it this name.
+               (unless (type-name type)
+                 (setf (type-name type) symbol))
                (setf (symbol-type-definition symbol) type)
                type))))
        
@@ -4321,6 +4324,28 @@
            (cons (list* special-form condition-annotated-expr loop-annotated-stmts) rest-annotated-stmts)))))))
 
 
+; (for-each <vector-or-set-expr> <var> . <statements>)
+; Not implemented on range-sets.
+(defun scan-for-each (world type-env rest-statements last special-form collection-expr var-source &rest loop-statements)
+  (multiple-value-bind (collection-code collection-kind element-type collection-annotated-expr) (scan-collection-value world type-env collection-expr)
+    (case collection-kind
+      ((:vector :list-set))
+      (:string (setq collection-code (list 'coerce collection-code ''list)))
+      (t (error "Not implemented")))
+    (let* ((var (scan-name world var-source))
+           (local-type-env (type-env-add-binding type-env var element-type :const)))
+      (multiple-value-bind (loop-codes loop-live loop-annotated-stmts) (scan-statements world local-type-env loop-statements nil)
+        (unless (listp loop-live)
+          (warn "For-each loop can execute at most once: ~S ~S" collection-expr var-source loop-statements))
+        (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+          (values
+           (cons `(dolist (,var ,collection-code)
+                    ,@loop-codes)
+                 rest-codes)
+           rest-live
+           (cons (list* special-form collection-annotated-expr var loop-annotated-stmts) rest-annotated-stmts)))))))
+
+
 (defconstant *semantic-exception-type-name* 'semantic-exception)
 
 ; (throw <value-expr>)
@@ -4648,6 +4673,7 @@
      (if scan-if-stmt depict-cond)
      (cond scan-cond depict-cond)
      (while scan-while depict-while)
+     (for-each scan-for-each depict-for-each)
      (throw scan-throw depict-throw)
      (catch scan-catch depict-catch)
      (case scan-case depict-case))

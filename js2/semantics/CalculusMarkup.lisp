@@ -51,7 +51,7 @@
     proc
     begin end nothing
     if then elsif else
-    while do
+    while for each do
     return
     throw try catch
     case of))
@@ -1124,6 +1124,26 @@
     (depict-paragraph (markup-stream last-paragraph-style)
       (depict-semantic-keyword markup-stream 'end :after)
       (depict-semantic-keyword markup-stream 'while nil)
+      (depict-semicolon markup-stream semicolon))))
+
+
+; (for-each <vector-or-set-expr> <var> . <statements>)
+(defun depict-for-each (markup-stream world semicolon last-paragraph-style collection-annotated-expr var &rest loop-annotated-stmts)
+  (depict-statement-block-using (markup-stream last-paragraph-style)
+    (depict-statement-block markup-stream
+      (depict-paragraph (markup-stream :statement)
+        (depict-semantic-keyword markup-stream 'for :after)
+        (depict-semantic-keyword markup-stream 'each :after)
+        (depict-logical-block (markup-stream 4)
+          (depict-local-variable markup-stream var)
+          (depict markup-stream " " :member-10 " ")
+          (depict-expression markup-stream world collection-annotated-expr %term%))
+        (depict-semantic-keyword markup-stream 'do :before))
+      (depict-statements markup-stream world nil :statement loop-annotated-stmts))
+    (depict-paragraph (markup-stream last-paragraph-style)
+      (depict-semantic-keyword markup-stream 'end :after)
+      (depict-semantic-keyword markup-stream 'for :after)
+      (depict-semantic-keyword markup-stream 'each nil)
       (depict-semicolon markup-stream semicolon))))
 
 
