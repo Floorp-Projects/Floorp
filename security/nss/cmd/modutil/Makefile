@@ -73,27 +73,8 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 include ../platrules.mk
 
 #
-# A version of yacc for Win32 used at Netscape (nstools/bin/yacc.exe)
-# generates output files named ytab.c and ytab.h (probably to be 8.3
-# compliant).  So we accept both ytab.{c,h} and y.tab.{c,h} here.
+# Cancel the built-in implicit yacc and lex rules.
 #
 
-ifeq ($(OS_ARCH), WINNT)
-installparse.c:  installparse.y FORCE
-	yacc -d installparse.y
-	if test -f ytab.c; then \
-		mv ytab.c installparse.c; \
-		mv ytab.h installparse.h; \
-	else \
-		mv y.tab.c installparse.c; \
-		mv y.tab.h installparse.h; \
-	fi
-
-FORCE:
-
-else
-installparse.c:  installparse.y
-	yacc -d installparse.y
-	mv y.tab.c installparse.c
-	mv y.tab.h installparse.h
-endif
+%.c: %.y
+%.c: %.l
