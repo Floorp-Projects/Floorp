@@ -67,20 +67,13 @@
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 
-// Bug 136580: Limit to the number of nested content frames that can have the
-//             same URL. This is to stop content that is recursively loading
-//             itself.
-#define MAX_SAME_URL_CONTENT_FRAMES 3
-
 // Bug 8065: Limit content frame depth to some reasonable level. This
 // does not count chrome frames when determining depth, nor does it
 // prevent chrome recursion.
 #define MAX_DEPTH_CONTENT_FRAMES 8
 
-// Bug 136580: Limit to the number of nested content frames that can have the
-//             same URL. This is to stop content that is recursively loading
-//             itself.
-#define MAX_SAME_URL_CONTENT_FRAMES 3
+// Bug 98158: Limit to the number of total docShells in one page.
+#define MAX_NUMBER_DOCSHELLS 100
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -96,6 +89,8 @@ public:
   NS_IMETHOD LoadFrame();
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell);
   NS_IMETHOD Destroy();
+
+  PRInt32    GetDocShellChildren(nsIDocShellTreeNode *aParentNode);
 
 protected:
   nsresult GetPresContext(nsIPresContext **aPresContext);
@@ -232,41 +227,6 @@ nsFrameLoader::LoadFrame()
     return rv; // We're not
   }
 
-
-  // Bug 136580: Check for recursive frame loading
-  PRInt32 matchCount = 0;
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(mDocShell);
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-  treeItem->GetParent(getter_AddRefs(parentAsItem));
-  while (parentAsItem) {
-    // Only interested in checking for recursion in content
-    PRInt32 parentType;
-    parentAsItem->GetItemType(&parentType);
-    if (parentType != nsIDocShellTreeItem::typeContent) {
-      break; // Not content
-    }
-    // Check the parent URI with the URI we're loading
-    nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentAsItem));
-    if (parentAsNav) {
-      // Does the URI match the one we're about to load?
-      nsCOMPtr<nsIURI> parentURI;
-      parentAsNav->GetCurrentURI(getter_AddRefs(parentURI));
-      if (parentURI) {
-        PRBool matches = PR_FALSE;
-        parentURI->Equals(uri, &matches);
-        if (matches) {
-          matchCount++;
-          if (matchCount >= MAX_SAME_URL_CONTENT_FRAMES) {
-            NS_WARNING("Too many nested content frames have the same url (recursion?) so giving up");
-            return NS_ERROR_UNEXPECTED;
-          }
-        }
-      }
-    }
-    nsIDocShellTreeItem* temp = parentAsItem;
-    temp->GetParent(getter_AddRefs(parentAsItem));
-  }
-  
   // Kick off the load...
   rv = mDocShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
                           PR_FALSE);
@@ -313,6 +273,28 @@ nsFrameLoader::Destroy()
   mDocShell = nsnull;
 
   return NS_OK;
+}
+
+/**
+ *  Count the total number of docshell children in each page.
+ */
+PRInt32
+nsFrameLoader::GetDocShellChildren(nsIDocShellTreeNode* aParentNode)
+{
+  PRInt32 retval = 1;
+
+  PRInt32 childCount;
+  PRInt32 i;
+  aParentNode->GetChildCount(&childCount);
+  for(i=0;i<childCount;i++)
+  {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    aParentNode->GetChildAt(i,getter_AddRefs(child));
+    nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
+    retval += GetDocShellChildren(childAsNode);
+  }
+    
+  return retval;
 }
 
 nsresult
@@ -383,6 +365,26 @@ nsFrameLoader::EnsureDocShell()
       } else {
         break; // we have exited content, stop counting, depth is OK!
       }
+    }
+  }
+
+  // bug98158:count the children under the root docshell.
+  // if the total number of children under the root docshell
+  // beyond the limit,return a error.
+  if (parentAsSupports) {
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem = do_QueryInterface(parentAsSupports);
+
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    parentAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+
+    nsCOMPtr<nsIDocShellTreeNode> rootNode(do_QueryInterface(root));
+
+    PRInt32  childrenCount;
+    childrenCount = GetDocShellChildren(rootNode);
+
+    if(childrenCount >= MAX_NUMBER_DOCSHELLS) {
+      NS_WARNING("Too many docshell (recursion?) so giving up");
+      return NS_ERROR_FAILURE;
     }
   }
 
