@@ -99,7 +99,7 @@ enum BCBorderOwner
   eRowOwner          =  7, 
   eAjaRowOwner       =  8, // row above
   eCellOwner         =  9,
-  eAjaCellOwner      = 10, // cell to the top or to the left
+  eAjaCellOwner      = 10  // cell to the top or to the left
 };
 
 // These are the max sizes that are stored. If they are exceeded, then the max is stored and
