@@ -19,6 +19,10 @@
  *
  * Contributor(s): 
  */
+
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+
 #include "msgCore.h"
 #include "nsSmtpProtocol.h"
 #include "nscore.h"
