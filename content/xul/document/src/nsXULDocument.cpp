@@ -1221,9 +1221,7 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
   nsCOMPtr<nsIStyleSheet> sheet;
   PRUint32 i;
   for (i = 0; i < oldCount; i++) {
-    nsCOMPtr<nsISupports> supp;
-    aOldSheets->GetElementAt(i, getter_AddRefs(supp));
-    sheet = do_QueryInterface(supp);
+    aOldSheets->QueryElementAt(i, NS_GET_IID(nsIStyleSheet), getter_AddRefs(sheet));
     if (sheet) {
       mStyleSheets.RemoveElement(sheet);
       PRBool enabled = PR_TRUE;
@@ -1241,9 +1239,7 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
   PRUint32 newCount;
   aNewSheets->Count(&newCount);
   for (i = 0; i < newCount; i++) {
-    nsCOMPtr<nsISupports> supp;
-    aNewSheets->GetElementAt(i, getter_AddRefs(supp));
-    sheet = do_QueryInterface(supp);
+    aNewSheets->QueryElementAt(i, NS_GET_IID(nsIStyleSheet), getter_AddRefs(sheet));
     if (sheet) {
       if (sheet == mAttrStyleSheet.get()) {  // always first
         mStyleSheets.InsertElementAt(sheet, 0);
@@ -1567,9 +1563,7 @@ nsXULDocument::EndLoad()
       PRUint32 count;
       sheets->Count(&count);
       for (PRUint32 i = 0; i < count; i++) {
-        nsCOMPtr<nsISupports> supp;
-        sheets->GetElementAt(i, getter_AddRefs(supp));
-        sheet = do_QueryInterface(supp);
+        sheets->QueryElementAt(i, NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(sheet));
         if (sheet) {
           nsCOMPtr<nsIURI> sheetURL;
           sheet->GetURL(*getter_AddRefs(sheetURL));
@@ -3082,11 +3076,8 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   for (PRUint32 i=0; i < count; i++)
   {
     // get our child's content and set its parent to our content
-    nsCOMPtr<nsISupports> node;
-    anonymousItems->GetElementAt(i,getter_AddRefs(node));
-
-    nsCOMPtr<nsIDOMNode> content(do_QueryInterface(node));
-    
+    nsCOMPtr<nsIDOMNode> content;
+    anonymousItems->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(content));
     if (content)
       elements->AppendNode(content);
   }

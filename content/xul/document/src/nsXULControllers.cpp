@@ -97,9 +97,7 @@ nsXULControllers::GetControllerForCommand(const PRUnichar *command, nsIControlle
     mControllers->Count(&count);
     for(PRUint32 i=0; i < count; i++) {
         nsCOMPtr<nsIController> controller;
-        nsCOMPtr<nsISupports>   supports;
-        mControllers->GetElementAt(i, getter_AddRefs(supports));
-        controller = do_QueryInterface(supports);
+        mControllers->QueryElementAt(i, NS_GET_IID(nsIController), getter_AddRefs(controller));
         if( controller ) {
             PRBool supportsCommand;
             controller->SupportsCommand(command, &supportsCommand);
@@ -130,14 +128,9 @@ NS_IMETHODIMP
 nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
 {
     if(mControllers) {
-        nsCOMPtr<nsISupports> supports;
-        mControllers->GetElementAt(index, getter_AddRefs(supports));
-        if (supports) {
-           supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
+        nsresult rv = mControllers->QueryElementAt(index, NS_GET_IID(nsIController), (void**)_retval);
+        if (NS_SUCCEEDED(rv) && *_retval)
            mControllers->RemoveElementAt(index);  
-        } else {
-            *_retval = nsnull;
-        }
     } else
         *_retval = nsnull;
     
@@ -148,16 +141,10 @@ nsXULControllers::RemoveControllerAt(PRUint32 index, nsIController **_retval)
 NS_IMETHODIMP
 nsXULControllers::GetControllerAt(PRUint32 index, nsIController **_retval)
 {
-    if(mControllers) {
-        nsCOMPtr<nsISupports> supports;
-        mControllers->GetElementAt(index, getter_AddRefs(supports));
-        if (supports)
-            supports->QueryInterface(NS_GET_IID(nsIController), (void**)_retval);
-        else
-            *_retval = nsnull;
-    } else 
+    if(mControllers)
+        mControllers->QueryElementAt(index, NS_GET_IID(nsIController), (void**)_retval);
+    else 
         *_retval = nsnull;
-    
     return NS_OK;
 }
 
