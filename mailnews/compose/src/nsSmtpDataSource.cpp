@@ -154,7 +154,7 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
         aProperty == kNC_Key.get()) {
     
         if (aProperty == kNC_Name.get()) {
-            smtpServer->GetHostname(getter_Copies(str));
+            smtpServer->GetDisplayname(getter_Copies(str));
         } else if (aProperty == kNC_Key.get()) {
             smtpServer->GetKey(getter_Copies(str));
         }

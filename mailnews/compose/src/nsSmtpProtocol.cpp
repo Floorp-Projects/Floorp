@@ -256,7 +256,6 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_prefAuthMethod = PREF_AUTH_NONE;
     m_usernamePrompted = PR_FALSE;
     m_prefTrySSL = PREF_SSL_TRY;
-    m_port = SMTP_PORT;
     m_tlsInitiated = PR_FALSE;
 
     m_urlErrorState = NS_ERROR_FAILURE;
@@ -301,7 +300,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
         smtpServer->GetAuthMethod(&m_prefAuthMethod);
         smtpServer->GetTrySSL(&m_prefTrySSL);
     }
-    
+
     rv = RequestOverrideInfo(smtpServer);
     // if we aren't waiting for a login override, then go ahead an
     // open the network connection like we normally would have.

@@ -80,6 +80,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 nsresult
 NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                    const char* aSmtpHostName, 
+                   PRInt32 aSmtpPort,
                    const char* aSmtpUserName, 
                    const char* aRecipients, 
                    nsIMsgIdentity * aSenderIdentity,
@@ -134,20 +135,22 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
   if (NS_FAILED(rv) || !smtpServer)
       rv = GetDefaultServer(getter_AddRefs(smtpServer));
 
-	if (NS_SUCCEEDED(rv) && smtpServer)
-	{
-    if (aPassword && *aPassword)
-		  smtpServer->SetPassword(aPassword);
+  if (NS_SUCCEEDED(rv) && smtpServer)
+  {
+      if (aPassword && *aPassword)
+          smtpServer->SetPassword(aPassword);
 
     nsXPIDLCString smtpHostName;
     nsXPIDLCString smtpUserName;
+    PRInt32 smtpPort;
 
-		smtpServer->GetHostname(getter_Copies(smtpHostName));
-		smtpServer->GetUsername(getter_Copies(smtpUserName));
+    smtpServer->GetHostname(getter_Copies(smtpHostName));
+    smtpServer->GetUsername(getter_Copies(smtpUserName));
+    smtpServer->GetPort(&smtpPort);
 
-    if ((const char*)smtpHostName && (const char*)smtpHostName[0] != 0 && !CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_10)) 
-		{
-      rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpUserName,
+    if (smtpHostName && smtpHostName.get()[0] && !CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_10)) 
+    {
+      rv = NS_MsgBuildSmtpUrl(aFilePath, smtpHostName, smtpPort, smtpUserName,
                               aRecipients, aSenderIdentity, aUrlListener, aStatusFeedback, 
                               aNotificationCallbacks, &urlToRun); // this ref counts urlToRun
       if (NS_SUCCEEDED(rv) && urlToRun)	
@@ -176,6 +179,7 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 // short cut function for creating a mailto url...
 nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                             const char* aSmtpHostName, 
+                            PRInt32 aSmtpPort,
                             const char* aSmtpUserName, 
                             const char * aRecipients, 
                             nsIMsgIdentity * aSenderIdentity,
@@ -184,103 +188,106 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
                             nsIInterfaceRequestor* aNotificationCallbacks,
                             nsIURI ** aUrl)
 {
-	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
-	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
-	// ..for testing purposes....
-	
-	nsresult rv = NS_OK;
-	nsCOMPtr <nsISmtpUrl> smtpUrl (do_CreateInstance(kCSmtpUrlCID, &rv));
+    // mscott: this function is a convience hack until netlib actually dispatches smtp urls.
+    // in addition until we have a session to get a password, host and other stuff from, we need to use default values....
+    // ..for testing purposes....
 
-	if (NS_SUCCEEDED(rv) && smtpUrl)
-	{
-		nsCAutoString urlSpec("smtp://");
-		if ((const char *)aSmtpUserName) 
+    nsresult rv = NS_OK;
+    nsCOMPtr <nsISmtpUrl> smtpUrl (do_CreateInstance(kCSmtpUrlCID, &rv));
+
+    if (NS_SUCCEEDED(rv) && smtpUrl)
     {
-			nsXPIDLCString escapedUsername;
-			*((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)aSmtpUserName, url_XAlphas);
-			urlSpec += (const char *)escapedUsername;
-			urlSpec += '@';
-		}
+        nsCAutoString urlSpec("smtp://");
+        if (aSmtpUserName) 
+        {
+            nsXPIDLCString escapedUsername;
+            *((char **)getter_Copies(escapedUsername)) = nsEscape(aSmtpUserName, url_XAlphas);
+            urlSpec += escapedUsername;
+            urlSpec += '@';
+        }
 
-		urlSpec += (const char*)aSmtpHostName;
-		urlSpec += ':';
-		urlSpec.AppendInt(SMTP_PORT);
+        urlSpec += aSmtpHostName;
+        if (!PL_strchr(aSmtpHostName, ':'))
+        {
+            urlSpec += ':';
+            urlSpec.AppendInt((aSmtpPort > 0) ? aSmtpPort : nsISmtpUrl::DEFAULT_SMTP_PORT);
+        }
 
-		if (urlSpec.get())
-		{
-			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
-			url->SetSpec(urlSpec);
+        if (urlSpec.get())
+        {
+            nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
+            url->SetSpec(urlSpec);
             smtpUrl->SetRecipients(aRecipients);
-			smtpUrl->SetPostMessageFile(aFilePath);
-			smtpUrl->SetSenderIdentity(aSenderIdentity);
+            smtpUrl->SetPostMessageFile(aFilePath);
+            smtpUrl->SetSenderIdentity(aSenderIdentity);
             smtpUrl->SetNotificationCallbacks(aNotificationCallbacks);
-            
+
             nsCOMPtr<nsIPrompt> smtpPrompt(do_GetInterface(aNotificationCallbacks));
             nsCOMPtr<nsIAuthPrompt> smtpAuthPrompt(do_GetInterface(aNotificationCallbacks));
             if (!smtpPrompt || !smtpAuthPrompt)
             {
-              nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-              if (wwatch) {
-                if (!smtpPrompt)
-                  wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));
-                if (!smtpAuthPrompt)
-                  wwatch->GetNewAuthPrompter(0, getter_AddRefs(smtpAuthPrompt));
-              }
+                nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                if (wwatch) {
+                    if (!smtpPrompt)
+                        wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));
+                    if (!smtpAuthPrompt)
+                        wwatch->GetNewAuthPrompter(0, getter_AddRefs(smtpAuthPrompt));
+                }
             }
             smtpUrl->SetPrompt(smtpPrompt);            
             smtpUrl->SetAuthPrompt(smtpAuthPrompt);
-			url->RegisterListener(aUrlListener);
-      if (aStatusFeedback)
-        url->SetStatusFeedback(aStatusFeedback);
-		}
-		rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
-	 }
+            url->RegisterListener(aUrlListener);
+            if (aStatusFeedback)
+                url->SetStatusFeedback(aStatusFeedback);
+        }
+        rv = smtpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aUrl);
+    }
 
-	 return rv;
+    return rv;
 }
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest ** aRequest)
 {
-	// for now, assume the url is a news url and load it....
-	nsCOMPtr <nsISmtpUrl> smtpUrl;
-	nsSmtpProtocol	*smtpProtocol = nsnull;
-	nsresult rv = NS_OK;
+    // for now, assume the url is a news url and load it....
+    nsCOMPtr <nsISmtpUrl> smtpUrl;
+    nsSmtpProtocol	*smtpProtocol = nsnull;
+    nsresult rv = NS_OK;
 
-	if (!aUrl)
-		return rv;
+    if (!aUrl)
+        return rv;
 
     // turn the url into an smtp url...
-	smtpUrl = do_QueryInterface(aUrl);
-  if (smtpUrl)
-  {
-		// almost there...now create a smtp protocol instance to run the url in...
-		smtpProtocol = new nsSmtpProtocol(aUrl);
-		if (smtpProtocol == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		
-		NS_ADDREF(smtpProtocol);
-		rv = smtpProtocol->LoadUrl(aUrl, aConsumer); // protocol will get destroyed when url is completed...
-    smtpProtocol->QueryInterface(NS_GET_IID(nsIRequest), (void **) aRequest);
-		NS_RELEASE(smtpProtocol);
-	}
+    smtpUrl = do_QueryInterface(aUrl);
+    if (smtpUrl)
+    {
+        // almost there...now create a smtp protocol instance to run the url in...
+        smtpProtocol = new nsSmtpProtocol(aUrl);
+        if (smtpProtocol == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-	return rv;
+        NS_ADDREF(smtpProtocol);
+        rv = smtpProtocol->LoadUrl(aUrl, aConsumer); // protocol will get destroyed when url is completed...
+        smtpProtocol->QueryInterface(NS_GET_IID(nsIRequest), (void **) aRequest);
+        NS_RELEASE(smtpProtocol);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsSmtpService::GetScheme(nsACString &aScheme)
 {
     aScheme = "mailto";
-	return NS_OK; 
+    return NS_OK; 
 }
 
 NS_IMETHODIMP nsSmtpService::GetDefaultPort(PRInt32 *aDefaultPort)
 {
-	nsresult rv = NS_OK;
-	if (aDefaultPort)
-		*aDefaultPort = SMTP_PORT;
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv; 	
+    nsresult rv = NS_OK;
+    if (aDefaultPort)
+        *aDefaultPort = nsISmtpUrl::DEFAULT_SMTP_PORT;
+    else
+        rv = NS_ERROR_NULL_POINTER;
+    return rv;
 }
 
 NS_IMETHODIMP 

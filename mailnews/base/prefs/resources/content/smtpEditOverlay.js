@@ -43,6 +43,7 @@
 var gSmtpUsername;
 var gSmtpUsernameLabel;
 var gSmtpHostname;
+var gSmtpPort;
 var gSmtpUseUsername;
 var gSmtpAuthMethod;
 var gSmtpTrySSL;
@@ -54,12 +55,14 @@ function initSmtpSettings(server) {
     gSmtpUsername = document.getElementById("smtp.username");
     gSmtpUsernameLabel = document.getElementById("smtpusernamelabel");
     gSmtpHostname = document.getElementById("smtp.hostname");
+    gSmtpPort = document.getElementById("smtp.port");
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
     gSmtpTrySSL = document.getElementById("smtp.trySSL");
 
     if (server) {
         gSmtpHostname.value = server.hostname;
+        gSmtpPort.value = server.port ? server.port : "";
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
 
@@ -94,6 +97,7 @@ function saveSmtpSettings(server)
     //dump("Saving to " + server + "\n");
     if (server) {
         server.hostname = gSmtpHostname.value;
+        server.port = gSmtpPort.value;
         server.authMethod = (gSmtpUseUsername.checked ? 1 : 0);
         //dump("Saved authmethod = " + server.authMethod +
         //     " but checked = " + gSmtpUseUsername.checked + "\n");

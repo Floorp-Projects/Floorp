@@ -178,6 +178,10 @@ function createSmtpTreeItem(server, isDefault)
     var treecell = document.createElement("treecell");
 
     var hostname = server.hostname;
+    if (server.port) {
+      hostname = hostname + ":" + server.port;
+    }
+    
     if (isDefault)
         hostname += " " + gMessengerBundle.getString("defaultServerTag");
 

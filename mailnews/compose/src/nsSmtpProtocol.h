@@ -161,7 +161,6 @@ private:
 	PRInt32 	m_previousResponseCode; 
 	PRInt32		m_continuationResponse;
   nsCString m_responseText;   /* text returned from Smtp server */
-	PRUint32  m_port;
 
 	char	   *m_addressCopy;
 	char	   *m_addresses;

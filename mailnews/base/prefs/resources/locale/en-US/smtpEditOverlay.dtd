@@ -1,4 +1,5 @@
 <!ENTITY serverName.label "Server Name:">
+<!ENTITY serverPort.label "Port:">
 <!ENTITY alwaysUseUsername.label "Use name and password">
 <!ENTITY userName.label "User Name:">
 <!ENTITY savePassword.label "Save my password">

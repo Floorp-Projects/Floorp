@@ -37,11 +37,6 @@
 
 #include "nsISupports.idl"
 
-
-%{ C++
-#define SMTP_PORT	25
-%}
-
 interface nsIMsgIdentity;
 interface nsIPrompt;
 interface nsIAuthPrompt;
@@ -85,6 +80,8 @@ interface nsISmtpUrl : nsISupports {
     attribute nsIAuthPrompt authPrompt;
     attribute nsIInterfaceRequestor notificationCallbacks;
     attribute nsISmtpServer smtpServer;
+    
+    const PRInt32 DEFAULT_SMTP_PORT = 25;
 };
 
 [scriptable, uuid(5EE2AFF7-9C6F-11d3-98A3-001083010E9B)]

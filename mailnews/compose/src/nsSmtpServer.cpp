@@ -44,6 +44,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsISmtpUrl.h"
 
 NS_IMPL_ADDREF(nsSmtpServer)
 NS_IMPL_RELEASE(nsSmtpServer)
@@ -85,10 +86,14 @@ nsSmtpServer::GetHostname(char * *aHostname)
 {
     nsresult rv;
     nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(aHostname);
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("hostname", pref);
     rv = prefs->CopyCharPref(pref.get(), aHostname);
-    if (NS_FAILED(rv)) *aHostname=nsnull;
+    if (NS_FAILED(rv))
+        *aHostname=nsnull;
     return NS_OK;
 }
 
@@ -98,11 +103,87 @@ nsSmtpServer::SetHostname(const char * aHostname)
     nsresult rv;
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("hostname", pref);
     if (aHostname)
         return prefs->SetCharPref(pref.get(), aHostname);
     else
         prefs->ClearUserPref(pref.get());
+    return NS_OK;
+}
+
+// if GetPort returns 0, it means default port
+NS_IMETHODIMP
+nsSmtpServer::GetPort(PRInt32 *aPort)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(aPort);
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+    getPrefString("port", pref);
+    rv = prefs->GetIntPref(pref.get(), aPort);
+    if (NS_FAILED(rv))
+        *aPort = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::SetPort(PRInt32 aPort)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+    getPrefString("port", pref);
+    if (aPort)
+        return prefs->SetIntPref(pref.get(), aPort);
+    else
+        prefs->ClearUserPref(pref.get());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::GetDisplayname(char * *aDisplayname)
+{
+    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aDisplayname);
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString hpref;
+    getPrefString("hostname", hpref);
+
+    nsCAutoString ppref;
+    getPrefString("port", ppref);
+
+    nsXPIDLCString hostname;
+    rv = prefs->CopyCharPref(hpref.get(), getter_Copies(hostname));
+    if (NS_FAILED(rv)) {
+        *aDisplayname=nsnull;
+        return NS_OK;
+    }
+    PRInt32 port;
+    rv = prefs->GetIntPref(ppref.get(), &port);
+    if (NS_FAILED(rv))
+        port = 0;
+    
+    if (port) {
+        nsCAutoString combined;
+        combined = hostname.get();
+        combined += ":";
+        combined.AppendInt(port);
+        *aDisplayname = ToNewCString(combined);
+    }
+    else {
+        *aDisplayname = ToNewCString(hostname);
+    }
+    
     return NS_OK;
 }
 
@@ -118,7 +199,7 @@ nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
     getPrefString("try_ssl", pref);
     rv = prefs->GetIntPref(pref.get(), trySSL);
     if (NS_FAILED(rv))
-		rv = getDefaultIntPref(prefs, 0, "try_ssl", trySSL);
+        getDefaultIntPref(prefs, 0, "try_ssl", trySSL);
     return NS_OK;
 }
 
@@ -128,7 +209,8 @@ nsSmtpServer::SetTrySSL(PRInt32 trySSL)
     nsresult rv;
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("try_ssl", pref);
     return prefs->SetIntPref(pref.get(), trySSL);
 }
@@ -140,20 +222,21 @@ nsSmtpServer::GetAuthMethod(PRInt32 *authMethod)
     nsCAutoString pref;
     NS_ENSURE_ARG_POINTER(authMethod);
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
     *authMethod = 1;
     getPrefString("auth_method", pref);
     rv = prefs->GetIntPref(pref.get(), authMethod);
     if (NS_FAILED(rv))
-		rv = getDefaultIntPref(prefs, 1, "auth_method", authMethod);
+        rv = getDefaultIntPref(prefs, 1, "auth_method", authMethod);
     return rv;
 }
 
 nsresult
 nsSmtpServer::getDefaultIntPref(nsIPref *prefs,
-								PRInt32 defVal,
-								const char *prefName,
-								PRInt32 *val)
+                                PRInt32 defVal,
+                                const char *prefName,
+                                PRInt32 *val)
 {
   // mail.smtpserver.default.<prefName>  
   nsCAutoString fullPrefName;
@@ -164,9 +247,8 @@ nsSmtpServer::getDefaultIntPref(nsIPref *prefs,
   if (NS_FAILED(rv))
   { // last resort
     *val = defVal;
-    rv = NS_OK;
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -185,10 +267,14 @@ nsSmtpServer::GetUsername(char * *aUsername)
 {
     nsresult rv;
     nsCAutoString pref;
+    NS_ENSURE_ARG_POINTER(aUsername);
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("username", pref);
     rv = prefs->CopyCharPref(pref.get(), aUsername);
-    if (NS_FAILED(rv)) *aUsername = nsnull;
+    if (NS_FAILED(rv))
+        *aUsername = nsnull;
     return NS_OK;
 }
 
@@ -198,6 +284,8 @@ nsSmtpServer::SetUsername(const char * aUsername)
     nsresult rv;
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("username", pref);
     if (aUsername)
         return prefs->SetCharPref(pref.get(), aUsername);
@@ -210,15 +298,15 @@ NS_IMETHODIMP
 nsSmtpServer::GetPassword(char * *aPassword)
 {
     NS_ENSURE_ARG_POINTER(aPassword);
-	*aPassword = ToNewCString(m_password);
+    *aPassword = ToNewCString(m_password);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSmtpServer::SetPassword(const char * aPassword)
 {
-	m_password = aPassword;
-	return NS_OK;
+    m_password = aPassword;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -231,38 +319,42 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 
     NS_ENSURE_ARG_POINTER(aPassword);
 
-    if (m_password.IsEmpty()) {
+    if (m_password.IsEmpty())
+    {
         NS_ENSURE_ARG_POINTER(aDialog);
-        
-		// prompt the user for the password
-		if (NS_SUCCEEDED(rv))
-		{
+
+        // prompt the user for the password
+        if (NS_SUCCEEDED(rv))
+        {
             nsXPIDLString uniPassword;
-			PRBool okayValue = PR_TRUE;
-			nsXPIDLCString serverUri;
-			rv = GetServerURI(getter_Copies(serverUri));
-			if (NS_FAILED(rv)) return rv;
-			rv = aDialog->PromptPassword(aPromptTitle, aPromptMessage, 
-                                         NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
-                                         getter_Copies(uniPassword), &okayValue);
-            if (NS_FAILED(rv)) return rv;
-				
-			if (!okayValue) // if the user pressed cancel, just return NULL;
-			{
-				*aPassword = nsnull;
-				return rv;
-			}
+            PRBool okayValue = PR_TRUE;
+            nsXPIDLCString serverUri;
+            rv = GetServerURI(getter_Copies(serverUri));
+            if (NS_FAILED(rv))
+                return rv;
+            rv = aDialog->PromptPassword(aPromptTitle, aPromptMessage, 
+                    NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
+                    getter_Copies(uniPassword), &okayValue);
+            if (NS_FAILED(rv))
+                return rv;
 
-			// we got a password back...so remember it
-			nsCString aCStr; aCStr.AssignWithConversion(uniPassword); 
+            if (!okayValue) // if the user pressed cancel, just return NULL;
+            {
+                *aPassword = nsnull;
+                return rv;
+            }
 
-			rv = SetPassword(aCStr.get());
-            if (NS_FAILED(rv)) return rv;
-		} // if we got a prompt dialog
-	} // if the password is empty
+            // we got a password back...so remember it
+            nsCString aCStr; aCStr.AssignWithConversion(uniPassword); 
+
+            rv = SetPassword(aCStr.get());
+            if (NS_FAILED(rv))
+                return rv;
+        } // if we got a prompt dialog
+    } // if the password is empty
 
     rv = GetPassword(aPassword);
-	return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -288,11 +380,13 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
             PRBool okayValue = PR_TRUE;
             nsXPIDLCString serverUri;
             rv = GetServerURI(getter_Copies(serverUri));
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+                return rv;
             rv = aDialog->PromptUsernameAndPassword(aPromptTitle, aPromptMessage, 
                                          NS_ConvertASCIItoUCS2(serverUri).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                          getter_Copies(uniUsername), getter_Copies(uniPassword), &okayValue);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+                return rv;
 				
             if (!okayValue) // if the user pressed cancel, just return NULL;
             {
@@ -306,16 +400,19 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
 
             aCStr.AssignWithConversion(uniUsername); 
             rv = SetUsername(aCStr.get());
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+                return rv;
 
             aCStr.AssignWithConversion(uniPassword); 
             rv = SetPassword(aCStr.get());
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv))
+                return rv;
         } // if we got a prompt dialog
     } // if the password is empty
 
     rv = GetUsername(aUsername);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
     rv = GetPassword(aPassword);
     return rv;
 }
@@ -329,7 +426,8 @@ nsSmtpServer::ForgetPassword()
 
     nsXPIDLCString serverUri;
     rv = GetServerURI(getter_Copies(serverUri));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), serverUri);
@@ -395,6 +493,8 @@ nsSmtpServer::SetRedirectorType(const char *aRedirectorType)
     nsresult rv;
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("redirector_type", pref);
     if (aRedirectorType)
         return prefs->SetCharPref(pref.get(), aRedirectorType);
@@ -409,6 +509,8 @@ nsSmtpServer::GetRedirectorType(char **aResult)
     nsresult rv;
     nsCAutoString pref;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;
     getPrefString("redirector_type", pref);
     rv = prefs->CopyCharPref(pref.get(), aResult);
     if (NS_FAILED(rv)) *aResult=nsnull;

@@ -28,8 +28,10 @@ interface nsISmtpServer : nsISupports {
     attribute string key;       // unique identifier
     
     attribute string hostname;
+    attribute PRInt32 port;
     attribute string username;
     attribute string password;
+    readonly attribute string displayname;
 
     /* what kind of logon redirector to use for this server, if any */
     attribute string redirectorType;   
