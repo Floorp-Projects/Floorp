@@ -251,6 +251,7 @@ Contributor(s): ______________________________________. -->
                      ondragover="nsDragAndDrop.dragOver(event, bookmarksButtonObserver);"
                      template="bookmarksMenuTemplate">
         <menupopup onpopuphiding="gDidOpen = false;"
+                   onpopupshowing="checkBookmarksMenuTemplateBuilder();"
                    ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
                    ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
                    ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
@@ -261,7 +262,7 @@ Contributor(s): ______________________________________. -->
           <menuseparator ondragover="event.preventBubble(); return false;"/>
           <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
                     ondragover="event.preventBubble(); return false;"/>
-          <menuseparator/>
+          <menuseparator id="lastStaticSeparator"/>
         </menupopup>
       </toolbarbutton>
 
