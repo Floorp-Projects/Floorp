@@ -71,14 +71,22 @@ public:
 
   nscoord GetCarriedOutBottomMargin() const { return mCarriedOutBottomMargin; }
 
+  nscoord GetCarriedOutMarginFlags() const { return mCarriedOutMarginFlags; }
+
   nscoord GetTopMargin() const { return mMargin.top; }
 
   nscoord GetBottomMargin() const { return mMargin.bottom; }
 
-  static void CalculateBlockMarginsFor(nsIPresContext& aPresContext,
-                                       nsIFrame* aFrame,
-                                       const nsStyleSpacing* aSpacing,
-                                       nsMargin& aMargin);
+  PRUintn GetMarginFlags() const { return mMarginFlags; }
+
+  static PRUintn CalculateBlockMarginsFor(nsIPresContext& aPresContext,
+                                          nsIFrame* aFrame,
+                                          const nsStyleSpacing* aSpacing,
+                                          nsMargin& aMargin);
+
+// Return value from CalculateBlockMarginsFor
+#define NS_TOP_MARGIN_IS_AUTO    0x1
+#define NS_BOTTOM_MARGIN_IS_AUTO 0x2
 
   static nscoord MaxMargin(nscoord a, nscoord b);
 
@@ -157,9 +165,11 @@ protected:
   // The frame's computed margin values (includes auto value
   // computation)
   nsMargin mMargin;
+  PRUintn mMarginFlags;
   nscoord mRightMargin;/* XXX */
   nscoord mCarriedOutTopMargin;
   nscoord mCarriedOutBottomMargin;
+  PRUintn mCarriedOutMarginFlags;
 
   // The computed available size and location for the frame
   nscoord mFrameX, mFrameY;
