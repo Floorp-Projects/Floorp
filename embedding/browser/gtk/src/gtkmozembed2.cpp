@@ -1083,6 +1083,40 @@ gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed)
   return retval;
 }
 
+PRUnichar *
+gtk_moz_embed_get_js_status_unichar (GtkMozEmbed *embed)
+{
+  PRUnichar *retval = nsnull;
+  EmbedPrivate *embedPrivate;
+                   
+  g_return_val_if_fail ((embed != NULL), (PRUnichar *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (PRUnichar *)NULL);
+  
+  embedPrivate = (EmbedPrivate *)embed->data;
+                   
+  if (embedPrivate->mWindow)
+    retval = ToNewUnicode(embedPrivate->mWindow->mJSStatus);
+                   
+  return retval;
+}
+
+PRUnichar *
+gtk_moz_embed_get_link_message_unichar (GtkMozEmbed *embed)
+{
+  PRUnichar *retval = nsnull;
+  EmbedPrivate *embedPrivate;
+                   
+  g_return_val_if_fail ((embed != NULL), (PRUnichar *)NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), (PRUnichar *)NULL);
+  
+  embedPrivate = (EmbedPrivate *)embed->data;
+                   
+  if (embedPrivate->mWindow)
+    retval = ToNewUnicode(embedPrivate->mWindow->mLinkMessage);
+                   
+  return retval;
+}
+
 // class and instance initialization
 
 GtkType
