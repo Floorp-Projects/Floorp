@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS= \
+EXPORTS= MailNewsTypes.h\
 		$(NULL)
 
 IDLSRCS = \
