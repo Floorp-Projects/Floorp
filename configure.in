@@ -135,7 +135,12 @@ case "$target" in
     if test -z "$GNU_CC"; then
        MKSHLIB='$(CXX) -xar $(DSO_LDOPTS)'
 	DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
-    fi ;;
+    else
+       MKSHLIB='$(CC) $(DSO_LDOPTS)'
+       MKSHLIB_FORCE_ALL='-Wl,-z -Wl,allextract'
+       MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
+    fi
+    ;;
 
 alpha-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
