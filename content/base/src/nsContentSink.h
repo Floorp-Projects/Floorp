@@ -101,11 +101,11 @@ protected:
   virtual void PreEvaluateScript()  {return;}
   virtual void PostEvaluateScript() {return;}
 
-  nsCOMPtr<nsIDocument>         mDocument;
-  nsCOMPtr<nsIParser>           mParser;
-  nsCOMPtr<nsIURI>              mDocumentURL;
-  nsCOMPtr<nsIURI>              mDocumentBaseURL;
+  nsIDocument*                  mDocument;
+  nsIURI*                       mDocumentURL;
+  nsIURI*                       mDocumentBaseURL;
   nsCOMPtr<nsIDocShell>         mDocShell;
+  nsIParser*                    mParser;
   nsCOMPtr<nsICSSLoader>        mCSSLoader;
   nsCOMPtr<nsINodeInfoManager>  mNodeInfoManager;
 

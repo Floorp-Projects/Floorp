@@ -141,11 +141,19 @@ NS_IMPL_ISUPPORTS3(nsContentSink,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
+  : mDocument(nsnull),
+    mParser(nsnull),
+    mDocumentURL(nsnull),
+    mDocumentBaseURL(nsnull)
 {
 }
 
 nsContentSink::~nsContentSink()
 {
+  NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mParser);
+  NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentBaseURL);
 }
 
 nsresult
@@ -165,9 +173,14 @@ nsContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDocument = aDoc;
+  NS_ADDREF(mDocument);
 
   mDocumentURL = aURL;
+  NS_ADDREF(mDocumentURL);
+
   mDocumentBaseURL = aURL;
+  NS_ADDREF(mDocumentBaseURL);
+
   mDocShell = do_QueryInterface(aContainer);
 
   // use this to avoid a circular reference sink->document->scriptloader->sink

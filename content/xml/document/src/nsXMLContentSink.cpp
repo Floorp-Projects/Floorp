@@ -302,7 +302,7 @@ nsXMLContentSink::DidBuildModel()
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  mParser = nsnull;
+  NS_IF_RELEASE(mParser);
 
   return NS_OK;
 }
@@ -346,9 +346,10 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 
   nsCOMPtr<nsIDocument> originalDocument = mDocument;
   if (NS_SUCCEEDED(aResult) || aResultDocument) {
+    NS_RELEASE(mDocument);
     // Transform succeeded or it failed and we have an error
     // document to display.
-    mDocument = do_QueryInterface(aResultDocument);
+    CallQueryInterface(aResultDocument, &mDocument);
   }
 
   nsIScriptLoader *loader = originalDocument->GetScriptLoader();
@@ -405,7 +406,10 @@ nsXMLContentSink::WillResume(void)
 NS_IMETHODIMP
 nsXMLContentSink::SetParser(nsIParser* aParser)
 {
+  NS_IF_RELEASE(mParser);
   mParser = aParser;
+  NS_IF_ADDREF(mParser);
+
   return NS_OK;
 }
 
@@ -703,7 +707,9 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
       if (NS_SUCCEEDED(rv)) {
         rv = mDocument->SetBaseURL(baseURI); // The document checks if it is legal to set this base
         if (NS_SUCCEEDED(rv)) {
+          NS_IF_RELEASE(mDocumentBaseURL);
           mDocumentBaseURL = mDocument->GetBaseURL();
+          NS_IF_ADDREF(mDocumentBaseURL);
         }
       }
     }
