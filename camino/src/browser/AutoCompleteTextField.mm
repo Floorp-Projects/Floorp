@@ -37,6 +37,10 @@
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
 
+
+// stole this from NSPasteboard+Utils.mm
+static const NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+
 @interface AutoCompleteWindow : NSWindow
 - (BOOL)isKeyWindow;
 @end
@@ -232,6 +236,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // read the user default on if we should auto-complete the text field as the user
   // types or make them pick something from a list (a-la mozilla).
 	mCompleteWhileTyping = [[NSUserDefaults standardUserDefaults] boolForKey:USER_DEFAULTS_AUTOCOMPLETE_WHILE_TYPING];
+        
+    // register for string & URL drags
+  [self registerForDraggedTypes:[NSArray arrayWithObjects:kCorePasteboardFlavorType_url, NSURLPboardType, NSStringPboardType, nil]];
 }
 
 - (void) dealloc
@@ -645,6 +652,42 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [self clearResults];
 }
 
+// Drag & Drop Methods ///////////////////////////////////////
+- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
+{
+  NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  if ( [[pboard types] containsObject:NSURLPboardType] ||
+       [[pboard types] containsObject:NSStringPboardType] ||
+       [[pboard types] containsObject:kCorePasteboardFlavorType_url]) {
+    if (sourceDragMask & NSDragOperationCopy) {
+      return NSDragOperationCopy;
+    }
+  }
+  return NSDragOperationNone;
+}
+
+- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
+{
+  NSPasteboard *pboard = [sender draggingPasteboard];
+  NSString *dragString;
+  if ( [[pboard types] containsObject:kCorePasteboardFlavorType_url] )
+    dragString = [pboard stringForType:kCorePasteboardFlavorType_url];
+  else if ( [[pboard types] containsObject:NSURLPboardType] )
+    dragString = [[NSURL URLFromPasteboard:pboard] absoluteString];
+  else if ( [[pboard types] containsObject:NSStringPboardType] ) {
+    dragString = [pboard stringForType:NSStringPboardType];
+    // Clean the string on the off chance it has line breaks, etc.
+    dragString = [dragString stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
+  }
+  [self setStringValue:dragString];
+  return YES;
+}
+
+- (void)concludeDragOperation:(id <NSDraggingInfo>)sender
+{
+  [self selectText:self];
+}
 
 // NSTextField delegate //////////////////////////////////
 - (void)controlTextDidChange:(NSNotification *)aNote

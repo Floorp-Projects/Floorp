@@ -37,8 +37,8 @@
 
 #import "NSPasteboard+Utils.h"
 
-const NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
-const NSString* kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
+static const NSString* kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+static const NSString* kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
 
 @implementation NSPasteboard(ChimeraPasteboardURLUtils)
 
