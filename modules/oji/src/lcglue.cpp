@@ -129,6 +129,9 @@ PR_BEGIN_EXTERN_C
 static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
 {
+	JVMContext* context = GetJVMContext();
+	JSContext *cx = context->js_context;
+
     /*
     ** This callback is called for spontaneous calls only. Either create a new JSContext
     ** or return the crippled context.
@@ -136,7 +139,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
     **       and then to get to the native context.
     */
     //JSContext *cx    = LM_GetCrippledContext();
-    JSContext *cx    = NULL;
+    //JSContext *cx    = NULL;
 
     *errp = NULL;
     return cx;
@@ -227,15 +230,15 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 		nsIJVMPluginTagInfo* tagInfo;
 		if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID, (void**) &tagInfo) == NS_OK) {
 			err = tagInfo->GetMayScript(&mayscript);
-			PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
+			// PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
 			NS_RELEASE(tagInfo);
 		}
+		if ( !mayscript ) {
+			*errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
+		} else {
+			err = pluginPeer->GetJSWindow(&window);
+		}
 		NS_RELEASE(pluginPeer);
-	}
-
-	if ( !mayscript ) {
-		*errp = strdup("JSObject.getWindow() requires mayscript attribute on this Applet");
-		return NULL;
 	}
 
 	//TODO: Get to the window object using DOM.
