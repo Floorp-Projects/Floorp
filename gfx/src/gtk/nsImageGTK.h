@@ -187,6 +187,7 @@ private:
   PRInt16       mAlphaHeight;       // alpha layer height
   PRInt8        mAlphaDepth;        // alpha layer depth
   PRPackedBool  mAlphaValid;
+  PRPackedBool  mIsSpacer;
 
   PRPackedBool  mIsTopToBottom;
   PRInt8        mNumBytesPixel;

@@ -77,6 +77,7 @@ nsImageGTK::nsImageGTK()
   mNaturalWidth = 0;
   mNaturalHeight = 0;
   mAlphaValid = PR_FALSE;
+  mIsSpacer = PR_TRUE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
@@ -300,18 +301,76 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 //          this, aUpdateRect->x, aUpdateRect->y, aUpdateRect->width,
 //          aUpdateRect->height);
 
+  unsigned bottom, left, right;
+  bottom = aUpdateRect->y + aUpdateRect->height;
+  left   = aUpdateRect->x;
+  right  = left + aUpdateRect->width;
+
   // check if the image has an all-opaque 8-bit alpha mask
   if ((mAlphaDepth==8) && !mAlphaValid) {
-    unsigned bottom, left, right;
-    bottom = aUpdateRect->y + aUpdateRect->height;
-    left   = aUpdateRect->x;
-    right  = left + aUpdateRect->width;
     for (unsigned y=aUpdateRect->y; (y<bottom) && !mAlphaValid; y++) {
       unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + left;
       for (unsigned x=left; x<right; x++) {
         if (*(alpha++)!=255) {
           mAlphaValid=PR_TRUE;
           break;
+        }
+      }
+    }
+  }
+
+  // check if the image is a spacer
+  if ((mAlphaDepth==1) && mIsSpacer) {
+    // mask of the leading/trailing bits in the update region
+    PRUint8  leftmask   = 0xff  >> (left & 0x7);
+    PRUint8  rightmask  = 0xff  << (7 - ((right-1) & 0x7));
+
+    // byte where the first/last bits of the update region are located
+    PRUint32 leftindex  = left      >> 3;
+    PRUint32 rightindex = (right-1) >> 3;
+
+    // first/last bits in the same byte - combine mask into leftmask
+    // and fill rightmask so we don't try using it
+    if (leftindex == rightindex) {
+      leftmask &= rightmask;
+      rightmask = 0xff;
+    }
+
+    // check the leading bits
+    if (leftmask != 0xff) {
+      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + leftindex;
+      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+        if (*ptr & leftmask) {
+          mIsSpacer = PR_FALSE;
+          break;
+        }
+      }
+      // move to first full byte
+      leftindex++;
+    }
+
+    // check the trailing bits
+    if (mIsSpacer && (rightmask != 0xff)) {
+      PRUint8 *ptr = mAlphaBits + mAlphaRowBytes * aUpdateRect->y + rightindex;
+      for (unsigned y=aUpdateRect->y; y<bottom; y++, ptr+=mAlphaRowBytes) {
+        if (*ptr & rightmask) {
+          mIsSpacer = PR_FALSE;
+          break;
+        }
+      }
+      // move to last full byte
+      rightindex--;
+    }
+    
+    // check the middle bytes
+    if (mIsSpacer && (leftindex <= rightindex)) {
+      for (unsigned y=aUpdateRect->y; (y<bottom) && mIsSpacer; y++) {
+        unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
+        for (unsigned x=left; x<right; x++) {
+          if (*(alpha++)!=0) {
+            mIsSpacer = PR_FALSE;
+            break;
+          }
         }
       }
     }
@@ -518,6 +577,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
+  if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
@@ -1156,6 +1217,9 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
+  if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
+
   if ((mAlphaDepth==8) && mAlphaValid) {
     DrawComposited(aContext, aSurface, 0, 0, aX, aY, aWidth, aHeight);
     return NS_OK;
@@ -1336,6 +1400,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
          aTileRect.width, aTileRect.height, this);
 #endif
 
+  if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
+
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
   PRBool partial = PR_FALSE;
 
@@ -1443,6 +1510,9 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
          aTileRect.x, aTileRect.y,
          aTileRect.width, aTileRect.height, this);
 #endif
+
+  if ((mAlphaDepth==1) && mIsSpacer)
+    return NS_OK;
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
   PRBool partial = PR_FALSE;
