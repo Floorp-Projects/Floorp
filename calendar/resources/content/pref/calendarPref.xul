@@ -46,12 +46,29 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');"
+      onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');calendarPrefOnLoad()"
       headertitle="&calendarPanel.label;">
 
+   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+   
    <script type="application/x-javascript">
      <![CDATA[
-       var _elementIDs = [
+       function calendarPrefOnLoad()
+       {
+          var thisDateFormater = new DateFormater();
+             var Now = new Date();
+            var DateFormatLong = thisDateFormater.getLongFormatedDate( Now );
+            var DateFormatShort = thisDateFormater.getShortFormatedDate( Now );
+      
+            //set the menu items for the date format to their proper values.
+          
+            document.getElementById( "dateformat-long-menuitem" ).setAttribute( "label", DateFormatLong );
+      
+            document.getElementById( "dateformat-short-menuitem" ).setAttribute( "label", DateFormatShort );
+          }
+       
+      var _elementIDs = [
          "alarmshow", "alarmplaysound", "categories", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength"
        ];
      ]]>
@@ -70,8 +87,8 @@
          <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
              <menupopup id="dateformat">
-               <menuitem label="&pref.dateformat.long;" value="0"/>
-               <menuitem label="&pref.dateformat.short;" value="1"/>
+               <menuitem id="dateformat-long-menuitem"  label="&pref.dateformat.long;" value="0"/>
+               <menuitem id="dateformat-short-menuitem" label="&pref.dateformat.short;" value="1"/>
              </menupopup>
            </menulist>
       </vbox>
