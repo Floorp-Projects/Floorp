@@ -20,9 +20,10 @@
 * Date: 2001-07-02
 *
 * SUMMARY: Testing is operator on user-defined classes
-*
+* Like testcase class-013.js, but here all object variables
+* are initially typed as Object before they are assigned. 
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
 var summary = 'Testing is operator on user-defined classes';
@@ -64,21 +65,21 @@ class D
 } 
 
 
-var objA1 = new A;
-var objA2 : A = new A;
-var objA3 : A = (new A);
+var objA1:Object = new A;
+var objA2:Object = new A;
+var objA3:Object = (new A);
 
-var objB1 = new B;
-var objB2 : B = new B;
-var objB3 : B = (new B);
+var objB1:Object = new B;
+var objB2:Object = new B;
+var objB3:Object = (new B);
 
-var objC1 = new C;
-var objC2 : C = new C;
-var objC3 : C = (new C);
+var objC1:Object = new C;
+var objC2:Object = new C;
+var objC3:Object = (new C);
 
-var objD1 = new D;
-var objD2 : D = new D;
-var objD3 : D = (new D);
+var objD1:Object = new D;
+var objD2:Object = new D;
+var objD3:Object = (new D);
 
 
 
@@ -147,9 +148,9 @@ addThis();
 
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 
