@@ -74,7 +74,7 @@ public:
   NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg) { return _to##ReplaceData(aOffset, aCount, aArg); }  \
 
 
-extern nsresult NS_InitCharacterDataClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCharacterDataClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCharacterData(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

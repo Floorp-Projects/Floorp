@@ -83,7 +83,7 @@ public:
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to##GetStyle(aStyle); } \
 
 
-extern nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

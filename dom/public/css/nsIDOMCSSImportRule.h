@@ -62,7 +62,7 @@ public:
   NS_IMETHOD    GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet) { return _to##GetStyleSheet(aStyleSheet); } \
 
 
-extern nsresult NS_InitCSSImportRuleClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSSImportRuleClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSSImportRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
 
 
-extern nsresult NS_InitHTMLDivElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLDivElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLDivElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

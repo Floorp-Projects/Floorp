@@ -699,4 +699,5 @@ void XXXDomNeverCalled()
   NS_NewScriptCSSStyleRule(0, 0, 0, 0);
   NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
   NET_InitJavaScriptProtocol();
+  NS_InitDocumentClass(nsnull, nsnull);
 }

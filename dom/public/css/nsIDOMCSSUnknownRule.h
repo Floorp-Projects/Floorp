@@ -43,7 +43,7 @@ public:
 #define NS_FORWARD_IDOMCSSUNKNOWNRULE(_to)  \
 
 
-extern nsresult NS_InitCSSUnknownRuleClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSSUnknownRuleClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSSUnknownRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

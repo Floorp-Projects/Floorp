@@ -109,7 +109,7 @@ public:
   NS_IMETHOD    DeleteCell(PRInt32 aIndex) { return _to##DeleteCell(aIndex); }  \
 
 
-extern nsresult NS_InitHTMLTableRowElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLTableRowElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLTableRowElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -198,7 +198,7 @@ HTMLTableCaptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //
 // HTMLTableCaptionElement class initialization
 //
-nsresult NS_InitHTMLTableCaptionElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLTableCaptionElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetClear(const nsString& aClear) { return _to##SetClear(aClear); } \
 
 
-extern nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLBRElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

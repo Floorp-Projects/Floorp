@@ -63,7 +63,7 @@ public:
   NS_IMETHOD    DeleteRule(PRUint32 aIndex) { return _to##DeleteRule(aIndex); }  \
 
 
-extern nsresult NS_InitCSSMediaRuleClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSSMediaRuleClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSSMediaRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

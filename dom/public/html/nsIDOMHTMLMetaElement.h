@@ -71,7 +71,7 @@ public:
   NS_IMETHOD    SetScheme(const nsString& aScheme) { return _to##SetScheme(aScheme); } \
 
 
-extern nsresult NS_InitHTMLMetaElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLMetaElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLMetaElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

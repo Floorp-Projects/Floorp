@@ -173,7 +173,7 @@ DocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // DocumentFragment class initialization
 //
-nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

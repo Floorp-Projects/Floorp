@@ -71,7 +71,7 @@ public:
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
 
-extern nsresult NS_InitHTMLHRElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLHRElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLHRElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -74,7 +74,7 @@ public:
   NS_IMETHOD    GetAvailTop(PRInt32* aAvailTop) { return _to##GetAvailTop(aAvailTop); } \
 
 
-extern nsresult NS_InitScreenClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitScreenClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptScreen(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

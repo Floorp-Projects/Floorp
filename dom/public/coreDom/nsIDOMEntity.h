@@ -55,7 +55,7 @@ public:
   NS_IMETHOD    GetNotationName(nsString& aNotationName) { return _to##GetNotationName(aNotationName); } \
 
 
-extern nsresult NS_InitEntityClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitEntityClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptEntity(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

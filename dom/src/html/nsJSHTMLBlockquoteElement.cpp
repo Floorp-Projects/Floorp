@@ -198,7 +198,7 @@ HTMLBlockquoteElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // HTMLBlockquoteElement class initialization
 //
-nsresult NS_InitHTMLBlockquoteElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLBlockquoteElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -131,7 +131,7 @@ public:
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to##CloneNode(aDeep, aReturn); }  \
 
 
-extern nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptNode(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

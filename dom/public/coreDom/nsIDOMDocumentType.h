@@ -56,7 +56,7 @@ public:
   NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations) { return _to##GetNotations(aNotations); } \
 
 
-extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptDocumentType(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

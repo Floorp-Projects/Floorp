@@ -43,7 +43,7 @@ public:
 #define NS_FORWARD_IDOMDOCUMENTFRAGMENT(_to)  \
 
 
-extern nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptDocumentFragment(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -127,7 +127,7 @@ public:
   NS_IMETHOD    Select() { return _to##Select(); }  \
 
 
-extern nsresult NS_InitHTMLTextAreaElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLTextAreaElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLTextAreaElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

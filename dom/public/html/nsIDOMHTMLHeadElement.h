@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetProfile(const nsString& aProfile) { return _to##SetProfile(aProfile); } \
 
 
-extern nsresult NS_InitHTMLHeadElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLHeadElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLHeadElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

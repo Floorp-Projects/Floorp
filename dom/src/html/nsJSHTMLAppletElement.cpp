@@ -418,7 +418,7 @@ HTMLAppletElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 //
 // HTMLAppletElement class initialization
 //
-nsresult NS_InitHTMLAppletElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLAppletElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

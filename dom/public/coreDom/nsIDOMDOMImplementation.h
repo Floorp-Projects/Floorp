@@ -46,7 +46,7 @@ public:
   NS_IMETHOD    HasFeature(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn) { return _to##HasFeature(aFeature, aVersion, aReturn); }  \
 
 
-extern nsresult NS_InitDOMImplementationClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitDOMImplementationClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptDOMImplementation(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

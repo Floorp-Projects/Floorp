@@ -54,7 +54,7 @@ public:
   NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
 
 
-extern nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptProcessingInstruction(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

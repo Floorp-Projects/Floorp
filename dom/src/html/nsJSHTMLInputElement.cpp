@@ -716,7 +716,7 @@ HTMLInputElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // HTMLInputElement class initialization
 //
-nsresult NS_InitHTMLInputElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLInputElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

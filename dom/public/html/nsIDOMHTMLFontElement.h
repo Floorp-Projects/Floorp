@@ -64,7 +64,7 @@ public:
   NS_IMETHOD    SetSize(const nsString& aSize) { return _to##SetSize(aSize); } \
 
 
-extern nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLFontElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

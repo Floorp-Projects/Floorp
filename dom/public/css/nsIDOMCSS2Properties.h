@@ -904,7 +904,7 @@ public:
   NS_IMETHOD    SetOpacity(const nsString& aOpacity) { return _to##SetOpacity(aOpacity); } \
 
 
-extern nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSS2Properties(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

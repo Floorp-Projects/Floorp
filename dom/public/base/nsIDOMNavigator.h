@@ -74,7 +74,7 @@ public:
   NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to##JavaEnabled(aReturn); }  \
 
 
-extern nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptNavigator(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

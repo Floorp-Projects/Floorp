@@ -92,7 +92,7 @@ public:
   NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
 
 
-extern nsresult NS_InitHTMLScriptElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLScriptElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLScriptElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetCompact(PRBool aCompact) { return _to##SetCompact(aCompact); } \
 
 
-extern nsresult NS_InitHTMLDirectoryElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLDirectoryElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLDirectoryElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

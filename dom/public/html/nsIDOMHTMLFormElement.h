@@ -102,7 +102,7 @@ public:
   NS_IMETHOD    Reset() { return _to##Reset(); }  \
 
 
-extern nsresult NS_InitHTMLFormElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLFormElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLFormElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

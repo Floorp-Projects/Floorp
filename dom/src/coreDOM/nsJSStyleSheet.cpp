@@ -226,7 +226,7 @@ StyleSheet(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // StyleSheet class initialization
 //
-nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -43,7 +43,7 @@ public:
 #define NS_FORWARD_IDOMCDATASECTION(_to)  \
 
 
-extern nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCDATASection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

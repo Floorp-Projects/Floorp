@@ -81,7 +81,7 @@ public:
   NS_IMETHOD    Normalize() { return _to##Normalize(); }  \
 
 
-extern nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -66,7 +66,7 @@ public:
   NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet) { return _to##GetSheet(aSheet); } \
 
 
-extern nsresult NS_InitCSSRuleClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSSRuleClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSSRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

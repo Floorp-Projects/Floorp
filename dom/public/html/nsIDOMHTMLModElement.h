@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return _to##SetDateTime(aDateTime); } \
 
 
-extern nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLModElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -48,7 +48,7 @@ public:
   NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn) { return _to##SplitText(aOffset, aReturn); }  \
 
 
-extern nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptText(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

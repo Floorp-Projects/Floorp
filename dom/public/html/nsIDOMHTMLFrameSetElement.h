@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetRows(const nsString& aRows) { return _to##SetRows(aRows); } \
 
 
-extern nsresult NS_InitHTMLFrameSetElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLFrameSetElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLFrameSetElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

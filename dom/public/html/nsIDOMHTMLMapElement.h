@@ -55,7 +55,7 @@ public:
   NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
 
 
-extern nsresult NS_InitHTMLMapElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLMapElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLMapElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

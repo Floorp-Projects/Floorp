@@ -222,7 +222,7 @@ HTMLUListElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // HTMLUListElement class initialization
 //
-nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -43,7 +43,7 @@ public:
 #define NS_FORWARD_IDOMENTITYREFERENCE(_to)  \
 
 
-extern nsresult NS_InitEntityReferenceClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitEntityReferenceClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptEntityReference(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

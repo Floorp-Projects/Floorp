@@ -113,7 +113,7 @@ public:
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
 
 
-extern nsresult NS_InitHTMLIFrameElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLIFrameElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLIFrameElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

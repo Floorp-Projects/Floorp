@@ -99,7 +99,7 @@ public:
   NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
 
 
-extern nsresult NS_InitHTMLAreaElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLAreaElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLAreaElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

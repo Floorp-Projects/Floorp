@@ -254,7 +254,7 @@ public:
   NS_IMETHOD    SetButton(PRUint32 aButton) { return _to##SetButton(aButton); } \
 
 
-extern nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptEvent(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

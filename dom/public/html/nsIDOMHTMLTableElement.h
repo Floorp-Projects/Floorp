@@ -171,7 +171,7 @@ public:
   NS_IMETHOD    DeleteRow(PRInt32 aIndex) { return _to##DeleteRow(aIndex); }  \
 
 
-extern nsresult NS_InitHTMLTableElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLTableElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLTableElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

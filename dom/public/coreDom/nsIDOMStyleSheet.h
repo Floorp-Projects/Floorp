@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to##GetReadOnly(aReadOnly); } \
 
 
-extern nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitStyleSheetClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptStyleSheet(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

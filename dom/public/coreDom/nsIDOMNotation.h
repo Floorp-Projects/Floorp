@@ -51,7 +51,7 @@ public:
   NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to##GetSystemId(aSystemId); } \
 
 
-extern nsresult NS_InitNotationClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitNotationClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptNotation(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

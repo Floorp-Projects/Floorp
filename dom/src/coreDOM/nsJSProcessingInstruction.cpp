@@ -211,7 +211,7 @@ ProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 //
 // ProcessingInstruction class initialization
 //
-nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

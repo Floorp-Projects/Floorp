@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
 
 
-extern nsresult NS_InitHTMLBaseElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLBaseElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLBaseElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetLabel(const nsString& aLabel) { return _to##SetLabel(aLabel); } \
 
 
-extern nsresult NS_InitHTMLOptGroupElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLOptGroupElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLOptGroupElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

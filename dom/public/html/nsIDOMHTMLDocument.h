@@ -125,7 +125,7 @@ public:
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn) { return _to##GetElementsByName(aElementName, aReturn); }  \
 
 
-extern nsresult NS_InitHTMLDocumentClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLDocumentClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLDocument(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
