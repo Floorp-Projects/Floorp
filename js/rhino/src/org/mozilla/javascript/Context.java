@@ -677,9 +677,9 @@ public class Context
      *
      * @return the initialized scope
      */
-    public ScriptableObject initStandardObjects()
+    public final ScriptableObject initStandardObjects()
     {
-        return initStandardObjects(false);
+        return initStandardObjects(null, false);
     }
 
     /**
@@ -705,11 +705,9 @@ public class Context
      *        cannot be modified.
      * @return the initialized scope
      */
-    public ScriptableObject initStandardObjects(boolean sealed)
+    public final ScriptableObject initStandardObjects(boolean sealed)
     {
-        NativeObject scope = new NativeObject();
-        initStandardObjects(scope, sealed);
-        return scope;
+        return initStandardObjects(null, sealed);
     }
 
     /**
@@ -726,9 +724,11 @@ public class Context
      *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
-     * @return the initialized scope
+     * @return the initialized scope. The method always returns instance
+	 *         of {@link ScriptableObject} but for compatibility 
+	 *         the return type is kept as {@link Scriptable}.
      */
-    public ScriptableObject initStandardObjects(ScriptableObject scope)
+    public final Scriptable initStandardObjects(ScriptableObject scope)
     {
         return initStandardObjects(scope, false);
     }
