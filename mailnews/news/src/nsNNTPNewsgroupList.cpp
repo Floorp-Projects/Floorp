@@ -410,15 +410,14 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 		{
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
+                PRBool download = PR_FALSE;
 #ifdef HAVE_PANES
 				nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
-				PRBool result = FE_NewsDownloadPrompt(m_pane->GetContext(),
+				download = FE_NewsDownloadPrompt(m_pane->GetContext(),
 													*last - *first + 1,
 													&m_downloadAll, newsFolder);
-#else
-                PRBool result = PR_FALSE;
 #endif
-				if (result)
+				if (download)
 				{
 					m_maxArticles = 0;
 
