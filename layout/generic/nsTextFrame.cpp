@@ -524,7 +524,7 @@ public:
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame* aNextFrame,
                                 nscoord aBaseWidth,
-                                const PRUnichar* aWordBuf,
+                                PRUnichar* aWordBuf,
                                 PRUint32   aWordBufLen,
                                 PRUint32   aWordBufSize);
 
@@ -3181,6 +3181,18 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+static void
+RevertSpacesToNBSP(PRUnichar* aBuffer, PRInt32 aWordLen)
+{
+  PRUnichar* end = aBuffer + aWordLen;
+  for (; aBuffer < end; aBuffer++) {
+    PRUnichar ch = *aBuffer;
+    if (ch == ' ') {
+      *aBuffer = CH_NBSP;
+    }
+  }
+}
+
 nscoord
 nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                    nsILineBreaker* aLineBreaker,
@@ -3188,10 +3200,14 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsIFrame* aNextFrame,
                                    nscoord aBaseWidth,
-                                   const PRUnichar* aWordBuf,
+                                   PRUnichar* aWordBuf,
                                    PRUint32 aWordLen,
                                    PRUint32 aWordBufSize)
 {
+  // Before we get going, convert any spaces in the current word back
+  // to nbsp's. This keeps the breaking logic happy.
+  RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
+
   nscoord addedWidth = 0;
   while (nsnull != aNextFrame) {
     nsIContent* content = nsnull;
@@ -3203,7 +3219,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 #endif
       nsITextContent* tc;
       if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
-        PRBool stop;
+        PRBool stop = PR_FALSE;
         nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
                                                      aLineBreaker,
                                                      aLineLayout,
@@ -3269,6 +3285,10 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
     return 0;
   }
   *aStop = contentLen < tx.GetContentLength();
+
+  // Convert any spaces in the current word back to nbsp's. This keeps
+  // the breaking logic happy.
+  RevertSpacesToNBSP(bp, wordLen);
 
   // We need to adjust the length by look at the two pieces together
   // XXX this should grow aWordBuf if necessary
