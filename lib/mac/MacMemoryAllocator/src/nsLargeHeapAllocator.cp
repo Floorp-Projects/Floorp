@@ -25,7 +25,8 @@
  const UInt32 LargeBlockHeader::kLargeBlockOverhead = sizeof(LargeBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
  
 //--------------------------------------------------------------------
-nsLargeHeapAllocator::nsLargeHeapAllocator()
+nsLargeHeapAllocator::nsLargeHeapAllocator(THz heapZone)
+:	nsMemAllocator(heapZone)
 //--------------------------------------------------------------------
 {
 	mBaseChunkSize = mTempChunkSize = (64 * 1024);
@@ -68,6 +69,12 @@ void * nsLargeHeapAllocator::AllocatorMakeBlock(size_t blockSize)
 	if (theBlock)
 	{
 		theBlock->SetLogicalSize(blockSize);
+		
+#if STATS_MAC_MEMORY
+		theBlock->header.logicalBlockSize = blockSize;		// yes, it is stored in 2 places in this allocator
+		AccountForNewBlock(blockSize);
+#endif
+
 		return &(theBlock->memory);
 	}
 
@@ -79,6 +86,32 @@ void * nsLargeHeapAllocator::AllocatorMakeBlock(size_t blockSize)
 void *nsLargeHeapAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 //--------------------------------------------------------------------
 {
+	LargeBlockHeader	*blockHeader = LargeBlockHeader::GetBlockHeader(block);
+	nsLargeHeapChunk	*chunk = blockHeader->GetOwningChunk();
+	
+#if DEBUG_HEAP_INTEGRITY
+	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header on realloc");
+	MEM_ASSERT(blockHeader->HasTrailerTag(blockHeader->GetBlockSize(), kUsedBlockTrailerTag), "Bad block trailer on realloc");
+	MEM_ASSERT(blockHeader->CheckPaddingBytes(), "Block has overwritten its bounds");
+#endif
+
+	UInt32		newAllocSize = (newSize + 3) & ~3;
+
+	// we can resize this block to any size, provided it fits.
+	
+	if (newAllocSize < blockHeader->GetBlockSize())					// shrinking
+	{
+		return chunk->ShrinkBlock(blockHeader, newSize);
+	}
+	else if (newAllocSize > blockHeader->GetBlockSize())			// growing
+	{
+		return chunk->GrowBlock(blockHeader, newSize);
+	}
+	else
+	{
+		return chunk->ResizeBlockInPlace(blockHeader, newSize);
+	}
+	
 	return nil;
 }
 
@@ -87,14 +120,25 @@ void *nsLargeHeapAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 void nsLargeHeapAllocator::AllocatorFreeBlock(void *freeBlock)
 //--------------------------------------------------------------------
 {
-	LargeBlockHeader	*blockHeader = (LargeBlockHeader *)((char *)freeBlock - sizeof(LargeBlockHeader));
+	LargeBlockHeader	*blockHeader = LargeBlockHeader::GetBlockHeader(freeBlock);
+
+#if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header on free");
 	MEM_ASSERT(blockHeader->HasTrailerTag(blockHeader->GetBlockSize(), kUsedBlockTrailerTag), "Bad block trailer on free");
 	MEM_ASSERT(blockHeader->CheckPaddingBytes(), "Block overwrote bounds");
-	nsLargeHeapChunk	*chunk = blockHeader->GetOwningChunk();
+#endif
 
+#if STATS_MAC_MEMORY
+	AccountForFreedBlock(blockHeader->header.logicalBlockSize);
+#endif
+
+	nsLargeHeapChunk	*chunk = blockHeader->GetOwningChunk();
 	chunk->ReturnBlock(blockHeader);
+	
+#if DEBUG_HEAP_INTEGRITY
 	blockHeader->SetHeaderTag(kFreeBlockHeaderTag);
+#endif
+
 	// if this chunk is completely empty and it's not the first chunk then free it
 	if (chunk->IsEmpty() && chunk != mFirstChunk)
 		FreeChunk(chunk);
@@ -178,7 +222,7 @@ nsLargeHeapChunk::nsLargeHeapChunk(
 	freeBlock->SetPrevBlock(nil);
 	freeBlock->SetNextBlock( (LargeBlockHeader *) ( (UInt32)freeBlock + heapSize - 2 * LargeBlockHeader::kLargeBlockOverhead) );
 	
-	// and then a zero sized allcated block at the end
+	// and then a zero sized allocated block at the end
 	mTail = freeBlock->GetNextBlock();
 	mTail->SetNextBlock(nil);
 	mTail->SetPrevBlock(freeBlock);
@@ -198,6 +242,8 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 {
 	UInt32				allocSize = ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead;
 
+	if (allocSize > mTotalFree) return nil;
+	
 	/* scan through the blocks in this chunk looking for a big enough free block */
 	/* we never allocate the head block */
 	LargeBlockHeader	*prevBlock = GetHeadBlock();
@@ -235,10 +281,12 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 	blockHeader->SetPrevBlock(prevBlock);
 	blockHeader->SetOwningChunk(this);
 
+#if DEBUG_HEAP_INTEGRITY
 	blockHeader->SetHeaderTag(kUsedBlockHeaderTag);
 	blockHeader->SetTrailerTag(blockHeader->GetBlockSize(), kUsedBlockTrailerTag);
 	blockHeader->SetPaddingBytes(((blockSize + 3) & ~3) - blockSize);
 	blockHeader->FillPaddingBytes();
+#endif
 	
 	mTotalFree -= blockHeader->GetBlockHeapUsageSize();
 	IncrementUsedBlocks();
@@ -267,6 +315,9 @@ void *nsLargeHeapChunk::GrowBlock(LargeBlockHeader *growBlock, size_t newSize)
 		return nil;
 	
 	// grow this block
+#if STATS_MAC_MEMORY
+	UInt32		oldLogicalSize = growBlock->GetLogicalSize();
+#endif
 	MEM_ASSERT(growBlock->logicalSize < newSize, "Wrong block size on grow block");
 	growBlock->SetLogicalSize(newSize);
 
@@ -281,6 +332,9 @@ void *nsLargeHeapChunk::GrowBlock(LargeBlockHeader *growBlock, size_t newSize)
 		smallFree->GetNextBlock()->SetPrevBlock(smallFree);
 		growBlock->SetNextBlock(smallFree);
 		mTotalFree += smallFree->GetBlockHeapUsageSize();
+#if DEBUG_HEAP_INTEGRITY
+		smallFree->header.headerTag = kFreeBlockHeaderTag;
+#endif
 	}
 	else
 	{
@@ -288,8 +342,17 @@ void *nsLargeHeapChunk::GrowBlock(LargeBlockHeader *growBlock, size_t newSize)
 		freeBlock->GetNextBlock()->SetPrevBlock(growBlock);
 	}
 	
-	return (void *)(&growBlock->memory);
+#if DEBUG_HEAP_INTEGRITY
+	growBlock->SetTrailerTag(growBlock->GetBlockSize(), kUsedBlockTrailerTag);
+	growBlock->SetPaddingBytes(((newSize + 3) & ~3) - newSize);
+	growBlock->FillPaddingBytes();
+#endif
 
+#if STATS_MAC_MEMORY
+	GetOwningAllocator()->AccountForResizedBlock(oldLogicalSize, newSize);
+#endif
+
+	return (void *)(&growBlock->memory);
 }
 
 
@@ -305,7 +368,10 @@ void *nsLargeHeapChunk::ShrinkBlock(LargeBlockHeader *growBlock, size_t newSize)
 	LargeBlockHeader* 	smallFree = nil;			// Where the recovered freeblock will go
 
 	// shrink this block
-	MEM_ASSERT(growBlock->logicalSize > newSize, "Wrong bock size on shrink block");
+#if STATS_MAC_MEMORY
+	UInt32		oldLogicalSize = growBlock->GetLogicalSize();
+#endif
+	MEM_ASSERT(oldAllocSize > newAllocSize, "Wrong bock size on shrink block");
 	growBlock->SetLogicalSize(newSize);
 
 	// is the block following this block a free block?
@@ -335,8 +401,41 @@ void *nsLargeHeapChunk::ShrinkBlock(LargeBlockHeader *growBlock, size_t newSize)
 #endif
 	}
 	
+#if DEBUG_HEAP_INTEGRITY
+	growBlock->SetTrailerTag(growBlock->GetBlockSize(), kUsedBlockTrailerTag);
+	growBlock->SetPaddingBytes(((newSize + 3) & ~3) - newSize);
+	growBlock->FillPaddingBytes();
+#endif
+
+#if STATS_MAC_MEMORY
+	GetOwningAllocator()->AccountForResizedBlock(oldLogicalSize, newSize);
+#endif
+
 	return (void *)(&growBlock->memory);
 }
+
+
+//--------------------------------------------------------------------
+void* nsLargeHeapChunk::ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t newSize)
+//--------------------------------------------------------------------
+{
+	theBlock->SetLogicalSize(newSize);
+
+#if DEBUG_HEAP_INTEGRITY
+	UInt32		newAllocSize = (newSize + 3) & ~3;
+	
+	theBlock->SetPaddingBytes(newAllocSize - newSize);
+	theBlock->FillPaddingBytes();
+#endif
+
+#if STATS_MAC_MEMORY
+	GetOwningAllocator()->AccountForResizedBlock(theBlock->header.logicalBlockSize, newSize);
+	theBlock->header.logicalBlockSize = newSize;
+#endif
+
+	return (void *)(&theBlock->memory);
+}
+
 
 //--------------------------------------------------------------------
 void nsLargeHeapChunk::ReturnBlock(LargeBlockHeader *deadBlock)

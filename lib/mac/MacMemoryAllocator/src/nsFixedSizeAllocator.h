@@ -83,16 +83,6 @@ struct FixedMemoryBlock
 												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
 												return trailer->trailerTag;
 											}
-#else
-	// stubs
-	void					SetPaddingBytes(UInt32 padding) {}
-	void					FillPaddingBytes(UInt32 blockSize)
-	Boolean					CheckPaddingBytes(UInt32 blockSize)	{ return true; }
-	UInt32					GetPaddingBytes()	{ return 0; }
-	Boolean					HasHeaderTag(MemoryBlockTag inHeaderTag){ return true; }
-	void					SetHeaderTag(MemoryBlockTag inHeaderTag){}
-	void					SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag) {}
-	MemoryBlockTag			GetTrailerTag(UInt32 blockSize) { return 0; }
 #endif
 
 	static const UInt32				kFixedSizeBlockOverhead;
@@ -116,7 +106,7 @@ class nsFixedSizeAllocator : public nsMemAllocator
 	
 	public:
 
-								nsFixedSizeAllocator(size_t blockSize);
+								nsFixedSizeAllocator(THz heapZone, size_t blockSize);
 								~nsFixedSizeAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);

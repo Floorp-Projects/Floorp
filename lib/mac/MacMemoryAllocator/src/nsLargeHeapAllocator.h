@@ -23,6 +23,8 @@ class nsLargeHeapChunk;
 struct LargeBlockHeader
 {
 	
+	static LargeBlockHeader *GetBlockHeader(void *block)	{ return (LargeBlockHeader *)((char *)block - sizeof(LargeBlockHeader));	}
+	
 	Boolean					IsFreeBlock() 	{ return prev == nil; }
 	UInt32					GetBlockSize()	{ return ((UInt32)next - (UInt32)this - kLargeBlockOverhead);	}
 
@@ -79,16 +81,6 @@ struct LargeBlockHeader
 												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
 												return (trailer->trailerTag == theTag);
 											}
-#else
-	// stubs
-	void					SetPaddingBytes(UInt32 padding) {}
-	void					FillPaddingBytes()
-	Boolean					CheckPaddingBytes()	{ return true; }
-	UInt32					GetPaddingBytes()	{ return 0; }
-	Boolean					HasHeaderTag(MemoryBlockTag inHeaderTag){ return true; }
-	void					SetHeaderTag(MemoryBlockTag inHeaderTag){}
-	void					SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag) {}
-	Boolean					HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag) { return true; }
 #endif
 
 	static const UInt32		kLargeBlockOverhead;
@@ -116,7 +108,7 @@ class nsLargeHeapAllocator : public nsMemAllocator
 	
 	
 	public:
-								nsLargeHeapAllocator();
+								nsLargeHeapAllocator(THz heapZone);
 								~nsLargeHeapAllocator();
 
 
@@ -154,6 +146,7 @@ class nsLargeHeapChunk : public nsHeapChunk
 
 		void *				GrowBlock(LargeBlockHeader *growBlock, size_t newSize);
 		void *				ShrinkBlock(LargeBlockHeader *shrinkBlock, size_t newSize);
+		void *				ResizeBlockInPlace(LargeBlockHeader *theBlock, size_t newSize);
 		
 		void				ReturnBlock(LargeBlockHeader *deadBlock);
 		

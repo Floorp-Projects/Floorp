@@ -25,7 +25,6 @@
 #include <Processes.h>
 #include <CodeFragments.h>
 
-
 #include "nsMemAllocator.h"
 
 #include "nsFixedSizeAllocator.h"
@@ -59,7 +58,7 @@ class nsAllocatorManager
 
 		static const SInt32			kNumMasterPointerBlocks;
 		static const SInt32			kApplicationStackSizeIncrease;
-
+		static const SInt32			kHeapZoneHeapPercentage;
 
 									nsAllocatorManager();
 									~nsAllocatorManager();
@@ -88,6 +87,9 @@ class nsAllocatorManager
 		nsMemAllocator**			mSmallBlockAllocators;		// array of pointers to allocator objects
 	
 		nsMemAllocator*				mLargeAllocator;
+
+		THz							mHeapZone;					// the heap zone for our memory heaps
+
 };
 
 //--------------------------------------------------------------------
@@ -96,6 +98,7 @@ class nsAllocatorManager
 
 const SInt32	nsAllocatorManager::kNumMasterPointerBlocks = 30;
 const SInt32	nsAllocatorManager::kApplicationStackSizeIncrease = (32 * 1024);
+const SInt32	nsAllocatorManager::kHeapZoneHeapPercentage = 60;
 
 nsAllocatorManager* 	nsAllocatorManager::sAllocatorManager = nil;
 
@@ -126,9 +129,6 @@ nsAllocatorManager::nsAllocatorManager() :
 		mFixedSizeAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsFixedSizeAllocator));
 		if (mFixedSizeAllocators[i] == nil)
 			throw((OSErr)memFullErr);
-			
-		// placement new
-		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator((i + 1) * 4);
 	}
 
 	for (SInt32 i = 0; i < mNumSmallBlockAllocators; i ++)
@@ -136,16 +136,42 @@ nsAllocatorManager::nsAllocatorManager() :
 		mSmallBlockAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsSmallHeapAllocator));
 		if (mSmallBlockAllocators[i] == nil)
 			throw((OSErr)memFullErr);
-			
-		// placement new
-		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator();
 	}
 	
 	mLargeAllocator = (nsMemAllocator *)NewPtr(sizeof(nsLargeHeapAllocator));
 	if (mLargeAllocator == nil)
 		throw((OSErr)memFullErr);
-	// placement new
-	new (mLargeAllocator) nsLargeHeapAllocator();
+	
+	// make the heap zone for our subheaps
+	UInt32		heapZoneSize;
+	
+	heapZoneSize = ( kHeapZoneHeapPercentage * ::FreeMem() ) / 100;
+	heapZoneSize = ( ( heapZoneSize + 3 ) & ~3 );		// round up to a multiple of 4 bytes
+
+	Ptr			heapZone = ::NewPtr(heapZoneSize);
+	if (heapZone == nil)
+		throw((OSErr)memFullErr);
+
+#define kNumMasterPointers		24		// does not matter, since we won't be allocating handles
+										// in this heap zone
+										
+	Ptr			endZone = heapZone + heapZoneSize;
+	::InitZone(nil, kNumMasterPointers, endZone, heapZone);
+	
+	// set the current zone back to the application zone
+	::SetZone(::ApplicationZone());
+	
+	mHeapZone = (THz)heapZone;
+	
+	// now we have the heap zone, call (placement) new on our allocators
+	for (SInt32 i = 0; i < mNumFixedSizeAllocators; i ++)
+		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator(mHeapZone, (i + 1) * 4);
+
+	for (SInt32 i = 0; i < mNumSmallBlockAllocators; i ++)
+		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator(mHeapZone);
+	
+	new (mLargeAllocator) nsLargeHeapAllocator(mHeapZone);
+
 }
 
 //--------------------------------------------------------------------
@@ -182,10 +208,11 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 {
 	if (blockSize < mMinSmallBlockSize)
 		return mFixedSizeAllocators[ (blockSize == 0) ? 0 : ((blockSize + 3) >> 2) - 1 ];
-	else if (blockSize < mMinLargeBlockSize)
+	
+	if (blockSize < mMinLargeBlockSize)
 		return mSmallBlockAllocators[ ((blockSize + 3) >> 2) - mNumFixedSizeAllocators ];
-	else
-		return mLargeAllocator;
+	
+	return mLargeAllocator;
 }
 
 
@@ -223,6 +250,7 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 	}
 	catch (...)
 	{
+		return paramErr;
 	}
 	
 	return noErr;
@@ -320,6 +348,8 @@ void *calloc(size_t nele, size_t elesize)
 
 #pragma mark -
 
+#if 0
+
 /*----------------------------------------------------------------------------
 	__MemInitialize 
 	
@@ -332,8 +362,12 @@ pascal OSErr __MemInitialize(const CFragInitBlock *theInitBlock)
 	OSErr	err = __initialize(theInitBlock);
 	if (err != noErr) return err;
 	
-	return nsAllocatorManager::InitializeMacMemory(nsAllocatorManager::kNumMasterPointerBlocks,
-													nsAllocatorManager::kApplicationStackSizeIncrease);
+#if __profile__
+	if (ProfilerInit(collectDetailed, bestTimeBase, 500, 20) != noErr)
+		ExitToShell();
+#endif
+
+	return noErr;
 }
 
 
@@ -350,6 +384,14 @@ pascal OSErr __MemInitialize(const CFragInitBlock *theInitBlock)
 
 pascal void __MemTerminate(void)
 {
+#if __profile__
+	ProfilerDump("\pMemory Tester.prof");
+	ProfilerTerm();
+#endif
+
 	__terminate();
 }
+
+#endif
+
 

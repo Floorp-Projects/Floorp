@@ -20,7 +20,6 @@
 
 #include "nsMemAllocator.h"
 
-
 //--------------------------------------------------------------------
 nsHeapChunk::nsHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize, Handle tempMemHandle)
 :	mOwningAllocator(inOwningAllocator)
@@ -47,15 +46,15 @@ nsHeapChunk::~nsHeapChunk()
 #pragma mark -
 
 //--------------------------------------------------------------------
-nsMemAllocator::nsMemAllocator()
-:	mFirstChunk(nil)
+nsMemAllocator::nsMemAllocator(THz inHeapZone)
+:	mHeapZone(inHeapZone)
+,	mFirstChunk(nil)
 ,	mLastChunk(nil)
 #if DEBUG_HEAP_INTEGRITY	
 ,	mSignature(kMemAllocatorSignature)
 #endif
 //--------------------------------------------------------------------
 {
-
 }
 
 //--------------------------------------------------------------------
@@ -73,8 +72,10 @@ nsMemAllocator::~nsMemAllocator()
 //--------------------------------------------------------------------
 {
 	MemoryBlockHeader	*blockHeader = MemoryBlockHeader::GetHeaderFromBlock(thisBlock);
+#if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header tag");
 	MEM_ASSERT(blockHeader->owningChunk->IsGoodChunk(), "Block has bad chunk pointer");
+#endif
 	return (blockHeader->owningChunk->GetOwningAllocator());
 }
 
@@ -83,7 +84,9 @@ nsMemAllocator::~nsMemAllocator()
 //--------------------------------------------------------------------
 {
 	nsMemAllocator*		allocator = GetAllocatorFromBlock(thisBlock);
+#if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(allocator && allocator->IsGoodAllocator(), "Failed to get allocator for block");
+#endif
 	return allocator->AllocatorGetBlockSize(thisBlock);
 }
 
@@ -101,6 +104,12 @@ void nsMemAllocator::AddToChunkList(nsHeapChunk *inNewChunk)
 		mFirstChunk = inNewChunk;
 
 	mLastChunk = inNewChunk;
+
+#if STATS_MAC_MEMORY
+	mCurSubheapCount ++;
+	if (mCurSubheapCount > mMaxSubheapCount)
+		mMaxSubheapCount = mCurSubheapCount;
+#endif
 }
 
 
@@ -134,6 +143,10 @@ void nsMemAllocator::RemoveFromChunkList(nsHeapChunk *inChunk)
 		if (mLastChunk == thisChunk)
 			mLastChunk = prevChunk;
 	}
+	
+#if STATS_MAC_MEMORY
+	mCurSubheapCount --;
+#endif
 }
 
 
@@ -144,6 +157,7 @@ const Size nsMemAllocator::kFreeHeapSpace 		= 512 * 1024;
 // block size multiple. All blocks should be multiples of this size,
 // to reduce heap fragmentation
 const Size nsMemAllocator::kChunkSizeMultiple 	= 2 * 1024;
+const Size nsMemAllocator::kMacMemoryPtrOvehead	= 16;
 
 //--------------------------------------------------------------------
 Ptr nsMemAllocator::DoMacMemoryAllocation(Size preferredSize, Size &outActualSize,
@@ -160,28 +174,27 @@ Ptr nsMemAllocator::DoMacMemoryAllocation(Size preferredSize, Size &outActualSiz
 //		than preferredSize
 //--------------------------------------------------------------------
 {
-
 	*outTempMemHandle = nil;
 	
 	// calculate an ideal chunk size by rounding up
-	//preferredSize += kChunkSizeMultiple * ((preferredSize % kChunkSizeMultiple) > 0);
-	preferredSize = kChunkSizeMultiple * (((preferredSize % kChunkSizeMultiple) > 0) + preferredSize / kChunkSizeMultiple);
+	preferredSize = kChunkSizeMultiple * ((preferredSize + (kChunkSizeMultiple - 1)) / kChunkSizeMultiple);
+	
+	// take into accound the memory manager's pointer overhead (16 btyes), to avoid fragmentation
+	preferredSize += ((preferredSize / kChunkSizeMultiple) - 1) * kMacMemoryPtrOvehead;
 	outActualSize = preferredSize;
 	
-	// Get the space available if a purge happened. This does not do the purge (despite the name)
-	long		total, contig;
-	::PurgeSpace(&total, &contig);
+	// try to allocate in our heap zone
+	::SetZone(mHeapZone);
+
+	Ptr	resultPtr = ::NewPtr(preferredSize);
+
+	// set the current zone back to the application zone
+	::SetZone(::ApplicationZone());
+
+	if (resultPtr != nil)
+		return resultPtr;
 	
-	Ptr		resultPtr = nil;
-	
-	if (contig + preferredSize > kFreeHeapSpace)		// space in heap
-	{
-		resultPtr = ::NewPtr(preferredSize);
-		if (resultPtr != nil)
-			return resultPtr;
-	}
-	
-	// try temp mem now
+	// that failed, so try temp mem now
 	OSErr		err;
 	Handle		tempMemHandle = ::TempNewHandle(preferredSize, &err);
 	if (tempMemHandle != nil)
@@ -195,3 +208,42 @@ Ptr nsMemAllocator::DoMacMemoryAllocation(Size preferredSize, Size &outActualSiz
 }
 
 
+#if STATS_MAC_MEMORY
+
+//--------------------------------------------------------------------
+void nsMemAllocator::AccountForNewBlock(size_t logicalSize)
+//--------------------------------------------------------------------
+{
+	mCurBlockCount ++;
+	
+	if (mCurBlockCount > mMaxBlockCount)
+		mMaxBlockCount = mCurBlockCount;
+		
+	mCurBlockSpaceUsed += logicalSize;
+	
+	if (mCurBlockSpaceUsed > mMaxBlockSpaceUsed)
+		mMaxBlockSpaceUsed = mCurBlockSpaceUsed;
+
+}
+
+//--------------------------------------------------------------------
+void nsMemAllocator::AccountForResizedBlock(size_t oldLogicalSize, size_t newLogicalSize)
+//--------------------------------------------------------------------
+{
+	mCurBlockSpaceUsed -= oldLogicalSize;
+	mCurBlockSpaceUsed += newLogicalSize;
+	
+	if (mCurBlockSpaceUsed > mMaxBlockSpaceUsed)
+		mMaxBlockSpaceUsed = mCurBlockSpaceUsed;
+
+}
+
+//--------------------------------------------------------------------
+void nsMemAllocator::AccountForFreedBlock(size_t logicalSize)
+//--------------------------------------------------------------------
+{
+	mCurBlockCount --;
+	mCurBlockSpaceUsed -= logicalSize;
+}
+
+#endif

@@ -91,18 +91,13 @@ struct SmallHeapBlock
 												MemoryBlockTrailer *trailer = (MemoryBlockTrailer *)((char *)&memory + blockSize);
 												return (trailer->trailerTag == theTag);
 											}
-#else
-	// stubs
-	void						SetPaddingBytes(UInt32 padding) {}
-	void						FillPaddingBytes()
-	Boolean						CheckPaddingBytes()	{ return true; }
-	UInt32						GetPaddingBytes()	{ return 0; }
-	Boolean						HasHeaderTag(MemoryBlockTag inHeaderTag){ return true; }
-	void						SetHeaderTag(MemoryBlockTag inHeaderTag){}
-	void						SetTrailerTag(UInt32 blockSize, MemoryBlockTag theTag) {}
-	Boolean						HasTrailerTag(UInt32 blockSize, MemoryBlockTag theTag) { return true; }
 #endif
 
+#if STATS_MAC_MEMORY
+	size_t						GetLogicalBlockSize()					{ return info.inUseInfo.freeProc.logicalBlockSize; }
+	void						SetLogicalBlockSize(size_t blockSize)	{ info.inUseInfo.freeProc.logicalBlockSize = blockSize; }
+#endif
+	
 	private:
 	
 		SmallHeapBlock				*prevBlock;
@@ -135,7 +130,7 @@ class nsSmallHeapAllocator : public nsMemAllocator
 
 	public:
 			
-								nsSmallHeapAllocator();
+								nsSmallHeapAllocator(THz heapZone);
 								~nsSmallHeapAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);
@@ -168,7 +163,7 @@ class nsSmallHeapChunk : public nsHeapChunk
 		
 		void *					GrowBlock(SmallHeapBlock *growBlock, size_t newSize);
 		void *					ShrinkBlock(SmallHeapBlock *shrinkBlock, size_t newSize);
-		
+		void *					ResizeBlockInPlace(SmallHeapBlock *shrinkBlock, size_t newSize);
 		
 	protected:
 	

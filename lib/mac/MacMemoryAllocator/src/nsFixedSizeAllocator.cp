@@ -25,8 +25,9 @@
 const UInt32 FixedMemoryBlock::kFixedSizeBlockOverhead = sizeof(FixedMemoryBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
 
 //--------------------------------------------------------------------
-nsFixedSizeAllocator::nsFixedSizeAllocator(size_t blockSize) :
-	mBlockSize(blockSize)
+nsFixedSizeAllocator::nsFixedSizeAllocator(THz heapZone, size_t blockSize)
+:	nsMemAllocator(heapZone)
+,	mBlockSize(blockSize)
 //--------------------------------------------------------------------
 {
 	mBaseChunkSize = mTempChunkSize = (nsMemAllocator::kChunkSizeMultiple);
@@ -46,9 +47,9 @@ nsHeapChunk* nsFixedSizeAllocator::FindChunkWithSpace(size_t blockSize) const
 	nsFixedSizeHeapChunk*	chunk = (nsFixedSizeHeapChunk *)mFirstChunk;
 
 	//	Try to find an existing chunk with a free block.
-	while ( chunk != NULL )
+	while (chunk != nil)
 	{
-		if ( chunk->GetFreeList() != nil )
+		if (chunk->GetFreeList() != nil)
 			return chunk;
 		
 		chunk = (nsFixedSizeHeapChunk *)chunk->GetNextChunk();
@@ -71,14 +72,19 @@ void *nsFixedSizeAllocator::AllocatorMakeBlock(size_t blockSize)
 	}
 
 	FixedMemoryBlock*	blockHeader = chunk->FetchFirstFree();
-	// these get stripped by the compiler in optimized builds
+
+#if DEBUG_HEAP_INTEGRITY
 	blockHeader->SetHeaderTag(kUsedBlockHeaderTag);
 	blockHeader->SetTrailerTag(GetAllocatorBlockSize(), kUsedBlockTrailerTag);
 	
-#if DEBUG_HEAP_INTEGRITY
 	UInt32		paddedSize = (blockSize + 3) & ~3;
 	blockHeader->SetPaddingBytes(paddedSize - blockSize);
 	blockHeader->FillPaddingBytes(mBlockSize);
+#endif
+
+#if STATS_MAC_MEMORY
+	blockHeader->blockHeader.header.logicalBlockSize = blockSize;
+	AccountForNewBlock(blockSize);
 #endif
 
 	return (void *)&blockHeader->memory;
@@ -91,15 +97,22 @@ void nsFixedSizeAllocator::AllocatorFreeBlock(void *freeBlock)
 {
 	FixedMemoryBlock*	blockHeader = FixedMemoryBlock::GetBlockHeader(freeBlock);
 	
+#if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header");
 	MEM_ASSERT(blockHeader->GetTrailerTag(GetAllocatorBlockSize()) == kUsedBlockTrailerTag, "Bad block trailer");
 	MEM_ASSERT(blockHeader->CheckPaddingBytes(mBlockSize), "Block bounds have been overwritten");
+#endif
 	
+#if STATS_MAC_MEMORY
+	AccountForFreedBlock(blockHeader->blockHeader.header.logicalBlockSize);
+#endif
+
 	nsFixedSizeHeapChunk*	chunk = blockHeader->GetOwningChunk();
 
-	// these get stripped by the compiler in optimized builds
+#if DEBUG_HEAP_INTEGRITY
 	blockHeader->SetHeaderTag(kFreeBlockHeaderTag);
 	blockHeader->SetTrailerTag(GetAllocatorBlockSize(), kFreeBlockTrailerTag);
+#endif
 
 	chunk->ReturnToFreeList(blockHeader);
 	
@@ -121,11 +134,11 @@ void *nsFixedSizeAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 	
 	FixedMemoryBlock*	blockHeader = FixedMemoryBlock::GetBlockHeader(block);
 
+#if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header");
 	MEM_ASSERT(blockHeader->GetTrailerTag(GetAllocatorBlockSize()) == kUsedBlockTrailerTag, "Bad block trailer");
 	MEM_ASSERT(blockHeader->CheckPaddingBytes(mBlockSize), "Block bounds have been overwritten");
 	
-#if DEBUG_HEAP_INTEGRITY
 	// if we shrunk the block to below this allocator's normal size range, then these
 	// padding bytes won't be any use. But they are tested using mBlockSize, so we
 	// have to udpate them anyway.
@@ -133,7 +146,12 @@ void *nsFixedSizeAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 	blockHeader->SetPaddingBytes(paddedSize - newSize);
 	blockHeader->FillPaddingBytes(mBlockSize);
 #endif
-	
+
+#if STATS_MAC_MEMORY
+	AccountForResizedBlock(blockHeader->blockHeader.header.logicalBlockSize, newSize);
+	blockHeader->blockHeader.header.logicalBlockSize = newSize;
+#endif
+
 	return block;
 }
 

@@ -16,12 +16,7 @@
  * Reserved. */
 
 
-
-// temporary defines
-//#define DEBUG_MAC_MEMORY			0
-//#define TRACK_EACH_ALLOCATOR		0
-//#define DEBUG_HEAP_INTEGRITY		DEBUG
-//#define STATS_MAC_MEMORY			0
+#include <stddef.h>
 
 class nsMemAllocator;
 class nsHeapChunk;
@@ -45,6 +40,13 @@ typedef	UInt32	MemoryBlockTag;
 struct MemoryBlockHeader
 {
 	nsHeapChunk					*owningChunk;
+
+#if STATS_MAC_MEMORY
+	// it sucks putting an extra data member in here which affects stats, but there is no other
+	// way to store the logical size of each block.
+	size_t						logicalBlockSize;
+#endif
+
 #if DEBUG_HEAP_INTEGRITY
 	//MemoryBlockHeader			*next;
 	//MemoryBlockHeader			*prev;
@@ -106,7 +108,7 @@ class nsHeapChunk
 	protected:
 #if DEBUG_HEAP_INTEGRITY
 		enum {
-			kChunkSignature = 'oink'
+			kChunkSignature = 'Chnk'
 		};
 
 		OSType					mSignature;
@@ -128,8 +130,8 @@ class nsMemAllocator
 {
 	public:
 
-								nsMemAllocator();
-		virtual 				~nsMemAllocator();
+								nsMemAllocator(THz inHeapZone);
+		virtual 				~nsMemAllocator() = 0;
 		
 		static size_t			GetBlockSize(void *thisBlock);
 		static nsMemAllocator*	GetAllocatorFromBlock(void *thisBlock);
@@ -156,6 +158,7 @@ class nsMemAllocator
 		
 		static const Size		kFreeHeapSpace;
 		static const Size		kChunkSizeMultiple;
+		static const Size		kMacMemoryPtrOvehead;
 		
 		Ptr						DoMacMemoryAllocation(Size preferredSize, Size &outActualSize, Handle *outTempMemHandle);
 	
@@ -163,15 +166,11 @@ class nsMemAllocator
 		void					RemoveFromChunkList(nsHeapChunk *inChunk);
 		
 		enum {
-			kMemAllocatorSignature = 'ARSE'
+			kMemAllocatorSignature = 'ARSE'				// Allocators R Supremely Efficient
 		};
 		
 #if DEBUG_HEAP_INTEGRITY
 		OSType					mSignature;				// signature for debugging
-#endif
-
-#if DEBUG_BLOCK_TRACKING
-		AllocationSet			*mAllocationSet;		// allocation set used by xp_tracker code
 #endif
 
 		nsHeapChunk				*mFirstChunk;			// pointer to first subheap managed by this allocator
@@ -179,6 +178,42 @@ class nsMemAllocator
 
 		UInt32					mBaseChunkSize;			// size of subheap allocated at startup
 		UInt32					mTempChunkSize;			// size of additional subheaps
+		
+		THz						mHeapZone;				// heap zone in which to allocate pointers
+
+#if STATS_MAC_MEMORY
+		
+	public:
+	
+		void					AccountForNewBlock(size_t logicalSize);
+		void					AccountForFreedBlock(size_t logicalSize);
+		void					AccountForResizedBlock(size_t oldLogicalSize, size_t newLogicalSize);
+		
+	private:
+	
+		UInt32					mCurBlockCount;			// number of malloc blocks allocated now
+		UInt32					mMaxBlockCount;			// max number of malloc blocks allocated
+		
+		UInt32					mCurBlockSpaceUsed;		// sum of logical size of allocated blocks
+		UInt32					mMaxBlockSpaceUsed;		// max of sum of logical size of allocated blocks
+		
+		UInt32					mCurHeapSpaceUsed;		// sum of physical size of allocated chunks
+		UInt32					mMaxHeapSpaceUsed;		// max of sum of logical size of allocated chunks
+		
+		UInt32					mCurSubheapCount;		// current number of subheaps allocated by this allocator
+		UInt32					mMaxSubheapCount;		// max number of subheaps allocated by this allocator
+		
+		
+		// the difference between mCurBlockSpaceUsed and mCurHeapSpaceUsed is
+		// the allocator overhead, which consists of:
+		//
+		//	1. Block overhead (rounding, headers & trailers)
+		//	2. Unused block space in chunks
+		//	3. Chunk overhead (rounding, headers & trailers)
+		//
+		//	This is a reasonable measure of the space efficiency of these allocators
+#endif
+
 };
 
 
