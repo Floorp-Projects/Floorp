@@ -167,7 +167,7 @@ function onLoad() {
   setDefaultButton = document.getElementById("setDefaultButton");
 
   sortAccountList(accounttree);
-  setTimeout(selectServer, 0, selectedServer, selectPage);
+  setTimeout(selectServer, 0, selectedServer.serverURI, selectPage);
 }
 
 function sortAccountList(accounttree)
@@ -176,16 +176,16 @@ function sortAccountList(accounttree)
   xulSortService.sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
-function selectServer(server, selectPage)
+function selectServer(serverId, selectPage)
 {
   var selectedServer, selectedItem;
 
-  if (server)
-    selectedServer = document.getElementById(server.serverURI);
+  if (serverId)
+    selectedServer = document.getElementById(serverId);
   if (!selectedServer)
     selectedServer = getFirstAccount();
 
-  if (server && selectedServer && selectPage)
+  if (serverId && selectedServer && selectPage)
     selectedItem = findSelectPage(selectedServer, selectPage);
   if (!selectedItem)
     selectedItem = selectedServer;
@@ -199,8 +199,6 @@ function selectServer(server, selectPage)
     index = accounttree.contentView.getIndexOfItem(lastItem);
 
   accounttree.treeBoxObject.ensureRowIsVisible(index);
-
-  updateButtons(accounttree, selectedServer.id);
 }
 
 function findSelectPage(selectServer, selectPage)
@@ -728,8 +726,8 @@ function onAccountClick(tree)
   if (!currentSelection)
     return;
 
-  showPage(currentSelection.serverId, currentSelection.pageId);
-  updateButtons(tree, currentSelection.serverId);
+  if (showPage(currentSelection.serverId, currentSelection.pageId))
+    updateButtons(tree, currentSelection.serverId);
 }
 
 // show the page for the given server:
@@ -739,19 +737,21 @@ function showPage(serverId, pageId)
 {
   if (pageId == currentPageId &&
       serverId == currentServerId)
-    return;
+    return false;
 
   // check if user/host names have been changed
   checkUserServerChanges(false);
 
   if (gSmtpHostNameIsIllegal) {
     gSmtpHostNameIsIllegal = false;
-    return;
+    selectServer(currentServerId, currentPageId);
+    return false;
   }
 
   // save the previous page
   savePage(currentServerId);
 
+  var changeServerId = (serverId != currentServerId);
   // loading a complete different page
   if (pageId != currentPageId) {
 
@@ -764,9 +764,10 @@ function showPage(serverId, pageId)
   }
 
   // same page, different server
-  else if (serverId != currentServerId) {
+  else if (changeServerId) {
     restorePage(pageId, serverId);
   }
+  return changeServerId;
 }
 
 // page has loaded
