@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMComment.h"
-#include "nsGenericDomDataNode.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -31,6 +31,7 @@ class nsCommentNode : public nsIDOMComment,
 public:
   nsCommentNode();
   ~nsCommentNode();
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -55,7 +56,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(mInner)
 
 protected:
-  nsGenericDomDataNode mInner;
+  nsGenericDOMDataNode mInner;
 };
 
 nsresult
@@ -86,7 +87,7 @@ NS_IMPL_ADDREF(nsCommentNode)
 
 NS_IMPL_RELEASE(nsCommentNode)
 
-nsresult
+NS_IMETHODIMP
 nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
@@ -100,7 +101,7 @@ nsCommentNode::GetNodeType(PRInt32* aNodeType)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCommentNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 {
   // XXX not yet implemented
@@ -108,7 +109,7 @@ nsCommentNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCommentNode::CloneNode(nsIDOMNode** aReturn)
 {
   nsCommentNode* it = new nsCommentNode();
@@ -137,7 +138,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCommentNode::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
@@ -148,7 +149,7 @@ nsCommentNode::ToHTML(FILE* out) const
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsCommentNode::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);

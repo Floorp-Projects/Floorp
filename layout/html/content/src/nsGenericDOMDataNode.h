@@ -16,8 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsGenericDomDataNode_h___
-#define nsGenericDomDataNode_h___
+#ifndef nsGenericDOMDataNode_h___
+#define nsGenericDOMDataNode_h___
 
 #include "nsIDOMData.h"
 #include "nsIScriptObjectOwner.h"
@@ -45,9 +45,9 @@ class nsIStyleContext;
 class nsIStyleRule;
 class nsISupportsArray;
 
-struct nsGenericDomDataNode {
-  nsGenericDomDataNode();
-  ~nsGenericDomDataNode();
+struct nsGenericDOMDataNode {
+  nsGenericDOMDataNode();
+  ~nsGenericDOMDataNode();
 
   void Init(nsIHTMLContent* aOuterContentObject);
 
@@ -518,7 +518,7 @@ struct nsGenericDomDataNode {
   }                                                                    \
   NS_IMETHOD                                                           \
     GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const { \
-    aMapFunc = nsGenericDomDataNode::MapNoAttributes;                  \
+    aMapFunc = nsGenericDOMDataNode::MapNoAttributes;                  \
     return NS_OK;                                                      \
   }
 
@@ -571,4 +571,4 @@ struct nsGenericDomDataNode {
     return NS_OK;                                           \
   }
 
-#endif /* nsGenericDomDataNode_h___ */
+#endif /* nsGenericDOMDataNode_h___ */
