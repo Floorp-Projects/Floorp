@@ -2443,6 +2443,21 @@ NS_IMETHODIMP GlobalWindowImpl::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDoc
 
    PRBool present = PR_FALSE;
    PRInt32 temp;
+
+   if((temp = WinHasOption(aFeatures, "left", &present)) || present)
+      chromeX = temp;
+   else if((temp = WinHasOption(aFeatures, "screenX", &present)) || present)
+      chromeX = temp;
+
+   present = PR_FALSE;
+
+   if((temp = WinHasOption(aFeatures, "top", &present)) || present)
+      chromeY = temp;
+   else if((temp = WinHasOption(aFeatures, "screenY", &present)) || present)
+      chromeY = temp;
+
+   present = PR_FALSE;
+
    PRBool sizeSpecified = PR_FALSE;
 
    if((temp = WinHasOption(aFeatures, "width", &present)) || present)
