@@ -17,53 +17,67 @@
 
 DEPTH		= ../..
 
-MODULE		= network
-LIBRARY_NAME	= network
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS= mkabook.cpp	
-endif
+MODULE		= mimetype
+LIBRARY_NAME	= mimetype
 
 CSRCS		= \
-	jscookie.c	\
-	mkautocf.c	\
-	mkconect.c	\
 	mkformat.c	\
-	mkfsort.c	\
-	mkgeturl.c	\
-	mkhelp.c	\
-	mkinit.c	\
-	mkmessag.c	\
-	mkpadpac.c	\
-	mkparse.c	\
-	mkselect.c	\
-	mksockrw.c	\
-	mksort.c	\
-	mkstream.c	\
-	mktrace.c	\
-	mkutils.c	\
-	prefetch.c	\
-	unix-dns.c	\
 	$(NULL)
 
-EXPORTS= mkstream.h mkformat.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
-	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
-        mkutils.h mktrace.h
+EXPORTS=mkformat.h
 
+include $(DEPTH)/config/config.mk
 
-REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
-	libfont netcache httpurl cnetinit security img layer netcnvts network
+REQUIRES	= nspr2 network img layer util
 
 include $(DEPTH)/config/rules.mk
 
-TEST_LIBS	= $(LIBRARY) \
-		  $(DIST)/lib/liburl.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libsec-us.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libxp.$(LIB_SUFFIX) \
-		  $(DIST)/lib/nspr.$(LIB_SUFFIX)
+#
+# This converts mime.types to C source code,
+#  and also to an HTML table that shows what's in it.
+#
+MIME_TYPES		= ./mime.types
+MIME_TYPES_UNIX		= ./mime.types-unix
+MIME_TYPES_NONUNIX	= ./mime.types-nonunix
+AD2C			= sh $(DEPTH)/cmd/xfe/ad2c
 
-test:
-	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS)
-	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS)
+mktypes.h: $(MIME_TYPES) $(MIME_TYPES_UNIX) $(MIME_TYPES_NONUNIX)
+	rm -f $@
+	@echo "generating $@ from $<..."			; \
+	 (echo '/* Generated file - do not edit! */'		; \
+	  echo ''						; \
+	  cat $(MIME_TYPES) | grep -v '^#' | $(AD2C)		; \
+	  echo ''						; \
+	  echo '#ifdef XP_UNIX'					; \
+	  cat $(MIME_TYPES_UNIX) | grep -v '^#' | $(AD2C)	; \
+	  echo '#else  /* !XP_UNIX */'				; \
+	  cat $(MIME_TYPES_NONUNIX) | grep -v '^#' | $(AD2C)	; \
+	  echo '#endif /* !XP_UNIX */'				; \
+	 ) > $@
+
+mime-types.html: $(MIME_TYPES) $(MIME_TYPES_UNIX)
+	rm -f $@
+	@echo "generating $@ from $<..."				; \
+	 (echo '<TITLE>Netscape MIME Types</TITLE>'			; \
+	  echo '<H1 ALIGN=CENTER>Netscape MIME Types</H1>'		; \
+	  echo '<CENTER>'						; \
+	  echo '<TABLE BORDER CELLSPACING=0 CELLPADDING=5>'		; \
+	  echo '<TR><TH></TH><TH>Content Type:</TH>'			; \
+	  echo '<TH>Extensions:</TH><TH>Description:</TH></TR>'		; \
+	  echo '<TR></TR><TR></TR><TR></TR>'	; \
+	  cat $(MIME_TYPES) $(MIME_TYPES_UNIX) | grep -v '^#' |		   \
+	  sed  's@exts="\([^"]*\)"[ 	]*[\]*@<TR><TD><TT>\1</TT></TD>@;  \
+		s@desc="\([^"]*\)"[ 	]*[\]*@<TD>\1</TD>@;		   \
+		s@enc=\([^ 	]*\)[ 	]*[\]*$$@<TD>encoding/\1</TD>@;	   \
+		s@type=\([^ 	]*\)[ 	]*[\]*$$@<TD>\1</TD>@;		   \
+		s@icon=\([^ 	]*\)[ 	]*[\]*$$@<TD><IMG SRC=\1></TD></TR>@'\
+	  | sed 's/,/ /g'						  \
+	  | awk '{if ( $$0 ~ /^<TR/ ) {printf "%s" , $$0}		  \
+		  else {printf "%s\n" , $$0} }'				  \
+	  | sed 's@\(<TR>\)\(<TD>.*</TD>\)\(<TD>.*</TD>\)\(<TD>.*</TD>\)\(<TD>.*</TD>\)\(</TR>\)$$@\1\5!\3!\2!\4\6@' \
+	  | tr '!' '\012'						  \
+	  | sed 's@<TD></TD>@<TD>\&nbsp;</TD>@'				; \
+	  echo '</TABLE>'						; \
+	  echo '</CENTER>'						; \
+	 ) > $@
 

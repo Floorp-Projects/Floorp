@@ -20,7 +20,7 @@
 #define MKHTTP_H
 
 #ifndef MKGETURL_H
-#include "MKGetURL.h"
+#include "mkgeturl.h"
 #endif /* MKGETURL_H */
 
 #define DEF_HTTP_PORT 80

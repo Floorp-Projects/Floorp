@@ -20,14 +20,19 @@
 DEPTH	= ../..
 
 DIRS	= about	\
-	dataurl	\
 	file	\
 	ftp	\
 	gopher	\
 	http	\
+	remote
+
+ifndef MODULAR_NETLIB
+DIRS += \
+	dataurl	\
 	js	\
 	marimba	\
-	remote
+	$(NULL)
+endif
 
 include $(DEPTH)/config/rules.mk
 

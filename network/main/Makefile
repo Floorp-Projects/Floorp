@@ -28,31 +28,36 @@ CSRCS		= \
 	jscookie.c	\
 	mkautocf.c	\
 	mkconect.c	\
-	mkformat.c	\
 	mkfsort.c	\
 	mkgeturl.c	\
 	mkhelp.c	\
-	mkinit.c	\
 	mkmessag.c	\
 	mkpadpac.c	\
 	mkparse.c	\
 	mkselect.c	\
 	mksockrw.c	\
 	mksort.c	\
-	mkstream.c	\
 	mktrace.c	\
 	mkutils.c	\
 	prefetch.c	\
 	unix-dns.c	\
 	$(NULL)
 
-EXPORTS= mkstream.h mkformat.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
+ifndef MODULAR_NETLIB
+CSRCS += \
+	mkinit.c	\
+	mkstream.c	\
+	$(NULL)
+endif
+
+EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
         mkutils.h mktrace.h
 
 
 REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
-	libfont netcache httpurl cnetinit security img layer netcnvts network
+	libfont netcache httpurl cnetinit security img layer netcnvts network \
+	mimetype
 
 include $(DEPTH)/config/rules.mk
 

@@ -480,6 +480,10 @@ ifdef STANDALONE_IMAGE_LIB
 DEFINES		+= -DSTANDALONE_IMAGE_LIB
 endif
 
+ifdef MODULAR_NETLIB
+DEFINES 	+= -DMODULAR_NETLIB
+endif
+
 ######################################################################
 
 GARBAGE		= $(DEPENDENCIES) core $(wildcard core.[0-9]*)

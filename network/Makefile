@@ -24,8 +24,13 @@ DIRS	= \
 	cache		\
 	client		\
 	cnvts		\
+	mimetype	\
 	main		\
-	protocol	\
+	protocol
+
+ifdef MODULAR_NETLIB
+DIRS	+= module
+endif
 
 include $(DEPTH)/config/rules.mk
 

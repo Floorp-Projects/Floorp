@@ -15,52 +15,35 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH		= ../..
+DEPTH			= ../..
 
-MODULE		= netcnvts
-LIBRARY_NAME	= netcnvts
+MODULE			= netlib
+LIBRARY_NAME		= netlib
 
-CSRCS		= \
-	cvactive.c	\
-	cvchunk.c	\
-	cvcolor.c	\
-	cvdisk.c	\
-	cvextcon.c	\
-	cvjscfg.c	\
-	cvsimple.c	\
-	cvunzip.c	\
-	cvview.c	\
-	txview.c	\
-	$(NULL)
+CPPSRCS			= \
+			  nsNetService.cpp    \
+			  nsNetStream.cpp     \
+			  nsURL.cpp           \
+			  nsHttpUrl.cpp       \
+			  nsStubContext.cpp   \
+			  nsNetStubs.cpp      \
+			  $(NULL)
 
-ifndef MODULAR_NETLIB
-CSRCS += \
-	cvmime.c	\
-	cvpics.c	\
-	$(NULL)
-endif
+REQUIRES		= raptor js dbm nspr security pref xpcom util img \
+			  layer network netcache fileurl ftpurl abouturl \
+			  httpurl gophurl remoturl
 
-EXPORTS= \
-	cvactive.h	\
-	cvview.h	\
-	cvproxy.h	\
-	cvextcon.h	\
-	txview.h	\
-    cvchunk.h   \
-    cvcolor.h   \
-    cvdisk.h    \
-    cvsimple.h  \
-    cvunzip.h   \
-    cvjscfg.h
+EXPORTS = nsIStreamListener.h           \
+          nsINetService.h               \
+          nsIURL.h                      \
+          nsIPostToServer.h             \
+          nsIHttpUrl.h                  \
+          $(NULL)
 
-ifndef MODULAR_NETLIB
-EXPORTS += \
-    cvmime.h    \
-    cvpics.h    \
-    $(NULL)
-endif
-
-REQUIRES	= network img lay layer util parse pref js \
-	security marimurl style zlib softupdt mimetype
+include $(DEPTH)/config/config.mk
 
 include $(DEPTH)/config/rules.mk
+
+$(LIBRARY): \
+	$(OBJS)
+

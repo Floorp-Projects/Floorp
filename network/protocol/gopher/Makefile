@@ -27,7 +27,7 @@ CSRCS		= \
 EXPORTS= gophurl.h
 
 REQUIRES	= network nspr2 dbm util pref js java fileurl \
-	security layer img httpurl remoturl
+	security layer img httpurl remoturl mimetype
 
 include $(DEPTH)/config/rules.mk
 

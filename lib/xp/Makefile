@@ -22,13 +22,14 @@ DEPTH		= ../..
 MODULE		= xp
 LIBRARY_NAME	= xp
 
-CSRCS		= xp_alloc.c \
+ifndef MODULAR_NETLIB
+CSRCS		= \
+		  xp_alloc.c \
 		  xp_cntxt.c \
 		  xp_core.c \
 		  xp_error.c \
-		  xp_file.c \
 		  xp_hash.c \
-		  xp_list.c \
+		  xp_intl.c \
 		  xp_ncent.c \
 		  xp_reg.c \
 		  xp_rgb.c \
@@ -41,10 +42,17 @@ CSRCS		= xp_alloc.c \
 		  xpassert.c \
 		  xplocale.c \
 		  $(NULL)
+else
+CSRCS =		  xp_stub.c 
+endif
+
+CSRCS +=          \
+	 	  xp_file.c \
+		  xp_list.c \
+		  allxpstr.c \
+		  $(NULL)
 
 REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf
-
-CSRCS		+= allxpstr.c xp_intl.c
 
 ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c
