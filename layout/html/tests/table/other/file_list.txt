@@ -10,3 +10,4 @@ file:///s|/mozilla/layout/html/tests/table/other/ms.html
 file:///s|/mozilla/layout/html/tests/table/other/XXXwf_table_index.html
 file:///s|/mozilla/layout/html/tests/table/other/move_row.html
 file:///s|/mozilla/layout/html/tests/table/other/move_row.html
+file:///s|/mozilla/layout/html/tests/table/other/nested2.html
