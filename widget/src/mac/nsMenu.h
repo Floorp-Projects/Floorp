@@ -46,6 +46,14 @@ extern const PRInt16 kAppleMenuID;
 //static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
  extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
 
+
+namespace MenuHelpers
+{
+    // utility routine for getting a PresContext out of a webShell
+  nsresult WebShellToPresContext ( nsIWebShell* inWebShell, nsIPresContext** outContext ) ;
+}
+
+
 class nsMenu : public nsIMenu, public nsIMenuListener, public nsIDocumentObserver
 {
 
@@ -176,23 +184,30 @@ protected:
   PRBool               mIsHelpMenu;
   PRBool               mIsEnabled;
 
-void LoadMenuItem(
-  nsIMenu *    pParentMenu,
-  nsIDOMElement * menuitemElement,
-  nsIDOMNode *    menuitemNode,
-  unsigned short  menuitemIndex,
-  nsIWebShell *   aWebShell);
+    // fetch the content node associated with the menupopup item
+  void GetMenuPopupElement ( nsIDOMNode** aResult ) ;
+
+    // fire handlers for oncreate/ondestroy
+  PRBool OnDestroy() ;
+  PRBool OnCreate() ;
   
-void LoadSubMenu(
-  nsIMenu *       pParentMenu,
-  nsIDOMElement * menuElement,
-  nsIDOMNode *    menuNode);
+  void LoadMenuItem(
+    nsIMenu *    pParentMenu,
+    nsIDOMElement * menuitemElement,
+    nsIDOMNode *    menuitemNode,
+    unsigned short  menuitemIndex,
+    nsIWebShell *   aWebShell);
+  
+  void LoadSubMenu(
+    nsIMenu *       pParentMenu,
+    nsIDOMElement * menuElement,
+    nsIDOMNode *    menuNode);
   
   nsEventStatus HelpMenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * menuNode,
-	void              * aWebShell);
+	  void              * aWebShell);
 	
 void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
 MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);

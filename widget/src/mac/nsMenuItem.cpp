@@ -25,6 +25,7 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 
+#include "nsMenu.h"         // for MenuHelpers namespace
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
@@ -333,22 +334,8 @@ NS_METHOD nsMenuItem::DoCommand()
 {
   nsresult rv = NS_ERROR_FAILURE;
  
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
-   NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocumentViewer> docViewer;
-  docViewer = do_QueryInterface(contentViewer);
-  if (!docViewer) {
-      NS_ERROR("Document viewer interface not supported by the content viewer.");
-      return rv;
-  }
-
   nsCOMPtr<nsIPresContext> presContext;
-  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
-      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
-      return rv;
-  }
+  MenuHelpers::WebShellToPresContext ( mWebShell, getter_AddRefs(presContext) );
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
