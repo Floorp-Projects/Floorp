@@ -2018,7 +2018,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
     int n = cnt;
 	for (int i=0 ; i<n ; i++) {
         char *groupname = nsnull;
-        nsresult rv = NS_OK;
+        rv = NS_OK;
         
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
         rv = info->GetName(&groupname);
@@ -2123,7 +2123,7 @@ nsNNTPHost::AddGroup(const char *name,
 			if (m_groups != nsnull) {
 				// groups are added at end so look there first...
                 PRUint32 cnt;
-                nsresult rv = m_groups->Count(&cnt);
+                rv = m_groups->Count(&cnt);
                 if (NS_FAILED(rv)) return rv;
 				newsInfo = (nsINNTPNewsgroup *)
                     (*m_groups)[cnt - 1];
@@ -2409,7 +2409,6 @@ nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
         PRBool wantNewTotals, subscribed;
-        nsresult rv;
         rv = info->GetWantNewTotals(&wantNewTotals);
         if (NS_SUCCEEDED(rv))
             rv = info->GetSubscribed(&subscribed);
@@ -2420,6 +2419,7 @@ nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 		}
 	}
 	*value = result;
+    // return rv; ??
     return NS_OK;
 }
 
@@ -2435,7 +2435,6 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
         
         PRBool wantNewTotals, subscribed;
-        nsresult rv;
         rv = info->GetWantNewTotals(&wantNewTotals);
         if (NS_SUCCEEDED(rv))
             rv = info->GetSubscribed(&subscribed);
@@ -2453,6 +2452,7 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 		}
 	}
     *result = NULL;
+    // return rv; ??
 	return NS_OK;
 }
 
@@ -2460,9 +2460,9 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 nsresult
 nsNNTPHost::GetFirstGroupNeedingExtraInfo(char **result)
 {
-	nsMsgGroupRecord* grec;
+	nsMsgGroupRecord* grec = nsnull;
 
-    *result=NULL;
+    *result=nsnull;
 	for (grec = m_groupTree->GetChildren();	 grec; grec = grec->GetNextAlphabetic()) {
 		if (grec && grec->NeedsExtraInfo()) {
 			char *fullName = grec->GetFullName();
@@ -3417,7 +3417,7 @@ int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *gr
 			PRBool	foundIdxInHostInfo = PR_FALSE;
 
 			PRUint32 cnt;
-            nsresult rv = m_groups->Count(&cnt);
+            rv = m_groups->Count(&cnt);
             if (NS_FAILED(rv)) return rv;
             for (idxInData = 0, idxInView = -1; idxInData < (PRInt32)cnt; idxInData++)
 			{
@@ -3515,8 +3515,6 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **retval)
     int n = cnt;
 	for (int i=0 ; i<n ; i++) {
         char *newsgroupname = nsnull;
-        nsresult rv = NS_OK;
-		
 		nsINNTPNewsgroupList* list = (nsINNTPNewsgroupList*) (*m_newsgrouplists)[i];
         rv = list->GetGroupName(&newsgroupname);
        

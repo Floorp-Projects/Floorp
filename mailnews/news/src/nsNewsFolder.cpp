@@ -381,18 +381,15 @@ nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 	uri.Append('/');
 
 	uri.Append(name);
-	char* uriStr = uri.ToNewCString();
-	if (uriStr == nsnull) 
-		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsIRDFResource* res;
-	rv = rdf->GetResource(uriStr, &res);
+	rv = rdf->GetResource(nsAutoCString(uri), &res);
 	if (NS_FAILED(rv))
 		return rv;
+
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 		return rv;        
-	delete[] uriStr;
 
 	folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
 
@@ -637,9 +634,7 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
   nsAutoString tmpPath((nsFilePath)path);	//ducarroz: please don't cast a nsFilePath to char* on Mac
-  const char *pathName = tmpPath.ToNewCString();
-  *url = PR_smprintf("%s%s", urlScheme, pathName);
-  delete [] pathName;
+  *url = PR_smprintf("%s%s", urlScheme, nsAutoCString(tmpPath));
 #else
   const char *pathName = path;
   *url = PR_smprintf("%s%s", urlScheme, pathName);

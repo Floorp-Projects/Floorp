@@ -121,9 +121,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     hostname.Truncate(hostEnd);
   }
 
-  char *hostchar = hostname.ToNewCString();
-  rv = nsGetNewsRoot(hostchar, pathResult);
-  delete[] hostchar;
+  rv = nsGetNewsRoot(nsAutoCString(hostname), pathResult);
 
   if (NS_FAILED(rv)) {
     pathResult = nsnull;
@@ -159,8 +157,8 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 #ifdef DEBUG_sspitzer
   printf("nsGetNewsRoot(%s) = %s\n\tnewsgroup = %s\n",
-         nsAutoCString(hostname), (const char*)pathResult,
-         nsAutoCString(newsgroup));
+         (const char *)nsAutoCString(hostname), (const char*)pathResult,
+         (const char *)nsAutoCString(newsgroup));
 #endif
 
   return NS_OK;

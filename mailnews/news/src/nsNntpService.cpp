@@ -383,7 +383,7 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
             
             if (NS_SUCCEEDED(rv) && newsgroup) {
 			  char *str = newsgroupName.ToNewCString();
-              newsgroup->SetName(str);
+              		  newsgroup->SetName(str);
 			  delete [] str;
             }
             else {

@@ -79,21 +79,17 @@ nsresult nsNewsMessage::GetFolderFromURI(nsIMsgFolder **folder)
 			folderURIStr = kNewsRootURI;
 			folderURIStr+= folderOnly;
 			nsIRDFResource *folderResource;
-			char *folderURI = folderURIStr.ToNewCString();
 
 			NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv))   // always check this before proceeding 
 			{
-				rv = rdfService->GetResource(folderURI, &folderResource);
+				rv = rdfService->GetResource(nsAutoCString(folderURIStr), &folderResource);
 				if(NS_SUCCEEDED(rv))
 				{
 					rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
 					NS_RELEASE(folderResource);
 				}
 			}
-
-
-			delete[] folderURI;
 		}
 
 		NS_RELEASE(resource);
