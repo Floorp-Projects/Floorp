@@ -395,8 +395,8 @@ int main(int argc, char **argv)
 	    break;
 
 	  case 'r': {
-	      const char* str = optstate->value;
-	      if (str && atoi(str)>0)
+	    const char* str = optstate->value;
+	    if (str && atoi(str)>0)
 		iterations = atoi(str);
 	    }
 	    break;
