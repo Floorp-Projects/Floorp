@@ -213,20 +213,14 @@ function GetNewMessages()
 function LoadMessage(messageNode)
 {
   var uri = messageNode.getAttribute('id');
-  dump(uri);
+  dump(uri + "\n");
 
   if(uri != gCurrentDisplayedMessage)
   {
     var resource = RDF.GetResource(uri);
     var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
     if (message)
-    {
-      /* RICHIE: After we can get decoded unicode for the subject,
-              just uncomment the next line:
-         setTitleFromFolder(message.GetMsgFolder(), message.subject);
-      */
-      setTitleFromFolder(message.GetMsgFolder(), "Mail - Netscape");
-    }
+      setTitleFromFolder(message.GetMsgFolder(), message.mime2DecodedSubject);
 
 	  gCurrentDisplayedMessage = uri;
 	  OpenURL(uri);
