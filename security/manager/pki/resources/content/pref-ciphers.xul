@@ -120,6 +120,8 @@
          prefstring="security.ssl3.rsa_des_ede3_sha"/>
     <checkbox label="&cipher.ssl3.rsa_fips_des_sha;" pref="true"
          prefstring="security.ssl3.rsa_fips_des_sha"/>
+    <checkbox label="&cipher.ssl3.rsa_des_sha;" pref="true"
+         prefstring="security.ssl3.rsa_des_sha"/>
     <checkbox label="&cipher.ssl3.rsa_1024_rc4_56_sha;" pref="true"
          prefstring="security.ssl3.rsa_1024_rc4_56_sha"/>
     <checkbox label="&cipher.ssl3.rsa_1024_des_cbc_sha;" pref="true"

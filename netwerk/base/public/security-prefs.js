@@ -13,6 +13,7 @@ pref("security.ssl2.rc4_40",        true);
 pref("security.ssl3.rsa_1024_des_cbc_sha", true);
 pref("security.ssl3.rsa_1024_rc4_56_sha", true);
 pref("security.ssl3.rsa_des_ede3_sha", true);
+pref("security.ssl3.rsa_des_sha", true);
 pref("security.ssl3.rsa_fips_des_ede3_sha", true);
 pref("security.ssl3.rsa_fips_des_sha", true);
 pref("security.ssl3.rsa_null_md5", false);
