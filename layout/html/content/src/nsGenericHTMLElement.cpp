@@ -3661,7 +3661,7 @@ nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
   nsresult rv = NS_OK;
 
   if (!aParent && mForm) {
-    mForm = nsnull;
+    SetForm(nsnull);
   } else if (mDocument && aParent && (mParent || !mForm)) {
     // If we have a new parent and either we had an old parent or we
     // don't have a form, search for a containing form.  If we didn't
@@ -3823,7 +3823,7 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
   nsresult rv = NS_OK;
 
   if (!aParent && mForm) {
-    mForm = nsnull;
+    SetForm(nsnull);
   }
   // If we have a new parent and either we had an old parent or we
   // don't have a form, search for a containing form.  If we didn't
