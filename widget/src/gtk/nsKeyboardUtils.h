@@ -20,8 +20,8 @@
 #define _NSKEYBOARDUTILS_H_
 
 extern "C" {
+#include <X11/Xlib.h>
 #include <gdk/gdk.h>
-struct XKeyEvent;
 }
 #include "prtypes.h"
 
