@@ -139,5 +139,5 @@
 
 <!ENTITY helpMenu.accesskey            "H">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
+<!ENTITY walletPasswordManager.label     "Gerenciador de Senhas">
 <!ENTITY walletPasswordManager.accesskey "p">
