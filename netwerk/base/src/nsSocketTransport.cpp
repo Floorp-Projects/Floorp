@@ -83,14 +83,16 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
 
 //
 // This is the timeout value (in milliseconds) for calls to PR_Connect(...).
+// The socket transport thread will block for this amount of time waiting
+// for the PR_Connect(...) to complete...
 //
 // The gConnectTimeout gets initialized the first time a nsSocketTransport
 // is created...  This interval is then passed to all PR_Connect() calls...
 //
 #define CONNECT_TIMEOUT_IN_MS 20
 
-static int gTimeoutIsInitialized = 0;
-static PRIntervalTime gConnectTimeout = PR_INTERVAL_NO_TIMEOUT;
+static PRIntervalTime gConnectTimeout  = PR_INTERVAL_NO_WAIT;
+static PRIntervalTime gTimeoutInterval = PR_INTERVAL_NO_WAIT;
 
 //
 // This is the global buffer used by all nsSocketTransport instances when
@@ -138,6 +140,8 @@ nsSocketTransport::nsSocketTransport():
 
   PR_INIT_CLIST(&mListLink);
 
+  mLastActiveTime  =  PR_INTERVAL_NO_WAIT;
+
   SetReadType (eSocketRead_None);
   SetWriteType(eSocketWrite_None);
 
@@ -150,9 +154,8 @@ nsSocketTransport::nsSocketTransport():
   //
   // Initialize the global connect timeout value if necessary...
   //
-  if (0 == gTimeoutIsInitialized) {
-    gConnectTimeout = PR_MillisecondsToInterval(CONNECT_TIMEOUT_IN_MS);
-    gTimeoutIsInitialized = 1;
+  if (PR_INTERVAL_NO_WAIT == gConnectTimeout) {
+    gConnectTimeout  = PR_MillisecondsToInterval(CONNECT_TIMEOUT_IN_MS);
   }
 
 #if defined(PR_LOGGING)
@@ -290,11 +293,43 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     }
   }
 
+  // Update the active time for timeout purposes...
+  mLastActiveTime  = PR_IntervalNow();
+
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("Initializing nsSocketTransport [this=%x].  rv = %x. \t"
           "aHost = %s.\t"
           "aPort = %d.\n",
           this, rv, aHost, aPort));
+
+  return rv;
+}
+
+
+nsresult nsSocketTransport::CheckForTimeout(PRIntervalTime aCurrentTime)
+{
+  nsresult rv = NS_OK;
+  PRIntervalTime idleInterval;
+
+  // Enter the socket transport lock...
+  nsAutoLock aLock(mLock);
+
+  idleInterval = aCurrentTime - mLastActiveTime;
+
+  //
+  // Only timeout if the transport is waiting to connect to the server
+  //
+  if ((eSocketState_WaitConnect == mCurrentState) && 
+      (idleInterval >= gTimeoutInterval)) {
+    PR_LOG(gSocketLog, PR_LOG_ERROR, 
+           ("nsSocketTransport::CheckForTimeout() [this=%x].\t"
+            "TIMED OUT... Idle interval: %d\n",
+            this, idleInterval));
+
+    // Move the transport into the Timeout state...  
+    mCurrentState = eSocketState_Timeout;
+    rv = NS_ERROR_NET_TIMEOUT;
+  }
 
   return rv;
 }
@@ -420,6 +455,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mReadListener = null_nsCOMPtr();
             mReadContext  = null_nsCOMPtr();
           }
+          // Close the socket transport end of the pipe...
+          if (mReadPipeOut) {
+            mReadPipeOut->Close();
+          }
           mReadPipeIn  = null_nsCOMPtr();
           mReadPipeOut = null_nsCOMPtr();
           SetReadType(eSocketRead_None);
@@ -437,6 +476,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mWriteObserver->OnStopRequest(this, mWriteContext, mStatus, nsnull);
             mWriteObserver = null_nsCOMPtr();
             mWriteContext  = null_nsCOMPtr();
+          }
+          // Close the socket transport end of the pipe...
+          if (mWritePipeIn) {
+            mWritePipeIn->Close();
           }
           mWritePipeIn  = null_nsCOMPtr();
           mWritePipeOut = null_nsCOMPtr();
@@ -492,8 +535,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
 
       case eSocketState_Timeout:
-        NS_ASSERTION(0, "Unexpected state...");
-        mStatus = NS_ERROR_FAILURE;
+        mStatus = NS_ERROR_NET_TIMEOUT;
         break;
 
       default:
@@ -519,6 +561,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     // 
     aSelectFlags = 0;
   }
+
+  // Update the active time for timeout purposes...
+  mLastActiveTime  = PR_IntervalNow();
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("--- Leaving nsSocketTransport::Process() [this=%x]. mStatus = %x.\t"
@@ -1084,6 +1129,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
   return rv;  
 }
 
+
 nsresult nsSocketTransport::CloseConnection(PRBool bNow)
 {
   PRStatus status;
@@ -1118,6 +1164,12 @@ nsresult nsSocketTransport::CloseConnection(PRBool bNow)
     mOpenContext = null_nsCOMPtr();
   }
   return rv;
+}
+
+
+void nsSocketTransport::SetSocketTimeout(PRIntervalTime aTimeInterval)
+{
+  gTimeoutInterval = aTimeInterval;
 }
 
 
