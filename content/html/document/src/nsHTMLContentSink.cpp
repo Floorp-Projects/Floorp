@@ -2904,15 +2904,16 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
               if (NS_FAILED(rv)) return rv;
 
               // next get any uri provided as an attribute in the tag.
-              PRInt32 urlLoc = result.Find("url", PR_TRUE);
-              if (urlLoc > -1) {
+              PRInt32 loc = result.Find("url", PR_TRUE);
+              PRInt32 urlLoc = loc;
+              if (loc > -1) {
                   // there is a url attribute, let's use it.
-                  urlLoc += 3; 
+                  loc += 3; 
                   // go past the '=' sign
-                  urlLoc = result.Find("=", PR_TRUE, urlLoc);
-                  if (urlLoc > -1) {
-                      urlLoc++; // leading/trailign spaces get trimmed in url creating code.
-                      result.Mid(uriAttribStr, urlLoc, result.Length() - urlLoc);
+                  loc = result.Find("=", PR_TRUE, loc);
+                  if (loc > -1) {
+                      loc++; // leading/trailign spaces get trimmed in url creating code.
+                      result.Mid(uriAttribStr, loc, result.Length() - loc);
                       uriCStr = uriAttribStr.GetUnicode();
                   }
               }
@@ -2924,9 +2925,15 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
               // the units of the numeric value contained in the result are seconds.
               // we need them in milliseconds before handing off to the refresh interface.
-              // NOTE: we're no longer using the urlLoc variable, just stick it in here
-              //   as the error argument to ::ToInteger() as an optimization.
-              PRInt32 millis = result.ToInteger(&urlLoc) * 1000;
+
+              PRInt32 millis;
+              if (urlLoc > 1) {
+                  nsString2 seconds;
+                  result.Left(seconds, urlLoc-2);
+                  millis = seconds.ToInteger(&loc) * 1000;
+              } else {
+                  millis = result.ToInteger(&loc) * 1000;
+              }
 
               nsIRefreshURI *reefer = nsnull;
               rv = mWebShell->QueryInterface(nsCOMTypeInfo<nsIRefreshURI>::GetIID(), (void**)&reefer);
