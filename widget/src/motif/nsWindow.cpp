@@ -501,6 +501,12 @@ void nsWindow::InitCallbacks(char * aName)
 		    nsXtWidget_ExposureMask_EventHandler,
 		    this);
 
+  XtAddEventHandler(mWidget, 
+                    KeyPressMask,
+                    PR_FALSE, 
+                    nsXtWidget_KeyPressMask_EventHandler,
+                    this);
+
 
   /*XtAddEventHandler(mWidget, 
                     ResizeRedirectMask,
@@ -1224,9 +1230,13 @@ printf("IN ON Resize %d %d %d %d\n",size->x, size->y, size->width, size->height)
   return FALSE;
 }
 
-PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
+PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
- return FALSE;
+  if (mEventCallback) {
+    return(DispatchEvent(aEvent));
+  }
+  else
+   return FALSE;
 }
 
 
