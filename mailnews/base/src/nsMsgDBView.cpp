@@ -4307,49 +4307,49 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   msgHdr->GetFlags(&flags);
   if (flags & MSG_FLAG_IGNORED && !GetShowingIgnored())
     return NS_OK;
-
+  
   nsMsgKey msgKey, threadId;
   nsMsgKey threadParent;
   msgHdr->GetMessageKey(&msgKey);
   msgHdr->GetThreadId(&threadId);
   msgHdr->GetThreadParent(&threadParent);
-
+  
   // ### this isn't quite right, is it? Should be checking that our thread parent key is none?
   if (threadParent == nsMsgKey_None) 
     flags |= MSG_VIEW_FLAG_ISTHREAD;
   nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
   if (insertIndex == nsMsgViewIndex_None)
   {
-	// if unreadonly, level is 0 because we must be the only msg in the thread.
+    // if unreadonly, level is 0 because we must be the only msg in the thread.
     PRInt32 levelToAdd = 0;
 #if 0 
     if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)) 
     {
-        levelToAdd = FindLevelInThread(msgHdr, insertIndex);
+      levelToAdd = FindLevelInThread(msgHdr, insertIndex);
     }
 #endif
-
+    
     if (m_sortOrder == nsMsgViewSortOrder::ascending)
-	{
-	  m_keys.Add(msgKey);
-	  m_flags.Add(flags);
+    {
+      m_keys.Add(msgKey);
+      m_flags.Add(flags);
       m_levels.Add(levelToAdd);
-
+      
       // the call to NoteChange() has to happen after we add the key
       // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
       NoteChange(GetSize() - 1, 1, nsMsgViewNotificationCode::insertOrDelete);
-	}
-	else
-	{
+    }
+    else
+    {
       m_keys.InsertAt(0, msgKey);
       m_flags.InsertAt(0, flags);
       m_levels.InsertAt(0, levelToAdd);
-
+      
       // the call to NoteChange() has to happen after we insert the key
       // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
       NoteChange(0, 1, nsMsgViewNotificationCode::insertOrDelete);
-	}
-	m_sortValid = PR_FALSE;
+    }
+    m_sortValid = PR_FALSE;
   }
   else
   {
@@ -4359,11 +4359,11 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
 #if 0 
     if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
     {
-        level = FindLevelInThread(msgHdr, insertIndex);
+      level = FindLevelInThread(msgHdr, insertIndex);
     }
 #endif
     m_levels.InsertAt(insertIndex, level);
-
+    
     // the call to NoteChange() has to happen after we add the key
     // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
     NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
@@ -4743,7 +4743,10 @@ NS_IMETHODIMP nsMsgDBView::SetViewFlags(nsMsgViewFlagsTypeValue aViewFlags)
   // if we're turning off threaded display, we need to expand all so that all
   // messages will be displayed.
   if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay && ! (aViewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+  {
     ExpandAll();
+    m_sortValid = PR_FALSE; // invalidate the sort so sorting will do something
+  }
   m_viewFlags = aViewFlags;
   
   if (m_folder)
