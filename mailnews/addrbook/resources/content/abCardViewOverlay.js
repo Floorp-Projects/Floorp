@@ -215,7 +215,7 @@ function cvSetNodeWithLabel(node, label, text)
 
 function cvSetCityStateZip(node, city, state, zip)
 {
-	var text;
+	var text = "";
 	
 	if ( city )
 	{
