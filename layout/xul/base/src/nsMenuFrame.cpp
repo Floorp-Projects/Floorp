@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-
+#include "nsXULAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsAreaFrame.h"
 #include "nsIContent.h"
@@ -81,6 +81,26 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if (nsLayoutAtoms::popupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
+
+    nsFrameList frames(aChildList);
+
+    // We may have an xpmenuchildren in here. Get it out, and move it into
+    // the popup frame list.
+    nsIFrame* frame = frames.FirstChild();
+    while (frame) {
+      nsCOMPtr<nsIContent> content;
+      frame->GetContent(getter_AddRefs(content));
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == nsXULAtoms::xpmenuchildren) {
+        // Remove this frame from the list and place it in the other list.
+        frames.RemoveFrame(frame);
+        mPopupFrames.AppendFrame(this, frame);
+        rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+        return rv;
+      }
+      frame->GetNextSibling(&frame);
+    }
     rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;

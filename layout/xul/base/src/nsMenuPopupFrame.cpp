@@ -69,7 +69,7 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                                                   aContext,
                                                   PR_FALSE,
                                                   getter_AddRefs(menuStyle));
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
+  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
   CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
   return rv;
 }
