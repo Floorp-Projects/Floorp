@@ -24,6 +24,7 @@ help.jar:
 	locale/en-US/help/validation_help.html		(locale/en-US/validation_help.html)
 	locale/en-US/help/content_style.css		(locale/en-US/content_style.css)
 	locale/en-US/help/help.dtd			(locale/en-US/help.dtd)
+       locale/en-US/help/helpMenuOverlay.dtd           (locale/en-US/helpMenuOverlay.dtd)
 	locale/en-US/help/images/anchor.gif		(locale/en-US/images/anchor.gif)
 	locale/en-US/help/images/banner.gif		(locale/en-US/images/banner.gif)
 	locale/en-US/help/images/biActive.gif		(locale/en-US/images/biActive.gif)

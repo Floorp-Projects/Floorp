@@ -1,11 +1,16 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE window [
+<!ENTITY % helpMenuDTD SYSTEM "chrome://help/locale/helpMenuOverlay.dtd">
+%helpMenuDTD;
+]>
+
 <overlay id="helpMenuID"
          xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <menupopup id="helpPopup">
-    <menuitem label="Help Contents" position="1" id="help"
+    <menuitem label="&helpContents.label;" accesskey="&helpContents.accesskey;" position="1" id="help"
   	oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />   
   
   </menupopup>
