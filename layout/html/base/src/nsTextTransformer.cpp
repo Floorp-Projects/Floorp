@@ -1049,14 +1049,20 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
             eLanguageSpecificTransformType_None) {
           LanguageSpecificTransform(result, wordLen, aWasTransformed);
         }
-#ifdef IBMBIDI
         if (NeedsArabicShaping()) {
           DoArabicShaping(result, wordLen, aWasTransformed);
+        }
+        else {
+          // We need to strip zero-width joiners and non-joiners even when not
+          // doing Arabic shaping, in order to catch cases where these
+          // characters appear in preshaped text (Bug 192088)
+          // We can't strip them any earlier, because they affect the results
+          // of the Arabic shaping algorithm.
+          StripZeroWidthJoinControls(result, result, wordLen, aWasTransformed);
         }
         if (NeedsNumericShaping()) {
           DoNumericShaping(result, wordLen, aWasTransformed);
         }
-#endif
       }
     }
 
@@ -1452,7 +1458,6 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   return result;
 }
 
-#ifdef IBMBIDI
 void
 nsTextTransformer::DoArabicShaping(PRUnichar* aText, 
                                    PRInt32& aTextLength, 
@@ -1471,19 +1476,10 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
   
   ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, !isVisual, !isVisual);
 
-  PRUnichar *source = buffer;
-  PRUnichar *target = aText;
-  for (PRInt32 i = 0; i < newLen; i++) {
-    if (*source == CH_ZWNJ || *source == CH_ZWJ) {
-      source++;
-    }
-    else {
-      *target++ = *source++;
-    }
-  }
-
-  aTextLength = target - aText;
+  aTextLength = newLen;
   *aWasTransformed = PR_TRUE;
+
+  StripZeroWidthJoinControls(buffer, aText, aTextLength, aWasTransformed);
 }
 
 void
@@ -1537,7 +1533,29 @@ nsTextTransformer::DoNumericShaping(PRUnichar* aText,
       break;
   }
 }
-#endif
+
+void
+nsTextTransformer::StripZeroWidthJoinControls(PRUnichar* aSource,
+                                              PRUnichar* aTarget,
+                                              PRInt32& aTextLength, 
+                                              PRBool* aWasTransformed)
+{
+  PRUnichar *src, *dest;
+  PRInt32 stripped = 0;
+
+  src = aSource;
+  dest = aTarget;
+
+  for (PRInt32 i = 0; i < aTextLength; ++i) {
+    while (*src == CH_ZWNJ || *src == CH_ZWJ) {
+      ++stripped;
+      ++src;
+      *aWasTransformed = PR_TRUE;
+    }
+    *dest++ = *src++;
+  }
+  aTextLength -= stripped;
+}
 
 //----------------------------------------------------------------------
 // Self test logic for this class. This will (hopefully) make sure
