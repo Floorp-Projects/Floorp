@@ -178,6 +178,74 @@ function createShortcuts()
   }
 }
 
+function updateMapi()
+{
+  var winreg;
+  var szValue;
+  var szMapiBackupDll;
+  var szDefaultMailClient;
+  var programMozMapi32File;
+  var mainExePath;
+  var sfpProgramMozMapi32File;
+  var sfpMainExePath;
+  var winsysMapi32File;
+
+  winreg = getWinRegistry();
+  if(winreg != null) 
+  {
+    mainExePath = getFolder("Program", "$MainExeFile$");
+    programMozMapi32File = getFolder("Program", "mozMapi32.dll");
+    winsysMapi32File = getFolder("Win System", "Mapi32.dll");
+    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+
+    // If Mapi_backup_dll *and* the default var of
+    // HKEY_LOCAL_MACHINE\Software\Clients\Mail is set, then install
+    // mozMapi32.dll to the windows system dir as Mapi32.dll.
+    szMapiBackupDll = winreg.getValueString("SOFTWARE\\Mozilla\\Desktop", "Mapi_backup_dll");
+    szDefaultMailClient = winreg.getValueString("SOFTWARE\\Clients\\Mail", "");
+    logComment("szMapiBackupDll: " + szMapiBackupDll);
+    logComment("szDefaultMailClient: " + szDefaultMailClient);
+    if((szMapiBackupDll != null) && (szMapiBackupDll != "") &&
+       (szDefaultMailClient != null) && (szDefaultMailClient == "$ProductName$"))
+    {
+      // We do not want to log this file to be uninstalled because the
+      // uninstaller already has a special way to deal with restoring the
+      // appropriate previous Mapi32.dll.
+      addFile("",
+              "$Version$",
+              "bin/mozMapi32.dll",           // file name in jar to extract 
+              getFolder("Win System"),       // Where to put this file (Returned from getFolder) 
+              "Mapi32.dll",                  // new name when installed
+              DO_NOT_UNINSTALL);
+    }
+
+    sfpProgramMozMapi32File = File.windowsGetShortName(programMozMapi32File);
+    sfpMainExePath = File.windowsGetShortName(mainExePath);
+
+    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$", "DLLPath");
+    if((szValue != null) && (szValue != ""))
+      winreg.setValueString("SOFTWARE\\Clients\\Mail", "DLLPath", sfpProgramMozMapi32File);
+
+    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\DefaultIcon", "");
+    if((szValue != null) && (szValue != ""))
+      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\DefaultIcon",
+                            "",
+                            + sfpMainExePath + ",0");
+
+    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command", "");
+    if((szValue != null) && (szValue != ""))
+      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command",
+                            "",
+                            sfpMainExePath + " \"%1\"");
+
+    szValue = winreg.getValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\shell\\open\\command", "");
+    if((szValue != null) && (szValue != ""))
+      winreg.setValueString("SOFTWARE\\Clients\\Mail\\$ProductName$\\shell\\open\\command",
+                            "",
+                            sfpMainExePath + " -mail");
+  }
+}
+
 function upgradeCleanup()
 {
   // Obsolete files from Netscape 6.0 and Netscape 6.01 that
@@ -227,6 +295,7 @@ if(verifyDiskSpace(fProgram, srDest))
     createShortcuts();
     upgradeCleanup();
     updateWinIni();
+    updateMapi();
 
     // we don't want to fail on errors for the above
     resetError();
@@ -238,6 +307,25 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-region/");
+
+    // log comments for uninstalling the registry keys created by mail for setting
+    // itself up in WinXP's Start menu
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$ []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$ []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$ [DLLPath]");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\DefaultIcon []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\DefaultIcon []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\protocols\\mailto\\shell\\open\\command []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open []");
+    logComment("Create Registry Key: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open\\command []");
+    logComment("Store Registry Value: HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\$ProductName$\\shell\\open\\command []");
 
     // check return value
     err = getLastError();

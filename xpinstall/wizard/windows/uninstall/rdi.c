@@ -28,6 +28,8 @@
 
 HKEY hkUnreadMailRootKey = HKEY_CURRENT_USER;
 char szUnreadMailKey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+char szMozillaDesktopKey[] = "Software\\Mozilla\\Desktop";
+char szRDISection[] = "Restore Desktop Integration";
 
 /* structure for use with UnreadMail registry keys */
 typedef struct sKeyNode skn;
@@ -103,6 +105,45 @@ void DeInitSknList(skn **sknHeadNode)
 
   SknNodeDelete(sknTemp);
   *sknHeadNode = NULL;
+}
+
+/* Function to check if [windir]\mapi32.dll belongs to mozilla or not */
+int IsMapiMozMapi(BOOL *bIsMozMapi)
+{
+  HINSTANCE hLib;
+  char szMapiFilePath[MAX_BUF];
+  int iRv = WIZ_ERROR_UNDEFINED;
+  int (PASCAL *GetMapiDllVersion)(void);
+  char szMapiVersionKey[] = "MAPI version installed";
+  char szBuf[MAX_BUF];
+  int  iMapiVersionInstalled;
+
+  /* Get the Mapi version that we installed from uninstall.ini.
+   * If there is none set, then return WIZ_ERROR_UNDEFINED. */
+  GetPrivateProfileString(szRDISection, szMapiVersionKey, "", szBuf, sizeof(szBuf), szFileIniUninstall);
+  if(*szBuf == '\0')
+    return(iRv);
+
+  iMapiVersionInstalled = atoi(szBuf);
+  if(GetSystemDirectory(szMapiFilePath, sizeof(szMapiFilePath)) == 0)
+    return(iRv);
+
+  AppendBackSlash(szMapiFilePath, sizeof(szMapiFilePath));
+  lstrcat(szMapiFilePath, "Mapi32.dll");
+  if(!FileExists(szMapiFilePath))
+    iRv = WIZ_FILE_NOT_FOUND;
+  else if((hLib = LoadLibrary(szMapiFilePath)) != NULL)
+  {
+    iRv = WIZ_OK;
+    *bIsMozMapi = FALSE;
+    if(((FARPROC)GetMapiDllVersion = GetProcAddress(hLib, "GetMapiDllVersion")) != NULL)
+    {
+      if(iMapiVersionInstalled == GetMapiDllVersion())
+        *bIsMozMapi = TRUE;
+    }
+    FreeLibrary(hLib);
+  }
+  return(iRv);
 }
 
 /* This function parses takes as input a registry key path string beginning
@@ -204,11 +245,10 @@ void RestoreDesktopIntegration()
   DWORD     dwIndex;
   DWORD     dwSubKeySize;
   DWORD     dwTotalValues;
-  char      szWRMozillaDesktopKey[] = "Software\\Mozilla\\Desktop";
   char      szKHKEY[]               = "HKEY";
   char      szKisHandling[]         = "isHandling";
 
-  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szWRMozillaDesktopKey, 0, KEY_READ|KEY_WRITE, &hkHandle) != ERROR_SUCCESS)
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, 0, KEY_READ|KEY_WRITE, &hkHandle) != ERROR_SUCCESS)
     return;
 
   dwTotalValues  = 0;
@@ -226,7 +266,7 @@ void RestoreDesktopIntegration()
         hkRootKey = GetRootKeyAndSubKeyPath(szVarName, szSubKey, sizeof(szSubKey));
         if(*szSubKey != '\0')
         {
-          GetWinReg(HKEY_LOCAL_MACHINE, szWRMozillaDesktopKey, szVarName, szValue, sizeof(szValue));
+          GetWinReg(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, szVarName, szValue, sizeof(szValue));
           if(*szValue != '\0')
           {
             /* Due to a bug in the browser code that saves the previous HKEY
@@ -258,11 +298,60 @@ void RestoreDesktopIntegration()
   return;
 }
 
+void RestoreMozMapi()
+{
+  char szMozMapiBackupFile[MAX_BUF];
+  BOOL bFileIsMozMapi = FALSE;
+
+  GetWinReg(HKEY_LOCAL_MACHINE,
+            szMozillaDesktopKey,
+            "Mapi_backup_dll",
+            szMozMapiBackupFile,
+            sizeof(szMozMapiBackupFile));
+
+  /* If the windows registry Mapi_backup_dll var name does not exist,
+   * then we're not the default mail handler for the system.
+   *
+   * If the backup mapi file does not exist for some reason, then
+   * there's no way to restore the previous saved mapi32.dll file. */
+  if((*szMozMapiBackupFile == '\0') || !FileExists(szMozMapiBackupFile))
+    return;
+
+  /* A TRUE for bFileIsMozMapi indicates that we need to restore
+   * the backed up mapi32.dll (if one was backed up).
+   *
+   * bFileIsMozMapi is TRUE in the following conditions:
+   *   * mapi32.dll is not found
+   *   * mapi32.dll loads and GetMapiDllVersion() exists
+   *     _and_ returns the same version indicated in the uninstall.ini file:
+   *
+   *       [Restore Desktop Integration]
+   *       Mapi version installed=94
+   *
+   *     94 indicates version 0.9.4 */
+  if(IsMapiMozMapi(&bFileIsMozMapi) == WIZ_FILE_NOT_FOUND)
+    bFileIsMozMapi = TRUE;
+
+  if(bFileIsMozMapi)
+  {
+    char szDestinationFilename[MAX_BUF];
+
+    /* Get the Windows System (or System32 under NT) directory */
+    if(GetSystemDirectory(szDestinationFilename, sizeof(szDestinationFilename)))
+    {
+      /* Copy the backup filename into the normal Mapi32.dll filename */
+      AppendBackSlash(szDestinationFilename, sizeof(szDestinationFilename));
+      lstrcat(szDestinationFilename, "Mapi32.dll");
+      CopyFile(szMozMapiBackupFile, szDestinationFilename, FALSE);
+    }
+  }
+  /* Delete the backup Mapi filename */
+  FileDelete(szMozMapiBackupFile);
+}
+
 BOOL UndoDesktopIntegration(void)
 {
-  char szMozillaDesktopKey[MAX_BUF];
   char szMozillaKey[] = "Software\\Mozilla";
-  char szRDISection[] = "Restore Desktop Integration";
   char szBuf[MAX_BUF];
 
   /* Check to see if uninstall.ini has indicated to restore
@@ -270,8 +359,8 @@ BOOL UndoDesktopIntegration(void)
   GetPrivateProfileString(szRDISection, "Enabled", "", szBuf, sizeof(szBuf), szFileIniUninstall);
   if(lstrcmpi(szBuf, "TRUE") == 0)
   {
-    wsprintf(szMozillaDesktopKey, "%s\\%s", szMozillaKey, "Desktop");
     RestoreDesktopIntegration();
+    RestoreMozMapi();
 
     DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaDesktopKey, TRUE);
     DeleteWinRegKey(HKEY_LOCAL_MACHINE, szMozillaKey, FALSE);

@@ -75,6 +75,8 @@ typedef int PRInt32;
 /* WIZ: WIZARD defines */
 #define WIZ_OK                          0
 #define WIZ_MEMORY_ALLOC_FAILED         1
+#define WIZ_ERROR_UNDEFINED             2
+#define WIZ_FILE_NOT_FOUND              3
 
 /* CMI: Cleanup Mail Integration */
 #define CMI_OK                          0
