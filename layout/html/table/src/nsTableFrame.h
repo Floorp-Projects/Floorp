@@ -601,6 +601,18 @@ protected:
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aDefaultHeight);
 
+  /** The following two functions are helpers for ComputeDesiredHeight 
+    */
+  void DistributeSpaceToCells(nsIPresContext& aPresContext, 
+                              const nsHTMLReflowState& aReflowState,
+                              nsIFrame* aRowGroupFrame);
+  void DistributeSpaceToRows(nsIPresContext& aPresContext,
+                                  const nsHTMLReflowState& aReflowState,
+                                  nsIFrame* aRowGroupFrame, const nscoord& aSumOfRowHeights,
+                                  const nscoord& aExcess, const nsStyleTable* aTableStyle, 
+                                  nscoord& aExcessForRowGroup, 
+                                  nscoord& aRowGroupYPos);
+
   nscoord GetEffectiveContainerHeight(const nsHTMLReflowState& aReflowState);
 
   void PlaceChild(nsIPresContext&        aPresContext,
@@ -731,6 +743,9 @@ protected:
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus);
+
+  /** Helper for BuildColumnCache */
+  virtual void SetColumnStylesFromCells(nsIPresContext& aPresContext, nsIFrame* aRowGroupFrame);
 
   virtual void CacheColFramesInCellMap();
 
