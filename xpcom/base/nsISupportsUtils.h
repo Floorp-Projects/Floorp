@@ -857,7 +857,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 template <class T>
 inline
 nsrefcnt
-ns_if_addref( T* expr )
+ns_if_addref( T expr )
     // Making this a |inline| |template| allows |expr| to be evaluated only once,
     //  yet still denies you the ability to |AddRef()| an |nsCOMPtr|.
     // Note that |NS_ADDREF()| already has this property in the non-logging case.
