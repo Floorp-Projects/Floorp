@@ -1203,20 +1203,21 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 
         nsAutoString charsetValue;
         nsCharsetSource charsetSource;
+        nsAutoString theCharsetKey("charset"); 
+        nsAutoString theSourceKey("charsetSource"); 
+        nsAutoString intValue;
+
         mParser->GetDocumentCharset(charsetValue, charsetSource);
         // Add pseudo attribute in the end
         if(index < 50) {
-          nsAutoString theCharsetKey("charset"); 
           theKeys[index]=theCharsetKey.GetUnicode(); 
           theValues[index] = charsetValue.GetUnicode();
           index++;
         }
 
         if(index < 50) {
-          nsAutoString theCharsetKey("charsetSource"); 
-          theKeys[index]=theCharsetKey.GetUnicode(); 
+          theKeys[index]=theSourceKey.GetUnicode(); 
           PRInt32 sourceInt = charsetSource;
-          nsAutoString intValue;
           intValue.Append(sourceInt,10);
           theValues[index] = intValue.GetUnicode();
 		  index++;
