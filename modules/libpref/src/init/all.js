@@ -214,6 +214,12 @@ pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 
+// ruslan:
+// pref("network.http.version", "1.1");
+// keep-alive option is effectively obsolete, as we want to use http/1.1 by
+// default eventually
+// pref("nework.http.keep-alive", true);
+
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
 // post to the server specified by this pref.
