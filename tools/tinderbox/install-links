@@ -10,4 +10,5 @@ ln -s ../mozilla/tools/tinderbox/build-seamonkey-util.pl
 ln -s ../mozilla/tools/tinderbox/gettime.pl
 ln -s ../mozilla/tools/tinderbox/bloatdiff.pl
 ln -s ../mozilla/tools/tinderbox/tinder-defaults.pl
+ln -s ../mozilla/tools/tinderbox/reportdata.pl
 
