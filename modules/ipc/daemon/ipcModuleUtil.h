@@ -42,7 +42,7 @@ inline void
 IPC_EnumClients(ipcClientEnumFunc func, void *closure)
 {
     PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->enumClients(func, closure);
+    gIPCDaemonMethods->enumClients(func, closure);
 }
 
 inline PRUint32
@@ -77,14 +77,14 @@ inline void
 IPC_EnumClientNames(ipcClientHandle client, ipcClientNameEnumFunc func, void *closure)
 {
     PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->enumClientNames(client, func, closure);
+    gIPCDaemonMethods->enumClientNames(client, func, closure);
 }
 
 inline void
 IPC_EnumClientTargets(ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure)
 {
     PR_ASSERT(gIPCDaemonMethods);
-    return gIPCDaemonMethods->enumClientTargets(client, func, closure);
+    gIPCDaemonMethods->enumClientTargets(client, func, closure);
 }
 
 //-----------------------------------------------------------------------------

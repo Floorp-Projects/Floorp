@@ -43,7 +43,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsString.h"
 
-static const nsID TestTargetID =
+static const nsID kTestTargetID =
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
     0xe628fc6e,
     0xa6a7,
@@ -116,7 +116,7 @@ myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, PRUint32 aStatus, ipcICl
                 printf("***   name:%s --> ID:%u\n", cName.get(), cID);
 
                 const char hello[] = "hello friend!";
-                gIpcServ->SendMessage(cID, TestTargetID, hello, sizeof(hello));
+                gIpcServ->SendMessage(cID, kTestTargetID, hello, sizeof(hello));
             }
         }
     }
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
         RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");
         NS_ADDREF(gIpcServ = ipcServ);
 
-        ipcServ->SetMessageObserver(TestTargetID, new myIpcMessageObserver());
+        ipcServ->SetMessageObserver(kTestTargetID, new myIpcMessageObserver());
 
         const char *data =
                 "01 this is a really long message.\n"
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
                 "58 this is a really long message.\n"
                 "59 this is a really long message.\n"
                 "60 this is a really long message.\n";
-        SendMsg(ipcServ, TestTargetID, data, strlen(data)+1);
+        SendMsg(ipcServ, kTestTargetID, data, strlen(data)+1);
 
         PRUint32 reqToken;
         nsCOMPtr<ipcIClientObserver> obs(new myIpcClientObserver());

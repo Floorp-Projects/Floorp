@@ -177,7 +177,7 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 
 //-----------------------------------------------------------------------------
 
-void
+PRStatus
 IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
 {
     LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
