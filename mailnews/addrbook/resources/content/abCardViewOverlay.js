@@ -41,6 +41,8 @@ var gMapItURLFormat = gPrefs.getComplexValue("mail.addr_book.mapit_url.format",
 
 var gAddrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
 
+var gIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+
 var zListName;
 var zPrimaryEmail;
 var zSecondaryEmail;
@@ -96,6 +98,7 @@ function OnLoadCardView()
 	cvData.cvEmail1Box		= doc.getElementById("cvEmail1Box");
 	cvData.cvEmail1			= doc.getElementById("cvEmail1");
 	cvData.cvScreennameBox		= doc.getElementById("cvScreennameBox");
+  cvData.cvAimPresence = doc.getElementById("cvAimPresence");
 	cvData.cvScreenname		= doc.getElementById("cvScreenname");
 	cvData.cvBuddyIcon              = doc.getElementById("cvBuddyIcon");
 	cvData.cvListNameBox		= doc.getElementById("cvListNameBox");
@@ -173,6 +176,11 @@ function GetAddressesFromURI(uri)
   return addresses;
 }
 
+function GoIM()
+{
+  LaunchUrl(top.cvData.cvAimPresence.getAttribute("url"));
+}
+
 function DisplayCardViewPane(card)
 {
   var generatedName = gAddrbookSession.generateNameFromCard(card, gPrefs.getIntPref("mail.addr_book.lastnamefirst"));
@@ -212,8 +220,21 @@ function DisplayCardViewPane(card)
     visible = HandleLink(data.cvEmail1, zPrimaryEmail, card.primaryEmail, data.cvEmail1Box, "mailto:" + card.primaryEmail) || visible;
   }
 
-  visible = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, "aim:goim?screenname=" + card.aimScreenName) || visible;
+  var goimURL = "aim:goim?screenname=" + card.aimScreenName;
+  var hasScreenName = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, goimURL);
+  
+  if (!hasScreenName || gIOService.offline) {
+    data.cvAimPresence.removeAttribute("src");
+    data.cvAimPresence.removeAttribute("url");
+    data.cvAimPresence.setAttribute("width","0");
+  }
+  else {
+    data.cvAimPresence.setAttribute("src","http://big.oscar.aol.com:80/" + card.aimScreenName + "?on_url=http://ncmail.netscape.com/include/nc/images/online.gif&off_url=http://ncmail.netscape.com/include/nc/images/offline.gif");   
+    data.cvAimPresence.setAttribute("url", goimURL);
+    data.cvAimPresence.setAttribute("width","16");
+  }
 
+  visible = hasScreenName || visible;
   visible = HandleLink(data.cvEmail2, zSecondaryEmail, card.secondEmail, data.cvEmail2Box, "mailto:" + card.secondEmail) || visible;
 
 	// Home section

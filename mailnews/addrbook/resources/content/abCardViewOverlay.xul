@@ -57,6 +57,7 @@ Rights Reserved.
 
             <description class="CardViewLink" id="cvScreennameBox">
               <html:a href="" id="cvScreenname"/>
+              <html:img onclick="GoIM()" align="top" id="cvAimPresence"/>
             </description>
         </vbox>
         
