@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
+#include "nsIParserDebug.h"
 
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
@@ -167,6 +168,15 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_ADDREF(myObserver);
   g_workList = workList;
 
+  nsIParserDebug * pIParserDebug;
+  nsresult rval = NS_NewParserDebug(&pIParserDebug);
+  if (NS_OK != rval) {
+    fputs("Cannot create parser debugger.\n", stdout);
+    NS_RELEASE(myObserver);
+    return -1;
+  }
+  pIParserDebug->SetVerificationDirectory(verify_dir);
+
   for (;;) {
     PRInt32 n = g_workList->Count();
     if (0 == n) {
@@ -182,6 +192,8 @@ extern "C" NS_EXPORT int DebugRobot(
       printf("invalid URL: '");
       fputs(*urlName, stdout);
       printf("'\n");
+      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(myObserver);
       return -1;
     }
 
@@ -199,14 +211,17 @@ extern "C" NS_EXPORT int DebugRobot(
     rv = NS_NewHTMLParser(&parser);
     if (NS_OK != rv) {
       printf("can't make parser\n");
+      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(myObserver);
       return -1;
     }
 
-	SetVerificationDirectory(verify_dir);
     nsIRobotSink* sink;
     rv = NS_NewRobotSink(&sink);
     if (NS_OK != rv) {
       printf("can't make parser\n");
+      NS_RELEASE(pIParserDebug);
+      NS_RELEASE(myObserver);
       return -1;
     }
     sink->Init(url);
@@ -214,7 +229,7 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;
-    parser->Parse(url, pl);/* XXX hook up stream listener here! */
+    parser->Parse(url, pl, PR_TRUE, pIParserDebug);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
@@ -238,7 +253,8 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_RELEASE(pl);
   NS_RELEASE(myObserver);
 
-  DumpVectorRecord();
+  pIParserDebug->DumpVectorRecord();
+  NS_RELEASE(pIParserDebug);
 
   return 0;
 }
