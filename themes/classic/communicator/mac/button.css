@@ -6,27 +6,28 @@
     {
       border                : 1px solid transparent;
       margin                : 1px 0px 1px 0px;
-      -moz-border-radius    : 0px;
-      color                 : black;
       padding               : 0px;
-      font                  : 3mm arial;
+      min-width             : 0px;
     }
     
   .button-toolbar:hover
     {
-      border                : 1px solid #FFFFFF;
+      border                : 1px solid #000000;
     }
   
   .button-toolbar:hover:active
     {
-      border                : 1px solid #336699;
+      border                : 1px solid #000000;
     }
     
   .button-toolbar > .button-internal-box, 
   .button-toolbar:hover > .button-internal-box
     {
+      border-left           : 1px solid #FFFFFF;
+      border-top            : 1px solid #FFFFFF;
+      border-right          : 1px soild #9D9D9D;
+      border-bottom         : 1px soild #9D9D9D;
       padding               : 1px 3px 1px 3px;
-      border                : none;
     }
     
   .button-toolbar > .button-internal-box > .button-text-container,
@@ -42,170 +43,112 @@
       border                : none;
     }
     
-  .button-toolbar[toggled="true"]
+  .button-toolbar[toggled="true"] > .button-internal-box
     {
-      border                : 1px solid #999999;
-      background-color      : #EEEEEE;
+      border-left           : 1px solid #9D9D9D;
+      border-top            : 1px solid #9D9D9D;
+      border-right          : 1px solid #FFFFFF;
+      border-bottom         : 1px solid #FFFFFF;
+      background-color      : #DDDDDD;
+      background-image      : url("chrome://global/skin/scrollbar-bg.gif");
     }    
     
   .button-toolbar[disabled="true"],
+  .button-toolbar[disabled="true"] > .button-internal-box,
   .button-toolbar[disabled="true"]:hover,
-  .button-toolbar[disabled="true"]:hover:active
+  .button-toolbar[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover:active,
+  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
     {
-      color                 : #999999;
-      border                : none;
+      border                : 1px solid #DDDDDD;
     }
 
-/** The largest type of toolbar buttons. In the Seamonkey implementation, 
- *  these are only used in the navigation toolbar in the navigator package.
- **/
- 
-  /* outer frame */
-  .button-toolbar-1
-    {
-      behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
-      background-repeat   : no-repeat;
-      background-color    : transparent;
-      background-position : 0px 0px;
-      color               : black;
-      width               : 36px;
-      height              : 36px;
-      margin              : 2px 6px 1px 1px;
-      font-size           : smaller;
-      border              : none;
-    }
-    
-  .button-toolbar-1:hover 
-    {
-      border              : 1px solid black
-    }
 
-  .button-toolbar-1:hover:active
-    {
-      margin              : 3px 5px 0px 2px;
-      border              : 1px solid black;
-      background-color    : #666666;
-    }
-
-  .button-toolbar-1[disabled="true"],
-  .button-toolbar-1[disabled="true"]:hover,
-  .button-toolbar-1[disabled="true"]:hover:active
-    {
-      margin              : 2px 6px 1px 1px;
-      border              : none;
-    }
-    
-/* internal frame */
-  .button-toolbar-1[disabled="true"] > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box
-    {
-      border              : none;
-    }
-      
-  .button-toolbar-1 > .button-internal-box
-    {
-      border              : none;
-      vertical-align      : middle;
-    }
-
-  .button-toolbar-1:hover > .button-internal-box
-  {
-      border-left           : 1px solid #FFFFFF;
-      border-top            : 1px solid #FFFFFF;
-      border-right          : 1px solid #999999;
-      border-bottom         : 1px solid #999999;
-  }
-
-  .button-toolbar-1:hover:active > .button-internal-box    
-  {
-      border-left           : 1px solid #444444;
-      border-top            : 1px solid #444444;
-      border-right          : 1px solid #CCCCCC;
-      border-bottom         : 1px solid #CCCCCC;
-  }
-
-  .button-toolbar-1 > .button-internal-box > .button-text-container 
-    {
-      text-align          : center;
-    }
-    
 /** Styles for the standard 'large' toolbar button, these buttons are used for
  *  toolbar buttons that are the most commonly used elements on a toolbar, e.g.
  *  'GetMsg' in Mailnews or 'Send' in Mail/Compose.
  **/
-  .button-toolbar-2
+  /* outer frame */
+  .button-toolbar-1,
+	.button-toolbar-2
     {
-      background-repeat   : no-repeat;
-      background-position : 50% 0px;
-      background-color    : transparent;
-      color               : #CCFFFF;
-      min-width           : 28px;
-      min-height          : 28px;
-      margin              : 2px 6px 1px 1px;
-/*      padding             : 3px 0px 0px 1px;*/
-      font-size           : smaller;
-      border              : none;
+      behavior            : url("chrome://global/skin/buttonBindings.xml#buttontop");
+      min-width           : 52px;
+      margin              : 1px;
+      border              : 1px solid #DDDDDD;	
     }
     
-  .button-toolbar-2:hover
+  .button-toolbar-1:hover,
+	.button-toolbar-2:hover 
     {
-      border              : 1px solid black;
+      border              : 1px solid #000000;
+      color               : ButtonText;
     } 
 
-  .button-toolbar-2:hover:active
+  .button-toolbar-1 > .button-box-1,
+	.button-toolbar-2 > .button-box-1
     {
-      border              : 1px solid black;
-      background-color    : #666666
-    }
-
-  .button-toolbar-2[disabled="true"],
+      padding             : 0px 2px 1px 1px;
+      vertical-align      : middle;
+      text-align          : center;
+      border              : 1px solid #DDDDDD;
+    }    
+   
+	.button-toolbar-1 > .button-box-2,
+	.button-toolbar-2 > .button-box-2
+    {
+      border-bottom       : none;
+    }    
+    
+  
+  .button-toolbar-1[disabled="true"],
+  .button-toolbar-1[disabled="true"]:hover,
+  .button-toolbar-1[disabled="true"]:hover:active,
+	.button-toolbar-2[disabled="true"],
   .button-toolbar-2[disabled="true"]:hover,
   .button-toolbar-2[disabled="true"]:hover:active
     {
-      margin              : 3px 7px 1px 1px;
-      border              : none;
+      border              : 1px solid #DDDDDD;
+      color               : #9D9D9D;
     }
     
 /* internal frame */
-  .button-toolbar-2[disabled="true"] > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
+  .button-toolbar-1:hover > .button-box-1,
+	.button-toolbar-2:hover > .button-box-1
     {
-      border              : none;
-      vertical-align      : middle;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
     }
-      
-  .button-toolbar-2 > .button-internal-box
+
+  .button-toolbar-1:hover:active > .button-box-1,
+	.button-toolbar-2:hover:active > .button-box-1
     {
-      border              : none;
-      vertical-align      : middle;
+      padding             : 1px 1px 0px 2px;
+      border-left         : 1px solid #9D9D9D !important;
+      border-top          : 1px solid #9D9D9D !important;
+      border-right        : 1px solid #FFFFFF !important;
+      border-bottom       : 1px solid #FFFFFF !important;
     }
-  
-  .button-toolbar-2:hover > .button-internal-box
+    
+  .button-toolbar-1 > .button-internal-box > .button-text-container 
+	.button-toolbar-2 > .button-internal-box > .button-text-container 
     {
-      border-left           : 1px solid #FFFFFF;
-      border-top            : 1px solid #FFFFFF;
-      border-right          : 1px solid #999999;
-      border-bottom         : 1px solid #999999;
-    }
-  
-  .button-toolbar-2:hover:active > .button-internal-box
-    {
-      border-left           : 1px solid #444444;
-      border-top            : 1px solid #444444;
-      border-right          : 1px solid #CCCCCC;
-      border-bottom         : 1px solid #CCCCCC;
-    }
-  
-/* text wrapper frame */
-  .button-toolbar-2 > .button-internal-box > .button-text-container 
-    {
-      padding-top         : 3px;
       text-align          : center;
     }
-
-
+    
+  .button-toolbar-1[disabled="true"] > .button-box-1,
+  .button-toolbar-1[disabled="true"]:hover > .button-box-1,
+  .button-toolbar-1[disabled="true"]:hover:active > .button-box-1,
+	.button-toolbar-2[disabled="true"] > .button-box-1,
+  .button-toolbar-2[disabled="true"]:hover > .button-box-1,
+  .button-toolbar-2[disabled="true"]:hover:active > .button-box-1
+    {
+      padding             : 0px 2px 1px 1px !important;
+      border              : 1px solid transparent !important;
+    }
+		
 /** "Green" buttons, e.g. "Search"
  *  class="button-toolbar-3"
  **/  
@@ -271,7 +214,7 @@
  **/
 .button-toolbar-4
   {
-    color                 : #99CCCC;
+    color                 : ButtonText;
     background            : inherit;
     font                  : inherit;
     border                : none;
@@ -282,23 +225,31 @@
 .button-toolbar-4:hover 
   {
     text-decoration       : none;
-    background-color      : #336699;
-    color                 : #CCFFFF;
+    color                 : ButtonText;
   }
 
 .button-toolbar-4:hover:active 
   {
     text-decoration       : none;
-    color                 : #CCFFFF;
+    color                 : ButtonText;
     padding               : 2px 0px 0px 2px !important;
   }
   
+.button-toolbar-4:hover > .button-box-1,
+.button-toolbar-4:hover:active > .button-box-1 
+  {
+	  border-left           : 1px solid ButtonHighlight;
+		border-top            : 1px solid ButtonHighlight;
+		border-right          : 1px solid ButtonShadow;
+		border-bottom         : 1px solid ButtonShadow; 
+	}
+
 menubutton.button-toolbar-4
   {
     behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
   
-.button-toolbar-4 > .button-internal-box,
+.button-toolbar-4 > .button-box-1,
 .button-toolbar-4 > .menubutton-internal-box
   {
     border                : none !important;

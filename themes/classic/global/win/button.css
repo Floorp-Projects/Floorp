@@ -15,21 +15,22 @@
       margin              : 1px 5px 2px 5px;
       background-color    : buttonface;
       min-width           : 8em;
-      font                : button;
+      font                : button,sans-serif;
       color               : buttontext;
     }
   
   .button-box-1  
     {
-      border-left         : 1px solid threedface;
-      border-top          : 1px solid threedface;
-      border-right        : 1px solid threedshadow;
-      border-bottom       : 1px solid threedshadow;
+      border-left         : 1px solid buttonhighlight;
+      border-top          : 1px solid buttonhighlight;
+      border-right        : 1px solid buttonshadow;
+      border-bottom       : 1px solid buttonshadow;
     }
 
   .button-box-2
     {
-      border              : 1px solid threedface;
+      
+			border              : 1px solid ButtonFace;	
     }
     
   button:hover:active 
@@ -49,7 +50,12 @@
 
   button:hover:active > .button-box-1 > .button-box-2 > .button-box-text
     {
-      padding             : 1px 2px 0px 3px;
+      padding             : 1px 2px 0px 3px; 
+    }
+  
+  .button-box-text
+    {
+      /*debug */
     }
   
   button[disabled="true"],
@@ -124,7 +130,5 @@
       margin              : 0px;
       padding             : 0px;
     }
-    
-    
     
     
