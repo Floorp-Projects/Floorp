@@ -214,7 +214,7 @@ handshakeCallback(PRFileDesc *fd, void *client_data)
 static void Usage(const char *progName)
 {
     fprintf(stderr, 
-"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23Tovx] \n"
+"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23Tfovx] \n"
 "                   [-c ciphers] [-w passwd] [-q]\n", progName);
     fprintf(stderr, "%-20s Hostname to connect with\n", "-h host");
     fprintf(stderr, "%-20s Port number for SSL server\n", "-p port");
@@ -226,6 +226,7 @@ static void Usage(const char *progName)
     fprintf(stderr, "%-20s Disable SSL v2.\n", "-2");
     fprintf(stderr, "%-20s Disable SSL v3.\n", "-3");
     fprintf(stderr, "%-20s Disable TLS (SSL v3.1).\n", "-T");
+    fprintf(stderr, "%-20s Client speaks first. \n", "-f");
     fprintf(stderr, "%-20s Override bad server cert. Make it OK.\n", "-o");
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
     fprintf(stderr, "%-20s Use export policy.\n", "-x");
@@ -401,6 +402,9 @@ thread_main(void * arg)
 
 #endif
 
+#define SSOCK_FD 0
+#define STDIN_FD 1
+
 int main(int argc, char **argv)
 {
     PRFileDesc *       s;
@@ -429,6 +433,7 @@ int main(int argc, char **argv)
     char               buf[PR_NETDB_BUF_SIZE];
     PRBool             useCommandLinePassword = PR_FALSE;
     PRBool             pingServerFirst = PR_FALSE;
+    PRBool             clientSpeaksFirst = PR_FALSE;
     int                error = 0;
     PLOptState *optstate;
     PLOptStatus optstatus;
@@ -454,7 +459,8 @@ int main(int argc, char **argv)
           case 'c': cipherString = strdup(optstate->value); break;
 
           case 'h': host = strdup(optstate->value);	break;
-          case 'f':  /* no longer meaningful. */        break;
+
+          case 'f':  clientSpeaksFirst = PR_TRUE;       break;
 
 	  case 'd':
 	    certDir = strdup(optstate->value);
@@ -685,9 +691,9 @@ int main(int argc, char **argv)
 	    if (verbose)
 		SECU_PrintError(progName, "connect");
 	    milliPause(50 * multiplier);
-	    pollset[0].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
-	    pollset[0].out_flags = 0;
-	    pollset[0].fd = s;
+	    pollset[SSOCK_FD].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
+	    pollset[SSOCK_FD].out_flags = 0;
+	    pollset[SSOCK_FD].fd = s;
 	    while(1) {
 		FPRINTF(stderr, 
 		        "%s: about to call PR_Poll for connect completion!\n", 
@@ -699,7 +705,7 @@ int main(int argc, char **argv)
 		}
 		FPRINTF(stderr,
 		        "%s: PR_Poll returned 0x%02x for socket out_flags.\n",
-			progName, pollset[0].out_flags);
+			progName, pollset[SSOCK_FD].out_flags);
 		if (filesReady == 0) {	/* shouldn't happen! */
 		    FPRINTF(stderr, "%s: PR_Poll returned zero!\n", progName);
 		    return 1;
@@ -726,10 +732,10 @@ int main(int argc, char **argv)
 	}
     }
 
-    pollset[0].fd        = s;
-    pollset[0].in_flags  = PR_POLL_READ;
-    pollset[1].fd        = PR_GetSpecialFD(PR_StandardInput);
-    pollset[1].in_flags  = PR_POLL_READ;
+    pollset[SSOCK_FD].fd        = s;
+    pollset[SSOCK_FD].in_flags  = clientSpeaksFirst ? 0 : PR_POLL_READ;
+    pollset[STDIN_FD].fd        = PR_GetSpecialFD(PR_StandardInput);
+    pollset[STDIN_FD].in_flags  = PR_POLL_READ;
     npds                 = 2;
     std_out              = PR_GetSpecialFD(PR_StandardOutput);
 
@@ -750,7 +756,7 @@ int main(int argc, char **argv)
 	error = 1;
 	goto done;
     }
-    pollset[1].fd = fds[1];
+    pollset[STDIN_FD].fd = fds[1];
 
     thread = PR_CreateThread(PR_USER_THREAD, thread_main, fds[0], 
                              PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, 
@@ -769,12 +775,12 @@ int main(int argc, char **argv)
     */
     FPRINTF(stderr, "%s: ready...\n", progName);
 
-    while (pollset[0].in_flags || pollset[1].in_flags) {
+    while (pollset[SSOCK_FD].in_flags | pollset[STDIN_FD].in_flags) {
 	char buf[4000];	/* buffer for stdin */
 	int nb;		/* num bytes read from stdin. */
 
-	pollset[0].out_flags = 0;
-	pollset[1].out_flags = 0;
+	pollset[SSOCK_FD].out_flags = 0;
+	pollset[STDIN_FD].out_flags = 0;
 
 	FPRINTF(stderr, "%s: about to call PR_Poll !\n", progName);
 	filesReady = PR_Poll(pollset, npds, PR_INTERVAL_NO_TIMEOUT);
@@ -788,19 +794,19 @@ int main(int argc, char **argv)
 	    return 1;
 	}
 	FPRINTF(stderr, "%s: PR_Poll returned!\n", progName);
-	if (pollset[1].in_flags) {
+	if (pollset[STDIN_FD].in_flags) {
 	    FPRINTF(stderr,
 		    "%s: PR_Poll returned 0x%02x for stdin out_flags.\n",
-		    progName, pollset[1].out_flags);
+		    progName, pollset[STDIN_FD].out_flags);
 	}
-	if (pollset[0].in_flags) {
+	if (pollset[SSOCK_FD].in_flags) {
 	    FPRINTF(stderr, 
 	            "%s: PR_Poll returned 0x%02x for socket out_flags.\n",
-		    progName, pollset[0].out_flags);
+		    progName, pollset[SSOCK_FD].out_flags);
 	}
-	if (pollset[1].out_flags & PR_POLL_READ) {
+	if (pollset[STDIN_FD].out_flags & PR_POLL_READ) {
 	    /* Read from stdin and write to socket */
-	    nb = PR_Read(pollset[1].fd, buf, sizeof(buf));
+	    nb = PR_Read(pollset[STDIN_FD].fd, buf, sizeof(buf));
 	    FPRINTF(stderr, "%s: stdin read %d bytes\n", progName, nb);
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
@@ -810,7 +816,7 @@ int main(int argc, char **argv)
 		}
 	    } else if (nb == 0) {
 		/* EOF on stdin, stop polling stdin for read. */
-		pollset[1].in_flags = 0;
+		pollset[STDIN_FD].in_flags = 0;
 	    } else {
 		char * bufp = buf;
 		FPRINTF(stderr, "%s: Writing %d bytes to server\n", 
@@ -831,8 +837,8 @@ int main(int argc, char **argv)
 		    nb   -= cc;
 		    if (nb <= 0) 
 		    	break;
-		    pollset[0].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
-		    pollset[0].out_flags = 0;
+		    pollset[SSOCK_FD].in_flags = PR_POLL_WRITE | PR_POLL_EXCEPT;
+		    pollset[SSOCK_FD].out_flags = 0;
 		    FPRINTF(stderr,
 		            "%s: about to call PR_Poll on writable socket !\n", 
 			    progName);
@@ -841,23 +847,23 @@ int main(int argc, char **argv)
 		            "%s: PR_Poll returned with writable socket !\n", 
 			    progName);
 		} while (1);
-		pollset[0].in_flags  = PR_POLL_READ;
+		pollset[SSOCK_FD].in_flags  = PR_POLL_READ;
 	    }
 	}
 
-	if (pollset[0].in_flags) {
+	if (pollset[SSOCK_FD].in_flags) {
 	    FPRINTF(stderr, 
 	            "%s: PR_Poll returned 0x%02x for socket out_flags.\n",
-		    progName, pollset[0].out_flags);
+		    progName, pollset[SSOCK_FD].out_flags);
 	}
-	if (   (pollset[0].out_flags & PR_POLL_READ) 
-	    || (pollset[0].out_flags & PR_POLL_ERR)  
+	if (   (pollset[SSOCK_FD].out_flags & PR_POLL_READ) 
+	    || (pollset[SSOCK_FD].out_flags & PR_POLL_ERR)  
 #ifdef PR_POLL_HUP
-	    || (pollset[0].out_flags & PR_POLL_HUP)
+	    || (pollset[SSOCK_FD].out_flags & PR_POLL_HUP)
 #endif
 	    ) {
 	    /* Read from socket and write to stdout */
-	    nb = PR_Read(pollset[0].fd, buf, sizeof(buf));
+	    nb = PR_Read(pollset[SSOCK_FD].fd, buf, sizeof(buf));
 	    FPRINTF(stderr, "%s: Read from server %d bytes\n", progName, nb);
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
@@ -867,7 +873,7 @@ int main(int argc, char **argv)
 	    	}
 	    } else if (nb == 0) {
 		/* EOF from socket... stop polling socket for read */
-		pollset[0].in_flags = 0;
+		pollset[SSOCK_FD].in_flags = 0;
 	    } else {
 		PR_Write(std_out, buf, nb);
 		if (verbose)
