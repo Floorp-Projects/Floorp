@@ -355,6 +355,9 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);
 
+    // Make sure the new context gets the default context options
+    ::JS_SetOptions(mContext, mDefaultJSOptions);
+
     // Check for the JS strict option, which enables extra error checks
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv)) {
