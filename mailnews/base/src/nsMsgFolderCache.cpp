@@ -383,7 +383,11 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 
 	if (!result || !pathKey)
 		return NS_ERROR_NULL_POINTER;
-
+		
+	if (nsCRT::strlen(pathKey) == 0) {
+		return NS_ERROR_FAILURE;
+	}
+	
 	nsCStringKey hashKey(pathKey);
 
 	*result = (nsIMsgFolderCacheElement *) m_cacheElements->Get(&hashKey);
