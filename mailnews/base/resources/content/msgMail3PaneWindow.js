@@ -228,6 +228,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
       else 
       {
         outlinerSelection.clearSelection(); /* clear selection in either case  */
+        setTitleFromFolder(folder,null);
         ClearMessagePane();
       }
     }
@@ -686,7 +687,7 @@ function ClearMessagePane()
     gHaveLoadedMessage = false;
 		gCurrentDisplayedMessage = null;
 		if (window.frames["messagepane"].location != "about:blank")
-			window.frames["messagepane"].location = "about:blank";
+		        window.frames["messagepane"].location = "about:blank";
 		// hide the message header view AND the message pane...
 		HideMessageHeaderPane();
 	}
