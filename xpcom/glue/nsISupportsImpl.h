@@ -71,16 +71,22 @@ extern "C" NS_COM void* NS_CurrentThread(void);
 extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread,
                                              const char* msg);
 
-#define NS_DECL_OWNINGTHREAD            void* _mOwningThread;
-#define NS_IMPL_OWNINGTHREAD()          (_mOwningThread = NS_CurrentThread())
-#define NS_ASSERT_OWNINGTHREAD(_class)  NS_CheckThreadSafe(_mOwningThread,    \
-                                                           #_class            \
-                                                           " not thread-safe")
+class nsAutoOwningThread {
+public:
+    nsAutoOwningThread() { mThread = NS_CurrentThread(); }
+    void *GetThread() const { return mThread; }
+
+private:
+    void *mThread;
+};
+
+#define NS_DECL_OWNINGTHREAD            nsAutoOwningThread _mOwningThread;
+#define NS_ASSERT_OWNINGTHREAD(_class) \
+  NS_CheckThreadSafe(_mOwningThread.GetThread(), #_class " not thread-safe")
 
 #else // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
 
 #define NS_DECL_OWNINGTHREAD            /* nothing */
-#define NS_IMPL_OWNINGTHREAD()          ((void)0)
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 
 #endif // !(defined(NS_DEBUG) && defined(NS_MT_SUPPORTED))
@@ -127,10 +133,11 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Initialize the reference count variable. Add this to each and every
- * constructor you implement.
+ * Previously used to initialize the reference count, but no longer needed.
+ *
+ * DEPRECATED.
  */
-#define NS_INIT_ISUPPORTS() (NS_IMPL_OWNINGTHREAD())
+#define NS_INIT_ISUPPORTS() ((void)0)
 
 /**
  * Use this macro to implement the AddRef method for a given <i>_class</i>

@@ -49,7 +49,7 @@ class RgnRectMemoryAllocator
 #elif defined(DEBUG)
   NS_DECL_OWNINGTHREAD
 
-  void InitLock()    { NS_IMPL_OWNINGTHREAD(); }
+  void InitLock()    { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
   void DestroyLock() { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
   void Lock ()       { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
   void Unlock ()     { NS_ASSERT_OWNINGTHREAD(RgnRectMemoryAllocator); }
