@@ -55,7 +55,7 @@ function onLoad()
   gProgressMeter = document.getElementById("replication.progress");
   gReplicationBundle = document.getElementById("bundle_replication");
 
-  window.title = gReplicationBundle.getFormattedString("replicatingTitle", [dirName])
+  document.title = gReplicationBundle.getFormattedString("replicatingTitle", [dirName])
 
   Replicate();
 }

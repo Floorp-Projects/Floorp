@@ -152,7 +152,7 @@ function setPPTitle(aTitle)
       }
     }
   } catch (e) {}
-  window.title = title;
+  document.title = title;
 }
 
 function PrintPreview()

@@ -67,7 +67,7 @@ function OnLoad()
         var downloadHeadersTitlePrefix = gNewsBundle.getString("downloadHeadersTitlePrefix");
         var okButtonText = gNewsBundle.getString("okButtonText");
 
-        window.title = downloadHeadersTitlePrefix;
+        document.title = downloadHeadersTitlePrefix;
 
         var infotext =  gNewsBundle.getFormattedString("downloadHeadersInfoText", [args.articleCount]);
         setText('info', infotext);

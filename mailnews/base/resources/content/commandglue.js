@@ -157,7 +157,7 @@ function setTitleFromFolder(msgfolder, subject)
       }
     }
     title += " - " + gBrandBundle.getString("brandShortName");
-    window.title = title;
+    document.title = title;
 }
 
 function UpdateMailToolbar(caller)

@@ -52,8 +52,8 @@ function onLoad()
   gAccount = window.arguments[0].account;
 
   var accountName = window.arguments[0].accountName;
-  window.title = document.getElementById("bundle_prefs")
-                    .getFormattedString("identity-list-title", [accountName]);
+  document.title = document.getElementById("bundle_prefs")
+                           .getFormattedString("identity-list-title", [accountName]);
 
   // extract the account from 
   refreshIdentityList();
