@@ -21,58 +21,13 @@ IGNORE_MANIFEST=1
 DEFINES=-DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
-CPPSRCS=                                \
- nsWidgetListener.cpp                   \
- nsBrowserController.cpp                \
- nsBrowserFactory.cpp                   \
- $(NULL)
-
-CPP_OBJS=                               \
- .\$(OBJDIR)\nsWidgetListener.obj       \
- .\$(OBJDIR)\nsBrowserController.obj    \
- .\$(OBJDIR)\nsBrowserFactory.obj       \
- $(NULL)
-
-LINCS=-I$(PUBLIC)\raptor                \
-      -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\base                  \
-      -I$(PUBLIC)\dom                   \
-      -I$(PUBLIC)\js                    \
-!ifdef NECKO
-      -I$(PUBLIC)\necko                 \
-!else
-      -I$(PUBLIC)\netlib                \
-!endif
-       $(NULL)
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = nsbrowser
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
-
-# These are the libraries we need to link with to create the DLL
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib        \
- $(DIST)\lib\raptorgfxwin.lib   \
-!ifdef NECKO
- $(DIST)\lib\neckoutil_s.lib    \
-!else
- $(DIST)\lib\netlib.lib         \
-!endif
- $(LIBNSPR)                     \
- $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 # Define this so nobody can screw it up.
 DISTRES=$(DIST)\bin\res\samples
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+install:: 
 	$(MAKE_INSTALL) appshell.html $(DISTRES)
 	$(MAKE_INSTALL) status.html $(DISTRES)
 	$(MAKE_INSTALL) status.xul $(DISTRES)
@@ -139,9 +94,9 @@ clobber::
 	rm -f $(DISTRES)\xul.css
 	rm -f $(DISTRES)\navigator.xul
 	rm -f $(DISTRES)\viewSource.xul
-    rm -f $(DISTRES)\viewsource.js
+        rm -f $(DISTRES)\viewsource.js
 	rm -f $(DISTRES)\openLocation.xul
-    rm -f $(DISTRES)\openLocation.js
+        rm -f $(DISTRES)\openLocation.js
 	rm -f $(DISTRES)\unknownContent.xul
 	rm -f $(DISTRES)\downloadProgress.xul
 	rm -f $(DISTRES)\downloadProgress.css
