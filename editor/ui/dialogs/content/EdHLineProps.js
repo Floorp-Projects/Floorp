@@ -89,9 +89,9 @@ function InitDialog()
   var marginLeft  = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-left").toLowerCase();
   var marginRight = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-right").toLowerCase();
   align = marginLeft + " " + marginRight;
-  gDialog.centerAlign.checked = (align == "center center" || align == "auto auto");
+  gDialog.leftAlign.checked   = (align == "left left"     || align == "0px auto");
+  gDialog.centerAlign.checked = (align == "center center" || align == "auto auto" || align == " ");
   gDialog.rightAlign.checked  = (align == "right right"   || align == "auto 0px");
-  gDialog.leftAlign.checked   = (align == "left left"     || align == "0px auto" || align == " ");
 
   if (gDialog.centerAlign.checked) {
     gDialog.alignGroup.selectedItem = gDialog.centerAlign;
