@@ -42,10 +42,10 @@ function fillContextMenu(name, treeName)
     if (!popupNode)    return(false);
     // remove the menu node (which tosses all of its kids);
     // do this in case any old command nodes are hanging around
-  while (popupNode.childNodes.length)
-  {
-    popupNode.removeChild(popupNode.childNodes[0]);
-  }
+    while (popupNode.hasChildNodes())
+    {
+      popupNode.removeChild(popupNode.lastChild);
+    }
 
     var treeNode = document.getElementById(treeName);
     if (!treeNode)    return(false);
@@ -185,17 +185,17 @@ function fillContextMenu(name, treeName)
     }
 
   // strip off leading/trailing menuseparators
-  while (popupNode.childNodes.length > 0)
+  while (popupNode.hasChildNodes())
   {
-    if (popupNode.childNodes[0].tagName != "menuseparator")
+    if (popupNode.firstChild.tagName != "menuseparator")
       break;
-    popupNode.removeChild(popupNode.childNodes[0]);
+    popupNode.removeChild(popupNode.firstChild);
   }
-  while (popupNode.childNodes.length > 0)
+  while (popupNode.hasChildNodes())
   {
-    if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+    if (popupNode.lastChild.tagName != "menuseparator")
       break;
-    popupNode.removeChild(popupNode.childNodes[popupNode.childNodes.length - 1]);
+    popupNode.removeChild(popupNode.lastChild);
   }
 
   var   searchMode = 0;
@@ -203,9 +203,9 @@ function fillContextMenu(name, treeName)
   if (pref && bundle)
   {
     // then add a menu separator (if necessary)
-    if (popupNode.childNodes.length > 0)
+    if (popupNode.hasChildNodes())
     {
-      if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+      if (popupNode.lastChild.tagName != "menuseparator")
       {
           var menuSep = document.createElement("menuseparator");
           popupNode.appendChild(menuSep);

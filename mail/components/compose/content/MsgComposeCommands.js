@@ -1996,8 +1996,8 @@ function queryISupportsArray(supportsArray, iid) {
 function ClearIdentityListPopup(popup)
 {
   if (popup)
-    for (var i = popup.childNodes.length - 1; i >= 0; i--)
-      popup.removeChild(popup.childNodes[i]);
+    while (popup.hasChildNodes())
+      popup.removeChild(popup.lastChild);
 }
 
 function compareAccountSortOrder(account1, account2)
@@ -2432,9 +2432,9 @@ function RemoveAllAttachments()
 {
   var child;
   var bucket = document.getElementById("attachmentBucket");
-  for (var i = bucket.childNodes.length - 1; i >= 0; i--)
+  while (bucket.hasChildNodes())
   {
-    child = bucket.removeChild(bucket.childNodes[i]);
+    child = bucket.removeChild(bucket.lastChild);
     // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
     child.attachment = null;
   }

@@ -259,9 +259,11 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
     if (NS_FAILED(result)) return result;
     if (!children) return NS_ERROR_NULL_POINTER;
 
+#ifdef DEBUG
     PRUint32 childCount;
     children->GetLength(&childCount);
     NS_ASSERTION(aEndOffset<=childCount, "bad aEndOffset");
+#endif
     PRUint32 i;
     for (i=aStartOffset; i<aEndOffset; i++)
     {

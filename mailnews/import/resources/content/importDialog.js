@@ -98,7 +98,7 @@ function SetDivText(id, text)
   var div = document.getElementById(id);
 
   if (div) {
-    if (!div.childNodes.length) {
+    if (!div.hasChildNodes()) {
       var textNode = document.createTextNode(text);
       div.appendChild(textNode);
     }
@@ -321,10 +321,8 @@ function ListModules() {
     return;
 
   var body = document.getElementById( "moduleList");
-  var max = body.childNodes.length - 1;
-  while (max >= 0) {
-    body.removeChild( body.childNodes[max]);
-    max--;
+  while (body.hasChildNodes()) {
+    body.removeChild(body.lastChild);
   }
 
   var count = top.importService.GetModuleCount(top.importType);

@@ -116,6 +116,12 @@ function transferToDocument(aResult, aResultDocument)
             else {
                 aResultDocument.insertBefore(childNode, aResultDocument.documentElement);
             }
+            // We removed the node from the list, which will cause it
+            // to shrink by one element.  "i" is now pointing to the
+            // node that used to be _after_ the node we just removed.
+            // Decrement i, so when it increments (at the start of the
+            // next iteration) we'll point at the right place.
+            --i;
         }
     }
 }

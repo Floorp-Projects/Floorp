@@ -1250,8 +1250,8 @@ function ClearAttachmentList()
   // clear selection
   var list = document.getElementById('attachmentList');
 
-  while (list.childNodes.length) 
-    list.removeChild(list.firstChild);
+  while (list.hasChildNodes()) 
+    list.removeChild(list.lastChild);
 }
 
 function ShowEditMessageButton() 

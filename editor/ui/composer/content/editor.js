@@ -3251,8 +3251,9 @@ function UpdateStructToolbar()
   var childNodesLength = childNodes.length;
   // We need to leave the <label> to flex the buttons to the left
   // so, don't remove the last child at position length - 1
-  for (var i = childNodesLength - 2; i >= 0; i--) {
-    toolbar.removeChild(childNodes.item(i));
+  while (childNodes.length > 1) {
+    // Remove back to front so there's less moving about.
+    toolbar.removeChild(childNodes.item(childNodes.length - 2));
   }
 
   toolbar.removeAttribute("label");

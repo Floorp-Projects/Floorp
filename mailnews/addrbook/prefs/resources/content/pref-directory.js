@@ -30,8 +30,8 @@ function onEditDirectories()
     var popup = document.getElementById("directoriesListPopup"); 
     if (popup) 
     { 
-       while (popup.childNodes.length)
-         popup.removeChild(popup.childNodes[0]);
+       while (popup.hasChildNodes())
+         popup.removeChild(popup.lastChild);
     } 
     gAvailDirectories = null;
     LoadDirectories(popup);

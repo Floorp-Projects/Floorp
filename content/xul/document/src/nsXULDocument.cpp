@@ -94,7 +94,6 @@
 #include "nsPIBoxObject.h"
 #include "nsRDFCID.h"
 #include "nsILocalStore.h"
-#include "nsRDFDOMNodeList.h"
 #include "nsXPIDLString.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULCommandDispatcher.h"

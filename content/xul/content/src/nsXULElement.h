@@ -82,13 +82,13 @@
 #include "nsAttrAndChildArray.h"
 #include "nsXULAtoms.h"
 #include "nsAutoPtr.h"
+#include "nsGenericElement.h"
 
 class nsIDocument;
 class nsIRDFService;
 class nsISupportsArray;
 class nsIXULContentUtils;
 class nsIXULPrototypeDocument;
-class nsRDFDOMNodeList;
 class nsString;
 class nsVoidArray;
 class nsIDocShell;
@@ -595,6 +595,7 @@ protected:
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
         nsRefPtr<nsDOMCSSDeclaration>       mDOMStyle;           // [OWNER]
         nsRefPtr<nsDOMAttributeMap>         mAttributeMap;       // [OWNER]
+        nsRefPtr<nsChildContentList>        mChildNodes;         // [OWNER]
         PRUint32                            mLazyState;
     };
 

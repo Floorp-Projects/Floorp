@@ -403,7 +403,7 @@ function cvSetNode(node, text)
 {
 	if ( node )
 	{
-		if ( node.childNodes.length == 0 )
+		if ( !node.hasChildNodes() )
 		{
 			var textNode = document.createTextNode(text);
 			node.appendChild(textNode);                   			
@@ -438,8 +438,8 @@ function cvAddAddressNodes(node, uri)
     if (addressList) {
       var total = addressList.Count();
       if (total > 0) {
-        for (var i = node.childNodes.length - 1; i >= 0; i--) {
-          node.removeChild(node.childNodes[i]);
+        while (node.hasChildNodes()) {
+          node.removeChild(node.lastChild);
         }
         for (i = 0;  i < total; i++ ) {
       		var descNode = document.createElement("description");   

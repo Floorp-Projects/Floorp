@@ -413,7 +413,7 @@ function createMenuItem( aParent, aIndex, aLabel)
 function deleteHistoryItems(aParent)
 {
   var children = aParent.childNodes;
-  for (var i = 0; i < children.length; i++)
+  for (var i = children.length - 1; i >= 0; --i)
     {
       var index = children[i].getAttribute("index");
       if (index)
