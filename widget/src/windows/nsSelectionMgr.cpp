@@ -26,23 +26,8 @@
  * Owns the copied text, listens for selection request events.
  */
 
-class nsSelectionMgr : nsISelectionMgr
-{
-public:
-  virtual void CopyToClipboard();
-
-  virtual ostream& GetCopyOStream();
-
-  virtual void HandlePasteRequest();
-
-  virtual nsEventStatus ProcessEvent(const nsGUIEvent & anEvent) = 0;
-
-private:
-  ostream* mCopyStream;
-}
-
-NS_IMPL_ADDREF(nsDialog)
-NS_IMPL_RELEASE(nsDialog)
+NS_IMPL_ADDREF(nsSelectionMgr)
+NS_IMPL_RELEASE(nsSelectionMgr)
 
 nsSelectionMgr::nsSelectionMgr()
 {
@@ -55,20 +40,108 @@ nsSelectionMgr::~nsSelectionMgr()
 {
 }
 
+nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
+                                        void** aInstancePtrResult)
+{
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult) 
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsISupports::IID())) 
+  {
+    *aInstancePtrResult = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsISelectionMgr::IID())) 
+  {
+    *aInstancePtrResult = (void*)(nsISelectionMgr*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return !NS_OK;
+}
+
 nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
 {
   if (mCopyStream)
     delete mCopyStream;
-  mCopyStream = new ostringstream;
+  mCopyStream = new ostrstream;
   *aStream = mCopyStream;
+  return NS_OK;
 }
 
-nsresult nsSelectionMgr::CopyToClipboard(ostream& str)
+
+static const char* gsAOLFormat = "AOLMAIL";
+static const char* gsHTMLFormat = "text/html";
+
+static void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
+{
+  HGLOBAL     hGlobalMemory;
+  PSTR        pGlobalMemory;
+
+  PRUint32    cf_aol = RegisterClipboardFormat(gsAOLFormat);
+  PRUint32    cf_html = RegisterClipboardFormat(gsHTMLFormat);
+
+  char*       preamble = "";
+  char*       postamble = "";
+
+  if (aFormat == cf_aol || aFormat == CF_TEXT)
+  {
+    preamble = "<HTML>";
+    postamble = "</HTML>";
+  }
+
+  PRInt32 size = aLength + 1 + strlen(preamble) + strlen(postamble);
+
+
+  if (aLength)
+  {
+    // Copy text to Global Memory Area
+    hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, size);
+    if (hGlobalMemory != NULL) 
+    {
+      pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+
+      int i;
+
+      // AOL requires HTML prefix/postamble
+      char*     s  = preamble;
+      PRInt32   len = strlen(s); 
+      for (i=0; i < len; i++)
+      {
+	*pGlobalMemory++ = *s++;
+      }
+
+      s  = aData;
+      len = aLength;
+      for (i=0;i< len;i++) {
+	*pGlobalMemory++ = *s++;
+      }
+
+
+      s = postamble;
+      len = strlen(s); 
+      for (i=0; i < len; i++)
+      {
+	*pGlobalMemory++ = *s++;
+      }
+      
+      // Put data on Clipboard
+      GlobalUnlock(hGlobalMemory);
+      SetClipboardData(aFormat, hGlobalMemory);
+    }
+  }  
+}
+
+nsresult nsSelectionMgr::CopyToClipboard()
 {
   // we'd better already have a stream ...
   if (!mCopyStream)
       return NS_ERROR_NOT_INITIALIZED;
 
+  PRInt32 len = mCopyStream->pcount();
   char* str = (char*)mCopyStream->str();
 
   PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
