@@ -35,6 +35,8 @@ XPIDLSRCS=						\
 		.\nsIURILoader.idl			\
     .\nsIDocumentLoader.idl \
     .\nsIDocumentLoaderObserver.idl \
+    .\nsIWebProgress.idl \
+    .\nsIWebProgressListener.idl \
 		$(NULL)
 
 LIBRARY_NAME=uriloaderbase_s

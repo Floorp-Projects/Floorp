@@ -40,6 +40,8 @@ XPIDLSRCS = 							\
 				nsCURILoader.idl		\
 				nsIDocumentLoader.idl		\
 				nsIDocumentLoaderObserver.idl 	\
+				nsIWebProgress.idl 	\
+				nsIWebProgressListener.idl 	\
 				$(NULL)
 EXPORTS = 							\
 				nsURILoader.h	 		\
