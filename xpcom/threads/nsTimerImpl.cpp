@@ -322,8 +322,8 @@ void nsTimerImpl::Fire()
   nsCOMPtr<nsIEventQueue> queue;
   if (gThread)
     gThread->mEventQueueService->GetThreadEventQueue(thread, getter_AddRefs(queue));
-
-  queue->PostEvent(&event->e);
+  if (queue)
+    queue->PostEvent(&event->e);
 }
 
 void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
