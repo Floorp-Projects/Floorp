@@ -224,10 +224,10 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
             if (NS_SUCCEEDED(rv)) {
-                // We're done!
-#ifndef DEBUG                
-                return;
-#endif
+                // We're done!  Skip return to fall thru to stderr
+                // printout, for the benefit of those invoking the
+                // browser with -console.
+                // return;
             }
         }
     }
