@@ -442,6 +442,9 @@ sub BuildClientDist()
 
 	#DBM
     _InstallFromManifest(":mozilla:dbm:include:MANIFEST",							"$distdirectory:dbm:");
+    
+    #URILOADER
+    _InstallFromManifest(":mozilla:uriloader:base:MANIFEST_IDL",				"$distdirectory:idl:");
 	
 	if ( $main::NECKO )
 	{
@@ -838,6 +841,8 @@ sub BuildIDLProjects()
 		# stream conversion.
 		BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
 	}
+	
+	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp", 				"uriloader");
 
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 	BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",				"libutil");
@@ -1067,7 +1072,9 @@ sub BuildCommonProjects()
 	{
 		BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	}
-
+	
+	BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",						"uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",	"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
