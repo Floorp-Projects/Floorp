@@ -4781,6 +4781,78 @@ BOOL CheckForProcess(LPSTR szProcessName, DWORD dwProcessName)
     return(CheckProcessNT4(szProcessName, dwProcessName));
 }
 
+int PreCheckInstance(char *szSection, char *szIniFile)
+{
+  char  szBuf[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szName[MAX_BUF];
+  char  szParameter[MAX_BUF];
+  char  szPath[MAX_BUF];
+  char  szFile[MAX_BUF];
+  char  *ptrName = NULL;
+  HKEY  hkeyRoot;
+  int   iRv = WIZ_OK;
+
+  /* Read the win reg key path */
+  GetPrivateProfileString(szSection,
+                          "Extra Cmd Reg Key",
+                          "",
+                          szKey,
+                          sizeof(szKey),
+                          szIniFile);
+  if(*szKey == '\0')
+    return(iRv);
+
+  /* Read the win reg root key */
+  GetPrivateProfileString(szSection,
+                          "Extra Cmd Reg Key Root",
+                          "",
+                          szBuf,
+                          sizeof(szBuf),
+                          szIniFile);
+  if(*szBuf == '\0')
+    return(iRv);
+  hkeyRoot = ParseRootKey(szBuf);
+
+  /* Read the win reg name value */
+  GetPrivateProfileString(szSection,
+                          "Extra Cmd Reg Name",
+                          "",
+                          szName,
+                          sizeof(szName),
+                          szIniFile);
+  if(*szName == '\0')
+    ptrName = NULL;
+  else
+    ptrName = szName;
+
+  /* Read the parameter to use for quitting the browser's turbo mode */
+  GetPrivateProfileString(szSection,
+                          "Extra Cmd Parameter",
+                          "",
+                          szParameter,
+                          sizeof(szParameter),
+                          szIniFile);
+
+  /* Read the win reg key that contains the path to the browser */
+  GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
+  ParsePath(szFile, szPath, sizeof(szPath), FALSE, PP_PATH_ONLY);
+
+  /* Make sure the file exists */
+  if(FileExists(szFile))
+  {
+    /* Run the file */
+    WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
+
+    /* Even though WinSpawn is suppose to wait for the app to finish, this
+     * does not really work that way for trying to quit the browser when
+     * it's in turbo mode, so we wait 2 secs for it to complete. */
+    Delay(2);
+  }
+
+  return(iRv);
+}
+
 HRESULT CheckInstances()
 {
   char  szSection[MAX_BUF];
@@ -4815,6 +4887,10 @@ HRESULT CheckInstances()
     {
       if(*szProcessName != '\0')
       {
+        /* If an instance is found, call PreCheckInstance first */
+        if(CheckForProcess(szProcessName, sizeof(szProcessName)) == TRUE)
+          PreCheckInstance(szSection, szFileIniConfig);
+
         if(CheckForProcess(szProcessName, sizeof(szProcessName)) == TRUE)
         {
           if(*szMessage != '\0')
@@ -4878,6 +4954,10 @@ HRESULT CheckInstances()
         szWN = NULL;
       else
         szWN = szWindowName;
+
+      /* If an instance is found, call PreCheckInstance first */
+      if((hwndFW = FindWindow(szCN, szWN)) != NULL)
+        PreCheckInstance(szSection, szFileIniConfig);
 
       if((hwndFW = FindWindow(szCN, szWN)) != NULL)
       {
