@@ -629,7 +629,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRInt32 nativeRet;
+  PRUint32 nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -650,7 +650,18 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    if ( nativeRet <= JSVAL_INT_MAX )
+      *rval = INT_TO_JSVAL(nativeRet);
+    else
+    {
+      JSInt64 l;
+      jsdouble d;
+
+      JSLL_UI2L( l, nativeRet );
+      JSLL_L2D( d, l );
+
+      JS_NewDoubleValue( cx, d, rval );
+    }
   }
   else
   {
