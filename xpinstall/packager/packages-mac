@@ -149,29 +149,27 @@ viewer:Components:Necko.shlb
 viewer:Components:Necko2.shlb 
 viewer:Components:necko.xpt 
 
+viewer:chrome:locales:*
+viewer:chrome:packages:*
 viewer:chrome:skins:*
-viewer:chrome:editor:*
--viewer:chrome:editor:content:EditorInitPage.html
--viewer:chrome:editor:content:EditorInitPagePlain.html
+-viewer:chrome:packages:core:editor:content:EditorInitPage.html
+-viewer:chrome:packages:core:editor:content:EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
-;-viewer:chrome:editor:content:TextEditorAppShell.xul
--viewer:chrome:editor:content:sb-bookmarks-panel.xul
--viewer:chrome:editor:content:sb-bookmarks.js
--viewer:chrome:editor:content:sb-file-contextMenu.js
--viewer:chrome:editor:content:sb-file-panel.js
--viewer:chrome:editor:content:sb-file-panel.xul
--viewer:chrome:editor:content:sb-FileWidgetFileHandler.js
-viewer:chrome:communicator:*
--viewer:chrome:communicator:content:domviewer
-viewer:chrome:global:* 
-viewer:chrome:navigator:* 
+;-viewer:chrome:packages:core:editor:content:TextEditorAppShell.xul
+-viewer:chrome:packages:core:editor:content:sb-bookmarks-panel.xul
+-viewer:chrome:packages:core:editor:content:sb-bookmarks.js
+-viewer:chrome:packages:core:editor:content:sb-file-contextMenu.js
+-viewer:chrome:packages:core:editor:content:sb-file-panel.js
+-viewer:chrome:packages:core:editor:content:sb-file-panel.xul
+-viewer:chrome:packages:core:editor:content:sb-FileWidgetFileHandler.js
+-viewer:chrome:packages:core:communicator:content:domviewer
+viewer:chrome:autocomplete.xml
 viewer:chrome:htmlBindings.xml
+viewer:chrome:menulistBindings.xml
 viewer:chrome:platformHTMLBindings.xml
+viewer:chrome:radioBindings.xml
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
-viewer:chrome:autocomplete.xml
-viewer:chrome:radioBindings.xml
-viewer:chrome:menulistBindings.xml
 
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:mailnews.js
@@ -260,5 +258,4 @@ viewer:Components:msgImportText.shlb
 viewer:Components:msgImportEudora.shlb
 viewer:Components:AbSyncSvc.shlb 
 viewer:Components:AbSyncSvc.xpt 
-viewer:chrome:messenger:* 
 viewer:res:Mailnews:*
