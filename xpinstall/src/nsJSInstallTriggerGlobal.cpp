@@ -408,94 +408,80 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1str;
-  PRInt32      b1int;
-  PRInt32      b2int;
-  PRInt32      b3int;
-  PRInt32      b4int;
+  nsAutoString regname;
+  nsAutoString version;
+  int32        major,minor,release,build;
 
   *rval = JSVAL_NULL;
 
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_FALSE;
 
-  if(argc >= 5)
+  if (argc < 2 )
+  {
+    JS_ReportError(cx, "CompareVersion requires at least 2 parameters");
+    return JS_FALSE;
+  }
+  else if ( !JSVAL_IS_STRING(argv[0]) )
+  {
+    JS_ReportError(cx, "Invalid parameter passed to CompareVersion");
+    return JS_FALSE;
+  }
+
+  // get the registry name argument
+  ConvertJSValToStr(regname, cx, argv[0]);
+
+  if (argc = 2 )
+  {
+    //  public int CompareVersion(String registryName, String version)
+    //  --OR-- CompareVersion(String registryNamve, InstallVersion version)
+
+    ConvertJSValToStr(version, cx, argv[1]);
+    if(NS_OK != nativeThis->CompareVersion(regname, version, &nativeRet))
+    {
+          return JS_FALSE;
+    }
+  }
+  else
   {
     //  public int CompareVersion(String registryName,
     //                            int    major,
     //                            int    minor,
     //                            int    release,
     //                            int    build);
+    //
+    //  minor, release, and build values are optional
 
-    ConvertJSValToStr(b0, cx, argv[0]);
+    major = minor = release = build = 0;
 
-    if(!JS_ValueToInt32(cx, argv[1], (int32 *)&b1int))
+    if(!JS_ValueToInt32(cx, argv[1], &major))
     {
       JS_ReportError(cx, "2th parameter must be a number");
       return JS_FALSE;
     }
-    if(!JS_ValueToInt32(cx, argv[2], (int32 *)&b2int))
+    if( argc > 2 && !JS_ValueToInt32(cx, argv[2], &minor) )
     {
       JS_ReportError(cx, "3th parameter must be a number");
       return JS_FALSE;
     }
-    if(!JS_ValueToInt32(cx, argv[3], (int32 *)&b3int))
+    if( argc > 3 && !JS_ValueToInt32(cx, argv[3], &release) )
     {
       JS_ReportError(cx, "4th parameter must be a number");
       return JS_FALSE;
     }
-    if(!JS_ValueToInt32(cx, argv[4], (int32 *)&b4int))
+    if( argc > 4 && !JS_ValueToInt32(cx, argv[4], &build) )
     {
       JS_ReportError(cx, "5th parameter must be a number");
       return JS_FALSE;
     }
 
-    if(NS_OK != nativeThis->CompareVersion(b0, b1int, b2int, b3int, b4int, &nativeRet))
+    if(NS_OK != nativeThis->CompareVersion(regname, major, minor, release, build, &nativeRet))
     {
       return JS_FALSE;
     }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else if(argc >= 2)
-  {
-    //  public int CompareVersion(String registryName,
-    //                            String version); --OR-- VersionInfo version
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-
-    if(JSVAL_IS_OBJECT(argv[1]))
-    {
-        JSObject* jsobj = JSVAL_TO_OBJECT(argv[1]);
-        JSClass* jsclass = JS_GetClass(cx, jsobj);
-        if((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) 
-        {
-          nsIDOMInstallVersion* version = (nsIDOMInstallVersion*)JS_GetPrivate(cx, jsobj);
-
-          if(NS_OK != nativeThis->CompareVersion(b0, version, &nativeRet))
-          {
-                return JS_FALSE;
-          }
-        }
-    }
-    else
-    {
-        ConvertJSValToStr(b1str, cx, argv[1]);
-        if(NS_OK != nativeThis->CompareVersion(b0, b1str, &nativeRet))
-        {
-          return JS_FALSE;
-        }
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function CompareVersion requires 5 parameters");
-    return JS_FALSE;
   }
 
+  *rval = INT_TO_JSVAL(nativeRet);
   return JS_TRUE;
 }
 

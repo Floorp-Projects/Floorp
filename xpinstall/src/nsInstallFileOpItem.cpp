@@ -250,7 +250,8 @@ char* nsInstallFileOpItem::toString()
 
 PRInt32 nsInstallFileOpItem::Prepare()
 {
-	return nsInstall::SUCCESS;
+    // no set-up necessary
+    return nsInstall::SUCCESS;
 }
 
 void nsInstallFileOpItem::Abort()
