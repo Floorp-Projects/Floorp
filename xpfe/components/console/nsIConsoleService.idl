@@ -32,6 +32,12 @@ interface nsIConsoleService : nsISupports
     // Needed for folks who need to avoid nsIConsoleMessage hassle
     void logStringMessage(in wstring message);
 
+    /**
+     * Get an array of all the messages logged so far.  If no messages
+     * are logged, this function will return a count of 0, but still
+     * will allocate one word for messages, so as to show up as a
+     * 0-length array when called from script.
+     */
     void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
                          out PRUint32 count);
 
