@@ -256,7 +256,7 @@
   
   // Only start the editing if the selection didn't change in the meantime
   // (e.g. because arrow keys were used to change it).
-  if (row > 0 && row == [self selectedRow])
+  if (row >= 0 && row == [self selectedRow])
     [self editColumn:mColumnToBeEdited row:row withEvent:nil select:YES];    
 }
 
