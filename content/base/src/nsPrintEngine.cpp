@@ -95,7 +95,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 // Printing Prompts
 #include "nsIPrintingPromptService.h"
-const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-service;1";
+static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-service;1";
 
 #define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://global/locale/printing.properties"
 

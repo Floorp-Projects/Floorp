@@ -64,7 +64,7 @@
 #include "nsIContentViewerFile.h"
 #include "nsIPrintingPromptService.h"
 
-const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-service;1";
+static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprompt-service;1";
 
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation
