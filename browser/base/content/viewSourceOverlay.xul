@@ -43,8 +43,6 @@
 %sourceDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 ]>
@@ -53,7 +51,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
@@ -151,19 +148,6 @@
                     label="&menu_wrapLongLines.title;" accesskey="&menu_wrapLongLines.accesskey;"/>
           <menuitem type="checkbox" command="cmd_highlightSyntax"
                     label="&menu_highlightSyntax.label;" accesskey="&menu_highlightSyntax.accesskey;"/>
-        </menupopup>
-      </menu>
-
-      <menu label="&helpMenu.label;"
-            accesskey="&helpMenu.accesskey;">
-        <menupopup>
-          <menuitem accesskey="&releaseCmd.accesskey;"
-                    label="&releaseCmd.label;"
-                    oncommand="openTopWin('&releaseURL;');"/>
-          <menuseparator/>
-          <menuitem accesskey="&aboutCmd.accesskey;"
-                    label="&aboutCmd.label;"
-                    oncommand="openAboutDialog();"/>
         </menupopup>
       </menu>
     </menubar>  

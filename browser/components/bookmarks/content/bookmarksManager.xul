@@ -33,8 +33,6 @@
 %utilDTD;
 <!ENTITY % bmDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 %bmDTD;
-<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
-%globalRegionDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 ]>
@@ -220,18 +218,6 @@
           <menuitem label="&menuitem.personaltoolbarfolder.label;"    
                     command="cmd_bm_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
-        </menupopup>
-      </menu>
-      <menu label="&helpMenu.label;"
-            accesskey="&helpMenu.accesskey;">
-        <menupopup>
-          <menuitem accesskey="&releaseCmd.accesskey;"
-                    label="&releaseCmd.label;"
-                    oncommand="openTopWin('&releaseURL;');"/>
-          <menuseparator/>
-          <menuitem accesskey="&aboutCmd.accesskey;"
-                    label="&aboutCmd.label;"
-                    oncommand="openAboutDialog();"/>
         </menupopup>
       </menu>
     </menubar>

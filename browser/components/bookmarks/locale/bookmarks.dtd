@@ -82,14 +82,6 @@
 <!ENTITY fileMenu.label                 "File">
 <!ENTITY fileMenu.accesskey             "F">
 
-<!ENTITY helpMenu.label            "Help">
-<!ENTITY helpMenu.accesskey        "H">
-<!ENTITY releaseCmd.label          "Release Notes">
-<!ENTITY releaseCmd.accesskey      "R">
-<!ENTITY aboutCmd.label            "About &brandShortName;">
-<!ENTITY aboutCmd.accesskey        "A">
-
-
 <!-- bookmarksToolbar.xml -->
 <!ENTITY emptyItem.label "(Empty)">
 
