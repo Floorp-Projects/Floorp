@@ -1,56 +1,105 @@
+
 <HTML>
 <HEAD>
 <SCRIPT>
 
-function insertIt() {
-    var body = document.documentElement.childNodes[1];
-    var table = document.getElementsByTagName("TABLE")[0];
-	var otherCaption = document.getElementsByTagName("CAPTION")[0];
-	var attrList = otherCaption.attributes;
-    var caption = document.createElement("CAPTION", attrList);
-	var text = document.createTextNode("here is the new caption text");
-	caption.appendChild(text);
-
-    table.appendChild(caption);
+function insertCaption() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var caption = document.createElement("CAPTION", null);
+  var text = document.createTextNode("here is the new caption text");
+  caption.appendChild(text);
+  table.appendChild(caption);
 }
 
-function deleteIt() {
-    var body = document.documentElement.childNodes[1];
-    var table = document.getElementsByTagName("TABLE")[0];
-    var caption = document.getElementsByTagName("CAPTION")[0];
-    table.removeChild(caption);
+function deleteCaption() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var caption = document.getElementsByTagName("CAPTION")[0];
+  table.removeChild(caption);
 }
 
+function insertColGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var colGroup = document.createElement("COLGROUP", null);
+  table.appendChild(colGroup);
+}
 
+function deleteColGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var colGroup = document.getElementsByTagName("COLGROUP")[0];
+  table.removeChild(colGroup);
+}
 
+function insertCol() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var col = document.createElement("COL", null);
+  table.appendChild(col);
+}
+
+function deleteCol() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var col = document.getElementsByTagName("COL")[0];
+  table.removeChild(col);
+}
+
+function insertRowGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var rowGroup = document.createElement("TBODY", null);
+  table.appendChild(rowGroup);
+}
+
+function deleteRowGroup() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var rowGroup = document.getElementsByTagName("TBODY")[0];
+  table.removeChild(rowGroup);
+}
+
+function insertRow() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var row = document.createElement("TR", null);
+  table.appendChild(row);
+}
+
+function deleteRow() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  var row = document.getElementsByTagName("TR")[0];
+  table.removeChild(row);
+}
 
 </SCRIPT>
 </HEAD>
 
 <BODY>
+all insert buttons currently do an append
+all delete buttons currently remove the first item of <type> found
 <table border>
 	<tbody>
 		<tr>
-			<td>table without a caption</td>
+			<td>cell content</td>
 		</tr>
 	</tbody>
 </table>
+
+<p>
 <form>
-<INPUT TYPE="button" NAME="Ins" VALUE="Insert" onClick="insertIt()">
-<INPUT TYPE="button" NAME="Del" VALUE="Delete" onClick="deleteIt()">
+<INPUT TYPE="button" NAME="Ins Caption" VALUE="InsertCaption" onClick="insertCaption()" width=100>
+<INPUT TYPE="button" NAME="Del Caption" VALUE="DeleteCaption" onClick="deleteCaption()" width=100>
+<br>
+
+<INPUT TYPE="button" NAME="Ins ColGroup" VALUE="InsertCG" onClick="insertColGroup()" width=100>
+<INPUT TYPE="button" NAME="Del ColGroup" VALUE="DeleteCG" onClick="deleteColGroup()" width=100>
+<br>
+<INPUT TYPE="button" NAME="Ins Col" VALUE="InsertCol" onClick="insertCol()" width=100>
+<INPUT TYPE="button" NAME="Del Col" VALUE="DeleteCol" onClick="deleteCol()" width=100>
+<br>
+<INPUT TYPE="button" NAME="Ins RowGroup" VALUE="InsertRG" onClick="insertRowGroup()" width=100>
+<INPUT TYPE="button" NAME="Del RowGroup" VALUE="DeleteRG" onClick="deleteRowGroup()" width=100>
+<br>
+<INPUT TYPE="button" NAME="Ins Row" VALUE="InsertRow" onClick="insertRowGroup()" width=100>
+<INPUT TYPE="button" NAME="Del Row" VALUE="DeleteRow" onClick="deleteRowGroup()" width=100>
+<br>
 </form>
-<br><br>
-<table border>
-	<caption style="border: 2px solid black">here is a caption</caption>
-	<tbody>
-		<tr>
-			<td>table with a caption</td>
-		</tr>
-	</tbody>
-</table>
 
+</BODY></HTML>
 
-</BODY>
-</HTML>
 
 
