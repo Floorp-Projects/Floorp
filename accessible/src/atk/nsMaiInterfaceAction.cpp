@@ -139,16 +139,11 @@ getNameCB(AtkAction *aAction, gint aActionIndex)
                        accWrap->GetMaiInterface(MAI_INTERFACE_ACTION));
     NS_ENSURE_TRUE(action, nsnull);
 
-    const char *name = action->GetName();
-    if (!name || !*name) {
-        nsAutoString autoStr;
-        nsresult rv = accWrap->GetActionName(aActionIndex, autoStr);
-        NS_ENSURE_SUCCESS(rv, nsnull);
-
-        action->SetName(autoStr);
-        name = action->GetName();
-    }
-    return name;
+    nsAutoString autoStr;
+    nsresult rv = accWrap->GetActionName(aActionIndex, autoStr);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    action->SetName(autoStr);
+    return action->GetName();
 }
 
 const gchar *
