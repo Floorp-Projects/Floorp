@@ -131,9 +131,6 @@ protected:
  * represents the set of documents actively being loaded...
  */
 class nsDocumentBindInfo : public nsIStreamListener
-#if 0
-                         , public nsIProgressEventSink
-#endif /* 0 */
 {
 public:
     nsDocumentBindInfo();
@@ -155,15 +152,6 @@ public:
 
 	// nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
-
-#if 0
-    // nsIProgressEventSink methods:
-    NS_DECL_NSIPROGRESSEVENTSINK
-
-    /* nsIRefreshURL interface methods... */
-    NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat);
-    NS_IMETHOD CancelRefreshURLTimers(void);
-#endif /* 0 */
 
 protected:
     virtual ~nsDocumentBindInfo();
@@ -240,28 +228,18 @@ public:
     nsresult AddChildGroup(nsDocLoaderImpl *aLoader);
     nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
 
-
     void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
                                  nsIURI* aURL, 
                                  const char* aCommand);
+
     void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
                                nsIChannel *aDocChannel,
                                nsresult aStatus);
 							   
-
     void FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
                             nsIChannel* channel, 
                             nsIContentViewer* aViewer);
-#if 0
-    void FireOnProgressURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                               nsIChannel* channel, 
-                               PRUint32 aProgress, 
-                               PRUint32 aProgressMax);
 
-    void FireOnStatusURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                             nsIChannel* channel, 
-                             nsString& aMsg);
-#endif /* 0 */
     void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                           nsIChannel* channel, nsresult aStatus);
 
@@ -902,54 +880,6 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
   }
 }
 
-#if 0
-void nsDocLoaderImpl::FireOnProgressURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                            nsIChannel* channel, 
-                                            PRUint32 aProgress,
-                                            PRUint32 aProgressMax)
-{
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
-
-  /*
-   * First notify any observers that there is progress information available...
-   */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnProgressURLLoad(aLoadInitiator, channel, aProgress, aProgressMax);
-  }
-
-  /*
-   * Finally notify the parent...
-   */
-  if (mParent) {
-    mParent->FireOnProgressURLLoad(aLoadInitiator, channel, aProgress, aProgressMax);
-  }
-}
-
-void nsDocLoaderImpl::FireOnStatusURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                                          nsIChannel* channel,
-                                          nsString& aMsg)
-{
-  PRInt32 count = mDocObservers.Count();
-  PRInt32 index;
-
-  /*
-   * First notify any observers that there is status text available...
-   */
-  for (index = 0; index < count; index++) {
-    nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStatusURLLoad(aLoadInitiator, channel, aMsg);
-  }
-
-  /*
-   * Finally notify the parent...
-   */
-  if (mParent) {
-    mParent->FireOnStatusURLLoad(aLoadInitiator, channel, aMsg);
-  }
-}
-#endif /* 0 */
 
 void nsDocLoaderImpl::FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
                                        nsIChannel* channel, nsresult aStatus)
@@ -1081,13 +1011,6 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#if 0
-  if (aIID.Equals(kRefreshURLIID)) {
-    *aInstancePtrResult = (void*) ((nsIRefreshUrl*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif /* 0 */
   return NS_NOINTERFACE;
 }
 
@@ -1161,59 +1084,6 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL,
   return rv;
 }
 
-#if 0
-NS_METHOD nsDocumentBindInfo::OnProgress(nsIChannel* channel, nsISupports *ctxt,
-                                         PRUint32 aProgress, PRUint32 aProgressMax)
-{
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIURI> aURL;
-    rv = channel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(rv)) return rv;
-
-#if defined(DEBUG)
-    char* spec;
-    (void)aURL->GetSpec(&spec);
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocumentBindInfo:%p: OnProgress(...) called for %s.  Progress: %d.  ProgressMax: %d\n", 
-            this, spec, aProgress, aProgressMax));
-    nsCRT::free(spec);
-#endif /* DEBUG */
-
-    /* Pass the notification out to the next stream listener... */
-    if (nsnull != m_NextStream) {
-//        rv = m_NextStream->OnProgress(channel, aProgress, aProgressMax);
-        NS_ASSERTION(0, "help");
-    }
-
-    /* Pass the notification out to any observers... */
-    m_DocLoader->FireOnProgressURLLoad(m_DocLoader, channel, aProgress, aProgressMax);
-
-    return rv;
-}
-
-
-NS_METHOD nsDocumentBindInfo::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnichar *aMsg)
-{
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIURI> aURL;
-    rv = channel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(rv)) return rv;
-
-    /* Pass the notification out to the next stream listener... */
-    if (nsnull != m_NextStream) {
-//        rv = m_NextStream->OnStatus(ctxt, aMsg);
-        NS_ASSERTION(0, "help");
-    }
-
-    /* Pass the notification out to any observers... */
-    nsString msgStr(aMsg);
-    m_DocLoader->FireOnStatusURLLoad(m_DocLoader, channel, msgStr);
-
-    return rv;
-}
-#endif /* 0 */
 
 NS_IMETHODIMP
 nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
@@ -1377,56 +1247,6 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ct
 
     return rv;
 }
-
-#if 0
-NS_METHOD
-nsDocumentBindInfo::RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat)
-{
-    if (nsnull != m_Container) {
-        nsresult rv = NS_OK;
-#ifdef NECKO
-        NS_ASSERTION(0, "help");
-#else
-        nsIRefreshUrl* refresher = nsnull;
-
-        /* Delegate the actual refresh call up-to the container. */
-        rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
-
-        if (NS_FAILED(rv)) {
-            return PR_FALSE;
-        }
-        rv = refresher->RefreshURL(aURL, millis, repeat);
-        NS_RELEASE(refresher);
-#endif
-        return rv;
-    }
-    return PR_FALSE;
-}
-
-NS_METHOD
-nsDocumentBindInfo::CancelRefreshURLTimers(void)
-{
-    if (nsnull != m_Container) {
-        nsresult rv = NS_OK;
-#ifdef NECKO
-        NS_ASSERTION(0, "help");
-#else
-        nsIRefreshUrl* refresher = nsnull;
-
-        /* Delegate the actual cancel call up-to the container. */
-        rv = m_Container->QueryInterface(kRefreshURLIID, (void**)&refresher);
-
-        if (NS_FAILED(rv)) {
-            return PR_FALSE;
-        }
-        rv = refresher->CancelRefreshURLTimers();
-        NS_RELEASE(refresher);
-#endif
-        return rv;
-    }
-    return PR_FALSE;
-}
-#endif /* 0 */
 
 
 
