@@ -33,5 +33,35 @@ interface nsIHTMLDocShell : nsISupports
 	/*
 	Scrolls to a given DOM content node. 
 	*/
-	void ScrollToNode(in nsIDOMNode node);
+	void scrollToNode(in nsIDOMNode node);
+
+	/*
+	XXX Comment here!
+	*/
+	attribute long marginWidth;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute long marginHeight;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute boolean isFrame;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring defaultCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring forceCharacterSet;
+
+	/* the following is the hacky access method 
+	Commented out as nsCharsetSource should be something IDL like
+	void GetCharacterSetHint(in wstring hintCharset, in nsCharsetSource charsetSource);
+	*/
 };
