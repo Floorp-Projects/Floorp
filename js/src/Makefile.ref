@@ -53,9 +53,9 @@ ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 INCLUDES += -I../../dist/$(OBJDIR)/include
 ifdef USE_MSVC
-OTHER_LIBS += ../../dist/$(OBJDIR)/lib/libnspr3.lib
+OTHER_LIBS += ../../dist/$(OBJDIR)/lib/libnspr${NSPR_LIBSUFFIX}.lib
 else
-OTHER_LIBS += -L../../dist/$(OBJDIR)/lib -lnspr3
+OTHER_LIBS += -L../../dist/$(OBJDIR)/lib -lnspr${NSPR_LIBSUFFIX}
 endif
 endif
 

@@ -122,4 +122,4 @@ VPATH           = $(OBJDIR)
 # Automatic make dependencies file
 DEPENDENCIES    = $(OBJDIR)/.md
 
-LCJAR = js14lc30.jar
+LCJAR = js15lc30.jar

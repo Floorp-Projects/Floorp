@@ -121,13 +121,15 @@ OTHER_LIBS += -L../editline/$(OBJDIR) -ledit
 endif
 endif
 
+NSPR_LIBSUFFIX = 4
+
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 INCLUDES += -I../../../dist/$(OBJDIR)/include
 ifdef USE_MSVC
-OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr3.lib
+OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr${NSPR_LIBSUFFIX}.lib
 else
-OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr3
+OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr${NSPR_LIBSUFFIX}
 endif
 endif
 

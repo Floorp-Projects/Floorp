@@ -1,3 +1,4 @@
+# -*- Mode: makefile -*-
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -32,8 +33,17 @@
 
 # Change these to the current platform settings!!!
 
-JDK = /u/rchinta/util/java/jdk1.1.5
+ifndef JDK_VERSION
+JDK_VERSION = 1.2.2
+endif
 
-INCLUDES   += -I$(JDK)/include -I$(JDK)/include/solaris
+JDK = /share/builds/components/jdk/$(JDK_VERSION)/SunOS
 
-OTHER_LIBS += -L$(JDK)/lib/sparc/native_threads -ljava
+# INCLUDES   += -I$(JDK)/include -I$(JDK)/include/solaris
+INCLUDES   += -I$(JDK)/include/solaris -I$(JDK)/include
+
+OTHER_LIBS += -L$(JDK)/jre/lib/sparc/native_threads
+OTHER_LIBS += -L$(JDK)/jre/lib/sparc/classic
+OTHER_LIBS += -L$(JDK)/jre/lib/sparc -ljava -ljvm
+
+
