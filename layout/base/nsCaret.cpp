@@ -67,7 +67,7 @@ nsCaret::nsCaret()
 , mCaretTwipsWidth(-1)
 , mCaretPixelsWidth(1)
 , mVisible(PR_FALSE)
-, mReadOnly(PR_TRUE)
+, mReadOnly(PR_FALSE)
 , mDrawn(PR_FALSE)
 , mShowWhenSelection(PR_FALSE)
 , mLastCaretFrame(nsnull)
@@ -780,12 +780,11 @@ void nsCaret::DrawCaret()
 
     mCaretRect.IntersectRect(clipRect, caretRect);
   }
-    /*
-    if (mReadOnly)
-      inRendContext.SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
-    */
-    
-  mRendContext->SetColor(NS_RGB(255,255,255));
+
+  if (mReadOnly)
+    mRendContext->SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
+  else
+    mRendContext->SetColor(NS_RGB(255,255,255));
   mRendContext->InvertRect(mCaretRect);
 
   PRBool emptyClip;   // I know what you're thinking. "Did he fire six shots or only five?"

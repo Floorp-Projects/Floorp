@@ -4247,7 +4247,7 @@ GlobalWindowImpl::RegisterEventListener(const char* aEventName,
     nsCOMPtr<nsIScriptContext> scriptCX;
     nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
     if (!scriptCX ||
-        NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this, 
+        NS_FAILED(manager->RegisterScriptEventListener(scriptCX, this,
                                                        eventName,
                                                        aIID))) {
       return NS_ERROR_FAILURE;
@@ -4406,7 +4406,7 @@ GlobalWindowImpl::GetOnchange(jsval* aOnchange)
 {
   return NS_OK;
 }
-NS_IMETHODIMP    
+NS_IMETHODIMP
 GlobalWindowImpl::SetOnchange(jsval aOnchange)
 {
   return RegisterEventListener("onchange", NS_GET_IID(nsIDOMFormListener));
@@ -4974,48 +4974,39 @@ const char *sCutString = "cmd_cut";
 const char *sPasteString = "cmd_paste";
 const char *sSelectAllString = "cmd_selectAll";
 
+const char *sScrollTopString = "cmd_scrollTop";
+const char *sScrollBottomString = "cmd_scrollBottom";
+const char *sScrollPageUpString = "cmd_scrollPageUp";
+const char *sScrollPageDownString = "cmd_scrollPageDown";
+const char *sScrollLineUpString = "cmd_scrollLineUp";
+const char *sScrollLineDownString = "cmd_scrollLineDown";
+const char *sScrollLeftString = "cmd_scrollLeft";
+const char *sScrollRightString = "cmd_scrollRight";
+
+// These are so the browser can use editor navigation key bindings
+// helps with accessibility (boolean pref accessibility.browsewithcaret)
+
+const char *sSelectCharPreviousString = "cmd_selectCharPrevious";
+const char *sSelectCharNextString = "cmd_selectCharNext";
+
+const char *sWordPreviousString = "cmd_wordPrevious";
+const char *sWordNextString = "cmd_wordNext";
+const char *sSelectWordPreviousString = "cmd_selectWordPrevious";
+const char *sSelectWordNextString = "cmd_selectWordNext";
+
 const char *sBeginLineString = "cmd_beginLine";
 const char *sEndLineString = "cmd_endLine";
 const char *sSelectBeginLineString = "cmd_selectBeginLine";
 const char *sSelectEndLineString = "cmd_selectEndLine";
 
-const char *sScrollTopString = "cmd_scrollTop";
-const char *sScrollBottomString = "cmd_scrollBottom";
+const char *sSelectLinePreviousString = "cmd_selectLinePrevious";
+const char *sSelectLineNextString = "cmd_selectLineNext";
 
-const char *sMoveTopString = "cmd_moveTop";
-const char *sMoveBottomString = "cmd_moveBottom";
-const char *sSelectMoveTopString = "cmd_selectTop";
-const char *sSelectMoveBottomString = "cmd_selectBottom";
+const char *sSelectPagePreviousString = "cmd_selectPagePrevious";
+const char *sSelectPageNextString = "cmd_selectPageNext";
 
-const char *sDownString = "cmd_linedown";
-const char *sUpString = "cmd_lineup";
-const char *sSelectDownString = "cmd_selectLineDown";
-const char *sSelectUpString = "cmd_selectLineUp";
-
-const char *sLeftString = "cmd_charPrevious";
-const char *sRightString = "cmd_charNext";
-const char *sSelectLeftString = "cmd_selectCharPrevious";
-const char *sSelectRightString = "cmd_selectCharNext";
-
-
-const char *sWordLeftString = "cmd_wordPrevious";
-const char *sWordRightString = "cmd_wordNext";
-const char *sSelectWordLeftString = "cmd_selectWordPrevious";
-const char *sSelectWordRightString = "cmd_selectWordNext";
-
-const char *sScrollPageUp = "cmd_scrollPageUp";
-const char *sScrollPageDown = "cmd_scrollPageDown";
-
-const char *sScrollLineUp = "cmd_scrollLineUp";
-const char *sScrollLineDown = "cmd_scrollLineDown";
-
-const char *sMovePageUp = "cmd_scrollPageUp";
-const char *sMovePageDown = "cmd_scrollPageDown";
-const char *sSelectMovePageUp = "cmd_selectPageUp";
-const char *sSelectMovePageDown = "cmd_selectPageDown";
-
-const char *sScrollLeft = "cmd_scrollLeft";
-const char *sScrollRight = "cmd_scrollRight";
+const char *sSelectMoveTopString = "cmd_selectMoveTop";
+const char *sSelectMoveBottomString = "cmd_selectMoveBottom";
 
 NS_IMPL_ADDREF(nsDOMWindowController)
 NS_IMPL_RELEASE(nsDOMWindowController)
@@ -5030,6 +5021,12 @@ nsDOMWindowController::nsDOMWindowController(nsIDOMWindowInternal *aWindow)
 {
   NS_INIT_REFCNT();
   mWindow = aWindow;
+
+  // Set browse with caret flag so we don't need to every time
+  mBrowseWithCaret = PR_FALSE;
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs)
+    prefs->GetBoolPref("accessibility.browsewithcaret", &mBrowseWithCaret);
 }
 
 nsresult
@@ -5123,44 +5120,38 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand,
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = PR_FALSE;
+
   if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sCutString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sPasteString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollPageUpString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollPageDownString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollLineUpString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollLineDownString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollLeftString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sScrollRightString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectCharPreviousString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectCharNextString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sWordPreviousString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sWordNextString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectWordPreviousString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectWordNextString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sBeginLineString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sEndLineString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sSelectBeginLineString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sSelectEndLineString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sMoveTopString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sMoveBottomString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectLinePreviousString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectLineNextString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectPagePreviousString).EqualsWithConversion(aCommand) ||
+      nsCAutoString(sSelectPageNextString).EqualsWithConversion(aCommand) ||
       nsCAutoString(sSelectMoveTopString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sDownString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sUpString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sLeftString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sRightString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectDownString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectUpString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectLeftString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectRightString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sWordLeftString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sWordRightString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectWordLeftString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectWordRightString).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollPageUp).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollPageDown).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLineUp).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLineDown).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sMovePageUp).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sMovePageDown).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectMovePageUp).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sSelectMovePageDown).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollLeft).EqualsWithConversion(aCommand) ||
-      nsCAutoString(sScrollRight).EqualsWithConversion(aCommand)) {
-    *aResult = PR_TRUE;
-  }
+      nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand)
+      ) {
+      *aResult=PR_TRUE;
+      }
 
   return NS_OK;
 }
@@ -5170,67 +5161,73 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   NS_ENSURE_ARG_POINTER(aCommand);
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewerEdit> editInterface;
-  nsCOMPtr<nsISelectionController> selCont;
   rv = GetEditInterface(getter_AddRefs(editInterface));
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_FAILED(rv))
+  if (!editInterface)
     return rv;
 
-  if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand)) {
-    rv = editInterface->CopySelection();
-  }
-  else if (nsCAutoString(sCutString).EqualsWithConversion(aCommand)) {
-    rv = editInterface->CutSelection();
-  }
-  else if (nsCAutoString(sPasteString).EqualsWithConversion(aCommand)) {
-    rv = editInterface->Paste();
-  }
-  else if (nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand)) {
-    rv = editInterface->SelectAll();
-  }
-  else if (nsCAutoString(sScrollPageUp).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollPage(PR_FALSE);
-  }
-  else if (nsCAutoString(sScrollPageDown).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollPage(PR_TRUE);
-  }
-  else if (nsCAutoString(sScrollLineUp).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollLine(PR_FALSE);
-  }
-  else if (nsCAutoString(sScrollLineDown).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollLine(PR_TRUE);
-  }
-  else if (nsCAutoString(sScrollLeft).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollHorizontal(PR_TRUE);
-  }
-  else if (nsCAutoString(sScrollRight).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->ScrollHorizontal(PR_FALSE);
-  }
-  else if (nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->CompleteScroll(PR_FALSE);
-  }
-  else if (nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand)) {
-    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),
-                      NS_ERROR_FAILURE);
-    return selCont->CompleteScroll(PR_TRUE);
-  }
+  if (nsCAutoString(sCopyString).EqualsWithConversion(aCommand))
+    return editInterface->CopySelection();
+  if (nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand))
+    return editInterface->SelectAll();
+  if (nsCAutoString(sCutString).EqualsWithConversion(aCommand))
+    return editInterface->CutSelection();
 
-  return NS_OK;
+  nsCOMPtr<nsISelectionController> selCont;
+  rv = GetSelectionController(getter_AddRefs(selCont));
+  if (!selCont)
+    return rv;
+
+  if (nsCAutoString(sPasteString).EqualsWithConversion(aCommand))
+    rv = editInterface->Paste();
+  else if (nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->CompleteMove(PR_FALSE, PR_FALSE): selCont->CompleteScroll(PR_FALSE));
+  else if (nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->CompleteMove(PR_TRUE, PR_FALSE): selCont->CompleteScroll(PR_TRUE));
+  else if (nsCAutoString(sScrollPageUpString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->PageMove(PR_FALSE, PR_FALSE): selCont->ScrollPage(PR_FALSE));
+  else if (nsCAutoString(sScrollPageDownString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->PageMove(PR_TRUE, PR_FALSE): selCont->ScrollPage(PR_TRUE));
+  else if (nsCAutoString(sScrollLineUpString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->LineMove(PR_FALSE, PR_FALSE): selCont->ScrollLine(PR_FALSE));
+  else if (nsCAutoString(sScrollLineDownString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->LineMove(PR_TRUE, PR_FALSE): selCont->ScrollLine(PR_TRUE));
+  else if (nsCAutoString(sScrollLeftString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->CharacterMove(PR_FALSE, PR_FALSE): selCont->ScrollHorizontal(PR_TRUE));
+  else if (nsCAutoString(sScrollRightString).EqualsWithConversion(aCommand))
+    rv = (mBrowseWithCaret? selCont->CharacterMove(PR_TRUE, PR_FALSE): selCont->ScrollHorizontal(PR_FALSE));
+  // These commands are so the browser can use editor navigation key bindings -
+  // Helps with accessibility - aaronl@chorus.net
+  else if (nsCAutoString(sSelectCharPreviousString).EqualsWithConversion(aCommand))
+    rv = selCont->CharacterMove(PR_FALSE, PR_TRUE);
+  else if (nsCAutoString(sSelectCharNextString).EqualsWithConversion(aCommand))
+    rv = selCont->CharacterMove(PR_TRUE, PR_TRUE);
+  else if (nsCAutoString(sWordPreviousString).EqualsWithConversion(aCommand))
+    rv = selCont->WordMove(PR_FALSE, PR_FALSE);
+  else if (nsCAutoString(sWordNextString).EqualsWithConversion(aCommand))
+    rv = selCont->WordMove(PR_TRUE, PR_FALSE);
+  else if (nsCAutoString(sSelectWordPreviousString).EqualsWithConversion(aCommand))
+    rv = selCont->WordMove(PR_FALSE, PR_TRUE);
+  else if (nsCAutoString(sSelectWordNextString).EqualsWithConversion(aCommand))
+    rv = selCont->WordMove(PR_TRUE, PR_TRUE);
+  else if (nsCAutoString(sBeginLineString).EqualsWithConversion(aCommand))
+    rv = selCont->IntraLineMove(PR_FALSE, PR_FALSE);
+  else if (nsCAutoString(sEndLineString).EqualsWithConversion(aCommand))
+    rv = selCont->IntraLineMove(PR_TRUE, PR_FALSE);
+  else if (nsCAutoString(sSelectBeginLineString).EqualsWithConversion(aCommand))
+    rv = selCont->IntraLineMove(PR_FALSE, PR_TRUE);
+  else if (nsCAutoString(sSelectEndLineString).EqualsWithConversion(aCommand))
+    rv = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
+  else if (nsCAutoString(sSelectLinePreviousString).EqualsWithConversion(aCommand))
+    rv = selCont->LineMove(PR_FALSE, PR_TRUE);
+  else if (nsCAutoString(sSelectLineNextString).EqualsWithConversion(aCommand))
+    rv = selCont->LineMove(PR_TRUE, PR_TRUE);
+  else if (nsCAutoString(sSelectMoveTopString).EqualsWithConversion(aCommand))
+    rv = selCont->CompleteMove(PR_FALSE, PR_TRUE);
+  else if (nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand))
+    rv = selCont->CompleteMove(PR_TRUE, PR_TRUE);
+  return rv;
 }
+
 
 NS_IMETHODIMP nsDOMWindowController::OnEvent(const PRUnichar *aEventName)
 {

@@ -84,6 +84,16 @@
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_scrollTop"/>
       <handler event="keypress" keycode="VK_END" modifiers="control" command="cmd_scrollBottom"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="control,shift" command="cmd_selectWordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="control,shift" command="cmd_selectWordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectCharPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectCharNext" />
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
     </handlers>
   </binding>
 

@@ -104,7 +104,7 @@ public:
   NS_IMETHOD SetOpenerWindow(nsIDOMWindowInternal *aOpener);
   NS_IMETHOD SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
   NS_IMETHOD GetGlobalObjectOwner(nsIScriptGlobalObjectOwner** aOwner);
-  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
                             nsEventStatus* aEventStatus);
 
@@ -272,7 +272,7 @@ protected:
   nsCOMPtr<nsIPrincipal>        mDocumentPrincipal;
 };
 
-/* 
+/*
  * Timeout struct that holds information about each JavaScript
  * timeout.
  */
@@ -412,13 +412,14 @@ public:
 	nsDOMWindowController( nsIDOMWindowInternal* aWindow );
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLER
-  	
+
 private:
   nsresult GetPresShell(nsIPresShell **aPresShell);
-	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);	
+	nsresult GetEditInterface( nsIContentViewerEdit** aEditInterface);
   nsresult GetSelectionController(nsISelectionController ** aSelCon);
 
 	nsIDOMWindowInternal *mWindow;
+  PRBool mBrowseWithCaret;
 };
 #endif // DOM_CONTROLLER
 
