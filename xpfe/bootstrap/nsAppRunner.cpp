@@ -44,10 +44,15 @@
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIWalletService.h"
 #include "nsIWebShell.h"
+#include "nsICookieService.h"
 #include "nsIWindowMediator.h"
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
+static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 
 #define PREF_GENERAL_STARTUP_BROWSER "general.startup.browser"
 #define PREF_GENERAL_STARTUP_MAIL "general.startup.mail"
@@ -536,6 +541,19 @@ static nsresult main1(int argc, char* argv[])
 
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
+
+  // fire up an instance of the cookie manager.
+  // I'm doing this using the serviceManager for convenience's sake.
+  // Presumably an application will init it's own cookie service a 
+  // different way (this way works too though).
+  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  // quiet the compiler
+  (void)cookieService;
+#ifndef XP_MAC
+  // Until the cookie manager actually exists on the Mac we don't want to bail here
+  if (NS_FAILED(rv))
+    return rv;
+#endif // XP_MAC
   
 	// Enumerate AppShellComponenets
 	appShell->EnumerateAndInitializeComponents();
@@ -552,6 +570,10 @@ static nsresult main1(int argc, char* argv[])
 	rv = Ensure1Window( cmdLineArgs );
   if (NS_FAILED(rv))
     return rv;
+  // Fire up the walletService
+  NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
+  if ( NS_SUCCEEDED(rv) )
+      walletService->WALLET_FetchFromNetCenter();
 
   NS_HideSplashScreen();
   // Start main event loop
