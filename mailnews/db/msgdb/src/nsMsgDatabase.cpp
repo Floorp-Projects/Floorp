@@ -2551,7 +2551,10 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 		PRUint32 flags;
 
 		newHdr->GetMessageKey(&key);
-		newHdr->GetFlags(&flags);
+		hdr->GetRawFlags(&flags);
+    // use raw flags instead of GetFlags, because GetFlags will
+    // pay attention to what's in m_newSet, and this new hdr isn't
+    // in m_newSet yet.
 		if (flags & MSG_FLAG_NEW)
 		{
 			PRUint32 newFlags;
