@@ -584,6 +584,11 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
   nsBaseWidget::SetCursor(aCursor);
 	
+	// allow the cursor to be set internally if we're in the bg, but
+	// don't actually set it.
+  if ( !nsToolkit::IsAppInForeground() )
+    return NS_OK;
+
   // mac specific cursor manipulation
 	//¥TODO: We need a way to get non-os cursors here.
 	if (nsToolkit::HasAppearanceManager())

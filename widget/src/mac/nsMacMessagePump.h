@@ -56,7 +56,6 @@ private:
 	PRBool					mRunning;
 	Point					mMousePoint;	// keep track of where the mouse is at all times
 	RgnHandle				mMouseRgn;
-	PRBool					mInBackground;
 	nsToolkit*				mToolkit;
 	nsMacMessageSink*       mMessageSink;
 	nsMacTSMMessagePump*	mTSMMessagePump;

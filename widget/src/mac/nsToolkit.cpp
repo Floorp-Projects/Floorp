@@ -140,6 +140,11 @@ void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 
+
+// assume we begin as the fg app
+bool nsToolkit::sInForeground = true;
+
+
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
@@ -208,6 +213,28 @@ bool nsToolkit::HasAppearanceManager()
 
 	return hasAppearanceManager;
 }
+
+
+void 
+nsToolkit :: AppInForeground ( )
+{
+  sInForeground = true;
+}
+
+
+void 
+nsToolkit :: AppInBackground ( )
+{
+  sInForeground = false;
+} 
+
+
+bool
+nsToolkit :: IsAppInForeground ( )
+{
+  return sInForeground;
+}
+
 
 //-------------------------------------------------------------------------
 //
