@@ -3158,6 +3158,7 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
 #define VARIANT_AHLP (VARIANT_AH | VARIANT_LP)
 #define VARIANT_AHI  (VARIANT_AH | VARIANT_INTEGER)
 #define VARIANT_AHK  (VARIANT_AH | VARIANT_KEYWORD)
+#define VARIANT_AUK  (VARIANT_AUTO | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHUK (VARIANT_AH | VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_AHL  (VARIANT_AH | VARIANT_LENGTH)
 #define VARIANT_AHKL (VARIANT_AHK | VARIANT_LENGTH)
@@ -4983,53 +4984,35 @@ PRBool CSSParserImpl::ParseCue(nsresult& aErrorCode)
 
 PRBool CSSParserImpl::ParseCursor(nsresult& aErrorCode)
 {
-  nsCSSValue  value;
-  if (ParseVariant(aErrorCode, value, VARIANT_AHUK, nsCSSProps::kCursorKTable)) {
-    nsCSSValueList* listHead = new nsCSSValueList();
-    nsCSSValueList* list = listHead;
-    if (nsnull == list) {
+  nsCSSValueList *list = nsnull;
+  for (nsCSSValueList **curp = &list, *cur; ; curp = &cur->mNext) {
+    cur = *curp = new nsCSSValueList();
+    if (!cur) {
       aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      delete list;
       return PR_FALSE;
     }
-    list->mValue = value;
-    if (eCSSUnit_URL == value.GetUnit()) {
-      while (nsnull != list) {
-        if (eCSSUnit_URL != value.GetUnit()) {
-          if (PR_FALSE == ExpectEndProperty(aErrorCode, PR_TRUE)) {
-            return PR_FALSE;
-          }
-        }
-        if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          mTempData.SetPropertyBit(eCSSProperty_cursor);
-          mTempData.mUserInterface.mCursor = listHead;
-          aErrorCode = NS_OK;
-          return PR_TRUE;
-        }
-        if (ParseVariant(aErrorCode, value, VARIANT_AHUK, nsCSSProps::kCursorKTable)) {
-          list->mNext = new nsCSSValueList();
-          list = list->mNext;
-          if (nsnull != list) {
-            list->mValue = value;
-          }
-          else {
-            aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-          }
-        }
-        else {
-          break;
-        }
-      }
-      delete listHead;
+    if (!ParseVariant(aErrorCode, cur->mValue,
+                      (cur == list) ? VARIANT_AHUK : VARIANT_AUK,
+                      nsCSSProps::kCursorKTable)) {
+      delete list;
       return PR_FALSE;
     }
-    if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      mTempData.SetPropertyBit(eCSSProperty_cursor);
-      mTempData.mUserInterface.mCursor = listHead;
-      aErrorCode = NS_OK;
-      return PR_TRUE;
+    if (cur->mValue.GetUnit() != eCSSUnit_URL)
+      break;
+    if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+      delete list;
+      return PR_FALSE;
     }
   }
-  return PR_FALSE;
+  if (!ExpectEndProperty(aErrorCode, PR_TRUE)) {
+    delete list;
+    return PR_FALSE;
+  }
+  mTempData.SetPropertyBit(eCSSProperty_cursor);
+  mTempData.mUserInterface.mCursor = list;
+  aErrorCode = NS_OK;
+  return PR_TRUE;
 }
 
 

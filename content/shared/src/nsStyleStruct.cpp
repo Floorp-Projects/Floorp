@@ -63,6 +63,7 @@ inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
 }
 
 // XXX this is here to support deprecated calc spacing methods only
+// XXXldb Probably shouldn't be inline.
 inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord, 
                            PRUint8 aSpacing, PRUint8 aSide,
                            const nscoord* aEnumTable, PRInt32 aNumEnums)
@@ -134,6 +135,7 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
   return result;
 }
 
+// XXXldb Probably shouldn't be inline.
 inline void CalcSidesFor(const nsIFrame* aFrame, const nsStyleSides& aSides, 
                          PRUint8 aSpacing, 
                          const nscoord* aEnumTable, PRInt32 aNumEnums,
@@ -1347,7 +1349,6 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
   mUserFocus = aSource.mUserFocus;
   
   mCursor = aSource.mCursor;
-  mCursorImage = aSource.mCursorImage;
 }
 
 nsStyleUserInterface::~nsStyleUserInterface(void) 
@@ -1356,8 +1357,7 @@ nsStyleUserInterface::~nsStyleUserInterface(void)
 
 nsChangeHint nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aOther) const
 {
-  if ((mCursor != aOther.mCursor) ||
-      !EqualURIs(mCursorImage, aOther.mCursorImage))
+  if (mCursor != aOther.mCursor)
     return NS_STYLE_HINT_VISUAL;
 
   if (mUserInput == aOther.mUserInput) {

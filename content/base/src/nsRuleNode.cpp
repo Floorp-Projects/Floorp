@@ -2236,19 +2236,23 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartData,
   // cursor: enum, auto, url, inherit
   nsCSSValueList*  list = uiData.mCursor;
   if (nsnull != list) {
-    // XXX need to deal with multiple URL values
-    if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
-      ui->mCursor = list->mValue.GetIntValue();
-    }
-    else if (eCSSUnit_Auto == list->mValue.GetUnit()) {
-      ui->mCursor = NS_STYLE_CURSOR_AUTO;
-    }
-    else if (eCSSUnit_URL == list->mValue.GetUnit()) {
-      ui->mCursorImage = list->mValue.GetURLValue();
-    }
-    else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+    if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
       inherited = PR_TRUE;
       ui->mCursor = parentUI->mCursor;
+    }
+    else {
+      // Since we don't support URL values, just skip them.
+      // The parser will never create a list that is *all* URL values --
+      // that's invalid.
+      while (list->mValue.GetUnit() == eCSSUnit_URL)
+        list = list->mNext;
+
+      if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
+        ui->mCursor = list->mValue.GetIntValue();
+      }
+      else if (eCSSUnit_Auto == list->mValue.GetUnit()) {
+        ui->mCursor = NS_STYLE_CURSOR_AUTO;
+      }
     }
   }
 
