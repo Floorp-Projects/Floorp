@@ -32,6 +32,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
+#include "nsHashtableEnumerator.h"
 
 #include "nsInterfaceInfoManager.h"
 #include "nsInterfaceInfo.h"
@@ -471,6 +472,52 @@ nsInterfaceInfoManager::GetNameForIID(const nsIID* iid, char** name)
     *name = p;
     return NS_OK;
 }    
+
+static
+NS_IMETHODIMP convert_interface_record(nsHashKey *key, void *data,
+                                       void *convert_data, nsISupports **retval)
+{
+    nsInterfaceRecord *rec = (nsInterfaceRecord *) data;
+    nsInterfaceInfo *iinfo;
+    nsresult rv;
+    
+    if(NS_FAILED(rv = rec->GetInfo(&iinfo)))
+    {
+#ifdef DEBUG
+        char *name;
+        rec->GetName(&name);
+        TRACE((stderr, "GetInfo failed for InterfaceRecord '%s'\n", name));
+        nsAllocator::Free(name);
+#endif
+        return NS_ERROR_FAILURE;
+    }
+    
+    rv = iinfo->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+                               (void **)retval);
+
+#ifdef DEBUG
+    if(NS_FAILED(rv))
+    {
+        char *name;
+        rec->GetName(&name);
+        TRACE((stderr, "QI[nsISupports] Failed for InterfaceInfo '%s'\n",
+               name));
+        nsAllocator::Free(name);
+    }
+#endif
+        
+    return rv;
+    
+}
+
+NS_IMETHODIMP
+nsInterfaceInfoManager::GetInterfaceEnumerator(nsIEnumerator** emumerator)
+{
+    NS_PRECONDITION (emumerator, "null ptr");
+
+    return NS_NewHashtableEnumerator(this->IIDTable, convert_interface_record,
+                                     nsnull, emumerator);
+}        
 
 XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
 XPTI_GetInterfaceInfoManager()

@@ -46,6 +46,9 @@ class nsInterfaceInfoManager : public nsIInterfaceInfoManager
     NS_IMETHOD GetIIDForName(const char* name, nsIID** iid);
     NS_IMETHOD GetNameForIID(const nsIID* iid, char** name);
 
+    // Get an enumeration of all the interfaces
+    NS_IMETHOD GetInterfaceEnumerator(nsIEnumerator** emumerator);
+
 public:
     virtual ~nsInterfaceInfoManager();
     static nsInterfaceInfoManager* GetInterfaceInfoManager();
