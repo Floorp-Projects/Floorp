@@ -16,6 +16,7 @@
  */
 
 @namespace url(http://www.w3.org/TR/REC-html40); /* set default namespace to HTML */
+@namespace viewsource url(http://www.mozilla.org/viewsource); 
 
 html {
   display: block;
@@ -1506,3 +1507,32 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 
 :-moz-letter-frame {
 }
+
+
+/* The following namespace if for use with viewsource */
+
+viewsource|key   {font-weight:bold;} 
+viewsource|key:before {content: " "; color: black;} 
+viewsource|key:after {content: "="; color: black;} 
+viewsource|val  {color: blue; font-weight:normal;} 
+
+viewsource|entity     {color: maroon; font-weight:normal;} 
+
+viewsource|comment    {color: green; font-style:italic; } 
+
+viewsource|doctype {color: green; font-style:italic;} 
+
+viewsource|pi         {color: #D74702; font-style:italic;} 
+
+viewsource|starttag {color: purple;  font-weight:bold;} 
+viewsource|starttag:before {content: "<"; color: black;} 
+viewsource|starttag:after {content: ">"; color: black;} 
+
+viewsource|endtag {color: purple;  font-weight:bold;} 
+viewsource|endtag:before {content: "</"; color: black;} 
+viewsource|endtag:after {content: ">"; color: black;} 
+
+viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre;} 
+
+viewsource|text {font-weight: normal; }
+
