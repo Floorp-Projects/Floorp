@@ -1158,8 +1158,19 @@ PRBool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
       sizeMode = nsSizeMode_Minimized;
     */
     if (stateString.Equals(SIZEMODE_MAXIMIZED)) {
-      mIntrinsicallySized = PR_FALSE;
-      sizeMode = nsSizeMode_Maximized;
+      /* Honor request to maximize only if the window is sizable.
+         An unsizable, unmaximizable, yet maximized window confuses
+         Windows OS and is something of a travesty, anyway. */
+      PRUint32 chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_RESIZE;
+      nsCOMPtr<nsIWebBrowserChrome> chrome(do_GetInterface(
+                                      NS_ISUPPORTS_CAST(nsIXULWindow *, this)));
+      if (chrome)
+        chrome->GetChromeFlags(&chromeFlags);
+
+      if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+        mIntrinsicallySized = PR_FALSE;
+        sizeMode = nsSizeMode_Maximized;
+      }
     }
     // the widget had better be able to deal with not becoming visible yet
     mWindow->SetSizeMode(sizeMode);
