@@ -71,7 +71,6 @@ toolbar[mode="icons"] .toolbarbutton-text {
   display: none;
 }
 
-toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
 toolbar[mode="text"] .toolbarbutton-icon {
   display: none;
 }
