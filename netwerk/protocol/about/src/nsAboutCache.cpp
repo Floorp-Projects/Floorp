@@ -66,7 +66,7 @@ static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
     PRExplodedTime et;
     PRTime t_usec = SecondsToPRTime(t_sec);
     PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, bufsize, "%c", &et);
+    PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
 }
 
 
