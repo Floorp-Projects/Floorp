@@ -155,7 +155,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
 nsMsgAttachedFile *
 GetAttachments(void)
 {  
-  int attachCount = 2;
+  int attachCount = 3;
   nsIURI      *url;
   nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * attachCount);
 
@@ -170,6 +170,12 @@ GetAttachments(void)
   attachments[0].type = PL_strdup("image/jpeg");
   attachments[0].encoding = PL_strdup(ENCODING_BINARY);
   attachments[0].description = PL_strdup("Boxster Image");
+
+  attachments[1].orig_url = url;
+  attachments[1].file_spec = new nsFileSpec("C:\\boxster.jpg");
+  attachments[1].type = PL_strdup("image/jpeg");
+  attachments[1].encoding = PL_strdup(ENCODING_BINARY);
+  attachments[1].description = PL_strdup("Boxster Image");
   return attachments;
 }
 
@@ -430,7 +436,7 @@ int main(int argc, char *argv[])
                                      pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
                 PR_FALSE,         // PRBool                            dont_deliver_p,
-		nsMsgQueueForLater,				    // nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
+		nsMsgDeliverNow, // nsMsgQueueForLater,				    // ,   // nsMsgDeliverMode                  mode,
 		nsnull, // nsIMessage *msgToReplace
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
 						    pBody,            // const char                        *attachment1_body,

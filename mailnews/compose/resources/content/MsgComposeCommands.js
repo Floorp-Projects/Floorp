@@ -159,11 +159,11 @@ function SetDocumentCharacterSet(aCharset)
 		dump("Compose has not been created!\n");
 }
 
-function SendMessage()
+function GenericSendMessage( msgType )
 {
-	dump("SendMessage from XUL\n");
+	dump("GenericSendMessage from XUL\n");
 
-    dump("Identity = " + getCurrentIdentity() + "\n");
+  dump("Identity = " + getCurrentIdentity() + "\n");
     
 	if (msgCompose != null)
 	{
@@ -173,11 +173,49 @@ function SendMessage()
 			Recipients2CompFields(msgCompFields);
 			msgCompFields.SetSubject(document.getElementById("msgSubject").value);
 		
-			msgCompose.SendMsg(0, getCurrentIdentity(), null);
+			msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
 		}
 	}
 	else
 		dump("###SendMessage Error: composeAppCore is null!\n");
+}
+
+function SendMessage()
+{
+	dump("SendMessage from XUL\n");
+  // 0 = nsMsgDeliverNow
+  // RICHIE: We should really have a way of using constants and not
+  // hardcoded numbers for the first argument
+	GenericSendMessage(0);
+}
+
+function SendMessageLater()
+{
+	dump("SendMessageLater from XUL\n");
+  // 1 = nsMsgQueueForLater
+  // RICHIE: We should really have a way of using constants and not
+  // hardcoded numbers for the first argument
+	GenericSendMessage(1);
+}
+
+function SaveAsDraft()
+{
+	dump("SaveAsDraft from XUL\n");
+
+  // 4 = nsMsgSaveAsDraft
+  // RICHIE: We should really have a way of using constants and not
+  // hardcoded numbers for the first argument
+  GenericSendMessage(4);
+}
+
+function SaveAsTemplate()
+{
+	dump("SaveAsDraft from XUL\n");
+
+  // 5 = nsMsgSaveAsTemplate
+  // RICHIE: We should really have a way of using constants and not
+  // hardcoded numbers for the first argument
+  GenericSendMessage(5);
 }
 
 function SelectAddress() 

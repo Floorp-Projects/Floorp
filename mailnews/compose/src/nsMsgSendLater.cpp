@@ -371,7 +371,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       printf("nsMsgSendLater: Success on the message send operation!\n");
 #endif
 
-      PRBool    deleteMsgs = PR_FALSE;
+      PRBool    deleteMsgs = PR_TRUE;
 
       //
       // Now delete the message from the outbox folder.

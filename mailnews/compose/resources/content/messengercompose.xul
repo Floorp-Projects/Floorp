@@ -22,10 +22,11 @@
 <!ENTITY fileMenu.label "File">
 <!ENTITY newCmd.label ".New">
 <!ENTITY saveCmd.label ".Save">
-<!ENTITY saveAsCmd.label ".Save As">
+<!ENTITY saveAsCmd.label "Save As (Draft)">
+<!ENTITY saveAsTemplateCmd.label "Save As (Template)">
 <!ENTITY attachCmd.label ".Attach">
 <!ENTITY sendNowCmd.label ".Send Now">
-<!ENTITY sendLaterCmd.label ".Send Later">
+<!ENTITY sendLaterCmd.label "Send Later">
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
 <!ENTITY printSetupCmd.label ".Print Setup">
@@ -114,11 +115,12 @@
 	<menu name="File">
 		<menuitem name="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
 		<menuitem name="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
-		<menuitem name="&saveAsCmd.label;" cmd="nsCmd:ComposeSaveAs"/>
+		<menuitem name="&saveAsCmd.label;" onclick="SaveAsDraft()"/>
+		<menuitem name="&saveAsTemplateCmd.label;" onclick="SaveAsTemplate()"/>
 		<menuitem name="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
 		<separator/>
 		<menuitem name="&sendNowCmd.label;" cmd="nsCmd:ComposeSend"/>
-		<menuitem name="&sendLaterCmd.label;" cmd="nsCmd:ComposeSendLater"/>
+		<menuitem name="&sendLaterCmd.label;" onclick="SendMessageLater()"/>
 		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
 		<menuitem name="&selectAddressCmd.label;" onclick="SelectAddress()"/>
 		<separator/>
@@ -210,7 +212,7 @@
  		<titledbutton src="&addressButton.img;" align="bottom" value="&addressButton.label;" onClick="SelectAddress()"/>
  		<titledbutton src="&attachButton.img;" align="bottom" value="&attachButton.label;" onClick="AttachFile()"/>
  		<titledbutton src="&spellingButton.img;" align="bottom" value="&spellingButton.label;" onClick="Spelling()"/>
- 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onClick="SaveMessage()"/>
+ 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onClick="SaveAsDraft()"/>
  		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onClick="Stop()"/>
 	    <spring flex="100%"/>
 		<titledbutton src="&throbberButton.img;" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>

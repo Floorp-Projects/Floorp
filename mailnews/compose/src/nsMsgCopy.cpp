@@ -127,10 +127,10 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                               nsIFileSpec          *aFileSpec, 
                               nsMsgDeliverMode     aMode,
                               nsMsgComposeAndSend  *aMsgSendObj,
-                              const char           *aSavePref)
+                              const char           *aSavePref,
+                              nsIMessage           *aMsgToReplace)
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
-  nsIMessage              *msgToReplace = nsnull;
   PRBool                  isDraft = PR_FALSE;
 
   if (!aMsgSendObj)
@@ -165,7 +165,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
 
   mMode = aMode;
-  nsresult rv = DoCopy(aFileSpec, dstFolder, msgToReplace, isDraft, nsnull, aMsgSendObj);
+  nsresult rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, nsnull, aMsgSendObj);
   return rv;
 }
 
@@ -197,6 +197,33 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	return rv;
 }
 
+nsIMsgFolder *
+nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref);
+}
+ 
+nsIMsgFolder *
+nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref);
+}
+
+nsIMsgFolder *
+nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref);
+}
+
+nsIMsgFolder * 
+nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
+{
+  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Utility Functions for MsgFolders
+////////////////////////////////////////////////////////////////////////////////////
 nsIMsgFolder *
 LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                     nsMsgDeliverMode aFolderType,
@@ -330,26 +357,45 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   return msgFolder;
 }
 
-nsIMsgFolder *
-nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity)
+//
+// Figure out if a folder is local or not and return a boolean to 
+// say so.
+//
+PRBool
+MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
+                     nsMsgDeliverMode aFolderType,
+                     const char       *aSavePref)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, mSavePref);
-}
- 
-nsIMsgFolder *
-nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity)
-{
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsDraft, mSavePref);
+  nsresult                        rv;
+  char                            *aType = nsnull;
+  nsCOMPtr<nsIMsgFolder>          dstFolder = nsnull;
+  nsIMsgIncomingServer            *dstServer = nsnull;
+
+  dstFolder = LocateMessageFolder(userIdentity, aFolderType, aSavePref);
+  if (!dstFolder)
+    return PR_TRUE;
+
+  rv = dstFolder->GetServer(&dstServer);
+  if (NS_FAILED(rv) || !dstServer)
+    return PR_TRUE;
+
+  rv = dstServer->GetType(&aType);
+  if (NS_FAILED(rv) || !aType)
+  {
+    NS_IF_RELEASE(dstServer);
+    return PR_TRUE;
+  }
+
+  if ((aType) && (*aType))
+  {
+    if (PL_strcasecmp(aType, "POP3") == 0)
+    {
+      NS_IF_RELEASE(dstServer);
+      return PR_TRUE;
+    }
+  }
+
+  NS_IF_RELEASE(dstServer);
+  return PR_FALSE;
 }
 
-nsIMsgFolder *
-nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity)
-{
-  return LocateMessageFolder(userIdentity, nsMsgSaveAsTemplate, mSavePref);
-}
-
-nsIMsgFolder * 
-nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
-{
-  return LocateMessageFolder(userIdentity, nsMsgDeliverNow, mSavePref);
-}

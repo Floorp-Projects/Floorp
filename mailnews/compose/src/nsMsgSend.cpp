@@ -2398,8 +2398,13 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	// For FCC files, we don't necessarily need one, but we might as well put
 	// one in so that it's marked as read already.
   //
-  if (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
-	    mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow)
+  //
+  // RICHIE - need to add these lines for POP3 ONLY! IMAP servers will handle
+  // this status information for summary file regeneration for us. 
+  if ( (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
+	      mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow) &&
+        MessageFolderIsLocal(mUserIdentity, mode, mCompFields->GetFcc())
+     )
 	{
 	  char       *buf = 0;
 	  PRUint16   flags = 0;
@@ -2653,8 +2658,8 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
 
   if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
     return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                        this, nsnull);
+                                        this, nsnull, mMsgToReplace);
   else
     return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                        this, mCompFields->GetFcc());
+                                        this, mCompFields->GetFcc(), mMsgToReplace);
 }

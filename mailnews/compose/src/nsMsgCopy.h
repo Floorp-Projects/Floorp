@@ -84,7 +84,8 @@ public:
                                            nsIFileSpec          *aFileSpec, 
                                            nsMsgDeliverMode     aMode,
                                            nsMsgComposeAndSend  *aMsgSendObj,
-                                           const char           *aSavePref);
+                                           const char           *aSavePref,
+                                           nsIMessage           *aMsgToReplace);
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                                nsIMessage *aMsgToReplace, PRBool aIsDraft,
@@ -109,6 +110,10 @@ public:
 
 // Useful function for the back end...
 nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
+                                       nsMsgDeliverMode aFolderType,
+                                       const char       *aSavePref);
+
+PRBool            MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
                                        const char       *aSavePref);
 
