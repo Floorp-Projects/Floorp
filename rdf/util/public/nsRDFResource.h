@@ -48,9 +48,6 @@ public:
 
 protected:
     char* mURI;
-
-    static PRInt32        gRefCnt;
-    static nsIRDFService* gRDFService;
 };
 
 #endif // nsRDFResource_h__
