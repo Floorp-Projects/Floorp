@@ -51,7 +51,8 @@ foreach my $i (@::param_list) {
     if (exists $::FORM{"reset-$i"}) {
         $::FORM{$i} = $::param_default{$i};
     }
-    $::FORM{$i} =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
+    $::FORM{$i} =~ s/\r\n/\n/g;   # Get rid of windows-style line endings.
+    $::FORM{$i} =~ s/^\n$//;      # assume single linefeed is an empty string
     if ($::FORM{$i} ne Param($i)) {
         if (defined $::param_checker{$i}) {
             my $ref = $::param_checker{$i};
@@ -64,6 +65,8 @@ foreach my $i (@::param_list) {
             }
         }
         print "Changed $i.<br>\n";
+#      print "Old: '" . url_quote(Param($i)) . "'<BR>\n";
+#      print "New: '" . url_quote($::FORM{$i}) . "'<BR>\n";
         $::param{$i} = $::FORM{$i}
     }
 }
