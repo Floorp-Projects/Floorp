@@ -56,6 +56,8 @@ class nsDocShellBase : public nsIDocShell, public nsIDocShellEdit,
    public nsIDocShellFile, public nsIGenericWindow, public nsIScrollable, 
    public nsITextScroll
 {
+friend class nsDSURIContentListener;
+
 public:
    NS_DECL_ISUPPORTS
 
@@ -74,8 +76,9 @@ protected:
       PRInt32* aOffset);
    nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
    nsresult GetPresShell(nsIPresShell** aPresShell);
-   nsresult NewURI(const PRUnichar* aUri, nsIURI** aURI);
    nsresult EnsureContentListener();
+
+   void SetCurrentURI(nsIURI* aUri);
 
 protected:
    PRBool                     mCreated;
@@ -85,6 +88,7 @@ protected:
    nsCOMPtr<nsIContentViewer> mContentViewer;
    nsCOMPtr<nsIWidget>        mParentWidget;
    nsCOMPtr<nsIPref>          mPrefs;
+   nsCOMPtr<nsIURI>           mCurrentURI;
 
    /* Note this can not be nsCOMPtr as that that would cause an addref on the 
    parent thus a cycle.  A weak reference would work, but not required as the
