@@ -49,4 +49,10 @@ particular environments. */
 #define XML_DTD 1
 #endif
 
+#ifdef IS_LITTLE_ENDIAN
+#define XML_BYTE_ORDER 12
+#else 
+#define XML_BYTE_ORDER 21
+#endif /* IS_LITTLE_ENDIAN */
+
 #endif /* MOZILLA_CLIENT */
