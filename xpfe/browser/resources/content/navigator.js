@@ -398,11 +398,11 @@ function UpdateBackForwardButtons()
 // Used by nsButtonPrefListener to hide the separator if needed
 function allLeftButtonsAreHidden()
 {
-  var buttonNode = document.getElementById("PersonalToolbar").firstChild;
-  while(buttonNode.tagName != "toolbarseparator") {
-    if(!buttonNode.hasAttribute("hidden") || buttonNode.getAttribute("hidden") == "false")
+  var buttonNode = document.getElementById("home-bm-separator").previousSibling;
+  while (buttonNode) {
+    if (buttonNode.localName != "tooltip" && !buttonNode.hidden)
       return false;
-    buttonNode = buttonNode.nextSibling;
+    buttonNode = buttonNode.previousSibling;
   }
   return true;
 }
