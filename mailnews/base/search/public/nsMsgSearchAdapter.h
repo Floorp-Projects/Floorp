@@ -50,15 +50,17 @@ public:
 	nsMsgSearchAdapter (nsMsgSearchScopeTerm*, nsMsgSearchTermArray&);
 	virtual ~nsMsgSearchAdapter ();
 
-	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search () { return NS_OK; }
-	NS_IMETHOD SendUrl () { return NS_OK; }
-	NS_IMETHOD OpenResultElement (nsMsgResultElement *);
-	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*);
-	NS_IMETHOD GetEncoding (char **encoding) { return NS_OK; }
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSEARCHADAPTER
+//	NS_IMETHOD ValidateTerms ();
+//	NS_IMETHOD Search () { return NS_OK; }
+//	NS_IMETHOD SendUrl () { return NS_OK; }
+//	NS_IMETHOD OpenResultElement (nsMsgResultElement *);
+//	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*);
+//	NS_IMETHOD GetEncoding (char **encoding) { return NS_OK; }
 
-	NS_IMETHOD FindTargetFolder (const nsMsgResultElement*, nsIMsgFolder **aFolder);
-	NS_IMETHOD Abort ();
+//	NS_IMETHOD FindTargetFolder (const nsMsgResultElement*, nsIMsgFolder **aFolder);
+//	NS_IMETHOD Abort ();
 
 	nsMsgSearchScopeTerm		*m_scope;
 	nsMsgSearchTermArray &m_searchTerms;
@@ -76,6 +78,10 @@ public:
 	static char *TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar *destCharset, PRBool useMIME2Style);
 	static char *GetImapCharsetParam(const PRUnichar *destCharset);
 	void GetSearchCharsets(nsString &srcCharset, nsString &destCharset);
+  static char *EscapeSearchUrl (const char *nntpCommand);
+  static char *EscapeImapSearchProtocol(const char *imapCommand);
+  static char *EscapeQuoteImapSearchProtocol(const char *imapCommand);
+  static char *UnEscapeSearchUrl (const char *commandSpecificData);
 
 	// This stuff lives in the base class because the IMAP search syntax 
 	// is used by the Dredd SEARCH command as well as IMAP itself
@@ -111,7 +117,7 @@ protected:
 	char *TransformSpacesToStars (const char *, msg_TransformType transformType);
 	nsresult OpenNewsResultInUnknownGroup (nsMsgResultElement*);
 
-	static nsresult EncodeImapTerm (nsMsgSearchTerm *, PRBool reallyDredd, const char*srcCharset, PRInt16 dest_csid, char **ppOutTerm);
+	static nsresult EncodeImapTerm (nsMsgSearchTerm *, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm);
 };
 
 #endif
