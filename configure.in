@@ -932,7 +932,7 @@ then
 
 	AC_MSG_CHECKING(for Qt insanity)
 
-    QT_CFLAGS="-I${QTDIR}/include"
+    QT_CFLAGS="-I${QTDIR}/include/qt"
     QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
