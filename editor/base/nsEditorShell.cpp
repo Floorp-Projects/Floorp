@@ -2568,12 +2568,10 @@ nsEditorShell::PasteAsCitedQuotation(const PRUnichar *cite, PRInt32 aSelectionTy
 }
 
 NS_IMETHODIMP    
-nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText,
+nsEditorShell::InsertAsQuotation(const PRUnichar *aQuotedText,
                                  nsIDOMNode** aNodeInserted)
 {  
   nsresult  err = NS_NOINTERFACE;
-  
-  nsAutoString aQuotedText(quotedText);
   
   switch (mEditorType)
   {
@@ -2582,7 +2580,7 @@ nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText,
       {
         nsCOMPtr<nsIEditorMailSupport>  mailEditor = do_QueryInterface(mEditor);
         if (mailEditor)
-          err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
+          err = mailEditor->InsertAsQuotation(nsDependentString(aQuotedText), aNodeInserted);
       }
       break;
 
@@ -2606,20 +2604,16 @@ nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
   if (!mailEditor)
     return NS_NOINTERFACE;
 
-  nsAutoString aQuotedText(quotedText);
-  nsAutoString aCiteString(cite);
-  nsAutoString aCharset(charset);
-  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
-      err = mailEditor->InsertAsQuotation(aQuotedText, aNodeInserted);
+      err = mailEditor->InsertAsQuotation(nsDependentString(quotedText), aNodeInserted);
       break;
 
     case eHTMLTextEditorType:
-      err = mailEditor->InsertAsCitedQuotation(aQuotedText, aCiteString,
+      err = mailEditor->InsertAsCitedQuotation(nsDependentString(quotedText), nsDependentString(cite),
                                                aInsertHTML,
-                                               aCharset, aNodeInserted);
+                                               nsDependentString(charset), aNodeInserted);
       break;
 
     default:
@@ -2725,8 +2719,6 @@ nsEditorShell::InsertSource(const PRUnichar *aSourceToInsert)
 {
   nsresult  err = NS_NOINTERFACE;
   
-  nsAutoString sourceToInsert(aSourceToInsert);
-  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
@@ -2734,7 +2726,7 @@ nsEditorShell::InsertSource(const PRUnichar *aSourceToInsert)
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->InsertHTML(sourceToInsert);
+          err = htmlEditor->InsertHTML(nsDependentString(aSourceToInsert));
       }
       break;
 
@@ -2751,9 +2743,6 @@ nsEditorShell::InsertSourceWithCharset(const PRUnichar *aSourceToInsert,
 {
   nsresult  err = NS_NOINTERFACE;
   
-  nsAutoString sourceToInsert(aSourceToInsert);
-  nsAutoString charset(aCharset);
-  
   switch (mEditorType)
   {
     case ePlainTextEditorType:
@@ -2761,7 +2750,7 @@ nsEditorShell::InsertSourceWithCharset(const PRUnichar *aSourceToInsert,
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->InsertHTMLWithCharset(sourceToInsert, charset);
+          err = htmlEditor->InsertHTMLWithCharset(nsDependentString(aSourceToInsert), nsDependentString(aCharset));
       }
       break;
 
