@@ -70,13 +70,38 @@ NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
 NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
+    *result = nsnull;
+    PRBool isFile = PR_TRUE;
+    if(NS_FAILED(mURI->SchemeIs("file", &isFile)))
+        return NS_ERROR_FAILURE;
+
+    if (isFile)
+    {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
+        if (url)
+        {
+            nsCAutoString directory;
+            nsresult rv = url->GetDirectory(directory);
+            if (NS_FAILED(rv))
+                return rv;
+            nsCAutoString fileName;
+            rv = url->GetFileName(fileName);
+            if (NS_FAILED(rv))
+                return rv;
+            *result =
+                ToNewCString(NS_LITERAL_CSTRING("file://") + directory + fileName);
+            if (!*result)
+                return NS_ERROR_OUT_OF_MEMORY;
+            return NS_OK;
+        }
+    }
     return GetOrigin(result);
 }
 
 NS_IMETHODIMP
 nsCodebasePrincipal::ToUserVisibleString(char **result)
 {
-    return GetOrigin(result);
+    return ToString(result);
 }
 
 NS_IMETHODIMP 
