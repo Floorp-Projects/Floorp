@@ -60,10 +60,14 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsXTFSVGDisplayFrame.cpp \
 		nsXTFXULDisplayFrame.cpp \
 		nsXTFXMLDisplayFrame.cpp \
 		$(NULL)
+
+ifdef MOZ_SVG
+CPPSRCS 	+= nsXTFSVGDisplayFrame.cpp
+endif
+
 
 include $(topsrcdir)/config/config.mk
 
