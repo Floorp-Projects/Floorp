@@ -112,6 +112,10 @@ static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 
 class ProxyStream : public nsIInputStream
@@ -420,6 +424,11 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     MOZ_COUNT_CTOR(RDF_RDFXMLDataSourceImpl);
 
     NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsRDFXMLDataSource");
+#endif
 }
 
 
@@ -824,6 +833,9 @@ RDFXMLDataSourceImpl::Flush(void)
     if (! mURLSpec)
         return NS_ERROR_NOT_INITIALIZED;
 
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] flush(%s) %sblocking", this, mURLSpec));
+
     nsresult rv;
 
     // XXX Replace this with channels someday soon...
@@ -867,9 +879,15 @@ RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] refresh(%s) %sblocking", this, mURLSpec, (aBlocking ? "" : "non")));
+
     // If an asynchronous load is already pending, then just let it do
     // the honors.
     if (mLoadPending) {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("rdfxml[%p] refresh(%s) a load was pending", this, mURLSpec));
+
         if (aBlocking) {
             NS_WARNING("blocking load requested when async load pending");
             return NS_ERROR_FAILURE;
@@ -956,6 +974,9 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] begin-load(%s)", this, mURLSpec));
+
     mIsLoading = PR_TRUE;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
@@ -967,6 +988,9 @@ RDFXMLDataSourceImpl::BeginLoad(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] interrupt(%s)", this, mURLSpec));
+
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
         obs->OnInterrupt(this);
@@ -977,6 +1001,9 @@ RDFXMLDataSourceImpl::Interrupt(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] resume(%s)", this, mURLSpec));
+
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
         obs->OnResume(this);
@@ -987,6 +1014,9 @@ RDFXMLDataSourceImpl::Resume(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml[%p] end-load(%s)", this, mURLSpec));
+
     mLoadPending = PR_FALSE;
     mIsLoading = PR_FALSE;
     nsCOMPtr<nsIRDFPurgeableDataSource> gcable = do_QueryInterface(mInner);
