@@ -399,6 +399,7 @@ xpcom/tools/registry/Makefile
 silentdl/Makefile
 xpinstall/Makefile
 xpinstall/public/Makefile
+xpinstall/res/Makefile
 xpinstall/src/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
