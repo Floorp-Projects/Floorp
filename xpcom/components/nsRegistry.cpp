@@ -426,15 +426,8 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
     return regerr2nsresult( err );
 }
 
-/*----------------------------- nsRegistry::OpenWellKnownRegistry --------------
-| Takes a registry id and maps that to a file name for opening. We first check |
-| to see if a registry file is already open and close  it if so.               |
-------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) 
-{
-    REGERR err = REGERR_OK;
-
-
+static void
+EnsureDefaultRegistryDirectory() {
     #ifdef XP_UNIX
     // Create ~/.mozilla as that is the default place for the registry file
 
@@ -484,7 +477,15 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
                ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
     }
 #endif
+}
 
+/*----------------------------- nsRegistry::OpenWellKnownRegistry --------------
+| Takes a registry id and maps that to a file name for opening. We first check |
+| to see if a registry file is already open and close  it if so.               |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) 
+{
+    REGERR err = REGERR_OK;
 
     if (mCurRegID != nsIRegistry::None && mCurRegID != regid)
     {
@@ -532,7 +533,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
       case ApplicationRegistry:
         {
             // can't use NS_GetSpecialDirectory here.  Called before service manager is initialized.
-
+            EnsureDefaultRegistryDirectory();
             nsCOMPtr<nsIProperties> directoryService;
             rv = nsDirectoryService::Create(nsnull, 
                                             NS_GET_IID(nsIProperties), 
