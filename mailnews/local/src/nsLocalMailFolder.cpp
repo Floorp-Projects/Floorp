@@ -479,32 +479,25 @@ nsMsgLocalMailFolder::Init(const char* aURI)
   return rv;
 
 }
-  
+
 nsresult
 nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 	nsAutoString currentFolderNameStr;
-    nsAutoString convertedFolderNameStr;
-    const nsString fileCharset = nsMsgI18NFileSystemCharset();
 	nsCOMPtr<nsIMsgFolder> child;
-	char *folderName;
+
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
-		folderName = currentFolderPath.GetLeafName();
-		currentFolderNameStr.AssignWithConversion(folderName);
+    currentFolderPath.GetLeafName(currentFolderNameStr);
 		if (nsShouldIgnoreFile(currentFolderNameStr))
-		{
-			PL_strfree(folderName);
 			continue;
-		}
 
-		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
-        ConvertToUnicode(fileCharset, folderName, convertedFolderNameStr);
-        child->SetName(convertedFolderNameStr.GetUnicode());
-		PL_strfree(folderName);
-    }
+    rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
+    if (child)
+      child->SetName(currentFolderNameStr.GetUnicode());
+  }
 	return rv;
 }
 
@@ -520,13 +513,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   
 	if(NS_FAILED(rv)) return rv;
 
-	nsAutoString uri;
-	uri.AppendWithConversion(mURI);
-	uri.AppendWithConversion('/');
-	uri.Append(*name);
+  nsCAutoString uri(mURI);
+  uri.Append('/');
+
+  // Convert from Unicode to filesystem charactorset
+  // XXX URI should use UTF-8?
+  // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
+
+  const nsString fileCharset = nsMsgI18NFileSystemCharset();
+  char *convertedName;
+  rv = ConvertFromUnicode(fileCharset, name->GetUnicode(), &convertedName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  uri.Append(convertedName);
+  PR_Free((void*) convertedName);
 
 	nsCOMPtr<nsIRDFResource> res;
-	rv = rdf->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(res));
+	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
 
@@ -623,7 +627,6 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 nsresult
 nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
-  
     nsAutoString sep;
     nsresult rv = nsGetMailFolderSeparator(sep);
     if (NS_FAILED(rv)) return rv;
@@ -632,9 +635,11 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
     // unfortunately we can't just say:
     //          path += sep;
     // here because of the way nsFileSpec concatenates
-    nsAutoString str; str.AssignWithConversion(NS_STATIC_CAST(nsFilePath, path));
-    str += sep;
-    path = nsFilePath(str);
+ 
+    nsAutoString str;
+    path.GetNativePathString(str);
+    str.Append(sep);
+    path = str;
 
 	return rv;
 }
@@ -938,6 +943,8 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 
 			//Now let's create the actual new folder
 			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
+			if (child)
+				child->SetName(folderNameStr.GetUnicode());
             unusedDB->SetSummaryValid(PR_TRUE);
             unusedDB->Close(PR_TRUE);
         }
@@ -1208,6 +1215,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
     trashFolder->AddSubfolder(&folderName, getter_AddRefs(child));
     if (child) 
     {
+      child->SetName(folderName.GetUnicode());
       nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
       nsCOMPtr<nsISupports> trashSupports = do_QueryInterface(trashFolder);
       if (childSupports && trashSupports)
@@ -1283,24 +1291,37 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
         parentFolder->PropagateDelete(this, PR_FALSE);
     }
 
-    nsCAutoString newNameStr; newNameStr.AssignWithConversion(aNewName);
-    oldPathSpec->Rename(newNameStr.GetBuffer());
-    newNameStr += ".msf";
-    oldSummarySpec.Rename(newNameStr.GetBuffer());
-    if (NS_SUCCEEDED(rv) && cnt > 0)
-    {
-      nsCAutoString newNameDirStr; newNameDirStr.AssignWithConversion(aNewName);
-      newNameDirStr += ".sbd";
-      dirSpec.Rename(newNameDirStr.GetBuffer());
-    }
-    
+	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
+	// function in nsIFileSpec
+
+	const nsString fileCharset = nsMsgI18NFileSystemCharset();
+	char *convertedNewName;
+	if (NS_FAILED(ConvertFromUnicode(fileCharset, aNewName, &convertedNewName)))
+		return NS_ERROR_FAILURE;
+
+	nsCAutoString newNameStr(convertedNewName);
+	oldPathSpec->Rename(newNameStr.GetBuffer());
+	newNameStr += ".msf";
+	oldSummarySpec.Rename(newNameStr.GetBuffer());
+	if (NS_SUCCEEDED(rv) && cnt > 0) {
+		// rename "*.sbd" directory
+		nsCAutoString newNameDirStr(convertedNewName);
+		newNameDirStr += ".sbd";
+		dirSpec.Rename(newNameDirStr.GetBuffer());
+	}
+
+	PR_Free((void*) convertedNewName);
+
     if (parentSupport)
     {
         nsCOMPtr<nsIMsgFolder> newFolder;
         nsAutoString newFolderName(aNewName);
-        parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
-        nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
-        NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
+		rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
+		if (newFolder) {
+			newFolder->SetName(newFolderName.GetUnicode());
+			nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
+			NotifyItemAdded(parentSupport, newFolderSupport, "folderView");
+		}
         Release(); // really remove ourself from the system; since we need to
                    // regenerate the folder uri from the parent folder.
         /***** jefft -
