@@ -50,14 +50,17 @@ XML::Parser (any)
 
 *** Deprecated Features ***
 
-- This is the last stable release of bugzilla which will support mysql version
-  3.22. Future releases will require at least version 3.23.x. The exact minimum
-  version number required has not yet been decided (bug 87958)
-- The use of bugzilla to maintain the shadowdb will be removed before the
-  next stable release. The replacement (using mysql's built in replication) is
-  not supported in 2.16, but we expect that very few sites use this feature.
-  If this would cause a problem for you, please comment in bug 124589
-- ??? Anything else?
+- This is possibly the last stable release that will work with
+  MySQL version 3.22.  Soon Bugzilla will require at least
+  version 3.23.x.  The exact minimum version number required
+  has not yet been decided.
+  (bug 87958)
+- This is possibly the last stable release to support the
+  shadow database. The replacement (using MySQL's built in
+  replication) is not present in 2.16, but we expect that
+  very few sites use this feature.  If this would cause a
+  problem for you, please comment on the below bug.
+  (bug 124589)
 
 *** Outstanding Issues Of Note ***
 
@@ -75,32 +78,188 @@ XML::Parser (any)
   program.  To fix this, you can turn on the "sendmailnow"
   parameter on the Edit Parameters page (editparams.cgi).
   (bug 50159)
-???
+- Users behind rotating transparent proxies or otherwise having
+  a dynamic IP will find they need to log in regularly.
+  (bug 20122)
+- If you search on any CC or added comments, as well as at least
+  one other of CC, added comments, assignee, reporter, etc, then
+  the search can be very slow.  This is because of limitations of
+  the MySQL optimiser.
+  (bug 96101)
 
 ************************************************************
 *** USERS UPGRADING FROM 2.14.1 OR EARLIER - 2.16 ISSUES ***
 ************************************************************
 
+*** SECURITY ISSUES RESOLVED ***
+
+- The bug reporter could set the priority even when
+  'letsubmitterchoosepriority' was off.
+  (bug 63018)
+- It was possible for random confidential information to be
+  divulged, if the shadow database was in use and became
+  corrupted.
+  (bug 92263)
+- Mass change would set the groupset of every bug to be the
+  groupset of the first bug.
+  (bug 107718)
+- Most CGIs now run in taint mode.  This helps to prevent
+  failure to validate errors.
+  (bug 108982)
+- queryhelp.cgi no longer shows confidential products to
+  people it shouldn't.
+  (bug 126801)
+- The bug list sort order could take arbitrary SQL.  There
+  are no known exploits for this problem.
+  (bug 130821)
+- It was possible for a user to bypass the IP check by
+  setting up a fake reverse DNS, if the Bugzilla web server
+  was configured to do reverse DNS lookups.  Apache is not
+  configured as such by default.  This is not a complete
+  exploit, as the user's login cookie would also need to
+  be divulged for this to be a problem.
+  (bug 129466)
+
 *** IMPORTANT CHANGES ***
 
-???
+- 2.16 introduces "templatisation", a new feature that allows
+  administrators to easily customise the HTML output of Bugzilla
+  without altering Perl code.  Bugzilla uses the "Template Toolkit"
+  for this.  ??? See the Bugzilla Guide?
+
+  Administrators who ran the 2.15 development version and customised
+  templates should check the templates are still valid, as file names
+  and file paths have changed.
+
+  Most output is now templatised.  This process will be complete next
+  milestone.
+  (bug 86168)
+- index.html is now configurable, as is now index.cgi. ??? Web server setup ???
+  (bug 80183)
+- Administrators can now configure maximum attachment sizes.  These
+  should remain below the maximum size for MySQL
+  (bug 91664)
+- Perl 5.004 is no longer supported because the Template Toolkit
+  requires 5.005.
+  (bug 97721)
+- It is now strongly recommended that administrators run
+  "processmail rescanall" after upgrading to 2.16 or beyond.
+
+  This will send out notification emails for changes that were
+  made but not emailed, due to Bugzilla bugs.  All known
+  causes of this have been fixed (bug 104589 and 99519).
+
+  It is also recommended that this be run nightly to avoid
+  lengthy delays in future if this reoccurs.
+  (bug 106377)
 
 *** Other changes of note ***
 
-???
+- The query page has been redesigned for better user friendliness.
+  (bug 98707)
+- Users can now change their email account.
+  (bug 23067)
+- "Dependent Bug Changed" notification emails now contain the
+  dependent bug's summary.
+  (bug 28736)
+- Bugs with severity "critical", "blocker", and "enhancement" are
+  visually differentiated on bug lists for recent browsers.
+  (bug 28884)
+- Bugzilla now has a sidebar for the Mozilla browser.
+  (bug 37339)
+- A link to just created attachments now appears in notification
+  email.
+  (bug 66651)
+- Comments now have numbers and can be referenced with
+  autohyperlinkifying similar to bugs.
+  (bug 71840)
+- The attachment system has been rewritten, supporting new
+  "attachment statuses" (like keywords, but for attachments),
+  the ability to obsolete attachments, and the ability to
+  edit attachment metadata.
+  (bugs 84338, 75176)
+- syncshadowdb now supports a configurable temp file location,
+  and properly shuts down Bugzilla.
+  (bug 75840)
+- Dependency tree now lets you exclude resolve bugs and bugs
+  below a specific depth.
+  (bugs 83058)
+- The "strictvaluechecks" parameter has gone away.  These checks
+  are now always done.
+  (bug 119715)
+- The midair collision page now shows all changes since the bug
+  page was loaded, not just the last one.
+  (bug 108312)
+- Added support for making dependency graphs with 'dot', which
+  is better at creating complex graphs than 'webdot'.
+  (bug 120537)
 
 *** Bug fixes of note ***
 
+- Bugzilla scripts are now usually not terminated when the browser
+  window they are running in is closed.  This caused hard to
+  reproduce bugs.
+  (bug 104589)
+- On browsers that "reflow" the page, large component / milestone /
+  version fields were extremely slow to reflow when you altered
+  the product field.
+  (bug 96534)
+- The selection in the component / milestone / version fields is
+  no longer lost when you change the selection in the product
+  field or use the back/forward buttons in your browser to return
+  to the page.
+  (bug 97966)
+- You could not reverse dependencies in one step.
+  (bug 82143)
+- Mass reassignment of non-open bugs will no longer reopen them.
+  (bug 30731)
+- Attempting to bulk change no bugs will now give a user-friendly
+  error message.
+  (bug 90333)
+- If you make a change to a bug where you only add yourself to CC,
+  email notifications are now properly sent out for MySQL 3.23.
+  (bug 99519)
+- Bug entry now properly validates the data it has been sent.
+  (bug 107743)
+- Midair collision checks will now properly work in all situations
+  where dependencies have changed.
+  (bug 73502)
+- Some browsers were able to corrupt the params file with the wrong
+  end-of-line markers.
+  (bug 92500)
+- The MySQL port defined in localconfig is now properly honoured.
+  (bug 98368)
+- Apostrophes in component/milestone/version names no longer cause
+  a problem on the query page.
+  (bug 30689/42810)
+- File attachment comments will now wrap.
+  (bug 52060)
+- Saved queries are no longer mangled if you need to log in again,
+  for example if you had cookies of.
+  (bug 38835)
 - Bug counts (on reports.cgi) were very slow if you had to
   count a lot of bugs.
   (bug 63249)
-- The new options to let people see a bug when their name
+- 2.14 introduced options to let people see a bug when their name
   is on it but who aren't in the groups the bug is restricted
-  to only allow people to view bugs if they know the bug number.
-  It still will not show up in these people's buglists and
-  they will not receive email about changes to the bugs.
+  to.  These only allowed the people to view the bugs directly,
+  and not see them on buglists and receive email about them.
   (bugs 95024, 97469)
-???
+- A new 'cookiepath' parameter on editparams.cgi allows multiple
+  Bugzilla installations to exist on one host without problems.
+  (bug 19910)
+- whineatnews.pl now respects the 'sendmailnow' parameter.
+  (bug 52782)
+- The query page came up even when Bugzilla was shut down.
+  (bug 121747)
+- Quicksearch gave a weird error message when Bugzilla was
+  shut down.
+  (bug 121741)
+- Querying on CC took too long on big databases, it is quicker
+  now.
+  (bug 127200)
+
+??? 109357
 
 ************************************************************
 *** USERS UPGRADING FROM 2.14 OR EARLIER - 2.14.1 ISSUES ***
