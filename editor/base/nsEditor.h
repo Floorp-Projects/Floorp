@@ -605,7 +605,7 @@ public:
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
   PRBool TagCanContain(const nsString &aParentTag, nsIDOMNode* aChild);
-  PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
+  virtual PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
 
   /** returns PR_TRUE if aNode is a descendant of our root node */
   PRBool IsDescendantOfBody(nsIDOMNode *inNode);

@@ -555,6 +555,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
     }
   }
+//  mEditor->DumpContentTree();
   return res;
 }
 

@@ -2178,20 +2178,8 @@ NS_IMETHODIMP nsEditor::OutputToStream(nsIOutputStream* aOutputStream,
 NS_IMETHODIMP
 nsEditor::DumpContentTree()
 {
-  nsCOMPtr<nsIDocument> thedoc;
-  nsCOMPtr<nsIPresShell> presShell;
-  if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))))
-  {
-    presShell->GetDocument(getter_AddRefs(thedoc));
-    if (thedoc) {
-      nsIContent* root = thedoc->GetRootContent();
-      if (nsnull != root) {
-        root->List(stdout);
-        NS_RELEASE(root);
-      }
-    }
-  }
-
+  nsCOMPtr<nsIContent> root = do_QueryInterface(mBodyElement);
+  if (root)  root->List(stdout);
   return NS_OK;
 }
 
