@@ -201,7 +201,7 @@ static PRUint32 countRanges(NSAttributedString *aString)
   return count;
 }
 
-static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, PRUint32 inCount, nsTextRange* aRanges)
+static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange markRange, NSRange selRange, PRUint32 inCount, nsTextRange* aRanges)
 {
   // Convert the Cocoa range into the nsTextRange Array used in Gecko.
   // Iterate through the attributed string and map the underline attribute to Gecko IME textrange attributes.
@@ -221,18 +221,24 @@ static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange ma
                              NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
     i++;
   }
+  // Get current caret position.
+  // Caret is indicator of insertion point, so mEndOffset = 0.
+  aRanges[i].mStartOffset = selRange.location + selRange.length;                         
+  aRanges[i].mEndOffset = 0;                         
+  aRanges[i].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 }
 
-static void fillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange)
+static void fillTextRangeInTextEvent(nsTextEvent *aTextEvent, NSAttributedString* aString, NSRange markRange, NSRange selRange)
 { 
-  // Count the number of segments in the attributed string.  Allocate the right size of nsTextRange.
-  // Convert the attributed string into an array of nsTextRange by calling above functions.
-  PRUint32 count = countRanges(aString);
+  // Count the number of segments in the attributed string and add one more count for sending current caret position to Gecko.
+  // Allocate the right size of nsTextRange and draw caret at right position.
+  // Convert the attributed string into an array of nsTextRange and get current caret position by calling above functions.
+  PRUint32 count = countRanges(aString) + 1;
   aTextEvent->rangeArray = new nsTextRange[count];
   if (aTextEvent->rangeArray)
   {
     aTextEvent->rangeCount = count;
-    convertAttributeToGeckoRange(aString, markRange, aTextEvent->rangeCount,  aTextEvent->rangeArray);
+    convertAttributeToGeckoRange(aString, markRange, selRange, aTextEvent->rangeCount,  aTextEvent->rangeArray);
   } 
 }
 
@@ -2898,7 +2904,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aBuffer;
   if (!doCommit)
-    fillTextRangeInTextEvent(&textEvent, aString, markRange);
+    fillTextRangeInTextEvent(&textEvent, aString, markRange, selRange);
 
   mGeckoChild->DispatchWindowEvent(textEvent);
   if ( textEvent.rangeArray )
