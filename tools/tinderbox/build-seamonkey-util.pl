@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.187 $ ';
+$::UtilsVersion = '$Revision: 1.188 $ ';
 
 package TinderUtils;
 
@@ -1574,9 +1574,9 @@ sub run_all_tests {
       
       my $args;
 
-      my $new_log   = "new.log";
-      my $old_log   = "old.log";
-      my $diff_log  = "diff.log";
+      my $new_log   = "Codesize-new.log";
+      my $old_log   = "Codesize-old.log";
+      my $diff_log  = "Codesize-diff.log";
       my $test_name = "CodesizeConversionTest";
       my $test_log  = "$test_name.log";
 
@@ -1586,6 +1586,7 @@ sub run_all_tests {
 
       # Clear the logs from the last run, so we can properly test for success.
       unlink("$build_dir/$new_log");
+      unlink("$build_dir/$diff_log");
       unlink("$build_dir/$test_log");
 
       my $test_result =
@@ -1601,6 +1602,11 @@ sub run_all_tests {
       if (-e "$build_dir/$new_log") {
         print_log "found $build_dir/$new_log\n";
         $test_result = 'success';
+
+        # Print diff data to tbox log.
+        if (-e "$build_dir/$diff_log") {
+          print_logfile("$build_dir/$diff_log", "codesize diff log");
+        }
 
         #
         # Extract data.
@@ -1621,7 +1627,7 @@ sub run_all_tests {
         print_log "TinderboxPrint:Zdiff:$zdiff_data\n";
 
         # Get ready for next cycle.
-        rename("$build_dir/new.log", "$build_dir/old.log");
+        rename("$build_dir/$new_log", "$build_dir/$old_log");
       } else {
         print_log "Error: $build_dir/$new_log not found.\n";
         $test_result = 'buildfailed';
