@@ -208,22 +208,17 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     xDelta += scrollX; // Normal direction.
     yDelta -= scrollY; // Remember, y is flipped.
     
-#define XMENUOFFSET 20
-#define MENUHEIGHT 20
-    
-    xDelta += XMENUOFFSET;
-    yDelta -= MENUHEIGHT*(selIndex+1);
-    
+    const float kMenuWidth = 20.0;               // specify something small so it sizes to fit
+    const float kMenuPopupHeight = 20.0;         // height of a popup in aqua
     NSEvent* event = [NSApp currentEvent];
     NSPoint point = [event locationInWindow];
-    point.x -= xDelta;
-    point.y -= yDelta;
+    NSRect bounds = { {point.x - xDelta, point.y - yDelta}, {kMenuWidth, kMenuPopupHeight} };
 
-    NSEvent* mouseEvent = [NSEvent mouseEventWithType: NSLeftMouseDown location: point
-                                        modifierFlags: 0 timestamp: [event timestamp]
-                                         windowNumber: [event windowNumber] context: [event context]
-                                          eventNumber: [event eventNumber] clickCount: [event clickCount] 																						 pressure: [event pressure]];
-    [NSMenu popUpContextMenu: menu withEvent: mouseEvent forView: [[event window] contentView]];
+    NSPopUpButtonCell *cell = [[NSPopUpButtonCell alloc] initTextCell: @"" pullsDown: NO];
+    [cell setMenu: menu];
+    [cell setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
+    [cell trackMouse: event inRect: bounds ofView: [[event window] contentView] untilMouseUp: YES];
+    [cell release];
   }
   return NS_OK;
 }
