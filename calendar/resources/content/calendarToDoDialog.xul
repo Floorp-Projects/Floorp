@@ -152,7 +152,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label for="description-field" value="&newevent.description.label;"/>
                         </hbox>
-                        <textbox id="description-field" multiline="true" rows="3" cols="30" />
+                        <textbox id="description-field" onkeypress="event.stopPropagation()" multiline="true" rows="3" cols="30" />
                     </row>
                     
             
