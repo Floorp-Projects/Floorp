@@ -78,7 +78,7 @@ textarea {
   border: 2px inset ThreeDFace;
   color: -moz-FieldText;
   cursor: text;
-  font: field;
+  font: -moz-fixed;
   margin: 1px 0 1px 0;
   text-align: start;
   vertical-align: text-bottom;
