@@ -106,9 +106,12 @@ var gSearchNotificationListener =
         if (gNumOfSearchHits == 0) {
             statusMsg = gSearchBundle.getString("searchFailureMessage");
         }
+        else if (gNumOfSearchHits == 1) {
+            statusMsg = gSearchBundle.getString("searchSuccessMessage");
+        }         
         else
         {
-            statusMsg = gNumOfSearchHits + " " + gSearchBundle.getString("searchSuccessMessage");
+            statusMsg = gSearchBundle.getFormattedString("searchSuccessMessages", [gNumOfSearchHits]);
             gNumOfSearchHits = 0;
         }
 
