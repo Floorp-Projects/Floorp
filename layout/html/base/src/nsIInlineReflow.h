@@ -69,15 +69,14 @@ typedef nsReflowStatus nsInlineReflowStatus;
 // When a break is requested, this bit when set indicates that the
 // break should occur after the frame just reflowed; when the bit is
 // clear the break should occur before the frame just reflowed.
-#define NS_INLINE_BREAK_SIDE        0x0200      // 0 = before, !0 = after
 #define NS_INLINE_BREAK_BEFORE      0x0000
-#define NS_INLINE_BREAK_AFTER       NS_INLINE_BREAK_SIDE
+#define NS_INLINE_BREAK_AFTER       0x0200
 
 #define NS_INLINE_IS_BREAK_AFTER(_status) \
-  (0 != ((_status) & NS_INLINE_BREAK_SIDE))
+  (0 != ((_status) & NS_INLINE_BREAK_AFTER))
 
 #define NS_INLINE_IS_BREAK_BEFORE(_status) \
-  (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_SIDE)))
+  (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_AFTER)))
 
 // The type of break requested can be found in these bits.
 #define NS_INLINE_BREAK_TYPE_MASK   0xF000
