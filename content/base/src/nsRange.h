@@ -142,6 +142,10 @@ private:
 // Make a new nsIDOMRange object
 nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
 
+//
 // Utility routine to compare two "points", were a point is a node/offset pair
+// Returns -1 if point1 < point2, 1, if point1 > point2,
+// 0 if error or if point1 == point2.
+//
 PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                       nsIDOMNode* aParent2, PRInt32 aOffset2);
