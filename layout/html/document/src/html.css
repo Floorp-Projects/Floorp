@@ -212,14 +212,20 @@ td, th, tr {
 caption {
   display: table-caption;
   text-align: center;
-  margin-left: inherit; 
-  margin-right: inherit;
   -moz-box-sizing: border-box;
 }
 
 table[align="center"] > caption {
   margin-left: auto;
   margin-right: auto;
+}
+
+table[align="center"] > caption[align="left"] {
+  margin-right: 0;
+}
+
+table[align="center"] > caption[align="right"] {
+  margin-left: 0;
 }
 
 tr {

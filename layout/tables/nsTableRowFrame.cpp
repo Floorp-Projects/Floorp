@@ -1463,7 +1463,8 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
     break;
 
   case eReflowReason_Resize:
-  case eReflowReason_StyleChange:
+  case eReflowReason_StyleChange: 
+  case eReflowReason_Dirty:
     rv = ReflowChildren(aPresContext, aDesiredSize, aReflowState, *tableFrame, aStatus, PR_FALSE);
     break;
 
