@@ -18,13 +18,9 @@
 
 #include <gtk/gtk.h>
 
-#define USE_XIM
-
 #include "nsTextWidget.h"
 #include "nsString.h"
 #include "nsGtkEventHandler.h"
-
-#define DBG 0
 
 extern int mIsPasswordCallBacksInstalled;
 
