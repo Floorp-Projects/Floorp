@@ -251,7 +251,7 @@ var DefaultController =
 			case "cmd_printSetup":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
-            case "cmd_properties":
+      case "cmd_properties":
 			case "cmd_viewPageSource":
 			case "cmd_setFolderCharset":
 			case "cmd_reload":
@@ -616,9 +616,9 @@ var DefaultController =
 			case "cmd_findPrev":
 				MsgFindAgain(true);
 				return;
-            case "cmd_properties":
-                MsgFolderProperties();
-                return;
+      case "cmd_properties":
+        MsgFolderProperties();
+        return;
       case "cmd_search":
         MsgSearchMessages();
         return;
@@ -874,32 +874,29 @@ function IsPropertiesEnabled(command)
 {
    try 
    {
-      var serverType;
       var folderTree = GetFolderTree();
       var folderResource = GetSelectedFolderResource();
-      
-      serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
-   
-      switch (serverType)
-      {
-        case "none":
-        case "imap":
-        case "pop3":
-          goSetMenuValue(command, 'valueFolder');
-          break;
-        case "nntp":
-          goSetMenuValue(command, 'valueNewsgroup');
-          break
-        default:
-          goSetMenuValue(command, 'valueGeneric');
-      }
+
+      // when servers are selected
+      // it should be "Edit | Properties..."
+      if (GetFolderAttribute(folderTree, folderResource, "IsServer") == "true")
+        goSetMenuValue(command, "valueGeneric");
+      else 
+        goSetMenuValue(command, isNewsURI(folderResource.Value) ? "valueNewsgroup" : "valueFolder");
    }
    catch (ex) 
    {
-      //properties menu failure
+      // properties menu failure
    }
-  return IsFolderSelected();
-  
+
+   // properties should be enabled for folders and servers
+   // but not fake accounts
+   if (IsFakeAccount())
+     return false;
+
+   var folderTree = GetFolderTree();
+   var selection = folderTree.treeBoxObject.selection;
+   return (selection.count == 1);
 }
 
 function IsViewNavigationItemEnabled()

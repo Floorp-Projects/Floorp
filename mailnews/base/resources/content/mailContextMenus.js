@@ -250,12 +250,12 @@ function fillFolderPaneContextMenu()
   var isNewsgroup = !isServer && serverType == 'nntp';
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
-  EnableMenuItem("folderPaneContext-properties", !isServer);
+  EnableMenuItem("folderPaneContext-properties", true);
   ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
   EnableMenuItem("folderPaneContext-getMessages", true);
 
   ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
-  EnableMenuItem("folderPaneContext-openNewWindow", (true));
+  EnableMenuItem("folderPaneContext-openNewWindow", true);
 
   SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);
   SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, specialFolder);

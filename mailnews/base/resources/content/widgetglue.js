@@ -179,7 +179,15 @@ function MsgCompactFolder(isAll)
 function MsgFolderProperties() 
 {
 	var preselectedURI = GetSelectedFolderURI();
-	var serverType = GetMsgFolderFromUri(preselectedURI, true).server.type;
+  var msgFolder = GetMsgFolderFromUri(preselectedURI, true);
+
+  // if a server is selected, view settings for that account
+  if (msgFolder.isServer) {
+    MsgAccountManager(null);
+    return;
+  }
+
+	var serverType = msgFolder.server.type;
 	var folderTree = GetFolderTree();
 
 	var name = GetFolderNameFromUri(preselectedURI, folderTree);
