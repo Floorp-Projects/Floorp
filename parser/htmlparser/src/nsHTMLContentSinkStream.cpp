@@ -501,8 +501,8 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
       else if (mBuffer[i] == nbsp)
         mBuffer[i] = ' ';
     }
-  }
 #endif
+  }
 }
 
 
