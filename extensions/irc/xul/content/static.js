@@ -1285,7 +1285,7 @@ function gotoIRCURL (url)
             client.onInputServer ({inputData: url.host + " " + url.port +
                                                   " " + pass});
             net = client.networks[url.host];
-            if (!net.pendingURLs)
+            if (!("pendingURLs" in net))
                 net.pendingURLs = new Array();
             net.pendingURLs.push (url);            
             return;

@@ -189,8 +189,9 @@ function readIRCPrefs (rootNode)
 
 function writeIRCPrefs (rootNode)
 {
-    pref = Components.classes["@mozilla.org/preferences-service;1"]
-                     .getService(Components.interfaces.nsIPrefBranch);
+    const PREF_CTRID = "@mozilla.org/preferences-service;1";
+    const nsIPrefBranch = Components.interfaces.nsIPrefBranch;
+    var pref = Components.classes[PREF_CTRID].getService(nsIPrefBranch);
     if(!pref)
         throw ("Can't find pref component.");
 
