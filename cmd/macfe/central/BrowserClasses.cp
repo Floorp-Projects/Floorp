@@ -315,6 +315,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CHyperScroller);
 	RegisterClass_(CButtonEnablerReloadStop);
 	RegisterClass_(CBrowserView);
+	RegisterClass_(CAdSpaceView);
 
 	RegisterClass_(CPatternedGrippyPane);
 	RegisterClass_(CDividerGrippyPane);
