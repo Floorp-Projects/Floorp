@@ -111,7 +111,7 @@ DOMNodeViewer.prototype =
     this.mSubject = aObject;
     var deck = document.getElementById("dkContent");
     
-    if (aObject.nodeType == 1) {
+    if (aObject.nodeType == Node.ELEMENT_NODE) {
       deck.setAttribute("selectedIndex", 0);
       
       this.setTextValue("nodeName", aObject.nodeName);

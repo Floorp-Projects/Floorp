@@ -41,7 +41,7 @@
   function inspectorGetContextNode()
   {
     var n = document.popupNode;
-    while (n && n.nodeType != 1)
+    while (n && n.nodeType != Node.ELEMENT_NODE)
       n = n.parentNode;
   
     return n;

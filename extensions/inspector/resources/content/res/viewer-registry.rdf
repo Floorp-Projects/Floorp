@@ -20,7 +20,7 @@
     <rdf:li><rdf:Description 
       ins:uid="domNode"
       ins:description="DOM Node"
-      ins:filter="return doesQI(object, 'nsIDOMNode') &amp;&amp; object.nodeType != 9;"/>
+      ins:filter="return doesQI(object, 'nsIDOMNode') &amp;&amp; object.nodeType != Node.DOCUMENT_NODE;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 

@@ -490,7 +490,7 @@ function ResourceTreeView(aBinding)
   if (res && res.length) {
     var kids = res[0].childNodes;
     for (var i = 0; i < kids.length; ++i)
-      if (kids[i].nodeType == 1)
+      if (kids[i].nodeType == Node.ELEMENT_NODE)
         list.push(kids[i]);
   }
         

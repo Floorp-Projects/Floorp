@@ -170,7 +170,7 @@ inSearchModule.prototype =
       var col, data;
       for (var i= 0; i < kids.length; ++i) {
         col = kids[i];
-        if (col.nodeType == 1) { // ignore non-element nodes
+        if (col.nodeType == Node.ELEMENT_NODE) { // ignore non-element nodes
           data = { 
             name: col.getAttribute("name"), 
             title: col.getAttribute("title"), 
@@ -427,7 +427,7 @@ inSearchModule.prototype =
 
   installSearchReference: function(aItem)
   {
-    if (aItem.nodeType == 1) {
+    if (aItem.nodeType == Node.ELEMENT_NODE) {
       if (aItem.localName == "menuitem") {
         aItem.search = this.mImpl;
         for (var i = 0; i < aItem.childNodes.length; ++i)

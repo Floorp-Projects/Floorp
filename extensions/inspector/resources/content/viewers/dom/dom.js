@@ -348,7 +348,7 @@ DOMViewer.prototype =
       indent += "  ";
     var line = indent;        
       
-    if (aNode.nodeType == 1) {
+    if (aNode.nodeType == Node.ELEMENT_NODE) {
       line += "<" + aNode.localName;
 
       var attrIndent = "";
@@ -375,9 +375,9 @@ DOMViewer.prototype =
           s += this._toXML(aNode.childNodes[i], aLevel+1);
         s += indent + "</" + aNode.localName + ">\n";
       }
-    } else if (aNode.nodeType == 3) {
+    } else if (aNode.nodeType == Node.TEXT_NODE) {
       s += aNode.nodeValue;
-    } else if (aNode.nodeType == 8) {
+    } else if (aNode.nodeType == Node.COMMENT_NODE) {
       s += line + "<!--" + aNode.nodeValue + "-->\n";
     }
     
@@ -655,7 +655,8 @@ DOMViewer.prototype =
   {
     // make sure we only try to flash element nodes, and don't 
     // flash the documentElement (it's too darn big!)
-    if (aElement.nodeType == 1 && aElement != aElement.ownerDocument.documentElement) {
+    if (aElement.nodeType == Node.ELEMENT_NODE &&
+        aElement != aElement.ownerDocument.documentElement) {
       var flasher = this.flasher;
       
       if (flasher.flashing) 
