@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsBuildID.h"
+
 #include "nsGREDirServiceProvider.h"
 #include "nsEmbedString.h"
 #include "nsXPCOMPrivate.h"
@@ -359,7 +361,7 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
   // Please see http://www.mozilla.org/projects/embedding/MRE.html for
   // more info.
   //
-  strcpy(szKey, GRE_WIN_REG_LOC MOZILLA_VERSION);
+  strcpy(szKey, GRE_WIN_REG_LOC GRE_BUILD_ID);
 
   if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) {
     if ((rc = ::RegQueryValueEx(hRegKey, "GreHome", NULL, NULL, (BYTE *)keyValue, &dwLength))==ERROR_SUCCESS) {
