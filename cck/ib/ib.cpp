@@ -786,11 +786,18 @@ BOOL ConvertToRemoteAdmin(CString strURL, CString strPrefFile, CString strRemote
   DeleteFile(strPrefFile);
   ModifyHashedPref(strPrefFile, "autoadmin.global_config_url", strURL, "string", TRUE); 
 
-  CString strAppendEmail = GetGlobal("RemoteAdminAppendEmail");
-  ModifyHashedPref(strPrefFile, "autoadmin.append_emailaddr", strAppendEmail, "bool", TRUE); 
+  CString strFailoverCached = GetGlobal("RemoteAdminFailoverToCached");
+  ModifyHashedPref(strPrefFile, "autoadmin.failover_to_cached", strFailoverCached, "bool", TRUE); 
 
   CString strFailover = GetGlobal("RemoteAdminFailover");
   ModifyHashedPref(strPrefFile, "autoadmin.offline_failover", strFailover, "bool", TRUE); 
+
+  CString strPoll = GetGlobal("RemoteAdminPoll");
+  if (strPoll == "1")
+  {
+    CString strPollFreq = GetGlobal("RemoteAdminPollFreq");
+    ModifyHashedPref(strPrefFile, "autoadmin.refresh_interval", strPollFreq, "int", TRUE); 
+  }
   
 
   return TRUE;
