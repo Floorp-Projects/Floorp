@@ -25,6 +25,7 @@
 
 #include "nsISupports.h"
 #include "nscore.h"
+#include "nsString.h"
 
 // {07D3D8E0-9614-11d2-B3AD-00805F8A6670}
 #define NS_ICASECONVERSION_IID \
@@ -55,6 +56,11 @@ public:
   // Convert an array of Unicode characters into title case
   NS_IMETHOD ToTitle( const PRUnichar* anArray, PRUnichar* aReturn, 
                       PRUint32 aLen, PRBool aStartInWordBundary=PR_TRUE) = 0;
+
+  // The following nsString flavor one know how to handle special casing
+  NS_IMETHOD ToUpper(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull) = 0;
+  NS_IMETHOD ToLower(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull ) = 0;
+  NS_IMETHOD ToTitle(const PRUnichar* anIn, PRUint32 aLen, nsString& anOut, const PRUnichar* aLocale=nsnull, PRBool aStartInWordBoundary=PR_TRUE) = 0;
    
 };
 
