@@ -24,28 +24,26 @@
 #include <windows.h>
 
 
+// Locale sensitive date and time format interface
+// 
 class nsDateTimeFormatWin : public nsIDateTimeFormat {
 
 public: 
   NS_DECL_ISUPPORTS 
 
   // performs a locale sensitive date formatting operation on the time_t parameter
-  // locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
   NS_IMETHOD FormatTime(const nsString& locale, 
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
                         const time_t  timetTime, 
-                        PRUnichar *stringOut, 
-                        PRUint32 *outLen); 
+                        nsString& stringOut); 
 
   // performs a locale sensitive date formatting operation on the struct tm parameter
-  // locale RFC1766 (e.g. "en-US"), caller should allocate the buffer, outLen is in/out
   NS_IMETHOD FormatTMTime(const nsString& locale, 
-                        const nsDateFormatSelector  dateFormatSelector, 
-                        const nsTimeFormatSelector timeFormatSelector, 
-                        const struct tm*  tmTime, 
-                        PRUnichar *stringOut, 
-                        PRUint32 *outLen); 
+                          const nsDateFormatSelector  dateFormatSelector, 
+                          const nsTimeFormatSelector timeFormatSelector, 
+                          const struct tm*  tmTime, 
+                          nsString& stringOut); 
 
   nsDateTimeFormatWin() {NS_INIT_REFCNT();};
 };
