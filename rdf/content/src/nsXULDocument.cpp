@@ -31,7 +31,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIArena.h"
-#include "nsICollection.h"
 #include "nsIContent.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
@@ -56,6 +55,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
 #include "nsIScriptContextOwner.h"
+#include "nsISelection.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleSet.h"
@@ -76,7 +76,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kICSSParserIID,          NS_ICSS_PARSER_IID); // XXX grr..
-static NS_DEFINE_IID(kICollectionIID,         NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDTDIID,                NS_IDTD_IID);
 static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
@@ -93,6 +92,7 @@ static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
+static NS_DEFINE_IID(kISelectionIID,          NS_ISELECTION_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,     NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -402,7 +402,7 @@ public:
     NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule);
 
-    NS_IMETHOD GetSelection(nsICollection** aSelection);
+    NS_IMETHOD GetSelection(nsISelection** aSelection);
 
     NS_IMETHOD SelectAll();
 
@@ -498,7 +498,7 @@ protected:
     nsIScriptContextOwner* mScriptContextOwner;
     nsString*              mCharSetID;
     nsVoidArray            mStyleSheets;
-    nsICollection*         mSelection;
+    nsISelection*          mSelection;
     PRBool                 mDisplaySelection;
     nsVoidArray            mPresShells;
     nsINameSpaceManager*   mNameSpaceManager;
@@ -637,7 +637,7 @@ XULDocumentImpl::XULDocumentImpl(void)
     // construct a selection object
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRangeListCID,
                                                     nsnull,
-                                                    kICollectionIID,
+                                                    kISelectionIID,
                                                     (void**) &mSelection)))
         PR_ASSERT(0);
 
@@ -1382,7 +1382,7 @@ XULDocumentImpl::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::GetSelection(nsICollection** aSelection)
+XULDocumentImpl::GetSelection(nsISelection** aSelection)
 {
     if (!mSelection) {
         PR_ASSERT(0);
