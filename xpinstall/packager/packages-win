@@ -428,3 +428,9 @@ bin\chrome\icons\default\winInspectorMain.ico
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
+
+[typeaheadfind]
+bin\components\typeaheadfind.dll
+bin\components\typeaheadfind.xpt
+bin\chrome\typeaheadfind.jar
+bin\defaults\pref\typeaheadfind.js
