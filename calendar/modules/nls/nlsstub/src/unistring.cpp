@@ -180,10 +180,6 @@ UnicodeString& UnicodeString::removeBetween(TextOffset aStart, TextOffset aLimit
   return (*this);
 }
 
-UnicodeString& UnicodeString::replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString)
-{
-  return (*this);
-}
 
 PRInt8 UnicodeString::compare(const UnicodeString& aUnicodeString) const
 {
@@ -305,4 +301,23 @@ UnicodeString&  UnicodeString::operator=(const UnicodeString& aUnicodeString)
   mLength = mString.Length();
   return (*this);
 }
+
+
+UnicodeString& UnicodeString::replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString)
+{
+  return (*this);
+}
+UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const UnicodeString& aString)
+{
+  return (*this);
+}
+UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const UniChar* aString)
+{
+  return (*this);
+}
+UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const char* aString)
+{
+  return (*this);
+}
+
 

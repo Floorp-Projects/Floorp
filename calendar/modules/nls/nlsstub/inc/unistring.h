@@ -78,6 +78,11 @@ public:
 
   UnicodeString& replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString);
 
+  UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const UnicodeString& aString);
+  UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const UniChar* aString);
+  UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const char* aString);
+
+
 public:
   PRUnichar		  operator[](TextOffset	aOffset) const;
   PRUnichar&	  operator[](TextOffset	aOffset);
