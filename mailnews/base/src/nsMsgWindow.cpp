@@ -35,6 +35,7 @@
 #include "nsILoadGroup.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"

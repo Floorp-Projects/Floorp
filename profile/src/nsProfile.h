@@ -35,6 +35,7 @@
 // Interfaces Needed
 #include "nsIXULWindow.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIURIContentListener.h"
 #include "nsIDirectoryService.h"
 

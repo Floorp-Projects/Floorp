@@ -30,6 +30,7 @@
 #include "nsIResProtocolHandler.h"
 #include "nsIURI.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsISupportsArray.h"

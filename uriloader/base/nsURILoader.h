@@ -28,6 +28,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
 
 class nsURILoader : public nsIURILoader

@@ -43,6 +43,7 @@
 #include "nsMsgI18N.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIPrompt.h"

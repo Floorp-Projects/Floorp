@@ -35,6 +35,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIScrollable.h"
 #include "nsISHistory.h"
 #include "nsITextScroll.h"

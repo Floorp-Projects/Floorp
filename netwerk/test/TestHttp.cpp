@@ -2,6 +2,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 
 #define RETURN_IF_FAILED(rv, step) \

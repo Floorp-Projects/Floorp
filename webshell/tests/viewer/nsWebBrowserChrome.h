@@ -33,6 +33,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsTimer.h"
 #include "nsWeakReference.h"

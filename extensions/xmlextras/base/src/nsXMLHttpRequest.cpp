@@ -53,6 +53,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #endif
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"

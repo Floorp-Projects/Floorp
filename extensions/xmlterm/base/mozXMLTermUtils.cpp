@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"

@@ -38,6 +38,7 @@
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 

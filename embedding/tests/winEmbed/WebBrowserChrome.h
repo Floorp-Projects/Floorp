@@ -36,6 +36,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowser.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"

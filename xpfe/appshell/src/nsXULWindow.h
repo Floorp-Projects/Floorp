@@ -40,6 +40,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWidget.h"
 #include "nsIXULWindow.h"
 #include "nsIPrompt.h"

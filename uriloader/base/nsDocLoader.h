@@ -38,6 +38,7 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsCOMPtr.h"

@@ -59,6 +59,7 @@
 #include "nsIPrompt.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsIImapFlagAndUidState.h"

@@ -26,6 +26,7 @@
 #include "nsFileTransport.h"
 #include "nsFileTransportService.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsAutoLock.h"
 #include "netCore.h"
 #include "nsIFileStreams.h"

@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsXPIDLString.h"
 #include "nsISocketTransportService.h"
 #include "nsIStringStream.h"

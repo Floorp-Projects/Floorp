@@ -32,6 +32,7 @@
 #include "nsILoadGroup.h"
 
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocumentLoader.h"
 
 #include "nsString.h"

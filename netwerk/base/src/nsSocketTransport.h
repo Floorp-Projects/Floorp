@@ -39,6 +39,7 @@
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIFileStreams.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)

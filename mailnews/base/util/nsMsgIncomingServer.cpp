@@ -54,6 +54,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER

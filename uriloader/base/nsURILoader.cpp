@@ -33,6 +33,7 @@
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"

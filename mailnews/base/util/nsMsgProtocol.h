@@ -32,6 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIStreamProvider.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"

@@ -28,6 +28,7 @@
 #include "nsIDocShell.h"
 #include "nsProxiedService.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowMediator.h"

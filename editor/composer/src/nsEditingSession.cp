@@ -46,6 +46,7 @@
 
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #if DEBUG
 #define NOISY_DOC_LOADING   1

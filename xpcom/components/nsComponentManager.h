@@ -29,6 +29,7 @@
 #include "nsIFactory.h"
 #include "nsRegistry.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsHashtable.h"
 #include "prtime.h"
 #include "prmon.h"

@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"

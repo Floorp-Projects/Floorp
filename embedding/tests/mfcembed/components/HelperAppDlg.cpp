@@ -34,6 +34,7 @@
 #include "nsIServiceManager.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 // This file contains code which overrides the default
 // Gecko implementation for helper app dialog handling

@@ -44,6 +44,7 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIStreamListener.h"
 #include "nsILDAPMessageListener.h"
 #include "nsIProgressEventSink.h"

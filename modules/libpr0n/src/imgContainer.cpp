@@ -27,6 +27,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 #include "nsMemory.h"

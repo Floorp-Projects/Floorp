@@ -43,6 +43,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMElement.h"
 
 #include "nsIDOMEventReceiver.h"

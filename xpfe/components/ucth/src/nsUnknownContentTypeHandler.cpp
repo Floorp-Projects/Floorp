@@ -32,6 +32,7 @@
 #include "nsIHttpChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIExternalHelperAppService.h"
 #include "nsIStringBundle.h"
 #include "nsIFilePicker.h"

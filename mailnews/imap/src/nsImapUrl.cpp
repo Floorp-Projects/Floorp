@@ -49,6 +49,7 @@
 #include "nsIMsgFolder.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgHdr.h"
 #include "nsIProgressEventSink.h"

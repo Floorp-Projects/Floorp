@@ -28,6 +28,7 @@
 #include "nsFileStream.h"
 #include "nsIAbSyncPostEngine.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIURI.h"

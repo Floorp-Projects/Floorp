@@ -57,6 +57,7 @@
 #include "nsIMsgWindow.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIStringBundle.h"
 #include "nsTextFormatter.h"
 

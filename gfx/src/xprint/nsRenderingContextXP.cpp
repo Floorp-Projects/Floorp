@@ -1465,6 +1465,7 @@ nsRenderingContextXp::DrawImage(nsIImage *aImage, const nsRect& aSRect, const ns
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
 NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)

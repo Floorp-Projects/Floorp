@@ -29,6 +29,7 @@
 #include "nsILoadGroup.h"
 #include "plbase64.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"

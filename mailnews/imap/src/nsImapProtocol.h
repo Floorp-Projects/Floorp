@@ -35,6 +35,7 @@
 #include "nsString.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsITransport.h"
 
 // imap event sinks

@@ -42,6 +42,7 @@
 #include "nsVoidArray.h"
 #include "nsIMimeConverter.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 //
 // The base emitter will serve as the place to do all of the caching,

@@ -30,6 +30,7 @@
 #include "nsIOutputStream.h"
 #include "nsITransport.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 /******************************************************************************
 * nsCacheEntryDescriptor

@@ -53,6 +53,7 @@
 #include "nsIScriptExternalNameSet.h"
 #include "nsJSUtils.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIJSNativeInitializer.h"

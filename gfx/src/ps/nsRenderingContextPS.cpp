@@ -1271,6 +1271,7 @@ nsRenderingContextPS::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord 
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
 NS_IMETHODIMP nsRenderingContextPS::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)

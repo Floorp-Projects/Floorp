@@ -22,6 +22,7 @@
 #include "imgContainerMNG.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 #include "nsIInputStream.h"

@@ -28,6 +28,7 @@
 #include "nsP3PLogging.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIObserverService.h"
 #include "nsIDocumentLoader.h"

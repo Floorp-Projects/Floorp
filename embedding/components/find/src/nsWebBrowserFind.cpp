@@ -29,6 +29,7 @@
 #include "nsTextServicesCID.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"

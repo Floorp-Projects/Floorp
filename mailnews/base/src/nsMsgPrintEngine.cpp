@@ -36,6 +36,7 @@
 #include "nsMsgUtils.h"
 #include "nsIWebProgress.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgPrintEngine.h"

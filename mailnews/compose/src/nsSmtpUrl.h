@@ -33,6 +33,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsISmtpServer.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 class nsMailtoUrl : public nsIMailtoUrl, public nsIURI
 {

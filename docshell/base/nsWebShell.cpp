@@ -35,6 +35,7 @@ typedef unsigned long HMTX;
 #include "nsWebShell.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"

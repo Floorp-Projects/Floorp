@@ -23,6 +23,7 @@
 
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIImage.h"
 

@@ -24,6 +24,7 @@
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
 
 class nsIFile;

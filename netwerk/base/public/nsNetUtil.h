@@ -32,6 +32,7 @@
 #include "nsIRequestObserverProxy.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIIOService.h"

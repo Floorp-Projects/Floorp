@@ -31,6 +31,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIChannel.h"

@@ -34,6 +34,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIServiceManager.h"
 #include "nsIClipboardCommands.h"

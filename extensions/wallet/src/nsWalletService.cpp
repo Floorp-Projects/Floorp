@@ -42,6 +42,7 @@
 #include "nsIDocShell.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
 #include "nsIWindowWatcher.h"

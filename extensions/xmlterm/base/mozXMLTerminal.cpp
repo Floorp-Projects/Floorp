@@ -63,6 +63,7 @@
 
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 
 ////////////////////////////////////////////////////////////////////////

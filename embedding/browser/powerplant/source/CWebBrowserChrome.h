@@ -33,6 +33,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"

@@ -71,6 +71,7 @@
 #include "nsNewsSummarySpec.h"
 
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsReadableUtils.h"
 #include "nsNewsDownloader.h"

@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIEventQueue.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"

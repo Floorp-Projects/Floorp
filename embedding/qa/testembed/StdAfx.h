@@ -59,6 +59,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWindowCreator.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIClipboardCommands.h"

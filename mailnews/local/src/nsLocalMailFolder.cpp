@@ -79,6 +79,7 @@
 #include "nsIDocShell.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPop3URL.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgFolderCompactor.h"

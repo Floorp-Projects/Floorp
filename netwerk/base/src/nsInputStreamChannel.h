@@ -31,6 +31,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStreamIO.h"
 #include "nsITransport.h"

@@ -49,6 +49,7 @@ EXPORTS =                  \
 !ifdef MOZ_TRACE_MALLOC
 		nsTraceMalloc.h    \
 !endif
+	nsIInterfaceRequestorUtils.h \
         $(NULL)			
 
 XPIDL_MODULE = xpcom_base

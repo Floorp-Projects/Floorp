@@ -73,6 +73,7 @@
 
 #include "nsISupportsPrimitives.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
 

@@ -37,6 +37,7 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMAbstractView.h"
 #include "prmem.h"

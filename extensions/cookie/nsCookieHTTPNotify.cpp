@@ -38,6 +38,7 @@
 #include "nsICategoryManager.h"
 #include "nsIHttpProtocolHandler.h"		// for NS_HTTP_STARTUP_CATEGORY
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);

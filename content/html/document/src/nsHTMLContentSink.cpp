@@ -25,6 +25,7 @@
 #include "nsXPIDLString.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIParser.h"
 #include "nsParserUtils.h"
 #include "nsICSSStyleSheet.h"
