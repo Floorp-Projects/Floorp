@@ -64,7 +64,7 @@ typedef struct RECharSet {
 #define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 
 
-struct JSRegExp {
+struct JS2RegExp {
     uint32       parenCount:24, /* number of parenthesized submatches */
                  flags:8;       /* flags, see above JSREG_* defines */
     uint32       classCount;    /* count [...] bitmaps */
@@ -93,16 +93,16 @@ namespace MetaData {
 class JS2Metadata;
 
 // Execute the re against the string starting at the index, return NULL for failure
-REMatchResult *REExecute(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline);
+REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 index, uint32 length, bool globalMultiline);
 
 // Compile the source re, return NULL for failure (error functions called)
-JSRegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags);
+JS2RegExp *RECompile(JS2Metadata *meta, const jschar *str, uint32 length, uint32 flags);
 
 // Compile the flag source and build a flag bit set. Return true/false for success/failure
 bool parseFlags(JS2Metadata *meta, const jschar *flagStr, uint32 length, uint32 *flags);
 
 // Execute the re against the string, but don't try advancing into the string
-REMatchResult *REMatch(JS2Metadata *meta, JSRegExp *re, const jschar *str, uint32 length);
+REMatchResult *REMatch(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint32 length);
 
 }
 }
