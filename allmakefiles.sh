@@ -150,6 +150,7 @@ htmlparser/src/Makefile
 htmlparser/tests/Makefile
 htmlparser/tests/grabpage/Makefile
 htmlparser/tests/logparse/Makefile
+htmlparser/tests/html/Makefile
 htmlparser/tests/outsinks/Makefile
 "
 
