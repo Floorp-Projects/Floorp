@@ -798,41 +798,38 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
     }break;
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
+      nsFrameState  state;
+      GetFrameState(&state);
       nsCOMPtr<nsIFrameSelection> frameselection;
       nsCOMPtr<nsISelectionController> selCon;
       rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
       if (NS_SUCCEEDED(rv) && selCon)
       {
-        frameselection = do_QueryInterface(selCon); //this MAY implement
+        if (state & NS_FRAME_INDEPENDENT_SELECTION) 
+          frameselection = do_QueryInterface(selCon); //this MAY implement
+        else 
+          rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
       }
-      if (!frameselection)
-        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
-      if (NS_SUCCEEDED(rv) && frameselection)
-      {
-        frameselection->SetMouseDownState( PR_TRUE );//not important if it fails here
-      }
+      NS_ENSURE_TRUE(frameselection, NS_ERROR_FAILURE);
+      frameselection->SetMouseDownState( PR_TRUE );//redandant in normal cases but we MUST tell this selection by hand here
       HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_UP:
     {
       nsFrameState  state;
       GetFrameState(&state);
-      if (state & NS_FRAME_INDEPENDENT_SELECTION) 
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      nsCOMPtr<nsISelectionController> selCon;
+      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+      if (NS_SUCCEEDED(rv) && selCon)
       {
-        nsCOMPtr<nsIFrameSelection> frameselection;
-        nsCOMPtr<nsISelectionController> selCon;
-        rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-        if (NS_SUCCEEDED(rv) && selCon)
-        {
+        if (state & NS_FRAME_INDEPENDENT_SELECTION) 
           frameselection = do_QueryInterface(selCon); //this MAY implement
-        }
-        if (!frameselection)
-          return NS_ERROR_FAILURE;
-        if (NS_SUCCEEDED(rv) && frameselection)
-        {
-          frameselection->SetMouseDownState( PR_FALSE );//redandant in normal cases but we MUST tell this selection by hand here
-        }
+        else 
+          rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
       }
+      NS_ENSURE_TRUE(frameselection, NS_ERROR_FAILURE);
+      frameselection->SetMouseDownState( PR_FALSE );//redandant in normal cases but we MUST tell this selection by hand here
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
     break;
