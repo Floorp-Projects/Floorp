@@ -710,7 +710,32 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
             // so we need to adjust the array index.
       }
       else
+      {
         rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
+#ifdef DEBUG_bienvenu
+        nsXPIDLCString curSelectedFolderName;
+        if (connection)    
+          connection->GetSelectedMailboxName(getter_Copies(curSelectedFolderName));
+        // check that no other connection is in the same selected state.
+        if (!curSelectedFolderName.IsEmpty())
+        {
+          for (PRUint32 j = 0; j < cnt; j++)
+          {
+            if (j != i)
+            {
+              nsCOMPtr<nsIImapProtocol> otherConnection = do_QueryElementAt(m_connectionCache, j);
+              if (otherConnection)
+              {
+                nsXPIDLCString otherSelectedFolderName;
+                otherConnection->GetSelectedMailboxName(getter_Copies(otherSelectedFolderName));
+                NS_ASSERTION(!curSelectedFolderName.Equals(otherSelectedFolderName), "two connections selected on same folder");
+              }
+
+            }
+          }
+        }
+      }
+#endif // DEBUG_bienvenu
     }
     if (NS_FAILED(rv)) 
     {

@@ -1773,23 +1773,25 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     PRBool inSelectedState = GetServerStateParser().GetIMAPstate() ==
       nsImapServerResponseParser::kFolderSelected;
     
-    nsCString curUrlFolderName;
+    nsCAutoString curSelectedUrlFolderName;
+    nsCAutoString pendingUrlFolderName;
     if (inSelectedState)
     {
-      curUrlFolderName = 
+      curSelectedUrlFolderName = 
         GetServerStateParser().GetSelectedMailboxName();
     }
-    else if (isBusy)
+    if (isBusy)
     {
       nsImapState curUrlImapState;
-      NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+//      NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
       if (m_runningUrl) {
         m_runningUrl->GetRequiredImapState(&curUrlImapState);
         if (curUrlImapState == nsIImapUrl::nsImapSelectedState) {
           char *folderName = OnCreateServerSourceFolderPathString();
-          curUrlFolderName.Assign(folderName);
+          if (!curSelectedUrlFolderName.Equals(folderName))
+            pendingUrlFolderName.Assign(folderName);
           inSelectedState = PR_TRUE;
-          PR_FREEIF(folderName);
+          PR_Free(folderName);
         }
       }
     }
@@ -1844,13 +1846,21 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
             {
               PRBool isInbox = 
                 PL_strcasecmp("Inbox", folderNameForProposedUrl) == 0;
-              if (!curUrlFolderName.IsEmpty())
+              if (!curSelectedUrlFolderName.IsEmpty())
               {
                 PRBool matched = isInbox ?
-                  PL_strcasecmp(curUrlFolderName.get(),
+                  PL_strcasecmp(curSelectedUrlFolderName.get(),
                   folderNameForProposedUrl) == 0 : 
-                PL_strcmp(curUrlFolderName.get(),
+                PL_strcmp(curSelectedUrlFolderName.get(),
                   folderNameForProposedUrl) == 0;
+                if (!matched && !pendingUrlFolderName.IsEmpty())
+                {
+                  matched = isInbox ?
+                    PL_strcasecmp(pendingUrlFolderName.get(),
+                    folderNameForProposedUrl) == 0 : 
+                  PL_strcmp(pendingUrlFolderName.get(),
+                    folderNameForProposedUrl) == 0;
+                }
                 if (matched)
                 {
                   if (isBusy)
@@ -3504,7 +3514,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     HandleMemoryFailure();
     
     // Block until libmsg decides whether to download headers or not.
-    PRUint32 *msgIdList = NULL;
+    PRUint32 *msgIdList = nsnull;
     PRUint32 msgCount = 0;
     
   if (!DeathSignalReceived())
@@ -3517,7 +3527,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     if (msgIdList && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
     {
       FolderHeaderDump(msgIdList, msgCount);
-      PR_FREEIF( msgIdList);
+      PR_Free( msgIdList);
     }
     HeaderFetchCompleted();
       // this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
