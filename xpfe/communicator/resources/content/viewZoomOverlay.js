@@ -73,12 +73,17 @@ ZoomManager.prototype = {
   steps : 0,
 
   get textZoom() {
-    var currentZoom = Math.round(getMarkupDocumentViewer().textZoom * 100);
-    if (this.indexOf(currentZoom) == -1) {
-      if (currentZoom != this.factorOther) {
-        this.factorOther = currentZoom;
-        this.factorAnchor = this.factorOther;
+    var currentZoom;
+    try {
+      currentZoom = Math.round(getMarkupDocumentViewer().textZoom * 100);
+      if (this.indexOf(currentZoom) == -1) {
+        if (currentZoom != this.factorOther) {
+          this.factorOther = currentZoom;
+          this.factorAnchor = this.factorOther;
+        }
       }
+    } catch (e) {
+      currentZoom = 100;
     }
     return currentZoom;
   },
@@ -214,41 +219,36 @@ ZoomManager.prototype = {
 }
 
 /***** init and helper functions for viewZoomOverlay.xul *****/
-
 window.addEventListener("load", registerZoomManager, false);
 
 function registerZoomManager()
 {
   var textZoomMenu = document.getElementById("menu_textZoom");
-  if (textZoomMenu) {
-    var zoom = ZoomManager.prototype.getInstance();
+  var zoom = ZoomManager.prototype.getInstance();
 
-    textZoomMenu.removeAttribute("hidden");
+  var parentMenu = textZoomMenu.parentNode;
+  parentMenu.addEventListener("popupshowing", updateViewMenu, false);
 
-    var parentMenu = textZoomMenu.parentNode;
-    parentMenu.addEventListener("popupshowing", updateViewMenu, false);
+  var insertBefore = document.getElementById("menu_textZoomInsertBefore");
+  var popup = insertBefore.parentNode;
+  var accessKeys = zoom.bundle.getString("accessKeys").split(",");
+  var zoomFactors = zoom.getZoomFactors();
+  for (var i = 0; i < zoomFactors.length; ++i) {
+    var menuItem = document.createElement("menuitem");
+    menuItem.setAttribute("type", "radio");
+    menuItem.setAttribute("name", "textZoom");
 
-    var insertBefore = document.getElementById("menu_textZoomInsertBefore");
-    var popup = insertBefore.parentNode;
-    var accessKeys = zoom.bundle.getString("accessKeys").split(",");
-    var zoomFactors = zoom.getZoomFactors();
-    for (var i = 0; i < zoomFactors.length; ++i) {
-      var menuItem = document.createElement("menuitem");
-      menuItem.setAttribute("type", "radio");
-      menuItem.setAttribute("name", "textZoom");
+    var label;
+    if (zoomFactors[i] == 100)
+      label = zoom.bundle.getString("labelOriginal");
+    else
+      label = zoom.bundle.getString("label");
 
-      var label;
-      if (zoomFactors[i] == 100)
-        label = zoom.bundle.getString("labelOriginal");
-      else
-        label = zoom.bundle.getString("label");
-
-      menuItem.setAttribute("label", label.replace(/%zoom%/, zoomFactors[i]));
-      menuItem.setAttribute("accesskey", accessKeys[i]);
-      menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.value;");
-      menuItem.setAttribute("value", zoomFactors[i]);
-      popup.insertBefore(menuItem, insertBefore);
-    }
+    menuItem.setAttribute("label", label.replace(/%zoom%/, zoomFactors[i]));
+    menuItem.setAttribute("accesskey", accessKeys[i]);
+    menuItem.setAttribute("oncommand", "ZoomManager.prototype.getInstance().textZoom = this.value;");
+    menuItem.setAttribute("value", zoomFactors[i]);
+    popup.insertBefore(menuItem, insertBefore);
   }
 }
 

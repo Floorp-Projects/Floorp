@@ -58,7 +58,7 @@
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
   </commandset>
 
-  <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" hidden="true">
+  <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;">
     <menupopup id="menu_textZoomPopup" onpopupshowing="updateTextZoomMenu();">
       <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" command="cmd_textZoomReduce"/>
       <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;" command="cmd_textZoomEnlarge"/>
