@@ -297,12 +297,6 @@ bin/chrome/icons/default/main-window.ico
 ;-bin/chrome/comm/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
 ;-bin/chrome/comm/content/editor/TextEditorAppShell.xul
-;-bin/chrome/comm/content/editor/sb-bookmarks-panel.xul
-;-bin/chrome/comm/content/editor/sb-bookmarks.js
-;-bin/chrome/comm/content/editor/sb-file-contextMenu.js
-;-bin/chrome/comm/content/editor/sb-file-panel.js
-;-bin/chrome/comm/content/editor/sb-file-panel.xul
-;-bin/chrome/comm/content/editor/sb-FileWidgetFileHandler.js
 ;-bin/chrome/comm/content/editor/viewsource.js
 ;-bin/chrome/comm/content/editor/viewsource.xul
 ;-bin/chrome/comm/content/communicator/domviewer

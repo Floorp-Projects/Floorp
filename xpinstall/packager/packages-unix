@@ -256,12 +256,6 @@ bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
 ;-bin/chrome/comm/content/editor/content/TextEditorAppShell.xul
-;-bin/chrome/comm/content/editor/content/sb-bookmarks-panel.xul
-;-bin/chrome/comm/content/editor/content/sb-bookmarks.js
-;-bin/chrome/comm/content/editor/content/sb-file-contextMenu.js
-;-bin/chrome/comm/content/editor/content/sb-file-panel.js
-;-bin/chrome/comm/content/editor/content/sb-file-panel.xul
-;-bin/chrome/comm/content/editor/content/sb-FileWidgetFileHandler.js
 
 ; window icons
 bin/chrome/icons/default/bmPropsWindow*.xpm

@@ -23,8 +23,6 @@
 # composer:locale:en-US directory
 
 editor.dtd
-sidebar-editor-rdf.dtd
-sidebar-editor.dtd
 editorOverlay.dtd
 editor.properties
 pref-composer.dtd
