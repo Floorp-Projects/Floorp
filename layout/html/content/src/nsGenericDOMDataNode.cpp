@@ -41,21 +41,17 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 //----------------------------------------------------------------------
 
 nsGenericDOMDataNode::nsGenericDOMDataNode()
+  : mText()
 {
   mDocument = nsnull;
   mParent = nsnull;
   mContent = nsnull;
   mScriptObject = nsnull;
   mListenerManager = nsnull;
-  mText = nsnull;
-  mTextLength = 0;
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  if (nsnull != mText) {
-    delete [] mText;
-  }
   NS_IF_RELEASE(mListenerManager);
   // XXX what about mScriptObject? its now safe to GC it...
 }
@@ -72,22 +68,14 @@ nsresult
 nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
 {
   aNodeValue.Truncate();
-  aNodeValue.Append(mText, mTextLength);
+  mText.AppendTo(aNodeValue);
   return NS_OK;
 }
 
 nsresult
 nsGenericDOMDataNode::SetNodeValue(const nsString& aNodeValue)
 {
-  PRUnichar* nt = aNodeValue.ToNewUnicode();
-  if (nsnull == nt) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (nsnull != mText) {
-    delete [] mText;
-  }
-  mTextLength = aNodeValue.Length();
-  mText = nt;
+  mText = aNodeValue;
 
   // Trigger a reflow
   if (nsnull != mDocument) {
@@ -174,8 +162,11 @@ nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 nsresult    
 nsGenericDOMDataNode::GetData(nsString& aData)
 {
-  if (nsnull != mText) {
-    aData.SetString(mText, mTextLength);
+  if (mText.Is2b()) {
+    aData.SetString(mText.Get2b(), mText.GetLength());
+  }
+  else {
+    aData.SetString(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }
@@ -183,13 +174,7 @@ nsGenericDOMDataNode::GetData(nsString& aData)
 nsresult    
 nsGenericDOMDataNode::SetData(const nsString& aData)
 {
-  if (mText) {
-    delete[] mText;
-    mText = nsnull;
-  }
-
-  mTextLength = aData.Length();
-  mText = aData.ToNewUnicode();
+  mText = aData;
 
   // Notify the document that the text changed
   if (nsnull != mDocument) {
@@ -201,11 +186,12 @@ nsGenericDOMDataNode::SetData(const nsString& aData)
 nsresult    
 nsGenericDOMDataNode::GetSize(PRUint32* aSize)
 {
-  *aSize = mTextLength;
+  *aSize = mText.GetLength();
   return NS_OK;
 }
 
-// XXX temporary
+// XXX temporary; none of these methods try to return error codes as
+// per the spec
 #define NS_DOM_INDEX_SIZE_ERR NS_ERROR_FAILURE
 
 nsresult    
@@ -214,24 +200,31 @@ nsGenericDOMDataNode::Substring(PRUint32 aStart,
                                 nsString& aReturn)
 {
   aReturn.Truncate();
-  if (nsnull != mText) {
-    // XXX add <0 checks if types change
-    if (aStart >= PRUint32(mTextLength)) {
-      return NS_DOM_INDEX_SIZE_ERR;
-    }
-    PRUint32 amount = aCount;
-    if (aStart + amount > PRUint32(mTextLength)) {
-      amount = mTextLength - aStart;
-    }
-    aReturn.SetString(mText + aStart, amount);
+
+  // XXX add <0 checks if types change
+  PRUint32 textLength = PRUint32( mText.GetLength() );
+  if (aStart >= textLength) {
+    return NS_DOM_INDEX_SIZE_ERR;
   }
+
+  PRUint32 amount = aCount;
+  if (aStart + amount > textLength) {
+    amount = textLength - aStart;
+  }
+  if (mText.Is2b()) {
+    aReturn.SetString(mText.Get2b() + aStart, amount);
+  }
+  else {
+    aReturn.SetString(mText.Get1b() + aStart, amount);
+  }
+
   return NS_OK;
 }
 
 nsresult    
 nsGenericDOMDataNode::Append(const nsString& aData)
 {
-  return Replace(mTextLength, 0, aData);
+  return Replace(mText.GetLength(), 0, aData);
 }
 
 nsresult    
@@ -252,18 +245,19 @@ nsGenericDOMDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
                               const nsString& aData)
 {
   // sanitize arguments
-  if (aOffset > (PRUint32)mTextLength) {
-    aOffset = mTextLength;
+  PRUint32 textLength = mText.GetLength();
+  if (aOffset > textLength) {
+    aOffset = textLength;
   }
 
   // Allocate new buffer
-  PRInt32 endOffset = aOffset + aCount;
-  if (endOffset > mTextLength) {
-    aCount = mTextLength - aOffset;
-    endOffset = mTextLength;
+  PRUint32 endOffset = aOffset + aCount;
+  if (endOffset > textLength) {
+    aCount = textLength - aOffset;
+    endOffset = textLength;
   }
   PRInt32 dataLength = aData.Length();
-  PRInt32 newLength = mTextLength - aCount + dataLength;
+  PRInt32 newLength = textLength - aCount + dataLength;
   PRUnichar* to = new PRUnichar[newLength ? newLength : 1];
   if (nsnull == to) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -271,23 +265,18 @@ nsGenericDOMDataNode::Replace(PRUint32 aOffset, PRUint32 aCount,
 
   // Copy over appropriate data
   if (0 != aOffset) {
-    nsCRT::memcpy(to, mText, sizeof(PRUnichar) * aOffset);
+    mText.CopyTo(to, 0, aOffset);
   }
   if (0 != dataLength) {
     nsCRT::memcpy(to + aOffset, aData.GetUnicode(),
                   sizeof(PRUnichar) * dataLength);
   }
-  if (endOffset != mTextLength) {
-    nsCRT::memcpy(to + aOffset + dataLength, mText + endOffset,
-                  sizeof(PRUnichar) * (mTextLength - endOffset));
+  if (endOffset != textLength) {
+    mText.CopyTo(to + aOffset + dataLength, endOffset, textLength - endOffset);
   }
 
   // Switch to new buffer
-  if (nsnull != mText) {
-    delete [] mText;
-  }
-  mText = to;
-  mTextLength = newLength;
+  mText.SetTo(to, newLength);
 
   // Notify the document that the text changed
   if (nsnull != mDocument) {
@@ -426,7 +415,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
         PRInt32 endOffset = endPoint->GetOffset();
 
         nsString  buffer;
-        buffer.Append(mText, mTextLength);
+        mText.AppendTo(buffer);
         if (startContent == content || endContent == content)
         { 
           // NOTE: ORDER MATTERS!
@@ -448,7 +437,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   else  
   {
     nsString  buffer;
-    buffer.Append(mText, mTextLength);
+    mText.AppendTo(buffer);
     aConverter.AddContent(buffer);
   }
   return NS_OK;
@@ -458,22 +447,44 @@ void
 nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
-  PRUnichar* cp = mText + aOffset;
-  PRUnichar* end = cp + aLen;
-  while (cp < end) {
-    PRUnichar ch = *cp++;
-    if (ch == '\r') {
-      aBuf.Append("\\r");
-    } else if (ch == '\n') {
-      aBuf.Append("\\n");
-    } else if (ch == '\t') {
-      aBuf.Append("\\t");
-    } else if ((ch < ' ') || (ch >= 127)) {
-      char buf[10];
-      PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-      aBuf.Append(buf);
-    } else {
-      aBuf.Append(ch);
+  if (mText.Is2b()) {
+    const PRUnichar* cp = mText.Get2b() + aOffset;
+    const PRUnichar* end = cp + aLen;
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (ch == '\r') {
+        aBuf.Append("\\r");
+      } else if (ch == '\n') {
+        aBuf.Append("\\n");
+      } else if (ch == '\t') {
+        aBuf.Append("\\t");
+      } else if ((ch < ' ') || (ch >= 127)) {
+        char buf[10];
+        PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
+        aBuf.Append(buf);
+      } else {
+        aBuf.Append(ch);
+      }
+    }
+  }
+  else {
+    unsigned char* cp = (unsigned char*)mText.Get1b() + aOffset;
+    const unsigned char* end = cp + aLen;
+    while (cp < end) {
+      PRUnichar ch = *cp++;
+      if (ch == '\r') {
+        aBuf.Append("\\r");
+      } else if (ch == '\n') {
+        aBuf.Append("\\n");
+      } else if (ch == '\t') {
+        aBuf.Append("\\t");
+      } else if ((ch < ' ') || (ch >= 127)) {
+        char buf[10];
+        PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
+        aBuf.Append(buf);
+      } else {
+        aBuf.Append(ch);
+      }
     }
   }
 }

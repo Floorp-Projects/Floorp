@@ -131,7 +131,7 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " refcount=%d<", mRefCnt);
 
   nsAutoString tmp;
-  mInner.ToCString(tmp, 0, mInner.mTextLength);
+  mInner.ToCString(tmp, 0, mInner.mText.GetLength());
   fputs(tmp, out);
 
   fputs(">\n", out);
@@ -143,7 +143,7 @@ nsCommentNode::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
   tmp.Append("<!--");
-  tmp.Append(mInner.mText, mInner.mTextLength);
+  mInner.mText.AppendTo(tmp);
   tmp.Append(">");
   fputs(tmp, out);
   return NS_OK;
@@ -154,7 +154,7 @@ nsCommentNode::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);
   aBuf.Append("<!--");
-  aBuf.Append(mInner.mText, mInner.mTextLength);
+  mInner.mText.AppendTo(aBuf);
   aBuf.Append(">");
   return NS_OK;
 }

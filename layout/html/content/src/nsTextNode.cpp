@@ -68,8 +68,13 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC_DOM_DATA(mInner)
 
   // nsITextContent
-  NS_IMETHOD GetText(const PRUnichar*& aBaseResult, PRInt32& aLengthResult);
-  NS_IMETHOD SetText(const PRUnichar* aBuffer, PRInt32 aLength,
+  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
+                     PRInt32& aNumFragmentsResult);
+  NS_IMETHOD SetText(const PRUnichar* aBuffer,
+                     PRInt32 aLength,
+                     PRBool aNotify);
+  NS_IMETHOD SetText(const char* aBuffer,
+                     PRInt32 aLength,
                      PRBool aNotify);
 
 protected:
@@ -161,7 +166,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "Text refcount=%d<", mRefCnt);
 
   nsAutoString tmp;
-  mInner.ToCString(tmp, 0, mInner.mTextLength);
+  mInner.ToCString(tmp, 0, mInner.mText.GetLength());
   fputs(tmp, out);
 
   fputs(">\n", out);
@@ -172,7 +177,7 @@ NS_IMETHODIMP
 nsTextNode::ToHTML(FILE* out) const
 {
   nsAutoString tmp;
-  tmp.Append(mInner.mText, mInner.mTextLength);
+  mInner.mText.AppendTo(tmp);
   fputs(tmp, out);
   return NS_OK;
 }
@@ -181,7 +186,7 @@ NS_IMETHODIMP
 nsTextNode::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);
-  aBuf.Append(mInner.mText, mInner.mTextLength);
+  mInner.mText.AppendTo(aBuf);
   return NS_OK;
 }
 
@@ -218,14 +223,14 @@ nsTextNode::JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2,
 // Implementation of the nsITextContent interface
 
 NS_IMETHODIMP
-nsTextNode::GetText(const PRUnichar*& aBaseResult, PRInt32& aLengthResult)
+nsTextNode::GetText(const nsTextFragment*& aFragmentsResult,
+                    PRInt32& aNumFragmentsResult)
 {
-  aBaseResult = mInner.mText;
-  aLengthResult = mInner.mTextLength;
+  aFragmentsResult = &mInner.mText;
+  aNumFragmentsResult = 1;
   return NS_OK;
 }
 
-// XXX probably should normalize the code to keep a \u0000 at the end
 NS_IMETHODIMP
 nsTextNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
                     PRBool aNotify)
@@ -237,18 +242,27 @@ nsTextNode::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
   if (nsnull == aBuffer) {
     return NS_ERROR_NULL_POINTER;
   }
+  mInner.mText.SetTo(aBuffer, aLength);
 
-  PRUnichar* nt = new PRUnichar[aLength+1];
-  if (nsnull == nt) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  // Trigger a reflow
+  if (aNotify && (nsnull != mInner.mDocument)) {
+    mInner.mDocument->ContentChanged(this, nsnull);
   }
-  if (nsnull != mInner.mText) {
-    delete [] mInner.mText;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextNode::SetText(const char* aBuffer, PRInt32 aLength,
+                    PRBool aNotify)
+{
+  NS_PRECONDITION((aLength >= 0) && (nsnull != aBuffer), "bad args");
+  if (aLength < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
   }
-  nsCRT::memcpy(nt, aBuffer, sizeof(PRUnichar) * aLength);
-  nt[aLength] = 0;
-  mInner.mTextLength = aLength;
-  mInner.mText = nt;
+  if (nsnull == aBuffer) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  mInner.mText.SetTo(aBuffer, aLength);
 
   // Trigger a reflow
   if (aNotify && (nsnull != mInner.mDocument)) {

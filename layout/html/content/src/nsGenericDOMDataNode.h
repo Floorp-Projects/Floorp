@@ -23,6 +23,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsTextFragment.h"
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
 
@@ -246,8 +247,7 @@ struct nsGenericDOMDataNode {
   void* mScriptObject;
   nsIEventListenerManager* mListenerManager;
 
-  PRUnichar* mText;
-  PRInt32 mTextLength;
+  nsTextFragment mText;
 };
 
 //----------------------------------------------------------------------
