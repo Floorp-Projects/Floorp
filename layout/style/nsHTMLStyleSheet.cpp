@@ -316,6 +316,11 @@ protected:
                                        nsIStyleContext* aStyleContext,
                                        nsIFrame*&       aNewFrame);
 
+  nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
+                                  PRUint8    aChildDisplayType,
+                                  nsIFrame*& aNewParentFrame);
+
+
   nsresult ProcessChildren(nsIPresContext* aPresContext,
                            nsIFrame*       aFrame,
                            nsIContent*     aContent,
@@ -1300,8 +1305,15 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
     // XXX We should check for being inside of a table. If there's a missing
     // table then create an anonynmous table frame
-    rv = NS_NewTableRowGroupFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
+    {
+      nsIFrame *parentFrame;
+      rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
+      if (NS_SUCCEEDED(rv))
+      {
+        rv = NS_NewTableRowGroupFrame(aContent, parentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+    }
     break;
 
   case NS_STYLE_DISPLAY_TABLE_COLUMN:
@@ -1312,8 +1324,15 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
 
   case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
     // XXX We should check for being inside of a table...
-    rv = NS_NewTableColGroupFrame(aContent, aParentFrame, aNewFrame);
-    processChildren = PR_TRUE;
+    {
+      nsIFrame *parentFrame;
+      rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
+      if (NS_SUCCEEDED(rv))
+      {
+        rv = NS_NewTableColGroupFrame(aContent, parentFrame, aNewFrame);
+        processChildren = PR_TRUE;
+      }
+    }
     break;
 
   case NS_STYLE_DISPLAY_TABLE_ROW:
@@ -1354,6 +1373,60 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
     aNewFrame->Init(*aPresContext, childList);
   }
 
+  return rv;
+}
+
+nsresult 
+HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
+                                           PRUint8    aChildDisplayType, 
+                                           nsIFrame*& aNewParentFrame)
+{
+  NS_PRECONDITION(nsnull!=aCurrentParentFrame, "bad arg aCurrentParentFrame");
+
+  nsresult rv=NS_OK;
+  // by default, the new parent frame is the given current parent frame
+  aNewParentFrame=aCurrentParentFrame;
+  if (nsnull!=aCurrentParentFrame)
+  {
+    const nsStyleDisplay* currentParentDisplay;
+    aCurrentParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)currentParentDisplay);
+    if (NS_STYLE_DISPLAY_TABLE==currentParentDisplay->mDisplay)
+    {
+      if (NS_STYLE_DISPLAY_TABLE_CAPTION!=aChildDisplayType)
+      {
+        nsIFrame *innerTableFrame=nsnull;
+        aCurrentParentFrame->FirstChild(innerTableFrame);
+        if (nsnull!=innerTableFrame)
+        {
+          const nsStyleDisplay* innerTableDisplay;
+          innerTableFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)innerTableDisplay);
+          if (NS_STYLE_DISPLAY_TABLE==innerTableDisplay->mDisplay)
+          { // we were given the outer table frame, use the inner table frame
+            aNewParentFrame=innerTableFrame;
+          }
+          // else we were already given the inner table frame
+        }
+        // else the current parent has no children and cannot be an outer table frame
+      }
+      // else the child is a caption and really belongs to the outer table frame
+    }
+    else
+    { 
+      if (NS_STYLE_DISPLAY_TABLE_CAPTION     ==aChildDisplayType ||
+          NS_STYLE_DISPLAY_TABLE_ROW_GROUP   ==aChildDisplayType ||
+          NS_STYLE_DISPLAY_TABLE_HEADER_GROUP==aChildDisplayType ||
+          NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP==aChildDisplayType ||
+          NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP==aChildDisplayType)
+      { // we need to create an anonymous table frame (outer and inner) around the new frame
+        NS_NOTYETIMPLEMENTED("anonymous table frame as parent of table content not yet implemented.");
+        rv = NS_ERROR_NOT_IMPLEMENTED;
+      }
+    }
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+
+  NS_POSTCONDITION(nsnull!=aNewParentFrame, "bad result null aNewParentFrame");
   return rv;
 }
 
@@ -1519,17 +1592,28 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       NS_RELEASE(child);
     }
 
+    // adjust parent frame for table inner/outer frame
+    // we need to do this here because we need both the parent frame and the constructed frame
+    nsresult result = NS_OK;
+    nsIFrame *adjustedParentFrame=parentFrame;
+    if (nsnull!=firstAppendedFrame)
+    {
+      const nsStyleDisplay* firstAppendedFrameDisplay;
+      firstAppendedFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)firstAppendedFrameDisplay);
+      result = GetAdjustedParentFrame(parentFrame, firstAppendedFrameDisplay->mDisplay, adjustedParentFrame);
+    }
+
     // Notify the parent frame with a reflow command, passing it the list of
     // new frames.
-    nsIReflowCommand* reflowCmd;
-    nsresult          result;
-
-    result = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame,
-                                     nsIReflowCommand::FrameAppended,
-                                     firstAppendedFrame);
     if (NS_SUCCEEDED(result)) {
-      shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
+      nsIReflowCommand* reflowCmd;
+      result = NS_NewHTMLReflowCommand(&reflowCmd, adjustedParentFrame,
+                                       nsIReflowCommand::FrameAppended,
+                                       firstAppendedFrame);
+      if (NS_SUCCEEDED(result)) {
+        shell->AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
     }
   }
 
