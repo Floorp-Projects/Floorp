@@ -30,6 +30,8 @@ CSRCS		= xpt_dump.c xpt_link.c
 LDFLAGS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
+		  -lxpcom	\
+		  -lreg		\
 		  $(NSPR_LIBS) 	\
 		  $(NULL)
 
