@@ -494,6 +494,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   mDoc = aDoc;
   mPresShell = aPresShell;		// we don't addref the pres shell
   
+  // ensure that text is selectable (for text widgets etc)
+  nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(mDoc);
+  if (theDoc)
+    theDoc->SetDisplaySelection(PR_TRUE);
+
   // disable links
   nsCOMPtr<nsIPresContext> context;
   mPresShell->GetPresContext(getter_AddRefs(context));
