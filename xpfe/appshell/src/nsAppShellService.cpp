@@ -524,6 +524,8 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
   *aResult = nsnull;
   intrinsicallySized = PR_FALSE;
   window = new nsWebShellWindow();
+  // Bump count to one so it doesn't die on us while doing init.
+  nsCOMPtr<nsIXULWindow> tempRef(window); 
   if (!window)
     rv = NS_ERROR_OUT_OF_MEMORY;
   else {
