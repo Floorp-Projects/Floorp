@@ -1,0 +1,73 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= appcomps
+LIBRARY_NAME	= appcomps
+IS_COMPONENT	= 1
+
+CPPSRCS		= nsModule.cpp
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libautocomplete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libbookmarks_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/libdirectory_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/libhistory_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/librelated_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/libsearch_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/libtimebomb_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/liburlbarhistory_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/lib.$(LIB_SUFFIX) \
+        $(DIST)/lib/lib.$(LIB_SUFFIX) \
+        $(DIST)/lib/lib.$(LIB_SUFFIX) \
+        $(DIST)/lib/lib.$(LIB_SUFFIX) \
+        $(DIST)/lib/lib.$(LIB_SUFFIX) \
+
+		$(NULL)
+
+ifdef MOZ_PERF_METRICS
+SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozutil_s.$(LIB_SUFFIX)
+endif
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../autocomplete/src  \
+        -I$(srcdir)/../bookmarks/src     \
+        -I$(srcdir)/../directory         \
+        -I$(srcdir)/../history/src       \
+        -I$(srcdir)/../related/src       \
+        -I$(srcdir)/../search/src        \
+        -I$(srcdir)/../timebomb          \
+        -I$(srcdir)/../urlbarhistory/src \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
