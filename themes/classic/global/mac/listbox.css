@@ -56,6 +56,10 @@ listbox {
   color: -moz-FieldText;
 }
 
+listbox[disabled="true"] {
+  color: GrayText;
+}
+
 .listcell-label {
   margin: 0px !important;
   padding: 0px 0px 1px 4px;

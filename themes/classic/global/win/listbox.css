@@ -57,6 +57,10 @@ listbox {
   -moz-appearance: listbox;
 }
 
+listbox[disabled="true"] {
+  color: GrayText;
+}
+
 /* ::::: listitem ::::: */
 
 listitem {
