@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsIServiceManager.h"
 #include "nsIImageGroup.h"
 #include "nsIImageManager.h"
 #include "nsIImageObserver.h"
@@ -34,9 +35,10 @@
 #include "nsIDeviceContext.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
+#include "nsGfxCIID.h"
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
-
+static NS_DEFINE_IID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 
 class ImageGroupImpl : public nsIImageGroup
 {
@@ -328,22 +330,26 @@ extern "C" NS_GFX_(nsresult)
 NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)
 {
   nsresult result;
-
+ 
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIImageManager *manager;
-  if ((result = NS_NewImageManager(&manager)) != NS_OK) {
-      return result;
+  nsCOMPtr<nsIImageManager> manager;
+  manager = do_GetService(kImageManagerCID, &result);
+  if (NS_FAILED(result)) {
+  /* This is just to provide backwards compatibility, until the ImageManagerImpl
+     can be converted to a service on all platforms. Once, we done the conversion
+     on all platforms, we should be removing the call to NS_NewImageManager(...)
+   */
+   if ((result = NS_NewImageManager(getter_AddRefs(manager))) != NS_OK) {
+        return result;
+      }
   }
-
   nsIImageGroup *group = new ImageGroupImpl(manager);
   if (group == nsnull) {
-    return NS_ERROR_OUT_OF_MEMORY;
+     return NS_ERROR_OUT_OF_MEMORY;
   }
-  NS_RELEASE(manager);
 
   return group->QueryInterface(kIImageGroupIID, (void **) aInstancePtrResult);
 }

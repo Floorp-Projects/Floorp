@@ -49,7 +49,8 @@ private:
 };
 
 // The singleton image manager
-// XXX make this a service
+// This a service on XP_PC , mac and gtk. Need to convert 
+// it to a service on all the remaining platforms.
 static ImageManagerImpl*   gImageManager;
 
 ImageManagerImpl::ImageManagerImpl()
@@ -64,6 +65,7 @@ ImageManagerImpl::~ImageManagerImpl()
 {
   IL_Shutdown();
   NS_RELEASE(mSS);
+  gImageManager = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(ImageManagerImpl, nsIImageManager); 
@@ -108,8 +110,6 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   }
   if (nsnull == gImageManager) {
     gImageManager = new ImageManagerImpl();
-    //neeti
-    NS_IF_ADDREF(gImageManager);
   }
   if (nsnull == gImageManager) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -117,8 +117,12 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   return gImageManager->QueryInterface(kIImageManagerIID,
                                        (void **)aInstancePtrResult);
 }
+
+/* This is going to be obsolete, once ImageManagerImpl becomes a service on all platforms */
 extern "C" NS_GFX_(void)
 NS_FreeImageManager()
 {
+  /*Do not release it on platforms on which ImageManagerImpl is a service. 
+  Need to remove this method, once ImageManagerImpl is converted to a service on all platforms.*/
   NS_IF_RELEASE(gImageManager);
 }

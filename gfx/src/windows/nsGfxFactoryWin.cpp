@@ -33,6 +33,7 @@
 #include "nsDeviceContextSpecWin.h"
 #include "nsDeviceContextSpecFactoryW.h"
 #include "nsScriptableRegion.h"
+#include "nsIImageManager.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
+static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -129,7 +131,8 @@ NS_IMPL_RELEASE(nsGfxFactoryWin);
 nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
                                           void **aResult)  
-{  
+{ 
+  nsresult res;
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
   }  
@@ -137,6 +140,7 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   *aResult = NULL;  
   
   nsISupports *inst = nsnull;
+  PRBool already_addreffed = PR_FALSE;
 
   if (mClassID.Equals(kCFontMetrics)) {
     nsFontMetricsWin* fm;
@@ -201,6 +205,15 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
       inst = (nsISupports *)scriptableRgn;
     }
   }
+  else if (mClassID.Equals(kImageManagerImpl)) {
+    nsCOMPtr<nsIImageManager> iManager;
+    res = NS_NewImageManager(getter_AddRefs(iManager));
+    already_addreffed = PR_TRUE;
+    if (NS_SUCCEEDED(res))
+    {
+      res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
+    }
+  }
   else if (mClassID.Equals(kCFontEnumerator)) {
     nsFontEnumeratorWin* fe;
     NS_NEWXPCOM(fe, nsFontEnumeratorWin);
@@ -212,9 +225,10 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
-  NS_ADDREF(inst);  // Stabilize
+  if (already_addreffed == PR_FALSE)
+    NS_ADDREF(inst);  // Stabilize
   
-  nsresult res = inst->QueryInterface(aIID, aResult);
+  res = inst->QueryInterface(aIID, aResult);
 
   NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 

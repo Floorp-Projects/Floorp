@@ -166,9 +166,7 @@ int main(int argc, char **argv)
     gTheApp->Run();
     delete gTheApp;
 
-    NS_FreeImageManager();
-
-    // Shutdown XPCOM
+     // Shutdown XPCOM
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
