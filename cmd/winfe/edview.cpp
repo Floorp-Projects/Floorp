@@ -355,7 +355,7 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TARGET, OnUpdateTargetProperties)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TARGET, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TARGET, HaveEditContext)
-    ON_UPDATE_COMMAND_UI(ID_INSERT_IMAGE, HaveEditContext)
+    ON_UPDATE_COMMAND_UI(ID_INSERT_IMAGE, IsNotInPreformat)
     ON_UPDATE_COMMAND_UI(ID_INSERT_HRULE, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TAG, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TAG, OnUpdateTagProperties)
@@ -987,10 +987,13 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
 
 BOOL CNetscapeEditView::ShouldParentHandle(UINT nID, int nCode)
 {
-    for (int i=0;i<NUM_MSG_NOT_ENDER;i++)
+    if( GetEmbedded() )
     {
-        if (nID == MSG_NOT_ENDER[i])
-            return TRUE;
+        for (int i=0;i<NUM_MSG_NOT_ENDER;i++)
+        {
+            if (nID == (UINT)MSG_NOT_ENDER[i])
+                return TRUE;
+        }
     }
     return FALSE;
 }
@@ -3597,11 +3600,14 @@ void CNetscapeEditView::IsNotSelected(CCmdUI* pCmdUI)
     pCmdUI->Enable( CAN_INTERACT && !EDT_IsSelected(GET_MWCONTEXT) );
 }
 
+// Use for any item that is not allowed in PRE (e.g, insert image, tag, super, sub, etc)
+void CNetscapeEditView::IsNotInPreformat(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable(CAN_INTERACT && !EDT_IsPreformat(GET_MWCONTEXT) );
+}
+ 
+
 #ifdef _IMAGE_CONVERT
-
-
-
-
 void
 FE_ImageConvertPluginCallback(EDT_ImageEncoderStatus status, void* hook)
 {

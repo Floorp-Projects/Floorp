@@ -790,7 +790,8 @@ void CNetscapeEditView::OnUpdateFontFaceComboBox(CCmdUI* pCmdUI)
             }
         }
     }
-    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
+    MWContext *pMWContext = GET_MWCONTEXT;
+    pCmdUI->Enable( EDT_CanSetCharacterAttribute(pMWContext) && !EDT_IsPreformat(pMWContext) );
 }
 
 void CNetscapeEditView::OnSelendokFontFaceCombo()
@@ -943,7 +944,6 @@ void CNetscapeEditView::OnUpdateFontSizeComboBox(CCmdUI* pCmdUI)
     	if( pMWContext )
         {
             char * pSize = NULL;
-            char pSizeNotInList[16];
 
             EDT_CharacterData * pData = EDT_GetCharacterData(pMWContext);
             if(pData)
@@ -1380,7 +1380,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 	// Some of following block is extracted from popup-up handling in Browser
     // Editor will move caret and do most things differently,
     //   but we want to use some link and image functions
-	//TODO: DO ANYTHING ON EMBEDED ITEMS???
     m_csRBEmbed.Empty();
 
 	UINT uState = MF_ENABLED;
@@ -1545,7 +1544,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
             cmPopup.AppendMenu(MF_ENABLED, ID_MERGE_TABLE_CELLS, 
                                szLoadString(MergeType == ED_MERGE_NEXT_CELL ? IDS_MERGE_NEXT_CELL : IDS_MERGE_SELECTED_CELLS) );
         }
-// TODO: IMPLEMENT SPLIT CELL
         if( EDT_CanSplitTableCell(pMWContext) )
             cmPopup.AppendMenu(MF_ENABLED, ID_SPLIT_TABLE_CELL, szLoadString(IDS_SPLIT_TABLE_CELL));
 
@@ -1812,18 +1810,6 @@ void FE_FinishedSave( MWContext *pMWContext, int status,
 
         }
     }
-
-#if 0
-        // *** TODO: We need to inform SiteManager about all URLs published
-        // Tell site manager when each file is published
-        if ( bSiteManagerIsActive &&
-             pView->m_pSaveFileDlg &&
-             ::IsWindow(pView->m_pSaveFileDlg->m_hWnd) &&
-             pView->m_pSaveFileDlg->m_bUpload )
-        {
-            pITalkSMClient->SavedURL(pURL);
-        }
-#endif
 }
 
 // Note: This is used by Navigator's HTP UPLOAD as well as Composer's file saving

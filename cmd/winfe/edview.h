@@ -340,6 +340,7 @@ protected:
    	afx_msg void OnFileSave();
    	afx_msg void OnEditFindReplace();
     afx_msg void HaveEditContext(CCmdUI* pCmdUI);
+    afx_msg void IsNotInPreformat(CCmdUI* pCmdUI);
     afx_msg void IsNotSelected(CCmdUI* pCmdUI);
     afx_msg void OnMakeLink();
     afx_msg void OnLinkProperties();
