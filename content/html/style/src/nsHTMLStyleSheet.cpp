@@ -568,8 +568,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           // test link state
           nsILinkHandler* linkHandler;
 
-          if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
-              (nsnull != linkHandler)) {
+          if (NS_OK == aPresContext->GetLinkHandler(&linkHandler)) {
             nsAutoString base, href;
             nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
 
@@ -602,7 +601,12 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                 NS_IF_RELEASE(docURL);
 
                 nsLinkState  state;
-                if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
+                if (!linkHandler) {
+                  // if there is no link handler then just use eLinkState_Unvisited rule
+                  aResults->AppendElement(mLinkRule);
+                  matchCount++;
+                }
+                else if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
                   switch (state) {
                     case eLinkState_Unvisited:
                       if (nsnull != mLinkRule) {
