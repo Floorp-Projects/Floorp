@@ -63,7 +63,7 @@ nsMimeURLUtils::~nsMimeURLUtils()
 }
 
 char *
-FindAmbitiousMailToTag(const char *line)
+FindAmbitiousMailToTag(const char *line, PRInt32 line_size)
 {
   char  *atLoc;
   char  *workLine;
@@ -73,11 +73,11 @@ FindAmbitiousMailToTag(const char *line)
     return NULL;
 
   // Should I bother at all...
-  if ( !(atLoc = PL_strchr(line, '@')) )
+  if ( !(atLoc = PL_strnchr(line, '@', line_size)) )
     return NULL;
 
   // create a working copy...
-  workLine = PL_strdup(line);
+  workLine = PL_strndup(line, line_size);
   if (!workLine)
     return NULL;
 
@@ -351,12 +351,11 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
 }
 
 PRBool
-ItMatches(const char *line, const char *rep)
+ItMatches(const char *line, PRInt32 lineLen, const char *rep)
 {
   if ( (!rep) || (!*rep) || (!line) || (!*line) )
     return PR_FALSE;
 
-  PRInt32 lineLen = PL_strlen(line);
   PRInt32 compLen = PL_strlen(rep);
 
   if (lineLen < compLen)
@@ -369,10 +368,10 @@ ItMatches(const char *line, const char *rep)
 }
 
 PRBool
-GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
+GlyphHit(const char *line, PRInt32 line_size, char **outputHTML, PRInt32 *glyphTextLen)
 {
 
-  if ( ItMatches(line, ":-)") || ItMatches(line, ":)") ) 
+  if ( ItMatches(line, line_size, ":-)") || ItMatches(line, line_size, ":)") ) 
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/smile.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -380,7 +379,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }  
-  else if ( ItMatches(line, ":-(") || ItMatches(line, ":(") ) 
+  else if ( ItMatches(line, line_size, ":-(") || ItMatches(line, line_size, ":(") ) 
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/frown.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -388,7 +387,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }
-  else if (ItMatches(line, ";-)"))
+  else if (ItMatches(line, line_size, ";-)"))
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/wink.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -396,7 +395,7 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }
-  else if (ItMatches(line, ";-P"))
+  else if (ItMatches(line, line_size, ";-P"))
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/sick.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -557,7 +556,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
   if (NS_SUCCEEDED(rv) && prefs)
     prefs->GetBoolPref("mail.do_glyph_substitution", &do_glyph_substitution);
 
-  mailToTag = FindAmbitiousMailToTag(input);
+  mailToTag = FindAmbitiousMailToTag(input, (PRInt32)input_size);
 
   /* Normal lines are scanned for buried references to URL's
      Unfortunately, it may screw up once in a while (nobody's perfect)
@@ -575,7 +574,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
     char    *glyphHTML;
     PRInt32 glyphTextLen;
 
-    if ((do_glyph_substitution) && GlyphHit(cp, &glyphHTML, &glyphTextLen))
+    if ((do_glyph_substitution) && GlyphHit(cp, (PRInt32)end - (PRInt32)cp, &glyphHTML, &glyphTextLen))
     {
       PRInt32   size_available = output_size - (output_ptr-output);
       PR_snprintf(output_ptr, size_available, glyphHTML);
@@ -716,7 +715,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 			}
 
       PR_FREEIF(mailToTag);
-      mailToTag = FindAmbitiousMailToTag(cp);
+      mailToTag = FindAmbitiousMailToTag(cp, (PRInt32)end - (PRInt32)cp);
 		}
 	}
 
