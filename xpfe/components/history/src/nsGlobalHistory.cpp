@@ -139,7 +139,6 @@ struct matchHost_t {
   const char *host;
   PRBool entireDomain;          // should we delete the entire domain?
   nsGlobalHistory *history;
-  nsIURI* cachedUrl;
 };
 
 struct matchSearchTerm_t {
@@ -1040,7 +1039,6 @@ nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = aHost;
   
-  hostInfo.cachedUrl = nsnull; // todo: leak?
   return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
 }
 
@@ -1055,14 +1053,15 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
   err = aRow->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
   if (err != 0) return PR_FALSE;
 
+  nsCOMPtr<nsIURI> uri;
   // do smart zero-termination
   const char* startPtr = (const char *)yarn.mYarn_Buf;
-  rv = NS_NewURI(&hostInfo->cachedUrl,
-         nsCAutoString(Substring(startPtr, startPtr + yarn.mYarn_Fill)).get());
+  rv = NS_NewURI(getter_AddRefs(uri),
+                 Substring(startPtr, startPtr + yarn.mYarn_Fill));
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsCAutoString urlHost;
-  rv = hostInfo->cachedUrl->GetHost(urlHost);
+  rv = uri->GetHost(urlHost);
   if (NS_FAILED(rv)) return PR_FALSE;
 
   if (PL_strcmp(urlHost.get(), hostInfo->host) == 0)
@@ -3647,8 +3646,9 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     if (err!=0) return PR_FALSE;
     if (!groupColumnValue.mYarn_Buf) return PR_FALSE;
 
-    nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
-                                      groupColumnValue.mYarn_Fill));
+    const char* startPtr = (const char*)groupColumnValue.mYarn_Buf;
+    nsCStringKey key(Substring(startPtr,
+                               startPtr +  groupColumnValue.mYarn_Fill));
 
     void *otherRow = mUniqueRows.Get(&key);
 
@@ -3664,8 +3664,9 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
     // we got this far, so we must have matched.
     // add ourselves to the hashtable so we don't match rows like this
     // in the future
-    nsCStringKey key(nsCAutoString((const char*)groupColumnValue.mYarn_Buf,
-                                      groupColumnValue.mYarn_Fill));
+    const char* startPtr = (const char*)groupColumnValue.mYarn_Buf;
+    nsCStringKey key(Substring(startPtr,
+                               startPtr + groupColumnValue.mYarn_Fill));
     
     // note - weak ref, don't worry about releasing
     mUniqueRows.Put(&key, (void *)aRow);
