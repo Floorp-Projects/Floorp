@@ -1177,7 +1177,11 @@ function loadURI(uri)
 function BrowserLoadURL()
 {
   var url = gURLBar.value;
+  loadShortcutOrURI(url);
+}
 
+function loadShortcutOrURI(url)
+{
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
     var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
