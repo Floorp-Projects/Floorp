@@ -47,20 +47,20 @@ public:
   NS_IMETHOD Init(eCharSize aCharSize) = 0;
 
   /** 
-   * Copy the caller's nsStr into the object's internal nsStr. The copy is "deep"; 
-   * that is, it duplicates the contents of "aStr.mStr" as well. 
+   * Copy the caller's nsStr into the object's internal nsStr by performing an 
+   * assignment operation.
    */ 
   NS_IMETHOD SetStr(nsStr* aStr) = 0;
 
   /** 
-   * Copy the object's internal nsStr into the caller's nsStr struct. The copy is 
-   * "deep"; that is, it duplicates the nsStr::mStr member, as well. 
+   * Copy the object's internal nsStr into the caller's nsStr struct by performing
+   * an assignment operation.
    */ 
-  NS_IMETHOD GetStr(nsStr* aStr) = 0 
+  NS_IMETHOD GetStr(nsStr* aStr) = 0;
 
   /** 
    * Return a pointer to the nsIString object's _actual_ string buffer. The caller 
-   * must treat this struct as an immutable object (hence the "const" qualifier)
+   * must treat this struct as an immutable object (hence the "const" qualifier).
    * The pointer will become invalid as soon as the nsIString interface is released.
    */
   NS_IMETHOD GetImmutableStr(const nsStr** aStr) = 0;
