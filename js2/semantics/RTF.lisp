@@ -62,8 +62,8 @@
     ((+ :fonts) (:palatino fnil fcharset 256 fprq 2 "Palatino;"))
     (:zapf-chancery f 7)
     ((+ :fonts) (:zapf-chancery fscript fcharset 256 fprq 2 "Zapf Chancery;"))
-    (:zapf-dingbats f 8)
-    ((+ :fonts) (:zapf-dingbats ftech fcharset 2 fprq 2 "Zapf Dingbats;"))
+    (:arial f 8)
+    ((+ :fonts) (:arial fnil fcharset 256 fprq 2 (* panose "00020b06040202020202") "Arial;"))
     
     
     ;Color table
@@ -170,7 +170,6 @@
     ((:right-triangle-bracket-10 1) (field (* fldinst "SYMBOL 241 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:right-ceiling-10 1) (field (* fldinst "SYMBOL 249 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:right-floor-10 1) (field (* fldinst "SYMBOL 251 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
-    ((:big-plus-10 2) (field (* fldinst "SYMBOL 58 \\f \"Zapf Dingbats\" \\s 10") (fldrslt :zapf-dingbats :10-pt)))
     
     ((:alpha 1) (field (* fldinst "SYMBOL 97 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
     ((:beta 1) (field (* fldinst "SYMBOL 98 \\f \"Symbol\" \\s 10") (fldrslt :symbol :10-pt)))
@@ -440,6 +439,10 @@
     (:sample-code-num 70)
     (:sample-code s :sample-code-num li 1440 sa 180 keep nowidctlpar :asian-keywords hyphpar 0 b :courier :blue :10-pt :no-language)
     ((+ :styles) (:sample-code sbasedon :normal-num snext :body-text-num "Sample Code;"))
+    
+    (:external-name-num 71)
+    (:external-name cs :external-name-num :arial :no-language)
+    ((+ :styles) (* :external-name additive sbasedon :default-paragraph-font-num "External Name;"))
     
     
     ;Headers and Footers
@@ -818,39 +821,41 @@
 (defun write-rtf (rtf &optional (stream t))
   (labels
     ((write-group-contents (rtf stream)
-       (let ((first-rtf (first rtf))
-             (rest-rtf (rest rtf)))
-         (cond
-          ((listp first-rtf)
-           (write-group first-rtf stream t))
-          ((stringp first-rtf)
-           (write-escaped-rtf stream first-rtf 0))
-          ((symbolp first-rtf)
-           (write-char #\\ stream)
-           (write (get first-rtf 'rtf-control-word first-rtf) :stream stream)
+       (loop
+         (let ((first-rtf (first rtf))
+               (rest-rtf (rest rtf)))
            (cond
-            ((alpha-char-p (char (symbol-name first-rtf) 0))
-             (when (integerp (first rest-rtf))
-               (write (first rest-rtf) :stream stream)
-               (setq rest-rtf (rest rest-rtf)))
-             (let ((first-rest (first rest-rtf)))
-               (when (and (stringp first-rest)
-                          (or (zerop (length first-rest))
-                              (let ((ch (char first-rest 0)))
-                                (or (alphanumericp ch)
-                                    (eql ch #\space)
-                                    (eql ch #\-)
-                                    (eql ch #\+)))))
-                 (write-char #\space stream))))
-            ((eq first-rtf '\')
-             (unless (integerp (first rest-rtf))
-               (error "Bad rtf: ~S" rtf))
-             (format stream "~2,'0x" (first rest-rtf))
-             (setq rest-rtf (rest rest-rtf)))))
-          (t (error "Bad rtf: ~S" rtf)))
-         (when rest-rtf
+            ((listp first-rtf)
+             (write-group first-rtf stream t))
+            ((stringp first-rtf)
+             (write-escaped-rtf stream first-rtf 0))
+            ((symbolp first-rtf)
+             (write-char #\\ stream)
+             (write (get first-rtf 'rtf-control-word first-rtf) :stream stream)
+             (cond
+              ((alpha-char-p (char (symbol-name first-rtf) 0))
+               (when (integerp (first rest-rtf))
+                 (write (first rest-rtf) :stream stream)
+                 (setq rest-rtf (rest rest-rtf)))
+               (let ((first-rest (first rest-rtf)))
+                 (when (and (stringp first-rest)
+                            (or (zerop (length first-rest))
+                                (let ((ch (char first-rest 0)))
+                                  (or (alphanumericp ch)
+                                      (eql ch #\space)
+                                      (eql ch #\-)
+                                      (eql ch #\+)))))
+                   (write-char #\space stream))))
+              ((eq first-rtf '\')
+               (unless (integerp (first rest-rtf))
+                 (error "Bad rtf: ~S" rtf))
+               (format stream "~2,'0x" (first rest-rtf))
+               (setq rest-rtf (rest rest-rtf)))))
+            (t (error "Bad rtf: ~S" rtf)))
+           (unless rest-rtf
+             (return))
            (break-line stream)
-           (write-group-contents rest-rtf stream))))
+           (setq rtf rest-rtf))))
      
      (write-group (rtf stream nested)
        (write-limited-block stream
