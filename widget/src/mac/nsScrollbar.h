@@ -120,4 +120,19 @@ private:
 	static ControlActionUPP		sControlActionProc; // we only need one of these
 };
 
+
+
+class nsHorizScrollbar : public nsScrollbar
+{
+public:
+		nsHorizScrollbar() : nsScrollbar(PR_FALSE) {}
+};
+
+class nsVertScrollbar : public nsScrollbar
+{
+public:
+		nsVertScrollbar() : nsScrollbar(PR_TRUE) {}								
+};
+
+
 #endif // nsScrollbar_

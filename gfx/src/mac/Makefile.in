@@ -15,70 +15,72 @@
 # Reserved.
 #
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 
-LIBRARY_NAME	= gfx_mac
-EXPORT_LIBRARY = 1
-MODULE		= gfx
-IS_COMPONENT	= 1
-MODULE_NAME	= nsGfxMacModule
-REQUIRES	= xpcom \
-		  string \
-		  img \
-		  widget \
-		  view \
-		  util \
-		  dom \
-		  pref \
-		  js \
-		  uconv \
-		  necko \
-		  unicharutil \
-		  gfx2 \
-		  mozcomps \
-		  windowwatcher \
-		  $(NULL)
+LIBRARY_NAME    = gfx_mac
+EXPORT_LIBRARY  = 1
+MODULE          = gfx
+IS_COMPONENT    = 1
+MODULE_NAME     = nsGfxMacModule
+
+REQUIRES    = xpcom \
+        string \
+        img \
+        widget \
+        view \
+        util \
+        dom \
+        pref \
+        js \
+        uconv \
+        necko \
+        unicharutil \
+        gfx2 \
+        mozcomps \
+        windowwatcher \
+        $(NULL)
 
 CPPSRCS = \
-		nsATSUIUtils.cpp \
-		nsDeviceContextMac.cpp \
-		nsDeviceContextSpecFactoryM.cpp \
-		nsDeviceContextSpecX.cpp \
-		nsDrawingSurfaceMac.cpp \
-		nsFontMetricsMac.cpp \
-		nsGfxFactoryMac.cpp \
-		nsGraphicState.cpp \
-		nsImageMac.cpp \
-		nsRegionMac.cpp \
-		nsRenderingContextMac.cpp \
-		nsMacUnicodeFontInfo.cpp \
-		nsUnicodeFontMappingMac.cpp \
-		nsUnicodeMappingUtil.cpp \
-		nsUnicodeRenderingToolkit.cpp \
-		nsScreenMac.cpp \
-		nsScreenManagerMac.cpp \
-		nsPrintOptionsX.cpp \
-		$(NULL)
+        nsATSUIUtils.cpp \
+        nsDeviceContextMac.cpp \
+        nsDeviceContextSpecFactoryM.cpp \
+        nsDeviceContextSpecX.cpp \
+        nsDrawingSurfaceMac.cpp \
+        nsFontMetricsMac.cpp \
+        nsGfxFactoryMac.cpp \
+        nsGraphicState.cpp \
+        nsImageMac.cpp \
+        nsRegionMac.cpp \
+        nsRenderingContextMac.cpp \
+        nsMacUnicodeFontInfo.cpp \
+        nsUnicodeFontMappingMac.cpp \
+        nsUnicodeMappingUtil.cpp \
+        nsUnicodeRenderingToolkit.cpp \
+        nsScreenMac.cpp \
+        nsScreenManagerMac.cpp \
+        nsPrintOptionsX.cpp \
+        nsFontUtils.cpp \
+        $(NULL)
 
-#                $(DIST)/lib/libimg_s.a \
+#       $(DIST)/lib/libimg_s.a \
 
 EXTRA_DSO_LDOPTS = \
-                $(MKSHLIB_FORCE_ALL) \
-                $(DIST)/lib/libmozutil_s.a \
-		-lgkgfx \
-                $(MKSHLIB_UNFORCE_ALL) \
-		$(TK_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                $(NULL)
+        $(MKSHLIB_FORCE_ALL) \
+        $(DIST)/lib/libmozutil_s.a \
+        -lgkgfx \
+        $(MKSHLIB_UNFORCE_ALL) \
+        $(TK_LIBS) \
+        $(MOZ_COMPONENT_LIBS) \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS        += $(TK_CFLAGS)
-CFLAGS          += $(TK_CFLAGS)
-INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
+CXXFLAGS    += $(TK_CFLAGS)
+CFLAGS      += $(TK_CFLAGS)
+INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..

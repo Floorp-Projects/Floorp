@@ -20,11 +20,6 @@
  * Contributor(s): 
  */
 
-#define MAC_SHARED 1
-#define _IMPL_NS_WIDGET 1
 
-#include "Widget.prefix"
-
-#if !TARGET_CARBON
-#define USE_MENUSELECT 1
-#endif
+#include "GFXConfig.h"
+#include "MacPrefix_debug.h"

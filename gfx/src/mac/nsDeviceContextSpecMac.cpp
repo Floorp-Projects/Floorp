@@ -387,7 +387,8 @@ NS_IMETHODIMP nsDeviceContextSpecMac::Init(PRBool aQuiet)
 
   // standard print dialog, if true print
   nsWatchTask::GetTask().Suspend();
-
+	::InitCursor();
+	
   // put up the print dialog
   if (::PrDlgMain(hPrintRec, theInitProcPtr))
   {

@@ -20,5 +20,5 @@
  * Contributor(s): 
  */
 
-#include "MacSharedPrefix.h"
 #include "GFXConfig.h"
+#include "MacPrefix.h"

@@ -58,10 +58,14 @@
 
 #include <FixMath.h>
 #include <Gestalt.h>
-#include <Quickdraw.h>
+#include <QuickDraw.h>
+
+#include "nsRegionPool.h"
+#include "nsFontUtils.h"
+
 #include "nsCarbonHelpers.h"
 
-#define STACK_TREASHOLD 1000
+#define STACK_THRESHOLD 1000
 
 
 //------------------------------------------------------------------------
@@ -272,7 +276,7 @@ NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
 		return NS_ERROR_NULL_POINTER;
 
 	TextStyle		theStyle;
-	nsFontMetricsMac::GetNativeTextStyle(*mGS->mFontMetrics, *mContext, theStyle);
+	nsFontUtils::GetNativeTextStyle(*mGS->mFontMetrics, *mContext, theStyle);
 
 	::TextFont(theStyle.tsFont);
 	::TextSize(theStyle.tsSize);
@@ -1336,8 +1340,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
 		::DrawText(aString,0,aLength);
 	else
 	{
-		int buffer[STACK_TREASHOLD];
-		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
+		int buffer[STACK_THRESHOLD];
+		int* spacing = (aLength <= STACK_THRESHOLD ? buffer : new int[aLength]);
 		if (spacing)
 		{
 			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);

@@ -43,7 +43,7 @@
 
 class EventRecord;
 
-class NS_NET Repeater
+class NS_WIDGET Repeater
 {
   public:
   

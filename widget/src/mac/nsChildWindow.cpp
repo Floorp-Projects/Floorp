@@ -38,6 +38,7 @@
 #include "nsChildWindow.h"
 #include "nsCOMPtr.h"
 #include "nsRegionMac.h"
+#include "nsRegionPool.h"
 
 //-------------------------------------------------------------------------
 //

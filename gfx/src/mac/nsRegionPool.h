@@ -36,53 +36,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsRegionMac_h___
-#define nsRegionMac_h___
+#ifndef nsRegionPool_h___
+#define nsRegionPool_h___
 
-#include "nsIRegion.h"
+#include "nscore.h"
 #include <QuickDraw.h>
+
+
+class NS_EXPORT nsNativeRegionPool
+{
+public:
+	nsNativeRegionPool();
+	~nsNativeRegionPool();
+
+	RgnHandle					GetNewRegion();
+	void							ReleaseRegion(RgnHandle aRgnHandle);
+
+private:
+	struct nsRegionSlot {
+		RgnHandle				mRegion;
+		nsRegionSlot*		mNext;
+	};
+
+	nsRegionSlot*			mRegionSlots;
+	nsRegionSlot*			mEmptySlots;
+};
 
 //------------------------------------------------------------------------
 
-class nsRegionMac : public nsIRegion
+extern nsNativeRegionPool sNativeRegionPool;
+
+//------------------------------------------------------------------------
+
+class StRegionFromPool 
 {
 public:
-  nsRegionMac();
-  virtual ~nsRegionMac();
+	StRegionFromPool()
+	{
+		mRegionH = sNativeRegionPool.GetNewRegion();
+	}
+	
+	~StRegionFromPool()
+	{
+		if ( mRegionH )
+			sNativeRegionPool.ReleaseRegion(mRegionH);
+	}
 
-  NS_DECL_ISUPPORTS
+	operator RgnHandle() const
+	{
+		return mRegionH;
+	}
 
-  virtual nsresult Init();
-
-  virtual void SetTo(const nsIRegion &aRegion);
-  virtual void SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Intersect(const nsIRegion &aRegion);
-  virtual void Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Union(const nsIRegion &aRegion);
-  virtual void Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual void Subtract(const nsIRegion &aRegion);
-  virtual void Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  virtual PRBool IsEmpty(void);
-  virtual PRBool IsEqual(const nsIRegion &aRegion);
-  virtual void GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight);
-  virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
-  virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD GetRects(nsRegionRectSet **aRects);
-  NS_IMETHOD FreeRects(nsRegionRectSet *aRects);
-  NS_IMETHOD GetNativeRegion(void *&aRegion) const;
-  virtual nsresult SetNativeRegion(void *aRegion);
-  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
-  NS_IMETHOD GetNumRects(PRUint32 *aRects) const { *aRects = 0; return NS_OK; }
-
-private:
-	RgnHandle			      mRegion;
-  nsRegionComplexity  mRegionType;
-
-private:
-  virtual void SetRegionType();
-  virtual void SetRegionEmpty();
-  virtual RgnHandle CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-
+	private:
+		RgnHandle mRegionH;
 };
 
-#endif  // nsRegionMac_h___ 
+
+
+#endif // nsRegionPool_h___

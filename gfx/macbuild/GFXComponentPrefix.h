@@ -20,6 +20,5 @@
  * Contributor(s): 
  */
 
-#define GFX_STATIC 1
-
-#include "MacPrefix_debug.h"
+#include "MacSharedPrefix.h"
+#include "GFXComponentConfig.h"

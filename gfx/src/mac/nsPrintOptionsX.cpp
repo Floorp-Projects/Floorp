@@ -98,6 +98,8 @@ nsPrintOptionsX::ShowNativeDialog(void)
   Boolean validated;
   ::PMValidatePageFormat(mPageFormat, &validated);
 
+	::InitCursor();
+
   Boolean   accepted = false;
   status = ::PMPageSetupDialog(mPageFormat, &accepted);
 

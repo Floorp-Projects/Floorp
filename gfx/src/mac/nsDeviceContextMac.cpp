@@ -69,7 +69,6 @@
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
-PRBool nsDeviceContextMac::mDisplayVerySmallFonts = true;
 PRUint32 nsDeviceContextMac::sNumberOfScreens = 0;
 
 
@@ -967,25 +966,6 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	}
 
 	return mPixelsPerInch;
-}
-
-PRBool nsDeviceContextMac::DisplayVerySmallFonts()
-{
-	static PRBool initialized = PR_FALSE;
-	if (initialized)
-		return mDisplayVerySmallFonts;
-	initialized = PR_TRUE;
-
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-    if (NS_SUCCEEDED(rv) && prefs) {
-		PRBool boolVal;
-		if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display_very_small_fonts", &boolVal))) {
-			mDisplayVerySmallFonts = boolVal;
-		}
-	}
-
-	return mDisplayVerySmallFonts;
 }
 
 

@@ -43,6 +43,7 @@
 #include "nsUnicodeFontMappingMac.h"
 #include "nsUnicodeMappingUtil.h"
 #include "nsGfxUtils.h"
+#include "nsFontUtils.h"
 
 #define BAD_FONT_NUM	-1
 
@@ -79,7 +80,7 @@ NS_IMETHODIMP nsFontMetricsMac::Init(const nsFont& aFont, nsIAtom* aLangGroup, n
   RealizeFont();
 	
 	TextStyle		theStyle;
-	nsFontMetricsMac::GetNativeTextStyle(*this, *mContext, theStyle);
+	nsFontUtils::GetNativeTextStyle(*this, *mContext, theStyle);
 	
   StTextStyleSetter styleSetter(theStyle);
   
@@ -399,68 +400,3 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 	return NS_OK;
 }
 
-// A utility routine to the the text style in a convenient manner.
-// This is static, which is unfortunate, because it introduces link
-// dependencies between libraries that should not exist.
-NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
-		const nsIDeviceContext& inDevContext, TextStyle &outStyle)
-{
-	
-	const nsFont *aFont;
-	inMetrics.GetFont(aFont);
-	
-	nsFontHandle	fontNum;
-	inMetrics.GetFontHandle(fontNum);
-	
-	float  dev2app;
-	inDevContext.GetDevUnitsToAppUnits(dev2app);
-	short		textSize = float(aFont->size) / dev2app;
-
-	if (textSize < 9 && !nsDeviceContextMac::DisplayVerySmallFonts())
-		textSize = 9;
-	
-	Style textFace = normal;
-	switch (aFont->style)
-	{
-		case NS_FONT_STYLE_NORMAL: 								break;
-		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
-		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
-	}
-#if 0
-	switch (aFont->variant)
-	{
-		case NS_FONT_VARIANT_NORMAL: 							break;
-		case NS_FONT_VARIANT_SMALL_CAPS: 						break;
-	}
-#endif
-	PRInt32 offset = aFont->weight % 100;
-	PRInt32 baseWeight = aFont->weight / 100;
-	NS_ASSERTION((offset < 10) || (offset > 90), "Invalid bolder or lighter value");
-	if (offset == 0) {
-		if (aFont->weight >= NS_FONT_WEIGHT_BOLD)
-			textFace |= bold;
-	} else {
-		if (offset < 10)
-			textFace |= bold;
-	}
-
-	if ( aFont->decorations & NS_FONT_DECORATION_UNDERLINE )
-		textFace |= underline;
-	if ( aFont->decorations & NS_FONT_DECORATION_OVERLINE )
-		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
-	if ( aFont->decorations & NS_FONT_DECORATION_LINE_THROUGH )
-		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
-
-	RGBColor	black = {0};
-	
-  float textZoom = 1.0;
-  inDevContext.GetTextZoom(textZoom);
-  textSize *= textZoom;
-
-	outStyle.tsFont = (short)fontNum;
-	outStyle.tsFace = textFace;
-	outStyle.tsSize = textSize;
-	outStyle.tsColor = black;
-}
-	
-	

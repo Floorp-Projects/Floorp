@@ -20,12 +20,27 @@
  * Contributor(s): 
  */
 
-#define MAC_SHARED 1
-#define _IMPL_NS_WIDGET 1
+#ifndef nsFontUtils_h_
+#define nsFontUtils_h_
 
-#include "WidgetDebug.prefix"
+#include <TextEdit.h>
 
-#if !TARGET_CARBON
-#define USE_MENUSELECT 1
-#endif
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
 
+class NS_GFX nsFontUtils
+{
+public:
+
+  static void   GetNativeTextStyle(nsIFontMetrics& inMetrics, const nsIDeviceContext& inDevContext, TextStyle &outStyle);
+  static PRBool DisplayVerySmallFonts();
+
+protected:
+
+	static PRBool	sDisplayVerySmallFonts;
+  
+};
+
+
+
+#endif // nsFontUtils_h_

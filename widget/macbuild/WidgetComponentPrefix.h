@@ -20,5 +20,6 @@
  * Contributor(s): 
  */
 
-#include "MacPrefix_debug.h"
-#include "GFXConfig.h"
+#include "WidgetComponentConfig.h"
+#include "MacPrefix.h"
+
