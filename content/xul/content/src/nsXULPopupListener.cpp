@@ -354,10 +354,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsIFrame* currFrame = targetFrame;
     // Look for the nearest enclosing focusable frame.
     while (currFrame) {
-        const nsStyleUserInterface* ui = currFrame->GetStyleUserInterface();
-        if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
-            (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) 
-        {
+        if (currFrame->IsFocusable()) {
           newFocus = currFrame->GetContent();
           nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
           if (domElement) {

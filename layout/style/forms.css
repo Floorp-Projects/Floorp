@@ -260,6 +260,7 @@ option[disabled],
 optgroup[disabled],
 select[disabled] {
   -moz-user-input: disabled;
+  -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
   cursor: default;
@@ -277,6 +278,7 @@ input[type="hidden"] {
   padding: 0;
   border: 0;
   cursor: auto;
+  -moz-user-focus: ignore;
   -moz-binding: none;
 }
 
