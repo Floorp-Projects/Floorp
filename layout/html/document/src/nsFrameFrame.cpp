@@ -694,8 +694,19 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   GetParentContent(content);
 
   mWebShell = do_CreateInstance(kWebShellCID);
+  NS_ENSURE_TRUE(mWebShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+  // notify the pres shell that a docshell has been created
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell)
+  {
+    nsCOMPtr<nsISupports> webShellAsSupports(do_QueryInterface(mWebShell));
+    NS_ENSURE_TRUE(webShellAsSupports, NS_ERROR_FAILURE);
+    presShell->SetSubShellFor(mContent, webShellAsSupports);
+  }
   
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(GetMarginWidth(aPresContext, content));
@@ -793,8 +804,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
 
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));     
 
   // create, init, set the parent of the view
   nsIView* view;
