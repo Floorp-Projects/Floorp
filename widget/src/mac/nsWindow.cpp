@@ -1824,3 +1824,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsWindow::SetTitle(const nsString& title)
+{
+  NS_ASSERTION(0, "Would some Mac person please implement me? Thanks.");
+  return NS_OK;
+}
