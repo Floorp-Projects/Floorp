@@ -125,6 +125,9 @@ public:
   
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
+  PRBool GetContentEmpty();
+  void SetContentEmpty(PRBool aContentEmpty);
+
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -212,6 +215,9 @@ protected:
   nsresult     mCalculated;
   nsMargin     mMargin;
   nsIFrame*    mBorderFrame[4];  // the frame whose border is used
+  PRBool       mIsContentEmpty;  // PR_TRUE if the cell's contents take up no space
+  //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
+  //     the FrameState slot (mState; GetFrameState/SetFrameState)
 
 };
 
@@ -289,6 +295,16 @@ inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
     return NS_OK;
   }
   return NS_ERROR_NOT_INITIALIZED;
+}
+
+inline PRBool nsTableCellFrame::GetContentEmpty()
+{
+  return mIsContentEmpty;
+}
+
+inline void nsTableCellFrame::SetContentEmpty(PRBool aContentEmpty)
+{
+  mIsContentEmpty = aContentEmpty;
 }
 
 #endif

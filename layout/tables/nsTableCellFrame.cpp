@@ -71,14 +71,19 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     //XXX: this could be calculated once and remembered
     // get border padding values
     //XXX: also check style for rule on rendering empty cells
-    nsMargin borderPadding;
-    const nsStyleSpacing* cellSpacingStyle;
-    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacingStyle));
-    cellSpacingStyle->CalcBorderPaddingFor(this, borderPadding);
-    nscoord contentWidth = mPass1DesiredSize.width - (borderPadding.left+borderPadding.right);
-    nscoord contentHeight = mPass1DesiredSize.height - (borderPadding.top+borderPadding.bottom);
+    /*
+
+    */
     // empty cells do not render their border
-    if (0<contentWidth || 0<contentHeight)
+    PRBool renderBorder = PR_TRUE;
+    if (PR_TRUE==GetContentEmpty())
+    {
+      const nsStyleTable* cellTableStyle;
+      GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
+      if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE==cellTableStyle->mEmptyCells)
+        renderBorder=PR_FALSE;
+    }
+    if (PR_TRUE==renderBorder)
     {
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, 0);
@@ -304,6 +309,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   // Nav4 hack for 0 dimensioned cells.  
   // Empty cells are assigned a width and height of 4px
   // see testcase "cellHeights.html"
+  if (eReflowReason_Initial == aReflowState.reason)
+  {
+    if ((0==kidSize.width) && (0==kidSize.height))
+      SetContentEmpty(PR_TRUE);
+    else
+      SetContentEmpty(PR_FALSE);
+  }
   if (0==kidSize.width)
   {
     float p2t;
