@@ -1130,7 +1130,7 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
   {
   	::SetEmptyRgn(destport->clipRgn);
-	  ::CopyRgn(((nsDrawingSurfaceMac)aSrcSurf)->clipRgn, desport->clipRgn);
+	  ::CopyRgn(((nsDrawingSurfaceMac)aSrcSurf)->clipRgn, destport->clipRgn);
   }
 
 	destpix = *((CGrafPtr)destport)->portPixMap;
