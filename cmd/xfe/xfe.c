@@ -2656,6 +2656,8 @@ fe_Basename (const char *s)
 }
 
 
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+
 /* Mail stuff */
 
 const char *
@@ -2809,6 +2811,8 @@ FE_UsersSignature (void)
 
   return signature;
 }
+
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 
 int32
