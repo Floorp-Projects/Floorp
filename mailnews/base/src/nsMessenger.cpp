@@ -1465,36 +1465,25 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
       rv = inStream->Read(m_dataBuffer, maxReadCount, &readCount);
 
       // rhp:
-      // Ok, here is where we need to see if any conversion needs to be
-      // done on this data as we write it out to disk. The logic of what
-      // type of conversion should be done by now and it should just be 
-      // a matter of mashing the bits.
-      // 
-      if ( (m_doCharsetConversion) && (m_outputFormat == TEXT_PLAIN) )
+      // Ok, now we do one of two things. If we are sending out HTML, then
+      // just write it to the HTML stream as it comes along...but if this is
+      // a save as TEXT operation, we need to buffer this up for conversion 
+      // when we are done. When the stream converter for HTML-TEXT gets in place,
+      // this magic can go away.
+      //
+      if (NS_SUCCEEDED(rv))
       {
-        if (NS_SUCCEEDED(rv) && readCount > 0)
+        if ( (m_doCharsetConversion) && (m_outputFormat == TEXT_PLAIN) )
         {
-          PRUnichar       *u = nsnull; 
-          nsAutoString    fmt("%s");
-          
-          u = nsTextFormatter::smprintf(fmt.GetUnicode(), m_dataBuffer); // this converts UTF-8 to UCS-2 
-          if (u)
-          {
-            PRInt32   newLen = nsCRT::strlen(u);
-            m_msgBuffer.Append(u, newLen);
-            PR_FREEIF(u);
-          }
-          else
-            m_msgBuffer.Append(m_dataBuffer, readCount);
+          m_msgBuffer.Append(m_dataBuffer, readCount);
         }
-      }
-      else
-      {
-        if (NS_SUCCEEDED(rv))
+        else
+        {
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
-      }
+        }
 
-      available -= readCount;
+        available -= readCount;
+      }
     }
   }
   return rv;
