@@ -170,7 +170,6 @@ function onEnterInSearchBar()
      return;
    }
 
-   gSearchInput.select();
    initializeSearchBar();
 
    gClearButton.setAttribute("disabled", false); //coming into search enable clear button   
@@ -366,6 +365,7 @@ function onSearchInput(returnKeyHit)
   // only select the text when the return key was hit
   if (returnKeyHit) {
     GetSearchInput();
+    gSearchInput.select();
     onEnterInSearchBar();
   }
   else {

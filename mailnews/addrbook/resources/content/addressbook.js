@@ -542,8 +542,7 @@ function onAdvancedAbSearch()
 
 function onEnterInSearchBar()
 {
-  ClearCardViewPane();
-  gSearchInput.select();
+  ClearCardViewPane();  
 
   if (!gQueryURIFormat)
     gQueryURIFormat = gPrefs.getComplexValue("mail.addr_book.quicksearchquery.format", 

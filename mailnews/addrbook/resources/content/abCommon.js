@@ -907,6 +907,7 @@ function onAbSearchInput(returnKeyHit)
   }
 
   if (returnKeyHit) {
+    gSearchInput.select();
     onEnterInSearchBar();
   }
   else {
