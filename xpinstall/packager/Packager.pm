@@ -309,18 +309,16 @@ sub do_copyfile
 			die "Error: copy of file $srcpath$srcname$srcsuffix failed ($package, $component, $lineno): $!.  Exiting...\n";
 
 		# if this is unix, set the dest file permissions
-		if ( $os eq "Unix" ) {
-			# read permissions
-			my($st) = stat("$srcpath$srcname$srcsuffix") ||
-				die "Error: can't stat $srcpath$srcname$srcsuffix: $!  Exiting...\n";
-			# set permissions
-			($debug >= 2) && print " chmod ".$st->mode." $destpath$destname$destsuffix\n";
-			chmod ($st->mode, "$destpath$destname$destsuffix") ||
-				warn "Warning: chmod of $destpath$destname$destsuffix failed: $!.  Exiting...\n";
-		}
-	} else {
+		# read permissions
+		my($st) = stat("$srcpath$srcname$srcsuffix") ||
+		    die "Error: can't stat $srcpath$srcname$srcsuffix: $!  Exiting...\n";
+		# set permissions
+		($debug >= 2) && print " chmod ".$st->mode." $destpath$destname$destsuffix\n";
+		chmod ($st->mode, "$destpath$destname$destsuffix") ||
+		    warn "Warning: chmod of $destpath$destname$destsuffix failed: $!.  Exiting...\n";
+	    } else {
 		warn "Error: file $srcpath$srcname$srcsuffix is not a file or is not readable ($package, $component, $lineno).\n";
-	}
+	    }
 }
 
 
