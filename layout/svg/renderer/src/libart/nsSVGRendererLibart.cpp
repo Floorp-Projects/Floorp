@@ -145,7 +145,7 @@ NS_NewSVGRendererLibart(nsISVGRenderer** aResult)
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS1(nsSVGRendererLibart, nsISVGRenderer);
+NS_IMPL_ISUPPORTS1(nsSVGRendererLibart, nsISVGRenderer)
 
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
