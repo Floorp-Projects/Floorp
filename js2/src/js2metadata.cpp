@@ -1390,6 +1390,18 @@ namespace MetaData {
                         ca->memberMod = Attribute::Constructor;
                         return ca;
                     }
+                    else
+                    if (name == world.identifiers["override"]) {
+                        ca = new CompoundAttribute();
+                        ca->overrideMod = Attribute::DoOverride;
+                        return ca;
+                    }
+                    else
+                    if (name == world.identifiers["virtual"]) {
+                        ca = new CompoundAttribute();
+                        ca->memberMod = Attribute::Virtual;
+                        return ca;
+                    }
                 }
             }            
             // fall thru to execute a readReference on the identifier...

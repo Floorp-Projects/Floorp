@@ -249,6 +249,7 @@
                 checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = a;
             else
                 checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = a;
+            push(a);
         }
         break;
 
