@@ -53,7 +53,7 @@ nsrefcnt nsRDFResource::gRDFServiceRefCnt = 0;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(void)
-    : mURI(nsnull), mDelegates(nsnull)
+    : mDelegates(nsnull)
 {
 }
 
@@ -66,19 +66,10 @@ nsRDFResource::~nsRDFResource(void)
         delete doomed;
     }
 
-    if (!mURI)
+    if (!gRDFService)
         return;
-
-    if (!gRDFService) {
-        nsMemory::Free(mURI);
-        return;
-    }
 
     gRDFService->UnregisterResource(this);
-
-    // N.B. that we need to free the URI *after* we un-cache the resource,
-    // due to the way that the resource manager is implemented.
-    nsMemory::Free(mURI);
 
     if (--gRDFServiceRefCnt == 0) {
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -125,8 +116,7 @@ nsRDFResource::Init(const char* aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (mURI = (char *)nsMemory::Clone(aURI, strlen(aURI) + 1)))
-        return NS_ERROR_OUT_OF_MEMORY;
+    mURI = aURI;
 
     if (gRDFServiceRefCnt++ == 0) {
         nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
@@ -140,19 +130,27 @@ nsRDFResource::Init(const char* aURI)
 NS_IMETHODIMP
 nsRDFResource::GetValue(char* *aURI)
 {
-    if (!aURI)
-        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(aURI, "Null out param.");
     
-    if ((*aURI = nsCRT::strdup(mURI)) == nsnull)
+    *aURI = ToNewCString(mURI);
+
+    if (!*aURI)
         return NS_ERROR_OUT_OF_MEMORY;
-    else
-        return NS_OK;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFResource::GetValueUTF8(nsACString& aResult)
+{
+    aResult = mURI;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRDFResource::GetValueConst(const char** aURI)
 {
-    *aURI = mURI;
+    *aURI = mURI.get();
     return NS_OK;
 }
 
@@ -163,11 +161,9 @@ nsRDFResource::EqualsString(const char* aURI, PRBool* aResult)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (!aResult)
-        return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(aResult, "null ptr");
 
-    *aResult = (nsCRT::strcmp(aURI, mURI) == 0);
+    *aResult = mURI.Equals(aURI);
     return NS_OK;
 }
 
@@ -196,8 +192,8 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     contractID.Append(aKey);
     contractID.Append("&scheme=");
 
-    for (const char* p = mURI; *p && *p != ':'; ++p)
-        contractID.Append(*p);
+    PRInt32 i = mURI.FindChar(':');
+    contractID += StringHead(mURI, i);
 
     nsCOMPtr<nsIRDFDelegateFactory> delegateFactory =
              do_CreateInstance(contractID.get(), &rv);

@@ -302,26 +302,25 @@ nsresult
 nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
 {
     nsresult rv = NS_OK;
-    if (PL_strcmp(mURI, kNewsRootURI) == 0) 
+    if (mURI.Equals(kNewsRootURI)) 
     {
     // don't concat the full separator with .sbd
     }
     else 
     {
-      nsAutoString sep;
-#if 0
-      rv = nsGetNewsFolderSeparator(sep);
-#else
-      rv = NS_OK;
-#endif
-      if (NS_FAILED(rv)) return rv;
-
       // see if there's a dir with the same name ending with .sbd
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-      nsAutoString str; str.AssignWithConversion(nsFilePath(path));
+      nsAutoString str;
+      str.AssignWithConversion(nsFilePath(path));
+#if 0
+      nsAutoString sep;
+      rv = nsGetNewsFolderSeparator(sep);
+      if (NS_FAILED(rv)) return rv;
       str += sep;
+#endif
+
       path = nsFilePath(str);
     }
 
@@ -1005,7 +1004,8 @@ nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetO
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsIURI> resultUri;
-  rv = nntpService->GetNewNews(nntpServer, mURI, aGetOld, this, aMsgWindow, getter_AddRefs(resultUri));
+  rv = nntpService->GetNewNews(nntpServer, mURI.get(), aGetOld, this,
+                               aMsgWindow, getter_AddRefs(resultUri));
   if (aUrlListener && NS_SUCCEEDED(rv) && resultUri)
   {
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(resultUri));
@@ -1311,7 +1311,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString signonURL;
-    rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+    rv = CreateNewsgroupUsernameUrlForSignon(mURI.get(), getter_Copies(signonURL));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> uri;
@@ -1335,7 +1335,7 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString signonURL;
-    rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+    rv = CreateNewsgroupPasswordUrlForSignon(mURI.get(), getter_Copies(signonURL));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIURI> uri;
@@ -1398,7 +1398,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       PRBool okayValue = PR_TRUE;
             
       nsXPIDLCString signonURL;
-      rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+      rv = CreateNewsgroupPasswordUrlForSignon(mURI.get(), getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
 
       rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL)).get(), nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
@@ -1468,7 +1468,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       PRBool okayValue = PR_TRUE;
       
       nsXPIDLCString signonURL;
-      rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+      rv = CreateNewsgroupUsernameUrlForSignon(mURI.get(), getter_Copies(signonURL));
       if (NS_FAILED(rv)) return rv;
       
       rv = dialog->Prompt(aPromptTitle, aPromptMessage, NS_ConvertASCIItoUCS2(signonURL).get(), 

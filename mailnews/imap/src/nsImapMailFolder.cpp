@@ -285,7 +285,7 @@ NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
   nsresult rv = NS_OK;
-  if (nsCRT::strcmp(mURI, kImapRootURI) == 0) 
+  if (mURI.Equals(kImapRootURI)) 
   {
       // don't concat the full separator with .sbd
   }
@@ -331,28 +331,22 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   if(NS_FAILED(rv))
     return rv;
 
-    PRInt32 flags = 0;
-  nsAutoString uri;
-  uri.AppendWithConversion(mURI);
-  uri.Append(PRUnichar('/'));
+  PRInt32 flags = 0;
 
-  uri.Append(*name);
-  char* uriStr = ToNewCString(uri);
-  if (uriStr == nsnull) 
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCAutoString uri = mURI + NS_LITERAL_CSTRING("/");
+  AppendUTF16toUTF8(*name, uri);
 
   //will make sure mSubFolders does not have duplicates because of bogus msf files.
 
   nsCOMPtr <nsIMsgFolder> msgFolder;
-  rv = GetChildWithURI(uriStr, PR_FALSE/*deep*/, PR_FALSE /*case Insensitive*/, getter_AddRefs(msgFolder));  
+  rv = GetChildWithURI(uri.get(), PR_FALSE/*deep*/, PR_FALSE /*case Insensitive*/, getter_AddRefs(msgFolder));  
   if (NS_SUCCEEDED(rv) && msgFolder)
   {
-    nsMemory::Free(uriStr);
     return NS_MSG_FOLDER_EXISTS;
   }
   
   nsCOMPtr<nsIRDFResource> res;
-  rv = rdf->GetUnicodeResource(uri, getter_AddRefs(res));
+  rv = rdf->GetResource(uri, getter_AddRefs(res));
   if (NS_FAILED(rv))
     return rv;
 
@@ -366,7 +360,6 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
     folder->GetFlags((PRUint32 *)&flags);
 
     folder->SetParent(this);
-  nsMemory::Free(uriStr);
 
   flags |= MSG_FOLDER_FLAG_MAIL;
 
@@ -5687,7 +5680,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
     if (! m_pathName)
        return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
+    rv = nsImapURI2Path(kImapRootURI, mURI.get(), *m_pathName);
     //    printf("constructing path %s\n", (const char *) *m_pathName);
     if (NS_FAILED(rv)) return rv;
   }
@@ -6834,18 +6827,17 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **aFolderURL)
   nsXPIDLCString rootURI;
   rootFolder->GetURI(getter_Copies(rootURI));
 
-  nsCAutoString namePart(mURI + rootURI.Length());
-  char *escapedName = nsEscape(namePart.get(), url_Path);
+  NS_ASSERTION(mURI.Length() > rootURI.Length(), "Should match with a folder name!");
+  nsAdoptingCString escapedName(nsEscape(mURI.get() + rootURI.Length(),
+                                         url_Path));
+  if (escapedName.IsEmpty()) {
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  char *folderURL = (char *) PR_Malloc(rootURI.Length() + strlen(escapedName) + 1);
-  if (!folderURL)
-    return NS_ERROR_OUT_OF_MEMORY;
-  strcpy(folderURL, rootURI.get());
-  strcpy(folderURL + rootURI.Length(), escapedName);
-  PR_Free(escapedName);
-  // imap uri's aren't escaped, so we need to escape the folder name
-  // part of the uri and return that.
-  *aFolderURL = folderURL;
+  *aFolderURL = ToNewCString(rootURI + escapedName);
+  if (!*aFolderURL)
+      return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
