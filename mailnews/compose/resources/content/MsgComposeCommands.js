@@ -58,6 +58,7 @@ var editorDocumentListener = {
 			dump("set focus on the body\n");
 			contentWindow.focus();
 		}
+		SetComposeWindowTitle(13);
 	}
 };
 
