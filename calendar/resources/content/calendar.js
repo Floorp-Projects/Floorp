@@ -786,9 +786,7 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
    
    if( calendarServer )
    {
-      if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" &&
-          calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true"
-        )
+      if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
       {
          var onResponseExtra = function( )
          {
@@ -799,7 +797,9 @@ function refreshRemoteCalendarAndRunFunction( calendarEvent, Server, functionToR
             
             //publish the changes back to the server
             if( calendarServer.getAttribute( "http://home.netscape.com/NC-rdf#publishAutomatically" ) == "true" )
+            {
                gCalendarWindow.calendarManager.publishCalendar( calendarServer );
+            }
          }
    
          //refresh the calendar file.
@@ -1169,7 +1169,30 @@ function printEventArray( calendarEventArray, stylesheetName )
 
 function print()
 {
-   printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
+   var args = new Object();
+
+   args.eventSource = gEventSource;
+   args.selectedEvents = gCalendarWindow.EventSelection.selectedEvents ;
+   args.selectedDate=gNewDateVariable = gCalendarWindow.getSelectedDate();
+
+   var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
+   var Offset = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "week.start", defaultWeekStart );
+   var defaultWeeksInView = categoriesStringBundle.GetStringFromName("defaultWeeksInView" );
+   var WeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "weeks.inview", defaultWeeksInView );
+   WeeksInView = ( WeeksInView >= 6 ) ? 6 : WeeksInView ;
+
+   var defaultPreviousWeeksInView = categoriesStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
+   var PreviousWeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "previousweeks.inview", defaultPreviousWeeksInView );
+   PreviousWeeksInView = ( PreviousWeeksInView >= WeeksInView - 1 ) ? WeeksInView - 1 : PreviousWeeksInView ;
+
+   args.startOfWeek=Offset;
+   args.weeksInView=WeeksInView;
+   args.prevWeeksInView=PreviousWeeksInView;
+
+   window.openDialog("chrome://calendar/content/printDialog.xul","printdialog","chrome",args);
+   
+   //printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }
 
 

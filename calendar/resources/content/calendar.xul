@@ -89,7 +89,7 @@
    <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
    <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="print_command" oncommand="print()" disabled="true" collapsed="true" disabledwhennoeventsselected="true"/>
+   <command id="print_command" oncommand="print()"/>
    <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
    <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
    <command id="paste_command" oncommand="pasteFromClipboard()"/>

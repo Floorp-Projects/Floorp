@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Colin Phillips <colinp@oeone.com> 
+   -                 Chris Charabaruk <ccharabaruk@meldstar.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Chris Allen <chris@netinflux.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
+
+<!-- CSS File with all styles specific to the dialog -->
+<?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://calendar/context/datepicker/datepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/context/datepicker/calendar.css" ?>
+
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE dialog 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<dialog
+   id="calendar-new-printwindow"
+   title="Print A Calendar"
+   onload="loadCalendarPrintDialog()"
+   buttons="accept,cancel"
+   ondialogaccept="printCalendar()"
+   ondialogcancel="return true;"
+   persist="screenX screenY"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:nc="http://home.netscape.com/NC-rdf#">
+    
+   
+<!-- Javascript DTD To Variable -->
+<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+
+
+<!-- Javascript includes -->
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+
+<script type="application/x-javascript" >
+var ArrayOfDayNames = new Array();
+
+ArrayOfDayNames[0] = "&day.1.name;";
+ArrayOfDayNames[1] = "&day.2.name;";
+ArrayOfDayNames[2] = "&day.3.name;";
+ArrayOfDayNames[3] = "&day.4.name;";
+ArrayOfDayNames[4] = "&day.5.name;";
+ArrayOfDayNames[5] = "&day.6.name;";
+ArrayOfDayNames[6] = "&day.7.name;";
+
+var windowTitle = "&window.title;";
+var locationTag = "&newevent.location.label;";
+var uriTag = "&newevent.uri.label;";
+var descriptionTag="&newevent.description.label;"
+
+</script>
+
+
+
+<script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
+
+
+
+<!-- Data used in JS from dtd -->
+
+<dataset>
+    <data id="data-event-title-edit"            value="&event.title.edit;" />
+</dataset>
+
+
+<!-- Picker popups -->
+
+   <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
+
+   <vbox id="standard-dialog-content"  flex="1">
+   
+               <grid>
+                  <columns>
+                     <column />
+                     <column flex="1"/>
+                  </columns>
+                  
+
+                  <rows>
+                     <!-- announce -->
+                     <row align="center">
+                     <spacer />
+                     <hbox class="field-label-box-class" pack="end">
+                      <label value="Select your options below, and use OK to print" />
+                      </hbox>
+                     </row>
+
+                     <!-- Title -->    
+                     <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label for="title-field" value="&newevent.title.label;"/>
+                        </hbox>
+                        <textbox id="title-field"/>
+                     </row>
+                     
+
+                     <row align="center">
+                        <spacer />
+                        <radiogroup id="view-field" >
+                           <caption label="Select View to Print" />
+                           <radio label="&calendar.monthview.button.label;"  value="month" selected="true" />
+                           <radio label="&calendar.weekview.button.label;"  value="week"/>
+                           <radio label="&calendar.multiweekview.button.label;"  value="multiweek"/>
+                           <radio label="&calendar.dayview.button.label;"  value="day"/>
+                           <radio label="List Selected Events"  value="list"/>
+                        </radiogroup>
+                     </row>
+
+                     <!-- Start Date -->
+                     <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newevent.startdate.label;"/>
+                        </hbox>
+                        <hbox  id="start-date-box" align="center">
+                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
+                            <textbox id="start-time-text" readonly="true" value=""        onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start" collapsed="true"/>
+                            <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start" collapsed="true"/>
+                        </hbox>
+                     </row>
+                     
+                     <!-- Private -->
+                     <row align="center">
+                        <spacer />
+                        <checkbox id="private-checkbox" checked="true" label="&newevent.private.label;"/>
+                     </row>
+
+                     <!-- Calendar Status -->
+                     <row align="center" collapsed="true">
+                      <spacer />
+                        <checkbox id="status-checkbox" checked="false" label="Print only items with this status:"/>
+                     </row>
+                     <row align="center" collapsed="true">
+                        <spacer />
+                        <menulist id="status-field" label="&newevent.status.label;">
+                            <menupopup id="status-menulist-menupopup">
+                                <menuitem label="&newevent.status.tentative.label;"  value="ICAL_STATUS_TENTATIVE"/>
+                                <menuitem label="&newevent.status.confirmed.label;"  value="ICAL_STATUS_CONFIRMED"/>
+                                <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
+                            </menupopup>
+                        </menulist>
+                     </row>
+                     
+
+                     <!-- Categories -->
+                     <row align="center" collapsed="true">
+                      <spacer />
+                        <checkbox id="category-checkbox" checked="false" label="Print only items with this category:"/>
+                     </row>
+
+                     <row align="center" collapsed="true">
+                        <spacer />
+                        <menulist id="categories-field" label="&newevent.category.label;">
+                            <menupopup id="categories-menulist-menupopup">
+                                <menuitem label="&priority.level.none;" value="0"/>
+                            </menupopup>
+                        </menulist>
+                     </row>
+            
+                  </rows>
+               </grid>
+
+
+   </vbox> <!-- standard-dialog-content -->
+</dialog>
