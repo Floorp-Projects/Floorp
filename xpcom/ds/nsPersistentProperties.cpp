@@ -357,17 +357,10 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   // Step through hash entries populating a transient array
   PRUint32 n =
       PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
-   if ( n < (PRIntn) mTable.entryCount )
+  if ( n < (PRIntn) mTable.entryCount )
       return NS_ERROR_OUT_OF_MEMORY;
 
-  // Convert array into enumerator
-  rv = NS_NewISupportsArrayEnumerator(propArray, getter_AddRefs(iterator));
-  if (NS_FAILED(rv)) return rv;
-  
-  // Convert nsIEnumerator into nsISimpleEnumerator
-  rv = NS_NewAdapterEnumerator(aResult, iterator);
-
-  return rv;
+  return NS_NewArrayEnumerator(aResult, propArray); 
 }
 
 
