@@ -5057,7 +5057,7 @@ nsCSSFrameConstructor::GetFloaterContainingBlock(nsIPresContext* aPresContext,
 // for the specified content object. Returns PR_TRUE if the frame is associated
 // with generated content and PR_FALSE otherwise
 static inline PRBool
-IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame)
+IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame, nsIAtom* aPseudoElement)
 {
   NS_PRECONDITION(aFrame, "null frame pointer");
   nsFrameState  state;
@@ -5070,7 +5070,17 @@ IsGeneratedContentFor(nsIContent* aContent, nsIFrame* aFrame)
 
     // Check that it has the same content pointer
     aFrame->GetContent(&content);
-    result = (content == aContent);
+    if (content == aContent) {
+      nsIStyleContext* styleContext;
+      nsIAtom*         pseudoType;
+
+      // See if the pseudo element type matches
+      aFrame->GetStyleContext(&styleContext);
+      styleContext->GetPseudoType(pseudoType);
+      result = (pseudoType == aPseudoElement);
+      NS_RELEASE(styleContext);
+      NS_IF_RELEASE(pseudoType);
+    }
     NS_IF_RELEASE(content);
   }
 
@@ -5094,7 +5104,7 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
   nsIFrame* lastChild = frames.LastChild();
 
   // See if the parent has an :after pseudo-element
-  if (lastChild && IsGeneratedContentFor(aContainer, lastChild)) {
+  if (lastChild && IsGeneratedContentFor(aContainer, lastChild, nsCSSAtoms::afterPseudo)) {
     // Insert the frames before the :after pseudo-element
     return aFrameManager->InsertFrames(*aPresContext, *aPresShell, aParentFrame,
                                        nsnull, frames.GetPrevSiblingFor(lastChild),
@@ -5812,7 +5822,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             nsIFrame* firstChild;
             parentFrame->FirstChild(nsnull, &firstChild);
 
-            if (firstChild && IsGeneratedContentFor(aContainer, firstChild)) {
+            if (firstChild && IsGeneratedContentFor(aContainer, firstChild, nsCSSAtoms::beforePseudo)) {
               // Insert the new frames after the :before pseudo-element
               prevSibling = firstChild;
             }
