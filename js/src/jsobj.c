@@ -2623,9 +2623,9 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if (pobj != obj) {
             /*
              * We found id in a prototype object: prepare to share or shadow.
-             * NB: Thanks to the garbage-collected property tree maintained
-             * by jsscope.c in rt, we need not worry about sprop going away
-             * behind our back after we've unlocked scope.
+             * NB: Thanks to the immutable, garbage-collected property tree
+             * maintained by jsscope.c in rt, we need not worry about sprop
+             * going away behind our back after we've unlocked scope.
              */
             JS_UNLOCK_SCOPE(cx, scope);
 
