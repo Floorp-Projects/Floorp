@@ -3071,11 +3071,17 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                  nsIDocumentLoaderObserver * aObserver)
 #endif // NECKO
 {
-#ifdef NECKO
-  nsCOMPtr<nsIURI>  aUrl;
-  channel->GetURI(getter_AddRefs(aUrl));
-#endif
-   return PrepareDocumentForEditing(aUrl);
+  // for pages with charsets, this gets called the first time with a 
+  // non-zero status value. Don't prepare the editor that time.
+  // aStatus will be NS_BINDING_ABORTED then.
+	if (NS_SUCCEEDED(aStatus))
+	{
+    nsCOMPtr<nsIURI>  aUrl;
+    channel->GetURI(getter_AddRefs(aUrl));
+    return PrepareDocumentForEditing(aUrl);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
