@@ -308,6 +308,7 @@ public:
   NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
                                     nsIFrame* aPlaceholderFrame);
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);
   NS_IMETHOD ProcessReflowCommands();
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
@@ -1208,6 +1209,27 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 }
 
 NS_IMETHODIMP
+PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
+{
+  PRInt32 i, n = mReflowCommands.Count();
+  for (i = 0; i < n; i++) {
+    nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
+    if (rc) {
+      nsIFrame* target;
+      if (NS_SUCCEEDED(rc->GetTarget(target))) {
+        if (target == aTargetFrame) {
+          mReflowCommands.RemoveElementAt(i);
+          n--;
+          i--;
+          continue;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
   if (0 != mReflowCommands.Count()) {
@@ -1236,9 +1258,6 @@ PresShell::ProcessReflowCommands()
          ("PresShell::ProcessReflowCommands: end reflow command"));
     }
     NS_IF_RELEASE(rcx);
-
-    // Place and size the root frame
-    mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 
 #ifdef NS_DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
