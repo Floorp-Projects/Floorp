@@ -135,7 +135,7 @@ interface nsIStreamBufferAccess : nsISupports
 #   define ULL_(x)     x ## ULL
 #  endif
 
-#  define NS_SWAP64(x) ((((x) /* & ULL_(0xff00000000000000) */) >> 56) |      \
+#  define NS_SWAP64(x) ((((x)    & ULL_(0xff00000000000000))    >> 56) |      \
                         (((x)    & ULL_(0x00ff000000000000))    >> 40) |      \
                         (((x)    & ULL_(0x0000ff0000000000))    >> 24) |      \
                         (((x)    & ULL_(0x000000ff00000000))    >> 8)  |      \
