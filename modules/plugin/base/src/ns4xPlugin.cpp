@@ -1041,10 +1041,10 @@ ns4xStreamWrapper::GetStream(nsIOutputStream* &result)
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
-_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
+_newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_NewStream: npp=%p, type=%s, window=%s\n", (void*)npp, (const char *)type, window));
+  ("NPN_NewStream: npp=%p, type=%s, window=%s\n", (void*)npp, (const char *)type, target));
 
   NPError err = NPERR_INVALID_INSTANCE_ERROR;
   if(npp && npp->ndata) {
@@ -1053,7 +1053,7 @@ _newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
     nsCOMPtr<nsIPluginInstancePeer> peer;
     if (NS_SUCCEEDED(inst->GetPeer(getter_AddRefs(peer))) && 
       peer &&
-      NS_SUCCEEDED(peer->NewStream((const char*) type, window, getter_AddRefs(stream))))
+      NS_SUCCEEDED(peer->NewStream((const char*) type, target, getter_AddRefs(stream))))
     {
       ns4xStreamWrapper* wrapper = new ns4xStreamWrapper(stream);
       if (wrapper) {
