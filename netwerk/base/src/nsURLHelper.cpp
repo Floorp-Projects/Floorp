@@ -22,6 +22,7 @@
 #include "nsCRT.h"
 #include "nsIAllocator.h"
 #include "nsIIOService.h"
+#include "nsIURI.h"
 
 #ifdef XP_PC
 #include <windows.h> // ::IsDBCSLeadByte need
@@ -338,4 +339,57 @@ ToLowerCase(char* str)
                 *(lstr) = *(lstr) + shift;
         }
     }
+}
+
+/* Extract URI-Scheme if possible */
+NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
+                                 PRUint32 *endPos, char* *scheme)
+{
+    // search for something up to a colon, and call it the scheme
+    NS_ENSURE_ARG_POINTER(inURI);
+
+    const char* uri = inURI;
+
+    // skip leading white space
+    while (nsCRT::IsAsciiSpace(*uri))
+        uri++;
+
+    PRUint32 start = uri - inURI;
+    if (startPos) {
+        *startPos = start;
+    }
+
+    PRUint32 length = 0;
+    char c;
+    while ((c = *uri++) != '\0') {
+        // First char must be Alpha
+        if (length == 0 && nsCRT::IsAsciiAlpha(c)) {
+            length++;
+        } 
+        // Next chars can be alpha + digit + some special chars
+        else if (length > 0 && (nsCRT::IsAsciiAlpha(c) || 
+                 nsCRT::IsAsciiDigit(c) || c == '+' || 
+                 c == '.' || c == '-')) {
+            length++;
+        }
+        // stop if colon reached but not as first char
+        else if (c == ':' && length > 0) {
+            if (endPos) {
+                *endPos = start + length + 1;
+            }
+
+            if (scheme) {
+                char* str = (char*)nsAllocator::Alloc(length + 1);
+                if (str == nsnull)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                nsCRT::memcpy(str, &inURI[start], length);
+                str[length] = '\0';
+                *scheme = str;
+            }
+            return NS_OK;
+        }
+        else 
+            break;
+    }
+    return NS_ERROR_MALFORMED_URI;
 }

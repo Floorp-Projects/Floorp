@@ -77,6 +77,10 @@ NS_NET void CoaleseDirs(char* io_Path);
 /* convert to lower case */
 NS_NET void ToLowerCase(char* str);
 
+/* Extract URI-Scheme if possible */
+NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 
+                                 PRUint32 *endPos, char* *scheme);
+
 #ifdef __cplusplus
 }
 #endif
