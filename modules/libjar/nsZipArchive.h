@@ -163,10 +163,10 @@ public:
    * before any calls to Read or Available
    *
    * @param   zipEntry name of item in file
-   * @param   (out) a structure used by Read and Available
+   * @param   aRead is filled with appropriate values
    * @return  status code
    */
-  PRInt32 ReadInit(const char* zipEntry, nsZipRead** aRead);
+  PRInt32 ReadInit(const char* zipEntry, nsZipRead* aRead);
 
   /** 
    * Read 
@@ -269,8 +269,20 @@ class nsZipRead
 {
 public:
 
-  nsZipRead( nsZipArchive* aZip, nsZipItem* item );
-  ~nsZipRead();
+  nsZipRead() { MOZ_COUNT_CTOR(nsZipRead); }
+  ~nsZipRead()
+  {
+    PR_FREEIF(mFileBuffer);
+    MOZ_COUNT_DTOR(nsZipRead);
+  }
+
+  void Init( nsZipArchive* aZip, nsZipItem* aZipItem )
+  {
+    mArchive = aZip;
+    mItem = aZipItem;
+    mCurPos = 0;
+    mFileBuffer = NULL;
+  }
 
   nsZipArchive* mArchive;
   nsZipItem*    mItem;

@@ -40,7 +40,7 @@ nsJARInputStream::Available(PRUint32 *_retval)
   if (Zip() == nsnull)
     *_retval = 0;
   else
-    *_retval = Zip()->Available(mReadInfo);
+    *_retval = Zip()->Available(&mReadInfo);
 
   return NS_OK;
 }
@@ -54,7 +54,7 @@ nsJARInputStream::Read(char* buf, PRUint32 count, PRUint32 *bytesRead)
     return NS_OK;
   }
 
-  PRInt32 err = Zip()->Read(mReadInfo, buf, count, bytesRead);
+  PRInt32 err = Zip()->Read(&mReadInfo, buf, count, bytesRead);
   return err == ZIP_OK ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -103,8 +103,6 @@ NS_IMETHODIMP
 nsJARInputStream::Close()
 {
   NS_IF_RELEASE(mJAR);
-  if (mReadInfo)
-    delete mReadInfo;
   return NS_OK;
 }
 
@@ -140,7 +138,7 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 //----------------------------------------------
 
 nsJARInputStream::nsJARInputStream()
-  : mJAR(nsnull), mReadInfo(nsnull)
+  : mJAR(nsnull)
 {
   NS_INIT_REFCNT();
 }
