@@ -514,17 +514,10 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 {
   nsIStyleContext*  result = nsnull;
 
-  NS_ASSERTION(aContent, "must have content"); // XXX ??? is this true?
+  NS_ASSERTION(aContent, "must have content");
+  NS_ASSERTION(aPresContext, "must have pres context");
 
-  // want to check parent frame's context for cached child context first
-  if ((nsnull != aParentContext) && (nsnull != aContent)) {
-//XXX Disabled this for the dom, as per peter's note
-//XXX    result = aParentContext->FindChildWithContent(aContent);
-  }
-
-  if (nsnull == result) {
-    // then do a brute force rule search
-
+  if (aContent && aPresContext) {
     nsISupportsArray*  rules = mRecycler;
     mRecycler = nsnull;
     if (nsnull == rules) {
@@ -533,10 +526,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
     if (nsnull != rules) {
       nsIAtom* medium = nsnull;
-      NS_ASSERTION(aPresContext, "must have aPresContext");
-      if (aPresContext) {
-	      aPresContext->GetMedium(&medium);
-      }
+      aPresContext->GetMedium(&medium);
       RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
       if (mBackstopSheets) {
         mBackstopSheets->EnumerateBackwards(EnumRulesMatching, &data);
@@ -622,52 +612,54 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      PRBool aForceUnique)
 {
   nsIStyleContext*  result = nsnull;
-  // want to check parent frame's context for cached child context first
 
-  // then do a brute force rule search
+  NS_ASSERTION(aPseudoTag, "must have pseudo tag");
+  NS_ASSERTION(aPresContext, "must have pres context");
 
-  nsISupportsArray*  rules = mRecycler;
-  mRecycler = nsnull;
-  if (nsnull == rules) {
-    NS_NewISupportsArray(&rules);
-  }
-
-  if (nsnull != rules) {
-    nsIAtom* medium = nsnull;
-    aPresContext->GetMedium(&medium);
-    PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                 aPseudoTag, aParentContext, rules);
-    if (mBackstopSheets) {
-      mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-    }
-    PRInt32 backstopRules = data.mCount;
-    if (mDocSheets) {
-      mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-    }
-    if (mOverrideSheets) {
-      mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+  if (aPseudoTag && aPresContext) {
+    nsISupportsArray*  rules = mRecycler;
+    mRecycler = nsnull;
+    if (nsnull == rules) {
+      NS_NewISupportsArray(&rules);
     }
 
-    PRBool usedRules = PR_FALSE;
-    if (0 < data.mCount) {
-      SortRulesByStrength(rules, backstopRules);
-      result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-      if (usedRules) {
-        NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-        NS_RELEASE(rules);
+    if (nsnull != rules) {
+      nsIAtom* medium = nsnull;
+      aPresContext->GetMedium(&medium);
+      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                   aPseudoTag, aParentContext, rules);
+      if (mBackstopSheets) {
+        mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+      PRInt32 backstopRules = data.mCount;
+      if (mDocSheets) {
+        mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+      if (mOverrideSheets) {
+        mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+
+      PRBool usedRules = PR_FALSE;
+      if (0 < data.mCount) {
+        SortRulesByStrength(rules, backstopRules);
+        result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
+        if (usedRules) {
+          NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
+          NS_RELEASE(rules);
+        }
+        else {
+          NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
+          rules->Clear();
+          mRecycler = rules;
+        }
       }
       else {
         NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-        rules->Clear();
         mRecycler = rules;
+        result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
       }
+      NS_IF_RELEASE(medium);
     }
-    else {
-      NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-      mRecycler = rules;
-      result = GetContext(aPresContext, aParentContext, aPseudoTag, nsnull, aForceUnique, usedRules);
-    }
-    NS_IF_RELEASE(medium);
   }
 
   return result;
@@ -680,51 +672,53 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    PRBool aForceUnique)
 {
   nsIStyleContext*  result = nsnull;
-  // want to check parent frame's context for cached child context first
 
-  // then do a brute force rule search
+  NS_ASSERTION(aPseudoTag, "must have pseudo tag");
+  NS_ASSERTION(aPresContext, "must have pres context");
 
-  nsISupportsArray*  rules = mRecycler;
-  mRecycler = nsnull;
-  if (nsnull == rules) {
-    NS_NewISupportsArray(&rules);
-  }
-
-  if (nsnull != rules) {
-    nsIAtom* medium = nsnull;
-    aPresContext->GetMedium(&medium);
-    PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                 aPseudoTag, aParentContext, rules);
-    if (mBackstopSheets) {
-      mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-    }
-    PRInt32 backstopRules = data.mCount;
-    if (mDocSheets) {
-      mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
-    }
-    if (mOverrideSheets) {
-      mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+  if (aPseudoTag && aPresContext) {
+    nsISupportsArray*  rules = mRecycler;
+    mRecycler = nsnull;
+    if (nsnull == rules) {
+      NS_NewISupportsArray(&rules);
     }
 
-    PRBool usedRules = PR_FALSE;
-    if (0 < data.mCount) {
-      SortRulesByStrength(rules, backstopRules);
-      result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
-      if (usedRules) {
-        NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
-        NS_RELEASE(rules);
+    if (nsnull != rules) {
+      nsIAtom* medium = nsnull;
+      aPresContext->GetMedium(&medium);
+      PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
+                                   aPseudoTag, aParentContext, rules);
+      if (mBackstopSheets) {
+        mBackstopSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+      PRInt32 backstopRules = data.mCount;
+      if (mDocSheets) {
+        mDocSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+      if (mOverrideSheets) {
+        mOverrideSheets->EnumerateBackwards(EnumPseudoRulesMatching, &data);
+      }
+
+      PRBool usedRules = PR_FALSE;
+      if (0 < data.mCount) {
+        SortRulesByStrength(rules, backstopRules);
+        result = GetContext(aPresContext, aParentContext, aPseudoTag, rules, aForceUnique, usedRules);
+        if (usedRules) {
+          NS_ASSERT_REFCOUNT(rules, 2, "rules array was used elsewhere");
+          NS_RELEASE(rules);
+        }
+        else {
+          NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
+          rules->Clear();
+          mRecycler = rules;
+        }
       }
       else {
         NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-        rules->Clear();
         mRecycler = rules;
       }
+      NS_IF_RELEASE(medium);
     }
-    else {
-      NS_ASSERT_REFCOUNT(rules, 1, "rules array was used elsewhere");
-      mRecycler = rules;
-    }
-    NS_IF_RELEASE(medium);
   }
 
   return result;
