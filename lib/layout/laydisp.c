@@ -773,6 +773,8 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
         if (((LO_CellStruct*)tptr)->cell_inflow_layer)
             break;
 
+        /* cmanske: reversed order so cell selection highlighing
+           shows up over text in the cell */
 		lo_DisplayCellContents(context, (LO_CellStruct *)tptr,
 			    			   base_x, base_y, x, y, width, height);
 		lo_DisplayCell(context, (LO_CellStruct *)tptr);

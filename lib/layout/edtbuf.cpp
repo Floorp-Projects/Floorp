@@ -1770,12 +1770,12 @@ void CEditBuffer::DocumentStored(){
     GetCommandLog()->DocumentStored();
 }
 
-CEditElement* CEditBuffer::FindRelayoutStart( CEditElement *pStartElement ){
+CEditElement* CEditBuffer::FindRelayoutStart( CEditElement *pStartElement, XP_Bool bRelayoutEntireTable ){
     CEditElement* pOldElement = NULL;
     while ( pStartElement && pStartElement != pOldElement ) {
         pOldElement = pStartElement;
         CEditElement* pTable = pStartElement->GetTopmostTableOrLayer();
-        if ( m_bDisplayTables && pTable ) {
+        if ( m_bDisplayTables && bRelayoutEntireTable && pTable ) {
             // If this is in a table, skip before it.
             pStartElement = pTable->PreviousLeaf();
         }
@@ -1811,7 +1811,13 @@ void EDT_FixupTableData(MWContext *pMWContext)
 //  else generated HTML is very misleading!
 void CEditBuffer::FixupTableData()
 {
-//    return;
+    // Reuse one cell data struct for maximumn efficiency
+    EDT_TableCellData *pCellData = XP_NEW( EDT_TableCellData );
+    if( pCellData )
+        XP_MEMSET( pCellData, 0, sizeof(EDT_TableCellData));
+    else
+        return;
+
     for( int i = 0; i < edt_RelayoutTables.Size(); i++ )
     {
         LO_TableStruct *pLoTable = edt_RelayoutTables[i];
@@ -1831,7 +1837,7 @@ void CEditBuffer::FixupTableData()
 
         EDT_TableData *pTableData = pEdTable->GetData();
         if(!pTableData)
-            return;
+            continue;
 
         // Get space between cells
         pTableData->iCellSpacing = pLoTable->inter_cell_space;
@@ -1843,7 +1849,7 @@ void CEditBuffer::FixupTableData()
         pEdTable->GetParentSize(m_pContext, &iMaxWidth, &iMaxHeight, pLoTable);
 
         // Save correct width even if bWidthDefined is FALSE
-        //   (NOTE: width will NOT be save in m_pTagData if bWidthDefined == FALSE)
+        //   (NOTE: width will NOT be saved in m_pTagData if bWidthDefined == FALSE)
         pTableData->iWidthPixels = pLoTable->width;
         if( pTableData->bWidthPercent )
         {
@@ -1883,9 +1889,10 @@ void CEditBuffer::FixupTableData()
         }
         XP_MEMSET( ExtraColumns, 0, iArraySize );
 
-        // This may actually be a CaptionElement,
-        //  but we will test for rows below
-        CEditElement *pRow = pEdTable->GetChild();
+        // There may be a CaptionElement as the first or last
+        //  child in a table. Be sure to use GetFirstRow(), GetNextRow()
+        //   which guarentee a non-caption row 
+        CEditTableRowElement *pRow = pEdTable->GetFirstRow();
         intn iRow = 0;
 
         // Clear existing layout data
@@ -1893,112 +1900,122 @@ void CEditBuffer::FixupTableData()
 
         while( pRow )
         {
-            // A Caption element may be a child, so test type first
-            if( pRow->IsTableRow() )
+            pEdCell = pRow->GetFirstCell();
+
+            // We will count number of actual cell locations in each row
+            // Start with extra columns caused by ROWSPAN in previous rows
+            int32 iColumnsInRow = ExtraColumns[iRow];
+
+            while( pEdCell )
             {
-                pEdCell = (CEditTableCellElement*)(pRow->GetChild());
-
-                // We will count number of actual cell locations in each row
-                // Start with extra columns caused by ROWSPAN in previous rows
-                int32 iColumnsInRow = ExtraColumns[iRow];
-
-                while( pEdCell )
+                intn iColSpan = pEdCell->GetColSpan();
+                intn iRowSpan = pEdCell->GetRowSpan();
+                iColumnsInRow += iColSpan;
+                
+#if 0 //#ifdef DEBUG
+                // Test if list scan is in sync between layout and editor objects        
+                LO_Element *pNextCell = (LO_Element*)(pEdCell->GetLoCell());
+                if( !pLoCell || pLoCell !=  pNextCell)
                 {
-                    intn iColSpan = pEdCell->GetColSpan();
-                    intn iRowSpan = pEdCell->GetRowSpan();
-                    iColumnsInRow += iColSpan;
-                    
-    #ifdef DEBUG
-                    // Test if list scan is in sync between layout and editor objects        
-                    LO_Element *pNextCell = (LO_Element*)(pEdCell->GetLoCell());
-                    if( !pLoCell || pLoCell !=  pNextCell)
+                    XP_TRACE(("**** pNextCell (%d) is not correct", pLoCell));
+                }
+                else
+#endif                
+                {
+                    // If current cell has extra ROWSPAN,
+                    //  then it will cause extra columns in following row(s)
+                    if( iRowSpan > 1 )
                     {
-                        XP_TRACE(("**** pNextCell (%d) is not correct", pLoCell));
-                    }
-                    else
-    #endif                
-                    {
-                        // If current cell has extra ROWSPAN,
-                        //  then it will cause extra columns in following row(s)
-                        if( iRowSpan > 1 )
+                        for( intn j = 1; j < iRowSpan; j++ )
                         {
-                            for( intn j = 1; j < iRowSpan; j++ )
-                            {
-                                // We may overrun our array if table is "bad"
-                                //   because of a ROWSPAN value that exceeds actual
-                                //   number of rows. Just skip attempts to access a value too high
-                                //   since there is no row to use the "ExtraColumns" anyway.
-                                if( iRow+j < iRows )
-                                    ExtraColumns[iRow+j] += iColSpan;
-                            }
+                            // We may overrun our array if table is "bad"
+                            //   because of a ROWSPAN value that exceeds actual
+                            //   number of rows. Just skip attempts to access a value too high
+                            //   since there is no row to use the "ExtraColumns" anyway.
+                            if( iRow+j < iRows )
+                                ExtraColumns[iRow+j] += iColSpan;
                         }
-                        //  Save actual location and size data
-                        EDT_TableCellData *pCellData = pEdCell->GetData();
-                        if( pCellData )
+                    }
+                    
+                    //  Save actual location and size data
+                    //  GetSizeData only returns valid size-related info
+                    //    and is much more efficient than GetData (no tag param parsing)
+                   
+                    pEdCell->GetSizeData(pCellData);
+                    if( pCellData )
+                    {
+                        XP_Bool bChangedX = pLoCell->lo_any.x != pCellData->X;
+                        XP_Bool bChangedY = pLoCell->lo_any.y != pCellData->Y;
+
+                        // The LO_Element's concept of cell "width" INCLUDES
+                        //   the border and cell padding, but the HTML tag value excludes these,
+                        //   so we must compensate here.
+                        int32 iWidthPixels = lo_GetCellTagWidth(pLoCell);
+                        int32 iHeightPixels = lo_GetCellTagHeight(pLoCell);
+                        
+                        if( iWidthPixels != pCellData->iWidthPixels ||
+                            iHeightPixels != pCellData->iHeightPixels )
                         {
+                            // Only write new size data if it really changed,
+                            //  since this formats HTML tag and is slow
                             pCellData->X = pLoCell->lo_any.x;
                             pCellData->Y = pLoCell->lo_any.y;
                             pCellData->iRow = iRow;
-
-                            // The LO_Element's concept of cell "width" INCLUDES
-                            //   the border and cell padding, but the HTML tag value excludes these,
-                            //   so we must compensate here.
-                            pCellData->iWidthPixels = lo_GetCellTagWidth(pLoCell);
-                            pCellData->iHeightPixels = lo_GetCellTagHeight(pLoCell);
-
-                            if( pCellData->bWidthPercent )
-                            {
-                                // Use "full" width of cell for % calculation
-                                pCellData->iWidth = (pLoCell->lo_any.width * 100) / iMaxWidth;
-                            } else {
-                                pCellData->iWidth = pCellData->iWidthPixels;
-                            }
-
-                            if( pCellData->bHeightPercent )
-                            {
-                                pCellData->iHeight = (pLoCell->lo_any.height * 100) / iMaxHeight;
-                            } else {
-                                pCellData->iHeight = pCellData->iHeightPixels;
-                            }
-                            pEdCell->SetData(pCellData);
-                            EDT_FreeTableCellData(pCellData);
+                            pCellData->iWidthPixels = iWidthPixels;
+                            pCellData->iHeightPixels = iHeightPixels;
+                            pEdCell->SetSizeData(pCellData);
+                        }
+                        else 
+                        {
+                            // These don't affect tag params
+                            if( iRow != pCellData->iRow )
+                                pEdCell->SetRow(iRow);
+                            if( bChangedX )
+                                pEdCell->SetX(pLoCell->lo_any.x);
+                            if( bChangedY )
+                                pEdCell->SetY(pLoCell->lo_any.y);
                         }
                     }
                     // Add this cell to Column and Row layout data
                     // Note: Can do only after setting size params above
+                    //if( bChangedX || bChangedY )
+                    // This sucks, but we have to do it for all cells each time
                     pEdTable->AddLayoutData(pEdCell, pLoCell);
-
-                    CEditTableCellElement *pNextEdCell = (CEditTableCellElement*)(pEdCell->GetNextSibling());
-                
-                    // Next cell in row 
-                    //  (or signal to get next row if NULL)
-                    pEdCell = pNextEdCell;
-
-                    // If cell scanning is in sync
-                    //   this should be much quicker than searching for 
-                    //   a LO_Element from each CEditElement or vice versa
-                    if( pLoCell )
-                    {
-                        pLoCell = pLoCell->lo_any.next;
-                        // Skip over non-cells
-                        while( pLoCell && pLoCell->type != LO_CELL )
-                            pLoCell = pLoCell->lo_any.next;
-                    }
                 }
-                // Save the column count in Row
-                pRow->TableRow()->SetColumns(iColumnsInRow);
 
-                // PLEASE!!! I hope this rule holds: "We can never have an empty row"
-                iRow++;
+                CEditTableCellElement *pNextEdCell = (CEditTableCellElement*)(pEdCell->GetNextSibling());
+            
+                // Next cell in row 
+                //  (or signal to get next row if NULL)
+                pEdCell = pNextEdCell;
+
+                // If cell scanning is in sync
+                //   this should be much quicker than searching for 
+                //   a LO_Element from each CEditElement or vice versa
+                if( pLoCell )
+                {
+                    pLoCell = pLoCell->lo_any.next;
+                    // Skip over non-cells
+                    while( pLoCell && pLoCell->type != LO_CELL )
+                        pLoCell = pLoCell->lo_any.next;
+                }
             }
-            pRow = pRow->GetNextSibling();
+            // Save the column count in Row
+            pRow->TableRow()->SetColumns(iColumnsInRow);
+
+            // PLEASE!!! I hope this rule holds: "We can never have an empty row"
+            iRow++;
+
+            pRow = pRow->GetNextRow();
         }
         // Safety check
         XP_ASSERT(iRow == iRows);
 
         // Now we know maximum number of columns to set in table
-        pTableData->iColumns = pEdTable->m_ColumnLayoutData.Size();
-        pTableData->iRows = iRows;
+        // (This is actually already set correctly by AddLayoutData,
+        //  but we need to set the new width and height data anyway)
+        pTableData->iColumns = pEdTable->GetColumns();
+        pTableData->iRows = iRows; // Should = pTable->m_iRows;
         pEdTable->SetData(pTableData);
         EDT_FreeTableData(pTableData);
 
@@ -2007,6 +2024,8 @@ void CEditBuffer::FixupTableData()
 
     // We need to do this just once, so clear the list
     edt_RelayoutTables.Empty();
+
+    EDT_FreeTableCellData(pCellData);
 }
 
 //
@@ -2072,16 +2091,26 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
 #endif
     }
 
-    pNewStartElement = FindRelayoutStart(pStartElement);
-    if( pNewStartElement && pNewStartElement != pStartElement ){
+    // 2nd param: Do NOT move start outside the table
+    pNewStartElement = FindRelayoutStart(pStartElement, FALSE);
+    if( pNewStartElement && pNewStartElement != pStartElement )
+    {
         // we had to back up some.  Layout until we pass this point.
-        if( pEndElement == 0 ){
+        if( pEndElement == 0 )
             pEndElement = pStartElement;
-        }
+
         pStartElement = pNewStartElement;
         iEditOffset = pStartElement->Leaf()->GetLen();
+    } 
+    else if( pEndElement == 0 )
+    {
+        if( pStartElement->IsLeaf() )
+            pEndElement = pStartElement;
+        else
+            pEndElement = pStartElement->NextLeafAll();
     }
 
+#if 0
     // If the end is in a table, move it outside of the table.
     if ( pEndElement ) {
         CEditElement* pTable = pEndElement->GetTopmostTableOrLayer();
@@ -2091,6 +2120,9 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
             pEndElement = pTable->GetLastMostChild();//->NextLeaf();
         }
     }
+#endif
+
+    XP_Bool bInTableCell = pStartElement ? (pStartElement->GetTableIgnoreSubdoc() != NULL) : FALSE;
 
     // laying out from the beginning of the document
     if( pNewStartElement == 0 ){
@@ -2120,15 +2152,30 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
                         pEndElement : pStartElement, relayoutFlags  );
             return;
         }
-        //
-        // Find the first element on this line.
-        pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
+        // Note: If here, we must have a pStartElement and associated LO_Element
+        XP_ASSERT(pStartElement && pLayoutElement);
 
+        // Find the first element on this line and get the current line number
+        pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
         //
         // Position the tag cursor at this position
         //
-        pEdStart = pLoStartLine->lo_any.edit_element;
-        iOffset = pLoStartLine->lo_any.edit_offset;
+        // **** TESTING NEW REFLOW WITHIN TABLE CELL
+        
+        //pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
+        //pEdStart = pLoStartLine->lo_any.edit_element;
+        //iOffset = pLoStartLine->lo_any.edit_offset;
+        if( bInTableCell )
+        {
+            // Trust the given element if inside a cell
+            pEdStart = pStartElement;
+            iOffset = iEditOffset;
+        }
+        else
+        {
+            pEdStart = pLoStartLine->lo_any.edit_element;
+            iOffset = pLoStartLine->lo_any.edit_offset;
+        }
     }
 
 
@@ -2147,8 +2194,18 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
     // Search for zero-length text elements, and remove the non-breaking spaces we put
     // in.
 
-    CEditElement* pElement= m_pRoot;
-    while ( NULL != (pElement = pElement->FindNextElement(&CEditElement::FindLeafAll,0))){
+    // Why do this for entire doc? Changed to do only from pStartElement to pEndElement
+    //CEditElement* pElement= pStartElement; // m_pRoot;
+    CEditElement* pElement;
+    if( pStartElement->IsLeaf() )
+        pElement = pStartElement;
+    else
+        pElement = pStartElement->FindNextElement(&CEditElement::FindLeafAll,0);
+
+    if( pEndElement && !pEndElement->IsLeaf() )
+        pEndElement = pEndElement->FindNextElement(&CEditElement::FindLeafAll,0);
+
+    do {
         switch ( pElement->GetElementType() ) {
         case eTextElement:
             {
@@ -2230,7 +2287,13 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
                 }
             }
         }
+        pElement = pElement->FindNextElement(&CEditElement::FindLeafAll,0);
+        if( pElement && pElement == pEndElement )
+            break;
     }
+    while ( pElement != NULL );
+    
+    
     if( (relayoutFlags & RELAYOUT_NOCARET) == 0 && !bWasSelected){
         SetCaret();
     }
@@ -2386,11 +2449,21 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
     XP_TRACE(("\n\nEDITOR RELAYOUT"));
 	lo_PrintLayout(m_pContext);
 #endif
-    // Search for zero-length text elements, and remove the non-breaking spaces we put
+    // Search for zero-length text elements, and remove the non-breaking spaces we put in
     // in.
 
-    CEditElement* pElement= m_pRoot;
-    while ( NULL != (pElement = pElement->FindNextElement(&CEditElement::FindLeafAll,0))){
+    // Why do this for entire doc? Changed to do only from pStartElement to pEndElement
+    //CEditElement* pElement= pStartElement; // m_pRoot;
+    CEditElement* pElement;
+    if( pStartElement->IsLeaf() )
+        pElement = pStartElement;
+    else
+        pElement = pStartElement->FindNextElement(&CEditElement::FindLeafAll,0);
+
+    if( pEndElement && !pEndElement->IsLeaf() )
+        pEndElement = pEndElement->FindNextElement(&CEditElement::FindLeafAll,0);
+
+    do {
         switch ( pElement->GetElementType() ) {
         case eTextElement:
             {
@@ -2537,7 +2610,12 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
                 }
             }
         }
+        pElement = pElement->FindNextElement(&CEditElement::FindLeafAll,0);
+        if( pElement && pElement == pEndElement )
+            break;
     }
+    while ( pElement != NULL );
+
     // For each table just layed out, readjust all table and cell width data
     //   to reflect the complicated Layout algorithm's size data
     // Moved ABOVE next block (was below)
@@ -2710,6 +2788,7 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
     } 
     else
     {
+        ClearTableAndCellSelection();
         CEditTableCellElement* pTableCell = m_pCurrent->GetTableCellIgnoreSubdoc();
         CEditElement *pParent = m_pCurrent->GetParent();
         CEditElement* pPrev = m_pCurrent->GetPreviousSibling();
@@ -2730,16 +2809,17 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
                 ElementOffset iOffset;
                 XP_Bool bStickyAfter;
                 GetInsertPoint( &pEle, &iOffset, &bStickyAfter );
+
                 // Delete forward if to the left of the space,
                 //  or delete back if to the right.
                 DeleteChar(iOffset == 0, bTyping);
             }
         }
     }
-    //ClearSelection();
 
     ClearMove(FALSE);
-    // This will move the insert point that is at the beginning of 
+    
+    // Following will move the insert point that is at the beginning of 
     //   one element to the end of the previous.
     // Don't do this if we are at an empty element or we set the flag
     //  to use the current element's text formatting 
@@ -2753,22 +2833,7 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
         // If this assert ever fails, it means that we've
         // got to uncomment this and make it work.
         XP_ASSERT(IsMultiSpaceMode()); 
-#if 0
-        // Check for space after space case.
-        if ( newChar == ' ' && !m_pCurrent->InFormattedText()
-                && !IsMultiSpaceMode() ) {
-            CEditInsertPoint p(m_pCurrent, m_iCurrentOffset);
-            // move to the right on spacebar if we are under a space.
-            if( p.IsSpace() ){
-                NextChar( FALSE );
-                return result;
-            }
-            if ( p.IsSpaceBeforeOrAfter() ) {
-                return result;
-            }
-        }
-#endif
-        //
+
         // The edit element can choose not to insert a character if it is
         //  a space and at the insertion point there already is a space.
         //
@@ -6779,7 +6844,13 @@ void CEditBuffer::MergeTableCells()
 */
 void CEditBuffer::SplitTableCell()
 {
-    //TODO: WRITE THIS!
+    CEditInsertPoint ip;
+    GetTableInsertPoint(ip);
+    CEditTableCellElement* pCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
+    if( !pCell )
+        return;
+
+    pCell->SplitCell();
 }
 
 
@@ -12351,7 +12422,7 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
                     // We don't want to use GetNextCellInColumn() because of 
                     //  ROWSPAN effect. This gets the first cell in the
                     //  next geometric row using the table's layout data
-                    pCell = pTable->GetFirstCellInNextRow(pCell->GetX());
+                    pCell = pTable->GetFirstCellInNextRow(pCell->GetY());
                     while( pCell )
                     {
                         if( pCell->AllCellsInRowAreSelected() )
@@ -12359,7 +12430,7 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
                         else
                             break;
 
-                        pCell = pTable->GetFirstCellInNextRow(pCell->GetX());
+                        pCell = pTable->GetFirstCellInNextRow(pCell->GetY());
                     }
             		AdoptAndDo(new CDeleteTableRowCommand(this, number));
 
@@ -15710,6 +15781,18 @@ void CEditBuffer::SetReplaceCellSelection()
     // Reset replace cell
     edt_pPrevReplaceCellSelected = m_pDragTableData->pDragOverCell;
 
+    LO_TableStruct *pSourceTable = lo_GetParentTable(m_pContext, m_pDragTableData->pFirstSelectedCell);
+    LO_TableStruct *pDragOverTable = lo_GetParentTable(m_pContext, m_pDragTableData->pDragOverCell);
+    if( pSourceTable && pSourceTable != pDragOverTable &&
+        (m_pDragTableData->pDragOverCell->lo_cell.ele_attrmask & LO_ELE_SELECTED) != 0 )
+    {
+        // We are hovering over selected cells in a different table
+        // Set all selected cells to the "special selection" mode
+        //  so they will be the ones replaced
+        DisplaySpecialCellSelection();
+        return;
+    }
+
     LO_Element *pLoEle = m_pDragTableData->pDragOverCell;
     // This will get updated by  edt_SetSpecialSelectRow for each row
     int32 iRowY = pLoEle->lo_cell.y;
@@ -15852,8 +15935,11 @@ void CEditBuffer::ClearTableAndCellSelection()
     int iLoSize = m_SelectedLoCells.Size();
     if( m_pSelectedEdTable == 0 &&
         iEdSize == 0 )
-        // Nothing to do
+    {
+        XP_ASSERT(iLoSize == 0);
+        // Nothing was selected
         return;
+    }
 
     SelectTable(FALSE);
 

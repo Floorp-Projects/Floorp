@@ -1021,7 +1021,7 @@ CEditSaveObject::~CEditSaveObject(){
     
         if( m_status == ED_ERROR_NONE ){
             // Save the last-used location into the history list
-            EDT_SyncPublishingHistory();
+            edt_SyncPublishingHistory(m_pBuffer->m_pContext);
         } else {
             // Save this URL so we can supply the "bad" location
             //   to user if they try to publish that URL again

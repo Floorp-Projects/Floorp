@@ -698,8 +698,9 @@ void lo_MergeElements( MWContext *context, lo_DocState *old_state, int32 iStartL
 	}
 	else
 	{
-#if 0
-		eptr = start_element;
+//#if 0
+		eptr = /*start_element*/ old_line_array[iStartLine];
+
 		if( eptr )
 		{
 			*pRetHeight = eptr->lo_any.y - *pRetY + eptr->lo_any.line_height;
@@ -708,7 +709,7 @@ void lo_MergeElements( MWContext *context, lo_DocState *old_state, int32 iStartL
 		{
 			*pRetHeight = -1;
 		}
-#else
+#if 0 //#else
 		XP_ASSERT(0);
 		*pRetHeight = -1;
 #endif

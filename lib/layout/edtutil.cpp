@@ -5494,6 +5494,21 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
     }
 
     if( !bLastPublishFailed && !EDT_IS_NEW_DOCUMENT(pMWContext) ){
+#if defined(SingleSignon)
+        // Check if we saved a username/password for this URL
+        char * pUserNameSingleSignon = NULL;
+        char * pPasswordSingleSignon = NULL;
+        SI_RestoreOldSignonDataFromBrowser(
+            pMWContext, pURL, FALSE, &pUserNameSingleSignon, &pPasswordSingleSignon);
+        if (pUserNameSingleSignon) {
+            *ppUserName = pUserNameSingleSignon;
+            *ppPassword = pPasswordSingleSignon;
+            // If we found a name, we assume the location part of 
+            //   URL is correct, so just return that
+            return EDT_ReplaceFilename(pURL, NULL, TRUE);
+        }
+#endif
+
         int iType = NET_URL_Type(pURL);
         if( iType == FTP_TYPE_URL ||
             iType == HTTP_TYPE_URL ||
@@ -5605,8 +5620,7 @@ EDT_GetPublishingHistory(unsigned n,
 	return TRUE;
 }
 
-void
-EDT_SyncPublishingHistory()
+void edt_SyncPublishingHistory(MWContext *pMWContext)
 {
 	char  prefname[32];
 	char* prefvalue = NULL;
@@ -5624,6 +5638,17 @@ EDT_SyncPublishingHistory()
         return;
 	PREF_CopyCharPref("editor.publish_last_pass", &pLastPass);
 	
+
+#if defined(SingleSignon)
+    char *pLocation = NULL;
+    char *pUsername = NULL;
+    // Separate the location from the username
+    if( NET_ParseUploadURL( pLastLoc, &pLocation, &pUsername, NULL )) 
+    {
+        SI_RememberSignonDataFromBrowser(
+            pMWContext, pLocation, pUsername, pLastPass);
+    }
+#endif 
     /*
 	 *    First scan the list to find pref that matches new item
 	 */

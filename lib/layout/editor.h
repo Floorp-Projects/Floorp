@@ -920,16 +920,16 @@ public:
 
     // This gets the next geometric column or row 
     //  using supplied X or Y value as current location
-    // (these use the tables m_RowLayoutData and m_ColumnLayoutData)
+    // (these use the tables m_pRowLayoutData and m_pColumnLayoutData)
     CEditTableCellElement* GetFirstCellInNextColumn(int32 iCurrentColumnX);
     CEditTableCellElement* GetFirstCellInNextRow(int32 iCurrentRowY);
 
     // Get the defining left (for columns) and top (for rows) value from
-    //  the index into m_ColumnLayoutData and m_RowLayoutData 
+    //  the index into m_pColumnLayoutData and m_pRowLayoutData 
     int32 GetColumnX(intn iIndex);
     int32 GetRowY(intn iIndex);
 
-    // Use m_ColumnLayoutData and m_RowLayoutData
+    // Use m_pColumnLayoutData and m_pRowLayoutData
     // to get grid coordinates of a cell
     intn GetColumnIndex(int32 X);
     intn GetRowIndex(int32 Y);
@@ -970,7 +970,7 @@ public:
     // ... to be restored by this after relayout after table, col, or row resizing
     void RestoreSizeMode(MWContext *pContext);
 
-    // Next two use m_RowLayoutData and m_ColumnLayoutData
+    // Next two use m_pRowLayoutData and m_pColumnLayoutData
     // Clear all row and column layout data
     void DeleteLayoutData();
     
@@ -998,7 +998,7 @@ public:
     // Analogous routine for rows
     CEditTableRowElement* GetFirstRow();
 
-    // Use following BEFORE we layout and build our m_RowLayoutData and m_ColumnLayoutData    
+    // Use following BEFORE we layout and build our m_pRowLayoutData and m_pColumnLayoutData    
     // This counts row elements in table and also saves result in m_iRows
     intn CountRows();
     // Max of number of columns 
@@ -1006,9 +1006,9 @@ public:
     //  row because of ROWSPAN effect)
     intn CountColumns();
 
-    intn GetRows()     {m_iRows = m_RowLayoutData.Size(); return m_iRows;}
-    intn GetColumns()  {m_iColumns = m_ColumnLayoutData.Size(); return m_iColumns;}
-    
+    intn GetRows()     {return m_iRows;}
+    intn GetColumns()  {return m_iColumns;}
+
     // Get number of columns between given values    
     intn GetColumnsSpanned(int32 iStartX, int32 iEndX);
 
@@ -1021,7 +1021,7 @@ public:
     //    that is bad, so fix it. Same for ROWSPAN
     // 2. Save accurate number of cells in each column,
     //    compensating for COLSPAN and ROWSPAN
-    //    Uses m_ColumnLayoutData and m_RowLayoutData
+    //    Uses m_pColumnLayoutData and m_pRowLayoutData
     void FixupColumnsAndRows();
     
     // Add empty cells to each row so table looks rectangular
@@ -1082,9 +1082,17 @@ public:
     intn m_iBackgroundSaveIndex;
 
     // Let CEditBuffer access this directly
-    TXP_GrowableArray_EDT_CellLayoutData m_ColumnLayoutData;
-    TXP_GrowableArray_EDT_CellLayoutData m_RowLayoutData;
+    // Very weird, but these are very slow when dereferencing pointer
+    //TXP_GrowableArray_EDT_CellLayoutData m_pColumnLayoutData;
+    //TXP_GrowableArray_EDT_CellLayoutData m_pRowLayoutData;
 
+    // Lets use simple arrays instead
+    EDT_CellLayoutData *m_pColumnLayoutData;
+    EDT_CellLayoutData *m_pRowLayoutData;
+    // Sizes of these arrays - initially 1000 each,
+    //  and expanded as needed
+    int32   m_iColumnLayoutSize;
+    int32   m_iRowLayoutSize;
 };
 
 class CEditTableRowElement: public CEditElement {
@@ -1192,9 +1200,15 @@ public:
     virtual void StreamOut(IStreamOut *pOut);
 
     void SetData( EDT_TableCellData *pData );
+    // This gets current params using GetData(),
+    //   then overrides the size-related values from suppled data
+    void SetSizeData( EDT_TableCellData *pData );
     // Supply the csid if getting data for table not
     //  yet part of doc, as when pasting from stream
     EDT_TableCellData* GetData(int16 csid = 0);
+    // No tag param parsing - get just member variables
+    // Supply a struct to avoid allocating another struct
+    EDT_TableCellData* GetSizeData(EDT_TableCellData *pData = NULL);
 
     // Clear mask bits for attributes different from supplied data
     void MaskData( EDT_TableCellData *pData );
@@ -1250,6 +1264,7 @@ public:
 
     // Move contents of supplied cell into this cell
     void MergeCells(CEditTableCellElement* pCell);
+    void SplitCell();
 
     // Delete all contents, leaving just the minimum empty text element
     // Set param to TRUE only when deleting all selected cells
@@ -1325,6 +1340,7 @@ public:
 
     void SetWidth(XP_Bool bWidthDefined, XP_Bool bWidthPercent, int32 iWidthPixels);
     void SetHeight(XP_Bool bHeightDefined, XP_Bool bHeightPercent, int32 iHeightPixels);
+    void SetRow(intn iRow) {m_iRow = iRow;}
 
     // Next two are used when dragging the right border
     // Set all cells in a column to the width supplied
@@ -1344,14 +1360,14 @@ private:
     char* m_pBackgroundImage;
 
     // Cache this for efficiency
+    XP_Bool m_bWidthDefined;
+    XP_Bool m_bHeightDefined;
     XP_Bool m_bWidthPercent;       
     XP_Bool m_bHeightPercent;
     int32   m_iColSpan;
     int32   m_iRowSpan;
 
-    // These are set only by FixupTableData(),
-    //FIGURING OUT INDEXES IS TOO COMPLICATED!
-    //  USE REAL LOCATIONS INSTEAD
+    // These are set only by FixupTableData() during Relayou
     int32 m_X;
     int32 m_Y;
     intn m_iRow;    // Current logical and actual row index
@@ -3201,7 +3217,7 @@ public:
     //  sizes calculated by Layout. Must do for all tables during Relayout()
     //  else generated HTML is very misleading!
     void FixupTableData();
-    CEditElement* FindRelayoutStart( CEditElement *pStartElement );
+    CEditElement* FindRelayoutStart( CEditElement *pStartElement, XP_Bool bRelayoutEntireTable = TRUE );
     void Relayout( CEditElement *pStartElement, int iOffset,
             CEditElement *pEndElement = 0, intn relayoutFlags = 0 );
 
@@ -4457,6 +4473,9 @@ inline char *edt_StrDup( char *pStr ){
         return 0;
     }
 }
+
+// Moved from EDT.H since we don't call it from FE any more
+void edt_SyncPublishingHistory(MWContext *pMWContext);
 
 #ifdef DEBUG
 

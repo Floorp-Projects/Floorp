@@ -3730,7 +3730,7 @@ XP_Bool LO_IsEmptyCell(LO_CellStruct *cell)
     return TRUE;
 }
 
-/* The LO_CellStruct.width does not include border, cell padding etc and is complicated
+/* The LO_CellStruct.width includes border, cell padding etc and is complicated
  * by Column Span as well. Calculate the value to use for <TD WIDTH> param that 
  * would result in current pCellElement->lo_cell.width during the next layout
 */ 
