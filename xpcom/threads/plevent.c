@@ -1522,8 +1522,18 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     /* Must have HMQ for this & can't assume we already have appshell */
     if( FALSE == WinQueryQueueInfo( HMQ_CURRENT, NULL, 0))
     {
-       HAB hab = WinInitialize( 0);
-       WinCreateMsgQueue( hab, 0);
+       PPIB ppib;
+       PTIB ptib;
+       HAB hab;
+       HMQ hmq;
+
+       /* Set our app to be a PM app before attempting Win calls */
+       DosGetInfoBlocks(&ptib, &ppib);
+       ppib->pib_ultype = 3;
+
+       hab = WinInitialize(0);
+       hmq = WinCreateMsgQueue(hab, 0);
+       PR_ASSERT(hmq);
     }
 
     if( !_pr_PostEventMsgId)
