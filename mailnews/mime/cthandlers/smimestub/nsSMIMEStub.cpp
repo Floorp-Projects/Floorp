@@ -33,14 +33,15 @@ static int MimeInlineTextSMIMEStub_parse_begin (MimeObject *obj);
 
  /* This is the object definition. Note: we will set the superclass 
     to NULL and manually set this on the class creation */
-MimeDefClass(MimeInlineTextSMIMEStub, MimeInlineTextSMIMEStubClass,
-             mimeInlineTextSMIMEStubClass, NULL);  
+
+MimeDefClass(MimeInlineTextSMIMEStub, MimeInlineTextSMIMEStubClass, mimeInlineTextSMIMEStubClass, NULL);  
 
 extern "C" char *
 MIME_GetContentType(void)
 {
   return SMIME_CONTENT_TYPE;
 }
+
 
 extern "C" MimeObjectClass *
 MIME_CreateContentTypeHandlerClass(const char *content_type, 
@@ -111,8 +112,6 @@ MimeInlineTextSMIMEStub_parse_line(char *line, PRInt32 length, MimeObject *obj)
   * This routine gets fed each line of data, one at a time. We just buffer
   * it all up, to be dealt with all at once at the end. 
   */  
-  MimeInlineTextSMIMEStubClass *clazz = ((MimeInlineTextSMIMEStubClass *) obj->clazz);
-  
   if (!obj->output_p) 
     return 0;
   if (!obj->options || !obj->options->output_fn) 
@@ -130,7 +129,6 @@ static int
 MimeInlineTextSMIMEStub_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   int status = 0;
-  MimeInlineTextSMIMEStubClass *clazz = ((MimeInlineTextSMIMEStubClass *) obj->clazz);
   char* html = NULL;
   
   if (obj->closed_p) return 0;
