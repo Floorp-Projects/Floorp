@@ -44,6 +44,7 @@ interface nsIEditor;
 interface nsIEditingShell;
 
 [scriptable, uuid(D3B0AA04-F221-11D4-A73C-EAA4BAA8B4FC)]
+
 interface nsIEditingSession : nsISupports
 {
 
@@ -52,8 +53,11 @@ interface nsIEditingSession : nsISupports
   */
   void          init(in nsIDOMWindow aWindow);
 
-  /*  Make this window editable */
-  void          makeWindowEditable(in nsIDOMWindow aWindow, in boolean inDoAfterUriLoad);
+  /*  Make this window editable
+   *  @param aWindow nsIDOMWindow, the window the embedder needs to make editable
+   *  @param aEditorType string, "html" "htmlsimple" "text" "textsimple"
+   */
+  void          makeWindowEditable(in nsIDOMWindow aWindow, in string aEditorType, in boolean inDoAfterUriLoad);
   
   /*  Test whether a specific window has had its editable flag set; it may have an editor
       now, or will get one after the uri load.
