@@ -79,6 +79,7 @@ LIBS		+= \
 		-limg \
 		-lmozutil \
 		-lxpcom \
+		-lsecfree \
 		$(NSPR_LIBS) \
 		$(MONOLITHIC_TK_FLAGS) \
 		$(NULL)
