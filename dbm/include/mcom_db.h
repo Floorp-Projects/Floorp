@@ -112,7 +112,8 @@
 #define BIG_ENDIAN      4321
 #define LITTLE_ENDIAN   1234            /* LSB first: i386, vax, all NT risc */
 
-#ifdef HAVE_COMPAT_H
+#ifndef __SVR4
+/* compat.h is only in 4.1.3 machines. - dp */
 #include <compat.h>
 #endif
 
@@ -128,7 +129,7 @@
 #define BYTE_ORDER BIG_ENDIAN
 #elif defined(_LITTLE_ENDIAN)
 #define BYTE_ORDER LITTLE_ENDIAN
-#elif !defined(SVR4)
+#elif !defined(__SVR4)
 /* 4.1.3 is always BIG_ENDIAN as it was released only on sparc platforms. */
 #define BYTE_ORDER BIG_ENDIAN
 #elif !defined(vax) && !defined(ntohl) && !defined(lint) && !defined(i386)
