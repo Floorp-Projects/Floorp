@@ -2776,8 +2776,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    PRBool nameSpecified = PR_FALSE;
    nsCOMPtr<nsIURI> uriToLoad;
 
-   if(argc > 0)
-      {
+   if(argc > 0) {
       JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
       NS_ENSURE_TRUE(mJSStrURL, NS_ERROR_FAILURE);
 
@@ -2793,8 +2792,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
         const PRUnichar* pt = unescapedURL.GetUnicode();
         PRUint32 len=unescapedURL.Length();
         PRUint32 i;
-        for(i=0;i<len;i++)
-        { 
+        for(i=0;i<len;i++) { 
           if(0!=(0xFF80 & (*pt++)))
             break;
         }
@@ -2806,11 +2804,9 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
         else
            mURL = unescapedURL;
       }
-      if(!mURL.IsEmpty()) 
-         {
+      if(!mURL.IsEmpty()) {
          nsAutoString mAbsURL;
-         if(mDocument)
-            {
+         if(mDocument) {
             // Build absolute URL relative to this document.
             nsCOMPtr<nsIURI> docURL;
             nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
@@ -2822,22 +2818,19 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
     
             NS_ENSURE_SUCCESS(NS_MakeAbsoluteURI(mAbsURL, mURL, baseUri),
                NS_ERROR_FAILURE);
-            } 
-         else 
-            {
+         } else {
             // No document.  Probably because this window's URL hasn't finished
             // loading.  All we can do is hope the URL we've been given is absolute.
             mAbsURL.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrURL)));
             // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
-            }
+         }
          NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uriToLoad), mAbsURL),
             NS_ERROR_FAILURE);
-         }
       }
+   }
   
    /* Sanity-check the optional window_name argument. */
-   if(argc > 1)
-      {
+   if(argc > 1) {
       JSString *mJSStrName = JS_ValueToString(cx, argv[1]);
       NS_ENSURE_TRUE(mJSStrName, NS_ERROR_FAILURE);
 
@@ -2849,25 +2842,39 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       // Don't use NS_ENSURE_SUCCESS - go ahead and open up the window
       // even if the name contains an illegal character.  See bug 32898.
       CheckWindowName(cx, name);
-      } 
+   } 
 
    options = nsnull;
-   if(argc > 2)
-      {
+   if(argc > 2) {
       NS_ENSURE_TRUE((str = JS_ValueToString(cx, argv[2])), NS_ERROR_FAILURE);
       options = JS_GetStringBytes(str);
-      }
+   }
    chromeFlags = CalculateChromeFlags(options, aDialog);
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    GetTreeOwner(getter_AddRefs(treeOwner));
    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
-   
+
    nsCOMPtr<nsIDocShellTreeItem> newDocShellItem;
-   // Check for existing window of same name
-   if(nameSpecified)
-      treeOwner->FindItemWithName(name.GetUnicode(), nsnull, 
-                                    getter_AddRefs(newDocShellItem));
+
+   // special handling for certain targets
+   if(nameSpecified) {
+     /* Oh good. special target names are now handled in multiple places:
+        Here and within FindItemWithName, just below. I put _top here because
+        here it's able to do what it should: get the topmost shell of the same
+        (content/chrome) type as the docshell. treeOwner is always chrome, so
+        this scheme doesn't work there, where a lot of other special case
+        targets are handled. (treeOwner is, however, a good place to look
+        for browser windows by name, as it does.)
+     */
+     if (name.EqualsIgnoreCase("_top")) {
+       nsCOMPtr<nsIDocShellTreeItem> shelltree(do_QueryInterface(mDocShell));
+       if (shelltree)
+         shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
+     } else
+       treeOwner->FindItemWithName(name.GetUnicode(), nsnull, 
+                                   getter_AddRefs(newDocShellItem));
+   }
 
    nsCOMPtr<nsIEventQueue> modalEventQueue; // This has an odd ownership model
    nsCOMPtr<nsIEventQueueService> eventQService;
@@ -2875,19 +2882,17 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    PRBool windowIsNew = PR_FALSE;
    PRBool windowIsModal = PR_FALSE;
 
-   if(!newDocShellItem)
-      {
+   if(!newDocShellItem) {
       windowIsNew = PR_TRUE;
-      if(chromeFlags & nsIWebBrowserChrome::modal)
-         {
+      if(chromeFlags & nsIWebBrowserChrome::modal) {
          eventQService = do_GetService(kEventQueueServiceCID);
          if(eventQService && 
             NS_SUCCEEDED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue))))
             windowIsModal = PR_TRUE;
-         }
+      }
       treeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));
       NS_ENSURE_TRUE(newDocShellItem, NS_ERROR_FAILURE);
-      }
+   }
 
    NS_ENSURE_SUCCESS(ReadyOpenedDocShellItem(newDocShellItem, aReturn),
       NS_ERROR_FAILURE);
@@ -2912,8 +2917,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       AttachArguments(*aReturn, argv+3, argc-3);
 
    nsCOMPtr<nsIScriptSecurityManager> secMan;
-   if(uriToLoad)
-      {
+   if(uriToLoad) {
       // Get security manager, check to see if URI is allowed.
       nsCOMPtr<nsIURI> newUrl;
       nsCOMPtr<nsIScriptContext> scriptCX;
@@ -2923,7 +2927,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
          NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
          NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad))) 
          return NS_ERROR_FAILURE;
-      }
+   }
 
    if(nameSpecified)
       newDocShellItem->SetName(name.GetUnicode());
@@ -2931,16 +2935,14 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       newDocShellItem->SetName(nsnull);
 
    nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
-   if(uriToLoad)
-      {
+   if(uriToLoad) {
       nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
          return NS_ERROR_FAILURE;
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
 
       nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-      if(codebase)
-         {
+      if(codebase) {
          newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
          NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -2950,14 +2952,13 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
             return rv;
 
          loadInfo->SetReferrer(codebaseURI);
-         }
-      newDocShell->LoadURI(uriToLoad, loadInfo); 
       }
+      newDocShell->LoadURI(uriToLoad, loadInfo); 
+   }
 
    if(windowIsNew)
       SizeOpenedDocShellItem(newDocShellItem, options, chromeFlags);
-   if(windowIsModal)
-      {
+   if(windowIsModal) {
       nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
       newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
       
@@ -2965,7 +2966,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
          newTreeOwner->ShowModal();
 
       eventQService->PopThreadEventQueue(modalEventQueue);
-      }
+   }
 
    return NS_OK;
 }
