@@ -36,7 +36,6 @@
 
 static const char* kNullPointerError = "Error: unexpected null ptr";
 static const char* kWhitespace="\b\t\r\n ";
-static const PRInt32  kNotFound=-1;
 
 #ifdef  RICKG_DEBUG
 PRBool nsString2::mSelfTested = PR_FALSE;   

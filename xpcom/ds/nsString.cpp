@@ -33,7 +33,6 @@
 #include "nsICaseConversion.h"
 
 const PRInt32 kGrowthDelta = 8;
-const PRInt32 kNotFound = -1;
 PRUnichar gBadChar = 0;
 const char* kOutOfBoundsError = "Error: out of bounds";
 const char* kNullPointerError = "Error: unexpected null ptr";
