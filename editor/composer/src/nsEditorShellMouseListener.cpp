@@ -36,16 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsEditorShellMouseListener.h"
-#include "nsEditorShell.h"
 #include "nsString.h"
-#include "nsUnicharUtils.h"
 
 #include "nsIDOMEvent.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
