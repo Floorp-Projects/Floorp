@@ -158,6 +158,9 @@ sub CheckCanChangeField {
     if ($f =~ /^longdesc/) {
         return 1;
     }
+    if ($f = "resolution") { # always OK this.  if they really can't,
+        return 1;            # it'll flag it when "status" is checked.
+    }
     if ($UserInEditGroupSet < 0) {
         $UserInEditGroupSet = UserInGroup("editbugs");
     }
@@ -662,12 +665,6 @@ sub LogDependencyActivity {
     }
     return 0;
 }
-
-delete $::FORM{'resolution'};   # Make sure we don't test the resolution
-                                # against our permissions; we've already done
-                                # that kind of testing, and this form field
-                                # is actually usually not used.
-
 
 # this loop iterates once for each bug to be processed (eg when this script
 # is called with multiple bugs selected from buglist.cgi instead of
