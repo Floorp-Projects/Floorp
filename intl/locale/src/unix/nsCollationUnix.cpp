@@ -32,6 +32,7 @@
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h" /* for nsAutoString */
+#include "nsIPref.h"
 //#define DEBUG_UNIX_COLLATION
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
@@ -65,6 +66,7 @@ nsCollationUnix::nsCollationUnix()
 {
   NS_INIT_REFCNT(); 
   mCollation = NULL;
+  mKeyAsCodePoint = PR_FALSE;
 }
 
 nsCollationUnix::~nsCollationUnix() 
@@ -79,6 +81,11 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   NS_ASSERTION(mCollation == NULL, "Should only be initialized once");
 
   nsresult res;
+
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
+  if (prefs) {
+    res = prefs->GetBoolPref("intl.collationKeyAsCodePoint", &mKeyAsCodePoint);
+  }
 
   mCollation = new nsCollation;
   if (mCollation == NULL) {
@@ -177,11 +184,16 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    DoSetLocale();
-    // call strxfrm to calculate a key length 
-    int len = strxfrm(NULL, str, 0) + 1;
-    DoRestoreLocale();
-    *outLen = (len == -1) ? 0 : (PRUint32)len;
+    if (mKeyAsCodePoint) {
+      *outLen = nsCRT::strlen(str);
+    }
+    else {
+      DoSetLocale();
+      // call strxfrm to calculate a key length 
+      int len = strxfrm(NULL, str, 0) + 1;
+      DoRestoreLocale();
+      *outLen = (len == -1) ? 0 : (PRUint32)len;
+    }
     PR_Free(str);
   }
 
@@ -202,11 +214,17 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
 
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
-    DoSetLocale();
-    // call strxfrm to generate a key 
-    int len = strxfrm((char *) key, str, strlen(str));
-    DoRestoreLocale();
-    *outLen = (len == -1) ? 0 : (PRUint32)len;
+    if (mKeyAsCodePoint) {
+      *outLen = nsCRT::strlen(str);
+      nsCRT::memcpy(key, str, *outLen);
+    }
+    else {
+      DoSetLocale();
+      // call strxfrm to generate a key 
+      int len = strxfrm((char *) key, str, strlen(str));
+      DoRestoreLocale();
+      *outLen = (len == -1) ? 0 : (PRUint32)len;
+    }
     PR_Free(str);
   }
 
