@@ -386,16 +386,20 @@ function onFormSelect()
     }
 
     var labels = form.getElementsByTagName("label");
-    var llength = labels.length
+    var llength = labels.length;
 
     for (i = 0; i < llength; i++)
     {
-      var whatfor = labels[i].getAttribute("for") || findFirstControl(labels[i]);
-      var labeltext = getValueText(labels[i]);
+      var whatfor = labels[i].hasAttribute("for") ?
+        theDocument.getElementById(labels[i].getAttribute("for")) :
+        findFirstControl(labels[i]);
 
-      for(var j = 0; j < length; j++)
-        if (formfields[j] == whatfor || formfields[j].name == whatfor)
-          fieldView.setCellText(j, "field-label", labeltext);
+      if (whatfor && (whatfor.form == form)) {
+        var labeltext = getValueText(labels[i]);
+        for (var j = 0; j < length; j++)
+          if (formfields[j] == whatfor)
+            fieldView.setCellText(j, "field-label", labeltext);
+      }
     }
 
     fieldView.rowCountChanged(0, length);
