@@ -68,6 +68,8 @@ public:
   virtual PRBool AppendChild(nsIContent* aKid);
   virtual PRBool RemoveChildAt(PRInt32 aIndex);
 
+  NS_IMETHOD IsSynthetic(PRBool& aResult);
+
   virtual void Compact();
   
   virtual void SetAttribute(const nsString& aName, const nsString& aValue);
