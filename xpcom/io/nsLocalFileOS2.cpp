@@ -736,29 +736,33 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     
    // create nested directories to target
     unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.get(), '\\');
-    // skip the first '\\'
-    ++slash;
-    slash = _mbschr(slash, '\\');
 
-    while (slash)
+
+    if (slash)
     {
-        *slash = '\0';
-
-#ifdef XP_OS2
-        rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
-        if (rv) {
-            rv = ConvertOS2Error(rv);
-#else
-        if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL)) {
-            rv = ConvertWinError(GetLastError());
-#endif
-            if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
-        }
-        *slash = '\\';
+        // skip the first '\\'
         ++slash;
         slash = _mbschr(slash, '\\');
+    
+        while (slash)
+        {
+            *slash = '\0';
+            
+#ifdef XP_OS2
+                rv = CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL);
+                if (rv) {
+                    rv = ConvertOS2Error(rv);
+#else
+                if (!CreateDirectoryA(NS_CONST_CAST(char*, mResolvedPath.get()), NULL)) {
+                    rv = ConvertWinError(GetLastError());
+#endif
+                    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+                }
+                *slash = '\\';
+                ++slash;
+                slash = _mbschr(slash, '\\');
+        }
     }
-
 
     if (type == NORMAL_FILE_TYPE)
     {
