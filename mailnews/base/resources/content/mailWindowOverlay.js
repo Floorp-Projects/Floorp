@@ -31,8 +31,17 @@ var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-var gTimelineService = Components.classes["@mozilla.org;timeline-service;1"].getService(Components.interfaces.nsITimelineService);
+
+var gTimelineService = null;
 var gTimelineEnabled = gPrefs.getBoolPref("mailnews.timeline_is_enabled");
+
+try {
+  gTimelineService = Components.classes["@mozilla.org;timeline-service;1"].getService(Components.interfaces.nsITimelineService);
+}
+catch (ex)
+{
+  gTimelineEnabled = false;
+}
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
