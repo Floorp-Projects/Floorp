@@ -27,7 +27,7 @@
 
 interface nsIURI;
 interface nsIStreamListener;
-
+interface nsIMsgWindow;
 
 /*
  * The Pop3 Service is an interface designed to make building and running
@@ -53,7 +53,7 @@ interface nsIPop3Service : nsISupports {
    * mail on different pop3 accounts....
    */
   
-  nsIURI GetNewMail(in nsIUrlListener aUrlListener,
+  nsIURI GetNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,
                     in nsIPop3IncomingServer popServer);
 
   nsIURI CheckForNewMail(in nsIUrlListener aUrlListener,

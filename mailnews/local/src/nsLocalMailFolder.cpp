@@ -1486,7 +1486,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 	    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
 					(void **)&popServer);
 	    if (NS_SUCCEEDED(rv)) {
-		rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
+		rv = pop3Service->GetNewMail(aWindow, nsnull,popServer,nsnull);
 	    }
     }
     else if (PL_strcmp(type, "none") == 0) {

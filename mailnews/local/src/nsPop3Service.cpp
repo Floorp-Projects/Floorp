@@ -102,7 +102,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 }
 
 
-nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
+nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener,
                                    nsIPop3IncomingServer *popServer,
                                    nsIURI ** aURL)
 {
@@ -127,7 +127,12 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 	}
     
 	if (NS_SUCCEEDED(rv) && url) 
+	{
+		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(url);
+		if (mailNewsUrl)
+			mailNewsUrl->SetMsgWindow(aMsgWindow);
 		rv = RunPopUrl(server, url);
+	}
 
     if (popHost) PL_strfree(popHost);
 
