@@ -159,11 +159,15 @@ extern int __poll(struct pollfd filedes[], unsigned int nfds, int timeout);
 /*
  * Atomic operations
  */
+
+/* builtins.h is not available for OSF1 V3.2. */
+#ifndef OSF1V3
 #include <machine/builtins.h>
 #define _PR_HAVE_ATOMIC_OPS
 #define _MD_INIT_ATOMIC()
 #define _MD_ATOMIC_INCREMENT(val) (__ATOMIC_INCREMENT_LONG(val) + 1)
 #define _MD_ATOMIC_DECREMENT(val) (__ATOMIC_DECREMENT_LONG(val) - 1)
 #define _MD_ATOMIC_SET(val, newval) __ATOMIC_EXCH_LONG(val, newval)
+#endif /* OSF1V3 */
 
 #endif /* nspr_osf1_defs_h___ */
