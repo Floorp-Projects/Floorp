@@ -1057,9 +1057,6 @@ htNewWorkspace(HT_Pane pane, char *id, char *optionalTitle, uint32 workspacePos)
 PR_PUBLIC_API(void)
 HT_NewWorkspace(HT_Pane pane, char *id, char *optionalTitle)
 {
-	HT_View			viewList;
-	RDF_Resource		r;
-
 	XP_ASSERT(pane != NULL);
 	XP_ASSERT(id != NULL);
 	if (pane == NULL)	return;
@@ -5864,7 +5861,6 @@ HT_DropHTRAtPos(HT_Resource dropTarget, HT_Resource obj, PRBool before)
 			if (before && (workspacePos>0))	--workspacePos;
 			htNewWorkspace(HT_GetPane(HT_GetView(dropTarget)),
 				resourceID(HT_GetRDFResource(obj)), NULL, workspacePos);
-// crap
 		}
 	}
 	else
