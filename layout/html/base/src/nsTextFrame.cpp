@@ -3079,14 +3079,22 @@ nsTextFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent)
 {
+  if (!aNewContent)
+    return NS_ERROR_NULL_POINTER;
+  *aNewContent = nsnull;//initialize
+  aContentOffset = 0;
+  aContentOffsetEnd = 0;
+  aBeginFrameContent = 0;
+
   nsPoint newPoint;
   newPoint.y = aPoint.y;
   if (aPoint.x < 0)
     newPoint.x = 0;
   else
     newPoint.x = aPoint.x;
-
   nsresult rv = GetPosition(aCX, newPoint, aNewContent, aContentOffset, aContentOffsetEnd);
+  if (NS_FAILED(rv))
+    return rv;
   if (aContentOffset == mContentOffset)
     aBeginFrameContent = PR_TRUE;
   else
