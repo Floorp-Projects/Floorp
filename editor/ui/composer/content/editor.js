@@ -1525,12 +1525,15 @@ function GetParentTableCell(element)
 
 function EditorDblClick(event)
 {
-  if (event.target)
+  // We check event.explicitOriginalTarget here because .target will never
+  // be a textnode (bug 193689)
+  if (event.explicitOriginalTarget)
   {
     // Only bring up properties if clicked on an element or selected link
     var element;
     try {
-      element = event.target.QueryInterface(Components.interfaces.nsIDOMElement);
+      element = event.explicitOriginalTarget.QueryInterface(
+                    Components.interfaces.nsIDOMElement);
     } catch (e) {}
 
      //  We use "href" instead of "a" to not be fooled by named anchor
@@ -1561,16 +1564,20 @@ function EditorClick(event)
   // For Web Composer: In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (IsWebComposer() && event.target && IsHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
+  if (IsWebComposer() && event.explicitOriginalTarget && IsHTMLEditor() &&
+      gEditorDisplayMode == kDisplayModeAllTags)
   {
     try
     {
-      var element = event.target.QueryInterface( Components.interfaces.nsIDOMElement);
+      // We check event.explicitOriginalTarget here because .target will never
+      // be a textnode (bug 193689)
+      var element = event.explicitOriginalTarget.QueryInterface(
+                        Components.interfaces.nsIDOMElement);
       var name = element.localName.toLowerCase();
       if (name != "body" && name != "table" &&
           name != "td" && name != "th" && name != "caption" && name != "tr")
       {          
-        GetCurrentEditor().selectElement(event.target);
+        GetCurrentEditor().selectElement(event.explicitOriginalTarget);
         event.preventDefault();
       }
     } catch (e) {}
