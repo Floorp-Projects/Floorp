@@ -24,7 +24,7 @@
 	CS
 	Color Scheme Library
 */
-#include <LTextEdit.h>
+#include <LTextEditView.h>
 #include <LGAEditField.h>
 #include "CFontReference.h"
 //#include "VEditField.h"
@@ -75,8 +75,11 @@ public:
 								CPrefs::PrefEnum r );
 	static CGrafPtr			IsColorPort( GrafPtr port );			// TRUE if GrafPtr is a color port
 	static void				SetWindowColors( LWindow *window );
+#if TARGET_CARBON
+	static void				SetWindowColor( GrafPtr *window, short field, const RGBColor& color );
+#else
 	static void				SetWindowColor( GrafPort *window, short field, const RGBColor& color );
-
+#endif
 
 	static void				DrawLine( Int16 top, Int16 left, Int16 bottom, Int16 right,
 								CPrefs::PrefEnum color );
@@ -107,7 +110,13 @@ inline Boolean UGraphics::EqualColor( const RGBColor& c1, const RGBColor& c2 )
 
 inline void UGraphics::SetIfColor( const RGBColor& newColor )
 {
+#if TARGET_CARBON
+	RGBColor currentColor;
+	::GetPortForeColor((CGrafPtr)qd.thePort, &currentColor);
+#else
 	RGBColor currentColor = ((CGrafPtr)qd.thePort)->rgbFgColor;
+#endif // TARGET_CARBON
+
 	if ( !EqualColor( currentColor, newColor ) )
 		::RGBForeColor( &newColor );
 }
@@ -115,7 +124,12 @@ inline void UGraphics::SetIfColor( const RGBColor& newColor )
 inline void UGraphics::SetIfBkColor( const RGBColor& newColor )
 {
 	CGrafPtr cgp = (CGrafPtr)qd.thePort;
-	RGBColor currentColor = cgp->rgbBkColor;
+#if TARGET_CARBON
+	RGBColor currentColor;
+	::GetPortBackColor(cgp, &currentColor);
+#else
+	RGBColor currentColor = ((CGrafPtr)qd.thePort)->rgbBkColor;
+#endif // TARGET_CARBON	
 	if ( !EqualColor( currentColor, newColor ) )
 		::RGBBackColor( &newColor );
 }
@@ -280,7 +294,7 @@ public:
  * class CTextEdit
  * LTextEdit, keeps track if it has been modified
  *****************************************************************************/
-class CTextEdit	: public LTextEdit, public LBroadcaster
+class CTextEdit	: public LTextEditView, public LBroadcaster
 {
 	Boolean fModified;		// Has user modified this field
 public:
