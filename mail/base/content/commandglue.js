@@ -306,6 +306,9 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
     gDBView = null;
   }
 
+  // cancel the pending mark as read timer
+  ClearPendingReadTimer();
+
   // if this is the drafts, sent, or send later folder,
   // we show "Recipient" instead of "Author"
   SetSentFolderColumns(IsSpecialFolder(newFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE));

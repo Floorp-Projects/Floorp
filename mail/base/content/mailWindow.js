@@ -72,6 +72,7 @@ var gLastKeywords = "";
 function OnMailWindowUnload()
 {
   RemoveMailOfflineObserver();
+  ClearPendingReadTimer();
 
   var searchSession = GetSearchSession();
   if (searchSession)

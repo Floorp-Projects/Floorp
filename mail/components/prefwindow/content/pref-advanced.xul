@@ -125,13 +125,11 @@
 
     <!-- Message Display Extras  -->
     <expander id="generalSettings" label="&generalSettings.label;" open="true" persist="open" clearhidden="true">
-#ifdef 0
       <hbox align="center" pack="start">
         <checkbox id="markAsRead" label="&markAsRead.label;" prefstring="mailnews.mark_message_read.delay"/>
         <textbox  id="markAsReadDelay" size="2" preftype="int" prefstring="mailnews.mark_message_read.delay.interval"/>
         <label value="&markAsReadEnd.label;"/>
       </hbox>
-#endif
       <hbox align="center" pack="start">
         <checkbox id="showFolderPaneColumns" label="&showFolderColumns.label;" prefstring="mail.showFolderPaneColumns"/>
       </hbox> 
