@@ -265,15 +265,14 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
 
   // Reflow the frame. If the frame must be placed somewhere else
   // then we return immediately.
-  nsRect bounds;
-  if (ReflowFrame(metrics, bounds, result)) {
+  if (ReflowFrame(metrics, result)) {
     // See if we can place the frame. If we can't fit it, then we
     // return now.
-    if (CanPlaceFrame(metrics, bounds, result)) {
+    if (CanPlaceFrame(metrics, result)) {
       // Place the frame, updating aBounds with the final size and
       // location.  Then apply the bottom+right margins (as
       // appropriate) to the frame.
-      PlaceFrame(metrics, bounds);
+      PlaceFrame(metrics);
     }
   }
 
@@ -332,18 +331,16 @@ nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
   return rv;
 }
 
-// XXX doesn't apply top margin; it should for inlines, yes? should
-// top margins for inlines end up in the ascent and bottom margins in
-// the descent?
+// XXX doesn't apply top margin
 
 void
 nsInlineReflow::ApplyTopLeftMargins()
 {
-  mFrameX = mX;
-  mFrameY = mTopEdge;
+  PerFrameData* pfd = mFrameData;
+  pfd->mBounds.x = mX;
+  pfd->mBounds.y = mTopEdge;
 
   // Compute left margin
-  nscoord leftMargin = 0;
   const nsStyleDisplay* display = GetDisplay();
   switch (display->mFloats) {
   default:
@@ -357,10 +354,9 @@ nsInlineReflow::ApplyTopLeftMargins()
     break;
 
   case NS_STYLE_FLOAT_NONE:
-    leftMargin = mFrameData->mMargin.left;
+    pfd->mBounds.x += pfd->mMargin.left;
     break;
   }
-  mFrameX += leftMargin;
 }
 
 PRBool
@@ -373,13 +369,15 @@ nsInlineReflow::ComputeAvailableSize()
     mFrameAvailSize.width = NS_UNCONSTRAINEDSIZE;
   }
   else {
-    mFrameAvailSize.width = mRightEdge - mFrameX - pfd->mMargin.right;
+    // XXX What does a negative right margin mean here?
+    mFrameAvailSize.width = mRightEdge - pfd->mBounds.x - pfd->mMargin.right;
   }
   if (NS_UNCONSTRAINEDSIZE == mBottomEdge) {
     mFrameAvailSize.height = NS_UNCONSTRAINEDSIZE;
   }
   else {
-    mFrameAvailSize.height = mBottomEdge - mFrameY - pfd->mMargin.bottom;
+    mFrameAvailSize.height = mBottomEdge - pfd->mBounds.y -
+      pfd->mMargin.bottom;
   }
 
   // Give up now if there is no chance. Note that we allow a reflow if
@@ -399,16 +397,17 @@ nsInlineReflow::ComputeAvailableSize()
  */
 PRBool
 nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
-                            nsRect& aBounds,
                             nsReflowStatus& aStatus)
 {
+  PerFrameData* pfd = mFrameData;
+
   // Get reflow reason set correctly. It's possible that a child was
   // created and then it was decided that it could not be reflowed
   // (for example, a block frame that isn't at the start of a
   // line). In this case the reason will be wrong so we need to check
   // the frame state.
   nsReflowReason reason = eReflowReason_Resize;
-  nsIFrame* frame = mFrameData->mFrame;
+  nsIFrame* frame = pfd->mFrame;
   nsFrameState state;
   frame->GetFrameState(state);
   if (NS_FRAME_FIRST_REFLOW & state) {
@@ -425,21 +424,17 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                                 mFrameAvailSize);
   if (!mTreatFrameAsBlock) {
     mIsInlineAware = PR_TRUE;
-//XX    reflowState.frameType = eReflowType_Inline;
     reflowState.lineLayout = &mLineLayout;
   }
   reflowState.reason = reason;
 
   // Let frame know that are reflowing it
-  nscoord x = mFrameX;
-  nscoord y = mFrameY;
+  nscoord x = pfd->mBounds.x;
+  nscoord y = pfd->mBounds.y;
   nsIHTMLReflow* htmlReflow;
 
   frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   htmlReflow->WillReflow(mPresContext);
-
-  aBounds.x = x;
-  aBounds.y = y;
 
   // Adjust spacemanager coordinate system for the frame. The
   // spacemanager coordinates are <b>inside</b> the mOuterFrame's
@@ -453,8 +448,8 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   mSpaceManager->Translate(tx, ty);
 
   htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
-  aBounds.width = aMetrics.width;
-  aBounds.height = aMetrics.height;
+  pfd->mBounds.width = aMetrics.width;
+  pfd->mBounds.height = aMetrics.height;
 
   mSpaceManager->Translate(-tx, -ty);
 
@@ -504,14 +499,13 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
  */
 PRBool
 nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
-                              nsRect& aBounds,
                               nsReflowStatus& aStatus)
 {
   PerFrameData* pfd = mFrameData;
 
   // Compute right margin to use
   mRightMargin = 0;
-  if (0 != aBounds.width) {
+  if (0 != pfd->mBounds.width) {
     const nsStyleDisplay* display = GetDisplay();
     switch (display->mFloats) {
     default:
@@ -559,7 +553,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
 
   // See if the frame fits. If it doesn't then we fabricate up a
   // break-before status.
-  if (aBounds.XMost() + mRightMargin > mRightEdge) {
+  if (pfd->mBounds.XMost() + mRightMargin > mRightEdge) {
     // Retain the completion status of the frame that was reflowed in
     // case the caller cares.
     aStatus = NS_INLINE_LINE_BREAK_BEFORE();
@@ -573,7 +567,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
  * Place the frame. Update running counters.
  */
 void
-nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
+nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
 {
   PerFrameData* pfd = mFrameData;
 
@@ -582,14 +576,16 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
     mIsBlock = PR_TRUE;
   }
 
+//XXX disabled: css2 spec claims otherwise; the problem is we need to
+//handle continuations differently so that empty continuations disappear
+
   // If frame is zero width then do not apply its left and right margins.
   PRBool emptyFrame = PR_FALSE;
-  if ((0 == aBounds.width) || (0 == aBounds.height)) {
-    aBounds.x = mX;
-    aBounds.y = 0;
+  if ((0 == pfd->mBounds.width) || (0 == pfd->mBounds.height)) {
+    pfd->mBounds.x = mX;
+    pfd->mBounds.y = mTopEdge;
     emptyFrame = PR_TRUE;
   }
-  pfd->mBounds = aBounds;
 
   // Record ascent and update max-ascent and max-descent values
   pfd->mAscent = aMetrics.ascent;
@@ -609,7 +605,7 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   mCarriedOutMarginFlags = aMetrics.mCarriedOutMarginFlags;
 
   // Advance to next X coordinate
-  mX = aBounds.XMost() + mRightMargin;
+  mX = pfd->mBounds.XMost() + mRightMargin;
 
   // If the frame is a not inline aware and it takes up some area
   // disable leading white-space compression for the next frame to
@@ -654,16 +650,19 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 
   // Short circuit 99% of this when this code has reflowed a single
   // block frame.
-  aLineBox.x = mLeftEdge;
-  aLineBox.y = mTopEdge;
-  aLineBox.width = mX - mLeftEdge;
   if (mTreatFrameAsBlock) {
-    aLineBox.height = pfd0->mBounds.height;
+    aLineBox = pfd0->mBounds;
     aMaxAscent = pfd0->mAscent;
     aMaxDescent = pfd0->mDescent;
     pfd0->mFrame->SetRect(aLineBox);
     return;
   }
+
+  // XXX I think that the line box should wrap around the children,
+  // even if they have negative margins, right?
+  aLineBox.x = mLeftEdge;
+  aLineBox.y = mTopEdge;
+  aLineBox.width = mX - mLeftEdge;
 
   // Get the parent elements font in case we need it
   const nsStyleFont* font;
