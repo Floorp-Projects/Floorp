@@ -434,23 +434,25 @@ if ($action eq 'new') {
 
     my $existing_product = TestProduct($product);
 
-    # Check for exact case sensitive match:
-    if ($existing_product eq $product) {
-        print "The product '$product' already exists. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
+    if ($existing_product) {
 
-    # Next check for a case-insensitive match:
-    if (lc($existing_product) eq lc($product)) {
-        print "The new product '$product' differs from existing product ";
-        print "'$existing_product' only in case. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
-        exit;
-    }
+        # Check for exact case sensitive match:
+        if ($existing_product eq $product) {
+            print "The product '$product' already exists. Please press\n";
+            print "<b>Back</b> and try again.\n";
+            PutTrailer($localtrailer);
+            exit;
+        }
 
+        # Next check for a case-insensitive match:
+        if (lc($existing_product) eq lc($product)) {
+            print "The new product '$product' differs from existing product ";
+            print "'$existing_product' only in case. Please press\n";
+            print "<b>Back</b> and try again.\n";
+            PutTrailer($localtrailer);
+            exit;
+        }
+    }
 
     my $version = trim($::FORM{version} || '');
 
