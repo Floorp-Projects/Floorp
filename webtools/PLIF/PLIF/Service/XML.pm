@@ -49,7 +49,7 @@ sub parse {
 sub parseNS {
     my $self = shift;
     my($string) = @_;
-    return XML::Parser->new(Style => 'Tree', Namespaces => 1)->parse($string);
+    return XML::Parser->new(Style => __PACKAGE__, Namespaces => 1)->parse($string);
 }
 
 sub escape {
@@ -62,6 +62,7 @@ sub escape {
     $value =~ s/>/&gt;/go;
     return $value;
 }
+
 
 # This is a convenient way of walking a DOM. The first argument should
 # be an object which has one or more of the following methods
@@ -128,4 +129,71 @@ sub walk {
             }
         }
     } while (scalar(@stack) and (($tree, $index, $data) = @{pop(@stack)}));
+}
+
+
+# Internal routines for creating a namespace-aware XML tree.
+#
+# If I was clever, I could just merge this with walk() above and do it
+# all in one step. Wouldn't that be nice. XXX
+
+sub Init {
+    my $parser = shift;
+    $parser->{'Lists'} = [];
+    $parser->{'Current List'} = [];
+    $parser->{'Tree'} = $parser->{'Current List'};
+}
+
+sub Start {
+    my $parser = shift;
+    my($tagName, @attributes) = @_;
+    # for those attributes in a particular namespace, expand their names
+    my $name = 1;
+    foreach my $attribute (@attributes) {
+        if ($name) {
+            my $ns = $parser->namespace($attribute);
+            if (defined($ns)) {
+                $attribute = "{$ns}$attribute";
+            }
+        } # else it's the value, skip it
+        $name = not $name;
+    }
+    my $newList = [{@attributes}];
+    # if the tag name is in a particular namespace, expand it too
+    my $ns = $parser->namespace($tagName);
+    if (defined($ns)) {
+        $tagName = "{$ns}$tagName";
+    }
+    # push the current level onto the stack
+    push(@{$parser->{'Current List'}}, $tagName => $newList);
+    push(@{$parser->{'Lists'}}, $parser->{'Current List'});
+    $parser->{'Current List'} = $newList;
+}
+
+sub End {
+    my $parser = shift;
+    my($tagName) = @_;
+    # pop the current level off the stack
+    $parser->{'Current List'} = pop(@{$parser->{'Lists'}});
+}
+
+sub Char {
+    my $parser = shift;
+    my($text) = @_;
+    my $currentList = $parser->{'Current List'};
+    my $position = $#$currentList;
+    if (($position > 0) and ($currentList->[$position-1] eq '0')) {
+        # we already have some text, just stick it on the end
+        $currentList->[$position] .= $text;
+    } else {
+        # new text node
+        push(@$currentList, 0 => $text);
+    }
+}
+
+sub Final {
+    my $parser = shift;
+    delete($parser->{'Current List'});
+    delete($parser->{'Lists'});
+    return $parser->{'Tree'};
 }

@@ -38,19 +38,24 @@ use HTTP::Headers; # DEPENDENCY
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'dataSource.strings' or $service eq 'setup.install' or $class->SUPER::provides($service));
+    # XXX this class should provide a 'clear caches' service (as should some others)
+    return ($service eq 'dataSource.strings' or 
+            $service eq 'setup.install' or 
+            $class->SUPER::provides($service));
 }
 
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
     $self->variantsCache({});
+    $self->stringsCache({});
 }
 
 sub databaseName {
     return 'default';
 }
 
+# returns ($type, $string)
 sub get {
     my $self = shift;
     my($app, $session, $protocol, $string) = @_;
@@ -64,20 +69,28 @@ sub get {
         # $app->input instead
         $variant = $self->selectVariant($app, $protocol);
     }
-    my $result;
-    eval {
-        $result = $self->getString($app, $variant, $string);
-    };
-    if ($@) {
-        # ok, so, er, it seems that didn't go to well
-        # XXX do we want to do an error here or something?
-        $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
+    if (not defined($self->stringsCache->{$variant})) {
+        $self->stringsCache->{$variant} = {};
     }
-    if (not defined($result)) {
-        $result = $self->getDefaultString($app, $protocol, $string);
-        $self->assert($result, 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+    if (not defined($self->stringsCache->{$variant}->{$string})) {
+        my @results;
+        eval {
+            @results = $self->getString($app, $variant, $string);
+        };
+        if ($@) {
+            # ok, so, er, it seems that didn't go to well
+            # XXX do we want to do an error here or something?
+            $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
+        }
+        if (not scalar(@results)) {
+            @results = $self->getDefaultString($app, $protocol, $string);
+            $self->assert(scalar(@results), 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+        }
+        $self->stringsCache->{$variant}->{$string} = \@results;
+        return @results;
+    } else {
+        return @{$self->stringsCache->{$variant}->{$string}};
     }
-    return $result;
 }
 
 sub selectVariant {
@@ -165,7 +178,7 @@ sub getString {
     my $self = shift;
     # my($app, $variant, $string) = @_;
     $self->notImplemented();
-    # return data
+    # return type, data
 }
 
 sub getDefaultString {
@@ -192,14 +205,14 @@ sub getVariantStrings {
     my $self = shift;
     # my($app, $variant) = @_;
     $self->notImplemented();
-    # return ( string => data )*;
+    # return ( string => [ type, data ] )*;
 }
 
 sub getStringVariants {
     my $self = shift;
     # my($app, $string) = @_;
     $self->notImplemented();
-    # return ( variant => data )*;
+    # return ( variant => [ type, data ] )*;
 }
 
 sub getDescribedVariants {
@@ -218,7 +231,7 @@ sub setVariant {
 
 sub setString {
     my $self = shift;
-    # my($app, $variant, $string, $data) = @_;
+    # my($app, $variant, $string, $type, $data) = @_;
     # if $data = '' then delete the relevant string from the database
     $self->notImplemented();
 }

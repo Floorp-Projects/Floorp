@@ -48,16 +48,17 @@ sub lastError {
     return $self->handle->err;
 }
 
-
 sub row {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
+    # XXX check for error
     return $self->handle->fetchrow_array();
 }
 
 sub rows {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
+    # XXX check for error
     return $self->handle->fetchall_arrayref();
 }
 

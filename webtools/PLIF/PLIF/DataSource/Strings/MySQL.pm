@@ -40,7 +40,7 @@ sub databaseType {
 sub getString {
     my $self = shift;
     my($app, $variant, $string) = @_;
-    return $self->database($app)->execute('SELECT data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
+    return $self->database($app)->execute('SELECT type, data FROM strings WHERE variant = ? AND name = ?', $variant, $string)->row;
 }
 
 sub getVariants {
@@ -79,8 +79,8 @@ sub getVariantStrings {
     my $self = shift;
     my($app, $variant) = @_;
     my %result = ();
-    foreach my $string ($self->database($app)->execute('SELECT name, data FROM strings WHERE variant = ?', $variant)->rows) {
-        $result{$string->[0]} = $string->[1];
+    foreach my $string ($self->database($app)->execute('SELECT name, type, data FROM strings WHERE variant = ?', $variant)->rows) {
+        $result{$string->[0]} = [$string->[1], $string->[2]];
     }
     return %result;
 }
@@ -89,8 +89,8 @@ sub getStringVariants {
     my $self = shift;
     my($app, $string) = @_;
     my %result = ();
-    foreach my $variant ($self->database($app)->execute('SELECT variant, data FROM strings WHERE name = ?', $string)->rows) {
-        $result{$variant->[0]} = $variant->[1];
+    foreach my $variant ($self->database($app)->execute('SELECT variant, type, data FROM strings WHERE name = ?', $string)->rows) {
+        $result{$variant->[0]} = [$variant->[1], $variant->[2]];
     }
     return %result;
 }
@@ -107,9 +107,9 @@ sub setVariant {
 
 sub setString {
     my $self = shift;
-    my($app, $variant, $string, $data) = @_;
+    my($app, $variant, $string, $type, $data) = @_;
     if ((defined($data)) and (length($data) > 0)) {
-        $self->database($app)->execute('REPLACE INTO stringVariants SET variant=?, string=?, data=?', $variant, $string, $data);
+        $self->database($app)->execute('REPLACE INTO stringVariants SET variant=?, string=?, type=?, data=?', $variant, $string, $type, $data);
     } else {
         $self->database($app)->execute('DELETE FROM stringVariants WHERE variant = ? AND string = ?', $variant, $string);
     }
@@ -148,12 +148,16 @@ sub setupInstall {
             CREATE TABLE strings (
                                   variant integer unsigned NOT NULL,
                                   name varchar(32) NOT NULL,
+                                  type varchar(32) NOT NULL,
                                   data text,
                                   PRIMARY KEY (variant, name)
                                   )
         ');
     } else {
         # check its schema is up to date
+        if (not $helper->columnExists($app, $self->database($app), 'strings', 'type')) {
+            $self->database($app)->execute('ALTER TABLE strings ADD COLUMN type varchar(32) NOT NULL');
+        }
     }
     $self->dump(9, 'done configuring string data source');
     return;

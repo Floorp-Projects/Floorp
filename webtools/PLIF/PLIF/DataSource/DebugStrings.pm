@@ -44,7 +44,7 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     # this is protocol agnostic stuff :-)
     if ($string eq 'debug.dumpVars') {
-        return <<eof;
+        return ('COSES', <<eof);
 <!--
  !
  !  This example will dump every single string passed into it. For
@@ -69,14 +69,15 @@ sub getDefaultString {
  !  this example as having the name 'debug.dumpVars' then to embed it
  !  you would do:
  !
- !     <embed string="debug.dumpVars"/>
+ !     <include href="debug.dumpVars"/>
  !
  !  This example is covered by the same license terms as COSES itself.
  !  Author: Ian Hickson
  !
  !-->
-<text xml:space="default"> <!-- trim whitespace -->
-  <with variable="prefix">  
+<text xmlns="http://bugzilla.mozilla.org/coses"
+      xml:space="default"> <!-- trim whitespace -->
+  <with variable="prefix">
     <if lvalue="((prefix))" condition="is" rvalue="scalar">
       <text value="  (prefix)"/> = <text value="((prefix))"/><br/>
     </if>
@@ -89,7 +90,7 @@ sub getDefaultString {
         </if>
         <else>
           <set variable="prefix" value="(prefix).(index)">
-            <embed string="debug.dumpVars"/>
+            <include href="debug.dumpVars"/>
           </set>
         </else>
       </set>
@@ -100,7 +101,7 @@ sub getDefaultString {
   </with>
   <without variable="prefix">
     <set variable="prefix" value="()" source="keys" order="lexical">
-      <embed string="debug.dumpVars"/>
+      <include href="debug.dumpVars"/>
     </set>
   </without>
 </text>

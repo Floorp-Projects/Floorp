@@ -88,6 +88,7 @@ sub reportInputVerificationError {
     $app->output->loginFailed(1); # 1 means 'invalid username/password'
 }
 
+# cmdSendPassword doubles up as 'cmdNewUser'
 # dispatcher.commands
 sub cmdSendPassword {
     my $self = shift;
@@ -195,19 +196,19 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'login.accessDenied') {
-            return '<text>Access Denied<br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Access Denied<br/></text>');
         } elsif ($string eq 'login.failed') {
-            return '<text><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>');
         } elsif ($string eq 'login.detailsSent') {
-            return '<text>Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>');
         }
     } elsif ($protocol eq 'http') {
         if ($string eq 'login.accessDenied') {
-            return '<text>HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>');
         } elsif ($string eq 'login.failed') {
-            return '<text>HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>');
         } elsif ($string eq 'login.detailsSent') {
-            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>');
         }
     }
     return; # nope, sorry

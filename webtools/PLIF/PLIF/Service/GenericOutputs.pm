@@ -76,15 +76,15 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'request') {
-            return '<text>\'<text value="(data.argument)"/>\'? </text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(data.argument)"/>\'? </text>');
         } elsif ($string eq 'error') {
             $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
-            return '<text>Error:<br/><text value="(data.error)"/><br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(data.error)"/><br/></text>');
         }
     } elsif ($protocol eq 'http') {
         if ($string eq 'error') {
             $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
-            return '<text>HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(data.error)"/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(data.error)"/></text>');
         }
     }
     return; # nope, sorry

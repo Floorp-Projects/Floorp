@@ -55,29 +55,34 @@ use PLIF::Output;
 #
 # It calls the generic output module's 'HelloWorld' method, which in
 # this case doesn't exist and ends up going through core PLIF and then
-# back to methodMissing implemented in the ancestor Output module.
+# back to methodMissing implemented in this module and the ancestor
+# Output module.
 #
-# The methodMissing method calls every output dispatcher service (for
-# the generic protocol, anyway) until one of them handles the
-# HelloWorld method.
+# The methodMissing methods first call every output dispatcher service
+# for the actual protocol (HTTP in this case) and then every output
+# dispatcher service for the generic protocol until one of them
+# handles the HelloWorld method.
 #
 # This ends up calling HelloWorld on one of the output dispatchers,
 # which should result in calling the 'output' method of this object
 # (defined below) with a string name and a hash.
 #
-# The output method now calls for a string expander service, passes it
-# the string and the hash, and waits for a string in return. Notice
-# that we still have not yet done anything output-protocol-specific.
+# The output method now fetches the string and related metadata from
+# the string data source which calls the default database which calls
+# the configuration data source which calls the configuration file
+# database which looks up the name of the database, which is used to
+# look up the list of variants and the specific string which should be
+# used from those variants. If that fails, then the string data source
+# will instead ask each of the default string data sources in turn for
+# a suitable string.
 #
-# The string expander calls the string data source which calls the
-# default database which calls the configuration data source which
-# calls the configuration file database which looks up the name of the
-# database, which is used to look up the list of variants and the
-# specific string which should be used from those variants. If that
-# fails, then the string data source will instead ask each of the
-# default string data sources in turn for a suitable string, which it
-# will return to the string expander which will expand the string and
-# return it to the output method.
+# The output method then calls for an appropriate string expander
+# service, passes it the string and the data hash, and waits for
+# another string in return.
+#
+# The string expander tytpically passes this string to an XML service
+# (which typically calls expat) to get it parsed and then handles it
+# as appropriate to get some string output.
 #
 # The output method then looks for a protocol outputter and passes it
 # the final string.
@@ -110,13 +115,20 @@ sub output {
     if (not defined($session)) {
         $session = $self->actualSession;
     }
-    my $expander = $self->app->getService("string.expander.$string");
+    $self->fillData($data);
+    $self->outputter->output($self->app, $session, $self->getString($session, $string, $data));
+}
+
+sub getString {
+    my $self = shift;
+    my($session, $name, $data) = @_;
+    my($type, $string) = $self->app->getService('dataSource.strings')->get($self->app, $session, $self->actualProtocol, $name);
+    my $expander = $self->app->getService("string.expander.named.$name");
     if (not defined($expander)) {
-        $expander = $self->app->getService('string.expander');
+        $expander = $self->app->getService("string.expander.$type");
         $self->assert($expander, 1, 'Could not find a string expander.');
     }
-    $self->fillData($data);
-    $self->outputter->output($self->app, $session, $expander->expand($self->app, $session, $self->actualProtocol, $string, $data));
+    return $expander->expand($self->app, $self, $session, $self->actualProtocol, $string, $data);
 }
 
 # If we don't implement the output handler directly, let's see if some

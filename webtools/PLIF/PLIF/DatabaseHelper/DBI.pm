@@ -43,6 +43,18 @@ sub tableExists {
     return defined($database->execute('SHOW TABLES LIKE ?', $table)->row);
 }
 
+sub columnExists {
+    my $self = shift;
+    my($app, $database, $table, $columnName) = @_;
+    my $columns = $database->execute('SHOW COLUMNS FROM ?', $table);
+    while (my @columnDefinition = $columns->row) {
+        if ($columnDefinition[0] eq $columnName) {
+            return @columnDefinition;
+        }
+    }
+    return undef;
+}
+
 
 =over time i would expect the following to be implemented:
 
@@ -56,18 +68,6 @@ sub tableExists {
 ###########################################################################
 # Detect changed local settings
 ###########################################################################
-
-sub GetFieldDef ($$)
-{
-    my ($table, $field) = @_;
-    my $sth = $dbh->prepare("SHOW COLUMNS FROM $table");
-    $sth->execute;
-
-    while (my $ref = $sth->fetchrow_arrayref) {
-        next if $$ref[0] ne $field;
-        return $ref;
-   }
-}
 
 sub GetIndexDef ($$)
 {

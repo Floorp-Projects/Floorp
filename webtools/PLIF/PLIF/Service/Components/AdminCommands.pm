@@ -128,9 +128,9 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
         if ($string eq 'setup') {
-            return '<text><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses"><if lvalue="(data.failed)" condition="=" rvalue="1">Failed with:<br/><text variable="(data.result)"/></if><else>Succeeded!</else><br/></text>');
         } elsif ($string eq 'setup.progress') {
-            return '<text>Setup: configuring <text value="(data.component)"/>...<br/></text>';
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">Setup: configuring <text value="(data.component)"/>...<br/></text>');
         }
     }
     return; # nope, sorry

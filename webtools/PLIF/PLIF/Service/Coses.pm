@@ -33,17 +33,23 @@ use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
+# XXX need to implement the three other places marked XXX in this
+# module to enable real output to be created.
+
+# COSES namespace is: http://bugzilla.mozilla.org/coses
+
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'string.expander' or $service eq 'service.coses' or $class->SUPER::provides($service));
+    return ($service eq 'string.expander.COSES' or $class->SUPER::provides($service));
 }
 
 sub expand {
     my $self = shift;
-    my($app, $session, $protocol, $string, $data) = @_;
+    my($app, $output, $session, $protocol, $string, $data) = @_;
+    my $xmlService = $app->getService('service.xml');
     my @index = (); my $index = 0;
-    my @stack = (); my $stack = $app->getService('service.xml')->parse($self->getString($app, $session, $protocol, $string));
+    my @stack = (); my $stack = $xmlService->parseNS($string);
     my @scope = (); my $scope = {'data' => $data};
     my $result = '';
     if (not $scope->{'coses: skip sanitation'}) {
@@ -69,11 +75,12 @@ sub expand {
             if ($node) {
                 # element node
                 my $attributes = $contents->[0];
-                if ($attributes->{'xml:space'}) {
+                if ($attributes->{'{http://www.w3.org/XML/1998/namespace}space'}) {
                     $scope = {%$scope}; # take a local copy of the root level for descendants
-                    $scope->{'coses: white space'} = $attributes->{'xml:space'} eq 'default'; # vs 'preserve', which is assumed
+                    $scope->{'coses: white space'} = $attributes->{'{http://www.w3.org/XML/1998/namespace}space'} eq 'default'; 
+                    # vs 'preserve', which is assumed
                 }
-                if ($node eq 'if') {
+                if ($node eq '{http://bugzilla.mozilla.org/coses}if') {
                     if (not $self->evaluateCondition($self->evaluateExpression($attributes->{'lvalue'}, $scope),
                                                      $self->evaluateExpression($attributes->{'rvalue'}, $scope),
                                                      $self->evaluateExpression($attributes->{'condition'}, $scope),
@@ -86,7 +93,7 @@ sub expand {
                         $scope = {%$scope};
                     }
                     $scope->{'coses: last condition'} = 0;
-                } elsif ($node eq 'set') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}set') {
                     my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
                     $self->assert($variable !~ /[\(\.\)]/o, 1,
                                   "variable '$variable' contains one of '(', ')' or '.' and is therefore not valid to use as a variable name.");
@@ -135,7 +142,7 @@ sub expand {
                         }
                         $scope->{$variable} = $value;
                     }
-                } elsif ($node eq 'text') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}text') {
                     if ($attributes->{'value'}) {
                         $result .= $self->evaluateExpression($attributes->{'value'}, $scope);
                         # XXX we need to also support:
@@ -143,32 +150,53 @@ sub expand {
                         #   insert a hash as a particular data structure (CGI arguments, an XML fragment, etc)
                         next node; # skip contents if attribute 'value' is present
                     }
-                } elsif ($node eq 'br') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}br') {
                     # useful if xml:space is set to 'default'
                     $result .= "\n";
-                } elsif ($node eq 'embed') {
-                    push(@index, $index);
-                    push(@stack, $stack);
-                    $index = 0;
-                    $stack = $app->getService('service.xml')->parse($self->getString($app, $session, $protocol, $self->evaluateExpression($attributes->{'string'}, $scope)));
-                    push(@scope, $superscope);
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}include') {
+                    if ((not exists($attributes->{'parse'})) or ($attributes->{'parse'} eq 'xml')) {
+                        # This is similar to an XInclude, but is done
+                        # later (during processing of the infoset, not
+                        # while it is being made) and doesn't support
+                        # any value for 'href'. Plus it has an
+                        # extension to the 'parse' attribute.
+                        push(@index, $index);
+                        push(@stack, $stack);
+                        $index = 0;
+                        $stack = $xmlService->parseNS($self->getString($app, $session, $protocol, 
+                                                                       $self->evaluateExpression($attributes->{'href'}, $scope)));
+                        push(@scope, $superscope);
+                    } elsif ($attributes->{'parse'} eq 'text') {
+                        # raw text inclusion
+                        $result .= $self->getString($app, $session, $protocol, 
+                                                    $self->evaluateExpression($attributes->{'href'}, $scope));
+                    } elsif ($attributes->{'parse'} eq 'x-auto') {
+                        # Get the string expanded automatically and
+                        # insert it into the result.
+                        $result .= $output->getString($session, $self->evaluateExpression($attributes->{'href'}, $scope), $scope);
+                    }
                     next node; # skip default handling
-                } elsif ($node eq 'else') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}else') {
                     if ($superscope->{'coses: last condition'}) {
                         next node; # skip this block if the variable IS there
                     }
-                } elsif ($node eq 'with') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}with') {
                     my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
                     if (not defined($scope->{$variable})) {
                         next node; # skip this block if the variable isn't there
                     }
-                } elsif ($node eq 'without') {
+                } elsif ($node eq '{http://bugzilla.mozilla.org/coses}without') {
                     my $variable = $self->evaluateExpression($attributes->{'variable'}, $scope);
                     if (defined($scope->{$variable})) {
                         next node; # skip this block if the variable IS there
                     }
+                # XXX add a couple of elements/attributes for encoding/decoding a hash into a string and back
                 } else {
-                    $self->error(1, "Tried to expand a string with an unrecognised COSES element: '$node'");
+                    my $serialisedAttributes = '';
+                    foreach my $attribute (keys(%$attributes)) {
+                        $serialisedAttributes .= ' '.$attribute.'="'.($xmlService->escape($attributes->{$attribute})).'"';
+                    }
+                    $self->dump(3, "Unexpected element <$node$serialisedAttributes> found during COSES expansion, ignoring...");
                 }
                 # fall through to default handling: push current
                 # stack, scope and index, and set new index to move
@@ -192,8 +220,9 @@ sub expand {
 
 sub getString {
     my $self = shift;
-    my($app, $session, $protocol, $string) = @_;
-    return $app->getService('dataSource.strings')->get($app, $session, $protocol, $string);
+    my($app, $session, $protocol, $name) = @_;
+    my($type, $string) = $app->getService('dataSource.strings')->get($app, $session, $protocol, $name);
+    return $string;
 }
 
 sub evaluateVariable {
