@@ -63,6 +63,7 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	.\$(OBJDIR)\nsCompressedCharMap.obj          \
 	.\$(OBJDIR)\nsNativeThemeWin.obj \
+	.\$(OBJDIR)\nsUnicodeRange.obj \
 	$(NULL)
 
 EXPORTS= nsIRenderingContextWin.h \

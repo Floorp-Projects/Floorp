@@ -59,6 +59,7 @@
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsUnicodeRange.h"
 
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95OR98 = NOT_SETUP;
@@ -3047,6 +3048,8 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
   return nsnull;
 }
 
+#define IsCJKLangGroupAtom(a)  ((a)==gJA || (a)==gKO || (a)==gZHCN || (a)==gZHTW)
+
 nsFontWin*
 nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
 {
@@ -3055,37 +3058,70 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
     return nsnull;
   }
   nsFont font("", 0, 0, 0, 0, 0);
-  // Try the pref of the user's ui lang group
-  // For example, if the ui language is Japanese, try pref from "ja"
-  // Make localized build work better on other OS
-  if (gUsersLocale != mLangGroup) {
-    nsAutoString langGroup;
-    gUsersLocale->ToString(langGroup);
-    AppendGenericFontFromPref(font.name, 
-                              NS_ConvertUCS2toUTF8(langGroup).get(), 
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
-  }
-  // Try the pref of the user's system lang group
-  // For example, if the os language is Simplified Chinese, 
-  // try pref from "zh-CN"
-  // Make English build work better on other OS
-  if ((gSystemLocale != mLangGroup) && (gSystemLocale != gUsersLocale)) {
-    nsAutoString langGroup;
-    gSystemLocale->ToString(langGroup);
-    AppendGenericFontFromPref(font.name, 
-                              NS_ConvertUCS2toUTF8(langGroup).get(), 
-                              NS_ConvertUCS2toUTF8(mGeneric).get());
-  }
 
-  // Also try all the default pref fonts enlisted from other languages
-  for (int i = 1; i < eCharset_COUNT; ++i) {
-    nsIAtom* langGroup = NS_NewAtom(gCharsetInfo[i].mLangGroup); 
-    if((gUsersLocale != langGroup) && (gSystemLocale != langGroup)) {
-      AppendGenericFontFromPref(font.name, gCharsetInfo[i].mLangGroup, 
+  // Sometimes we could not find the font in doc's suggested langGroup,(this usually means  
+  // the language specified by doc is incorrect). The characters can, to a certain degree, 
+  // tell us what language it is. This allows us to quickly locate and use a more appropriate 
+  // font as indicated by user's preference. In some situations a set of possible languages may
+  // be identified instead of a single language (eg. CJK and latin). In this case we have to 
+  // try every language in the set. gUserLocale and gSystemLocale provide some hints about 
+  // which one should be tried first. This is important for CJK font, since the glyph for single 
+  // char varies dramatically in different langauges. For latin languages, their glyphs are 
+  // similar. In fact, they almost always share identical fonts. It will be a waste of time to 
+  // figure out which one comes first. As a final fallback, unicode preference is always tried. 
+
+  PRUint32 unicodeRange = FindCharUnicodeRange(aChar);
+  if (unicodeRange > kRangeSpecificItemNum) { 
+    // a single language is identified
+    AppendGenericFontFromPref(font.name, LangGroupFromUnicodeRange(unicodeRange), 
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
+  } else if (kRangeSetLatin == unicodeRange) { 
+    // Character is from a latin language set, so try western and central european
+    // If mLangGroup is western or central european, this most probably will not be
+    // used, but is here as a fallback scenario.    
+    AppendGenericFontFromPref(font.name, "x-western",
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
+    AppendGenericFontFromPref(font.name, "x-central-euro",
+                              NS_ConvertUCS2toUTF8(mGeneric).get());
+  } else if (kRangeSetCJK == unicodeRange) { 
+    // CJK, we have to be careful about the order, use locale info as hint
+    
+    // then try user locale first, if it is CJK
+    if ((gUsersLocale != mLangGroup) && IsCJKLangGroupAtom(gUsersLocale)) {
+      const PRUnichar *usersLocaleLangGroup;
+      gUsersLocale->GetUnicode(&usersLocaleLangGroup);
+      AppendGenericFontFromPref(font.name, NS_ConvertUCS2toUTF8(usersLocaleLangGroup).get(), 
                                 NS_ConvertUCS2toUTF8(mGeneric).get());
     }
-    NS_IF_RELEASE(langGroup);
-  }
+    
+    // then system locale (os language)
+    if ((gSystemLocale != mLangGroup) && (gSystemLocale != gUsersLocale) && IsCJKLangGroupAtom(gSystemLocale)) {
+      const PRUnichar *systemLocaleLangGroup;
+      gSystemLocale->GetUnicode(&systemLocaleLangGroup);
+      AppendGenericFontFromPref(font.name, NS_ConvertUCS2toUTF8(systemLocaleLangGroup).get(), 
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    }
+
+    // try all other languages in this set.
+    if (mLangGroup != gJA && gUsersLocale != gJA && gSystemLocale != gJA)
+      AppendGenericFontFromPref(font.name, "ja",
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    if (mLangGroup != gZHCN && gUsersLocale != gZHCN && gSystemLocale != gZHCN)
+      AppendGenericFontFromPref(font.name, "zh-CN",
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    if (mLangGroup != gZHTW && gUsersLocale != gZHTW && gSystemLocale != gZHTW)
+      AppendGenericFontFromPref(font.name, "zh-TW",
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+    if (mLangGroup != gKO && gUsersLocale != gKO && gSystemLocale != gKO)
+      AppendGenericFontFromPref(font.name, "ko",
+                                NS_ConvertUCS2toUTF8(mGeneric).get());
+  } 
+
+  // always try unicode as fallback
+  AppendGenericFontFromPref(font.name, "x-unicode",
+                            NS_ConvertUCS2toUTF8(mGeneric).get());
+  
+  // use the font list to find font
   GenericFontEnumContext context = {aDC, aChar, nsnull, this};
   font.EnumerateFamilies(GenericFontEnumCallback, &context);
   if (context.mFont) { // a suitable font was found
