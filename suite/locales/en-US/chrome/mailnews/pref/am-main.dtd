@@ -12,6 +12,7 @@
 <!ENTITY organization.label "Organization">
 <!ENTITY signature.label "Attach this signature">
 <!ENTITY editSignature.label "Edit...">
+<!ENTITY editVCard.label "Edit vCard...">
 <!ENTITY sampleSig1.label "Sample Signature 1">
 <!ENTITY sampleSig2.label "Sample Signature 2">
 <!ENTITY sampleSig3.label "Sample Signature 3">
