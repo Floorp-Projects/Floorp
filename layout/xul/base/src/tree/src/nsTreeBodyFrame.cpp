@@ -41,6 +41,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMXULElement.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsICSSStyleRule.h"
@@ -48,6 +49,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
+#include "nsIXULTemplateBuilder.h"
 #include "nsXPIDLString.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIView.h"
@@ -264,6 +266,19 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
   ourView->CreateWidget(kWidgetCID);
   ourView->GetWidget(*getter_AddRefs(mOutlinerWidget));
 
+  // See if there is a XUL outliner builder associated with the
+  // element. If so, try to make *it* be the view.
+  nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(aContent);
+  if (xulele) {
+    nsCOMPtr<nsIXULTemplateBuilder> builder;
+    xulele->GetBuilder(getter_AddRefs(builder));
+    if (builder) {
+      nsCOMPtr<nsIOutlinerView> view = do_QueryInterface(builder);
+      if (view)
+        SetView(view);
+    }
+  }
+
   return rv;
 }
 
@@ -332,6 +347,12 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
  
   if (mView) {
     // View, meet the outliner.
+#if 1 // XXX Waaah! HYATT, SPANK ME!
+    nsCOMPtr<nsIXULTemplateBuilder> builder = do_QueryInterface(mView);
+    if (builder)
+      mView->SetOutliner(this);
+    else
+#endif
     mView->SetOutliner(mOutlinerBoxObject);
     
     // Give the view a new empty selection object to play with.
@@ -469,7 +490,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::InvalidateScrollbar()
     mPresContext->GetShell(getter_AddRefs(shell));
     nsIFrame* outlinerFrame;
     shell->GetPrimaryFrameFor(parContent, &outlinerFrame);
-    mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
+    if (outlinerFrame)
+      mScrollbar = InitScrollbarFrame(mPresContext, outlinerFrame, this);
   }
 
   if (!mScrollbar || !mView)
