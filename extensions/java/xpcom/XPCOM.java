@@ -71,7 +71,8 @@ public final class XPCOM {
    * </ul>
    */
   public static native
-  nsIServiceManager initXPCOM(File aMozBinDirectory, AppFileLocProvider aAppFileLocProvider);
+  nsIServiceManager initXPCOM(File aMozBinDirectory,
+                              AppFileLocProvider aAppFileLocProvider);
 
   /**
    * Shutdown XPCOM. You must call this method after you are finished

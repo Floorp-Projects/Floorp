@@ -805,7 +805,6 @@ nsJavaXPTCStub::GetRetvalSig(const nsXPTParamInfo* aParamInfo,
       aRetvalSig.Append("Lorg/mozilla/xpcom/nsISupports;");
       break;
 
-    // XXX Probably won't work for 64 bit addr
     case nsXPTType::T_VOID:
       aRetvalSig.Append("I");
       break;
