@@ -57,10 +57,11 @@ sub DumpKids {
     if (@list) {
         print "<ul>\n";
         foreach my $kid (@list) {
-            SendSQL("select bug_status, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
-            my ($stat, $short_desc) = (FetchSQLData());
-            $stat = "NEW" if !defined $stat;
-            $short_desc = "" if !defined $short_desc;
+            SendSQL("select bug_id, bug_status, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+            my ($bugid, $stat, $short_desc) = (FetchSQLData());
+            if (!defined $bugid) {
+                next;
+            }
             my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
                           $stat eq "REOPENED");
             print "<li>";
