@@ -378,7 +378,7 @@ main(int argc, char **argv)
 	/* Call the NSPR initialization routines */
 	PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
-	progName = PL_strdup(argv[0]);
+	progName = PORT_Strdup(argv[0]);
 
 	hostName = NULL;
 	optstate = PL_CreateOptState(argc, argv, "C:c:d:n:p:w:");
@@ -449,6 +449,7 @@ main(int argc, char **argv)
 
 	NSS_Shutdown();
 	PR_Cleanup();
+	PORT_Free(progName);
 	return 0;
 }
 
