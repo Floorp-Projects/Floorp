@@ -69,7 +69,7 @@ MRESULT EXPENTRY nsDragWindowProc(HWND hWnd, ULONG msg, MPARAM mp1,
       pszURL = (PSZ)nsMemory::Alloc(ulLength+1);
       DrgQueryStrName(pdragtransfer->pditem->hstrSourceName, ulLength+1, pszURL);
       fp = fopen(chPath, "wb+");
-      fwrite(pszURL, ulLength+1, 1, fp);
+      fwrite(pszURL, ulLength, 1, fp);
       fclose(fp);
       WriteTypeEA(chPath, "UniformResourceLocator");
       nsMemory::Free(pszURL);
