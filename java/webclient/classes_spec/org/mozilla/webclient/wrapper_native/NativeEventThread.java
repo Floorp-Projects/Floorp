@@ -142,6 +142,15 @@ public void delete()
     synchronized(this) {
         // this has to be inside the synchronized block!
         browserControlCanvas = null;
+        synchronized (this) {
+            try {
+                wait();
+            }
+            catch (Exception e) {
+                System.out.println("NativeEventThread.delete: interrupted while waiting\n\t for NativeEventThread to notify() after destruction of initContext: " + e + 
+                                   " " + e.getMessage());
+            }
+        }
     }
     // PENDING(ashuk): do any necessary cleanup.
     listenersToAdd = null;
@@ -199,6 +208,15 @@ public void run()
 
             // this has to be inside the synchronized block!
             if (null == this.browserControlCanvas) {
+                // if we get here, this Thread is terminating, destroy
+                // the initContext and notify the WindowControl
+                ((WindowControlImpl)windowControl).nativeDestroyInitContext(nativeWebShell);
+                try {
+                    notify();
+                }
+                catch (Exception e) {
+                    System.out.println("NativeEventThread.run: Exception: trying to send notify() to this during delete: " + e + " " + e.getMessage());
+                }
                 return;
             }
 

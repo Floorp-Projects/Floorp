@@ -65,7 +65,7 @@ public WindowControlImpl(WrapperFactory yourFactory,
 /**
 
  * First, we delete our eventThread, which causes the eventThread to
- * stop running.  Then we call nativeDestroyInitContext(), which
+ * stop running, which causes the initContext to be deleted.  
  * deallocates native resources for this window.
 
  */
@@ -75,7 +75,6 @@ public void delete()
     Assert.assert(null != eventThread, "eventThread shouldn't be null at delete time");
     eventThread.delete();
     eventThread = null;
-    nativeDestroyInitContext(nativeWebShell);
     nativeWebShell = -1;
 }
 
@@ -243,7 +242,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.4 2000/03/13 18:42:31 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.5 2000/07/07 18:49:08 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
