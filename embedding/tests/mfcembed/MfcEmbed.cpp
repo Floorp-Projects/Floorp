@@ -48,6 +48,7 @@
 #include "BrowserImpl.h"
 #include "nsIWindowWatcher.h"
 #include "plstr.h"
+#include "Preferences.h"
 #include <io.h>
 #include <fcntl.h>
 
@@ -62,6 +63,7 @@ BEGIN_MESSAGE_MAP(CMfcEmbedApp, CWinApp)
 	ON_COMMAND(ID_NEW_BROWSER, OnNewBrowser)
 	ON_COMMAND(ID_MANAGE_PROFILES, OnManageProfiles)
 	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
+    ON_COMMAND(ID_EDIT_PREFERENCES, OnEditPreferences)
 	// NOTE - the ClassWizard will add and remove mapping macros here.
 	//    DO NOT EDIT what you see in these blocks of generated code!
 	//}}AFX_MSG_MAP
@@ -71,6 +73,11 @@ CMfcEmbedApp::CMfcEmbedApp() :
     m_ProfileMgr(NULL)
 {
     mRefCnt = 1; // Start at one - nothing is going to addref this object
+
+    m_strHomePage = "";
+
+    m_iStartupPage = 0; 
+
 }
 
 CMfcEmbedApp theApp;
@@ -262,7 +269,7 @@ void CMfcEmbedApp::OnNewBrowser()
 	CBrowserFrame *pBrowserFrame = CreateNewBrowserFrame();
 
 	//Load the HomePage into the browser view
-	if(pBrowserFrame)
+	if(pBrowserFrame && (GetStartupPageMode() == 1))
 		pBrowserFrame->m_wndBrowserView.LoadHomePage();
 }
 
@@ -335,6 +342,34 @@ void CMfcEmbedApp::OnManageProfiles()
     m_ProfileMgr->DoManageProfilesDialog(PR_FALSE);
 }
 
+void CMfcEmbedApp::OnEditPreferences()
+{
+    CPreferences prefs(_T("Preferences"));
+    
+    prefs.m_startupPage.m_iStartupPage = m_iStartupPage;
+    prefs.m_startupPage.m_strHomePage = m_strHomePage;   
+
+    if(prefs.DoModal() == IDOK)
+    {
+        // Update our member vars with these new pref values
+        m_iStartupPage = prefs.m_startupPage.m_iStartupPage;
+        m_strHomePage = prefs.m_startupPage.m_strHomePage;
+
+        // Save these changes to disk now
+        nsresult rv;
+        NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) 
+        {
+            prefs->SetIntPref("browser.startup.page", m_iStartupPage);
+            rv = prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
+            if (NS_SUCCEEDED(rv))
+                rv = prefs->SavePrefFile();
+        }
+        else
+		    NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+    }
+}
+
 BOOL CMfcEmbedApp::InitializeProfiles()
 {
     m_ProfileMgr = new CProfileMgr;
@@ -387,13 +422,30 @@ nsresult CMfcEmbedApp::InitializePrefs()
 		rv = prefs->GetBoolPref("mfcbrowser.prefs_inited", &inited);
 		if (NS_FAILED(rv) || !inited)
 		{
+            m_iStartupPage = 1;
+            m_strHomePage = "http://www.mozilla.org/projects/embedding";
+
+            prefs->SetIntPref("browser.startup.page", m_iStartupPage);
+            prefs->SetCharPref("browser.startup.homepage", m_strHomePage);
             prefs->SetIntPref("font.size.variable.x-western", 16);
             prefs->SetIntPref("font.size.fixed.x-western", 13);
             rv = prefs->SetBoolPref("mfcbrowser.prefs_inited", PR_TRUE);
             if (NS_SUCCEEDED(rv))
                 rv = prefs->SavePrefFile();
         }
-        
+        else
+        {
+            // The prefs are present, read them in
+
+            prefs->GetIntPref("browser.startup.page", &m_iStartupPage);
+
+            CString strBuf;
+            char *pBuf = strBuf.GetBuffer(_MAX_PATH);
+            prefs->CopyCharPref("browser.startup.homepage", &pBuf);
+            strBuf.ReleaseBuffer(-1);
+            if(pBuf)
+                m_strHomePage = pBuf;
+        }       
 	}
 	else
 		NS_ASSERTION(PR_FALSE, "Could not get preferences service");

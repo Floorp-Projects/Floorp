@@ -130,6 +130,10 @@ SOURCE=.\MostRecentUrls.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Preferences.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PrintProgressDialog.cpp
 # End Source File
 # Begin Source File
@@ -179,6 +183,10 @@ SOURCE=.\MfcEmbed.h
 # Begin Source File
 
 SOURCE=.\MostRecentUrls.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Preferences.h
 # End Source File
 # Begin Source File
 

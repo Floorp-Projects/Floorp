@@ -62,9 +62,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// "HomePage" URL
-static const char* g_HomeURL = "http://www.mozilla.org/projects/embedding";
-
 // Register message for FindDialog communication
 static UINT WM_FINDMSG = ::RegisterWindowMessage(FINDMSGSTRING);
 
@@ -419,7 +416,14 @@ void CBrowserView::OnUpdateNavForward(CCmdUI* pCmdUI)
 
 void CBrowserView::OnNavHome() 
 {
-    OpenURL(g_HomeURL);	
+    // Get the currently configured HomePage URL
+    CString strHomeURL;
+ 	CMfcEmbedApp *pApp = (CMfcEmbedApp *)AfxGetApp();
+	if(pApp)
+      pApp->GetHomePage(strHomeURL);
+
+    if(strHomeURL.GetLength() > 0)
+        OpenURL(strHomeURL);	
 }
 
 void CBrowserView::OnNavReload() 
@@ -966,4 +970,22 @@ void CBrowserView::SetCtxMenuLinkUrl(nsAutoString& strLinkUrl)
 void CBrowserView::SetCtxMenuImageSrc(nsAutoString& strImgSrc)
 {
 	mCtxMenuImgSrc = strImgSrc;
+}
+
+void CBrowserView::Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
+{
+	nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(mWebBrowser));
+	if(!focus)
+		return;
+    
+    switch(nState) {
+        case WA_ACTIVE:
+            focus->Activate();
+            break;
+        case WA_INACTIVE:
+            focus->Deactivate();
+            break;
+        default:
+            break;
+    }
 }

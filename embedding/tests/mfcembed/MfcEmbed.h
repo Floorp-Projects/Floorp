@@ -78,6 +78,17 @@ public:
 
 	CObList m_FrameWndLst;
 
+    CString m_strHomePage;
+    inline BOOL GetHomePage(CString& strHomePage) {
+        strHomePage = m_strHomePage;
+        return TRUE;
+    }
+
+    int m_iStartupPage; //0 = BlankPage, 1 = HomePage
+    inline int GetStartupPageMode() {
+        return m_iStartupPage;
+    }
+
 // Implementation
 
 public:
@@ -85,6 +96,7 @@ public:
 	afx_msg void OnAppAbout();
 	afx_msg void OnNewBrowser();
     afx_msg void OnManageProfiles();
+    afx_msg void OnEditPreferences();
 		// NOTE - the ClassWizard will add and remove member functions here.
 		//    DO NOT EDIT what you see in these blocks of generated code !
 	//}}AFX_MSG
@@ -96,7 +108,7 @@ private:
     nsresult        InitializePrefs();
     nsresult        InitializeCachePrefs();
     nsresult        InitializeWindowCreator();
-
+    
 private:
     CProfileMgr     *m_ProfileMgr;
 };
