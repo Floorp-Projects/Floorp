@@ -51,163 +51,11 @@
 #undef DARWIN
 #import <Cocoa/Cocoa.h>
 
-//
-// interface EventQueueHanlder
-//
-// An object that handles processing events for the PLEvent queue
-// on each thread.
-//
-@interface EventQueueHandler : NSObject
-{
-  nsIEventQueue*  mMainThreadEventQueue;    // addreffed
-  NSTimer*        mEventTimer;              // our timer [STRONG]
-}
-
-- (void)eventTimer:(NSTimer *)theTimer;
-
-@end
-
-
-static EventQueueHandler*  gEventQueueHandler = nsnull;
-
-
-@implementation EventQueueHandler
-
-//
-// -init
-//
-// Do init stuff. Cache the EventQueue Service and kick off our repeater
-// to process PLEvents. The toolkit owns the timer so that neither Mozilla
-// nor embedding apps need to worry about polling to process these events.
-//
-- (id)init
-{
-  if ( (self = [super init]) )
-  {
-    nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-    if (!service) {
-      [self release];
-      return nil;
-    }
-    
-    service->GetThreadEventQueue(NS_CURRENT_THREAD, &mMainThreadEventQueue);   // addref
-
-    mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.005
-                              target:self
-                              selector:@selector(eventTimer:)
-                              userInfo:nil
-                              repeats:YES];
-    if (!mMainThreadEventQueue || !mEventTimer) {
-      [self release];
-      return nil;
-    }
-  }
-  
-  return self;
-}
-
-
-//
-// -dealloc
-//
-// When we're finally ready to go away, kill our timer and get rid of the
-// EventQueue Service. Also set the global var to null so in case we're called
-// into action again we'll start over and not try to re-use the deleted object.
-//
-- (void) dealloc
-{
-  [mEventTimer release];
-  NS_IF_RELEASE(mMainThreadEventQueue);
-  
-  gEventQueueHandler = nsnull;
-  
-  [super dealloc];
-}
-
-
-//
-// -eventTimer
-//
-// Called periodically to process PLEvents from the queue on the current thread
-//
-
-#define MAX_PROCESS_EVENT_CALLS        20
-
-//#define DEBUG_EVENT_TIMING
-
-//#define TIMED_EVENT_PROCESSING
-#define MAX_PLEVENT_TIME_MILLISECONDS  500
-
-
-- (void)eventTimer:(NSTimer *)theTimer
-{
-#ifdef DEBUG_EVENT_TIMING
-  AbsoluteTime startTime = ::UpTime();
-#endif
-  
-  if (mMainThreadEventQueue)
-  {
-#ifdef TIMED_EVENT_PROCESSING
-    // the new way; process events until some time has elapsed, or there are
-    // no events left. UpTime() is a very low-overhead way to measure time.
-    AbsoluteTime bailTime = ::AddDurationToAbsolute(MAX_PLEVENT_TIME_MILLISECONDS * durationMillisecond, ::UpTime());
-    while (1)
-    {
-      PRBool pendingEvents = PR_FALSE;
-      mMainThreadEventQueue->PendingEvents(&pendingEvents);
-      if (!pendingEvents)
-        break;
-      mMainThreadEventQueue->ProcessPendingEvents();
-      
-      AbsoluteTime now = ::UpTime();
-      if (UnsignedWideToUInt64(now) > UnsignedWideToUInt64(bailTime))
-        break;
-    }
-#else
-    // the old way; process events 20 times. Can suck CPU, and make the app
-    // unresponsive
-    for (PRInt32 i = 0; i < MAX_PROCESS_EVENT_CALLS; i ++)
-    {
-      PRBool pendingEvents = PR_FALSE;
-      mMainThreadEventQueue->PendingEvents(&pendingEvents);
-      if (!pendingEvents)
-        break;
-      mMainThreadEventQueue->ProcessPendingEvents();
-    } 
-#endif
-  }
-
-#ifdef DEBUG_EVENT_TIMING
-  Nanoseconds duration = ::AbsoluteDeltaToNanoseconds(::UpTime(), startTime);
-  UInt32 milliseconds = UnsignedWideToUInt64(duration) / 1000000;
-    
-  static UInt32 sMaxDuration = 0;
-  
-  if (milliseconds > sMaxDuration)
-    sMaxDuration = milliseconds;
-  
-  printf("Event handling took %u ms (max %u)\n", milliseconds, sMaxDuration);
-#endif
-  
-}
-
-
-@end
-
-
-#pragma mark -
-
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-  if (!gEventQueueHandler)
-  {
-    // autorelease this so that if Init is never called, it is not
-    // leaked. Init retains it.
-    gEventQueueHandler = [[[EventQueueHandler alloc] init] autorelease];
-  }
 }
 
 //-------------------------------------------------------------------------
@@ -215,13 +63,6 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 { 
-  /* Decrement our refcount on gEventQueueHandler; a prelude toward
-     stopping event handling. This is not something you want to do unless you've
-     bloody well started event handling and incremented the refcount. That's
-     done in the Init method, not the constructor, and that's what mInited is about.
-  */
-  if (mInited && gEventQueueHandler)
-    [gEventQueueHandler release];
 }
 
 
@@ -231,11 +72,7 @@ nsToolkit::~nsToolkit()
 nsresult
 nsToolkit::InitEventQueue(PRThread * aThread)
 {
-  if (!gEventQueueHandler)
-    return NS_ERROR_FAILURE;
-  
-  [gEventQueueHandler retain];
-
+  // nothing to do
   return NS_OK;
 }
 
