@@ -130,7 +130,9 @@ viewer:Components:search.xpt
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
-viewer:Components:TextServices.shlb 
+viewer:Components:TextServices.shlb
+viewer:Components:tmbm.shlb
+viewer:Components:tmbm.xpt
 viewer:Components:txmgr.xpt 
 viewer:Components:uconv.shlb 
 viewer:Components:uconv.xpt 
