@@ -1867,6 +1867,58 @@ il_internal_image(const char *image_url)
 }
 
 
+#include "nsICookieService.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+
+/* block certain hosts from loading images */
+PRBool il_PermitLoad(const char * image_url) {
+
+    /* convert image_url to an nsIURL so we can extract host and scheme */
+    nsresult rv;
+    NS_WITH_SERVICE(nsIURL, uri, "component://netscape/network/standard-url", &rv);
+    if (NS_FAILED(rv) || NS_FAILED(uri->SetSpec(image_url))) {
+        return PR_TRUE;
+    }
+
+    /* extract scheme -- we block loading of only http and https images */
+    char * scheme;
+    rv = uri->GetScheme(&scheme);
+    if (NS_FAILED(rv)) {
+        return PR_TRUE;
+    }
+    if (PL_strcasecmp(scheme, "http") && PL_strcasecmp(scheme, "https")) {
+        Recycle(scheme);
+        return PR_TRUE;
+    }
+    Recycle(scheme);
+
+    /* extract host */
+    char * host;
+    rv = uri->GetHost(&host);
+    if (NS_FAILED(rv)) {
+        return PR_TRUE;
+    }
+
+    /* check to see if we need to block image from loading */
+    NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
+    if (NS_FAILED(rv)) {
+        Recycle(host);
+        return PR_TRUE;
+    }
+    PRBool permission;
+    rv = cookieservice->Image_CheckForPermission(host, permission);
+    Recycle(host);
+    if (NS_FAILED(rv)) {
+      return PR_TRUE;
+    }
+    return permission;
+}
+
+#include "nsWeakPtr.h"
+#include "nsILoadGroup.h"
+#include "ilIURL.h"
+#include "nsIHTTPChannel.h"
 
 IL_IMPLEMENT(IL_ImageReq *)
 IL_GetImage(const char* image_url,
@@ -1877,6 +1929,11 @@ IL_GetImage(const char* image_url,
             PRUint32 flags,
             void *opaque_cx)
 {
+    /* block certain hosts from loading images */
+    if (!il_PermitLoad(image_url)) {
+      return NULL;
+    }
+
     ilINetContext *net_cx = (ilINetContext *)opaque_cx;
     NET_ReloadMethod cache_reload_policy = net_cx->GetReloadPolicy();
 
