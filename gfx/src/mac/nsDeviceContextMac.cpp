@@ -28,9 +28,11 @@
 #include <Resources.h>
 #include "il_util.h"
 #include <FixMath.h>
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 
-const PRUint32		nsDeviceContextMac::kPixelsPerInch = 96;
+PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
 
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -72,7 +74,7 @@ double				pix_inch;
   thegd = ::GetMainDevice();
 	thepix = (**thegd).gdPMap;					// dereferenced handle: don't move memory below!
 	mDepth = (**thepix).pixelSize;
-  pix_inch = kPixelsPerInch;		//Fix2X((**thepix).hRes);
+  pix_inch = GetScreenResolution();		//Fix2X((**thepix).hRes);
 	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
 	
@@ -325,6 +327,7 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 }
 
 
+#pragma mark -
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
@@ -560,4 +563,33 @@ nsresult nsDeviceContextMac::CreateFontAliasTable()
     }
   }
   return result;
+}
+
+#pragma mark -
+
+//------------------------------------------------------------------------
+//
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+PRUint32 nsDeviceContextMac::GetScreenResolution()
+{
+	static PRBool initialized = PR_FALSE;
+	if (initialized)
+		return mPixelsPerInch;
+	initialized = PR_TRUE;
+
+  nsIPref* prefs;
+  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+  if (NS_SUCCEEDED(rv) && prefs) {
+		PRInt32 intVal;
+		if (NS_SUCCEEDED(prefs->GetIntPref("browser.screen_resolution", &intVal))) {
+			mPixelsPerInch = intVal;
+		}
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
+
+
+	return mPixelsPerInch;
+	
 }
