@@ -930,7 +930,7 @@ sniffout_mimetype(const char *buf, int32 len, char* aContentType)
      ((unsigned char) buf[1])==0x47 &&
      ((unsigned char) buf[4])==0x00 )
   {
-        PR_snprintf(aContentType, 10,"%s", "image/art");
+        PR_snprintf(aContentType, 11,"%s", "image/x-jg");
         return PR_TRUE;
   }
 
