@@ -36,20 +36,20 @@ ifdef NO_SECURITY
 DIRS +=	security
 endif
 
-ifdef JAVA_OR_OJI
+ifdef MOZ_JAVA
 DIRS		+= libreg softupdt zlib li progress
 
 ifdef EDITOR
 DIRS		+= edtplug spellchk
 endif
 
-else  # JAVA_OR_OJI
+else  # MOZ_JAVA
 DIRS            += zlib li progress
 ifdef EDITOR
 DIRS		+= spellchk
 endif
 
-endif # JAVA_OR_OJI
+endif # MOZ_JAVA
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
 DIRS	+= spellchk
