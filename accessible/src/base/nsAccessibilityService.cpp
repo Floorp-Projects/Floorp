@@ -1513,10 +1513,11 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                                nsIAccessible **aAccessible) 
 {
   *aAccessible = nsnull;
+  if (!aPresShell || !aWeakShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   NS_ASSERTION(aNode, "GetAccessibleFor() called with no node.");
-  NS_ASSERTION(aPresShell, "GetAccessible() called with no pres shell.");
-  NS_ASSERTION(aWeakShell, "GetAccessible() called with no weak shell.");
 
 #ifdef DEBUG_aaronl
   // Please leave this in for now, it's a convenient debugging method

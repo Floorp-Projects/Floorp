@@ -265,7 +265,9 @@ NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling)
     // This node has been shut down
     return NS_ERROR_FAILURE;
   }
-  if (mNextSibling) {
+  if (mNextSibling || !mParent) {
+    // If no parent, don't try to calculate a new sibling
+    // It either means we're at the root or shutting down the parent
     if (mNextSibling != DEAD_END_ACCESSIBLE) {
       *aAccNextSibling = mNextSibling;
       NS_ADDREF(*aAccNextSibling);
