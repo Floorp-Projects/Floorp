@@ -120,7 +120,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 
 <!-- Pop up menus -->
-<popup id="savetip"/>
+<tooltip id="savetip"/>
 
 <popup id="context-menu">
    <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
@@ -137,7 +137,6 @@
    <menuseparator/>
    <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
    <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
-   <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
@@ -186,8 +185,8 @@
                <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
                <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
             </box>
-            <box align="center" collapsed="true">
-               <checkbox label="With Alarms" oncommand="unifinderShowEventsWithAlarmsOnly( event )"/>
+            <box align="center">
+               <checkbox label="With Alarms" oncommand="unifinderShowEventsWithAlarmsOnly( event )" collapsed="true"/>
                <checkbox label="Today And Future" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )"/>
             </box>
             <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
