@@ -115,6 +115,7 @@ nsPKIParamBlock::SetNumberISupports(PRInt32 numISupports)
     mNumISupports = 0;
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  memset(mSupports, 0, sizeof(nsISupports*)*mNumISupports);
   return NS_OK;
 }
 
@@ -128,13 +129,14 @@ nsPKIParamBlock::SetISupportAtIndex(PRInt32 index, nsISupports *object)
     if (mSupports == nsnull) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    memset(mSupports, 0, sizeof(nsISupports*)*mNumISupports);
   }
   nsresult rv = InBounds(index, mNumISupports);
   if (rv != NS_OK)
     return rv;
 
-  mSupports[index-1] = object;
-  NS_ADDREF(mSupports[index-1]);
+  mSupports[index] = object;
+  NS_IF_ADDREF(mSupports[index]);
   return NS_OK;
 }
 
@@ -147,7 +149,7 @@ nsPKIParamBlock::GetISupportAtIndex(PRInt32 index, nsISupports **_retval)
   if (rv != NS_OK)
     return rv;
 
-  *_retval = mSupports[index-1];
+  *_retval = mSupports[index];
   NS_IF_ADDREF(*_retval);
   return NS_OK;
 }

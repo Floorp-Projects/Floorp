@@ -22,25 +22,27 @@
  */
 
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIX509Cert      = Components.interfaces.nsIX509Cert;
 
 var params;
 
 
 function onLoad()
 {
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);  
-  serverName = params.GetString(1); 
+  params = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
+  var isupport = params.getISupportAtIndex(1); 
+  var cert = isupport.QueryInterface(nsIX509Cert);
 
   var bundle = srGetStrBundle("chrome://pippki/locale/newserver.properties");
   var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
 
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
   var message1 = bundle.formatStringFromName("newServerMessage1", 
-                                             [ serverName, brandName ],
+                                             [ cert.commonName, brandName ],
                                              2);
   var message4 = bundle.formatStringFromName("newServerMessage4", 
-                                             [ serverName ],
+                                             [ cert.commonName ],
                                               1);
   setText("message1", message1);
   setText("message4", message4);

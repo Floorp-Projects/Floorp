@@ -281,10 +281,7 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
     return NS_ERROR_FAILURE;
 
   nsXPIDLString commonName;
-  rv = cert->GetCommonName(getter_Copies(commonName));
-  if (NS_FAILED(rv))
-    return rv;
-  rv = block->SetString(1, commonName);
+  rv = block->SetISupportAtIndex(1, cert);
   if (NS_FAILED(rv))
     return rv;
 
@@ -344,15 +341,11 @@ nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
   if (!block)
     return NS_ERROR_FAILURE;
 
-  nsXPIDLString commonName;
-  rv = cert->GetCommonName(getter_Copies(commonName));
-  if (NS_FAILED(rv))
-    return rv;
   rv = block->SetString(1, targetURL);
   if (NS_FAILED(rv))
     return rv;
 
-  block->SetString(2, commonName);
+  rv = block->SetISupportAtIndex(1, cert);
   if (NS_FAILED(rv))
     return rv;
 
@@ -436,6 +429,10 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 
   rv = block->SetString(1,message1); 
 
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = block->SetISupportAtIndex(1, cert);
   if (NS_FAILED(rv))
     return rv;
 
