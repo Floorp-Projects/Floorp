@@ -3,6 +3,8 @@
 <!ENTITY view.header.timeremaining.label  "Time Remaining">
 <!ENTITY view.header.transferred.label    "Transferred">
 <!ENTITY view.header.transferrate.label   "Rate">
+<!ENTITY view.header.timeelapsed.label    "Time Elapsed">
+<!ENTITY view.header.progresstext.label   "Percent Done">
 
 <!ENTITY downloadManager.title            "Download Manager">
 

@@ -37,6 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+ /* So here's the deal:
+  *
+  * As it stands, nsIDownloadManager does not handle the actual downloading of files.
+  * Rather, it manages them.  When clients use some transfer component to download a
+  * file, they also create an nsIDownloadItem, define its properties (uri, target, etc.),
+  * get the download manager service, and call addItem.  nsIDownloadItem acts as a 
+  * "master listener" for the ongoing transfer.  It implements nsIWebProgressListener,
+  * and clients should set it to be the listener for whatever xfer component they're using.
+  * nsIDownloadItem's listener impl will forward progress notifications onto three possible
+  * listeners: the internal listener (an nsIDownloadProgressListener, used to update
+  * the main download manager UI), the properties listener (used to update the download manager
+  * properties dialog), and an optional listener set by the client via nsIDownloadItem's |listener|
+  * attribute (used to update client UI).
+  */
+
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
