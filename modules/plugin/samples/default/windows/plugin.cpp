@@ -715,9 +715,12 @@ void CPlugin::onPaint(HWND hWnd)
     DeletePen(hPen3DDKShadow);
     DeletePen(hPen3DShadow);
     DeletePen(hPen3DLight);
+    
+    DrawCommandMessage(hDC, m_szCommandMessage, &rc);
   }
-
-  DrawCommandMessage(hDC, m_szCommandMessage, &rc);
+  else
+    if(m_hIcon != NULL)
+      DrawIconEx(hDC, x, y, m_hIcon, rc.right - rc.left, rc.bottom - rc.top, 0, NULL, DI_NORMAL);
 
   EndPaint (hWnd, &ps);
 }
