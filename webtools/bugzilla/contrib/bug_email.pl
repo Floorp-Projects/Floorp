@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.9 2001/05/25 12:48:47 jake%acutex.net Exp $
+# $Id: bug_email.pl,v 1.10 2002/07/25 01:47:19 justdave%syndicomm.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -70,7 +70,9 @@ use diagnostics;
 use strict;
 use MIME::Parser;
 
-push @INC, "../."; # this script now lives in contrib
+chdir '..';        # this script lives in contrib
+push @INC, "contrib/.";
+push @INC, ".";
 
 require "globals.pl";
 require "BugzillaEmail.pm";
@@ -736,10 +738,10 @@ my $parser = new MIME::Parser;
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
-(-d "../data/mimedump-tmp") or mkdir "../data/mimedump-tmp",0755 or die "mkdir: $!";
-(-w "../data/mimedump-tmp") or die "can't write to directory";
+(-d "data/mimedump-tmp") or mkdir "data/mimedump-tmp",0755 or die "mkdir: $!";
+(-w "data/mimedump-tmp") or die "can't write to directory";
 
-$parser->output_dir("../data/mimedump-tmp");
+$parser->output_dir("data/mimedump-tmp");
     
 # Read the MIME message:
 my $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";
@@ -1233,8 +1235,14 @@ END
 	my $long_desc_query = "INSERT INTO longdescs SET bug_id=$id, who=$userid, bug_when=\'$bug_when\', thetext=" . SqlQuote($comment);
 	SendSQL($long_desc_query);
 
-	# Cool, the mail was successfull
-	system("cd .. ; ./processmail $id '$Sender'");
+	# Cool, the mail was successful
+        # chdir back to the main directory which has the processmail script
+        # Oh, for a processmail module....
+        use Cwd;
+        my $old_cwd = getcwd();
+        chdir("..");
+        system("./processmail", $id, $SenderShort);
+        chdir($old_cwd);
     } else {
 	$id = 0xFFFF;  # TEST !
 	print "\n-------------------------------------------------------------------------\n";

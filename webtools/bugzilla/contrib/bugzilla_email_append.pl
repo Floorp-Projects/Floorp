@@ -32,7 +32,9 @@ use diagnostics;
 use strict;
 use MIME::Parser;
 
-push @INC, "../."; # this script lives in contrib
+chdir "..";        # this script lives in contrib, change to main
+push @INC, "contrib";
+push @INC, "."; # this script lives in contrib
 require "globals.pl";
 require "BugzillaEmail.pm";
 
@@ -43,10 +45,10 @@ my $Comment = "";
 
 # Create and set the output directory:
 # FIXME: There should be a $BUGZILLA_HOME variable (SML)
-(-d "../data/mimedump-tmp") or mkdir "../data/mimedump-tmp",0755 or die "mkdir: $!";
-(-w "../data/mimedump-tmp") or die "can't write to directory";
+(-d "data/mimedump-tmp") or mkdir "data/mimedump-tmp",0755 or die "mkdir: $!";
+(-w "data/mimedump-tmp") or die "can't write to directory";
 
-$parser->output_dir("../data/mimedump-tmp");
+$parser->output_dir("data/mimedump-tmp");
     
 # Read the MIME message:
 my $entity = $parser->read(\*STDIN) or die "couldn't parse MIME stream";
@@ -120,6 +122,7 @@ system("cd .. ; ./processmail $found_id '$SenderShort'");
 sub DealWithError {
   my ($reason) = @_;
   print $reason . "\n";
+  exit 100;
 }
 
 # Yanking this wholesale from bug_email, 'cause I know this works.  I'll
