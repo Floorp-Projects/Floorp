@@ -70,7 +70,6 @@
   
   
   NSArray  *regionMappingTable;
-  NSString *defaultFontType;
   
   NSButton *fontButtonForEditor;
 }

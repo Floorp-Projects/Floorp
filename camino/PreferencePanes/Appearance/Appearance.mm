@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,9 +47,11 @@
 - (void)saveFontPrefs;
 
 - (NSMutableDictionary *)makeDictFromPrefsForFontType:(NSString*)fontType andRegion:(NSString*)regionCode;
+- (NSMutableDictionary *)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode;
 - (NSMutableDictionary *)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode;
 
 - (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType;
+- (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)entryDict;
 - (void)saveFontSizePrefsForRegion:(NSDictionary*)entryDict;
 
 - (void)setupFontSamplesFromDict:(NSDictionary*)regionDict;
@@ -76,7 +79,6 @@
 - (void)dealloc
 {
   [regionMappingTable release];
-  [defaultFontType release];
   [super dealloc];
 }
 
@@ -102,13 +104,6 @@
   [colorwellTextColor setColor:[self getColorPref:"browser.display.foreground_color" withSuccess:&gotPref]];
   [colorwellUnvisitedLinks setColor:[self getColorPref:"browser.anchor_color" withSuccess:&gotPref]];
   [colorwellVisitedLinks setColor:[self getColorPref:"browser.visited_color" withSuccess:&gotPref]];
-  
-  BOOL gotDefaultFont;
-  NSString* defaultFont = [self getStringPref:"font.default" withSuccess:&gotDefaultFont];
-  if (!gotDefaultFont || (![defaultFont isEqualTo:@"serif"] && ![defaultFont isEqualTo:@"sans-serif"]))
-    defaultFont = @"serif";
-  
-  defaultFontType = [defaultFont retain];
 
   [self setupFontRegionPopup];
   [self updateFontPreviews];
@@ -214,7 +209,13 @@
           monospace =   {
               fontfamily =
             }
-      
+
+      an entry that stores the default font type:
+
+          defaultFontType = {
+              type =
+            }
+
       and an entry that stores font sizes:
           
           fontsize = {
@@ -247,6 +248,10 @@
     // font sizes dict
     NSMutableDictionary *sizesDict = [self makeFontSizesDictFromPrefsForRegion:regionCode];
     [regionDict setObject:sizesDict forKey:@"fontsize"];
+
+    // default font type dict
+    NSMutableDictionary *defaultFontTypeDict = [self makeDefaultFontTypeDictFromPrefsForRegion:regionCode];
+    [regionDict setObject:defaultFontTypeDict forKey:@"defaultFontType"];
   }
 }
 
@@ -264,11 +269,9 @@
     [self saveFontNamePrefsForRegion:regionDict forFontType:@"cursive"];
     [self saveFontNamePrefsForRegion:regionDict forFontType:@"fantasy"];
     
+    [self saveDefaultFontTypePrefForRegion:regionDict];
     [self saveFontSizePrefsForRegion:regionDict];
   }
-  
-  if (defaultFontType && [defaultFontType length] > 0)
-    [self setPref:"font.default" toString:defaultFontType];
 }
 
 #pragma mark -
@@ -285,6 +288,20 @@
     [fontDict setObject:fontName forKey:@"fontfamily"];
 
   return fontDict;
+}
+
+- (NSMutableDictionary *)makeDefaultFontTypeDictFromPrefsForRegion:(NSString*)regionCode
+{
+  NSMutableDictionary *fontTypeDict = [NSMutableDictionary dictionaryWithCapacity:1];
+  NSString *prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
+
+  BOOL gotPref;
+  NSString *fontType = [self getStringPref:[prefName cString] withSuccess:&gotPref];
+
+  if (gotPref)
+    [fontTypeDict setObject:fontType forKey:@"type"];
+
+  return fontTypeDict;
 }
 
 - (NSMutableDictionary *)makeFontSizesDictFromPrefsForRegion:(NSString*)regionCode
@@ -361,6 +378,20 @@
     [self clearPref:[minSizePref cString]];
 }
 
+- (void)saveDefaultFontTypePrefForRegion:(NSDictionary*)regionDict
+{
+  NSString *regionCode = [regionDict objectForKey:@"code"];
+  
+  NSString *prefName = [NSString stringWithFormat:@"font.default.%@", regionCode];
+  NSString *value = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
+
+  // If the preferences were reset to defaults, this key could be gone.
+  if (value)
+    [self setPref:[prefName cString] toString:value];
+  else
+    [self clearPref:[prefName cString]];
+}
+
 #pragma mark -
 
 - (void)saveFont:(NSFont*)font toDict:(NSMutableDictionary*)regionDict forType:(NSString*)fontType
@@ -409,8 +440,10 @@
 
 - (void)setupFontSamplesFromDict:(NSDictionary*)regionDict
 {
-  [self setupFontSampleOfType:@"serif" fromDict:regionDict]; // one of these...
-  [self setupFontSampleOfType:@"sans-serif"	fromDict:regionDict]; // is a no-op
+  // For proportional, show either serif or sans-serif font,
+  // per region's default-font-type (font.default.%regionCode% pref)
+  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
+  [self setupFontSampleOfType:defaultFontType fromDict:regionDict];
   [self setupFontSampleOfType:@"monospace" fromDict:regionDict];
 }
 
@@ -482,7 +515,7 @@
 
 - (NSTextField*)getFontSampleForType:(NSString *)fontType
 {
-  if ([fontType isEqualToString:defaultFontType])
+  if ([fontType isEqualToString:@"serif"] || [fontType isEqualToString:@"sans-serif"])
     return fontSampleProportional;
 
   if ([fontType isEqualToString:@"monospace"])
@@ -507,6 +540,7 @@
 
   NSDictionary *regionDict = [regionMappingTable objectAtIndex:selectedRegion];
 
+  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
   [chooseProportionalFontButton setAlternateTitle:defaultFontType];
 
   // make sure the 'proportional' label matches
@@ -550,6 +584,7 @@ const int kDefaultFontSansSerifTag = 1;
   [minFontSizePopup selectItemAtIndex:itemIndex];
   
   // set up default font radio buttons (default to serif)
+  NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
   [defaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
   
 	[NSApp beginSheet:advancedFontsDialog
@@ -577,11 +612,11 @@ const int kDefaultFontSansSerifTag = 1;
   // a value of 0 indicates 'none'; we'll clear the pref on save
   NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
   [fontSizeDict setObject:[NSNumber numberWithInt:(int)minSize] forKey:@"minimum"];
-    
-  // save the default font
-  [defaultFontType release];
-  defaultFontType = ([[defaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
-  [defaultFontType retain];
+
+  // save the default font type
+  NSDictionary *defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
+  NSString *defaultFontType = ([[defaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
+  [defaultFontTypeDict setObject:defaultFontType forKey:@"type"];
   
   [advancedFontsDialog orderOut:self];
   [NSApp endSheet:advancedFontsDialog];
@@ -615,11 +650,6 @@ const int kDefaultFontSansSerifTag = 1;
 // Reset the Fonts tab to application factory defaults.
 - (IBAction)resetFontsToDefaults:(id)sender
 {
-  // reset default font type
-  [defaultFontType release];
-  defaultFontType = @"serif"; // the default default font type...wish there were a constant for it ;)
-  [defaultFontType retain];
-  
   // clear all the preferences for the font regions
   for (unsigned int i = 0; i < [regionMappingTable count]; i++)
   {
@@ -633,6 +663,7 @@ const int kDefaultFontSansSerifTag = 1;
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"cursive"];
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"fantasy"];
     [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"fontsize"];
+    [regionDict setObject:[NSMutableDictionary dictionary] forKey:@"defaultFontType"];
   }
 
   // commit the changes
