@@ -553,12 +553,11 @@ sub on_nick_taken {
             @nicks = (@nicks[0..$nickFirstTried], $new, @nicks[$nickFirstTried+1..$#nicks]);
             $nick += 1; # try the new nick now
             $nickFirstTried = $nick;
-            &debug("saving nicks: @nicks");
-            &Configuration::Save($cfgfile, &configStructure(\@nicks));
         }
     }
 
     &debug("now going to try nick '$nicks[$nick]'");
+    &Configuration::Save($cfgfile, &configStructure(\$nick, \@nicks));
     $self->nick($nicks[$nick]);
 }
 
