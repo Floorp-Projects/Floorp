@@ -36,29 +36,26 @@
     // if separator is an empty string, split each by character
 
 
-    // the expected results here are based on the behavior of perl5,
-    // except where exceptions are noted.
-
     AddSplitCases( "hello", new RegExp, "new RegExp", ["h","e","l","l","o"] );
 
     AddSplitCases( "hello", /l/, "/l/", ["he","","o"] );
-    AddLimitedSplitCases( "hello", /l/, "/l/", 0, ["he","","o"] );
+    AddLimitedSplitCases( "hello", /l/, "/l/", 0, [] );
     AddLimitedSplitCases( "hello", /l/, "/l/", 1, ["he"] );
-    AddLimitedSplitCases( "hello", /l/, "/l/", 2, ["he","lo"] );
+    AddLimitedSplitCases( "hello", /l/, "/l/", 2, ["he",""] );
     AddLimitedSplitCases( "hello", /l/, "/l/", 3, ["he","","o"] );
     AddLimitedSplitCases( "hello", /l/, "/l/", 4, ["he","","o"] );
     AddLimitedSplitCases( "hello", /l/, "/l/", void 0, ["he","","o"] );
-    AddLimitedSplitCases( "hello", /l/, "/l/", "hi", ["he","","o"] );
+    AddLimitedSplitCases( "hello", /l/, "/l/", "hi", [] );
     AddLimitedSplitCases( "hello", /l/, "/l/", undefined, ["he","","o"] );
 
-    AddSplitCases( "hello", new RegExp, "new RegExp", ["he","","o"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 0, ["h","e","l","l","o"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 1, ["hello"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 2, ["h","ello"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 3, ["h","e","llo"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 4, ["h","e","l","lo"] );
+    AddSplitCases( "hello", new RegExp, "new RegExp", ["h","e","l","l","o"] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 0, [] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 1, ["h"] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 2, ["h","e"] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 3, ["h","e","l"] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", 4, ["h","e","l","l"] );
     AddLimitedSplitCases( "hello", new RegExp, "new RegExp", void 0,  ["h","e","l","l","o"] );
-    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", "hi",  ["h","e","l","l","o"] );
+    AddLimitedSplitCases( "hello", new RegExp, "new RegExp", "hi",  [] );
     AddLimitedSplitCases( "hello", new RegExp, "new RegExp", undefined,  ["h","e","l","l","o"] );
 
     test();
@@ -104,17 +101,17 @@ function AddLimitedSplitCases(
     AddTestCase(
         "( " + string + " ).split(" + str_sep  +", " + limit + " ).length",
         split_array.length,
-        string.split(separator).length );
+        string.split(separator, limit).length );
 
     // check the value of each array item
 
     var slimit = (split_array.length > string.split(separator).length )
-        ? split_array.length : string.split(separator).length;
+        ? split_array.length : string.split(separator, limit).length;
 
     for ( var matches = 0; matches < slimit; matches++ ) {
         AddTestCase(
             "( " + string + " ).split(" + str_sep +", " + limit + " )[" + matches +"]",
             split_array[matches],
-            string.split( separator )[matches] );
+            string.split( separator, limit )[matches] );
     }
 }
