@@ -322,7 +322,7 @@ protected:
   gint               mDragMotionX;
   gint               mDragMotionY;
   guint              mDragMotionTime;
-  nsCOMPtr<nsITimer> mDragMotionTimer;
+  guint              mDragMotionTimerID;
   nsCOMPtr<nsITimer> mDragLeaveTimer;
 
   void        ResetDragMotionTimer    (GtkWidget      *aWidget,
@@ -332,8 +332,8 @@ protected:
                                        guint          aTime);
   void        FireDragMotionTimer     (void);
   void        FireDragLeaveTimer      (void);
-  static void DragMotionTimerCallback (nsITimer *aTimer, void *aClosure);
-  static void DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
+  static guint DragMotionTimerCallback (gpointer aClosure);
+  static void  DragLeaveTimerCallback  (nsITimer *aTimer, void *aClosure);
 
 #ifdef NS_DEBUG
   void        DumpWindowTree(void);

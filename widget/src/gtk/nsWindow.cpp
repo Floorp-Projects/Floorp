@@ -208,6 +208,7 @@ nsWindow::nsWindow()
   mDragMotionX = 0;
   mDragMotionY = 0;
   mDragMotionTime = 0;
+  mDragMotionTimerID = 0;
 
   // for commit character
   mIMECompositionUniString = nsnull;
@@ -3655,20 +3656,25 @@ nsWindow::ResetDragMotionTimer(GtkWidget *aWidget,
   mDragMotionY = aY;
   mDragMotionTime = aTime;
 
-  // clear the timer
-  if (!aWidget) {
-    // destroying the timer will cancel it
-    mDragMotionTimer = 0;
+  // always clear the timer
+  if (mDragMotionTimerID) {
+      gtk_timeout_remove(mDragMotionTimerID);
+      mDragMotionTimerID = 0;
 #ifdef DEBUG_DND_EVENTS
-    g_print("*** canceled motion timer\n");
+      g_print("*** canceled motion timer\n");
 #endif
+  }
+
+  // if no widget was passed in, just return instead of setting a new
+  // timer
+  if (!aWidget) {
     return;
   }
   
   // otherwise we create a new timer
-  mDragMotionTimer = do_CreateInstance("@mozilla.org/timer;1");
-  NS_ASSERTION(mDragMotionTimer, "Failed to create drag motion timer!");
-  mDragMotionTimer->Init(DragMotionTimerCallback, this, 100);
+  mDragMotionTimerID = gtk_timeout_add(100,
+                                       (GtkFunction)DragMotionTimerCallback,
+                                       this);
 }
 
 void
@@ -3704,11 +3710,12 @@ nsWindow::FireDragLeaveTimer(void)
 }
 
 /* static */
-void
-nsWindow::DragMotionTimerCallback(nsITimer *aTimer, void *aClosure)
+guint
+nsWindow::DragMotionTimerCallback(gpointer aClosure)
 {
   nsWindow *window = NS_STATIC_CAST(nsWindow *, aClosure);
   window->FireDragMotionTimer();
+  return FALSE;
 }
 
 /* static */
