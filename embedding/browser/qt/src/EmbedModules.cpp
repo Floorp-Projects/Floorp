@@ -52,5 +52,5 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE("Qt components", components)
+NS_IMPL_NSGETMODULE(QtComponents, components)
 #endif
