@@ -29,8 +29,8 @@ Rights Reserved.
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY junkStatusColumn.label "Junk Status">
 <!ENTITY linesColumn.label "Lines">
-<!ENTITY unreadColumn.label "Unread">
-<!ENTITY totalColumn.label "Total">
+<!ENTITY unreadColumn.label "Unread in Thread">
+<!ENTITY totalColumn.label "Total in Thread">
 <!ENTITY readColumn.label "Read">
 <!ENTITY flagColumn.label "Flag">
 <!ENTITY locationColumn.label "Location">
