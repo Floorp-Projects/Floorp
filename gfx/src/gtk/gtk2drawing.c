@@ -65,7 +65,7 @@ static GtkWidget* gHandleBoxWidget;
 static GtkWidget* gFrameWidget;
 static GtkWidget* gProgressWidget;
 static GtkWidget* gTabWidget;
-static GtkTooltips* gTooltipWidget;
+static GtkWidget* gTooltipWidget;
 
 static style_prop_t style_prop_func;
 
@@ -175,15 +175,8 @@ static gint
 ensure_tooltip_widget()
 {
     if (!gTooltipWidget) {
-        gTooltipWidget = gtk_tooltips_new();
-
-        /* take ownership of the tooltips object */
-        g_object_ref(gTooltipWidget);
-        gtk_object_sink(GTK_OBJECT(gTooltipWidget));
-
-        gtk_tooltips_force_window(gTooltipWidget);
-        gtk_widget_set_rc_style(gTooltipWidget->tip_window);
-        gtk_widget_realize(gTooltipWidget->tip_window);
+        gTooltipWidget = gtk_window_new(GTK_WINDOW_POPUP);
+        gtk_widget_realize(gTooltipWidget);
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -767,11 +760,14 @@ moz_gtk_tooltip_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
 
     ensure_tooltip_widget();
-    style = gTooltipWidget->tip_window->style;
+    style = gtk_rc_get_style_by_paths(gtk_settings_get_default(),
+                                      "gtk-tooltips", "GtkWindow",
+                                      GTK_TYPE_WINDOW);
 
+    gtk_style_attach(style, gTooltipWidget->window);
     TSOffsetStyleGCs(style, rect->x, rect->y);
     gtk_paint_flat_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_OUT,
-                       cliprect, gTooltipWidget->tip_window, "tooltip",
+                       cliprect, gTooltipWidget, "tooltip",
                        rect->x, rect->y, rect->width, rect->height);
 
     return MOZ_GTK_SUCCESS;
@@ -1128,7 +1124,7 @@ gint
 moz_gtk_shutdown()
 {
     if (gTooltipWidget)
-        g_object_unref(gTooltipWidget);
+        gtk_widget_destroy(gTooltipWidget);
     /* This will destroy all of our widgets */
     if (gProtoWindow)
         gtk_widget_destroy(gProtoWindow);
