@@ -1,0 +1,216 @@
+; Base Embedding Package File for linux
+;
+;
+;
+
+[Embed]
+
+; 
+; Sample App:
+; 
+;  coming soon!
+
+
+; 
+; NSPR:
+; 
+libnspr4.so
+libplc4.so
+libplds4.so
+
+; 
+; Javascript:
+; 
+libmozjs.so
+
+; 
+; NGLayout Web Widget Control:
+; 
+
+libwebshell.so 
+libgkgfx.so 
+libgtksuperwin.so 
+libgtkembedmoz.so 
+
+
+; 
+; DOM:
+; 
+libjsdom.so 
+
+
+; 
+; XPCOM:
+; 
+libxpcom.so 
+
+
+
+; 
+; Components: (need to trim fat)
+; 
+
+; appshell 
+
+components/libnsappshell.so
+components/appshell.xpt 
+
+
+; caps
+components/libcaps.so
+components/caps.xpt                     
+
+; chrome
+components/libchrome.so                   
+components/chrome.xpt                   
+
+; docshell
+components/libdocshell.so                 
+components/docshell.xpt            
+
+; dom
+components/dom.xpt                      
+
+; editor
+components/libeditor.so                   
+components/editor.xpt
+
+; embedding                   
+components/libmozbrwsr.so                 
+components/mozbrwsr.xpt                 
+components/webBrowser_core.xpt
+components/webBrowser_setup.xpt
+
+
+; gfx
+components/libgfx_gtk.so                     
+components/gfx.xpt 
+
+; layout
+components/libgklayout.so                   
+components/libhtmlpars.so                 
+components/libgkview.so                   
+components/layout_base.xpt              
+components/layout_xul.xpt               
+
+; netwerk
+
+components/libnecko.so                    
+components/necko.xpt                    
+components/libnecko2.so                   
+components/necko_about.xpt              
+components/necko_cache.xpt              
+components/necko_data.xpt               
+components/necko_dns.xpt                
+components/necko_ftp.xpt                
+components/necko_http.xpt               
+components/necko_jar.xpt                
+components/necko_res.xpt                
+components/necko_strconv.xpt            
+
+; imagelib
+components/libnsgif.so                    
+components/libnsjpg.so                    
+
+; prefs
+components/pref.xpt                     
+components/libpref.so
+
+; profile
+components/libprofile.so                  
+components/profile.xpt                  
+
+; rdf
+components/librdf.so
+components/rdf.xpt
+components/librdfdomds.so
+components/rdfdomds.xpt
+
+; session history
+components/libshistory.so
+components/shistory.xpt
+
+; required l10n libraries
+
+components/libucharuti.so
+components/libuconv.so
+components/uconv.xpt
+components/liblwbrk.so
+components/libnslocale.so
+components/libucvlatin.so
+components/unicharutil.xpt
+; optional - on english only systems
+; components/libucvja.so for japanese 
+; components/libucvko.so for korean
+; components/libucvcn.so for simplified chinese
+; components/libucvtw.so for traditional chinese
+; components/libucvtw2.so for traditional chinese
+; components/libucvibm.so for ibm
+
+; uriloader
+components/liburildr.so
+components/uriloader.xpt
+
+; widget
+components/widget.xpt
+
+; xpconnect
+components/libxpconnect.so
+components/xpconnect.xpt
+components/xpconnect_tests.xpt
+
+; xpcom
+components/xpcom_base.xpt
+components/xpcom_components.xpt
+components/xpcom_ds.xpt
+components/xpcom_eventloop_windows.xpt
+components/xpcom_eventloop_xp.xpt
+components/xpcom_io.xpt
+components/xpcom_nativeapp.xpt
+components/xpcom_thread.xpt
+components/xpcom_xpti.xpt
+
+; 
+; Widget-Toolit:
+; 
+chrome/packages/widget-toolkit/global`content/*
+chrome/skins/modern/manifest.rdf
+
+chrome/skins/modern/global/skin/*
+chrome/locales/en-US/manifest.rdf
+
+chrome/locales/en-us/global/locale/*
+
+; 
+; res:
+; 
+res/html.css   
+res/quirk.css  
+res/ua.css
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
