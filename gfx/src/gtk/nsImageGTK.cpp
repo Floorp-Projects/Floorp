@@ -327,8 +327,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
   g_return_val_if_fail ((aSurface != nsnull), NS_ERROR_FAILURE);
 
-  abort();
-
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   gdk_draw_rgb_image (drawing->GetDrawable(),
