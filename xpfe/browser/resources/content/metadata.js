@@ -105,6 +105,11 @@ function showMetadataFor(elem)
     // Each of them could be at a different level in the tree, so they each
     // need their own boolean to tell us to stop looking.
     while (elem && elem.nodeType == Node.ELEMENT_NODE) {
+        htmllocalname = "";
+        if (isHTMLElement(elem,"")) {
+            htmllocalname = elem.localName.toLowerCase();
+        }
+
         if (!onLink)   checkForLink(elem, htmllocalname);
         if (!onInsDel) checkForInsDel(elem, htmllocalname);
         if (!onQuote)  checkForQuote(elem, htmllocalname);
@@ -113,13 +118,8 @@ function showMetadataFor(elem)
         if (!onLang)   checkForLang(elem, htmllocalname);
           
         elem = elem.parentNode;
-
-        htmllocalname = "";
-        if (isHTMLElement(elem,"")) { 
-            htmllocalname = elem.localName.toLowerCase();
-        }
     }
-    
+
     // Decide which sections to show
     var onMisc = onTable || onTitle || onLang;
     if (!onMisc)   hideNode("misc-sec");
@@ -252,10 +252,14 @@ function checkForLink(elem, htmllocalname)
             break;
         case "":
         case "_self":
-            if (elem.ownerDocument != elem.ownerDocument.defaultView.content.document)
-                setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
-            else
-                setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
+            if (elem.ownerDocument.defaultView) {
+                if (elem.ownerDocument != elem.ownerDocument.defaultView.content.document)
+                    setInfo("link-target", gMetadataBundle.getString("sameFrameText"));
+                else
+                    setInfo("link-target", gMetadataBundle.getString("sameWindowText"));
+            } else {
+                hideNode("link-target");
+            }
             break;
         default:
             setInfo("link-target", "\"" + target + "\"");
