@@ -7819,6 +7819,10 @@ mailnews/news/tests/Makefile
 mailnews/mime/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
+mailnews/compose/Makefile
+mailnews/compose/public/Makefile
+mailnews/compose/src/Makefile
+mailnews/compose/tests/Makefile
 mailnews/public/Makefile
 "
 
