@@ -1226,7 +1226,8 @@ nsBaseIBFrame::FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult)
 
 nsresult
 nsBaseIBFrame::RecoverStateFrom(nsBlockReflowState& aState,
-                               nsLineBox* aLine)
+                                nsLineBox* aLine,
+                                nscoord aDeltaY)
 {
   // Recover xmost
   nscoord xmost = aLine->mBounds.XMost();
@@ -1256,6 +1257,17 @@ nsBaseIBFrame::RecoverStateFrom(nsBlockReflowState& aState,
   aState.mPrevBottomMargin = bottomMargin;
   if (!aState.ShouldApplyTopMargin()) {
     aState.mCarriedOutTopMargin = topMargin;
+  }
+
+  if (0 != aDeltaY) {
+    // Move this lines frames by the current delta value
+    SlideFrames(aState.mPresContext, aState.mSpaceManager, aLine, aDeltaY);
+    SlideFloaters(aState.mPresContext, aState.mSpaceManager, aLine, aDeltaY,
+                  PR_FALSE);
+  }
+  if (nsnull != aLine->mFloaters) {
+    aState.mY = aLine->mBounds.y;
+    aState.PlaceFloaters(aLine->mFloaters, PR_TRUE);
   }
 
   // Advance Y to be below the line.
@@ -1396,13 +1408,8 @@ nsBaseIBFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     else {
       // XXX what if the slid line doesn't fit because we are in a
       // vertically constrained situation?
-      if (0 != deltaY) {
-        // Move this line's frames by the current delta value
-        SlideFrames(aState.mPresContext, aState.mSpaceManager, line, deltaY);
-      }
-
       // Recover state as if we reflowed this line
-      RecoverStateFrom(aState, line);
+      RecoverStateFrom(aState, line, deltaY);
     }
 #ifdef NOISY_INCREMENTAL_REFLOW
     if (aState.reason == eReflowReason_Incremental) {
@@ -1603,9 +1610,11 @@ nsBaseIBFrame::ReflowLine(nsBlockReflowState& aState,
   // If the line already has floaters on it from last time, remove
   // them from the spacemanager now.
   if (nsnull != aLine->mFloaters) {
+#if 0
     if (eReflowReason_Resize != aState.reason) {
       aLine->UnplaceFloaters(aState.mSpaceManager);
     }
+#endif
     aLine->mFloaters->Clear();
   }
 
@@ -1618,14 +1627,6 @@ nsBaseIBFrame::ReflowLine(nsBlockReflowState& aState,
       return rv;
     }
     if (nsnull == frame) {
-#if 0
-      // If there is nothing left to pull then get rid of the empty
-      // line and return.
-      if (nsnull != aState.mPrevLine) {
-        aState.mPrevLine->mNext = nsnull;
-      }
-      delete aLine;
-#endif
       aKeepGoing = PR_FALSE;
       return rv;
     }
@@ -1906,16 +1907,16 @@ nsBaseIBFrame::SlideFrames(nsIPresContext& aPresContext,
 ListTag(stdout); printf(": SlideFrames: line=%p dy=%d\n", aDY);
 #endif
   // Adjust the Y coordinate of the frames in the line
+  nsRect r;
   nsIFrame* kid = aLine->mFirstChild;
   PRInt32 n = aLine->ChildCount();
   while (--n >= 0) {
-    nsRect r;
     kid->GetRect(r);
     r.y += aDY;
     kid->SetRect(r);
 
     // If the child has any floaters that impact the space manager,
-    // slide them now
+    // slide them now.
     nsIHTMLReflow* ihr;
     if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
       ihr->MoveInSpaceManager(aPresContext, aSpaceManager, 0, aDY);
@@ -1924,28 +1925,34 @@ ListTag(stdout); printf(": SlideFrames: line=%p dy=%d\n", aDY);
     kid->GetNextSibling(kid);
   }
 
-  // Slide down our floaters too
-  nsVoidArray* floaters = aLine->mFloaters;
-  if (nsnull != floaters) {
-    PRInt32 i;
-    n = floaters->Count();
-    for (i = 0; i < n; i++) {
-      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-      kid = ph->GetAnchoredItem();
-      nsRect r;
-      kid->GetRect(r);
-      r.y += aDY;
-      kid->SetRect(r);
-// XXX check and see if we should be calling OffsetRegion in the spacemanager!
-#if 0
-((nsFrame*)kid)->ListTag(stdout); printf(": moved=%d\n", aDY);
-#endif
-    }
-  }
-
-  // Slide line box too
+  // Adjust line state
   aLine->mBounds.y += aDY;
   aLine->mCombinedArea.y += aDY;
+}
+
+void
+nsBaseIBFrame::SlideFloaters(nsIPresContext& aPresContext,
+                             nsISpaceManager* aSpaceManager,
+                             nsLineBox* aLine, nscoord aDY,
+                             PRBool aUpdateSpaceManager)
+{
+  nsVoidArray* floaters = aLine->mFloaters;
+  if (nsnull != floaters) {
+    nsRect r;
+    PRInt32 i, n = floaters->Count();
+    for (i = 0; i < n; i++) {
+      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
+      nsIFrame* floater = ph->GetAnchoredItem();
+      floater->GetRect(r);
+      r.y += aDY;
+      floater->SetRect(r);
+
+      if (aUpdateSpaceManager) {
+        // Adjust placement in space manager by the same amount
+        aSpaceManager->OffsetRegion(floater, 0, aDY);
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -1958,17 +1965,14 @@ ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
 #endif
   nsLineBox* line = mLines;
   while (nsnull != line) {
-    PRInt32 i, n;
-    nsIFrame* kid;
-
     // Move the floaters in the spacemanager
     nsVoidArray* floaters = line->mFloaters;
     if (nsnull != floaters) {
-      n = floaters->Count();
+      PRInt32 i, n = floaters->Count();
       for (i = 0; i < n; i++) {
         nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters->ElementAt(i);
-        kid = ph->GetAnchoredItem();
-        aSpaceManager->OffsetRegion(kid, aDeltaX, aDeltaY);
+        nsIFrame* floater = ph->GetAnchoredItem();
+        aSpaceManager->OffsetRegion(floater, aDeltaX, aDeltaY);
 #if 0
 ((nsFrame*)kid)->ListTag(stdout); printf(": offset=%d,%d\n", aDeltaX, aDeltaY);
 #endif
@@ -1976,8 +1980,8 @@ ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
     }
 
     // Tell kids about the move too
-    n = line->ChildCount();
-    kid = line->mFirstChild;
+    PRInt32 n = line->ChildCount();
+    nsIFrame* kid = line->mFirstChild;
     while (--n >= 0) {
       nsIHTMLReflow* ihr;
       if (NS_OK == kid->QueryInterface(kIHTMLReflowIID, (void**)&ihr)) {
@@ -2641,6 +2645,7 @@ nsBaseIBFrame::PlaceLine(nsBlockReflowState& aState,
     if (NS_STYLE_TEXT_ALIGN_JUSTIFY == aState.mStyleText->mTextAlign) {
       allowJustify = ShouldJustifyLine(aState, aLine);
     }
+    ir.TrimTrailingWhiteSpace(aLine->mBounds);
     ir.HorizontalAlignFrames(aLine->mBounds, allowJustify);
   }
   ir.RelativePositionFrames(aLine->mCombinedArea);
@@ -2728,6 +2733,8 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
   if (0 != topMargin) {
     // Apply collapsed top-margin value
     SlideFrames(aState.mPresContext, aState.mSpaceManager, aLine, topMargin);
+    SlideFloaters(aState.mPresContext, aState.mSpaceManager, aLine, topMargin,
+                  PR_TRUE);
   }
   aState.mY = newY;
 
@@ -3520,6 +3527,13 @@ void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
                                  PRBool& aIsLeftFloater)
 {
+  // Save away the Y coordinate before placing the floater. We will
+  // restore mY at the end after placing the floater. This is
+  // necessary because any adjustments to mY during the floater
+  // placement are for the floater only, not for any non-floating
+  // content.
+  nscoord saveY = mY;
+
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
 
   // XXX the choice of constructors is confusing and non-obvious
@@ -3628,6 +3642,10 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // translation, therefore we have to factor in our border/padding.
   floater->MoveTo(mBorderPadding.left + floaterMargin.left + region.x,
                   mBorderPadding.top + floaterMargin.top + region.y);
+
+  // Now restore mY
+  mY = saveY;
+
 #ifdef NOISY_INCREMENTAL_REFLOW
   if (reason == eReflowReason_Incremental) {
     nsRect r;
@@ -3659,9 +3677,6 @@ nsBlockReflowState::PlaceFloaters(nsVoidArray* aFloaters, PRBool aAllOfThem)
     PRBool isLeftFloater;
     PlaceFloater(placeholderFrame, isLeftFloater);
   }
-
-  // Update available spcae now that the floaters have been placed
-  GetAvailableSpace();
 }
 
 void

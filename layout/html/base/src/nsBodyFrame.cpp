@@ -251,11 +251,8 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowState reflowState(aReflowState);
   reflowState.spaceManager = mSpaceManager;
 
-  if (eReflowReason_Resize == reflowState.reason) {
-    // Clear any regions that are marked as unavailable
-    // XXX Temporary hack until everything is incremental...
-    mSpaceManager->ClearRegions();
-  }
+  // Clear the spacemanager's regions.
+  mSpaceManager->ClearRegions();
 
   // XXX We need to peek at incremental reflow commands and see if the next
   // frame is one of the absolutely positioned frames...
