@@ -19,6 +19,8 @@ IGNORE_MANIFEST=1
 
 DEPTH= ..\..\..
 
+include <$(DEPTH)/config/config.mak>
+
 MODULE	= plugimpl
 
 EXPORTS =        \
@@ -47,6 +49,10 @@ OBJS =  .\$(OBJDIR)\npassoc.obj \
         .\$(OBJDIR)\nsplugin.obj \
         .\$(OBJDIR)\npglue.obj \
         .\$(OBJDIR)\nsMalloc.obj
+
+!ifdef NEW_PLUGIN_STREAM_API
+LCFLAGS = $(LCFLAGS) -DNEW_PLUGIN_STREAM_API
+!endif
 
 include <$(DEPTH)/config/rules.mak>
 

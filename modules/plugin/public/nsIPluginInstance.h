@@ -126,6 +126,7 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window) = 0;
 
+#ifndef NEW_PLUGIN_STREAM_API
     /**
      * Called when a new plugin stream must be constructed in order for the plugin
      * instance to receive a stream of data from the browser. 
@@ -139,6 +140,7 @@ public:
      */
     NS_IMETHOD
     NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result) = 0;
+#endif
 
     /**
      * Called to instruct the plugin instance to print itself to a printer.
@@ -151,6 +153,7 @@ public:
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint) = 0;
 
+#ifndef NEW_PLUGIN_STREAM_API
     /**
      * Called to notify the plugin instance that a URL request has been
      * completed. (See nsIPluginManager::GetURL and nsIPluginManager::PostURL).
@@ -166,6 +169,7 @@ public:
     NS_IMETHOD
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData) = 0;
+#endif
 
     /**
      * Returns the value of a variable associated with the plugin instance.

@@ -57,11 +57,10 @@
  *    |                   v                                      v               
  *    |     +---------------------------------+    +----------------------------+
  *    |     | nsIPluginInstancePeer           |+   | nsIPluginStreamPeer        |+
- *    |     | nsIPluginInstancePeer2          ||   | nsISeekablePluginStreamPeer||      
- *    |     | nsIWindowlessPluginInstancePeer ||   | nsIPluginstreamPeer2       ||
- *    |     | nsILiveConnectPluginInstancePeer||   +----------------------------+|                                        
- *    |     | nsIPluginTagInfo                ||     +---------------------------+ 
- *    |     | nsIPluginTagInfo2               ||                  
+ *    |     | nsIWindowlessPluginInstancePeer ||   | nsISeekablePluginStreamPeer||      
+ *    |     | nsILiveConnectPluginInstancePeer||   | nsIPluginstreamPeer2       ||
+ *    |     | nsIPluginTagInfo                ||   +----------------------------+|                                        
+ *    |     | nsIPluginTagInfo2               ||     +---------------------------+ 
  *    |     +---------------------------------+|                  
  *    |       +--------------------------------+                  
  *    |                                                
@@ -110,11 +109,22 @@
  */
 #include "nsIPluginInstance.h"
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+/**
+ * A plugin stream listener ...
+ */
+#include "nsIPluginStreamListener.h"
+
+#else // !NEW_PLUGIN_STREAM_API
+
 /**
  * A plugin stream gets instantiated when a plugin instance receives data from
  * the browser. 
  */
 #include "nsIPluginStream.h"
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 /**
  * The nsILiveConnectPlugin interface provides additional operations that a 
@@ -162,6 +172,15 @@
  */
 #include "nsIWindowlessPlugInstPeer.h"
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+/**
+ *
+ */
+#include "nsIPluginInputStream.h"
+
+#else // !NEW_PLUGIN_STREAM_API
+
 /**
  * A plugin stream peer gets create by the browser and associated with each
  * plugin stream to represent stream and URL information, and provides
@@ -176,6 +195,8 @@
  * To obtain: QueryInterface on nsIPluginStreamPeer
  */
 #include "nsISeekablePluginStreamPeer.h"
+
+#endif // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -210,6 +231,15 @@
  */
 #include "nsILiveConnectPlugInstPeer.h"
 
+#ifdef NEW_PLUGIN_STREAM_API
+
+/**
+ *
+ */
+#include "nsIPluginInputStream2.h"
+
+#else // !NEW_PLUGIN_STREAM_API
+
 /**
  * The nsIPluginStreamPeer2 interface provides additional plugin stream
  * peer features only available in Communicator 5.0. 
@@ -218,6 +248,8 @@
  */
 #include "nsIPluginStreamPeer2.h"
 
+#endif // !NEW_PLUGIN_STREAM_API
+
 /**
  * The nsIPluginTagInfo2 interface provides additional html tag information
  * only available in Communicator 5.0. 
@@ -225,6 +257,8 @@
  * To obtain: QueryInterface on nsIPluginTagInfo
  */
 #include "nsIPluginTagInfo2.h"
+
+#include "nsIOutputStream.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 #endif // nsplugins_h___

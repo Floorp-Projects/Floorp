@@ -155,6 +155,7 @@ public:
     NS_IMETHOD
     HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result) = 0;
 
+#if 0 // problematic
 	/**
      * This operation causes the next browser event to be processed. This is
      * handy for implement nested event loops where some other activity must
@@ -171,7 +172,7 @@ public:
      */
     NS_IMETHOD
     ProcessNextEvent(PRBool *bEventHandled) = 0;
-
+#endif
 };
 
 #define NS_IPLUGINMANAGER2_IID                       \

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -141,6 +141,9 @@ struct _np_urlsnode {
     void* notifyData;
     XP_Bool cached;
     XP_Bool notify;
+#ifdef NEW_PLUGIN_STREAM_API
+    uint16 streamType;
+#endif
 };
 
 /* MWContext.pluginReconnect -> np_reconnect */

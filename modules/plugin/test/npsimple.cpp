@@ -249,18 +249,26 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window);
 
+#ifndef NEW_PLUGIN_STREAM_API
+
     // (Corresponds to NPP_NewStream.)
     NS_IMETHOD
     NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result);
+
+#endif // NEW_PLUGIN_STREAM_API
 
     // (Corresponds to NPP_Print.)
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint);
 
+#ifndef NEW_PLUGIN_STREAM_API
+
     // (Corresponds to NPP_URLNotify.)
     NS_IMETHOD
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData);
+
+#endif // NEW_PLUGIN_STREAM_API
 
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value);
@@ -301,6 +309,70 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginStream represents the stream used by SimplePluginInstances
 // to receive data from the browser. 
+
+#ifdef NEW_PLUGIN_STREAM_API
+
+class SimplePluginStreamListener : public nsIPluginStreamListener {
+public:
+
+    NS_DECL_ISUPPORTS
+
+    ////////////////////////////////////////////////////////////////////////////
+    // from nsIPluginStreamListener:
+
+    /**
+     * Notify the observer that the URL has started to load.  This method is
+     * called only once, at the beginning of a URL load.<BR><BR>
+     *
+     * @return The return value is currently ignored.  In the future it may be
+     * used to cancel the URL load..
+     */
+    NS_IMETHOD
+    OnStartBinding(const char* url, const nsPluginStreamInfo* info);
+
+    /**
+     * Notify the client that data is available in the input stream.  This
+     * method is called whenver data is written into the input stream by the
+     * networking library...<BR><BR>
+     * 
+     * @param aIStream  The input stream containing the data.  This stream can
+     * be either a blocking or non-blocking stream.
+     * @param length    The amount of data that was just pushed into the stream.
+     * @return The return value is currently ignored.
+     */
+    NS_IMETHOD
+    OnDataAvailable(const char* url, nsIPluginInputStream* input,
+                    PRUint32 offset, PRUint32 length);
+
+    NS_IMETHOD
+    OnFileAvailable(const char* url, const char* fileName);
+
+    /**
+     * Notify the observer that the URL has finished loading.  This method is 
+     * called once when the networking library has finished processing the 
+     * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
+     * 
+     * This method is called regardless of whether the URL loaded successfully.<BR><BR>
+     * 
+     * @param status    Status code for the URL load.
+     * @param msg   A text string describing the error.
+     * @return The return value is currently ignored.
+     */
+    NS_IMETHOD
+    OnStopBinding(const char* url, nsresult status);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // SimplePluginStreamListener specific methods:
+
+    SimplePluginStreamListener(SimplePluginInstance* inst);
+    virtual ~SimplePluginStreamListener(void);
+
+protected:
+    SimplePluginInstance*       fInst;
+
+};
+
+#else // !NEW_PLUGIN_STREAM_API
 
 class SimplePluginStream : public nsIPluginStream {
 public:
@@ -350,18 +422,33 @@ protected:
 
 };
 
+#endif // !NEW_PLUGIN_STREAM_API
+
 // Interface IDs we'll need:
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kIJRILiveConnectPluginIID, NS_IJRILIVECONNECTPLUGIN_IID);
 static NS_DEFINE_IID(kIJRILiveConnectPluginInstancePeerIID, NS_IJRILIVECONNECTPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-static NS_DEFINE_IID(kIPluginStreamIID, NS_IPLUGINSTREAM_IID);
 static NS_DEFINE_IID(kIJRIEnvIID, NS_IJRIENV_IID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+
+#ifdef NEW_PLUGIN_STREAM_API
+static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
+#else // !NEW_PLUGIN_STREAM_API
+static NS_DEFINE_IID(kIPluginStreamIID, NS_IPLUGINSTREAM_IID);
+#endif // !NEW_PLUGIN_STREAM_API
 
 /*******************************************************************************
  * SECTION 3 - API Plugin Implementations
  ******************************************************************************/
+
+// This counter is used to keep track of the number of outstanding objects.
+// It is used to determine whether the plugin's DLL can be unloaded.
+static PRUint32 gPluginObjectCount = 0;
+
+// This flag is used to keep track of whether the plugin's DLL is explicitly
+// being retained by some client.
+static PRBool gPluginLocked = PR_FALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePlugin Methods
@@ -371,10 +458,12 @@ SimplePlugin::SimplePlugin()
     : mgr(NULL)
 {
     NS_INIT_REFCNT();
+    gPluginObjectCount++;
 }
 
 SimplePlugin::~SimplePlugin(void)
 {
+    gPluginObjectCount--;
     if (env)
         Simple::_unuse(env);
 }
@@ -436,6 +525,12 @@ NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
     return NS_ERROR_FAILURE;    // XXX right error?
 }
 
+extern "C" NS_EXPORT PRBool
+NSCanUnload(void)
+{
+    return gPluginObjectCount == 1 && !gPluginLocked;
+}
+
 NS_METHOD
 SimplePlugin::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -443,13 +538,14 @@ SimplePlugin::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     if (inst == NULL) 
         return NS_ERROR_OUT_OF_MEMORY;
     inst->AddRef();
+    *aResult = inst;
     return NS_OK;
 }
 
 NS_METHOD
 SimplePlugin::LockFactory(PRBool aLock)
 {
-    // XXX what to do here?
+    gPluginLocked = aLock;
     return NS_OK;
 }
 
@@ -457,7 +553,7 @@ NS_METHOD
 SimplePlugin::Initialize(nsISupports* browserInterfaces)
 {
     if (browserInterfaces->QueryInterface(kIPluginManagerIID, 
-                                          (void**)mgr) != NS_OK) {
+                                          (void**)&mgr) != NS_OK) {
         return NS_ERROR_FAILURE;
     }
     return NS_OK;
@@ -542,10 +638,12 @@ SimplePluginInstance::SimplePluginInstance(void)
     : fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded)
 {
     NS_INIT_REFCNT();
+    gPluginObjectCount++;
 }
 
 SimplePluginInstance::~SimplePluginInstance(void)
 {
+    gPluginObjectCount--;
     PlatformDestroy(); // Perform platform specific cleanup
     DisplayJavaMessage("Calling SimplePluginInstance::Release.", -1);
 }
@@ -572,6 +670,7 @@ NS_METHOD
 SimplePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
     fPeer = peer;
+    peer->AddRef();
     nsresult err = peer->GetMode(&fMode);
     if (err) return err;
     PlatformNew(); 	/* Call Platform-specific initializations */
@@ -656,6 +755,8 @@ SimplePluginInstance::SetWindow(nsPluginWindow* window)
     return result;
 }
 
+#ifndef NEW_PLUGIN_STREAM_API
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NewStream:
  * Notifies an instance of a new data stream and returns an error value. 
@@ -677,6 +778,8 @@ SimplePluginInstance::NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *res
     *result = strm;
     return NS_OK;
 }
+
+#endif // NEW_PLUGIN_STREAM_API
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * NPP_Print:
@@ -754,6 +857,8 @@ SimplePluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
     return NS_OK;
 }
 
+#ifndef NEW_PLUGIN_STREAM_API
+
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
  * URLNotify:
  * Notifies the instance of the completion of a URL request. 
@@ -781,11 +886,75 @@ SimplePluginInstance::URLNotify(const char* url, const char* target,
     return NS_OK;
 }
 
+#endif // NEW_PLUGIN_STREAM_API
+
 NS_METHOD
 SimplePluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
 {
+    return NS_ERROR_FAILURE;
+}
+
+#ifdef NEW_PLUGIN_STREAM_API
+
+////////////////////////////////////////////////////////////////////////////////
+// SimplePluginStreamListener Methods
+////////////////////////////////////////////////////////////////////////////////
+
+SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* inst)
+    : fInst(inst)
+{
+    gPluginObjectCount++;
+    NS_INIT_REFCNT();
+}
+
+SimplePluginStreamListener::~SimplePluginStreamListener(void)
+{
+    gPluginObjectCount--;
+    fInst->DisplayJavaMessage("Calling SimplePluginStream destructor.", -1);
+}
+
+// This macro produces a simple version of QueryInterface, AddRef and Release.
+// See the nsISupports.h header file for details.
+
+NS_IMPL_ISUPPORTS(SimplePluginStreamListener, kIPluginStreamListenerIID);
+
+NS_METHOD
+SimplePluginStreamListener::OnStartBinding(const char* url, const nsPluginStreamInfo* info)
+{
+    fInst->DisplayJavaMessage("Opening plugin stream.", -1); 
     return NS_OK;
 }
+
+NS_METHOD
+SimplePluginStreamListener::OnDataAvailable(const char* url, nsIPluginInputStream* input,
+                                            PRUint32 offset, PRUint32 length)
+{
+    char* buffer = new char[length];
+    if (buffer) {
+        PRInt32 amountRead = 0;
+        nsresult rslt = input->Read(buffer, offset, length, &amountRead);
+        if (rslt == NS_OK)
+            fInst->DisplayJavaMessage(buffer, amountRead); 
+        delete buffer;
+    }
+    return NS_OK;
+}
+
+NS_METHOD
+SimplePluginStreamListener::OnFileAvailable(const char* url, const char* fileName)
+{
+    fInst->DisplayJavaMessage("Calling SimplePluginStreamListener::OnFileAvailable.", -1); 
+    return NS_OK;
+}
+
+NS_METHOD
+SimplePluginStreamListener::OnStopBinding(const char* url, nsresult status)
+{
+    fInst->DisplayJavaMessage("Closing plugin stream.", -1); 
+    return NS_OK;
+}
+
+#else // !NEW_PLUGIN_STREAM_API
 
 ////////////////////////////////////////////////////////////////////////////////
 // SimplePluginStream Methods
@@ -795,11 +964,13 @@ SimplePluginStream::SimplePluginStream(nsIPluginStreamPeer* peer,
                                        SimplePluginInstance* inst)
     : fPeer(peer), fInst(inst)
 {
+    gPluginObjectCount++;
     NS_INIT_REFCNT();
 }
 
 SimplePluginStream::~SimplePluginStream(void)
 {
+    gPluginObjectCount--;
     fInst->DisplayJavaMessage("Calling SimplePluginStream::Release.", -1);
 }
 
@@ -875,7 +1046,7 @@ SimplePluginStream::AsFile(const char* fname)
     return NS_OK;
 }
 
-
+#endif // !NEW_PLUGIN_STREAM_API
 
 
 /*******************************************************************************
