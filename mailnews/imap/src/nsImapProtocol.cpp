@@ -768,7 +768,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     PRBool closeNeeded = GetServerStateParser().GetIMAPstate() ==
         nsImapServerResponseParser::kFolderSelected && isSaveToClose;
     nsCString command;
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (closeNeeded && GetDeleteIsMoveToTrash())
     {
@@ -777,7 +777,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
         command.Append(" close" CRLF);
         rv = SendData(command.GetBuffer());
     }
-        
+
 	IncrementCommandTagNumber();
 	command = GetServerCommandTag();
 	command.Append(" logout" CRLF);
@@ -801,7 +801,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
 
     PR_CExitMonitor(this);
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -1140,7 +1140,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
 		if (NS_SUCCEEDED(rv))
 			aImapServer->RemoveConnection(this);
-        TellThreadToDie(PR_TRUE);
+        TellThreadToDie(PR_FALSE);
 
 	}
 	return anotherUrlRun;
@@ -2899,8 +2899,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 			if (!DeathSignalReceived())	// only expunge if not reading messages manually and before fetching new
 			{
 				// ### TODO read gExpungeThreshhold from prefs.
-				if ((m_flagState.GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  /*&& 
-					GetDeleteIsMoveToTrash() */)
+				if ((m_flagState.GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  && GetDeleteIsMoveToTrash() )
 					Expunge();	// might be expensive, test for user cancel
 			}
 

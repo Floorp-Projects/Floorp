@@ -338,7 +338,7 @@ nsImapIncomingServer::ConnectionTimeOut(nsIImapProtocol* aConnection)
         if (NS_SUCCEEDED(rv) && aProtocol)
         {
             m_connectionCache->RemoveElement(aConnection);
-            aProtocol->TellThreadToDie(PR_TRUE);
+            aProtocol->TellThreadToDie(PR_FALSE);
             retVal = PR_TRUE;
         }
     }
