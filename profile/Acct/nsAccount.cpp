@@ -394,7 +394,7 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 	printf("Failed to return the Get property \n");
     }
 
-	PL_strcpy(IspLocation[LocCount], v.get());
+	PL_strcpy(IspLocation[LocCount], NS_LossyConvertUCS2toASCII(v).get());
 
       cout << "the value is " << IspLocation[LocCount] << "." << endl;
 	LocCount++;
