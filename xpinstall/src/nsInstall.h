@@ -14,7 +14,6 @@
 #include "nsSoftwareUpdate.h"
 
 #include "nsInstallObject.h"
-#include "nsInstallFolder.h"
 #include "nsInstallVersion.h"
 
 class nsInstall
@@ -73,30 +72,30 @@ class nsInstall
         PRInt32    GetRegPackageName(nsString& aRegPackageName);
 
         PRInt32    AbortInstall();
-        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
-        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
-        PRInt32    DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
-        PRInt32    DiskSpaceAvailable(nsIDOMInstallFolder* aFolder, PRInt32* aReturn);
+        PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
+        PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
         PRInt32    Gestalt(const nsString& aSelector, PRInt32* aReturn);
-        PRInt32    GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder);
-        PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder);
+        PRInt32    GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsString** aFolder);
+        PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsString** aFolder);
         PRInt32    GetLastError(PRInt32* aReturn);
-        PRInt32    GetWinProfile(nsIDOMInstallFolder* aFolder, const nsString& aFile, PRInt32* aReturn);
+        PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, PRInt32* aReturn);
         PRInt32    GetWinRegistry(PRInt32* aReturn);
-        PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
+        PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    ResetError();
-        PRInt32    SetPackageFolder(nsIDOMInstallFolder* aFolder);
+        PRInt32    SetPackageFolder(const nsString& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
 
 
-        PRInt32    ExtractFileFromJar(const nsString& aJarfile, const nsString& aFinalFile, nsString** aTempFile);
-        void       AddPatch(nsHashKey *aKey, nsString* fileName);
-        void       GetPatch(nsHashKey *aKey, nsString* fileName);
+        PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
+        void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
+        void       GetPatch(nsHashKey *aKey, nsFileSpec* fileName);
         
         void       GetJarFileLocation(char** aFile);
         void       SetJarFileLocation(char* aFile);
@@ -119,11 +118,12 @@ class nsInstall
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;
 
-        nsString            mPackageName;        /* Name of the package we are installing */
-        nsString            mUserPackageName;    /* User-readable package name */
+        nsString            mRegistryPackageName;   /* Name of the package we are installing */
+        nsString            mUIName;                /* User-readable package name */
 
         nsInstallVersion*   mVersionInfo;        /* Component version info */
-        nsInstallFolder*    mPackageFolder;
+        
+        nsString*           mPackageFolder;
         
         nsVector*           mInstalledFiles;        
         nsHashtable*        mPatchList;

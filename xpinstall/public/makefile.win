@@ -19,10 +19,8 @@ DEPTH=..\..
 
 DEFINES=-D_IMPL_NS_DOM 
 
-EXPORTS=	nsIDOMInstall.h              \
-			nsIDOMInstallTriggerGlobal.h \
+EXPORTS=    nsIDOMInstallTriggerGlobal.h \
 			nsIDOMInstallVersion.h       \
-            nsIDOMInstallFolder.h       \
             nsSoftwareUpdateIIDs.h       \
 			nsISoftwareUpdate.h
 

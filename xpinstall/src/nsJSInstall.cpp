@@ -20,18 +20,9 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIJSScriptObject.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIPtr.h"
+
 #include "nsString.h"
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
-#include "nsRepository.h"
-
-static NS_DEFINE_IID(kIInstallFolderIID, NS_IDOMINSTALLFOLDER_IID);
-
-NS_DEF_PTR(nsIDOMInstallFolder);
 
 //
 // Install property ids
@@ -100,7 +91,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         break;
       }
-
+        
       default:
         return JS_TRUE;
     }
@@ -216,7 +207,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
-  nsIDOMInstallFolderPtr b3;
+  nsAutoString b3;
   nsAutoString b4;
   PRBool b5;
 
@@ -235,13 +226,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b3,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[3])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
 
     nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
 
@@ -276,7 +261,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
-  nsIDOMInstallFolderPtr b3;
+  nsAutoString b3;
   nsAutoString b4;
   PRBool b5;
 
@@ -295,13 +280,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b3,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[3])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
 
     nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
 
@@ -370,7 +349,7 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
-  nsIDOMInstallFolderPtr b0;
+  nsAutoString b0;
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
@@ -382,13 +361,7 @@ InstallDeleteFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   if (argc >= 2) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
@@ -416,7 +389,7 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
-  nsIDOMInstallFolderPtr b0;
+  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -427,13 +400,7 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   if (argc >= 1) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->DiskSpaceAvailable(b0, &nativeRet)) {
       return JS_FALSE;
@@ -569,7 +536,7 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMInstallFolder* nativeRet;
+  nsString* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -590,7 +557,7 @@ InstallGetComponentFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertStringToJSVal(*nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function GetComponentFolder requires 2 parameters");
@@ -609,7 +576,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMInstallFolder* nativeRet;
+  nsString* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
 
@@ -630,7 +597,7 @@ InstallGetFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       return JS_FALSE;
     }
 
-    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+    nsJSUtils::nsConvertStringToJSVal(*nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function GetFolder requires 2 parameters");
@@ -684,7 +651,7 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
-  nsIDOMInstallFolderPtr b0;
+  nsAutoString b0;
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
@@ -696,13 +663,7 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   if (argc >= 2) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
@@ -767,7 +728,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
-  nsIDOMInstallFolderPtr b3;
+  nsAutoString b3;
   nsAutoString b4;
 
   *rval = JSVAL_NULL;
@@ -785,13 +746,7 @@ InstallPatch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b3,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[3])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
 
     nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
 
@@ -851,7 +806,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMInstallFolderPtr b0;
+  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -862,13 +817,7 @@ InstallSetPackageFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 1) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallFolderIID,
-                                           "InstallFolder",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (NS_OK != nativeThis->SetPackageFolder(b0)) {
       return JS_FALSE;

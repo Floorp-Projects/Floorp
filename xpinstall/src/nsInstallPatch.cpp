@@ -16,20 +16,14 @@
  * Reserved.
  */
 
-#include "prmem.h"
-
-#include "nsCRT.h"
-
 #include "nsFileSpec.h"
-
-#include "VerReg.h"
-#include "nsInstallPatch.h"
-
+#include "prmem.h"
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
+#include "nsInstallPatch.h"
 #include "nsIDOMInstallVersion.h"
 
-#include "nsInstallErrorMessages.h"
+#include "VerReg.h"
+
 
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
@@ -40,41 +34,26 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
-    if ((inInstall == nsnull) || (inVRName == "null") || (inJarLocation == "null")) 
-    {
-        *error = nsInstall::INVALID_ARGUMENTS;
-        return;
-    }
+    char* tempTargetFile = new char[MAXREGPATHLEN];
+    char* tempVersionString = inVRName.ToNewCString();
 
-    mRegistryName   =   inVRName;
-    mVersionInfo    =   inVInfo;    /* Who owns this object? May be we should make a copy of it */
+    PRInt32 err = VR_GetPath(tempVersionString, MAXREGPATHLEN, tempTargetFile );
     
-    mJarLocation    =   inJarLocation; 
-
-    mPatchFile      =   nsnull;
-
-    mTargetFile     =   "";
-    mPatchedFile    =   "";
-
-    char* tempTargetFile = (char*) PR_MALLOC(MAXREGPATHLEN);
-    char* tempVRName     = inVRName.ToNewCString();
-    
-    PRInt32 err = VR_GetPath( tempVRName, MAXREGPATHLEN, tempTargetFile );
+    delete [] tempVersionString;
     
     if (err != REGERR_OK)
     {
-        PR_FREEIF(tempTargetFile);
+        if(tempTargetFile)
+            delete [] tempTargetFile;
         
         *error = nsInstall::NO_SUCH_COMPONENT;
         return;
     }
-
-    mTargetFile.SetString(tempTargetFile);
     
-    delete tempVRName;
+     
+    nsInstallPatch( inInstall, inVRName, inVInfo, inJarLocation, nsString(tempTargetFile), "null", error);
+    
     delete tempTargetFile;
-
-    *error = nsInstall::SUCCESS;
 }
 
 
@@ -82,7 +61,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,
                                 nsIDOMInstallVersion* inVInfo,
                                 const nsString& inJarLocation,
-                                nsIDOMInstallFolder* folderSpec,
+                                const nsString& folderSpec,
                                 const nsString& inPartialPath,
                                 PRInt32 *error)
 
@@ -93,21 +72,44 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
-
-    mRegistryName   =   inVRName;
-    mVersionInfo    =   inVInfo;    /* Who owns this object? May be we should make a copy of it */
-    mJarLocation    =   inJarLocation; 
-
+    
     mPatchFile      =   nsnull;
-    mPatchedFile    =   "";
+    mTargetFile     =   nsnull;
+    mPatchedFile    =   nsnull;
+    mRegistryName   =   new nsString(inVRName);
+    mJarLocation    =   new nsString(inJarLocation);
 
-    folderSpec->MakeFullPath(inPartialPath, mTargetFile);
+    nsString tempString;
+    inVInfo->ToString(tempString);
+    mVersionInfo = new nsInstallVersion();
+    mVersionInfo->Init(tempString);
+    
+
+     mTargetFile = new nsFileSpec(folderSpec);
+     if(inPartialPath != "null")
+        *mTargetFile += inPartialPath;
 }
 
 nsInstallPatch::~nsInstallPatch()
 {
-    if (mPatchFile != nsnull)
+    if (mVersionInfo)
+        delete mVersionInfo;
+
+    if (mTargetFile)
+        delete mTargetFile;
+
+    if (mJarLocation)
+        delete mJarLocation;
+    
+    if (mRegistryName)
+        delete mRegistryName;
+
+    if (mPatchedFile)
+        delete mPatchedFile;
+    
+    if (mPatchFile)
         delete mPatchFile;
+
 }
 
 
@@ -116,13 +118,12 @@ PRInt32 nsInstallPatch::Prepare()
     PRInt32 err;
     PRBool deleteOldSrc;
     
-    char *tempString = mTargetFile.ToNewCString();
-    nsFileSpec file(tempString);
-    delete tempString;
+    if (mTargetFile == nsnull)
+        return  nsInstall::INVALID_ARGUMENTS;
 
-    if (file.Exists())
+    if (mTargetFile->Exists())
     {
-        if (file.IsFile())
+        if (mTargetFile->IsFile())
         {
             err = nsInstall::SUCCESS;
         }
@@ -141,11 +142,11 @@ PRInt32 nsInstallPatch::Prepare()
         return err;
     }
 
-    err =  mInstall->ExtractFileFromJar(mJarLocation, mTargetFile, &mPatchFile);
+    err =  mInstall->ExtractFileFromJar(*mJarLocation, mTargetFile, &mPatchFile);
    
     
-    nsString *fileName = nsnull;
-    nsVoidKey ikey( (void*) nsCRT::HashValue( mTargetFile.GetUnicode() )  );
+    nsFileSpec *fileName = nsnull;
+    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
     
     mInstall->GetPatch(&ikey, fileName);
 
@@ -155,20 +156,22 @@ PRInt32 nsInstallPatch::Prepare()
     } 
     else 
     {
-        fileName = new nsString(mTargetFile);
+        fileName     = mTargetFile;
         deleteOldSrc = PR_FALSE;
     }
 
-    err = NativePatch( *fileName, *mPatchFile, mPatchedFile);
+    err = NativePatch(  *fileName,           // the file to patch
+                        *mPatchFile,         // the patch that was extracted from the jarfile
+                        &mPatchedFile);     // the new patched file
     
     if (err != nsInstall::SUCCESS)
     {   
         return err;
     }
 
-    if ( mPatchedFile != "" ) 
+    if ( mPatchedFile != nsnull ) 
     {
-        mInstall->AddPatch(&ikey, &mPatchedFile );
+        mInstall->AddPatch(&ikey, mPatchedFile );
     } 
     else 
     {
@@ -179,7 +182,7 @@ PRInt32 nsInstallPatch::Prepare()
 
     if ( deleteOldSrc ) 
     {
-        NativeDeleteFile( *fileName );
+        NativeDeleteFile( fileName );
     }
   
     return err;
@@ -187,38 +190,37 @@ PRInt32 nsInstallPatch::Prepare()
 
 PRInt32 nsInstallPatch::Complete()
 {  
-    if ((mInstall == nsnull) || (mVersionInfo == nsnull) || (mPatchedFile == "") || (mTargetFile == "")) 
+    if ((mInstall == nsnull) || (mVersionInfo == nsnull) || (mPatchedFile == nsnull) || (mTargetFile == nsnull)) 
     {
         return nsInstall::INVALID_ARGUMENTS;
     }
     
     PRInt32 err = nsInstall::SUCCESS;
 
-    nsString *fileName = nsnull;
-    nsVoidKey ikey( (void*) nsCRT::HashValue( mTargetFile.GetUnicode() )  );
+    nsFileSpec *fileName = nsnull;
+    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) )  );
     
     mInstall->GetPatch(&ikey, fileName);
     
-    if (fileName != nsnull && fileName->Equals(mPatchedFile) )
+    if (fileName != nsnull && fileName->Equals(*mPatchedFile) )
     {
         // the patch has not been superceded--do final replacement
-        err = NativeReplace( mTargetFile, mPatchedFile );
+        err = NativeReplace( *mTargetFile, *mPatchedFile );
         if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
         {
-            // WHY DO nsString suck so bad!
+            nsString tempVersionString;
+            mVersionInfo->ToString(tempVersionString);
+            
+            char* tempRegName = mRegistryName->ToNewCString();
+            char* tempVersion = tempVersionString.ToNewCString();
 
-            char* tempVRString      = mRegistryName.ToNewCString();
-            char* tempTargetFile    = mTargetFile.ToNewCString();
+            err = VR_Install( tempRegName, 
+                              nsFilePath(*mTargetFile), 
+                              tempVersion, 
+                              PR_FALSE );
             
-            nsString tempString;
-            mVersionInfo->ToString(tempString);
-            char* tempVersion = tempString.ToNewCString();
-            
-            err = VR_Install( tempVRString, tempTargetFile, tempVersion, PR_FALSE );
-            
-            delete tempVRString;
-            delete tempTargetFile;
-            delete tempVersion;
+            delete [] tempRegName;
+            delete [] tempVersion;
 
         }
         else
@@ -237,12 +239,12 @@ PRInt32 nsInstallPatch::Complete()
 
 void nsInstallPatch::Abort()
 {
-    nsString *fileName = nsnull;
-    nsVoidKey ikey( (void*) nsCRT::HashValue( mTargetFile.GetUnicode() )  );
+    nsFileSpec *fileName = nsnull;
+    nsVoidKey ikey( HashFilePath( nsFilePath(*mTargetFile) ) );
 
     mInstall->GetPatch(&ikey, fileName);
 
-    if (fileName != nsnull && fileName->Equals(mPatchedFile) )
+    if (fileName != nsnull && fileName->Equals(*mPatchedFile) )
     {
         NativeDeleteFile( mPatchedFile );
     }
@@ -268,25 +270,21 @@ nsInstallPatch::RegisterPackageNode()
 }
 
 PRInt32
-nsInstallPatch::NativePatch(const nsString &sourceFile, const nsString &patchfile, nsString &newFile)
+nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patchfile, nsFileSpec **newFile)
 {
     return -1;
 }
 
 PRInt32
-nsInstallPatch::NativeDeleteFile(const nsString& doomedFile)
+nsInstallPatch::NativeDeleteFile(nsFileSpec* doomedFile)
 {
-    char * tempFile = doomedFile.ToNewCString();
-    nsFileSpec file(tempFile);
-    delete tempFile;
-
-    if (file.Exists())
+    if (doomedFile->Exists())
     {
-        if (file.IsFile())
+        if (doomedFile->IsFile())
         {
-           file.Delete(false);
+           doomedFile->Delete(false);
 
-           if (file.Exists())
+           if (doomedFile->Exists())
            {
                 // If file still exists, we need to delete it later!
                 // FIX DeleteOldFileLater( (char*)finalFile );
@@ -298,50 +296,52 @@ nsInstallPatch::NativeDeleteFile(const nsString& doomedFile)
             return nsInstall::FILE_IS_DIRECTORY;
         }
     }
-    else
-    {
-        return nsInstall::FILE_DOES_NOT_EXIST;
-    }
+
+    return nsInstall::FILE_DOES_NOT_EXIST;
 }
 
 PRInt32
-nsInstallPatch::NativeReplace(const nsString& oldfile, nsString& newFile)
+nsInstallPatch::NativeReplace(const nsFileSpec& oldfile, const nsFileSpec& newFile)
 {
-
-    char *tempString = oldfile.ToNewCString();
-    nsFileSpec file(tempString);
-    delete tempString;
-
-    if (file.Exists() && (! file.IsFile()) )
-        return nsInstall::FILE_IS_DIRECTORY;
     
-    
-    file.Delete(PR_FALSE);
-    if (file.Exists())
+    oldfile.Delete(PR_FALSE);
+    if (oldfile.Exists())
     {
         //FIX: FE_ReplaceExistingFile
     }
-    
+
     nsFileSpec parentDirectory;
-    file.GetParent(parentDirectory);
+    oldfile.GetParent(parentDirectory);
     
     if (parentDirectory.Exists() && parentDirectory.IsDirectory())
     {
-        char* currentName = oldfile.ToNewCString();
-        char* finalName   = newFile.ToNewCString();
-        
-        // FIX - this may not work on UNIX between different
-        // filesystems! 
-        PRInt32 result = PR_Rename(currentName, finalName);
-        
-        delete currentName;
-        delete finalName;
-
-        if (result != 0)
+        if (newFile.Move(parentDirectory) != 0)
         {
             return nsInstall::UNEXPECTED_ERROR;   
         }
     }
     
     return nsInstall::SUCCESS;
+}
+
+
+void* 
+nsInstallPatch::HashFilePath(const nsFilePath& aPath)
+{
+    PRUint32 rv = 0;
+    if(aPath) 
+    {
+        char  ch;
+        char* filePath = nsnull;
+        strcpy(filePath, aPath);
+
+        while ((ch = *filePath++) != 0) 
+        {
+            // FYI: rv = rv*37 + ch
+            rv = ((rv << 5) + (rv << 2) + rv) + ch;
+        }
+
+        PR_Free(filePath);
+    }
+    return (void*)rv;
 }

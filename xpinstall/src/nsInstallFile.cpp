@@ -15,15 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#if defined(XP_MAC)
-#include <stat.h>
-#else
-#include <sys/stat.h>
-#endif
-
-#include "prio.h"
-#include "prmem.h"
-#include "plstr.h"
 
 #include "nsFileSpec.h"
 
@@ -32,25 +23,6 @@
 
 #include "nsInstall.h"
 #include "nsInstallVersion.h"
-#include "nsIDOMInstallFolder.h"
-
-
-#include "nsInstallErrorMessages.h"
-
-static PRBool endsWith(nsString* str, char* string_to_find);
-
-static PRBool endsWith(nsString* str, char* string_to_find) 
-{
-  PRBool found = PR_FALSE;
-  if (str) {
-    int len = strlen(".zip");
-    int size = str->Length();
-    int offset = str->RFind(string_to_find, PR_FALSE);
-    if (offset == (size - len))
-      found = PR_TRUE;
-  }
-  return found;
-}
 
 /* Public Methods */
 
@@ -62,46 +34,38 @@ static PRBool endsWith(nsString* str, char* string_to_find)
         inFinalFileSpec	- final	location on disk
 */
 nsInstallFile::nsInstallFile(nsInstall* inInstall,
-                             const nsString& inVRName,
+                             const nsString& inComponentName,
                              nsIDOMInstallVersion* inVInfo,
                              const nsString& inJarLocation,
-                             nsIDOMInstallFolder* folderSpec,
+                             const nsString& folderSpec,
                              const nsString& inPartialPath,
                              PRBool forceInstall,
                              PRInt32 *error) 
 : nsInstallObject(inInstall)
 {
-    mTempFile    = nsnull;
+    mExtracedFile= nsnull;
     mFinalFile   = nsnull;
     mUpgradeFile = PR_FALSE;
 
-    if ((folderSpec == NULL) || (inInstall == NULL)  || (inVInfo == NULL)) 
+    if ((folderSpec == "null") || (inInstall == NULL)  || (inVInfo == NULL)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
     
-
-    mReplaceFile            = DoesFileExist();
+     mFinalFile = new nsFileSpec(folderSpec);
+    *mFinalFile += inPartialPath;
+    
     mForceInstall           = forceInstall;
     
-    mVersionRegistryName    = new nsString(inVRName);
+    mVersionRegistryName    = new nsString(inComponentName);
     mJarLocation            = new nsString(inJarLocation);
     mVersionInfo	        = new nsInstallVersion();
     
-    
-    //FIX need to delete char* created by .ToNewCString(). 
-
     nsString tempString;
     inVInfo->ToString(tempString);
-    mVersionInfo->Init(tempString.ToNewCString());
-
-    mFinalFile = new nsString();
-    folderSpec->MakeFullPath(inPartialPath, *mFinalFile);
-    
-    
-
-    
+    mVersionInfo->Init(tempString);
+        
     nsString regPackageName;
     mInstall->GetRegPackageName(regPackageName);
     
@@ -138,8 +102,8 @@ nsInstallFile::~nsInstallFile()
     if (mJarLocation)
         delete mJarLocation;
   
-    if (mTempFile)
-        delete mTempFile;
+    if (mExtracedFile)
+        delete mExtracedFile;
 
     if (mFinalFile)
         delete mFinalFile;
@@ -149,14 +113,14 @@ nsInstallFile::~nsInstallFile()
 }
 
 /* Prepare
- * Extracts file out of the JAR archive into the temp directory
+ * Extracts file out of the JAR archive
  */
 PRInt32 nsInstallFile::Prepare()
 {
-    if (mInstall == NULL || mFinalFile == NULL || mJarLocation == NULL) 
+    if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull ) 
         return nsInstall::INVALID_ARGUMENTS;
 
-    return mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, &mTempFile);
+    return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, &mExtracedFile);
 }
 
 /* Complete
@@ -167,21 +131,95 @@ PRInt32 nsInstallFile::Prepare()
 PRInt32 nsInstallFile::Complete()
 {
     PRInt32 err;
-    int refCount;
-    int rc;
 
-    if (mInstall == NULL || mVersionRegistryName == NULL || mFinalFile == NULL) 
+    if (mInstall == nsnull || mVersionRegistryName == nsnull || mFinalFile == nsnull ) 
     {
        return nsInstall::INVALID_ARGUMENTS;
     }
 
-    /* Check the security for our target */
+    err = CompleteFileMove();
     
-    err = NativeComplete();
-  
+    if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
+    {
+        err = RegisterInVersionRegistry();
+    }
+    
+    return err;
 
-    char *final_file = mFinalFile->ToNewCString();
-    char *vr_name    = mVersionRegistryName->ToNewCString();
+}
+
+void nsInstallFile::Abort()
+{
+    if (mExtracedFile != nsnull)
+        mExtracedFile->Delete(PR_FALSE);
+}
+
+char* nsInstallFile::toString()
+{
+    return nsnull;
+}
+
+
+PRInt32 nsInstallFile::CompleteFileMove()
+{
+    int result = 0;
+    
+    if (mExtracedFile == nsnull) 
+    {
+        return -1;
+    }
+   	
+    if ( mExtracedFile->Equals(*mFinalFile) ) 
+    {
+        /* No need to rename, they are the same */
+        result = 0;
+    } 
+    else 
+    {
+        if (mFinalFile->Exists() == PR_FALSE)
+        {
+            // We can simple move the extracted file to the mFinalFile's parent
+            nsFileSpec parentofFinalFile;
+
+            mFinalFile->GetParent(parentofFinalFile);
+            result = mExtracedFile->Move(parentofFinalFile);
+            
+            char* leafName = mFinalFile->GetLeafName();
+            mExtracedFile->Rename(leafName);
+            delete [] leafName;
+
+        }
+        else
+        {
+            /* Target exists, can't trust XP_FileRename--do platform specific stuff in FE_ReplaceExistingFile() */
+            // FIX: FE_ReplaceExistingFile()
+            mFinalFile->Delete(PR_FALSE);
+
+            // Now that we have move the existing file, we can move the mExtracedFile into place.
+            nsFileSpec parentofFinalFile;
+
+            mFinalFile->GetParent(parentofFinalFile);
+            result = mExtracedFile->Move(parentofFinalFile);
+            
+            char* leafName = mFinalFile->GetLeafName();
+            mExtracedFile->Rename(leafName);
+            delete [] leafName;
+        }
+    }
+
+  return result;  
+}
+
+PRInt32
+nsInstallFile::RegisterInVersionRegistry()
+{
+    PRInt32 err;
+    int refCount;
+    int rc;
+    char* tempCString;
+
+    char *final_file  = nsFilePath(*mFinalFile);  // FIX: mac?  What should we be passing to the version registry???
+    char *vr_name     = mVersionRegistryName->ToNewCString();
       
     nsString regPackageName;
     mInstall->GetRegPackageName(regPackageName);
@@ -189,259 +227,119 @@ PRInt32 nsInstallFile::Complete()
   
     // Register file and log for Uninstall
   
-    if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
+     // we ignore all registry errors because they're not
+    // important enough to abort an otherwise OK install.
+    if (!mChildFile) 
     {
-        // we ignore all registry errors because they're not
-        // important enough to abort an otherwise OK install.
-        if (!mChildFile) 
+        int found;
+        if (regPackageName != "") 
         {
-            int found;
-            if (regPackageName != "") 
-            {
-                char *reg_package_name = regPackageName.ToNewCString();
-                found = VR_UninstallFileExistsInList( reg_package_name, vr_name );
-                delete reg_package_name;
-            } 
-            else 
-            {
-                found = VR_UninstallFileExistsInList( "", vr_name );
-            }
-            
-            if (found != REGERR_OK)
-                mUpgradeFile = PR_FALSE;
-            else
-                mUpgradeFile = PR_TRUE;
-        } 
-        else if (REGERR_OK == VR_InRegistry(vr_name)) 
-        {
-            mUpgradeFile = PR_TRUE;
+            tempCString = regPackageName.ToNewCString();
+            found = VR_UninstallFileExistsInList( tempCString , vr_name );
         } 
         else 
         {
+            found = VR_UninstallFileExistsInList( "", vr_name );
+        }
+        
+        if (found != REGERR_OK)
             mUpgradeFile = PR_FALSE;
-        }
-    
-        err = VR_GetRefCount( vr_name, &refCount );
-        if ( err != REGERR_OK ) 
-        {
-            refCount = 0;
-        }
-//FIX need to delete char* created by .ToNewCString().  There should be 5 of them.  mcmullen told me that 
-// he was working on a nsAutoString that would do this.
+        else
+            mUpgradeFile = PR_TRUE;
+    } 
+    else if (REGERR_OK == VR_InRegistry(vr_name)) 
+    {
+        mUpgradeFile = PR_TRUE;
+    } 
+    else 
+    {
+        mUpgradeFile = PR_FALSE;
+    }
 
-        if (!mUpgradeFile) 
+    err = VR_GetRefCount( vr_name, &refCount );
+    if ( err != REGERR_OK ) 
+    {
+        refCount = 0;
+    }
+
+    if (!mUpgradeFile) 
+    {
+        if (refCount != 0) 
         {
-            if (refCount != 0) 
-            {
-                rc = 1 + refCount;
-                nsString tempString;
-                mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
-                VR_SetRefCount( vr_name, rc );
-            } 
-            else 
-            {
-                if (mReplaceFile)
-                {
-                    nsString tempString;
-                    mVersionInfo->ToString(tempString);
-                    VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE);
-                    VR_SetRefCount( vr_name, 2 );
-                }
-                else
-                {
-                    nsString tempString;
-                    mVersionInfo->ToString(tempString);
-                    VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
-                    VR_SetRefCount( vr_name, 1 );
-                }
-            }
+            rc = 1 + refCount;
+            nsString tempString;
+            mVersionInfo->ToString(tempString);
+            tempCString = regPackageName.ToNewCString();
+            VR_Install( vr_name, final_file, tempCString, PR_FALSE );
+            VR_SetRefCount( vr_name, rc );
         } 
-        else if (mUpgradeFile) 
+        else 
         {
-            if (refCount == 0) 
+            if (mFinalFile->Exists())
             {
                 nsString tempString;
                 mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
+                tempCString = regPackageName.ToNewCString();
+                VR_Install( vr_name, final_file, tempCString, PR_FALSE);
+                VR_SetRefCount( vr_name, 2 );
+            }
+            else
+            {
+                nsString tempString;
+                mVersionInfo->ToString(tempString);
+                tempCString = regPackageName.ToNewCString();
+                VR_Install( vr_name, final_file, tempCString, PR_FALSE );
                 VR_SetRefCount( vr_name, 1 );
-            } 
-            else 
-            {
-                nsString tempString;
-                mVersionInfo->ToString(tempString);
-                VR_Install( vr_name, final_file, tempString.ToNewCString(), PR_FALSE );
-                VR_SetRefCount( vr_name, 0 );
             }
         }
-    
-        if ( !mChildFile && !mUpgradeFile ) 
+    } 
+    else if (mUpgradeFile) 
+    {
+        if (refCount == 0) 
         {
-            if (regPackageName != "") 
-            {
-                char *reg_package_name = regPackageName.ToNewCString();
-                VR_UninstallAddFileToList( reg_package_name, vr_name );
-                delete reg_package_name;
-            } 
-            else 
-            {
-                VR_UninstallAddFileToList( "", vr_name );
-            }
+            nsString tempString;
+            mVersionInfo->ToString(tempString);
+            tempCString = regPackageName.ToNewCString();
+            VR_Install( vr_name, final_file, tempCString, PR_FALSE );
+            VR_SetRefCount( vr_name, 1 );
+        } 
+        else 
+        {
+            nsString tempString;
+            mVersionInfo->ToString(tempString);
+            tempCString = regPackageName.ToNewCString();
+            VR_Install( vr_name, final_file, tempCString, PR_FALSE );
+            VR_SetRefCount( vr_name, 0 );
         }
     }
-    delete vr_name;
-    delete final_file;
+    
+    if ( !mChildFile && !mUpgradeFile ) 
+    {
+        if (regPackageName != "") 
+        {
+            if (tempCString == nsnull)
+                tempCString = regPackageName.ToNewCString();
+            
+            VR_UninstallAddFileToList( tempCString, vr_name );
+        } 
+        else 
+        {
+            VR_UninstallAddFileToList( "", vr_name );
+        }
+    }
 
+    if (vr_name != nsnull)
+        delete vr_name;
+        
+    if (tempCString != nsnull)
+        delete [] tempCString;
+    
     if ( err != 0 ) 
         return nsInstall::UNEXPECTED_ERROR;
     
     return nsInstall::SUCCESS;
+
 }
-
-void nsInstallFile::Abort()
-{
-    char* currentName;
-    int result;
-
-    /* Get the names */
-    if (mTempFile == NULL) 
-        return;
-    currentName = mTempFile->ToNewCString();
-
-    result = PR_Delete(currentName);
-    PR_ASSERT(result == 0); /* XXX: need to fe_deletefilelater() or something */
-    delete currentName;
-}
-
-char* nsInstallFile::toString()
-{
-    if (mReplaceFile) 
-    {
-        return nsInstallErrorMessages::GetString(nsInstall::DETAILS_REPLACE_FILE_MSG_ID, mFinalFile);
-    } 
-    else 
-    {
-        return nsInstallErrorMessages::GetString(nsInstall::DETAILS_INSTALL_FILE_MSG_ID, mFinalFile);
-  }
-}
-
-
-/* Private Methods */
-
-/* Complete 
- * copies the file to its final location
- * Tricky, we need to create the directories 
- */
-int nsInstallFile::NativeComplete()
-{
-    char* currentName = NULL;
-    char* finalName = NULL;
-    int result = 0;
-    
-    if (mTempFile == nsnull) 
-    {
-        return -1;
-    }
-    
-    /* Get the names */
-    currentName = mTempFile->ToNewCString();
-    finalName   = mFinalFile->ToNewCString();
-	
-    if ( finalName == NULL || currentName == NULL ) 
-    {
-        /* memory or JRI problems */
-        result = -1;
-        goto end;
-    } 
-    
-    if ( PL_strcmp(finalName, currentName) == 0 ) 
-    {
-        /* No need to rename, they are the same */
-        result = 0;
-    } 
-    else 
-    {
-        struct stat finfo;
-        if (stat(finalName, &finfo) != 0)
-        {
-            PR_Rename(currentName, finalName);
-        }
-        else
-        {
-            /* FIX 
-             * Target exists, can't trust XP_FileRename--do platform
-             * specific stuff in FE_ReplaceExistingFile()
-             */
-            result = -1;
-        }
-    }
-
-
-    if (result != 0) 
-    {
-        struct stat finfo;
-        if (stat(finalName, &finfo) == 0)
-        {
-            /* File already exists, need to remove the original */
-            // FIX result = FE_ReplaceExistingFile(currentName, xpURL, finalName, xpURL, mForceInstall);
-            if ( result == nsInstall::REBOOT_NEEDED ) 
-            {
-            }
-        } 
-        else 
-        {
-            /* Directory might not exist, check and create if necessary */
-            char separator;
-            char * end;
-            separator = '/';
-            end = PL_strrchr(finalName, separator);
-            if (end) 
-            {
-                end[0] = 0;
-                
-                // Lame use of nsFileSpec, but NSPR does not support creation
-                // of nested directories.
-                nsFileSpec* directoryMaker = new nsFileSpec(finalName, PR_TRUE);
-                delete directoryMaker;
-
-                end[0] = separator;
-                if ( 0 == result )
-                {
-                    // FIX - this may not work on UNIX between different
-                    // filesystems! 
-                    result = PR_Rename(currentName, finalName);
-                }
-            }
-        }
-    }
-
-
-end:
-  delete [] finalName;
-  delete [] currentName;
-  return result;  
-}
-
-
-/* Finds out if the file exists
- */
-PRBool nsInstallFile::DoesFileExist()
-{
-  if (mFinalFile == nsnull)
-      return PR_FALSE;
-
-  char* finalName = mFinalFile->ToNewCString();
-  
-  struct stat finfo;
-  if ( stat(finalName, &finfo) != -1)
-  {
-      delete [] finalName;
-      return PR_TRUE;
-  }
-  delete [] finalName;
-  return PR_FALSE;
-}
-
 
 /* CanUninstall
 * InstallFile() installs files which can be uninstalled,

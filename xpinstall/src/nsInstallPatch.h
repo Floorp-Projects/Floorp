@@ -25,7 +25,7 @@
 #include "nsInstallObject.h"
 
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
+#include "nsInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
 
@@ -37,7 +37,7 @@ class nsInstallPatch : public nsInstallObject
                         const nsString& inVRName,
                         nsIDOMInstallVersion* inVInfo,
                         const nsString& inJarLocation,
-                        nsIDOMInstallFolder* folderSpec,
+                        const nsString& folderSpec,
                         const nsString& inPartialPath,
                         PRInt32 *error);
 
@@ -60,19 +60,22 @@ class nsInstallPatch : public nsInstallObject
   
     private:
         
-        nsString                mRegistryName;
-        nsIDOMInstallVersion*   mVersionInfo;
-
-        nsString                mJarLocation;
-
-        nsString                *mPatchFile;
         
-        nsString                mTargetFile;
-        nsString                mPatchedFile;
+        nsInstallVersion        *mVersionInfo;
+        
+        nsFileSpec              *mTargetFile;
+        nsFileSpec              *mPatchFile;
+        nsFileSpec              *mPatchedFile;
 
-        PRInt32 NativePatch(const nsString &sourceFile, const nsString &patchfile, nsString &newFile);
-        PRInt32 NativeReplace (const nsString& target, nsString& tempFile);
-        PRInt32 NativeDeleteFile(const nsString& doomedFile);
+        nsString                *mJarLocation;
+        nsString                *mRegistryName;
+        
+       
+
+        PRInt32  NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patchfile, nsFileSpec **newFile);
+        PRInt32  NativeReplace (const nsFileSpec& target, const nsFileSpec& tempFile);
+        PRInt32  NativeDeleteFile(nsFileSpec* doomedFile);
+        void*    HashFilePath(const nsFilePath& aPath);
 };
 
 #endif /* nsInstallPatch_h__ */

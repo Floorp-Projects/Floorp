@@ -17,489 +17,189 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsSoftwareUpdate.h"
-
+#include "nsInstall.h"
 #include "nsInstallFolder.h"
-#include "nsIDOMInstallFolder.h"
 
 #include "nscore.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
-#include "nsIScriptGlobalObject.h"
+#include "prtypes.h"
 
-#include "prefapi.h"
-#include "pratom.h"
-#include "prprf.h"
+#include "nsString.h"
+#include "nsFileSpec.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-
-static NS_DEFINE_IID(kIInstallFolder_IID, NS_IDOMINSTALLFOLDER_IID);
-
-
-
-#ifndef MAX_PATH
-	#if defined(XP_WIN) || defined(XP_OS2)
-		#define MAX_PATH _MAX_PATH
-	#endif
-	#ifdef XP_UNIX
-		#if defined(HPUX) || defined(SCO)
-			/*
-			** HPUX: PATH_MAX is defined in <limits.h> to be 1023, but they
-			**       recommend that it not be used, and that pathconf() be
-			**       used to determine the maximum at runtime.
-			** SCO:  This is what MAXPATHLEN is set to in <arpa/ftp.h> and
-			**       NL_MAXPATHLEN in <nl_types.h>.  PATH_MAX is defined in
-			**       <limits.h> to be 256, but the comments in that file
-			**       claim the setting is wrong.
-			*/
-			#define MAX_PATH 1024
-		#else
-			#define MAX_PATH PATH_MAX
-		#endif
-	#endif
-#endif
-
-typedef enum SecurityLevel {
-	eOneFolderAccess,
-	eAllFolderAccess
-} SecurityLevel;
 
 struct DirectoryTable
 {
 	char *  directoryName;			/* The formal directory name */
 	PRInt32 folderEnum;		        /* Directory ID */
-	PRBool  bJavaDir;               /* TRUE is a Java-capable directory */
 };
 
-
-/* 
- * Directory manipulation 
- *
- * DirectoryTable holds the info about built-in directories:
- * Text name, security level, enum
- */
 struct DirectoryTable DirectoryTable[] = 
 {
-    {"Plugins",         nsIDOMInstallFolder::PluginFolder,              PR_TRUE},
-	{"Program",         nsIDOMInstallFolder::ProgramFolder,             PR_FALSE},
-	{"Communicator",    nsIDOMInstallFolder::CommunicatorFolder,        PR_FALSE},
-	{"User Pick",       nsIDOMInstallFolder::PackageFolder,             PR_FALSE},
-	{"Temporary",       nsIDOMInstallFolder::TemporaryFolder,           PR_FALSE},
-	{"Installed",       nsIDOMInstallFolder::InstalledFolder,           PR_FALSE},
-	{"Current User",    nsIDOMInstallFolder::CurrentUserFolder,         PR_FALSE},
+    {"Plugins",             100 },
+	{"Program",             101 },
+	{"Communicator",        102 },
+	{"User Pick",           103 },
+	{"Temporary",           104 },
+	{"Installed",           105 },
+	{"Current User",        106 },
+	{"NetHelp",             107 },
+	{"OS Drive",            108 },
+	{"File URL",            109 },
 
-	{"NetHelp",         nsIDOMInstallFolder::NetHelpFolder,             PR_FALSE},
-	{"OS Drive",        nsIDOMInstallFolder::OSDriveFolder,             PR_FALSE},
-	{"File URL",        nsIDOMInstallFolder::FileURLFolder,             PR_FALSE},
+	{"Win System",          200 },
+	{"Windows",             201 },
 
-	{"Netscape Java Bin",     nsIDOMInstallFolder::JavaBinFolder,       PR_FALSE},
-	{"Netscape Java Classes", nsIDOMInstallFolder::JavaClassesFolder,   PR_TRUE},
-	{"Java Download",         nsIDOMInstallFolder::JavaDownloadFolder,  PR_TRUE},
+	{"Mac System",          300 },
+	{"Mac Desktop",         301 },
+	{"Mac Trash",           302 },
+	{"Mac Startup",         303 },
+	{"Mac Shutdown",        304 },
+	{"Mac Apple Menu",      305 },
+	{"Mac Control Panel",   306 },
+	{"Mac Extension",       307 },
+	{"Mac Fonts",           308 },
+	{"Mac Preferences",     309 },
 
-	{"Win System",      nsIDOMInstallFolder::Win_SystemFolder,          PR_FALSE},
-	{"Win System16",    nsIDOMInstallFolder::Win_System16Folder,        PR_FALSE},
-	{"Windows",         nsIDOMInstallFolder::Win_WindowsFolder,         PR_FALSE},
+	{"Unix Local",          400 },
+	{"Unix Lib",            401 },
 
-	{"Mac System",      nsIDOMInstallFolder::Mac_SystemFolder,          PR_FALSE},
-	{"Mac Desktop",     nsIDOMInstallFolder::Mac_DesktopFolder,         PR_FALSE},
-	{"Mac Trash",       nsIDOMInstallFolder::Mac_TrashFolder,           PR_FALSE},
-	{"Mac Startup",     nsIDOMInstallFolder::Mac_StartupFolder,         PR_FALSE},
-	{"Mac Shutdown",    nsIDOMInstallFolder::Mac_ShutdownFolder,        PR_FALSE},
-	{"Mac Apple Menu",  nsIDOMInstallFolder::Mac_AppleMenuFolder,       PR_FALSE},
-	{"Mac Control Panel", nsIDOMInstallFolder::Mac_ControlPanelFolder,  PR_FALSE},
-	{"Mac Extension",   nsIDOMInstallFolder::Mac_ExtensionFolder,       PR_FALSE},
-	{"Mac Fonts",       nsIDOMInstallFolder::Mac_FontsFolder,           PR_FALSE},
-	{"Mac Preferences", nsIDOMInstallFolder::Mac_PreferencesFolder,     PR_FALSE},
-
-	{"Unix Local",      nsIDOMInstallFolder::Unix_LocalFolder,          PR_FALSE},
-	{"Unix Lib",        nsIDOMInstallFolder::Unix_LibFolder,            PR_FALSE},
-
-	{"",                nsIDOMInstallFolder::BadFolder,                 PR_FALSE} /* Termination */
+	{"",                    -1  }
 };
 
 
-nsInstallFolder::nsInstallFolder()
+
+nsInstallFolder::nsInstallFolder(const nsString& aFolderID)
 {
-    mScriptObject   = nsnull;
-
-	mUrlPath = mFolderID = mVersionRegistryPath = mUserPackageName = nsnull;
-
-    NS_INIT_REFCNT();
+    nsInstallFolder(aFolderID, "");
 }
+
+nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath)
+{
+    mUrlPath = nsnull;
+
+    if ( aFolderID == "null") 
+    {
+        return;
+    }
+
+    SetDirectoryPath( aFolderID, aRelativePath);
+}
+
 
 nsInstallFolder::~nsInstallFolder()
 {
-}
-
-NS_IMETHODIMP 
-nsInstallFolder::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kIScriptObjectOwnerIID))
-    {
-        *aInstancePtr = (void*) ((nsIScriptObjectOwner*)this);
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kIInstallFolder_IID) )
-    {
-        *aInstancePtr = (void*) ((nsIDOMInstallFolder*)this);
-        AddRef();
-        return NS_OK;
-    }
-    else if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
-        AddRef();
-        return NS_OK;
-    }
-
-     return NS_NOINTERFACE;
-}
-
-
-NS_IMPL_ADDREF(nsInstallFolder)
-NS_IMPL_RELEASE(nsInstallFolder)
-
-
-
-NS_IMETHODIMP 
-nsInstallFolder::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-    NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-    nsresult res = NS_OK;
-    
-    if (nsnull == mScriptObject) 
-    {
-        res = NS_NewScriptInstallFolder( aContext, 
-                                         (nsISupports *)(nsIDOMInstallFolder*)this, 
-                                         nsnull, 
-                                         &mScriptObject);
-    }
-  
-
-    *aScriptObject = mScriptObject;
-    return res;
-}
-
-NS_IMETHODIMP 
-nsInstallFolder::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-//  this will go away when our constructors can have parameters.
-
-NS_IMETHODIMP 
-nsInstallFolder::Init(const nsString& aFolderID, const nsString& aVrPatch, const nsString& aPackageName)
-{
-    /* Since urlPath is set to NULL, this FolderSpec is essentially the error message */
-	
-    if ( aFolderID == "null" || aPackageName == "null") 
-    {
-        return NS_OK; // should we stop the script?
-    }
-    
-    mFolderID            = new nsString(aFolderID);
-	mVersionRegistryPath = new nsString(aVrPatch);
-	mUserPackageName     = new nsString(aPackageName);
-    
-    /* Setting the urlPath to a real file patch. */
-	SetDirectoryPath( &mUrlPath );
-
-    return NS_OK;
+    if (mUrlPath != nsnull)
+        delete mUrlPath;
 }
         
-NS_IMETHODIMP 
+void 
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
     aDirectoryPath.SetLength(0);
     aDirectoryPath.Append(*mUrlPath);
-    return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsInstallFolder::MakeFullPath(const nsString& aRelativePath, nsString& aFullPath)
-{
-    nsString *tempString = GetNativePath(aRelativePath);
-    
-    aFullPath.SetLength(0);
-    
-    if (mUrlPath != nsnull)
-    {
-        aFullPath.Append( *mUrlPath );
-    }
-
-    if (tempString != nsnull)
-    {
-        aFullPath.Append( *tempString );
-        delete tempString;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsInstallFolder::IsJavaCapable(PRBool* aReturn)
-{
-    *aReturn =  PR_FALSE; // FIX: what are we going to do here.
-    return -1;
-}
-
-NS_IMETHODIMP 
-nsInstallFolder::ToString(nsString& aFolderString)
-{
-    return GetDirectoryPath(aFolderString);
-}
 
 void
-nsInstallFolder::SetDirectoryPath(nsString** aFolderString)
+nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath)
 {
-    if ( mFolderID->EqualsIgnoreCase("User Pick") )
+    if ( aFolderID.EqualsIgnoreCase("User Pick") )
     {
-        PickDefaultDirectory(&mUrlPath);
+        PickDefaultDirectory();
     }
-    else if ( mFolderID->EqualsIgnoreCase("Installed") )
-    {
-        mUrlPath = mVersionRegistryPath->ToNewString();
+    else if ( aFolderID.EqualsIgnoreCase("Installed") )
+    {   
+        mUrlPath = new nsFileSpec(aRelativePath, PR_TRUE);  // creates the directories to the relative path.
     }
     else
     {
-        PRInt32 folderDirSpecID;
-		char*	folderPath = NULL;
-		
-		folderDirSpecID = MapNameToEnum(mFolderID);
+        PRInt32 folderDirSpecID = MapNameToEnum(aFolderID);
         
         switch (folderDirSpecID) 
 		{
-            case nsIDOMInstallFolder::BadFolder:
-                folderPath = NULL;
-                break;
+            case 100:               //  Plugins
             
-            case nsIDOMInstallFolder::CurrentUserFolder:
-				{
-					char dir[MAX_PATH];
-					int len = MAX_PATH;
-					if ( PREF_GetCharPref("profile.directory", dir, &len) == PREF_NOERROR)      
-					{
-//						char * platformDir = WH_FileName(dir, xpURL);
-//						if (platformDir)
-//							folderPath = AppendSlashToDirPath(platformDir);
-//						PR_FREEIF(platformDir);
-					}
-				}
-				break;
+            case 101:               //  Program
+            
+            case 102:               //  Communicator
+            
+            case 103:               //  User Pick
+                // we should never be here.
+                break;
+            case 104:               //  Temporary
+            
+            case 105:               //  Installed
+                // we should never be here.
+                break;
+            case 106:               //  Current User
+            
+            case 107:               //  NetHelp
+            
+            case 108:               //  OS Drive
+            
+            case 109:               //  File URL
 
-				default:
-					/* Get the FE path */
-					//      folderPath = FE_GetDirectoryPath(folderDirSpecID);
-					break;
+
+            case 200:               //  Win System
+            
+            case 201:               //  Windows
+
+            case 300:               //  Mac System
+            
+            case 301:               //  Mac Desktop
+            
+            case 302:               //  Mac Trash
+            
+            case 303:               //  Mac Startup
+            
+            case 304:               //  Mac Shutdown
+            
+            case 305:               //  Mac Apple Menu
+            
+            case 306:               //  Mac Control Panel
+            
+            case 307:               //  Mac Extension
+            
+            case 308:               //  Mac Fonts
+            
+            case 309:               //  Mac Preferences
+
+            case 400:               //  Unix Local
+            case 401:               //  Unix Lib
+
+            // Insert code here...
+
+            case -1:
+		    default:
+			    break;
 		}
     }
 }
 
-nsString* nsInstallFolder::GetNativePath(const nsString& path)
+void nsInstallFolder::PickDefaultDirectory()
 {
-    char pathSeparator;
-    char xp_pathSeparator =  '/';
-
-#ifdef XP_WIN
-  pathSeparator = '\\';
-#elif defined(XP_MAC)
-  pathSeparator = ':';
-#else /* XP_UNIX */
-  pathSeparator = '/';
-#endif
-    
-    nsString *xpPath = new nsString(path);
-    PRInt32 offset   = xpPath->FindCharInSet(&xp_pathSeparator);
-    
-    while (offset != -1)
-    {
-        xpPath[offset] =   pathSeparator;
-        offset = xpPath->FindCharInSet(&xp_pathSeparator, offset); 
-    }
-
-  return xpPath;
+    //FIX:  Need to put up a dialog here and set mUrlPath
+    return;   
 }
-
-void nsInstallFolder::PickDefaultDirectory(nsString** aFolderString)
-{
-    return;   //FIX:  Need to put up a dialog here!
-}
-
-PRBool nsInstallFolder::IsJavaDir(void)
-{  
-    for (int i=0; DirectoryTable[i].directoryName[0] != 0; i++ ) 
-    {
-        if ( mFolderID->EqualsIgnoreCase(DirectoryTable[i].directoryName) )
-            return DirectoryTable[i].bJavaDir;
-    }
-    return PR_FALSE;
-}
-
-
 
 /* MapNameToEnum
  * maps name from the directory table to its enum */
 PRInt32 
-nsInstallFolder::MapNameToEnum(nsString* name)
+nsInstallFolder::MapNameToEnum(const nsString& name)
 {
 	int i = 0;
 
-	if ( name == nsnull )
-        return nsIDOMInstallFolder::BadFolder;
+	if ( name == "null")
+        return -1;
 
 	while ( DirectoryTable[i].directoryName[0] != 0 )
 	{
-		if ( name->EqualsIgnoreCase(DirectoryTable[i].directoryName) )
+		if ( name.EqualsIgnoreCase(DirectoryTable[i].directoryName) )
 			return DirectoryTable[i].folderEnum;
 		i++;
 	}
-	return nsIDOMInstallFolder::BadFolder;
+	return -1;
 }
 
 
 
-/* 
-     Makes sure that the path ends with a slash (or other platform end character)
- */
-
-void
-nsInstallFolder::AppendSlashToDirPath(nsString* dirPath)
-{
-    char pathSeparator;
-
-#ifdef XP_WIN
-    pathSeparator = '\\';
-#elif defined(XP_MAC)
-    pathSeparator = ':';
-#else /* XP_UNIX */
-    pathSeparator = '/';
-#endif
-
-    if ( dirPath->CharAt( dirPath->Last() ) != pathSeparator )
-    {
-        dirPath += pathSeparator;
-    }
-}
-
-
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////
-// 
-/////////////////////////////////////////////////////////////////////////
-static PRInt32 gInstallFolderInstanceCnt = 0;
-static PRInt32 gInstallFolderLock        = 0;
-
-nsInstallFolderFactory::nsInstallFolderFactory(void)
-{
-    mRefCnt=0;
-    PR_AtomicIncrement(&gInstallFolderInstanceCnt);
-}
-
-nsInstallFolderFactory::~nsInstallFolderFactory(void)
-{
-    PR_AtomicDecrement(&gInstallFolderInstanceCnt);
-}
-
-NS_IMETHODIMP 
-nsInstallFolderFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
-{
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    // Always NULL result, in case of failure
-    *aInstancePtr = NULL;
-
-    if ( aIID.Equals(kISupportsIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-    else if ( aIID.Equals(kIFactoryIID) )
-    {
-        *aInstancePtr = (void*) this;
-    }
-
-    if (aInstancePtr == NULL)
-    {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    AddRef();
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsInstallFolderFactory::AddRef(void)
-{
-    return ++mRefCnt;
-}
-
-
-NS_IMETHODIMP
-nsInstallFolderFactory::Release(void)
-{
-    if (--mRefCnt ==0)
-    {
-        delete this;
-        return 0; // Don't access mRefCnt after deleting!
-    }
-
-    return mRefCnt;
-}
-
-NS_IMETHODIMP
-nsInstallFolderFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (aResult == NULL)
-    {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aResult = NULL;
-
-    /* do I have to use iSupports? */
-    nsInstallFolder *inst = new nsInstallFolder();
-
-    if (inst == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult result =  inst->QueryInterface(aIID, aResult);
-
-    if (result != NS_OK)
-        delete inst;
-
-    return result;
-}
-
-NS_IMETHODIMP
-nsInstallFolderFactory::LockFactory(PRBool aLock)
-{
-    if (aLock)
-        PR_AtomicIncrement(&gInstallFolderLock);
-    else
-        PR_AtomicDecrement(&gInstallFolderLock);
-
-    return NS_OK;
-}

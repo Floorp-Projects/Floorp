@@ -25,7 +25,6 @@
 #include "nsInstallObject.h"
 
 #include "nsInstall.h"
-#include "nsIDOMInstallFolder.h"
 
 #define DELETE_COMPONENT 1
 #define DELETE_FILE      2
@@ -35,7 +34,7 @@ class nsInstallDelete : public nsInstallObject
     public:
 
         nsInstallDelete(  nsInstall* inInstall,
-                          nsIDOMInstallFolder*  folderSpec,
+                          const nsString& folderSpec,
                           const nsString& inPartialPath,
                           PRInt32 *error);
 
@@ -58,9 +57,10 @@ class nsInstallDelete : public nsInstallObject
 
         /* Private Fields */
 
-        nsString mFinalFile;
-        nsString mRegistryName;
-        PRInt32 mDeleteStatus;
+        nsFileSpec* mFinalFile;
+        
+        nsString    mRegistryName;
+        PRInt32     mDeleteStatus;
 
         PRInt32 ProcessInstallDelete();
         PRInt32 NativeComplete();

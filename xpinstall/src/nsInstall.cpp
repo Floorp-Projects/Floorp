@@ -25,6 +25,7 @@
 #include "nsVector.h"
 #include "nsHashtable.h"
 #include "nsFileSpec.h"
+#include "nsSpecialSystemDirectory.h"
 
 #include "prmem.h"
 #include "pratom.h"
@@ -34,16 +35,14 @@
 #include "zipfile.h"
 
 #include "nsInstall.h"
+#include "nsInstallFolder.h"
 
-#include "nsIDOMInstallFolder.h"
 #include "nsIDOMInstallVersion.h"
 
 #include "nsInstallFile.h"
 #include "nsInstallDelete.h"
 #include "nsInstallExecute.h"
 #include "nsInstallPatch.h"
-
-static NS_DEFINE_IID(kIInstallFolder_IID, NS_IDOMINSTALLFOLDER_IID);
 
 #ifdef XP_PC
 #define FILESEP "\\"
@@ -57,13 +56,11 @@ static NS_DEFINE_IID(kIInstallFolder_IID, NS_IDOMINSTALLFOLDER_IID);
 
 nsInstall::nsInstall()
 {
-    mScriptObject   = nsnull;
-    mVersionInfo    = nsnull;
-    
-    mJarFileData    = nsnull;
-
-    mPackageName    = "";
-    mUserPackageName= "";
+    mScriptObject           = nsnull;           // this is the jsobject for our context
+    mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()
+    mJarFileData            = nsnull;           // this is an opaque handle to the jarfile.  
+    mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing 
+    mUIName                 = "";               // this is the name that will be displayed in UI.
 
     mUninstallPackage = PR_FALSE;
     mRegisterPackage  = PR_FALSE;
@@ -85,14 +82,14 @@ nsInstall::SetScriptObject(void *aScriptObject)
 PRInt32    
 nsInstall::GetUserPackageName(nsString& aUserPackageName)
 {
-    aUserPackageName = mUserPackageName;
+    aUserPackageName = mUIName;
     return NS_OK;
 }
 
 PRInt32    
 nsInstall::GetRegPackageName(nsString& aRegPackageName)
 {
-    aRegPackageName = mPackageName;
+    aRegPackageName = mRegistryPackageName;
     return NS_OK;
 }
 
@@ -116,14 +113,20 @@ nsInstall::AbortInstall()
     
     return NS_OK;
 }
-//FIX:  Should we use empty strings or nulls for parameters that do not need values.
+
 PRInt32    
-nsInstall::AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn)
+nsInstall::AddDirectory(const nsString& aRegName, 
+                        const nsString& aVersion, 
+                        const nsString& aJarSource, 
+                        const nsString& aFolder, 
+                        const nsString& aSubdir, 
+                        PRBool aForceMode, 
+                        PRInt32* aReturn)
 {
     nsInstallFile* ie = nsnull;
     PRInt32 result;
     
-    if ( aJarSource == "null" || aFolder == nsnull) 
+    if ( aJarSource == "null" || aFolder == "null") 
     {
         *aReturn = SaveError(nsInstall::INVALID_ARGUMENTS);
         return NS_OK;
@@ -175,8 +178,6 @@ nsInstall::AddDirectory(const nsString& aRegName, const nsString& aVersion, cons
         *aReturn = SaveError( result );
         return NS_OK;
     }
-
-
     
     for (int i=0; i< pathsUpperBound; i++)
     {
@@ -276,7 +277,7 @@ PRInt32
 nsInstall::AddSubcomponent(const nsString& aRegName, 
                            const nsString& aVersion, 
                            const nsString& aJarSource, 
-                           nsIDOMInstallFolder* aFolder, 
+                           const nsString& aFolder, 
                            const nsString& aTargetName, 
                            PRBool aForceMode, 
                            PRInt32* aReturn)
@@ -286,7 +287,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     
     PRInt32         errcode = nsInstall::SUCCESS;
     
-    if ( aJarSource == "null" || aFolder == nsnull) 
+    if ( aJarSource == "null" || aFolder == "null") 
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
         return NS_OK;
@@ -407,7 +408,7 @@ nsInstall::DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)
         return NS_OK;
     }
     
-    nsInstallDelete* id = new nsInstallDelete(this, NULL, *qualifiedRegName, &result);
+    nsInstallDelete* id = new nsInstallDelete(this, "", *qualifiedRegName, &result);
     if (result == nsInstall::SUCCESS) 
     {
         result = ScheduleForInstall( id );
@@ -421,7 +422,7 @@ nsInstall::DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn)
+nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn)
 {
     PRInt32 result = SanityCheck();
 
@@ -449,7 +450,7 @@ nsInstall::DeleteFile(nsIDOMInstallFolder* aFolder, const nsString& aRelativeFil
 }
 
 PRInt32    
-nsInstall::DiskSpaceAvailable(nsIDOMInstallFolder* aFolder, PRInt32* aReturn)
+nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn)
 {
     return NS_OK;
 }
@@ -503,15 +504,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 
     if ( mUninstallPackage )
     {
-        char* packageName     = mPackageName.ToNewCString();
-        char* userPackageName = mUserPackageName.ToNewCString();
-
         // The Version Registry is not real.  FIX!
         //
-        //VR_UninstallCreateNode( packageName, userPackageName);
-        
-        delete packageName;
-        delete userPackageName;
+        //VR_UninstallCreateNode( nsAutoCString(mRegistryPackageName), nsAutoCString(mUIName));
     }
       
     PRUint32 i=0;
@@ -520,8 +515,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         ie = (nsInstallObject*)mInstalledFiles->Get(i);
         if (ie == NULL)
             continue;
-    //CAN we get rid of char* crap?? FiX
-    //result = ie->Complete();
+
         ie->Complete();
 
         if (result != nsInstall::SUCCESS) 
@@ -533,6 +527,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 
         //SetProgressDialogThermo(++count);
     }
+
+    *aReturn = NS_OK;
     return NS_OK;
 }
 
@@ -544,19 +540,18 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder)
+nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsString** aFolder)
 {
-    nsInstallFolder* spec = nsnull;
+    long err;
+    char* dir;
+    char* componentCString;
+
     *aFolder = nsnull;
 
     nsString *tempString = GetQualifiedPackageName( aComponentName );
     
     if (tempString == nsnull)
         return NS_OK;
-    
-    long err;
-    char* dir;
-    char* componentCString;
     
     componentCString = tempString->ToNewCString();
     delete tempString;
@@ -594,39 +589,30 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     if ( dir != NULL ) 
     {
-        spec = new nsInstallFolder();
-        spec->Init("Installed", nsString(dir), mUserPackageName);   
+        *aFolder = new nsString(dir);
     }
 
     PR_FREEIF(dir);
     delete [] componentCString;
 
-    nsresult result =  spec->QueryInterface(kIInstallFolder_IID, (void**)aFolder);
-     
-    if (result != NS_OK)
-        *aFolder = nsnull;
-
     return NS_OK;
 }
 
 PRInt32    
-nsInstall::GetFolder(const nsString& targetFolder, const nsString& aSubdirectory, nsIDOMInstallFolder** aFolder)
+nsInstall::GetFolder(const nsString& targetFolder, const nsString& aSubdirectory, nsString** aFolder)
 {
     nsInstallFolder* spec = nsnull;
     *aFolder = nsnull;
 
-// FIX: What was this for?    if ((! targetFolder.EqualsIgnoreCase("Installed")) && (! targetFolder.EqualsIgnoreCase("file:///")) )
-    {
-        spec = new nsInstallFolder();
-        spec->Init(targetFolder, aSubdirectory, mUserPackageName);   
-    }
+    spec = new nsInstallFolder(targetFolder, aSubdirectory);   
+       
+    nsString dirString;
+    spec->GetDirectoryPath(dirString);
 
-     nsresult result =  spec->QueryInterface(kIInstallFolder_IID, (void**)aFolder);
-     
-     if (result != NS_OK)
-        *aFolder = nsnull;
+    *aFolder = new nsString(dirString);
+    
 
-     return NS_OK;    
+    return NS_OK;    
 }
 
 PRInt32    
@@ -637,7 +623,7 @@ nsInstall::GetLastError(PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::GetWinProfile(nsIDOMInstallFolder* aFolder, const nsString& aFile, PRInt32* aReturn)
+nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, PRInt32* aReturn)
 {
     return NS_OK;
 }
@@ -649,7 +635,7 @@ nsInstall::GetWinRegistry(PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsIDOMInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn)
+nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn)
 {
     PRInt32 result = SanityCheck();
 
@@ -698,16 +684,12 @@ nsInstall::ResetError()
 
 
 PRInt32    
-nsInstall::SetPackageFolder(nsIDOMInstallFolder* aFolder)
+nsInstall::SetPackageFolder(const nsString& aFolder)
 {
-    nsString directoryPath;
-    aFolder->GetDirectoryPath(directoryPath);
-
     if (mPackageFolder != nsnull)
         delete mPackageFolder;
 
-    mPackageFolder = new nsInstallFolder();
-    mPackageFolder->Init("Installed",  directoryPath, mPackageName);
+    mPackageFolder = new nsString(aFolder);
 
     return NS_OK;
 }
@@ -741,7 +723,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
         
     mUserCancelled = PR_FALSE; 
     
-    mUserPackageName = aUserPackageName;
+    mUIName = aUserPackageName;
 
     if ( aPackageName.Equals("") ) 
     {
@@ -751,17 +733,17 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
     
     nsString *tempString = GetQualifiedPackageName( aPackageName );
     
-    mPackageName.SetLength(0);
-    mPackageName.Append( *tempString );  
+    mRegistryPackageName.SetLength(0);
+    mRegistryPackageName.Append( *tempString );  
     
     delete tempString;
 
     /* Check to see if the PackageName ends in a '/'.  If it does nuke it. */
 
-    if (mPackageName.Last() == '/')
+    if (mRegistryPackageName.Last() == '/')
     {
-        PRInt32 index = mPackageName.Length();
-        mPackageName.Truncate(--index);
+        PRInt32 index = mRegistryPackageName.Length();
+        mRegistryPackageName.Truncate(--index);
     }
     
     if (mVersionInfo != nsnull)
@@ -788,7 +770,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aPacka
     
     if (*aReturn != nsInstall::SUCCESS)
     {
-        mPackageName = ""; // Reset!
+        mRegistryPackageName = ""; // Reset!
     }
 
     return NS_OK;
@@ -830,7 +812,7 @@ nsInstall::Uninstall(const nsString& aPackageName, PRInt32* aReturn)
 
 
 void       
-nsInstall::AddPatch(nsHashKey *aKey, nsString* fileName)
+nsInstall::AddPatch(nsHashKey *aKey, nsFileSpec* fileName)
 {
     if (mPatchList != nsnull)
     {
@@ -839,11 +821,11 @@ nsInstall::AddPatch(nsHashKey *aKey, nsString* fileName)
 }
 
 void       
-nsInstall::GetPatch(nsHashKey *aKey, nsString* fileName)
+nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec* fileName)
 {
     if (mPatchList != nsnull)
     {
-        fileName = (nsString*) mPatchList->Get(aKey);
+        fileName = (nsFileSpec*) mPatchList->Get(aKey);
     }
 }
 
@@ -903,7 +885,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 PRInt32
 nsInstall::SanityCheck(void)
 {
-    if ( mPackageName == "" || mUserPackageName == "") 
+    if ( mRegistryPackageName == "" || mUIName == "") 
     {
         return INSTALL_NOT_STARTED;	
     }
@@ -982,9 +964,9 @@ nsInstall::GetQualifiedRegName(const nsString& name )
     }
     else if ( name[0] != '/' )
     {
-        if (mUserPackageName != "")
+        if (mUIName != "")
         {
-            qualifiedRegName = new nsString(mUserPackageName);
+            qualifiedRegName = new nsString(mUIName);
             qualifiedRegName->Append("/");
             qualifiedRegName->Append(name);
         }
@@ -1108,7 +1090,7 @@ nsInstall::CleanUp(void)
         delete mPatchList;
     }
     
-    mPackageName = ""; // used to see if StartInstall() has been called
+    mRegistryPackageName = ""; // used to see if StartInstall() has been called
 
     //CloseProgressDialog();
 }
@@ -1144,7 +1126,7 @@ PRInt32
 nsInstall::OpenJARFile(void)
 {    
     
-    PRInt32 result = ZIPR_OpenArchive(mJarFileLocation,  &mJarFileData);
+    PRInt32 result = ZIP_OpenArchive(mJarFileLocation,  &mJarFileData);
     
     return result;
 }
@@ -1152,7 +1134,7 @@ nsInstall::OpenJARFile(void)
 void
 nsInstall::CloseJARFile(void)
 {
-    ZIPR_CloseArchive(&mJarFileData);
+    ZIP_CloseArchive(&mJarFileData);
     mJarFileData = nsnull;
 }
 
@@ -1162,33 +1144,53 @@ nsInstall::CloseJARFile(void)
 // aRealName        - This is the name that we did extract to.  This will be allocated by use and should be disposed by the caller.
 
 PRInt32    
-nsInstall::ExtractFileFromJar(const nsString& aJarfile, const nsString& aSuggestedName, nsString** aRealName)
+nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName)
 {
     PRInt32 result;
-    char* extractFileHere;
+    const char* extractFileHere;
    
-    
-    nsFileSpec finalFile(aSuggestedName);
-
-    if (aSuggestedName == "" || finalFile.Exists() )
+    nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+        
+    if (aSuggestedName == nsnull || aSuggestedName->Exists() )
     {
+        nsString tempfileName = "xpinstall";
+         
+        // Get the extention of the file in the jar.
+        
+        PRInt32 result = aJarfile.RFind('.');
+        if (result != -1)
+        {            
+            // We found an extention.  Add it to the tempfileName string
+            nsString extention;
+            aJarfile.Right(extention, (aJarfile.Length() - result) );        
+            tempfileName += extention;
+        }
+         
+        tempFile += tempfileName;
+         
         // Create a temporary file to extract to.
-
-        extractFileHere = "c:\\temp\\tempFile.tmp";
+        tempFile.MakeUnique();
+       
+        extractFileHere = tempFile.operator const char* ();
     }
     else
     {
         // extract to the final destination.
-        extractFileHere = aSuggestedName.ToNewCString();
+        extractFileHere =  aSuggestedName->operator const char* ();
     }
 
-    *aRealName = new nsString(extractFileHere);
-    
-    char* fileInJar = aJarfile.ToNewCString();
+    // Return the filepath that we extracted to:
 
-    result  = ZIPR_ExtractFile( mJarFileData, fileInJar, extractFileHere );
+    nsFileSpec *fileSpec = new nsFileSpec(extractFileHere);
+
+    // FIX:  We will overwrite what is in the way.  is this something that we want to do?  
+    fileSpec->Delete(PR_FALSE);
+
+    result  = ZIP_ExtractFile( mJarFileData, nsAutoCString(aJarfile), extractFileHere );
     
-    delete [] fileInJar;
+    if (result == 0)
+        *aRealName = fileSpec;
+
     //delete [] extractFileHere;
 
     return result;

@@ -71,12 +71,10 @@ OBJS = \
     .\$(OBJDIR)\nsJSInstall.obj              \
     .\$(OBJDIR)\nsJSInstallTriggerGlobal.obj \
     .\$(OBJDIR)\nsJSInstallVersion.obj       \
-    .\$(OBJDIR)\nsJSInstallFolder.obj        \
     .\$(OBJDIR)\nsSoftwareUpdate.obj         \
     .\$(OBJDIR)\nsSoftwareUpdateQueue.obj    \
     .\$(OBJDIR)\nsSoftwareUpdateRun.obj      \
     .\$(OBJDIR)\nsSoftwareUpdateStream.obj   \
-    .\$(OBJDIR)\nsInstallErrorMessages.obj   \
     .\$(OBJDIR)\nsInstallFile.obj   \
     .\$(OBJDIR)\nsInstallDelete.obj   \
     .\$(OBJDIR)\nsInstallExecute.obj   \
