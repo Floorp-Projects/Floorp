@@ -127,6 +127,7 @@ CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mFilename("") {
   mSink=0;
   mLineNumber=0;
   mTokenizer=0;
+  mDTDState=NS_OK;
 }
 
 /**
@@ -333,7 +334,7 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  */
 nsresult  CWellFormedDTD::Terminate(void)
 {
-  return NS_ERROR_HTMLPARSER_STOPPARSING;
+    return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
 /**
@@ -469,10 +470,14 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
 
+  if(mDTDState==NS_ERROR_HTMLPARSER_STOPPARSING) {
+    //Report only errors to the sink.
+    if(theType!=eToken_error) return result;
+  }
+
   mParser=(nsParser*)aParser;
   mSink=aParser->GetContentSink();
 
-  nsCParserNode theNode(theToken,mLineNumber,mTokenizer->GetTokenRecycler());
   switch(theType) {
 
     case eToken_newline:
@@ -481,93 +486,25 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_whitespace:
     case eToken_text:
     case eToken_cdatasection:
-      result=mSink->AddLeaf(theNode); 
+      result=HandleLeafToken(aToken);
       break;
-
     case eToken_comment:
-      result=mSink->AddComment(theNode); 
-      break;
-    
+      result=HandleCommentToken(aToken);
+      break;   
     case eToken_instruction:
-     {
-        char thePI[30]={0};
-        nsString& thePIString = theToken->GetStringValueXXX();
-        GetProcessingInstruction(thePIString,thePI);
-        // XXX - HACK - The current observer dictionary is tag based. Converting it to be string based
-        // might cause some overhead.  Until we figure out a better solution, in handling PIs and tags, I'm hardcoding
-        // a specific PI observer-list to be notified.
-        eHTMLTags theTag  = (nsCRT::strcasecmp(thePI,"?xml") == 0)? eHTMLTag_unknown:eHTMLTag_userdefined;
-        nsDeque*  theDeque= (mParser)? (mParser->GetObserverDictionary()).GetObserversForTag(theTag):nsnull;
-        if(theDeque) {
-          CParserContext* pc=mParser->PeekContext();
-          void* theDocID=(pc) ? pc-> mKey : 0; 
-          nsObserverNotifier theNotifier(thePIString.GetUnicode(),(PRUint32)theDocID); 
-          theDeque->FirstThat(theNotifier);
-        }
-        result=mSink->AddProcessingInstruction(theNode); 
-        break;
-      }
-
+      result=HandleProcessingInstructionToken(aToken);
+      break;
     case eToken_start:
-      {
-        PRInt16 attrCount=aToken->GetAttributeCount();
-
-        if(0<attrCount){ //go collect the attributes...
-          int attr=0;
-          for(attr=0;attr<attrCount;attr++){
-            CToken* theInnerToken=mTokenizer->PeekToken();
-            if(theInnerToken)  {
-              eHTMLTokenTypes theInnerType=eHTMLTokenTypes(theInnerToken->GetTokenType());
-              if(eToken_attribute==theInnerType){
-                mTokenizer->PopToken(); //pop it for real...
-                theNode.AddAttribute(theInnerToken);
-              } 
-            }
-            else return kEOF;
-          }
-        }
-        if(NS_OK==result){
-          result=mSink->OpenContainer(theNode); 
-          if(((CStartToken*)aToken)->IsEmpty()){
-            result=mSink->CloseContainer(theNode); 
-          }
-        }
-      }
+      result=HandleStartToken(aToken);
       break;
-
     case eToken_end:
-      result=mSink->CloseContainer(theNode); 
+      result=HandleEndToken(aToken);
       break;
-
     case eToken_error:
-      {
-        // Propagate the error onto the content sink.
-        CErrorToken *errTok = (CErrorToken *)aToken;
-        
-        // XXX Dump error to error output stream just in case the content
-        // sink is RDF or XUL and does not implement error handling.  We need to factor
-        // code better among HTMLContentSink, XMLContentSink, RDFContentSink,
-        // and XULContentSink.  Until that happens, instead of cutting and
-        // pasting error handling code for each content sink, I output an
-        // error to cerr here.
-        const nsParserError* error = errTok->GetError();
-        if (error) {
-          char* temp;          
-          cerr << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
-          delete [] temp;
-          cerr << "Line Number: " << error->lineNumber << ", ";
-          cerr << "Col Number: " << error->colNumber << ", ";
-          cerr << "Description: " << (temp = error->description.ToNewCString()) << "\n";
-          delete [] temp;
-          cerr << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
-          delete [] temp;
-        }
-
-        result = mSink->NotifyError(errTok->GetError());
-      }
+      result=HandleErrorToken(aToken);
       break;
     case eToken_doctypeDecl:
-      result = mSink->AddDocTypeDecl(theNode, 0);
+      result=HandleDocTypeDeclToken(aToken);
       break;
     case eToken_style:
     case eToken_skippedcontent:
@@ -577,6 +514,210 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   return result;
 }
 
+/**
+ *  This method gets called when a leaf token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleLeafToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  result= (mSink)? mSink->AddLeaf(theNode):NS_OK;
+  return result;
+}
+
+/**
+ * This method gets called when a comment token has been 
+ * encountered in the parse process. Here we also make sure
+ * to count the newlines in the comment.
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleCommentToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  result=(mSink)? mSink->AddComment(theNode):NS_OK; 
+
+  return result;
+}
+
+/**
+ *  This method gets called when a prcessing instruction
+ *  has been  encountered in the parse process. 
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleProcessingInstructionToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  char thePI[30]={0};
+  nsString& thePIString = aToken->GetStringValueXXX();
+  
+  GetProcessingInstruction(thePIString,thePI);
+  
+  // XXX - HACK - The current observer dictionary is tag based. Converting it to be string based
+  // might cause some overhead.  Until we figure out a better solution, in handling PIs and tags, I'm hardcoding
+  // a specific PI observer-list to be notified.
+  eHTMLTags theTag  = (nsCRT::strcasecmp(thePI,"?xml") == 0)? eHTMLTag_unknown:eHTMLTag_userdefined;
+  nsDeque*  theDeque= (mParser)? (mParser->GetObserverDictionary()).GetObserversForTag(theTag):nsnull;
+  if(theDeque) {
+    CParserContext* pc=mParser->PeekContext();
+    void* theDocID=(pc) ? pc-> mKey : 0; 
+    nsObserverNotifier theNotifier(thePIString.GetUnicode(),(PRUint32)theDocID); 
+    theDeque->FirstThat(theNotifier);
+  }
+  result=(mSink)? mSink->AddProcessingInstruction(theNode):NS_OK; 
+  return result;
+}
+
+/**
+ *  This method gets called when a start token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleStartToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  PRInt16 attrCount=aToken->GetAttributeCount();
+      
+  if(0<attrCount){ //go collect the attributes...
+    int attr=0;
+    for(attr=0;attr<attrCount;attr++){
+      CToken* theInnerToken= (mTokenizer)? mTokenizer->PeekToken():nsnull;
+      if(theInnerToken)  {
+        eHTMLTokenTypes theInnerType=eHTMLTokenTypes(theInnerToken->GetTokenType());
+        if(eToken_attribute==theInnerType){
+          mTokenizer->PopToken(); //pop it for real...
+          theNode.AddAttribute(theInnerToken);
+        } 
+      }
+      else return kEOF;
+    }
+  }
+  if(NS_OK==result){
+    if(mSink) {
+      result=mSink->OpenContainer(theNode); 
+      if(((CStartToken*)aToken)->IsEmpty()){
+        result=mSink->CloseContainer(theNode); 
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when an end token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next (end) token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleEndToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  result=(mSink)? mSink->CloseContainer(theNode):NS_OK;    
+  return result;
+}
+
+/**
+ *  This method gets called when an error token has been 
+ *  encountered in the parse process. 
+ *  FYI: when the document is malformed this is the only
+ *  token that will get reported to the content sink.
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+
+  // Propagate the error onto the content sink.
+  CErrorToken *errTok = (CErrorToken *)aToken;
+    
+  // XXX Dump error to error output stream just in case the content
+  // sink is RDF or XUL and does not implement error handling.  We need to factor
+  // code better among HTMLContentSink, XMLContentSink, RDFContentSink,
+  // and XULContentSink.  Until that happens, instead of cutting and
+  // pasting error handling code for each content sink, I output an
+  // error to cerr here.
+  const nsParserError* error = errTok->GetError();
+  if (error) {
+    char* temp;          
+    cerr << "XML Error in file '" << (temp = mFilename.ToNewCString()) << "', ";
+    delete [] temp;
+    cerr << "Line Number: " << error->lineNumber << ", ";
+    cerr << "Col Number: " << error->colNumber << ", ";
+    cerr << "Description: " << (temp = error->description.ToNewCString()) << "\n";
+    delete [] temp;
+    cerr << "Source Line: " << (temp = error->sourceLine.ToNewCString()) << "\n";
+    delete [] temp;
+  }
+  result=(mSink)? mSink->NotifyError(errTok->GetError()):NS_OK;
+  return result;
+}
+
+/**
+ *  This method gets called when a doc. type token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  harishd 08/18/99
+ *
+ *  @param   aToken -- next token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+
+nsresult CWellFormedDTD::HandleDocTypeDeclToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,"null token");
+
+  nsresult result=NS_OK;
+  
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  result = (mSink)? mSink->AddDocTypeDecl(theNode, 0):NS_OK;
+  return result;
+}
 
 /**
  *  This method causes all tokens to be dispatched to the given tag handler.
