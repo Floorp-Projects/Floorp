@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.9 $ $Date: 2001/12/11 20:28:37 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.10 $ $Date: 2001/12/11 23:47:16 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -298,7 +298,7 @@ static NSSASCII7 *
 nss3certificate_getEmailAddress(nssDecodedCert *dc)
 {
     CERTCertificate *cc = (CERTCertificate *)dc->data;
-    return (NSSASCII7 *)cc->emailAddr;
+    return cc ? (NSSASCII7 *)cc->emailAddr : NULL;
 }
 
 NSS_IMPLEMENT nssDecodedCert *
@@ -490,10 +490,12 @@ STAN_GetCERTCertificate(NSSCertificate *c)
 	dc = c->decoding;
     }
     cc = (CERTCertificate *)dc->data;
-    if (!cc->nssCertificate) {
-	fill_CERTCertificateFields(c, cc);
-    } else if (!cc->trust) {
-	cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+    if (cc) {
+	if (!cc->nssCertificate) {
+	    fill_CERTCertificateFields(c, cc);
+	} else if (!cc->trust) {
+	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
+	}
     }
     return cc;
 }
