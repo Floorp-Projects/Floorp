@@ -3249,7 +3249,6 @@ lo_BeginLayerReflow(MWContext *context, lo_DocState *state,
     LO_MoveLayer(layer, block_x, block_y);
     LO_SetLayerBbox(layer, &bbox);
     lo_expand_parent_bbox(layer);
-	CL_ChangeLayerFlag(layer, CL_HIDDEN, hidden);
 
 	/* Resize the layer */
 	CL_ResizeLayer(layer, block_wrap_width, layer_state->height);
