@@ -2943,7 +2943,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	             result = PR_FALSE;
             }
 
-            if (wParam == VK_MENU || wParam == VK_F10) {
+            if (wParam == VK_MENU || (wParam == VK_F10 && !mIsShiftDown)) {
               // This is required to prevent Windows
               // default menu processing getting in the
               // way of XP menus and key handling.
@@ -2993,6 +2993,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP);
             break;
 
+        case WM_CONTEXTMENU:
+            result = DispatchMouseEvent(NS_CONTEXTMENU);
+            break;
+            
         case WM_LBUTTONDBLCLK:
             result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
             break;
