@@ -9,7 +9,7 @@ function getSqlService() {
 
 function getSelectedAlias() {
   var tree = document.getElementById("aliasesTree");
-  return tree.builderView.getResourceAtIndex(tree.currentIndex).Value;
+  return tree.builderView.getResourceAtIndex(tree.currentIndex);
 }
 
 function updateButtons() {

@@ -116,106 +116,88 @@ mozSqlService::Init()
 }
 
 NS_IMETHODIMP
-mozSqlService::AddAlias(const nsACString& aURI,
-                        const nsAString& aName,
+mozSqlService::AddAlias(const nsAString& aName,
                         const nsAString& aType,
                         const nsAString& aHostname,
                         PRInt32 aPort,
-                        const nsAString& aDatabase)
+                        const nsAString& aDatabase,
+                        nsIRDFResource** aResult)
 {
-  nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(aURI, getter_AddRefs(resource));
+  nsCOMPtr<nsIRDFResource> alias;
+  gRDFService->GetAnonymousResource(getter_AddRefs(alias));
 
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
   nsCOMPtr<nsIRDFInt> rdfInt;
 
   gRDFService->GetLiteral(PromiseFlatString(aName).get(), getter_AddRefs(rdfLiteral));
-  mInner->Assert(resource, kSQL_Name, rdfLiteral, PR_TRUE);
+  mInner->Assert(alias, kSQL_Name, rdfLiteral, PR_TRUE);
 
   gRDFService->GetLiteral(PromiseFlatString(aType).get(), getter_AddRefs(rdfLiteral));
-  mInner->Assert(resource, kSQL_Type, rdfLiteral, PR_TRUE);
+  mInner->Assert(alias, kSQL_Type, rdfLiteral, PR_TRUE);
 
   gRDFService->GetLiteral(PromiseFlatString(aHostname).get(), getter_AddRefs(rdfLiteral));
-  mInner->Assert(resource, kSQL_Hostname, rdfLiteral, PR_TRUE);
+  mInner->Assert(alias, kSQL_Hostname, rdfLiteral, PR_TRUE);
 
   gRDFService->GetIntLiteral(aPort, getter_AddRefs(rdfInt));
-  mInner->Assert(resource, kSQL_Port, rdfInt, PR_TRUE);
+  mInner->Assert(alias, kSQL_Port, rdfInt, PR_TRUE);
 
   gRDFService->GetLiteral(PromiseFlatString(aDatabase).get(), getter_AddRefs(rdfLiteral));
-  mInner->Assert(resource, kSQL_Database, rdfLiteral, PR_TRUE);
+  mInner->Assert(alias, kSQL_Database, rdfLiteral, PR_TRUE);
 
   nsresult rv = EnsureAliasesContainer();
   if (NS_FAILED(rv))
     return rv;
-  mAliasesContainer->AppendElement(resource);
+  mAliasesContainer->AppendElement(alias);
 
   Flush();
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozSqlService::HasAlias(const nsACString& aURI, PRBool* _retval)
-{
-  nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(aURI, getter_AddRefs(resource));
-
-  nsresult rv = EnsureAliasesContainer();
-  if (NS_FAILED(rv))
-    return rv;
-
-  PRInt32 aliasIndex;
-  mAliasesContainer->IndexOf(resource, &aliasIndex);
-
-  *_retval = aliasIndex != -1;
+  NS_ADDREF(*aResult = alias);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-mozSqlService::GetAlias(const nsACString& aURI,
-                        nsAString& aName,
-                        nsAString& aType,
-                        nsAString& aHostname,
-                        PRInt32* aPort,
-                        nsAString& aDatabase)
-{
-  nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
+NS_IMETHODIMP
+mozSqlService::FetchAlias(nsIRDFResource* aAlias,
+                          nsAString& aName,
+                          nsAString& aType,
+                          nsAString& aHostname,
+                          PRInt32* aPort,
+                          nsAString& aDatabase)
+{
   nsCOMPtr<nsIRDFNode> rdfNode;
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
   nsCOMPtr<nsIRDFInt> rdfInt;
   const PRUnichar* value;
   
-  mInner->GetTarget(resource, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
   if (rdfNode) {
     rdfLiteral = do_QueryInterface(rdfNode);
     rdfLiteral->GetValueConst(&value);
     aName.Assign(value);
   }
 
-  mInner->GetTarget(resource, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
   if (rdfNode) {
     rdfLiteral = do_QueryInterface(rdfNode);
     rdfLiteral->GetValueConst(&value);
     aType.Assign(value);
   }
 
-  mInner->GetTarget(resource, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
   if (rdfNode) {
     rdfLiteral = do_QueryInterface(rdfNode);
     rdfLiteral->GetValueConst(&value);
     aHostname.Assign(value);
   }
 
-  mInner->GetTarget(resource, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
   if (rdfNode) {
     rdfInt = do_QueryInterface(rdfNode);
     rdfInt->GetValue(aPort);
   }
 
-  mInner->GetTarget(resource, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
   if (rdfNode) {
     rdfLiteral = do_QueryInterface(rdfNode);
     rdfLiteral->GetValueConst(&value);
@@ -226,39 +208,36 @@ mozSqlService::GetAlias(const nsACString& aURI,
 }
 
 NS_IMETHODIMP
-mozSqlService::UpdateAlias(const nsACString& aURI,
+mozSqlService::UpdateAlias(nsIRDFResource* aAlias,
                            const nsAString& aName,
                            const nsAString& aType,
                            const nsAString& aHostname,
                            PRInt32 aPort,
                            const nsAString& aDatabase)
 {
-  nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(aURI, getter_AddRefs(resource));
-
   nsCOMPtr<nsIRDFNode> rdfNode;
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
   nsCOMPtr<nsIRDFInt> rdfInt;
 
-  mInner->GetTarget(resource, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
   gRDFService->GetLiteral(PromiseFlatString(aName).get(), getter_AddRefs(rdfLiteral));
-  mInner->Change(resource, kSQL_Name, rdfNode, rdfLiteral);
+  mInner->Change(aAlias, kSQL_Name, rdfNode, rdfLiteral);
 
-  mInner->GetTarget(resource, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
   gRDFService->GetLiteral(PromiseFlatString(aType).get(), getter_AddRefs(rdfLiteral));
-  mInner->Change(resource, kSQL_Type, rdfNode, rdfLiteral);
+  mInner->Change(aAlias, kSQL_Type, rdfNode, rdfLiteral);
 
-  mInner->GetTarget(resource, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
   gRDFService->GetLiteral(PromiseFlatString(aHostname).get(), getter_AddRefs(rdfLiteral));
-  mInner->Change(resource, kSQL_Hostname, rdfNode, rdfLiteral);
+  mInner->Change(aAlias, kSQL_Hostname, rdfNode, rdfLiteral);
 
-  mInner->GetTarget(resource, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
   gRDFService->GetIntLiteral(aPort, getter_AddRefs(rdfInt));
-  mInner->Change(resource, kSQL_Port, rdfNode, rdfInt);
+  mInner->Change(aAlias, kSQL_Port, rdfNode, rdfInt);
 
-  mInner->GetTarget(resource, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->GetTarget(aAlias, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
   gRDFService->GetLiteral(PromiseFlatString(aDatabase).get(), getter_AddRefs(rdfLiteral));
-  mInner->Change(resource, kSQL_Database, rdfNode, rdfLiteral);
+  mInner->Change(aAlias, kSQL_Database, rdfNode, rdfLiteral);
 
   Flush();
 
@@ -266,32 +245,29 @@ mozSqlService::UpdateAlias(const nsACString& aURI,
 }
 
 NS_IMETHODIMP
-mozSqlService::RemoveAlias(const nsACString &aURI)
+mozSqlService::RemoveAlias(nsIRDFResource* aAlias)
 {
-  nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(aURI, getter_AddRefs(resource));
-
   nsCOMPtr<nsIRDFNode> rdfNode;
 
-  mInner->GetTarget(resource, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
-  mInner->Unassert(resource, kSQL_Name, rdfNode);
+  mInner->GetTarget(aAlias, kSQL_Name, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->Unassert(aAlias, kSQL_Name, rdfNode);
 
-  mInner->GetTarget(resource, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
-  mInner->Unassert(resource, kSQL_Type, rdfNode);
+  mInner->GetTarget(aAlias, kSQL_Type, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->Unassert(aAlias, kSQL_Type, rdfNode);
 
-  mInner->GetTarget(resource, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
-  mInner->Unassert(resource, kSQL_Hostname, rdfNode);
+  mInner->GetTarget(aAlias, kSQL_Hostname, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->Unassert(aAlias, kSQL_Hostname, rdfNode);
 
-  mInner->GetTarget(resource, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
-  mInner->Unassert(resource, kSQL_Port, rdfNode);
+  mInner->GetTarget(aAlias, kSQL_Port, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->Unassert(aAlias, kSQL_Port, rdfNode);
 
-  mInner->GetTarget(resource, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
-  mInner->Unassert(resource, kSQL_Database, rdfNode);
+  mInner->GetTarget(aAlias, kSQL_Database, PR_TRUE, getter_AddRefs(rdfNode));
+  mInner->Unassert(aAlias, kSQL_Database, rdfNode);
 
   nsresult rv = EnsureAliasesContainer();
   if (NS_FAILED(rv))
     return rv;
-  mAliasesContainer->RemoveElement(resource, PR_TRUE);
+  mAliasesContainer->RemoveElement(aAlias, PR_TRUE);
 
   Flush();
 
@@ -299,9 +275,28 @@ mozSqlService::RemoveAlias(const nsACString &aURI)
 }
 
 NS_IMETHODIMP
-mozSqlService::GetConnection(const nsACString &aURI, mozISqlConnection **_retval)
+mozSqlService::GetAlias(const nsAString& aName, nsIRDFResource** _retval)
 {
-  nsCStringKey key(aURI);
+  nsCOMPtr<nsIRDFLiteral> nameLiteral;
+  nsresult rv = gRDFService->GetLiteral(PromiseFlatString(aName).get(),
+                                        getter_AddRefs(nameLiteral));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIRDFResource> alias;
+  rv = mInner->GetSource(kSQL_Name, nameLiteral, PR_TRUE, getter_AddRefs(alias));
+  if (NS_FAILED(rv))
+    return rv;
+
+  NS_IF_ADDREF(*_retval = alias);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlService::GetConnection(nsIRDFResource* aAlias, mozISqlConnection **_retval)
+{
+  nsISupportsKey key(aAlias);
   nsCOMPtr<nsIWeakReference> weakRef;
   nsCOMPtr<mozISqlConnection> conn;
 
@@ -315,7 +310,7 @@ mozSqlService::GetConnection(const nsACString &aURI, mozISqlConnection **_retval
   }
 
   if (! *_retval) {
-    nsresult rv = GetNewConnection(aURI, getter_AddRefs(conn));
+    nsresult rv = GetNewConnection(aAlias, getter_AddRefs(conn));
     if (NS_FAILED(rv))
       return rv;
 
@@ -332,21 +327,16 @@ mozSqlService::GetConnection(const nsACString &aURI, mozISqlConnection **_retval
 }
 
 NS_IMETHODIMP
-mozSqlService::GetNewConnection(const nsACString &aURI, mozISqlConnection **_retval)
+mozSqlService::GetNewConnection(nsIRDFResource* aAlias, mozISqlConnection **_retval)
 {
-  PRBool hasAlias;
-  HasAlias(aURI, &hasAlias);
-  if (!hasAlias)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv;
-
   nsAutoString name;
   nsAutoString type;
   nsAutoString hostname;
   PRInt32 port;
   nsAutoString database;
-  GetAlias(aURI, name, type, hostname, &port, database);
+  nsresult rv = FetchAlias(aAlias, name, type, hostname, &port, database);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCAutoString contractID(
     NS_LITERAL_CSTRING("@mozilla.org/sql/connection;1?type=") +

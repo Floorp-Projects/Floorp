@@ -37,6 +37,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIRDFResource;
 interface mozISqlConnection;
 
 /**
@@ -49,33 +50,32 @@ interface mozISqlService : nsISupports
 
   readonly attribute AString errorMessage;
 
-  void addAlias(in ACString aURI,
-                in AString aName,
-                in AString aType,
-                in AString aHostname,
-                in long aPort,
-                in AString aDatabase);
+  nsIRDFResource addAlias(in AString aName,
+                          in AString aType,
+                          in AString aHostname,
+                          in long aPort,
+                          in AString aDatabase);
 
-  boolean hasAlias(in ACString aURI);
+  void fetchAlias(in nsIRDFResource aAlias,
+                  out AString aName,
+                  out AString aType,
+                  out AString aHostname,
+                  out long aPort,
+                  out AString aDatabase);
 
-  void getAlias(in ACString aURI,
-                out AString aName,
-                out AString aType,
-                out AString aHostname,
-                out long aPort,
-                out AString aDatabase);
-
-  void updateAlias(in ACString aURI,
+  void updateAlias(in nsIRDFResource aAlias,
                    in AString aName,
                    in AString aType,
                    in AString aHostname,
                    in long aPort,
                    in AString aDatabase);
 
-  void removeAlias(in ACString aURI);
+  void removeAlias(in nsIRDFResource aAlias);
 
-  mozISqlConnection getConnection(in ACString aURI);
+  nsIRDFResource getAlias(in AString aName);
 
-  mozISqlConnection getNewConnection(in ACString aURI);
+  mozISqlConnection getConnection(in nsIRDFResource aAlias);
+
+  mozISqlConnection getNewConnection(in nsIRDFResource aAlias);
 
 };

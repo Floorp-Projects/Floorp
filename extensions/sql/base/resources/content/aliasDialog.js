@@ -18,22 +18,21 @@ function init() {
 
   if (window.arguments) {
     // get original values
-    var uri = window.arguments[0];
-    sqlService.getAlias(uri, name, type, hostname, port, database);
+    var alias = window.arguments[0];
+    sqlService.fetchAlias(alias, name, type, hostname, port, database);
   }
 }
 
 function onAccept() {
   if (window.arguments) {
     // update an existing alias
-    var uri = window.arguments[0];
-    sqlService.updateAlias(uri, name.value, type.value, hostname.value,
+    var alias = window.arguments[0];
+    sqlService.updateAlias(alias, name.value, type.value, hostname.value,
                            port.value, database.value);
   }
   else {
     // add a new database
-    var uri = "urn:aliases:" + name.value;
-    sqlService.addAlias(uri, name.value, type.value, hostname.value,
+    sqlService.addAlias(name.value, type.value, hostname.value,
                         port.value, database.value);
   }
 }
