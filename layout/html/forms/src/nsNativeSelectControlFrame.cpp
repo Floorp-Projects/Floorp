@@ -77,9 +77,11 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SelectControl", aResult);
   }
+#endif
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 

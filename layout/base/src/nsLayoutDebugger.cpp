@@ -18,9 +18,11 @@
  */
 #include "nsILayoutDebugger.h"
 #include "nsIFrame.h"
+#include "nsIFrameDebug.h"
 
 static NS_DEFINE_IID(kILayoutDebuggerIID, NS_ILAYOUT_DEBUGGER_IID);
 
+#ifdef NS_DEBUG
 class nsLayoutDebugger : public nsILayoutDebugger {
 public:
   nsLayoutDebugger();
@@ -71,14 +73,14 @@ NS_IMPL_ISUPPORTS(nsLayoutDebugger, kILayoutDebuggerIID);
 NS_IMETHODIMP
 nsLayoutDebugger::SetShowFrameBorders(PRBool aEnable)
 {
-  nsIFrame::ShowFrameBorders(aEnable);
+  nsIFrameDebug::ShowFrameBorders(aEnable);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutDebugger::GetShowFrameBorders(PRBool* aResult)
 {
-  *aResult = nsIFrame::GetShowFrameBorders();
+  *aResult = nsIFrameDebug::GetShowFrameBorders();
   return NS_OK;
 }
 
@@ -105,3 +107,4 @@ nsLayoutDebugger::GetStyleSize(nsIPresShell* aPresentation,
   *aSizeInBytesResult = 0;
   return NS_ERROR_FAILURE;
 }
+#endif

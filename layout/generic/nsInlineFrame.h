@@ -63,7 +63,9 @@ public:
                           nsIAtom* aListName,
                           nsIFrame* aOldFrame,
                           nsIFrame* aNewFrame);
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
   // nsIHTMLReflow overrides

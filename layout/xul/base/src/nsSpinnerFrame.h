@@ -40,10 +40,13 @@ class nsSpinnerFrame : public nsLeafFrame
 public:
   nsSpinnerFrame();
 
-    // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SpinnerFrame", aResult);
   }
+#endif
+
+  // nsIFrame overrides
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,

@@ -1158,6 +1158,7 @@ nsBlockFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 static void
 ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 {
@@ -1170,7 +1171,6 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 NS_METHOD
 nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
-#ifdef DEBUG
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
@@ -1242,7 +1242,11 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
       }
       fputs("<\n", out);
       while (nsnull != kid) {
-        kid->List(aPresContext, out, aIndent + 1);
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+          frameDebug->List(aPresContext, out, aIndent + 1);
+        }
         kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);
@@ -1266,7 +1270,6 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   IndentBy(out, aIndent);
   fputs(">\n", out);
 
-#endif
   return NS_OK;
 }
 
@@ -1275,6 +1278,7 @@ nsBlockFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Block", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsBlockFrame::GetFrameType(nsIAtom** aType) const
@@ -5682,7 +5686,6 @@ nsBlockFrame::IsChild(nsIFrame* aFrame)
   }
   return PR_FALSE;
 }
-#endif
 
 NS_IMETHODIMP
 nsBlockFrame::VerifyTree() const
@@ -5691,7 +5694,6 @@ nsBlockFrame::VerifyTree() const
   return NS_OK;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

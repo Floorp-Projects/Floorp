@@ -155,10 +155,9 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 #ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
-
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
   NS_METHOD GetRowCount(PRInt32 &aCount, PRBool aDeepCount = PR_TRUE);

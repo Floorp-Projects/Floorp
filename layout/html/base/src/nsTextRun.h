@@ -63,7 +63,9 @@ public:
     return (nsIFrame*) mArray[aIndex];
   }
 
+#ifdef DEBUG
   void List(FILE* out, PRInt32 aIndent);
+#endif
 
   static void DeleteTextRuns(nsTextRun* aRun) {
     while (nsnull != aRun) {

@@ -223,11 +223,13 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext&      aPresContext,
                                    const nsRect&        aDirtyRect,
                                    nsFramePaintLayer    aWhichLayer)
 {
+#ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+#endif
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
@@ -1141,13 +1143,13 @@ NS_NewTableOuterFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableOuterFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableOuter", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsTableOuterFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

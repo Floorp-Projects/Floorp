@@ -121,7 +121,9 @@ public:
 
   void VerifyParent(nsIFrame* aParent) const;
 
+#ifdef NS_DEBUG
   void List(nsIPresContext* aPresContext, FILE* out) const;
+#endif
 
 protected:
   nsIFrame* mFirstChild;

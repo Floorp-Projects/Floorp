@@ -26,6 +26,7 @@
 
 static NS_DEFINE_IID(kIFrameUtilIID, NS_IFRAME_UTIL_IID);
 
+#ifdef NS_DEBUG
 class nsFrameUtil : public nsIFrameUtil {
 public:
   nsFrameUtil();
@@ -630,3 +631,4 @@ nsFrameUtil::DumpRegressionData(FILE* aInputFile, FILE* aOutputFile)
   }
   return NS_ERROR_FAILURE;
 }
+#endif

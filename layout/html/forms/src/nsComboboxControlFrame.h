@@ -79,7 +79,9 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,

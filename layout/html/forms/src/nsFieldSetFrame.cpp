@@ -74,9 +74,11 @@ public:
                   const nsRect& aDirtyRect,
                   nsFramePaintLayer aWhichLayer);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("FieldSet", aResult);
   }
+#endif
 
 protected:
 
@@ -269,6 +271,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
+#ifdef DEBUG
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
     GetView(&aPresContext, &view);
@@ -280,6 +283,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
     }
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+#endif
   return NS_OK;
 }
 

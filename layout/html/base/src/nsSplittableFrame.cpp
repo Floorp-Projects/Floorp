@@ -154,6 +154,7 @@ nsIFrame * nsSplittableFrame::GetNextInFlow()
    return mNextInFlow;
 } 
 
+#ifdef DEBUG
 void
 nsSplittableFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
@@ -169,7 +170,6 @@ nsSplittableFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* ou
 
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

@@ -347,10 +347,12 @@ public:
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow);
 
+#ifdef NS_DEBUG
   /** debug method to dump frames 
     * @see nsIFrame
     */
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+#endif
 
   /** create all the objects required for editing. */
   NS_IMETHOD CreateEditor();

@@ -279,11 +279,13 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
 
 //----------------------------------------------------------------------
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("SimplePageSequence", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,

@@ -47,8 +47,10 @@ public:
                     const nsPrintOptions&   aPrintOptions,
                     nsIPrintStatusCallback* aStatusCallback);
 
+#ifdef DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
+#endif
 
 protected:
   nsSimplePageSequenceFrame();

@@ -107,7 +107,9 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
 protected:
   nsGfxScrollFrame(nsIDocument* aDocument);

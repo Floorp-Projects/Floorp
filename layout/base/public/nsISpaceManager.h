@@ -184,12 +184,12 @@ public:
    */
   NS_IMETHOD ClearRegions() = 0;
 
+#ifdef DEBUG
   /**
    * Dump the state of the spacemanager out to a file
    */
   NS_IMETHOD List(FILE* out) = 0;
 
-#ifdef DEBUG
   virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const = 0;
 #endif
 };

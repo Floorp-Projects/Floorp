@@ -248,7 +248,7 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
 
 #ifdef NS_DEBUG
       // Draw a border around the child
-      if (nsIFrame::GetShowFrameBorders() && !kidRect.IsEmpty()) {
+      if (nsIFrameDebug::GetShowFrameBorders() && !kidRect.IsEmpty()) {
         aRenderingContext.SetColor(NS_RGB(255,0,0));
         aRenderingContext.DrawRect(kidRect);
       }
@@ -605,6 +605,7 @@ nsContainerFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
@@ -649,7 +650,11 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
       }
       fputs("<\n", out);
       while (nsnull != kid) {
-        kid->List(aPresContext, out, aIndent + 1);
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+          frameDebug->List(aPresContext, out, aIndent + 1);
+        }
         kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);
@@ -666,7 +671,6 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   return NS_OK;
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

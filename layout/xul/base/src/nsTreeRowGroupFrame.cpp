@@ -761,11 +761,13 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
       aRenderingContext.PushState();
       aRenderingContext.Translate(kidRect.x, kidRect.y);
       mScrollbar->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer);
+#ifdef DEBUG
       if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
           GetShowFrameBorders()) {
         aRenderingContext.SetColor(NS_RGB(255,0,0));
         aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
       }
+#endif
       aRenderingContext.PopState(clipState);
     }
   }

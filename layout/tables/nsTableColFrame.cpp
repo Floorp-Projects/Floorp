@@ -182,13 +182,13 @@ nsTableColFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableColFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableCol", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsTableColFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

@@ -545,11 +545,13 @@ nsScrollPortFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsScrollPortFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Scroll", aResult);
 }
+#endif
 
 /**
  * Goes though each child asking for its size to determine our size. Returns our box size minus our border.

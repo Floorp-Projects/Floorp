@@ -28,9 +28,11 @@ private:
 public:
   nsGfxCheckboxControlFrame();
   
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("CheckboxControl", aResult);
   }
+#endif
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,

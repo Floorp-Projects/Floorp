@@ -52,11 +52,13 @@ public:
   nsSliderFrame();
   virtual ~nsSliderFrame();
 
-    // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SliderFrame", aResult);
   }
+#endif
 
+  // nsIFrame overrides
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

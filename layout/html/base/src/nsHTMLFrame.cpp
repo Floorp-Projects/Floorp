@@ -88,8 +88,8 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
 #ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
@@ -445,13 +445,13 @@ RootFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 RootFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Root", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 RootFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

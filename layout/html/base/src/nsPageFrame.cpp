@@ -157,11 +157,13 @@ nsPageFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsPageFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Page", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsPageFrame::IsPercentageBase(PRBool& aBase) const

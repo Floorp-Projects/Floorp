@@ -611,11 +611,13 @@ nsGfxScrollFrame::GetFrameType(nsIAtom** aType) const
   return nsHTMLContainerFrame::GetFrameType(aType);
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsGfxScrollFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("GfxScroll", aResult);
 }
+#endif
 
 NS_IMETHODIMP 
 nsGfxScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      

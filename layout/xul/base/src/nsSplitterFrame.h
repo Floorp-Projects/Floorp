@@ -38,12 +38,13 @@ public:
   nsSplitterFrame();
   ~nsSplitterFrame();
 
-    // nsIFrame overrides
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("SplitterFrame", aResult);
   }
+#endif
 
- 
+  // nsIFrame overrides
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,

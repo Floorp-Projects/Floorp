@@ -62,6 +62,7 @@ nsTextRun::~nsTextRun()
   MOZ_COUNT_DTOR(nsTextRun);
 }
 
+#ifdef DEBUG
 void
 nsTextRun::List(FILE* out, PRInt32 aIndent)
 {
@@ -72,12 +73,17 @@ nsTextRun::List(FILE* out, PRInt32 aIndent)
   for (i = 0; i < n; i++) {
     nsIFrame* text = (nsIFrame*) mArray.ElementAt(i);
     nsAutoString tmp;
-    text->GetFrameName(tmp);
-    fputs(tmp, out);
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(text->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(tmp);
+      fputs(tmp, out);
+    }
     printf("@%p ", text);
   }
   fputs(">\n", out);
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -1827,11 +1833,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     const nsStyleText* textStyle;
     frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+#ifdef DEBUG
     if (eStyleUnit_Inherit == verticalAlignUnit) {
       printf("XXX: vertical-align: inherit not implemented for ");
       nsFrame::ListTag(stdout, frame);
       printf("\n");
     }
+#endif
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  ");
     nsFrame::ListTag(stdout, frame);

@@ -88,14 +88,15 @@ static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aSta
 
 //----------------------------------------------------------------------
 
+#ifdef NS_DEBUG
 static PRBool gShowFrameBorders = PR_FALSE;
 
-NS_LAYOUT void nsIFrame::ShowFrameBorders(PRBool aEnable)
+NS_LAYOUT void nsIFrameDebug::ShowFrameBorders(PRBool aEnable)
 {
   gShowFrameBorders = aEnable;
 }
 
-NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
+NS_LAYOUT PRBool nsIFrameDebug::GetShowFrameBorders()
 {
   return gShowFrameBorders;
 }
@@ -106,16 +107,13 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
  */
 static PRLogModuleInfo* gLogModule;
 
-#ifdef NS_DEBUG
 static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
-#endif
 
 static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
 
 NS_LAYOUT PRBool
-nsIFrame::GetVerifyTreeEnable()
+nsIFrameDebug::GetVerifyTreeEnable()
 {
-#ifdef NS_DEBUG
   if (gFrameVerifyTreeEnable == PRBool(0x55)) {
     if (nsnull == gFrameVerifyTreeLogModuleInfo) {
       gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
@@ -124,26 +122,22 @@ nsIFrame::GetVerifyTreeEnable()
              gFrameVerifyTreeEnable ? "en" : "dis");
     }
   }
-#endif
   return gFrameVerifyTreeEnable;
 }
 
 NS_LAYOUT void
-nsIFrame::SetVerifyTreeEnable(PRBool aEnabled)
+nsIFrameDebug::SetVerifyTreeEnable(PRBool aEnabled)
 {
   gFrameVerifyTreeEnable = aEnabled;
 }
 
-#ifdef NS_DEBUG
 static PRLogModuleInfo* gStyleVerifyTreeLogModuleInfo;
-#endif
 
 static PRBool gStyleVerifyTreeEnable = PRBool(0x55);
 
 NS_LAYOUT PRBool
-nsIFrame::GetVerifyStyleTreeEnable()
+nsIFrameDebug::GetVerifyStyleTreeEnable()
 {
-#ifdef NS_DEBUG
   if (gStyleVerifyTreeEnable == PRBool(0x55)) {
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
       gStyleVerifyTreeLogModuleInfo = PR_NewLogModule("styleverifytree");
@@ -152,24 +146,24 @@ nsIFrame::GetVerifyStyleTreeEnable()
              gStyleVerifyTreeEnable ? "en" : "dis");
     }
   }
-#endif
   return gStyleVerifyTreeEnable;
 }
 
 NS_LAYOUT void
-nsIFrame::SetVerifyStyleTreeEnable(PRBool aEnabled)
+nsIFrameDebug::SetVerifyStyleTreeEnable(PRBool aEnabled)
 {
   gStyleVerifyTreeEnable = aEnabled;
 }
 
 NS_LAYOUT PRLogModuleInfo*
-nsIFrame::GetLogModuleInfo()
+nsIFrameDebug::GetLogModuleInfo()
 {
   if (nsnull == gLogModule) {
     gLogModule = PR_NewLogModule("frame");
   }
   return gLogModule;
 }
+#endif
 
 //----------------------------------------------------------------------
 
@@ -1697,6 +1691,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
   return result;
 }
 
+#ifdef NS_DEBUG
 // Debugging
 NS_IMETHODIMP
 nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
@@ -1744,6 +1739,7 @@ nsFrame::MakeFrameName(const char* aType, nsString& aResult) const
   aResult.Append(buf);
   return NS_OK;
 }
+#endif
 
 void
 nsFrame::XMLQuote(nsString& aString)
@@ -1794,6 +1790,7 @@ nsFrame::ParentDisablesSelection() const
   */
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsFrame::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
@@ -1861,7 +1858,11 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
       }
       aIndent++;
       while (nsnull != kid) {
-        kid->DumpRegressionData(aPresContext, out, aIndent);
+        nsIFrameDebug*  frameDebug;
+
+        if (NS_SUCCEEDED(kid->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+          frameDebug->DumpRegressionData(aPresContext, out, aIndent);
+        }
         kid->GetNextSibling(&kid);
       }
       aIndent--;
@@ -1893,6 +1894,7 @@ nsFrame::VerifyTree() const
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
   return NS_OK;
 }
+#endif
 
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/

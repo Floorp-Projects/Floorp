@@ -88,7 +88,9 @@ class nsHTMLFrameOuterFrame : public nsHTMLFrameOuterFrameSuper {
 public:
   nsHTMLFrameOuterFrame();
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -135,7 +137,9 @@ public:
 
   nsHTMLFrameInnerFrame();
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -286,10 +290,12 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
   }
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FrameOuter", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsHTMLFrameOuterFrame::GetFrameType(nsIAtom** aType) const
@@ -566,10 +572,12 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
   return marginHeight;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FrameInner", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::GetFrameType(nsIAtom** aType) const

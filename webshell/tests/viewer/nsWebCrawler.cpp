@@ -276,6 +276,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
       vm->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
     }
 
+#ifdef NS_DEBUG
     if (mOutputDir.Length() > 0) {
       nsIFrame* root;
       shell->GetRootFrame(&root);
@@ -309,6 +310,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
           root->DumpRegressionData(presContext, stdout, 0);
       }
     }
+#endif
 
     if (mJiggleLayout) {
       nsRect r;

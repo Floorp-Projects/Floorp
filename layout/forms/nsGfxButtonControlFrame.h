@@ -46,7 +46,9 @@ public:
  
    // nsFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
   PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,

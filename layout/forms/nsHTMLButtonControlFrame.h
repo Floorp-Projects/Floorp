@@ -92,10 +92,11 @@ public:
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
  
-
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ButtonControl", aResult);
   }
+#endif
 
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 

@@ -432,11 +432,14 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
       }
     }
   }
+
+#ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0,255,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+#endif
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
@@ -484,11 +487,13 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.Translate(kidRect.x, kidRect.y);
         kid->Paint(aPresContext, aRenderingContext, kidDamageArea,
                    aWhichLayer);
+#ifdef DEBUG
         if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
             GetShowFrameBorders()) {
           aRenderingContext.SetColor(NS_RGB(255,0,0));
           aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
         }
+#endif
         aRenderingContext.PopState(clipState);
       }
     }
@@ -1551,13 +1556,13 @@ NS_NewTableRowFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableRowFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableRow", aResult);
 }
 
-#ifdef DEBUG
 NS_IMETHODIMP
 nsTableRowFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {

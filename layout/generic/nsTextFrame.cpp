@@ -313,8 +313,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
-
   /**
    * Get the "type" of the frame
    *
@@ -322,10 +320,10 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
-
 #ifdef DEBUG
+  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
   NS_IMETHOD GetPosition(nsIPresContext& aCX,
@@ -3424,7 +3422,6 @@ nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP
 nsTextFrame::GetFrameName(nsString& aResult) const
@@ -3487,3 +3484,5 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
 
   return NS_OK;
 }
+#endif
+

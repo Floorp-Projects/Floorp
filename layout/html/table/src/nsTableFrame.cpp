@@ -956,11 +956,14 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       }
     }
   }
+
+#ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0,255,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+#endif
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   return NS_OK;
@@ -3896,11 +3899,13 @@ PRBool nsTableFrame::RequiresPass1Layout()
   return (PRBool)(NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Table", aResult);
 }
+#endif
 
 // This assumes that aFrame is a scroll frame if  
 // XXX make this a macro if it becomes an issue

@@ -200,7 +200,9 @@ public:
 
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
 
   NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -402,11 +404,13 @@ nsObjectFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsObjectFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("ObjectFrame", aResult);
 }
+#endif
 
 nsresult
 nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,

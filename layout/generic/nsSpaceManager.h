@@ -53,10 +53,10 @@ public:
   NS_IMETHOD RemoveRegion(nsIFrame* aFrame);
 
   NS_IMETHOD ClearRegions();
-  NS_IMETHOD List(FILE* out);
 
 #ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  NS_IMETHOD List(FILE* out);
+  void       SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
 protected:

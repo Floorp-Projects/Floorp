@@ -734,7 +734,7 @@ nsGfxTextControlFrame::PaintChild(nsIPresContext&      aPresContext,
 
 #ifdef NS_DEBUG
       // Draw a border around the child
-      if (nsIFrame::GetShowFrameBorders() && !kidRect.IsEmpty()) {
+      if (nsIFrameDebug::GetShowFrameBorders() && !kidRect.IsEmpty()) {
         aRenderingContext.SetColor(NS_RGB(255,0,0));
         aRenderingContext.DrawRect(kidRect);
       }
@@ -2287,6 +2287,7 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
   aString.StripChars(badChars);
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
 nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
@@ -2319,7 +2320,11 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
             nsIFrame* rootFrame;
             shell->GetRootFrame(&rootFrame);
             if (rootFrame) {
-              rootFrame->List(aPresContext, out, aIndent + 1);
+              nsIFrameDebug*  frameDebug;
+
+              if (NS_SUCCEEDED(rootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+                frameDebug->List(aPresContext, out, aIndent + 1);
+              }
               nsCOMPtr<nsIDocument> doc;
               docv->GetDocument(*getter_AddRefs(doc));
               if (doc) {
@@ -2339,10 +2344,14 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
   fputs(">\n", out);
 
     if (mDisplayFrame) {
+      nsIFrameDebug*  frameDebug;
+      
       IndentBy(out, aIndent);
       nsAutoString tmp;
       fputs("<\n", out);
-      mDisplayFrame->List(aPresContext, out, aIndent + 1);
+      if (NS_SUCCEEDED(mDisplayFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+        frameDebug->List(aPresContext, out, aIndent + 1);
+      }
       IndentBy(out, aIndent);
       fputs(">\n", out);
     }
@@ -2350,6 +2359,7 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
 
   return NS_OK;
 }
+#endif
 
 /*******************************************************************************
  * EnderFrameLoadingInfo

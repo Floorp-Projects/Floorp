@@ -270,11 +270,13 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     }
   }
 
+#ifdef DEBUG
   // for debug...
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0, 0, 128));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+#endif
 
   // if the cell originates in a row and/or col that is collapsed, the
   // bottom and/or right portion of the cell is painted by translating
@@ -1103,7 +1105,6 @@ void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFram
   }
 }
 
-
 NS_IMETHODIMP
 nsTableCellFrame::GetFrameType(nsIAtom** aType) const
 {
@@ -1113,11 +1114,13 @@ nsTableCellFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableCellFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableCell", aResult);
 }
+#endif
 
 // Destructor function for the collapse offset frame property
 static void
