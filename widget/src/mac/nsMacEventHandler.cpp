@@ -154,6 +154,72 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 
 
 #pragma mark -
+
+//-------------------------------------------------------------------------
+//
+// HandleKeyEvent
+//
+//-------------------------------------------------------------------------
+
+#define homeKey				0x01		/* ascii code for home key */
+#define enterKey			0x03		/* ascii code for enter key */
+#define endKey				0x04		/* ascii code for end key */
+#define helpKey				0x05		/* ascii code for help key */
+#define deleteKey			0x08		/* ascii code for delete/backspace */
+#define tabKey				0x09		/* ascii code for tab key */
+#define pageUpKey			0x0B		/* ascii code for page up key */
+#define pageDownKey		0x0C		/* ascii code for page down key */
+#define returnKey			0x0D		/* ascii code for return key */
+#define leftArrow			0x1C		/* ascii code for left arrow key */
+#define rightArrow		0x1D		/* ascii code for right arrow key */
+#define upArrow				0x1E			/* ascii code for up arrow key */
+#define downArrow			0x1F			/* ascii code for down arrow key */
+#define forwardDelKey	0x7F			/* ascii code for forward delete key */
+#define spaceKey			0x20		/* ascii code for a space */
+
+#define escapeKeyCode		0x35		/* key code for escape key */
+#define clearKeyCode		0x47		/* key code for clear key */
+
+static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModifiers)
+{
+	UInt8			charCode = (eventMessage & charCodeMask);
+	UInt8			keyCode = (eventMessage & keyCodeMask) >> 8;
+	PRUint32	raptorKeyCode;
+	
+	// temporary hack until we figure out the key handling strategy (sfraser)
+	
+	if (charCode >= ' ' && charCode <= '~')			// ~ is 0x7E
+	{
+		raptorKeyCode = charCode;
+	}
+	else
+	{
+		switch (charCode)
+		{
+			case homeKey:					raptorKeyCode = NS_VK_HOME;				break;
+			case enterKey:				raptorKeyCode = NS_VK_RETURN;			break;			// fix me!
+			case endKey:					raptorKeyCode = NS_VK_END;				break;
+		//case helpKey:					raptorKeyCode = ;			break;
+			case deleteKey:				raptorKeyCode = NS_VK_DELETE;			break;
+			case tabKey:					raptorKeyCode = NS_VK_TAB;				break;
+
+			case pageUpKey:				raptorKeyCode = NS_VK_PAGE_UP;		break;
+			case pageDownKey:			raptorKeyCode = NS_VK_PAGE_DOWN;	break;
+			case returnKey:				raptorKeyCode = NS_VK_RETURN;			break;
+
+			case leftArrow:				raptorKeyCode = NS_VK_LEFT;				break;
+			case rightArrow:			raptorKeyCode = NS_VK_RIGHT;			break;
+			case upArrow:					raptorKeyCode = NS_VK_UP;					break;
+			case downArrow:				raptorKeyCode = NS_VK_DOWN;				break;
+
+			case escapeKeyCode:		raptorKeyCode = NS_VK_ESCAPE;			break;
+			case clearKeyCode:		raptorKeyCode = NS_VK_CLEAR;			break;
+		}
+	}
+
+	return raptorKeyCode;
+}
+
 //-------------------------------------------------------------------------
 //
 // HandleKeyEvent
@@ -194,7 +260,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 	keyEvent.isCommand	= ((aOSEvent.modifiers & cmdKey) != 0);
 
 	// nsKeyEvent
-  keyEvent.keyCode		= (aOSEvent.message & charCodeMask);	//¥TODO: do special keys conversions for NS_VK_F1 etc...
+  keyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
 
 	return(focusedWidget->DispatchWindowEvent(keyEvent));
 }
