@@ -459,8 +459,12 @@ XFE_RDFMenuToolbarBase::createItemTree(Widget menu,HT_Resource entry)
 {
     XP_ASSERT( HT_IsContainer(entry) );
 
+    int numItems = 0;
+
     D(printf("Create tree: %s\n",HT_GetNodeName(entry)));
     HT_SetOpenState(entry, PR_TRUE);
+    int numAlloc = HT_GetCountVisibleChildren(entry);
+    Widget* wItems = (Widget*) calloc(numAlloc, sizeof(Widget));
     HT_Cursor child_cursor = HT_NewCursor(entry);
     HT_Resource child;
     while ( (child = HT_GetNextItem(child_cursor)) )
@@ -486,10 +490,12 @@ XFE_RDFMenuToolbarBase::createItemTree(Widget menu,HT_Resource entry)
         if (item)
         {
             XP_ASSERT( XfeIsAlive(item) );
-
-            XtManageChild(item);
+            wItems[numItems++] = item;
         }
     }
+    XtManageChildren(wItems, numItems);
+    free(wItems);
+    wItems = NULL;
     HT_DeleteCursor(child_cursor);
 }
 //////////////////////////////////////////////////////////////////////////
