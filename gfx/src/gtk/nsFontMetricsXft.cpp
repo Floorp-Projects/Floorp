@@ -207,7 +207,7 @@ static nsresult
 EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
              PRUint32* aCount, PRUnichar*** aResult);
 
-nsFontMetricsXft::nsFontMetricsXft()
+nsFontMetricsXft::nsFontMetricsXft(): mMiniFont(nsnull)
 {
     if (!gXftFontLoad)
         gXftFontLoad = PR_NewLogModule("XftFontLoad");
@@ -332,6 +332,9 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
     if (NS_FAILED(RealizeFont()))
         return NS_ERROR_FAILURE;
+
+    // Set up the mini-font in case it needs to be used later
+    SetupMiniFont();
 
     return NS_OK;
 }
@@ -1008,7 +1011,9 @@ nsFontMetricsXft::SetupMiniFont(void)
     XftFont *font = nsnull;
     XftFont *xftFont = mWesternFont->GetXftFont();
     FcPattern *pat = nsnull;
-    nsresult rv = NS_ERROR_FAILURE;
+
+    mMiniFontAscent = xftFont->ascent;
+    mMiniFontDescent = xftFont->descent;
 
     pattern = FcPatternCreate();
     if (!pattern)
@@ -1030,21 +1035,22 @@ nsFontMetricsXft::SetupMiniFont(void)
     FcResult res;
     
     set = FcFontSort(0, pattern, FcTrue, NULL, &res);
-    if (!set)
-        goto end;
 
-    pat = FcFontRenderPrepare(0, pattern, set->fonts[0]);
-    if (!pat)
-        goto end;
+    if (set) {
+        pat = FcFontRenderPrepare(0, pattern, set->fonts[0]);
+    }
 
-    font = XftFontOpenPattern(GDK_DISPLAY(), pat);
-    if (!font)
-        goto end;
+    if (pat) {
+        font = XftFontOpenPattern(GDK_DISPLAY(), pat);
 
-    // the font owns the pattern now
-    pat = nsnull;
-
-    mMiniFont = font;
+        if (font) {
+            mMiniFont = font;
+            pat = nsnull; // the font owns the pattern now
+        }
+        else {
+            font = xftFont;
+        }
+    }
 
     // now that the font has been loaded, measure the fonts to find
     // the bounds
@@ -1057,21 +1063,23 @@ nsFontMetricsXft::SetupMiniFont(void)
         str[1] = '\0';
 
         XGlyphInfo extents;
-        XftTextExtents8(GDK_DISPLAY(), mMiniFont,
+        XftTextExtents8(GDK_DISPLAY(), font,
                         (FcChar8 *)str, 1, &extents);
 
         mMiniFontWidth = PR_MAX (mMiniFontWidth, extents.width);
         mMiniFontHeight = PR_MAX (mMiniFontHeight, extents.height);
     }
 
-    mMiniFontPadding = PR_MAX(mMiniFontHeight / 10, 1);
+    if (!mMiniFont) {
+        mMiniFontWidth /= 2;
+        mMiniFontHeight /= 2;
+    }
 
-    mMiniFontYOffset = ((xftFont->ascent + xftFont->descent) -
+    mMiniFontPadding = PR_MAX(mMiniFontHeight / 10, 1);
+    mMiniFontYOffset = ((mMiniFontAscent + mMiniFontDescent) -
                         (mMiniFontHeight * 2 + mMiniFontPadding * 5)) / 2;
 
-    rv = NS_OK;
 
- end:
     if (pat)
         FcPatternDestroy(pat);
     if (pattern)
@@ -1079,12 +1087,7 @@ nsFontMetricsXft::SetupMiniFont(void)
     if (set)
         FcFontSetSortDestroy(set);
 
-    if (NS_FAILED(rv)) {
-        if (font)
-            XftFontClose(GDK_DISPLAY(), font);
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -1126,6 +1129,11 @@ nsFontMetricsXft::DrawUnknownGlyph(FcChar32   aChar,
                 aX + width - mMiniFontPadding,
                 aY - height + mMiniFontPadding,
                 mMiniFontPadding, height - mMiniFontPadding * 2);
+
+    // If for some reason the mini font couldn't be loaded, just
+    // return - the box is enough.
+    if (!mMiniFont)
+        return NS_OK;
 
     // now draw the characters
     char buf[7];
@@ -1179,10 +1187,6 @@ nsFontMetricsXft::EnumerateGlyphs(FcChar32 *aChars, PRUint32 aLen,
                                   GlyphEnumeratorCallback aCallback,
                                   void *aCallbackData)
 {
-    // XXX this really should be somewhere else
-    if (!mMiniFont)
-        SetupMiniFont();
-
     for (PRUint32 i = 0; i < aLen; ++i) {
         FcChar32 c = aChars[i];
         nsFontXft *foundFont = nsnull;
@@ -1261,7 +1265,6 @@ nsFontMetricsXft::DrawStringCallback(FcChar32 aChar, nsFontXft *aFont,
     // If there was no font found for this character, just draw the
     // unknown glyph character
     if (!aFont) {
-        // XXX check to make sure that the mini font has been loaded
         DrawUnknownGlyph(aChar, x, y + mMiniFontYOffset, &data->color,
                          data->draw);
 
@@ -1320,10 +1323,10 @@ nsFontMetricsXft::TextDimensionsCallback(FcChar32 aChar, nsFontXft *aFont,
         data->dimensions->width += mMiniFontWidth * (IS_NON_BMP(aChar)?3:2) +
                                    mMiniFontPadding * (IS_NON_BMP(aChar)?6:5);
 
-        if (data->dimensions->ascent < mMiniFont->ascent)
-            data->dimensions->ascent = mMiniFont->ascent;
-        if (data->dimensions->descent < mMiniFont->descent)
-            data->dimensions->descent = mMiniFont->descent;
+        if (data->dimensions->ascent < mMiniFontAscent)
+            data->dimensions->ascent = mMiniFontAscent;
+        if (data->dimensions->descent < mMiniFontDescent)
+            data->dimensions->descent = mMiniFontDescent;
 
         return;
     }

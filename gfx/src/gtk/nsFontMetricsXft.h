@@ -268,6 +268,8 @@ private:
     nscoord                  mMiniFontHeight;
     nscoord                  mMiniFontPadding;
     nscoord                  mMiniFontYOffset;
+    nscoord                  mMiniFontAscent;
+    nscoord                  mMiniFontDescent;
 
     // Cached font metrics
     nscoord                  mXHeight;
