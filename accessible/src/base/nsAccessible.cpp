@@ -49,6 +49,9 @@
 #include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsRootAccessible.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -798,13 +801,9 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
         view->GetWidget(*getter_AddRefs(widget));
         if (widget)
           break;
-        // Include position of view in calculation of starting coordinates
-        view->GetPosition(&origin.x, &origin.y);
       }
-      else {
-        // No widget yet, so count up the coordinates of the frame 
-        aFrame->GetOrigin(origin);
-      }
+      // No widget yet, so count up the coordinates of the frame 
+      aFrame->GetOrigin(origin);
       offsetX += origin.x;
       offsetY += origin.y;
   
@@ -815,7 +814,7 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
       // Get the scale from that Presentation Context
       float t2p;
       aPresContext->GetTwipsToPixels(&t2p);
-      
+    
       // Convert to pixels using that scale
       offsetX = NSTwipsToIntPixels(offsetX, t2p);
       offsetY = NSTwipsToIntPixels(offsetY, t2p);
@@ -829,6 +828,26 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
   }
 }
 
+void nsAccessible::GetScrollOffset(nsRect *aRect)
+{
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (shell) {
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(doc));
+    if (!docView) 
+      return;
+
+    nsCOMPtr<nsIDOMAbstractView> abstractView;
+    docView->GetDefaultView(getter_AddRefs(abstractView));
+    if (!abstractView) 
+      return;
+
+    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(abstractView));
+    window->GetPageXOffset(&aRect->x);
+    window->GetPageYOffset(&aRect->y);
+  }
+}
 
 
 void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
@@ -860,13 +879,10 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 
   while (ancestorFrame) {  
     *aBoundingFrame = ancestorFrame;
-    nsIView *view = nsnull;
-    ancestorFrame->GetView(presContext, &view);
-    if (view ||
-        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::areaFrame) ||
-        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::rootFrame) ||
-        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::tableFrame) ||
-        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::scrollFrame))
+    // If any other frame type, we only need to deal with the primary frame
+    // Otherwise, there may be more frames attached to the same content node
+    if (!IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::inlineFrame) &&
+        !IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::textFrame))
       break;
     ancestorFrame->GetParent(&ancestorFrame); 
   }
@@ -882,17 +898,20 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
     nsIFrame *parentFrame = iterFrame;
     nsRect currFrameBounds;
     iterFrame->GetRect(currFrameBounds);
- 
+   
+    // We just want the width and height - only get relative coordinates if we're not already
+    // at the bounding frame
+    currFrameBounds.x = currFrameBounds.y = 0;
+
     // Make this frame's bounds relative to common parent frame
-    while (parentFrame != *aBoundingFrame) {
-      parentFrame->GetParent(&parentFrame);
-      if (!parentFrame)
-        break;
+    while (parentFrame && parentFrame != *aBoundingFrame) {
       nsRect parentFrameBounds;
       parentFrame->GetRect(parentFrameBounds);
       // Add this frame's bounds to our total rectangle
       currFrameBounds.x += parentFrameBounds.x;
       currFrameBounds.y += parentFrameBounds.y;
+
+      parentFrame->GetParent(&parentFrame);
     }
 
     // Add this frame's bounds to total
@@ -967,19 +986,17 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
   if (presContext) {
-    nsRect orgRectPixels;
-
+    nsRect orgRectPixels, pageRectPixels;
     GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
-    *x += orgRectPixels.x;
-    *y += orgRectPixels.y;
+    GetScrollOffset(&pageRectPixels);
+    *x += orgRectPixels.x - pageRectPixels.x;
+    *y += orgRectPixels.y - pageRectPixels.y;
   }
 
   return NS_OK;
 }
 
-
 // helpers
-
 
 /**
   * Static
