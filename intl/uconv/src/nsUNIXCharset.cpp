@@ -336,7 +336,7 @@ nsPlatformCharset::Init()
   NS_ASSERTION(locale, "cannot setlocale");
   if (locale) {
     nsCOMPtr<nsIPosixLocale> posixConverter =
-      do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
+      do_GetService(NS_POSIXLOCALE_CONTRACTID);
     if (posixConverter)
       res = posixConverter->GetXPLocale(locale, mLocale);
     if (NS_FAILED(res))
