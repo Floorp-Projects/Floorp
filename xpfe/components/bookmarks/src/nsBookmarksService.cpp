@@ -2374,6 +2374,8 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 		if ((NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Bookmark, PR_TRUE, &hasAssertion))
 		    && hasAssertion) ||
 		    (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_IEFavorite, PR_TRUE, &hasAssertion))
+		    && hasAssertion) ||
+		    (NS_SUCCEEDED(mInner->HasAssertion(aSource, kRDF_type, kNC_Folder, PR_TRUE, &hasAssertion))
 		    && hasAssertion))
 		{
 			const char	*uri;
@@ -2384,7 +2386,7 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			}
 
 			nsAutoString	ncURI(uri);
-			if (ncURI.Find("NC:", PR_TRUE) == 0)
+			if (ncURI.Find("NC:", PR_TRUE, 0) == 0)
 			{
 				return(NS_RDF_NO_VALUE);
 			}
