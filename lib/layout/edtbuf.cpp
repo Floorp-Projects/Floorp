@@ -10082,6 +10082,17 @@ void CEditBuffer::FinishedLoad2()
 
     XP_Bool bShouldSendOpenEvent = !GetCommandLog()->InReload();
 
+    // Be sure a doc that thinks its "new" has the correct URL
+    // If user loads a URL into a "new doc" buffer that is unedited,
+    //  we reuse that buffer and context, so we must clear the new-doc flag here
+    // (this used to be done in NET_GetURL, mkgeturl.c, but that had bad side effects)
+    char *pBaseURL = LO_GetBaseURL(m_pContext);
+    if( pBaseURL && EDT_IS_NEW_DOCUMENT(m_pContext) && 
+        0 != XP_STRCMP(pBaseURL, XP_GetString(XP_EDIT_NEW_DOC_NAME)) )
+    {
+        m_pContext->is_new_document = FALSE;
+    }
+
     // Set page properties (color, background, etc.)
     //  for a new document:
     XP_Bool bIsNewDocument = EDT_IS_NEW_DOCUMENT(m_pContext)
