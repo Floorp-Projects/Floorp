@@ -315,6 +315,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+    pData->pScriptingPeer = NULL;
 
     // Create a plugin according to the mime type
 
