@@ -27,6 +27,7 @@
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
 <?xml-stylesheet href="chrome://chatzilla/skin/chatzilla.css" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
@@ -40,6 +41,16 @@
         persist="width height" windowtype="irc:chatzilla">
 
 <script src="chrome://global/content/strres.js"/>
+<script src="chrome://navigator/content/tooltip.js"/>
+<script src="chrome://global/content/nsJSSupportsUtils.js"/>
+<script src="chrome://global/content/nsJSComponentManager.js"/>
+<script src="chrome://global/content/nsUserSettings.js"/>
+<script src="chrome://global/content/nsTransferable.js"/>
+<script src="chrome://global/content/nsClipboard.js"/>
+<script src="chrome://global/content/nsDragAndDrop.js"/>
+<script src="chrome://communicator/content/contentAreaUtils.js"/>
+<script src="chrome://communicator/content/contentAreaDD.js"/>
+
 <script src="chrome://chatzilla/content/lib/js/utils.js"/>
 <script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
 <script src="chrome://chatzilla/content/lib/js/events.js"/>
@@ -59,12 +70,71 @@
   <command id="cmd_quit"/>
 </commandset>
 
-<keyset id="tasksKeys">
-  <key id="key_close"/>
-  <key id="key_quit"/>
+<commandset id="chatzillaCommands">
+  <command id="cmd_focus_input" oncommand="focusInput();"/>
+  <command id="cmd_debug" oncommand="onToggleTraceHook()"/>
+  <command id="cmd_toggletabstrip" oncommand="onToggleVisibility('tabstrip');"/>
+  <command id="cmd_togglelist" oncommand="onToggleVisibility('info');"/>
+  <command id="cmd_togglestatus" oncommand="onToggleVisibility('status');"/>
+  <command id="cmd_clearview" oncommand="onClearCurrentView();"/>
+  <command id="cmd_deleteview" oncommand="onDeleteCurrentView();"/>
+  <command id="cmd_status" oncommand="client.onInputStatus();"/>
+  <command id="cmd_popup_query"
+    oncommand="onPopupSimulateCommand('/query $nick');"/>
+  <command id="cmd_popup_whois"
+    oncommand="onPopupSimulateCommand('/whois $nick');"/>
+  <command id="cmd_popup_ping"
+    oncommand="onPopupSimulateCommand('/ctcp $nick PING');"/>
+  <command id="cmd_popup_version"
+    oncommand="onPopupSimulateCommand('/ctcp $nick VERSION');"/>
+  <command id="cmd_popup_highlight"
+    oncommand="onPopupHighlight(true);"/>
+  <command id="cmd_popup_nohighlight"
+    oncommand="onPopupHighlight(false);"/>
+  <command id="cmd_popup_giveop"
+    oncommand="onPopupSimulateCommand('/op $nick');"/>
+  <command id="cmd_popup_takeop"
+    oncommand="onPopupSimulateCommand('/deop $nick');"/>
+  <command id="cmd_popup_givevoice"
+    oncommand="onPopupSimulateCommand('/voice $nick');"/>
+  <command id="cmd_popup_takevoice"
+    oncommand="onPopupSimulateCommand('/devoice $nick');"/>
+  <command id="cmd_popup_kick"
+    oncommand="onPopupSimulateCommand('/kick $nick');"/>
+</commandset>
+
+<keyset id="chatzillaKeys">
+  <key id="key_focus_input" observes="cmd_focus_input" keycode="VK_ESCAPE"/>
+
+  <key id="key_debug" observes="cmd_debug"
+    modifiers="control shift" key="D"/>
+  <key id="key_clearview" observes="cmd_clearview"
+    modifiers="control" key="R"/>
+  <key id="key_deleteview" observes="cmd_deleteview"
+    modifiers="control" key="D"/>
+  <key id="key_toggletabstrip" observes="cmd_toggletabstrip"
+    modifiers="control" key="T"/>
+  <key id="key_togglelist" observes="cmd_togglelist"
+    modifiers="control" key="L"/>
+  <key id="key_togglestatus" observes="cmd_togglestatus"
+    modifiers="control" key="S"/>
+  <key id="key_status" observes="cmd_status"
+    modifiers="control shift" key="S"/>
 </keyset>
 
-<popupset>
+<keyset id="tasksKeys">
+  <key id="key_close"/>
+  <!-- nobody needs to quit that quickly.  key id="key_quit"/ -->
+</keyset>
+
+<popupset id="aHTMLTooltipSet">
+  <popup id="aHTMLTooltip" class="tooltip" 
+    onpopupshowing="return fillInHTMLTooltip(document.tooltipNode);">
+    <vbox id="HTML_TOOLTIP_tooltipBox"/>
+  </popup>
+</popupset>
+
+<popupset id="contextMenus">
     <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
         <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op" />
         <menuitem label="&deop.value;" accesskey="&deop.accesskey;"
@@ -75,12 +145,67 @@
           code="/devoice" />  
         <menuitem label="&kick.value;" accesskey="&kick.accesskey;"
           code="/kick" />
-<!--
-    <menuitem label="&kick2.value;" accesskey="&kick2.accesskey;"
-          code="/kick" />
- -->
-    <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
+        <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
     </popup>
+
+    <popup id="outputContext"
+        onpopupshowing="if (event.originalTarget == this) onOutputContextMenuCreate(event);"
+        onpopuphiding="if (event.originalTarget == this) delete client._popupContext;">
+        <menuitem format="&PopupQueryCmd.label;" accesskey="&PopupQueryCmd.aKey;"
+          observes="cmd_popup_query"
+          showfor="targetUser != 'undefined'"/>
+        <menuitem format="&PopupWhoisCmd.label;" accesskey="&PopupWhoisCmd.aKey;"
+          observes="cmd_popup_whois"
+          showfor="targetUser != 'undefined'"/>
+        <menuitem format="&PopupPingCmd.label;" accesskey="&PopupPingCmd.aKey;"
+          observes="cmd_popup_ping"
+          showfor="targetUser != 'undefined'"/>
+        <menuitem format="&PopupVersionCmd.label;"
+          accesskey="&PopupVersionCmd.aKey;"
+          observes="cmd_popup_version"
+          showfor="targetUser != 'undefined'"/>
+
+    <!-- css bugs keep this from working for now, see bug 91447
+        <menu format="&PopupHighlightStyle.label;" 
+          accesskey="&PopupHighlightStyle.aKey;"
+          showfor="targetUser != 'undefined'">
+          <menupopup id="highlightMenu"><menuitem/></menupopup>
+        </menu>
+    -->
+        <menuseparator
+          showfor="targetUser != 'undefined'"/>
+
+        <menuitem label="&PopupGiveOp.label;" accesskey="&PopupGiveOp.aKey;"
+          observes="cmd_popup_giveop"
+          showfor="iAmOp is 'yes' and targetIsOp is 'no'"/>
+        <menuitem label="&PopupTakeOp.label;" accesskey="&PopupTakeOp.aKey;"
+          observes="cmd_popup_takeop"
+          showfor="iAmOp is 'yes' and targetIsOp is 'yes'"/>
+        <menuitem label="&PopupGiveVoice.label;"
+          accesskey="&PopupGiveVoice.aKey;"
+          observes="cmd_popup_givevoice"
+          showfor="iAmOp is 'yes' and targetIsVoice is 'no'"/>
+        <menuitem label="&PopupTakeVoice.label;"
+          accesskey="&PopupTakeVoice.aKey;"
+          observes="cmd_popup_takevoice"
+          showfor="iAmOp is 'yes' and targetIsVoice is 'yes'"/>
+        <menuitem label="&PopupKick.label;" accesskey="&PopupKick.aKey;"
+          observes="cmd_popup_kick"
+          showfor="iAmOp is 'yes' and targetUser != 'undefined'"/>
+
+        <menuseparator
+          showfor="targetUser != 'undefined' and iAmOp is 'yes'"/>
+
+        <menuitem label="&ClearViewCmd.label;" accesskey="&ClearViewCmd.aKey;"
+          observes="cmd_clearview" key="key_clearview"/>
+        <menuitem label="&DeleteViewCmd.label;" accesskey="&DeleteViewCmd.aKey;"
+          observes="cmd_deleteview" key="key_deleteview"/>
+        <menuseparator/>
+
+        <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
+          observes="cmd_status" key="key_status"/>
+    </popup>
+
 </popupset>
 
 <toolbox>
@@ -90,22 +215,14 @@
         <menu label="&OptionsCmd.label;">
           <menupopup>
 
-            <menuitem id="menu-view-toolbar" label="&ShowToolbarCmd.label;" 
-              type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
-            <menuitem id="menu-view-info" label="&ShowUserlistCmd.label;" 
-              type="checkbox" oncommand="onToggleVisibility('info');"/>
-            <menuitem id="menu-view-status" label="&ShowStatusbarCmd.label;" 
-              type="checkbox" oncommand="onToggleVisibility('status');"/>
-
-            <menuseparator/>
-
             <menuitem id="menu-munger" label="&EnableSmileysCmd.label;"
               oncommand="onToggleMunger()" type="checkbox"/>
 
             <menuseparator/>
 
             <menuitem id="menu-dmessages" label="&DebugMsgCmd.label;"
-              oncommand="onToggleTraceHook()" type="checkbox"/>
+              accesskey="&DebugMsgCmd.aKey;" type="checkbox"
+              observes="cmd_debug" key="key_debug"/>
 
             <menuseparator/>
 
@@ -121,16 +238,47 @@
         <menuitem id="menu_close"/>
       </menupopup>
     </menu>
-    <menu label="&ViewCmd.label;">
+    <menu label="&ViewCmd.label;" accesskey="&ViewCmd.aKey;">
       <menupopup>
+
+        <menuitem id="menu-view-tabstrip" label="&ShowTabStripCmd.label;" 
+          accesskey="&ShowTabStripCmd.aKey;" type="checkbox"
+          key="key_toggletabstrip" observes="cmd_toggletabstrip"/>
+        <menuitem id="menu-view-info" label="&ShowUserlistCmd.label;" 
+          accesskey="&ShowUserlistCmd.aKey;" type="checkbox"
+          key="key_togglelist" observes="cmd_togglelist"/>
+        <menuitem id="menu-view-status" label="&ShowStatusbarCmd.label;" 
+          accesskey="&ShowStatusbarCmd.aKey;" type="checkbox"
+          key="key_togglestatus" observes="cmd_togglestatus"/>
+        <menuseparator/>
+
+        <menuitem id="menu-view-none" label="&NoneCmd.label;" 
+          accesskey="&NoneCmd.aKey;"
+          oncommand="onSimulateCommand('/css none');"/>
+        <menuitem id="menu-view-default" label="&DefaultCmd.label;" 
+          accesskey="&DefaultCmd.aKey;"
+          oncommand="onSimulateCommand('/css default');"/>
+        <menuitem id="menu-view-dark" label="&DarkCmd.label;" 
+          accesskey="&DarkCmd.aKey;"
+          oncommand="onSimulateCommand('/css dark');"/>
+        <menuitem id="menu-view-light" label="&LightCmd.label;" 
+          accesskey="&LightCmd.aKey;"
+          oncommand="onSimulateCommand('/css light');"/>
+
+        <menuseparator/>
 
        <!-- hide vs delete nuances are too vague
         <menuitem label="&HideCmd.label;" oncommand="onHideCurrentView();"/>
        -->
-        <menuitem label="&ClearViewCmd.label;" oncommand="onClearCurrentView();"/>
-        <menuitem label="&DeleteViewCmd.label;" oncommand="onDeleteCurrentView();"/>
-
+        <menuitem label="&ClearViewCmd.label;" accesskey="&ClearViewCmd.aKey;"
+          observes="cmd_clearview" key="key_clearview"/>
+        <menuitem label="&DeleteViewCmd.label;" accesskey="&DeleteViewCmd.aKey;"
+          observes="cmd_deleteview" key="key_deleteview"/>
+        <menuseparator/>
+        <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
+          observes="cmd_status" key="key_status"/>
       </menupopup>
+
     </menu>
     <menu id="tasksMenu"/>
   </menubar>
@@ -150,16 +298,19 @@
             <treechildren flex="1">
               <treeitem uri="..." flex="1">
                 <treerow crop="right">
-                    <treecell>
+                    <treecell align="center">
                       <image class="op-image"
                         state="rdf:http://home.netscape.com/NC-irc#op"/>
                     </treecell>
-                    <treecell>
+                    <treecell align="center">
                       <image class="voice-image"
                         state="rdf:http://home.netscape.com/NC-irc#voice"/>
                     </treecell>
                     <treecell flex="1">
-                      <text value="rdf:http://home.netscape.com/NC-irc#nick"
+                      <text class="user-nick"
+                        isop="rdf:http://home.netscape.com/NC-irc#op"
+                        isvoice="rdf:http://home.netscape.com/NC-irc#voice"
+                        value="rdf:http://home.netscape.com/NC-irc#nick"
                         flex="1" crop="right"/>
                     </treecell>
                 </treerow>
@@ -168,11 +319,11 @@
           </template>
   
           <treecolgroup flex="1">
-            <treecol
-              resource="http://home.netscape.com/NC-irc#op" wwidth="15"/>
+            <treecol align="center"
+              resource="http://home.netscape.com/NC-irc#op" width="25"/>
             <splitter class="tree-splitter"/>
-            <treecol
-              resource="http://home.netscape.com/NC-irc#voice" wwidth="15"/>
+            <treecol align="center"
+              resource="http://home.netscape.com/NC-irc#voice" width="25"/>
             <splitter class="tree-splitter"/>
             <treecol flex="1"
               resource="http://home.netscape.com/NC-irc#nick"/>
@@ -182,11 +333,11 @@
             <treerow crop="right">
               <treecell id="usercol-op"
                 resource="http://home.netscape.com/NC-irc#op"
-                class="treecell-header sortDirectionIndicator" label="O"
+                class="treecell-header" label="O"
                 onclick="return onSortCol('usercol-op');"/>
               <treecell id="usercol-voice"
                 resource="http://home.netscape.com/NC-irc#voice"
-                class="treecell-header sortDirectionIndicator" label="V"
+                class="treecell-header" label="V"
                 onclick="return onSortCol('usercol-voice');"/>
               <treecell id="usercol-nick"
                 resource="http://home.netscape.com/NC-irc#nick"
@@ -206,15 +357,18 @@
 
       <vbox flex="1">
         <iframe id="output-iframe" class="output-container" type="content"
-          flex="1" src="chrome://chatzilla/content/outputwindow.html"/>
+          flex="1" tooltip="aHTMLTooltip" context="outputContext"
+          ondragover="nsDragAndDrop.dragOver(event, contentDropObserver);"
+          ondragdrop="nsDragAndDrop.drop(event, contentDropObserver);"
+          ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+          src="chrome://chatzilla/content/outputwindow.html?chrome://chatzilla/skin/output-dark.css"/>
       </vbox>
 
     </hbox> <!-- tabpanels-contents-box -->
   
     <hbox id="tabstrip-box" flex="0" crop="right">
-      <scrollbox id="views-tbar" persist="collapsed" orient="horizontal"
-        flex="1" onoverflow="dd('views-tbar overflow');"
-        onunderflow="dd('views-tbar underflow');">
+      <scrollbox id="view-tabs" persist="collapsed" orient="horizontal"
+        flex="1">
 
         <tabs class="tabs-bottom" id="views-tbar-inner" flex="1"
           crop="right">
