@@ -1529,8 +1529,22 @@ nsImageFrame::GetNaturalImageSize(PRUint32* naturalWidth,
                                   PRUint32 *naturalHeight)
 { 
 #ifdef USE_IMG2
-  *naturalWidth = mIntrinsicSize.width;
-  *naturalHeight = mIntrinsicSize.height;
+  *naturalWidth = 0;
+  *naturalHeight = 0;
+
+  if (mImageRequest) {
+    nsCOMPtr<imgIContainer> container;
+    mImageRequest->GetImage(getter_AddRefs(container));
+    if (container) {
+      PRInt32 w, h;
+      container->GetWidth(&w);
+      container->GetHeight(&h);
+
+      *naturalWidth = NS_STATIC_CAST(PRUint32, w);
+      *naturalHeight = NS_STATIC_CAST(PRUint32, h);
+    }
+  }
+
 #else
   mImageLoader.GetNaturalImageSize(naturalWidth, naturalHeight);
 #endif
