@@ -451,7 +451,7 @@ CHyperTreeFlexTable :: DrawSelf ( )
 // Redraw the row corresponding to the given HT node
 //
 void
-CHyperTreeFlexTable :: RedrawRow ( HT_Resource inNode )
+CHyperTreeFlexTable :: RedrawRow ( HT_Resource inNode ) const
 {
 	TableIndexT row = URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(HT_GetView(inNode), inNode));
 	RefreshRowRange( row, row );
@@ -1667,7 +1667,7 @@ CPopdownFlexTable :: DragSelection(
 
 #pragma mark -
 
-CTreeIcon :: CTreeIcon ( const string & inURL, CHyperTreeFlexTable* inParent, HT_Resource inNode )
+CTreeIcon :: CTreeIcon ( const string & inURL, const CHyperTreeFlexTable* inParent, HT_Resource inNode )
 	: CImageIconMixin(inURL), mTree(inParent), mNode(inNode)
 {
 }

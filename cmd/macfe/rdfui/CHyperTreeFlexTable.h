@@ -72,7 +72,7 @@ public:
 	virtual void		SetTargetFrame ( const char* inFrame ) ;
 	virtual const char*	GetTargetFrame ( ) const ;
 
-	virtual void	RedrawRow ( HT_Resource ) ;
+	virtual void	RedrawRow ( HT_Resource ) const ;
 	
 	virtual void	SetupColumns ( ) ;
 		
@@ -253,7 +253,7 @@ private:
 class CTreeIcon : public CImageIconMixin
 {
 public:
-	CTreeIcon ( const string & inURL, CHyperTreeFlexTable* inTree, HT_Resource inNode ) ;
+	CTreeIcon ( const string & inURL, const CHyperTreeFlexTable* inTree, HT_Resource inNode ) ;
 	~CTreeIcon ( ) ;
 	
 private:
@@ -261,7 +261,7 @@ private:
 	void DrawStandby ( const Point & inTopLeft, 
 								const IconTransformType inTransform ) const;
 	
-	CHyperTreeFlexTable*	mTree;
-	HT_Resource				mNode;
+	const CHyperTreeFlexTable*	mTree;
+	HT_Resource					mNode;
 	
 }; // class CTreeIcon
