@@ -62,8 +62,7 @@ public:
    * @param aSrcOpacity 0.0f -> 1.0f opacity value of source area. 1.0f indicates
    *        complete opacity.
    */
-  virtual void Blend(nsDrawingSurface aSrc,
-                     PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+  virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
 
   /**

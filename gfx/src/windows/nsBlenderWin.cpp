@@ -119,10 +119,11 @@ nsBlenderWin::CleanUp()
 
 //------------------------------------------------------------
 
-void
-nsBlenderWin::Blend(nsDrawingSurface aSrc,PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+nsresult
+nsBlenderWin::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea)
 {
+nsresult            result = NS_ERROR_FAILURE;
 HDC                 dstdc,tb1;
 HBITMAP             dstbits;
 nsPoint             srcloc,maskloc;
@@ -146,7 +147,7 @@ nsColorMap          *colormap;
       oldsize = mSaveLS*mSaveNumLines;
 
       // allocate some memory
-      mSaveLS = CalcBytesSpan(numbytes,mDstInfo.bmBitsPixel);
+      mSaveLS = numbytes;
       mSaveNumLines = numlines;
       size = mSaveLS * numlines; 
       mSaveNumBytes = numbytes;
@@ -171,13 +172,14 @@ nsColorMap          *colormap;
       {
       if(mask)
         {
-        numbytes/=3;    // since the mask is only 8 bits, this routine wants number of pixels
         this->Do24BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
+        result = NS_OK;
         }
       else
         {
         level = (PRInt32)(aSrcOpacity*100);
         this->Do24Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
+        result = NS_OK;
         }
       }
     else
@@ -186,11 +188,24 @@ nsColorMap          *colormap;
         if(mask)
           {
           this->Do8BlendWithMask(numlines,numbytes,s1,d1,m1,slinespan,dlinespan,mlinespan,nsHighQual,aSaveBlendArea);
+          result = NS_OK;
           }
         else
           {
           level = (PRInt32)(aSrcOpacity*100);
           this->Do8Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,colormap,nsHighQual,aSaveBlendArea);
+          result = NS_OK;
+          }
+        }
+      else
+        {
+        if ((mSrcInfo.bmBitsPixel==16) && (mDstInfo.bmBitsPixel==16))
+          {
+          if(!mask)
+            {
+            this->Do16Blend(level,numlines,numbytes,s1,d1,slinespan,dlinespan,nsHighQual,aSaveBlendArea);
+            result = NS_OK;
+            }
           }
         }
 
@@ -201,6 +216,7 @@ nsColorMap          *colormap;
     ::DeleteObject(tb1);
     }
 
+return result;
 }
 
 //------------------------------------------------------------
@@ -340,14 +356,21 @@ nsBlenderWin :: BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
 {
 PRInt32   numpalletcolors,imagesize,spanbytes;
 PRUint8   *colortable;
+DWORD     bicomp;
 
 	switch (aDepth) 
     {
 		case 8:
 			numpalletcolors = 256;
+      bicomp = BI_RGB;
+      break;
+    case 16:
+      numpalletcolors = 0;
+      bicomp = BI_RGB;
       break;
 		case 24:
 			numpalletcolors = 0;
+      bicomp = BI_RGB;
       break;
 		default:
 			numpalletcolors = -1;
@@ -363,7 +386,7 @@ PRUint8   *colortable;
 	  (*aBHead)->biHeight = aHeight;
 	  (*aBHead)->biPlanes = 1;
 	  (*aBHead)->biBitCount = (unsigned short) aDepth;
-	  (*aBHead)->biCompression = BI_RGB;
+	  (*aBHead)->biCompression = bicomp;
 	  (*aBHead)->biSizeImage = 0;            // not compressed, so we dont need this to be set
 	  (*aBHead)->biXPelsPerMeter = 0;
 	  (*aBHead)->biYPelsPerMeter = 0;
@@ -526,6 +549,109 @@ PRUint8   *saveptr,*sv2;
           temp1 = 255;
         *d2 = (unsigned char)temp1; 
 
+        d2++;
+        s2++;
+        }
+
+      s1 += aSLSpan;
+      d1 += aDLSpan;
+      }
+    }
+
+}
+
+//------------------------------------------------------------
+
+#define RED16(x) ((x)&0x7C00)>>7
+#define GREEN16(x) ((x)&0x3E0)>>2
+#define BLUE16(x) ((x)&0x1F)<<3
+
+
+// This routine can not be fast enough
+void
+nsBlenderWin::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea)
+{
+PRUint16    *d1,*d2,*s1,*s2;
+PRUint32    val1,val2,red,green,blue;
+PRInt32     x,y,numlines,xinc,yinc;
+PRUint16    *saveptr,*sv2;
+PRInt16     dspan,sspan,span,savesp;
+
+  // since we are using 16 bit pointers, the num bytes need to be cut by 2
+  saveptr = (PRUint16*)mSaveBytes;
+  aBlendVal = (aBlendVal*255)/100;
+  val2 = aBlendVal;
+  val1 = 255-val2;
+
+  // now go thru the image and blend (remember, its bottom upwards)
+  s1 = (PRUint16*)aSImage;
+  d1 = (PRUint16*)aDImage;
+  dspan = aDLSpan/2;
+  sspan = aSLSpan/2;
+  span = aNumbytes/2;
+  savesp = mSaveLS/2;
+  numlines = aNumlines;  
+  xinc = 1;
+  yinc = 1;
+
+  if(aSaveBlendArea)
+    {
+    for(y = 0; y < aNumlines; y++)
+      {
+      s2 = s1;
+      d2 = d1;
+      sv2 = saveptr;
+
+      for(x=0;x<span;x++)
+        {
+        red = ((PRUint32)(RED16(*d2))*val1+(PRUint32)(RED16(*s2)*val2))>>8;
+        if(red>255)
+          red = 255;
+         
+        green = ((PRUint32)(GREEN16(*d2))*val1+(PRUint32)(GREEN16(*s2)*val2))>>8;
+        if(green>255)
+          green = 255;
+
+        blue = ((PRUint32)(BLUE16(*d2))*val1+(PRUint32)(BLUE16(*s2)*val2))>>8;
+        if(blue>255)
+          blue = 255;
+
+
+        *sv2 = *d2;
+        *d2 = ((red&0xF8)<<7) | ((green&0xF8)<<2) | (blue&0xF8)>>3;
+        sv2++;
+        d2++;
+        s2++;
+        }
+
+       
+      s1 += sspan;
+      d1 += dspan;
+      saveptr += savesp;
+      }
+    }
+  else
+    {
+    for(y = 0; y < aNumlines; y++)
+      {
+      s2 = s1;
+      d2 = d1;
+
+      for(x = 0; x < aNumbytes; x++)
+        {
+        red = RED16(*d2)*val1+RED16(*s2)*val2;
+        if(red>255)
+          red = 255;
+
+        green = GREEN16(*d2)*val1+GREEN16(*s2)*val2;
+        if(green>255)
+          green = 255;
+
+        blue = BLUE16(*d2)*val1+BLUE16(*s2)*val2;
+        if(blue>255)
+          blue = 255;
+
+        *d2 = ((red&0xf8)<<7) | ((green&0xf8)<<2) | ((blue&0xf8)>>3);
         d2++;
         s2++;
         }
