@@ -113,18 +113,23 @@ function OpenBrowserWindow()
   
   if (appCore != null) {
        
-      try {
-            var DocCharset = appCore.GetDocumentCharset();
-            charsetArg = "charset="+DocCharset;
-            dump("*** Current document charset: " + DocCharset + "\n");
-             window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
-     }
+      try 
+      {
+          var DocCharset = appCore.GetDocumentCharset();
+          charsetArg = "charset="+DocCharset;
+          dump("*** Current document charset: " + DocCharset + "\n");
+          window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
+      }
  
-       catch(ex) { 
-           dump("*** failed to read document charset \n");
+       catch(ex) 
+       { 
+          dump("*** failed to read document charset \n");
        }
-  } 
-  window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+
+  } else {
+    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
+  }
+
  }
 
 
