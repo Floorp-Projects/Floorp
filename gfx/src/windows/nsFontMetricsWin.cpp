@@ -4631,7 +4631,7 @@ nsFontMetricsWinA::GetFontFor(HFONT aHFONT)
 }
 
 nsFontWin*
-nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUint32 aChar)
 {
   if (!gFamilyNames) {
     if (!InitializeFamilyNames()) {
@@ -4651,7 +4651,7 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
     }
     nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, winName);
     if (font && font->HasGlyph(aChar)) {
-      nsFontSubset* subset = font->FindSubset(aDC, aChar, this);
+      nsFontSubset* subset = font->FindSubset(aDC, (PRUnichar)aChar, this);
       if (subset) 
         return subset;
     }
@@ -4661,7 +4661,7 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
+nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
 
@@ -4672,7 +4672,7 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
   }
   nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, aName);
   if (font && font->HasGlyph(aChar)) {
-    return font->FindSubset(aDC, aChar, this);
+    return font->FindSubset(aDC, (PRUnichar)aChar, this);
   }
 
   return nsnull;
@@ -4701,7 +4701,7 @@ SystemSupportsChar(PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
+nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUint32 c)
 {
   if (!gGlobalFonts) {
     if (!InitializeGlobalFonts(aDC)) {
@@ -4744,7 +4744,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
         globalFont->flags |= NS_GLOBALFONT_SKIP;
         continue;
       }
-      nsFontSubset* subset = font->FindSubset(aDC, c, this);
+      nsFontSubset* subset = font->FindSubset(aDC, (PRUnichar)c, this);
       if (subset) {
         return subset;
       }
@@ -4767,7 +4767,7 @@ nsFontWinSubstituteA::~nsFontWinSubstituteA()
 }
 
 nsFontWin*
-nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUint32 aChar)
 {
   // @see nsFontMetricsWin::FindSubstituteFont() for the general idea behind
   // this function. The fundamental difference here in nsFontMetricsWinA is
