@@ -49,7 +49,7 @@
 #include "macstdlibextras.h"
 #endif
 
-#define DRAW_ON_RESIZE
+#define DRAW_ON_RESIZE	1		// if 1, debug builds draw on resize when the command key is down
 
 const short	kMinWindowWidth = 300;
 const short kMinWindowHeight = 150;
@@ -282,57 +282,62 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			case inGrow:
 			{
 				::SetPort(whichWindow);
-#ifdef DRAW_ON_RESIZE
-				Point oldPt = anEvent.where;
-				while (::WaitMouseUp())
-				{
-			        Repeater::DoRepeaters(anEvent);
 
-					Point origin = {0,0};
-					::LocalToGlobal(&origin);
+				Boolean drawOnResize = (DEBUG && DRAW_ON_RESIZE && ((anEvent.modifiers & cmdKey) != 0));
+				if (drawOnResize)
+				{
+					Point oldPt = anEvent.where;
+					while (::WaitMouseUp())
+					{
+				        Repeater::DoRepeaters(anEvent);
+
+						Point origin = {0,0};
+						::LocalToGlobal(&origin);
+						Point newPt;
+						::GetMouse(&newPt);
+						::LocalToGlobal(&newPt);
+						if (::DeltaPoint(oldPt, newPt))
+						{
+							Rect portRect = whichWindow->portRect;
+							short	width = newPt.h - origin.h;
+							short	height = newPt.v - origin.v;
+							if (width < kMinWindowWidth)
+								width = kMinWindowWidth;
+							if (height < kMinWindowHeight)
+								height = kMinWindowHeight;
+
+							oldPt = newPt;
+							::SizeWindow(whichWindow, width, height, true);
+							::DrawGrowIcon(whichWindow);
+
+							anEvent.where.h = width;	// simulate a click in the grow icon
+							anEvent.where.v = height;
+							::LocalToGlobal(&anEvent.where);
+							DispatchOSEventToRaptor(anEvent, whichWindow);
+
+							Boolean					haveEvent;
+							EventRecord			updateEvent;
+							haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
+							if (haveEvent)
+								DoUpdate(updateEvent);
+						}
+					}
+				}
+				else
+				{
+					Rect sizeRect = (**::GetGrayRgn()).rgnBBox;
+					sizeRect.top = kMinWindowHeight;
+					sizeRect.left = kMinWindowWidth;
+					long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
+					if (newSize != 0)
+						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
+					::DrawGrowIcon(whichWindow);
 					Point newPt;
 					::GetMouse(&newPt);
 					::LocalToGlobal(&newPt);
-					if (::DeltaPoint(oldPt, newPt))
-					{
-						Rect portRect = whichWindow->portRect;
-						short	width = newPt.h - origin.h;
-						short	height = newPt.v - origin.v;
-						if (width < kMinWindowWidth)
-							width = kMinWindowWidth;
-						if (height < kMinWindowHeight)
-							height = kMinWindowHeight;
-
-						oldPt = newPt;
-						::SizeWindow(whichWindow, width, height, true);
-						::DrawGrowIcon(whichWindow);
-
-						anEvent.where.h = width;	// simulate a click in the grow icon
-						anEvent.where.v = height;
-						::LocalToGlobal(&anEvent.where);
-						DispatchOSEventToRaptor(anEvent, whichWindow);
-
-						Boolean					haveEvent;
-						EventRecord			updateEvent;
-						haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
-						if (haveEvent)
-							DoUpdate(updateEvent);
-					}
+					anEvent.where = newPt;	// important!
+					DispatchOSEventToRaptor(anEvent, whichWindow);
 				}
-#else
-				Rect sizeRect = (**::GetGrayRgn()).rgnBBox;
-				sizeRect.top = kMinWindowHeight;
-				sizeRect.left = kMinWindowWidth;
-				long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
-				if (newSize != 0)
-					::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
-				::DrawGrowIcon(whichWindow);
-				Point newPt;
-				::GetMouse(&newPt);
-				::LocalToGlobal(&newPt);
-				anEvent.where = newPt;	// important!
-				DispatchOSEventToRaptor(anEvent, whichWindow);
-#endif
 				break;
 			}
 
