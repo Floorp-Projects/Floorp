@@ -1,0 +1,492 @@
+/* mozilla.org Base Styles
+ * maintained by fantasai
+ * (classes defined in the Markup Guide - http://mozilla.org/contribute/writing/markup )
+ */
+/* Suggested order:
+ * display
+ * list-style
+ * position
+ * float
+ * clear
+ * width
+ * height
+ * margin
+ * padding
+ * border
+ * background
+ * color
+ * font
+ * text-decoration
+ * text-align
+ * vertical-align
+ * white-space
+ * other text
+ * content
+ *
+ */
+
+/* TOC:
+   Random HTML Styles
+     Forms
+   General Structure
+   Navigation
+   Quotations
+   Comments and Other Asides
+   Emphasis
+   Computers - General
+   Code
+   Examples and Figures
+   Q and A (FAQ)
+   Tables
+   Headers
+   Meta
+   Specific to Products Pages
+*/
+/* Random HTML Styles */
+
+	dt {
+		font-weight: bold;
+	}
+	
+	dd {
+		margin: 0 0 1em 1em;
+	}
+	
+	li {
+		margin-top: 0.2em;
+		margin-bottom: 0.2em;
+	}
+	
+	sup {
+		font-size: 70%;
+	}
+
+	form {
+		margin: 0;
+		display: inline;
+	}
+
+	label {
+		font-weight: bold;
+	}
+
+	.deepLevel #mainContent :link img,
+	.deepLevel #mainContent :visited img {
+		border: medium solid;
+	}
+
+/* General Structure */
+	
+	.subtitle {
+		font-style: italic;
+	}
+
+	div.para {
+		margin: 1em 0;
+	}
+
+	div.section {
+		display: block;
+		padding-left: 3%;
+	}
+
+	div.section > h2,
+	div.section > h3,
+	div.section > h4,
+	div.section > h5,
+	div.section > h6 {
+		margin-left: -1.3%;
+	}
+	
+	.imgright {
+		float: right;
+		margin: 0 0 2em 2em;
+	}
+	
+	.first {
+		margin-top: 0; /* For IE not understanding first:child */
+	}
+
+/* Navigation */
+
+	:link img,
+	:visited img {
+		border: 0;
+	}
+
+	.ex-ref {
+		font-style: italic;
+	}
+
+	dl.toc dt {
+		margin-top: 1em;
+		font-size: 110%;
+	}
+	dl.toc p {
+		margin: 0;
+		text-indent: 1em;
+	}
+	dl.toc p:first-child {
+		text-indent: 0;
+	}
+	dl.toc > dd {
+		margin-left: 1em;
+	}
+
+	ol.toc ol {
+		list-style-type: circle;
+	}
+	ol.toc > li > ol {
+		font-size: 90%;
+	}
+
+	ul.snav {/* section navigation or short navigation, whichever you prefer */
+		margin: 0.7em 10%;
+		padding: .2em;
+		text-align: center;
+	}
+	ul.snav > li {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+	}
+	ul.snav > li {
+		display: inline;
+	}
+	ul.snav > li:before {
+		content: " | ";
+	}
+	ul.snav > li:first-child:before {
+		content: "";
+	}
+
+	a.cont {
+		display: block;
+		margin-right: 0;
+		text-align: right;
+	}
+
+/* Quotations */
+
+	blockquote > address {
+		padding-left: 1em;
+		text-indent: -1em;
+	}
+	blockquote > address:before {
+		content: "\2015";
+	}
+
+	div.quote,
+	div.epigraph {
+		margin: 1em;
+	}
+	div.quote q,
+	div.epigraph q {
+		display: block;
+		margin: 0 .5em;
+		text-indent: -0.5em;
+	}
+	div.quote cite,
+	div.epigraph cite {
+		display: block;
+		padding: 0 1em;
+		text-align: right;
+		text-indent: -1em;
+	}
+	div.quote cite:before,
+	div.epigraph cite:before {
+		content: "\2015";
+	}
+
+	blockquote.epigraph,
+	div.epigraph q {
+		font-style: italic;
+		text-align: right;
+	}
+	blockquote.epigraph em,
+	div.epigraph q em {
+		font-style: normal;
+	}
+	blockquote.epigraph address,
+	div.epigraph cite {
+		font-style: normal;
+	}
+
+/* Comments and other Asides */
+
+	.note {
+		font-style: italic;
+	}
+	.note:before {
+		content: "Note: ";
+	}
+
+	.remark {
+		font-size: smaller;
+	}
+	.remark:before {
+		content: "[";
+	}
+	.remark:after {
+		content: "]";
+	}
+
+	.sidenote {
+		clear: both;
+		margin: 0.75em 0.5em;
+		padding: 0.2em;
+		border: 1px solid;
+
+		/* Block NS4 from floating */ /*/*/
+		float: right;
+		width: 30%;
+		min-width: 15em;
+		/* */
+	}
+	/* Reduce main header sizes */
+	.sidenote h1 {font-size: 1.40em;}
+	.sidenote h2 {font-size: 1.25em;}
+	.sidenote h3 {font-size: 1.10em;}
+
+	.key-point > h1:first-child,
+	.key-point > h2:first-child,
+	.key-point > h3:first-child,
+	.key-point > h4:first-child,
+	.key-point > h5:first-child,
+	.key-point > h6:first-child {
+		margin-top: 0;
+	}
+
+/* Emphasis */
+
+	/* em, strong */
+
+	strong.stronger {
+		font-style: italic;
+		font-weight: bold;
+	}
+
+	strong.very-strong {
+		font-weight: bold;
+		text-transform: uppercase;
+	}
+
+	*.important,
+	div.important,
+	p.important {
+		margin: 1em;
+		padding: 0.1em;
+		border: solid #F00;
+		font-size: larger;
+	}
+
+/* Computers - General */
+
+	pre.screen {
+		overflow: auto;
+		margin: 1em 0.5em;
+		padding: 0.2em;
+		border: solid 1px;
+		font-family: monospace;
+		white-space: pre;
+	}
+
+	div.screen {
+		margin: 1em .5em;
+		padding: 0.2em;
+		border: solid 1px;
+	}
+
+	span.application {
+		font-style: italic;
+	}
+
+	kbd.command,
+	code.command {
+		white-space: pre;
+	}
+
+	code.filename {
+		font-style: italic;
+		white-space: nowrap;
+	}
+
+/* Code */
+
+	code {
+		white-space: pre;
+	}
+
+	pre.code {
+		overflow: auto;
+		margin: 1em .5em;
+		padding: .2em;
+		border: solid 1px;
+	}
+
+	pre.code .remark {
+		font-size: 1em;
+		font-style: italic;
+	}
+
+	/* turn off content generation */
+	pre.code .remark:before,
+	pre.code .remark:after,
+	pre.code .note:before {
+		content: "";
+	}
+
+
+/* Examples and Figures */
+
+	.example {
+		margin: 1em 3%;
+		padding: .25em;
+		border: solid;
+	}
+	.example:before {
+		display: block;
+		font-weight: bold;
+		content: "Example";
+	}
+	.example[title]:before {
+		content: "Example: " attr(title);
+	}
+
+	pre.bad,
+	div.bad {
+		border: dashed red 3px;
+	}
+	.bad.example:before {
+		content: "Incorrect Example";
+	}
+	.bad.example[title]:before {
+		content: "Incorrect Example: " attr(title);
+	}
+
+	pre.good,
+	div.good {
+		border: double lime 3px;
+	}
+	.good.example:before {
+		content: "Correct Example";
+	}
+	.good.example[title]:before {
+		content: "Correct Example: " attr(title);
+	}
+
+	.figure,
+	.screenshot {
+		display: block;
+		margin: .75em auto;
+	}
+	.screenshot[title]:after,
+	.figure[title]:after {
+		display: block;
+		margin: 0 8% .05em;
+		font-style: italic;
+		font-size: small;
+		text-align: right;
+		content: attr(title);
+	}
+
+	.co,
+	.callout {
+		text-decoration: underline;
+	}
+
+/* Q and A (FAQ) */
+
+	.qandaset .question {
+		font-size: large;
+		font-weight: bold;
+	}
+
+	.qandaset .answer {
+		margin-top: 1em;
+	}
+
+/* Tables */
+
+	table.data {
+		border-collapse: collapse;
+		margin: 0.5em auto;
+		border: 1px solid;
+	}
+
+	table.data caption {
+		margin: 1em auto 0.2em;
+		font-size: small;
+		font-style: italic;
+		text-align: center;
+	}
+
+	table.data th,
+	table.data td {
+		padding: 0.2em;
+		border: 1px solid;
+	}
+
+/* Meta */
+
+	address {
+		text-align: right;
+	}
+	.author {
+		margin-bottom: 1em;
+		text-align: left;
+	}
+
+
+/* Headers */
+
+	#mainContent > h1:first-child,
+	#mainContent > h2:first-child,
+	#mainContent > h3:first-child,
+	#mainContent > h4:first-child,
+	#mainContent > h5:first-child,
+	#mainContent > h6:first-child,
+	#side > h1:first-child,
+	#side > h2:first-child,
+	#side > h3:first-child,
+	#side > h4:first-child,
+	#side > h5:first-child,
+	#side > h6:first-child {
+		margin-top: 0;
+	}
+	
+
+/* Specific to Products Pages */
+
+.productlist {
+	margin: 0;
+	padding: 0 0 0 5px;
+}
+
+.productlist li {
+	clear: left;
+	list-style: none;
+	padding: 0 0 1em 0;
+	margin-left: 0;
+}
+
+.productlist h3 {
+	margin: 0 0 0.2em 0;
+}
+
+.productlist img {
+	float: left;
+	margin: 0 0.5em 1em 0;
+	display: auto;
+}
+
+/* Random Stuff That Needs To Be Cleaned Up / Deprecated */
+
+.flLeft {
+	float: left;
+	margin: 5px 10px 5px 0;
+}
+.flRight {
+	float: right;
+	margin: 5px 0 5px 10px;
+}

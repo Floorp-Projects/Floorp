@@ -1,0 +1,125 @@
+h2 a { text-decoration: none; }
+h2 a:link { color: #000; }
+h2 a:visited { color: #000; }
+h2 a:hover { color: #039; }
+
+#mBody h2 { margin-top: 0; }
+#mBody p { margin-top: 0; }
+
+.front-feature-cnet { background: #E4ECEC url(/images/feature-back-cnet.png) bottom right no-repeat; }
+.front-feature-wired { background: #E4ECEC url(/images/feature-back-wired.png) bottom right no-repeat; }
+.front-feature-nytimes { background: #E4ECEC url(/images/feature-back-nytimes.png) bottom right no-repeat; }
+.front-feature-onion { background: #E4ECEC url(/images/feature-back-onion.png) bottom right no-repeat; }
+.front-feature-slate { background: #E4ECEC url(/images/feature-back-slate.png) bottom right no-repeat; }
+.front-feature-nasa { background: #E4ECEC url(/images/feature-back-nasa.png) bottom right no-repeat; }
+
+#firefox-feature {
+	position: relative;
+}
+
+#firefox-feature ul {
+	margin: 0.5em 0 0 0;
+	padding: 0;
+}
+
+#firefox-feature li {
+	list-style: none;
+	margin-left: 1.5em;
+}
+
+#firefox-feature li a {
+	display: block;
+	padding: 5px 0 7px 34px;
+	text-decoration: none;
+}
+
+#firefox-feature li a .front-link {
+	text-decoration: underline;
+}
+
+a#shopLink {
+	display: block;
+	padding: 2px 4px 10px 32px;
+	background: url(/images/front-shop.gif) no-repeat;	
+}
+
+div.extrainfo {
+	margin-top: 10px;
+}
+
+#firefox-feature p {
+	margin: 0 0 1em 0;
+	line-height: 140%;
+}
+
+#firefox-feature #feature-content {
+	padding: 6px 330px 10px 10px;
+}
+
+#featurelink {
+	display: block;
+	width: 350px;
+	height: 235px;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	text-decoration: none;
+	text-indent: -2500px;
+}
+
+ul.news {
+	margin: 0.5em 0 0 0;
+	padding: 0;
+}
+
+.news li {
+	margin: 0 0 0.7em 0;
+	padding: 0;
+	clear: both;
+	list-style-type: none;
+}
+.news li a { font-weight: normal; }
+
+.news .date {
+	background: #eee;
+	border-right: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+	float: left;
+	text-align: center;
+	margin: 0 5px 5px 0;
+	line-height: 1.1em;
+	padding: 2px;
+	font-size: 11px;
+	width: 4em;
+	white-space: nowrap;
+}
+
+img.rss {
+	float: right;
+	margin: 0;
+	padding: 4px 4px 0 0;
+}
+
+img.promo {
+	margin: 0 0 8px 8px;
+	float: right;
+}
+
+.frontcolumn {
+	width: 30%;
+	float: left;
+	padding-right: 3%;
+}
+
+.frontcolumnlast {
+	width: 33%;
+	float: left;
+}
+
+.homepage .download {
+	width: 200px;
+}
+
+.homepage .shop {
+	width: 175px;
+}

@@ -1,0 +1,84 @@
+/* mozilla.com print css
+by dave shea, http://www.mezzoblue.com/ */
+
+/*html elements*/
+body {
+	background: #fff;
+	font: 12pt Verdana,Sans-serif;
+}
+
+a img {
+	border: 0;
+}
+form {
+	margin: 0;
+	display: inline;
+}
+label, input {
+	font-weight: bold;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+}
+h1 {
+	font-size: 120%;
+	color: #955322;
+}
+h2 {
+	font-size: 110%;
+	color: #B26C38;
+}
+h2 a:visited {
+	text-decoration: none;
+}
+h3 {
+	color: #EC361D;
+	font-size: 110%;
+}
+h4 {
+	font-size: 110%;
+	color: #666;
+}
+h5 {
+	font-size: 100%;
+	color: #955322;
+}
+h6 {
+	color: #EC361D;
+	font-size: 100%;
+}
+
+p, li, dt, dd {
+	font-size: 92%;
+}
+p {
+	line-height: 150%;
+}
+sup {
+	font-size: 70%;
+}
+a:link, a:visited {
+	color: #554FA0;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+dt.im {
+	float: left;
+}
+
+#mainContent a:link:after, #mainContent a:visited:after {
+	content: " (" attr(href) ") ";
+	font-size: 70%;
+	color: #000;
+}
+#mainContent a[href^="/"]:after {
+	content: " (http://www.mozilla.org" attr(href) ") ";
+}
+
+#tools, #search, #ad, #bn, #int, .skipLink, #brd {
+	display: none;
+}
+#header + hr {
+	display: none;
+}

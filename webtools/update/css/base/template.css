@@ -1,0 +1,104 @@
+/* mozilla.org Base Template Styles
+ * Initial Design by Dave Shea
+ * Severely tweaked by David Baron
+ * Reorganized by fantasai
+ * Large Changes for new Cavendish default by Daniel Burka and Steven Garrity
+ */
+
+/* Basic Structure */
+	body {
+		min-width: 610px;
+		margin: 20px;
+	}
+
+	#container {
+		max-width: 70em;
+		margin: 0 auto;
+	}
+	
+	#mBody {
+		clear: both;
+		padding: 0 0 1em 0;
+	}
+
+	#side {
+		float: left;
+		width: 23%;
+		margin-bottom: 1em;
+	}
+
+	#mainContent {
+		margin-left: 25%;
+	}
+	.nomenu #mainContent {
+		margin-left: 0;
+	}
+	.bodyleft {
+		margin-left: 25% ! important
+	}
+	#mainContent.right {
+		float: left;
+		width: 62%;
+		margin-bottom: 1em;
+		margin-left: 0;
+	}
+	
+	#side.right {
+		float: none;
+		width: auto;
+		margin-left: 65%;
+	}
+
+/* Header */
+
+	#header { margin-bottom: 1em; }
+	#header ul {
+		margin: 0 0 1em 0;
+		padding: 0;
+	}
+	
+	#header li {
+		display: inline;
+		padding: 0 20px 0 0;
+		margin: 0;
+		white-space: nowrap;
+	}
+
+/* Sidebar */
+
+	#getcd {
+		margin: 1em 0 0 45px;
+	}
+
+/* Footer */
+
+	#footer {
+		clear: both;
+		margin-top: 1em;
+	}
+		
+	#footer ul {
+		margin: 0 0 1em 0;
+		padding: 0;
+	}
+	
+	#footer li {
+		display: inline;
+		padding: 0 20px 0 0;
+		margin: 0;
+		white-space: nowrap;
+	}
+	
+	#footer p {
+		margin: 0.6em 0;
+	}
+
+/*accessibility tweaks*/
+	.skipLink {
+		position: absolute;
+		left: -999px;
+		width: 990px;
+	}
+	hr.hide {
+		display: none;
+	}
