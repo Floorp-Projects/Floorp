@@ -461,6 +461,15 @@ NameSpaceManagerImpl::GetElementFactory(PRInt32 aNameSpaceID,
 {
   *aElementFactory = nsnull;
 
+  // Parsing should have aborted before we get here, but for now we'll have to
+  // live with returning the default factory. Bugs 184697 and 103255
+  if (aNameSpaceID == kNameSpaceID_Unknown) {
+    *aElementFactory = mDefaultElementFactory;
+    NS_ADDREF(*aElementFactory);
+
+    return NS_OK;
+  }
+
   NS_ENSURE_TRUE(aNameSpaceID >= 0, NS_ERROR_ILLEGAL_VALUE);
 
   if (aNameSpaceID < mElementFactoryArray.Count()) {
