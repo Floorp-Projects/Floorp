@@ -565,11 +565,20 @@ nsHttpConnection::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
     LOG(("nsHttpConnection::OnStartRequest [this=%x]\n", this));
 
-    if (mTransaction && ctxt) { // do this only once
-        nsCOMPtr<nsISupports> info;
-        mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
-        mTransaction->SetSecurityInfo(info);
+    // because this code can run before AsyncWrite (AsyncRead) returns, we need
+    // to capture the write (read) request object.  see bug 90196 for an example
+    // of why this is necessary.
+    if (ctxt) {
+        mWriteRequest = request;
+        // this only needs to be done once, so do it for the write request.
+        if (mTransaction) {
+            nsCOMPtr<nsISupports> info;
+            mSocketTransport->GetSecurityInfo(getter_AddRefs(info));
+            mTransaction->SetSecurityInfo(info);
+        }
     }
+    else
+        mReadRequest = request;
 
     return NS_OK;
 }
