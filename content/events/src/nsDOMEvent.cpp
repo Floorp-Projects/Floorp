@@ -59,7 +59,8 @@ static const char* const sEventNames[] = {
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
-  "popupshowing", "popupshown", "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
+  "compositionstart", "compositionend", "popupshowing", "popupshown",
+  "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
   "scroll","overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
@@ -407,6 +408,11 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
       mEvent->message = NS_KEY_UP;
     else if (atom == nsLayoutAtoms::onkeypress)
       mEvent->message = NS_KEY_PRESS;
+  } else if (mEvent->eventStructType == NS_COMPOSITION_EVENT) {
+    if (atom == nsLayoutAtoms::oncompositionstart)
+      mEvent->message = NS_COMPOSITION_START;
+    else if (atom == nsLayoutAtoms::oncompositionend)
+      mEvent->message = NS_COMPOSITION_END;
   } else if (mEvent->eventStructType == NS_EVENT) {
     if (atom == nsLayoutAtoms::onfocus)
       mEvent->message = NS_FOCUS_CONTENT;
@@ -765,6 +771,10 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_keydown];
   case NS_KEY_PRESS:
     return sEventNames[eDOMEvents_keypress];
+  case NS_COMPOSITION_START:
+    return sEventNames[eDOMEvents_compositionstart];
+  case NS_COMPOSITION_END:
+    return sEventNames[eDOMEvents_compositionend];
   case NS_FOCUS_CONTENT:
     return sEventNames[eDOMEvents_focus];
   case NS_BLUR_CONTENT:

@@ -932,6 +932,15 @@
       </method>
 
       <!--  -->
+      <method name="processStartComposition">
+        <body><![CDATA[
+          this.finishAutoComplete(false, false, null);
+          this.clearTimer();
+          this.closeResultPopup();
+        ]]></body>
+      </method>
+
+      <!--  -->
       <method name="keyNavigation">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1316,6 +1325,9 @@
 
       <handler event="keypress" phase="capturing"
                 action="return this.processKeyPress(event);"/>
+
+      <handler event="compositionstart" phase="capturing"
+                action="this.processStartComposition();"/>
 
       <handler event="focus" phase="capturing"
                action="this.userAction = 'typing';"/>

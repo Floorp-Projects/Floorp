@@ -104,6 +104,9 @@ protected:
   PRPackedBool mEnterAfterSearch;
   PRPackedBool mDefaultIndexCompleted;
   PRPackedBool mBackspaced;
+  PRPackedBool mPopupClosedByCompositionStart;
+  PRPackedBool mIsIMEComposing;
+  PRPackedBool mIgnoreHandleText;
   PRUint16 mSearchStatus;
   PRUint32 mRowCount;
   PRUint32 mSearchesOngoing;

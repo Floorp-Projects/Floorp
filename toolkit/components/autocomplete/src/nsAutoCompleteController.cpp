@@ -23,6 +23,7 @@
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Johnny Stenback <jst@mozilla.jstenback.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +59,9 @@ nsAutoCompleteController::nsAutoCompleteController() :
   mEnterAfterSearch(PR_FALSE),
   mDefaultIndexCompleted(PR_FALSE),
   mBackspaced(PR_FALSE),
+  mPopupClosedByCompositionStart(PR_FALSE),
+  mIsIMEComposing(PR_FALSE),
+  mIgnoreHandleText(PR_FALSE),
   mSearchStatus(0),
   mRowCount(0),
   mSearchesOngoing(0)
@@ -165,12 +169,11 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 NS_IMETHODIMP
 nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
 {
-  // Stop current search in case it's async.
-  StopSearch();
-  // Stop the queued up search on a timer
-  ClearSearchTimer();
-
   if (!mInput) {
+    // Stop current search in case it's async.
+    StopSearch();
+    // Stop the queued up search on a timer
+    ClearSearchTimer();
     // Note: if now is after blur and IME end composition,
     // check mInput before calling.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=193544#c31
@@ -178,17 +181,38 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
     return NS_OK;
   }
 
+  nsAutoString newValue;
+  mInput->GetTextValue(newValue);
+
+  // Note: the events occur in the following order when IME is used.
+  // 1. composition start event(HandleStartComposition)
+  // 2. composition end event(HandleEndComposition)
+  // 3. input event(HandleText)
+  // Note that the input event occurs if IME composition is cancelled, as well.
+  // In HandleEndComposition, we are processing the popup properly.
+  // Therefore, the input event after composition end event should do nothing.
+  // (E.g., calling StopSearch(), ClearSearchTimer() and ClosePopup().)
+  // If it is not, popup is always closed after composition end.
+  if (mIgnoreHandleText) {
+    mIgnoreHandleText = PR_FALSE;
+    if (newValue.Equals(mSearchString))
+      return NS_OK;
+    NS_ERROR("Now is after composition end event. But the value was changed.");
+  }
+
+  // Stop current search in case it's async.
+  StopSearch();
+  // Stop the queued up search on a timer
+  ClearSearchTimer();
+
   PRBool disabled;
   mInput->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);
 
-  nsAutoString newValue;
-  mInput->GetTextValue(newValue);
-
   // Don't search again if the new string is the same as the last search
   if (newValue.Length() > 0 && newValue.Equals(mSearchString))
     return NS_OK;
-  
+
   // Determine if the user has removed text from the end (probably by backspacing)
   if (newValue.Length() < mSearchString.Length() &&
       Substring(mSearchString, 0, newValue.Length()).Equals(newValue))
@@ -263,6 +287,62 @@ nsAutoCompleteController::HandleEscape(PRBool *_retval)
 }
 
 NS_IMETHODIMP
+nsAutoCompleteController::HandleStartComposition()
+{
+  NS_ENSURE_TRUE(!mIsIMEComposing, NS_OK);
+
+  mPopupClosedByCompositionStart = PR_FALSE;
+  mIsIMEComposing = PR_TRUE;
+
+  if (!mInput)
+    return NS_OK;
+
+  PRBool disabled;
+  mInput->GetDisableAutoComplete(&disabled);
+  if (disabled)
+    return NS_OK;
+
+  StopSearch();
+  ClearSearchTimer();
+
+  PRBool isOpen;
+  mInput->GetPopupOpen(&isOpen);
+  if (isOpen)
+    ClosePopup();
+  mPopupClosedByCompositionStart = isOpen;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::HandleEndComposition()
+{
+  NS_ENSURE_TRUE(mIsIMEComposing, NS_OK);
+
+  mIsIMEComposing = PR_FALSE;
+  PRBool forceOpenPopup = mPopupClosedByCompositionStart;
+  mPopupClosedByCompositionStart = PR_FALSE;
+
+  if (!mInput)
+    return NS_OK;
+
+  nsAutoString value;
+  mInput->GetTextValue(value);
+  SetSearchString(EmptyString());
+  if (!value.IsEmpty()) {
+    // Show the popup with a filtered result set
+    HandleText(PR_TRUE);
+  } else if (forceOpenPopup) {
+    PRBool cancel;
+    HandleKeyNavigation(nsIAutoCompleteController::KEY_DOWN, &cancel);
+  }
+  // On here, |value| and |mSearchString| are same. Therefore, next HandleText should be
+  // ignored. Because there are no reason to research.
+  mIgnoreHandleText = PR_TRUE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAutoCompleteController::HandleTab()
 {
   PRBool cancel;
@@ -274,7 +354,15 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
 {
   // By default, don't cancel the event
   *_retval = PR_FALSE;
-  
+
+  if (!mInput) {
+    // Note: if now is after blur and IME end composition,
+    // check mInput before calling.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=193544#c31
+    NS_ERROR("Called before attaching to the control or after detaching from the control");
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIAutoCompletePopup> popup;
   mInput->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);

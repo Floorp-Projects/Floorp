@@ -53,6 +53,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIDOMCompositionListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
@@ -79,6 +80,7 @@ NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCompositionListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
 NS_INTERFACE_MAP_END
@@ -647,6 +649,49 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 }
 
 ////////////////////////////////////////////////////////////////////////
+//// nsIDOMCompositionListener
+
+NS_IMETHODIMP
+nsFormFillController::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
+{
+  NS_ASSERTION(mController, "should have a controller!");
+
+  if (mController && mFocusedInput)
+    mController->HandleStartComposition();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
+{
+  NS_ASSERTION(mController, "should have a controller!");
+
+  if (mController && mFocusedInput)
+    mController->HandleEndComposition();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::HandleQueryComposition(nsIDOMEvent* aCompositionEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::HandleQueryReconversion(nsIDOMEvent* aCompositionEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::HandleQueryCaretRect(nsIDOMEvent* aCompostionEvent)
+{
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
 //// nsIDOMFormListener
 
 NS_IMETHODIMP
@@ -864,6 +909,14 @@ nsFormFillController::AddWindowListeners(nsIDOMWindow *aWindow)
   target->AddEventListener(NS_LITERAL_STRING("unload"),
                            NS_STATIC_CAST(nsIDOMLoadListener *, this),
                            PR_TRUE);
+
+  target->AddEventListener(NS_LITERAL_STRING("compositionstart"),
+                           NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                           PR_TRUE);
+
+  target->AddEventListener(NS_LITERAL_STRING("compositionend"),
+                           NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                           PR_TRUE);
 }
 
 void
@@ -906,6 +959,14 @@ nsFormFillController::RemoveWindowListeners(nsIDOMWindow *aWindow)
 
   target->RemoveEventListener(NS_LITERAL_STRING("unload"),
                               NS_STATIC_CAST(nsIDOMLoadListener *, this),
+                              PR_TRUE);
+
+  target->RemoveEventListener(NS_LITERAL_STRING("compositionstart"),
+                              NS_STATIC_CAST(nsIDOMCompositionListener *, this),
+                              PR_TRUE);
+
+  target->RemoveEventListener(NS_LITERAL_STRING("compositionend"),
+                              NS_STATIC_CAST(nsIDOMCompositionListener *, this),
                               PR_TRUE);
 }
 
