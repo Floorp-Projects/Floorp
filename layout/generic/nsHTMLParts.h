@@ -245,10 +245,11 @@ extern nsresult NS_NewAreaFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 extern nsresult NS_NewBRFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 
-// Flags for body and block frames
-#define NS_BODY_SHRINK_WRAP     0x1
-#define NS_BODY_NO_AUTO_MARGINS 0x2
-#define NS_BODY_THE_BODY        0x4
+// Flags for block/area frames
+#define NS_BLOCK_SHRINK_WRAP     0x1
+#define NS_BLOCK_NO_AUTO_MARGINS 0x2
+#define NS_BLOCK_MARGIN_ROOT     0x4
+#define NS_BLOCK_DOCUMENT_ROOT   0x8
 
 extern nsresult NS_NewCommentFrame(nsIFrame*& aFrameResult);
 extern nsresult NS_NewHRFrame(nsIFrame*& aNewFrame);
