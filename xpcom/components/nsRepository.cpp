@@ -831,7 +831,7 @@ nsresult nsRepository::SyncComponentsInFile(const char *fullname)
 		}
 		
 		// We already have seen this dll. Check if this dll changed
-		if (dll->GetLastModifiedTime() != statbuf.modifyTime &&
+		if (LL_EQ(dll->GetLastModifiedTime(), statbuf.modifyTime) &&
 			LL_EQ(dll->GetSize(), statbuf.size))
 		{
 			// Dll hasn't changed. Skip.
