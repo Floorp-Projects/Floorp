@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef __nsmultimixedconv__h__
+#define __nsmultimixedconv__h__
 
 #include "nsIStreamConverter.h"
 #include "nsIChannel.h"
@@ -130,3 +132,5 @@ protected:
     const char* mClassName;
     const char* mProgID;
 };
+
+#endif /* __nsmultimixedconv__h__ */
