@@ -922,7 +922,6 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
-  nsSize    kidAvailSize(aState.availSize);
   PRInt32   kidIndex = NextChildOffset();
   nsIFrame* prevKidFrame;
   
@@ -950,7 +949,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     }
 
     nsIFrame* kidFrame;
-
+    nsSize    kidAvailSize(aState.availSize);
     // Create a child frame -- always an nsTableCell frame
     nsIStyleContext* kidStyleContext = aPresContext->ResolveStyleContextFor(cell, this, PR_TRUE);
     if (nsnull == kidPrevInFlow) {

@@ -269,7 +269,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
       case eStyleUnit_Coord:
         haveColWidth = PR_TRUE;
         specifiedFixedColWidth = colPosition->mWidth.GetCoordValue();
-        mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);  //QQQ add in margins
+        mTableFrame->SetColumnWidth(colIndex, specifiedFixedColWidth);  //QQQ add in margins?
         break;
 
       default:
@@ -335,7 +335,7 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
             if (mTableFrame->GetColumnWidth(colIndex) < widthForThisCell)
             {
               if (gsDebug) printf ("    setting fixed width to %d\n",widthForThisCell);
-              mTableFrame->SetColumnWidth(colIndex, widthForThisCell);
+              mTableFrame->SetColumnWidth(colIndex, widthForThisCell); //QQQ add in margins?
               maxColWidth = widthForThisCell;
             }
           }
@@ -489,7 +489,7 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPre
       if (gsDebug) printf ("  * specified width table > maxTableWidth, calling BalanceColumnsTableFits\n");
       result = BalanceColumnsTableFits(aPresContext, aReflowState, aAvailWidth, aMaxWidth, aTableFixedWidth);
     }
-    else if (aTableFixedWidth<aMinTableWidth)
+    else if ((aTableFixedWidth<aMinTableWidth) /*|| (aAvailWidth<aMinTableWidth)*/)
     { // the table's specified width doesn't fit in the available space
       if (gsDebug) printf ("  * specified width table with width<minTableWidth, calling SetColumnsToMinWidth\n");
       result = SetColumnsToMinWidth(aPresContext);
@@ -672,7 +672,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
         if (nsnull == data) {
-          // For cells that span rows there's only cell layout data for the first row
+          // For cells that span columns there's only cell layout data for the first column
           continue;
         }
  
@@ -963,13 +963,20 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
     PRInt32 i;
     for (i = 0; i<numAutoColumns; i++)
     {
-      totalWidthOfAutoColumns += aColWidths[autoColumns[i]];
+      if (0!=aColWidths[autoColumns[i]])
+        totalWidthOfAutoColumns += aColWidths[autoColumns[i]];
+      else
+        totalWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
     }
     // 2. next, compute the proportion to be added to each column, and add it
     for (i = 0; i<numAutoColumns; i++)
     {
       PRInt32 colIndex = autoColumns[i];
-      nscoord oldColWidth = aColWidths[colIndex];
+      nscoord oldColWidth;
+      if (0!=aColWidths[autoColumns[i]])
+        oldColWidth = aColWidths[colIndex];
+      else 
+        oldColWidth = mTableFrame->GetColumnWidth(autoColumns[i]);
       float percent;
       if (0!=totalWidthOfAutoColumns)
         percent = (float)oldColWidth/(float)totalWidthOfAutoColumns;
@@ -978,14 +985,13 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
       nscoord excessForThisColumn = (nscoord)(excess*percent);
       nscoord colWidth = excessForThisColumn+oldColWidth;
       if (gsDebug==PR_TRUE) 
-        printf("  column %d was %d, now set to %d\n", 
+        printf("  distribute excess to auto columns:  column %d was %d, now set to %d\n", 
                colIndex, aColWidths[colIndex], colWidth);
       mTableFrame->SetColumnWidth(colIndex, colWidth);
     }
   }
   // otherwise, distribute the space between all the columns 
   // (they must be all fixed and percentage-width columns, or we would have gone into the block above)
-  // TODO - should extra space be proportionately distributed? XXX
   else
   {
     nscoord excessPerColumn = excess/aNumCols;
@@ -993,7 +999,19 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
       printf("  aTableFixedWidth specified as %d, expanding columns by excess = %d\n", aTableFixedWidth, excess);
     for (PRInt32 colIndex = 0; colIndex<aNumCols; colIndex++)
     {
-      nscoord colWidth = excessPerColumn+mTableFrame->GetColumnWidth(colIndex);
+      nscoord oldColWidth = aColWidths[colIndex];
+      if (0==oldColWidth)
+        oldColWidth = mTableFrame->GetColumnWidth(colIndex);
+      float percent;
+      if (0!=aComputedTableWidth)
+        percent = (float)oldColWidth/(float)aComputedTableWidth;
+      else
+        percent = (float)1/(float)aNumCols;
+      nscoord excessForThisColumn = (nscoord)(excess*percent);
+      nscoord colWidth = excessForThisColumn+oldColWidth;
+      if (gsDebug==PR_TRUE) 
+        printf("  distribute excess to all columns:  column %d was %d, now set to %d\n", 
+               colIndex, aColWidths[colIndex], colWidth);
       mTableFrame->SetColumnWidth(colIndex, colWidth);
     }
   }
