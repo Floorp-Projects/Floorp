@@ -45,5 +45,5 @@ classic.jar:
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)
         locale/en-US/browser/browser.dtd              (locale/browser.dtd)
-        locale/en-US/browser/navigator.properties     (locale/navigator.properties)
+        locale/en-US/browser/browser.properties       (locale/browser.properties)
         locale/en-US/browser/customizeToolbar.dtd     (locale/customizeToolbar.dtd)

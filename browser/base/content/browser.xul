@@ -57,7 +57,6 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserContentListener.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
@@ -65,7 +64,6 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
@@ -73,7 +71,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
  
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
@@ -146,13 +144,12 @@ Contributor(s):
   <command id="Browser:ManageBookmark" oncommand="BrowserEditBookmarks();"/>
   
   <command id="Browser:Home"    oncommand="BrowserHome();"/>
-  <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
-  <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
+  <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
+  <command id="Browser:Forward" oncommand="BrowserForward();" disabled="true"/>
+  <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
   <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     
-  <broadcaster id="canGoBack"    disabled="true"/>
-  <broadcaster id="canGoForward" disabled="true"/>
   <broadcaster id="isImage"/>
 
   <keyset>
@@ -199,7 +196,7 @@ Contributor(s):
     <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
 
-    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"        oncommand="toHistory();" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
@@ -281,8 +278,7 @@ Contributor(s):
       <menuitem id="context-stop"
                 label="&stopCmd.label;"
                 accesskey="&stopCmd.accesskey;"
-                disabled="true"
-                oncommand="BrowserStop();"/>
+                command="Browser:Stop"/>
       <menuseparator id="context-sep-stop"/>
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
@@ -465,14 +461,13 @@ Contributor(s):
                       label="&fullScreenCmd.label;" key="key_fullScreen"
                       command="View:FullScreen"/>
             <menuseparator/>
-            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
+            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
             <menuseparator/>
             <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;"
                       command="cmd_textZoomEnlarge" observes="isImage"/>
             <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;"
                       command="cmd_textZoomReduce" observes="isImage"/>
-            <menuseparator/>
             <menu observes="isImage"
                   label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
                   datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
@@ -572,7 +567,7 @@ Contributor(s):
                 <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
                 </menupopup>
             </menu>
-            <menuseparator />
+            <menuseparator/>
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
             <menuseparator />
@@ -694,18 +689,20 @@ Contributor(s):
         <toolbarpalette>
           <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
                          label="&backCmd.label;"
-                         oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
-                         observes="canGoBack" context="backMenu"
+                         command="Browser:Back"
+                         context="backMenu"
                          tooltiptext="&backButton.tooltip;">
-            <menupopup context="" onpopupshowing="BrowserBackMenu(event);"/>
+            <menupopup context="" onpopupshowing="BrowserBackMenu(event);"
+                       oncommand="goToHistoryIndex(event); event.preventBubble();"/>
           </toolbarbutton>
         
           <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
                          label="&forwardCmd.label;"
-                         oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
-                         observes="canGoForward" context="forwardMenu"
+                         command="Browser:Forward"
+                         context="forwardMenu"
                          tooltiptext="&forwardButton.tooltip;">
-            <menupopup context="" onpopupshowing="BrowserForwardMenu(event);"/>
+            <menupopup context="" oncommand="goToHistoryIndex(event); event.preventBubble()"
+                       onpopupshowing="BrowserForwardMenu(event);"/>
           </toolbarbutton>
         
           <toolbarbutton id="reload-button" class="toolbarbutton-1"
@@ -715,7 +712,7 @@ Contributor(s):
                        
           <toolbarbutton id="stop-button" class="toolbarbutton-1"
                          label="&stopCmd.label;"
-                         oncommand="BrowserStop();" observes="canStop"  
+                         command="Browser:Stop"
                          tooltiptext="&stopButton.tooltip;"/>
 
           <toolbarbutton id="home-button" class="toolbarbutton-1"
