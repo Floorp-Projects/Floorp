@@ -927,12 +927,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
   theContext.Append("<endnote>");       //XXXHack! I'll make this better later.
   nsAutoString theBuffer(theContext);
 
-#if 0
-  theBuffer.Append(aSourceBuffer);
-#else
-  theBuffer.Append("<B><META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=iso-8859-1\">text</b>");
-#endif
-  
+  theBuffer.Append(aSourceBuffer);  
   if(theBuffer.Length()){
     //now it's time to try to build the model from this fragment
 
@@ -951,7 +946,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
  *  parse process to happen in chunks, such as when the
  *  content is push based, and we need to parse in pieces.
  *  
- *  @update  gess 01/04/99
+ *  @update  gess 01/04/99 
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
