@@ -217,8 +217,9 @@ pref("network.hosts.pop_server",            "mail");
 // ruslan:
 // pref("network.http.version", "1.1");
 // keep-alive option is effectively obsolete, as we want to use http/1.1 by
-// default eventually
-// pref("nework.http.keep-alive", true);
+// default eventually. Nevertheless it'll work with some older 1.0 servers
+// pref("network.http.keep-alive", true);
+// pref("network.http.keep-alive.timeout", 120);
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
