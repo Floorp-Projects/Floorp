@@ -79,7 +79,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
 
     mLock = nsnull;
 	mPasv = 0;
-	mLastModified = 0;
+	mLastModified = LL_ZERO;
 	mAsyncReadEvent = 0;
 	mWriteCount = -1;
 	mBufferSegmentSize = 0;
