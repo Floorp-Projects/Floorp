@@ -194,6 +194,10 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
 	// get the num children before we add the new header.
 	GetNumChildren(&numChildren);
 
+  // if this is an empty thread, set the root key to this header's key
+  if (numChildren == 0)
+    SetThreadRootKey(newHdrKey);
+
 	if (m_mdbTable)
 	{
 		m_mdbTable->AddRow(m_mdbDB->GetEnv(), hdrRow);
