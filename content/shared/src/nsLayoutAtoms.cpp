@@ -49,7 +49,7 @@ void nsLayoutAtoms::AddRefAtoms()
 {
   if (0 == gRefCnt++) {
     // create atoms
-#define LAYOUT_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define LAYOUT_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsLayoutAtomList.h"
 #undef LAYOUT_ATOM
   }

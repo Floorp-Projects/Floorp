@@ -50,8 +50,24 @@
 #define NS_ATOMSERVICE_CLASSNAME "Atom Service"
 %}
 
+/*
+ * Should this really be scriptable?  Using atoms from script or proxies
+ * could be dangerous since double-wrapping could lead to loss of
+ * pointer identity.
+ */
  
 [scriptable, uuid(e5d0d92b-ea45-4622-ab48-302baf2094ee)]
 interface nsIAtomService : nsISupports {
+
+  /**
+   * Version of NS_NewAtom that doesn't require linking against the
+   * XPCOM library.  See nsIAtom.idl.
+   */
   nsIAtom getAtom(in wstring value);
+
+  /**
+   * Version of NS_NewPermanentAtom that doesn't require linking against
+   * the XPCOM library.  See nsIAtom.idl.
+   */
+  nsIAtom getPermanentAtom(in wstring value);
 };

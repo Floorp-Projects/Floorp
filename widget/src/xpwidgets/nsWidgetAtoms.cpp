@@ -50,7 +50,7 @@ void nsWidgetAtoms::AddRefAtoms() {
 
   if (gRefCnt == 0) {
     // now register the atoms
-#define WIDGET_ATOM(_name, _value) _name = NS_NewAtom(_value);
+#define WIDGET_ATOM(_name, _value) _name = NS_NewPermanentAtom(_value);
 #include "nsWidgetAtomList.h"
 #undef WIDGET_ATOM
   }

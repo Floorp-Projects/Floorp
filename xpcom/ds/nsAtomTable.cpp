@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,75 +39,160 @@
 #include "nsAtomTable.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "plhash.h"
+#include "pldhash.h"
+#include "prenv.h"
 #include "nsISizeOfHandler.h"
-#include "nslog.h"
-
-NS_IMPL_LOG(nsAtomTableLog)
-#define PRINTF NS_LOG_PRINTF(nsAtomTableLog)
-#define FLUSH  NS_LOG_FLUSH(nsAtomTableLog)
 
 /**
  * The shared hash table for atom lookups.
+ *
+ * XXX This should be manipulated in a threadsafe way or we should make
+ * sure it's only manipulated from the main thread.  Probably the latter
+ * is better, since the former would hurt performance.
+ *
+ * If |gAtomTable.entryCount| is 0, then the table is uninitialized.
  */
-static nsrefcnt gAtoms;
-static struct PLHashTable* gAtomHashTable;
+static PLDHashTable gAtomTable;
 
-#if defined(DEBUG) && (defined(XP_UNIX) || defined(XP_PC))
-static PRIntn PR_CALLBACK
-DumpAtomLeaks(PLHashEntry *he, PRIntn index, void *arg)
+struct AtomTableEntry : public PLDHashEntryHdr {
+  AtomImpl *mAtom;
+};
+
+PR_STATIC_CALLBACK(const void *)
+AtomTableGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-  AtomImpl* atom = (AtomImpl*) he->value;
-  if (atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
+  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
+  return he->mAtom->mString;
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+AtomTableHashKey(PLDHashTable *table, const void *key)
+{
+  return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*,key));
+}
+
+PR_STATIC_CALLBACK(PRBool)
+AtomTableMatchKey(PLDHashTable *table,
+                  const PLDHashEntryHdr *entry,
+                  const void *key)
+{
+  const AtomTableEntry *he = NS_STATIC_CAST(const AtomTableEntry*, entry);
+  const PRUnichar* keyStr = NS_STATIC_CAST(const PRUnichar*, key);
+  return nsCRT::strcmp(keyStr, he->mAtom->mString) == 0;
+}
+
+PR_STATIC_CALLBACK(void)
+AtomTableClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
+  AtomImpl *atom = he->mAtom;
+  he->mAtom = 0;
+  he->keyHash = 0;
+
+  // Normal |AtomImpl| atoms are deleted when their refcount hits 0, and
+  // they then remove themselves from the table.  In other words, they
+  // are owned by the callers who own references to them.
+  // |PermanentAtomImpl| permanent atoms ignore their refcount and are
+  // deleted when they are removed from the table at table destruction.
+  // In other words, they are owned by the atom table.
+  if (atom->IsPermanent())
+    delete atom;
+}
+
+static PLDHashTableOps AtomTableOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  AtomTableGetKey,
+  AtomTableHashKey,
+  AtomTableMatchKey,
+  PL_DHashMoveEntryStub,
+  AtomTableClearEntry,
+  PL_DHashFinalizeStub,
+  NULL
+};
+
+
+#ifdef DEBUG
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+DumpAtomLeaks(PLDHashTable *table, PLDHashEntryHdr *he,
+              PRUint32 index, void *arg)
+{
+  AtomTableEntry *entry = NS_STATIC_CAST(AtomTableEntry*, he);
+  AtomImpl* atom = entry->mAtom;
+  if (!atom->IsPermanent()) {
+    ++*NS_STATIC_CAST(PRUint32*, arg);
+    const PRUnichar *str;
+    atom->GetUnicode(&str);
+    fputs(NS_LossyConvertUCS2toASCII(str).get(), stdout);
     fputs("\n", stdout);
   }
-  return HT_ENUMERATE_NEXT;
+  return PL_DHASH_NEXT;
 }
+
 #endif
 
-NS_COM void NS_PurgeAtomTable(void)
+void NS_PurgeAtomTable()
 {
-  if (gAtomHashTable) {
-#if defined(DEBUG) && (defined(XP_UNIX) || defined(XP_PC))
-    if (gAtoms) {
-      if (NS_LOG_ENABLED(nsAtomTableLog)) {
-        PRINTF("*** leaking %d atoms\n", gAtoms);
-        PL_HashTableEnumerateEntries(gAtomHashTable, DumpAtomLeaks, 0);
-      }
+  if (gAtomTable.entryCount) {
+#ifdef DEBUG
+    if (PR_GetEnv("MOZ_DUMP_ATOM_LEAKS")) {
+      PRUint32 leaked = 0;
+      printf("*** %d atoms still exist (including permanent):\n",
+             gAtomTable.entryCount);
+      PL_DHashTableEnumerate(&gAtomTable, DumpAtomLeaks, &leaked);
+      printf("*** %u non-permanent atoms leaked\n", leaked);
     }
 #endif
-    PL_HashTableDestroy(gAtomHashTable);
-    gAtomHashTable = nsnull;
+    PL_DHashTableFinish(&gAtomTable);
+    gAtomTable.entryCount = 0;
   }
 }
 
 AtomImpl::AtomImpl()
 {
-  NS_INIT_REFCNT();
-  // Every live atom holds a reference on the atom hashtable
-  gAtoms++;
+  NS_INIT_ISUPPORTS();
 }
 
 AtomImpl::~AtomImpl()
 {
-  NS_PRECONDITION(nsnull != gAtomHashTable, "null atom hashtable");
-  if (nsnull != gAtomHashTable) {
-
-    PL_HashTableRemove(gAtomHashTable, mString);
-    nsrefcnt cnt = --gAtoms;
-    if (0 == cnt) {
-      // When the last atom is destroyed, the atom arena is destroyed
-      NS_ASSERTION(0 == gAtomHashTable->nentries, "bad atom table");
-      PL_HashTableDestroy(gAtomHashTable);
-      gAtomHashTable = nsnull;
+  NS_PRECONDITION(gAtomTable.entryCount, "uninitialized atom hashtable");
+  // Permanent atoms are removed from the hashtable at shutdown, and we
+  // don't want to remove them twice.  See comment above in
+  // |AtomTableClearEntry|.
+  if (!IsPermanent()) {
+    PL_DHashTableOperate(&gAtomTable, mString, PL_DHASH_REMOVE);
+    if (gAtomTable.entryCount == 0) {
+      PL_DHashTableFinish(&gAtomTable);
+      NS_ASSERTION(gAtomTable.entryCount == 0,
+                   "PL_DHashTableFinish changed the entry count");
     }
   }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
+
+NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::AddRef()
+{
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::Release()
+{
+  return 1;
+}
+
+/* virtual */ PRBool
+AtomImpl::IsPermanent()
+{
+  return PR_FALSE;
+}
+
+/* virtual */ PRBool
+PermanentAtomImpl::IsPermanent()
+{
+  return PR_TRUE;
+}
 
 void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
 {
@@ -120,12 +206,20 @@ void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
         http://lxr.mozilla.org/seamonkey/source/xpcom/ds/nsSharedString.h#174
      */
   size += aString.Length() * sizeof(PRUnichar);
-  AtomImpl* ii = (AtomImpl*) ::operator new(size);
+  AtomImpl* ii = NS_STATIC_CAST(AtomImpl*, ::operator new(size));
 
   PRUnichar* toBegin = &ii->mString[0];
   nsReadingIterator<PRUnichar> fromBegin, fromEnd;
   *copy_string(aString.BeginReading(fromBegin), aString.EndReading(fromEnd), toBegin) = PRUnichar(0);
   return ii;
+}
+
+void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) {
+  NS_ASSERTION(!aAtom->IsPermanent(),
+               "converting atom that's already permanent");
+
+  // Just let the constructor overwrite the vtable pointer.
+  return aAtom;
 }
 
 NS_IMETHODIMP 
@@ -138,7 +232,7 @@ AtomImpl::ToString(nsAWritableString& aBuf) /*FIX: const */
 NS_IMETHODIMP 
 AtomImpl::GetUnicode(const PRUnichar **aResult) /*FIX: const */
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mString;
   return NS_OK;
 }
@@ -147,61 +241,84 @@ NS_IMETHODIMP
 AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
 {
 #ifdef DEBUG
-  NS_ENSURE_ARG_POINTER(_retval);
-  PRUint32 sum = sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar);
-  *_retval = sum;
+  NS_PRECONDITION(_retval, "null out param");
+  *_retval = sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar);
 #endif
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 
-static PLHashNumber HashKey(const PRUnichar* k)
-{
-  return nsCRT::HashCode(k);
-}
-
-static PRIntn CompareKeys( const PRUnichar* k1, const PRUnichar* k2 )
-{
-  return nsCRT::strcmp(k1, k2) == 0;
-}
-
 NS_COM nsIAtom* NS_NewAtom(const char* isolatin1)
 {
   return NS_NewAtom(NS_ConvertASCIItoUCS2(isolatin1));
 }
 
-NS_COM nsIAtom* NS_NewAtom( const nsAReadableString& aString )
+NS_COM nsIAtom* NS_NewPermanentAtom(const char* isolatin1)
 {
-  if ( !gAtomHashTable )
-    gAtomHashTable = PL_NewHashTable(2048, (PLHashFunction)HashKey,
-                                     (PLHashComparator)CompareKeys,
-                                     (PLHashComparator)0, 0, 0);
+  return NS_NewPermanentAtom(NS_ConvertASCIItoUCS2(isolatin1));
+}
 
-  const nsPromiseFlatString& flat = PromiseFlatString(aString);
-  const PRUnichar *str = flat.get();
+static AtomTableEntry* GetAtomHashEntry(const nsAString& aString)
+{
+  if ( !gAtomTable.entryCount )
+    PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
+                      sizeof(AtomTableEntry), 2048);
 
-  PRUint32 hashCode = HashKey(str);
+  return NS_STATIC_CAST(AtomTableEntry*,
+                        PL_DHashTableOperate(&gAtomTable,
+                                             PromiseFlatString(aString).get(),
+                                             PL_DHASH_ADD));
+}
 
-  PLHashEntry** hep = PL_HashTableRawLookup(gAtomHashTable, hashCode, str);
+NS_COM nsIAtom* NS_NewAtom( const nsAString& aString )
+{
+  AtomTableEntry *he = GetAtomHashEntry(aString);
+  AtomImpl* atom = he->mAtom;
 
-  PLHashEntry*  he  = *hep;
-
-  AtomImpl* id;
-
-  if ( he ) {
-      // if we found one, great
-    id = NS_STATIC_CAST(AtomImpl*, he->value);
-  } else {
-      // otherwise, we'll make a new atom
-    id = new (aString) AtomImpl();
-    if ( id ) {
-      PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);
+  if (!atom) {
+    atom = new (aString) AtomImpl();
+    he->mAtom = atom;
+    if (!atom) {
+      PL_DHashTableRawRemove(&gAtomTable, he);
+      return nsnull;
     }
   }
 
-  NS_IF_ADDREF(id);
-  return id;
+  NS_ADDREF(atom);
+  return atom;
+}
+
+NS_COM nsIAtom* NS_NewPermanentAtom( const nsAString& aString )
+{
+  AtomTableEntry *he = GetAtomHashEntry(aString);
+  AtomImpl* atom = he->mAtom;
+
+  if (atom) {
+    // ensure that it's permanent
+    if (!atom->IsPermanent()) {
+#ifdef NS_BUILD_REFCNT_LOGGING
+      {
+        nsrefcnt refcount = atom->GetRefCount();
+        do {
+          NS_LOG_RELEASE(atom, --refcount, "AtomImpl");
+        } while (refcount);
+      }
+#endif
+      atom = new (atom) PermanentAtomImpl();
+    }
+  } else {
+    // otherwise, make a new atom
+    atom = new (aString) PermanentAtomImpl();
+    he->mAtom = atom;
+    if ( !atom ) {
+      PL_DHashTableRawRemove(&gAtomTable, he);
+      return nsnull;
+    }
+  }
+
+  NS_ADDREF(atom);
+  return atom;
 }
 
 NS_COM nsIAtom* NS_NewAtom( const PRUnichar* str )
@@ -209,10 +326,12 @@ NS_COM nsIAtom* NS_NewAtom( const PRUnichar* str )
   return NS_NewAtom(nsDependentString(str));
 }
 
+NS_COM nsIAtom* NS_NewPermanentAtom( const PRUnichar* str )
+{
+  return NS_NewPermanentAtom(nsDependentString(str));
+}
+
 NS_COM nsrefcnt NS_GetNumberOfAtoms(void)
 {
-  if (nsnull != gAtomHashTable) {
-    NS_PRECONDITION(nsrefcnt(gAtomHashTable->nentries) == gAtoms, "bad atom table");
-  }
-  return gAtoms;
+  return gAtomTable.entryCount;
 }

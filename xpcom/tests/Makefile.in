@@ -33,24 +33,25 @@ REQUIRES	= necko \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsIFileTest.cpp \
+		FilesTest.cpp \
 		nsIFileEnumerator.cpp \
+		nsIFileTest.cpp \
 		TestArray.cpp \
-		TestServMgr.cpp \
-		TestFactory.cpp \
+		TestAtoms.cpp \
+		TestAutoLock.cpp \
 		TestCallTemplates.cpp \
 		TestCOMPtr.cpp \
 		TestCOMPtrEq.cpp \
-		TestID.cpp \
-		TestXPIDLString.cpp \
-		TestAtoms.cpp \
 		TestCRT.cpp \
-		FilesTest.cpp \
-		TestAutoLock.cpp \
+		TestFactory.cpp \
+		TestID.cpp \
 		TestObserverService.cpp \
+		TestPermanentAtoms.cpp \
 		TestPipes.cpp \
+		TestServMgr.cpp \
 		TestThreads.cpp \
 		TestVoidBTree.cpp \
+		TestXPIDLString.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -80,7 +81,10 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
-INCLUDES	+= -I$(srcdir)/../public -I$(srcdir)/services
+INCLUDES	+= \
+                -I$(srcdir)/../ds \
+		-I$(srcdir)/services \
+		$(NULL)
 
 install::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res

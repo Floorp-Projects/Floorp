@@ -51,6 +51,7 @@ PROG19 = .\$(OBJDIR)\TestVoidBTree.exe
 PROG20 = .\$(OBJDIR)\nsIFileEnumerator.exe
 PROG21 = .\$(OBJDIR)\TestCOMPtrEq.exe
 PROG22 = .\$(OBJDIR)\TestCallTemplates.exe
+PROG23 = .\$(OBJDIR)\TestPermanentAtoms.exe
 
 RESFILE = timer.res
 
@@ -74,6 +75,7 @@ PROGRAMS = $(PROG1) \
            $(PROG20) \
            $(PROG21) \
            $(PROG22) \
+           $(PROG23) \
            $(NULL)
 
 LCFLAGS=-DUSE_NSREG -GX
@@ -81,7 +83,8 @@ LCFLAGS=-DUSE_NSREG -GX
 
 LINCS=                     \
         -Iservices         \
-		$(NULL)
+        -I..\ds            \
+        $(NULL)
 
 LLIBS=                         \
         $(DIST)\lib\xpcom.lib  \
@@ -115,5 +118,6 @@ $(PROG19): $(OBJDIR) TestVoidBTree.cpp
 $(PROG20): $(OBJDIR) nsIFileEnumerator.cpp
 $(PROG21): $(OBJDIR) TestCOMPtrEq.cpp
 $(PROG22): $(OBJDIR) TestCallTemplates.cpp
+$(PROG23): $(OBJDIR) TestPermanentAtoms.cpp
 
 
