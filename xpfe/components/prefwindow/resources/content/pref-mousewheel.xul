@@ -84,25 +84,38 @@
 
   ]]>
   </script>
-    
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+
   <box class="box-smallheader" title="&title.label;"/>
 
-  <titledbox orient="vertical">
-    <title><text value="&mouseWheelTitle.label;"/></title>
-  
-    <box>
-      <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" for="mouseWheelMode"/>
-      <menulist id="mouseWheelMode" oncommand="switchPage(this);">
-        <menupopup>
-          <menuitem data="0" value="&usingJustTheWheel.label;"/>
-          <menuitem data="1" value="&usingWheelAndAlt.label;"/>
-          <menuitem data="2" value="&usingWheelAndCtrl.label;"/>
-          <menuitem data="3" value="&usingWheelAndShft.label;"/>
-        </menupopup>
-      </menulist>
+    <box orient="vertical">
+      <box valign="bottom" autostretch="never">
+        <box orient="vertical">
+          <text class="label" value="&mouseWheelPanel.label;" accesskey="&mouseWheelPanel.accesskey;" 
+                for="mouseWheelMode"/>
+        </box>
+      </box>
     </box>
+
+    <separator class="thin"/>
   
-    <deck id="modifierDeck" flex="1" class="indent">
+    <titledbox orient="vertical">
+      <title>
+        <box> 
+          <menulist id="mouseWheelMode" oncommand="switchPage(this);">
+            <menupopup>
+              <menuitem data="0" value="&usingJustTheWheel.label;"/>
+              <menuitem data="1" value="&usingWheelAndAlt.label;"/>
+              <menuitem data="2" value="&usingWheelAndCtrl.label;"/>
+              <menuitem data="3" value="&usingWheelAndShft.label;"/>
+            </menupopup>
+          </menulist>
+        </box>
+      </title>
+
+
+    <deck id="modifierDeck" class="indent">
       
       <!-- no key modifiers -->
       <radiogroup id="mousewheelWithNoKeyAction" orient="vertical" autostretch="never"
