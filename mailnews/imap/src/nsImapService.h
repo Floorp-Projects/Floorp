@@ -163,6 +163,11 @@ public:
                             nsIMsgFolder* srcFolder,
                             nsIUrlListener* urlListener,
                             nsIURI** url);
+    NS_IMETHOD CreateFolder(nsIEventQueue* eventQueue,
+                          nsIMsgFolder* parent,
+                          const char* leafName,
+                          nsIUrlListener* urlListener,
+                          nsIURI** url);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////

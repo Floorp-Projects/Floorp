@@ -111,7 +111,6 @@ public:
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
     
-	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
     NS_IMETHOD Compact();
     NS_IMETHOD EmptyTrash();
 	NS_IMETHOD Delete ();
@@ -162,6 +161,11 @@ public:
     NS_IMETHOD GetNewMessages();
 
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
+
+    // nsIMsgImapMailFolder methods
+	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
+    NS_IMETHOD CreateSubfolder2 (const char* folderName);
+
     // nsIImapMailFolderSink methods
     // Tell mail master about a discovered imap mailbox
     NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,

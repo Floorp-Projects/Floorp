@@ -1477,6 +1477,52 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
+                            const char* newFolderName, 
+                            nsIUrlListener* urlListener, nsIURI** url)
+{
+    NS_ASSERTION(eventQueue && parent && newFolderName && *newFolderName,
+                 "Oops ... [RenameLeaf] null pointers");
+    if (!eventQueue || !parent || !newFolderName || !*newFolderName)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsIImapUrl* imapUrl;
+    nsCString urlSpec;
+    nsresult rv;
+
+    rv = CreateStartOfImapUrl(imapUrl, parent, urlSpec);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(parent, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            char hierarchySeparator = '/';
+            nsCString folderName;
+            GetFolderName(parent, folderName);
+            urlSpec.Append("/create>");
+            urlSpec.Append(hierarchySeparator);
+            if (folderName.Length() > 0)
+            {
+                urlSpec.Append(folderName.GetBuffer());
+                urlSpec.Append(hierarchySeparator);
+            }
+            urlSpec.Append(newFolderName);
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl, &rv);
+            if (NS_SUCCEEDED(rv) && uri)
+            {
+                rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+                if (NS_SUCCEEDED(rv))
+                    rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                     urlListener, nsnull,
+                                                     url);
+            } // if (NS_SUCCEEDED(rv) && uri)
+        } // if (NS_SUCCEEDED(rv))
+        NS_RELEASE(imapUrl);
+    } // if (NS_SUCCEEDED(rv) && imapUrl)
+    return rv;
+}
+
 #ifdef HAVE_PORT
 
 /* fetching the headers of RFC822 messages */

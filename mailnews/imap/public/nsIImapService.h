@@ -167,6 +167,11 @@ public:
                             nsIMsgFolder* aFolder,
                             nsIUrlListener* urlListener,
                             nsIURI** url) = 0;
+    NS_IMETHOD CreateFolder(nsIEventQueue* eventQueue,
+                            nsIMsgFolder* parent,
+                            const char* leafName,
+                            nsIUrlListener* urlListener,
+                            nsIURI** url) = 0;
 };
 
 

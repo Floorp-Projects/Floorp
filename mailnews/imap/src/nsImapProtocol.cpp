@@ -4374,7 +4374,6 @@ char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
 
 void nsImapProtocol::OnCreateFolder(const char * aSourceMailbox)
 {
-	NS_ASSERTION(0, "on create folder is not implemented yet");
     PRBool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
     if (created)
     {
@@ -5866,6 +5865,12 @@ PRBool nsImapProtocol::TryToLogon()
 
 	}
 
+	if (userName && !password && m_imapMiscellaneousSink)
+	{
+        m_imapMiscellaneousSink->GetPasswordForUser(this, userName);
+		WaitForFEEventCompletion();
+		rv = m_server->GetPassword(&password);
+	}
 	do
 	{
 		if (userName && !password && m_imapMiscellaneousSink)

@@ -429,7 +429,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     {
         if (!m_haveDiscoverAllFolders)
         {
-            rv = CreateSubfolder("Inbox");
+            rv = CreateSubfolder2("Inbox");
             if (NS_FAILED(rv)) return rv;
             m_haveDiscoverAllFolders = PR_TRUE;
 #if 0
@@ -464,8 +464,18 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char* folderName)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!folderName) return rv;
+    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+    if (NS_SUCCEEDED(rv))
+        rv = imapService->CreateFolder(m_eventQueue, this, 
+                                       folderName, this, nsnull);
+    return rv;
+}
 
-NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
+NS_IMETHODIMP nsImapMailFolder::CreateSubfolder2(const char *folderName)
 {
 	nsresult rv = NS_OK;
     
@@ -490,7 +500,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
     {
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
         nsCOMPtr<nsIRDFResource> res;
-        nsCOMPtr<nsIMsgFolder> parentFolder;
+        nsCOMPtr<nsIMsgImapMailFolder> parentFolder;
         nsAutoString uri ((const char *) mURI, eOneByte);
         parentName.Right(leafName, leafName.Length() - folderStart - 1);
         parentName.Truncate(folderStart);
@@ -504,7 +514,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
-        return parentFolder->CreateSubfolder(leafName.GetBuffer());
+        return parentFolder->CreateSubfolder2(leafName.GetBuffer());
     }
     
     folderNameStr = leafName;
@@ -553,8 +563,14 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
     
 NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
+    nsCOMPtr<nsISupportsArray> folders;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(folders));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupports> folderSupport = do_QueryInterface(which, &rv);
+    if (NS_FAILED(rv)) return rv;
+    folders->AppendElement(folderSupport);
+    which->Delete();
+    return nsMsgFolder::DeleteSubFolders(folders);
 }
 
 NS_IMETHODIMP nsImapMailFolder::Compact()
@@ -594,12 +610,10 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
 NS_IMETHODIMP nsImapMailFolder::Delete ()
 {
     nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIMsgDatabase> thisDb;
-    rv = GetMsgDatabase(getter_AddRefs(thisDb));
-    if (NS_SUCCEEDED(rv))
+    if (mDatabase)
     {
-        thisDb->ForceClosed();
-        thisDb = null_nsCOMPtr();
+        mDatabase->ForceClosed();
+        mDatabase = null_nsCOMPtr();
     }
 
     nsCOMPtr<nsIFileSpec> pathSpec;
@@ -1144,7 +1158,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 {
 	nsresult rv;
     PRBool found = PR_FALSE;
-    nsCOMPtr<nsIMsgFolder> hostFolder;
+    nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
     nsCOMPtr<nsIMsgFolder> aFolder;
     nsCOMPtr<nsISupports> aItem;
     nsCOMPtr<nsIEnumerator> aEnumerator;
@@ -1206,7 +1220,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		found = PR_TRUE;
     if (!found)
     {
-        hostFolder->CreateSubfolder(aSpec->allocatedPathName);
+        hostFolder->CreateSubfolder2(aSpec->allocatedPathName);
     }
     
 	return NS_OK;
@@ -1433,11 +1447,30 @@ NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
     nsresult rv = NS_ERROR_FAILURE;
     if (aStruct && aStruct->fNewName && *aStruct->fNewName)
     {
-        Delete();
+        nsCOMPtr<nsIFolder> iFolder;
+        nsCOMPtr<nsIMsgImapMailFolder> parent;
+        nsCOMPtr<nsIMsgFolder> me;
+        rv = GetParent(getter_AddRefs(iFolder));
+        if (NS_SUCCEEDED(rv))
+        {
+            parent = do_QueryInterface(iFolder, &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(),
+                                    getter_AddRefs(me));
+                if (NS_SUCCEEDED(rv))
+                    parent->RemoveSubFolder(me);
+            }
+        }
         nsCOMPtr<nsIMsgFolder> rootFolder;
         rv = GetRootFolder(getter_AddRefs(rootFolder));
         if (NS_SUCCEEDED(rv))
-            rv = rootFolder->CreateSubfolder(aStruct->fNewName);
+        {
+            nsCOMPtr<nsIMsgImapMailFolder> imapRootFolder =
+                do_QueryInterface(rootFolder, &rv);
+            if (NS_SUCCEEDED(rv))
+            rv = imapRootFolder->CreateSubfolder2(aStruct->fNewName);
+        }
     }
 	return rv;
 }
@@ -2660,6 +2693,22 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         if (m_transactionManager && m_copyState->m_undoMsgTxn)
                             m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                         ClearCopyState(aExitCode);
+                    }
+                }
+                break;
+            case nsIImapUrl::nsImapCreateFolder:
+                {
+                    char *path = nsnull;
+                    rv = imapUrl->CreateCanonicalSourceFolderPathString(&path);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        nsCOMPtr<nsIMsgImapMailFolder> imapFolder;
+                        rv = QueryInterface(nsCOMTypeInfo
+                                            <nsIMsgImapMailFolder>::GetIID(),
+                                            getter_AddRefs(imapFolder));
+                        if (NS_SUCCEEDED(rv))
+                            imapFolder->CreateSubfolder2(path);
+                        PR_FREEIF(path);
                     }
                 }
                 break;

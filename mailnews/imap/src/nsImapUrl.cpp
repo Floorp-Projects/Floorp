@@ -54,7 +54,15 @@ nsImapUrl::nsImapUrl()
 	m_flags = 0;
 	m_userName = nsnull;
 	m_onlineSubDirSeparator = '/'; 
+
+    // ** jt - the following are not ref counted
     m_copyState = nsnull;
+    m_imapLog = nsnull;
+    m_fileSpec = nsnull;
+    m_imapMailFolderSink = nsnull;
+    m_imapMessageSink = nsnull;
+    m_imapExtensionSink = nsnull;
+    m_imapMiscellaneousSink = nsnull;
 }
 
 nsresult nsImapUrl::Initialize(const char * aUserName)
@@ -129,8 +137,8 @@ NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
 
 NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
 {
-	if (aImapLog)
-		m_imapLog = dont_QueryInterface(aImapLog);
+    // ** jt - not ref counted; talk to me before you change the code
+    m_imapLog = aImapLog;
 	return NS_OK;
 }
 
@@ -148,8 +156,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
 
 NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
-	if (aImapMailFolderSink)
-		m_imapMailFolderSink = dont_QueryInterface(aImapMailFolderSink);
+    // ** jt - not ref counted; talk to me before you change the code
+    m_imapMailFolderSink = aImapMailFolderSink;
 
 	return NS_OK;
 }
@@ -167,8 +175,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSi
 
 NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
-	if (aImapMessageSink)
-		m_imapMessageSink = dont_QueryInterface(aImapMessageSink);
+    // ** jt - not ref counted; talk to me before you change the code
+    m_imapMessageSink = aImapMessageSink;
 
 	return NS_OK;
 }
@@ -186,8 +194,8 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
-	if (aImapExtensionSink)
-		m_imapExtensionSink = dont_QueryInterface(aImapExtensionSink);
+    // ** jt - not ref counted; talk to me before you change the code
+    m_imapExtensionSink = aImapExtensionSink;
 
 	return NS_OK;
 }
@@ -207,8 +215,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
 NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
-	if (aImapMiscellaneousSink)
-		m_imapMiscellaneousSink = dont_QueryInterface(aImapMiscellaneousSink);
+    // ** jt - not ref counted; talk to me before you change the code
+    m_imapMiscellaneousSink = aImapMiscellaneousSink;
 
 	return NS_OK;
 }
@@ -845,10 +853,8 @@ NS_IMETHODIMP nsImapUrl::SetAllowContentChange(PRBool allowContentChange)
 
 NS_IMETHODIMP nsImapUrl::SetCopyState(nsISupports* copyState)
 {
-    if (!copyState) return NS_ERROR_NULL_POINTER;
     NS_LOCK_INSTANCE();
-    m_copyState = null_nsCOMPtr();
-    m_copyState = do_QueryInterface(copyState);
+    m_copyState = copyState;
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -869,10 +875,7 @@ nsImapUrl::SetMsgFileSpec(nsIFileSpec* fileSpec)
 {
     nsresult rv = NS_OK;
     NS_LOCK_INSTANCE();
-    if (fileSpec)
-        m_fileSpec = do_QueryInterface(fileSpec, &rv);
-    else
-        m_fileSpec = null_nsCOMPtr();
+    m_fileSpec = fileSpec; // ** jt - not ref counted
     NS_UNLOCK_INSTANCE();
     return rv;
 }

@@ -128,15 +128,20 @@ protected:
 	// event sinks
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
-	nsCOMPtr<nsIImapLog>	m_imapLog;
-    nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
-    nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;
-    nsCOMPtr<nsIImapExtensionSink>	m_imapExtensionSink;
-    nsCOMPtr<nsIImapMiscellaneousSink> m_imapMiscellaneousSink;
+    
+    // ** jt -- I am not usring nsCOMPtr here because I don't know when the
+    // usr get deleted; netlib has a strange manipulation over the transport
+    // layer; the runningUrl can get swapped; using nsCOMPtr can cause object
+    // never gets freed. 
+	nsIImapLog*	m_imapLog;   // not ref counted
+    nsIImapMailFolderSink* m_imapMailFolderSink;   // not ref counted
+    nsIImapMessageSink*	m_imapMessageSink;   // not ref counted
+    nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
+    nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
   
     // online message copy support; i don't have a better solution yet
-    nsCOMPtr<nsISupports> m_copyState;
-    nsCOMPtr<nsIFileSpec> m_fileSpec;
+    nsISupports* m_copyState;   // ** not refcount'd
+    nsIFileSpec* m_fileSpec;
 };
 
 #endif /* nsImapUrl_h___ */
