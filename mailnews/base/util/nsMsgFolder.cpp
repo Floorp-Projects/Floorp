@@ -1613,6 +1613,10 @@ nsresult nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, char *propert
 
 nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
 {
+	static PRBool notify = PR_TRUE;
+
+	if (!notify)
+		return NS_OK;
 
 	PRInt32 i;
 	for(i = 0; i < mListeners->Count(); i++)

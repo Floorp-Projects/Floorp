@@ -411,6 +411,9 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 	nsCOMPtr<nsISupports> aItem;
 
 	rv = aEnumerator->First();
+	if (!NS_SUCCEEDED(rv))
+		return NS_OK;	// it's OK, there are no sub-folders.
+
 	while(NS_SUCCEEDED(rv))
 	{
 		rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
@@ -419,9 +422,18 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 		if (NS_SUCCEEDED(rv))
 		{
 			if (folderCache)
+			{
 				rv = aMsgFolder->WriteToFolderCache(folderCache);
+				if (!NS_SUCCEEDED(rv))
+					break;
+			}
 		}
 		rv = aEnumerator->Next();
+		if (!NS_SUCCEEDED(rv))
+		{
+			rv = NS_OK;
+			break;
+		}
 	}
 	return rv;
 }
