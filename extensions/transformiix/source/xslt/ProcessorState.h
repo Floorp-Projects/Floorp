@@ -29,9 +29,7 @@
 #define TRANSFRMX_PROCESSORSTATE_H
 
 #include "NodeSet.h"
-#include "Stack.h"
 #include "ErrorObserver.h"
-#include "NamedMap.h"
 #include "txPatternParser.h"
 #include "Expr.h"
 #include "txOutputFormat.h"
@@ -42,9 +40,38 @@
 #include "XSLTFunctions.h"
 #include "txError.h"
 #include "nsVoidArray.h"
+#include "nsDoubleHashtable.h"
 
 class txVariableMap;
 class txXSLKey;
+
+class txLoadedDocumentEntry : public PLDHashStringEntry {
+public:
+    txLoadedDocumentEntry(const void* aKey) : PLDHashStringEntry(aKey)
+    {
+    }
+    ~txLoadedDocumentEntry()
+    {
+        delete mDocument;
+    }
+    Document* mDocument;
+};
+
+DECL_DHASH_WRAPPER(txLoadedDocumentsBase, txLoadedDocumentEntry, nsAString&)
+
+class txLoadedDocumentsHash : public txLoadedDocumentsBase
+{
+public:
+    txLoadedDocumentsHash(Document* aSourceDocument, Document* aStyleDocument);
+    ~txLoadedDocumentsHash();
+    void Add(Document* aDocument);
+    Document* Get(const nsAString& aURI);
+
+private:
+    friend class ProcessorState;
+    Document* mSourceDocument;
+    Document* mStyleDocument;
+};
 
 /**
  * Class used for keeping the current state of the XSL Processor
@@ -418,7 +445,7 @@ private:
      * The set of loaded documents. This includes both document() loaded
      * documents and xsl:include/xsl:import'ed documents.
      */
-    NamedMap loadedDocuments;
+    txLoadedDocumentsHash mLoadedDocuments;
     
     /**
      * The set of all available keys
@@ -467,9 +494,6 @@ private:
      */
     txExpandedNameMap mGlobalVariableValues;
 
-    Document*      mSourceDocument;
-    Document*      xslDocument;
-    
     /**
      * Document used to create RTFs
      */

@@ -30,6 +30,8 @@
 
 #include "ProcessorState.h"
 
+class txStack;
+
 class txIGlobalParameter : public TxObject
 {
 public:
@@ -123,7 +125,7 @@ private:
      *                        including themselves, even indirectly
      */
     static void processAttributeSets(Element* aElement, ProcessorState* aPs,
-                                     Stack* aRecursionStack = 0);
+                                     txStack* aRecursionStack = 0);
 
     /**
      * Processes the children of the specified element using the given
