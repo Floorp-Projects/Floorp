@@ -64,7 +64,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
@@ -75,6 +75,7 @@ Contributor(s):
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
   <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+  <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   
   <commandset commandupdater="true"
