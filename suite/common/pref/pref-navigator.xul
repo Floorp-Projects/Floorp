@@ -71,8 +71,8 @@
 			<html:input name="homepage" type="text"	id="pref:string:browser.startup.homepage" size="30" /> 
 			<html:div>
 				<spring flex="100%"/>
-				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetHomePageToCurrentPage();" />
-				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile()"/>
+				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetPrefToCurrentPage('pref:string:browser.startup.homepage');" />
+				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile('pref:string:browser.startup.homepage')"/>
 			</html:div>		
 		</html:fieldset>  
 
