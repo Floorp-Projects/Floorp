@@ -292,7 +292,7 @@ depend_xpconnect:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
 	nmake -f makefile.win depend
 
-build_nspr: nsprpub\config.status
+build_nspr: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake
 
