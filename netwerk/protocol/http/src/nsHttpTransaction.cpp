@@ -618,6 +618,13 @@ nsHttpTransaction::Cancel(nsresult status)
 {
     LOG(("nsHttpTransaction::Cancel [this=%x status=%x]\n", this, status));
 
+    // ignore cancelation if the transaction already has an error status.
+    if (NS_FAILED(mStatus)) {
+        LOG(("ignoring cancel since transaction has already failed "
+             "[this=%x mStatus=%x]\n", this, mStatus));
+        return NS_OK;
+    }
+
     // if the transaction is already "done" then there is nothing more to do.
     // ie., our consumer _will_ eventually receive their OnStopRequest.
     PRInt32 priorVal = PR_AtomicSet(&mTransactionDone, 1);
