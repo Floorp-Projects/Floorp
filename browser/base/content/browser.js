@@ -4431,6 +4431,9 @@ function stylesheetSwitchAll(frameset, title) {
   for (var i = 0; i < frameset.frames.length; i++) {
     stylesheetSwitchAll(frameset.frames[i], title);
   }
+
+  // FIXME: Persist the alternate sheet chosen as both a default for this URL and
+  // as the default for the immediate enclosing directory.
 }
 
 function updatePageTheme(evt)
@@ -4455,15 +4458,14 @@ function updatePageTheme(evt)
 
   if (hasThemes) {
     gPageThemeButton.setAttribute("themes", "true");
-    //if (gPrefService && gPrefService.getBoolPref("privacy.popups.firstTime")) {
-    //  displayPageReportFirstTime();
-
-      // Now set the pref.
-      //gPrefService.setBoolPref("privacy.popups.firstTime", "false");
-   // }
+    // FIXME: Do a first-time explanation of page themes here perhaps?
+    // Avoid for now since Firebird's default home page has an alt sheet.
   }
   else
     gPageThemeButton.removeAttribute("themes");
+
+  // FIXME: Read in the persisted alt sheet data and auto-select the correct
+  // alt sheet.
 }
 /* End of the Page Theme functions */
 
