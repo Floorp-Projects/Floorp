@@ -247,6 +247,39 @@ nsTableFrame::Destroy(nsIPresContext* aPresContext)
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
+// Helper function. It marks the table frame as dirty and generates
+// a reflow command
+nsresult
+nsTableFrame::AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
+                                         nsIFrame*       aTableFrame)
+{
+  nsFrameState      frameState;
+  nsIFrame*         tableParentFrame;
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+  nsIPresShell*     presShell;
+
+  aPresContext->GetShell(&presShell);
+
+  // Mark the table frame as dirty
+  aTableFrame->GetFrameState(&frameState);
+  frameState |= NS_FRAME_IS_DIRTY;
+  aTableFrame->SetFrameState(frameState);
+
+  // Target the reflow comamnd at its parent frame
+  aTableFrame->GetParent(&tableParentFrame);
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
+                               nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = presShell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  NS_RELEASE(presShell);
+  return rv;
+}
+
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list.
 NS_IMETHODIMP
@@ -312,6 +345,37 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+
+
+void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 
+                                       nsIFrame*       aFrame,
+                                       nsIContent*     aContent, 
+                                       nsIAtom*        aAttribute)
+{
+  nsIAtom* frameType;
+  aFrame->GetFrameType(&frameType);
+  if (nsLayoutAtoms::tableCellFrame == frameType) {
+    if ((nsHTMLAtoms::rowspan == aAttribute) || 
+        (nsHTMLAtoms::colspan == aAttribute)) {
+      nsCellMap* cellMap = GetCellMap();
+      if (cellMap) {
+        // for now just remove the cell from the map and reinsert it
+        nsTableCellFrame* cellFrame = (nsTableCellFrame*)aFrame;
+        PRInt32 rowIndex, colIndex;
+        cellFrame->GetRowIndex(rowIndex);
+        cellFrame->GetColIndex(colIndex);
+        RemoveCell(*aPresContext, cellFrame, rowIndex);
+        nsVoidArray cells;
+        cells.AppendElement(cellFrame);
+        InsertCells(*aPresContext, cells, rowIndex, colIndex - 1);
+        // invalidate the column widths and generate a reflow command
+        InvalidateColumnWidths(); 
+        AddTableDirtyReflowCommand(aPresContext, this);
+      }
+    }
+  }
+  NS_IF_RELEASE(frameType);
 }
 
 

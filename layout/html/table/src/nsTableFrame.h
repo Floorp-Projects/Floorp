@@ -106,6 +106,16 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
+  static nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
+                                             nsIFrame*       aTableFrame);
+  /*
+   * Notification that aAttribute has changed for content inside a table (cell, row, etc)
+   */
+  void AttributeChangedFor(nsIPresContext* aPresContext, 
+                           nsIFrame*       aFrame,
+                           nsIContent*     aContent, 
+                           nsIAtom*        aAttribute); 
+
   /** @see nsIFrame::Destroy */
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 

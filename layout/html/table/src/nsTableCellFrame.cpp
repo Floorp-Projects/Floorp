@@ -51,6 +51,13 @@ NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 
+nsTableCellFrame::nsTableCellFrame()
+{
+  mColIndex        = 0;
+  mPriorAvailWidth = 0;
+  mBorderEdges     = nsnull;
+}
+
 nsTableCellFrame::~nsTableCellFrame()
 {
   delete mBorderEdges;
@@ -78,6 +85,22 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsTableCellFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                   nsIContent*     aChild,
+                                   PRInt32         aNameSpaceID,
+                                   nsIAtom*        aAttribute,
+                                   PRInt32         aHint)
+{
+  // let the table frame decide what to do
+  nsTableFrame* tableFrame = nsnull; 
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (tableFrame)) {
+    tableFrame->AttributeChangedFor(aPresContext, this, aChild, aAttribute); 
+  }
+  return NS_OK;
 }
 
 void nsTableCellFrame::SetPass1MaxElementSize(const nsSize& aMaxElementSize)
@@ -144,6 +167,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
     SetColIndex(aColIndex);
     if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
+      if (mBorderEdges) delete mBorderEdges; // this could be non null during a reinitialization
       mBorderEdges = new nsBorderEdges;
       mBorderEdges->mOutsideEdge=PR_FALSE;
       
