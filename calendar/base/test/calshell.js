@@ -68,7 +68,7 @@ calOpListener.prototype =
 {
 
   onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, 
-				aDetail) {
+                                aDetail) {
     dump("onOperationComplete:\n\t");
     dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + aOperationType + 
 	 "\n\t" + aId + "\n\t" + aDetail + "\n");
@@ -76,7 +76,7 @@ calOpListener.prototype =
   },
 
   onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, 
-			aItems) {
+                        aItems) {
     dump("onGetResult: \n\t");
     dump(aCalendar + "\n\t" + findErr(aStatus) + "\n\t" + aItemType + "\n\t" +
 	 aDetail + "\n\t" + aCount + "\n\t" + aItems + "\n");
