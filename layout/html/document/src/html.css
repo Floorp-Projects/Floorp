@@ -510,7 +510,6 @@ input[type="file"][disabled] > input[type="button"] {
 
 /* radio buttons */
 input[type="radio"] {
-  box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   padding: 0px;
   margin-left:   3px;   
@@ -520,8 +519,8 @@ input[type="radio"] {
   border: 2px inset rgb(153, 153, 153);
   background-color:rgb(255, 255, 255);
   color:black;
-  width:8px;
-  height:8px;
+  width:12px;
+  height:12px;
   behavior: none;
   -moz-border-radius:6px;
 	cursor: default;
@@ -568,7 +567,6 @@ input[type="radio"][disabled]:active {
 
 
 input[type="checkbox"] {
-  box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   padding:       0px;
   margin-left:   3px;   
@@ -577,8 +575,8 @@ input[type="checkbox"] {
   margin-bottom: 3px;
   border: 2px inset rgb(153, 153, 153);
   background-color:rgb(255, 255, 255);
-  width:9px;
-  height:9px;
+  width:13px;
+  height:13px;
   color:black;
   behavior: none;
 	cursor: default;
@@ -834,7 +832,6 @@ input[type="text"] {
   padding: 0px;                         /* for Nav Quirks */
   background-color: white;
   color: black;
-  padding: 0px;
   margin-top:    1px;
   margin-bottom: 0px;
   margin-left:   0px;
@@ -932,6 +929,7 @@ select > input[type="button"] {
   background-image:url("arrow.gif");
   background-repeat:no-repeat;
   background-position:center;
+  background-color: buttonface;
   width:12px;
   height:12px;
   -moz-border-radius:0px;
