@@ -234,7 +234,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult Init(HDC aDC);
+  nsresult Init(HDC aDC, PRBool aDSOwnsDC);
   nsresult Init(nsIWidget *aOwner);
 #ifdef NGLAYOUT_DDRAW
   nsresult Init(LPDIRECTDRAWSURFACE aSurface);
@@ -246,6 +246,7 @@ public:
   HDC                 mDC;
   HBITMAP             mOrigBitmap;
   HBITMAP             mSelectedBitmap;
+  PRBool              mKillDC;
 
 #ifdef NGLAYOUT_DDRAW
   IDirectDrawSurface  *mSurface;
