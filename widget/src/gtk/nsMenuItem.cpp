@@ -305,7 +305,7 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-  NS_ASSERTION(false, "we should never get here");
+  NS_ASSERTION(PR_FALSE, "we should never get here");
   NS_IF_RELEASE(mXULCommandListener);
   NS_IF_ADDREF(aMenuListener);
   mXULCommandListener = aMenuListener;
