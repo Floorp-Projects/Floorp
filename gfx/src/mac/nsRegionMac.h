@@ -34,15 +34,13 @@ public:
 	void							ReleaseRegion(RgnHandle aRgnHandle);
 
 private:
-	static const short	kRegionPoolCount = 200;
+	struct nsRegionSlot {
+		RgnHandle				mRegion;
+		nsRegionSlot*		mNext;
+	};
 
-	typedef struct nsRegionRec
-	{
-			RgnHandle			mRegion;
-			PRBool				mFree;
-	} nsRegionRec;
-
-	nsRegionRec						mRegionArray[kRegionPoolCount];
+	nsRegionSlot*			mRegionSlots;
+	nsRegionSlot*			mEmptySlots;
 };
 
 //------------------------------------------------------------------------
