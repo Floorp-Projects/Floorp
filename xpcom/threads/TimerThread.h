@@ -36,6 +36,8 @@
 #ifndef TimerThread_h___
 #define TimerThread_h___
 
+#include "nsWeakReference.h"
+
 #include "nsIEventQueueService.h"
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
@@ -49,7 +51,9 @@
 #include "prinrval.h"
 #include "prlock.h"
 
-class TimerThread : public nsIRunnable
+class TimerThread : public nsSupportsWeakReference,
+                    public nsIRunnable,
+                    public nsIObserver
 {
 public:
   TimerThread();
@@ -57,7 +61,8 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
-
+  NS_DECL_NSIOBSERVER
+  
   nsresult Init();
   nsresult Shutdown();
 
@@ -74,6 +79,9 @@ public:
   // For use by nsTimerImpl::Fire()
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
 
+  void DoBeforeSleep();
+  void DoAfterSleep();
+
 private:
   // These two internal helper methods must be called while mLock is held.
   // AddTimerInternal returns the position where the timer was added in the
@@ -87,7 +95,8 @@ private:
 
   PRPackedBool mShutdown;
   PRPackedBool mWaiting;
-
+  PRPackedBool mSleeping;
+  
   nsVoidArray mTimers;
 
 #define DELAY_LINE_LENGTH_LOG2  5
