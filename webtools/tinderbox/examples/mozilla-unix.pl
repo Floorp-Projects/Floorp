@@ -139,7 +139,7 @@ while ( $EarlyExit ) {
 #	    print LOG $_;
 #	}
 #	close( PULL );
-#   }
+    }
     chdir($BuildConfigDir) || die "couldn't chdir to $BuildConfigDir";
     print LOG "gmake show_objname 2>&1 |\n";
     open ( GETOBJ, "gmake show_objname 2>&1 |\n");
