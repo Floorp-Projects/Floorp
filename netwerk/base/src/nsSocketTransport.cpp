@@ -518,6 +518,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 nsresult
 nsSocketTransport::Cancel(nsresult status)
 {
+    nsAutoMonitor mon(mMonitor);
     //
     // Cancel any existing requests
     //
@@ -992,7 +993,11 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
             // Read data if available
             //
             if (aSelectFlags & PR_POLL_READ) {
+                // we must not call out to our listener with the monitor held.  mReadRequest
+                // can only be cleared on this thread, so releasing the monitor should be safe.
+                PR_ExitMonitor(mMonitor);
                 readStatus = mReadRequest->OnRead();
+                PR_EnterMonitor(mMonitor);
                 if (mReadRequest->IsSuspended()) {
                     mSelectFlags &= ~PR_POLL_READ;
                     readStatus = NS_BASE_STREAM_WOULD_BLOCK;
@@ -1030,7 +1035,11 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
             // Write data if possible
             //
             if (aSelectFlags & PR_POLL_WRITE) {
+                // we must not call out to our provider with the monitor held.  mWriteRequest
+                // can only be cleared on this thread, so releasing the monitor should be safe.
+                PR_ExitMonitor(mMonitor);
                 writeStatus = mWriteRequest->OnWrite();
+                PR_EnterMonitor(mMonitor);
                 if (mWriteRequest->IsSuspended()) {
                     mSelectFlags &= ~PR_POLL_WRITE;
                     writeStatus = NS_BASE_STREAM_WOULD_BLOCK;
@@ -1477,7 +1486,8 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
     LOG(("nsSocketTransport: Leaving AsyncRead() [host=%s:%d this=%x], rv=%x.\n",
         mHostName, mPort, this, rv));
     
-    NS_IF_ADDREF(*aRequest = mReadRequest);
+    *aRequest = mReadRequest;
+    NS_IF_ADDREF(*aRequest);
     return rv;
 }
 
@@ -1554,7 +1564,8 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
     LOG(("nsSocketTransport: Leaving AsyncWrite() [host=%s:%d this=%x], rv=%x.\n",
         mHostName, mPort, this, rv));
     
-    NS_IF_ADDREF(*aRequest = mWriteRequest);
+    *aRequest = mWriteRequest;
+    NS_IF_ADDREF(*aRequest);
     return rv;
 }
 
