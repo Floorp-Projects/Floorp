@@ -1,0 +1,6 @@
+WIN32_MODULE_FILEVERSION=0,8,0,0
+WIN32_MODULE_FILEVERSION_STRING=0.8
+WIN32_MODULE_COPYRIGHT=©Thunderbird and Mozilla Developers, according to the MPL 1.1/GPL 2.0/LGPL 2.1 licenses, as applicable.
+WIN32_MODULE_COMPANYNAME=Mozilla.org
+WIN32_MODULE_TRADEMARKS=Mozilla
+WIN32_MODULE_COMMENT=Mozilla Thunderbird Thunderbird MAPI Proxy Dll
