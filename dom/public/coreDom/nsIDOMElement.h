@@ -55,6 +55,22 @@ public:
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn)=0;
 
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn)=0;
+
+  NS_IMETHOD    GetAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsString& aReturn)=0;
+
+  NS_IMETHOD    SetAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, const nsString& aValue)=0;
+
+  NS_IMETHOD    RemoveAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName)=0;
+
+  NS_IMETHOD    GetAttributeNodeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMAttr** aReturn)=0;
+
+  NS_IMETHOD    SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn)=0;
+
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn)=0;
+
+  NS_IMETHOD    HasAttribute(const nsString& aName, PRBool* aReturn)=0;
+
+  NS_IMETHOD    HasAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, PRBool* aReturn)=0;
 };
 
 
@@ -67,6 +83,14 @@ public:
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    GetAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsString& aReturn);  \
+  NS_IMETHOD    SetAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, const nsString& aValue);  \
+  NS_IMETHOD    RemoveAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName);  \
+  NS_IMETHOD    GetAttributeNodeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMAttr** aReturn);  \
+  NS_IMETHOD    SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);  \
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    HasAttribute(const nsString& aName, PRBool* aReturn);  \
+  NS_IMETHOD    HasAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, PRBool* aReturn);  \
 
 
 
@@ -79,6 +103,14 @@ public:
   NS_IMETHOD    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to SetAttributeNode(aNewAttr, aReturn); }  \
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) { return _to RemoveAttributeNode(aOldAttr, aReturn); }  \
   NS_IMETHOD    GetElementsByTagName(const nsString& aName, nsIDOMNodeList** aReturn) { return _to GetElementsByTagName(aName, aReturn); }  \
+  NS_IMETHOD    GetAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsString& aReturn) { return _to GetAttributeNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    SetAttributeNS(const nsString& aNamespaceURI, const nsString& aQualifiedName, const nsString& aValue) { return _to SetAttributeNS(aNamespaceURI, aQualifiedName, aValue); }  \
+  NS_IMETHOD    RemoveAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName) { return _to RemoveAttributeNS(aNamespaceURI, aLocalName); }  \
+  NS_IMETHOD    GetAttributeNodeNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMAttr** aReturn) { return _to GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { return _to SetAttributeNodeNS(aNewAttr, aReturn); }  \
+  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn) { return _to GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    HasAttribute(const nsString& aName, PRBool* aReturn) { return _to HasAttribute(aName, aReturn); }  \
+  NS_IMETHOD    HasAttributeNS(const nsString& aNamespaceURI, const nsString& aLocalName, PRBool* aReturn) { return _to HasAttributeNS(aNamespaceURI, aLocalName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);

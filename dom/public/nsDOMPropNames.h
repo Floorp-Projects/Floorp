@@ -265,11 +265,19 @@
     "domimplementation.hasfeature", \
     "element.getattribute", \
     "element.getattributenode", \
+    "element.getattributenodens", \
+    "element.getattributens", \
     "element.getelementsbytagname", \
+    "element.getelementsbytagnamens", \
+    "element.hasattribute", \
+    "element.hasattributens", \
     "element.removeattribute", \
     "element.removeattributenode", \
+    "element.removeattributens", \
     "element.setattribute", \
     "element.setattributenode", \
+    "element.setattributenodens", \
+    "element.setattributens", \
     "element.tagname", \
     "entity.notationname", \
     "entity.publicid", \

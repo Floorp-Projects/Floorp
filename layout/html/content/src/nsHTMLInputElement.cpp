@@ -124,6 +124,39 @@ public:
                                   nsIDOMNodeList** aReturn) {              
     return mInner.GetElementsByTagName(aTagname, aReturn);                     
   }                                                                        
+  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aLocalName, nsString& aReturn) {
+    return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aQualifiedName,
+                            const nsString& aValue) {
+    return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
+  }
+  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,
+                               const nsString& aLocalName) {
+    return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
+  }
+  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,
+                                const nsString& aLocalName,
+                                nsIDOMAttr** aReturn) {
+    return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
+    return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
+  }
+  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                    const nsString& aLocalName,
+                                    nsIDOMNodeList** aReturn) {
+    return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
+  }
+  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {
+    return mInner.HasAttribute(aName, aReturn);
+  }
+  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,
+                            const nsString& aLocalName, PRBool* aReturn) {
+    return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
+  }
 
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)

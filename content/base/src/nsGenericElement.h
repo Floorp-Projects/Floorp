@@ -155,6 +155,23 @@ public:
   nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
   nsresult    GetElementsByTagName(const nsString& aTagname,
                                    nsIDOMNodeList** aReturn);
+  nsresult    GetAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aLocalName, nsString& aReturn);
+  nsresult    SetAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aQualifiedName,
+                             const nsString& aValue);
+  nsresult    RemoveAttributeNS(const nsString& aNamespaceURI,
+                                const nsString& aLocalName);
+  nsresult    GetAttributeNodeNS(const nsString& aNamespaceURI,
+                                 const nsString& aLocalName,
+                                 nsIDOMAttr** aReturn);
+  nsresult    SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
+  nsresult    GetElementsByTagNameNS(const nsString& aNamespaceURI,
+                                     const nsString& aLocalName,
+                                     nsIDOMNodeList** aReturn);
+  nsresult    HasAttribute(const nsString& aName, PRBool* aReturn);
+  nsresult    HasAttributeNS(const nsString& aNamespaceURI,
+                             const nsString& aLocalName, PRBool* aReturn);
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -464,6 +481,39 @@ public:
   NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                   \
                                   nsIDOMNodeList** aReturn) {                 \
     return _g.GetElementsByTagName(aTagname, aReturn);                        \
+  }                                                                           \
+  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,                    \
+                            const nsString& aLocalName, nsString& aReturn) {  \
+    return _g.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);             \
+  }                                                                           \
+  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,                    \
+                            const nsString& aQualifiedName,                   \
+                            const nsString& aValue) {                         \
+    return _g.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);          \
+  }                                                                           \
+  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,                 \
+                               const nsString& aLocalName) {                  \
+    return _g.RemoveAttributeNS(aNamespaceURI, aLocalName);                   \
+  }                                                                           \
+  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,                \
+                                const nsString& aLocalName,                   \
+                                nsIDOMAttr** aReturn) {                       \
+    return _g.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);         \
+  }                                                                           \
+  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { \
+    return _g.SetAttributeNodeNS(aNewAttr, aReturn);                          \
+  }                                                                           \
+  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,            \
+                                    const nsString& aLocalName,               \
+                                    nsIDOMNodeList** aReturn) {               \
+    return _g.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);     \
+  }                                                                           \
+  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {           \
+    return _g.HasAttribute(aName, aReturn);                                   \
+  }                                                                           \
+  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,                    \
+                            const nsString& aLocalName, PRBool* aReturn) {    \
+    return _g.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);             \
   }
 
 /**
