@@ -118,7 +118,7 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                            aParentStyle,
                                            PR_FALSE,
                                            &newStyleContext);
-  if (newStyleContext != *aCurrentStyle)
+  if (newStyleContext != aCurrentStyle->get())
     *aCurrentStyle = newStyleContext;
     
 } // RefreshStyleContext
@@ -140,7 +140,7 @@ nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyle
     return rv;
   }
 
-  if ( old != mStyleContext ) {
+  if ( old.get() != mStyleContext ) {
     nsCOMPtr<nsIAtom> grippyRolloverPseudo ( dont_AddRef(NS_NewAtom(":toolbox-rollover")) );
     RefreshStyleContext(aPresContext, grippyRolloverPseudo, &mGrippyRolloverStyle, mContent, mStyleContext);
 

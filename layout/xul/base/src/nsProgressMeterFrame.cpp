@@ -706,7 +706,7 @@ nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                            aParentStyle,
                                            PR_FALSE,
                                            &newStyleContext);
-  if (newStyleContext != *aCurrentStyle)
+  if (newStyleContext != aCurrentStyle->get())
     *aCurrentStyle = newStyleContext;
     
 } // RefreshStyleContext
@@ -728,7 +728,7 @@ nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, ns
     return rv;
   }
 
-  if ( old != mStyleContext ) {
+  if ( old.get() != mStyleContext ) {
     nsCOMPtr<nsIAtom> barPseudo ( dont_AddRef(NS_NewAtom(":progressmeter-stripe")) );
     RefreshStyleContext(aPresContext, barPseudo, &mBarStyle, mContent, mStyleContext);
   }
