@@ -1793,6 +1793,18 @@ nsTreeRowGroupFrame::IndexOfRow(nsIPresContext* aPresContext,
 PRBool
 nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
 {
+  if (!mRowGroupInfo) {
+    mRowGroupInfo = new nsTreeRowGroupInfo();
+  }
+
+  PRInt32 count = mRowGroupInfo->mRowCount;
+  if (count == -1) {
+    count = 0;
+    mRowGroupInfo->Clear();
+    ComputeTotalRowCount(count, mContent);
+    mRowGroupInfo->mRowCount = count;
+  }
+
   if (aRowIndex >= 0 && aRowIndex < mRowGroupInfo->mRowCount)
     return PR_TRUE;
   return PR_FALSE;
