@@ -825,11 +825,12 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
         mTextValue.Append(aChar);
         result=aScanner.Peek(aChar);    //then see what's next.
         if((NS_OK==result) && (kRightSquareBracket==aChar)) {
-          result=aScanner.GetChar(aChar);    //strip off the second ]
+          result=aScanner.GetChar(aChar); //strip off the second ]
           mTextValue.Append(aChar);
-          result=aScanner.Peek(aChar);    //then see what's next.
         }
-        if((NS_OK==result) && (kGreaterThan==aChar)) {
+        nsAutoString dummy; // skip any bad data
+        result=aScanner.ReadUntil(dummy,kGreaterThan,PR_FALSE);
+        if (NS_OK==result) {
           result=aScanner.GetChar(aChar); //strip off the >
           done=PR_TRUE;
         }
