@@ -58,12 +58,20 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
 
   if (nsnull == kLinkAtom) {
     kLinkAtom = NS_NewAtom("link");
-    kHrefAtom = NS_NewAtom("href");
-    kShowAtom = NS_NewAtom("show");
   }
   else {
     NS_ADDREF(kLinkAtom);
+  }
+  if (nsnull == kHrefAtom) {  // need to test these individually, others may refcnt these atoms
+    kHrefAtom = NS_NewAtom("href");
+  }
+  else {
     NS_ADDREF(kHrefAtom);
+  }
+  if (nsnull == kShowAtom) {
+    kShowAtom = NS_NewAtom("show");
+  }
+  else {
     NS_ADDREF(kShowAtom);
   }
 }
