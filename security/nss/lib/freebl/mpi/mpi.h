@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.18 2000/12/29 01:01:34 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.19 2001/03/13 19:01:52 relyea%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -55,6 +55,11 @@
 #endif
 
 #include <limits.h>
+
+#if defined(BSDI)
+#undef ULLONG_MAX
+#endif
+
 #ifdef macintosh
 #include <Types.h>
 #else
