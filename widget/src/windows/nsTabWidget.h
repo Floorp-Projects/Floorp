@@ -37,8 +37,10 @@ public:
   nsTabWidget();
   virtual ~nsTabWidget();
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
+      // nsISupports
+  NS_IMETHOD_(nsrefcnt) Release(void);          
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
+  NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
 
   // nsITabWidget part 
   NS_IMETHOD SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]);
