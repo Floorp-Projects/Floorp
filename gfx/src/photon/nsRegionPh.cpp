@@ -69,6 +69,16 @@ nsRegionPh :: nsRegionPh()
   mRegionType = eRegionComplexity_empty;
 }
 
+nsRegionPh :: nsRegionPh(PhTile_t *tiles)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::nsRegion Constructor this=<%p>\n", this));
+
+  NS_INIT_REFCNT();
+
+  mRegion = tiles; /* assume ownership */
+  mRegionType = eRegionComplexity_complex;
+}
+
 
 nsRegionPh :: ~nsRegionPh()
 {

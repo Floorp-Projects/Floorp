@@ -30,6 +30,8 @@ class nsRegionPh : public nsIRegion
 {
 public:
   nsRegionPh();
+  nsRegionPh(PhTile_t *tiles);
+
   virtual ~nsRegionPh();
 
   NS_DECL_ISUPPORTS
