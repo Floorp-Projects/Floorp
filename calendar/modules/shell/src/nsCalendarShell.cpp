@@ -135,6 +135,8 @@ static NS_DEFINE_IID(kCMIMEServiceCID,      NS_MIME_SERVICE_CID);
 #include "nsIXPFCObserver.h"
 #define kNotFound -1
 
+#include "nsCalTestStrings.h"
+
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
 {
@@ -1228,6 +1230,7 @@ extern "C" void XP_Trace( const char *, ... )
 
 // XXX: Move Me. This code was in the CommandCanvas, but is really
 //      independent of any UI
+// XXX: Lots of testing code is going here, needs to be moved...
 
 nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
 {
@@ -1235,7 +1238,7 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
   /*
    * Extract the CanvasName, method and params out
    */
-
+  
   nsString target, name, method, param;
 
   aCommand.Trim(" \r\n\t");
@@ -1243,38 +1246,44 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
   PRInt32 offset = aCommand.Find(' ');
 
   if (offset == kNotFound)
-    return NS_OK;
-
-  aCommand.Left(target,offset);
-  aCommand.Cut(0,offset);
-  aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
-
-  offset = aCommand.Find(' ');
-
-  if (offset == kNotFound)
-    return NS_OK;
-  
-  aCommand.Left(name,offset);
-  aCommand.Cut(0,offset);
-  aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
-
-  offset = aCommand.Find(' ');
-
-  if (offset == kNotFound)
   {
-    method = aCommand;
-    param = "";
-  } else
-  {
-    aCommand.Left(method,offset);
+    target = aCommand;
+  } else {
+
+    aCommand.Left(target,offset);
     aCommand.Cut(0,offset);
     aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
 
-    param = aCommand;
+    offset = aCommand.Find(' ');
+
+    if (offset == kNotFound)
+    { 
+      name = aCommand;
+    } else {
+  
+      aCommand.Left(name,offset);
+      aCommand.Cut(0,offset);
+      aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+
+      offset = aCommand.Find(' ');
+
+      if (offset == kNotFound)
+      {
+        method = aCommand;
+        param = "";
+      } else
+      {
+        aCommand.Left(method,offset);
+        aCommand.Cut(0,offset);
+        aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+
+        param = aCommand;
+      }
+    }
   }
 
   /*
-   * Fint the canvas by this name
+   * Find the canvas by this name
    */
 
   if (target.EqualsIgnoreCase(XPFC_STRING_PANEL))
@@ -1332,8 +1341,30 @@ nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
 
     NS_IF_RELEASE(command);
     NS_IF_RELEASE(observer);
+  } else if (target.EqualsIgnoreCase(XPFC_STRING_HELP)) {
+
+    /*
+     * Return basic help?
+     */
+
+    if (name.Length() == 0)
+    {
+      aReply = ZULUCOMMAND_HELP;
+
+    } else if (name.EqualsIgnoreCase(XPFC_STRING_PANEL)) {
+
+      aReply = ZULUCOMMAND_HELP_PANEL;
+
+    } else {
+
+      aReply = "ERROR: Command Not Known:\r\n";
+      aReply += ZULUCOMMAND_HELP;
+
+    }
+
+
   } else {
-    aReply = "ERROR: target class unknown\n";
+    aReply = "ERROR: target class unknown\r\n";
   }
   
   return NS_OK;  

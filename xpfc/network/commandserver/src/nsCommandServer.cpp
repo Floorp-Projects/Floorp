@@ -219,7 +219,7 @@ static void PR_CALLBACK CommandServerClientThread(void * arg)
     {
       nsString string = "BOBO";
 
-      string.SetString(in_buf->data, bytes2);
+      string.SetString(in_buf->data, nsCRT::strlen(in_buf->data));
 
       // XXX:  We really need an interface for receiving string results
       //       for CommandInvoker queries.  Right now, we can dispatch 
@@ -232,6 +232,7 @@ static void PR_CALLBACK CommandServerClientThread(void * arg)
       //
       //       I believe sman had an idea on how to do these things, check my notes...
       //
+#if 0
       if (string.EqualsIgnoreCase(XPFC_STRING_HELP) || string.EqualsIgnoreCase(XPFC_STRING_QUESTIONMARK))
       {
 
@@ -240,7 +241,7 @@ static void PR_CALLBACK CommandServerClientThread(void * arg)
         nsCRT::memcpy(in_buf->data, "Help Not Yet Implemented ... Sorry Steve!!!\n", bytes);
 
       } else {
-
+#endif
         nsString reply("Command Received and Executed!!!\n");
 
         gApplicationShell->ReceiveCommand(string, reply);
@@ -255,8 +256,10 @@ static void PR_CALLBACK CommandServerClientThread(void * arg)
         nsCRT::memcpy(in_buf->data, cstring, reply.Length());
 
         delete cstring;
+#if 0
 
       }
+#endif
 
       
 
