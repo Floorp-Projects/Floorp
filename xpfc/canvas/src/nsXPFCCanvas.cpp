@@ -49,6 +49,8 @@
 #define DEFAULT_WIDTH  100
 #define DEFAULT_HEIGHT 100
 
+#define DELTA 5
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kXPFCCanvasCID, NS_XPFC_CANVAS_CID);
 static NS_DEFINE_IID(kCBoxLayoutCID,   NS_BOXLAYOUT_CID);
@@ -2178,10 +2180,65 @@ PRBool nsXPFCCanvas :: IsSplittable()
 
 PRBool nsXPFCCanvas :: IsOverSplittableRegion(nsPoint& aPoint)
 {
-  return (PR_FALSE);
+  /*
+   * For now, if we are 5 pixels within our border, return true
+   */
+
+  nsRect bounds;
+  PRBool bSplittable = PR_FALSE;
+
+  GetBounds(bounds);
+
+  if (bounds.Contains(aPoint) == PR_FALSE)
+    return bSplittable;
+
+
+  if (aPoint.x <= bounds.x+DELTA) {
+
+    bSplittable = PR_TRUE;
+  
+  } else if( aPoint.x >= bounds.XMost()-DELTA) {
+
+    bSplittable = PR_TRUE;
+
+  } else if (aPoint.y <= bounds.y+DELTA) {
+
+    bSplittable = PR_TRUE;
+  
+  } else if( aPoint.y <= bounds.YMost()-DELTA) {
+
+    bSplittable = PR_TRUE;
+
+  }
+
+  return (bSplittable);
 }
 
 nsSplittableOrientation nsXPFCCanvas :: GetSplittableOrientation(nsPoint& aPoint)
 {
-  return (nsSplittableOrientation_none);
+
+  nsRect bounds;
+  nsSplittableOrientation orientation = nsSplittableOrientation_none;
+
+  GetBounds(bounds);
+
+  if (aPoint.x <= bounds.x+DELTA) {
+
+    orientation = nsSplittableOrientation_eastwest;
+  
+  } else if( aPoint.x >= bounds.XMost()-DELTA) {
+
+    orientation = nsSplittableOrientation_eastwest;
+
+  } else if (aPoint.y <= bounds.y+DELTA) {
+
+    orientation = nsSplittableOrientation_northsouth;
+  
+  } else if( aPoint.y >= bounds.YMost()-DELTA) {
+
+    orientation = nsSplittableOrientation_northsouth;
+
+  }
+
+  return (orientation);
 }
