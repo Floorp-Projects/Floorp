@@ -43,7 +43,7 @@
                                 <treechildren>
 				<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
 					<treerow>
-						<treecell treeallowevents="true">
+						<treecell allowevents="true">
 							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell>
