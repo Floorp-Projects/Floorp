@@ -332,6 +332,9 @@ private:
   static nsSize            gOffScreenSize;
   static nsSize            gBlendSize;
 
+  //Rendering context used to cleanup the blending buffers
+  static nsIRenderingContext* gCleanupContext;
+
   // Largest requested offscreen size if larger than a full screen.
   static nsSize            gLargestRequestedSize;
 
