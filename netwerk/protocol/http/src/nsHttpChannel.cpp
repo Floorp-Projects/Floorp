@@ -1667,6 +1667,7 @@ nsHttpChannel::GetContentType(char **value)
     nsresult rv;
 
     NS_ENSURE_ARG_POINTER(value);
+    *value = nsnull;
 
     if (mResponseHead && mResponseHead->ContentType())
         return DupString(mResponseHead->ContentType(), value);
@@ -1706,9 +1707,12 @@ nsHttpChannel::GetContentType(char **value)
         }
     }
 
-    if (!*value)
-        *value = PL_strdup(UNKNOWN_CONTENT_TYPE);
+    // the content-type can only be set to application/x-unknown-content-type 
+    // if there is data from which to infer a content-type.
+    if (!mResponseHead)
+        return NS_ERROR_NOT_AVAILABLE;
 
+    *value = PL_strdup(UNKNOWN_CONTENT_TYPE);
     return *value ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 NS_IMETHODIMP
