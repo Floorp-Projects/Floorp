@@ -2,6 +2,7 @@
 # This is a list of local files which get copied to the mozilla:dist:layout directory
 #
 nslayout.h
+nsICaret.h
 nsIContent.h
 nsIDocument.h
 nsIDocumentContainer.h
@@ -29,3 +30,4 @@ nsIStyleSet.h
 nsIStyleSheet.h
 nsITextContent.h
 nsTextFragment.h
+nsIDOMSelectionListener.h
