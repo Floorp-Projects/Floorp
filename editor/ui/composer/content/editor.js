@@ -1436,7 +1436,6 @@ function EditorSetDefaultPrefs()
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
     {
-dump("\n**************** frank tang ********\n");
         var element = domdoc.createElement("meta");
         if ( element )
         {
