@@ -45,8 +45,8 @@ by the sanity test target like this:
     make parser sanity
 
 To automatically rebuild the parser and run the sanity test. What's
-is any kind of dependency knowledge so using the root target always
-rebuilds everything.
+missing is any kind of dependency rules, so using the root target 
+always rebuilds everything. This, for the sake of keeping it simple.
 
 
 RUNNING JSC
@@ -67,7 +67,7 @@ Dec-1-2000
 ----------
 Signficant portions of the type system, compile-time constant evaluator,
 and name management systems are working. Missing are semantics for 
-using, import and export, and unit syntax. More tests are also needed.
+using, import, export, and unit parsing. More tests are also needed.
 
 
 ISSUES
