@@ -533,7 +533,7 @@ NS_IMETHODIMP nsAbView::PerformActionOnCell(const PRUnichar *action, PRInt32 row
 
 NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
 {
-  if (mCards.Count() <= row) {
+  if ((mCards.Count() <= row) || (row < 0)) {
     *aCard = nsnull;
     return NS_OK;
   }
