@@ -86,9 +86,12 @@ struct bitFields {
     PRUint32 red;
     PRUint32 green;
     PRUint32 blue;
-    PRInt8 redshift;
-    PRInt8 greenshift;
-    PRInt8 blueshift;
+    PRUint8 redLeftShift;
+    PRUint8 redRightShift;
+    PRUint8 greenLeftShift;
+    PRUint8 greenRightShift;
+    PRUint8 blueLeftShift;
+    PRUint8 blueRightShift;
 };
 
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
@@ -132,6 +135,10 @@ private:
      * @param aBuffer Data to process.
      * @oaram count Number of bytes in mBuffer */
     NS_METHOD ProcessData(const char* aBuffer, PRUint32 aCount);
+
+    /** Calculates the red-, green- and blueshift in mBitFields using
+     * the bitmasks from mBitFields */
+    NS_METHOD CalcBitShift();
 
     /** Sets the image data at specified position. mCurLine is used
      * to get the row

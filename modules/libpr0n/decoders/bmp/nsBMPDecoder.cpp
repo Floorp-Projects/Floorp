@@ -38,7 +38,6 @@
 
 /* This does not yet work in this version:
  * o) Compressed Bitmaps
- * o) Bitfields which are not 5-5-5 or 5-6-5
  * This decoder was tested on Windows, Linux and Mac. */
 
 /* This is a Cross-Platform BMP Decoder, which should work everywhere, including
@@ -159,6 +158,42 @@ nsresult nsBMPDecoder::SetData(PRUint8* aData)
     return NS_OK;
 }
 
+static void calcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
+{
+    // find the rightmost 1
+    PRUint8 pos;
+    PRBool started = PR_FALSE;
+    aBegin = aLength = 0;
+    for (pos = 0; pos <= 31; pos++) {
+        if (!started && (aMask & (1 << pos))) {
+            aBegin = pos;
+            started = PR_TRUE;
+        }
+        else if (started && !(aMask & (1 << pos))) {
+            aLength = pos - aBegin;
+            break;
+        }
+    }
+}
+
+NS_METHOD nsBMPDecoder::CalcBitShift()
+{
+    PRUint8 begin, length;
+    // red
+    calcBitmask(mBitFields.red, begin, length);
+    mBitFields.redRightShift = begin;
+    mBitFields.redLeftShift = 8 - length;
+    // green
+    calcBitmask(mBitFields.green, begin, length);
+    mBitFields.greenRightShift = begin;
+    mBitFields.greenLeftShift = 8 - length;
+    // blue
+    calcBitmask(mBitFields.blue, begin, length);
+    mBitFields.blueRightShift = begin;
+    mBitFields.blueLeftShift = 8 - length;
+    return NS_OK;
+}
+
 NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 {
     if (!aCount || (mCurLine < 0)) // aCount=0 means EOF, mCurLine < 0 means we're past end of image
@@ -225,11 +260,9 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         else if (mBIH.compression != BI_BITFIELDS && mBIH.bpp == 16) {
             // Use default 5-5-5 format
             mBitFields.red   = 0x7C00;
-            mBitFields.redshift = 7;
             mBitFields.green = 0x03E0;
-            mBitFields.greenshift = 2;
             mBitFields.blue  = 0x001F;
-            mBitFields.blueshift = 3; // is treated as -3
+            CalcBitShift();
         }
 
         rv = mImage->Init(mBIH.width, mBIH.height, mObserver);
@@ -292,26 +325,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         mBitFields.red = LITTLE_TO_NATIVE32(*(PRUint32*)mRawBuf);
         mBitFields.green = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 4));
         mBitFields.blue = LITTLE_TO_NATIVE32(*(PRUint32*)(mRawBuf + 8));
-        if (mBIH.bpp == 16) {
-            if (mBitFields.red == 0x7C00 && mBitFields.green == 0x03E0 && mBitFields.blue == 0x1F) {
-                // 5-5-5
-                mBitFields.redshift = 7;
-                mBitFields.greenshift = 2;
-                mBitFields.blueshift = 3;
-            }
-            else if (mBitFields.red == 0xF800 && mBitFields.green == 0x7E0 && mBitFields.blue == 0x1F) {
-                // 5-6-5
-                mBitFields.redshift = 8;
-                mBitFields.greenshift = 3;
-                mBitFields.blueshift = 3;
-            }
-            else
-                return NS_ERROR_FAILURE;
-        }
-        else if (mBIH.bpp == 32 && (mBitFields.red != 0xFF0000 || mBitFields.green != 0xFF00
-                 || mBitFields.blue != 0xFF))
-            // We only support 8-8-8 32 bit BMPs
-            return NS_ERROR_FAILURE;
+        CalcBitShift();
     }
     while (aCount && (mPos < mBFH.dataoffset)) { // Skip whatever is between header and data
         mPos++; aBuffer++; aCount--;
@@ -377,10 +391,9 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         while (lpos < mBIH.width) {
                           PRUint16 val = LITTLE_TO_NATIVE16(*(PRUint16*)p);
                           SetPixel(d,
-                                  (val & mBitFields.red) >> mBitFields.redshift,
-                                  (val & mBitFields.green) >> mBitFields.greenshift,
-                                  (val & mBitFields.blue) << mBitFields.blueshift);
-                          // Blue shift is always negative
+                                  (val & mBitFields.red) >> mBitFields.redRightShift << mBitFields.redLeftShift,
+                                  (val & mBitFields.green) >> mBitFields.greenRightShift << mBitFields.greenLeftShift,
+                                  (val & mBitFields.blue) >> mBitFields.blueRightShift << mBitFields.blueLeftShift);
                           ++lpos;
                           p+=2;
                         }
