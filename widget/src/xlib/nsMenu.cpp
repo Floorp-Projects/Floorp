@@ -42,7 +42,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {                                      
     *aInstancePtr = (void*)(nsIMenuListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

@@ -661,7 +661,7 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
          ("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
-          (const char *) nsAutoCString(mName)));
+          (const char *) nsCAutoString(mName)));
 
   if (mName == "unnamed") {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG,
@@ -962,7 +962,7 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
 
   printf("%4d %-26s(this=%-8p , window=%-8p",
          sPrintCount++,
-         (const char *) nsAutoCString(debug_GuiEventToString(&aEvent)),
+         (const char *) nsCAutoString(debug_GuiEventToString(&aEvent)),
          this,
          (void *) aWindow);
          
