@@ -1340,7 +1340,7 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
         return NS_ERROR_NOT_INITIALIZED;
 
     PRBool containedIn;
-    mComponentsDir->IsContainedIn(aSpec, PR_TRUE, &containedIn); // dougt FIX!
+    mComponentsDir->Contains(aSpec, PR_TRUE, &containedIn);
 
     char *persistentDescriptor;
 
