@@ -40,11 +40,11 @@
 #include "nsToken.h"
 #include "nsString.h"
 #include "nsParserCIID.h"
+#include "nsDeque.h"
 
 class nsITokenRecycler;
 
 class nsCParserNode :  public nsIParserNode {
-  enum {eMaxAttr=20};
   
   public:
 
@@ -67,7 +67,7 @@ class nsCParserNode :  public nsIParserNode {
      * Init
      * @update	gess5/11/98
      */
-    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1);
+    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsITokenRecycler* aRecycler=0);
 
     /**
      * Retrieve the name of the node
@@ -170,11 +170,11 @@ class nsCParserNode :  public nsIParserNode {
     virtual CToken* PopAttributeToken();
     
   protected:
-    PRUint32      mAttributeCount;    
     PRInt32       mLineNumber;
     CToken*       mToken;
-    CToken*       mAttributes[eMaxAttr]; // XXX Ack! This needs to be dynamic! 
+    nsDeque*      mAttributes;
     nsAutoString  mSkippedContent;
+
     nsITokenRecycler* mRecycler;
 };
 

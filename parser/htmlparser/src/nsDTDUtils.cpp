@@ -462,9 +462,11 @@ void CTokenRecycler::RecycleToken(CToken* aToken) {
     PRInt32 theType=aToken->GetTokenType();
     CTokenFinder finder(aToken);
     CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(finder);
+#ifdef NS_DEBUG
     if(theMatch) {
       int x=5;
     }
+#endif
     mTokenCache[theType-1]->Push(aToken);
   }
 }

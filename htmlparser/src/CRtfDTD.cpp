@@ -481,18 +481,17 @@ PRInt32 CRTFControlWord::GetTokenType() {
   return eRTFToken_controlword;
 }
 
-
-PRInt32 CRTFControlWord::Consume(nsScanner& aScanner){
+nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner) {
   static nsString     gAlphaChars("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
   static nsAutoString gDigits("-0123456789");
 
   PRInt32 result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
   if(NS_OK==result) {
     //ok, now look for an option parameter...
-    PRUnichar ch;
-    result=aScanner.Peek(ch);
 
-    switch(ch) {
+    result=aScanner.Peek(aChar);
+
+    switch(aChar) {
       case '0': case '1': case '2': case '3': case '4': 
       case '5': case '6': case '7': case '8': case '9': 
       case kMinus:
@@ -531,7 +530,7 @@ PRBool CRTFGroup::IsGroupStart(){
   return mStart;
 }
 
-PRInt32 CRTFGroup::Consume(nsScanner& aScanner){
+nsresult CRTFGroup::Consume(PRUnichar aChar,nsScanner& aScanner) {
   PRInt32 result=NS_OK;
   if(PR_FALSE==mStart)
     result=aScanner.SkipWhitespace();
@@ -561,7 +560,8 @@ PRInt32 CRTFContent::GetTokenType() {
  * @return
  */
 static nsString textTerminators("\\{}");
-PRInt32 CRTFContent::Consume(nsScanner& aScanner){
+
+nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner) {
   PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
   return result;
 }

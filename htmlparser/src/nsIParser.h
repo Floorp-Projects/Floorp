@@ -221,14 +221,14 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_CONTINUE              NS_OK
 
 
-const PRInt32   kEOF              = NS_ERROR_HTMLPARSER_EOF;
-const PRInt32   kUnknownError     = NS_ERROR_HTMLPARSER_UNKNOWN;
-const PRInt32   kCantPropagate    = NS_ERROR_HTMLPARSER_CANTPROPAGATE;
-const PRInt32   kContextMismatch  = NS_ERROR_HTMLPARSER_CONTEXTMISMATCH;
-const PRInt32   kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
-const PRInt32   kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
-const PRInt32   kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
-const PRInt32   kBlocked          = NS_ERROR_HTMLPARSER_BLOCK;
+const PRUint32  kEOF              = NS_ERROR_HTMLPARSER_EOF;
+const PRUint32  kUnknownError     = NS_ERROR_HTMLPARSER_UNKNOWN;
+const PRUint32  kCantPropagate    = NS_ERROR_HTMLPARSER_CANTPROPAGATE;
+const PRUint32  kContextMismatch  = NS_ERROR_HTMLPARSER_CONTEXTMISMATCH;
+const PRUint32  kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
+const PRUint32  kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
+const PRUint32  kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
+const PRUint32  kBlocked          = NS_ERROR_HTMLPARSER_BLOCK;
 
 const PRUint32  kNewLine          = '\n';
 const PRUint32  kCR               = '\r';

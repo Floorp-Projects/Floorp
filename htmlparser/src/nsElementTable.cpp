@@ -1691,9 +1691,6 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
       }
     }
 
-    if(mTagID!=eHTMLTag_server){
-      int x=5;
-    }
   }
   
   return PR_FALSE;

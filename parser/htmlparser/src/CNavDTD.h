@@ -85,6 +85,7 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
+#include "nsParserNode.h"
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
@@ -94,7 +95,6 @@
 class nsIHTMLContentSink;
 class nsIDTDDebug;
 class nsIParserNode;
-class nsCParserNode;
 class CITokenHandler;
 class nsParser;
 class nsDTDContext;
@@ -490,12 +490,14 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
 protected:
 
-		nsresult    CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
-		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
-    nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
-    nsresult    DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
-    nsresult    HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode);
-    nsresult    HandleSavedTokensAbove(eHTMLTags aTag);
+		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
+		nsresult        CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+    nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
+    nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode& aNode);
+    nsresult        HandleSavedTokensAbove(eHTMLTags aTag);
+    nsCParserNode*  CreateNode(void);
+    void            RecycleNode(nsCParserNode* aNode);
 
     nsIHTMLContentSink* mSink;
 
@@ -521,6 +523,7 @@ protected:
     PRBool              mHasOpenScript;
     PRBool              mSaveBadTokens;
     eHTMLTags           mSkipTarget;
+    nsDeque             mSharedNodes;
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;

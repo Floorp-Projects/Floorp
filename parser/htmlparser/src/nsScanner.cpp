@@ -53,7 +53,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
   mIncremental=PR_TRUE;
   mOwnsStream=PR_FALSE;
   mOffset=0;
-  mMarkPos=-1;
+  mMarkPos=0;
   mInputStream=0;
   mUnicodeDecoder = 0;
   mCharset = "";
@@ -75,7 +75,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
 {
   mIncremental=PR_TRUE;
   mOffset=0;
-  mMarkPos=-1;
+  mMarkPos=0;
   mTotalRead=0;
   mOwnsStream=aCreateStream;
   mInputStream=0;
@@ -103,7 +103,7 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
 {    
   mIncremental=PR_TRUE;
   mOffset=0;
-  mMarkPos=-1;
+  mMarkPos=0;
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
   mInputStream=&aStream;

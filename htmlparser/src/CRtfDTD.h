@@ -102,7 +102,7 @@ class CRTFControlWord : public CToken {
 public:
                   CRTFControlWord(char* aKey);
   virtual PRInt32 GetTokenType();
-  virtual PRInt32 Consume(nsScanner& aScanner);
+  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner);
 protected:
   nsString  mArgument;
 };
@@ -120,7 +120,7 @@ public:
   virtual PRInt32 GetTokenType();
   virtual void    SetGroupStart(PRBool aFlag);
   virtual PRBool  IsGroupStart();
-  virtual PRInt32 Consume(nsScanner& aScanner);
+  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner);
 protected:
           PRBool  mStart;
 };
@@ -136,7 +136,7 @@ class CRTFContent: public CToken {
 public:
                   CRTFContent(PRUnichar* aValue);
   virtual PRInt32 GetTokenType();
-  virtual PRInt32 Consume(nsScanner& aScanner);
+  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner);
 };
 
 

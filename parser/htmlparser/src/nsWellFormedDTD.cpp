@@ -120,11 +120,10 @@ NS_IMPL_RELEASE(CWellFormedDTD)
  *  @param   
  *  @return  
  */
-CWellFormedDTD::CWellFormedDTD() : nsIDTD() {
+CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mFilename("") {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
-  mFilename;
   mLineNumber=0;
   mTokenizer=0;
 }
@@ -452,12 +451,12 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
         if(0<attrCount){ //go collect the attributes...
           int attr=0;
           for(attr=0;attr<attrCount;attr++){
-            CToken* theToken=mTokenizer->PeekToken();
-            if(theToken)  {
-              eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-              if(eToken_attribute==theType){
+            CToken* theInnerToken=mTokenizer->PeekToken();
+            if(theInnerToken)  {
+              eHTMLTokenTypes theInnerType=eHTMLTokenTypes(theInnerToken->GetTokenType());
+              if(eToken_attribute==theInnerType){
                 mTokenizer->PopToken(); //pop it for real...
-                theNode.AddAttribute(theToken);
+                theNode.AddAttribute(theInnerToken);
               } 
             }
             else return kEOF;

@@ -242,11 +242,10 @@ static void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : nsIDTD() {
+CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mFilename("") {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
-  mFilename;
   mLineNumber=0;
   mTokenizer=0;
   mIsHTML=PR_FALSE;
@@ -605,7 +604,6 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
   PRInt32   theTextOffset=0;
   PRInt32   theOffset=-1; //aTextString.FindCharInSet("\t\n\r ",theStartOffset);
   PRInt32   theSpaces=0;
-  PRBool    theOutputReady=PR_FALSE;
   PRUnichar theChar=0;
   PRUnichar theNextChar=0;
 
@@ -877,8 +875,8 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_style:
     case eToken_skippedcontent:
       {
-        CAttributeToken* theToken=(CAttributeToken*)aToken;
-        nsString& theText=theToken->GetKey();
+        CAttributeToken* theAToken=(CAttributeToken*)aToken;
+        nsString& theText=theAToken->GetKey();
         ::WriteText(theText,*mSink,PR_FALSE,mIsPlaintext,theContext);
       }
       break;
@@ -922,12 +920,12 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         if(0<attrCount){ //go collect the attributes...
           int attr=0;
           for(attr=0;attr<attrCount;attr++){
-            CToken* theToken=mTokenizer->PeekToken();
-            if(theToken)  {
-              eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-              if(eToken_attribute==theType){
+            CToken* theInnerToken=mTokenizer->PeekToken();
+            if(theInnerToken)  {
+              eHTMLTokenTypes theInnerType=eHTMLTokenTypes(theInnerToken->GetTokenType());
+              if(eToken_attribute==theInnerType){
                 mTokenizer->PopToken(); //pop it for real...
-                theContext.mTokenNode.AddAttribute(theToken);
+                theContext.mTokenNode.AddAttribute(theInnerToken);
               } 
             }
             else return kEOF;
