@@ -23,7 +23,6 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-navigator.dtd" >
 
