@@ -192,8 +192,6 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 			if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].userName, searchStringLen) == 0
 				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
 			{
-				matchFound = PR_TRUE; // so we kick out of the loop
-
 				// get a mime header parser to generate a valid address
 				nsCOMPtr<nsIMsgHeaderParser> parser;
 				nsComponentManager::CreateInstance(kHeaderParserCID,
@@ -205,6 +203,9 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 				if (parser)
 					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
 											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
+
+				if (! fullAddress || ! *fullAddress)
+					continue;	/* something goes wrong with this entry, maybe the email address is missing. Just skip it... */
 				
 				/* We need to convert back the result from UTF-8 to Unicode */
 				PRUnichar* searchResult;
@@ -214,6 +215,8 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 				// iterate over the table looking for a match
 				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult);
 				PR_Free(searchResult);
+
+				matchFound = PR_TRUE; // so we kick out of the loop
 				break;
 			}
 		}
