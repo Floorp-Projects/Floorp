@@ -32,7 +32,8 @@ class CWebShellContainer :
 		public nsIStreamObserver,
 		public nsIURIContentListener,
 		public nsIDocumentLoaderObserver,
-		public nsIDocShellTreeOwner
+		public nsIDocShellTreeOwner,
+		public nsIInterfaceRequestor
 {
 public:
 	CWebShellContainer(CMozillaBrowser *pOwner);
@@ -49,12 +50,14 @@ protected:
 	CDWebBrowserEvents2 *m_pEvents2;
 
 public:
-
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIBASEWINDOW
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER
+	NS_DECL_NSISTREAMOBSERVER
+	NS_DECL_NSIDOCUMENTLOADEROBSERVER
+	NS_DECL_NSIINTERFACEREQUESTOR
 
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
@@ -72,12 +75,6 @@ public:
 						 const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
 
-	// nsIStreamObserver
-    NS_IMETHOD OnStartRequest(nsIChannel* aChannel, nsISupports* aContext);
-    NS_IMETHOD OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
-
-	// nsIDocumentLoaderObserver
-   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 };
 
 #endif

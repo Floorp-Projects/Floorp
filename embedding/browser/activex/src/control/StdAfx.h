@@ -97,6 +97,7 @@ typedef long int32;
 #include "nsIWebNavigation.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMSelection.h"
