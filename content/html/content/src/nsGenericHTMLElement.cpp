@@ -540,14 +540,6 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
 //  }
 //}
 
-#if 0
-static nsGenericHTMLElement::EnumTable kDirTable[] = {
-  { "ltr", NS_STYLE_DIRECTION_LTR },
-  { "rtl", NS_STYLE_DIRECTION_RTL },
-  { 0 }
-};
-#endif
-
 nsresult 
 nsGenericHTMLElement::ParseAttributeString(const nsString& aStr, 
                                            nsIAtom*& aName,
@@ -688,8 +680,14 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
     return result;
   }
   else {
-    if (0 == aValue.Length()) { // ifempty string
-      val.Reset();  // set empty value
+    if (ParseCommonAttribute(aAttribute, aValue, val)) {
+      // string value was mapped to nsHTMLValue, set it that way
+      result = SetHTMLAttribute(aAttribute, val, aNotify);
+      NS_RELEASE(htmlContent);
+      return result;
+    }
+    if (0 == aValue.Length()) { // if empty string
+      val.SetEmptyValue();
       result = SetHTMLAttribute(aAttribute, val, aNotify);
       NS_RELEASE(htmlContent);
       return result;
@@ -1586,6 +1584,12 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
 }         
           
 // XXX check all mappings against ebina's usage
+static nsGenericHTMLElement::EnumTable kDirTable[] = {
+  { "ltr", NS_STYLE_DIRECTION_LTR },
+  { "rtl", NS_STYLE_DIRECTION_RTL },
+  { 0 }
+};
+
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
@@ -1673,6 +1677,17 @@ static nsGenericHTMLElement::EnumTable kTableVAlignTable[] = {
   { "baseline",NS_STYLE_VERTICAL_ALIGN_BASELINE },
   { 0 }
 };
+
+PRBool 
+nsGenericHTMLElement::ParseCommonAttribute(nsIAtom* aAttribute, 
+                                           const nsString& aValue, 
+                                           nsHTMLValue& aResult) 
+{
+  if (nsHTMLAtoms::dir == aAttribute) {
+    return ParseEnumValue(aValue, kDirTable, aResult);
+  }
+  return PR_FALSE;
+}
 
 PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsString& aString,
