@@ -271,7 +271,9 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
                                                *lCID,
                                                nsnull,
                                                nsIHTTPNotify::GetIID(),
-                                               PROXY_ASYNC,
+                                               /* XXX needs to be async */
+                                               /*PROXY_ASYNC,*/
+                                               PROXY_SYNC,
                                                (void**)&pNotify);
             NS_RELEASE(proxyObjectManager);
         
