@@ -85,32 +85,27 @@ AddStyleSheetTxn::DoTransaction()
   
   nsCOMPtr<nsISelectionController> selCon;
   mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (!selCon)
-    return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = do_QueryInterface(selCon);
-
+  nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
-  
+
+  // although we don't need styleSet here; we need it in Undo
   nsCOMPtr<nsIStyleSet> styleSet;
   nsresult rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
+  if (NS_FAILED(rv)) return rv;
+  if (!styleSet) return NS_OK;
 
-  if (NS_SUCCEEDED(rv) && styleSet)
+  nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(mSheet);
+  if (styleSheet)
   {
-    nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
+    nsCOMPtr<nsIDocument> document;
+    rv = presShell->GetDocument(getter_AddRefs(document));
 
-    if (styleSheet)
-    {
-      nsCOMPtr<nsIDocument> document;
-      rv = presShell->GetDocument(getter_AddRefs(document));
-
-      if (NS_SUCCEEDED(rv) && document)
-        document->AddStyleSheet(styleSheet, 0);
-    }
+    if (NS_SUCCEEDED(rv) && document)
+      document->AddStyleSheet(styleSheet, 0);
   }
-  
+
   return rv;
 }
 
@@ -122,11 +117,8 @@ AddStyleSheetTxn::UndoTransaction()
   
   nsCOMPtr<nsISelectionController> selCon;
   mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (!selCon)
-    return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = do_QueryInterface(selCon);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   
@@ -213,11 +205,8 @@ RemoveStyleSheetTxn::DoTransaction()
   
   nsCOMPtr<nsISelectionController> selCon;
   mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (!selCon)
-    return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = do_QueryInterface(selCon);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
   
@@ -249,21 +238,18 @@ RemoveStyleSheetTxn::UndoTransaction()
   
   nsCOMPtr<nsISelectionController> selCon;
   mEditor->GetSelectionController(getter_AddRefs(selCon));
-  if (!selCon)
-    return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = do_QueryInterface(selCon);
+  nsCOMPtr<nsIPresShell> presShell = do_QueryInterface(selCon);
   if (!presShell)
     return NS_ERROR_UNEXPECTED;
-  
+
+  // although we don't really use styleSet here, we will in Do above
   nsCOMPtr<nsIStyleSet> styleSet;
   nsresult rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
 
   if (NS_SUCCEEDED(rv) && styleSet)
   {
-    nsCOMPtr<nsIStyleSheet> styleSheet     = do_QueryInterface(mSheet);
-
+    nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(mSheet);
     if (styleSheet)
     {
       nsCOMPtr<nsIDocument> document;
@@ -273,7 +259,7 @@ RemoveStyleSheetTxn::UndoTransaction()
         document->AddStyleSheet(styleSheet, 0);
     }
   }
-  
+
   return rv;
 }
 

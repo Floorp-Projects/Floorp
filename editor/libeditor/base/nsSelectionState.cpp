@@ -64,10 +64,9 @@ nsresult
 nsSelectionState::SaveSelection(nsISelection *aSel)
 {
   if (!aSel) return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
   PRInt32 i,rangeCount, arrayCount = mArray.Count();
-  nsRangeStore *item;
   aSel->GetRangeCount(&rangeCount);
+  nsRangeStore *item;
   
   // if we need more items in the array, new them
   if (arrayCount<rangeCount)
@@ -92,6 +91,7 @@ nsSelectionState::SaveSelection(nsISelection *aSel)
   }
   
   // now store the selection ranges
+  nsresult res = NS_OK;
   for (i=0; i<rangeCount; i++)
   {
     item = (nsRangeStore*)mArray.ElementAt(i);
@@ -242,7 +242,7 @@ nsRangeUpdater::RegisterSelectionState(nsSelectionState &aSelState)
     RegisterRangeItem(item);
   }
 
-  return NS_OK;;
+  return NS_OK;
 }
 
 nsresult 
@@ -259,7 +259,7 @@ nsRangeUpdater::DropSelectionState(nsSelectionState &aSelState)
     DropRangeItem(item);
   }
 
-  return NS_OK;;
+  return NS_OK;
 }
 
 // gravity methods:
@@ -304,12 +304,12 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
 
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset = 0;
-  nsRangeStore *item;
   
   nsresult res = nsEditor::GetNodeLocation(aNode, address_of(parent), &offset);
   NS_ENSURE_SUCCESS(res, res);
   
   // check for range endpoints that are after aNode and in the same parent
+  nsRangeStore *item;
   for (i=0; i<count; i++)
   {
     item = (nsRangeStore*)mArray.ElementAt(i);
@@ -483,13 +483,13 @@ nsRangeUpdater::SelAdjInsertText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
 
-  if (!aTextNode) return NS_ERROR_NULL_POINTER;
-  PRInt32 len=aString.Length(), i, count = mArray.Count();
+  PRInt32 count = mArray.Count();
   if (!count) return NS_OK;
-  nsRangeStore *item;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aTextNode));
   if (!node) return NS_ERROR_NULL_POINTER;
   
+  PRInt32 len=aString.Length(), i;
+  nsRangeStore *item;
   for (i=0; i<count; i++)
   {
     item = (nsRangeStore*)mArray.ElementAt(i);
@@ -509,7 +509,6 @@ nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset
 {
   if (mLock) return NS_OK;  // lock set by Will/DidReplaceParent, etc...
 
-  if (!aTextNode) return NS_ERROR_NULL_POINTER;
   PRInt32 i, count = mArray.Count();
   if (!count) return NS_OK;
   nsRangeStore *item;
