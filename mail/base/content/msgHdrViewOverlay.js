@@ -393,13 +393,14 @@ var messageHeaderSink = {
       // presentation level change....don't show vcards as external attachments in the UI.
       // libmime already renders them inline.
 
+      if (!mSaveHdr)
+        mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
       if (contentType == "text/x-vcard")
       {
         var inlineAttachments = pref.getBoolPref("mail.inline_attachments");
         var displayHtmlAs = pref.getIntPref("mailnews.display.html_as");
         if (inlineAttachments && !displayHtmlAs)
         {
-          mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
           return;
         }
       }
@@ -418,8 +419,7 @@ var messageHeaderSink = {
 
         try {
           // convert the uri into a hdr
-          var hdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
-          hdr.markHasAttachments(true);
+          mSaveHdr.markHasAttachments(true);
         }
         catch (ex) {
           dump("ex = " + ex + "\n");
@@ -429,15 +429,19 @@ var messageHeaderSink = {
     
     onEndAllAttachments: function()
     {
-      // if we only got a v-card, turn off the attachments flag
-      if (!currentAttachments.length && mSaveHdr)
-        mSaveHdr.markHasAttachments(false);
-      mSaveHdr = null;
       displayAttachmentsForExpandedView();
     },
 
     onEndMsgDownload: function(url)
     {
+      // if we don't have any attachments, turn off the attachments flag
+      if (!mSaveHdr)
+      {
+        var messageUrl = url.QueryInterface(Components.interfaces.nsIMsgMessageUrl);
+        mSaveHdr = messenger.messageServiceFromURI(messageUrl.uri).messageURIToMsgHdr(messageUrl.uri);
+      }
+      if (!currentAttachments.length && mSaveHdr)
+        mSaveHdr.markHasAttachments(false);
       OnMsgParsed(url);
     },
 
