@@ -749,6 +749,16 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
   if (nsnull == mRangeList) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  // Make sure we don't add a range that is already
+  // in the list!
+  PRInt32 i = mRangeList->IndexOf(&aRange);
+  if (i >= 0) {
+    // Range is already in the list, so there
+    // is nothing to do!
+    return NS_OK;
+  }
+  
   // dont need to addref - this call is made by the range object itself
   PRBool rv = mRangeList->AppendElement(&aRange);
   if (rv)  return NS_OK;
