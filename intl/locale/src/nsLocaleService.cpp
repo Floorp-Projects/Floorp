@@ -180,7 +180,7 @@ nsLocaleService::nsLocaleService(void)
 	nsresult result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 						NULL,kIWin32LocaleIID,(void**)&win32Converter);
 	NS_ASSERTION(win32Converter!=NULL,"nsLocaleService: can't get win32 converter\n");
-	if (result==NS_OK && win32Converter!=nsnull) {
+	if (NS_SUCCEEDED(result) && win32Converter!=nsnull) {
 		
 		//
 		// get the system LCID
@@ -188,9 +188,9 @@ nsLocaleService::nsLocaleService(void)
 		LCID win_lcid = GetSystemDefaultLCID();
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (result!=NS_OK) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
-		if (result!=NS_OK) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 
 		//
 		// get the application LCID
@@ -198,9 +198,9 @@ nsLocaleService::nsLocaleService(void)
 		win_lcid = GetUserDefaultLCID();
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
-		if (result!=NS_OK) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 		result = NewLocale(xpLocale.ToNewUnicode(),&mApplicationLocale);
-		if (result!=NS_OK) { win32Converter->Release(); return;}
+		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 	
 		win32Converter->Release();
 	}
@@ -210,15 +210,15 @@ nsLocaleService::nsLocaleService(void)
     nsString xpLocale;
     nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
                            NULL,kIPosixLocaleIID,(void**)&posixConverter);
-    if (result==NS_OK && posixConverter!=nsnull) {
+    if (NS_SUCCEEDED(result) && posixConverter!=nsnull) {
         char* lc_all = setlocale(LC_ALL,NULL);
         char* lang = getenv("LANG");
 
         if (lc_all!=nsnull) {
             result = posixConverter->GetXPLocale(lc_all,&xpLocale);
-            if (result!=NS_OK) { posixConverter->Release(); return; }
+            if (NS_FAILED(result)) { posixConverter->Release(); return; }
             result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
-            if (result!=NS_OK) { posixConverter->Release(); return; }
+            if (NS_FAILED(result)) { posixConverter->Release(); return; }
             mApplicationLocale=mSystemLocale;
             mApplicationLocale->AddRef();
             posixConverter->Release();
@@ -226,7 +226,7 @@ nsLocaleService::nsLocaleService(void)
             if (lang==nsnull) {
                 xpLocale = "en-US";
                 result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
-                if (result!=NS_OK) { posixConverter->Release(); return; }
+                if (NS_FAILED(result)) { posixConverter->Release(); return; }
                 mApplicationLocale = mSystemLocale;
                 mApplicationLocale->AddRef();
                 posixConverter->Release();
@@ -256,12 +256,12 @@ nsLocaleService::nsLocaleService(void)
 	nsIMacLocale*	macConverter;
 	nsresult result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
 						NULL,kIMacLocaleIID,(void**)&macConverter);
-	if (result==NS_OK && macConverter!=nsnull) {
+	if (NS_SUCCEEDED(result) && macConverter!=nsnull) {
 		nsString xpLocale;
 		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
-		if (result!=NS_OK) { macConverter->Release(); return; }
+		if (NS_FAILED(result)) { macConverter->Release(); return; }
 		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
-		if (result!=NS_OK) { macConverter->Release(); return; }
+		if (NS_FAILED(result)) { macConverter->Release(); return; }
 		mApplicationLocale = mSystemLocale;
 		mApplicationLocale->AddRef();
 		macConverter->Release();
@@ -305,7 +305,7 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 	for(i=0;i<LocaleListLength;i++) {
 		nsString category = LocaleList[i];
 		result = resultLocale->AddCategory(category.ToNewUnicode(),aLocale);
-		if (result!=NS_OK) { delete resultLocale; return result;}
+		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
 	return resultLocale->QueryInterface(kILocaleIID,(void**)_retval);
