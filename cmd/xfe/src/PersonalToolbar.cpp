@@ -440,6 +440,37 @@ XFE_PersonalToolbar::getIndicatorItem()
 }
 //////////////////////////////////////////////////////////////////////////
 void
+XFE_PersonalToolbar::configureIndicatorItem(BM_Entry * entry)
+{
+	Widget indicator = getIndicatorItem();
+
+	if (XfeIsAlive(indicator))
+	{
+		if (fe_globalPrefs.toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
+		{
+			XtVaSetValues(indicator,
+						  XmNpixmap,			XmUNSPECIFIED_PIXMAP,
+						  XmNpixmapMask,		XmUNSPECIFIED_PIXMAP,
+						  //XmNbuttonLayout,		XmBUTTON_LABEL_ONLY,
+						  NULL);
+		}
+		else
+		{		
+			Pixmap pixmap;
+			Pixmap pixmapMask;
+			
+			getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
+			
+			XtVaSetValues(indicator,
+						  XmNpixmap,		pixmap,
+						  XmNpixmapMask,	pixmapMask,
+						  //XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
+						  NULL);
+		}
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+void
 XFE_PersonalToolbar::setRaised(XP_Bool state)
 {
 	XP_ASSERT( XfeIsAlive(m_toolBar) );

@@ -53,6 +53,8 @@ public:
 	Widget			getLastItem			();
 	Widget			getIndicatorItem	();
 
+	void			configureIndicatorItem		(BM_Entry * entry);
+
 	void			setRaised			(XP_Bool);
 
 	void			addEntry				(const char *	address,

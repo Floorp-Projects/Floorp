@@ -387,6 +387,9 @@ XFE_PersonalDrop::dragMotion()
 		{
 			_personalToolbar->setDropTargetItem(target,
 												_dropEventX - XfeX(target));
+
+            // The argument should really be a (BM_Entry *) 
+			_personalToolbar->configureIndicatorItem(NULL);
 		}
 		// Otherwise use the last item
 		else
@@ -397,6 +400,9 @@ XFE_PersonalDrop::dragMotion()
 			if (XfeIsAlive(last))
 			{
 				_personalToolbar->setDropTargetItem(last,10000);
+
+                // The argument should really be a (BM_Entry *) 
+                _personalToolbar->configureIndicatorItem(NULL);
 			}
 		}
 	}
