@@ -405,6 +405,10 @@ void GC_init()
 
 }
 
+#ifdef MACOS
+    extern void GC_init_MacOS();
+#endif
+
 #ifdef MSWIN32
     extern void GC_init_win32();
 #endif
@@ -424,6 +428,9 @@ void GC_init_inner()
 	if ((ptr_t)endGC_arrays != (ptr_t)(&GC_obj_kinds)) {
 	    GC_printf0("Reordering linker, didn't exclude obj_kinds\n");
 	}
+#   endif
+#   ifdef MACOS
+    GC_init_MacOS();
 #   endif
 #   ifdef MSWIN32
  	GC_init_win32();

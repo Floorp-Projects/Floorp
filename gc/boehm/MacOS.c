@@ -25,6 +25,15 @@ unloading shared library.
 #include "gc.h"
 #include "gc_priv.h"
 
+void GC_init_MacOS()
+{
+    int i;
+    
+    MaxApplZone();
+    for (i = 0; i < 8; ++i)
+        MoreMasters();
+}
+
 // use 'CODE' resource 0 to get exact location of the beginning of global space.
 
 typedef struct {
