@@ -154,7 +154,6 @@ protected:
 #endif
 
 	PRPackedBool                    mWindowMadeHere; // true if we created the window
-	PRPackedBool                    mIsDialog;       // true if the window is a dialog
 	PRPackedBool                    mIsSheet;        // true if the window is a sheet (Mac OS X)
 	PRPackedBool                    mIgnoreDeactivate;  // true if this window has a (Mac OS X) sheet opening
 	PRPackedBool                    mAcceptsActivation;
@@ -162,6 +161,7 @@ protected:
 	PRPackedBool                    mZoomOnShow;
 	PRPackedBool                    mZooming;
 	PRPackedBool                    mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
+	Point                           mBoundsOffset;      // offset from window structure to content
 	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	
