@@ -315,7 +315,7 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
   if (nsnull == mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
     
-    res = nsGenericHTMLElement::GetScriptObjectFactory(&factory);
+    res = nsGenericElement::GetScriptObjectFactory(&factory);
     if (NS_OK != res) {
       return res;
     }

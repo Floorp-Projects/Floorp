@@ -428,30 +428,16 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
                                   nsIStreamListener **aDocListener,
                                   const char* aCommand)
 {
-  nsresult rv;
-  nsIWebShell* webShell;
-
-  // Delete references to style sheets - this should be done in superclass...
-  PRInt32 index = mStyleSheets.Count();
-  while (--index >= 0) {
-    nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
-    NS_RELEASE(sheet);
+  nsresult rv = nsDocument::StartDocumentLoad(aURL, aContainer,
+                                              aDocListener);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  mStyleSheets.Clear();
+
+  nsIWebShell* webShell;
 
   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mStyleAttrStyleSheet);
-  NS_IF_RELEASE(mDocumentURL);
-  NS_IF_RELEASE(mDocumentURLGroup);
-  if (nsnull != mDocumentTitle) {
-    delete mDocumentTitle;
-    mDocumentTitle = nsnull;
-  }
-
-  mDocumentURL = aURL;
-  NS_ADDREF(aURL);
-
-  mDocumentURLGroup = aURL->GetURLGroup();
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);

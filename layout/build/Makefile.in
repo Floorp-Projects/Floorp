@@ -55,6 +55,8 @@ EXTRA_DSO_LDOPTS = \
 	-lraptorhtmlstyle_s	\
 	-lraptorhtmlbase_s	\
 	-lraptorhtmltable_s	\
+	-lraptorxmldoc_s	\
+	-lraptorxmlcontent_s	\
 	-lraptorlayout_s        \
 	-lraptorevents_s	\
 	-L$(DIST)/bin		\

@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base html events build
+DIRS = base html xml events build
 
 include $(topsrcdir)/config/config.mk
 

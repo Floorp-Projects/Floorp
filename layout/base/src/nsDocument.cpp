@@ -275,6 +275,34 @@ nsIArena* nsDocument::GetArena()
   return mArena;
 }
 
+NS_IMETHODIMP
+nsDocument::StartDocumentLoad(nsIURL *aURL, 
+                              nsIContentViewerContainer* aContainer,
+                              nsIStreamListener **aDocListener)
+{
+  // Delete references to style sheets - this should be done in superclass...
+  PRInt32 index = mStyleSheets.Count();
+  while (--index >= 0) {
+    nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
+    NS_RELEASE(sheet);
+  }
+  mStyleSheets.Clear();
+
+  NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentURLGroup);
+  if (nsnull != mDocumentTitle) {
+    delete mDocumentTitle;
+    mDocumentTitle = nsnull;
+  }
+
+  mDocumentURL = aURL;
+  NS_ADDREF(aURL);
+
+  mDocumentURLGroup = aURL->GetURLGroup();
+
+  return NS_OK;
+}
+
 const nsString* nsDocument::GetDocumentTitle() const
 {
   return mDocumentTitle;

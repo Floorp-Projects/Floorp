@@ -23,6 +23,8 @@
 #include "nsIHTMLContent.h"
 #include "nsFrame.h"
 
+static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
+
 class nsCommentNode : public nsIDOMComment,
                       public nsIScriptObjectOwner,
                       public nsIDOMEventReceiver,
@@ -91,6 +93,12 @@ NS_IMETHODIMP
 nsCommentNode::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_DOM_DATA_QUERY_INTERFACE(aIID, aInstancePtr, this)
+  if (aIID.Equals(kIDOMCommentIID)) {
+    nsIDOMComment* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 

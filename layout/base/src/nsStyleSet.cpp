@@ -27,6 +27,12 @@
 #include "nsIContent.h"
 #include "nsIStyleFrameConstruction.h"
 
+// XXX Temporary fix to make sure that ua.css only gets applied
+// to HTML content. When this removed, remember to get rid of
+// the include dependency in the makefile.
+#include "nsIHTMLContent.h"
+static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
@@ -477,7 +483,13 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
 
     if (nsnull != rules) {
-      PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, aContent, aParentContext, rules);
+      nsIHTMLContent *htmlContent;
+      nsresult rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+      PRInt32 ruleCount = 0;
+      if (NS_SUCCEEDED(rv)) {
+         ruleCount += RulesMatching(mBackstopSheets, aPresContext, aContent, aParentContext, rules);
+         NS_RELEASE(htmlContent);
+      }
       PRInt32 backstopRules = ruleCount;
       ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentContext, rules);
       ruleCount += RulesMatching(mOverrideSheets, aPresContext, aContent, aParentContext, rules);

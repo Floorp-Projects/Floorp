@@ -58,6 +58,10 @@ public:
 
   virtual nsIArena* GetArena();
 
+  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                               nsIContentViewerContainer* aContainer,
+                               nsIStreamListener **aDocListener);
+
   /**
    * Return the title of the document. May return null.
    */
