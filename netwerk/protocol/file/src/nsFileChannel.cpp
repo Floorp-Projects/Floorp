@@ -416,12 +416,22 @@ nsFileChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsFileChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-    mLoadGroup = aLoadGroup;
-    if (mLoadGroup) {
-        nsresult rv = mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_OK;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsILoadGroup> oldLoadGroup = mLoadGroup;
+  mLoadGroup = aLoadGroup;
+
+  if (oldLoadGroup) {
+      // then remove ourselves from the group...and add ourselves to the new group...
+      (void)mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+      mLoadGroup->AddChannel(this, nsnull);
+  }
+
+  if (mLoadGroup) {
+    rv = mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
