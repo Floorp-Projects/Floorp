@@ -64,7 +64,7 @@ NS_DataAfterHandle( HandleT* aHandlePtr, const CharT* aDummyCharTPtr )
 
 template <class HandleT, class CharT>
 HandleT*
-NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic_nsAReadableString<CharT>& aDataSource, PRUint32 aAdditionalCapacity=1 )
+NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic_nsAReadableString<CharT>& aDataSource, PRUint32 aAdditionalCapacity )
   {
     typedef CharT* CharT_ptr;
 
