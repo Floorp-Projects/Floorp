@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.14 $ ';
+$Version = '$Revision: 1.15 $ ';
 
 
 sub PrintUsage {
@@ -621,12 +621,32 @@ sub PrintEnv {
   }
 }
 
+local $pid;
+
+sub killer {
+  &killproc($pid);
+}
+
+sub killproc {
+  my ($local_pid) = @_;
+  my $status;
+
+  # try to kill 3 times, then try a kill -9
+  for ($i=0; $i < 3; $i++) {
+    kill('TERM',$local_pid);
+    # give it 3 seconds to actually die
+    sleep 3;
+    $status = waitpid($local_pid, WNOHANG());
+    last if $status != 0;
+  }
+  return $status;
+}
+
 sub RunSmokeTest {
   my ($fe) = @_;
   my $Binary;
   my $status = 0;
   my $waittime = 45;
-  my $pid = fork;
   $fe = 'x' unless defined $fe;
   
   $ENV{LD_LIBRARY_PATH} = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
@@ -638,6 +658,9 @@ sub RunSmokeTest {
   $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/apprunner";
   $BinaryLog = $BuildDir . '/runlog';
   
+  # Fork off a child process.
+  $pid = fork;
+
   unless ($pid) { # child
     
     chdir $BinaryDir;
@@ -674,14 +697,8 @@ sub RunSmokeTest {
   
   print LOG "Success! $Binary is still running.\n";
 
-  # try to kill 3 times, then try a kill -9
-  for ($i=0; $i < 3; $i++) {
-    kill('TERM',$pid);
-    # give it 3 seconds to actually die
-    sleep 3;
-    $status = waitpid($pid, WNOHANG());
-    last if $status != 0;
-  }
+  $status = &killproc($pid);
+
   print LOG "----------- success output from apprunner for smoke tests --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
@@ -708,7 +725,6 @@ sub RunBloatTest {
   $ENV{NSPR_LOG_MODULES} = "xpcomrefcnt:1";
   $ENV{XPCOM_MEM_BLOAT_LOG} = "1";
 
-
   $Binary = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
   
   print LOG "$Binary\n";
@@ -718,7 +734,9 @@ sub RunBloatTest {
   
   rename ($BinaryLog, "$BuildDir/runlog.prev");
   
-  my $pid = fork;
+  # Fork off a child process.
+  $pid = fork;
+
   unless ($pid) { # child
     chdir $BinaryDir;
     unlink $BinaryLog;
@@ -738,6 +756,12 @@ sub RunBloatTest {
     die "Couldn't exec()";
   }
   
+  # Set up a timer with a signal handler.
+  $SIG{ALRM} = \&killer;
+
+  # Wait 30 seconds, then kill the process if it's still alive.
+  alarm 30;
+
   $status = waitpid($pid, 0);
   print LOG "Client quit with status $status\n";
   if ($status == 0) {
@@ -750,11 +774,14 @@ sub RunBloatTest {
     }
     close READRUNLOG;
     print LOG "--------------- End of Output -------------------- \n";
-    return 333;
+	return 333;
   }
 
   print LOG "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
+
+  
   open DIFF, "$BuildDir/../bloatdiff.pl $BuildDir/runlog.prev $BinaryLog |" or die "Unable to run bloatdiff.pl";
+
   while (my $line = <DIFF>) {
     print LOG $line;
   }
