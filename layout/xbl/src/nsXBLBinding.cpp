@@ -639,6 +639,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             // Call AddScriptEventListener for other IID types
             nsAutoString value;
             child->GetAttribute(kNameSpaceID_None, kValueAtom, value);
+            if (value.IsEmpty())
+                GetTextData(child, value);
+
             AddScriptEventListener(mBoundElement, eventAtom, value, iid);
           }
         }

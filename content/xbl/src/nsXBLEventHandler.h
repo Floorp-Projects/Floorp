@@ -95,6 +95,8 @@ protected:
   static nsIAtom* kValueAtom;
   static nsIAtom* kCommandAtom;
 
+  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
+
 protected:
   nsIContent* mBoundElement; // Both of these refs are weak.
   nsIContent* mHandlerElement;
