@@ -22,6 +22,7 @@
 #include "nsIXMLContentSink.h"
 class nsIRDFDataSource;
 class nsINameSpaceManager;
+class nsIURL;
 
 // {751843E2-8309-11d2-8EAC-00805F29F370}
 #define NS_IRDFCONTENTSINK_IID \
@@ -34,14 +35,19 @@ class nsINameSpaceManager;
 class nsIRDFContentSink : public nsIXMLContentSink {
 public:
     /**
+     * Initialize the content sink.
+     */
+    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager) = 0;
+
+    /**
      * Set the content sink's RDF Data source
      */
-    NS_IMETHOD SetDataSource(nsIRDFDataSource* ds) = 0;
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource) = 0;
 
     /**
      * Retrieve the content sink's RDF data source.
      */
-    NS_IMETHOD GetDataSource(nsIRDFDataSource*& result) = 0;
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& rDataSource) = 0;
 };
 
 
