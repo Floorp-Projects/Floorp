@@ -33,6 +33,8 @@
 NS_DEFINE_IID(kMacLocaleIID,NS_IMACLOCALE_IID);
 NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
 
+static nsURLProperties *gInfo = nsnull;
+static PRInt32 gCnt;
 
 class nsMacCharset : public nsIPlatformCharset
 {
@@ -56,29 +58,36 @@ nsMacCharset::nsMacCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  nsAutoString propertyURL("resource:/res/maccharset.properties");
+  PR_AtomicIncrement(&gCnt);
+  
+  // XXX we should make the following block critical section
+  if(gInfo == nsnull) 
+  {
+	  nsAutoString propertyURL("resource:/res/maccharset.properties");
 
-  nsURLProperties *info = new nsURLProperties( propertyURL );
+	  nsURLProperties *info = new nsURLProperties( propertyURL );
+	  NS_ASSERTION(info , "cannot open properties file");
+	  gInfo = info;
 
-  if( info ) { 
+  }
+  if( gInfo ) { 
 	  long ret = ::GetScriptManagerVariable(smRegionCode);
 	  PRInt32 reg = (PRInt32)(ret & 0x00FFFF);
  	  nsAutoString regionKey("region.");
 	  regionKey.Append(reg, 10);
 	  
-	  nsresult res = info->Get(regionKey, mCharset);
+	  nsresult res = gInfo->Get(regionKey, mCharset);
 	  if(NS_FAILED(res)) {
 		  ret = ::GetScriptManagerVariable(smSysScript);
 		  PRInt32 script = (PRInt32)(ret & 0x00FFFF);
 		  nsAutoString scriptKey("script.");
 		  scriptKey.Append(script, 10);
-	 	  nsresult res = info->Get(scriptKey, mCharset);
+	 	  nsresult res = gInfo->Get(scriptKey, mCharset);
 	      if(NS_FAILED(res)) {
 	      	  mCharset = "x-mac-roman";
 		  }   
 	  }
 	  
-	  delete info;
   } else {
   	mCharset = "x-mac-roman";
   }
@@ -109,22 +118,18 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	rv = pMacLocale->GetPlatformLocale(&localeAsString,&script,&language,&region);
 	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
 	
-	nsAutoString property_url("resource:/res/maccharset.properties");
-	nsURLProperties *charset_properties = new nsURLProperties(property_url);
-	if (!charset_properties) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 	
 	nsAutoString locale_key("region.");
 	locale_key.Append(region,10);
 	
-	rv = charset_properties->Get(locale_key,charset);
+	rv = gInfo->Get(locale_key,charset);
 	if (NS_FAILED(rv)) {
 		locale_key = "script.";
 		locale_key.Append(script,10);
-		rv = charset_properties->Get(locale_key,charset);
+		rv = gInfo->Get(locale_key,charset);
 		if (NS_FAILED(rv)) { charset="x-mac-roman";}
 	}
-	
-	delete charset_properties;
 	*_retValue = charset.ToNewUnicode();	
 	return rv;
 }
