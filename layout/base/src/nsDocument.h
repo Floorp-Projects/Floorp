@@ -26,6 +26,7 @@
 #include "nsIDOMEventCapturer.h"
 #include "nsXIFConverter.h"
 #include "nsIJSScriptObject.h"
+#include "nsIContent.h"
 
 class nsISelection;
 class nsIEventListenerManager;
@@ -166,6 +167,11 @@ public:
     * Selects all the Content
    */
   virtual void SelectAll();
+
+  /**
+    * Finds text in content
+   */
+  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   /**
     * Copies all text from the selection

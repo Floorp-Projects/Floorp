@@ -44,8 +44,13 @@
 #include "nsICSSDeclaration.h"
 #include "nsIHTMLCSSStyleSheet.h"
 
+#include "nsHTMLTokens.h"
+#include "nsITextContent.h"
+
 #include "nsHTMLValue.h"
 #include "nsXIFConverter.h"
+
+#include "nsHTMLTags.h"
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
@@ -197,6 +202,7 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mSelection);
   NS_IF_RELEASE(mScriptContextOwner);
   NS_IF_RELEASE(mListenerManager);
+
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -1105,13 +1111,41 @@ nsISelection * nsDocument::GetSelection() {
   }
   return mSelection;
 }
- 
+
+
+void TraverseBlockContent(nsIContent * aContent, nsString & aStr) 
+{
+  nsIContent * parent = aContent;
+  PRInt32 i;
+  for (i=0;i<parent->ChildCount();i++) {
+    nsIContent * child = parent->ChildAt(i);
+    nsIAtom * atom = child->GetTag();
+    if (atom == nsnull) {
+      static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+      nsIDOMText* textContent;
+      nsresult rv = child->QueryInterface(kIDOMTextIID,(void **)&textContent);
+      if (NS_OK == rv) {
+        nsString stringBuf;
+        PRInt32 len;
+        textContent->GetData(stringBuf);
+        len = stringBuf.Length();
+        aStr.Append(stringBuf);
+        NS_RELEASE(textContent);
+      }
+    }
+    NS_RELEASE(child);
+  }
+
+}
+
+
 /**
   * Selects all the Content
  */
 void nsDocument::SelectAll() {
   nsIContent * start = nsnull;
   nsIContent * end   = nsnull;
+  nsIContent * body  = nsnull;
 
   nsString bodyStr("BODY");
   PRInt32 i;
@@ -1122,8 +1156,7 @@ void nsDocument::SelectAll() {
     if (!isSynthetic) {
       nsIAtom * atom = child->GetTag();
       if (bodyStr.EqualsIgnoreCase(atom)) {
-        start = child;
-        end   = child;
+        body = child;
         break;
       }
 
@@ -1131,10 +1164,11 @@ void nsDocument::SelectAll() {
     NS_RELEASE(child);
   }
 
-  if (start == nsnull) {
+  if (body == nsnull) {
     return;
   }
 
+  start = body;
   // Find Very first Piece of Content
   while (start->ChildCount() > 0) {
     nsIContent * child = start;
@@ -1142,6 +1176,7 @@ void nsDocument::SelectAll() {
     NS_RELEASE(child);
   }
 
+  end = body;
   // Last piece of Content
   PRInt32 count = end->ChildCount();
   while (count > 0) {
@@ -1150,15 +1185,28 @@ void nsDocument::SelectAll() {
     NS_RELEASE(child);
     count = end->ChildCount();
   }
+
+  //NS_RELEASE(start);
+  //NS_RELEASE(end);
+
   nsSelectionRange * range    = mSelection->GetRange();
   nsSelectionPoint * startPnt = range->GetStartPoint();
   nsSelectionPoint * endPnt   = range->GetEndPoint();
   startPnt->SetPoint(start, -1, PR_TRUE);
   endPnt->SetPoint(end, -1, PR_FALSE);
-
   SetDisplaySelection(PR_TRUE);
 
 }
+
+/**
+  * Finds text in content
+ */
+NS_IMETHODIMP nsDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+{
+  aIsFound = PR_FALSE;
+  return NS_OK;
+}
+
 void nsDocument::TraverseTree(nsString   & aText,  
                               nsIContent * aContent, 
                               nsIContent * aStart, 
