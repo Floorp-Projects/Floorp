@@ -69,10 +69,8 @@ function Startup() {
 }
 
 function Shutdown() {
-  if (isPasswordManager) {
-    kObserverService.removeObserver(signonReloadDisplay, "signonChanged");
-    kObserverService.removeObserver(signonReloadDisplay, "signonSelectUser");
-  }
+  kObserverService.removeObserver(signonReloadDisplay, "signonChanged");
+  kObserverService.removeObserver(signonReloadDisplay, "signonSelectUser");
 }
 
 var signonReloadDisplay = {
@@ -355,11 +353,7 @@ function TrimString(string)
 }
 
 function doHelpButton() {
-  if (isPasswordManager) {
-     openHelp("password_mgr");
-  } else {
-     openHelp("forms_sites");
-  }
+  openHelp("password_mgr");
 }
 
 
