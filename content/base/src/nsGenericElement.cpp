@@ -3164,7 +3164,8 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsIURI* aOriginURI,
                               nsIURI* aLinkURI,
                               const nsAFlatString& aTargetSpec,
-                              PRBool aClick)
+                              PRBool aClick,
+                              PRBool aIsUserTriggered)
 {
   NS_PRECONDITION(aLinkURI, "No link URI");
   nsresult rv = NS_OK;
@@ -3180,7 +3181,9 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv))
       proceed =
         securityManager->CheckLoadURI(aOriginURI, aLinkURI,
-                                      nsIScriptSecurityManager::STANDARD);
+                                      aIsUserTriggered ?
+                                        nsIScriptSecurityManager::STANDARD :
+                                        nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
 
     // Only pass off the click event if the script security manager
     // says it's ok.

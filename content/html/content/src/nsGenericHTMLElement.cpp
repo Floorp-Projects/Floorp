@@ -1444,7 +1444,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
           }
 
           ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI, hrefURI,
-                            target, PR_TRUE);
+                            target, PR_TRUE, PR_TRUE);
 
           *aEventStatus = nsEventStatus_eConsumeDoDefault;
         }
@@ -1491,7 +1491,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
           GetBaseTarget(target);
         }
         ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURI,
-                          hrefURI, target, PR_FALSE);
+                          hrefURI, target, PR_FALSE, PR_TRUE);
       }
       break;
 
