@@ -8,9 +8,10 @@
 #include "nsISupports.h"
 #include "nsrootidl.h"
 #include "nsIWebShell.h"
-#include "nsIDeviceContext.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrintListener.h"
+
+class nsIDeviceContext;
 
 /* starting interface:    nsIContentViewerFile */
 

@@ -22,7 +22,6 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 %{ C++
 class nsIPresContext;

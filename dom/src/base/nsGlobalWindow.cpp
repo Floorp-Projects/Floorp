@@ -69,6 +69,7 @@
 #include "nsContentCID.h"
 
 // Interfaces Needed
+#include "nsIWidget.h"
 #include "nsIBaseWindow.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICodebasePrincipal.h"
