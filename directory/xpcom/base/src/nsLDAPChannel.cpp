@@ -136,6 +136,13 @@ nsLDAPChannel::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 // nsIRequest methods
 
 NS_IMETHODIMP
+nsLDAPChannel::GetName(PRUnichar* *result)
+{
+  NS_NOTYETIMPLEMENTED("nsLDAPChannel::GetName");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsLDAPChannel::IsPending(PRBool *result)
 {
   NS_NOTYETIMPLEMENTED("nsLDAPChannel::IsPending");
