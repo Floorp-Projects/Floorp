@@ -18,7 +18,7 @@
         chrome:extension="true"
         chrome:settingsURL="chrome://messenger-offline/content/pref-offline.xul"
         chrome:localeVersion="1.5a"
-        chrome:skinVersion="1.2">
+        chrome:skinVersion="1.5">
   </RDF:Description>
 
   <!-- overlay information -->
