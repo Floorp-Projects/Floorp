@@ -136,47 +136,51 @@ MyGetFileAttributesEx(const char* file, WIN32_FILE_ATTRIBUTE_DATA* data)
 			
 			memset(data, 0, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
 			data->dwFileAttributes =  GetFileAttributes(file);
-    
-			if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-			{
-				HANDLE hFile = CreateFile(file,
-										  GENERIC_READ, 
-										  FILE_SHARE_READ, 
-										  NULL, 
-										  OPEN_EXISTING, 
-										  FILE_ATTRIBUTE_NORMAL, 
-										  NULL); 
 
-				if (hFile != INVALID_HANDLE_VALUE)
+			if(data->dwFileAttributes != 0xFFFFFFFF)
+			{
+   
+				if(! (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 				{
-					okay = GetFileTime(hFile,
-									   &data->ftCreationTime,
-									   &data->ftLastAccessTime,
-									   &data->ftLastWriteTime);
-					if (okay)
-					{
-					   // Try to obtain hFile's huge size. 
-					   data->nFileSizeLow = GetFileSize (hFile, 
-														 &data->nFileSizeHigh);
+					HANDLE hFile = CreateFile(file,
+											  GENERIC_READ, 
+											  FILE_SHARE_READ, 
+											  NULL, 
+											  OPEN_EXISTING, 
+											  FILE_ATTRIBUTE_NORMAL, 
+											  NULL); 
 
-					   if (data->nFileSizeLow == 0xFFFFFFFF && 
-						   GetLastError() != NO_ERROR )
-					   { 
-						   //error in getting filesize
-						   okay = PR_FALSE;      
-					   } 
-					   else
-					   {
-						   okay = PR_TRUE;
-					   }
+					if (hFile != INVALID_HANDLE_VALUE)
+					{
+						okay = GetFileTime(hFile,
+										   &data->ftCreationTime,
+										   &data->ftLastAccessTime,
+										   &data->ftLastWriteTime);
+						if (okay)
+						{
+						   // Try to obtain hFile's huge size. 
+						   data->nFileSizeLow = GetFileSize (hFile, 
+															 &data->nFileSizeHigh);
+
+						   if (data->nFileSizeLow == 0xFFFFFFFF && 
+							   GetLastError() != NO_ERROR )
+						   { 
+							   //error in getting filesize
+							   okay = PR_FALSE;      
+						   } 
+						   else
+						   {
+							   okay = PR_TRUE;
+						   }
+						}
+						CloseHandle(hFile);
 					}
-					CloseHandle(hFile);
 				}
-			}
-			else
-			{
-				// it is a directory, 
-				okay = PR_TRUE;
+				else
+				{
+					// it is a directory, 
+					okay = PR_TRUE;
+				}
 			}
 		}
 
