@@ -77,9 +77,7 @@ ifeq ($(MOZ_PKG_FORMAT),DEB)
 PKG_SUFFIX	= .deb
 endif
 
-ifdef BUILD_OFFICIAL
 TARGETS		= $(PACKAGE)
-endif
 
 NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
 ifneq ($(NSPR_LDIR),)
