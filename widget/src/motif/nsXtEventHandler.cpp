@@ -16,9 +16,10 @@
  * Reserved.
  */
 
-#include "Xm/Xm.h"
+#include <Xm/Xm.h>
+#include <X11/keysym.h>
+#include <X11/keysymdef.h>
 #include "nsXtEventHandler.h"
-#include "X11/keysym.h"
 
 #include "nsWindow.h"
 #include "nsTextWidget.h"
