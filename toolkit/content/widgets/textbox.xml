@@ -151,6 +151,7 @@
           if (this._timer)
             clearTimeout(this._timer);
           this._fireCommand(this);
+          event.preventDefault();
         ]]>
       </handler>
     </handlers>
