@@ -160,6 +160,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     PR_FREEIF(serverKey);
   }
   
+  if (NS_FAILED(rv)) return rv;
   if (!m_incomingServer) return NS_ERROR_UNEXPECTED;
   
   *aIncomingServer = m_incomingServer;
