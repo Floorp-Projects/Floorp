@@ -307,20 +307,18 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJarCallBack()
 {
-    //PR_Lock(mLock);  we are already lock by RunNextInstall().
+    PR_Lock(mLock);
 
     nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
-    
     if (nextInstall != nsnull)
         delete nextInstall;
-    
+
     mJarInstallQueue->Remove(0);
-    
     mInstalling = PR_FALSE;
-    //PR_Unlock(mLock);
+
+    PR_Unlock(mLock);
 
     return RunNextInstall();
-
 }
 
 
