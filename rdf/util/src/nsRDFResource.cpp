@@ -66,17 +66,23 @@ nsRDFResource::~nsRDFResource(void)
         delete doomed;
     }
 
-    if (mURI) {
-        gRDFService->UnregisterResource(this);
+    if (!mURI)
+        return;
 
-        // N.B. that we need to free the URI *after* we un-cache the resource,
-        // due to the way that the resource manager is implemented.
-        nsCRT::free(mURI);
+    if (!gRDFService) {
+        nsMemory::Free(mURI);
+        return;
+    }
 
-        if (--gRDFServiceRefCnt == 0) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
+    gRDFService->UnregisterResource(this);
+
+    // N.B. that we need to free the URI *after* we un-cache the resource,
+    // due to the way that the resource manager is implemented.
+    nsMemory::Free(mURI);
+
+    if (--gRDFServiceRefCnt == 0) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+        gRDFService = nsnull;
     }
 }
 
@@ -119,16 +125,11 @@ nsRDFResource::Init(const char* aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (mURI = (char *)nsMemory::Alloc(strlen(aURI) + 1)))
+    if (! (mURI = (char *)nsMemory::Clone(aURI, strlen(aURI) + 1)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_strcpy(mURI, aURI);
-
-    nsresult rv = NS_OK;
     if (gRDFServiceRefCnt++ == 0) {
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**)&gRDFService);
+        nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
         if (NS_FAILED(rv)) return rv;
     }
 
