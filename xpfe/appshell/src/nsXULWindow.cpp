@@ -861,7 +861,7 @@ NS_IMETHODIMP nsXULWindow::SizeShellTo(nsIDocShellTreeItem* aShellItem,
       PRInt32 winCY = 0;
 
       GetSize(&winCX, &winCY);
-      SetSize(winCX + widthDelta, winCY + heightDelta, PR_FALSE);
+      SetSize(winCX + widthDelta, winCY + heightDelta, PR_TRUE);
       PersistPositionAndSize(PR_FALSE, PR_TRUE);
       }
 
