@@ -858,7 +858,8 @@ SECStatus
 SECMOD_UpdateSlotList(SECMODModule *mod)
 {
     CK_RV crv;
-    int count,i, oldCount;
+    CK_ULONG count;
+    int i, oldCount;
     PRBool freeRef = PR_FALSE;
     void *mark;
     CK_ULONG *slotIDs = NULL;
