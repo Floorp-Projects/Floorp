@@ -307,9 +307,22 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         //
         // All the headers have been read.
         //
-        rv = FinishedResponseHeaders();
+        rv = FinishedResponseHeaders ();
         if (NS_FAILED(rv)) return rv;
 
+        if (mResponse)
+        {
+            PRUint32 statusCode = 0;
+            mResponse -> GetStatus (&statusCode);
+            if (statusCode == 304)  // no content
+            {
+                nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+
+                // XXX/ruslan: will be replace with the new Cancel (code)
+                if (NS_SUCCEEDED (rv))
+		            trans -> SetBytesExpected (0);
+            }
+        }
     }
 
     // At this point we've digested headers from the server and we're
@@ -345,13 +358,13 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 mBodyBytesReceived += i_Length;
 
-                if (cl != -1)
+                if (cl != -1 && cl - mBodyBytesReceived == 0)
                 {
-                    nsCOMPtr<nsISocketTransport> trans = 
-                            do_QueryInterface (channel, &rv);
+                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
 
+                    // XXX/ruslan: will be replaced with the new Cancel (code)
                     if (NS_SUCCEEDED (rv))
-					    trans -> SetBytesExpected (cl - mBodyBytesReceived);
+					    trans -> SetBytesExpected (0);
 				}
 
 				if (!mChunkConverterPushed && mResponse -> isChunkedResponse ())
