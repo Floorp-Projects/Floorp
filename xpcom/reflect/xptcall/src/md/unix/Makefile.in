@@ -66,7 +66,7 @@ endif
 #
 # Linux/Alpha
 #
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxalpha)
+ifneq (,$(filter Linuxalpha FreeBSDalpha NetBSDalpha,$(OS_ARCH)$(OS_TEST)))                           
 CPPSRCS		:= xptcinvoke_linux_alpha.cpp xptcstubs_linux_alpha.cpp
 endif
 #
