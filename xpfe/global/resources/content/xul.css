@@ -231,6 +231,10 @@ popup {
   display: none;
 }
 
+popup.tooltip {
+  behavior: url("chrome://global/content/xulBindings.xml#tooltips");
+}
+
 menupopup[menugenerated="true"] {
   display: block;
 }
