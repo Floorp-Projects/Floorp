@@ -41,10 +41,8 @@
 #include "nsCOMPtr.h"
 
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsWeakReference.h"
 
 class nsIURI;
@@ -65,11 +63,10 @@ public:
 private:
   PRUint32                       mPolicy;
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
-  nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
 };
 
-// {4275d3f4-752a-427a-b432-14d5dda1c20b}
+// {822bcd11-6432-48be-9e9d-36f7804b7747}
 #define NS_POPUPWINDOWMANAGER_CID \
- {0x4275d3f4, 0x752a, 0x427a, {0xb4, 0x32, 0x14, 0xd5, 0xdd, 0xa1, 0xc2, 0x0b}}
+ {0x822bcd11, 0x6432, 0x48be, {0x9e, 0x9d, 0x36, 0xf7, 0x80, 0x4b, 0x77, 0x47}}
 
 #endif /* nsPopupWindowManager_h__ */
