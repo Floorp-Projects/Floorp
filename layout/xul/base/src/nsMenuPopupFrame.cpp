@@ -1129,21 +1129,21 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       }
       else {
         // move it up to be on screen, but don't let it go off the screen at the top
-
-        //  |
-        //  |
-        //  |+----  screenViewLocY
-        //  ||
-        //  ||  Submenu ( = mRect )
-        // -+|
-        //   |
-        //   |
-        // - - - - - - - - - - screenBottomTwips (bottom of the screen)
-        //   |    \ 
-        //   |     }  moveDistY
-        //   |    / 
-        //   +----  screenViewLocY + mRect.height
-        //
+        /*
+         *  |
+         *  |
+         *  |+----  screenViewLocY
+         *  ||
+         *  ||  Submenu ( = mRect )
+         * -+|
+         *   |
+         *   |
+         * - - - - - - - - - - screenBottomTwips (bottom of the screen)
+         *   |    \ 
+         *   |     }  moveDistY
+         *   |    / 
+         *   +----  screenViewLocY + mRect.height
+         */
 
         if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
           // XXX Bug 84121 comment 48 says the next line has to use screenHeightTwips, why not screenBottomTwips?
