@@ -578,9 +578,13 @@ public:
 
   nsresult AddValue(const char* aProperty, const nsCSSValue& aValue);
   nsresult AddValue(PRInt32 aProperty, const nsCSSValue& aValue);
+  nsresult SetValueImportant(const char* aProperty);
+  nsresult SetValueImportant(PRInt32 aProperty);
   nsresult GetValue(const char* aProperty, nsCSSValue& aValue);
   nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue);
 
+  nsresult GetImportantValues(nsICSSDeclaration*& aResult);
+  
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
 private:
@@ -596,6 +600,8 @@ protected:
   nsCSSPosition*  mPosition;
   nsCSSList*      mList;
   nsCSSDisplay*   mDisplay;
+
+  CSSDeclarationImpl* mImportant;
 };
 
 #ifdef DEBUG_REFS
@@ -643,6 +649,8 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
   if (nsnull != mDisplay) {
     delete mDisplay;
   }
+  NS_IF_RELEASE(mImportant);
+
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d - CSSDeclaration\n", gInstanceCount);
@@ -1103,6 +1111,560 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
   return result;
 }
 
+nsresult CSSDeclarationImpl::SetValueImportant(const char* aProperty)
+{
+  return SetValueImportant(nsCSSProps::LookupName(aProperty));
+}
+
+nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
+{
+  nsresult result = NS_OK;
+
+  if (nsnull == mImportant) {
+    mImportant = new CSSDeclarationImpl();
+    if (nsnull != mImportant) {
+      NS_ADDREF(mImportant);
+    }
+    else {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  if (NS_OK == result) {
+    switch (aProperty) {
+      // nsCSSFont
+      case PROP_FONT_FAMILY:
+      case PROP_FONT_STYLE:
+      case PROP_FONT_VARIANT:
+      case PROP_FONT_WEIGHT:
+      case PROP_FONT_SIZE:
+        if (nsnull != mFont) {
+          if (nsnull == mImportant->mFont) {
+            mImportant->mFont = new nsCSSFont();
+          }
+          if (nsnull != mImportant->mFont) {
+            switch (aProperty) {
+              case PROP_FONT_FAMILY:  mImportant->mFont->mFamily =  mFont->mFamily;   
+                                      mFont->mFamily.Reset();       break;
+              case PROP_FONT_STYLE:   mImportant->mFont->mStyle =   mFont->mStyle;
+                                      mFont->mStyle.Reset();        break;
+              case PROP_FONT_VARIANT: mImportant->mFont->mVariant = mFont->mVariant;
+                                      mFont->mVariant.Reset();      break;
+              case PROP_FONT_WEIGHT:  mImportant->mFont->mWeight =  mFont->mWeight;
+                                      mFont->mWeight.Reset();       break;
+              case PROP_FONT_SIZE:    mImportant->mFont->mSize =    mFont->mSize;
+                                      mFont->mSize.Reset();         break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+      // nsCSSColor
+      case PROP_COLOR:
+      case PROP_BACKGROUND_COLOR:
+      case PROP_BACKGROUND_IMAGE:
+      case PROP_BACKGROUND_REPEAT:
+      case PROP_BACKGROUND_ATTACHMENT:
+      case PROP_BACKGROUND_X_POSITION:
+      case PROP_BACKGROUND_Y_POSITION:
+      case PROP_BACKGROUND_FILTER:
+      case PROP_CURSOR:
+      case PROP_CURSOR_IMAGE:
+      case PROP_OPACITY:
+        if (nsnull != mColor) {
+          if (nsnull == mImportant->mColor) {
+            mImportant->mColor = new nsCSSColor();
+          }
+          if (nsnull != mImportant->mColor) {
+            switch (aProperty) {
+              case PROP_COLOR:                  mImportant->mColor->mColor =          mColor->mColor;
+                                                mColor->mColor.Reset();               break;
+              case PROP_BACKGROUND_COLOR:       mImportant->mColor->mBackColor =      mColor->mBackColor;
+                                                mColor->mBackColor.Reset();           break;
+              case PROP_BACKGROUND_IMAGE:       mImportant->mColor->mBackImage =      mColor->mBackImage;
+                                                mColor->mBackImage.Reset();           break;
+              case PROP_BACKGROUND_REPEAT:      mImportant->mColor->mBackRepeat =     mColor->mBackRepeat;
+                                                mColor->mBackRepeat.Reset();          break;
+              case PROP_BACKGROUND_ATTACHMENT:  mImportant->mColor->mBackAttachment = mColor->mBackAttachment;
+                                                mColor->mBackAttachment.Reset();      break;
+              case PROP_BACKGROUND_X_POSITION:  mImportant->mColor->mBackPositionX =  mColor->mBackPositionX;
+                                                mColor->mBackPositionX.Reset();       break;
+              case PROP_BACKGROUND_Y_POSITION:  mImportant->mColor->mBackPositionY =  mColor->mBackPositionY;
+                                                mColor->mBackPositionY.Reset();       break;
+              case PROP_BACKGROUND_FILTER:      mImportant->mColor->mBackFilter =     mColor->mBackFilter;
+                                                mColor->mBackFilter.Reset();          break;
+              case PROP_CURSOR:                 mImportant->mColor->mCursor =         mColor->mCursor;
+                                                mColor->mCursor.Reset();              break;
+              case PROP_CURSOR_IMAGE:           mImportant->mColor->mCursorImage =    mColor->mCursorImage;
+                                                mColor->mCursorImage.Reset();         break;
+              case PROP_OPACITY:                mImportant->mColor->mOpacity =        mColor->mOpacity;
+                                                mColor->mOpacity.Reset();             break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+      // nsCSSText
+      case PROP_WORD_SPACING:
+      case PROP_LETTER_SPACING:
+      case PROP_TEXT_DECORATION:
+      case PROP_VERTICAL_ALIGN:
+      case PROP_TEXT_TRANSFORM:
+      case PROP_TEXT_ALIGN:
+      case PROP_TEXT_INDENT:
+      case PROP_LINE_HEIGHT:
+      case PROP_WHITE_SPACE:
+        if (nsnull != mText) {
+          if (nsnull == mImportant->mText) {
+            mImportant->mText = new nsCSSText();
+          }
+          if (nsnull != mImportant->mText) {
+            switch (aProperty) {
+              case PROP_WORD_SPACING:     mImportant->mText->mWordSpacing =   mText->mWordSpacing;
+                                          mText->mWordSpacing.Reset();        break;
+              case PROP_LETTER_SPACING:   mImportant->mText->mLetterSpacing = mText->mLetterSpacing;
+                                          mText->mLetterSpacing.Reset();      break;
+              case PROP_TEXT_DECORATION:  mImportant->mText->mDecoration =    mText->mDecoration;
+                                          mText->mDecoration.Reset();         break;
+              case PROP_VERTICAL_ALIGN:   mImportant->mText->mVerticalAlign = mText->mVerticalAlign;
+                                          mText->mVerticalAlign.Reset();      break;
+              case PROP_TEXT_TRANSFORM:   mImportant->mText->mTextTransform = mText->mTextTransform;
+                                          mText->mTextTransform.Reset();      break;
+              case PROP_TEXT_ALIGN:       mImportant->mText->mTextAlign =     mText->mTextAlign;
+                                          mText->mTextAlign.Reset();          break;
+              case PROP_TEXT_INDENT:      mImportant->mText->mTextIndent =    mText->mTextIndent;
+                                          mText->mTextIndent.Reset();         break;
+              case PROP_LINE_HEIGHT:      mImportant->mText->mLineHeight =    mText->mLineHeight;
+                                          mText->mLineHeight.Reset();         break;
+              case PROP_WHITE_SPACE:      mImportant->mText->mWhiteSpace =    mText->mWhiteSpace;
+                                          mText->mWhiteSpace.Reset();         break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+      // nsCSSMargin
+      case PROP_MARGIN_TOP:
+      case PROP_MARGIN_RIGHT:
+      case PROP_MARGIN_BOTTOM:
+      case PROP_MARGIN_LEFT:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mMargin) {
+            if (nsnull == mImportant->mMargin) {
+              mImportant->mMargin = new nsCSSMargin();
+            }
+            if (nsnull != mImportant->mMargin) {
+              if (nsnull == mImportant->mMargin->mMargin) {
+                mImportant->mMargin->mMargin = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mMargin->mMargin) {
+                switch (aProperty) {
+                  case PROP_MARGIN_TOP:     mImportant->mMargin->mMargin->mTop =    mMargin->mMargin->mTop;
+                                            mMargin->mMargin->mTop.Reset();         break;
+                  case PROP_MARGIN_RIGHT:   mImportant->mMargin->mMargin->mRight =  mMargin->mMargin->mRight;
+                                            mMargin->mMargin->mRight.Reset();       break;
+                  case PROP_MARGIN_BOTTOM:  mImportant->mMargin->mMargin->mBottom = mMargin->mMargin->mBottom;
+                                            mMargin->mMargin->mBottom.Reset();      break;
+                  case PROP_MARGIN_LEFT:    mImportant->mMargin->mMargin->mLeft =   mMargin->mMargin->mLeft;
+                                            mMargin->mMargin->mLeft.Reset();        break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      case PROP_PADDING_TOP:
+      case PROP_PADDING_RIGHT:
+      case PROP_PADDING_BOTTOM:
+      case PROP_PADDING_LEFT:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mPadding) {
+            if (nsnull == mImportant->mMargin) {
+              mImportant->mMargin = new nsCSSMargin();
+            }
+            if (nsnull != mImportant->mMargin) {
+              if (nsnull == mImportant->mMargin->mPadding) {
+                mImportant->mMargin->mPadding = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mMargin->mPadding) {
+                switch (aProperty) {
+                  case PROP_PADDING_TOP:    mImportant->mMargin->mPadding->mTop =     mMargin->mPadding->mTop;
+                                            mMargin->mPadding->mTop.Reset();          break;
+                  case PROP_PADDING_RIGHT:  mImportant->mMargin->mPadding->mRight =   mMargin->mPadding->mRight;
+                                            mMargin->mPadding->mRight.Reset();        break;
+                  case PROP_PADDING_BOTTOM: mImportant->mMargin->mPadding->mBottom =  mMargin->mPadding->mBottom;
+                                            mMargin->mPadding->mBottom.Reset();       break;
+                  case PROP_PADDING_LEFT:   mImportant->mMargin->mPadding->mLeft =    mMargin->mPadding->mLeft;
+                                            mMargin->mPadding->mLeft.Reset();         break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      case PROP_BORDER_TOP_WIDTH:
+      case PROP_BORDER_RIGHT_WIDTH:
+      case PROP_BORDER_BOTTOM_WIDTH:
+      case PROP_BORDER_LEFT_WIDTH:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mBorder) {
+            if (nsnull == mImportant->mMargin) {
+              mImportant->mMargin = new nsCSSMargin();
+            }
+            if (nsnull != mImportant->mMargin) {
+              if (nsnull == mImportant->mMargin->mBorder) {
+                mImportant->mMargin->mBorder = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mMargin->mBorder) {
+                switch (aProperty) {
+                  case PROP_BORDER_TOP_WIDTH:     mImportant->mMargin->mBorder->mTop =    mMargin->mBorder->mTop;
+                                                  mMargin->mBorder->mTop.Reset();         break;
+                  case PROP_BORDER_RIGHT_WIDTH:   mImportant->mMargin->mBorder->mRight =  mMargin->mBorder->mRight;
+                                                  mMargin->mBorder->mRight.Reset();       break;
+                  case PROP_BORDER_BOTTOM_WIDTH:  mImportant->mMargin->mBorder->mBottom = mMargin->mBorder->mBottom;
+                                                  mMargin->mBorder->mBottom.Reset();      break;
+                  case PROP_BORDER_LEFT_WIDTH:    mImportant->mMargin->mBorder->mLeft =   mMargin->mBorder->mLeft;
+                                                  mMargin->mBorder->mLeft.Reset();        break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      case PROP_BORDER_TOP_COLOR:
+      case PROP_BORDER_RIGHT_COLOR:
+      case PROP_BORDER_BOTTOM_COLOR:
+      case PROP_BORDER_LEFT_COLOR:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mColor) {
+            if (nsnull == mImportant->mMargin) {
+              mImportant->mMargin = new nsCSSMargin();
+            }
+            if (nsnull != mImportant->mMargin) {
+              if (nsnull == mImportant->mMargin->mColor) {
+                mImportant->mMargin->mColor = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mMargin->mColor) {
+                switch (aProperty) {
+                  case PROP_BORDER_TOP_COLOR:     mImportant->mMargin->mColor->mTop   =   mMargin->mColor->mTop;
+                                                  mMargin->mColor->mTop.Reset();          break;
+                  case PROP_BORDER_RIGHT_COLOR:   mImportant->mMargin->mColor->mRight =   mMargin->mColor->mRight;
+                                                  mMargin->mColor->mRight.Reset();        break;
+                  case PROP_BORDER_BOTTOM_COLOR:  mImportant->mMargin->mColor->mBottom =  mMargin->mColor->mBottom;
+                                                  mMargin->mColor->mBottom.Reset();       break;
+                  case PROP_BORDER_LEFT_COLOR:    mImportant->mMargin->mColor->mLeft =    mMargin->mColor->mLeft;
+                                                  mMargin->mColor->mLeft.Reset();         break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      case PROP_BORDER_TOP_STYLE:
+      case PROP_BORDER_RIGHT_STYLE:
+      case PROP_BORDER_BOTTOM_STYLE:
+      case PROP_BORDER_LEFT_STYLE:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mStyle) {
+            if (nsnull == mImportant->mMargin) {
+              mImportant->mMargin = new nsCSSMargin();
+            }
+            if (nsnull != mImportant->mMargin) {
+              if (nsnull == mImportant->mMargin->mStyle) {
+                mImportant->mMargin->mStyle = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mMargin->mStyle) {
+                switch (aProperty) {
+                  case PROP_BORDER_TOP_STYLE:     mImportant->mMargin->mStyle->mTop =     mMargin->mStyle->mTop;
+                                                  mMargin->mStyle->mTop.Reset();          break;
+                  case PROP_BORDER_RIGHT_STYLE:   mImportant->mMargin->mStyle->mRight =   mMargin->mStyle->mRight;
+                                                  mMargin->mStyle->mRight.Reset();        break;
+                  case PROP_BORDER_BOTTOM_STYLE:  mImportant->mMargin->mStyle->mBottom =  mMargin->mStyle->mBottom;
+                                                  mMargin->mStyle->mBottom.Reset();       break;
+                  case PROP_BORDER_LEFT_STYLE:    mImportant->mMargin->mStyle->mLeft =    mMargin->mStyle->mLeft;
+                                                  mMargin->mStyle->mLeft.Reset();         break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      // nsCSSPosition
+      case PROP_POSITION:
+      case PROP_WIDTH:
+      case PROP_HEIGHT:
+      case PROP_LEFT:
+      case PROP_TOP:
+      case PROP_Z_INDEX:
+        if (nsnull != mPosition) {
+          if (nsnull == mImportant->mPosition) {
+            mImportant->mPosition = new nsCSSPosition();
+          }
+          if (nsnull != mImportant->mPosition) {
+            switch (aProperty) {
+              case PROP_POSITION:   mImportant->mPosition->mPosition =  mPosition->mPosition;
+                                    mPosition->mPosition.Reset();       break;
+              case PROP_WIDTH:      mImportant->mPosition->mWidth =     mPosition->mWidth;
+                                    mPosition->mWidth.Reset();          break;
+              case PROP_HEIGHT:     mImportant->mPosition->mHeight =    mPosition->mHeight;
+                                    mPosition->mHeight.Reset();         break;
+              case PROP_LEFT:       mImportant->mPosition->mLeft =      mPosition->mLeft;
+                                    mPosition->mLeft.Reset();           break;
+              case PROP_TOP:        mImportant->mPosition->mTop =       mPosition->mTop;
+                                    mPosition->mTop.Reset();            break;
+              case PROP_Z_INDEX:    mImportant->mPosition->mZIndex =    mPosition->mZIndex;
+                                    mPosition->mZIndex.Reset();         break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+        // nsCSSList
+      case PROP_LIST_STYLE_TYPE:
+      case PROP_LIST_STYLE_IMAGE:
+      case PROP_LIST_STYLE_POSITION:
+        if (nsnull != mList) {
+          if (nsnull == mImportant->mList) {
+            mImportant->mList = new nsCSSList();
+          }
+          if (nsnull != mImportant->mList) {
+            switch (aProperty) {
+              case PROP_LIST_STYLE_TYPE:      mImportant->mList->mType =      mList->mType;
+                                              mList->mType.Reset();           break;
+              case PROP_LIST_STYLE_IMAGE:     mImportant->mList->mImage =     mList->mImage;
+                                              mList->mImage.Reset();          break;
+              case PROP_LIST_STYLE_POSITION:  mImportant->mList->mPosition =  mList->mPosition;
+                                              mList->mPosition.Reset();       break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+        // nsCSSDisplay
+      case PROP_FLOAT:
+      case PROP_CLEAR:
+      case PROP_DISPLAY:
+      case PROP_DIRECTION:
+      case PROP_VISIBILITY:
+      case PROP_OVERFLOW:
+      case PROP_FILTER:
+        if (nsnull != mDisplay) {
+          if (nsnull == mImportant->mDisplay) {
+            mImportant->mDisplay = new nsCSSDisplay();
+          }
+          if (nsnull != mImportant->mDisplay) {
+            switch (aProperty) {
+              case PROP_FLOAT:      mImportant->mDisplay->mFloat =      mDisplay->mFloat;
+                                    mDisplay->mFloat.Reset();           break;
+              case PROP_CLEAR:      mImportant->mDisplay->mClear =      mDisplay->mClear;
+                                    mDisplay->mClear.Reset();           break;
+              case PROP_DISPLAY:    mImportant->mDisplay->mDisplay =    mDisplay->mDisplay;
+                                    mDisplay->mDisplay.Reset();         break;
+              case PROP_DIRECTION:  mImportant->mDisplay->mDirection =  mDisplay->mDirection;
+                                    mDisplay->mDirection.Reset();       break;
+              case PROP_VISIBILITY: mImportant->mDisplay->mVisibility = mDisplay->mVisibility;
+                                    mDisplay->mVisibility.Reset();      break;
+              case PROP_OVERFLOW:   mImportant->mDisplay->mOverflow =   mDisplay->mOverflow;
+                                    mDisplay->mOverflow.Reset();        break;
+              case PROP_FILTER:     mImportant->mDisplay->mFilter =     mDisplay->mFilter;
+                                    mDisplay->mFilter.Reset();          break;
+            }
+          }
+          else {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+        }
+        break;
+
+      case PROP_CLIP_TOP:
+      case PROP_CLIP_RIGHT:
+      case PROP_CLIP_BOTTOM:
+      case PROP_CLIP_LEFT:
+        if (nsnull != mDisplay) {
+          if (nsnull != mDisplay->mClip) {
+            if (nsnull == mImportant->mDisplay) {
+              mImportant->mDisplay = new nsCSSDisplay();
+            }
+            if (nsnull != mImportant->mDisplay) {
+              if (nsnull == mImportant->mDisplay->mClip) {
+                mImportant->mDisplay->mClip = new nsCSSRect();
+              }
+              if (nsnull != mImportant->mDisplay->mClip) {
+                switch(aProperty) {
+                  case PROP_CLIP_TOP:     mImportant->mDisplay->mClip->mTop =     mDisplay->mClip->mTop;
+                                          mDisplay->mClip->mTop.Reset();          break;
+                  case PROP_CLIP_RIGHT:   mImportant->mDisplay->mClip->mRight =   mDisplay->mClip->mRight;
+                                          mDisplay->mClip->mRight.Reset();        break;
+                  case PROP_CLIP_BOTTOM:  mImportant->mDisplay->mClip->mBottom =  mDisplay->mClip->mBottom;
+                                          mDisplay->mClip->mBottom.Reset();       break;
+                  case PROP_CLIP_LEFT:    mImportant->mDisplay->mClip->mLeft =    mDisplay->mClip->mLeft;
+                                          mDisplay->mClip->mLeft.Reset();         break;
+                }
+              }
+              else {
+                result = NS_ERROR_OUT_OF_MEMORY;
+              }
+            }
+            else {
+              result = NS_ERROR_OUT_OF_MEMORY;
+            }
+          }
+        }
+        break;
+
+      case PROP_BACKGROUND:
+        SetValueImportant(PROP_BACKGROUND_COLOR);
+        SetValueImportant(PROP_BACKGROUND_IMAGE);
+        SetValueImportant(PROP_BACKGROUND_REPEAT);
+        SetValueImportant(PROP_BACKGROUND_ATTACHMENT);
+        SetValueImportant(PROP_BACKGROUND_X_POSITION);
+        SetValueImportant(PROP_BACKGROUND_Y_POSITION);
+        SetValueImportant(PROP_BACKGROUND_FILTER);
+        break;
+      case PROP_BORDER:
+        SetValueImportant(PROP_BORDER_TOP_WIDTH);
+        SetValueImportant(PROP_BORDER_RIGHT_WIDTH);
+        SetValueImportant(PROP_BORDER_BOTTOM_WIDTH);
+        SetValueImportant(PROP_BORDER_LEFT_WIDTH);
+        SetValueImportant(PROP_BORDER_TOP_STYLE);
+        SetValueImportant(PROP_BORDER_RIGHT_STYLE);
+        SetValueImportant(PROP_BORDER_BOTTOM_STYLE);
+        SetValueImportant(PROP_BORDER_LEFT_STYLE);
+        SetValueImportant(PROP_BORDER_TOP_COLOR);
+        SetValueImportant(PROP_BORDER_RIGHT_COLOR);
+        SetValueImportant(PROP_BORDER_BOTTOM_COLOR);
+        SetValueImportant(PROP_BORDER_LEFT_COLOR);
+        break;
+      case PROP_CLIP:
+        SetValueImportant(PROP_CLIP_TOP);
+        SetValueImportant(PROP_CLIP_RIGHT);
+        SetValueImportant(PROP_CLIP_BOTTOM);
+        SetValueImportant(PROP_CLIP_LEFT);
+        break;
+      case PROP_FONT:
+        SetValueImportant(PROP_FONT_FAMILY);
+        SetValueImportant(PROP_FONT_STYLE);
+        SetValueImportant(PROP_FONT_VARIANT);
+        SetValueImportant(PROP_FONT_WEIGHT);
+        SetValueImportant(PROP_FONT_SIZE);
+        SetValueImportant(PROP_LINE_HEIGHT);
+        break;
+      case PROP_LIST_STYLE:
+        SetValueImportant(PROP_LIST_STYLE_TYPE);
+        SetValueImportant(PROP_LIST_STYLE_IMAGE);
+        SetValueImportant(PROP_LIST_STYLE_POSITION);
+        break;
+      case PROP_MARGIN:
+        SetValueImportant(PROP_MARGIN_TOP);
+        SetValueImportant(PROP_MARGIN_RIGHT);
+        SetValueImportant(PROP_MARGIN_BOTTOM);
+        SetValueImportant(PROP_MARGIN_LEFT);
+        break;
+      case PROP_PADDING:
+        SetValueImportant(PROP_PADDING_TOP);
+        SetValueImportant(PROP_PADDING_RIGHT);
+        SetValueImportant(PROP_PADDING_BOTTOM);
+        SetValueImportant(PROP_PADDING_LEFT);
+        break;
+      case PROP_BACKGROUND_POSITION:
+        SetValueImportant(PROP_BACKGROUND_X_POSITION);
+        SetValueImportant(PROP_BACKGROUND_Y_POSITION);
+        break;
+      case PROP_BORDER_TOP:
+        SetValueImportant(PROP_BORDER_TOP_WIDTH);
+        SetValueImportant(PROP_BORDER_TOP_STYLE);
+        SetValueImportant(PROP_BORDER_TOP_COLOR);
+        break;
+      case PROP_BORDER_RIGHT:
+        SetValueImportant(PROP_BORDER_RIGHT_WIDTH);
+        SetValueImportant(PROP_BORDER_RIGHT_STYLE);
+        SetValueImportant(PROP_BORDER_RIGHT_COLOR);
+        break;
+      case PROP_BORDER_BOTTOM:
+        SetValueImportant(PROP_BORDER_BOTTOM_WIDTH);
+        SetValueImportant(PROP_BORDER_BOTTOM_STYLE);
+        SetValueImportant(PROP_BORDER_BOTTOM_COLOR);
+        break;
+      case PROP_BORDER_LEFT:
+        SetValueImportant(PROP_BORDER_LEFT_WIDTH);
+        SetValueImportant(PROP_BORDER_LEFT_STYLE);
+        SetValueImportant(PROP_BORDER_LEFT_COLOR);
+        break;
+      case PROP_BORDER_COLOR:
+        SetValueImportant(PROP_BORDER_TOP_COLOR);
+        SetValueImportant(PROP_BORDER_RIGHT_COLOR);
+        SetValueImportant(PROP_BORDER_BOTTOM_COLOR);
+        SetValueImportant(PROP_BORDER_LEFT_COLOR);
+        break;
+      case PROP_BORDER_STYLE:
+        SetValueImportant(PROP_BORDER_TOP_STYLE);
+        SetValueImportant(PROP_BORDER_RIGHT_STYLE);
+        SetValueImportant(PROP_BORDER_BOTTOM_STYLE);
+        SetValueImportant(PROP_BORDER_LEFT_STYLE);
+        break;
+      case PROP_BORDER_WIDTH:
+        SetValueImportant(PROP_BORDER_TOP_WIDTH);
+        SetValueImportant(PROP_BORDER_RIGHT_WIDTH);
+        SetValueImportant(PROP_BORDER_BOTTOM_WIDTH);
+        SetValueImportant(PROP_BORDER_LEFT_WIDTH);
+        break;
+      default:
+        result = NS_ERROR_ILLEGAL_VALUE;
+        break;
+    }
+  }
+  return result;
+}
+
 nsresult CSSDeclarationImpl::GetValue(const char* aProperty, nsCSSValue& aValue)
 {
   return GetValue(nsCSSProps::LookupName(aProperty), aValue);
@@ -1381,6 +1943,19 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
   return result;
 }
 
+nsresult CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
+{
+  if (nsnull != mImportant) {
+    aResult = mImportant;
+    NS_ADDREF(aResult);
+  }
+  else {
+    aResult = nsnull;
+  }
+  return NS_OK;
+}
+
+
 void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -1410,6 +1985,11 @@ void CSSDeclarationImpl::List(FILE* out, PRInt32 aIndent) const
   }
 
   fputs("}", out);
+
+  if (nsnull != mImportant) {
+    fputs(" ! important ", out);
+    mImportant->List(out, 0);
+  }
 }
 
 NS_HTML nsresult

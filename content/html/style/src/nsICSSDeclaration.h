@@ -315,9 +315,14 @@ public:
 
   virtual nsresult AddValue(const char* aProperty, const nsCSSValue& aValue) = 0;
   virtual nsresult AddValue(PRInt32 aProperty, const nsCSSValue& aValue) = 0;
+  virtual nsresult SetValueImportant(const char* aProperty) = 0;
+  virtual nsresult SetValueImportant(PRInt32 aProperty) = 0;
+
 // XXX make nscolor a struct to avoid type conflicts
   virtual nsresult GetValue(const char* aProperty, nsCSSValue& aValue) = 0;
   virtual nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue) = 0;
+
+  virtual nsresult GetImportantValues(nsICSSDeclaration*& aResult) = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
