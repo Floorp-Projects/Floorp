@@ -704,9 +704,17 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           nsAutoString temp("");
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
+
             if(NS_OK==result) {
-              result=aScanner.ReadWhile(temp,gEdibles,PR_TRUE,PR_TRUE);  //get all available '---'
+              result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+              aScanner.SkipWhitespace(); //but skip terminating whitespace...
             }
+            
+            if(NS_OK==result) {
+              result=aScanner.GetChar(aChar);
+              temp+=aChar;
+            }
+
             findpos=temp.RFind("-->");
             if(kNotFound==findpos)
               findpos=temp.RFind("!>");
