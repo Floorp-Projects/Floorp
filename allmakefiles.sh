@@ -1065,6 +1065,7 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/pref/autoconfig/Makefile
             extensions/pref/autoconfig/public/Makefile
             extensions/pref/autoconfig/src/Makefile
+            extensions/pref/autoconfig/resources/Makefile
             " ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
