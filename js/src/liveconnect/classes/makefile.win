@@ -46,25 +46,24 @@ MODULE=java
 JMODS=netscape/javascript
 !ifdef MOZ_JAVA
 JDIRS=$(JMODS) 
-!endif
-JAR_JSJ=jsj10.jar 
 JAR_JSJ_CLASSES=$(JMODS) 
-JARS=$(JAR_JSJ) 
-
+JAR_NAME = jsj10.jar
 
 include <$(DEPTH)\config\rules.mak>
 
-$(JAR_JSJ):
+install:: 
 	cd $(JAVA_DESTPATH)
-	@echo +++ building/updating $@
-	$(ZIP_PROG) -$(COMP_LEVEL)qu $@ META-INF\build
-	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) -$(COMP_LEVEL)qu $@ %i\*.class
+	@echo +++ building/updating $(JAR_NAME)
+	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) $(ZIP_FLAGS) $(JAR_NAME) %i\*.class
 	cd $(MAKEDIR)
 
-jars:	$(JARS)
-
-install:: jars
-
+!ifdef REGENERATE
+install::
+	cd $(JAVA_DESTPATH)
+	@echo +++ updating $(DEPTH)\nav-java\stubs\classes\$(JAR_NAME) for checkin
+	-for %i in ($(JAR_JSJ_CLASSES:/=\)) do @$(ZIP_PROG) $(ZIP_FLAGS) ..\..\nav-java\stubs\classes\$(JAR_NAME) %i\*.class
+	cd $(MAKEDIR)
+!endif
 
 javadoc:
 	-mkdir $(XPDIST)\javadoc 2> NUL
