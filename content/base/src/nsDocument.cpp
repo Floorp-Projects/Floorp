@@ -2793,25 +2793,11 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 NS_IMETHODIMP
 nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 {
-  NS_ENSURE_ARG_POINTER(aDefaultView);
+  if (mScriptGlobalObject) {
+    return CallQueryInterface(mScriptGlobalObject, aDefaultView);
+  }
+
   *aDefaultView = nsnull;
-
-  NS_ENSURE_TRUE(mPresShells.Count() != 0, NS_OK);
-  nsCOMPtr<nsIPresShell> shell = NS_STATIC_CAST(nsIPresShell *,
-                                                mPresShells.ElementAt(0));
-  NS_ENSURE_TRUE(shell, NS_OK);
-
-  nsPresContext *ctx = shell->GetPresContext();
-  NS_ENSURE_TRUE(ctx, NS_OK);
-
-  nsCOMPtr<nsISupports> container = ctx->GetContainer();
-  NS_ENSURE_TRUE(container, NS_OK);
-
-  nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
-  NS_ENSURE_TRUE(window, NS_OK);
-
-  CallQueryInterface(window, aDefaultView);
-
   return NS_OK;
 }
 
