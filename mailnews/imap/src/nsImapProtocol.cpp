@@ -804,14 +804,7 @@ void nsImapProtocol::EstablishServerConnection()
 void nsImapProtocol::ProcessCurrentURL()
 {
 	PRBool	logonFailed = FALSE;
-
-	if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
-	{
-		nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
-		m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
-		SetFlag(IMAP_CONNECTION_IS_OPEN);
-	}
-    
+ 
 	// we used to check if the current running url was 
 	// Reinitialize the parser
 	GetServerStateParser().InitializeState();
@@ -1097,7 +1090,12 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 			// we're pulling out a selected state connection, but maybe we
 			// can get away with this.
 			m_needNoop = (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapDeleteAllMsgs);
-
+			if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
+			{
+				nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
+				m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
+				SetFlag(IMAP_CONNECTION_IS_OPEN);
+			}
 			// We now have a url to run so signal the monitor for url ready to be processed...
 			PR_EnterMonitor(m_urlReadyToRunMonitor);
 			m_nextUrlReadyToRun = PR_TRUE;
