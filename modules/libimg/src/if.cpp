@@ -906,7 +906,7 @@ IL_StreamWriteReady(il_container *ic)
 
     if (ic->imgdec)
   //      request_size = (*ic->write_ready)();
-    request_size = ((ic->imgdec->ImgDWriteReady))();
+    request_size = ic->imgdec->ImgDWriteReady();
 
     if (!request_size)
         return 0;
@@ -1018,7 +1018,7 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 
 	//	err = (*ic->write)(ic, (unsigned char *)str, len);
 
-		err = (ic->imgdec->ImgDWrite)(str,  len);
+		err = ic->imgdec->ImgDWrite(str,  len);
 
 
 
