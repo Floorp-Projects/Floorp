@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLMENUELEMENT(_to)  \
-  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to##GetCompact(aCompact); } \
-  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to##SetCompact(aCompact); } \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLMenuElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -61,13 +61,13 @@ public:
 
 
 #define NS_FORWARD_IDOMHISTORY(_to)  \
-  NS_IMETHOD    GetLength(PRInt32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    GetCurrent(nsString& aCurrent) { return _to##GetCurrent(aCurrent); } \
-  NS_IMETHOD    GetPrevious(nsString& aPrevious) { return _to##GetPrevious(aPrevious); } \
-  NS_IMETHOD    GetNext(nsString& aNext) { return _to##GetNext(aNext); } \
-  NS_IMETHOD    Back() { return _to##Back(); }  \
-  NS_IMETHOD    Forward() { return _to##Forward(); }  \
-  NS_IMETHOD    Go(PRInt32 aIndex) { return _to##Go(aIndex); }  \
+  NS_IMETHOD    GetLength(PRInt32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    GetCurrent(nsString& aCurrent) { return _to GetCurrent(aCurrent); } \
+  NS_IMETHOD    GetPrevious(nsString& aPrevious) { return _to GetPrevious(aPrevious); } \
+  NS_IMETHOD    GetNext(nsString& aNext) { return _to GetNext(aNext); } \
+  NS_IMETHOD    Back() { return _to Back(); }  \
+  NS_IMETHOD    Forward() { return _to Forward(); }  \
+  NS_IMETHOD    Go(PRInt32 aIndex) { return _to Go(aIndex); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);

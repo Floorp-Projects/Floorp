@@ -233,37 +233,37 @@ public:
 
 
 #define NS_FORWARD_IDOMEVENT(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
-  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
-  NS_IMETHOD    GetCommitText(PRBool* aCommitText) { return _to##GetCommitText(aCommitText); } \
-  NS_IMETHOD    SetCommitText(PRBool aCommitText) { return _to##SetCommitText(aCommitText); } \
-  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget) { return _to##SetTarget(aTarget); } \
-  NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return _to##GetScreenX(aScreenX); } \
-  NS_IMETHOD    SetScreenX(PRInt32 aScreenX) { return _to##SetScreenX(aScreenX); } \
-  NS_IMETHOD    GetScreenY(PRInt32* aScreenY) { return _to##GetScreenY(aScreenY); } \
-  NS_IMETHOD    SetScreenY(PRInt32 aScreenY) { return _to##SetScreenY(aScreenY); } \
-  NS_IMETHOD    GetClientX(PRInt32* aClientX) { return _to##GetClientX(aClientX); } \
-  NS_IMETHOD    SetClientX(PRInt32 aClientX) { return _to##SetClientX(aClientX); } \
-  NS_IMETHOD    GetClientY(PRInt32* aClientY) { return _to##GetClientY(aClientY); } \
-  NS_IMETHOD    SetClientY(PRInt32 aClientY) { return _to##SetClientY(aClientY); } \
-  NS_IMETHOD    GetAltKey(PRBool* aAltKey) { return _to##GetAltKey(aAltKey); } \
-  NS_IMETHOD    SetAltKey(PRBool aAltKey) { return _to##SetAltKey(aAltKey); } \
-  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey) { return _to##GetCtrlKey(aCtrlKey); } \
-  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey) { return _to##SetCtrlKey(aCtrlKey); } \
-  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey) { return _to##GetShiftKey(aShiftKey); } \
-  NS_IMETHOD    SetShiftKey(PRBool aShiftKey) { return _to##SetShiftKey(aShiftKey); } \
-  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to##GetMetaKey(aMetaKey); } \
-  NS_IMETHOD    SetMetaKey(PRBool aMetaKey) { return _to##SetMetaKey(aMetaKey); } \
-  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to##GetCancelBubble(aCancelBubble); } \
-  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to##SetCancelBubble(aCancelBubble); } \
-  NS_IMETHOD    GetCharCode(PRUint32* aCharCode) { return _to##GetCharCode(aCharCode); } \
-  NS_IMETHOD    SetCharCode(PRUint32 aCharCode) { return _to##SetCharCode(aCharCode); } \
-  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode) { return _to##GetKeyCode(aKeyCode); } \
-  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode) { return _to##SetKeyCode(aKeyCode); } \
-  NS_IMETHOD    GetButton(PRUint32* aButton) { return _to##GetButton(aButton); } \
-  NS_IMETHOD    SetButton(PRUint32 aButton) { return _to##SetButton(aButton); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    GetCommitText(PRBool* aCommitText) { return _to GetCommitText(aCommitText); } \
+  NS_IMETHOD    SetCommitText(PRBool aCommitText) { return _to SetCommitText(aCommitText); } \
+  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return _to GetScreenX(aScreenX); } \
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX) { return _to SetScreenX(aScreenX); } \
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY) { return _to GetScreenY(aScreenY); } \
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY) { return _to SetScreenY(aScreenY); } \
+  NS_IMETHOD    GetClientX(PRInt32* aClientX) { return _to GetClientX(aClientX); } \
+  NS_IMETHOD    SetClientX(PRInt32 aClientX) { return _to SetClientX(aClientX); } \
+  NS_IMETHOD    GetClientY(PRInt32* aClientY) { return _to GetClientY(aClientY); } \
+  NS_IMETHOD    SetClientY(PRInt32 aClientY) { return _to SetClientY(aClientY); } \
+  NS_IMETHOD    GetAltKey(PRBool* aAltKey) { return _to GetAltKey(aAltKey); } \
+  NS_IMETHOD    SetAltKey(PRBool aAltKey) { return _to SetAltKey(aAltKey); } \
+  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey) { return _to GetCtrlKey(aCtrlKey); } \
+  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey) { return _to SetCtrlKey(aCtrlKey); } \
+  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey) { return _to GetShiftKey(aShiftKey); } \
+  NS_IMETHOD    SetShiftKey(PRBool aShiftKey) { return _to SetShiftKey(aShiftKey); } \
+  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to GetMetaKey(aMetaKey); } \
+  NS_IMETHOD    SetMetaKey(PRBool aMetaKey) { return _to SetMetaKey(aMetaKey); } \
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to GetCancelBubble(aCancelBubble); } \
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to SetCancelBubble(aCancelBubble); } \
+  NS_IMETHOD    GetCharCode(PRUint32* aCharCode) { return _to GetCharCode(aCharCode); } \
+  NS_IMETHOD    SetCharCode(PRUint32 aCharCode) { return _to SetCharCode(aCharCode); } \
+  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode) { return _to GetKeyCode(aKeyCode); } \
+  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode) { return _to SetKeyCode(aKeyCode); } \
+  NS_IMETHOD    GetButton(PRUint32* aButton) { return _to GetButton(aButton); } \
+  NS_IMETHOD    SetButton(PRUint32 aButton) { return _to SetButton(aButton); } \
 
 
 extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);

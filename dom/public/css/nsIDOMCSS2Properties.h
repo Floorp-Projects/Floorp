@@ -656,252 +656,252 @@ public:
 
 
 #define NS_FORWARD_IDOMCSS2PROPERTIES(_to)  \
-  NS_IMETHOD    GetAzimuth(nsString& aAzimuth) { return _to##GetAzimuth(aAzimuth); } \
-  NS_IMETHOD    SetAzimuth(const nsString& aAzimuth) { return _to##SetAzimuth(aAzimuth); } \
-  NS_IMETHOD    GetBackground(nsString& aBackground) { return _to##GetBackground(aBackground); } \
-  NS_IMETHOD    SetBackground(const nsString& aBackground) { return _to##SetBackground(aBackground); } \
-  NS_IMETHOD    GetBackgroundAttachment(nsString& aBackgroundAttachment) { return _to##GetBackgroundAttachment(aBackgroundAttachment); } \
-  NS_IMETHOD    SetBackgroundAttachment(const nsString& aBackgroundAttachment) { return _to##SetBackgroundAttachment(aBackgroundAttachment); } \
-  NS_IMETHOD    GetBackgroundColor(nsString& aBackgroundColor) { return _to##GetBackgroundColor(aBackgroundColor); } \
-  NS_IMETHOD    SetBackgroundColor(const nsString& aBackgroundColor) { return _to##SetBackgroundColor(aBackgroundColor); } \
-  NS_IMETHOD    GetBackgroundImage(nsString& aBackgroundImage) { return _to##GetBackgroundImage(aBackgroundImage); } \
-  NS_IMETHOD    SetBackgroundImage(const nsString& aBackgroundImage) { return _to##SetBackgroundImage(aBackgroundImage); } \
-  NS_IMETHOD    GetBackgroundPosition(nsString& aBackgroundPosition) { return _to##GetBackgroundPosition(aBackgroundPosition); } \
-  NS_IMETHOD    SetBackgroundPosition(const nsString& aBackgroundPosition) { return _to##SetBackgroundPosition(aBackgroundPosition); } \
-  NS_IMETHOD    GetBackgroundRepeat(nsString& aBackgroundRepeat) { return _to##GetBackgroundRepeat(aBackgroundRepeat); } \
-  NS_IMETHOD    SetBackgroundRepeat(const nsString& aBackgroundRepeat) { return _to##SetBackgroundRepeat(aBackgroundRepeat); } \
-  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to##GetBorder(aBorder); } \
-  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to##SetBorder(aBorder); } \
-  NS_IMETHOD    GetBorderCollapse(nsString& aBorderCollapse) { return _to##GetBorderCollapse(aBorderCollapse); } \
-  NS_IMETHOD    SetBorderCollapse(const nsString& aBorderCollapse) { return _to##SetBorderCollapse(aBorderCollapse); } \
-  NS_IMETHOD    GetBorderColor(nsString& aBorderColor) { return _to##GetBorderColor(aBorderColor); } \
-  NS_IMETHOD    SetBorderColor(const nsString& aBorderColor) { return _to##SetBorderColor(aBorderColor); } \
-  NS_IMETHOD    GetBorderSpacing(nsString& aBorderSpacing) { return _to##GetBorderSpacing(aBorderSpacing); } \
-  NS_IMETHOD    SetBorderSpacing(const nsString& aBorderSpacing) { return _to##SetBorderSpacing(aBorderSpacing); } \
-  NS_IMETHOD    GetBorderStyle(nsString& aBorderStyle) { return _to##GetBorderStyle(aBorderStyle); } \
-  NS_IMETHOD    SetBorderStyle(const nsString& aBorderStyle) { return _to##SetBorderStyle(aBorderStyle); } \
-  NS_IMETHOD    GetBorderTop(nsString& aBorderTop) { return _to##GetBorderTop(aBorderTop); } \
-  NS_IMETHOD    SetBorderTop(const nsString& aBorderTop) { return _to##SetBorderTop(aBorderTop); } \
-  NS_IMETHOD    GetBorderRight(nsString& aBorderRight) { return _to##GetBorderRight(aBorderRight); } \
-  NS_IMETHOD    SetBorderRight(const nsString& aBorderRight) { return _to##SetBorderRight(aBorderRight); } \
-  NS_IMETHOD    GetBorderBottom(nsString& aBorderBottom) { return _to##GetBorderBottom(aBorderBottom); } \
-  NS_IMETHOD    SetBorderBottom(const nsString& aBorderBottom) { return _to##SetBorderBottom(aBorderBottom); } \
-  NS_IMETHOD    GetBorderLeft(nsString& aBorderLeft) { return _to##GetBorderLeft(aBorderLeft); } \
-  NS_IMETHOD    SetBorderLeft(const nsString& aBorderLeft) { return _to##SetBorderLeft(aBorderLeft); } \
-  NS_IMETHOD    GetBorderTopColor(nsString& aBorderTopColor) { return _to##GetBorderTopColor(aBorderTopColor); } \
-  NS_IMETHOD    SetBorderTopColor(const nsString& aBorderTopColor) { return _to##SetBorderTopColor(aBorderTopColor); } \
-  NS_IMETHOD    GetBorderRightColor(nsString& aBorderRightColor) { return _to##GetBorderRightColor(aBorderRightColor); } \
-  NS_IMETHOD    SetBorderRightColor(const nsString& aBorderRightColor) { return _to##SetBorderRightColor(aBorderRightColor); } \
-  NS_IMETHOD    GetBorderBottomColor(nsString& aBorderBottomColor) { return _to##GetBorderBottomColor(aBorderBottomColor); } \
-  NS_IMETHOD    SetBorderBottomColor(const nsString& aBorderBottomColor) { return _to##SetBorderBottomColor(aBorderBottomColor); } \
-  NS_IMETHOD    GetBorderLeftColor(nsString& aBorderLeftColor) { return _to##GetBorderLeftColor(aBorderLeftColor); } \
-  NS_IMETHOD    SetBorderLeftColor(const nsString& aBorderLeftColor) { return _to##SetBorderLeftColor(aBorderLeftColor); } \
-  NS_IMETHOD    GetBorderTopStyle(nsString& aBorderTopStyle) { return _to##GetBorderTopStyle(aBorderTopStyle); } \
-  NS_IMETHOD    SetBorderTopStyle(const nsString& aBorderTopStyle) { return _to##SetBorderTopStyle(aBorderTopStyle); } \
-  NS_IMETHOD    GetBorderRightStyle(nsString& aBorderRightStyle) { return _to##GetBorderRightStyle(aBorderRightStyle); } \
-  NS_IMETHOD    SetBorderRightStyle(const nsString& aBorderRightStyle) { return _to##SetBorderRightStyle(aBorderRightStyle); } \
-  NS_IMETHOD    GetBorderBottomStyle(nsString& aBorderBottomStyle) { return _to##GetBorderBottomStyle(aBorderBottomStyle); } \
-  NS_IMETHOD    SetBorderBottomStyle(const nsString& aBorderBottomStyle) { return _to##SetBorderBottomStyle(aBorderBottomStyle); } \
-  NS_IMETHOD    GetBorderLeftStyle(nsString& aBorderLeftStyle) { return _to##GetBorderLeftStyle(aBorderLeftStyle); } \
-  NS_IMETHOD    SetBorderLeftStyle(const nsString& aBorderLeftStyle) { return _to##SetBorderLeftStyle(aBorderLeftStyle); } \
-  NS_IMETHOD    GetBorderTopWidth(nsString& aBorderTopWidth) { return _to##GetBorderTopWidth(aBorderTopWidth); } \
-  NS_IMETHOD    SetBorderTopWidth(const nsString& aBorderTopWidth) { return _to##SetBorderTopWidth(aBorderTopWidth); } \
-  NS_IMETHOD    GetBorderRightWidth(nsString& aBorderRightWidth) { return _to##GetBorderRightWidth(aBorderRightWidth); } \
-  NS_IMETHOD    SetBorderRightWidth(const nsString& aBorderRightWidth) { return _to##SetBorderRightWidth(aBorderRightWidth); } \
-  NS_IMETHOD    GetBorderBottomWidth(nsString& aBorderBottomWidth) { return _to##GetBorderBottomWidth(aBorderBottomWidth); } \
-  NS_IMETHOD    SetBorderBottomWidth(const nsString& aBorderBottomWidth) { return _to##SetBorderBottomWidth(aBorderBottomWidth); } \
-  NS_IMETHOD    GetBorderLeftWidth(nsString& aBorderLeftWidth) { return _to##GetBorderLeftWidth(aBorderLeftWidth); } \
-  NS_IMETHOD    SetBorderLeftWidth(const nsString& aBorderLeftWidth) { return _to##SetBorderLeftWidth(aBorderLeftWidth); } \
-  NS_IMETHOD    GetBorderWidth(nsString& aBorderWidth) { return _to##GetBorderWidth(aBorderWidth); } \
-  NS_IMETHOD    SetBorderWidth(const nsString& aBorderWidth) { return _to##SetBorderWidth(aBorderWidth); } \
-  NS_IMETHOD    GetBottom(nsString& aBottom) { return _to##GetBottom(aBottom); } \
-  NS_IMETHOD    SetBottom(const nsString& aBottom) { return _to##SetBottom(aBottom); } \
-  NS_IMETHOD    GetCaptionSide(nsString& aCaptionSide) { return _to##GetCaptionSide(aCaptionSide); } \
-  NS_IMETHOD    SetCaptionSide(const nsString& aCaptionSide) { return _to##SetCaptionSide(aCaptionSide); } \
-  NS_IMETHOD    GetClear(nsString& aClear) { return _to##GetClear(aClear); } \
-  NS_IMETHOD    SetClear(const nsString& aClear) { return _to##SetClear(aClear); } \
-  NS_IMETHOD    GetClip(nsString& aClip) { return _to##GetClip(aClip); } \
-  NS_IMETHOD    SetClip(const nsString& aClip) { return _to##SetClip(aClip); } \
-  NS_IMETHOD    GetColor(nsString& aColor) { return _to##GetColor(aColor); } \
-  NS_IMETHOD    SetColor(const nsString& aColor) { return _to##SetColor(aColor); } \
-  NS_IMETHOD    GetContent(nsString& aContent) { return _to##GetContent(aContent); } \
-  NS_IMETHOD    SetContent(const nsString& aContent) { return _to##SetContent(aContent); } \
-  NS_IMETHOD    GetCounterIncrement(nsString& aCounterIncrement) { return _to##GetCounterIncrement(aCounterIncrement); } \
-  NS_IMETHOD    SetCounterIncrement(const nsString& aCounterIncrement) { return _to##SetCounterIncrement(aCounterIncrement); } \
-  NS_IMETHOD    GetCounterReset(nsString& aCounterReset) { return _to##GetCounterReset(aCounterReset); } \
-  NS_IMETHOD    SetCounterReset(const nsString& aCounterReset) { return _to##SetCounterReset(aCounterReset); } \
-  NS_IMETHOD    GetCue(nsString& aCue) { return _to##GetCue(aCue); } \
-  NS_IMETHOD    SetCue(const nsString& aCue) { return _to##SetCue(aCue); } \
-  NS_IMETHOD    GetCueAfter(nsString& aCueAfter) { return _to##GetCueAfter(aCueAfter); } \
-  NS_IMETHOD    SetCueAfter(const nsString& aCueAfter) { return _to##SetCueAfter(aCueAfter); } \
-  NS_IMETHOD    GetCueBefore(nsString& aCueBefore) { return _to##GetCueBefore(aCueBefore); } \
-  NS_IMETHOD    SetCueBefore(const nsString& aCueBefore) { return _to##SetCueBefore(aCueBefore); } \
-  NS_IMETHOD    GetCursor(nsString& aCursor) { return _to##GetCursor(aCursor); } \
-  NS_IMETHOD    SetCursor(const nsString& aCursor) { return _to##SetCursor(aCursor); } \
-  NS_IMETHOD    GetDirection(nsString& aDirection) { return _to##GetDirection(aDirection); } \
-  NS_IMETHOD    SetDirection(const nsString& aDirection) { return _to##SetDirection(aDirection); } \
-  NS_IMETHOD    GetDisplay(nsString& aDisplay) { return _to##GetDisplay(aDisplay); } \
-  NS_IMETHOD    SetDisplay(const nsString& aDisplay) { return _to##SetDisplay(aDisplay); } \
-  NS_IMETHOD    GetElevation(nsString& aElevation) { return _to##GetElevation(aElevation); } \
-  NS_IMETHOD    SetElevation(const nsString& aElevation) { return _to##SetElevation(aElevation); } \
-  NS_IMETHOD    GetEmptyCells(nsString& aEmptyCells) { return _to##GetEmptyCells(aEmptyCells); } \
-  NS_IMETHOD    SetEmptyCells(const nsString& aEmptyCells) { return _to##SetEmptyCells(aEmptyCells); } \
-  NS_IMETHOD    GetCssFloat(nsString& aCssFloat) { return _to##GetCssFloat(aCssFloat); } \
-  NS_IMETHOD    SetCssFloat(const nsString& aCssFloat) { return _to##SetCssFloat(aCssFloat); } \
-  NS_IMETHOD    GetFont(nsString& aFont) { return _to##GetFont(aFont); } \
-  NS_IMETHOD    SetFont(const nsString& aFont) { return _to##SetFont(aFont); } \
-  NS_IMETHOD    GetFontFamily(nsString& aFontFamily) { return _to##GetFontFamily(aFontFamily); } \
-  NS_IMETHOD    SetFontFamily(const nsString& aFontFamily) { return _to##SetFontFamily(aFontFamily); } \
-  NS_IMETHOD    GetFontSize(nsString& aFontSize) { return _to##GetFontSize(aFontSize); } \
-  NS_IMETHOD    SetFontSize(const nsString& aFontSize) { return _to##SetFontSize(aFontSize); } \
-  NS_IMETHOD    GetFontSizeAdjust(nsString& aFontSizeAdjust) { return _to##GetFontSizeAdjust(aFontSizeAdjust); } \
-  NS_IMETHOD    SetFontSizeAdjust(const nsString& aFontSizeAdjust) { return _to##SetFontSizeAdjust(aFontSizeAdjust); } \
-  NS_IMETHOD    GetFontStretch(nsString& aFontStretch) { return _to##GetFontStretch(aFontStretch); } \
-  NS_IMETHOD    SetFontStretch(const nsString& aFontStretch) { return _to##SetFontStretch(aFontStretch); } \
-  NS_IMETHOD    GetFontStyle(nsString& aFontStyle) { return _to##GetFontStyle(aFontStyle); } \
-  NS_IMETHOD    SetFontStyle(const nsString& aFontStyle) { return _to##SetFontStyle(aFontStyle); } \
-  NS_IMETHOD    GetFontVariant(nsString& aFontVariant) { return _to##GetFontVariant(aFontVariant); } \
-  NS_IMETHOD    SetFontVariant(const nsString& aFontVariant) { return _to##SetFontVariant(aFontVariant); } \
-  NS_IMETHOD    GetFontWeight(nsString& aFontWeight) { return _to##GetFontWeight(aFontWeight); } \
-  NS_IMETHOD    SetFontWeight(const nsString& aFontWeight) { return _to##SetFontWeight(aFontWeight); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to##GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to##SetHeight(aHeight); } \
-  NS_IMETHOD    GetLeft(nsString& aLeft) { return _to##GetLeft(aLeft); } \
-  NS_IMETHOD    SetLeft(const nsString& aLeft) { return _to##SetLeft(aLeft); } \
-  NS_IMETHOD    GetLetterSpacing(nsString& aLetterSpacing) { return _to##GetLetterSpacing(aLetterSpacing); } \
-  NS_IMETHOD    SetLetterSpacing(const nsString& aLetterSpacing) { return _to##SetLetterSpacing(aLetterSpacing); } \
-  NS_IMETHOD    GetLineHeight(nsString& aLineHeight) { return _to##GetLineHeight(aLineHeight); } \
-  NS_IMETHOD    SetLineHeight(const nsString& aLineHeight) { return _to##SetLineHeight(aLineHeight); } \
-  NS_IMETHOD    GetListStyle(nsString& aListStyle) { return _to##GetListStyle(aListStyle); } \
-  NS_IMETHOD    SetListStyle(const nsString& aListStyle) { return _to##SetListStyle(aListStyle); } \
-  NS_IMETHOD    GetListStyleImage(nsString& aListStyleImage) { return _to##GetListStyleImage(aListStyleImage); } \
-  NS_IMETHOD    SetListStyleImage(const nsString& aListStyleImage) { return _to##SetListStyleImage(aListStyleImage); } \
-  NS_IMETHOD    GetListStylePosition(nsString& aListStylePosition) { return _to##GetListStylePosition(aListStylePosition); } \
-  NS_IMETHOD    SetListStylePosition(const nsString& aListStylePosition) { return _to##SetListStylePosition(aListStylePosition); } \
-  NS_IMETHOD    GetListStyleType(nsString& aListStyleType) { return _to##GetListStyleType(aListStyleType); } \
-  NS_IMETHOD    SetListStyleType(const nsString& aListStyleType) { return _to##SetListStyleType(aListStyleType); } \
-  NS_IMETHOD    GetMargin(nsString& aMargin) { return _to##GetMargin(aMargin); } \
-  NS_IMETHOD    SetMargin(const nsString& aMargin) { return _to##SetMargin(aMargin); } \
-  NS_IMETHOD    GetMarginTop(nsString& aMarginTop) { return _to##GetMarginTop(aMarginTop); } \
-  NS_IMETHOD    SetMarginTop(const nsString& aMarginTop) { return _to##SetMarginTop(aMarginTop); } \
-  NS_IMETHOD    GetMarginRight(nsString& aMarginRight) { return _to##GetMarginRight(aMarginRight); } \
-  NS_IMETHOD    SetMarginRight(const nsString& aMarginRight) { return _to##SetMarginRight(aMarginRight); } \
-  NS_IMETHOD    GetMarginBottom(nsString& aMarginBottom) { return _to##GetMarginBottom(aMarginBottom); } \
-  NS_IMETHOD    SetMarginBottom(const nsString& aMarginBottom) { return _to##SetMarginBottom(aMarginBottom); } \
-  NS_IMETHOD    GetMarginLeft(nsString& aMarginLeft) { return _to##GetMarginLeft(aMarginLeft); } \
-  NS_IMETHOD    SetMarginLeft(const nsString& aMarginLeft) { return _to##SetMarginLeft(aMarginLeft); } \
-  NS_IMETHOD    GetMarkerOffset(nsString& aMarkerOffset) { return _to##GetMarkerOffset(aMarkerOffset); } \
-  NS_IMETHOD    SetMarkerOffset(const nsString& aMarkerOffset) { return _to##SetMarkerOffset(aMarkerOffset); } \
-  NS_IMETHOD    GetMarks(nsString& aMarks) { return _to##GetMarks(aMarks); } \
-  NS_IMETHOD    SetMarks(const nsString& aMarks) { return _to##SetMarks(aMarks); } \
-  NS_IMETHOD    GetMaxHeight(nsString& aMaxHeight) { return _to##GetMaxHeight(aMaxHeight); } \
-  NS_IMETHOD    SetMaxHeight(const nsString& aMaxHeight) { return _to##SetMaxHeight(aMaxHeight); } \
-  NS_IMETHOD    GetMaxWidth(nsString& aMaxWidth) { return _to##GetMaxWidth(aMaxWidth); } \
-  NS_IMETHOD    SetMaxWidth(const nsString& aMaxWidth) { return _to##SetMaxWidth(aMaxWidth); } \
-  NS_IMETHOD    GetMinHeight(nsString& aMinHeight) { return _to##GetMinHeight(aMinHeight); } \
-  NS_IMETHOD    SetMinHeight(const nsString& aMinHeight) { return _to##SetMinHeight(aMinHeight); } \
-  NS_IMETHOD    GetMinWidth(nsString& aMinWidth) { return _to##GetMinWidth(aMinWidth); } \
-  NS_IMETHOD    SetMinWidth(const nsString& aMinWidth) { return _to##SetMinWidth(aMinWidth); } \
-  NS_IMETHOD    GetOrphans(nsString& aOrphans) { return _to##GetOrphans(aOrphans); } \
-  NS_IMETHOD    SetOrphans(const nsString& aOrphans) { return _to##SetOrphans(aOrphans); } \
-  NS_IMETHOD    GetOutline(nsString& aOutline) { return _to##GetOutline(aOutline); } \
-  NS_IMETHOD    SetOutline(const nsString& aOutline) { return _to##SetOutline(aOutline); } \
-  NS_IMETHOD    GetOutlineColor(nsString& aOutlineColor) { return _to##GetOutlineColor(aOutlineColor); } \
-  NS_IMETHOD    SetOutlineColor(const nsString& aOutlineColor) { return _to##SetOutlineColor(aOutlineColor); } \
-  NS_IMETHOD    GetOutlineStyle(nsString& aOutlineStyle) { return _to##GetOutlineStyle(aOutlineStyle); } \
-  NS_IMETHOD    SetOutlineStyle(const nsString& aOutlineStyle) { return _to##SetOutlineStyle(aOutlineStyle); } \
-  NS_IMETHOD    GetOutlineWidth(nsString& aOutlineWidth) { return _to##GetOutlineWidth(aOutlineWidth); } \
-  NS_IMETHOD    SetOutlineWidth(const nsString& aOutlineWidth) { return _to##SetOutlineWidth(aOutlineWidth); } \
-  NS_IMETHOD    GetOverflow(nsString& aOverflow) { return _to##GetOverflow(aOverflow); } \
-  NS_IMETHOD    SetOverflow(const nsString& aOverflow) { return _to##SetOverflow(aOverflow); } \
-  NS_IMETHOD    GetPadding(nsString& aPadding) { return _to##GetPadding(aPadding); } \
-  NS_IMETHOD    SetPadding(const nsString& aPadding) { return _to##SetPadding(aPadding); } \
-  NS_IMETHOD    GetPaddingTop(nsString& aPaddingTop) { return _to##GetPaddingTop(aPaddingTop); } \
-  NS_IMETHOD    SetPaddingTop(const nsString& aPaddingTop) { return _to##SetPaddingTop(aPaddingTop); } \
-  NS_IMETHOD    GetPaddingRight(nsString& aPaddingRight) { return _to##GetPaddingRight(aPaddingRight); } \
-  NS_IMETHOD    SetPaddingRight(const nsString& aPaddingRight) { return _to##SetPaddingRight(aPaddingRight); } \
-  NS_IMETHOD    GetPaddingBottom(nsString& aPaddingBottom) { return _to##GetPaddingBottom(aPaddingBottom); } \
-  NS_IMETHOD    SetPaddingBottom(const nsString& aPaddingBottom) { return _to##SetPaddingBottom(aPaddingBottom); } \
-  NS_IMETHOD    GetPaddingLeft(nsString& aPaddingLeft) { return _to##GetPaddingLeft(aPaddingLeft); } \
-  NS_IMETHOD    SetPaddingLeft(const nsString& aPaddingLeft) { return _to##SetPaddingLeft(aPaddingLeft); } \
-  NS_IMETHOD    GetPage(nsString& aPage) { return _to##GetPage(aPage); } \
-  NS_IMETHOD    SetPage(const nsString& aPage) { return _to##SetPage(aPage); } \
-  NS_IMETHOD    GetPageBreakAfter(nsString& aPageBreakAfter) { return _to##GetPageBreakAfter(aPageBreakAfter); } \
-  NS_IMETHOD    SetPageBreakAfter(const nsString& aPageBreakAfter) { return _to##SetPageBreakAfter(aPageBreakAfter); } \
-  NS_IMETHOD    GetPageBreakBefore(nsString& aPageBreakBefore) { return _to##GetPageBreakBefore(aPageBreakBefore); } \
-  NS_IMETHOD    SetPageBreakBefore(const nsString& aPageBreakBefore) { return _to##SetPageBreakBefore(aPageBreakBefore); } \
-  NS_IMETHOD    GetPageBreakInside(nsString& aPageBreakInside) { return _to##GetPageBreakInside(aPageBreakInside); } \
-  NS_IMETHOD    SetPageBreakInside(const nsString& aPageBreakInside) { return _to##SetPageBreakInside(aPageBreakInside); } \
-  NS_IMETHOD    GetPause(nsString& aPause) { return _to##GetPause(aPause); } \
-  NS_IMETHOD    SetPause(const nsString& aPause) { return _to##SetPause(aPause); } \
-  NS_IMETHOD    GetPauseAfter(nsString& aPauseAfter) { return _to##GetPauseAfter(aPauseAfter); } \
-  NS_IMETHOD    SetPauseAfter(const nsString& aPauseAfter) { return _to##SetPauseAfter(aPauseAfter); } \
-  NS_IMETHOD    GetPauseBefore(nsString& aPauseBefore) { return _to##GetPauseBefore(aPauseBefore); } \
-  NS_IMETHOD    SetPauseBefore(const nsString& aPauseBefore) { return _to##SetPauseBefore(aPauseBefore); } \
-  NS_IMETHOD    GetPitch(nsString& aPitch) { return _to##GetPitch(aPitch); } \
-  NS_IMETHOD    SetPitch(const nsString& aPitch) { return _to##SetPitch(aPitch); } \
-  NS_IMETHOD    GetPitchRange(nsString& aPitchRange) { return _to##GetPitchRange(aPitchRange); } \
-  NS_IMETHOD    SetPitchRange(const nsString& aPitchRange) { return _to##SetPitchRange(aPitchRange); } \
-  NS_IMETHOD    GetPlayDuring(nsString& aPlayDuring) { return _to##GetPlayDuring(aPlayDuring); } \
-  NS_IMETHOD    SetPlayDuring(const nsString& aPlayDuring) { return _to##SetPlayDuring(aPlayDuring); } \
-  NS_IMETHOD    GetPosition(nsString& aPosition) { return _to##GetPosition(aPosition); } \
-  NS_IMETHOD    SetPosition(const nsString& aPosition) { return _to##SetPosition(aPosition); } \
-  NS_IMETHOD    GetQuotes(nsString& aQuotes) { return _to##GetQuotes(aQuotes); } \
-  NS_IMETHOD    SetQuotes(const nsString& aQuotes) { return _to##SetQuotes(aQuotes); } \
-  NS_IMETHOD    GetRichness(nsString& aRichness) { return _to##GetRichness(aRichness); } \
-  NS_IMETHOD    SetRichness(const nsString& aRichness) { return _to##SetRichness(aRichness); } \
-  NS_IMETHOD    GetRight(nsString& aRight) { return _to##GetRight(aRight); } \
-  NS_IMETHOD    SetRight(const nsString& aRight) { return _to##SetRight(aRight); } \
-  NS_IMETHOD    GetSize(nsString& aSize) { return _to##GetSize(aSize); } \
-  NS_IMETHOD    SetSize(const nsString& aSize) { return _to##SetSize(aSize); } \
-  NS_IMETHOD    GetSpeak(nsString& aSpeak) { return _to##GetSpeak(aSpeak); } \
-  NS_IMETHOD    SetSpeak(const nsString& aSpeak) { return _to##SetSpeak(aSpeak); } \
-  NS_IMETHOD    GetSpeakHeader(nsString& aSpeakHeader) { return _to##GetSpeakHeader(aSpeakHeader); } \
-  NS_IMETHOD    SetSpeakHeader(const nsString& aSpeakHeader) { return _to##SetSpeakHeader(aSpeakHeader); } \
-  NS_IMETHOD    GetSpeakNumeral(nsString& aSpeakNumeral) { return _to##GetSpeakNumeral(aSpeakNumeral); } \
-  NS_IMETHOD    SetSpeakNumeral(const nsString& aSpeakNumeral) { return _to##SetSpeakNumeral(aSpeakNumeral); } \
-  NS_IMETHOD    GetSpeakPunctuation(nsString& aSpeakPunctuation) { return _to##GetSpeakPunctuation(aSpeakPunctuation); } \
-  NS_IMETHOD    SetSpeakPunctuation(const nsString& aSpeakPunctuation) { return _to##SetSpeakPunctuation(aSpeakPunctuation); } \
-  NS_IMETHOD    GetSpeechRate(nsString& aSpeechRate) { return _to##GetSpeechRate(aSpeechRate); } \
-  NS_IMETHOD    SetSpeechRate(const nsString& aSpeechRate) { return _to##SetSpeechRate(aSpeechRate); } \
-  NS_IMETHOD    GetStress(nsString& aStress) { return _to##GetStress(aStress); } \
-  NS_IMETHOD    SetStress(const nsString& aStress) { return _to##SetStress(aStress); } \
-  NS_IMETHOD    GetTableLayout(nsString& aTableLayout) { return _to##GetTableLayout(aTableLayout); } \
-  NS_IMETHOD    SetTableLayout(const nsString& aTableLayout) { return _to##SetTableLayout(aTableLayout); } \
-  NS_IMETHOD    GetTextAlign(nsString& aTextAlign) { return _to##GetTextAlign(aTextAlign); } \
-  NS_IMETHOD    SetTextAlign(const nsString& aTextAlign) { return _to##SetTextAlign(aTextAlign); } \
-  NS_IMETHOD    GetTextDecoration(nsString& aTextDecoration) { return _to##GetTextDecoration(aTextDecoration); } \
-  NS_IMETHOD    SetTextDecoration(const nsString& aTextDecoration) { return _to##SetTextDecoration(aTextDecoration); } \
-  NS_IMETHOD    GetTextIndent(nsString& aTextIndent) { return _to##GetTextIndent(aTextIndent); } \
-  NS_IMETHOD    SetTextIndent(const nsString& aTextIndent) { return _to##SetTextIndent(aTextIndent); } \
-  NS_IMETHOD    GetTextShadow(nsString& aTextShadow) { return _to##GetTextShadow(aTextShadow); } \
-  NS_IMETHOD    SetTextShadow(const nsString& aTextShadow) { return _to##SetTextShadow(aTextShadow); } \
-  NS_IMETHOD    GetTextTransform(nsString& aTextTransform) { return _to##GetTextTransform(aTextTransform); } \
-  NS_IMETHOD    SetTextTransform(const nsString& aTextTransform) { return _to##SetTextTransform(aTextTransform); } \
-  NS_IMETHOD    GetTop(nsString& aTop) { return _to##GetTop(aTop); } \
-  NS_IMETHOD    SetTop(const nsString& aTop) { return _to##SetTop(aTop); } \
-  NS_IMETHOD    GetUnicodeBidi(nsString& aUnicodeBidi) { return _to##GetUnicodeBidi(aUnicodeBidi); } \
-  NS_IMETHOD    SetUnicodeBidi(const nsString& aUnicodeBidi) { return _to##SetUnicodeBidi(aUnicodeBidi); } \
-  NS_IMETHOD    GetVerticalAlign(nsString& aVerticalAlign) { return _to##GetVerticalAlign(aVerticalAlign); } \
-  NS_IMETHOD    SetVerticalAlign(const nsString& aVerticalAlign) { return _to##SetVerticalAlign(aVerticalAlign); } \
-  NS_IMETHOD    GetVisibility(nsString& aVisibility) { return _to##GetVisibility(aVisibility); } \
-  NS_IMETHOD    SetVisibility(const nsString& aVisibility) { return _to##SetVisibility(aVisibility); } \
-  NS_IMETHOD    GetVoiceFamily(nsString& aVoiceFamily) { return _to##GetVoiceFamily(aVoiceFamily); } \
-  NS_IMETHOD    SetVoiceFamily(const nsString& aVoiceFamily) { return _to##SetVoiceFamily(aVoiceFamily); } \
-  NS_IMETHOD    GetVolume(nsString& aVolume) { return _to##GetVolume(aVolume); } \
-  NS_IMETHOD    SetVolume(const nsString& aVolume) { return _to##SetVolume(aVolume); } \
-  NS_IMETHOD    GetWhiteSpace(nsString& aWhiteSpace) { return _to##GetWhiteSpace(aWhiteSpace); } \
-  NS_IMETHOD    SetWhiteSpace(const nsString& aWhiteSpace) { return _to##SetWhiteSpace(aWhiteSpace); } \
-  NS_IMETHOD    GetWidows(nsString& aWidows) { return _to##GetWidows(aWidows); } \
-  NS_IMETHOD    SetWidows(const nsString& aWidows) { return _to##SetWidows(aWidows); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
-  NS_IMETHOD    GetWordSpacing(nsString& aWordSpacing) { return _to##GetWordSpacing(aWordSpacing); } \
-  NS_IMETHOD    SetWordSpacing(const nsString& aWordSpacing) { return _to##SetWordSpacing(aWordSpacing); } \
-  NS_IMETHOD    GetZIndex(nsString& aZIndex) { return _to##GetZIndex(aZIndex); } \
-  NS_IMETHOD    SetZIndex(const nsString& aZIndex) { return _to##SetZIndex(aZIndex); } \
-  NS_IMETHOD    GetOpacity(nsString& aOpacity) { return _to##GetOpacity(aOpacity); } \
-  NS_IMETHOD    SetOpacity(const nsString& aOpacity) { return _to##SetOpacity(aOpacity); } \
+  NS_IMETHOD    GetAzimuth(nsString& aAzimuth) { return _to GetAzimuth(aAzimuth); } \
+  NS_IMETHOD    SetAzimuth(const nsString& aAzimuth) { return _to SetAzimuth(aAzimuth); } \
+  NS_IMETHOD    GetBackground(nsString& aBackground) { return _to GetBackground(aBackground); } \
+  NS_IMETHOD    SetBackground(const nsString& aBackground) { return _to SetBackground(aBackground); } \
+  NS_IMETHOD    GetBackgroundAttachment(nsString& aBackgroundAttachment) { return _to GetBackgroundAttachment(aBackgroundAttachment); } \
+  NS_IMETHOD    SetBackgroundAttachment(const nsString& aBackgroundAttachment) { return _to SetBackgroundAttachment(aBackgroundAttachment); } \
+  NS_IMETHOD    GetBackgroundColor(nsString& aBackgroundColor) { return _to GetBackgroundColor(aBackgroundColor); } \
+  NS_IMETHOD    SetBackgroundColor(const nsString& aBackgroundColor) { return _to SetBackgroundColor(aBackgroundColor); } \
+  NS_IMETHOD    GetBackgroundImage(nsString& aBackgroundImage) { return _to GetBackgroundImage(aBackgroundImage); } \
+  NS_IMETHOD    SetBackgroundImage(const nsString& aBackgroundImage) { return _to SetBackgroundImage(aBackgroundImage); } \
+  NS_IMETHOD    GetBackgroundPosition(nsString& aBackgroundPosition) { return _to GetBackgroundPosition(aBackgroundPosition); } \
+  NS_IMETHOD    SetBackgroundPosition(const nsString& aBackgroundPosition) { return _to SetBackgroundPosition(aBackgroundPosition); } \
+  NS_IMETHOD    GetBackgroundRepeat(nsString& aBackgroundRepeat) { return _to GetBackgroundRepeat(aBackgroundRepeat); } \
+  NS_IMETHOD    SetBackgroundRepeat(const nsString& aBackgroundRepeat) { return _to SetBackgroundRepeat(aBackgroundRepeat); } \
+  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to SetBorder(aBorder); } \
+  NS_IMETHOD    GetBorderCollapse(nsString& aBorderCollapse) { return _to GetBorderCollapse(aBorderCollapse); } \
+  NS_IMETHOD    SetBorderCollapse(const nsString& aBorderCollapse) { return _to SetBorderCollapse(aBorderCollapse); } \
+  NS_IMETHOD    GetBorderColor(nsString& aBorderColor) { return _to GetBorderColor(aBorderColor); } \
+  NS_IMETHOD    SetBorderColor(const nsString& aBorderColor) { return _to SetBorderColor(aBorderColor); } \
+  NS_IMETHOD    GetBorderSpacing(nsString& aBorderSpacing) { return _to GetBorderSpacing(aBorderSpacing); } \
+  NS_IMETHOD    SetBorderSpacing(const nsString& aBorderSpacing) { return _to SetBorderSpacing(aBorderSpacing); } \
+  NS_IMETHOD    GetBorderStyle(nsString& aBorderStyle) { return _to GetBorderStyle(aBorderStyle); } \
+  NS_IMETHOD    SetBorderStyle(const nsString& aBorderStyle) { return _to SetBorderStyle(aBorderStyle); } \
+  NS_IMETHOD    GetBorderTop(nsString& aBorderTop) { return _to GetBorderTop(aBorderTop); } \
+  NS_IMETHOD    SetBorderTop(const nsString& aBorderTop) { return _to SetBorderTop(aBorderTop); } \
+  NS_IMETHOD    GetBorderRight(nsString& aBorderRight) { return _to GetBorderRight(aBorderRight); } \
+  NS_IMETHOD    SetBorderRight(const nsString& aBorderRight) { return _to SetBorderRight(aBorderRight); } \
+  NS_IMETHOD    GetBorderBottom(nsString& aBorderBottom) { return _to GetBorderBottom(aBorderBottom); } \
+  NS_IMETHOD    SetBorderBottom(const nsString& aBorderBottom) { return _to SetBorderBottom(aBorderBottom); } \
+  NS_IMETHOD    GetBorderLeft(nsString& aBorderLeft) { return _to GetBorderLeft(aBorderLeft); } \
+  NS_IMETHOD    SetBorderLeft(const nsString& aBorderLeft) { return _to SetBorderLeft(aBorderLeft); } \
+  NS_IMETHOD    GetBorderTopColor(nsString& aBorderTopColor) { return _to GetBorderTopColor(aBorderTopColor); } \
+  NS_IMETHOD    SetBorderTopColor(const nsString& aBorderTopColor) { return _to SetBorderTopColor(aBorderTopColor); } \
+  NS_IMETHOD    GetBorderRightColor(nsString& aBorderRightColor) { return _to GetBorderRightColor(aBorderRightColor); } \
+  NS_IMETHOD    SetBorderRightColor(const nsString& aBorderRightColor) { return _to SetBorderRightColor(aBorderRightColor); } \
+  NS_IMETHOD    GetBorderBottomColor(nsString& aBorderBottomColor) { return _to GetBorderBottomColor(aBorderBottomColor); } \
+  NS_IMETHOD    SetBorderBottomColor(const nsString& aBorderBottomColor) { return _to SetBorderBottomColor(aBorderBottomColor); } \
+  NS_IMETHOD    GetBorderLeftColor(nsString& aBorderLeftColor) { return _to GetBorderLeftColor(aBorderLeftColor); } \
+  NS_IMETHOD    SetBorderLeftColor(const nsString& aBorderLeftColor) { return _to SetBorderLeftColor(aBorderLeftColor); } \
+  NS_IMETHOD    GetBorderTopStyle(nsString& aBorderTopStyle) { return _to GetBorderTopStyle(aBorderTopStyle); } \
+  NS_IMETHOD    SetBorderTopStyle(const nsString& aBorderTopStyle) { return _to SetBorderTopStyle(aBorderTopStyle); } \
+  NS_IMETHOD    GetBorderRightStyle(nsString& aBorderRightStyle) { return _to GetBorderRightStyle(aBorderRightStyle); } \
+  NS_IMETHOD    SetBorderRightStyle(const nsString& aBorderRightStyle) { return _to SetBorderRightStyle(aBorderRightStyle); } \
+  NS_IMETHOD    GetBorderBottomStyle(nsString& aBorderBottomStyle) { return _to GetBorderBottomStyle(aBorderBottomStyle); } \
+  NS_IMETHOD    SetBorderBottomStyle(const nsString& aBorderBottomStyle) { return _to SetBorderBottomStyle(aBorderBottomStyle); } \
+  NS_IMETHOD    GetBorderLeftStyle(nsString& aBorderLeftStyle) { return _to GetBorderLeftStyle(aBorderLeftStyle); } \
+  NS_IMETHOD    SetBorderLeftStyle(const nsString& aBorderLeftStyle) { return _to SetBorderLeftStyle(aBorderLeftStyle); } \
+  NS_IMETHOD    GetBorderTopWidth(nsString& aBorderTopWidth) { return _to GetBorderTopWidth(aBorderTopWidth); } \
+  NS_IMETHOD    SetBorderTopWidth(const nsString& aBorderTopWidth) { return _to SetBorderTopWidth(aBorderTopWidth); } \
+  NS_IMETHOD    GetBorderRightWidth(nsString& aBorderRightWidth) { return _to GetBorderRightWidth(aBorderRightWidth); } \
+  NS_IMETHOD    SetBorderRightWidth(const nsString& aBorderRightWidth) { return _to SetBorderRightWidth(aBorderRightWidth); } \
+  NS_IMETHOD    GetBorderBottomWidth(nsString& aBorderBottomWidth) { return _to GetBorderBottomWidth(aBorderBottomWidth); } \
+  NS_IMETHOD    SetBorderBottomWidth(const nsString& aBorderBottomWidth) { return _to SetBorderBottomWidth(aBorderBottomWidth); } \
+  NS_IMETHOD    GetBorderLeftWidth(nsString& aBorderLeftWidth) { return _to GetBorderLeftWidth(aBorderLeftWidth); } \
+  NS_IMETHOD    SetBorderLeftWidth(const nsString& aBorderLeftWidth) { return _to SetBorderLeftWidth(aBorderLeftWidth); } \
+  NS_IMETHOD    GetBorderWidth(nsString& aBorderWidth) { return _to GetBorderWidth(aBorderWidth); } \
+  NS_IMETHOD    SetBorderWidth(const nsString& aBorderWidth) { return _to SetBorderWidth(aBorderWidth); } \
+  NS_IMETHOD    GetBottom(nsString& aBottom) { return _to GetBottom(aBottom); } \
+  NS_IMETHOD    SetBottom(const nsString& aBottom) { return _to SetBottom(aBottom); } \
+  NS_IMETHOD    GetCaptionSide(nsString& aCaptionSide) { return _to GetCaptionSide(aCaptionSide); } \
+  NS_IMETHOD    SetCaptionSide(const nsString& aCaptionSide) { return _to SetCaptionSide(aCaptionSide); } \
+  NS_IMETHOD    GetClear(nsString& aClear) { return _to GetClear(aClear); } \
+  NS_IMETHOD    SetClear(const nsString& aClear) { return _to SetClear(aClear); } \
+  NS_IMETHOD    GetClip(nsString& aClip) { return _to GetClip(aClip); } \
+  NS_IMETHOD    SetClip(const nsString& aClip) { return _to SetClip(aClip); } \
+  NS_IMETHOD    GetColor(nsString& aColor) { return _to GetColor(aColor); } \
+  NS_IMETHOD    SetColor(const nsString& aColor) { return _to SetColor(aColor); } \
+  NS_IMETHOD    GetContent(nsString& aContent) { return _to GetContent(aContent); } \
+  NS_IMETHOD    SetContent(const nsString& aContent) { return _to SetContent(aContent); } \
+  NS_IMETHOD    GetCounterIncrement(nsString& aCounterIncrement) { return _to GetCounterIncrement(aCounterIncrement); } \
+  NS_IMETHOD    SetCounterIncrement(const nsString& aCounterIncrement) { return _to SetCounterIncrement(aCounterIncrement); } \
+  NS_IMETHOD    GetCounterReset(nsString& aCounterReset) { return _to GetCounterReset(aCounterReset); } \
+  NS_IMETHOD    SetCounterReset(const nsString& aCounterReset) { return _to SetCounterReset(aCounterReset); } \
+  NS_IMETHOD    GetCue(nsString& aCue) { return _to GetCue(aCue); } \
+  NS_IMETHOD    SetCue(const nsString& aCue) { return _to SetCue(aCue); } \
+  NS_IMETHOD    GetCueAfter(nsString& aCueAfter) { return _to GetCueAfter(aCueAfter); } \
+  NS_IMETHOD    SetCueAfter(const nsString& aCueAfter) { return _to SetCueAfter(aCueAfter); } \
+  NS_IMETHOD    GetCueBefore(nsString& aCueBefore) { return _to GetCueBefore(aCueBefore); } \
+  NS_IMETHOD    SetCueBefore(const nsString& aCueBefore) { return _to SetCueBefore(aCueBefore); } \
+  NS_IMETHOD    GetCursor(nsString& aCursor) { return _to GetCursor(aCursor); } \
+  NS_IMETHOD    SetCursor(const nsString& aCursor) { return _to SetCursor(aCursor); } \
+  NS_IMETHOD    GetDirection(nsString& aDirection) { return _to GetDirection(aDirection); } \
+  NS_IMETHOD    SetDirection(const nsString& aDirection) { return _to SetDirection(aDirection); } \
+  NS_IMETHOD    GetDisplay(nsString& aDisplay) { return _to GetDisplay(aDisplay); } \
+  NS_IMETHOD    SetDisplay(const nsString& aDisplay) { return _to SetDisplay(aDisplay); } \
+  NS_IMETHOD    GetElevation(nsString& aElevation) { return _to GetElevation(aElevation); } \
+  NS_IMETHOD    SetElevation(const nsString& aElevation) { return _to SetElevation(aElevation); } \
+  NS_IMETHOD    GetEmptyCells(nsString& aEmptyCells) { return _to GetEmptyCells(aEmptyCells); } \
+  NS_IMETHOD    SetEmptyCells(const nsString& aEmptyCells) { return _to SetEmptyCells(aEmptyCells); } \
+  NS_IMETHOD    GetCssFloat(nsString& aCssFloat) { return _to GetCssFloat(aCssFloat); } \
+  NS_IMETHOD    SetCssFloat(const nsString& aCssFloat) { return _to SetCssFloat(aCssFloat); } \
+  NS_IMETHOD    GetFont(nsString& aFont) { return _to GetFont(aFont); } \
+  NS_IMETHOD    SetFont(const nsString& aFont) { return _to SetFont(aFont); } \
+  NS_IMETHOD    GetFontFamily(nsString& aFontFamily) { return _to GetFontFamily(aFontFamily); } \
+  NS_IMETHOD    SetFontFamily(const nsString& aFontFamily) { return _to SetFontFamily(aFontFamily); } \
+  NS_IMETHOD    GetFontSize(nsString& aFontSize) { return _to GetFontSize(aFontSize); } \
+  NS_IMETHOD    SetFontSize(const nsString& aFontSize) { return _to SetFontSize(aFontSize); } \
+  NS_IMETHOD    GetFontSizeAdjust(nsString& aFontSizeAdjust) { return _to GetFontSizeAdjust(aFontSizeAdjust); } \
+  NS_IMETHOD    SetFontSizeAdjust(const nsString& aFontSizeAdjust) { return _to SetFontSizeAdjust(aFontSizeAdjust); } \
+  NS_IMETHOD    GetFontStretch(nsString& aFontStretch) { return _to GetFontStretch(aFontStretch); } \
+  NS_IMETHOD    SetFontStretch(const nsString& aFontStretch) { return _to SetFontStretch(aFontStretch); } \
+  NS_IMETHOD    GetFontStyle(nsString& aFontStyle) { return _to GetFontStyle(aFontStyle); } \
+  NS_IMETHOD    SetFontStyle(const nsString& aFontStyle) { return _to SetFontStyle(aFontStyle); } \
+  NS_IMETHOD    GetFontVariant(nsString& aFontVariant) { return _to GetFontVariant(aFontVariant); } \
+  NS_IMETHOD    SetFontVariant(const nsString& aFontVariant) { return _to SetFontVariant(aFontVariant); } \
+  NS_IMETHOD    GetFontWeight(nsString& aFontWeight) { return _to GetFontWeight(aFontWeight); } \
+  NS_IMETHOD    SetFontWeight(const nsString& aFontWeight) { return _to SetFontWeight(aFontWeight); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetLeft(nsString& aLeft) { return _to GetLeft(aLeft); } \
+  NS_IMETHOD    SetLeft(const nsString& aLeft) { return _to SetLeft(aLeft); } \
+  NS_IMETHOD    GetLetterSpacing(nsString& aLetterSpacing) { return _to GetLetterSpacing(aLetterSpacing); } \
+  NS_IMETHOD    SetLetterSpacing(const nsString& aLetterSpacing) { return _to SetLetterSpacing(aLetterSpacing); } \
+  NS_IMETHOD    GetLineHeight(nsString& aLineHeight) { return _to GetLineHeight(aLineHeight); } \
+  NS_IMETHOD    SetLineHeight(const nsString& aLineHeight) { return _to SetLineHeight(aLineHeight); } \
+  NS_IMETHOD    GetListStyle(nsString& aListStyle) { return _to GetListStyle(aListStyle); } \
+  NS_IMETHOD    SetListStyle(const nsString& aListStyle) { return _to SetListStyle(aListStyle); } \
+  NS_IMETHOD    GetListStyleImage(nsString& aListStyleImage) { return _to GetListStyleImage(aListStyleImage); } \
+  NS_IMETHOD    SetListStyleImage(const nsString& aListStyleImage) { return _to SetListStyleImage(aListStyleImage); } \
+  NS_IMETHOD    GetListStylePosition(nsString& aListStylePosition) { return _to GetListStylePosition(aListStylePosition); } \
+  NS_IMETHOD    SetListStylePosition(const nsString& aListStylePosition) { return _to SetListStylePosition(aListStylePosition); } \
+  NS_IMETHOD    GetListStyleType(nsString& aListStyleType) { return _to GetListStyleType(aListStyleType); } \
+  NS_IMETHOD    SetListStyleType(const nsString& aListStyleType) { return _to SetListStyleType(aListStyleType); } \
+  NS_IMETHOD    GetMargin(nsString& aMargin) { return _to GetMargin(aMargin); } \
+  NS_IMETHOD    SetMargin(const nsString& aMargin) { return _to SetMargin(aMargin); } \
+  NS_IMETHOD    GetMarginTop(nsString& aMarginTop) { return _to GetMarginTop(aMarginTop); } \
+  NS_IMETHOD    SetMarginTop(const nsString& aMarginTop) { return _to SetMarginTop(aMarginTop); } \
+  NS_IMETHOD    GetMarginRight(nsString& aMarginRight) { return _to GetMarginRight(aMarginRight); } \
+  NS_IMETHOD    SetMarginRight(const nsString& aMarginRight) { return _to SetMarginRight(aMarginRight); } \
+  NS_IMETHOD    GetMarginBottom(nsString& aMarginBottom) { return _to GetMarginBottom(aMarginBottom); } \
+  NS_IMETHOD    SetMarginBottom(const nsString& aMarginBottom) { return _to SetMarginBottom(aMarginBottom); } \
+  NS_IMETHOD    GetMarginLeft(nsString& aMarginLeft) { return _to GetMarginLeft(aMarginLeft); } \
+  NS_IMETHOD    SetMarginLeft(const nsString& aMarginLeft) { return _to SetMarginLeft(aMarginLeft); } \
+  NS_IMETHOD    GetMarkerOffset(nsString& aMarkerOffset) { return _to GetMarkerOffset(aMarkerOffset); } \
+  NS_IMETHOD    SetMarkerOffset(const nsString& aMarkerOffset) { return _to SetMarkerOffset(aMarkerOffset); } \
+  NS_IMETHOD    GetMarks(nsString& aMarks) { return _to GetMarks(aMarks); } \
+  NS_IMETHOD    SetMarks(const nsString& aMarks) { return _to SetMarks(aMarks); } \
+  NS_IMETHOD    GetMaxHeight(nsString& aMaxHeight) { return _to GetMaxHeight(aMaxHeight); } \
+  NS_IMETHOD    SetMaxHeight(const nsString& aMaxHeight) { return _to SetMaxHeight(aMaxHeight); } \
+  NS_IMETHOD    GetMaxWidth(nsString& aMaxWidth) { return _to GetMaxWidth(aMaxWidth); } \
+  NS_IMETHOD    SetMaxWidth(const nsString& aMaxWidth) { return _to SetMaxWidth(aMaxWidth); } \
+  NS_IMETHOD    GetMinHeight(nsString& aMinHeight) { return _to GetMinHeight(aMinHeight); } \
+  NS_IMETHOD    SetMinHeight(const nsString& aMinHeight) { return _to SetMinHeight(aMinHeight); } \
+  NS_IMETHOD    GetMinWidth(nsString& aMinWidth) { return _to GetMinWidth(aMinWidth); } \
+  NS_IMETHOD    SetMinWidth(const nsString& aMinWidth) { return _to SetMinWidth(aMinWidth); } \
+  NS_IMETHOD    GetOrphans(nsString& aOrphans) { return _to GetOrphans(aOrphans); } \
+  NS_IMETHOD    SetOrphans(const nsString& aOrphans) { return _to SetOrphans(aOrphans); } \
+  NS_IMETHOD    GetOutline(nsString& aOutline) { return _to GetOutline(aOutline); } \
+  NS_IMETHOD    SetOutline(const nsString& aOutline) { return _to SetOutline(aOutline); } \
+  NS_IMETHOD    GetOutlineColor(nsString& aOutlineColor) { return _to GetOutlineColor(aOutlineColor); } \
+  NS_IMETHOD    SetOutlineColor(const nsString& aOutlineColor) { return _to SetOutlineColor(aOutlineColor); } \
+  NS_IMETHOD    GetOutlineStyle(nsString& aOutlineStyle) { return _to GetOutlineStyle(aOutlineStyle); } \
+  NS_IMETHOD    SetOutlineStyle(const nsString& aOutlineStyle) { return _to SetOutlineStyle(aOutlineStyle); } \
+  NS_IMETHOD    GetOutlineWidth(nsString& aOutlineWidth) { return _to GetOutlineWidth(aOutlineWidth); } \
+  NS_IMETHOD    SetOutlineWidth(const nsString& aOutlineWidth) { return _to SetOutlineWidth(aOutlineWidth); } \
+  NS_IMETHOD    GetOverflow(nsString& aOverflow) { return _to GetOverflow(aOverflow); } \
+  NS_IMETHOD    SetOverflow(const nsString& aOverflow) { return _to SetOverflow(aOverflow); } \
+  NS_IMETHOD    GetPadding(nsString& aPadding) { return _to GetPadding(aPadding); } \
+  NS_IMETHOD    SetPadding(const nsString& aPadding) { return _to SetPadding(aPadding); } \
+  NS_IMETHOD    GetPaddingTop(nsString& aPaddingTop) { return _to GetPaddingTop(aPaddingTop); } \
+  NS_IMETHOD    SetPaddingTop(const nsString& aPaddingTop) { return _to SetPaddingTop(aPaddingTop); } \
+  NS_IMETHOD    GetPaddingRight(nsString& aPaddingRight) { return _to GetPaddingRight(aPaddingRight); } \
+  NS_IMETHOD    SetPaddingRight(const nsString& aPaddingRight) { return _to SetPaddingRight(aPaddingRight); } \
+  NS_IMETHOD    GetPaddingBottom(nsString& aPaddingBottom) { return _to GetPaddingBottom(aPaddingBottom); } \
+  NS_IMETHOD    SetPaddingBottom(const nsString& aPaddingBottom) { return _to SetPaddingBottom(aPaddingBottom); } \
+  NS_IMETHOD    GetPaddingLeft(nsString& aPaddingLeft) { return _to GetPaddingLeft(aPaddingLeft); } \
+  NS_IMETHOD    SetPaddingLeft(const nsString& aPaddingLeft) { return _to SetPaddingLeft(aPaddingLeft); } \
+  NS_IMETHOD    GetPage(nsString& aPage) { return _to GetPage(aPage); } \
+  NS_IMETHOD    SetPage(const nsString& aPage) { return _to SetPage(aPage); } \
+  NS_IMETHOD    GetPageBreakAfter(nsString& aPageBreakAfter) { return _to GetPageBreakAfter(aPageBreakAfter); } \
+  NS_IMETHOD    SetPageBreakAfter(const nsString& aPageBreakAfter) { return _to SetPageBreakAfter(aPageBreakAfter); } \
+  NS_IMETHOD    GetPageBreakBefore(nsString& aPageBreakBefore) { return _to GetPageBreakBefore(aPageBreakBefore); } \
+  NS_IMETHOD    SetPageBreakBefore(const nsString& aPageBreakBefore) { return _to SetPageBreakBefore(aPageBreakBefore); } \
+  NS_IMETHOD    GetPageBreakInside(nsString& aPageBreakInside) { return _to GetPageBreakInside(aPageBreakInside); } \
+  NS_IMETHOD    SetPageBreakInside(const nsString& aPageBreakInside) { return _to SetPageBreakInside(aPageBreakInside); } \
+  NS_IMETHOD    GetPause(nsString& aPause) { return _to GetPause(aPause); } \
+  NS_IMETHOD    SetPause(const nsString& aPause) { return _to SetPause(aPause); } \
+  NS_IMETHOD    GetPauseAfter(nsString& aPauseAfter) { return _to GetPauseAfter(aPauseAfter); } \
+  NS_IMETHOD    SetPauseAfter(const nsString& aPauseAfter) { return _to SetPauseAfter(aPauseAfter); } \
+  NS_IMETHOD    GetPauseBefore(nsString& aPauseBefore) { return _to GetPauseBefore(aPauseBefore); } \
+  NS_IMETHOD    SetPauseBefore(const nsString& aPauseBefore) { return _to SetPauseBefore(aPauseBefore); } \
+  NS_IMETHOD    GetPitch(nsString& aPitch) { return _to GetPitch(aPitch); } \
+  NS_IMETHOD    SetPitch(const nsString& aPitch) { return _to SetPitch(aPitch); } \
+  NS_IMETHOD    GetPitchRange(nsString& aPitchRange) { return _to GetPitchRange(aPitchRange); } \
+  NS_IMETHOD    SetPitchRange(const nsString& aPitchRange) { return _to SetPitchRange(aPitchRange); } \
+  NS_IMETHOD    GetPlayDuring(nsString& aPlayDuring) { return _to GetPlayDuring(aPlayDuring); } \
+  NS_IMETHOD    SetPlayDuring(const nsString& aPlayDuring) { return _to SetPlayDuring(aPlayDuring); } \
+  NS_IMETHOD    GetPosition(nsString& aPosition) { return _to GetPosition(aPosition); } \
+  NS_IMETHOD    SetPosition(const nsString& aPosition) { return _to SetPosition(aPosition); } \
+  NS_IMETHOD    GetQuotes(nsString& aQuotes) { return _to GetQuotes(aQuotes); } \
+  NS_IMETHOD    SetQuotes(const nsString& aQuotes) { return _to SetQuotes(aQuotes); } \
+  NS_IMETHOD    GetRichness(nsString& aRichness) { return _to GetRichness(aRichness); } \
+  NS_IMETHOD    SetRichness(const nsString& aRichness) { return _to SetRichness(aRichness); } \
+  NS_IMETHOD    GetRight(nsString& aRight) { return _to GetRight(aRight); } \
+  NS_IMETHOD    SetRight(const nsString& aRight) { return _to SetRight(aRight); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return _to GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return _to SetSize(aSize); } \
+  NS_IMETHOD    GetSpeak(nsString& aSpeak) { return _to GetSpeak(aSpeak); } \
+  NS_IMETHOD    SetSpeak(const nsString& aSpeak) { return _to SetSpeak(aSpeak); } \
+  NS_IMETHOD    GetSpeakHeader(nsString& aSpeakHeader) { return _to GetSpeakHeader(aSpeakHeader); } \
+  NS_IMETHOD    SetSpeakHeader(const nsString& aSpeakHeader) { return _to SetSpeakHeader(aSpeakHeader); } \
+  NS_IMETHOD    GetSpeakNumeral(nsString& aSpeakNumeral) { return _to GetSpeakNumeral(aSpeakNumeral); } \
+  NS_IMETHOD    SetSpeakNumeral(const nsString& aSpeakNumeral) { return _to SetSpeakNumeral(aSpeakNumeral); } \
+  NS_IMETHOD    GetSpeakPunctuation(nsString& aSpeakPunctuation) { return _to GetSpeakPunctuation(aSpeakPunctuation); } \
+  NS_IMETHOD    SetSpeakPunctuation(const nsString& aSpeakPunctuation) { return _to SetSpeakPunctuation(aSpeakPunctuation); } \
+  NS_IMETHOD    GetSpeechRate(nsString& aSpeechRate) { return _to GetSpeechRate(aSpeechRate); } \
+  NS_IMETHOD    SetSpeechRate(const nsString& aSpeechRate) { return _to SetSpeechRate(aSpeechRate); } \
+  NS_IMETHOD    GetStress(nsString& aStress) { return _to GetStress(aStress); } \
+  NS_IMETHOD    SetStress(const nsString& aStress) { return _to SetStress(aStress); } \
+  NS_IMETHOD    GetTableLayout(nsString& aTableLayout) { return _to GetTableLayout(aTableLayout); } \
+  NS_IMETHOD    SetTableLayout(const nsString& aTableLayout) { return _to SetTableLayout(aTableLayout); } \
+  NS_IMETHOD    GetTextAlign(nsString& aTextAlign) { return _to GetTextAlign(aTextAlign); } \
+  NS_IMETHOD    SetTextAlign(const nsString& aTextAlign) { return _to SetTextAlign(aTextAlign); } \
+  NS_IMETHOD    GetTextDecoration(nsString& aTextDecoration) { return _to GetTextDecoration(aTextDecoration); } \
+  NS_IMETHOD    SetTextDecoration(const nsString& aTextDecoration) { return _to SetTextDecoration(aTextDecoration); } \
+  NS_IMETHOD    GetTextIndent(nsString& aTextIndent) { return _to GetTextIndent(aTextIndent); } \
+  NS_IMETHOD    SetTextIndent(const nsString& aTextIndent) { return _to SetTextIndent(aTextIndent); } \
+  NS_IMETHOD    GetTextShadow(nsString& aTextShadow) { return _to GetTextShadow(aTextShadow); } \
+  NS_IMETHOD    SetTextShadow(const nsString& aTextShadow) { return _to SetTextShadow(aTextShadow); } \
+  NS_IMETHOD    GetTextTransform(nsString& aTextTransform) { return _to GetTextTransform(aTextTransform); } \
+  NS_IMETHOD    SetTextTransform(const nsString& aTextTransform) { return _to SetTextTransform(aTextTransform); } \
+  NS_IMETHOD    GetTop(nsString& aTop) { return _to GetTop(aTop); } \
+  NS_IMETHOD    SetTop(const nsString& aTop) { return _to SetTop(aTop); } \
+  NS_IMETHOD    GetUnicodeBidi(nsString& aUnicodeBidi) { return _to GetUnicodeBidi(aUnicodeBidi); } \
+  NS_IMETHOD    SetUnicodeBidi(const nsString& aUnicodeBidi) { return _to SetUnicodeBidi(aUnicodeBidi); } \
+  NS_IMETHOD    GetVerticalAlign(nsString& aVerticalAlign) { return _to GetVerticalAlign(aVerticalAlign); } \
+  NS_IMETHOD    SetVerticalAlign(const nsString& aVerticalAlign) { return _to SetVerticalAlign(aVerticalAlign); } \
+  NS_IMETHOD    GetVisibility(nsString& aVisibility) { return _to GetVisibility(aVisibility); } \
+  NS_IMETHOD    SetVisibility(const nsString& aVisibility) { return _to SetVisibility(aVisibility); } \
+  NS_IMETHOD    GetVoiceFamily(nsString& aVoiceFamily) { return _to GetVoiceFamily(aVoiceFamily); } \
+  NS_IMETHOD    SetVoiceFamily(const nsString& aVoiceFamily) { return _to SetVoiceFamily(aVoiceFamily); } \
+  NS_IMETHOD    GetVolume(nsString& aVolume) { return _to GetVolume(aVolume); } \
+  NS_IMETHOD    SetVolume(const nsString& aVolume) { return _to SetVolume(aVolume); } \
+  NS_IMETHOD    GetWhiteSpace(nsString& aWhiteSpace) { return _to GetWhiteSpace(aWhiteSpace); } \
+  NS_IMETHOD    SetWhiteSpace(const nsString& aWhiteSpace) { return _to SetWhiteSpace(aWhiteSpace); } \
+  NS_IMETHOD    GetWidows(nsString& aWidows) { return _to GetWidows(aWidows); } \
+  NS_IMETHOD    SetWidows(const nsString& aWidows) { return _to SetWidows(aWidows); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetWordSpacing(nsString& aWordSpacing) { return _to GetWordSpacing(aWordSpacing); } \
+  NS_IMETHOD    SetWordSpacing(const nsString& aWordSpacing) { return _to SetWordSpacing(aWordSpacing); } \
+  NS_IMETHOD    GetZIndex(nsString& aZIndex) { return _to GetZIndex(aZIndex); } \
+  NS_IMETHOD    SetZIndex(const nsString& aZIndex) { return _to SetZIndex(aZIndex); } \
+  NS_IMETHOD    GetOpacity(nsString& aOpacity) { return _to GetOpacity(aOpacity); } \
+  NS_IMETHOD    SetOpacity(const nsString& aOpacity) { return _to SetOpacity(aOpacity); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype);

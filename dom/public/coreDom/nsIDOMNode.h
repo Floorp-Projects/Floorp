@@ -111,24 +111,24 @@ public:
 
 
 #define NS_FORWARD_IDOMNODE(_to)  \
-  NS_IMETHOD    GetNodeName(nsString& aNodeName) { return _to##GetNodeName(aNodeName); } \
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue) { return _to##GetNodeValue(aNodeValue); } \
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue) { return _to##SetNodeValue(aNodeValue); } \
-  NS_IMETHOD    GetNodeType(PRUint16* aNodeType) { return _to##GetNodeType(aNodeType); } \
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode) { return _to##GetParentNode(aParentNode); } \
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes) { return _to##GetChildNodes(aChildNodes); } \
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild) { return _to##GetFirstChild(aFirstChild); } \
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild) { return _to##GetLastChild(aLastChild); } \
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling) { return _to##GetPreviousSibling(aPreviousSibling); } \
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return _to##GetNextSibling(aNextSibling); } \
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return _to##GetAttributes(aAttributes); } \
-  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument) { return _to##GetOwnerDocument(aOwnerDocument); } \
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to##InsertBefore(aNewChild, aRefChild, aReturn); }  \
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##ReplaceChild(aNewChild, aOldChild, aReturn); }  \
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to##RemoveChild(aOldChild, aReturn); }  \
-  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) { return _to##AppendChild(aNewChild, aReturn); }  \
-  NS_IMETHOD    HasChildNodes(PRBool* aReturn) { return _to##HasChildNodes(aReturn); }  \
-  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to##CloneNode(aDeep, aReturn); }  \
+  NS_IMETHOD    GetNodeName(nsString& aNodeName) { return _to GetNodeName(aNodeName); } \
+  NS_IMETHOD    GetNodeValue(nsString& aNodeValue) { return _to GetNodeValue(aNodeValue); } \
+  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue) { return _to SetNodeValue(aNodeValue); } \
+  NS_IMETHOD    GetNodeType(PRUint16* aNodeType) { return _to GetNodeType(aNodeType); } \
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode) { return _to GetParentNode(aParentNode); } \
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes) { return _to GetChildNodes(aChildNodes); } \
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild) { return _to GetFirstChild(aFirstChild); } \
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild) { return _to GetLastChild(aLastChild); } \
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling) { return _to GetPreviousSibling(aPreviousSibling); } \
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling) { return _to GetNextSibling(aNextSibling); } \
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes) { return _to GetAttributes(aAttributes); } \
+  NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument) { return _to GetOwnerDocument(aOwnerDocument); } \
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to InsertBefore(aNewChild, aRefChild, aReturn); }  \
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to ReplaceChild(aNewChild, aOldChild, aReturn); }  \
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to RemoveChild(aOldChild, aReturn); }  \
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) { return _to AppendChild(aNewChild, aReturn); }  \
+  NS_IMETHOD    HasChildNodes(PRBool* aReturn) { return _to HasChildNodes(aReturn); }  \
+  NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn) { return _to CloneNode(aDeep, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);

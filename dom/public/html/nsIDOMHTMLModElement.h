@@ -51,10 +51,10 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLMODELEMENT(_to)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return _to##GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
-  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return _to##GetDateTime(aDateTime); } \
-  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return _to##SetDateTime(aDateTime); } \
+  NS_IMETHOD    GetCite(nsString& aCite) { return _to GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return _to SetCite(aCite); } \
+  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return _to GetDateTime(aDateTime); } \
+  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return _to SetDateTime(aDateTime); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);

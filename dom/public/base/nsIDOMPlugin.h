@@ -58,12 +58,12 @@ public:
 
 
 #define NS_FORWARD_IDOMPLUGIN(_to)  \
-  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to##GetDescription(aDescription); } \
-  NS_IMETHOD    GetFilename(nsString& aFilename) { return _to##GetFilename(aFilename); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMMimeType** aReturn) { return _to##Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMMimeType** aReturn) { return _to##NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to GetDescription(aDescription); } \
+  NS_IMETHOD    GetFilename(nsString& aFilename) { return _to GetFilename(aFilename); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMMimeType** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMMimeType** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitPluginClass(nsIScriptContext *aContext, void **aPrototype);

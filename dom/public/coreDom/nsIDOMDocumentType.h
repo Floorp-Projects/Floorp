@@ -51,9 +51,9 @@ public:
 
 
 #define NS_FORWARD_IDOMDOCUMENTTYPE(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return _to##GetEntities(aEntities); } \
-  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations) { return _to##GetNotations(aNotations); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return _to GetEntities(aEntities); } \
+  NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations) { return _to GetNotations(aNotations); } \
 
 
 extern "C" NS_DOM nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);

@@ -55,11 +55,11 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSIMPORTRULE(_to)  \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to##GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to##SetHref(aHref); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to##GetMedia(aMedia); } \
-  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to##SetMedia(aMedia); } \
-  NS_IMETHOD    GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet) { return _to##GetStyleSheet(aStyleSheet); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to SetMedia(aMedia); } \
+  NS_IMETHOD    GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet) { return _to GetStyleSheet(aStyleSheet); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSImportRuleClass(nsIScriptContext *aContext, void **aPrototype);

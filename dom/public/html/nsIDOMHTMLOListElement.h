@@ -56,12 +56,12 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLOLISTELEMENT(_to)  \
-  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to##GetCompact(aCompact); } \
-  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to##SetCompact(aCompact); } \
-  NS_IMETHOD    GetStart(PRInt32* aStart) { return _to##GetStart(aStart); } \
-  NS_IMETHOD    SetStart(PRInt32 aStart) { return _to##SetStart(aStart); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } \
+  NS_IMETHOD    GetStart(PRInt32* aStart) { return _to GetStart(aStart); } \
+  NS_IMETHOD    SetStart(PRInt32 aStart) { return _to SetStart(aStart); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLOListElementClass(nsIScriptContext *aContext, void **aPrototype);

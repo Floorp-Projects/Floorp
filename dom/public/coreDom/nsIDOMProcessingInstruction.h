@@ -49,9 +49,9 @@ public:
 
 
 #define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(_to)  \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
 
 
 extern "C" NS_DOM nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);

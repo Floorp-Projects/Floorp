@@ -71,18 +71,18 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLTABLECOLELEMENT(_to)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
-  NS_IMETHOD    GetCh(nsString& aCh) { return _to##GetCh(aCh); } \
-  NS_IMETHOD    SetCh(const nsString& aCh) { return _to##SetCh(aCh); } \
-  NS_IMETHOD    GetChOff(nsString& aChOff) { return _to##GetChOff(aChOff); } \
-  NS_IMETHOD    SetChOff(const nsString& aChOff) { return _to##SetChOff(aChOff); } \
-  NS_IMETHOD    GetSpan(PRInt32* aSpan) { return _to##GetSpan(aSpan); } \
-  NS_IMETHOD    SetSpan(PRInt32 aSpan) { return _to##SetSpan(aSpan); } \
-  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to##GetVAlign(aVAlign); } \
-  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to##SetVAlign(aVAlign); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetCh(nsString& aCh) { return _to GetCh(aCh); } \
+  NS_IMETHOD    SetCh(const nsString& aCh) { return _to SetCh(aCh); } \
+  NS_IMETHOD    GetChOff(nsString& aChOff) { return _to GetChOff(aChOff); } \
+  NS_IMETHOD    SetChOff(const nsString& aChOff) { return _to SetChOff(aChOff); } \
+  NS_IMETHOD    GetSpan(PRInt32* aSpan) { return _to GetSpan(aSpan); } \
+  NS_IMETHOD    SetSpan(PRInt32 aSpan) { return _to SetSpan(aSpan); } \
+  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return _to GetVAlign(aVAlign); } \
+  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return _to SetVAlign(aVAlign); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLTableColElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -51,10 +51,10 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLLIELEMENT(_to)  \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
-  NS_IMETHOD    GetValue(PRInt32* aValue) { return _to##GetValue(aValue); } \
-  NS_IMETHOD    SetValue(PRInt32 aValue) { return _to##SetValue(aValue); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetValue(PRInt32* aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(PRInt32 aValue) { return _to SetValue(aValue); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLIElementClass(nsIScriptContext *aContext, void **aPrototype);

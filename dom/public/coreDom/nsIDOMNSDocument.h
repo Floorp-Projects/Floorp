@@ -48,8 +48,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
-  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to##GetStyleSheets(aStyleSheets); } \
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to##CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
+  NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets) { return _to GetStyleSheets(aStyleSheets); } \
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
 
 
 #endif // nsIDOMNSDocument_h__

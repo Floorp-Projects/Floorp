@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLDLISTELEMENT(_to)  \
-  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to##GetCompact(aCompact); } \
-  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to##SetCompact(aCompact); } \
+  NS_IMETHOD    GetCompact(PRBool* aCompact) { return _to GetCompact(aCompact); } \
+  NS_IMETHOD    SetCompact(PRBool aCompact) { return _to SetCompact(aCompact); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLDListElementClass(nsIScriptContext *aContext, void **aPrototype);

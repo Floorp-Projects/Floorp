@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNODELIST(_to)  \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to##Item(aIndex, aReturn); }  \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNodeListClass(nsIScriptContext *aContext, void **aPrototype);

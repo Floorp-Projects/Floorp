@@ -107,32 +107,32 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLANCHORELEMENT(_to)  \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetCharset(nsString& aCharset) { return _to##GetCharset(aCharset); } \
-  NS_IMETHOD    SetCharset(const nsString& aCharset) { return _to##SetCharset(aCharset); } \
-  NS_IMETHOD    GetCoords(nsString& aCoords) { return _to##GetCoords(aCoords); } \
-  NS_IMETHOD    SetCoords(const nsString& aCoords) { return _to##SetCoords(aCoords); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to##GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to##SetHref(aHref); } \
-  NS_IMETHOD    GetHreflang(nsString& aHreflang) { return _to##GetHreflang(aHreflang); } \
-  NS_IMETHOD    SetHreflang(const nsString& aHreflang) { return _to##SetHreflang(aHreflang); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetRel(nsString& aRel) { return _to##GetRel(aRel); } \
-  NS_IMETHOD    SetRel(const nsString& aRel) { return _to##SetRel(aRel); } \
-  NS_IMETHOD    GetRev(nsString& aRev) { return _to##GetRev(aRev); } \
-  NS_IMETHOD    SetRev(const nsString& aRev) { return _to##SetRev(aRev); } \
-  NS_IMETHOD    GetShape(nsString& aShape) { return _to##GetShape(aShape); } \
-  NS_IMETHOD    SetShape(const nsString& aShape) { return _to##SetShape(aShape); } \
-  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to##GetTabIndex(aTabIndex); } \
-  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to##SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
-  NS_IMETHOD    Blur() { return _to##Blur(); }  \
-  NS_IMETHOD    Focus() { return _to##Focus(); }  \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetCharset(nsString& aCharset) { return _to GetCharset(aCharset); } \
+  NS_IMETHOD    SetCharset(const nsString& aCharset) { return _to SetCharset(aCharset); } \
+  NS_IMETHOD    GetCoords(nsString& aCoords) { return _to GetCoords(aCoords); } \
+  NS_IMETHOD    SetCoords(const nsString& aCoords) { return _to SetCoords(aCoords); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetHreflang(nsString& aHreflang) { return _to GetHreflang(aHreflang); } \
+  NS_IMETHOD    SetHreflang(const nsString& aHreflang) { return _to SetHreflang(aHreflang); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetRel(nsString& aRel) { return _to GetRel(aRel); } \
+  NS_IMETHOD    SetRel(const nsString& aRel) { return _to SetRel(aRel); } \
+  NS_IMETHOD    GetRev(nsString& aRev) { return _to GetRev(aRev); } \
+  NS_IMETHOD    SetRev(const nsString& aRev) { return _to SetRev(aRev); } \
+  NS_IMETHOD    GetShape(nsString& aShape) { return _to GetShape(aShape); } \
+  NS_IMETHOD    SetShape(const nsString& aShape) { return _to SetShape(aShape); } \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    Blur() { return _to Blur(); }  \
+  NS_IMETHOD    Focus() { return _to Focus(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLAnchorElementClass(nsIScriptContext *aContext, void **aPrototype);

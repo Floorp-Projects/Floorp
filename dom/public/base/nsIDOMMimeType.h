@@ -52,10 +52,10 @@ public:
 
 
 #define NS_FORWARD_IDOMMIMETYPE(_to)  \
-  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to##GetDescription(aDescription); } \
-  NS_IMETHOD    GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin) { return _to##GetEnabledPlugin(aEnabledPlugin); } \
-  NS_IMETHOD    GetSuffixes(nsString& aSuffixes) { return _to##GetSuffixes(aSuffixes); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
+  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to GetDescription(aDescription); } \
+  NS_IMETHOD    GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin) { return _to GetEnabledPlugin(aEnabledPlugin); } \
+  NS_IMETHOD    GetSuffixes(nsString& aSuffixes) { return _to GetSuffixes(aSuffixes); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitMimeTypeClass(nsIScriptContext *aContext, void **aPrototype);

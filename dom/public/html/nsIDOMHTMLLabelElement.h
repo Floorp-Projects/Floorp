@@ -55,11 +55,11 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLLABELELEMENT(_to)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to##GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to##SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return _to##GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return _to##SetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return _to GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return _to SetHtmlFor(aHtmlFor); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype);

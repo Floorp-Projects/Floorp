@@ -56,12 +56,12 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLFONTELEMENT(_to)  \
-  NS_IMETHOD    GetColor(nsString& aColor) { return _to##GetColor(aColor); } \
-  NS_IMETHOD    SetColor(const nsString& aColor) { return _to##SetColor(aColor); } \
-  NS_IMETHOD    GetFace(nsString& aFace) { return _to##GetFace(aFace); } \
-  NS_IMETHOD    SetFace(const nsString& aFace) { return _to##SetFace(aFace); } \
-  NS_IMETHOD    GetSize(nsString& aSize) { return _to##GetSize(aSize); } \
-  NS_IMETHOD    SetSize(const nsString& aSize) { return _to##SetSize(aSize); } \
+  NS_IMETHOD    GetColor(nsString& aColor) { return _to GetColor(aColor); } \
+  NS_IMETHOD    SetColor(const nsString& aColor) { return _to SetColor(aColor); } \
+  NS_IMETHOD    GetFace(nsString& aFace) { return _to GetFace(aFace); } \
+  NS_IMETHOD    SetFace(const nsString& aFace) { return _to SetFace(aFace); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return _to GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return _to SetSize(aSize); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLFontElementClass(nsIScriptContext *aContext, void **aPrototype);

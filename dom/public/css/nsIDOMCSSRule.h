@@ -60,10 +60,10 @@ public:
 
 
 #define NS_FORWARD_IDOMCSSRULE(_to)  \
-  NS_IMETHOD    GetType(PRUint16* aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to##GetCssText(aCssText); } \
-  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to##SetCssText(aCssText); } \
-  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet) { return _to##GetSheet(aSheet); } \
+  NS_IMETHOD    GetType(PRUint16* aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
+  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
+  NS_IMETHOD    GetSheet(nsIDOMCSSStyleSheet** aSheet) { return _to GetSheet(aSheet); } \
 
 
 extern "C" NS_DOM nsresult NS_InitCSSRuleClass(nsIScriptContext *aContext, void **aPrototype);

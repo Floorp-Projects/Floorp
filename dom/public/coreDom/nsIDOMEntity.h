@@ -50,9 +50,9 @@ public:
 
 
 #define NS_FORWARD_IDOMENTITY(_to)  \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to##GetPublicId(aPublicId); } \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to##GetSystemId(aSystemId); } \
-  NS_IMETHOD    GetNotationName(nsString& aNotationName) { return _to##GetNotationName(aNotationName); } \
+  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to GetSystemId(aSystemId); } \
+  NS_IMETHOD    GetNotationName(nsString& aNotationName) { return _to GetNotationName(aNotationName); } \
 
 
 extern "C" NS_DOM nsresult NS_InitEntityClass(nsIScriptContext *aContext, void **aPrototype);

@@ -64,14 +64,14 @@ public:
 
 
 #define NS_FORWARD_IDOMCHARACTERDATA(_to)  \
-  NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn) { return _to##SubstringData(aOffset, aCount, aReturn); }  \
-  NS_IMETHOD    AppendData(const nsString& aArg) { return _to##AppendData(aArg); }  \
-  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsString& aArg) { return _to##InsertData(aOffset, aArg); }  \
-  NS_IMETHOD    DeleteData(PRUint32 aOffset, PRUint32 aCount) { return _to##DeleteData(aOffset, aCount); }  \
-  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg) { return _to##ReplaceData(aOffset, aCount, aArg); }  \
+  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn) { return _to SubstringData(aOffset, aCount, aReturn); }  \
+  NS_IMETHOD    AppendData(const nsString& aArg) { return _to AppendData(aArg); }  \
+  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsString& aArg) { return _to InsertData(aOffset, aArg); }  \
+  NS_IMETHOD    DeleteData(PRUint32 aOffset, PRUint32 aCount) { return _to DeleteData(aOffset, aCount); }  \
+  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg) { return _to ReplaceData(aOffset, aCount, aArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCharacterDataClass(nsIScriptContext *aContext, void **aPrototype);

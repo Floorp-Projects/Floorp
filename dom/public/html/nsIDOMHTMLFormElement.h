@@ -84,22 +84,22 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLFORMELEMENT(_to)  \
-  NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements) { return _to##GetElements(aElements); } \
-  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to##GetLength(aLength); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset) { return _to##GetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset) { return _to##SetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD    GetAction(nsString& aAction) { return _to##GetAction(aAction); } \
-  NS_IMETHOD    SetAction(const nsString& aAction) { return _to##SetAction(aAction); } \
-  NS_IMETHOD    GetEnctype(nsString& aEnctype) { return _to##GetEnctype(aEnctype); } \
-  NS_IMETHOD    SetEnctype(const nsString& aEnctype) { return _to##SetEnctype(aEnctype); } \
-  NS_IMETHOD    GetMethod(nsString& aMethod) { return _to##GetMethod(aMethod); } \
-  NS_IMETHOD    SetMethod(const nsString& aMethod) { return _to##SetMethod(aMethod); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to##GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to##SetTarget(aTarget); } \
-  NS_IMETHOD    Submit() { return _to##Submit(); }  \
-  NS_IMETHOD    Reset() { return _to##Reset(); }  \
+  NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements) { return _to GetElements(aElements); } \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset) { return _to SetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    GetAction(nsString& aAction) { return _to GetAction(aAction); } \
+  NS_IMETHOD    SetAction(const nsString& aAction) { return _to SetAction(aAction); } \
+  NS_IMETHOD    GetEnctype(nsString& aEnctype) { return _to GetEnctype(aEnctype); } \
+  NS_IMETHOD    SetEnctype(const nsString& aEnctype) { return _to SetEnctype(aEnctype); } \
+  NS_IMETHOD    GetMethod(nsString& aMethod) { return _to GetMethod(aMethod); } \
+  NS_IMETHOD    SetMethod(const nsString& aMethod) { return _to SetMethod(aMethod); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    Submit() { return _to Submit(); }  \
+  NS_IMETHOD    Reset() { return _to Reset(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLFormElementClass(nsIScriptContext *aContext, void **aPrototype);

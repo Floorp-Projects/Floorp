@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLTITLEELEMENT(_to)  \
-  NS_IMETHOD    GetText(nsString& aText) { return _to##GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return _to##SetText(aText); } \
+  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);

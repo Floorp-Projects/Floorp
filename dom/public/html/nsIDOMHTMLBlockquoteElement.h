@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLBLOCKQUOTEELEMENT(_to)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return _to##GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
+  NS_IMETHOD    GetCite(nsString& aCite) { return _to GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return _to SetCite(aCite); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBlockquoteElementClass(nsIScriptContext *aContext, void **aPrototype);

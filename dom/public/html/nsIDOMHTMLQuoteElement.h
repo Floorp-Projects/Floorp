@@ -46,8 +46,8 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLQUOTEELEMENT(_to)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return _to##GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
+  NS_IMETHOD    GetCite(nsString& aCite) { return _to GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return _to SetCite(aCite); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);

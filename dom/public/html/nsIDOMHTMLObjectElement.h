@@ -130,41 +130,41 @@ public:
 
 
 #define NS_FORWARD_IDOMHTMLOBJECTELEMENT(_to)  \
-  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to##GetForm(aForm); } \
-  NS_IMETHOD    GetCode(nsString& aCode) { return _to##GetCode(aCode); } \
-  NS_IMETHOD    SetCode(const nsString& aCode) { return _to##SetCode(aCode); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to##GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to##SetAlign(aAlign); } \
-  NS_IMETHOD    GetArchive(nsString& aArchive) { return _to##GetArchive(aArchive); } \
-  NS_IMETHOD    SetArchive(const nsString& aArchive) { return _to##SetArchive(aArchive); } \
-  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to##GetBorder(aBorder); } \
-  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to##SetBorder(aBorder); } \
-  NS_IMETHOD    GetCodeBase(nsString& aCodeBase) { return _to##GetCodeBase(aCodeBase); } \
-  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase) { return _to##SetCodeBase(aCodeBase); } \
-  NS_IMETHOD    GetCodeType(nsString& aCodeType) { return _to##GetCodeType(aCodeType); } \
-  NS_IMETHOD    SetCodeType(const nsString& aCodeType) { return _to##SetCodeType(aCodeType); } \
-  NS_IMETHOD    GetData(nsString& aData) { return _to##GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to##SetData(aData); } \
-  NS_IMETHOD    GetDeclare(PRBool* aDeclare) { return _to##GetDeclare(aDeclare); } \
-  NS_IMETHOD    SetDeclare(PRBool aDeclare) { return _to##SetDeclare(aDeclare); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to##GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to##SetHeight(aHeight); } \
-  NS_IMETHOD    GetHspace(nsString& aHspace) { return _to##GetHspace(aHspace); } \
-  NS_IMETHOD    SetHspace(const nsString& aHspace) { return _to##SetHspace(aHspace); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to##GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to##SetName(aName); } \
-  NS_IMETHOD    GetStandby(nsString& aStandby) { return _to##GetStandby(aStandby); } \
-  NS_IMETHOD    SetStandby(const nsString& aStandby) { return _to##SetStandby(aStandby); } \
-  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to##GetTabIndex(aTabIndex); } \
-  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to##SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to##GetUseMap(aUseMap); } \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to##SetUseMap(aUseMap); } \
-  NS_IMETHOD    GetVspace(nsString& aVspace) { return _to##GetVspace(aVspace); } \
-  NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to##SetVspace(aVspace); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to##GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to##SetWidth(aWidth); } \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
+  NS_IMETHOD    GetCode(nsString& aCode) { return _to GetCode(aCode); } \
+  NS_IMETHOD    SetCode(const nsString& aCode) { return _to SetCode(aCode); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetArchive(nsString& aArchive) { return _to GetArchive(aArchive); } \
+  NS_IMETHOD    SetArchive(const nsString& aArchive) { return _to SetArchive(aArchive); } \
+  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to SetBorder(aBorder); } \
+  NS_IMETHOD    GetCodeBase(nsString& aCodeBase) { return _to GetCodeBase(aCodeBase); } \
+  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase) { return _to SetCodeBase(aCodeBase); } \
+  NS_IMETHOD    GetCodeType(nsString& aCodeType) { return _to GetCodeType(aCodeType); } \
+  NS_IMETHOD    SetCodeType(const nsString& aCodeType) { return _to SetCodeType(aCodeType); } \
+  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
+  NS_IMETHOD    GetDeclare(PRBool* aDeclare) { return _to GetDeclare(aDeclare); } \
+  NS_IMETHOD    SetDeclare(PRBool aDeclare) { return _to SetDeclare(aDeclare); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(nsString& aHspace) { return _to GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(const nsString& aHspace) { return _to SetHspace(aHspace); } \
+  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetStandby(nsString& aStandby) { return _to GetStandby(aStandby); } \
+  NS_IMETHOD    SetStandby(const nsString& aStandby) { return _to SetStandby(aStandby); } \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
+  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
+  NS_IMETHOD    GetVspace(nsString& aVspace) { return _to GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLObjectElementClass(nsIScriptContext *aContext, void **aPrototype);
