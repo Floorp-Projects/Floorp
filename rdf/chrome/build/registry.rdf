@@ -19,6 +19,12 @@
       </RDF:Description> 
     </content> 
 
+    <locale> 
+      <RDF:Description about="chrome://global/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome>
 	
 
@@ -38,6 +44,12 @@
       </RDF:Description> 
     </content> 
 
+    <locale> 
+      <RDF:Description about="chrome://navigator/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome> 
 
   <chrome about="chrome://sidebar/"> 
@@ -54,6 +66,12 @@
         <main>sidebar.css</main> 
       </RDF:Description> 
     </skin> 
+
+    <locale> 
+      <RDF:Description about="chrome://sidebar/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
 
   </chrome> 
 
@@ -73,6 +91,12 @@
       </RDF:Description> 
     </content> 
 
+    <locale> 
+      <RDF:Description about="chrome://messenger/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome> 
 
   <chrome about="chrome://messengercompose/"> 
@@ -90,6 +114,12 @@
         <main>messengercompose.xul</main> 
       </RDF:Description> 
     </content> 
+
+    <locale> 
+      <RDF:Description about="chrome://messengercompose/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
 
   </chrome>  
   
@@ -109,6 +139,12 @@
       </RDF:Description> 
     </skin> 
 
+    <locale> 
+      <RDF:Description about="chrome://editor/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome>
   
   <chrome about="chrome://editordlgs/">
@@ -124,6 +160,13 @@
 	    <base>resource:/chrome/editor/dialogs/content/default/</base>
       </RDF:Description>
     </content> 
+
+    <locale> 
+      <RDF:Description about="chrome://editordlgs/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome>
  
   <chrome about="chrome://addressbook/"> 
@@ -142,6 +185,12 @@
       </RDF:Description> 
     </content> 
 
+    <locale> 
+      <RDF:Description about="chrome://addressbook/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
   </chrome> 
 
   <chrome about="chrome://pref/"> 
@@ -159,6 +208,12 @@
         <main>PrefsWindow.xul</main> 
       </RDF:Description> 
     </content> 
+
+    <locale> 
+      <RDF:Description about="chrome://pref/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
 
   </chrome> 
 
