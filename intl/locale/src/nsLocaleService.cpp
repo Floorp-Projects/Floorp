@@ -189,7 +189,9 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+        PRUnichar* loc = xpLocale.ToNewUnicode();
+		result = NewLocale(loc, &mSystemLocale);
+        nsCRT::free(loc);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 
 		//
@@ -199,7 +201,9 @@ nsLocaleService::nsLocaleService(void)
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
-		result = NewLocale(xpLocale.ToNewUnicode(),&mApplicationLocale);
+        loc = xpLocale.ToNewUnicode();
+		result = NewLocale(loc, &mApplicationLocale);
+        nsCRT::free(loc);
 		if (NS_FAILED(result)) { win32Converter->Release(); return;}
 	
 		win32Converter->Release();
@@ -217,7 +221,9 @@ nsLocaleService::nsLocaleService(void)
         if (lc_all!=nsnull) {
             result = posixConverter->GetXPLocale(lc_all,&xpLocale);
             if (NS_FAILED(result)) { posixConverter->Release(); return; }
-            result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+            PRUnichar* loc = xpLocale.ToNewUnicode();
+            result = NewLocale(loc, &mSystemLocale);
+            nsCRT::free(loc);
             if (NS_FAILED(result)) { posixConverter->Release(); return; }
             mApplicationLocale=mSystemLocale;
             mApplicationLocale->AddRef();
@@ -225,7 +231,9 @@ nsLocaleService::nsLocaleService(void)
         } else {
             if (lang==nsnull) {
                 xpLocale = "en-US";
-                result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+                PRUnichar* loc = xpLocale.ToNewUnicode();
+                result = NewLocale(loc, &mSystemLocale);
+                nsCRT::free(loc);
                 if (NS_FAILED(result)) { posixConverter->Release(); return; }
                 mApplicationLocale = mSystemLocale;
                 mApplicationLocale->AddRef();
@@ -240,7 +248,11 @@ nsLocaleService::nsLocaleService(void)
                     category = LocaleList[i];
                     if (lc_temp==nsnull) xpLocale = "en-US";
                     else xpLocale = lc_temp;
-                    resultLocale->AddCategory(category.ToNewUnicode(),xpLocale.ToNewUnicode());
+                    PRUnichar* loc = xpLocale.ToNewUnicode();
+                    PRUnichar* cat = category.ToNewUnicode();
+                    resultLocale->AddCategory(cat, loc);
+                    nsCRT::free(cat);
+                    nsCRT::free(loc);                    
                 }
                 (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
                 (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
@@ -260,7 +272,9 @@ nsLocaleService::nsLocaleService(void)
 		nsString xpLocale;
 		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
 		if (NS_FAILED(result)) { macConverter->Release(); return; }
-		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+        PRUnichar* loc = xpLocale.ToNewUnicode();
+		result = NewLocale(loc, &mSystemLocale);
+        nsCRT::free(loc);                    
 		if (NS_FAILED(result)) { macConverter->Release(); return; }
 		mApplicationLocale = mSystemLocale;
 		mApplicationLocale->AddRef();
@@ -292,7 +306,9 @@ nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)
 
 	for(i=0;i<LocaleListLength;i++) {
 		nsString category = LocaleList[i];
-		result = resultLocale->AddCategory(category.ToNewUnicode(),aLocale);
+        PRUnichar* cat = category.ToNewUnicode();
+		result = resultLocale->AddCategory(cat, aLocale);
+        nsCRT::free(cat);
 		if (NS_FAILED(result)) { delete resultLocale; return result;}
 	}
 
