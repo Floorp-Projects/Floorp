@@ -29,7 +29,7 @@
  * file under either the MPL or the GPL.
  *
  * Contributor(s):
- *  
+ *   Robert Ginda, <rginda@netscape.com>
  *
  */
     
@@ -37,11 +37,18 @@
 
 %{ C++
 #include "jsdebug.h"
+#include "nsAReadableString.h"
 %}
     
 [ptr] native JSDContext(JSDContext);
+[ptr] native JSDObject(JSDObject);
+[ptr] native JSDProperty(JSDProperty);
 [ptr] native JSDScript(JSDScript);
+[ptr] native JSDStackFrameInfo(JSDStackFrameInfo);
 [ptr] native JSDThreadState(JSDThreadState);
+[ptr] native JSDValue(JSDValue);
+
+interface jsdIValue;
 
 /*
 [scriptable, uuid(e7c8ea2c-1dd1-11b2-9242-f2768e04e92e)]
@@ -51,6 +58,7 @@ interface jsdIHandle : nsISupports
 };
 */
 
+/* handle objects */
 [scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
 interface jsdIContext : nsISupports
 {
@@ -59,20 +67,27 @@ interface jsdIContext : nsISupports
 
 [scriptable, uuid(d500e8b8-1dd1-11b2-89a1-cdf55d91cbbd)]
 interface jsdIObject : nsISupports
-{};
+{
+    [noscript] readonly attribute JSDContext JSDContext;
+    [noscript] readonly attribute JSDObject  JSDObject;
+};
 
 [scriptable, uuid(b8816e56-1dd1-11b2-81dc-8ba99a833d9e)]
 interface jsdIProperty : nsISupports
-{};
+{
+    [noscript] readonly attribute JSDContext  JSDContext;
+    [noscript] readonly attribute JSDProperty JSDProperty;
+};
 
 [scriptable, uuid(a38f65ca-1dd1-11b2-95d5-ff2947e9c920)]
 interface jsdIScript : nsISupports
 {
-    [noscript] readonly attribute JSDScript JSDScript;
+    [noscript] readonly attribute JSDContext JSDContext;
+    [noscript] readonly attribute JSDScript  JSDScript;
 
     readonly attribute boolean       isActive;
-    readonly attribute wstring       fileName;
-    readonly attribute wstring       functionName;
+    readonly attribute string        fileName;
+    readonly attribute string        functionName;
     readonly attribute unsigned long baseLineNumber;
     readonly attribute unsigned long lineExtent;
 };
@@ -82,25 +97,80 @@ interface jsdISourceText : nsISupports
 {};
 
 [scriptable, uuid(b6d50784-1dd1-11b2-a932-882246c6fe45)]
-interface jsdIStackFrameInfo : nsISupports
-{};
+interface jsdIStackFrame : nsISupports
+{
+    [noscript] readonly attribute JSDContext        JSDContext;
+    [noscript] readonly attribute JSDThreadState    JSDThreadState;
+    [noscript] readonly attribute JSDStackFrameInfo JSDStackFrameInfo;
+    
+    readonly attribute jsdIStackFrame callingFrame;
+    readonly attribute jsdIScript     script;
+    readonly attribute unsigned long  pc;
+    readonly attribute jsdIValue      callee;
+    readonly attribute jsdIValue      scope;
+    readonly attribute jsdIValue      thisValue;
+
+    jsdIValue eval (in AString bytes, in string fileName,
+                    in unsigned long line);
+};
 
 [scriptable, uuid(b6d1c006-1dd1-11b2-b9d8-b4d1ccfb74d8)]
 interface jsdIThreadState : nsISupports
 {
+    [noscript] readonly attribute JSDContext     JSDContext;
     [noscript] readonly attribute JSDThreadState JSDThreadState;
+    
+    readonly attribute unsigned long  frameCount;
+    readonly attribute jsdIStackFrame topFrame;
+    
+    attribute jsdIValue pendingException;
 };
 
 [scriptable, uuid(b7964304-1dd1-11b2-ba20-cf4205772e9d)]
 interface jsdIValue : nsISupports
-{};
+{
+    [noscript] readonly attribute JSDContext JSDContext;
+    [noscript] readonly attribute JSDValue   JSDValue;
 
+    readonly attribute boolean isFunction;
+    readonly attribute boolean isNative;
+    readonly attribute boolean isNumber;
+    readonly attribute boolean isPrimitive;
+
+    const unsigned long TYPE_DOUBLE = 0;
+    const unsigned long TYPE_INT = 1;
+    const unsigned long TYPE_FUNCTION = 2;
+    const unsigned long TYPE_NULL = 3;
+    const unsigned long TYPE_OBJECT = 4;
+    const unsigned long TYPE_STRING = 5;
+    const unsigned long TYPE_VOID = 6;
+    
+    readonly attribute unsigned long jsType;
+    readonly attribute jsdIValue     jsPrototype;
+    readonly attribute jsdIValue     jsParent;
+    readonly attribute string        jsClassName;
+    readonly attribute jsdIValue     jsConstructor;
+    readonly attribute string        jsFunctionName;
+    
+    readonly attribute boolean     booleanValue;
+    readonly attribute double      doubleValue;
+    readonly attribute long        intValue;
+    readonly attribute jsdIObject  objectValue;
+    readonly attribute string      stringValue;
+
+    void getProperties ([array, size_is(length)] out jsdIProperty propArray,
+                        out unsigned long length);
+    jsdIProperty getProperty (in string name);
+
+    void refresh();    
+};
+
+/* callback interfaces */
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
 interface jsdIScriptHook : nsISupports
 {
     void onScriptLoaded (in jsdIContext aCx, in jsdIScript aScript,
-                       in boolean aCreating);
-
+                         in boolean aCreating);
 };
 
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
@@ -115,9 +185,10 @@ interface jsdIExecutionHook : nsISupports
 
     unsigned long onExecute (in jsdIContext aCx,
                              in jsdIThreadState aThreadState,
-                             in unsigned long aType, out nsISupports rval);
+                             in unsigned long aType, out jsdIValue rval);
 };
 
+/* debugger service */
 [scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
 interface jsdIDebuggerService : nsISupports
 {
@@ -128,5 +199,7 @@ interface jsdIDebuggerService : nsISupports
     attribute jsdIExecutionHook interruptHook;
     attribute jsdIScriptHook    scriptHook;
     
+    /* XXX temporary hacks */
+    unsigned long enterNestedEventLoop ();
+    unsigned long exitNestedEventLoop ();
 };
-
