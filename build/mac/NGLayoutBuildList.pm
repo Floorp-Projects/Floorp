@@ -102,6 +102,12 @@ sub _getDistDirectory()
 	return $main::DEBUG ? ":mozilla:dist:viewer_debug:" : ":mozilla:dist:viewer:";
 }
 
+sub BuildIDLProject($$)
+{
+	my ($project_path, $module_name) = @_;
+	BuildOneProject($project_path, 	"headers", "", 0, 0, 0);
+	BuildOneProject($project_path,	$module_name.".xpt", "", 1, 0, 1);
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Check out everything
@@ -288,8 +294,7 @@ sub BuildClientDist()
 	InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",							"$distdirectory:idl:");
 	InstallFromManifest(":mozilla:xpcom:ds:MANIFEST_IDL",							"$distdirectory:idl:");
 
-	BuildOneProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",							"xpcom.xpt", "", 1, 0, 1);
+	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
 
 	InstallFromManifest(":mozilla:xpcom:base:MANIFEST",								"$distdirectory:xpcom:");
 	InstallFromManifest(":mozilla:xpcom:components:MANIFEST",						"$distdirectory:xpcom:");
@@ -305,8 +310,7 @@ sub BuildClientDist()
 	
 	#PREFS
 	InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
-	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp", 			"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref.xpt", "", 1, 0, 1);
+	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
 
 	#ZLIB
     InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
@@ -333,8 +337,7 @@ sub BuildClientDist()
 	
 	#XPCONNECT	
 	InstallFromManifest(":mozilla:js:src:xpconnect:idl:MANIFEST",					"$distdirectory:idl:");
-	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect.xpt", "", 1, 0, 1);
+	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");
 	InstallFromManifest(":mozilla:js:src:xpconnect:public:MANIFEST",				"$distdirectory:xpconnect:");
 
 	#CAPS
@@ -447,8 +450,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:widget:public:MANIFEST",							"$distdirectory:widget:");
     InstallFromManifest(":mozilla:widget:public:MANIFEST_IDL",						"$distdirectory:idl:");
     InstallFromManifest(":mozilla:widget:src:mac:MANIFEST",							"$distdirectory:widget:");
-	BuildOneProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget.xpt", "", 1, 0, 1);
+	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
@@ -458,8 +460,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",					"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
-	BuildOneProject(":mozilla:rdf:macbuild:RDFIDL.mcp", 							"headers", "", 0, 0, 0);
-	BuildOneProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf.xpt", "", 1, 0, 1);
+	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
     
     #BRPROF
     InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
@@ -497,12 +498,20 @@ sub BuildClientDist()
 
 
 	# XPFE COMPONENTS
+
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST",					"$distdirectory:xpfe:components");
+
    # find
    InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
+
    # history
    InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
-   BuildOneProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp", 		"headers", "", 0, 0, 0);
+   BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
+
+   # prefwindow
+#   InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST",		"$distdirectory:idl:");
+#   BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
+
    # sample
    InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
    # ucth
@@ -518,32 +527,27 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
-   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp", 				"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
    InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildOneProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp", 			"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
    InstallFromManifest(":mozilla:mailnews:compose:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildOneProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp", 				"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
    InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-   BuildOneProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp", 				"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
    InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
-   BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp", 		"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
    InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",					"$distdirectory:mailnews:");
 
 	print("--- Client Dist export complete ----\n")
