@@ -114,7 +114,7 @@ endif
 endif
 
 ifdef _EXTRA_DSO_RELATIVE_PATHS
-EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
+EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(EXTRA_DSO_LIBS)))
 EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
 EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
 LIBS                := $(patsubst -l%,$(DIST)/lib/$(LIB_PREFIX)%.$(LIB_SUFFIX),$(LIBS))
@@ -754,7 +754,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) $(EXE_DEF_FILE) /ST:0x100000
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(PROGOBJS) $(RESFILE) $(LDFLAGS) $(LIBS) $(OS_LIBS)
+	$(LD) /NOLOGO /OUT:$@ /PDB:$(PDBFILE) $(PROGOBJS) $(RESFILE) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
@@ -798,7 +798,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
 else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
-	$(LD) /nologo /out:$@ /pdb:$(PDBFILE) $< $(LDFLAGS) $(LIBS) $(OS_LIBS)
+	$(LD) /nologo /out:$@ /pdb:$(PDBFILE) $< $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
