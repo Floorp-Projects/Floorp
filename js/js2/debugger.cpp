@@ -63,7 +63,7 @@ namespace Debugger {
 
     /* return true if str2 starts with/is str1
      * XXX ignore case */
-    bool
+    static bool
     startsWith (const String &str1, const String &str2)
     {
         uint n;
