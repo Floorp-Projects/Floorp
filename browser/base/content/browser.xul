@@ -806,7 +806,6 @@ Contributor(s):
                  tabscrolling="true"
                  showcommentcolumn="true"
                  enablehistory="true"
-                 inputtooltiptext="&locationBar.tooltip;"
                  oninput="window.XULBrowserWindow.userTyped.value=true;"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
