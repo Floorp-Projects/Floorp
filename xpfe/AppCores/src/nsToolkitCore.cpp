@@ -303,7 +303,7 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsArgCallbacks> cb;
-  cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
+  cb = dont_QueryInterface( new nsArgCallbacks( aArgs ) );
 
   nsCOMPtr<nsIWebShellWindow>  window;
   appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
