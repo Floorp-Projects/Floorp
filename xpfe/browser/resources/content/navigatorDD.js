@@ -425,8 +425,7 @@ var personalToolbarDNDObserver = {
   DROP_ON    : 0,
   DROP_AFTER : 1,
   springLoadedMenuDelay: 350, // milliseconds
-  isPlatformNotSupported: navigator.platform.indexOf("Linux") != -1 ||
-                          navigator.platform.indexOf("Mac")   != -1, // see bug 136524
+  isPlatformNotSupported: navigator.platform.indexOf("Mac") != -1, // see bug 136524
   isTimerSupported: navigator.platform.indexOf("Win") == -1,
 
   mCurrentDragOverTarget: null,
