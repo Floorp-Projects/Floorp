@@ -984,16 +984,19 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
         sft_savings += strlen(sfe->filename);
 #endif
     if (!sfe) {
-        /* XXX this assumes NULL puns as JS_FALSE in the mark byte... */
         sfe = (ScriptFilenameEntry *)
               JS_HashTableRawAdd(table, hep, hash, filename, NULL);
-        if (sfe)
+        if (sfe) {
             sfe->key = strcpy(sfe->filename, filename);
-        else
-            JS_ReportOutOfMemory(cx);
+            JS_ASSERT(!sfe->mark);
+        }
     }
     JS_RELEASE_LOCK(script_filename_table_lock);
-    return sfe ? sfe->filename : NULL;
+    if (!sfe) {
+        JS_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    return sfe->filename;
 }
 
 void
