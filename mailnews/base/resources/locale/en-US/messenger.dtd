@@ -466,9 +466,9 @@ Rights Reserved.
 <!ENTITY folderContextProperties.accesskey "o">
 
 <!-- Message Header View Popup -->
-<!ENTITY AddToAddressBook.label "Add Address To Address Book">
+<!ENTITY AddToAddressBook.label "Add to Address Book...">
 <!ENTITY AddToAddressBook.accesskey "b">
-<!ENTITY SendMailTo.label "Send Mail To">
+<!ENTITY SendMailTo.label "Compose Mail To">
 <!ENTITY SendMailTo.accesskey "">
 
 <!-- Print Engine -->
