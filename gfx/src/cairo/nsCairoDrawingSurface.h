@@ -43,21 +43,26 @@
 
 #include <cairo.h>
 
+class nsIWidget;
+class nsCairoDeviceContext;
+
 class nsCairoDrawingSurface : public nsIDrawingSurface
 {
 public:
     nsCairoDrawingSurface ();
     virtual ~nsCairoDrawingSurface ();
 
-    // create a new image surface
-    nsresult Init (PRUint32 aWidth, PRUint32 aHeight);
-    // create a DrawingSurface based on the existing cairo surface
-    nsresult Init (cairo_surface_t *aSurface, PRBool aIsOffscreen,
-                   PRUint32 aWidth, PRUint32 aHeight);
+    // create a image surface if aFastAccess == TRUE, otherwise create
+    // a fast server pixmap
+    nsresult Init (nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess);
 
+    // create a fast drawing surface for a native widget
+    nsresult Init (nsCairoDevicecontext *aDC, nsIWidget *aWidget);
+
+    // nsISupports interface
     NS_DECL_ISUPPORTS
 
-    //nsIDrawingSurface interface
+    // nsIDrawingSurface interface
 
     NS_IMETHOD Lock(PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 aHeight,
                     void **aBits, PRInt32 *aStride, PRInt32 *aWidthBytes,
@@ -72,11 +77,16 @@ public:
     cairo_surface_t *GetCairoSurface(void) { return mSurface; }
     PRInt32 GetDepth() { return mDepth; }
 private:
-    cairo_surface_t *mSurface;
-    PRUint8 *mSurfaceData;
-    PRUint32 mWidth, mHeight, mStride, mDepth;
-    PRBool mOwnsData, mIsOffscreen;
-};
+    cairo_surface_t *mSurface, *mImageSurface;
 
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    Display *mXDisplay;
+    Pixmap mPixmap;
+#endif
+
+    PRUint32 mLockFlags;
+    PRBool mFastAccess;
+    PRUint32 mWidth, mHeight;
+};
 
 #endif /* NSCAIRODRAWINGSURFACE__H__ */
