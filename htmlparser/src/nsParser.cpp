@@ -107,6 +107,67 @@ public:
 
 CSharedParserObjects gSharedParserObjects;
 
+//----------------------------------------
+
+#define NOT_USED 0xfffd
+
+static PRUint16 PA_HackTable[] = {
+	NOT_USED,
+	NOT_USED,
+	0x201a,  /* SINGLE LOW-9 QUOTATION MARK */
+	0x0192,  /* LATIN SMALL LETTER F WITH HOOK */
+	0x201e,  /* DOUBLE LOW-9 QUOTATION MARK */
+	0x2026,  /* HORIZONTAL ELLIPSIS */
+	0x2020,  /* DAGGER */
+	0x2021,  /* DOUBLE DAGGER */
+	0x02c6,  /* MODIFIER LETTER CIRCUMFLEX ACCENT */
+	0x2030,  /* PER MILLE SIGN */
+	0x0160,  /* LATIN CAPITAL LETTER S WITH CARON */
+	0x2039,  /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
+	0x0152,  /* LATIN CAPITAL LIGATURE OE */
+	NOT_USED,
+	NOT_USED,
+	NOT_USED,
+
+	NOT_USED,
+	0x2018,  /* LEFT SINGLE QUOTATION MARK */
+	0x2019,  /* RIGHT SINGLE QUOTATION MARK */
+	0x201c,  /* LEFT DOUBLE QUOTATION MARK */
+	0x201d,  /* RIGHT DOUBLE QUOTATION MARK */
+	0x2022,  /* BULLET */
+	0x2013,  /* EN DASH */
+	0x2014,  /* EM DASH */
+	0x02dc,  /* SMALL TILDE */
+	0x2122,  /* TRADE MARK SIGN */
+	0x0161,  /* LATIN SMALL LETTER S WITH CARON */
+	0x203a,  /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
+	0x0153,  /* LATIN SMALL LIGATURE OE */
+	NOT_USED,
+	NOT_USED,
+	0x0178   /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
+};
+
+static PRUnichar gToUCS2[256];
+
+static void
+MakeConversionTable()
+{
+  static PRBool firstTime = PR_TRUE;
+  if (firstTime) {
+    firstTime = PR_FALSE;
+    PRUnichar* cp = gToUCS2;
+    PRInt32 i;
+    for (i = 0; i < 256; i++) {
+      *cp++ = PRUnichar(i);
+    }
+    cp = gToUCS2;
+    for (i = 0; i < 32; i++) {
+      cp[0x80 + i] = PA_HackTable[i];
+    }
+  }
+}
+
+//----------------------------------------
 
 /**
  *  default constructor
@@ -122,6 +183,7 @@ nsParser::nsParser() {
   mSink=0;
   mParserContext=0;
   mDTDVerification=PR_FALSE;
+  MakeConversionTable();
 }
 
 
@@ -775,13 +837,31 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
     mParserContext->mTransferBuffer = new char[CParserContext::eTransferBufferSize+1];
 
   while (len > 0) {
-    nsresult rv = pIStream->Read(mParserContext->mTransferBuffer, 0, mParserContext->eTransferBufferSize, &len);
+    nsresult rv = pIStream->Read(mParserContext->mTransferBuffer, 0,
+                                 mParserContext->eTransferBufferSize, &len);
     if((rv == NS_OK) && (len>0)) {
-
       if(mParserFilter)
          mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &len);
 
-      mParserContext->mScanner->Append(mParserContext->mTransferBuffer,len);
+      // XXX kipp was here: this is a temporary piece of code that
+      // fixes up the data in the transfer buffer so that the 8 bit
+      // ascii is mapped to ucs2 properly. The problem is that for the
+      // default character set, some web pages use illegal codes (0x80
+      // to 0x9f, inclusive); we already have code to map entities
+      // properly in this range. This code maps raw stream data the
+      // same way.
+      PRUnichar buf[CParserContext::eTransferBufferSize];
+      PRUnichar* dst = buf;
+      const PRUnichar* table = gToUCS2;
+      const char* src = mParserContext->mTransferBuffer;
+      const char* end = src + len;
+      while (src < end) {
+        unsigned char ch = *(unsigned char*)src;
+        *dst++ = table[ch];
+        src++;
+      }
+
+      mParserContext->mScanner->Append(buf, len);
 
       if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
         if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
