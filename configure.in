@@ -1226,6 +1226,13 @@ MOZ_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          Enable test stubs],
   ENABLE_TESTS=1)
 
+dnl Build PICS (mozilla/extensions/pics) code
+MOZ_ARG_ENABLE_BOOL(pics,
+[  --enable-pics          Enable PICS code],
+  ENABLE_PICS=1)
+
+AC_DEFINE(ENABLE_PICS)
+
 dnl Build browsing profile by default
 MOZ_BRPROF=1
 MOZ_ARG_DISABLE_BOOL(brprof,
@@ -1538,6 +1545,7 @@ AC_SUBST(NO_UNIX_ASYNC_DNS)
 AC_SUBST(NO_SHARED_LIB)
 AC_SUBST(NO_STATIC_LIB)
 AC_SUBST(ENABLE_TESTS)
+AC_SUBST(ENABLE_PICS)
 AC_SUBST(MOZ_USER_DIR)
 dnl AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(MOZ_DOM)
