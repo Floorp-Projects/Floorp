@@ -324,11 +324,13 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
 {
   rc.PushState();
 
+  rc.Translate(mBounds.x, mBounds.y);
+
   if (mClipRect.IsEmpty() == PR_FALSE)
   {
     nsRect  trect;
 
-    rc.Translate(mBounds.x, mBounds.y);
+//    rc.Translate(mBounds.x, mBounds.y);
 
     trect.x = mClipRect.x;
     trect.y = mClipRect.y;
@@ -339,8 +341,8 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
   }
   else
   {
-    rc.SetClipRect(mBounds, PR_TRUE);
-    rc.Translate(mBounds.x, mBounds.y);
+//    rc.SetClipRect(mBounds, PR_TRUE);
+//    rc.Translate(mBounds.x, mBounds.y);
   }
 
   if (nsnull != mFrame)
