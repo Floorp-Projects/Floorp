@@ -1,4 +1,12 @@
-initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.8");
+/* ***************
+Desc: Installation script
+Last modified: October 2th, 2003
+****************** */
+const displayName = "Mozilla Calendar";
+const name        = "Mozilla/Calendar";
+const version     = "0.8";
+
+initInstall(displayName, name, version);
 
 calendarDir = getFolder("Chrome","calendar");
 
@@ -25,16 +33,10 @@ if ( err == SUCCESS ) {
   
    err = performInstall();
   
-   if ( err == SUCCESS ) {
+   if ( err == SUCCESS || err == 999 ) {
       alert("The Mozilla Calendar has been succesfully installed. \n"
-      +"Please restart your browser to continue.");
-   }
-   else if( err == "999" )
-   {
-      alert("The Mozilla Calendar has been installed. \n Please restart your browser to continue.");
-   }
-   
-   else { 
+      +"Please restart your application to continue.");
+   } else { 
     alert("performInstall() failed. \n"
     +"_____________________________\nError code:" + err);
     cancelInstall(err);
@@ -43,7 +45,7 @@ if ( err == SUCCESS ) {
 else { 
    alert("Failed to create directory. \n"
     +"You probably don't have appropriate permissions \n"
-    +"(write access to mozilla/chrome directory). \n"
+    +"(write access to <mozilla>/chrome directory). \n"
     +"If you installed Mozilla as root then you need to install calendar as root as well.\n"
     +"Or, you can change ownership of your Mozilla directory to yourself and install calendar."
     +"_____________________________\nError code:" + err);
