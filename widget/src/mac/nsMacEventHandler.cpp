@@ -34,6 +34,8 @@
 #include <Script.h>
 #include "nsCarbonHelpers.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
+
 #ifndef RHAPSODY
 #include <locale>
 #endif
@@ -1095,12 +1097,45 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 	short partCode = ::FindWindow(aOSEvent.where, &whichWindow);
 
   PRBool ignoreClickInContent = PR_FALSE;
+
+  // Deal with any popups (comboboxes, xul popups, XP menus, etc) that might have to 
+  // be closed down since they are implemented as stand-alone windows on top of
+  // the current content window. If the click is not in the front window, we need to
+  // hide the popup if one is visible. Furthermore, we want to ignore the click that
+  // caused the popup to close and not pass it along to gecko.
   if ( whichWindow != ::FrontWindow() ) {
-    if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-			gRollupListener->Rollup();
-			ignoreClickInContent = PR_TRUE;
-		}
-  }
+    if ( gRollupListener && gRollupWidget ) {
+      PRBool rollup = PR_TRUE;
+
+      // if we're dealing with menus, we probably have submenus and we don't want
+      // to rollup if the click is in a parent menu of the current submenu.
+      nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+      if ( menuRollup ) {
+        nsCOMPtr<nsISupportsArray> widgetChain;
+        menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+        if ( widgetChain ) {      
+          PRUint32 count = 0;
+          widgetChain->Count(&count);
+          for ( PRUint32 i = 0; i < count; ++i ) {
+            nsCOMPtr<nsISupports> genericWidget;
+            widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+            nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+            if ( widget ) {
+              if ( NS_REINTERPRET_CAST(WindowPtr,widget->GetNativeData(NS_NATIVE_DISPLAY)) == whichWindow )
+                 rollup = PR_FALSE;
+            }         
+          } // foreach parent menu widget
+        }
+      } // if rollup listener knows about menus
+      
+      // if we've determined that we should still rollup everything, do it.
+      if ( rollup ) {
+  			gRollupListener->Rollup();
+  			ignoreClickInContent = PR_TRUE;
+  	  }
+ 
+		} // if a popup is active
+  } // if click in a window not the frontmost
  
 	switch (partCode)
 	{
