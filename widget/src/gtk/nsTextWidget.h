@@ -25,7 +25,7 @@
 #include "nsITextWidget.h"
 
 /**
- * Native Motif single line edit control wrapper.
+ * Native GTK+ single line edit control wrapper.
  */
 
 class nsTextWidget : public nsTextHelper

@@ -23,7 +23,7 @@
 #include "nsIComboBox.h"
 
 /**
- * Native Motif Listbox wrapper
+ * Native GTK+ Listbox wrapper
  */
 
 class nsComboBox : public nsWidget,

@@ -33,7 +33,7 @@ class nsFont;
 
 
 /**
- * Native GTK+ window wrapper.
+ * Native GTK++ window wrapper.
  */
 
 class nsWindow : public nsWidget
@@ -80,8 +80,6 @@ protected:
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
 
-public:
-protected:
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
@@ -96,9 +94,8 @@ protected:
   int    mResized;
   PRBool mLowerLeft;
 
+  GtkWidget *mShell;  /* used for toplevel windows */
   GtkWidget *mVBox;
-
-private:
 };
 
 //

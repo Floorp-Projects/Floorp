@@ -114,7 +114,6 @@ NS_METHOD nsAppShell::Run()
 
 NS_METHOD nsAppShell::Exit()
 {
-//  gtk_widget_destroy (mTopLevel);
   gtk_main_quit ();
   gtk_exit(0);
 

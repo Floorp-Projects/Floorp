@@ -26,7 +26,7 @@
 class nsIWidget;
 
 /**
- * Native Motif PopUp wrapper
+ * Native GTK+ PopUp wrapper
  */
 
 class nsPopUpMenu : public nsIPopUpMenu

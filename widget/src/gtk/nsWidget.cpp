@@ -100,6 +100,10 @@ NS_IMETHODIMP nsWidget::Destroy(void)
     if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
   }
+  if (mGC) {
+    ::gdk_gc_destroy(mGC);
+    mGC = nsnull;
+  }
   return NS_OK;
 }
 

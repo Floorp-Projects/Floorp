@@ -24,7 +24,7 @@
 #include "nsILabel.h"
 
 /**
- * Native Motif Label wrapper
+ * Native GTK+ Label wrapper
  */
 class nsLabel :  public nsWidget,
                  public nsILabel

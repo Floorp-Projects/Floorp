@@ -34,26 +34,9 @@ NS_IMPL_RELEASE(nsDialog)
 // nsDialog constructor
 //
 //-------------------------------------------------------------------------
-nsDialog::nsDialog() : nsWidget(), nsIDialog()
+nsDialog::nsDialog() : nsWindow(), nsIDialog()
 {
   NS_INIT_REFCNT();
-}
-
-//-------------------------------------------------------------------------
-//
-// Create the native GtkDialog widget
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD  nsDialog::CreateNative(GtkWidget *parentWindow)
-{
-  mShell = gtk_dialog_new();
-  gtk_widget_set_name(mShell, "nsDialog");
-  gtk_widget_show(mShell);
-  mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
-  gtk_container_add(GTK_CONTAINER(GTK_DIALOG(mShell)->vbox), mWidget);
-
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -63,6 +46,26 @@ NS_METHOD  nsDialog::CreateNative(GtkWidget *parentWindow)
 //-------------------------------------------------------------------------
 nsDialog::~nsDialog()
 {
+}
+
+//-------------------------------------------------------------------------
+//
+// Create the native GtkDialog widget
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsDialog::CreateNative(GtkWidget *parentWindow)
+{
+  mShell = gtk_window_new(GTK_WINDOW_DIALOG);
+  gtk_window_set_default_size(GTK_WINDOW(mShell),
+                              mBounds.width,
+                              mBounds.height);
+  gtk_widget_set_name(mShell, "nsDialog");
+  gtk_widget_show(mShell);
+  mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
+  gtk_container_add(GTK_CONTAINER(mShell), mWidget);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

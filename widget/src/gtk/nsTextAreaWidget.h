@@ -24,7 +24,7 @@
 #include "nsITextAreaWidget.h"
 
 /**
- * Native Motif multi-line edit control wrapper.
+ * Native GTK+ multi-line edit control wrapper.
  */
 
 class nsTextAreaWidget : public nsTextHelper

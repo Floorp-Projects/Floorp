@@ -32,7 +32,7 @@
 #include <gtk/gtk.h>
 
 /**
- * Base of all GTK native widgets.
+ * Base of all GTK+ native widgets.
  */
 
 class nsWidget : public nsBaseWidget

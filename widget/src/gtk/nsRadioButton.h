@@ -23,7 +23,7 @@
 #include "nsIRadioButton.h"
 
 /**
- * Native Motif Radiobutton wrapper
+ * Native GTK+ Radiobutton wrapper
  */
 class nsRadioButton : public nsWidget,
                       public nsIRadioButton

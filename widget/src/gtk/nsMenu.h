@@ -24,7 +24,7 @@
 class nsIMenuBar;
 
 /**
- * Native Motif Menu wrapper
+ * Native GTK+ Menu wrapper
  */
 
 class nsMenu : public nsIMenu

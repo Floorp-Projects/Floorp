@@ -23,7 +23,7 @@
 #include "nsIListBox.h"
 
 /**
- * Native Motif Listbox wrapper
+ * Native GTK+ Listbox wrapper
  */
 
 class nsListBox :   public nsWidget,

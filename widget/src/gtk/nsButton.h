@@ -23,7 +23,7 @@
 #include "nsIButton.h"
 
 /**
- * Native Motif button wrapper
+ * Native GTK+ button wrapper
  */
 class nsButton : public nsWidget,
                  public nsIButton

@@ -27,7 +27,7 @@ class nsIPopUpMenu;
 class nsIWidget;
 
 /**
- * Native Motif MenuItem wrapper
+ * Native GTK+ MenuItem wrapper
  */
 
 class nsMenuItem : public nsIMenuItem

@@ -50,6 +50,7 @@ nsWindow::nsWindow()
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
   mFontMetrics = nsnull;
+  mShell = nsnull;
   mVBox = nsnull;
   mResized = PR_FALSE;
   mVisible = PR_FALSE;
@@ -66,15 +67,11 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  if (mWidget)
+  if (mShell)
   {
-    if (GTK_IS_WIDGET(mWidget))
-      gtk_widget_destroy(mWidget);
-    mWidget = nsnull;
-  }
-  if (mGC) {
-    gdk_gc_destroy(mGC);
-    mGC = nsnull;
+    if (GTK_IS_WIDGET(mShell))
+      gtk_widget_destroy(mShell);
+    mShell = nsnull;
   }
 }
 
@@ -145,8 +142,6 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
-  GtkWidget *mainWindow;
-
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
 
@@ -163,17 +158,17 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
   if (!parentWidget) {
 
-//    mainWindow = gtk_window_new(mBorderStyle);
-    mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(mainWindow),
+//  mainWindow = gtk_window_new(mBorderStyle);
+    mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(mShell),
     				mBounds.width,
 				mBounds.height);
-    gtk_widget_show (mainWindow);
+    gtk_widget_show (mShell);
 
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
     gtk_widget_show (mVBox);
-    gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
+    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
   }
 
@@ -290,8 +285,10 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
+  if (!mShell)
+    return NS_ERROR_FAILURE;
   char * titleStr = aTitle.ToNewCString();
-  gtk_window_set_title(GTK_WINDOW(mVBox->parent), titleStr);
+  gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
   delete[] titleStr;
   return NS_OK;
 }
