@@ -95,7 +95,16 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                   ///(west/east sizing,    usually rendered as ->||<-)
                 eCursor_sizeWE,
                   ///(north/south sizing,  usually rendered as sizeWE rotated 90 degrees)
-                eCursor_sizeNS }; 
+                eCursor_sizeNS,
+                eCursor_arrow_north,
+                eCursor_arrow_north_plus,
+                eCursor_arrow_south,
+                eCursor_arrow_south_plus,
+                eCursor_arrow_west,
+                eCursor_arrow_west_plus,
+                eCursor_arrow_east,
+                eCursor_arrow_east_plus
+                }; 
 
 
 /**
