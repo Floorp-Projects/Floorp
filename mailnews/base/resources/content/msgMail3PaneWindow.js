@@ -322,6 +322,7 @@ function OnLoadFolderPane(folderTree)
 	dump('In onLoadfolderPane\n');
     gFolderTree = folderTree;
 	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#FolderTreeName');
+
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
@@ -469,3 +470,67 @@ function GetSelectedFolder()
 
 }
 
+function ThreadPaneOnClick(event)
+{
+	dump('In ThreadPaneOnClick\n');
+    var targetclass = event.target.getAttribute('class');
+    debug('targetclass = ' + targetclass + '\n');
+
+    if (targetclass == 'twisty') {
+        // The twisty is nested three below the treeitem:
+        // <treeitem>
+        //   <treerow>
+        //     <treecell>
+        //       <box> <!-- anonymous -->
+        //         <titledbutton class="twisty"> <!-- anonymous -->
+        var treeitem = event.target.parentNode.parentNode.parentNode.parentNode;
+		var open = treeitem.getAttribute('open');
+		if(open == "true")
+		{
+			//open all of the children of the treeitem
+			OpenThread(treeitem);
+		}
+		dump('clicked on a twisty\n');
+    }
+
+}
+
+function OpenThread(treeitem)
+{
+	var open = treeitem.getAttribute('open');
+	if(open != "true")
+	{
+		treeitem.setAttribute('open', 'true');
+	}
+
+	var treeitemChildNodes = treeitem.childNodes;
+	var numTreeitemChildren = treeitemChildNodes.length;
+
+	//if there's only one child then there are no treechildren so close it.
+	if(numTreeitemChildren == 1)
+		treeitem.setAttribute('open', '');
+	else
+	{
+		for(var i = 0; i < numTreeitemChildren; i++)
+		{
+			var treeitemChild = treeitemChildNodes[i];
+			if(treeitemChild.nodeName == 'treechildren')
+			{
+				var treechildrenChildNodes = treeitemChildNodes[i].childNodes;
+				var numTreechildrenChildren = treechildrenChildNodes.length;
+				
+				for(var j = 0; j < numTreechildrenChildren; j++)
+				{
+					var treechildrenChild = treechildrenChildNodes[j];
+					if(treechildrenChild.nodeName == 'treeitem')
+					{
+						treechildrenChild.setAttribute('open', 'true');
+						//Open up all of this items
+						OpenThread(treechildrenChild);
+					}
+				}
+			}
+		}
+	}
+
+}

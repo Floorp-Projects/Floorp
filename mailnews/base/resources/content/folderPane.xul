@@ -46,7 +46,7 @@
 			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
 			  HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
-			  SubfoldersHaveUnreadMesages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+			  SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
 			  persist="threaded">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>

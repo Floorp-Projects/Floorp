@@ -258,9 +258,11 @@ function MsgDeleteMessage(fromToolbar)
 	}
 	dump("tree is valid\n");
 	//get the selected elements
+
 	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
     	var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
 	//get the current folder
+
 	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
 	SelectNextMessage(nextMessage);
   }
@@ -788,16 +790,16 @@ function MsgStop() {
 
 function MsgNextMessage()
 {
-	GoNextMessage(GoMessage, false);
+	GoNextMessage(GoMessage, ResourceGoMessage, false);
 }
 
 function MsgNextUnreadMessage()
 {
-	GoNextMessage(GoUnreadMessage, true);
+	GoNextMessage(GoUnreadMessage, ResourceGoUnreadMessage, true);
 }
 function MsgNextFlaggedMessage()
 {
-	GoNextMessage(GoFlaggedMessage, true);
+	GoNextMessage(GoFlaggedMessage, ResourceGoFlaggedMessage, true);
 }
 
 function MsgPreviousMessage()

@@ -25,10 +25,21 @@ function GoMessage(message)
 	return true;
 }
 
+function ResourceGoMessage(message)
+{
+	return true;
+}
+
 function GoUnreadMessage(message)
 {
 	var status = message.getAttribute('Status');
 	return(status == ' ' || status == 'New');
+}
+
+function ResourceGoUnreadMessage(message)
+{
+	var statusValue = GetMessageValue(message, "http://home.netscape.com/NC-rdf#Status");
+	return(statusValue == ' ' || statusValue == 'New');
 }
 
 function GoFlaggedMessage(message)
@@ -37,14 +48,32 @@ function GoFlaggedMessage(message)
 	return(flagged == 'flagged');
 }
 
+function ResourceGoFlaggedMessage(message)
+{
+	var flaggedValue = GetMessageValue(message, "http://home.netscape.com/NC-rdf#Flagged");
+	return(flaggedValue == 'flagged');
+}
+
+function GetMessageValue(message, propertyURI)
+{
+	var db = GetThreadTree().database;
+	var propertyResource = RDF.GetResource(propertyURI);
+	var node = db.GetTarget(message, propertyResource, true);
+	var literal = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
+	if(literal)
+	{
+		return literal.Value;
+	}
+	return null;
+}
 
 /*GoNextMessage finds the message that matches criteria and selects it.  
   nextFunction is the function that will be used to detertime if a message matches criteria.
   It must take a node and return a boolean.
   startFromBeginning is a boolean that states whether or not we should start looking at the beginning
-  if we reach then end 
+  if we reach the end 
 */
-function GoNextMessage(nextFunction, startFromBeginning)
+function GoNextMessage(nextFunction, nextResourceFunction, startFromBeginning)
 {
 	var tree = GetThreadTree();
 	
@@ -60,7 +89,16 @@ function GoNextMessage(nextFunction, startFromBeginning)
 		else
 			currentMessage = selArray[0];
 
-		var nextMessage = GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning);
+		var nextMessage;
+
+		if(messageView.showThreads)
+		{
+			nextMessage = GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, startFromBeginning);	
+		}
+		else
+		{
+			nextMessage = GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning);
+		}
 
 		//Only change the selection if there's a valid nextMessage
 		if(nextMessage && (nextMessage != currentMessage))
@@ -119,6 +157,162 @@ function GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning)
 	return nextMessage;
 }
 
+function GetNextMessageInThreads(tree, currentMessage, nextFunction, nextResourceFunction, startFromBeginning)
+{
+	var checkStartMessage = false;
+
+	//In the case where nothing is selected
+	if(currentMessage == null)
+	{
+		currentMessage = FindFirstMessage(tree);
+		checkStartMessage = true;
+	}
+
+	return FindNextMessageInThreads(currentMessage, currentMessage, nextFunction, nextResourceFunction, startFromBeginning, checkStartMessage);
+}
+
+function FindNextMessageInThreads(startMessage, originalStartMessage, nextFunction, nextResourceFunction, startFromBeginning, checkStartMessage)
+{
+	//First check startMessage if we are supposed to
+	if(checkStartMessage)
+	{
+		if(nextFunction(startMessage))
+			return startMessage;
+	}
+
+	//Next, search the current messages children.
+	nextChildMessage = FindNextInChildren(startMessage, originalStartMessage, nextFunction, nextResourceFunction);
+	if(nextChildMessage)
+		return nextChildMessage;
+
+	//Next we need to search the current messages siblings
+	nextMessage = startMessage.nextSibling;
+	while(nextMessage)
+	{
+		//In case we've already been here before
+		if(nextMessage == originalStartMessage)
+			return nextMessage;
+
+		if(nextFunction(nextMessage))
+			return nextMessage;
+
+		var nextChildMessage = FindNextInChildren(nextMessage, originalStartMessage, nextFunction, nextResourceFunction);
+		if(nextChildMessage)
+			return nextChildMessage;
+			 
+		nextMessage = nextMessage.nextSibling;
+	}
+
+	//Finally, we need to find the next of the start message's ancestors that has a sibling
+	var parentMessage = startMessage.parentNode.parentNode;
+
+	while(parentMessage.nodeName == 'treeitem')
+	{
+		if(parentMessage.nextSibling != null)
+		{
+			nextMessage = FindNextMessageInThreads(parentMessage.nextSibling, originalStartMessage, nextFunction, nextResourceFunction, startFromBeginning, true);
+			return nextMessage;
+		}
+		parentMessage = parentMessage.parentNode.parentNode;
+	}
+	//otherwise it's the tree so we need to stop and potentially start from the beginning
+	if(startFromBeginning)
+	{
+		nextMessage = FindNextMessageInThreads(FindFirstMessage(parentMessage), originalStartMessage, nextFunction, nextResourceFunction, false, true);
+		return nextMessage;
+	}
+	return null;
+
+}
+
+//Searches children messages in thread navigation.
+function FindNextInChildren(parentMessage, originalStartMessage, nextFunction, nextResourceFunction)
+{
+	var isParentOpen = parentMessage.getAttribute('open') == 'true';
+	//First we'll deal with the case where the parent is open.  In this case we can use DOM calls.
+	if(isParentOpen)
+	{
+		//In this case we have treechildren
+		if(parentMessage.childNodes.length == 2)
+		{
+			var treechildren = parentMessage.childNodes[1];
+			var childMessages = treechildren.childNodes;
+			var numChildMessages = childMessages.length;
+
+			for(var i = 0; i < numChildMessages; i++)
+			{
+				var childMessage = childMessages[i];
+
+				//If we're at the original message again then stop.
+				if(childMessage == originalStartMessage)
+					return childMessage;
+
+				if(nextFunction(childMessage))
+					return childMessage;
+				else
+				{
+					//if this child isn't the message, perhaps one of its children is.
+					var nextChildMessage = FindNextInChildren(childMessage, originalStartMessage, nextFunction);
+					if(nextChildMessage)
+						return nextChildMessage;
+				}
+			}
+		}
+	}
+	else
+	{
+		//We need to traverse the graph in rdf looking for the next resource that fits what we're searching for.
+		var parentUri = parentMessage.getAttribute('id');
+		var parentResource = RDF.GetResource(parentUri);
+
+		//If we find one, then we get the id and open up the parent and all of it's children.  Then we find the element
+		//with the id in the document and return that.
+		if(parentResource)
+		{
+			var nextResource = FindNextInChildrenResources(parentResource, nextResourceFunction);
+			if(nextResource)
+			{
+				OpenThread(parentMessage);
+				var nextUri = nextResource.Value;
+				var nextChildMessage = document.getElementById(nextUri);
+				return nextChildMessage;
+			}
+		}
+
+	}
+	return null;
+}
+
+function FindNextInChildrenResources(parentResource, nextResourceFunction)
+{
+	var db = GetThreadTree().database;
+
+	var childrenResource = RDF.GetResource("http://home.netscape.com/NC-rdf#MessageChild");
+	var childrenEnumerator = db.GetTargets(parentResource, childrenResource, true);
+
+	if(childrenEnumerator)
+	{
+		while(childrenEnumerator.HasMoreElements())
+		{
+			var childResource = childrenEnumerator.GetNext().QueryInterface(Components.interfaces.nsIRDFResource);
+			if(childResource)
+			{
+				if(nextResourceFunction(childResource))
+					return childResource;
+
+				var nextMessageResource = FindNextInChildrenResources(childResource, nextResourceFunction);
+				if(nextMessageResource)
+					return nextMessageResource;
+
+			}
+
+
+		}
+
+	}
+
+	return null;
+}
 
 /*GoPreviousMessage finds the message that matches criteria and selects it.  
   previousFunction is the function that will be used to detertime if a message matches criteria.

@@ -42,7 +42,7 @@ Rights Reserved.
 
   <template>
   	<rule>
-          <treechildren>
+          <treechildren onclick="ThreadPaneOnClick(event);">
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
@@ -105,5 +105,6 @@ Rights Reserved.
 		</treecell>
 	</treerow>
   </treehead>
+
 </tree>
 </overlay>
