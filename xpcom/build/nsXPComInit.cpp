@@ -26,6 +26,7 @@
 #include "nsObserverService.h"
 #include "nsObserver.h"
 #include "nsProperties.h"
+#include "nsScriptableInputStream.h"
 
 #include "nsAllocator.h"
 #include "nsArena.h"
@@ -96,6 +97,7 @@ static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID);
 // io
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 static NS_DEFINE_CID(kDirectoryIteratorCID, NS_DIRECTORYITERATOR_CID);
+static NS_DEFINE_CID(kScriptableInputStreamCID, NS_SCRIPTABLEINPUTSTREAM_CID);
 
 // components
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -287,6 +289,12 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 NS_DIRECTORYITERATOR_CLASSNAME,
                                 NS_DIRECTORYITERATOR_PROGID,
                                 nsDirectoryIteratorImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = RegisterGenericFactory(compMgr, kScriptableInputStreamCID,
+                                NS_SCRIPTABLEINPUTSTREAM_CLASSNAME,
+                                NS_SCRIPTABLEINPUTSTREAM_PROGID,
+                                nsScriptableInputStream::Create);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef PAGE_MANAGER
